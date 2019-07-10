@@ -1,0 +1,19 @@
+# Distributed under the MIT License.
+# See LICENSE.txt for details.
+
+# Executable: PrintExportCoordinates3D
+# Check: execute
+# ExpectedOutput:
+#   PrintExportCoordinates3DVolume0.h5
+
+DomainCreator:
+  Brick:
+    LowerBound: [0, 0, 0]
+    UpperBound: [3.141592653589793, 3.141592653589793, 3.141592653589793]
+    IsPeriodicIn: [false, false, false]
+    InitialRefinement: [3, 3, 3]
+    InitialGridPoints: [2, 2, 2]
+
+Observers:
+  VolumeFileName: "PrintExportCoordinates3DVolume"
+  ReductionFileName: "PrintExportCoordinates3DReductions"
