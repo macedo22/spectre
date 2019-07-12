@@ -102,7 +102,8 @@ struct ExportCoordinates {
       typename DbTagsList, typename... InboxTags, typename Metavariables,
       typename ArrayIndex, typename ActionList, typename ParallelComponent,
       Requires<tmpl::list_contains_v<DbTagsList, Tags::Mesh<Dim>>> = nullptr>
-  static std::tuple<db::DataBox<DbTagsList>&&, bool> apply(
+  //static std::tuple<db::DataBox<DbTagsList>&&, bool> apply(
+  static auto apply(
       db::DataBox<DbTagsList>& box,
       const tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
       const Parallel::ConstGlobalCache<Metavariables>& cache,
@@ -113,6 +114,20 @@ struct ExportCoordinates {
         db::get<::Tags::Coordinates<Dim, Frame::Inertial>>(box);
     const std::string element_name = MakeString{} << ElementId<Dim>(array_index)
                                                   << '/';
+
+    const auto& box_with_min_spacing =
+        /*db::create_from<
+            db::RemoveTags<>,
+            db::AddSimpleTags<Tags::Coordinates<Dim, Frame::Inertial>,
+                              Tags::Mesh<Dim>>,
+            db::AddComputeTags<Tags::MinimumGridSpacing<Dim, Frame::Inertial>>>(
+        box, inertial_coordinates, mesh);*/
+        db::create_from<
+            db::RemoveTags<>,
+            db::AddSimpleTags<>,
+            db::AddComputeTags<Tags::MinimumGridSpacing<Dim, Frame::Inertial>>>(
+        box);
+
     // Collect volume data
     // Remove tensor types, only storing individual components
     std::vector<TensorComponent> components;
@@ -136,8 +151,13 @@ struct ExportCoordinates {
             Parallel::ArrayIndex<ElementIndex<Dim>>(array_index)),
         std::move(components), mesh.extents());
 
-    double element_min_grid_spacing = minimum_grid_spacing(
-      mesh.extents(), inertial_coordinates);
+    /*double element_min_grid_spacing = minimum_grid_spacing(
+      mesh.extents(), inertial_coordinates);*/
+
+    const double element_min_grid_spacing =
+        get<Tags::MinimumGridSpacing<Dim, Frame::Inertial>>(
+            box_with_min_spacing);
+
 
     if (element_min_grid_spacing < overall_min_grid_spacing) {
         overall_min_grid_spacing = element_min_grid_spacing;
@@ -148,7 +168,9 @@ struct ExportCoordinates {
     printf("Overall inertial minimum grid spacing: %f\n\n",
       overall_min_grid_spacing);
 
-    return {std::move(box), true};
+    //return {std::move(box), true};
+    return std::forward_as_tuple(std::move(box), true);
+    //return std::forward_as_tuple(std::move(box_with_min_spacing), true);
   }
 };
 }  // namespace Actions
