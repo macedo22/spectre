@@ -6,6 +6,7 @@
 #include <string>
 
 #include "AlgorithmArray.hpp"
+#include "AlgorithmSingleton.hpp"
 #include "DataStructures/DataBox/DataBox.hpp"
 #include "Domain/Creators/RegisterDerivedWithCharm.hpp"
 #include "Domain/ElementIndex.hpp"
@@ -28,13 +29,14 @@
 #include "Parallel/Invoke.hpp"
 #include "Parallel/Printf.hpp"
 #include "Time/Time.hpp"
+#include "Utilities/Functional.hpp"
 #include "Utilities/MakeString.hpp"
 #include "Utilities/Requires.hpp"
 #include "Utilities/TMPL.hpp"
 
 /// \cond
 namespace Actions {
-double overall_min_grid_spacing = std::numeric_limits<double>::max();
+//double overall_min_grid_spacing = std::numeric_limits<double>::max();
 template <size_t Dim>
 struct InitializeElement {
   struct InitialExtents : db::SimpleTag {
@@ -65,11 +67,24 @@ struct InitializeElement {
           domain = std::move(*domain_ptr);
         });
     return std::make_tuple(
+    //const auto& initial_box =
         Elliptic::Initialization::Domain<Dim>::initialize(
             db::create_from<typename AddOptionsToDataBox::simple_tags>(
                 std::move(box)),
             array_index, initial_extents, domain),
         true);
+
+    /*const auto& mesh = get<Tags::Mesh<Dim>>(initial_box);
+    const auto& inertial_coordinates =
+        db::get<::Tags::Coordinates<Dim, Frame::Inertial>>(initial_box);
+
+    const auto& box_with_min_spacing =
+        db::create_from<
+            db::RemoveTags<>,
+            db::AddSimpleTags<>,
+            db::AddComputeTags<Tags::MinimumGridSpacing<Dim, Frame::Inertial>>>(
+        initial_box);
+    return std::make_tuple(std::move(box_with_min_spacing), true);*/
   }
 
   template <typename DbTagsList, typename... InboxTags, typename Metavariables,
@@ -115,19 +130,6 @@ struct ExportCoordinates {
     const std::string element_name = MakeString{} << ElementId<Dim>(array_index)
                                                   << '/';
 
-    const auto& box_with_min_spacing =
-        /*db::create_from<
-            db::RemoveTags<>,
-            db::AddSimpleTags<Tags::Coordinates<Dim, Frame::Inertial>,
-                              Tags::Mesh<Dim>>,
-            db::AddComputeTags<Tags::MinimumGridSpacing<Dim, Frame::Inertial>>>(
-        box, inertial_coordinates, mesh);*/
-        db::create_from<
-            db::RemoveTags<>,
-            db::AddSimpleTags<>,
-            db::AddComputeTags<Tags::MinimumGridSpacing<Dim, Frame::Inertial>>>(
-        box);
-
     // Collect volume data
     // Remove tensor types, only storing individual components
     std::vector<TensorComponent> components;
@@ -151,30 +153,93 @@ struct ExportCoordinates {
             Parallel::ArrayIndex<ElementIndex<Dim>>(array_index)),
         std::move(components), mesh.extents());
 
-    /*double element_min_grid_spacing = minimum_grid_spacing(
-      mesh.extents(), inertial_coordinates);*/
-
-    const double element_min_grid_spacing =
+    /*const double element_min_grid_spacing =
         get<Tags::MinimumGridSpacing<Dim, Frame::Inertial>>(
-            box_with_min_spacing);
+            box);*///box_with_min_spacing);
 
 
-    if (element_min_grid_spacing < overall_min_grid_spacing) {
+    /*if (element_min_grid_spacing < overall_min_grid_spacing) {
         overall_min_grid_spacing = element_min_grid_spacing;
-    }
-    printf("-----------Current minimum grid spacing status-----------\n");
+    }*/
+
+    /*printf("-----------Current minimum grid spacing status-----------\n");
     printf("Element's inertial minimum grid spacing calculated: %f\n",
       element_min_grid_spacing);
     printf("Overall inertial minimum grid spacing: %f\n\n",
-      overall_min_grid_spacing);
+      overall_min_grid_spacing);*/
 
     //return {std::move(box), true};
     return std::forward_as_tuple(std::move(box), true);
     //return std::forward_as_tuple(std::move(box_with_min_spacing), true);
   }
 };
+
+struct PrintMinimumGridSpacing {
+  template <typename ParallelComponent, typename DbTags, typename Metavariables,
+            typename ArrayIndex>
+  static void apply(db::DataBox<DbTags>& /*box*/,
+                    const Parallel::ConstGlobalCache<Metavariables>& /*cache*/,
+                    const ArrayIndex& /*array_index*/,
+                    const double& overall_min_grid_spacing) noexcept {
+    /*SPECTRE_PARALLEL_REQUIRE(number_of_1d_array_elements *
+                                 (number_of_1d_array_elements - 1) / 2 ==
+                             value);*/
+    printf("Overall inertial minimum grid spacing: %f\n\n",
+              overall_min_grid_spacing);
+  }
+};
+
 }  // namespace Actions
 
+//template <typename Metavariables>
+template <size_t Dim, typename Metavariables>
+struct SingletonParallelComponent {
+  using chare_type = Parallel::Algorithms::Singleton;
+  using const_global_cache_tag_list = tmpl::list<>;
+  using options = tmpl::list<>;
+  using metavariables = Metavariables;
+  using add_options_to_databox = Parallel::AddNoOptionsToDataBox;
+  using phase_dependent_action_list =
+      tmpl::list<Parallel::PhaseActions<typename Metavariables::Phase,
+                                        Metavariables::Phase::Initialization,
+                                        tmpl::list<>>>;
+
+  static void initialize(
+      Parallel::CProxy_ConstGlobalCache<Metavariables>& /*global_cache*/) {}
+
+  static void execute_next_phase(
+      const typename Metavariables::Phase /*next_phase*/,
+      const Parallel::CProxy_ConstGlobalCache<
+          Metavariables>& /*global_cache*/) {}
+};
+
+template <size_t Dim, typename Metavariables>
+struct ElementArray;
+
+template <size_t Dim>
+struct ArrayReduce {
+  template <typename ParallelComponent, typename DbTags, typename Metavariables,
+            typename ArrayIndex,
+            Requires<tmpl::list_contains_v<DbTags, Tags::Mesh<Dim>>> = nullptr>
+  static void apply(const db::DataBox<DbTags>& box,
+                    const Parallel::ConstGlobalCache<Metavariables>& cache,
+                    const ArrayIndex& array_index) noexcept {
+    static_assert(cpp17::is_same_v<ParallelComponent,
+                                   ElementArray<Dim, Metavariables>>,
+                  "The ParallelComponent is not deduced to be the right type");
+    const auto& my_proxy =
+        Parallel::get_parallel_component<ElementArray<Dim, Metavariables>>(
+            cache)[array_index];
+    const auto& singleton_proxy = Parallel::get_parallel_component<
+        SingletonParallelComponent<Dim, Metavariables>>(cache);
+
+    Parallel::ReductionData<Parallel::ReductionDatum<double, funcl::Min<>>>
+        elemental_min_grid_spacing{
+            get<Tags::MinimumGridSpacing<Dim, Frame::Inertial>>(box)};
+    Parallel::contribute_to_reduction<Actions::PrintMinimumGridSpacing>(
+        elemental_min_grid_spacing, my_proxy, singleton_proxy);
+  }
+};
 
 // A parallel component struct
 template <size_t Dim, typename Metavariables>
@@ -182,6 +247,7 @@ struct ElementArray {
   // Hold elements distributed to some core
   using chare_type = Parallel::Algorithms::Array;
   using metavariables = Metavariables;
+  using elemental_min_grid_spacing = double;
   // Type that indexes the Parallel Component Array
   using array_index = ElementIndex<Dim>;
   // OptionTags required by parallel component, usually obtained from
@@ -259,7 +325,12 @@ struct ElementArray {
     auto& local_cache = *(global_cache.ckLocalBranch());
     auto& element_array =
         Parallel::get_parallel_component<ElementArray>(local_cache);
-    element_array.start_phase(next_phase);
+    if (next_phase == Metavariables::Phase::CallArrayReduce) {
+      Parallel::simple_action<ArrayReduce<Dim>>(element_array);
+    }
+    else {
+        element_array.start_phase(next_phase);
+    }
   }
 };
 
@@ -274,13 +345,16 @@ struct Metavariables {
   // (empty) list of OptionTags needed by metavariables
   using const_global_cache_tag_list = tmpl::list<>;
   // list of parallel components to be created
-  using component_list = tmpl::list<ElementArray<Dim, Metavariables>,
+  using component_list = tmpl::list<SingletonParallelComponent
+                                        <Dim, Metavariables>,
+                                    ElementArray<Dim, Metavariables>,
                                     observers::Observer<Metavariables>,
                                     observers::ObserverWriter<Metavariables>>;
   using observed_reduction_data_tags = tmpl::list<>;
 
   // Phases to be executed, must contain at least Initialization and Exit
-  enum class Phase { Initialization, RegisterWithObserver, Export, Exit };
+  enum class Phase { Initialization, RegisterWithObserver, Export,
+                     CallArrayReduce, Exit };
 
   static Phase determine_next_phase(
       const Phase& current_phase,
@@ -292,6 +366,8 @@ struct Metavariables {
       case Phase::RegisterWithObserver:
         return Phase::Export;
       case Phase::Export:
+        return Phase::CallArrayReduce;
+      case Phase::CallArrayReduce:
         return Phase::Exit;
       case Phase::Exit:
         ERROR(
