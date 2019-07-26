@@ -310,5 +310,25 @@ struct Unity : db::ComputeTag {
   using argument_tags =
       tmpl::list<AreaElement<Frame::Inertial>>;
 };
+
+struct Area : db::SimpleTag {
+  static std::string name() noexcept { return "Area"; }
+  using type = double;
+};
+
+template<typename Frame>
+struct AreaCompute : Area, db::ComputeTag {
+  static std::string name() noexcept {
+    return "AreaCompute";
+  }
+  static double function(
+      const Strahlkorper<Frame>& strahlkorper,
+      const Scalar<DataVector>& area_element) noexcept {
+    return strahlkorper.ylm_spherepack()
+                       .definite_integral(get(area_element).data());
+  }
+  using argument_tags =
+      tmpl::list<StrahlkorperTags::Strahlkorper<Frame>, AreaElement<Frame>>;
+};
 }  // namespace Tags
 }  // namespace StrahlkorperGr

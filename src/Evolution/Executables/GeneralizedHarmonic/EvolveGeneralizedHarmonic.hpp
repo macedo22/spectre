@@ -159,7 +159,8 @@ struct EvolutionMetavars {
   // Horizon finding struct
   struct Horizon {
     using tags_to_observe = tmpl::list<StrahlkorperGr::Tags::SurfaceIntegral<
-        StrahlkorperGr::Tags::Unity, domain_frame>>;
+        StrahlkorperGr::Tags::Unity, domain_frame>,
+        StrahlkorperGr::Tags::Area>;
     using compute_items_on_source = tmpl::list<
         gr::Tags::SpatialMetricCompute<domain_dim, domain_frame, DataVector>,
         ah::Tags::InverseSpatialMetricCompute<domain_dim, domain_frame>,
@@ -174,6 +175,7 @@ struct EvolutionMetavars {
         gr::Tags::RicciTensor<domain_dim, domain_frame, DataVector>>;
     using compute_items_on_target =
         tmpl::list<StrahlkorperGr::Tags::AreaElement<domain_frame>,
+                   StrahlkorperGr::Tags::AreaCompute<domain_frame>,
                    StrahlkorperGr::Tags::Unity,
                    StrahlkorperGr::Tags::SurfaceIntegral<
                        StrahlkorperGr::Tags::Unity, domain_frame>>;
