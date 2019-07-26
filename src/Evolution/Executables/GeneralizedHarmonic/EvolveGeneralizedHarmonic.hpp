@@ -160,7 +160,8 @@ struct EvolutionMetavars {
   struct Horizon {
     using tags_to_observe = tmpl::list<StrahlkorperGr::Tags::SurfaceIntegral<
         StrahlkorperGr::Tags::Unity, domain_frame>,
-        StrahlkorperGr::Tags::Area>;
+        StrahlkorperGr::Tags::Area,
+      StrahlkorperGr::Tags::IrreducibleMass>;
     using compute_items_on_source = tmpl::list<
         gr::Tags::SpatialMetricCompute<domain_dim, domain_frame, DataVector>,
         ah::Tags::InverseSpatialMetricCompute<domain_dim, domain_frame>,
@@ -178,7 +179,8 @@ struct EvolutionMetavars {
                    StrahlkorperGr::Tags::AreaCompute<domain_frame>,
                    StrahlkorperGr::Tags::Unity,
                    StrahlkorperGr::Tags::SurfaceIntegral<
-                       StrahlkorperGr::Tags::Unity, domain_frame>>;
+                       StrahlkorperGr::Tags::Unity, domain_frame>,
+      StrahlkorperGr::Tags::IrreducibleMassCompute<domain_frame>>;
     using compute_target_points =
         intrp::Actions::ApparentHorizon<Horizon, ::Frame::Inertial>;
     using post_interpolation_callback =
