@@ -300,15 +300,12 @@ struct SurfaceIntegral : db::ComputeTag {
 };
 
 struct Unity : db::ComputeTag {
-  static std::string name() noexcept {
-    return "Unity";
-  }
+  static std::string name() noexcept { return "Unity"; }
   static Scalar<DataVector> function(
       const Scalar<DataVector>& used_for_size) noexcept {
     return make_with_value<Scalar<DataVector>>(used_for_size, 1.0);
   }
-  using argument_tags =
-      tmpl::list<AreaElement<Frame::Inertial>>;
+  using argument_tags = tmpl::list<AreaElement<Frame::Inertial>>;
 };
 
 struct Area : db::SimpleTag {
@@ -316,37 +313,30 @@ struct Area : db::SimpleTag {
   using type = double;
 };
 
-template<typename Frame>
+template <typename Frame>
 struct AreaCompute : Area, db::ComputeTag {
-  static std::string name() noexcept {
-    return "AreaCompute";
-  }
-  static double function(
-      const Strahlkorper<Frame>& strahlkorper,
-      const Scalar<DataVector>& area_element) noexcept {
-    return strahlkorper.ylm_spherepack()
-                       .definite_integral(get(area_element).data());
+  static std::string name() noexcept { return "AreaCompute"; }
+  static double function(const Strahlkorper<Frame>& strahlkorper,
+                         const Scalar<DataVector>& area_element) noexcept {
+    return strahlkorper.ylm_spherepack().definite_integral(
+        get(area_element).data());
   }
   using argument_tags =
       tmpl::list<StrahlkorperTags::Strahlkorper<Frame>, AreaElement<Frame>>;
 };
-    
-    struct IrreducibleMass : db::SimpleTag {
-        static std::string name() noexcept { return "IrreducibleMass"; }
-        using type = double;
-    };
-    
-    template<typename Frame>
-    struct IrreducibleMassCompute : IrreducibleMass, db::ComputeTag
-    {
-        static std::string name() noexcept {
-            return "IrreducibleMassCompute";
-        }
-        static double function = ::StrahlkorperGr::irreducible_mass;
-        
-        using argument_tags = tmpl::list<AreaCompute<Frame>>;
-        
-    };
-    
+
+struct IrreducibleMass : db::SimpleTag {
+  static std::string name() noexcept { return "IrreducibleMass"; }
+  using type = double;
+};
+
+template <typename Frame>
+struct IrreducibleMassCompute : IrreducibleMass, db::ComputeTag {
+  static std::string name() noexcept { return "IrreducibleMassCompute"; }
+  static constexpr auto function = ::StrahlkorperGr::irreducible_mass;
+
+  using argument_tags = tmpl::list<AreaCompute<Frame>>;
+};
+
 }  // namespace Tags
 }  // namespace StrahlkorperGr
