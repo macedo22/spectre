@@ -355,7 +355,7 @@ std::array<double, 3> spin_vector(double spin_magnitude,
  * irreducible mass from the area of a horizon. Specifically, computes
  * \f$M_\mathrm{irr}=\sqrt{\frac{A}{16\pi}}\f$.
  */
-double irreducible_mass(double area) noexcept;
+double irreducible_mass(const double& area) noexcept;
 
 /*!
  * \ingroup SurfacesGroup

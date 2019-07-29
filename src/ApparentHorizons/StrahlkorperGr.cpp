@@ -696,7 +696,7 @@ std::array<double, 3> spin_vector(const double spin_magnitude,
   return spin_vector * (spin_magnitude / magnitude(spin_vector));
 }
 
-double irreducible_mass(const double area) noexcept {
+double irreducible_mass(const double& area) noexcept {
   ASSERT(area > 0.0,
          "The area of the horizon must be greater than zero but is " << area);
   return sqrt(area / (16.0 * M_PI));

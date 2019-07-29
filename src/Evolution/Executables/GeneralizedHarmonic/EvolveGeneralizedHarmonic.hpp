@@ -180,7 +180,7 @@ struct EvolutionMetavars {
                    StrahlkorperGr::Tags::Unity,
                    StrahlkorperGr::Tags::SurfaceIntegral<
                        StrahlkorperGr::Tags::Unity, domain_frame>,
-      StrahlkorperGr::Tags::IrreducibleMassCompute<domain_frame>>;
+                   StrahlkorperGr::Tags::IrreducibleMassCompute<domain_frame>>;
     using compute_target_points =
         intrp::Actions::ApparentHorizon<Horizon, ::Frame::Inertial>;
     using post_interpolation_callback =
