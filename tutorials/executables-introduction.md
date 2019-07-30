@@ -6,14 +6,14 @@ This is a high level introduction to the structure and ingredients of a SpECTRE 
 
 # What ingredients go into a SpECTRE parallel executable and how are they related?
 
-<u>The main ingredients include</u>:
+**The main ingredients include:**
 - Phases: temporal chunks of the executable
 - Actions: computational actions (e.g. calculating a value, printing a message)
 - Parallel components: units on which Actions can be done in parallel
 - Metavariables: high-level configuration for the compiler regarding the system to simulate
 - Input file: a yaml file containing options for the executable
 
-<u>How they are related</u>:
+**How they are related**
 
 Temporally, a parallel executable is broken up into Phases. Parallel components are structs through which Actions can be executed in parallel. You might want to execute certain Actions during specific Phases, so each parallel component  has a `phase_dependent_action_list` that defines the list of Phase-dependent Actions that are to be carried out in which Phase on that parallel component. The Metavariables struct defines, among other things, the parallel components and Phases that exist in the executable and how the executable should proceed from one Phase to the next. When you run an executable, it takes an input file as a command line argument that specifies options called OptionTags that are grabbed by the Metavariables struct (OptionTags will not be covered in this tutorial).
 
@@ -52,7 +52,7 @@ The `Phase` class tells us that this executable has three Phases: `Initializatio
 
 The `determine_next_phase` function determines which Phase should be run next after one finishes. In this case, it says that when `Initialization` is complete, then enter the `Execute` Phase, and when that's complete, enter the `Exit` Phase.
 
-<u>Metavariables takeaway</u>: We have an executable that defines one parallel component called `HelloWorld`, three Phases called `Initialization`, `Execute`, and `Exit`, and altogether the executable should print some "hello" message.
+**Metavariables takeaway:** We have an executable that defines one parallel component called `HelloWorld`, three Phases called `Initialization`, `Execute`, and `Exit`, and altogether the executable should print some "hello" message.
 
 ## Parallel component breakdown
 
@@ -101,7 +101,7 @@ void HelloWorld<Metavariables>::execute_next_phase(
 ```
 This function body tells us that all this function does is execute the simple Action called `PrintMessage` that is defined in the `Actions` namespace.  An important thing to note about simple Actions is that they can be called during any Phase.
 
-<u>HelloWorld parallel component takeaway</u> This is a singleton component, so only one `HelloWorld` object will exist and it is associated with the OptionTag called `Name`, whose value is `Albert Einstein`. Nothing happens to the component during the `Initialization` Phase and no Phase-dependent Actions are executed on it. When the `Execute` Phase ends, `execute_next_phase` will execute the `PrintMessage` Action.
+**HelloWorld parallel component takeaway:** This is a singleton component, so only one `HelloWorld` object will exist and it is associated with the OptionTag called `Name`, whose value is `Albert Einstein`. Nothing happens to the component during the `Initialization` Phase and no Phase-dependent Actions are executed on it. When the `Execute` Phase ends, `execute_next_phase` will execute the `PrintMessage` Action.
 
 ## PrintMessage Action breakdown
 Since the `HelloWorld` component is the only parallel component and it does not execute any Phase-dependent Actions, the only Action that is run in this whole executable is `PrintMessage`. Let's take a look at its struct, which is defined in the `Actions` namespace, a convention followed by other Actions in other executables:
