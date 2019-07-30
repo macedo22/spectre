@@ -1,7 +1,7 @@
 > Written with [StackEdit](https://stackedit.io/).
 # SpECTRE parallel executables
 
-This is a high level introduction to the structure and ingredients of a SpECTRE parallel executable using an existing example executable, for those who do not have pre-existing knowledge on the topic. The goal of this tutorial is to provide higher-level context for some SpECTRE concepts and how they connect in a parallel executable before jumping into the more fleshed-out development guides. In going forward with development, the official SpECTRE [creating executables guide]([https://spectre-code.org/dev_guide_creating_executables.html](https://spectre-code.org/dev_guide_creating_executables.html)) and [parallelization guide]([https://spectre-code.org/dev_guide_parallelization_foundations.html](https://spectre-code.org/dev_guide_parallelization_foundations.html)) should be consulted for comprehensive information, instructions, and requirements.
+This is a high level introduction to the structure and ingredients of a SpECTRE parallel executable using an existing example executable, for those who do not have pre-existing knowledge on the topic. The goal of this tutorial is to provide higher-level context for some SpECTRE concepts and how they connect in a parallel executable before jumping into the more fleshed-out development guides. In going forward with development, the official SpECTRE [creating executables guide](https://spectre-code.org/dev_guide_creating_executables.html) and [parallelization guide](https://spectre-code.org/dev_guide_parallelization_foundations.html) should be consulted for comprehensive information, instructions, and requirements.
 
 
 # What ingredients go into a SpECTRE parallel executable and how are they related?
@@ -20,7 +20,7 @@ Temporally, a parallel executable is broken up into Phases. Parallel components 
 The sections below provide some more notes regarding each of these ingredients, but this is in no way comprehensive.
 
 # Walkthrough of SingletonHelloWorld
-We will use the <code>SingletonHelloWorld</code> executable as an example to step through to see how these pieces fit together to make an executable. The source file is [here]([https://github.com/sxs-collaboration/spectre/blob/develop/src/Executables/Examples/HelloWorld/SingletonHelloWorld.hpp](https://github.com/sxs-collaboration/spectre/blob/develop/src/Executables/Examples/HelloWorld/SingletonHelloWorld.hpp)). The source input file is [here]([https://github.com/sxs-collaboration/spectre/blob/develop/tests/InputFiles/ExampleExecutables/SingletonHelloWorld.yaml](https://github.com/sxs-collaboration/spectre/blob/develop/tests/InputFiles/ExampleExecutables/SingletonHelloWorld.yaml)).
+We will use the <code>SingletonHelloWorld</code> executable as an example to step through to see how these pieces fit together to make an executable. The source file is [here](https://github.com/sxs-collaboration/spectre/blob/develop/src/Executables/Examples/HelloWorld/SingletonHelloWorld.hpp). The source input file is [here](https://github.com/sxs-collaboration/spectre/blob/develop/tests/InputFiles/ExampleExecutables/SingletonHelloWorld.yaml).
 
 ## Metavariables breakdown
 
@@ -77,7 +77,7 @@ struct HelloWorld {
 ```
 The `chare_type` here says that `HelloWorld` is a singleton component, which means that only one such `HelloWorld` object will exist in parallel across processors.
 
-The `const_global_cache_tag_list` defines the list of OptionTags needed by `HelloWorld`. It only lists one such tag, `Name`. This is referring to the one option specified by the [sample input yaml file]([https://github.com/sxs-collaboration/spectre/blob/develop/tests/InputFiles/ExampleExecutables/SingletonHelloWorld.yaml](https://github.com/sxs-collaboration/spectre/blob/develop/tests/InputFiles/ExampleExecutables/SingletonHelloWorld.yaml)), where the option is specified by the line:
+The `const_global_cache_tag_list` defines the list of OptionTags needed by `HelloWorld`. It only lists one such tag, `Name`. This is referring to the one option specified by the [sample input yaml file](https://github.com/sxs-collaboration/spectre/blob/develop/tests/InputFiles/ExampleExecutables/SingletonHelloWorld.yaml), where the option is specified by the line:
 
 ```
 Name: Albert Einstein
@@ -123,4 +123,4 @@ Each Action has an `apply` method that is called when the Action is executed. Th
 We've now stepped through the whole executable!
 
 ## Beyond this example: DataBox
-`DataBox`es are an important SpECTRE data structure and concept that were not addressed by this example, but are essential to most executables. Each parallel component has an associated `DataBox` that is a flexible container that holds the information you ask for, specified by `SimpleTag`s and `ComputeTag`s. The motivation for `DataBox`es is outlined [here]([https://spectre-code.org/databox_foundations.html](https://spectre-code.org/databox_foundations.html)) and a guide to using and manipulating them is [here]([https://spectre-code.org/group__databoxgroup](https://spectre-code.org/group__databoxgroup)).
+`DataBox`es are an important SpECTRE data structure and concept that were not addressed by this example, but are essential to most executables. Each parallel component has an associated `DataBox` that is a flexible container that holds the information you ask for, specified by `SimpleTag`s and `ComputeTag`s. The motivation for `DataBox`es is outlined [here](https://spectre-code.org/databox_foundations.html) and a guide to using and manipulating them is [here](https://spectre-code.org/group__databoxgroup).
