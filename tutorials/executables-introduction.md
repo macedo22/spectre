@@ -13,9 +13,9 @@ This is a high level introduction to the structure and ingredients of a SpECTRE 
 - Metavariables: high-level configuration for the compiler regarding the system to simulate
 - Input file: a yaml file containing options for the executable
 
-**How they are related**
+**How they are related:**
 
-Temporally, a parallel executable is broken up into Phases. Parallel components are structs through which Actions can be executed in parallel. You might want to execute certain Actions during specific Phases, so each parallel component  has a `phase_dependent_action_list` that defines the list of Phase-dependent Actions that are to be carried out in which Phase on that parallel component. The Metavariables struct defines, among other things, the parallel components and Phases that exist in the executable and how the executable should proceed from one Phase to the next. When you run an executable, it takes an input file as a command line argument that specifies options called OptionTags that are grabbed by the Metavariables struct (OptionTags will not be covered in this tutorial).
+Temporally, a parallel executable is broken up into Phases. During each Phase, certain Actions will be executed on certain parallel components. Each parallel component  has a `phase_dependent_action_list` that defines the list of Phase-dependent Actions that are to be carried out in which Phase on that parallel component. The Metavariables struct defines, among other things, the parallel components and Phases that exist in the executable and how the executable should proceed from one Phase to the next. When you run an executable, it takes an input file as a command line argument that specifies options called OptionTags that are used to initialize parallel components with initial input data.
 
 The sections below provide some more notes regarding each of these ingredients, but this is in no way comprehensive.
 
