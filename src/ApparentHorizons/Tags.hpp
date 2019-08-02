@@ -198,6 +198,11 @@ struct OneOverOneFormMagnitude : db::SimpleTag {
 };
 
 template <size_t Dim, typename Frame, typename DataType>
+struct UnitNormalOneForm : db::SimpleTag {
+    using type = tnsr::i<DataVector, Dim, Frame>;
+    static std::string name() noexcept { return "UnitNormalOneForm"; }
+
+template <size_t Dim, typename Frame, typename DataType>
 struct OneOverOneFormMagnitudeCompute : db::SimpleTag, OneOverOneFormMagnitude {
   static std::string name() noexcept {
     return "OneOverOneFormMagnitudeCompute";
