@@ -333,7 +333,7 @@ struct IrreducibleMass : db::SimpleTag {
 template <typename Frame>
 struct IrreducibleMassCompute : IrreducibleMass, db::ComputeTag {
   static std::string name() noexcept { return "IrreducibleMassCompute"; }
-  static constexpr double (*function)(const double&) = &irreducible_mass;
+  static constexpr auto function = &irreducible_mass;
 
   using argument_tags = tmpl::list<AreaCompute<Frame>>;
 };
