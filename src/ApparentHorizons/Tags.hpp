@@ -11,6 +11,7 @@
 #include "ApparentHorizons/TagsTypeAliases.hpp"
 #include "DataStructures/DataBox/DataBoxTag.hpp"
 #include "DataStructures/DataVector.hpp"
+#include "DataStructures/Tensor/EagerMath/Magnitude.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Tensor/TypeAliases.hpp"
 #include "PointwiseFunctions/GeneralRelativity/TagsDeclarations.hpp"  // IWYU pragma: keep
@@ -189,6 +190,26 @@ struct NormalOneForm : db::ComputeTag {
       const db::item_type<DxRadius<Frame>>& dx_radius,
       const db::item_type<Rhat<Frame>>& r_hat) noexcept;
   using argument_tags = tmpl::list<DxRadius<Frame>, Rhat<Frame>>;
+};
+
+struct OneOverOneFormMagnitude : db::SimpleTag {
+  static std::string name() noexcept { return "OneOverOneFormMagnitude"; }
+  using type = DataVector;
+};
+
+template <size_t Dim, typename Frame, typename DataType>
+struct OneOverOneFormMagnitudeCompute : db::SimpleTag, OneOverOneFormMagnitude {
+  static std::string name() noexcept {
+    return "OneOverOneFormMagnitudeCompute";
+  }
+  static DataVector function(
+      const tnsr::II<DataType, Dim, Frame>& inverse_spatial_metric,
+      const tnsr::i<DataType, Dim, Frame>& normal_one_form) noexcept {
+    return 1.0 / get(magnitude(normal_one_form, inverse_spatial_metric));
+  }
+  using argument_tags =
+      tmpl::list<gr::Tags::InverseSpatialMetric<Dim, Frame, DataType>,
+                 NormalOneForm<Frame>>;
 };
 
 /// `Tangents(i,j)` is \f$\partial x_{\rm surf}^i/\partial q^j\f$,
