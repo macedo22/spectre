@@ -198,15 +198,7 @@ struct OneOverOneFormMagnitude : db::SimpleTag {
 };
 
 template <size_t Dim, typename Frame, typename DataType>
-struct UnitNormalOneForm : db::SimpleTag {
-    using type = tnsr::i<DataVector, Dim, Frame>;
-    static std::string name() noexcept { return "UnitNormalOneForm"; }
-
-template <size_t Dim, typename Frame, typename DataType>
 struct OneOverOneFormMagnitudeCompute : db::SimpleTag, OneOverOneFormMagnitude {
-  static std::string name() noexcept {
-    return "OneOverOneFormMagnitudeCompute";
-  }
   static DataVector function(
       const tnsr::II<DataType, Dim, Frame>& inverse_spatial_metric,
       const tnsr::i<DataType, Dim, Frame>& normal_one_form) noexcept {
@@ -215,6 +207,20 @@ struct OneOverOneFormMagnitudeCompute : db::SimpleTag, OneOverOneFormMagnitude {
   using argument_tags =
       tmpl::list<gr::Tags::InverseSpatialMetric<Dim, Frame, DataType>,
                  NormalOneForm<Frame>>;
+};
+
+template <typename Frame>
+struct UnitNormalOneForm : db::SimpleTag {
+    using type = tnsr::i<DataVector, 3, Frame>;
+    static std::string name() noexcept { return "UnitNormalOneForm"; }
+};
+
+template <size_t Dim, typename Frame, typename DataType>
+struct UnitNormalOneFormCompute : UnitNormalOneForm, db::ComputeTag {
+  static constexpr auto function = &unit_normal_one_form;
+  using argument_tags =
+      tmpl::list<NormalOneForm<Frame>,
+                 OneOverOneFormMagnitudeCompute<Dim, Frame, DataType>>;
 };
 
 /// `Tangents(i,j)` is \f$\partial x_{\rm surf}^i/\partial q^j\f$,
@@ -341,7 +347,6 @@ struct Area : db::SimpleTag {
 
 template <typename Frame>
 struct AreaCompute : Area, db::ComputeTag {
-  static std::string name() noexcept { return "AreaCompute"; }
   static double function(const Strahlkorper<Frame>& strahlkorper,
                          const Scalar<DataVector>& area_element) noexcept {
     return strahlkorper.ylm_spherepack().definite_integral(
@@ -358,9 +363,7 @@ struct IrreducibleMass : db::SimpleTag {
 
 template <typename Frame>
 struct IrreducibleMassCompute : IrreducibleMass, db::ComputeTag {
-  static std::string name() noexcept { return "IrreducibleMassCompute"; }
   static constexpr auto function = &irreducible_mass;
-
   using argument_tags = tmpl::list<AreaCompute<Frame>>;
 };
 
