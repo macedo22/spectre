@@ -58,6 +58,7 @@
 #include "NumericalAlgorithms/Interpolation/InterpolatorRegisterElement.hpp"
 #include "NumericalAlgorithms/Interpolation/Tags.hpp"
 #include "NumericalAlgorithms/Interpolation/TryToInterpolate.hpp"
+#include "NumericalAlgorithms/LinearOperators/PartialDerivatives.hpp"
 #include "Options/Options.hpp"
 #include "Parallel/Actions/TerminatePhase.hpp"
 #include "Parallel/InitializationFunctions.hpp"
@@ -158,29 +159,34 @@ struct EvolutionMetavars {
 
   // Horizon finding struct
   struct Horizon {
-    using tags_to_observe = tmpl::list<StrahlkorperGr::Tags::SurfaceIntegral<
-        StrahlkorperGr::Tags::Unity, domain_frame>,
-        StrahlkorperGr::Tags::Area,
-      StrahlkorperGr::Tags::IrreducibleMass>;
-    using compute_items_on_source = tmpl::list<
+    using tags_to_observe = tmpl::list<
+        StrahlkorperGr::Tags::SurfaceIntegral<StrahlkorperGr::Tags::Unity,
+                                              domain_frame>,
+        StrahlkorperGr::Tags::Area, StrahlkorperGr::Tags::IrreducibleMass>;
+    using compute_items_on_source =
+        tmpl::list <
         gr::Tags::SpatialMetricCompute<domain_dim, domain_frame, DataVector>,
-        ah::Tags::InverseSpatialMetricCompute<domain_dim, domain_frame>,
-        ah::Tags::ExtrinsicCurvatureCompute<domain_dim, domain_frame>,
-        ah::Tags::SpatialChristoffelSecondKindCompute<domain_dim,
-                                                      domain_frame>>;
+          ah::Tags::InverseSpatialMetricCompute<domain_dim, domain_frame>,
+          ah::Tags::ExtrinsicCurvatureCompute<domain_dim, domain_frame>,
+          ah::Tags::SpatialChristoffelSecondKindCompute<domain_dim,
+                                                        domain_frame>>;
     using vars_to_interpolate_to_target = tmpl::list<
         gr::Tags::SpatialMetric<domain_dim, domain_frame, DataVector>,
         gr::Tags::InverseSpatialMetric<domain_dim, domain_frame>,
         gr::Tags::ExtrinsicCurvature<domain_dim, domain_frame>,
         gr::Tags::SpatialChristoffelSecondKind<domain_dim, domain_frame>,
         gr::Tags::RicciTensor<domain_dim, domain_frame, DataVector>>;
-    using compute_items_on_target =
-        tmpl::list<StrahlkorperGr::Tags::AreaElement<domain_frame>,
-                   StrahlkorperGr::Tags::AreaCompute<domain_frame>,
-                   StrahlkorperGr::Tags::Unity,
-                   StrahlkorperGr::Tags::SurfaceIntegral<
-                       StrahlkorperGr::Tags::Unity, domain_frame>,
-                   StrahlkorperGr::Tags::IrreducibleMassCompute<domain_frame>>;
+    using compute_items_on_target = tmpl::list<
+        StrahlkorperTags::OneOverOneFormMagnitudeCompute<domain_frame>,
+        StrahlkorperTags::UnitNormalOneFormCompute<domain_frame>,
+        StrahlkorperTags::UnitNormalVectorCompute<domain_frame>,
+        //StrahlkorperGr::Tags::RicciScalarCompute<domain_frame>,
+        StrahlkorperGr::Tags::AreaElement<domain_frame>,
+        StrahlkorperGr::Tags::AreaCompute<domain_frame>,
+        StrahlkorperGr::Tags::Unity,
+        StrahlkorperGr::Tags::SurfaceIntegral<StrahlkorperGr::Tags::Unity,
+                                              domain_frame>,
+        StrahlkorperGr::Tags::IrreducibleMassCompute<domain_frame>>;
     using compute_target_points =
         intrp::Actions::ApparentHorizon<Horizon, ::Frame::Inertial>;
     using post_interpolation_callback =
@@ -250,12 +256,10 @@ struct EvolutionMetavars {
               Parallel::PhaseActions<
                   Phase, Phase::Initialization,
                   tmpl::list<GeneralizedHarmonic::Actions::Initialize<dim>>>,
-
               Parallel::PhaseActions<
                   Phase, Phase::InitializeTimeStepperHistory,
                   tmpl::flatten<tmpl::list<SelfStart::self_start_procedure<
                       compute_rhs, update_variables>>>>,
-
               Parallel::PhaseActions<
                   Phase, Phase::RegisterWithObserver,
                   tmpl::list<Actions::AdvanceTime,
@@ -265,7 +269,6 @@ struct EvolutionMetavars {
                                      element_observation_type>>,
                              importer::Actions::RegisterWithImporter,
                              Parallel::Actions::TerminatePhase>>,
-
               Parallel::PhaseActions<
                   Phase, Phase::Evolve,
                   tmpl::flatten<tmpl::list<
@@ -310,17 +313,16 @@ struct EvolutionMetavars {
 };
 
 static const std::vector<void (*)()> charm_init_node_funcs{
-    &setup_error_handling,
-    &domain::creators::register_derived_with_charm,
+    &setup_error_handling, &domain::creators::register_derived_with_charm,
     &Parallel::register_derived_classes_with_charm<MathFunction<1>>,
     &Parallel::register_derived_classes_with_charm<
-        Event<metavariables::events>>,
+         Event<metavariables::events>>,
     &Parallel::register_derived_classes_with_charm<
-        StepChooser<metavariables::step_choosers>>,
+         StepChooser<metavariables::step_choosers>>,
     &Parallel::register_derived_classes_with_charm<StepController>,
     &Parallel::register_derived_classes_with_charm<TimeStepper>,
     &Parallel::register_derived_classes_with_charm<
-        Trigger<metavariables::triggers>>};
+         Trigger<metavariables::triggers>>};
 
 static const std::vector<void (*)()> charm_init_proc_funcs{
     &enable_floating_point_exceptions};

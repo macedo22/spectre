@@ -5,6 +5,7 @@
 
 #include <string>
 
+#include "ApparentHorizons/ComputeItems.hpp"
 #include "ApparentHorizons/Strahlkorper.hpp"
 #include "ApparentHorizons/StrahlkorperGr.hpp"
 #include "ApparentHorizons/TagsDeclarations.hpp"  // IWYU pragma: keep
@@ -14,6 +15,8 @@
 #include "DataStructures/Tensor/EagerMath/Magnitude.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Tensor/TypeAliases.hpp"
+#include "PointwiseFunctions/GeneralRelativity/Ricci.hpp"
+#include "PointwiseFunctions/GeneralRelativity/Tags.hpp"
 #include "PointwiseFunctions/GeneralRelativity/TagsDeclarations.hpp"  // IWYU pragma: keep
 #include "Utilities/ForceInline.hpp"
 #include "Utilities/TMPL.hpp"
@@ -197,30 +200,48 @@ struct OneOverOneFormMagnitude : db::SimpleTag {
   using type = DataVector;
 };
 
-template <size_t Dim, typename Frame, typename DataType>
-struct OneOverOneFormMagnitudeCompute : db::SimpleTag, OneOverOneFormMagnitude {
+template <typename Frame>
+struct OneOverOneFormMagnitudeCompute : OneOverOneFormMagnitude,
+                                        db::ComputeTag {
   static DataVector function(
-      const tnsr::II<DataType, Dim, Frame>& inverse_spatial_metric,
-      const tnsr::i<DataType, Dim, Frame>& normal_one_form) noexcept {
+      const tnsr::II<DataVector, 3, Frame>& inverse_spatial_metric,
+      const tnsr::i<DataVector, 3, Frame>& normal_one_form) noexcept {
     return 1.0 / get(magnitude(normal_one_form, inverse_spatial_metric));
   }
   using argument_tags =
-      tmpl::list<gr::Tags::InverseSpatialMetric<Dim, Frame, DataType>,
+      tmpl::list<gr::Tags::InverseSpatialMetric<3, Frame, DataVector>,
                  NormalOneForm<Frame>>;
 };
 
 template <typename Frame>
 struct UnitNormalOneForm : db::SimpleTag {
-    using type = tnsr::i<DataVector, 3, Frame>;
-    static std::string name() noexcept { return "UnitNormalOneForm"; }
+  static std::string name() noexcept { return "UnitNormalOneForm"; }
+  using type = tnsr::i<DataVector, 3, Frame>;
 };
 
-template <size_t Dim, typename Frame, typename DataType>
-struct UnitNormalOneFormCompute : UnitNormalOneForm, db::ComputeTag {
-  static constexpr auto function = &unit_normal_one_form;
+template <typename Frame>
+struct UnitNormalOneFormCompute : UnitNormalOneForm<Frame>, db::ComputeTag {
+  static constexpr auto function = &StrahlkorperGr::unit_normal_one_form<Frame>;
   using argument_tags =
-      tmpl::list<NormalOneForm<Frame>,
-                 OneOverOneFormMagnitudeCompute<Dim, Frame, DataType>>;
+      tmpl::list<NormalOneForm<Frame>, OneOverOneFormMagnitudeCompute<Frame>>;
+};
+
+template <typename Frame>
+struct UnitNormalVector : db::SimpleTag {
+  static std::string name() noexcept { return "UnitNormalVector"; }
+  using type = tnsr::I<DataVector, 3, Frame>;
+};
+
+template <typename Frame>
+struct UnitNormalVectorCompute : UnitNormalVector<Frame>, db::ComputeTag {
+  static tnsr::I<DataVector, 3, Frame> function(
+      const tnsr::II<DataVector, 3, Frame>& inverse_spatial_metric,
+      const tnsr::i<DataVector, 3, Frame>& unit_normal_one_form) noexcept {
+    return raise_or_lower_index(unit_normal_one_form, inverse_spatial_metric);
+  }
+  using argument_tags =
+      tmpl::list<gr::Tags::InverseSpatialMetric<3, Frame, DataVector>,
+                 UnitNormalOneForm<Frame>>;
 };
 
 /// `Tangents(i,j)` is \f$\partial x_{\rm surf}^i/\partial q^j\f$,
@@ -318,6 +339,21 @@ struct AreaElement : db::ComputeTag {
       gr::Tags::SpatialMetric<3, Frame>, StrahlkorperTags::Jacobian<Frame>,
       StrahlkorperTags::NormalOneForm<Frame>, StrahlkorperTags::Radius<Frame>,
       StrahlkorperTags::Rhat<Frame>>;
+};
+
+struct RicciScalar : db::SimpleTag {
+  static std::string name() noexcept { return "RicciScalar"; }
+  using type = double/*Scalar<DataVector>*/;
+};
+
+template <typename Frame>
+struct RicciScalarCompute : RicciScalar, db::ComputeTag {
+  static constexpr auto function = &StrahlkorperGr::ricci_scalar<Frame>;
+  using argument_tags =
+      tmpl::list<gr::Tags::RicciTensorCompute<3, Frame, DataVector>,
+                 StrahlkorperTags::UnitNormalVectorCompute<Frame>,
+                 ah::Tags::ExtrinsicCurvatureCompute<3, Frame>,
+                 ah::Tags::InverseSpatialMetricCompute<3, Frame>>;
 };
 
 /// Computes the integral of a scalar over a Strahlkorper.
