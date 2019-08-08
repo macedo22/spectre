@@ -343,7 +343,7 @@ struct AreaElement : db::ComputeTag {
 
 struct RicciScalar : db::SimpleTag {
   static std::string name() noexcept { return "RicciScalar"; }
-  using type = double/*Scalar<DataVector>*/;
+  using type = Scalar<DataVector>;
 };
 
 template <typename Frame>
