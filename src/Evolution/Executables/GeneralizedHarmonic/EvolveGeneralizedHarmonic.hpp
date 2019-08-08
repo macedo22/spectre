@@ -180,7 +180,7 @@ struct EvolutionMetavars {
         StrahlkorperTags::OneOverOneFormMagnitudeCompute<domain_frame>,
         StrahlkorperTags::UnitNormalOneFormCompute<domain_frame>,
         StrahlkorperTags::UnitNormalVectorCompute<domain_frame>,
-        //StrahlkorperGr::Tags::RicciScalarCompute<domain_frame>,
+        StrahlkorperGr::Tags::RicciScalarCompute<domain_frame>,
         StrahlkorperGr::Tags::AreaElement<domain_frame>,
         StrahlkorperGr::Tags::AreaCompute<domain_frame>,
         StrahlkorperGr::Tags::Unity,

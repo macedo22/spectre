@@ -223,7 +223,7 @@ template <typename Frame>
 struct UnitNormalOneFormCompute : UnitNormalOneForm<Frame>, db::ComputeTag {
   static constexpr auto function = &StrahlkorperGr::unit_normal_one_form<Frame>;
   using argument_tags =
-      tmpl::list<NormalOneForm<Frame>, OneOverOneFormMagnitudeCompute<Frame>>;
+      tmpl::list<NormalOneForm<Frame>, OneOverOneFormMagnitude>;
 };
 
 template <typename Frame>
@@ -350,10 +350,10 @@ template <typename Frame>
 struct RicciScalarCompute : RicciScalar, db::ComputeTag {
   static constexpr auto function = &StrahlkorperGr::ricci_scalar<Frame>;
   using argument_tags =
-      tmpl::list<gr::Tags::RicciTensorCompute<3, Frame, DataVector>,
-                 StrahlkorperTags::UnitNormalVectorCompute<Frame>,
-                 ah::Tags::ExtrinsicCurvatureCompute<3, Frame>,
-                 ah::Tags::InverseSpatialMetricCompute<3, Frame>>;
+      tmpl::list<gr::Tags::RicciTensor<3, Frame, DataVector>,
+                 StrahlkorperTags::UnitNormalVector<Frame>,
+                 gr::Tags::ExtrinsicCurvature<3, Frame, DataVector>,
+                 gr::Tags::InverseSpatialMetric<3, Frame, DataVector>>;
 };
 
 /// Computes the integral of a scalar over a Strahlkorper.
