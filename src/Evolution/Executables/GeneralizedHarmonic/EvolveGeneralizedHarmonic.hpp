@@ -162,14 +162,15 @@ struct EvolutionMetavars {
     using tags_to_observe = tmpl::list<
         StrahlkorperGr::Tags::SurfaceIntegral<StrahlkorperGr::Tags::Unity,
                                               domain_frame>,
-        StrahlkorperGr::Tags::Area, StrahlkorperGr::Tags::IrreducibleMass>;
-    using compute_items_on_source =
-        tmpl::list <
+        StrahlkorperGr::Tags::Area, StrahlkorperGr::Tags::IrreducibleMass,
+        StrahlkorperGr::Tags::MaxRicciScalar,
+        StrahlkorperGr::Tags::MinRicciScalar>;
+    using compute_items_on_source = tmpl::list<
         gr::Tags::SpatialMetricCompute<domain_dim, domain_frame, DataVector>,
-          ah::Tags::InverseSpatialMetricCompute<domain_dim, domain_frame>,
-          ah::Tags::ExtrinsicCurvatureCompute<domain_dim, domain_frame>,
-          ah::Tags::SpatialChristoffelSecondKindCompute<domain_dim,
-                                                        domain_frame>>;
+        ah::Tags::InverseSpatialMetricCompute<domain_dim, domain_frame>,
+        ah::Tags::ExtrinsicCurvatureCompute<domain_dim, domain_frame>,
+        ah::Tags::SpatialChristoffelSecondKindCompute<domain_dim,
+                                                      domain_frame>>;
     using vars_to_interpolate_to_target = tmpl::list<
         gr::Tags::SpatialMetric<domain_dim, domain_frame, DataVector>,
         gr::Tags::InverseSpatialMetric<domain_dim, domain_frame>,
@@ -181,6 +182,8 @@ struct EvolutionMetavars {
         StrahlkorperTags::UnitNormalOneFormCompute<domain_frame>,
         StrahlkorperTags::UnitNormalVectorCompute<domain_frame>,
         StrahlkorperGr::Tags::RicciScalarCompute<domain_frame>,
+        StrahlkorperGr::Tags::MaxRicciScalarCompute,
+        StrahlkorperGr::Tags::MinRicciScalarCompute,
         StrahlkorperGr::Tags::AreaElement<domain_frame>,
         StrahlkorperGr::Tags::AreaCompute<domain_frame>,
         StrahlkorperGr::Tags::Unity,

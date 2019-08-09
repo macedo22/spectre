@@ -356,6 +356,30 @@ struct RicciScalarCompute : RicciScalar, db::ComputeTag {
                  gr::Tags::InverseSpatialMetric<3, Frame, DataVector>>;
 };
 
+struct MaxRicciScalar : db::SimpleTag {
+  static std::string name() noexcept { return "MaxRicciScalar"; }
+  using type = double;
+};
+
+struct MaxRicciScalarCompute : MaxRicciScalar, db::ComputeTag {
+  static double function(const Scalar<DataVector>& ricci_scalar) {
+    return max(get(ricci_scalar));
+  }
+  using argument_tags = tmpl::list<RicciScalar>;
+};
+
+struct MinRicciScalar : db::SimpleTag {
+  static std::string name() noexcept { return "MinRicciScalar"; }
+  using type = double;
+};
+
+struct MinRicciScalarCompute : MinRicciScalar, db::ComputeTag {
+  static double function(const Scalar<DataVector>& ricci_scalar) {
+    return min(get(ricci_scalar));
+  }
+  using argument_tags = tmpl::list<RicciScalar>;
+};
+
 /// Computes the integral of a scalar over a Strahlkorper.
 template <typename IntegrandTag, typename Frame>
 struct SurfaceIntegral : db::ComputeTag {
