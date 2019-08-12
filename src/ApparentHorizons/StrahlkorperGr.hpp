@@ -134,6 +134,11 @@ Scalar<DataVector> ricci_scalar(
     const tnsr::ii<DataVector, 3, Frame>& extrinsic_curvature,
     const tnsr::II<DataVector, 3, Frame>& upper_spatial_metric) noexcept;
 
+template <typename Frame>
+Scalar<DataVector> ricci_scalar_3d(
+    const tnsr::ii<DataVector, 3, Frame>& spatial_ricci_tensor,
+    const tnsr::II<DataVector, 3, Frame>& inverse_spatial_metric) noexcept;
+
 /*!
  * \ingroup SurfacesGroup
  * \brief Area element of a 2D `Strahlkorper`.

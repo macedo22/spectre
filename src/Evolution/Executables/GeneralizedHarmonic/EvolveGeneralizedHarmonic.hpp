@@ -125,16 +125,17 @@ struct EvolutionMetavars {
                  GeneralizedHarmonic::Tags::Phi<domain_dim, domain_frame>,
                  gr::Tags::RicciTensor<domain_dim, domain_frame, DataVector>>;
 
-  using constraint_tags = tmpl::list<
+  using observation_tags = tmpl::list<
       GeneralizedHarmonic::Tags::GaugeConstraint<domain_dim, domain_frame>,
       GeneralizedHarmonic::Tags::FConstraint<domain_dim, domain_frame>,
       GeneralizedHarmonic::Tags::TwoIndexConstraint<domain_dim, domain_frame>,
       GeneralizedHarmonic::Tags::ThreeIndexConstraint<domain_dim, domain_frame>,
       GeneralizedHarmonic::Tags::FourIndexConstraint<domain_dim, domain_frame>,
-      GeneralizedHarmonic::Tags::ConstraintEnergy<domain_dim, domain_frame>>;
+      GeneralizedHarmonic::Tags::ConstraintEnergy<domain_dim, domain_frame>,
+      StrahlkorperGr::Tags::RicciScalar3D>;
   using observation_events = tmpl::list<
-      dg::Events::Registrars::ObserveNorms<domain_dim, constraint_tags>,
-      dg::Events::Registrars::ObserveFields<domain_dim, constraint_tags,
+      dg::Events::Registrars::ObserveNorms<domain_dim, observation_tags>,
+      dg::Events::Registrars::ObserveFields<domain_dim, observation_tags,
                                             tmpl::list<>>>;
   using events = tmpl::push_back<observation_events,
                                  intrp::Events::Registrars::Interpolate<

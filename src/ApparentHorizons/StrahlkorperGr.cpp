@@ -499,6 +499,13 @@ Scalar<DataVector> ricci_scalar(
 }
 
 template <typename Frame>
+Scalar<DataVector> ricci_scalar_3d(
+    const tnsr::ii<DataVector, 3, Frame>& spatial_ricci_tensor,
+    const tnsr::II<DataVector, 3, Frame>& inverse_spatial_metric) noexcept {
+  return trace(spatial_ricci_tensor, inverse_spatial_metric);
+}
+
+template <typename Frame>
 Scalar<DataVector> area_element(
     const tnsr::ii<DataVector, 3, Frame>& spatial_metric,
     const StrahlkorperTags::aliases::Jacobian<Frame>& jacobian,
@@ -748,6 +755,11 @@ template Scalar<DataVector> StrahlkorperGr::ricci_scalar<Frame::Inertial>(
     const tnsr::ii<DataVector, 3, Frame::Inertial>& extrinsic_curvature,
     const tnsr::II<DataVector, 3, Frame::Inertial>&
         upper_spatial_metric) noexcept;
+
+template Scalar<DataVector> StrahlkorperGr::ricci_scalar_3d<Frame::Inertial>(
+    const tnsr::ii<DataVector, 3, Frame::Inertial>& spatial_ricci_tensor,
+    const tnsr::II<DataVector, 3, Frame::Inertial>&
+        inverse_spatial_metric) noexcept;
 
 template Scalar<DataVector> StrahlkorperGr::area_element<Frame::Inertial>(
     const tnsr::ii<DataVector, 3, Frame::Inertial>& spatial_metric,

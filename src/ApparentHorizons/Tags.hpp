@@ -380,6 +380,19 @@ struct MinRicciScalarCompute : MinRicciScalar, db::ComputeTag {
   using argument_tags = tmpl::list<RicciScalar>;
 };
 
+struct RicciScalar3D : db::SimpleTag {
+  static std::string name() noexcept { return "RicciScalar"; }
+  using type = Scalar<DataVector>;
+};
+
+template <typename Frame>
+struct RicciScalar3DCompute : RicciScalar3D, db::ComputeTag {
+  static constexpr auto function = &StrahlkorperGr::ricci_scalar_3d<Frame>;
+  using argument_tags =
+      tmpl::list<gr::Tags::RicciTensor<3, Frame, DataVector>,
+                 gr::Tags::InverseSpatialMetric<3, Frame, DataVector>>;
+};
+
 /// Computes the integral of a scalar over a Strahlkorper.
 template <typename IntegrandTag, typename Frame>
 struct SurfaceIntegral : db::ComputeTag {

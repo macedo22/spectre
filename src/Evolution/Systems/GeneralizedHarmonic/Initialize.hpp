@@ -9,6 +9,8 @@
 #include <utility>  // IWYU pragma: keep
 #include <vector>
 
+#include "ApparentHorizons/Tags.hpp"
+#include "ApparentHorizons/StrahlkorperGr.hpp"
 #include "DataStructures/DataBox/DataBox.hpp"
 #include "DataStructures/DataBox/DataBoxTag.hpp"
 #include "DataStructures/DataBox/Prefixes.hpp"
@@ -147,6 +149,7 @@ struct Initialize {
         gr::Tags::TraceSpatialChristoffelFirstKindCompute<Dim, Inertial,
                                                           DataVector>,
         gr::Tags::RicciTensorCompute<Dim, Inertial, DataVector>,
+        StrahlkorperGr::Tags::RicciScalar3DCompute<Inertial>,
         GeneralizedHarmonic::Tags::ExtrinsicCurvatureCompute<Dim, Inertial>,
         GeneralizedHarmonic::Tags::TraceExtrinsicCurvatureCompute<Dim,
                                                                   Inertial>,
