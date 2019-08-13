@@ -47,6 +47,20 @@ struct Strahlkorper : db::SimpleTag {
   using type = ::Strahlkorper<Frame>;
 };
 
+struct YlmSpherepack : db::SimpleTag {
+  static std::string name() noexcept { return "YlmSpherepack"; }
+  using type = ::YlmSpherepack;
+};
+
+template <typename Frame>
+struct YlmSpherepackCompute : YlmSpherepack, db::ComputeTag {
+  static const ::YlmSpherepack& function(
+      const ::Strahlkorper<Frame>& strahlkorper) noexcept {
+          return strahlkorper.ylm_spherepack();
+      }
+  using argument_tags = tmpl::list<Strahlkorper<Frame>>;
+};
+
 /// \f$(\theta,\phi)\f$ on the grid.
 /// Doesn't depend on the shape of the surface.
 template <typename Frame>
@@ -391,6 +405,22 @@ struct RicciScalar3DCompute : RicciScalar3D, db::ComputeTag {
   using argument_tags =
       tmpl::list<gr::Tags::RicciTensor<3, Frame, DataVector>,
                  gr::Tags::InverseSpatialMetric<3, Frame, DataVector>>;
+};
+
+struct SpinFunction : db::SimpleTag {
+  static std::string name() noexcept { return "SpinFunction"; }
+  using type = Scalar<DataVector>;
+};
+
+template <typename Frame>
+struct SpinFunctionCompute : SpinFunction, db::ComputeTag {
+  static constexpr auto function = &StrahlkorperGr::spin_function<Frame>;
+  using argument_tags =
+      tmpl::list<StrahlkorperTags::Tangents<Frame>,
+      StrahlkorperTags::YlmSpherepack,
+      StrahlkorperTags::UnitNormalVector<Frame>,
+      AreaElement<Frame>,
+      gr::Tags::ExtrinsicCurvature<3, Frame, DataVector>>;
 };
 
 /// Computes the integral of a scalar over a Strahlkorper.

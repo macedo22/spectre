@@ -8,6 +8,7 @@
 
 #include "AlgorithmSingleton.hpp"
 #include "ApparentHorizons/ComputeItems.hpp"
+#include "ApparentHorizons/YlmSpherepack.hpp"
 #include "ApparentHorizons/Tags.hpp"
 #include "Domain/Creators/RegisterDerivedWithCharm.hpp"
 #include "Domain/Tags.hpp"
@@ -190,7 +191,9 @@ struct EvolutionMetavars {
         StrahlkorperGr::Tags::Unity,
         StrahlkorperGr::Tags::SurfaceIntegral<StrahlkorperGr::Tags::Unity,
                                               domain_frame>,
-        StrahlkorperGr::Tags::IrreducibleMassCompute<domain_frame>>;
+        StrahlkorperGr::Tags::IrreducibleMassCompute<domain_frame>,
+        StrahlkorperTags::YlmSpherepackCompute<domain_frame>,
+        StrahlkorperGr::Tags::SpinFunctionCompute<domain_frame>>;
     using compute_target_points =
         intrp::Actions::ApparentHorizon<Horizon, ::Frame::Inertial>;
     using post_interpolation_callback =
