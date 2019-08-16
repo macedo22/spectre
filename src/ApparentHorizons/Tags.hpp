@@ -131,6 +131,26 @@ struct Radius : db::ComputeTag {
   using argument_tags = tmpl::list<Strahlkorper<Frame>>;
 };
 
+template <typename Frame>
+struct MaxRadius : db::ComputeTag {
+  static std::string name() noexcept { return "MaxRadius"; }
+  static double function(
+      const DataVector& radius) noexcept {
+    return max(radius);
+  }
+  using argument_tags = tmpl::list<Radius<Frame>>;
+};
+
+template <typename Frame>
+struct MinRadius : db::ComputeTag {
+  static std::string name() noexcept { return "MinRadius"; }
+  static double function(
+      const DataVector& radius) noexcept {
+    return min(radius);
+  }
+  using argument_tags = tmpl::list<Radius<Frame>>;
+};
+
 /// `CartesianCoords(i)` is \f$x_{\rm surf}^i\f$,
 /// the vector of \f$(x,y,z)\f$ coordinates of each point
 /// on the surface.
@@ -405,6 +425,96 @@ struct RicciScalar3DCompute : RicciScalar3D, db::ComputeTag {
   using argument_tags =
       tmpl::list<gr::Tags::RicciTensor<3, Frame, DataVector>,
                  gr::Tags::InverseSpatialMetric<3, Frame, DataVector>>;
+};
+
+struct MaxRicciScalar3D : db::SimpleTag {
+  static std::string name() noexcept { return "MaxRicciScalar3D"; }
+  using type = double;
+};
+
+struct MaxRicciScalar3DCompute : MaxRicciScalar3D, db::ComputeTag {
+  static double function(const Scalar<DataVector>& ricci_scalar) {
+    return max(get(ricci_scalar));
+  }
+  using argument_tags = tmpl::list<RicciScalar3D>;
+};
+
+struct MinRicciScalar3D : db::SimpleTag {
+  static std::string name() noexcept { return "MinRicciScalar3D"; }
+  using type = double;
+};
+
+struct MinRicciScalar3DCompute : MinRicciScalar3D, db::ComputeTag {
+  static double function(const Scalar<DataVector>& ricci_scalar) {
+    return min(get(ricci_scalar));
+  }
+  using argument_tags = tmpl::list<RicciScalar3D>;
+};
+
+struct RicciScalar2ndTerm : db::SimpleTag {
+  static std::string name() noexcept { return "RicciScalar2ndTerm"; }
+  using type = Scalar<DataVector>;
+};
+
+template <typename Frame>
+struct RicciScalar2ndTermCompute : RicciScalar2ndTerm, db::ComputeTag {
+  static Scalar<DataVector> function(
+      const tnsr::ii<DataVector, 3, Frame>& spatial_ricci_tensor,
+      const tnsr::I<DataVector, 3, Frame>& unit_normal_vector,
+      const tnsr::ii<DataVector, 3, Frame>& extrinsic_curvature,
+      const tnsr::II<DataVector, 3, Frame>& inverse_spatial_metric) noexcept {
+    auto ricci_scalar = trace(spatial_ricci_tensor, inverse_spatial_metric);
+
+    for (size_t i = 0; i < 3; ++i) {
+      for (size_t j = 0; j < 3; ++j) {
+        get(ricci_scalar) -= 2.0 * spatial_ricci_tensor.get(i, j) *
+                             unit_normal_vector.get(i) *
+                             unit_normal_vector.get(j);
+
+        for (size_t k = 0; k < 3; ++k) {
+          for (size_t l = 0; l < 3; ++l) {
+            // K^{ij} K_{ij} = g^{ik} g^{jl} K_{kl} K_{ij}
+            get(ricci_scalar) -=
+                inverse_spatial_metric.get(i, k) *
+                inverse_spatial_metric.get(j, l) *
+                extrinsic_curvature.get(k, l) *
+                extrinsic_curvature.get(i, j);
+          }
+        }
+      }
+    }
+
+    return ricci_scalar;
+  }
+  using argument_tags =
+      tmpl::list<gr::Tags::RicciTensor<3, Frame, DataVector>,
+                 StrahlkorperTags::UnitNormalVector<Frame>,
+                 gr::Tags::ExtrinsicCurvature<3, Frame, DataVector>,
+                 gr::Tags::InverseSpatialMetric<3, Frame, DataVector>>;
+};
+
+struct MaxRicciScalar2ndTerm : db::SimpleTag {
+  static std::string name() noexcept { return "MaxRicciScalar2ndTerm"; }
+  using type = double;
+};
+
+struct MaxRicciScalar2ndTermCompute : MaxRicciScalar2ndTerm, db::ComputeTag {
+  static double function(const Scalar<DataVector>& ricci_scalar_second_term) {
+    return max(get(ricci_scalar_second_term));
+  }
+  using argument_tags = tmpl::list<RicciScalar2ndTerm>;
+};
+
+struct MinRicciScalar2ndTerm : db::SimpleTag {
+  static std::string name() noexcept { return "MinRicciScalar2ndTerm"; }
+  using type = double;
+};
+
+struct MinRicciScalar2ndTermCompute : MinRicciScalar2ndTerm, db::ComputeTag {
+  static double function(const Scalar<DataVector>& ricci_scalar_second_term) {
+    return min(get(ricci_scalar_second_term));
+  }
+  using argument_tags = tmpl::list<RicciScalar2ndTerm>;
 };
 
 struct SpinFunction : db::SimpleTag {

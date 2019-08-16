@@ -19,7 +19,7 @@ tnsr::aa<DataType, SpatialDim, Frame, Index> ricci_tensor(
   for (size_t i = 0; i < dimensionality; ++i) {
     for (size_t j = i; j < dimensionality; ++j) {
       for (size_t m = 0; m < dimensionality; ++m) {
-        ricci.get(i, j) += d_christoffel_2nd_kind.get(m, m, i, j) -
+        /*ricci.get(i, j) += d_christoffel_2nd_kind.get(m, m, i, j) -
                            0.5 * (d_christoffel_2nd_kind.get(i, m, m, j) +
                                   d_christoffel_2nd_kind.get(j, m, m, i));
 
@@ -28,6 +28,15 @@ tnsr::aa<DataType, SpatialDim, Frame, Index> ricci_tensor(
                                  christoffel_2nd_kind.get(n, n, m) -
                              christoffel_2nd_kind.get(m, i, n) *
                                  christoffel_2nd_kind.get(n, m, j);
+        }*/
+        ricci.get(i, j) += d_christoffel_2nd_kind.get(m, m, i, j) -
+                           d_christoffel_2nd_kind.get(j, m, i, m);
+
+        for (size_t n = 0; n < dimensionality; ++n) {
+          ricci.get(i, j) += christoffel_2nd_kind.get(n, i, j) *
+                                 christoffel_2nd_kind.get(m, m, n) -
+                             christoffel_2nd_kind.get(n, i, m) *
+                                 christoffel_2nd_kind.get(m, j, n);
         }
       }
     }

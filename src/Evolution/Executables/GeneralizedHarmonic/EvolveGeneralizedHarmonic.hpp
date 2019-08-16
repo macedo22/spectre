@@ -166,7 +166,11 @@ struct EvolutionMetavars {
                                               domain_frame>,
         StrahlkorperGr::Tags::Area, StrahlkorperGr::Tags::IrreducibleMass,
         StrahlkorperGr::Tags::MaxRicciScalar,
-        StrahlkorperGr::Tags::MinRicciScalar>;
+        StrahlkorperGr::Tags::MinRicciScalar,
+        StrahlkorperGr::Tags::MaxRicciScalar3D,
+        StrahlkorperGr::Tags::MaxRicciScalar2ndTerm,
+        StrahlkorperTags::MaxRadius<domain_frame>,
+        StrahlkorperTags::MinRadius<domain_frame>>;
     using compute_items_on_source = tmpl::list<
         gr::Tags::SpatialMetricCompute<domain_dim, domain_frame, DataVector>,
         ah::Tags::InverseSpatialMetricCompute<domain_dim, domain_frame>,
@@ -180,12 +184,20 @@ struct EvolutionMetavars {
         gr::Tags::SpatialChristoffelSecondKind<domain_dim, domain_frame>,
         gr::Tags::RicciTensor<domain_dim, domain_frame, DataVector>>;
     using compute_items_on_target = tmpl::list<
+        StrahlkorperTags::MaxRadius<domain_frame>,
+        StrahlkorperTags::MinRadius<domain_frame>,
         StrahlkorperTags::OneOverOneFormMagnitudeCompute<domain_frame>,
         StrahlkorperTags::UnitNormalOneFormCompute<domain_frame>,
         StrahlkorperTags::UnitNormalVectorCompute<domain_frame>,
         StrahlkorperGr::Tags::RicciScalarCompute<domain_frame>,
         StrahlkorperGr::Tags::MaxRicciScalarCompute,
         StrahlkorperGr::Tags::MinRicciScalarCompute,
+        StrahlkorperGr::Tags::RicciScalar3DCompute<domain_frame>,
+        StrahlkorperGr::Tags::MaxRicciScalar3DCompute,
+        StrahlkorperGr::Tags::MinRicciScalar3DCompute,
+        StrahlkorperGr::Tags::RicciScalar2ndTermCompute<domain_frame>,
+        StrahlkorperGr::Tags::MaxRicciScalar2ndTermCompute,
+        StrahlkorperGr::Tags::MinRicciScalar2ndTermCompute,
         StrahlkorperGr::Tags::AreaElement<domain_frame>,
         StrahlkorperGr::Tags::AreaCompute<domain_frame>,
         StrahlkorperGr::Tags::Unity,
