@@ -372,6 +372,6 @@ double irreducible_mass(const double& area) noexcept;
  * of a black hole horizon. Specifically, computes
  *\f$M=\sqrt{M_{irr}^2+\frac{S^2}{4M_{irr}^2}}\f$
  */
-double christodoulou_mass(double dimensionful_spin_magnitude,
-                          double irreducible_mass) noexcept;
+double christodoulou_mass(const double& dimensionful_spin_magnitude,
+                          const double& irreducible_mass) noexcept;
 }  // namespace StrahlkorperGr

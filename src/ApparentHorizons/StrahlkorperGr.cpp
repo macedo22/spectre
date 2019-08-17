@@ -709,8 +709,8 @@ double irreducible_mass(const double& area) noexcept {
   return sqrt(area / (16.0 * M_PI));
 }
 
-double christodoulou_mass(const double dimensionful_spin_magnitude,
-                          const double irreducible_mass) noexcept {
+double christodoulou_mass(const double& dimensionful_spin_magnitude,
+                          const double& irreducible_mass) noexcept {
   return sqrt(square(irreducible_mass) + (square(dimensionful_spin_magnitude) /
                                           (4.0 * square(irreducible_mass))));
 }

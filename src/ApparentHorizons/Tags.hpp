@@ -417,10 +417,26 @@ struct SpinFunctionCompute : SpinFunction, db::ComputeTag {
   static constexpr auto function = &StrahlkorperGr::spin_function<Frame>;
   using argument_tags =
       tmpl::list<StrahlkorperTags::Tangents<Frame>,
-      StrahlkorperTags::YlmSpherepack,
-      StrahlkorperTags::UnitNormalVector<Frame>,
-      AreaElement<Frame>,
-      gr::Tags::ExtrinsicCurvature<3, Frame, DataVector>>;
+                 StrahlkorperTags::YlmSpherepack,
+                 StrahlkorperTags::UnitNormalVector<Frame>,
+                 AreaElement<Frame>,
+                 gr::Tags::ExtrinsicCurvature<3, Frame, DataVector>>;
+};
+
+struct DimensionfulSpinMagnitude : db::SimpleTag {
+  static std::string name() noexcept { return "DimensionfulSpinMagnitude"; }
+  using type = double;
+};
+
+template <typename Frame>
+struct DimensionfulSpinMagnitudeCompute :
+    DimensionfulSpinMagnitude, db::ComputeTag {
+  static constexpr auto function =
+      &StrahlkorperGr::dimensionful_spin_magnitude<Frame>;
+  using argument_tags =
+      tmpl::list<RicciScalar, SpinFunction, gr::Tags::SpatialMetric<3, Frame>,
+                 StrahlkorperTags::Tangents<Frame>,
+                 StrahlkorperTags::YlmSpherepack, AreaElement<Frame>>;
 };
 
 /// Computes the integral of a scalar over a Strahlkorper.
@@ -470,5 +486,16 @@ struct IrreducibleMassCompute : IrreducibleMass, db::ComputeTag {
   using argument_tags = tmpl::list<AreaCompute<Frame>>;
 };
 
+struct ChristodoulouMass : db::SimpleTag {
+  static std::string name() noexcept { return "ChristodoulouMass"; }
+  using type = double;
+};
+
+struct ChristodoulouMassCompute :
+    ChristodoulouMass, db::ComputeTag {
+  static constexpr auto function = &StrahlkorperGr::christodoulou_mass;
+  using argument_tags =
+      tmpl::list<DimensionfulSpinMagnitude, IrreducibleMass>;
+};
 }  // namespace Tags
 }  // namespace StrahlkorperGr
