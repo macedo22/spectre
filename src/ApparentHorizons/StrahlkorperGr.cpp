@@ -499,7 +499,7 @@ Scalar<DataVector> ricci_scalar(
 }
 
 template <typename Frame>
-Scalar<DataVector> ricci_scalar_3d(
+Scalar<DataVector> spatial_ricci_scalar(
     const tnsr::ii<DataVector, 3, Frame>& spatial_ricci_tensor,
     const tnsr::II<DataVector, 3, Frame>& inverse_spatial_metric) noexcept {
   return trace(spatial_ricci_tensor, inverse_spatial_metric);
@@ -756,7 +756,8 @@ template Scalar<DataVector> StrahlkorperGr::ricci_scalar<Frame::Inertial>(
     const tnsr::II<DataVector, 3, Frame::Inertial>&
         upper_spatial_metric) noexcept;
 
-template Scalar<DataVector> StrahlkorperGr::ricci_scalar_3d<Frame::Inertial>(
+template Scalar<DataVector>
+StrahlkorperGr::spatial_ricci_scalar<Frame::Inertial>(
     const tnsr::ii<DataVector, 3, Frame::Inertial>& spatial_ricci_tensor,
     const tnsr::II<DataVector, 3, Frame::Inertial>&
         inverse_spatial_metric) noexcept;

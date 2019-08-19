@@ -133,7 +133,7 @@ struct EvolutionMetavars {
       GeneralizedHarmonic::Tags::ThreeIndexConstraint<domain_dim, domain_frame>,
       GeneralizedHarmonic::Tags::FourIndexConstraint<domain_dim, domain_frame>,
       GeneralizedHarmonic::Tags::ConstraintEnergy<domain_dim, domain_frame>,
-      StrahlkorperGr::Tags::RicciScalar3D>;
+      StrahlkorperGr::Tags::SpatialRicciScalar>;
   using observation_events = tmpl::list<
       dg::Events::Registrars::ObserveNorms<domain_dim, observation_tags>,
       dg::Events::Registrars::ObserveFields<domain_dim, observation_tags,
@@ -165,8 +165,8 @@ struct EvolutionMetavars {
         StrahlkorperGr::Tags::SurfaceIntegral<StrahlkorperGr::Tags::Unity,
                                               domain_frame>,
         StrahlkorperGr::Tags::Area, StrahlkorperGr::Tags::IrreducibleMass,
-        StrahlkorperGr::Tags::MaxRicciScalar,
-        StrahlkorperGr::Tags::MinRicciScalar,
+        StrahlkorperGr::Tags::MaxHorizonRicciScalar,
+        StrahlkorperGr::Tags::MinHorizonRicciScalar,
         StrahlkorperGr::Tags::ChristodoulouMass>;
     using compute_items_on_source = tmpl::list<
         gr::Tags::SpatialMetricCompute<domain_dim, domain_frame, DataVector>,
@@ -186,9 +186,9 @@ struct EvolutionMetavars {
         StrahlkorperGr::Tags::UnitNormalVectorCompute<domain_frame>,
         StrahlkorperGr::Tags::GradUnitNormalOneFormCompute<domain_frame>,
         StrahlkorperGr::Tags::ExtrinsicCurvatureCompute<domain_frame>,
-        StrahlkorperGr::Tags::RicciScalarCompute<domain_frame>,
-        StrahlkorperGr::Tags::MaxRicciScalarCompute,
-        StrahlkorperGr::Tags::MinRicciScalarCompute,
+        StrahlkorperGr::Tags::HorizonRicciScalarCompute<domain_frame>,
+        StrahlkorperGr::Tags::MaxHorizonRicciScalarCompute,
+        StrahlkorperGr::Tags::MinHorizonRicciScalarCompute,
         StrahlkorperGr::Tags::AreaElement<domain_frame>,
         StrahlkorperGr::Tags::AreaCompute<domain_frame>,
         StrahlkorperGr::Tags::Unity,

@@ -364,6 +364,36 @@ struct GradUnitNormalOneFormCompute :
 };
 
 template <typename Frame>
+struct InverseSurfaceMetric : db::SimpleTag {
+  using type = tnsr::II<DataVector, 3, Frame>;
+  static std::string name() noexcept { return "InverseSurfaceMetric"; }
+};
+
+template <typename Frame>
+struct InverseSurfaceMetricCompute :
+      InverseSurfaceMetric<Frame>, db::ComputeTag {
+  static constexpr auto function =
+      &StrahlkorperGr::inverse_surface_metric<Frame>;
+  using argument_tags =
+      tmpl::list<UnitNormalVector<Frame>,
+                 gr::Tags::InverseSpatialMetric<3, Frame, DataVector>>;
+};
+
+struct Expansion : db::SimpleTag {
+  using type = Scalar<DataVector>;
+  static std::string name() noexcept { return "Expansion"; }
+};
+
+template <typename Frame>
+struct ExpansionCompute : Expansion, db::ComputeTag {
+  static constexpr auto function = &StrahlkorperGr::expansion<Frame>;
+  using argument_tags =
+      tmpl::list<GradUnitNormalOneForm<Frame>,
+                 InverseSurfaceMetric<Frame>,
+                 gr::Tags::ExtrinsicCurvature<3, Frame, DataVector>>;
+};
+
+template <typename Frame>
 struct ExtrinsicCurvature : db::SimpleTag {
   using type = tnsr::ii<DataVector, 3, Frame>;
   static std::string name() noexcept { return "ExtrinsicCurvature"; }
@@ -377,6 +407,58 @@ struct ExtrinsicCurvatureCompute : ExtrinsicCurvature<Frame>, db::ComputeTag {
                  UnitNormalVector<Frame>>;
 };
 
+struct HorizonRicciScalar : db::SimpleTag {
+  static std::string name() noexcept { return "HorizonRicciScalar"; }
+  using type = Scalar<DataVector>;
+};
+
+template <typename Frame>
+struct HorizonRicciScalarCompute : HorizonRicciScalar, db::ComputeTag {
+  static constexpr auto function = &StrahlkorperGr::ricci_scalar<Frame>;
+  using argument_tags =
+      tmpl::list<gr::Tags::RicciTensor<3, Frame, DataVector>,
+                 UnitNormalVector<Frame>, ExtrinsicCurvature<Frame>,
+                 gr::Tags::InverseSpatialMetric<3, Frame, DataVector>>;
+};
+
+struct MaxHorizonRicciScalar : db::SimpleTag {
+  static std::string name() noexcept { return "MaxHorizonRicciScalar"; }
+  using type = double;
+};
+
+struct MaxHorizonRicciScalarCompute : MaxHorizonRicciScalar, db::ComputeTag {
+  static double function(const Scalar<DataVector>& ricci_scalar) {
+    return max(get(ricci_scalar));
+  }
+  using argument_tags = tmpl::list<HorizonRicciScalar>;
+};
+
+struct MinHorizonRicciScalar : db::SimpleTag {
+  static std::string name() noexcept { return "MinHorizonRicciScalar"; }
+  using type = double;
+};
+
+struct MinHorizonRicciScalarCompute : MinHorizonRicciScalar, db::ComputeTag {
+  static double function(const Scalar<DataVector>& ricci_scalar) {
+    return min(get(ricci_scalar));
+  }
+  using argument_tags = tmpl::list<HorizonRicciScalar>;
+};
+
+struct SpatialRicciScalar : db::SimpleTag {
+  static std::string name() noexcept { return "SpatialRicciScalar"; }
+  using type = Scalar<DataVector>;
+};
+
+template <typename Frame>
+struct SpatialRicciScalarCompute : SpatialRicciScalar, db::ComputeTag {
+  static constexpr auto function =
+      &StrahlkorperGr::spatial_ricci_scalar<Frame>;
+  using argument_tags =
+      tmpl::list<gr::Tags::RicciTensor<3, Frame, DataVector>,
+                 gr::Tags::InverseSpatialMetric<3, Frame, DataVector>>;
+};
+
 /// Computes the area element on a Strahlkorper. Useful for integrals.
 template <typename Frame>
 struct AreaElement : db::ComputeTag {
@@ -386,57 +468,6 @@ struct AreaElement : db::ComputeTag {
       gr::Tags::SpatialMetric<3, Frame>, StrahlkorperTags::Jacobian<Frame>,
       StrahlkorperTags::NormalOneForm<Frame>, StrahlkorperTags::Radius<Frame>,
       StrahlkorperTags::Rhat<Frame>>;
-};
-
-struct RicciScalar : db::SimpleTag {
-  static std::string name() noexcept { return "RicciScalar"; }
-  using type = Scalar<DataVector>;
-};
-
-template <typename Frame>
-struct RicciScalarCompute : RicciScalar, db::ComputeTag {
-  static constexpr auto function = &StrahlkorperGr::ricci_scalar<Frame>;
-  using argument_tags =
-      tmpl::list<gr::Tags::RicciTensor<3, Frame, DataVector>,
-                 UnitNormalVector<Frame>, ExtrinsicCurvature<Frame>,
-                 gr::Tags::InverseSpatialMetric<3, Frame, DataVector>>;
-};
-
-struct MaxRicciScalar : db::SimpleTag {
-  static std::string name() noexcept { return "MaxRicciScalar"; }
-  using type = double;
-};
-
-struct MaxRicciScalarCompute : MaxRicciScalar, db::ComputeTag {
-  static double function(const Scalar<DataVector>& ricci_scalar) {
-    return max(get(ricci_scalar));
-  }
-  using argument_tags = tmpl::list<RicciScalar>;
-};
-
-struct MinRicciScalar : db::SimpleTag {
-  static std::string name() noexcept { return "MinRicciScalar"; }
-  using type = double;
-};
-
-struct MinRicciScalarCompute : MinRicciScalar, db::ComputeTag {
-  static double function(const Scalar<DataVector>& ricci_scalar) {
-    return min(get(ricci_scalar));
-  }
-  using argument_tags = tmpl::list<RicciScalar>;
-};
-
-struct RicciScalar3D : db::SimpleTag {
-  static std::string name() noexcept { return "RicciScalar"; }
-  using type = Scalar<DataVector>;
-};
-
-template <typename Frame>
-struct RicciScalar3DCompute : RicciScalar3D, db::ComputeTag {
-  static constexpr auto function = &StrahlkorperGr::ricci_scalar_3d<Frame>;
-  using argument_tags =
-      tmpl::list<gr::Tags::RicciTensor<3, Frame, DataVector>,
-                 gr::Tags::InverseSpatialMetric<3, Frame, DataVector>>;
 };
 
 struct SpinFunction : db::SimpleTag {
@@ -465,9 +496,26 @@ struct DimensionfulSpinMagnitudeCompute :
   static constexpr auto function =
       &StrahlkorperGr::dimensionful_spin_magnitude<Frame>;
   using argument_tags =
-      tmpl::list<RicciScalar, SpinFunction, gr::Tags::SpatialMetric<3, Frame>,
+      tmpl::list<HorizonRicciScalar, SpinFunction,
+                 gr::Tags::SpatialMetric<3, Frame>,
                  StrahlkorperTags::Tangents<Frame>,
                  StrahlkorperTags::YlmSpherepack, AreaElement<Frame>>;
+};
+
+struct SpinVector : db::SimpleTag {
+  static std::string name() noexcept { return "SpinVector"; }
+  using type = std::array<double, 3>;
+};
+
+template <typename Frame>
+struct SpinVectorCompute : SpinVector, db::ComputeTag {
+  static constexpr auto function =
+      &StrahlkorperGr::dimensionful_spin_magnitude<Frame>;
+  using argument_tags =
+      tmpl::list<DimensionfulSpinMagnitude, AreaElement<Frame>,
+                 StrahlkorperTags::Radius<Frame>, StrahlkorperTags::Rhat<Frame>,
+                 HorizonRicciScalar, SpinFunction,
+                 StrahlkorperTags::YlmSpherepack>;
 };
 
 /// Computes the integral of a scalar over a Strahlkorper.

@@ -149,7 +149,7 @@ struct Initialize {
         gr::Tags::TraceSpatialChristoffelFirstKindCompute<Dim, Inertial,
                                                           DataVector>,
         gr::Tags::RicciTensorCompute<Dim, Inertial, DataVector>,
-        StrahlkorperGr::Tags::RicciScalar3DCompute<Inertial>,
+        StrahlkorperGr::Tags::SpatialRicciScalarCompute<Inertial>,
         GeneralizedHarmonic::Tags::ExtrinsicCurvatureCompute<Dim, Inertial>,
         GeneralizedHarmonic::Tags::TraceExtrinsicCurvatureCompute<Dim,
                                                                   Inertial>,
