@@ -352,8 +352,8 @@ struct GradUnitNormalOneForm : db::SimpleTag {
 };
 
 template <typename Frame>
-struct GradUnitNormalOneFormCompute :
-    GradUnitNormalOneForm<Frame>, db::ComputeTag {
+struct GradUnitNormalOneFormCompute : GradUnitNormalOneForm<Frame>,
+                                      db::ComputeTag {
   static constexpr auto function =
       &StrahlkorperGr::grad_unit_normal_one_form<Frame>;
   using argument_tags =
@@ -370,8 +370,8 @@ struct InverseSurfaceMetric : db::SimpleTag {
 };
 
 template <typename Frame>
-struct InverseSurfaceMetricCompute :
-      InverseSurfaceMetric<Frame>, db::ComputeTag {
+struct InverseSurfaceMetricCompute : InverseSurfaceMetric<Frame>,
+                                     db::ComputeTag {
   static constexpr auto function =
       &StrahlkorperGr::inverse_surface_metric<Frame>;
   using argument_tags =
@@ -491,8 +491,8 @@ struct DimensionfulSpinMagnitude : db::SimpleTag {
 };
 
 template <typename Frame>
-struct DimensionfulSpinMagnitudeCompute :
-    DimensionfulSpinMagnitude, db::ComputeTag {
+struct DimensionfulSpinMagnitudeCompute : DimensionfulSpinMagnitude,
+                                          db::ComputeTag {
   static constexpr auto function =
       &StrahlkorperGr::dimensionful_spin_magnitude<Frame>;
   using argument_tags =
@@ -569,8 +569,7 @@ struct ChristodoulouMass : db::SimpleTag {
   using type = double;
 };
 
-struct ChristodoulouMassCompute :
-    ChristodoulouMass, db::ComputeTag {
+struct ChristodoulouMassCompute : ChristodoulouMass, db::ComputeTag {
   static constexpr auto function = &StrahlkorperGr::christodoulou_mass;
   using argument_tags =
       tmpl::list<DimensionfulSpinMagnitude, IrreducibleMass>;
