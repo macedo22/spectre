@@ -509,8 +509,7 @@ struct SpinVector : db::SimpleTag {
 
 template <typename Frame>
 struct SpinVectorCompute : SpinVector, db::ComputeTag {
-  static constexpr auto function =
-      &StrahlkorperGr::dimensionful_spin_magnitude<Frame>;
+  static constexpr auto function = &StrahlkorperGr::spin_vector<Frame>;
   using argument_tags =
       tmpl::list<DimensionfulSpinMagnitude, AreaElement<Frame>,
                  StrahlkorperTags::Radius<Frame>, StrahlkorperTags::Rhat<Frame>,
