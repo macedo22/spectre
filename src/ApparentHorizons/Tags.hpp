@@ -258,6 +258,37 @@ struct UnitNormalVectorCompute : UnitNormalVector<Frame>, db::ComputeTag {
                  UnitNormalOneForm<Frame>>;
 };
 
+template <typename Frame>
+struct GradUnitNormalOneForm : db::SimpleTag {
+  static std::string name() noexcept { return "GradUnitNormalOneForm"; }
+  using type = tnsr::ii<DataVector, 3, Frame>;
+};
+
+template <typename Frame>
+struct GradUnitNormalOneFormCompute :
+    GradUnitNormalOneForm<Frame>, db::ComputeTag {
+  static constexpr auto function =
+      &StrahlkorperGr::grad_unit_normal_one_form<Frame>;
+  using argument_tags =
+      tmpl::list<Rhat<Frame>, Radius<Frame>, UnitNormalOneForm<Frame>,
+                 D2xRadius<Frame>, OneOverOneFormMagnitude,
+                 gr::Tags::SpatialChristoffelSecondKind<3, Frame, DataVector>>;
+};
+
+template <typename Frame>
+struct ExtrinsicCurvature : db::SimpleTag {
+  using type = tnsr::ii<DataVector, 3, Frame>;
+  static std::string name() noexcept { return "ExtrinsicCurvature"; }
+};
+
+template <typename Frame>
+struct ExtrinsicCurvatureCompute : ExtrinsicCurvature<Frame>, db::ComputeTag {
+  static constexpr auto function = &StrahlkorperGr::extrinsic_curvature<Frame>;
+  using argument_tags =
+      tmpl::list<GradUnitNormalOneForm<Frame>, UnitNormalOneForm<Frame>,
+                 UnitNormalVector<Frame>>;
+};
+
 /// `Tangents(i,j)` is \f$\partial x_{\rm surf}^i/\partial q^j\f$,
 /// where \f$x_{\rm surf}^i\f$ are the Cartesian coordinates of the
 /// surface (i.e. `CartesianCoords`) and are considered functions of
@@ -366,7 +397,7 @@ struct RicciScalarCompute : RicciScalar, db::ComputeTag {
   using argument_tags =
       tmpl::list<gr::Tags::RicciTensor<3, Frame, DataVector>,
                  StrahlkorperTags::UnitNormalVector<Frame>,
-                 gr::Tags::ExtrinsicCurvature<3, Frame, DataVector>,
+                 StrahlkorperTags::ExtrinsicCurvature<Frame>,
                  gr::Tags::InverseSpatialMetric<3, Frame, DataVector>>;
 };
 

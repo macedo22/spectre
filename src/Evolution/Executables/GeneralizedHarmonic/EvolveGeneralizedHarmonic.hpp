@@ -184,6 +184,8 @@ struct EvolutionMetavars {
         StrahlkorperTags::OneOverOneFormMagnitudeCompute<domain_frame>,
         StrahlkorperTags::UnitNormalOneFormCompute<domain_frame>,
         StrahlkorperTags::UnitNormalVectorCompute<domain_frame>,
+        StrahlkorperTags::GradUnitNormalOneFormCompute<domain_frame>,
+        StrahlkorperTags::ExtrinsicCurvatureCompute<domain_frame>,
         StrahlkorperGr::Tags::RicciScalarCompute<domain_frame>,
         StrahlkorperGr::Tags::MaxRicciScalarCompute,
         StrahlkorperGr::Tags::MinRicciScalarCompute,
