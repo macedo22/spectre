@@ -181,11 +181,11 @@ struct EvolutionMetavars {
         gr::Tags::SpatialChristoffelSecondKind<domain_dim, domain_frame>,
         gr::Tags::RicciTensor<domain_dim, domain_frame, DataVector>>;
     using compute_items_on_target = tmpl::list<
-        StrahlkorperTags::OneOverOneFormMagnitudeCompute<domain_frame>,
-        StrahlkorperTags::UnitNormalOneFormCompute<domain_frame>,
-        StrahlkorperTags::UnitNormalVectorCompute<domain_frame>,
-        StrahlkorperTags::GradUnitNormalOneFormCompute<domain_frame>,
-        StrahlkorperTags::ExtrinsicCurvatureCompute<domain_frame>,
+        StrahlkorperGr::Tags::OneOverOneFormMagnitudeCompute<domain_frame>,
+        StrahlkorperGr::Tags::UnitNormalOneFormCompute<domain_frame>,
+        StrahlkorperGr::Tags::UnitNormalVectorCompute<domain_frame>,
+        StrahlkorperGr::Tags::GradUnitNormalOneFormCompute<domain_frame>,
+        StrahlkorperGr::Tags::ExtrinsicCurvatureCompute<domain_frame>,
         StrahlkorperGr::Tags::RicciScalarCompute<domain_frame>,
         StrahlkorperGr::Tags::MaxRicciScalarCompute,
         StrahlkorperGr::Tags::MinRicciScalarCompute,

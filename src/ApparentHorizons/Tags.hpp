@@ -209,86 +209,6 @@ struct NormalOneForm : db::ComputeTag {
   using argument_tags = tmpl::list<DxRadius<Frame>, Rhat<Frame>>;
 };
 
-struct OneOverOneFormMagnitude : db::SimpleTag {
-  static std::string name() noexcept { return "OneOverOneFormMagnitude"; }
-  using type = DataVector;
-};
-
-template <typename Frame>
-struct OneOverOneFormMagnitudeCompute : OneOverOneFormMagnitude,
-                                        db::ComputeTag {
-  static DataVector function(
-      const tnsr::II<DataVector, 3, Frame>& inverse_spatial_metric,
-      const tnsr::i<DataVector, 3, Frame>& normal_one_form) noexcept {
-    return 1.0 / get(magnitude(normal_one_form, inverse_spatial_metric));
-  }
-  using argument_tags =
-      tmpl::list<gr::Tags::InverseSpatialMetric<3, Frame, DataVector>,
-                 NormalOneForm<Frame>>;
-};
-
-template <typename Frame>
-struct UnitNormalOneForm : db::SimpleTag {
-  static std::string name() noexcept { return "UnitNormalOneForm"; }
-  using type = tnsr::i<DataVector, 3, Frame>;
-};
-
-template <typename Frame>
-struct UnitNormalOneFormCompute : UnitNormalOneForm<Frame>, db::ComputeTag {
-  static constexpr auto function = &StrahlkorperGr::unit_normal_one_form<Frame>;
-  using argument_tags =
-      tmpl::list<NormalOneForm<Frame>, OneOverOneFormMagnitude>;
-};
-
-template <typename Frame>
-struct UnitNormalVector : db::SimpleTag {
-  static std::string name() noexcept { return "UnitNormalVector"; }
-  using type = tnsr::I<DataVector, 3, Frame>;
-};
-
-template <typename Frame>
-struct UnitNormalVectorCompute : UnitNormalVector<Frame>, db::ComputeTag {
-  static tnsr::I<DataVector, 3, Frame> function(
-      const tnsr::II<DataVector, 3, Frame>& inverse_spatial_metric,
-      const tnsr::i<DataVector, 3, Frame>& unit_normal_one_form) noexcept {
-    return raise_or_lower_index(unit_normal_one_form, inverse_spatial_metric);
-  }
-  using argument_tags =
-      tmpl::list<gr::Tags::InverseSpatialMetric<3, Frame, DataVector>,
-                 UnitNormalOneForm<Frame>>;
-};
-
-template <typename Frame>
-struct GradUnitNormalOneForm : db::SimpleTag {
-  static std::string name() noexcept { return "GradUnitNormalOneForm"; }
-  using type = tnsr::ii<DataVector, 3, Frame>;
-};
-
-template <typename Frame>
-struct GradUnitNormalOneFormCompute :
-    GradUnitNormalOneForm<Frame>, db::ComputeTag {
-  static constexpr auto function =
-      &StrahlkorperGr::grad_unit_normal_one_form<Frame>;
-  using argument_tags =
-      tmpl::list<Rhat<Frame>, Radius<Frame>, UnitNormalOneForm<Frame>,
-                 D2xRadius<Frame>, OneOverOneFormMagnitude,
-                 gr::Tags::SpatialChristoffelSecondKind<3, Frame, DataVector>>;
-};
-
-template <typename Frame>
-struct ExtrinsicCurvature : db::SimpleTag {
-  using type = tnsr::ii<DataVector, 3, Frame>;
-  static std::string name() noexcept { return "ExtrinsicCurvature"; }
-};
-
-template <typename Frame>
-struct ExtrinsicCurvatureCompute : ExtrinsicCurvature<Frame>, db::ComputeTag {
-  static constexpr auto function = &StrahlkorperGr::extrinsic_curvature<Frame>;
-  using argument_tags =
-      tmpl::list<GradUnitNormalOneForm<Frame>, UnitNormalOneForm<Frame>,
-                 UnitNormalVector<Frame>>;
-};
-
 /// `Tangents(i,j)` is \f$\partial x_{\rm surf}^i/\partial q^j\f$,
 /// where \f$x_{\rm surf}^i\f$ are the Cartesian coordinates of the
 /// surface (i.e. `CartesianCoords`) and are considered functions of
@@ -375,6 +295,88 @@ namespace StrahlkorperGr {
 /// also need a metric.
 namespace Tags {
 
+struct OneOverOneFormMagnitude : db::SimpleTag {
+  static std::string name() noexcept { return "OneOverOneFormMagnitude"; }
+  using type = DataVector;
+};
+
+template <typename Frame>
+struct OneOverOneFormMagnitudeCompute : OneOverOneFormMagnitude,
+                                        db::ComputeTag {
+  static DataVector function(
+      const tnsr::II<DataVector, 3, Frame>& inverse_spatial_metric,
+      const tnsr::i<DataVector, 3, Frame>& normal_one_form) noexcept {
+    return 1.0 / get(magnitude(normal_one_form, inverse_spatial_metric));
+  }
+  using argument_tags =
+      tmpl::list<gr::Tags::InverseSpatialMetric<3, Frame, DataVector>,
+                 StrahlkorperTags::NormalOneForm<Frame>>;
+};
+
+template <typename Frame>
+struct UnitNormalOneForm : db::SimpleTag {
+  static std::string name() noexcept { return "UnitNormalOneForm"; }
+  using type = tnsr::i<DataVector, 3, Frame>;
+};
+
+template <typename Frame>
+struct UnitNormalOneFormCompute : UnitNormalOneForm<Frame>, db::ComputeTag {
+  static constexpr auto function = &StrahlkorperGr::unit_normal_one_form<Frame>;
+  using argument_tags =
+      tmpl::list<StrahlkorperTags::NormalOneForm<Frame>,
+                 OneOverOneFormMagnitude>;
+};
+
+template <typename Frame>
+struct UnitNormalVector : db::SimpleTag {
+  static std::string name() noexcept { return "UnitNormalVector"; }
+  using type = tnsr::I<DataVector, 3, Frame>;
+};
+
+template <typename Frame>
+struct UnitNormalVectorCompute : UnitNormalVector<Frame>, db::ComputeTag {
+  static tnsr::I<DataVector, 3, Frame> function(
+      const tnsr::II<DataVector, 3, Frame>& inverse_spatial_metric,
+      const tnsr::i<DataVector, 3, Frame>& unit_normal_one_form) noexcept {
+    return raise_or_lower_index(unit_normal_one_form, inverse_spatial_metric);
+  }
+  using argument_tags =
+      tmpl::list<gr::Tags::InverseSpatialMetric<3, Frame, DataVector>,
+                 UnitNormalOneForm<Frame>>;
+};
+
+template <typename Frame>
+struct GradUnitNormalOneForm : db::SimpleTag {
+  static std::string name() noexcept { return "GradUnitNormalOneForm"; }
+  using type = tnsr::ii<DataVector, 3, Frame>;
+};
+
+template <typename Frame>
+struct GradUnitNormalOneFormCompute :
+    GradUnitNormalOneForm<Frame>, db::ComputeTag {
+  static constexpr auto function =
+      &StrahlkorperGr::grad_unit_normal_one_form<Frame>;
+  using argument_tags =
+      tmpl::list<StrahlkorperTags::Rhat<Frame>,
+                 StrahlkorperTags::Radius<Frame>, UnitNormalOneForm<Frame>,
+                 StrahlkorperTags::D2xRadius<Frame>, OneOverOneFormMagnitude,
+                 gr::Tags::SpatialChristoffelSecondKind<3, Frame, DataVector>>;
+};
+
+template <typename Frame>
+struct ExtrinsicCurvature : db::SimpleTag {
+  using type = tnsr::ii<DataVector, 3, Frame>;
+  static std::string name() noexcept { return "ExtrinsicCurvature"; }
+};
+
+template <typename Frame>
+struct ExtrinsicCurvatureCompute : ExtrinsicCurvature<Frame>, db::ComputeTag {
+  static constexpr auto function = &StrahlkorperGr::extrinsic_curvature<Frame>;
+  using argument_tags =
+      tmpl::list<GradUnitNormalOneForm<Frame>, UnitNormalOneForm<Frame>,
+                 UnitNormalVector<Frame>>;
+};
+
 /// Computes the area element on a Strahlkorper. Useful for integrals.
 template <typename Frame>
 struct AreaElement : db::ComputeTag {
@@ -396,8 +398,7 @@ struct RicciScalarCompute : RicciScalar, db::ComputeTag {
   static constexpr auto function = &StrahlkorperGr::ricci_scalar<Frame>;
   using argument_tags =
       tmpl::list<gr::Tags::RicciTensor<3, Frame, DataVector>,
-                 StrahlkorperTags::UnitNormalVector<Frame>,
-                 StrahlkorperTags::ExtrinsicCurvature<Frame>,
+                 UnitNormalVector<Frame>, ExtrinsicCurvature<Frame>,
                  gr::Tags::InverseSpatialMetric<3, Frame, DataVector>>;
 };
 
@@ -448,8 +449,7 @@ struct SpinFunctionCompute : SpinFunction, db::ComputeTag {
   static constexpr auto function = &StrahlkorperGr::spin_function<Frame>;
   using argument_tags =
       tmpl::list<StrahlkorperTags::Tangents<Frame>,
-                 StrahlkorperTags::YlmSpherepack,
-                 StrahlkorperTags::UnitNormalVector<Frame>,
+                 StrahlkorperTags::YlmSpherepack, UnitNormalVector<Frame>,
                  AreaElement<Frame>,
                  gr::Tags::ExtrinsicCurvature<3, Frame, DataVector>>;
 };
