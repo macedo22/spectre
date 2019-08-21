@@ -295,6 +295,8 @@ namespace StrahlkorperGr {
 /// also need a metric.
 namespace Tags {
 
+/// Computes one over the magnitude of \f$s^j\f$.
+
 struct OneOverOneFormMagnitude : db::SimpleTag {
   static std::string name() noexcept { return "OneOverOneFormMagnitude"; }
   using type = DataVector;
@@ -313,6 +315,20 @@ struct OneOverOneFormMagnitudeCompute : OneOverOneFormMagnitude,
                  StrahlkorperTags::NormalOneForm<Frame>>;
 };
 
+/// See Eqs. (1--9) of \cite Baumgarte1996hh.
+/// Here \f$S_j\f$ is the (normalized) unit one-form to the surface,
+/// and \f$D_i\f$ is the spatial covariant derivative.  Note that this
+/// object is symmetric, even though this is not obvious from the
+/// definition.  The input arguments `r_hat`, `radius`, and
+/// `d2x_radius` depend on the Strahlkorper but not on the metric, and
+/// can be computed from a Strahlkorper using ComputeItems in
+/// `StrahlkorperTags`.  The input argument
+/// `one_over_one_form_magnitude` is \f$1/\sqrt{g^{ij}n_i n_j}\f$,
+/// where \f$n_i\f$ is `StrahlkorperTags::NormalOneForm` (i.e.  the
+/// unnormalized one-form to the Strahlkorper); it can be computed
+/// using (one over) the `magnitude` function.  The input argument
+/// `unit_normal_one_form` is \f$S_j\f$,the normalized one-form.
+
 template <typename Frame>
 struct UnitNormalOneForm : db::SimpleTag {
   static std::string name() noexcept { return "UnitNormalOneForm"; }
@@ -326,6 +342,8 @@ struct UnitNormalOneFormCompute : UnitNormalOneForm<Frame>, db::ComputeTag {
       tmpl::list<StrahlkorperTags::NormalOneForm<Frame>,
                  OneOverOneFormMagnitude>;
 };
+/// UnitNormalVector is defined as f$S^i = g^{ij} S_j\f$,
+/// where \f$S_j\f$ is the unit normal one form.
 
 template <typename Frame>
 struct UnitNormalVector : db::SimpleTag {
@@ -362,6 +380,7 @@ struct GradUnitNormalOneFormCompute : GradUnitNormalOneForm<Frame>,
                  StrahlkorperTags::D2xRadius<Frame>, OneOverOneFormMagnitude,
                  gr::Tags::SpatialChristoffelSecondKind<3, Frame, DataVector>>;
 };
+
 
 template <typename Frame>
 struct InverseSurfaceMetric : db::SimpleTag {
@@ -470,6 +489,9 @@ struct AreaElement : db::ComputeTag {
       StrahlkorperTags::Rhat<Frame>>;
 };
 
+/// Calculates the spin function, \f$\Omega\f$, a component of the spin
+/// vector.
+
 struct SpinFunction : db::SimpleTag {
   static std::string name() noexcept { return "SpinFunction"; }
   using type = Scalar<DataVector>;
@@ -484,6 +506,36 @@ struct SpinFunctionCompute : SpinFunction, db::ComputeTag {
                  AreaElement<Frame>,
                  gr::Tags::ExtrinsicCurvature<3, Frame, DataVector>>;
 };
+
+/// Measures the quasilocal spin magnitude of a Strahlkorper, by
+/// inserting \f$\alpha=1\f$ into Eq. (10) of \cite Owen2009sb
+/// and dividing by \f$8\pi\f$ to yield the spin magnitude. The
+/// spin magnitude is a Euclidean norm of surface integrals over the horizon
+/// \f$S = \frac{1}{8\pi}\oint z \Omega dA\f$,
+/// where \f$\Omega\f$ is obtained via `StrahlkorperGr::spin_function()`,
+/// \f$dA\f$ is the area element, and \f$z\f$ (the "spin potential") is a
+/// solution of a generalized eigenproblem given by Eq. (9) of
+/// \cite Owen2009sb. Specifically,
+/// \f$\nabla^4 z + \nabla \cdot (R\nabla z) = \lambda \nabla^2 z\f$, where
+/// \f$R\f$ is obtained via `StrahlkorperGr::ricci_scalar()`. The spin
+/// magnitude is the Euclidean norm of the three values of \f$S\f$ obtained from
+/// the eigenvectors \f$z\f$ with the 3 smallest-magnitude
+/// eigenvalues \f$\lambda\f$. Note that this formulation of the eigenproblem
+/// uses the "Owen" normalization, Eq. (A9) and surrounding discussion in
+/// \cite Lovelace2008tw.
+/// The eigenvectors are normalized  with the "Kerr normalization",
+/// Eq. (A22) of \cite Lovelace2008tw.
+/// The argument `spatial_metric` is the metric of the 3D spatial slice
+/// evaluated on the `Strahlkorper`.
+/// The argument `tangents` can be obtained from the StrahlkorperDataBox
+/// using the `StrahlkorperTags::Tangents` tag, and the argument
+/// `unit_normal_vector` can
+/// be found by raising the index of the one-form returned by
+/// `StrahlkorperGr::unit_normal_one_form`.
+/// The argument `ylm` is the `YlmSpherepack` of the `Strahlkorper`.
+/// The argument `area_element`
+/// can be computed via `StrahlkorperGr::area_element`.
+
 
 struct DimensionfulSpinMagnitude : db::SimpleTag {
   static std::string name() noexcept { return "DimensionfulSpinMagnitude"; }
@@ -548,6 +600,8 @@ struct Unity : db::ComputeTag {
   using argument_tags = tmpl::list<AreaElement<Frame::Inertial>>;
 };
 
+/// Computes the area of a horizon as a double.
+
 struct Area : db::SimpleTag {
   static std::string name() noexcept { return "Area"; }
   using type = double;
@@ -564,6 +618,10 @@ struct AreaCompute : Area, db::ComputeTag {
       tmpl::list<StrahlkorperTags::Strahlkorper<Frame>, AreaElement<Frame>>;
 };
 
+/// See Eqs. (15.38) \cite Hartle2003gravity. This function computes the
+/// irreducible mass from the area of a horizon. Specifically, computes
+/// \f$M_\mathrm{irr}=\sqrt{\frac{A}{16\pi}}\f$.
+
 struct IrreducibleMass : db::SimpleTag {
   static std::string name() noexcept { return "IrreducibleMass"; }
   using type = double;
@@ -574,6 +632,11 @@ struct IrreducibleMassCompute : IrreducibleMass, db::ComputeTag {
   static constexpr auto function = &irreducible_mass;
   using argument_tags = tmpl::list<AreaCompute<Frame>>;
 };
+
+/// See e.g. Eq. (1) of \cite Lovelace2016uwp. This function computes the
+/// Christodoulou mass from the dimensionful spin angular momentum \f$S\f$
+/// and the irreducible mass \f$M_{irr}\f$ of a black hole horizon.
+/// Specifically, computes \f$M=\sqrt{M_{irr}^2+\frac{S^2}{4M_{irr}^2}}\f$.
 
 struct ChristodoulouMass : db::SimpleTag {
   static std::string name() noexcept { return "ChristodoulouMass"; }
