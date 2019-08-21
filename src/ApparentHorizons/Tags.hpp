@@ -19,6 +19,7 @@
 #include "PointwiseFunctions/GeneralRelativity/Tags.hpp"
 #include "PointwiseFunctions/GeneralRelativity/TagsDeclarations.hpp"  // IWYU pragma: keep
 #include "Utilities/ForceInline.hpp"
+#include "Utilities/Gsl.hpp"
 #include "Utilities/TMPL.hpp"
 
 // IWYU pragma: no_forward_declare gr::Tags::SpatialMetric
@@ -526,6 +527,52 @@ struct DimensionfulSpinVectorCompute : DimensionfulSpinVector, db::ComputeTag {
                  StrahlkorperTags::Radius<Frame>, StrahlkorperTags::Rhat<Frame>,
                  HorizonRicciScalar, SpinFunction,
                  StrahlkorperTags::YlmSpherepack>;
+};
+
+struct DimensionfulSpinVectorComp1 : db::SimpleTag {
+  static std::string name() noexcept { return "DimensionfulSpinVectorComp1"; }
+  using type = double;
+};
+
+struct DimensionfulSpinVectorComp1Compute : DimensionfulSpinVectorComp1,
+                                          db::ComputeTag {
+  static double function(const std::array<double, 3>& dimensionful_spin_vector)
+      noexcept {
+    return gsl::at(dimensionful_spin_vector, 1);
+  }
+  using argument_tags =
+      tmpl::list<DimensionfulSpinVector>;
+};
+
+
+struct DimensionfulSpinVectorComp2 : db::SimpleTag {
+  static std::string name() noexcept { return "DimensionfulSpinVectorComp2"; }
+  using type = double;
+};
+
+struct DimensionfulSpinVectorComp2Compute : DimensionfulSpinVectorComp2,
+                                          db::ComputeTag {
+  static double function(const std::array<double, 3>& dimensionful_spin_vector)
+      noexcept {
+    return gsl::at(dimensionful_spin_vector, 2);
+  }
+  using argument_tags =
+      tmpl::list<DimensionfulSpinVector>;
+};
+
+struct DimensionfulSpinVectorComp3 : db::SimpleTag {
+  static std::string name() noexcept { return "DimensionfulSpinVectorComp3"; }
+  using type = double;
+};
+
+struct DimensionfulSpinVectorComp3Compute : DimensionfulSpinVectorComp3,
+                                          db::ComputeTag {
+  static double function(const std::array<double, 3>& dimensionful_spin_vector)
+      noexcept {
+    return gsl::at(dimensionful_spin_vector, 3);
+  }
+  using argument_tags =
+      tmpl::list<DimensionfulSpinVector>;
 };
 
 /// Computes the integral of a scalar over a Strahlkorper.
