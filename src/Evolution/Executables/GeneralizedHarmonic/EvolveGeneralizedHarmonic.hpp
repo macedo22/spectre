@@ -167,6 +167,7 @@ struct EvolutionMetavars {
         StrahlkorperGr::Tags::Area, StrahlkorperGr::Tags::IrreducibleMass,
         StrahlkorperGr::Tags::MaxHorizonRicciScalar,
         StrahlkorperGr::Tags::MinHorizonRicciScalar,
+        StrahlkorperGr::Tags::DimensionfulSpinMagnitude,
         StrahlkorperGr::Tags::ChristodoulouMass>;
     using compute_items_on_source = tmpl::list<
         gr::Tags::SpatialMetricCompute<domain_dim, domain_frame, DataVector>,
@@ -198,6 +199,7 @@ struct EvolutionMetavars {
         StrahlkorperTags::YlmSpherepackCompute<domain_frame>,
         StrahlkorperGr::Tags::SpinFunctionCompute<domain_frame>,
         StrahlkorperGr::Tags::DimensionfulSpinMagnitudeCompute<domain_frame>,
+        StrahlkorperGr::Tags::DimensionfulSpinVectorCompute<domain_frame>,
         StrahlkorperGr::Tags::ChristodoulouMassCompute>;
     using compute_target_points =
         intrp::Actions::ApparentHorizon<Horizon, ::Frame::Inertial>;

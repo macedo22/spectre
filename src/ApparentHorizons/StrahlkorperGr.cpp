@@ -676,7 +676,7 @@ double dimensionful_spin_magnitude(
 }
 
 template <typename Frame>
-std::array<double, 3> spin_vector(const double spin_magnitude,
+std::array<double, 3> spin_vector(const double& spin_magnitude,
                                   const Scalar<DataVector>& area_element,
                                   const Scalar<DataVector>& radius,
                                   const tnsr::i<DataVector, 3, Frame>& r_hat,
@@ -803,7 +803,7 @@ template double StrahlkorperGr::dimensionful_spin_magnitude<Frame::Inertial>(
     const YlmSpherepack& ylm, const Scalar<DataVector>& area_element) noexcept;
 
 template std::array<double, 3> StrahlkorperGr::spin_vector<Frame::Inertial>(
-    const double spin_magnitude, const Scalar<DataVector>& area_element,
+    const double& spin_magnitude, const Scalar<DataVector>& area_element,
     const Scalar<DataVector>& radius,
     const tnsr::i<DataVector, 3, Frame::Inertial>& r_hat,
     const Scalar<DataVector>& ricci_scalar,

@@ -502,14 +502,25 @@ struct DimensionfulSpinMagnitudeCompute : DimensionfulSpinMagnitude,
                  StrahlkorperTags::YlmSpherepack, AreaElement<Frame>>;
 };
 
-struct SpinVector : db::SimpleTag {
-  static std::string name() noexcept { return "SpinVector"; }
+struct DimensionfulSpinVector : db::SimpleTag {
+  static std::string name() noexcept { return "DimensionfulSpinVector"; }
   using type = std::array<double, 3>;
 };
 
 template <typename Frame>
-struct SpinVectorCompute : SpinVector, db::ComputeTag {
-  static constexpr auto function = &StrahlkorperGr::spin_vector<Frame>;
+struct DimensionfulSpinVectorCompute : DimensionfulSpinVector, db::ComputeTag {
+  static std::array<double, 3> function(
+      const double& dimensionful_spin_magnitude,
+      const Scalar<DataVector>& area_element, const DataVector& radius,
+      const tnsr::i<DataVector, 3, Frame>& r_hat,
+      const Scalar<DataVector>& ricci_scalar,
+      const Scalar<DataVector>& spin_function,
+      const YlmSpherepack& ylm) noexcept {
+    return StrahlkorperGr::spin_vector<Frame>(
+        dimensionful_spin_magnitude, area_element,
+        Scalar<DataVector>{std::move(radius)}, r_hat, ricci_scalar,
+        spin_function, ylm);
+  }
   using argument_tags =
       tmpl::list<DimensionfulSpinMagnitude, AreaElement<Frame>,
                  StrahlkorperTags::Radius<Frame>, StrahlkorperTags::Rhat<Frame>,

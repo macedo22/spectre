@@ -344,7 +344,7 @@ double dimensionful_spin_magnitude(
  * is the product of `StrahlkorperTags::Rhat` and `StrahlkorperTags::Radius`.
  */
 template <typename Frame>
-std::array<double, 3> spin_vector(double spin_magnitude,
+std::array<double, 3> spin_vector(const double& spin_magnitude,
                                   const Scalar<DataVector>& area_element,
                                   const Scalar<DataVector>& radius,
                                   const tnsr::i<DataVector, 3, Frame>& r_hat,
