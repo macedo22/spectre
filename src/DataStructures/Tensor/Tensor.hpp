@@ -153,8 +153,11 @@ class Tensor<X, Symm, IndexList<Indices...>> {
         "evaluate<_a_t, _b_t>(G); if G has 2 free indices and you want "
         "the LHS of the equation to be F_{ab} rather than F_{ba}.");
     for (size_t i = 0; i < size(); ++i) {
-      gsl::at(data_, i) = tensor_expression.template get<LhsIndices...>(
-          structure::get_canonical_tensor_index(i));
+      gsl::at(data_, i) =
+          tensor_expression.template get<structure, LhsIndices...>(i);
+          // why was the AddSubtract test still passing when I had the below
+          // line instead but with these 2 template parameters above? :
+          // structure::get_canonical_tensor_index(i)
     }
   }
   /// \endcond

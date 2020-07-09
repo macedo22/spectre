@@ -6,12 +6,39 @@
 #include <cstddef>
 #include <iterator>
 #include <numeric>
+#include <iostream> // REMOVE
 
 #include "DataStructures/Tensor/Expressions/AddSubtract.hpp"
 #include "DataStructures/Tensor/Expressions/Evaluate.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Utilities/TMPL.hpp"
+
+SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.NewGet",
+                  "[DataStructures][Unit]") {
+  Tensor<double, Symmetry<1, 1>,
+         index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
+      All{};
+  std::iota(All.begin(), All.end(), 0.0);
+  /*Tensor<double, Symmetry<2, 1>,
+         index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
+      Hll{};
+  std::iota(Hll.begin(), Hll.end(), 0.0);
+
+  auto All_Exp = All(ti_a, ti_b);*/
+
+  //auto result = TensorExpressions::evaluate<ti_a_t, ti_b_t>(All(ti_a, ti_b));
+
+  /*using LhsStructure = Tensor_detail::Structure<Symmetry<1, 1>,
+                           SpatialIndex<3, UpLo::Lo, Frame::Grid>,
+                           SpatialIndex<3, UpLo::Lo, Frame::Grid>>;
+  for (int i = 0; i < 4; ++i) {
+      std::cout << All_Exp.template get<LhsStructure>(i) << std::endl;
+  }*/
+
+}
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.AddSubtract",
                   "[DataStructures][Unit]") {

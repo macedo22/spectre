@@ -8,7 +8,9 @@
 
 #include <array>
 #include <cstddef>
+#include <iostream>                                                                   //remove
 
+#include "DataStructures/Tensor/Structure.hpp"
 #include "ErrorHandling/Assert.hpp"  // IWYU pragma: keep
 #include "Utilities/ForceInline.hpp"
 #include "Utilities/Requires.hpp"
@@ -290,22 +292,27 @@ template <typename Derived, typename DataType, typename Symm,
 struct TensorExpression;
 /// \endcond
 
-template <typename Derived, typename DataType, typename Symm,
+/*template <typename Derived, typename DataType, typename Symm,
           typename IndexList, template <typename...> class ArgsList,
+          typename... Args>*/
+template <typename Derived, typename DataType, typename Symm,
+          typename... Indices, template <typename...> class ArgsList,
           typename... Args>
-struct TensorExpression<Derived, DataType, Symm, IndexList, ArgsList<Args...>>
-    : public Expression {
+struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
+                        ArgsList<Args...>> {
   static_assert(sizeof...(Args) == 0 or
-                    sizeof...(Args) == tmpl::size<IndexList>::value,
+                sizeof...(Args) == tmpl::size<tmpl::list<Indices...>>::value,
                 "the number of Tensor indices must match the number of "
                 "components specified in an expression.");
   using type = DataType;
   using symmetry = Symm;
-  using index_list = IndexList;
+  //using index_list = IndexList;
+  using index_list = tmpl::list<Indices...>;
   static constexpr auto num_tensor_indices =
       tmpl::size<index_list>::value == 0 ? 1 : tmpl::size<index_list>::value;
   /// Typelist of the tensor indices, e.g. `_a_t` and `_b_t` in `F(_a, _b)`
   using args_list = ArgsList<Args...>;
+  using structure = Tensor_detail::Structure<symmetry, Indices...>;
 
   // @{
   /// If Derived is a TensorExpression, it is casted down to the derived
@@ -428,6 +435,60 @@ struct TensorExpression<Derived, DataType, Symm, IndexList, ArgsList<Args...>>
     }
   }
 
+  template <size_t NumberOfIndices>
+  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, NumberOfIndices>
+  compute_rhs_tensor_index (
+      const std::array<size_t, NumberOfIndices>& lhs_index_order,
+      const std::array<size_t, NumberOfIndices>& rhs_index_order,
+      const std::array<size_t, NumberOfIndices>& lhs_tensor_index) noexcept {
+    // lhs_index_order <a, b>
+    // rhs_index_order <b, a>
+    std::array<size_t, NumberOfIndices> rhs_tensor_index{};
+    for (size_t i = 0; i < NumberOfIndices; ++i) {
+      rhs_tensor_index[lhs_index_order[i]] =
+          lhs_tensor_index[rhs_index_order[i]];
+    }
+    return rhs_tensor_index;
+  }
+
+  // add structure alias to this file
+  template <typename LhsStructure, typename... LhsIndices>
+  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t,
+                                                    LhsStructure::size()>
+  compute_map() noexcept {
+    constexpr size_t num_components = LhsStructure::size();
+    constexpr size_t rank = LhsStructure::rank();
+    std::array<size_t, num_components> map{};
+    auto LhsStorageToTensorIndices = LhsStructure::storage_to_tensor_index();
+    for (size_t lhs_storage_index = 0; lhs_storage_index < num_components;
+         ++lhs_storage_index) {
+      map[lhs_storage_index] =
+           structure::get_storage_index(
+              compute_rhs_tensor_index<rank>(
+                  {{LhsIndices::value...}}, // LhsIndices ti_a, ti_b, ...
+                  {{Indices::value...}}, // Indices ti_a, ti_b, ...
+                  LhsStorageToTensorIndices[lhs_storage_index]));
+        //LhsStructure::get_canonical_tensor_index(lhs_storage_index)));
+    }
+    return map;
+  }
+
+  // LhsIndices = {ti_a, ti_b, ti_c} with evaluate - my own notes, remove
+  template <typename LhsStructure, typename... LhsIndices>
+  SPECTRE_ALWAYS_INLINE type
+  get(const size_t lhs_storage_index) const noexcept {
+    if constexpr (tt::is_a<Tensor, Derived>::value) {
+      constexpr std::array<size_t,
+                           LhsStructure::size()>
+          map = compute_map<LhsStructure, LhsIndices...>();
+      return t_[map[lhs_storage_index]][0];
+    } else {
+      return static_cast<const Derived&>(*this).template get<LhsStructure,
+                                                             LhsIndices...>(
+          lhs_storage_index);
+    }
+  }
+
   /// Retrieve the i'th entry of the Tensor being held
   template <typename V = Derived,
             Requires<tt::is_a<Tensor, V>::value> = nullptr>
@@ -447,7 +508,7 @@ struct TensorExpression<Derived, DataType, Symm, IndexList, ArgsList<Args...>>
   ///
   /// We need to store a pointer to the Tensor in a member variable in order
   /// to be able to access the data when later evaluating the tensor expression.
-  explicit TensorExpression(const Tensor<DataType, Symm, IndexList>& t)
+  explicit TensorExpression(const Tensor<DataType, Symm, index_list>& t)
       : t_(&t) {}
 
  private:
