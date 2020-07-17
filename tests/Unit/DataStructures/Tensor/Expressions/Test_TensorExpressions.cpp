@@ -25,11 +25,21 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.NewGet",
          index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
                     SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
       Hll{};
-  std::iota(Hll.begin(), Hll.end(), 0.0);
+  std::iota(Hll.begin(), Hll.end(), 0.0);*/
 
-  auto All_Exp = All(ti_a, ti_b);*/
+  //auto All_Exp = All(ti_a, ti_b);
 
-  //auto result = TensorExpressions::evaluate<ti_a_t, ti_b_t>(All(ti_a, ti_b));
+  auto result1 = TensorExpressions::evaluate<ti_a_t, ti_b_t>(All(ti_a, ti_b));
+
+  auto result2 = TensorExpressions::evaluate<ti_a_t, ti_b_t>(All(ti_b, ti_a));
+
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      CHECK(result1.get(i, j) == All.get(i, j));
+      CHECK(result2.get(j, i) == All.get(i, j));
+      CHECK(result1.get(j, i) == result2.get(i, j));
+    }
+  }
 
   /*using LhsStructure = Tensor_detail::Structure<Symmetry<1, 1>,
                            SpatialIndex<3, UpLo::Lo, Frame::Grid>,
@@ -37,6 +47,8 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.NewGet",
   for (int i = 0; i < 4; ++i) {
       std::cout << All_Exp.template get<LhsStructure>(i) << std::endl;
   }*/
+
+  CHECK(2 == 2);
 
 }
 

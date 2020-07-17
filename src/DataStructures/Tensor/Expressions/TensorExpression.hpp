@@ -299,7 +299,7 @@ template <typename Derived, typename DataType, typename Symm,
           typename... Indices, template <typename...> class ArgsList,
           typename... Args>
 struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
-                        ArgsList<Args...>> {
+                        ArgsList<Args...>> : public Expression {
   static_assert(sizeof...(Args) == 0 or
                 sizeof...(Args) == tmpl::size<tmpl::list<Indices...>>::value,
                 "the number of Tensor indices must match the number of "
@@ -466,7 +466,7 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
            structure::get_storage_index(
               compute_rhs_tensor_index<rank>(
                   {{LhsIndices::value...}}, // LhsIndices ti_a, ti_b, ...
-                  {{Indices::value...}}, // Indices ti_a, ti_b, ...
+                  {{Args::value...}}, // Indices ti_a, ti_b, ...
                   LhsStorageToTensorIndices[lhs_storage_index]));
         //LhsStructure::get_canonical_tensor_index(lhs_storage_index)));
     }
@@ -481,7 +481,7 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
       constexpr std::array<size_t,
                            LhsStructure::size()>
           map = compute_map<LhsStructure, LhsIndices...>();
-      return t_[map[lhs_storage_index]][0];
+      return (*t_)[map[lhs_storage_index]];
     } else {
       return static_cast<const Derived&>(*this).template get<LhsStructure,
                                                              LhsIndices...>(

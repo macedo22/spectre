@@ -496,9 +496,9 @@ struct Structure {
   }
 
   /// Get the array of tensor_index's corresponding to the storage_index's.
-  SPECTRE_ALWAYS_INLINE static constexpr const std::array<
-      std::array<size_t, sizeof...(Indices) == 0 ? 1 : sizeof...(Indices)>,
-      size()>&
+  SPECTRE_ALWAYS_INLINE static constexpr cpp17::array<
+      cpp17::array<size_t, sizeof...(Indices) == 0 ? 1 : sizeof...(Indices)>,
+      size()>
   storage_to_tensor_index() noexcept {
     constexpr auto storage_to_tensor = storage_to_tensor_;
     return storage_to_tensor;
