@@ -247,11 +247,13 @@ void test_compute_rhs_tensor_index_rank_3_helper(
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
                   "[DataStructures][Unit]") {
-  using IndexListRank2 = index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
-                                    SpatialIndex<3, UpLo::Lo, Frame::Grid>>;
+  const size_t num_indices_rank_2 = 3;
+  using IndexListRank2 =
+      index_list<SpatialIndex<num_indices_rank_2, UpLo::Lo, Frame::Grid>,
+                 SpatialIndex<num_indices_rank_2, UpLo::Lo, Frame::Grid>>;
 
-  for (size_t i = 0; i < 3; i++) {
-    for (size_t j = 0; j < 3; j++) {
+  for (size_t i = 0; i < num_indices_rank_2; i++) {
+    for (size_t j = 0; j < num_indices_rank_2; j++) {
       test_compute_rhs_tensor_index_rank_2_helper<
           double, Symmetry<1, 1>, IndexListRank2, ti_a_t, ti_b_t>(ti_a, ti_b, i,
                                                                   j);
@@ -273,13 +275,15 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
     }
   }
 
-  using IndexListRank3 = index_list<SpatialIndex<5, UpLo::Lo, Frame::Grid>,
-                                    SpatialIndex<5, UpLo::Lo, Frame::Grid>,
-                                    SpatialIndex<5, UpLo::Lo, Frame::Grid>>;
+  const size_t num_indices_rank_3 = 5;
+  using IndexListRank3 =
+      index_list<SpatialIndex<num_indices_rank_3, UpLo::Lo, Frame::Grid>,
+                 SpatialIndex<num_indices_rank_3, UpLo::Lo, Frame::Grid>,
+                 SpatialIndex<num_indices_rank_3, UpLo::Lo, Frame::Grid>>;
 
-  for (size_t i = 0; i < 5; i++) {
-    for (size_t j = 0; j < 5; j++) {
-      for (size_t k = 0; k < 5; k++) {
+  for (size_t i = 0; i < num_indices_rank_3; i++) {
+    for (size_t j = 0; j < num_indices_rank_3; j++) {
+      for (size_t k = 0; k < num_indices_rank_3; k++) {
         test_compute_rhs_tensor_index_rank_3_helper<
             double, Symmetry<1, 1, 1>, IndexListRank3, ti_a_t, ti_b_t, ti_c_t>(
             ti_a, ti_b, ti_c, i, j, k);
