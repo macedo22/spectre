@@ -24,6 +24,47 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.StorageGet",
   auto result1 = TensorExpressions::evaluate<ti_a_t, ti_b_t>(All(ti_a, ti_b));
 
   auto result2 = TensorExpressions::evaluate<ti_a_t, ti_b_t>(All(ti_b, ti_a));
+
+  auto result3 = TensorExpressions::evaluate<ti_b_t, ti_a_t>(All(ti_a, ti_b));
+
+  auto result4 = TensorExpressions::evaluate<ti_b_t, ti_a_t>(All(ti_b, ti_a));
+
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      CHECK(result1.get(i, j) == All.get(i, j));
+      CHECK(result2.get(j, i) == All.get(i, j));
+      CHECK(result3.get(j, i) == All.get(i, j));
+      CHECK(result4.get(i, j) == All.get(i, j));
+
+      CHECK(result1.get(j, i) == result2.get(i, j));
+      CHECK(result1.get(j, i) == result2.get(i, j));
+      CHECK(result1.get(i, j) == result4.get(i, j));
+      CHECK(result2.get(i, j) == result3.get(i, j));
+      CHECK(result2.get(j, i) == result4.get(i, j));
+      CHECK(result3.get(j, i) == result4.get(i, j));
+    }
+  }
+
+  Tensor<double, Symmetry<2, 1, 2>,
+         index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpatialIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
+      Auul{};
+
+  auto result5 = TensorExpressions::evaluate<ti_G_t, ti_B_t, ti_d_t>(
+      Auul(ti_G, ti_B, ti_d));
+  auto result6 = TensorExpressions::evaluate<ti_G_t, ti_B_t, ti_d_t>(
+      Auul(ti_d, ti_G, ti_B));
+
+  for (size_t i = 0; i < 3; ++i) {
+    for (size_t j = 0; j < 3; ++j) {
+      for (size_t k = 0; k < 3; k++) {
+        CHECK(result5.get(i, j, k) == Auul.get(i, j, k));
+        CHECK(result6.get(j, k, i) == Auul.get(i, j, k));
+        CHECK(result5.get(i, j, k) == result6.get(j, k, i));
+      }
+    }
+  }
 }
 
 template <typename Datatype, typename Symmetry, typename IndexList,
@@ -244,6 +285,57 @@ void test_compute_rhs_tensor_index_rank_3_helper(
               index_order_cba, index_order_cba, {{i, j, k}}) == ijk);
   }
 }
+
+/*template <typename Datatype, typename Symmetry, typename IndexList,
+          typename TensorIndexTypeA, typename TensorIndexTypeB,
+          typename... LhsIndices>
+void test_compute_map_rank_2_helper(
+    const TensorIndexTypeA& index_type_a,
+    const TensorIndexTypeB& index_type_b) {
+
+  //template <typename LhsStructure, typename... LhsIndices>
+  //SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t,
+  //                                                  LhsStructure::size()>
+  //compute_map
+
+  Tensor<Datatype, Symmetry, IndexList> rhs_tensor{};
+
+  auto rhs_tensor_ab = rhs_tensor(index_type_a, index_type_b);
+  auto rhs_tensor_ba = rhs_tensor(index_type_b, index_type_a);
+
+  std::array<size_t, 2> index_order_ab = {TensorIndexTypeA::value,
+                                          TensorIndexTypeB::value};
+  std::array<size_t, 2> index_order_ba = {TensorIndexTypeB::value,
+                                          TensorIndexTypeA::value};
+
+  using LhsStructure = Tensor_detail::Structure<Symmetry, LhsIndices...>;
+  // ... need to figure out expectation for result of calling compute_map
+
+  //CHECK(rhs_tensor_ab.template compute_map<LhsStructure, LhsIndices...>()
+  //          = ?);
+  //CHECK(rhs_tensor_ba.template compute_map<LhsStructure, LhsIndices...>()
+  //          = ?);
+
+  //std::array<std::array<size_t, 2>, 2> index_orderings_rank2 =
+  //    {index_order_ab, index_order_ba};
+
+  for (int n = 0; n < 2; n++) {
+    //size_t i = index_orderings_rank2[n][0];
+    //size_t j = index_orderings_rank2[n][1];
+
+    std::array<size_t, 2> ij = {i, j};
+    std::array<size_t, 2> ji = {j, i};
+
+    CHECK(rhs_tensor_ab.template compute_rhs_tensor_index<2>(
+              index_order_ab, index_order_ab, {{i, j}}) == ij);
+    CHECK(rhs_tensor_ab.template compute_rhs_tensor_index<2>(
+              index_order_ba, index_order_ab, {{i, j}}) == ji);
+    CHECK(rhs_tensor_ba.template compute_rhs_tensor_index<2>(
+              index_order_ba, index_order_ba, {{i, j}}) == ij);
+    CHECK(rhs_tensor_ba.template compute_rhs_tensor_index<2>(
+              index_order_ab, index_order_ba, {{i, j}}) == ji);
+  }
+}*/
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
                   "[DataStructures][Unit]") {
