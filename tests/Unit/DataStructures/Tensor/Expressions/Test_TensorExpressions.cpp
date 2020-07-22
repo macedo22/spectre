@@ -28,6 +28,14 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.StorageGet",
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
                   "[DataStructures][Unit]") {
+// TODO - make this templated on Symm, Indices...
+//      - i, j, and k are not supposed to be the same as generic indices,
+//        they can be whatever value.
+//      - Should take arguments:
+//        - lhs_tensor_index (i, j, k) - either array or 3 size_t args
+//template
+//void test_compute_rhs_tensor_index_rank_3_helper() {
+
   Tensor<double, Symmetry<1, 1>,
          index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
                     SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
@@ -38,17 +46,24 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
   std::array<size_t, 2> index_order_ab = {0, 1};
   std::array<size_t, 2> index_order_ba = {1, 0};
 
-  for (size_t i = 0; i < 2; i++) {
-    for (size_t j = 0; j < 2; j++) {
-      CHECK(All_Rhs_ab.compute_rhs_tensor_index<2>(
-                index_order_ab, index_order_ab, {{i, j}}) == {{i, j}});
-      CHECK(All_Rhs_ab.compute_rhs_tensor_index<2>(
-                index_order_ba, index_order_ab, {{i, j}}) == {{j, i}});
-      CHECK(All_Rhs_ba.compute_rhs_tensor_index<2>(
-                index_order_ba, index_order_ba, {{i, j}}) == {{i, j}});
-      CHECK(All_Rhs_ba.compute_rhs_tensor_index<2>(
-                index_order_ab, index_order_ba, {{i, j}}) == {{j, i}});
-    }
+  std::array<std::array<size_t, 2>, 2> index_orderings_rank2 = {index_order_ab,
+                                                                index_order_ba};
+
+  for (int n = 0; n < 2; n++) {
+    size_t i = index_orderings_rank2[n][0];
+    size_t j = index_orderings_rank2[n][1];
+
+    std::array<size_t, 2> ij = {i, j};
+    std::array<size_t, 2> ji = {j, i};
+
+    CHECK(All_Rhs_ab.compute_rhs_tensor_index<2>(index_order_ab, index_order_ab,
+                                                 {{i, j}}) == ij);
+    CHECK(All_Rhs_ab.compute_rhs_tensor_index<2>(index_order_ba, index_order_ab,
+                                                 {{i, j}}) == ji);
+    CHECK(All_Rhs_ba.compute_rhs_tensor_index<2>(index_order_ba, index_order_ba,
+                                                 {{i, j}}) == ij);
+    CHECK(All_Rhs_ba.compute_rhs_tensor_index<2>(index_order_ab, index_order_ba,
+                                                 {{i, j}}) == ji);
   }
 
   Tensor<double, Symmetry<1, 2, 1>,
@@ -70,138 +85,106 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
   std::array<size_t, 3> index_order_cab = {2, 0, 1};
   std::array<size_t, 3> index_order_cba = {2, 1, 0};
 
-  for (size_t i = 0; i < 3; i++) {
-    for (size_t j = 0; j < 3; j++) {
-      for (size_t k = 0; k < 3; k++) {
-        // for RHS ={a, b, c}
-        CHECK(Alll_Rhs_abc.compute_rhs_tensor_index<3>(
-                  index_order_abc, index_order_abc, {{i, j, k}}) ==
-              {{i, j, k}});
-        CHECK(Alll_Rhs_abc.compute_rhs_tensor_index<3>(
-                  index_order_acb, index_order_abc, {{i, j, k}}) ==
-              {{i, k, j}});
-        CHECK(Alll_Rhs_abc.compute_rhs_tensor_index<3>(
-                  index_order_bac, index_order_abc, {{i, j, k}}) ==
-              {{j, i, k}});
-        CHECK(Alll_Rhs_abc.compute_rhs_tensor_index<3>(
-                  index_order_bca, index_order_abc, {{i, j, k}}) ==
-              {{j, k, i}});
-        CHECK(Alll_Rhs_abc.compute_rhs_tensor_index<3>(
-                  index_order_cab, index_order_abc, {{i, j, k}}) ==
-              {{k, i, j}});
-        CHECK(Alll_Rhs_abc.compute_rhs_tensor_index<3>(
-                  index_order_cba, index_order_abc, {{i, j, k}}) ==
-              {{k, j, i}});
+  std::array<std::array<size_t, 3>, 6> index_orderings_rank3 = {
+      index_order_abc, index_order_acb, index_order_bac,
+      index_order_bca, index_order_cab, index_order_cba};
 
-        // for RHS = {a, c, b}
-        CHECK(Alll_Rhs_acb.compute_rhs_tensor_index<3>(
-                  index_order_abc, index_order_acb, {{i, j, k}}) ==
-              {{i, k, j}});
-        CHECK(Alll_Rhs_acb.compute_rhs_tensor_index<3>(
-                  index_order_acb, index_order_acb, {{i, j, k}}) ==
-              {{i, j, k}});
-        CHECK(Alll_Rhs_acb.compute_rhs_tensor_index<3>(
-                  index_order_bac, index_order_acb, {{i, j, k}}) ==
-              {{j, k, i}});
-        CHECK(Alll_Rhs_acb.compute_rhs_tensor_index<3>(
-                  index_order_bca, index_order_acb, {{i, j, k}}) ==
-              {{k, j, i}});
-        CHECK(Alll_Rhs_acb.compute_rhs_tensor_index<3>(
-                  index_order_cab, index_order_acb, {{i, j, k}}) ==
-              {{j, i, k}});
-        CHECK(Alll_Rhs_acb.compute_rhs_tensor_index<3>(
-                  index_order_cba, index_order_acb, {{i, j, k}}) ==
-              {{k, i, j}});
+  for (int n = 0; n < 6; n++) {
+    size_t i = index_orderings_rank3[n][0];
+    size_t j = index_orderings_rank3[n][1];
+    size_t k = index_orderings_rank3[n][2];
 
-        // for RHS = {b, a, c}
-        CHECK(Alll_Rhs_bac.compute_rhs_tensor_index<3>(
-                  index_order_abc, index_order_bac, {{i, j, k}}) ==
-              {{j, i, k}});
-        CHECK(Alll_Rhs_bac.compute_rhs_tensor_index<3>(
-                  index_order_acb, index_order_bac, {{i, j, k}}) ==
-              {{k, i, j}});
-        CHECK(Alll_Rhs_bac.compute_rhs_tensor_index<3>(
-                  index_order_bac, index_order_bac, {{i, j, k}}) ==
-              {{i, j, k}});
-        CHECK(Alll_Rhs_bac.compute_rhs_tensor_index<3>(
-                  index_order_bca, index_order_bac, {{i, j, k}}) ==
-              {{i, k, j}});
-        CHECK(Alll_Rhs_bac.compute_rhs_tensor_index<3>(
-                  index_order_cab, index_order_bac, {{i, j, k}}) ==
-              {{k, j, i}});
-        CHECK(Alll_Rhs_bac.compute_rhs_tensor_index<3>(
-                  index_order_cba, index_order_bac, {{i, j, k}}) ==
-              {{j, k, i}});
+    std::array<size_t, 3> ijk = {i, j, k};
+    std::array<size_t, 3> ikj = {i, k, j};
+    std::array<size_t, 3> jik = {j, i, k};
+    std::array<size_t, 3> jki = {j, k, i};
+    std::array<size_t, 3> kij = {k, i, j};
+    std::array<size_t, 3> kji = {k, j, i};
 
-        // for RHS = {b, c, a}
-        CHECK(Alll_Rhs_bca.compute_rhs_tensor_index<3>(
-                  index_order_abc, index_order_bca, {{i, j, k}}) ==
-              {{j, k, i}});
-        CHECK(Alll_Rhs_bca.compute_rhs_tensor_index<3>(
-                  index_order_acb, index_order_bca, {{i, j, k}}) ==
-              {{k, j, i}});
-        CHECK(Alll_Rhs_bca.compute_rhs_tensor_index<3>(
-                  index_order_bac, index_order_bca, {{i, j, k}}) ==
-              {{i, k, j}});
-        CHECK(Alll_Rhs_bca.compute_rhs_tensor_index<3>(
-                  index_order_bca, index_order_bca, {{i, j, k}}) ==
-              {{i, j, k}});
-        CHECK(Alll_Rhs_bca.compute_rhs_tensor_index<3>(
-                  index_order_cab, index_order_bca, {{i, j, k}}) ==
-              {{k, i, j}});
-        CHECK(Alll_Rhs_bca.compute_rhs_tensor_index<3>(
-                  index_order_cba, index_order_bca, {{i, j, k}}) ==
-              {{j, i, k}});
+    // for RHS ={a, b, c}
+    CHECK(Alll_Rhs_abc.compute_rhs_tensor_index<3>(
+              index_order_abc, index_order_abc, {{i, j, k}}) == ijk);
+    CHECK(Alll_Rhs_abc.compute_rhs_tensor_index<3>(
+              index_order_acb, index_order_abc, {{i, j, k}}) == ikj);
+    CHECK(Alll_Rhs_abc.compute_rhs_tensor_index<3>(
+              index_order_bac, index_order_abc, {{i, j, k}}) == jik);
+    CHECK(Alll_Rhs_abc.compute_rhs_tensor_index<3>(
+              index_order_bca, index_order_abc, {{i, j, k}}) == kij);
+    CHECK(Alll_Rhs_abc.compute_rhs_tensor_index<3>(
+              index_order_cab, index_order_abc, {{i, j, k}}) == jki);
+    CHECK(Alll_Rhs_abc.compute_rhs_tensor_index<3>(
+              index_order_cba, index_order_abc, {{i, j, k}}) == kji);
 
-        // for RHS = {c, a, b}
-        CHECK(Alll_Rhs_cab.compute_rhs_tensor_index<3>(
-                  index_order_abc, index_order_cab, {{i, j, k}}) ==
-              {{k, i, j}});
-        CHECK(Alll_Rhs_cab.compute_rhs_tensor_index<3>(
-                  index_order_acb, index_order_cab, {{i, j, k}}) ==
-              {{j, i, k}});
-        CHECK(Alll_Rhs_cab.compute_rhs_tensor_index<3>(
-                  index_order_bac, index_order_cab, {{i, j, k}}) ==
-              {{k, j, i}});
-        CHECK(Alll_Rhs_cab.compute_rhs_tensor_index<3>(
-                  index_order_bca, index_order_cab, {{i, j, k}}) ==
-              {{j, k, i}});
-        CHECK(Alll_Rhs_cab.compute_rhs_tensor_index<3>(
-                  index_order_cab, index_order_cab, {{i, j, k}}) ==
-              {{i, j, k}});
-        CHECK(Alll_Rhs_cab.compute_rhs_tensor_index<3>(
-                  index_order_cba, index_order_cab, {{i, j, k}}) ==
-              {{i, k, j}});
+    // for RHS = {a, c, b}
+    CHECK(Alll_Rhs_acb.compute_rhs_tensor_index<3>(
+              index_order_abc, index_order_acb, {{i, j, k}}) == ikj);
+    CHECK(Alll_Rhs_acb.compute_rhs_tensor_index<3>(
+              index_order_acb, index_order_acb, {{i, j, k}}) == ijk);
+    CHECK(Alll_Rhs_acb.compute_rhs_tensor_index<3>(
+              index_order_bac, index_order_acb, {{i, j, k}}) == jki);
+    CHECK(Alll_Rhs_acb.compute_rhs_tensor_index<3>(
+              index_order_bca, index_order_acb, {{i, j, k}}) == kji);
+    CHECK(Alll_Rhs_acb.compute_rhs_tensor_index<3>(
+              index_order_cab, index_order_acb, {{i, j, k}}) == jik);
+    CHECK(Alll_Rhs_acb.compute_rhs_tensor_index<3>(
+              index_order_cba, index_order_acb, {{i, j, k}}) == kij);
 
-        // for RHS = {c, b, a}
-        CHECK(Alll_Rhs_cba.compute_rhs_tensor_index<3>(
-                  index_order_abc, index_order_cba, {{i, j, k}}) ==
-              {{k, j, i}});
-        CHECK(Alll_Rhs_cba.compute_rhs_tensor_index<3>(
-                  index_order_acb, index_order_cba, {{i, j, k}}) ==
-              {{j, k, i}});
-        CHECK(Alll_Rhs_cba.compute_rhs_tensor_index<3>(
-                  index_order_bac, index_order_cba, {{i, j, k}}) ==
-              {{k, i, j}});
-        CHECK(Alll_Rhs_cba.compute_rhs_tensor_index<3>(
-                  index_order_bca, index_order_cba, {{i, j, k}}) ==
-              {{j, i, k}});
-        CHECK(Alll_Rhs_cba.compute_rhs_tensor_index<3>(
-                  index_order_cab, index_order_cba, {{i, j, k}}) ==
-              {{i, k, j}});
-        CHECK(Alll_Rhs_cba.compute_rhs_tensor_index<3>(
-                  index_order_cba, index_order_cba, {{i, j, k}}) ==
-              {{i, j, k}});
-      }
-    }
+    // for RHS = {b, a, c}
+    CHECK(Alll_Rhs_bac.compute_rhs_tensor_index<3>(
+              index_order_abc, index_order_bac, {{i, j, k}}) == jik);
+    CHECK(Alll_Rhs_bac.compute_rhs_tensor_index<3>(
+              index_order_acb, index_order_bac, {{i, j, k}}) == kij);
+    CHECK(Alll_Rhs_bac.compute_rhs_tensor_index<3>(
+              index_order_bac, index_order_bac, {{i, j, k}}) == ijk);
+    CHECK(Alll_Rhs_bac.compute_rhs_tensor_index<3>(
+              index_order_bca, index_order_bac, {{i, j, k}}) == ikj);
+    CHECK(Alll_Rhs_bac.compute_rhs_tensor_index<3>(
+              index_order_cab, index_order_bac, {{i, j, k}}) == kji);
+    CHECK(Alll_Rhs_bac.compute_rhs_tensor_index<3>(
+              index_order_cba, index_order_bac, {{i, j, k}}) == jki);
+
+    // for RHS = {b, c, a}
+    CHECK(Alll_Rhs_bca.compute_rhs_tensor_index<3>(
+              index_order_abc, index_order_bca, {{i, j, k}}) == jki);
+    CHECK(Alll_Rhs_bca.compute_rhs_tensor_index<3>(
+              index_order_acb, index_order_bca, {{i, j, k}}) == kji);
+    CHECK(Alll_Rhs_bca.compute_rhs_tensor_index<3>(
+              index_order_bac, index_order_bca, {{i, j, k}}) == ikj);
+    CHECK(Alll_Rhs_bca.compute_rhs_tensor_index<3>(
+              index_order_bca, index_order_bca, {{i, j, k}}) == ijk);
+    CHECK(Alll_Rhs_bca.compute_rhs_tensor_index<3>(
+              index_order_cab, index_order_bca, {{i, j, k}}) == kij);
+    CHECK(Alll_Rhs_bca.compute_rhs_tensor_index<3>(
+              index_order_cba, index_order_bca, {{i, j, k}}) == jik);
+
+    // for RHS = {c, a, b}
+    CHECK(Alll_Rhs_cab.compute_rhs_tensor_index<3>(
+              index_order_abc, index_order_cab, {{i, j, k}}) == kij);
+    CHECK(Alll_Rhs_cab.compute_rhs_tensor_index<3>(
+              index_order_acb, index_order_cab, {{i, j, k}}) == jik);
+    CHECK(Alll_Rhs_cab.compute_rhs_tensor_index<3>(
+              index_order_bac, index_order_cab, {{i, j, k}}) == kji);
+    CHECK(Alll_Rhs_cab.compute_rhs_tensor_index<3>(
+              index_order_bca, index_order_cab, {{i, j, k}}) == jki);
+    CHECK(Alll_Rhs_cab.compute_rhs_tensor_index<3>(
+              index_order_cab, index_order_cab, {{i, j, k}}) == ijk);
+    CHECK(Alll_Rhs_cab.compute_rhs_tensor_index<3>(
+              index_order_cba, index_order_cab, {{i, j, k}}) == ikj);
+
+    // for RHS = {c, b, a}
+    CHECK(Alll_Rhs_cba.compute_rhs_tensor_index<3>(
+              index_order_abc, index_order_cba, {{i, j, k}}) == kji);
+    CHECK(Alll_Rhs_cba.compute_rhs_tensor_index<3>(
+              index_order_acb, index_order_cba, {{i, j, k}}) == jki);
+    CHECK(Alll_Rhs_cba.compute_rhs_tensor_index<3>(
+              index_order_bac, index_order_cba, {{i, j, k}}) == kij);
+    CHECK(Alll_Rhs_cba.compute_rhs_tensor_index<3>(
+              index_order_bca, index_order_cba, {{i, j, k}}) == jik);
+    CHECK(Alll_Rhs_cba.compute_rhs_tensor_index<3>(
+              index_order_cab, index_order_cba, {{i, j, k}}) == ikj);
+    CHECK(Alll_Rhs_cba.compute_rhs_tensor_index<3>(
+              index_order_cba, index_order_cba, {{i, j, k}}) == ijk);
   }
-
-  /*using Symmetry = Symmetry<1, 1>;
-  using Rhs_Index_List = index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
-                                    SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
-  using Rhs_Tensor = Tensor<double, Symmetry, Rhs_Index_List>;
-
-  using Lhs_Structure = */
 }
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.AddSubtract",
