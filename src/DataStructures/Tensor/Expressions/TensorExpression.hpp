@@ -432,6 +432,24 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
     }
   }
 
+  /// \brief return the RHS tensor index that corresponds to the LHS tensor
+  /// index
+  ///
+  /// \details
+  /// Given the ordering of the generic indices of the LHS tensor, the
+  /// ordering of the generic indices of the RHS tensor, and a
+  /// specific LHS tensor index, return the equivalent RHS tensor index
+  /// that accounts for differences in the ordering of the generic indices
+  /// on the LHS and RHS.
+  ///
+  /// Here, the elements of `lhs_index_order` and `rhs_index_order` refer
+  /// to `TensorIndex` values that correspond to generic spacetime indices.
+  /// For example, given [use latex here to write out both tensors]
+  ///
+  /// \tparam NumberOfIndices
+  /// \param lhs_index_order
+  /// \param rhs_index_order
+  /// \param lhs_tensor_index
   template <size_t NumberOfIndices>
   SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, NumberOfIndices>
   compute_rhs_tensor_index(

@@ -115,46 +115,6 @@ void test_compute_rhs_tensor_index_rank_3_helper(
     const TensorIndexTypeA& index_type_a, const TensorIndexTypeB& index_type_b,
     const TensorIndexTypeC& index_type_c, const size_t& i, const size_t& j,
     const size_t& k) {
-  /*Tensor<double, Symmetry<1, 1>,
-         index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
-                    SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
-      All_Rhs{};*/
-
-  /*auto All_Rhs_ab = All_Rhs(ti_a, ti_b);  // {0, 1}
-  auto All_Rhs_ba = All_Rhs(ti_b, ti_a);  // {1, 0}
-
-  std::array<size_t, 2> index_order_ab = {0, 1};
-  std::array<size_t, 2> index_order_ba = {1, 0};
-
-  std::array<std::array<size_t, 2>, 2> index_orderings_rank2 = {index_order_ab,
-                                                                index_order_ba};
-
-  for (int n = 0; n < 2; n++) {
-    size_t i = index_orderings_rank2[n][0];
-    size_t j = index_orderings_rank2[n][1];
-
-    std::array<size_t, 2> ij = {i, j};
-    std::array<size_t, 2> ji = {j, i};
-
-    CHECK(All_Rhs_ab.compute_rhs_tensor_index<2>(index_order_ab, index_order_ab,
-                                                 {{i, j}}) == ij);
-    CHECK(All_Rhs_ab.compute_rhs_tensor_index<2>(index_order_ba, index_order_ab,
-                                                 {{i, j}}) == ji);
-    CHECK(All_Rhs_ba.compute_rhs_tensor_index<2>(index_order_ba, index_order_ba,
-                                                 {{i, j}}) == ij);
-    CHECK(All_Rhs_ba.compute_rhs_tensor_index<2>(index_order_ab, index_order_ba,
-                                                 {{i, j}}) == ji);
-  }*/
-
-  /* +++ Rank 2 tensor scratchwork ^^^^^ === */
-
-  /* +++ Rank 3 tensor scratchwork vvvvv === */
-
-  /*Tensor<double, Symmetry<1, 2, 1>,
-         index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
-                    SpatialIndex<3, UpLo::Lo, Frame::Grid>,
-                    SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
-      Alll_Rhs{};*/
 
   Tensor<Datatype, Symmetry, IndexList> rhs_tensor{};
 
@@ -286,56 +246,6 @@ void test_compute_rhs_tensor_index_rank_3_helper(
   }
 }
 
-/*template <typename Datatype, typename Symmetry, typename IndexList,
-          typename TensorIndexTypeA, typename TensorIndexTypeB,
-          typename... LhsIndices>
-void test_compute_map_rank_2_helper(
-    const TensorIndexTypeA& index_type_a,
-    const TensorIndexTypeB& index_type_b) {
-
-  //template <typename LhsStructure, typename... LhsIndices>
-  //SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t,
-  //                                                  LhsStructure::size()>
-  //compute_map
-
-  Tensor<Datatype, Symmetry, IndexList> rhs_tensor{};
-
-  auto rhs_tensor_ab = rhs_tensor(index_type_a, index_type_b);
-  auto rhs_tensor_ba = rhs_tensor(index_type_b, index_type_a);
-
-  std::array<size_t, 2> index_order_ab = {TensorIndexTypeA::value,
-                                          TensorIndexTypeB::value};
-  std::array<size_t, 2> index_order_ba = {TensorIndexTypeB::value,
-                                          TensorIndexTypeA::value};
-
-  using LhsStructure = Tensor_detail::Structure<Symmetry, LhsIndices...>;
-  // ... need to figure out expectation for result of calling compute_map
-
-  //CHECK(rhs_tensor_ab.template compute_map<LhsStructure, LhsIndices...>()
-  //          = ?);
-  //CHECK(rhs_tensor_ba.template compute_map<LhsStructure, LhsIndices...>()
-  //          = ?);
-
-  //std::array<std::array<size_t, 2>, 2> index_orderings_rank2 =
-  //    {index_order_ab, index_order_ba};
-
-  for (int n = 0; n < 2; n++) {
-    //size_t i = index_orderings_rank2[n][0];
-    //size_t j = index_orderings_rank2[n][1];
-
-    std::array<size_t, 2> ij = {i, j};
-    std::array<size_t, 2> ji = {j, i};
-
-    CHECK(rhs_tensor_ab.template compute_rhs_tensor_index<2>(
-              index_order_ab, index_order_ab, {{i, j}}) == ij);
-    CHECK(rhs_tensor_ab.template compute_rhs_tensor_index<2>(
-              index_order_ba, index_order_ab, {{i, j}}) == ji);
-    CHECK(rhs_tensor_ba.template compute_rhs_tensor_index<2>(
-              index_order_ba, index_order_ba, {{i, j}}) == ij);
-    CHECK(rhs_tensor_ba.template compute_rhs_tensor_index<2>(
-              index_order_ab, index_order_ba, {{i, j}}) == ji);
-  }
-}*/
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
                   "[DataStructures][Unit]") {
