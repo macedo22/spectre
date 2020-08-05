@@ -139,6 +139,27 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
   test_compute_rhs_tensor_index_rank_2_no_symmetry<
       double, ti_c_t, ti_I_t, SpacetimeIndex, SpatialIndex, UpLo::Lo, UpLo::Up>(
       ti_c, ti_I);
+  test_compute_rhs_tensor_index_rank_2_no_symmetry<
+      double, ti_A_t, ti_i_t, SpacetimeIndex, SpatialIndex, UpLo::Up, UpLo::Lo>(
+      ti_A, ti_i);
+  test_compute_rhs_tensor_index_rank_2_no_symmetry<
+      double, ti_J_t, ti_a_t, SpatialIndex, SpacetimeIndex, UpLo::Up, UpLo::Lo>(
+      ti_J, ti_a);
+  test_compute_rhs_tensor_index_rank_2_no_symmetry<
+      double, ti_i_t, ti_B_t, SpatialIndex, SpacetimeIndex, UpLo::Lo, UpLo::Up>(
+      ti_i, ti_B);
+  test_compute_rhs_tensor_index_rank_2_no_symmetry<
+      double, ti_e_t, ti_j_t, SpacetimeIndex, SpatialIndex, UpLo::Lo, UpLo::Lo>(
+      ti_e, ti_j);
+  test_compute_rhs_tensor_index_rank_2_no_symmetry<
+      double, ti_i_t, ti_d_t, SpatialIndex, SpacetimeIndex, UpLo::Lo, UpLo::Lo>(
+      ti_i, ti_d);
+  test_compute_rhs_tensor_index_rank_2_no_symmetry<
+      double, ti_C_t, ti_I_t, SpacetimeIndex, SpatialIndex, UpLo::Up, UpLo::Up>(
+      ti_C, ti_I);
+  test_compute_rhs_tensor_index_rank_2_no_symmetry<
+      double, ti_J_t, ti_A_t, SpatialIndex, SpacetimeIndex, UpLo::Up, UpLo::Up>(
+      ti_J, ti_A);
 
   // Rank 2 symmetric, spacetime
   test_compute_rhs_tensor_index_rank_2_symmetric<double, ti_a_t, ti_d_t,
