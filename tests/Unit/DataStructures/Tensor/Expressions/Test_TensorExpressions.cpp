@@ -11,6 +11,8 @@
 #include "DataStructures/Tensor/Expressions/Evaluate.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank2TestHelpers.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank3TestHelpers.hpp"
 #include "Utilities/TMPL.hpp"
 
 // include on multiple lines just to avoid line length warning
@@ -85,776 +87,106 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.StorageGet",
   }
 }
 
-// instead, this should iterate over
-// 0 - SpatialDim1 (all i) and 0 - SpatialDim2 (all j)
-// which means moving the for loops out of the test_rank_2
-template <typename Datatype, typename Symmetry, typename IndexList,
-          typename TensorIndexTypeA, typename TensorIndexTypeB>
-void test_compute_rhs_tensor_index_rank_2_core_impl(
-    const TensorIndexTypeA& tensor_index_type_a,
-    const TensorIndexTypeB& tensor_index_type_b, const size_t& spatial_dim_a,
-    const size_t& spatial_dim_b) {
-  Tensor<Datatype, Symmetry, IndexList> rhs_tensor{};
-
-  auto rhs_tensor_expr = rhs_tensor(tensor_index_type_a, tensor_index_type_b);
-
-  std::array<size_t, 2> index_order_ab = {TensorIndexTypeA::value,
-                                          TensorIndexTypeB::value};
-  std::array<size_t, 2> index_order_ba = {TensorIndexTypeB::value,
-                                          TensorIndexTypeA::value};
-
-  for (size_t i = 0; i < spatial_dim_a; i++) {
-    for (size_t j = 0; j < spatial_dim_b; j++) {
-      const std::array<size_t, 2> ij = {i, j};
-      const std::array<size_t, 2> ji = {j, i};
-
-      CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<2>(
-                index_order_ab, index_order_ab, ij) == ij);
-      CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<2>(
-                index_order_ba, index_order_ab, ij) == ji);
-    }
-  }
-}
-
-// this should iterate over all possible non-symmetric symmetry combinations
-template <typename Datatype, typename IndexList, typename TensorIndexTypeA,
-          typename TensorIndexTypeB, size_t SpatialDimA, size_t SpatialDimB>
-void test_compute_rhs_tensor_index_rank_2_core(
-    const TensorIndexTypeA& tensor_index_type_a,
-    const TensorIndexTypeB& tensor_index_type_b) {
-  /*test_compute_rhs_tensor_index_rank_2_core_impl<
-          Datatype, Symmetry<1, 1>, IndexList,
-              TensorIndexTypeA, TensorIndexTypeB>(
-            tensor_index_type_a, tensor_index_type_b, SpatialDimA,
-     SpatialDimB);*/
-  test_compute_rhs_tensor_index_rank_2_core_impl<
-      Datatype, Symmetry<1, 2>, IndexList, TensorIndexTypeA, TensorIndexTypeB>(
-      tensor_index_type_a, tensor_index_type_b, SpatialDimA, SpatialDimB);
-  test_compute_rhs_tensor_index_rank_2_core_impl<
-      Datatype, Symmetry<2, 1>, IndexList, TensorIndexTypeA, TensorIndexTypeB>(
-      tensor_index_type_a, tensor_index_type_b, SpatialDimA, SpatialDimB);
-}
-
-// TensorIndexType refers to TensorIndex<#>
-// IndexType refers to SpatialIndex or SpacetimeIndex
-template <typename Datatype, typename TensorIndexTypeA,
-          typename TensorIndexTypeB,
-          template <size_t, UpLo, typename> class IndexTypeA,
-          template <size_t, UpLo, typename> class IndexTypeB, UpLo ValenceA,
-          UpLo ValenceB>
-void test_compute_rhs_tensor_index_rank_2(
-    const TensorIndexTypeA& tensor_index_type_a,
-    const TensorIndexTypeB& tensor_index_type_b) {
-  test_compute_rhs_tensor_index_rank_2_core<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Grid>,
-                 IndexTypeB<1, ValenceB, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, 1, 1>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_compute_rhs_tensor_index_rank_2_core<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Grid>,
-                 IndexTypeB<2, ValenceB, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, 1, 2>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_compute_rhs_tensor_index_rank_2_core<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Grid>,
-                 IndexTypeB<3, ValenceB, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, 1, 3>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_compute_rhs_tensor_index_rank_2_core<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Grid>,
-                 IndexTypeB<1, ValenceB, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, 2, 1>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_compute_rhs_tensor_index_rank_2_core<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Grid>,
-                 IndexTypeB<2, ValenceB, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, 2, 2>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_compute_rhs_tensor_index_rank_2_core<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Grid>,
-                 IndexTypeB<3, ValenceB, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, 2, 3>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_compute_rhs_tensor_index_rank_2_core<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Grid>,
-                 IndexTypeB<1, ValenceB, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, 3, 1>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  // TODO: it seems to be breaking on this one for some reason?
-  test_compute_rhs_tensor_index_rank_2_core<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Grid>,
-                 IndexTypeB<2, ValenceB, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, 3, 2>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_compute_rhs_tensor_index_rank_2_core<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Grid>,
-                 IndexTypeB<3, ValenceB, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, 3, 3>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_compute_rhs_tensor_index_rank_2_core<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Grid>,
-                 IndexTypeB<1, ValenceB, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, 1, 1>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_compute_rhs_tensor_index_rank_2_core<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Inertial>,
-                 IndexTypeB<2, ValenceB, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, 1, 2>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_compute_rhs_tensor_index_rank_2_core<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Inertial>,
-                 IndexTypeB<3, ValenceB, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, 1, 3>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_compute_rhs_tensor_index_rank_2_core<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Inertial>,
-                 IndexTypeB<1, ValenceB, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, 2, 1>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_compute_rhs_tensor_index_rank_2_core<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Inertial>,
-                 IndexTypeB<2, ValenceB, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, 2, 2>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_compute_rhs_tensor_index_rank_2_core<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Inertial>,
-                 IndexTypeB<3, ValenceB, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, 2, 3>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_compute_rhs_tensor_index_rank_2_core<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Inertial>,
-                 IndexTypeB<1, ValenceB, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, 3, 1>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_compute_rhs_tensor_index_rank_2_core<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Inertial>,
-                 IndexTypeB<2, ValenceB, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, 3, 2>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_compute_rhs_tensor_index_rank_2_core<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Inertial>,
-                 IndexTypeB<3, ValenceB, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, 3, 3>(tensor_index_type_a,
-                                                tensor_index_type_b);
-}
-
-// *** The last (outermost) one should go through all
-// grid types and spatial dimensions
-
-// TODO - make this templated on Symm, Indices...
-//      - i, j, and k are not supposed to be the same as generic indices,
-//        they can be whatever value.
-//      - Should take arguments:
-//        - lhs_tensor_index (i, j, k) - either array or 3 size_t args
-template <typename Datatype, typename Symmetry, typename IndexList,
-          typename TensorIndexTypeA, typename TensorIndexTypeB,
-          typename TensorIndexTypeC>
-void test_compute_rhs_tensor_index_rank_3_core_impl(
-    const TensorIndexTypeA& tensor_index_type_a,
-    const TensorIndexTypeB& tensor_index_type_b,
-    const TensorIndexTypeC& tensor_index_type_c, const size_t& spatial_dim_a,
-    const size_t& spatial_dim_b, const size_t& spatial_dim_c) {
-  Tensor<Datatype, Symmetry, IndexList> rhs_tensor{};
-
-  auto rhs_tensor_expr =
-      rhs_tensor(tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  std::array<size_t, 3> index_order_abc = {TensorIndexTypeA::value,
-                                           TensorIndexTypeB::value,
-                                           TensorIndexTypeC::value};
-  std::array<size_t, 3> index_order_acb = {TensorIndexTypeA::value,
-                                           TensorIndexTypeC::value,
-                                           TensorIndexTypeB::value};
-  std::array<size_t, 3> index_order_bac = {TensorIndexTypeB::value,
-                                           TensorIndexTypeA::value,
-                                           TensorIndexTypeC::value};
-  std::array<size_t, 3> index_order_bca = {TensorIndexTypeB::value,
-                                           TensorIndexTypeC::value,
-                                           TensorIndexTypeA::value};
-  std::array<size_t, 3> index_order_cab = {TensorIndexTypeC::value,
-                                           TensorIndexTypeA::value,
-                                           TensorIndexTypeB::value};
-  std::array<size_t, 3> index_order_cba = {TensorIndexTypeC::value,
-                                           TensorIndexTypeB::value,
-                                           TensorIndexTypeA::value};
-
-  /*std::array<std::array<size_t, 3>, 6> index_orderings_rank3 = {
-      index_order_abc, index_order_acb, index_order_bac,
-      index_order_bca, index_order_cab, index_order_cba};*/
-
-  // auto result = rhs_tensor_abc.template
-  // compute_rhs_tensor_index<3>(index_order_abc, index_order_abc, ijk); bool
-  // flag = (result == ijk);
-
-  for (size_t i = 0; i < spatial_dim_a; i++) {
-    for (size_t j = 0; j < spatial_dim_b; j++) {
-      for (size_t k = 0; k < spatial_dim_c; k++) {
-        std::array<size_t, 3> ijk = {i, j, k};
-        std::array<size_t, 3> ikj = {i, k, j};
-        std::array<size_t, 3> jik = {j, i, k};
-        std::array<size_t, 3> jki = {j, k, i};
-        std::array<size_t, 3> kij = {k, i, j};
-        std::array<size_t, 3> kji = {k, j, i};
-
-        // for RHS ={a, b, c}
-        CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<3>(
-                  index_order_abc, index_order_abc, {{i, j, k}}) == ijk);
-        CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<3>(
-                  index_order_acb, index_order_abc, {{i, j, k}}) == ikj);
-        CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<3>(
-                  index_order_bac, index_order_abc, {{i, j, k}}) == jik);
-        CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<3>(
-                  index_order_bca, index_order_abc, {{i, j, k}}) == kij);
-        CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<3>(
-                  index_order_cab, index_order_abc, {{i, j, k}}) == jki);
-        CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<3>(
-                  index_order_cba, index_order_abc, {{i, j, k}}) == kji);
-      }
-    }
-  }
-}
-
-// this should iterate over all possible non-symmetric symmetry combinations
-template <typename Datatype, typename IndexList, typename TensorIndexTypeA,
-          typename TensorIndexTypeB, typename TensorIndexTypeC,
-          size_t SpatialDimA, size_t SpatialDimB, size_t SpatialDimC>
-void test_compute_rhs_tensor_index_rank_3_core(
-    const TensorIndexTypeA& tensor_index_type_a,
-    const TensorIndexTypeB& tensor_index_type_b,
-    const TensorIndexTypeC& tensor_index_type_c) {
-  /*test_compute_rhs_tensor_index_rank_2_core_impl<
-          Datatype, Symmetry<1, 1>, IndexList,
-              TensorIndexTypeA, TensorIndexTypeB>(
-            tensor_index_type_a, tensor_index_type_b, SpatialDimA,
-     SpatialDimB);*/
-  test_compute_rhs_tensor_index_rank_3_core_impl<
-      Datatype, Symmetry<1, 2, 3>, IndexList, TensorIndexTypeA,
-      TensorIndexTypeB, TensorIndexTypeC>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c,
-      SpatialDimA, SpatialDimB, SpatialDimC);
-
-  test_compute_rhs_tensor_index_rank_3_core_impl<
-      Datatype, Symmetry<1, 3, 2>, IndexList, TensorIndexTypeA,
-      TensorIndexTypeB, TensorIndexTypeC>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c,
-      SpatialDimA, SpatialDimB, SpatialDimC);
-
-  test_compute_rhs_tensor_index_rank_3_core_impl<
-      Datatype, Symmetry<2, 1, 3>, IndexList, TensorIndexTypeA,
-      TensorIndexTypeB, TensorIndexTypeC>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c,
-      SpatialDimA, SpatialDimB, SpatialDimC);
-
-  test_compute_rhs_tensor_index_rank_3_core_impl<
-      Datatype, Symmetry<2, 3, 1>, IndexList, TensorIndexTypeA,
-      TensorIndexTypeB, TensorIndexTypeC>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c,
-      SpatialDimA, SpatialDimB, SpatialDimC);
-
-  test_compute_rhs_tensor_index_rank_3_core_impl<
-      Datatype, Symmetry<3, 1, 2>, IndexList, TensorIndexTypeA,
-      TensorIndexTypeB, TensorIndexTypeC>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c,
-      SpatialDimA, SpatialDimB, SpatialDimC);
-
-  test_compute_rhs_tensor_index_rank_3_core_impl<
-      Datatype, Symmetry<3, 2, 1>, IndexList, TensorIndexTypeA,
-      TensorIndexTypeB, TensorIndexTypeC>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c,
-      SpatialDimA, SpatialDimB, SpatialDimC);
-}
-
-// TensorIndexType refers to TensorIndex<#>
-// IndexType refers to SpatialIndex or SpacetimeIndex
-template <typename Datatype, typename TensorIndexTypeA,
-          typename TensorIndexTypeB, typename TensorIndexTypeC,
-          template <size_t, UpLo, typename> class IndexTypeA,
-          template <size_t, UpLo, typename> class IndexTypeB,
-          template <size_t, UpLo, typename> class IndexTypeC, UpLo ValenceA,
-          UpLo ValenceB, UpLo ValenceC>
-void test_compute_rhs_tensor_index_rank_3(
-    const TensorIndexTypeA& tensor_index_type_a,
-    const TensorIndexTypeB& tensor_index_type_b,
-    const TensorIndexTypeC& tensor_index_type_c) {
-  // all dimensionality combinations
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Grid>,
-                 IndexTypeB<1, ValenceB, Frame::Grid>,
-                 IndexTypeC<1, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 1, 1, 1>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Grid>,
-                 IndexTypeB<1, ValenceB, Frame::Grid>,
-                 IndexTypeC<2, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 1, 1, 2>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Grid>,
-                 IndexTypeB<1, ValenceB, Frame::Grid>,
-                 IndexTypeC<3, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 1, 1, 3>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Grid>,
-                 IndexTypeB<2, ValenceB, Frame::Grid>,
-                 IndexTypeC<1, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 1, 2, 1>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Grid>,
-                 IndexTypeB<2, ValenceB, Frame::Grid>,
-                 IndexTypeC<2, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 1, 2, 2>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Grid>,
-                 IndexTypeB<2, ValenceB, Frame::Grid>,
-                 IndexTypeC<3, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 1, 2, 3>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Grid>,
-                 IndexTypeB<3, ValenceB, Frame::Grid>,
-                 IndexTypeC<1, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 1, 3, 1>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Grid>,
-                 IndexTypeB<3, ValenceB, Frame::Grid>,
-                 IndexTypeC<2, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 1, 3, 2>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Grid>,
-                 IndexTypeB<3, ValenceB, Frame::Grid>,
-                 IndexTypeC<3, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 1, 3, 3>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Grid>,
-                 IndexTypeB<1, ValenceB, Frame::Grid>,
-                 IndexTypeC<1, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 2, 1, 1>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Grid>,
-                 IndexTypeB<1, ValenceB, Frame::Grid>,
-                 IndexTypeC<2, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 2, 1, 2>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Grid>,
-                 IndexTypeB<1, ValenceB, Frame::Grid>,
-                 IndexTypeC<3, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 2, 1, 3>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Grid>,
-                 IndexTypeB<2, ValenceB, Frame::Grid>,
-                 IndexTypeC<1, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 2, 2, 1>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Grid>,
-                 IndexTypeB<2, ValenceB, Frame::Grid>,
-                 IndexTypeC<2, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 2, 2, 2>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Grid>,
-                 IndexTypeB<2, ValenceB, Frame::Grid>,
-                 IndexTypeC<3, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 2, 2, 3>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Grid>,
-                 IndexTypeB<3, ValenceB, Frame::Grid>,
-                 IndexTypeC<1, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 2, 3, 1>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Grid>,
-                 IndexTypeB<3, ValenceB, Frame::Grid>,
-                 IndexTypeC<2, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 2, 3, 2>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Grid>,
-                 IndexTypeB<3, ValenceB, Frame::Grid>,
-                 IndexTypeC<3, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 2, 3, 3>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Grid>,
-                 IndexTypeB<1, ValenceB, Frame::Grid>,
-                 IndexTypeC<1, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 3, 1, 1>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Grid>,
-                 IndexTypeB<1, ValenceB, Frame::Grid>,
-                 IndexTypeC<2, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 3, 1, 2>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Grid>,
-                 IndexTypeB<1, ValenceB, Frame::Grid>,
-                 IndexTypeC<3, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 3, 1, 3>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Grid>,
-                 IndexTypeB<2, ValenceB, Frame::Grid>,
-                 IndexTypeC<1, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 3, 2, 1>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Grid>,
-                 IndexTypeB<2, ValenceB, Frame::Grid>,
-                 IndexTypeC<2, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 3, 2, 2>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Grid>,
-                 IndexTypeB<2, ValenceB, Frame::Grid>,
-                 IndexTypeC<3, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 3, 2, 3>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Grid>,
-                 IndexTypeB<3, ValenceB, Frame::Grid>,
-                 IndexTypeC<1, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 3, 3, 1>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Grid>,
-                 IndexTypeB<3, ValenceB, Frame::Grid>,
-                 IndexTypeC<2, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 3, 3, 2>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Grid>,
-                 IndexTypeB<3, ValenceB, Frame::Grid>,
-                 IndexTypeC<3, ValenceC, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 3, 3, 3>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  // Testing all dimension combinations with inertial frame
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Inertial>,
-                 IndexTypeB<1, ValenceB, Frame::Inertial>,
-                 IndexTypeC<1, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 1, 1, 1>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Inertial>,
-                 IndexTypeB<1, ValenceB, Frame::Inertial>,
-                 IndexTypeC<2, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 1, 1, 2>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Inertial>,
-                 IndexTypeB<1, ValenceB, Frame::Inertial>,
-                 IndexTypeC<3, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 1, 1, 3>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Inertial>,
-                 IndexTypeB<2, ValenceB, Frame::Inertial>,
-                 IndexTypeC<1, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 1, 2, 1>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Inertial>,
-                 IndexTypeB<2, ValenceB, Frame::Inertial>,
-                 IndexTypeC<2, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 1, 2, 2>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Inertial>,
-                 IndexTypeB<2, ValenceB, Frame::Inertial>,
-                 IndexTypeC<3, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 1, 2, 3>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Inertial>,
-                 IndexTypeB<3, ValenceB, Frame::Inertial>,
-                 IndexTypeC<1, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 1, 3, 1>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Inertial>,
-                 IndexTypeB<3, ValenceB, Frame::Inertial>,
-                 IndexTypeC<2, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 1, 3, 2>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Inertial>,
-                 IndexTypeB<3, ValenceB, Frame::Inertial>,
-                 IndexTypeC<3, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 1, 3, 3>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Inertial>,
-                 IndexTypeB<1, ValenceB, Frame::Inertial>,
-                 IndexTypeC<1, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 2, 1, 1>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Inertial>,
-                 IndexTypeB<1, ValenceB, Frame::Inertial>,
-                 IndexTypeC<2, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 2, 1, 2>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Inertial>,
-                 IndexTypeB<1, ValenceB, Frame::Inertial>,
-                 IndexTypeC<3, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 2, 1, 3>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Inertial>,
-                 IndexTypeB<2, ValenceB, Frame::Inertial>,
-                 IndexTypeC<1, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 2, 2, 1>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Inertial>,
-                 IndexTypeB<2, ValenceB, Frame::Inertial>,
-                 IndexTypeC<2, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 2, 2, 2>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Inertial>,
-                 IndexTypeB<2, ValenceB, Frame::Inertial>,
-                 IndexTypeC<3, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 2, 2, 3>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Inertial>,
-                 IndexTypeB<3, ValenceB, Frame::Inertial>,
-                 IndexTypeC<1, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 2, 3, 1>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Inertial>,
-                 IndexTypeB<3, ValenceB, Frame::Inertial>,
-                 IndexTypeC<2, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 2, 3, 2>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Inertial>,
-                 IndexTypeB<3, ValenceB, Frame::Inertial>,
-                 IndexTypeC<3, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 2, 3, 3>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Inertial>,
-                 IndexTypeB<1, ValenceB, Frame::Inertial>,
-                 IndexTypeC<1, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 3, 1, 1>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Inertial>,
-                 IndexTypeB<1, ValenceB, Frame::Inertial>,
-                 IndexTypeC<2, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 3, 1, 2>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Inertial>,
-                 IndexTypeB<1, ValenceB, Frame::Inertial>,
-                 IndexTypeC<3, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 3, 1, 3>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Inertial>,
-                 IndexTypeB<2, ValenceB, Frame::Inertial>,
-                 IndexTypeC<1, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 3, 2, 1>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Inertial>,
-                 IndexTypeB<2, ValenceB, Frame::Inertial>,
-                 IndexTypeC<2, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 3, 2, 2>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Inertial>,
-                 IndexTypeB<2, ValenceB, Frame::Inertial>,
-                 IndexTypeC<3, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 3, 2, 3>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Inertial>,
-                 IndexTypeB<3, ValenceB, Frame::Inertial>,
-                 IndexTypeC<1, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 3, 3, 1>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Inertial>,
-                 IndexTypeB<3, ValenceB, Frame::Inertial>,
-                 IndexTypeC<2, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 3, 3, 2>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-
-  test_compute_rhs_tensor_index_rank_3_core<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Inertial>,
-                 IndexTypeB<3, ValenceB, Frame::Inertial>,
-                 IndexTypeC<3, ValenceC, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 3, 3, 3>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
-}
-
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
                   "[DataStructures][Unit]") {
-  test_compute_rhs_tensor_index_rank_2<double, ti_c_t, ti_I_t, SpatialIndex,
-                                       SpacetimeIndex, UpLo::Lo, UpLo::Up>(
+  // Rank 2 nonsymmetric, spacetime only
+  test_compute_rhs_tensor_index_rank_2_no_symmetry<
+      double, ti_a_t, ti_b_t, SpacetimeIndex, SpacetimeIndex, UpLo::Lo,
+      UpLo::Lo>(ti_a, ti_b);
+  test_compute_rhs_tensor_index_rank_2_no_symmetry<
+      double, ti_A_t, ti_B_t, SpacetimeIndex, SpacetimeIndex, UpLo::Up,
+      UpLo::Up>(ti_A, ti_B);
+  test_compute_rhs_tensor_index_rank_2_no_symmetry<
+      double, ti_d_t, ti_c_t, SpacetimeIndex, SpacetimeIndex, UpLo::Lo,
+      UpLo::Lo>(ti_d, ti_c);
+  test_compute_rhs_tensor_index_rank_2_no_symmetry<
+      double, ti_D_t, ti_C_t, SpacetimeIndex, SpacetimeIndex, UpLo::Up,
+      UpLo::Up>(ti_D, ti_C);
+  test_compute_rhs_tensor_index_rank_2_no_symmetry<
+      double, ti_G_t, ti_b_t, SpacetimeIndex, SpacetimeIndex, UpLo::Up,
+      UpLo::Lo>(ti_G, ti_b);
+  test_compute_rhs_tensor_index_rank_2_no_symmetry<
+      double, ti_f_t, ti_G_t, SpacetimeIndex, SpacetimeIndex, UpLo::Lo,
+      UpLo::Up>(ti_f, ti_G);
+
+  // Rank 2 nonsymmetric, spatial only
+  test_compute_rhs_tensor_index_rank_2_no_symmetry<
+      double, ti_i_t, ti_j_t, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Lo>(
+      ti_i, ti_j);
+  test_compute_rhs_tensor_index_rank_2_no_symmetry<
+      double, ti_I_t, ti_J_t, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Up>(
+      ti_I, ti_J);
+  test_compute_rhs_tensor_index_rank_2_no_symmetry<
+      double, ti_j_t, ti_i_t, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Lo>(
+      ti_j, ti_i);
+  test_compute_rhs_tensor_index_rank_2_no_symmetry<
+      double, ti_J_t, ti_I_t, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Up>(
+      ti_J, ti_I);
+  test_compute_rhs_tensor_index_rank_2_no_symmetry<
+      double, ti_i_t, ti_J_t, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Up>(
+      ti_i, ti_J);
+  test_compute_rhs_tensor_index_rank_2_no_symmetry<
+      double, ti_I_t, ti_j_t, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Lo>(
+      ti_I, ti_j);
+  test_compute_rhs_tensor_index_rank_2_no_symmetry<
+      double, ti_j_t, ti_I_t, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Up>(
+      ti_j, ti_I);
+  test_compute_rhs_tensor_index_rank_2_no_symmetry<
+      double, ti_J_t, ti_i_t, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Lo>(
+      ti_J, ti_i);
+
+  // Rank 2 nonsymmetric, spacetime and spatial mixed
+  test_compute_rhs_tensor_index_rank_2_no_symmetry<
+      double, ti_c_t, ti_I_t, SpacetimeIndex, SpatialIndex, UpLo::Lo, UpLo::Up>(
       ti_c, ti_I);
 
-  test_compute_rhs_tensor_index_rank_3<
-      double, ti_D_t, ti_j_t, ti_B_t, SpatialIndex, SpacetimeIndex,
-      SpatialIndex, UpLo::Up, UpLo::Lo, UpLo::Up>(ti_D, ti_j, ti_B);
+  // Rank 2 symmetric, spacetime
+  test_compute_rhs_tensor_index_rank_2_symmetric<double, ti_a_t, ti_d_t,
+                                                 SpacetimeIndex, SpacetimeIndex,
+                                                 UpLo::Lo, UpLo::Lo>(ti_a,
+                                                                     ti_d);
+  test_compute_rhs_tensor_index_rank_2_symmetric<double, ti_G_t, ti_B_t,
+                                                 SpacetimeIndex, SpacetimeIndex,
+                                                 UpLo::Up, UpLo::Up>(ti_G,
+                                                                     ti_B);
+
+  // Rank 2 symmetric, spatial
+  test_compute_rhs_tensor_index_rank_2_symmetric<
+      double, ti_j_t, ti_i_t, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Lo>(
+      ti_j, ti_i);
+  test_compute_rhs_tensor_index_rank_2_symmetric<
+      double, ti_I_t, ti_J_t, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Up>(
+      ti_I, ti_J);
+
+  // Rank 3 nonsymmetric
+  test_compute_rhs_tensor_index_rank_3_no_symmetry<
+      double, ti_D_t, ti_j_t, ti_B_t, SpacetimeIndex, SpatialIndex,
+      SpacetimeIndex, UpLo::Up, UpLo::Lo, UpLo::Up>(ti_D, ti_j, ti_B);
+
+  // TODO: The below doesn't work due to ti_a and ti_A trying to contract?
+  /*test_compute_rhs_tensor_index_rank_3_ab_symmetry<
+      double, ti_b_t, ti_a_t, ti_A_t, SpacetimeIndex, SpacetimeIndex,
+      SpacetimeIndex, UpLo::Lo, UpLo::Lo, UpLo::Up>(ti_b, ti_a, ti_A);*/
+
+  // Rank 3 ab symmetry
+  test_compute_rhs_tensor_index_rank_3_ab_symmetry<
+      double, ti_b_t, ti_a_t, ti_C_t, SpacetimeIndex, SpacetimeIndex,
+      SpacetimeIndex, UpLo::Lo, UpLo::Lo, UpLo::Up>(ti_b, ti_a, ti_C);
+
+  // Rank 3 ac symmetry
+  test_compute_rhs_tensor_index_rank_3_ac_symmetry<
+      double, ti_i_t, ti_f_t, ti_j_t, SpatialIndex, SpacetimeIndex,
+      SpatialIndex, UpLo::Lo, UpLo::Lo, UpLo::Lo>(ti_i, ti_f, ti_j);
+
+  // Rank 3 bc symmetry
+  test_compute_rhs_tensor_index_rank_3_bc_symmetry<
+      double, ti_d_t, ti_J_t, ti_I_t, SpacetimeIndex, SpatialIndex,
+      SpatialIndex, UpLo::Lo, UpLo::Up, UpLo::Up>(ti_d, ti_J, ti_I);
+
+  // Rank 3 abc symmetry
+  test_compute_rhs_tensor_index_rank_3_abc_symmetry<
+      double, ti_f_t, ti_d_t, ti_a_t, SpacetimeIndex, SpacetimeIndex,
+      SpacetimeIndex, UpLo::Lo, UpLo::Lo, UpLo::Lo>(ti_f, ti_d, ti_a);
 }
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.AddSubtract",

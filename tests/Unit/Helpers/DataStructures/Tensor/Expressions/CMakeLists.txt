@@ -1,12 +1,11 @@
 # Distributed under the MIT License.
 # See LICENSE.txt for details.
 
-add_subdirectory(Tensor)
-
-set(LIBRARY "DataStructuresHelpers")
+set(LIBRARY "TensorExpressionsHelpers")
 
 set(LIBRARY_SOURCES
-  RandomUnitNormal.cpp
+  ComputeRhsTensorIndexRank2TestHelpers.cpp
+  #ComputeRhsTensorIndexRank3TestHelpers.cpp
   )
 
 add_spectre_library(${LIBRARY} ${LIBRARY_SOURCES})
