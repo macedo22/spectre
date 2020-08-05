@@ -11,6 +11,7 @@
 #include "DataStructures/Tensor/Expressions/Evaluate.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank0TestHelpers.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank1TestHelpers.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank2TestHelpers.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank3TestHelpers.hpp"
@@ -90,6 +91,9 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.StorageGet",
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
                   "[DataStructures][Unit]") {
+
+  // Rank 0
+  test_compute_rhs_tensor_index_rank_0<double>();
 
   // Rank 1 spacetime
   test_compute_rhs_tensor_index_rank_1<
