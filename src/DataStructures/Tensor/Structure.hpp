@@ -7,6 +7,7 @@
 #pragma once
 
 #include <array>
+#include <iostream>
 #include <limits>
 
 #include "DataStructures/Tensor/IndexType.hpp"
@@ -447,6 +448,18 @@ struct Structure {
   SPECTRE_ALWAYS_INLINE static constexpr std::size_t get_storage_index(
       const std::array<I, sizeof...(Indices)>& tensor_index) noexcept {
     constexpr auto collapsed_to_storage = collapsed_to_storage_;
+    // diff from Nils:
+    // return collapsed_to_storage[
+    //    compute_collapsed_index(               .....())];
+    /*std::cout << "get_storage_index passed in tensor_index : " << tensor_index
+    << std::endl; std::cout << "result of compute_collapsed_index : " <<
+    (compute_collapsed_index( canonicalize_tensor_index(
+                convert_to_cpp17_array(tensor_index),
+                make_cpp17_array_from_list<
+                    tmpl::conditional_t<0 != sizeof...(Indices), Symm, int>>()),
+            make_cpp17_array_from_list<tmpl::conditional_t<
+                0 != sizeof...(Indices), index_list, size_t>>())) << std::endl
+    << std::endl;*/
     return gsl::at(
         collapsed_to_storage,
         compute_collapsed_index(
@@ -456,6 +469,7 @@ struct Structure {
                     tmpl::conditional_t<0 != sizeof...(Indices), Symm, int>>()),
             make_cpp17_array_from_list<tmpl::conditional_t<
                 0 != sizeof...(Indices), index_list, size_t>>()));
+    // return 0;
   }
 
   template <int... N, Requires<(sizeof...(N) > 0)> = nullptr>
