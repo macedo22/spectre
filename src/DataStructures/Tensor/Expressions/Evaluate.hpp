@@ -30,8 +30,6 @@ struct LhsTensor<RhsTensorIndexList, tmpl::list<LhsTensorIndices...>,
                  RhsSymmetry, RhsTensorIndexTypeList,
                  std::integer_sequence<size_t, Ints...>> {
   static constexpr size_t num_indices = sizeof...(LhsTensorIndices);
-  static constexpr std::make_integer_sequence<size_t, num_indices>
-      running_int_seq{};
   static constexpr std::array<size_t, num_indices> lhs_tensorindex_values = {
       {LhsTensorIndices::value...}};
   static constexpr std::array<size_t, num_indices> rhs_tensorindex_values = {
