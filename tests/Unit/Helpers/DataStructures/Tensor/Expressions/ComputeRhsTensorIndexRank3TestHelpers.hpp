@@ -13,6 +13,7 @@
 #include "DataStructures/Tensor/Expressions/Evaluate.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
+#include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/TMPL.hpp"
 
 // *** The last (outermost) one should go through all
@@ -215,7 +216,61 @@ void test_compute_rhs_tensor_index_rank_3_no_symmetry(
     const TensorIndexTypeA& tensor_index_type_a,
     const TensorIndexTypeB& tensor_index_type_b,
     const TensorIndexTypeC& tensor_index_type_c){
-  // Testing all dimension combinations with grid frame
+#define DIM_A(data) BOOST_PP_TUPLE_ELEM(0, data)
+//#define FRAME_A(data) BOOST_PP_TUPLE_ELEM(1, data)
+//#define VALENCE_A(data) BOOST_PP_TUPLE_ELEM(1, data)
+//#define INDEX_TYPE_A(data) BOOST_PP_TUPLE_ELEM(2, data)
+#define DIM_B(data) BOOST_PP_TUPLE_ELEM(1, data)
+//#define FRAME_B(data) BOOST_PP_TUPLE_ELEM(5, data)
+//#define VALENCE_B(data) BOOST_PP_TUPLE_ELEM(4, data)
+//#define INDEX_TYPE_B(data) BOOST_PP_TUPLE_ELEM(5, data)
+#define DIM_C(data) BOOST_PP_TUPLE_ELEM(2, data)
+//#define FRAME_C(data) BOOST_PP_TUPLE_ELEM(9, data)
+//#define VALENCE_C(data) BOOST_PP_TUPLE_ELEM(7, data)
+//#define INDEX_TYPE_C(data) BOOST_PP_TUPLE_ELEM(8, data)
+#define CALL_TEST_3_INDEX_NO_SYMM(_, data)                                \
+  test_compute_rhs_tensor_index_rank_3_core_no_symmetry<                  \
+      Datatype,                                                           \
+      index_list<IndexTypeA<DIM_A(data), ValenceA, Frame::Grid>,          \
+                 IndexTypeB<DIM_B(data), ValenceB, Frame::Grid>,          \
+                 IndexTypeC<DIM_C(data), ValenceC, Frame::Grid>>,         \
+      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, DIM_A(data),  \
+      DIM_B(data), DIM_C(data)>(tensor_index_type_a, tensor_index_type_b, \
+                                tensor_index_type_c);                     \
+  test_compute_rhs_tensor_index_rank_3_core_no_symmetry<                  \
+      Datatype,                                                           \
+      index_list<IndexTypeA<DIM_A(data), ValenceA, Frame::Inertial>,      \
+                 IndexTypeB<DIM_B(data), ValenceB, Frame::Inertial>,      \
+                 IndexTypeC<DIM_C(data), ValenceC, Frame::Inertial>>,     \
+      TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, DIM_A(data),  \
+      DIM_B(data), DIM_C(data)>(tensor_index_type_a, tensor_index_type_b, \
+                                tensor_index_type_c);
+
+  GENERATE_INSTANTIATIONS(CALL_TEST_3_INDEX_NO_SYMM,
+                        // Terms for IndexA
+                        (1, 2, 3), /*(Frame::Grid, Frame::Inertial),
+                        (UpLo::Up, UpLo::Lo), (SpatialIndex, SpacetimeIndex),*/
+                        // Terms for IndexB
+                        (1, 2, 3), /*(Frame::Grid, Frame::Inertial),
+                        (UpLo::Up, UpLo::Lo), (SpatialIndex, SpacetimeIndex),*/
+                        // Terms for IndexC
+                        (1, 2, 3)/*, (Frame::Grid, Frame::Inertial),
+                        (UpLo::Up, UpLo::Lo), (SpatialIndex, SpacetimeIndex)*/)
+#undef CALL_TEST_3_INDEX_NO_SYMM
+//#undef INDEX_TYPE_C
+//#undef VALENCE_C
+//#undef FRAME_C
+#undef DIM_C
+//#undef INDEX_TYPE_B
+//#undef VALENCE_B
+//#undef FRAME_B
+#undef DIM_B
+//#undef INDEX_TYPE_A
+//#undef VALENCE_A
+//#undef FRAME_A
+#undef DIM_A
+
+  /*// Testing all dimension combinations with grid frame
   test_compute_rhs_tensor_index_rank_3_core_no_symmetry<
       Datatype,
       index_list<IndexTypeA<1, ValenceA, Frame::Grid>,
@@ -647,7 +702,7 @@ void test_compute_rhs_tensor_index_rank_3_no_symmetry(
                  IndexTypeB<3, ValenceB, Frame::Inertial>,
                  IndexTypeC<3, ValenceC, Frame::Inertial>>,
       TensorIndexTypeA, TensorIndexTypeB, TensorIndexTypeC, 3, 3, 3>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);
+      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c);*/
 }
 
 // TensorIndexType refers to TensorIndex<#>
