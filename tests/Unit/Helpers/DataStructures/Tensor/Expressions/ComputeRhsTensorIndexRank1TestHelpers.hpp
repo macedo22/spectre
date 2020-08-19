@@ -11,18 +11,19 @@
 #include "DataStructures/Tensor/Expressions/Evaluate.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
+#include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/TMPL.hpp"
 
-// Check mapping for all positions from 0 to spatial_dim
-template <typename Datatype, typename Symmetry, typename IndexList,
-          typename TensorIndexType>
-void test_compute_rhs_tensor_index_rank_1_core(
-    const TensorIndexType& tensor_index_type, const size_t& spatial_dim) {
-  Tensor<Datatype, Symmetry, IndexList> rhs_tensor{};
+// Check each element of each mapping
+template <typename Datatype, typename Symmetry, typename TensorIndexTypeList,
+          typename TensorIndex>
+void test_compute_rhs_tensor_index_rank_1_core(const TensorIndex& tensorindex,
+                                               const size_t& spatial_dim) {
+  Tensor<Datatype, Symmetry, TensorIndexTypeList> rhs_tensor{};
 
-  auto rhs_tensor_expr = rhs_tensor(tensor_index_type);
+  auto rhs_tensor_expr = rhs_tensor(tensorindex);
 
-  std::array<size_t, 1> index_order = {TensorIndexType::value};
+  std::array<size_t, 1> index_order = {TensorIndex::value};
 
   for (size_t i = 0; i < spatial_dim; i++) {
       const std::array<size_t, 1> i_arr = {i};
@@ -31,47 +32,26 @@ void test_compute_rhs_tensor_index_rank_1_core(
   }
 }
 
-// TensorIndexType refers to TensorIndex<#>
-// IndexType refers to SpatialIndex or SpacetimeIndex
-template <typename Datatype, typename TensorIndexType,
-          template <size_t, UpLo, typename> class IndexType, UpLo Valence>
-void test_compute_rhs_tensor_index_rank_1(
-    const TensorIndexType& tensor_index_type) {
-  // Testing all dimensions with grid frame
-  test_compute_rhs_tensor_index_rank_1_core<
-      Datatype,
-      Symmetry<1>,
-      index_list<IndexType<1, Valence, Frame::Grid>>,
-      TensorIndexType>(tensor_index_type, 1);
+// Test all dimensions with grid and inertial frames
+//
+// TensorIndex refers to TensorIndex<#>
+// TensorIndexType refers to SpatialIndex or SpacetimeIndex
+template <typename Datatype, typename TensorIndex,
+          template <size_t, UpLo, typename> class TensorIndexType, UpLo Valence>
+void test_compute_rhs_tensor_index_rank_1(const TensorIndex& tensorindex) {
+#define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
+#define FRAME(data) BOOST_PP_TUPLE_ELEM(1, data)
 
-  test_compute_rhs_tensor_index_rank_1_core<
-      Datatype,
-      Symmetry<1>,
-      index_list<IndexType<2, Valence, Frame::Grid>>,
-      TensorIndexType>(tensor_index_type, 2);
+#define CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_1_CORE(_, data)     \
+  test_compute_rhs_tensor_index_rank_1_core<                        \
+      Datatype, Symmetry<1>,                                        \
+      index_list<TensorIndexType<DIM(data), Valence, FRAME(data)>>, \
+      TensorIndex>(tensorindex, DIM(data));
 
-  test_compute_rhs_tensor_index_rank_1_core<
-      Datatype,
-      Symmetry<1>,
-      index_list<IndexType<3, Valence, Frame::Grid>>,
-      TensorIndexType>(tensor_index_type, 3);
+  GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_1_CORE,
+                          (1, 2, 3), (Frame::Grid, Frame::Inertial))
 
-  // Testing all dimensions with inertial frame
-  test_compute_rhs_tensor_index_rank_1_core<
-      Datatype,
-      Symmetry<1>,
-      index_list<IndexType<1, Valence, Frame::Inertial>>,
-      TensorIndexType>(tensor_index_type, 1);
-
-  test_compute_rhs_tensor_index_rank_1_core<
-      Datatype,
-      Symmetry<1>,
-      index_list<IndexType<2, Valence, Frame::Inertial>>,
-      TensorIndexType>(tensor_index_type, 2);
-
-  test_compute_rhs_tensor_index_rank_1_core<
-      Datatype,
-      Symmetry<1>,
-      index_list<IndexType<3, Valence, Frame::Inertial>>,
-      TensorIndexType>(tensor_index_type, 3);
+#undef CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_1_CORE
+#undef FRAME
+#undef DIM
 }
