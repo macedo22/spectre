@@ -17,20 +17,19 @@
 #include "Utilities/TMPL.hpp"
 
 // Check each element of each mapping
-template <typename Datatype, typename Symmetry, typename IndexList,
-          typename TensorIndexTypeA, typename TensorIndexTypeB>
+template <typename Datatype, typename Symmetry, typename TensorIndexTypeList,
+          typename TensorIndexA, typename TensorIndexB>
 void test_compute_rhs_tensor_index_rank_2_core(
-    const TensorIndexTypeA& tensor_index_type_a,
-    const TensorIndexTypeB& tensor_index_type_b, const size_t& spatial_dim_a,
-    const size_t& spatial_dim_b) {
-  Tensor<Datatype, Symmetry, IndexList> rhs_tensor{};
+    const TensorIndexA& tensorindex_a, const TensorIndexB& tensorindex_b,
+    const size_t& spatial_dim_a, const size_t& spatial_dim_b) {
+  Tensor<Datatype, Symmetry, TensorIndexTypeList> rhs_tensor{};
 
-  auto rhs_tensor_expr = rhs_tensor(tensor_index_type_a, tensor_index_type_b);
+  auto rhs_tensor_expr = rhs_tensor(tensorindex_a, tensorindex_b);
 
-  std::array<size_t, 2> index_order_ab = {TensorIndexTypeA::value,
-                                          TensorIndexTypeB::value};
-  std::array<size_t, 2> index_order_ba = {TensorIndexTypeB::value,
-                                          TensorIndexTypeA::value};
+  std::array<size_t, 2> index_order_ab = {TensorIndexA::value,
+                                          TensorIndexB::value};
+  std::array<size_t, 2> index_order_ba = {TensorIndexB::value,
+                                          TensorIndexA::value};
 
   for (size_t i = 0; i < spatial_dim_a; i++) {
     for (size_t j = 0; j < spatial_dim_b; j++) {
@@ -55,17 +54,17 @@ template <typename Datatype, typename TensorIndexA, typename TensorIndexB,
           template <size_t, UpLo, typename> class TensorIndexTypeB,
           UpLo ValenceA, UpLo ValenceB>
 void test_compute_rhs_tensor_index_rank_2_no_symmetry(
-    const TensorIndexA& tensor_index_a, const TensorIndexB& tensor_index_b) {
+    const TensorIndexA& tensorindex_a, const TensorIndexB& tensorindex_b) {
 #define DIM_A(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define DIM_B(data) BOOST_PP_TUPLE_ELEM(1, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(2, data)
 
-#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_2_CORE(_, data)                \
-  test_compute_rhs_tensor_index_rank_2_core<                                   \
-      Datatype, Symmetry<2, 1>,                                                \
-      index_list<TensorIndexTypeA<DIM_A(data), ValenceA, FRAME(data)>,         \
-                 TensorIndexTypeB<DIM_B(data), ValenceB, FRAME(data)>>,        \
-      TensorIndexA, TensorIndexB>(tensor_index_a, tensor_index_b, DIM_A(data), \
+#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_2_CORE(_, data)              \
+  test_compute_rhs_tensor_index_rank_2_core<                                 \
+      Datatype, Symmetry<2, 1>,                                              \
+      index_list<TensorIndexTypeA<DIM_A(data), ValenceA, FRAME(data)>,       \
+                 TensorIndexTypeB<DIM_B(data), ValenceB, FRAME(data)>>,      \
+      TensorIndexA, TensorIndexB>(tensorindex_a, tensorindex_b, DIM_A(data), \
                                   DIM_B(data));
 
   GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_2_CORE,
@@ -87,16 +86,16 @@ template <typename Datatype, typename TensorIndexA, typename TensorIndexB,
           template <size_t, UpLo, typename> class TensorIndexTypeB,
           UpLo ValenceA, UpLo ValenceB>
 void test_compute_rhs_tensor_index_rank_2_symmetric(
-    const TensorIndexA& tensor_index_a, const TensorIndexB& tensor_index_b) {
+    const TensorIndexA& tensorindex_a, const TensorIndexB& tensorindex_b) {
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(1, data)
 
-#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_2_CORE(_, data)              \
-  test_compute_rhs_tensor_index_rank_2_core<                                 \
-      Datatype, Symmetry<1, 1>,                                              \
-      index_list<TensorIndexTypeA<DIM(data), ValenceA, FRAME(data)>,         \
-                 TensorIndexTypeB<DIM(data), ValenceB, FRAME(data)>>,        \
-      TensorIndexA, TensorIndexB>(tensor_index_a, tensor_index_b, DIM(data), \
+#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_2_CORE(_, data)            \
+  test_compute_rhs_tensor_index_rank_2_core<                               \
+      Datatype, Symmetry<1, 1>,                                            \
+      index_list<TensorIndexTypeA<DIM(data), ValenceA, FRAME(data)>,       \
+                 TensorIndexTypeB<DIM(data), ValenceB, FRAME(data)>>,      \
+      TensorIndexA, TensorIndexB>(tensorindex_a, tensorindex_b, DIM(data), \
                                   DIM(data));
 
   GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_2_CORE,
