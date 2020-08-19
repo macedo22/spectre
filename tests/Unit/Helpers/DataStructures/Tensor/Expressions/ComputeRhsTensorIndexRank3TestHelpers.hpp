@@ -16,12 +16,11 @@
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/TMPL.hpp"
 
-// *** The last (outermost) one should go through all
-// grid types and spatial dimensions
+// Check each element of each mapping
 template <typename Datatype, typename Symmetry, typename IndexList,
           typename TensorIndexTypeA, typename TensorIndexTypeB,
           typename TensorIndexTypeC>
-void test_compute_rhs_tensor_index_rank_3_core_impl(
+void test_compute_rhs_tensor_index_rank_3_core(
     const TensorIndexTypeA& tensor_index_type_a,
     const TensorIndexTypeB& tensor_index_type_b,
     const TensorIndexTypeC& tensor_index_type_c, const size_t& spatial_dim_a,
@@ -50,7 +49,6 @@ void test_compute_rhs_tensor_index_rank_3_core_impl(
                                            TensorIndexTypeB::value,
                                            TensorIndexTypeA::value};
 
-
   for (size_t i = 0; i < spatial_dim_a; i++) {
     for (size_t j = 0; j < spatial_dim_b; j++) {
       for (size_t k = 0; k < spatial_dim_c; k++) {
@@ -61,7 +59,7 @@ void test_compute_rhs_tensor_index_rank_3_core_impl(
         std::array<size_t, 3> kij = {k, i, j};
         std::array<size_t, 3> kji = {k, j, i};
 
-        // for RHS ={a, b, c}
+        // RHS = {a, b, c}
         CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<3>(
                   index_order_abc, index_order_abc, {{i, j, k}}) == ijk);
         CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<3>(
@@ -79,133 +77,8 @@ void test_compute_rhs_tensor_index_rank_3_core_impl(
   }
 }
 
-// this should iterate over all possible non-symmetric symmetry combinations
-template <typename Datatype, typename IndexList, typename TensorIndexTypeA,
-          typename TensorIndexTypeB, typename TensorIndexTypeC,
-          size_t SpatialDimA, size_t SpatialDimB, size_t SpatialDimC>
-void test_compute_rhs_tensor_index_rank_3_core_no_symmetry(
-    const TensorIndexTypeA& tensor_index_type_a,
-    const TensorIndexTypeB& tensor_index_type_b,
-    const TensorIndexTypeC& tensor_index_type_c) {
-  test_compute_rhs_tensor_index_rank_3_core_impl<
-      Datatype, Symmetry<1, 2, 3>, IndexList, TensorIndexTypeA,
-      TensorIndexTypeB, TensorIndexTypeC>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c,
-      SpatialDimA, SpatialDimB, SpatialDimC);
-
-  test_compute_rhs_tensor_index_rank_3_core_impl<
-      Datatype, Symmetry<1, 3, 2>, IndexList, TensorIndexTypeA,
-      TensorIndexTypeB, TensorIndexTypeC>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c,
-      SpatialDimA, SpatialDimB, SpatialDimC);
-
-  test_compute_rhs_tensor_index_rank_3_core_impl<
-      Datatype, Symmetry<2, 1, 3>, IndexList, TensorIndexTypeA,
-      TensorIndexTypeB, TensorIndexTypeC>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c,
-      SpatialDimA, SpatialDimB, SpatialDimC);
-
-  test_compute_rhs_tensor_index_rank_3_core_impl<
-      Datatype, Symmetry<2, 3, 1>, IndexList, TensorIndexTypeA,
-      TensorIndexTypeB, TensorIndexTypeC>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c,
-      SpatialDimA, SpatialDimB, SpatialDimC);
-
-  test_compute_rhs_tensor_index_rank_3_core_impl<
-      Datatype, Symmetry<3, 1, 2>, IndexList, TensorIndexTypeA,
-      TensorIndexTypeB, TensorIndexTypeC>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c,
-      SpatialDimA, SpatialDimB, SpatialDimC);
-
-  test_compute_rhs_tensor_index_rank_3_core_impl<
-      Datatype, Symmetry<3, 2, 1>, IndexList, TensorIndexTypeA,
-      TensorIndexTypeB, TensorIndexTypeC>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c,
-      SpatialDimA, SpatialDimB, SpatialDimC);
-}
-
-// this should iterate over combinations where first two indices are symmetric
-template <typename Datatype, typename IndexList, typename TensorIndexTypeA,
-          typename TensorIndexTypeB, typename TensorIndexTypeC,
-          size_t SpatialDimA, size_t SpatialDimB, size_t SpatialDimC>
-void test_compute_rhs_tensor_index_rank_3_core_ab_symmetry(
-    const TensorIndexTypeA& tensor_index_type_a,
-    const TensorIndexTypeB& tensor_index_type_b,
-    const TensorIndexTypeC& tensor_index_type_c) {
-  test_compute_rhs_tensor_index_rank_3_core_impl<
-      Datatype, Symmetry<1, 1, 2>, IndexList, TensorIndexTypeA,
-      TensorIndexTypeB, TensorIndexTypeC>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c,
-      SpatialDimA, SpatialDimB, SpatialDimC);
-
-  test_compute_rhs_tensor_index_rank_3_core_impl<
-      Datatype, Symmetry<2, 2, 1>, IndexList, TensorIndexTypeA,
-      TensorIndexTypeB, TensorIndexTypeC>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c,
-      SpatialDimA, SpatialDimB, SpatialDimC);
-}
-
-// this should iterate over combinations where first and third
-// indices are symmetric
-template <typename Datatype, typename IndexList, typename TensorIndexTypeA,
-          typename TensorIndexTypeB, typename TensorIndexTypeC,
-          size_t SpatialDimA, size_t SpatialDimB, size_t SpatialDimC>
-void test_compute_rhs_tensor_index_rank_3_core_ac_symmetry(
-    const TensorIndexTypeA& tensor_index_type_a,
-    const TensorIndexTypeB& tensor_index_type_b,
-    const TensorIndexTypeC& tensor_index_type_c) {
-  test_compute_rhs_tensor_index_rank_3_core_impl<
-      Datatype, Symmetry<1, 2, 1>, IndexList, TensorIndexTypeA,
-      TensorIndexTypeB, TensorIndexTypeC>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c,
-      SpatialDimA, SpatialDimB, SpatialDimC);
-
-  test_compute_rhs_tensor_index_rank_3_core_impl<
-      Datatype, Symmetry<2, 1, 2>, IndexList, TensorIndexTypeA,
-      TensorIndexTypeB, TensorIndexTypeC>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c,
-      SpatialDimA, SpatialDimB, SpatialDimC);
-}
-
-// this should iterate over combinations where second and third
-// indices are symmetric
-template <typename Datatype, typename IndexList, typename TensorIndexTypeA,
-          typename TensorIndexTypeB, typename TensorIndexTypeC,
-          size_t SpatialDimA, size_t SpatialDimB, size_t SpatialDimC>
-void test_compute_rhs_tensor_index_rank_3_core_bc_symmetry(
-    const TensorIndexTypeA& tensor_index_type_a,
-    const TensorIndexTypeB& tensor_index_type_b,
-    const TensorIndexTypeC& tensor_index_type_c) {
-  test_compute_rhs_tensor_index_rank_3_core_impl<
-      Datatype, Symmetry<1, 2, 2>, IndexList, TensorIndexTypeA,
-      TensorIndexTypeB, TensorIndexTypeC>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c,
-      SpatialDimA, SpatialDimB, SpatialDimC);
-
-  test_compute_rhs_tensor_index_rank_3_core_impl<
-      Datatype, Symmetry<2, 1, 1>, IndexList, TensorIndexTypeA,
-      TensorIndexTypeB, TensorIndexTypeC>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c,
-      SpatialDimA, SpatialDimB, SpatialDimC);
-}
-
-// when all three indices are symmetric
-template <typename Datatype, typename IndexList, typename TensorIndexTypeA,
-          typename TensorIndexTypeB, typename TensorIndexTypeC,
-          size_t SpatialDimA, size_t SpatialDimB, size_t SpatialDimC>
-void test_compute_rhs_tensor_index_rank_3_core_abc_symmetry(
-    const TensorIndexTypeA& tensor_index_type_a,
-    const TensorIndexTypeB& tensor_index_type_b,
-    const TensorIndexTypeC& tensor_index_type_c) {
-  test_compute_rhs_tensor_index_rank_3_core_impl<
-      Datatype, Symmetry<1, 1, 1>, IndexList, TensorIndexTypeA,
-      TensorIndexTypeB, TensorIndexTypeC>(
-      tensor_index_type_a, tensor_index_type_b, tensor_index_type_c,
-      SpatialDimA, SpatialDimB, SpatialDimC);
-}
-
-// Call test_compute_rhs_tensor_index_rank_3_core_no_symmetry
-// for all dimension combinations with grid and inertial frames
+// Test all dimension combinations with grid and inertial frames
+// for nonsymmetric indices
 //
 // TensorIndex refers to TensorIndex<#>
 // TensorIndexType refers to SpatialIndex or SpacetimeIndex
@@ -223,28 +96,29 @@ void test_compute_rhs_tensor_index_rank_3_no_symmetry(
 #define DIM_C(data) BOOST_PP_TUPLE_ELEM(2, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(3, data)
 
-#define CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE_NO_SYMMETRY(_, data) \
-  test_compute_rhs_tensor_index_rank_3_core_no_symmetry<                    \
-      Datatype,                                                             \
-      index_list<TensorIndexTypeA<DIM_A(data), ValenceA, FRAME(data)>,      \
-                 TensorIndexTypeB<DIM_B(data), ValenceB, FRAME(data)>,      \
-                 TensorIndexTypeC<DIM_C(data), ValenceC, FRAME(data)>>,     \
-      TensorIndexA, TensorIndexB, TensorIndexC, DIM_A(data), DIM_B(data),   \
-      DIM_C(data)>(tensor_index_a, tensor_index_b, tensor_index_c);
+#define CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE(_, data)         \
+  test_compute_rhs_tensor_index_rank_3_core<                            \
+      Datatype, Symmetry<3, 2, 1>,                                      \
+      index_list<TensorIndexTypeA<DIM_A(data), ValenceA, FRAME(data)>,  \
+                 TensorIndexTypeB<DIM_B(data), ValenceB, FRAME(data)>,  \
+                 TensorIndexTypeC<DIM_C(data), ValenceC, FRAME(data)>>, \
+      TensorIndexA, TensorIndexB, TensorIndexC>(                        \
+      tensor_index_a, tensor_index_b, tensor_index_c, DIM_A(data),      \
+      DIM_B(data), DIM_C(data));
 
-  GENERATE_INSTANTIATIONS(
-      CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE_NO_SYMMETRY, (1, 2, 3),
-      (1, 2, 3), (1, 2, 3), (Frame::Grid, Frame::Inertial))
+  GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE,
+                          (1, 2, 3), (1, 2, 3), (1, 2, 3),
+                          (Frame::Grid, Frame::Inertial))
 
-#undef CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE_NO_SYMMETRY
+#undef CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE
 #undef FRAME
 #undef DIM_C
 #undef DIM_B
 #undef DIM_A
 }
 
-// Call test_compute_rhs_tensor_index_rank_3_core_ab_symmetry
-// for all dimension combinations with grid and inertial frames
+// Test all dimension combinations with grid and inertial frames
+// for symmetric first and second indices
 //
 // TensorIndex refers to TensorIndex<#>
 // TensorIndexType refers to SpatialIndex or SpacetimeIndex
@@ -261,27 +135,27 @@ void test_compute_rhs_tensor_index_rank_3_ab_symmetry(
 #define DIM_C(data) BOOST_PP_TUPLE_ELEM(1, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(2, data)
 
-#define CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE_AB_SYMMETRY(_, data) \
-  test_compute_rhs_tensor_index_rank_3_core_ab_symmetry<                    \
-      Datatype,                                                             \
-      index_list<TensorIndexTypeA<DIM_AB(data), ValenceA, FRAME(data)>,     \
-                 TensorIndexTypeB<DIM_AB(data), ValenceB, FRAME(data)>,     \
-                 TensorIndexTypeC<DIM_C(data), ValenceC, FRAME(data)>>,     \
-      TensorIndexA, TensorIndexB, TensorIndexC, DIM_AB(data), DIM_AB(data), \
-      DIM_C(data)>(tensor_index_a, tensor_index_b, tensor_index_c);
+#define CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE(_, data)         \
+  test_compute_rhs_tensor_index_rank_3_core<                            \
+      Datatype, Symmetry<2, 2, 1>,                                      \
+      index_list<TensorIndexTypeA<DIM_AB(data), ValenceA, FRAME(data)>, \
+                 TensorIndexTypeB<DIM_AB(data), ValenceB, FRAME(data)>, \
+                 TensorIndexTypeC<DIM_C(data), ValenceC, FRAME(data)>>, \
+      TensorIndexA, TensorIndexB, TensorIndexC>(                        \
+      tensor_index_a, tensor_index_b, tensor_index_c, DIM_AB(data),     \
+      DIM_AB(data), DIM_C(data));
 
-  GENERATE_INSTANTIATIONS(
-      CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE_AB_SYMMETRY, (1, 2, 3),
-      (1, 2, 3), (Frame::Grid, Frame::Inertial))
+  GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE,
+                          (1, 2, 3), (1, 2, 3), (Frame::Grid, Frame::Inertial))
 
-#undef CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE_AB_SYMMETRY
+#undef CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE
 #undef FRAME
 #undef DIM_C
 #undef DIM_AB
 }
 
-// Call test_compute_rhs_tensor_index_rank_3_core_ac_symmetry
-// for all dimension combinations with grid and inertial frames
+// Test all dimension combinations with grid and inertial frames
+// for symmetric first and third indices
 //
 // TensorIndex refers to TensorIndex<#>
 // TensorIndexType refers to SpatialIndex or SpacetimeIndex
@@ -298,27 +172,27 @@ void test_compute_rhs_tensor_index_rank_3_ac_symmetry(
 #define DIM_B(data) BOOST_PP_TUPLE_ELEM(1, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(2, data)
 
-#define CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE_AC_SYMMETRY(_, data) \
-  test_compute_rhs_tensor_index_rank_3_core_ac_symmetry<                    \
-      Datatype,                                                             \
-      index_list<TensorIndexTypeA<DIM_AC(data), ValenceA, FRAME(data)>,     \
-                 TensorIndexTypeB<DIM_B(data), ValenceB, FRAME(data)>,      \
-                 TensorIndexTypeC<DIM_AC(data), ValenceC, FRAME(data)>>,    \
-      TensorIndexA, TensorIndexB, TensorIndexC, DIM_AC(data), DIM_B(data),  \
-      DIM_AC(data)>(tensor_index_a, tensor_index_b, tensor_index_c);
+#define CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE(_, data)          \
+  test_compute_rhs_tensor_index_rank_3_core<                             \
+      Datatype, Symmetry<2, 1, 2>,                                       \
+      index_list<TensorIndexTypeA<DIM_AC(data), ValenceA, FRAME(data)>,  \
+                 TensorIndexTypeB<DIM_B(data), ValenceB, FRAME(data)>,   \
+                 TensorIndexTypeC<DIM_AC(data), ValenceC, FRAME(data)>>, \
+      TensorIndexA, TensorIndexB, TensorIndexC>(                         \
+      tensor_index_a, tensor_index_b, tensor_index_c, DIM_AC(data),      \
+      DIM_B(data), DIM_AC(data));
 
-  GENERATE_INSTANTIATIONS(
-      CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE_AC_SYMMETRY, (1, 2, 3),
-      (1, 2, 3), (Frame::Grid, Frame::Inertial))
+  GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE,
+                          (1, 2, 3), (1, 2, 3), (Frame::Grid, Frame::Inertial))
 
-#undef CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE_AC_SYMMETRY
+#undef CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE
 #undef FRAME
 #undef DIM_B
 #undef DIM_AC
 }
 
-// Call test_compute_rhs_tensor_index_rank_3_core_bc_symmetry
-// for all dimension combinations with grid and inertial frames
+// Test all dimension combinations with grid and inertial frames
+// for symmetric second and third indices
 //
 // TensorIndex refers to TensorIndex<#>
 // TensorIndexType refers to SpatialIndex or SpacetimeIndex
@@ -335,27 +209,27 @@ void test_compute_rhs_tensor_index_rank_3_bc_symmetry(
 #define DIM_BC(data) BOOST_PP_TUPLE_ELEM(1, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(2, data)
 
-#define CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE_BC_SYMMETRY(_, data) \
-  test_compute_rhs_tensor_index_rank_3_core_bc_symmetry<                    \
-      Datatype,                                                             \
-      index_list<TensorIndexTypeA<DIM_A(data), ValenceA, FRAME(data)>,      \
-                 TensorIndexTypeB<DIM_BC(data), ValenceB, FRAME(data)>,     \
-                 TensorIndexTypeC<DIM_BC(data), ValenceC, FRAME(data)>>,    \
-      TensorIndexA, TensorIndexB, TensorIndexC, DIM_A(data), DIM_BC(data),  \
-      DIM_BC(data)>(tensor_index_a, tensor_index_b, tensor_index_c);
+#define CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE(_, data)          \
+  test_compute_rhs_tensor_index_rank_3_core<                             \
+      Datatype, Symmetry<2, 1, 1>,                                       \
+      index_list<TensorIndexTypeA<DIM_A(data), ValenceA, FRAME(data)>,   \
+                 TensorIndexTypeB<DIM_BC(data), ValenceB, FRAME(data)>,  \
+                 TensorIndexTypeC<DIM_BC(data), ValenceC, FRAME(data)>>, \
+      TensorIndexA, TensorIndexB, TensorIndexC>(                         \
+      tensor_index_a, tensor_index_b, tensor_index_c, DIM_A(data),       \
+      DIM_BC(data), DIM_BC(data));
 
-  GENERATE_INSTANTIATIONS(
-      CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE_BC_SYMMETRY, (1, 2, 3),
-      (1, 2, 3), (Frame::Grid, Frame::Inertial))
+  GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE,
+                          (1, 2, 3), (1, 2, 3), (Frame::Grid, Frame::Inertial))
 
-#undef CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE_BC_SYMMETRY
+#undef CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE
 #undef FRAME
 #undef DIM_BC
 #undef DIM_A
 }
 
-// Call test_compute_rhs_tensor_index_rank_3_core_abc_symmetry
-// for all dimension combinations with grid and inertial frames
+// Test all dimension combinations with grid and inertial frames
+// for symmetric indices
 //
 // TensorIndex refers to TensorIndex<#>
 // TensorIndexType refers to SpatialIndex or SpacetimeIndex
@@ -371,20 +245,20 @@ void test_compute_rhs_tensor_index_rank_3_abc_symmetry(
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(1, data)
 
-#define CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE_ABC_SYMMETRY(_, data) \
-  test_compute_rhs_tensor_index_rank_3_core_abc_symmetry<                    \
-      Datatype,                                                              \
-      index_list<TensorIndexTypeA<DIM(data), ValenceA, FRAME(data)>,         \
-                 TensorIndexTypeB<DIM(data), ValenceB, FRAME(data)>,         \
-                 TensorIndexTypeC<DIM(data), ValenceC, FRAME(data)>>,        \
-      TensorIndexA, TensorIndexB, TensorIndexC, DIM(data), DIM(data),        \
-      DIM(data)>(tensor_index_a, tensor_index_b, tensor_index_c);
+#define CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE(_, data)             \
+  test_compute_rhs_tensor_index_rank_3_core<                                \
+      Datatype, Symmetry<1, 1, 1>,                                          \
+      index_list<TensorIndexTypeA<DIM(data), ValenceA, FRAME(data)>,        \
+                 TensorIndexTypeB<DIM(data), ValenceB, FRAME(data)>,        \
+                 TensorIndexTypeC<DIM(data), ValenceC, FRAME(data)>>,       \
+      TensorIndexA, TensorIndexB, TensorIndexC>(                            \
+      tensor_index_a, tensor_index_b, tensor_index_c, DIM(data), DIM(data), \
+      DIM(data));
 
-  GENERATE_INSTANTIATIONS(
-      CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE_ABC_SYMMETRY, (1, 2, 3),
-      (Frame::Grid, Frame::Inertial))
+  GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE,
+                          (1, 2, 3), (Frame::Grid, Frame::Inertial))
 
-#undef CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE_ABC_SYMMETRY
+#undef CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_3_CORE
 #undef FRAME
 #undef DIM
 }
