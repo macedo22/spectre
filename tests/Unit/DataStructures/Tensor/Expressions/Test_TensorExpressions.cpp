@@ -168,43 +168,11 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.StorageGet",
                   "[DataStructures][Unit]") {
-  /*Tensor<double, Symmetry<1, 1>,
-         index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
-                    SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
-      All{};
-  std::iota(All.begin(), All.end(), 0.0);
-
-  auto result1 = TensorExpressions::evaluate<ti_a_t, ti_b_t>(All(ti_a, ti_b));
-
-  auto result2 = TensorExpressions::evaluate<ti_a_t, ti_b_t>(All(ti_b, ti_a));
-
-  auto result3 = TensorExpressions::evaluate<ti_b_t, ti_a_t>(All(ti_a, ti_b));
-
-  auto result4 = TensorExpressions::evaluate<ti_b_t, ti_a_t>(All(ti_b, ti_a));
-
-  for (int i = 0; i < 3; ++i) {
-    for (int j = 0; j < 3; ++j) {
-      CHECK(result1.get(i, j) == All.get(i, j));
-      CHECK(result2.get(j, i) == All.get(i, j));
-      CHECK(result3.get(j, i) == All.get(i, j));
-      CHECK(result4.get(i, j) == All.get(i, j));
-
-      CHECK(result1.get(j, i) == result2.get(i, j));
-      CHECK(result1.get(j, i) == result2.get(i, j));
-      CHECK(result1.get(i, j) == result4.get(i, j));
-      CHECK(result2.get(i, j) == result3.get(i, j));
-      CHECK(result2.get(j, i) == result4.get(i, j));
-      CHECK(result3.get(j, i) == result4.get(i, j));
-    }
-  }*/
-
-  // TODO : add back the test case combinations for rank 2 from
-  // compute_rhs_tensor_index that I removed
   // Rank 2 nonsymmetric, spacetime only
   test_storage_get_rank_2_no_symmetry<double, ti_a_t, ti_b_t, SpacetimeIndex,
                                       SpacetimeIndex, UpLo::Lo, UpLo::Lo>(ti_a,
                                                                           ti_b);
-  /*test_storage_get_rank_2_no_symmetry<
+  test_storage_get_rank_2_no_symmetry<
       double, ti_A_t, ti_B_t, SpacetimeIndex, SpacetimeIndex, UpLo::Up,
       UpLo::Up>(ti_A, ti_B);
   test_storage_get_rank_2_no_symmetry<
@@ -227,12 +195,24 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.StorageGet",
   test_storage_get_rank_2_no_symmetry<
       double, ti_I_t, ti_J_t, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Up>(
       ti_I, ti_J);
+   test_storage_get_rank_2_no_symmetry<
+      double, ti_j_t, ti_i_t, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Lo>(
+      ti_j, ti_i);
+  test_storage_get_rank_2_no_symmetry<
+      double, ti_J_t, ti_I_t, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Up>(
+      ti_J, ti_I);
   test_storage_get_rank_2_no_symmetry<
       double, ti_i_t, ti_J_t, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Up>(
       ti_i, ti_J);
   test_storage_get_rank_2_no_symmetry<
       double, ti_I_t, ti_j_t, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Lo>(
       ti_I, ti_j);
+  test_storage_get_rank_2_no_symmetry<
+      double, ti_j_t, ti_I_t, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Up>(
+      ti_j, ti_I);
+  test_storage_get_rank_2_no_symmetry<
+      double, ti_J_t, ti_i_t, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Lo>(
+      ti_J, ti_i);
 
   // Rank 2 nonsymmetric, spacetime and spatial mixed
   test_storage_get_rank_2_no_symmetry<
@@ -276,28 +256,31 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.StorageGet",
       ti_j, ti_i);
   test_storage_get_rank_2_symmetric<
       double, ti_I_t, ti_J_t, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Up>(
-      ti_I, ti_J);*/
+      ti_I, ti_J);
 
-  // Rank 3 testsing - TODO: factor out into test methods
+  // TODO - define the methods below
+  /*// Rank 3 nonsymmetric
+  test_storage_get_rank_3_no_symmetry<
+      double, ti_D_t, ti_j_t, ti_B_t, SpacetimeIndex, SpatialIndex,
+      SpacetimeIndex, UpLo::Up, UpLo::Lo, UpLo::Up>(ti_D, ti_j, ti_B);
 
-  Tensor<double, Symmetry<2, 1, 2>,
-         index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
-                    SpatialIndex<3, UpLo::Lo, Frame::Grid>,
-                    SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
-      Auul{};
+  // Rank 3 ab symmetry
+  test_storage_get_rank_3_ab_symmetry<
+      double, ti_b_t, ti_a_t, ti_C_t, SpacetimeIndex, SpacetimeIndex,
+      SpacetimeIndex, UpLo::Lo, UpLo::Lo, UpLo::Up>(ti_b, ti_a, ti_C);
 
-  auto result5 = TensorExpressions::evaluate<ti_G_t, ti_B_t, ti_d_t>(
-      Auul(ti_G, ti_B, ti_d));
-  auto result6 = TensorExpressions::evaluate<ti_G_t, ti_B_t, ti_d_t>(
-      Auul(ti_d, ti_G, ti_B));
+  // Rank 3 ac symmetry
+  test_storage_get_rank_3_ac_symmetry<
+      double, ti_i_t, ti_f_t, ti_j_t, SpatialIndex, SpacetimeIndex,
+      SpatialIndex, UpLo::Lo, UpLo::Lo, UpLo::Lo>(ti_i, ti_f, ti_j);
 
-  for (size_t i = 0; i < 3; ++i) {
-    for (size_t j = 0; j < 3; ++j) {
-      for (size_t k = 0; k < 3; k++) {
-        CHECK(result5.get(i, j, k) == Auul.get(i, j, k));
-        CHECK(result6.get(j, k, i) == Auul.get(i, j, k));
-        CHECK(result5.get(i, j, k) == result6.get(j, k, i));
-      }
-    }
-  }
+  // Rank 3 bc symmetry
+  test_storage_get_rank_3_bc_symmetry<
+      double, ti_d_t, ti_J_t, ti_I_t, SpacetimeIndex, SpatialIndex,
+      SpatialIndex, UpLo::Lo, UpLo::Up, UpLo::Up>(ti_d, ti_J, ti_I);
+
+  // Rank 3 abc symmetry
+  test_storage_get_rank_3_abc_symmetry<
+      double, ti_f_t, ti_d_t, ti_a_t, SpacetimeIndex, SpacetimeIndex,
+      SpacetimeIndex, UpLo::Lo, UpLo::Lo, UpLo::Lo>(ti_f, ti_d, ti_a);*/
 }

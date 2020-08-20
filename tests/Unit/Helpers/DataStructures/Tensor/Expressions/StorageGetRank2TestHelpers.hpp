@@ -11,60 +11,27 @@
 #include "DataStructures/Tensor/Expressions/Evaluate.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
+#include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/TMPL.hpp"
 
 // figure out how to note need to pass in spatial dims and tensor index types
-template <typename Datatype, typename Symmetry, typename IndexList,
-          typename TensorIndexTypeA, typename TensorIndexTypeB>
-void test_storage_get_rank_2_core_impl(
-    const TensorIndexTypeA& tensor_index_type_a,
-    const TensorIndexTypeB& tensor_index_type_b, const size_t& spatial_dim_1,
-    const size_t& spatial_dim_2) {
-  Tensor<Datatype, Symmetry, IndexList> rhs_tensor{};
+template <typename Datatype, typename Symmetry, typename TensorIndexTypeList,
+          typename TensorIndexA, typename TensorIndexB>
+void test_storage_get_rank_2_core(const TensorIndexA& tensorindex_a,
+                                  const TensorIndexB& tensorindex_b,
+                                  const size_t& spatial_dim_a,
+                                  const size_t& spatial_dim_b) {
+  Tensor<Datatype, Symmetry, TensorIndexTypeList> rhs_tensor{};
   std::iota(rhs_tensor.begin(), rhs_tensor.end(), 0.0);
 
-  /*std::cout << "\n\n Rank 2 tensor" << std::endl
-            << "spatial_dim_1 : " << spatial_dim_1 << std::endl
-            << "spatial_dim_2 : " << spatial_dim_2 << std::endl;*/
+  auto ab_to_ab = TensorExpressions::evaluate<TensorIndexA, TensorIndexB>(
+      rhs_tensor(tensorindex_a, tensorindex_b));  // i j -> i j
 
-  // TODO : need to specialize the below into multiple functions because
-  // not all of these expressions can be evaluated - all of these
-  // only work if the indices are symmetric
-  auto ab_to_ab =
-      TensorExpressions::evaluate<TensorIndexTypeA, TensorIndexTypeB>(
-          rhs_tensor(tensor_index_type_a, tensor_index_type_b));  // i j -> i j
+  auto ab_to_ba = TensorExpressions::evaluate<TensorIndexB, TensorIndexA>(
+      rhs_tensor(tensorindex_a, tensorindex_b));  // i j -> j i
 
-  /*auto ba_to_ab = TensorExpressions::evaluate<
-                        TensorIndexTypeA, TensorIndexTypeB>(
-      rhs_tensor(tensor_index_type_b, tensor_index_type_a));  // i j -> j i*/
-
-  // Not compiling either due to an outside error with collapsed_to_storage
-  // (or something related to it) or my own compute_map or
-  // (storage) get function
-  auto ab_to_ba =
-      TensorExpressions::evaluate<TensorIndexTypeB, TensorIndexTypeA>(
-          rhs_tensor(tensor_index_type_a, tensor_index_type_b));  // i j -> j i
-
-  /*auto ba_to_ba = TensorExpressions::evaluate<
-                        TensorIndexTypeB, TensorIndexTypeA>(
-      rhs_tensor(tensor_index_type_b, tensor_index_type_a));  // i j -> i j*/
-
-  for (size_t i = 0; i < spatial_dim_1; ++i) {
-    for (size_t j = 0; j < spatial_dim_2; ++j) {
-      // OLD - don't need all of theseS
-      /*CHECK(ab_to_ab.get(i, j) == rhs_tensor.get(i, j));
-      CHECK(ba_to_ab.get(j, i) == rhs_tensor.get(i, j));
-      CHECK(ab_to_ba.get(j, i) == rhs_tensor.get(i, j));
-      CHECK(ba_to_ba.get(i, j) == rhs_tensor.get(i, j));
-
-      CHECK(ab_to_ab.get(i, j) == ba_to_ab.get(j, i));
-      CHECK(ab_to_ab.get(i, j) == ab_to_ba.get(j, i));
-      CHECK(ab_to_ab.get(i, j) == ba_to_ba.get(i, j));
-      CHECK(ba_to_ab.get(j, i) == ab_to_ba.get(j, i));
-      CHECK(ba_to_ab.get(j, i) == ba_to_ba.get(i, j));
-      CHECK(ab_to_ba.get(j, i) == ba_to_ba.get(i, j));*/
-
-      // uncomment the below once the ab_to_ba is fixed above
+  for (size_t i = 0; i < spatial_dim_a; ++i) {
+    for (size_t j = 0; j < spatial_dim_b; ++j) {
       CHECK(ab_to_ab.get(i, j) == rhs_tensor.get(i, j));
       CHECK(ab_to_ba.get(j, i) == rhs_tensor.get(i, j));
       CHECK(ab_to_ab.get(i, j) == ab_to_ba.get(j, i));
@@ -72,221 +39,64 @@ void test_storage_get_rank_2_core_impl(
   }
 }
 
-// this should iterate over all possible non-symmetric symmetry combinations
-template <typename Datatype, typename IndexList, typename TensorIndexTypeA,
-          typename TensorIndexTypeB, size_t SpatialDim1, size_t SpatialDim2>
-void test_storage_get_rank_2_core_no_symmetry(
-    const TensorIndexTypeA& tensor_index_type_a,
-    const TensorIndexTypeB& tensor_index_type_b) {
-  test_storage_get_rank_2_core_impl<Datatype, Symmetry<1, 2>, IndexList,
-                                    TensorIndexTypeA, TensorIndexTypeB>(
-      tensor_index_type_a, tensor_index_type_b, SpatialDim1, SpatialDim2);
-  test_storage_get_rank_2_core_impl<Datatype, Symmetry<2, 1>, IndexList,
-                                    TensorIndexTypeA, TensorIndexTypeB>(
-      tensor_index_type_a, tensor_index_type_b, SpatialDim1, SpatialDim2);
+// Test all dimension combinations with grid and inertial frames
+// for nonsymmetric indices
+//
+// TensorIndex refers to TensorIndex<#>
+// TensorIndexType refers to SpatialIndex or SpacetimeIndex
+template <typename Datatype, typename TensorIndexA, typename TensorIndexB,
+          template <size_t, UpLo, typename> class TensorIndexTypeA,
+          template <size_t, UpLo, typename> class TensorIndexTypeB,
+          UpLo ValenceA, UpLo ValenceB>
+void test_storage_get_rank_2_no_symmetry(const TensorIndexA& tensorindex_a,
+                                         const TensorIndexB& tensorindex_b) {
+#define DIM_A(data) BOOST_PP_TUPLE_ELEM(0, data)
+#define DIM_B(data) BOOST_PP_TUPLE_ELEM(1, data)
+#define FRAME(data) BOOST_PP_TUPLE_ELEM(2, data)
+
+#define CALL_TEST_STORAGE_GET_RANK_2_CORE(_, data)                           \
+  test_storage_get_rank_2_core<                                              \
+      Datatype, Symmetry<2, 1>,                                              \
+      index_list<TensorIndexTypeA<DIM_A(data), ValenceA, FRAME(data)>,       \
+                 TensorIndexTypeB<DIM_B(data), ValenceB, FRAME(data)>>,      \
+      TensorIndexA, TensorIndexB>(tensorindex_a, tensorindex_b, DIM_A(data), \
+                                  DIM_B(data));
+
+  GENERATE_INSTANTIATIONS(CALL_TEST_STORAGE_GET_RANK_2_CORE, (1, 2, 3),
+                          (1, 2, 3), (Frame::Grid, Frame::Inertial))
+
+#undef CALL_TEST_STORAGE_GET_RANK_2_CORE
+#undef FRAME
+#undef DIM_B
+#undef DIM_A
 }
 
-// this should iterate over all possible non-symmetric symmetry combinations
-template <typename Datatype, typename IndexList, typename TensorIndexTypeA,
-          typename TensorIndexTypeB, size_t SpatialDim1, size_t SpatialDim2>
-void test_storage_get_rank_2_core_symmetric(
-    const TensorIndexTypeA& tensor_index_type_a,
-    const TensorIndexTypeB& tensor_index_type_b) {
-  test_storage_get_rank_2_core_impl<Datatype, Symmetry<1, 1>, IndexList,
-                                    TensorIndexTypeA, TensorIndexTypeB>(
-      tensor_index_type_a, tensor_index_type_b, SpatialDim1, SpatialDim2);
-}
+// Test all dimensions with grid and inertial frames
+// for symmetric indices
+//
+// TensorIndex refers to TensorIndex<#>
+// TensorIndexType refers to SpatialIndex or SpacetimeIndex
+template <typename Datatype, typename TensorIndexA, typename TensorIndexB,
+          template <size_t, UpLo, typename> class TensorIndexTypeA,
+          template <size_t, UpLo, typename> class TensorIndexTypeB,
+          UpLo ValenceA, UpLo ValenceB>
+void test_storage_get_rank_2_symmetric(const TensorIndexA& tensorindex_a,
+                                       const TensorIndexB& tensorindex_b) {
+#define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
+#define FRAME(data) BOOST_PP_TUPLE_ELEM(1, data)
 
-// TensorIndexType refers to TensorIndex<#>
-// IndexType refers to SpatialIndex or SpacetimeIndex
-template <typename Datatype, typename TensorIndexTypeA,
-          typename TensorIndexTypeB,
-          template <size_t, UpLo, typename> class IndexTypeA,
-          template <size_t, UpLo, typename> class IndexTypeB, UpLo ValenceA,
-          UpLo ValenceB>
-void test_storage_get_rank_2_no_symmetry(
-    const TensorIndexTypeA& tensor_index_type_a,
-    const TensorIndexTypeB& tensor_index_type_b) {
-  // Testing all dimension combinations with grid frame
-  test_storage_get_rank_2_core_no_symmetry<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Grid>,
-                 IndexTypeB<1, ValenceB, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, 1, 1>(tensor_index_type_a,
-                                                tensor_index_type_b);
+#define CALL_TEST_STORAGE_GET_RANK_2_CORE(_, data)                         \
+  test_storage_get_rank_2_core<                                            \
+      Datatype, Symmetry<1, 1>,                                            \
+      index_list<TensorIndexTypeA<DIM(data), ValenceA, FRAME(data)>,       \
+                 TensorIndexTypeB<DIM(data), ValenceB, FRAME(data)>>,      \
+      TensorIndexA, TensorIndexB>(tensorindex_a, tensorindex_b, DIM(data), \
+                                  DIM(data));
 
-  test_storage_get_rank_2_core_no_symmetry<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Grid>,
-                 IndexTypeB<2, ValenceB, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, 1, 2>(tensor_index_type_a,
-                                                tensor_index_type_b);
+  GENERATE_INSTANTIATIONS(CALL_TEST_STORAGE_GET_RANK_2_CORE, (1, 2, 3),
+                          (Frame::Grid, Frame::Inertial))
 
-  test_storage_get_rank_2_core_no_symmetry<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Grid>,
-                 IndexTypeB<3, ValenceB, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, 1, 3>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_storage_get_rank_2_core_no_symmetry<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Grid>,
-                 IndexTypeB<1, ValenceB, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, 2, 1>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_storage_get_rank_2_core_no_symmetry<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Grid>,
-                 IndexTypeB<2, ValenceB, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, 2, 2>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_storage_get_rank_2_core_no_symmetry<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Grid>,
-                 IndexTypeB<3, ValenceB, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, 2, 3>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_storage_get_rank_2_core_no_symmetry<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Grid>,
-                 IndexTypeB<1, ValenceB, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, 3, 1>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_storage_get_rank_2_core_no_symmetry<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Grid>,
-                 IndexTypeB<2, ValenceB, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, 3, 2>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_storage_get_rank_2_core_no_symmetry<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Grid>,
-                 IndexTypeB<3, ValenceB, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, 3, 3>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  // Testing all dimension combinations with inertial frame
-  test_storage_get_rank_2_core_no_symmetry<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Inertial>,
-                 IndexTypeB<1, ValenceB, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, 1, 1>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_storage_get_rank_2_core_no_symmetry<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Inertial>,
-                 IndexTypeB<2, ValenceB, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, 1, 2>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_storage_get_rank_2_core_no_symmetry<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Inertial>,
-                 IndexTypeB<3, ValenceB, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, 1, 3>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_storage_get_rank_2_core_no_symmetry<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Inertial>,
-                 IndexTypeB<1, ValenceB, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, 2, 1>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_storage_get_rank_2_core_no_symmetry<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Inertial>,
-                 IndexTypeB<2, ValenceB, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, 2, 2>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_storage_get_rank_2_core_no_symmetry<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Inertial>,
-                 IndexTypeB<3, ValenceB, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, 2, 3>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_storage_get_rank_2_core_no_symmetry<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Inertial>,
-                 IndexTypeB<1, ValenceB, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, 3, 1>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_storage_get_rank_2_core_no_symmetry<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Inertial>,
-                 IndexTypeB<2, ValenceB, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, 3, 2>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_storage_get_rank_2_core_no_symmetry<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Inertial>,
-                 IndexTypeB<3, ValenceB, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, 3, 3>(tensor_index_type_a,
-                                                tensor_index_type_b);
-}
-
-// TensorIndexType refers to TensorIndex<#>
-// IndexType refers to SpatialIndex or SpacetimeIndex
-template <typename Datatype, typename TensorIndexTypeA,
-          typename TensorIndexTypeB,
-          template <size_t, UpLo, typename> class IndexTypeA,
-          template <size_t, UpLo, typename> class IndexTypeB, UpLo ValenceA,
-          UpLo ValenceB>
-void test_storage_get_rank_2_symmetric(
-    const TensorIndexTypeA& tensor_index_type_a,
-    const TensorIndexTypeB& tensor_index_type_b) {
-  // Testing all dimension combinations with grid frame
-  test_storage_get_rank_2_core_symmetric<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Grid>,
-                 IndexTypeB<1, ValenceB, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, 1, 1>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_storage_get_rank_2_core_symmetric<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Grid>,
-                 IndexTypeB<2, ValenceB, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, 2, 2>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_storage_get_rank_2_core_symmetric<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Grid>,
-                 IndexTypeB<3, ValenceB, Frame::Grid>>,
-      TensorIndexTypeA, TensorIndexTypeB, 3, 3>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  // Testing all dimension combinations with inertial frame
-  test_storage_get_rank_2_core_symmetric<
-      Datatype,
-      index_list<IndexTypeA<1, ValenceA, Frame::Inertial>,
-                 IndexTypeB<1, ValenceB, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, 1, 1>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_storage_get_rank_2_core_symmetric<
-      Datatype,
-      index_list<IndexTypeA<2, ValenceA, Frame::Inertial>,
-                 IndexTypeB<2, ValenceB, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, 2, 2>(tensor_index_type_a,
-                                                tensor_index_type_b);
-
-  test_storage_get_rank_2_core_symmetric<
-      Datatype,
-      index_list<IndexTypeA<3, ValenceA, Frame::Inertial>,
-                 IndexTypeB<3, ValenceB, Frame::Inertial>>,
-      TensorIndexTypeA, TensorIndexTypeB, 3, 3>(tensor_index_type_a,
-                                                tensor_index_type_b);
+#undef CALL_TEST_STORAGE_GET_RANK_2_CORE
+#undef FRAME
+#undef DIM
 }

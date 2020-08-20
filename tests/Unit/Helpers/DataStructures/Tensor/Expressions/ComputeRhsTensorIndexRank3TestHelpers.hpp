@@ -220,7 +220,7 @@ void test_compute_rhs_tensor_index_rank_3_bc_symmetry(
 #undef DIM_A
 }
 
-// Test all dimension combinations with grid and inertial frames
+// Test all dimensions with grid and inertial frames
 // for symmetric indices
 //
 // TensorIndex refers to TensorIndex<#>
