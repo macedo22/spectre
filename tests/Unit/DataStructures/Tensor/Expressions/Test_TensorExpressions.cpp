@@ -16,6 +16,7 @@
 #include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank2TestHelpers.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank3TestHelpers.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/StorageGetRank2TestHelpers.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/StorageGetRank3TestHelpers.hpp"
 #include "Utilities/TMPL.hpp"
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
@@ -259,7 +260,7 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.StorageGet",
       ti_I, ti_J);
 
   // TODO - define the methods below
-  /*// Rank 3 nonsymmetric
+  // Rank 3 nonsymmetric
   test_storage_get_rank_3_no_symmetry<
       double, ti_D_t, ti_j_t, ti_B_t, SpacetimeIndex, SpatialIndex,
       SpacetimeIndex, UpLo::Up, UpLo::Lo, UpLo::Up>(ti_D, ti_j, ti_B);
@@ -282,5 +283,5 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.StorageGet",
   // Rank 3 abc symmetry
   test_storage_get_rank_3_abc_symmetry<
       double, ti_f_t, ti_d_t, ti_a_t, SpacetimeIndex, SpacetimeIndex,
-      SpacetimeIndex, UpLo::Lo, UpLo::Lo, UpLo::Lo>(ti_f, ti_d, ti_a);*/
+      SpacetimeIndex, UpLo::Lo, UpLo::Lo, UpLo::Lo>(ti_f, ti_d, ti_a);
 }
