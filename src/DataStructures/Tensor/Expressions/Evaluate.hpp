@@ -34,13 +34,14 @@ struct LhsTensor<RhsTensorIndexList, tmpl::list<LhsTensorIndices...>,
       {LhsTensorIndices::value...}};
   static constexpr std::array<size_t, num_indices> rhs_tensorindex_values = {
       {tmpl::at_c<RhsTensorIndexList, Ints>::value...}};
-  static constexpr std::array<size_t, num_indices> rhs_to_lhs_map = {
-      {array_index_of<size_t, num_indices>(lhs_tensorindex_values,
-                                           rhs_tensorindex_values[Ints])...}};
+  static constexpr std::array<size_t, num_indices> lhs_to_rhs_map = {
+      {array_index_of<size_t, num_indices>(rhs_tensorindex_values,
+                                           lhs_tensorindex_values[Ints])...}};
 
-  using symmetry = tmpl::list<tmpl::at_c<RhsSymmetry, rhs_to_lhs_map[Ints]>...>;
+  using symmetry =
+      Symmetry<tmpl::at_c<RhsSymmetry, lhs_to_rhs_map[Ints]>::value...>;
   using tensorindextype_list =
-      tmpl::list<tmpl::at_c<RhsTensorIndexTypeList, rhs_to_lhs_map[Ints]>...>;
+      tmpl::list<tmpl::at_c<RhsTensorIndexTypeList, lhs_to_rhs_map[Ints]>...>;
 };
 
 /*!
