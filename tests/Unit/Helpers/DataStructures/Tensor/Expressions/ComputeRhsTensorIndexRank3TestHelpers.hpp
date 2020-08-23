@@ -53,17 +53,17 @@ void test_compute_rhs_tensor_index_rank_3_core(
 
         // RHS = {a, b, c}
         CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<3>(
-                  index_order_abc, index_order_abc, {{i, j, k}}) == ijk);
+                  index_order_abc, index_order_abc, ijk) == ijk);
         CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<3>(
-                  index_order_acb, index_order_abc, {{i, j, k}}) == ikj);
+                  index_order_acb, index_order_abc, ijk) == ikj);
         CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<3>(
-                  index_order_bac, index_order_abc, {{i, j, k}}) == jik);
+                  index_order_bac, index_order_abc, ijk) == jik);
         CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<3>(
-                  index_order_bca, index_order_abc, {{i, j, k}}) == kij);
+                  index_order_bca, index_order_abc, ijk) == kij);
         CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<3>(
-                  index_order_cab, index_order_abc, {{i, j, k}}) == jki);
+                  index_order_cab, index_order_abc, ijk) == jki);
         CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<3>(
-                  index_order_cba, index_order_abc, {{i, j, k}}) == kji);
+                  index_order_cba, index_order_abc, ijk) == kji);
       }
     }
   }
