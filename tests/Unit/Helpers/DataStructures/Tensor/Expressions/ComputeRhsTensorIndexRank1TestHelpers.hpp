@@ -42,16 +42,16 @@ void test_compute_rhs_tensor_index_rank_1(const TensorIndex& tensorindex) {
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(1, data)
 
-#define CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_1_CORE(_, data)     \
+#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_1_CORE(_, data)     \
   test_compute_rhs_tensor_index_rank_1_core<                        \
       Datatype, Symmetry<1>,                                        \
       index_list<TensorIndexType<DIM(data), Valence, FRAME(data)>>, \
       TensorIndex>(tensorindex, DIM(data));
 
-  GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_1_CORE,
+  GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_1_CORE,
                           (1, 2, 3), (Frame::Grid, Frame::Inertial))
 
-#undef CALL_TEST_COMPUTE_RHS_TNESOR_INDEX_RANK_1_CORE
+#undef CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_1_CORE
 #undef FRAME
 #undef DIM
 }
