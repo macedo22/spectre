@@ -509,7 +509,9 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   template <typename LhsStructure, typename... LhsIndices>
   SPECTRE_ALWAYS_INLINE type
   get(const size_t lhs_storage_index) const noexcept {
-    if constexpr (tt::is_a_v<Tensor, Derived>) {
+    if constexpr (sizeof...(LhsIndices) < 2) {
+      return (*t_)[lhs_storage_index];
+    } else if constexpr (tt::is_a_v<Tensor, Derived>) {
       constexpr std::array<size_t, LhsStructure::size()> map =
           compute_map<LhsStructure, LhsIndices...>();
       return (*t_)[map[lhs_storage_index]];

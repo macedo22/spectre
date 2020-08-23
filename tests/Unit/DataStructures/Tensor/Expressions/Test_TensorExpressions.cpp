@@ -16,6 +16,8 @@
 #include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank2TestHelpers.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank3TestHelpers.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank4TestHelpers.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/StorageGetRank0TestHelpers.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/StorageGetRank1TestHelpers.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/StorageGetRank2TestHelpers.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/StorageGetRank3TestHelpers.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/StorageGetRank4TestHelpers.hpp"
@@ -206,6 +208,29 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.StorageGet",
                   "[DataStructures][Unit]") {
+  // Rank 0
+  test_storage_get_rank_0<double>(-7.31);
+
+  // Rank 1 spacetime
+  test_storage_get_rank_1<
+      double, ti_a_t, SpacetimeIndex, UpLo::Lo>(ti_a);
+  test_storage_get_rank_1<
+      double, ti_b_t, SpacetimeIndex, UpLo::Lo>(ti_b);
+  test_storage_get_rank_1<
+      double, ti_A_t, SpacetimeIndex, UpLo::Up>(ti_A);
+  test_storage_get_rank_1<
+      double, ti_B_t, SpacetimeIndex, UpLo::Up>(ti_B);
+
+  // Rank 1 spatial
+  test_storage_get_rank_1<
+      double, ti_i_t, SpatialIndex, UpLo::Lo>(ti_i);
+  test_storage_get_rank_1<
+      double, ti_j_t, SpatialIndex, UpLo::Lo>(ti_j);
+  test_storage_get_rank_1<
+      double, ti_I_t, SpatialIndex, UpLo::Up>(ti_I);
+  test_storage_get_rank_1<
+      double, ti_J_t, SpatialIndex, UpLo::Up>(ti_J);
+
   // Rank 2 nonsymmetric, spacetime only
   test_storage_get_rank_2_no_symmetry<double, ti_a_t, ti_b_t, SpacetimeIndex,
                                       SpacetimeIndex, UpLo::Lo, UpLo::Lo>(ti_a,
