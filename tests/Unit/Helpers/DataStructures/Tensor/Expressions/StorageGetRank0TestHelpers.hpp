@@ -18,7 +18,7 @@ void test_storage_get_rank_0(const Datatype& data) {
   Tensor<Datatype> rhs_tensor{};
   rhs_tensor.get() = data;
 
-  auto evaluated_rhs_tensor = TensorExpressions::evaluate(rhs_tensor());
+  auto lhs_tensor = TensorExpressions::evaluate(rhs_tensor());
 
-  CHECK(evaluated_rhs_tensor.get() == rhs_tensor.get());
+  CHECK(lhs_tensor.get() == data);
 }
