@@ -14,7 +14,7 @@
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/TMPL.hpp"
 
-// figure out how to note need to pass in spatial dims and tensor index types
+// figure out how to not need to pass in spatial dims and tensor index types
 template <typename Datatype, typename Symmetry, typename TensorIndexTypeList,
           typename TensorIndexA, typename TensorIndexB>
 void test_storage_get_rank_2_core(const TensorIndexA& tensorindex_a,
@@ -25,10 +25,10 @@ void test_storage_get_rank_2_core(const TensorIndexA& tensorindex_a,
   std::iota(rhs_tensor.begin(), rhs_tensor.end(), 0.0);
 
   auto ab_to_ab = TensorExpressions::evaluate<TensorIndexA, TensorIndexB>(
-      rhs_tensor(tensorindex_a, tensorindex_b));  // i j -> i j
+      rhs_tensor(tensorindex_a, tensorindex_b));
 
   auto ab_to_ba = TensorExpressions::evaluate<TensorIndexB, TensorIndexA>(
-      rhs_tensor(tensorindex_a, tensorindex_b));  // i j -> j i
+      rhs_tensor(tensorindex_a, tensorindex_b));
 
   for (size_t i = 0; i < spatial_dim_a; ++i) {
     for (size_t j = 0; j < spatial_dim_b; ++j) {
