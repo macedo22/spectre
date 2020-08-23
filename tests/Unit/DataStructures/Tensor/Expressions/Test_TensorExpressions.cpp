@@ -15,6 +15,7 @@
 #include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank1TestHelpers.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank2TestHelpers.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank3TestHelpers.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank4TestHelpers.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/StorageGetRank2TestHelpers.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/StorageGetRank3TestHelpers.hpp"
 #include "Utilities/TMPL.hpp"
@@ -136,15 +137,40 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
       double, ti_I_t, ti_J_t, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Up>(
       ti_I, ti_J);
 
-  // Rank 3 nonsymmetric
+  // Rank 3 nonsymmetric, spacetime
   test_compute_rhs_tensor_index_rank_3_no_symmetry<
       double, ti_D_t, ti_j_t, ti_B_t, SpacetimeIndex, SpatialIndex,
       SpacetimeIndex, UpLo::Up, UpLo::Lo, UpLo::Up>(ti_D, ti_j, ti_B);
-
-  // TODO: The below doesn't work due to ti_a and ti_A trying to contract?
-  /*test_compute_rhs_tensor_index_rank_3_ab_symmetry<
-      double, ti_b_t, ti_a_t, ti_A_t, SpacetimeIndex, SpacetimeIndex,
-      SpacetimeIndex, UpLo::Lo, UpLo::Lo, UpLo::Up>(ti_b, ti_a, ti_A);*/
+  /*test_compute_rhs_tensor_index_rank_3_no_symmetry<
+      double, ti_a_t, ti_b_t, ti_c_t, SpacetimeIndex, SpacetimeIndex,
+      SpacetimeIndex, UpLo::Lo, UpLo::Lo, UpLo::Lo>(ti_a, ti_b, ti_c);
+  test_compute_rhs_tensor_index_rank_3_no_symmetry<
+      double, ti_A_t, ti_B_t, ti_C_t, SpacetimeIndex, SpacetimeIndex,
+      SpacetimeIndex, UpLo::Up, UpLo::Up, UpLo::Up>(ti_A, ti_B, ti_C);
+  test_compute_rhs_tensor_index_rank_3_no_symmetry<
+      double, ti_f_t, ti_e_t, ti_d_t, SpacetimeIndex, SpacetimeIndex,
+      SpacetimeIndex, UpLo::Lo, UpLo::Lo, UpLo::Lo>(ti_f, ti_e, ti_d);
+  test_compute_rhs_tensor_index_rank_3_no_symmetry<
+      double, ti_F_t, ti_E_t, ti_D_t, SpacetimeIndex, SpacetimeIndex,
+      SpacetimeIndex, UpLo::Up, UpLo::Up, UpLo::Up>(ti_F, ti_E, ti_D);
+  test_compute_rhs_tensor_index_rank_3_no_symmetry<
+      double, ti_b_t, ti_d_t, ti_a_t, SpacetimeIndex, SpacetimeIndex,
+      SpacetimeIndex, UpLo::Lo, UpLo::Lo, UpLo::Lo>(ti_b, ti_d, ti_a);
+  test_compute_rhs_tensor_index_rank_3_no_symmetry<
+      double, ti_B_t, ti_D_t, ti_A_t, SpacetimeIndex, SpacetimeIndex,
+      SpacetimeIndex, UpLo::Up, UpLo::Up, UpLo::Up>(ti_B, ti_D, ti_A);
+  test_compute_rhs_tensor_index_rank_3_no_symmetry<
+      double, ti_a_t, ti_e_t, ti_c_t, SpacetimeIndex, SpacetimeIndex,
+      SpacetimeIndex, UpLo::Lo, UpLo::Lo, UpLo::Lo>(ti_a, ti_e, ti_c);
+  test_compute_rhs_tensor_index_rank_3_no_symmetry<
+      double, ti_A_t, ti_E_t, ti_C_t, SpacetimeIndex, SpacetimeIndex,
+      SpacetimeIndex, UpLo::Up, UpLo::Up, UpLo::Up>(ti_A, ti_E, ti_C);
+  test_compute_rhs_tensor_index_rank_3_no_symmetry<
+      double, ti_h_t, ti_c_t, ti_e_t, SpacetimeIndex, SpacetimeIndex,
+      SpacetimeIndex, UpLo::Lo, UpLo::Lo, UpLo::Lo>(ti_h, ti_c, ti_e);
+  test_compute_rhs_tensor_index_rank_3_no_symmetry<
+      double, ti_H_t, ti_C_t, ti_E_t, SpacetimeIndex, SpacetimeIndex,
+      SpacetimeIndex, UpLo::Up, UpLo::Up, UpLo::Up>(ti_H, ti_C, ti_E);*/
 
   // Rank 3 ab symmetry
   test_compute_rhs_tensor_index_rank_3_ab_symmetry<
@@ -165,6 +191,46 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
   test_compute_rhs_tensor_index_rank_3_abc_symmetry<
       double, ti_f_t, ti_d_t, ti_a_t, SpacetimeIndex, SpacetimeIndex,
       SpacetimeIndex, UpLo::Lo, UpLo::Lo, UpLo::Lo>(ti_f, ti_d, ti_a);
+
+  // Rank 4 nonsymmetric
+  test_compute_rhs_tensor_index_rank_4<
+      double, Symmetry<4, 3, 2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpatialIndex<2, UpLo::Up, Frame::Grid>,
+                 SpatialIndex<1, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<2, UpLo::Up, Frame::Grid>>,
+      ti_c_t, ti_J_t, ti_i_t, ti_A_t> (
+          ti_c, ti_J, ti_i, ti_A, 3, 2, 1, 2);
+
+  // Rank 4 bd symmetry
+  test_compute_rhs_tensor_index_rank_4<
+      double, Symmetry<3, 2, 1, 2>,
+      index_list<SpatialIndex<1, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpatialIndex<2, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>,
+      ti_I_t, ti_A_t, ti_l_t, ti_F_t> (
+          ti_I, ti_A, ti_l, ti_F, 1, 3, 2, 3);
+
+  // Rank 4 acd symmetry
+  test_compute_rhs_tensor_index_rank_4<
+      double, Symmetry<2, 1, 2, 2>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>,
+      ti_l_t, ti_J_t, ti_i_t, ti_k_t> (
+          ti_l, ti_J, ti_i, ti_k, 3, 3, 3, 3);
+
+  // Rank 4 abcd symmetry
+  test_compute_rhs_tensor_index_rank_4<
+      double, Symmetry<1, 1, 1, 1>,
+      index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>>,
+      ti_j_t, ti_i_t, ti_k_t, ti_l_t> (
+          ti_j, ti_i, ti_k, ti_l, 3, 3, 3, 3);
 }
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.StorageGet",
@@ -259,7 +325,6 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.StorageGet",
       double, ti_I_t, ti_J_t, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Up>(
       ti_I, ti_J);
 
-  // TODO - define the methods below
   // Rank 3 nonsymmetric
   test_storage_get_rank_3_no_symmetry<
       double, ti_D_t, ti_j_t, ti_B_t, SpacetimeIndex, SpatialIndex,
