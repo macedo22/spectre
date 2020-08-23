@@ -18,6 +18,7 @@
 #include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank4TestHelpers.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/StorageGetRank2TestHelpers.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/StorageGetRank3TestHelpers.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/StorageGetRank4TestHelpers.hpp"
 #include "Utilities/TMPL.hpp"
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
@@ -349,4 +350,45 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.StorageGet",
   test_storage_get_rank_3_abc_symmetry<
       double, ti_f_t, ti_d_t, ti_a_t, SpacetimeIndex, SpacetimeIndex,
       SpacetimeIndex, UpLo::Lo, UpLo::Lo, UpLo::Lo>(ti_f, ti_d, ti_a);
+
+  // Rank 4 nonsymmetric
+  test_storage_get_rank_4<
+      double, Symmetry<4, 3, 2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpatialIndex<1, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<2, UpLo::Lo, Frame::Inertial>>,
+      ti_b_t, ti_A_t, ti_k_t, ti_l_t> (
+          ti_b, ti_A, ti_k, ti_l, 3, 3, 1, 2);
+
+  // Rank 4 bc symmetry
+  test_storage_get_rank_4<
+      double, Symmetry<3, 2, 2, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpatialIndex<1, UpLo::Lo, Frame::Grid>>,
+      ti_G_t, ti_d_t, ti_a_t, ti_j_t> (
+          ti_G, ti_d, ti_a, ti_j, 2, 3, 3, 1);
+
+  // Rank 4 abd symmetry
+  test_storage_get_rank_4<
+      double, Symmetry<2, 2, 1, 2>,
+      index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>>,
+      ti_j_t, ti_i_t, ti_k_t, ti_l_t> (
+          ti_j, ti_i, ti_k, ti_l, 3, 3, 3, 3);
+
+  // Rank 4 abcd symmetry
+  test_storage_get_rank_4<
+      double, Symmetry<1, 1, 1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Grid>>,
+      ti_F_t, ti_A_t, ti_C_t, ti_D_t> (
+          ti_F, ti_A, ti_C, ti_D, 3, 3, 3, 3);
+
 }
