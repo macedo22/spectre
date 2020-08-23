@@ -142,36 +142,6 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
   test_compute_rhs_tensor_index_rank_3_no_symmetry<
       double, ti_D_t, ti_j_t, ti_B_t, SpacetimeIndex, SpatialIndex,
       SpacetimeIndex, UpLo::Up, UpLo::Lo, UpLo::Up>(ti_D, ti_j, ti_B);
-  /*test_compute_rhs_tensor_index_rank_3_no_symmetry<
-      double, ti_a_t, ti_b_t, ti_c_t, SpacetimeIndex, SpacetimeIndex,
-      SpacetimeIndex, UpLo::Lo, UpLo::Lo, UpLo::Lo>(ti_a, ti_b, ti_c);
-  test_compute_rhs_tensor_index_rank_3_no_symmetry<
-      double, ti_A_t, ti_B_t, ti_C_t, SpacetimeIndex, SpacetimeIndex,
-      SpacetimeIndex, UpLo::Up, UpLo::Up, UpLo::Up>(ti_A, ti_B, ti_C);
-  test_compute_rhs_tensor_index_rank_3_no_symmetry<
-      double, ti_f_t, ti_e_t, ti_d_t, SpacetimeIndex, SpacetimeIndex,
-      SpacetimeIndex, UpLo::Lo, UpLo::Lo, UpLo::Lo>(ti_f, ti_e, ti_d);
-  test_compute_rhs_tensor_index_rank_3_no_symmetry<
-      double, ti_F_t, ti_E_t, ti_D_t, SpacetimeIndex, SpacetimeIndex,
-      SpacetimeIndex, UpLo::Up, UpLo::Up, UpLo::Up>(ti_F, ti_E, ti_D);
-  test_compute_rhs_tensor_index_rank_3_no_symmetry<
-      double, ti_b_t, ti_d_t, ti_a_t, SpacetimeIndex, SpacetimeIndex,
-      SpacetimeIndex, UpLo::Lo, UpLo::Lo, UpLo::Lo>(ti_b, ti_d, ti_a);
-  test_compute_rhs_tensor_index_rank_3_no_symmetry<
-      double, ti_B_t, ti_D_t, ti_A_t, SpacetimeIndex, SpacetimeIndex,
-      SpacetimeIndex, UpLo::Up, UpLo::Up, UpLo::Up>(ti_B, ti_D, ti_A);
-  test_compute_rhs_tensor_index_rank_3_no_symmetry<
-      double, ti_a_t, ti_e_t, ti_c_t, SpacetimeIndex, SpacetimeIndex,
-      SpacetimeIndex, UpLo::Lo, UpLo::Lo, UpLo::Lo>(ti_a, ti_e, ti_c);
-  test_compute_rhs_tensor_index_rank_3_no_symmetry<
-      double, ti_A_t, ti_E_t, ti_C_t, SpacetimeIndex, SpacetimeIndex,
-      SpacetimeIndex, UpLo::Up, UpLo::Up, UpLo::Up>(ti_A, ti_E, ti_C);
-  test_compute_rhs_tensor_index_rank_3_no_symmetry<
-      double, ti_h_t, ti_c_t, ti_e_t, SpacetimeIndex, SpacetimeIndex,
-      SpacetimeIndex, UpLo::Lo, UpLo::Lo, UpLo::Lo>(ti_h, ti_c, ti_e);
-  test_compute_rhs_tensor_index_rank_3_no_symmetry<
-      double, ti_H_t, ti_C_t, ti_E_t, SpacetimeIndex, SpacetimeIndex,
-      SpacetimeIndex, UpLo::Up, UpLo::Up, UpLo::Up>(ti_H, ti_C, ti_E);*/
 
   // Rank 3 ab symmetry
   test_compute_rhs_tensor_index_rank_3_ab_symmetry<
