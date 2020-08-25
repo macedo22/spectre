@@ -18,25 +18,26 @@ namespace TensorExpressions {
 // RhseTensorIndexTypeList is the list of RHS TensorIndexTypes
 //   - e.g. (SpatialIndex<3, UpLo::Lo, Frame::Grid>,
 //           SpatialIndex<2, UpLo::Up, Frame::Grid>)
-// IntSequence is a sequence of ints from [0 ... number of indices)
+// IndexSequence is a sequence of ints from [0 ... NumIndices)
 template <typename RhsTensorIndexList, typename LhsTensorIndexList,
           typename RhsSymmetry, typename RhsTensorIndexTypeList,
-          typename IntSequence>
+          size_t NumIndices = tmpl::size<RhsSymmetry>::value,
+          typename IndexSequence = std::make_index_sequence<NumIndices>>
 struct LhsTensor;
 
 template <typename RhsTensorIndexList, typename... LhsTensorIndices,
-          typename RhsSymmetry, typename RhsTensorIndexTypeList, size_t... Ints>
+          typename RhsSymmetry, typename RhsTensorIndexTypeList,
+          size_t NumIndices, size_t... Ints>
 struct LhsTensor<RhsTensorIndexList, tmpl::list<LhsTensorIndices...>,
-                 RhsSymmetry, RhsTensorIndexTypeList,
-                 std::integer_sequence<size_t, Ints...>> {
-  static constexpr size_t num_indices = sizeof...(LhsTensorIndices);
-  static constexpr std::array<size_t, num_indices> lhs_tensorindex_values = {
+                 RhsSymmetry, RhsTensorIndexTypeList, NumIndices,
+                 std::index_sequence<Ints...>> {
+  static constexpr std::array<size_t, NumIndices> lhs_tensorindex_values = {
       {LhsTensorIndices::value...}};
-  static constexpr std::array<size_t, num_indices> rhs_tensorindex_values = {
+  static constexpr std::array<size_t, NumIndices> rhs_tensorindex_values = {
       {tmpl::at_c<RhsTensorIndexList, Ints>::value...}};
-  static constexpr std::array<size_t, num_indices> lhs_to_rhs_map = {
-      {array_index_of<size_t, num_indices>(rhs_tensorindex_values,
-                                           lhs_tensorindex_values[Ints])...}};
+  static constexpr std::array<size_t, NumIndices> lhs_to_rhs_map = {
+      {array_index_of<size_t, NumIndices>(rhs_tensorindex_values,
+                                          lhs_tensorindex_values[Ints])...}};
 
   using symmetry =
       Symmetry<tmpl::at_c<RhsSymmetry, lhs_to_rhs_map[Ints]>::value...>;
@@ -77,16 +78,8 @@ auto evaluate(const T& te) {
   //       SpatialIndex<2, UpLo::Up, Frame::Grid>)
   using rhs_tensorindextype_list = typename T::index_list;
 
-  constexpr size_t num_indices = sizeof...(LhsIndices);
-
-  // Running integer sequence from [0 ... num_indices)
-  // used for indexing into template template parameters with tmpl::at_c
-  // in LhsTensor
-  using running_int_seq = std::make_integer_sequence<size_t, num_indices>;
-
-  using lhs_tensor =
-      LhsTensor<rhs_tensorindex_list, lhs_tensorindex_list, rhs_symmetry,
-                rhs_tensorindextype_list, running_int_seq>;
+  using lhs_tensor = LhsTensor<rhs_tensorindex_list, lhs_tensorindex_list,
+                               rhs_symmetry, rhs_tensorindextype_list>;
 
   return Tensor<typename T::type, typename lhs_tensor::symmetry,
                 typename lhs_tensor::tensorindextype_list>(
