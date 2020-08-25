@@ -10,6 +10,41 @@
 #include "DataStructures/Tensor/Tensor.hpp"
 
 namespace TensorExpressions {
+// LhsTensor computes and stores the reordered LHS symmetry and indices
+//
+// RhsTensorIndexList & LhsTensorIndexList are lists of TensorIndex<#>s
+//   - e.g. (ti_a_t, ti_B_t) and (ti_B_t, ti_a_t)
+// RhseTensorIndexTypeList is the list of RHS TensorIndexTypes
+//   - e.g. (SpatialIndex<3, UpLo::Lo, Frame::Grid>,
+//           SpatialIndex<2, UpLo::Up, Frame::Grid>)
+// IndexSequence is a sequence of ints from [0 ... NumIndices)
+template <typename RhsTensorIndexList, typename LhsTensorIndexList,
+          typename RhsSymmetry, typename RhsTensorIndexTypeList,
+          size_t NumIndices = tmpl::size<RhsSymmetry>::value,
+          typename IndexSequence = std::make_index_sequence<NumIndices>>
+struct LhsTensor;
+
+template <typename RhsTensorIndexList, typename... LhsTensorIndices,
+          typename RhsSymmetry, typename RhsTensorIndexTypeList,
+          size_t NumIndices, size_t... Ints>
+struct LhsTensor<RhsTensorIndexList, tmpl::list<LhsTensorIndices...>,
+                 RhsSymmetry, RhsTensorIndexTypeList, NumIndices,
+                 std::index_sequence<Ints...>> {
+  static constexpr std::array<size_t, NumIndices> lhs_tensorindex_values = {
+      {LhsTensorIndices::value...}};
+  static constexpr std::array<size_t, NumIndices> rhs_tensorindex_values = {
+      {tmpl::at_c<RhsTensorIndexList, Ints>::value...}};
+  static constexpr std::array<size_t, NumIndices> lhs_to_rhs_map = {
+      {std::distance(
+          rhs_tensorindex_values.begin(),
+          alg::find(rhs_tensorindex_values, lhs_tensorindex_values[Ints]))...}};
+
+  using symmetry =
+      Symmetry<tmpl::at_c<RhsSymmetry, lhs_to_rhs_map[Ints]>::value...>;
+  using tensorindextype_list =
+      tmpl::list<tmpl::at_c<RhsTensorIndexTypeList, lhs_to_rhs_map[Ints]>...>;
+};
+
 /*!
  * \ingroup TensorExpressionsGroup
  * \brief Evaluate a Tensor Expression with LHS indices set in the template
@@ -43,19 +78,11 @@ auto evaluate(const T& te) {
   //       SpatialIndex<2, UpLo::Up, Frame::Grid>)
   using rhs_tensorindextype_list = typename T::index_list;
 
-  using mapping = tmpl::transform<
-      lhs_tensorindex_list,
-      tmpl::bind<tmpl::index_of, tmpl::pin<rhs_tensorindex_list>,
-                 tmpl::_1>>;
-  using lhs_symmetry =
-      tmpl::transform<mapping,
-                      tmpl::bind<tmpl::at, tmpl::pin<rhs_symmetry>, tmpl::_1>>;
-  using lhs_tensorindextype_list =
-      tmpl::transform<mapping,
-                      tmpl::bind<tmpl::at, tmpl::pin<rhs_tensorindextype_list>,
-                                 tmpl::_1>>;
+  using lhs_tensor = LhsTensor<rhs_tensorindex_list, lhs_tensorindex_list,
+                               rhs_symmetry, rhs_tensorindextype_list>;
 
-  return Tensor<typename T::type, lhs_symmetry, lhs_tensorindextype_list>(
+  return Tensor<typename T::type, typename lhs_tensor::symmetry,
+                typename lhs_tensor::tensorindextype_list>(
       te, tmpl::list<LhsIndices...>{});
 }
 }  // namespace TensorExpressions
