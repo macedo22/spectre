@@ -19,8 +19,8 @@ template <typename Datatype, typename Symmetry, typename TensorIndexTypeList,
           typename TensorIndex>
 void test_storage_get_rank_1_core(
     const TensorIndex& tensorindex, const size_t& spatial_dim) {
-  Tensor<Datatype, Symmetry, TensorIndexTypeList> rhs_vector{};
-  std::iota(rhs_vector.begin(), rhs_tensor.end(), 0.0);
+  Tensor<Datatype, Symmetry, TensorIndexTypeList> rhs_tensor{};
+  std::iota(rhs_tensor.begin(), rhs_tensor.end(), 0.0);
 
   auto lhs_tensor = TensorExpressions::evaluate<TensorIndex>(
       rhs_tensor(tensorindex));
