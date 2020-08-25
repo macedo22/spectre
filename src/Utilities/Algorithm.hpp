@@ -178,58 +178,97 @@ decltype(auto) count_if(const Container& c, UnaryPredicate&& unary_predicate) {
                        std::forward<UnaryPredicate>(unary_predicate));
 }
 
-/// Convenience wrapper around std::find
-template <class Container, class T>
-decltype(auto) find(const Container& c, const T& value) {
-  using std::begin;
-  using std::end;
-  return std::find(begin(c), end(c), value);
+/// `constexpr` find
+template <class InputIt, class T>
+constexpr InputIt find(InputIt first, InputIt last, const T& value) {
+  for (; first != last; ++first) {
+    if (*first == value) {
+      return first;
+    }
+  }
+  return last;
 }
 
-/// Convenience wrapper around std::find_if
-template <class Container, class UnaryPredicate>
-decltype(auto) find_if(const Container& c, UnaryPredicate&& unary_predicate) {
+/// Convenience wrapper around `constexpr` find implementation
+template <class Container, class T>
+constexpr decltype(auto) find(Container&& c, const T& value) {
   using std::begin;
   using std::end;
-  return std::find_if(begin(c), end(c),
+  return alg::find(begin(std::forward<Container>(c)),
+                   end(std::forward<Container>(c)), value);
+}
+
+/// `constexpr` find_if
+template <class InputIt, class UnaryPredicate>
+constexpr InputIt find_if(InputIt first, InputIt last, UnaryPredicate p) {
+  for (; first != last; ++first) {
+    if (p(*first)) {
+      return first;
+    }
+  }
+  return last;
+}
+
+/// Convenience wrapper around `constexpr` find_if implementation
+template <class Container, class UnaryPredicate>
+constexpr decltype(auto) find_if(Container&& c,
+                                 UnaryPredicate&& unary_predicate) {
+  using std::begin;
+  using std::end;
+  return alg::find_if(begin(std::forward<Container>(c)),
+                      end(std::forward<Container>(c)),
                       std::forward<UnaryPredicate>(unary_predicate));
 }
 
-/// Convenience wrapper around std::find_if_not
+/// `constexpr` find_if_not
+template <class InputIt, class UnaryPredicate>
+constexpr InputIt find_if_not(InputIt first, InputIt last, UnaryPredicate q) {
+  for (; first != last; ++first) {
+    if (!q(*first)) {
+      return first;
+    }
+  }
+  return last;
+}
+
+/// Convenience wrapper around `constexpr` find_if_not implementation
 template <class Container, class UnaryPredicate>
-decltype(auto) find_if_not(const Container& c,
-                           UnaryPredicate&& unary_predicate) {
+constexpr decltype(auto) find_if_not(Container&& c,
+                                     UnaryPredicate&& unary_predicate) {
   using std::begin;
   using std::end;
-  return std::find_if_not(begin(c), end(c),
+  return alg::find_if_not(begin(std::forward<Container>(c)),
+                          end(std::forward<Container>(c)),
                           std::forward<UnaryPredicate>(unary_predicate));
 }
 
-/// Convenience wrapper around std::find, returns `true` if `value` is in `c`.
+/// Convenience wrapper around `constexpr` find implementation, returns `true`
+/// if `value` is in `c`.
 template <class Container, class T>
-bool found(const Container& c, const T& value) {
+constexpr bool found(const Container& c, const T& value) {
   using std::begin;
   using std::end;
-  return std::find(begin(c), end(c), value) != end(c);
+  return alg::find(begin(c), end(c), value) != end(c);
 }
 
-/// Convenience wrapper around std::find_if, returns `true` if the result of
-/// `std::find_if` is not equal to `end(c)`.
+/// Convenience wrapper around `constexpr` find_if implementation, returns
+/// `true` if the result of `alg::find_if` is not equal to `end(c)`.
 template <class Container, class UnaryPredicate>
-bool found_if(const Container& c, UnaryPredicate&& unary_predicate) {
+constexpr bool found_if(const Container& c, UnaryPredicate&& unary_predicate) {
   using std::begin;
   using std::end;
-  return std::find_if(begin(c), end(c),
+  return alg::find_if(begin(c), end(c),
                       std::forward<UnaryPredicate>(unary_predicate)) != end(c);
 }
 
-/// Convenience wrapper around std::find_if_not, returns `true` if the result of
-/// `std::find_if_not` is not equal to `end(c)`.
+/// Convenience wrapper around `constexpr` find_if_not implementation, returns
+/// `true` if the result of `alg::find_if_not` is not equal to `end(c)`.
 template <class Container, class UnaryPredicate>
-bool found_if_not(const Container& c, UnaryPredicate&& unary_predicate) {
+constexpr bool found_if_not(const Container& c,
+                            UnaryPredicate&& unary_predicate) {
   using std::begin;
   using std::end;
-  return std::find_if_not(begin(c), end(c),
+  return alg::find_if_not(begin(c), end(c),
                           std::forward<UnaryPredicate>(unary_predicate)) !=
          end(c);
 }
