@@ -59,5 +59,4 @@ auto evaluate(const T& te) {
   return Tensor<typename T::type, lhs_symmetry, lhs_tensorindextype_list>(
       te, tmpl::list<LhsIndices...>{});
 }
-
 }  // namespace TensorExpressions
