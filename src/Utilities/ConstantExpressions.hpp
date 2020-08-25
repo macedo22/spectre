@@ -383,19 +383,3 @@ inline constexpr bool array_equal(const std::array<T, size>& lhs,
                      and array_equal(lhs, rhs, i + 1))
                   : true;
 }
-
-/// \ingroup ConstantExpressionsGroup
-/// Find the first index of an element in a std::array
-template <typename DataType, size_t NumberOfElements>
-inline constexpr size_t array_index_of(
-    const std::array<DataType, NumberOfElements>& arr,
-    const DataType& element_to_find) noexcept {
-  size_t index = 0;
-  while (index < NumberOfElements) {
-    if (arr[index] == element_to_find) {
-      return index;
-    }
-    index++;
-  }
-  return index;
-}
