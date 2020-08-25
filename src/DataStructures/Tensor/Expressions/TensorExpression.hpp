@@ -12,7 +12,7 @@
 
 #include "DataStructures/Tensor/Structure.hpp"
 #include "ErrorHandling/Assert.hpp"  // IWYU pragma: keep
-#include "Utilities/ConstantExpressions.hpp"
+#include "Utilities/Algorithm.hpp"
 #include "Utilities/ForceInline.hpp"
 #include "Utilities/Requires.hpp"
 #include "Utilities/TMPL.hpp"
@@ -463,8 +463,10 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
       const std::array<size_t, NumberOfIndices>& lhs_tensor_index) noexcept {
     std::array<size_t, NumberOfIndices> rhs_tensor_index{};
     for (size_t i = 0; i < NumberOfIndices; ++i) {
-      rhs_tensor_index[array_index_of<size_t, NumberOfIndices>(
-          rhs_index_order, lhs_index_order[i])] = lhs_tensor_index[i];
+      rhs_tensor_index[static_cast<unsigned long>(
+          std::distance(rhs_index_order.begin(),
+                        alg::find(rhs_index_order, lhs_index_order[i])))] =
+          lhs_tensor_index[i];
     }
     return rhs_tensor_index;
   }
