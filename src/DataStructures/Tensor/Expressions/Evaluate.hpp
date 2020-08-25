@@ -8,7 +8,6 @@
 
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
-#include "Utilities/Algorithm.hpp"
 
 namespace TensorExpressions {
 /*!
