@@ -479,27 +479,8 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
     constexpr size_t rank = LhsStructure::rank();
     std::array<size_t, num_components> map{};
     auto LhsStorageToTensorIndices = LhsStructure::storage_to_tensor_index();
-    // std::cout << "\nnum_components : " << num_components << std::endl;
     for (size_t lhs_storage_index = 0; lhs_storage_index < num_components;
          ++lhs_storage_index) {
-      /*map[lhs_storage_index] =
-          structure::get_storage_index(compute_rhs_tensor_index<rank>(
-              {{LhsIndices::value...}}, {{Args::value...}},
-              LhsStorageToTensorIndices[lhs_storage_index]));
-              //LhsStructure::get_canonical_tensor_index(lhs_storage_index)));*/
-      /*constexpr std::array<size_t, rank> lhs = {{LhsIndices::value...}};
-      constexpr std::array<size_t, rank> rhs = {{Args::value...}};
-      std::array<size_t, rank> this_index =
-      LhsStorageToTensorIndices[lhs_storage_index]; std::array<size_t, rank>
-      rhs_tensor_index = compute_rhs_tensor_index<rank>(
-              {{LhsIndices::value...}}, {{Args::value...}},
-              LhsStorageToTensorIndices[lhs_storage_index]);
-      std::cout << "LhsIndices::value... : " << lhs << std::endl
-                << "Args::value... : " << rhs << std::endl
-                << "LhsStorageToTensorIndices[" << lhs_storage_index << "] : "
-                    << this_index << std::endl << std::endl
-                << "compute_rhs_tensor_index return val : " << rhs_tensor_index
-                    << std::endl;// << std::endl;*/
       map[lhs_storage_index] =
           structure::get_storage_index(compute_rhs_tensor_index<rank>(
               {{LhsIndices::value...}}, {{Args::value...}},
