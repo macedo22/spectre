@@ -12,7 +12,7 @@
 
 #include "DataStructures/Tensor/Structure.hpp"
 #include "ErrorHandling/Assert.hpp"  // IWYU pragma: keep
-#include "Utilities/Algorithm.hpp"
+#include "Utilities/ConstantExpressions.hpp"
 #include "Utilities/ForceInline.hpp"
 #include "Utilities/Requires.hpp"
 #include "Utilities/TMPL.hpp"
@@ -455,40 +455,17 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   /// Here, the elements of `lhs_index_order` and `rhs_index_order` refer
   /// to `TensorIndex` values that correspond to generic spacetime indices.
   /// For example, given [use latex here to write out both tensors]
-  /*template <size_t NumberOfIndices,
-            typename IndexSequence = std::make_index_sequence<NumberOfIndices>>
+  template <size_t NumberOfIndices>
   SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, NumberOfIndices>
   compute_rhs_tensor_index(
       const std::array<size_t, NumberOfIndices>& lhs_index_order,
       const std::array<size_t, NumberOfIndices>& rhs_index_order,
-      const std::array<size_t, NumberOfIndices>& lhs_tensor_index) noexcept;*/
-
-  template <size_t NumberOfIndices, size_t... Ints>
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, NumberOfIndices>
-  compute_rhs_tensor_index(
-      const std::array<size_t, NumberOfIndices>& lhs_index_order,
-      const std::array<size_t, NumberOfIndices>& rhs_index_order,
-      const std::array<size_t, NumberOfIndices>& lhs_tensor_index,
-      const std::index_sequence<Ints...>& /*index_seq*/ =
-          std::make_index_sequence<NumberOfIndices>{}) noexcept {
-    // std::array<size_t, NumberOfIndices> rhs_tensor_index{};
-    /*for (size_t i = 0; i < NumberOfIndices; ++i) {
-      //rhs_tensor_index[std::distance(rhs_index_order.begin(),
-                         alg::find(rhs_index_order, lhs_index_order[Ints]))...]
-    = lhs_tensor_index[i]; rhs_tensor_index[array_index_of<size_t,
-    NumberOfIndices>( rhs_index_order, lhs_index_order[i])] =
-    lhs_tensor_index[i];
-    }*/
-
-    // rhs_tensor_index[i] = lhs_index_order[rhs_to_lhs_map[i]]
-    constexpr std::array<size_t, NumberOfIndices> rhs_to_lhs_map = {
-        {std::distance(lhs_index_order.begin(),
-                       alg::find(lhs_index_order, rhs_index_order[Ints]))...}};
-    constexpr std::array<size_t, NumberOfIndices> rhs_tensor_index = {
-        {lhs_index_order[rhs_to_lhs_map[Ints]]...}};
-    // rhs_tensor_index[std::distance(rhs_index_order.begin(),
-    // alg::find(rhs_index_order, lhs_index_order[Ints]))]... =
-    // lhs_tensor_index[Ints]...;
+      const std::array<size_t, NumberOfIndices>& lhs_tensor_index) noexcept {
+    std::array<size_t, NumberOfIndices> rhs_tensor_index{};
+    for (size_t i = 0; i < NumberOfIndices; ++i) {
+      rhs_tensor_index[array_index_of<size_t, NumberOfIndices>(
+          rhs_index_order, lhs_index_order[i])] = lhs_tensor_index[i];
+    }
     return rhs_tensor_index;
   }
 
@@ -524,8 +501,7 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
       map[lhs_storage_index] =
           structure::get_storage_index(compute_rhs_tensor_index<rank>(
               {{LhsIndices::value...}}, {{Args::value...}},
-              LhsStorageToTensorIndices[lhs_storage_index],
-              std::make_index_sequence<rank>{}));
+              LhsStorageToTensorIndices[lhs_storage_index]));
     }
     return map;
   }
