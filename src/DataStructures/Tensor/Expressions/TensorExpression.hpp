@@ -442,65 +442,106 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
     }
   }
 
-  /// \brief return the RHS tensor index that corresponds to the LHS tensor
-  /// index
+  /// \brief Computes the RHS tensor multi-index that corresponds to the LHS
+  /// tensor multi-index, given the generic index orders of the RHS and LHS
   ///
   /// \details
   /// Given the ordering of the generic indices of the LHS tensor, the
-  /// ordering of the generic indices of the RHS tensor, and a
-  /// specific LHS tensor index, return the equivalent RHS tensor index
-  /// that accounts for differences in the ordering of the generic indices
-  /// on the LHS and RHS.
+  /// ordering of the generic indices of the RHS tensor, and a specific LHS
+  /// tensor multi-index, return the equivalent RHS tensor multi-index that
+  /// accounts for differences in the ordering of the generic indices on the LHS
+  /// and RHS.
   ///
   /// Here, the elements of `lhs_index_order` and `rhs_index_order` refer
-  /// to `TensorIndex` values that correspond to generic spacetime indices.
-  /// For example, given [use latex here to write out both tensors]
+  /// to \ref SpacetimeIndex "TensorIndex"::values that correspond to generic
+  /// tensor indices, and `lhs_tensor_multi_index` is a multi-index for the LHS
+  /// tensor. If we have LHS tensor \f$L_{ab}\f$, RHS tensor \f$R_{ba}\f$, and
+  /// the LHS component \f$L_{31}\f$, the corresponding RHS component is
+  /// \f$R_{13}\f$.
+  ///
+  /// Here is an example of what the algorithm does:
+  ///
+  /// `lhs_index_order`:
+  /// \code
+  /// [0, 1, 2] // i.e. abc
+  /// \endcode
+  /// `rhs_index_order`:
+  /// \code
+  /// [1, 2, 0] // i.e. bca
+  /// \endcode
+  /// `lhs_tensor_multi_index`:
+  /// \code
+  /// [4, 0, 3]
+  /// \endcode
+  /// returned `rhs_tensor_index`:
+  /// \code
+  /// [0, 3, 4]
+  /// \endcode
   template <size_t NumberOfIndices>
   SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, NumberOfIndices>
   compute_rhs_tensor_index(
       const std::array<size_t, NumberOfIndices>& lhs_index_order,
       const std::array<size_t, NumberOfIndices>& rhs_index_order,
-      const std::array<size_t, NumberOfIndices>& lhs_tensor_index) noexcept {
+      const std::array<size_t, NumberOfIndices>&
+          lhs_tensor_multi_index) noexcept {
     std::array<size_t, NumberOfIndices> rhs_tensor_index{};
     for (size_t i = 0; i < NumberOfIndices; ++i) {
       rhs_tensor_index[static_cast<unsigned long>(
           std::distance(rhs_index_order.begin(),
                         alg::find(rhs_index_order, lhs_index_order[i])))] =
-          lhs_tensor_index[i];
+          lhs_tensor_multi_index[i];
     }
     return rhs_tensor_index;
   }
 
+  /// \brief Computes a mapping from the storage indices of the LHS to the RHS
   template <typename LhsStructure, typename... LhsIndices>
   SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t,
                                                     LhsStructure::size()>
-  compute_map() noexcept {
+  compute_lhs_to_rhs_map() noexcept {
     constexpr size_t num_components = LhsStructure::size();
     constexpr size_t rank = LhsStructure::rank();
-    std::array<size_t, num_components> map{};
+    std::array<size_t, num_components> lhs_to_rhs_map{};
     auto LhsStorageToTensorIndices = LhsStructure::storage_to_tensor_index();
     for (size_t lhs_storage_index = 0; lhs_storage_index < num_components;
          ++lhs_storage_index) {
-      map[lhs_storage_index] =
+      // `compute_rhs_tensor_index` will return the RHS tensor multi-index that
+      // corresponds to the LHS tensor multi-index, according to the order of
+      // the generic indices for the LHS and RHS. structure::get_storage_index
+      // will then get the RHS storage index that corresponds to this RHS
+      // tensor multi-index.
+      lhs_to_rhs_map[lhs_storage_index] =
           structure::get_storage_index(compute_rhs_tensor_index<rank>(
               {{LhsIndices::value...}}, {{Args::value...}},
               LhsStorageToTensorIndices[lhs_storage_index]));
     }
-    return map;
+    return lhs_to_rhs_map;
   }
 
+  /// \brief return the value with the LHS tensor's storage index
+  /// `lhs_tensor_index`
+  ///
+  /// \details
+  /// If Derived is a TensorExpression, `storage_index` is forwarded onto the
+  /// next TensorExpression.
+  ///
+  /// Otherwise, it is a Tensor, where one big challenge with TensorExpression
+  /// implementation is the reordering of the indices on the RHS and LHS of the
+  /// expression. The algoritms implemented in `compute_lhs_to_rhs_map` and
+  /// `compute_rhs_tensor_index` handles the index sorting by mapping between
+  /// the generic index orders of the LHS and RHS.
   template <typename LhsStructure, typename... LhsIndices>
   SPECTRE_ALWAYS_INLINE type
   get(const size_t lhs_storage_index) const noexcept {
-    if constexpr (sizeof...(LhsIndices) < 2) {
-      return (*t_)[lhs_storage_index];
-    } else if constexpr (tt::is_a_v<Tensor, Derived>) {
-      constexpr std::array<size_t, LhsStructure::size()> map =
-          compute_map<LhsStructure, LhsIndices...>();
-      return (*t_)[map[lhs_storage_index]];
-    } else {
+    if constexpr (not tt::is_a_v<Tensor, Derived>) {
       return static_cast<const Derived&>(*this)
           .template get<LhsStructure, LhsIndices...>(lhs_storage_index);
+    } else if constexpr (sizeof...(LhsIndices) < 2) {
+      return (*t_)[lhs_storage_index];
+    } else {
+      constexpr std::array<size_t, LhsStructure::size()> lhs_to_rhs_map =
+          compute_lhs_to_rhs_map<LhsStructure, LhsIndices...>();
+      return (*t_)[lhs_to_rhs_map[lhs_storage_index]];
     }
   }
 
