@@ -16,15 +16,15 @@ namespace TensorExpressions {
  * RHS tensor expression and desired LHS index order
  *
  * \details Given the generic index order of a RHS TensorExpression and the
- * generic index order of the desired LHS Tensor, this creates a mapping
- * between the two that is used to determine the (potentially reordered)
- * ordering of the elements of the desired LHS Tensor`s ::Symmetry and
- * typelist of \ref SpacetimeIndex "TensorIndexType"s.
+ * generic index order of the desired LHS Tensor, this creates a mapping between
+ * the two that is used to determine the (potentially reordered) ordering of the
+ * elements of the desired LHS Tensor`s ::Symmetry and typelist of
+ * \ref SpacetimeIndex "TensorIndexType"s.
  *
- * @tparam RhsTensorIndexList the typelist of \ref SpacetimeIndex "TensorIndex"s
- * of the right hand side TensorExpression, e.g. `ti_a_t`, `ti_b_t`, `ti_c_t`
- * @tparam LhsTensorIndexList the typelist of \ref SpacetimeIndex "TensorIndex"s
- * of the the desired left hand side tensor, e.g. `ti_b_t`, `ti_c_t`, `ti_a_t`
+ * @tparam RhsTensorIndexList the typelist of TensorIndex of the RHS
+ * TensorExpression, e.g. `ti_a_t`, `ti_b_t`, `ti_c_t`
+ * @tparam LhsTensorIndexList the typelist of TensorIndexs of the desired LHS
+ * tensor, e.g. `ti_b_t`, `ti_c_t`, `ti_a_t`
  * @tparam RhsSymmetry the ::Symmetry of the RHS indices
  * @tparam RhsTensorIndexTypeList the RHS TensorExpression's typelist of
  * \ref SpacetimeIndex "TensorIndexType"s
@@ -59,18 +59,19 @@ struct LhsTensor<RhsTensorIndexList, tmpl::list<LhsTensorIndices...>,
 
 /*!
  * \ingroup TensorExpressionsGroup
- * \brief Evaluate a RHS tensor expression to a tensor with the LHS index order
- * set in the template parameters
+ * \brief Evaluate a right hand side tensor expression to a tensor with the LHS
+ * index order set in the template parameters
  *
- * \details Uses the RHS `TensorExpression`'s index ordering (`T::args_list`)
- * and the desired LHS tensor's index ordering (`LhsIndices`) to construct a LHS
- * Tensor with that LHS index ordering. This can carry out the evaluation of a
- * RHS tensor expression to a LHS tensor ith the same index ordering, such as
- * \f$L_{ab} = R_{ab}\f$, or different ordering, such as \f$L_{ba} = R_{ab}\f$.
+ * \details Uses the right hand side (RHS) TensorExpression's index ordering
+ * (`T::args_list`) and the desired left hand side (LHS) tensor's index ordering
+ * (`LhsTensorIndices`) to construct a LHS Tensor with that LHS index ordering.
+ * This can carry out the evaluation of a RHS tensor expression to a LHS tensor
+ * with the same index ordering, such as \f$L_{ab} = R_{ab}\f$, or different
+ * ordering, such as \f$L_{ba} = R_{ab}\f$.
  *
  * ### Usage
  * Given two rank 2 Tensors `R` and `S` with index order (a, b), add them
- * together and generate the resultant LHS `Tensor` `L` with index order (b, a):
+ * together and generate the resultant LHS Tensor `L` with index order (b, a):
  * \code{.cpp}
  * auto L = TensorExpressions::evaluate<ti_b_t, ti_a_t>(
  *     R(ti_a, ti_b) + S(ti_a, ti_b));
@@ -79,24 +80,24 @@ struct LhsTensor<RhsTensorIndexList, tmpl::list<LhsTensorIndices...>,
  *
  * This represents evaluating: \f$L_{ba} = \R_{ab} + S_{ab}\f$
  *
- * @tparam LhsIndices the \ref SpacetimeIndex "TensorIndex"s of the Tensor on
- * the left hand side of the tensor expression,
- * e.g. `ti_a_t`, `ti_b_t`, `ti_c_t`
- * @tparam T the type of the right hand side TensorExpression
+ * @tparam LhsTensorIndices the TensorIndex of the Tensor on the LHS of the
+ * tensor expression, e.g. `ti_a_t`, `ti_b_t`, `ti_c_t`
+ * @tparam T the type of the RHS TensorExpression
  * @param rhs_te the RHS TensorExpression to be evaluated
- * @return the LHS Tensor with index order specified by LhsIndices
+ * @return the LHS Tensor with index order specified by LhsTensorIndices
  */
-template <typename... LhsIndices, typename T,
+template <typename... LhsTensorIndices, typename T,
           Requires<std::is_base_of<Expression, T>::value> = nullptr>
 auto evaluate(const T& rhs_te) {
   static_assert(
-      sizeof...(LhsIndices) == tmpl::size<typename T::args_list>::value,
+      sizeof...(LhsTensorIndices) == tmpl::size<typename T::args_list>::value,
       "Must have the same number of indices on the LHS and RHS of a tensor "
       "equation.");
   using rhs = tmpl::transform<tmpl::remove_duplicates<typename T::args_list>,
                               std::decay<tmpl::_1>>;
   static_assert(
-      tmpl::equal_members<tmpl::list<std::decay_t<LhsIndices>...>, rhs>::value,
+      tmpl::equal_members<tmpl::list<std::decay_t<LhsTensorIndices>...>,
+                          rhs>::value,
       "All indices on the LHS of a Tensor Expression (that is, those specified "
       "in evaluate<Indices::...>) must be present on the RHS of the expression "
       "as well.");
@@ -104,20 +105,20 @@ auto evaluate(const T& rhs_te) {
   // e.g. (ti_a_t, ti_B_t)
   using rhs_tensorindex_list = typename T::args_list;
   // e.g. (ti_B_t, ti_a_t)
-  using lhs_tensorindex_list = tmpl::list<LhsIndices...>;
+  using lhs_tensorindex_list = tmpl::list<LhsTensorIndices...>;
   using rhs_symmetry = typename T::symmetry;
   // e.g. (SpatialIndex<3, UpLo::Lo, Frame::Grid>,
   //       SpatialIndex<2, UpLo::Up, Frame::Grid>)
   using rhs_tensorindextype_list = typename T::index_list;
 
   // Stores (potentially reordered) symmetry and indices needed for constructing
-  // the LHS tensor with index order specified by LhsIndices
+  // the LHS tensor with index order specified by LhsTensorIndices
   using lhs_tensor = LhsTensor<rhs_tensorindex_list, lhs_tensorindex_list,
                                rhs_symmetry, rhs_tensorindextype_list>;
 
   // Construct and return LHS tensor
   return Tensor<typename T::type, typename lhs_tensor::symmetry,
                 typename lhs_tensor::tensorindextype_list>(
-      rhs_te, tmpl::list<LhsIndices...>{});
+      rhs_te, tmpl::list<LhsTensorIndices...>{});
 }
 }  // namespace TensorExpressions
