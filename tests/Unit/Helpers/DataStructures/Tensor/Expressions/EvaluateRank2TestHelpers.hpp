@@ -1,0 +1,179 @@
+// Distributed under the MIT License.
+// See LICENSE.txt for details.
+
+#pragma once
+
+#include <cstddef>
+#include <iterator>
+#include <numeric>
+
+#include "DataStructures/Tensor/Expressions/Evaluate.hpp"
+#include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
+#include "DataStructures/Tensor/Tensor.hpp"
+#include "Utilities/GenerateInstantiations.hpp"
+#include "Utilities/TMPL.hpp"
+
+/// \ingroup TestingFrameworkGroup
+/// \brief Test that evaluating a right hand side tensor expression containing a
+/// single rank 2 tensor correctly assigns the data to the evaluated left hand
+/// side tensor
+///
+/// \details `TensorIndexA` and `TensorIndexB` can be any type of TensorIndex
+/// and are not necessarily `ti_a_t` and `ti_b_t`. The "A" and "B" suffixes just
+/// denote the ordering of the generic indices of the RHS tensor expression. In
+/// the RHS tensor expression, it means `TensorIndexA` is the first index used
+/// and `TensorIndexB` is the second index used.
+///
+/// If we consider the RHS tensor's generic indices to be (a, b), then this test
+/// checks that the data in the evaluated LHS tensor is correct according to the
+/// index orders of the LHS and RHS. The two possible cases that are checked are
+/// when the LHS tensor is evaluated with index order (a, b) and when it is
+/// evaluated with the index order (b, a).
+///
+/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam RhsSymmetry the ::Symmetry of the RHS Tensor
+/// \tparam RhsTensorIndexTypeList the RHS Tensor's typelist of
+/// \ref SpacetimeIndex "TensorIndexType"s
+/// \tparam TensorIndexA the type of the first TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_a_t`
+/// \tparam TensorIndexB the type of the second TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_B_t`
+/// \param tensorindex_a the first TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_a`
+/// \param tensorindex_b the second TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_B`
+template <typename Datatype, typename RhsSymmetry,
+          typename RhsTensorIndexTypeList, typename TensorIndexA,
+          typename TensorIndexB>
+void test_evaluate_rank_2_core(
+    const TensorIndexA& tensorindex_a, const TensorIndexB& tensorindex_b) {
+  Tensor<Datatype, RhsSymmetry, RhsTensorIndexTypeList> rhs_tensor{};
+  std::iota(rhs_tensor.begin(), rhs_tensor.end(), 0.0);
+
+  size_t dim_a = tmpl::at_c<RhsTensorIndexTypeList, 0>::dim;
+  size_t dim_b = tmpl::at_c<RhsTensorIndexTypeList, 1>::dim;
+
+  // L_{ab} = R_{ab}
+  auto ab_to_ab = TensorExpressions::evaluate<TensorIndexA, TensorIndexB>(
+      rhs_tensor(tensorindex_a, tensorindex_b));
+  // L_{ba} = R_{ab}
+  auto ab_to_ba = TensorExpressions::evaluate<TensorIndexB, TensorIndexA>(
+      rhs_tensor(tensorindex_a, tensorindex_b));
+
+  for (size_t i = 0; i < dim_a; ++i) {
+    for (size_t j = 0; j < dim_b; ++j) {
+      CHECK(ab_to_ab.get(i, j) == rhs_tensor.get(i, j));
+      CHECK(ab_to_ba.get(j, i) == rhs_tensor.get(i, j));
+    }
+  }
+}
+
+/// \ingroup TestingFrameworkGroup
+/// \brief Iterate testing of evaluate for single rank 2 Tensors on multiple
+/// Frame types and dimension combinations for nonsymmetric indices
+///
+/// \details `TensorIndexA` and `TensorIndexB` can be any type of TensorIndex
+/// and are not necessarily `ti_a_t` and `ti_b_t`. The "A" and "B" suffixes just
+/// denote the ordering of the generic indices of the RHS tensor expression. In
+/// the RHS tensor expression, it means `TensorIndexA` is the first index used
+/// and `TensorIndexB` is the second index used.
+///
+/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam TensorIndexTypeA the \ref SpacetimeIndex "TensorIndexType" of the
+/// first index of the RHS Tensor
+/// \tparam TensorIndexTypeB the \ref SpacetimeIndex "TensorIndexType" of the
+/// second index of the RHS Tensor
+/// \tparam TensorIndexA the type of the first TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_a_t`
+/// \tparam TensorIndexB the type of the second TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_B_t`
+/// \tparam ValenceA the valence of the first index used on the RHS of the
+/// TensorExpression
+/// \tparam ValenceB the valence of the second index used on the RHS of the
+/// TensorExpression
+/// \param tensorindex_a the first TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_a`
+/// \param tensorindex_b the second TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_B`
+template <typename Datatype,
+          template <size_t, UpLo, typename> class TensorIndexTypeA,
+          template <size_t, UpLo, typename> class TensorIndexTypeB,
+          UpLo ValenceA, UpLo ValenceB, typename TensorIndexA,
+          typename TensorIndexB>
+void test_evaluate_rank_2_no_symmetry(const TensorIndexA& tensorindex_a,
+                                      const TensorIndexB& tensorindex_b) {
+#define DIM_A(data) BOOST_PP_TUPLE_ELEM(0, data)
+#define DIM_B(data) BOOST_PP_TUPLE_ELEM(1, data)
+#define FRAME(data) BOOST_PP_TUPLE_ELEM(2, data)
+
+#define CALL_TEST_EVALUATE_RANK_2_CORE(_, data)                            \
+  test_evaluate_rank_2_core<Datatype, Symmetry<2, 1>,                      \
+                            index_list<                                    \
+                                TensorIndexTypeA<                          \
+                                    DIM_A(data), ValenceA, FRAME(data)>,   \
+                                TensorIndexTypeB<                          \
+                                    DIM_B(data), ValenceB, FRAME(data)>>>( \
+      tensorindex_a, tensorindex_b);
+
+  GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_2_CORE, (1, 2, 3),
+                          (1, 2, 3), (Frame::Grid, Frame::Inertial))
+
+#undef CALL_TEST_EVALUATE_RANK_2_CORE
+#undef FRAME
+#undef DIM_B
+#undef DIM_A
+}
+
+/// \ingroup TestingFrameworkGroup
+/// \brief Iterate testing of evaluate for single rank 2 Tensors on multiple
+/// Frame types and dimension combinations for symmetric indices
+///
+/// \details `TensorIndexA` and `TensorIndexB` can be any type of TensorIndex
+/// and are not necessarily `ti_a_t` and `ti_b_t`. The "A" and "B" suffixes just
+/// denote the ordering of the generic indices of the RHS tensor expression. In
+/// the RHS tensor expression, it means `TensorIndexA` is the first index used
+/// and `TensorIndexB` is the second index used.
+///
+/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam TensorIndexTypeA the \ref SpacetimeIndex "TensorIndexType" of the
+/// first index of the RHS Tensor
+/// \tparam TensorIndexTypeB the \ref SpacetimeIndex "TensorIndexType" of the
+/// second index of the RHS Tensor
+/// \tparam TensorIndexA the type of the first TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_a_t`
+/// \tparam TensorIndexB the type of the second TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_B_t`
+/// \tparam ValenceA the valence of the first index used on the RHS of the
+/// TensorExpression
+/// \tparam ValenceB the valence of the second index used on the RHS of the
+/// TensorExpression
+/// \param tensorindex_a the first TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_a`
+/// \param tensorindex_b the second TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_B`
+template <typename Datatype,
+          template <size_t, UpLo, typename> class TensorIndexTypeA,
+          template <size_t, UpLo, typename> class TensorIndexTypeB,
+          UpLo ValenceA, UpLo ValenceB, typename TensorIndexA,
+          typename TensorIndexB>
+void test_evaluate_rank_2_symmetric(const TensorIndexA& tensorindex_a,
+                                    const TensorIndexB& tensorindex_b) {
+#define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
+#define FRAME(data) BOOST_PP_TUPLE_ELEM(1, data)
+
+#define CALL_TEST_EVALUATE_RANK_2_CORE(_, data)                          \
+  test_evaluate_rank_2_core<Datatype, Symmetry<1, 1>,                    \
+                            index_list<                                  \
+                                TensorIndexTypeA<                        \
+                                    DIM(data), ValenceA, FRAME(data)>,   \
+                                TensorIndexTypeB<                        \
+                                    DIM(data), ValenceB, FRAME(data)>>>( \
+      tensorindex_a, tensorindex_b);
+
+  GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_2_CORE, (1, 2, 3),
+                          (Frame::Grid, Frame::Inertial))
+
+#undef CALL_TEST_EVALUATE_RANK_2_CORE
+#undef FRAME
+#undef DIM
+}

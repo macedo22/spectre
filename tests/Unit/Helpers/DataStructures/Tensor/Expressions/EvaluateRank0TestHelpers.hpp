@@ -3,18 +3,19 @@
 
 #pragma once
 
-#include <cstddef>
-#include <iterator>
-#include <numeric>
-
-#include "DataStructures/Tensor/Expressions/AddSubtract.hpp"
 #include "DataStructures/Tensor/Expressions/Evaluate.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
-#include "Utilities/TMPL.hpp"
 
+/// \ingroup TestingFrameworkGroup
+/// \brief Test that evaluating a right hand side tensor expression containing a
+/// single rank 0 tensor correctly assigns the data to the evaluated left hand
+/// side tensor
+///
+/// \tparam Datatype the type of data being stored in the Tensors
+/// \param data the data being stored in the Tensors
 template <typename Datatype>
-void test_storage_get_rank_0(const Datatype& data) {
+void test_evaluate_rank_0(const Datatype& data) {
   Tensor<Datatype> rhs_tensor{};
   rhs_tensor.get() = data;
 
