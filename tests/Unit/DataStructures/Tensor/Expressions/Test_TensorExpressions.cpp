@@ -15,6 +15,15 @@
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.AddSubtract",
                   "[DataStructures][Unit]") {
+  // Test adding scalars
+  Tensor<double> scalar_1{};
+  scalar_1.get() = 2.1;
+  Tensor<double> scalar_2{};
+  scalar_2.get() = -0.8;
+  Tensor<double> lhs_scalar =
+      TensorExpressions::evaluate(scalar_1() + scalar_2());
+  CHECK(lhs_scalar.get() == 1.3);
+
   Tensor<double, Symmetry<1, 1>,
          index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
                     SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
