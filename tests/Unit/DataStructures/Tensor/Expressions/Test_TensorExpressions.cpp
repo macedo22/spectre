@@ -3,11 +3,7 @@
 
 #include "Framework/TestingFramework.hpp"
 
-#include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank0TestHelpers.hpp"
-#include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank1TestHelpers.hpp"
-#include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank2TestHelpers.hpp"
-#include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank3TestHelpers.hpp"
-#include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank4TestHelpers.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexTestHelpers.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/EvaluateTestHelpers.hpp"
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
