@@ -1,8 +1,6 @@
 # Distributed under the MIT License.
 # See LICENSE.txt for details.
 
-add_subdirectory(Tensor)
-
 set(LIBRARY "DataStructuresHelpers")
 
 set(LIBRARY_SOURCES
