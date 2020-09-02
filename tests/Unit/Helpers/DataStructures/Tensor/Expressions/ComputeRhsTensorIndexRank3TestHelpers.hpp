@@ -22,28 +22,28 @@ void test_compute_rhs_tensor_index_rank_3_core(
   auto rhs_tensor_expr =
       rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c);
 
-  std::array<size_t, 3> index_order_abc = {
+  const std::array<size_t, 3> index_order_abc = {
       TensorIndexA::value, TensorIndexB::value, TensorIndexC::value};
-  std::array<size_t, 3> index_order_acb = {
+  const std::array<size_t, 3> index_order_acb = {
       TensorIndexA::value, TensorIndexC::value, TensorIndexB::value};
-  std::array<size_t, 3> index_order_bac = {
+  const std::array<size_t, 3> index_order_bac = {
       TensorIndexB::value, TensorIndexA::value, TensorIndexC::value};
-  std::array<size_t, 3> index_order_bca = {
+  const std::array<size_t, 3> index_order_bca = {
       TensorIndexB::value, TensorIndexC::value, TensorIndexA::value};
-  std::array<size_t, 3> index_order_cab = {
+  const std::array<size_t, 3> index_order_cab = {
       TensorIndexC::value, TensorIndexA::value, TensorIndexB::value};
-  std::array<size_t, 3> index_order_cba = {
+  const std::array<size_t, 3> index_order_cba = {
       TensorIndexC::value, TensorIndexB::value, TensorIndexA::value};
 
   for (size_t i = 0; i < spatial_dim_a; i++) {
     for (size_t j = 0; j < spatial_dim_b; j++) {
       for (size_t k = 0; k < spatial_dim_c; k++) {
-        std::array<size_t, 3> ijk = {i, j, k};
-        std::array<size_t, 3> ikj = {i, k, j};
-        std::array<size_t, 3> jik = {j, i, k};
-        std::array<size_t, 3> jki = {j, k, i};
-        std::array<size_t, 3> kij = {k, i, j};
-        std::array<size_t, 3> kji = {k, j, i};
+        const std::array<size_t, 3> ijk = {i, j, k};
+        const std::array<size_t, 3> ikj = {i, k, j};
+        const std::array<size_t, 3> jik = {j, i, k};
+        const std::array<size_t, 3> jki = {j, k, i};
+        const std::array<size_t, 3> kij = {k, i, j};
+        const std::array<size_t, 3> kji = {k, j, i};
 
         // RHS = {a, b, c}
         CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<3>(

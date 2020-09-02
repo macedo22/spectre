@@ -11,20 +11,20 @@
 #include "Utilities/TMPL.hpp"
 
 // Check each element of each mapping
-template <typename Datatype, typename Symmetry, typename TensorIndexTypeList,
-          typename TensorIndex>
-void test_compute_rhs_tensor_index_rank_1_core(const TensorIndex& tensorindex,
-                                               const size_t& spatial_dim) {
-  Tensor<Datatype, Symmetry, TensorIndexTypeList> rhs_tensor{};
-
+template <typename Datatype, typename TensorIndexTypeList, typename TensorIndex>
+void test_compute_rhs_tensor_index_rank_1_core(const TensorIndex& tensorindex) {
+  Tensor<Datatype, Symmetry<1>, TensorIndexTypeList> rhs_tensor{};
   auto rhs_tensor_expr = rhs_tensor(tensorindex);
 
-  std::array<size_t, 1> index_order = {TensorIndex::value};
+  size_t dim = tmpl::at_c<TensorIndexTypeList, 0>::dim;
 
-  for (size_t i = 0; i < spatial_dim; i++) {
-      const std::array<size_t, 1> i_arr = {i};
-      CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<1>(
-                index_order, index_order, i_arr) == i_arr);
+  const std::array<size_t, 1> index_order = {TensorIndex::value};
+
+  for (size_t i = 0; i < dim; i++) {
+    const std::array<size_t, 1> tensor_multi_index = {i};
+    CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<1>(
+              index_order, index_order, tensor_multi_index) ==
+          tensor_multi_index);
   }
 }
 

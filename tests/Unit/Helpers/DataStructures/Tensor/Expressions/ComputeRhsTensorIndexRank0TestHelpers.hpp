@@ -9,16 +9,20 @@
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Utilities/TMPL.hpp"
 
-// Check mapping for all positions from 0 to spatial_dim
+/// \ingroup TestingFrameworkGroup
+/// \brief Test that the tensor multi-index of a rank 0 RHS Tensor is an empty
+/// array
+///
+/// \tparam Datatype the type of data being stored in the Tensors
 template <typename Datatype>
 void test_compute_rhs_tensor_index_rank_0() {
   Tensor<Datatype> rhs_tensor{};
-
   auto rhs_tensor_expr = rhs_tensor();
 
-  std::array<size_t, 0> index_order = {};
+  const std::array<size_t, 0> index_order = {};
 
-  const std::array<size_t, 0> arr = {};
+  const std::array<size_t, 0> tensor_multi_index = {};
   CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<0>(
-        index_order, index_order, arr) == arr);
+            index_order, index_order, tensor_multi_index) ==
+        tensor_multi_index);
 }

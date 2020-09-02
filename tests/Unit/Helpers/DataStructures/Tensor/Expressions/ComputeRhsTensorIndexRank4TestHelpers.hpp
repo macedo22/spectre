@@ -24,79 +24,79 @@ void test_compute_rhs_tensor_index_rank_4(
   auto rhs_tensor_expr =
       rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d);
 
-  std::array<size_t, 4> index_order_abcd = {
+  const std::array<size_t, 4> index_order_abcd = {
       TensorIndexA::value, TensorIndexB::value, TensorIndexC::value,
       TensorIndexD::value};
-  std::array<size_t, 4> index_order_abdc = {
+  const std::array<size_t, 4> index_order_abdc = {
       TensorIndexA::value, TensorIndexB::value, TensorIndexD::value,
       TensorIndexC::value};
-  std::array<size_t, 4> index_order_acbd = {
+  const std::array<size_t, 4> index_order_acbd = {
       TensorIndexA::value, TensorIndexC::value, TensorIndexB::value,
       TensorIndexD::value};
-  std::array<size_t, 4> index_order_acdb = {
+  const std::array<size_t, 4> index_order_acdb = {
       TensorIndexA::value, TensorIndexC::value, TensorIndexD::value,
       TensorIndexB::value};
-  std::array<size_t, 4> index_order_adbc = {
+  const std::array<size_t, 4> index_order_adbc = {
       TensorIndexA::value, TensorIndexD::value, TensorIndexB::value,
       TensorIndexC::value};
-  std::array<size_t, 4> index_order_adcb = {
+  const std::array<size_t, 4> index_order_adcb = {
       TensorIndexA::value, TensorIndexD::value, TensorIndexC::value,
       TensorIndexB::value};
 
-  std::array<size_t, 4> index_order_bacd = {
+  const std::array<size_t, 4> index_order_bacd = {
       TensorIndexB::value, TensorIndexA::value, TensorIndexC::value,
       TensorIndexD::value};
-  std::array<size_t, 4> index_order_badc = {
+  const std::array<size_t, 4> index_order_badc = {
       TensorIndexB::value, TensorIndexA::value, TensorIndexD::value,
       TensorIndexC::value};
-  std::array<size_t, 4> index_order_bcad = {
+  const std::array<size_t, 4> index_order_bcad = {
       TensorIndexB::value, TensorIndexC::value, TensorIndexA::value,
       TensorIndexD::value};
-  std::array<size_t, 4> index_order_bcda = {
+  const std::array<size_t, 4> index_order_bcda = {
       TensorIndexB::value, TensorIndexC::value, TensorIndexD::value,
       TensorIndexA::value};
-  std::array<size_t, 4> index_order_bdac = {
+  const std::array<size_t, 4> index_order_bdac = {
       TensorIndexB::value, TensorIndexD::value, TensorIndexA::value,
       TensorIndexC::value};
-  std::array<size_t, 4> index_order_bdca = {
+  const std::array<size_t, 4> index_order_bdca = {
       TensorIndexB::value, TensorIndexD::value, TensorIndexC::value,
       TensorIndexA::value};
 
-  std::array<size_t, 4> index_order_cabd = {
+  const std::array<size_t, 4> index_order_cabd = {
       TensorIndexC::value, TensorIndexA::value, TensorIndexB::value,
       TensorIndexD::value};
-  std::array<size_t, 4> index_order_cadb = {
+  const std::array<size_t, 4> index_order_cadb = {
       TensorIndexC::value, TensorIndexA::value, TensorIndexD::value,
       TensorIndexB::value};
-  std::array<size_t, 4> index_order_cbad = {
+  const std::array<size_t, 4> index_order_cbad = {
       TensorIndexC::value, TensorIndexB::value, TensorIndexA::value,
       TensorIndexD::value};
-  std::array<size_t, 4> index_order_cbda = {
+  const std::array<size_t, 4> index_order_cbda = {
       TensorIndexC::value, TensorIndexB::value, TensorIndexD::value,
       TensorIndexA::value};
-  std::array<size_t, 4> index_order_cdab = {
+  const std::array<size_t, 4> index_order_cdab = {
       TensorIndexC::value, TensorIndexD::value, TensorIndexA::value,
       TensorIndexB::value};
-  std::array<size_t, 4> index_order_cdba = {
+  const std::array<size_t, 4> index_order_cdba = {
       TensorIndexC::value, TensorIndexD::value, TensorIndexB::value,
       TensorIndexA::value};
 
-  std::array<size_t, 4> index_order_dabc = {
+  const std::array<size_t, 4> index_order_dabc = {
       TensorIndexD::value, TensorIndexA::value, TensorIndexB::value,
       TensorIndexC::value};
-  std::array<size_t, 4> index_order_dacb = {
+  const std::array<size_t, 4> index_order_dacb = {
       TensorIndexD::value, TensorIndexA::value, TensorIndexC::value,
       TensorIndexB::value};
-  std::array<size_t, 4> index_order_dbac = {
+  const std::array<size_t, 4> index_order_dbac = {
       TensorIndexD::value, TensorIndexB::value, TensorIndexA::value,
       TensorIndexC::value};
-  std::array<size_t, 4> index_order_dbca = {
+  const std::array<size_t, 4> index_order_dbca = {
       TensorIndexD::value, TensorIndexB::value, TensorIndexC::value,
       TensorIndexA::value};
-  std::array<size_t, 4> index_order_dcab = {
+  const std::array<size_t, 4> index_order_dcab = {
       TensorIndexD::value, TensorIndexC::value, TensorIndexA::value,
       TensorIndexB::value};
-  std::array<size_t, 4> index_order_dcba = {
+  const std::array<size_t, 4> index_order_dcba = {
       TensorIndexD::value, TensorIndexC::value, TensorIndexB::value,
       TensorIndexA::value};
 
@@ -104,33 +104,33 @@ void test_compute_rhs_tensor_index_rank_4(
     for (size_t j = 0; j < spatial_dim_b; j++) {
       for (size_t k = 0; k < spatial_dim_c; k++) {
         for (size_t l = 0; l < spatial_dim_d; l++) {
-          std::array<size_t, 4> ijkl = {i, j, k, l};
-          std::array<size_t, 4> ijlk = {i, j, l, k};
-          std::array<size_t, 4> ikjl = {i, k, j, l};
-          std::array<size_t, 4> iklj = {i, k, l, j};
-          std::array<size_t, 4> iljk = {i, l, j, k};
-          std::array<size_t, 4> ilkj = {i, l, k, j};
+          const std::array<size_t, 4> ijkl = {i, j, k, l};
+          const std::array<size_t, 4> ijlk = {i, j, l, k};
+          const std::array<size_t, 4> ikjl = {i, k, j, l};
+          const std::array<size_t, 4> iklj = {i, k, l, j};
+          const std::array<size_t, 4> iljk = {i, l, j, k};
+          const std::array<size_t, 4> ilkj = {i, l, k, j};
 
-          std::array<size_t, 4> jikl = {j, i, k, l};
-          std::array<size_t, 4> jilk = {j, i, l, k};
-          std::array<size_t, 4> jkil = {j, k, i, l};
-          std::array<size_t, 4> jkli = {j, k, l, i};
-          std::array<size_t, 4> jlik = {j, l, i, k};
-          std::array<size_t, 4> jlki = {j, l, k, i};
+          const std::array<size_t, 4> jikl = {j, i, k, l};
+          const std::array<size_t, 4> jilk = {j, i, l, k};
+          const std::array<size_t, 4> jkil = {j, k, i, l};
+          const std::array<size_t, 4> jkli = {j, k, l, i};
+          const std::array<size_t, 4> jlik = {j, l, i, k};
+          const std::array<size_t, 4> jlki = {j, l, k, i};
 
-          std::array<size_t, 4> kijl = {k, i, j, l};
-          std::array<size_t, 4> kilj = {k, i, l, j};
-          std::array<size_t, 4> kjil = {k, j, i, l};
-          std::array<size_t, 4> kjli = {k, j, l, i};
-          std::array<size_t, 4> klij = {k, l, i, j};
-          std::array<size_t, 4> klji = {k, l, j, i};
+          const std::array<size_t, 4> kijl = {k, i, j, l};
+          const std::array<size_t, 4> kilj = {k, i, l, j};
+          const std::array<size_t, 4> kjil = {k, j, i, l};
+          const std::array<size_t, 4> kjli = {k, j, l, i};
+          const std::array<size_t, 4> klij = {k, l, i, j};
+          const std::array<size_t, 4> klji = {k, l, j, i};
 
-          std::array<size_t, 4> lijk = {l, i, j, k};
-          std::array<size_t, 4> likj = {l, i, k, j};
-          std::array<size_t, 4> ljik = {l, j, i, k};
-          std::array<size_t, 4> ljki = {l, j, k, i};
-          std::array<size_t, 4> lkij = {l, k, i, j};
-          std::array<size_t, 4> lkji = {l, k, j, i};
+          const std::array<size_t, 4> lijk = {l, i, j, k};
+          const std::array<size_t, 4> likj = {l, i, k, j};
+          const std::array<size_t, 4> ljik = {l, j, i, k};
+          const std::array<size_t, 4> ljki = {l, j, k, i};
+          const std::array<size_t, 4> lkij = {l, k, i, j};
+          const std::array<size_t, 4> lkji = {l, k, j, i};
 
           // RHS = {a, b, c, d}
           CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(

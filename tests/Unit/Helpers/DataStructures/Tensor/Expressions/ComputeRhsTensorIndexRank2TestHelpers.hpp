@@ -17,16 +17,18 @@ void test_compute_rhs_tensor_index_rank_2_core(
     const TensorIndexA& tensorindex_a, const TensorIndexB& tensorindex_b,
     const size_t& spatial_dim_a, const size_t& spatial_dim_b) {
   Tensor<Datatype, Symmetry, TensorIndexTypeList> rhs_tensor{};
-
   auto rhs_tensor_expr = rhs_tensor(tensorindex_a, tensorindex_b);
 
-  std::array<size_t, 2> index_order_ab = {TensorIndexA::value,
-                                          TensorIndexB::value};
-  std::array<size_t, 2> index_order_ba = {TensorIndexB::value,
-                                          TensorIndexA::value};
+  size_t dim_a = tmpl::at_c<TensorIndexTypeList, 0>::dim;
+  size_t dim_b = tmpl::at_c<TensorIndexTypeList, 1>::dim;
 
-  for (size_t i = 0; i < spatial_dim_a; i++) {
-    for (size_t j = 0; j < spatial_dim_b; j++) {
+  const std::array<size_t, 2> index_order_ab = {TensorIndexA::value,
+                                                TensorIndexB::value};
+  const std::array<size_t, 2> index_order_ba = {TensorIndexB::value,
+                                                TensorIndexA::value};
+
+  for (size_t i = 0; i < dim_a; i++) {
+    for (size_t j = 0; j < dim_b; j++) {
       const std::array<size_t, 2> ij = {i, j};
       const std::array<size_t, 2> ji = {j, i};
 
