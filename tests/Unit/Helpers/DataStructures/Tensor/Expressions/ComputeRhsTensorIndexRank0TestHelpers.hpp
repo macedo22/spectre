@@ -16,13 +16,13 @@
 /// \tparam Datatype the type of data being stored in the Tensors
 template <typename Datatype>
 void test_compute_rhs_tensor_index_rank_0() {
-  Tensor<Datatype> rhs_tensor{};
-  auto rhs_tensor_expr = rhs_tensor();
+  const Tensor<Datatype> rhs_tensor{};
+  const auto R = rhs_tensor();
 
   const std::array<size_t, 0> index_order = {};
 
   const std::array<size_t, 0> tensor_multi_index = {};
-  CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<0>(
-            index_order, index_order, tensor_multi_index) ==
+  CHECK(R.template compute_rhs_tensor_index<0>(index_order, index_order,
+                                               tensor_multi_index) ==
         tensor_multi_index);
 }

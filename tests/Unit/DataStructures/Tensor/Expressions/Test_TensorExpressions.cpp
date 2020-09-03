@@ -13,140 +13,103 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
   test_compute_rhs_tensor_index_rank_0<double>();
 
   // Rank 1 spacetime
-  test_compute_rhs_tensor_index_rank_1<
-      double, ti_a_t, SpacetimeIndex, UpLo::Lo>(ti_a);
-  test_compute_rhs_tensor_index_rank_1<
-      double, ti_b_t, SpacetimeIndex, UpLo::Lo>(ti_b);
-  test_compute_rhs_tensor_index_rank_1<
-      double, ti_A_t, SpacetimeIndex, UpLo::Up>(ti_A);
-  test_compute_rhs_tensor_index_rank_1<
-      double, ti_B_t, SpacetimeIndex, UpLo::Up>(ti_B);
+  test_compute_rhs_tensor_index_rank_1<double, SpacetimeIndex, UpLo::Lo>(ti_a);
+  test_compute_rhs_tensor_index_rank_1<double, SpacetimeIndex, UpLo::Lo>(ti_b);
+  test_compute_rhs_tensor_index_rank_1<double, SpacetimeIndex, UpLo::Up>(ti_A);
+  test_compute_rhs_tensor_index_rank_1<double, SpacetimeIndex, UpLo::Up>(ti_B);
 
   // Rank 1 spatial
-  test_compute_rhs_tensor_index_rank_1<
-      double, ti_i_t, SpatialIndex, UpLo::Lo>(ti_i);
-  test_compute_rhs_tensor_index_rank_1<
-      double, ti_j_t, SpatialIndex, UpLo::Lo>(ti_j);
-  test_compute_rhs_tensor_index_rank_1<
-      double, ti_I_t, SpatialIndex, UpLo::Up>(ti_I);
-  test_compute_rhs_tensor_index_rank_1<
-      double, ti_J_t, SpatialIndex, UpLo::Up>(ti_J);
-
+  test_compute_rhs_tensor_index_rank_1<double, SpatialIndex, UpLo::Lo>(ti_i);
+  test_compute_rhs_tensor_index_rank_1<double, SpatialIndex, UpLo::Lo>(ti_j);
+  test_compute_rhs_tensor_index_rank_1<double, SpatialIndex, UpLo::Up>(ti_I);
+  test_compute_rhs_tensor_index_rank_1<double, SpatialIndex, UpLo::Up>(ti_J);
 
   // Rank 2 nonsymmetric, spacetime only
   test_compute_rhs_tensor_index_rank_2_no_symmetry<
-      double, ti_a_t, ti_b_t, SpacetimeIndex, SpacetimeIndex, UpLo::Lo,
-      UpLo::Lo>(ti_a, ti_b);
+      double, SpacetimeIndex, SpacetimeIndex, UpLo::Lo, UpLo::Lo>(ti_a, ti_b);
   test_compute_rhs_tensor_index_rank_2_no_symmetry<
-      double, ti_A_t, ti_B_t, SpacetimeIndex, SpacetimeIndex, UpLo::Up,
-      UpLo::Up>(ti_A, ti_B);
+      double, SpacetimeIndex, SpacetimeIndex, UpLo::Up, UpLo::Up>(ti_A, ti_B);
   test_compute_rhs_tensor_index_rank_2_no_symmetry<
-      double, ti_d_t, ti_c_t, SpacetimeIndex, SpacetimeIndex, UpLo::Lo,
-      UpLo::Lo>(ti_d, ti_c);
+      double, SpacetimeIndex, SpacetimeIndex, UpLo::Lo, UpLo::Lo>(ti_d, ti_c);
   test_compute_rhs_tensor_index_rank_2_no_symmetry<
-      double, ti_D_t, ti_C_t, SpacetimeIndex, SpacetimeIndex, UpLo::Up,
-      UpLo::Up>(ti_D, ti_C);
+      double, SpacetimeIndex, SpacetimeIndex, UpLo::Up, UpLo::Up>(ti_D, ti_C);
   test_compute_rhs_tensor_index_rank_2_no_symmetry<
-      double, ti_G_t, ti_b_t, SpacetimeIndex, SpacetimeIndex, UpLo::Up,
-      UpLo::Lo>(ti_G, ti_b);
+      double, SpacetimeIndex, SpacetimeIndex, UpLo::Up, UpLo::Lo>(ti_G, ti_b);
   test_compute_rhs_tensor_index_rank_2_no_symmetry<
-      double, ti_f_t, ti_G_t, SpacetimeIndex, SpacetimeIndex, UpLo::Lo,
-      UpLo::Up>(ti_f, ti_G);
+      double, SpacetimeIndex, SpacetimeIndex, UpLo::Lo, UpLo::Up>(ti_f, ti_G);
 
   // Rank 2 nonsymmetric, spatial only
   test_compute_rhs_tensor_index_rank_2_no_symmetry<
-      double, ti_i_t, ti_j_t, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Lo>(
-      ti_i, ti_j);
+      double, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Lo>(ti_i, ti_j);
   test_compute_rhs_tensor_index_rank_2_no_symmetry<
-      double, ti_I_t, ti_J_t, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Up>(
-      ti_I, ti_J);
+      double, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Up>(ti_I, ti_J);
   test_compute_rhs_tensor_index_rank_2_no_symmetry<
-      double, ti_j_t, ti_i_t, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Lo>(
-      ti_j, ti_i);
+      double, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Lo>(ti_j, ti_i);
   test_compute_rhs_tensor_index_rank_2_no_symmetry<
-      double, ti_J_t, ti_I_t, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Up>(
-      ti_J, ti_I);
+      double, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Up>(ti_J, ti_I);
   test_compute_rhs_tensor_index_rank_2_no_symmetry<
-      double, ti_i_t, ti_J_t, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Up>(
-      ti_i, ti_J);
+      double, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Up>(ti_i, ti_J);
   test_compute_rhs_tensor_index_rank_2_no_symmetry<
-      double, ti_I_t, ti_j_t, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Lo>(
-      ti_I, ti_j);
+      double, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Lo>(ti_I, ti_j);
   test_compute_rhs_tensor_index_rank_2_no_symmetry<
-      double, ti_j_t, ti_I_t, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Up>(
-      ti_j, ti_I);
+      double, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Up>(ti_j, ti_I);
   test_compute_rhs_tensor_index_rank_2_no_symmetry<
-      double, ti_J_t, ti_i_t, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Lo>(
-      ti_J, ti_i);
+      double, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Lo>(ti_J, ti_i);
 
   // Rank 2 nonsymmetric, spacetime and spatial mixed
   test_compute_rhs_tensor_index_rank_2_no_symmetry<
-      double, ti_c_t, ti_I_t, SpacetimeIndex, SpatialIndex, UpLo::Lo, UpLo::Up>(
-      ti_c, ti_I);
+      double, SpacetimeIndex, SpatialIndex, UpLo::Lo, UpLo::Up>(ti_c, ti_I);
   test_compute_rhs_tensor_index_rank_2_no_symmetry<
-      double, ti_A_t, ti_i_t, SpacetimeIndex, SpatialIndex, UpLo::Up, UpLo::Lo>(
-      ti_A, ti_i);
+      double, SpacetimeIndex, SpatialIndex, UpLo::Up, UpLo::Lo>(ti_A, ti_i);
   test_compute_rhs_tensor_index_rank_2_no_symmetry<
-      double, ti_J_t, ti_a_t, SpatialIndex, SpacetimeIndex, UpLo::Up, UpLo::Lo>(
-      ti_J, ti_a);
+      double, SpatialIndex, SpacetimeIndex, UpLo::Up, UpLo::Lo>(ti_J, ti_a);
   test_compute_rhs_tensor_index_rank_2_no_symmetry<
-      double, ti_i_t, ti_B_t, SpatialIndex, SpacetimeIndex, UpLo::Lo, UpLo::Up>(
-      ti_i, ti_B);
+      double, SpatialIndex, SpacetimeIndex, UpLo::Lo, UpLo::Up>(ti_i, ti_B);
   test_compute_rhs_tensor_index_rank_2_no_symmetry<
-      double, ti_e_t, ti_j_t, SpacetimeIndex, SpatialIndex, UpLo::Lo, UpLo::Lo>(
-      ti_e, ti_j);
+      double, SpacetimeIndex, SpatialIndex, UpLo::Lo, UpLo::Lo>(ti_e, ti_j);
   test_compute_rhs_tensor_index_rank_2_no_symmetry<
-      double, ti_i_t, ti_d_t, SpatialIndex, SpacetimeIndex, UpLo::Lo, UpLo::Lo>(
-      ti_i, ti_d);
+      double, SpatialIndex, SpacetimeIndex, UpLo::Lo, UpLo::Lo>(ti_i, ti_d);
   test_compute_rhs_tensor_index_rank_2_no_symmetry<
-      double, ti_C_t, ti_I_t, SpacetimeIndex, SpatialIndex, UpLo::Up, UpLo::Up>(
-      ti_C, ti_I);
+      double, SpacetimeIndex, SpatialIndex, UpLo::Up, UpLo::Up>(ti_C, ti_I);
   test_compute_rhs_tensor_index_rank_2_no_symmetry<
-      double, ti_J_t, ti_A_t, SpatialIndex, SpacetimeIndex, UpLo::Up, UpLo::Up>(
-      ti_J, ti_A);
+      double, SpatialIndex, SpacetimeIndex, UpLo::Up, UpLo::Up>(ti_J, ti_A);
 
   // Rank 2 symmetric, spacetime
-  test_compute_rhs_tensor_index_rank_2_symmetric<double, ti_a_t, ti_d_t,
-                                                 SpacetimeIndex, SpacetimeIndex,
-                                                 UpLo::Lo, UpLo::Lo>(ti_a,
-                                                                     ti_d);
-  test_compute_rhs_tensor_index_rank_2_symmetric<double, ti_G_t, ti_B_t,
-                                                 SpacetimeIndex, SpacetimeIndex,
-                                                 UpLo::Up, UpLo::Up>(ti_G,
-                                                                     ti_B);
+  test_compute_rhs_tensor_index_rank_2_symmetric<
+      double, SpacetimeIndex, SpacetimeIndex, UpLo::Lo, UpLo::Lo>(ti_a, ti_d);
+  test_compute_rhs_tensor_index_rank_2_symmetric<
+      double, SpacetimeIndex, SpacetimeIndex, UpLo::Up, UpLo::Up>(ti_G, ti_B);
 
   // Rank 2 symmetric, spatial
   test_compute_rhs_tensor_index_rank_2_symmetric<
-      double, ti_j_t, ti_i_t, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Lo>(
-      ti_j, ti_i);
+      double, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Lo>(ti_j, ti_i);
   test_compute_rhs_tensor_index_rank_2_symmetric<
-      double, ti_I_t, ti_J_t, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Up>(
-      ti_I, ti_J);
+      double, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Up>(ti_I, ti_J);
 
   // Rank 3 nonsymmetric, spacetime
   test_compute_rhs_tensor_index_rank_3_no_symmetry<
-      double, ti_D_t, ti_j_t, ti_B_t, SpacetimeIndex, SpatialIndex,
-      SpacetimeIndex, UpLo::Up, UpLo::Lo, UpLo::Up>(ti_D, ti_j, ti_B);
+      double, SpacetimeIndex, SpatialIndex, SpacetimeIndex, UpLo::Up, UpLo::Lo,
+      UpLo::Up>(ti_D, ti_j, ti_B);
 
   // Rank 3 ab symmetry
   test_compute_rhs_tensor_index_rank_3_ab_symmetry<
-      double, ti_b_t, ti_a_t, ti_C_t, SpacetimeIndex, SpacetimeIndex,
-      SpacetimeIndex, UpLo::Lo, UpLo::Lo, UpLo::Up>(ti_b, ti_a, ti_C);
+      double, SpacetimeIndex, SpacetimeIndex, SpacetimeIndex, UpLo::Lo,
+      UpLo::Lo, UpLo::Up>(ti_b, ti_a, ti_C);
 
   // Rank 3 ac symmetry
   test_compute_rhs_tensor_index_rank_3_ac_symmetry<
-      double, ti_i_t, ti_f_t, ti_j_t, SpatialIndex, SpacetimeIndex,
-      SpatialIndex, UpLo::Lo, UpLo::Lo, UpLo::Lo>(ti_i, ti_f, ti_j);
+      double, SpatialIndex, SpacetimeIndex, SpatialIndex, UpLo::Lo, UpLo::Lo,
+      UpLo::Lo>(ti_i, ti_f, ti_j);
 
   // Rank 3 bc symmetry
   test_compute_rhs_tensor_index_rank_3_bc_symmetry<
-      double, ti_d_t, ti_J_t, ti_I_t, SpacetimeIndex, SpatialIndex,
-      SpatialIndex, UpLo::Lo, UpLo::Up, UpLo::Up>(ti_d, ti_J, ti_I);
+      double, SpacetimeIndex, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Up,
+      UpLo::Up>(ti_d, ti_J, ti_I);
 
   // Rank 3 abc symmetry
   test_compute_rhs_tensor_index_rank_3_abc_symmetry<
-      double, ti_f_t, ti_d_t, ti_a_t, SpacetimeIndex, SpacetimeIndex,
-      SpacetimeIndex, UpLo::Lo, UpLo::Lo, UpLo::Lo>(ti_f, ti_d, ti_a);
+      double, SpacetimeIndex, SpacetimeIndex, SpacetimeIndex, UpLo::Lo,
+      UpLo::Lo, UpLo::Lo>(ti_f, ti_d, ti_a);
 
   // Rank 4 nonsymmetric
   test_compute_rhs_tensor_index_rank_4<
@@ -154,9 +117,8 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
                  SpatialIndex<2, UpLo::Up, Frame::Grid>,
                  SpatialIndex<1, UpLo::Lo, Frame::Grid>,
-                 SpacetimeIndex<2, UpLo::Up, Frame::Grid>>,
-      ti_c_t, ti_J_t, ti_i_t, ti_A_t> (
-          ti_c, ti_J, ti_i, ti_A, 3, 2, 1, 2);
+                 SpacetimeIndex<2, UpLo::Up, Frame::Grid>>>(ti_c, ti_J, ti_i,
+                                                            ti_A);
 
   // Rank 4 bd symmetry
   test_compute_rhs_tensor_index_rank_4<
@@ -164,9 +126,8 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
       index_list<SpatialIndex<1, UpLo::Up, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
                  SpatialIndex<2, UpLo::Lo, Frame::Inertial>,
-                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>,
-      ti_I_t, ti_A_t, ti_l_t, ti_F_t> (
-          ti_I, ti_A, ti_l, ti_F, 1, 3, 2, 3);
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>(ti_I, ti_A,
+                                                                ti_l, ti_F);
 
   // Rank 4 acd symmetry
   test_compute_rhs_tensor_index_rank_4<
@@ -174,9 +135,8 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
                  SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
-                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>,
-      ti_l_t, ti_J_t, ti_i_t, ti_k_t> (
-          ti_l, ti_J, ti_i, ti_k, 3, 3, 3, 3);
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>(ti_l, ti_J, ti_i,
+                                                            ti_k);
 
   // Rank 4 abcd symmetry
   test_compute_rhs_tensor_index_rank_4<
@@ -184,9 +144,8 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
       index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
-                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>>,
-      ti_j_t, ti_i_t, ti_k_t, ti_l_t> (
-          ti_j, ti_i, ti_k, ti_l, 3, 3, 3, 3);
+                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>(ti_j, ti_i, ti_k,
+                                                              ti_l);
 }
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Evaluate",

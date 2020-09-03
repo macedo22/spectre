@@ -11,18 +11,21 @@
 #include "Utilities/TMPL.hpp"
 
 // Check each element of each mapping
-template <typename Datatype, typename Symmetry, typename TensorIndexTypeList,
-          typename TensorIndexA, typename TensorIndexB, typename TensorIndexC,
-          typename TensorIndexD>
-void test_compute_rhs_tensor_index_rank_4(
-    const TensorIndexA& tensorindex_a, const TensorIndexB& tensorindex_b,
-    const TensorIndexC& tensorindex_c, const TensorIndexD& tensorindex_d,
-    const size_t& spatial_dim_a, const size_t& spatial_dim_b,
-    const size_t& spatial_dim_c, const size_t& spatial_dim_d) {
-  Tensor<Datatype, Symmetry, TensorIndexTypeList> rhs_tensor{};
-
-  auto rhs_tensor_expr =
+template <typename Datatype, typename RhsSymmetry,
+          typename RhsTensorIndexTypeList, typename TensorIndexA,
+          typename TensorIndexB, typename TensorIndexC, typename TensorIndexD>
+void test_compute_rhs_tensor_index_rank_4(const TensorIndexA& tensorindex_a,
+                                          const TensorIndexB& tensorindex_b,
+                                          const TensorIndexC& tensorindex_c,
+                                          const TensorIndexD& tensorindex_d) {
+  const Tensor<Datatype, RhsSymmetry, RhsTensorIndexTypeList> rhs_tensor{};
+  const auto R_abcd =
       rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d);
+
+  const size_t dim_a = tmpl::at_c<RhsTensorIndexTypeList, 0>::dim;
+  const size_t dim_b = tmpl::at_c<RhsTensorIndexTypeList, 1>::dim;
+  const size_t dim_c = tmpl::at_c<RhsTensorIndexTypeList, 2>::dim;
+  const size_t dim_d = tmpl::at_c<RhsTensorIndexTypeList, 3>::dim;
 
   const std::array<size_t, 4> index_order_abcd = {
       TensorIndexA::value, TensorIndexB::value, TensorIndexC::value,
@@ -100,10 +103,10 @@ void test_compute_rhs_tensor_index_rank_4(
       TensorIndexD::value, TensorIndexC::value, TensorIndexB::value,
       TensorIndexA::value};
 
-  for (size_t i = 0; i < spatial_dim_a; i++) {
-    for (size_t j = 0; j < spatial_dim_b; j++) {
-      for (size_t k = 0; k < spatial_dim_c; k++) {
-        for (size_t l = 0; l < spatial_dim_d; l++) {
+  for (size_t i = 0; i < dim_a; i++) {
+    for (size_t j = 0; j < dim_b; j++) {
+      for (size_t k = 0; k < dim_c; k++) {
+        for (size_t l = 0; l < dim_d; l++) {
           const std::array<size_t, 4> ijkl = {i, j, k, l};
           const std::array<size_t, 4> ijlk = {i, j, l, k};
           const std::array<size_t, 4> ikjl = {i, k, j, l};
@@ -133,56 +136,56 @@ void test_compute_rhs_tensor_index_rank_4(
           const std::array<size_t, 4> lkji = {l, k, j, i};
 
           // RHS = {a, b, c, d}
-          CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(
+          CHECK(R_abcd.template compute_rhs_tensor_index<4>(
                     index_order_abcd, index_order_abcd, ijkl) == ijkl);
-          CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(
+          CHECK(R_abcd.template compute_rhs_tensor_index<4>(
                     index_order_abdc, index_order_abcd, ijkl) == ijlk);
-          CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(
+          CHECK(R_abcd.template compute_rhs_tensor_index<4>(
                     index_order_acbd, index_order_abcd, ijkl) == ikjl);
-          CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(
+          CHECK(R_abcd.template compute_rhs_tensor_index<4>(
                     index_order_acdb, index_order_abcd, ijkl) == iljk);
-          CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(
+          CHECK(R_abcd.template compute_rhs_tensor_index<4>(
                     index_order_adbc, index_order_abcd, ijkl) == iklj);
-          CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(
+          CHECK(R_abcd.template compute_rhs_tensor_index<4>(
                     index_order_adcb, index_order_abcd, ijkl) == ilkj);
 
-          CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(
+          CHECK(R_abcd.template compute_rhs_tensor_index<4>(
                     index_order_bacd, index_order_abcd, ijkl) == jikl);
-          CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(
+          CHECK(R_abcd.template compute_rhs_tensor_index<4>(
                     index_order_badc, index_order_abcd, ijkl) == jilk);
-          CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(
+          CHECK(R_abcd.template compute_rhs_tensor_index<4>(
                     index_order_bcad, index_order_abcd, ijkl) == kijl);
-          CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(
+          CHECK(R_abcd.template compute_rhs_tensor_index<4>(
                     index_order_bcda, index_order_abcd, ijkl) == lijk);
-          CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(
+          CHECK(R_abcd.template compute_rhs_tensor_index<4>(
                     index_order_bdac, index_order_abcd, ijkl) == kilj);
-          CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(
+          CHECK(R_abcd.template compute_rhs_tensor_index<4>(
                     index_order_bdca, index_order_abcd, ijkl) == likj);
 
-          CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(
+          CHECK(R_abcd.template compute_rhs_tensor_index<4>(
                     index_order_cabd, index_order_abcd, ijkl) == jkil);
-          CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(
+          CHECK(R_abcd.template compute_rhs_tensor_index<4>(
                     index_order_cadb, index_order_abcd, ijkl) == jlik);
-          CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(
+          CHECK(R_abcd.template compute_rhs_tensor_index<4>(
                     index_order_cbad, index_order_abcd, ijkl) == kjil);
-          CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(
+          CHECK(R_abcd.template compute_rhs_tensor_index<4>(
                     index_order_cbda, index_order_abcd, ijkl) == ljik);
-          CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(
+          CHECK(R_abcd.template compute_rhs_tensor_index<4>(
                     index_order_cdab, index_order_abcd, ijkl) == klij);
-          CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(
+          CHECK(R_abcd.template compute_rhs_tensor_index<4>(
                     index_order_cdba, index_order_abcd, ijkl) == lkij);
 
-          CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(
+          CHECK(R_abcd.template compute_rhs_tensor_index<4>(
                     index_order_dabc, index_order_abcd, ijkl) == jkli);
-          CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(
+          CHECK(R_abcd.template compute_rhs_tensor_index<4>(
                     index_order_dacb, index_order_abcd, ijkl) == jlki);
-          CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(
+          CHECK(R_abcd.template compute_rhs_tensor_index<4>(
                     index_order_dbac, index_order_abcd, ijkl) == kjli);
-          CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(
+          CHECK(R_abcd.template compute_rhs_tensor_index<4>(
                     index_order_dbca, index_order_abcd, ijkl) == ljki);
-          CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(
+          CHECK(R_abcd.template compute_rhs_tensor_index<4>(
                     index_order_dcab, index_order_abcd, ijkl) == klji);
-          CHECK(rhs_tensor_expr.template compute_rhs_tensor_index<4>(
+          CHECK(R_abcd.template compute_rhs_tensor_index<4>(
                     index_order_dcba, index_order_abcd, ijkl) == lkji);
         }
       }
