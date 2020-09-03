@@ -11,9 +11,9 @@
 #include "Utilities/TMPL.hpp"
 
 /// \ingroup TestingFrameworkGroup
-/// \brief Test that evaluating a right hand side tensor expression containing a
-/// single rank 4 tensor correctly assigns the data to the evaluated left hand
-/// side tensor
+/// \brief Test that the tensor multi-index of a rank 3 RHS Tensor is equivalent
+/// to the LHS tensor multi-index, according to the order of their generic
+/// indices
 ///
 /// \details `TensorIndexA`, `TensorIndexB`, `TensorIndexC`, and  `TensorIndexD`
 /// can be any type of TensorIndex and are not necessarily `ti_a_t`, `ti_b_t`,
