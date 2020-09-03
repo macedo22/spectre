@@ -30,7 +30,7 @@ void test_compute_rhs_tensor_index_rank_1_core(const TensorIndex& tensorindex) {
 
   const std::array<size_t, 1> index_order = {TensorIndex::value};
 
-  // For L_{a} = R_{a}, check that L_{i} == R_{i}
+  // For L_a = R_a, check that L_i == R_i
   for (size_t i = 0; i < dim; i++) {
     const std::array<size_t, 1> tensor_multi_index = {i};
     CHECK(R_a.template compute_rhs_tensor_index<1>(index_order, index_order,
