@@ -10,7 +10,34 @@
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/TMPL.hpp"
 
-// Check each element of each mapping
+/// \ingroup TestingFrameworkGroup
+/// \brief Test that the tensor multi-index of a rank 2 RHS Tensor is equivalent
+/// to the LHS tensor multi-index, according to the order of their generic
+/// indices
+///
+/// \details `TensorIndexA` and `TensorIndexB` can be any type of TensorIndex
+/// and are not necessarily `ti_a_t` and `ti_b_t`. The "A" and "B" suffixes just
+/// denote the ordering of the generic indices of the RHS tensor expression. In
+/// the RHS tensor expression, it means `TensorIndexA` is the first index used
+/// and `TensorIndexB` is the second index used.
+///
+/// If we consider the RHS tensor's generic indices to be (a, b), the possible
+/// orderings of the LHS tensor's generic indices are: (a, b) and (b, a). For
+/// each of these cases, this test checks that for each LHS component's tensor
+/// multi-index, the equivalent RHS tensor multi-index is correctly computed.
+///
+/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam RhsSymmetry the ::Symmetry of the RHS Tensor
+/// \tparam RhsTensorIndexTypeList the RHS Tensor's typelist of
+/// \ref SpacetimeIndex "TensorIndexType"s
+/// \tparam TensorIndexA the type of the first TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_a_t`
+/// \tparam TensorIndexB the type of the second TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_B_t`
+/// \param tensorindex_a the first TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_a`
+/// \param tensorindex_b the second TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_B`
 template <typename Datatype, typename RhsSymmetry,
           typename RhsTensorIndexTypeList, typename TensorIndexA,
           typename TensorIndexB>
@@ -32,19 +59,44 @@ void test_compute_rhs_tensor_index_rank_2_core(
       const std::array<size_t, 2> ij = {i, j};
       const std::array<size_t, 2> ji = {j, i};
 
+      // For L_{ab} = R_{ab}, check that L_{ij} == R_{ij}
       CHECK(R_ab.template compute_rhs_tensor_index<2>(
                 index_order_ab, index_order_ab, ij) == ij);
+      // For L_{ba} = R_{ab}, check that L_{ij} == R_{ji}
       CHECK(R_ab.template compute_rhs_tensor_index<2>(
                 index_order_ba, index_order_ab, ij) == ji);
     }
   }
 }
 
-// Test all dimension combinations with grid and inertial frames
-// for nonsymmetric indices
-//
-// TensorIndex refers to TensorIndex<#>
-// TensorIndexType refers to SpatialIndex or SpacetimeIndex
+/// \ingroup TestingFrameworkGroup
+/// \brief Iterate testing of computing the RHS tensor multi-index equivalent of
+/// the LHS tensor multi-index with rank 2 Tensors on multiple Frame types and
+/// dimension combinations for nonsymmetric indices
+///
+/// \details `TensorIndexA` and `TensorIndexB` can be any type of TensorIndex
+/// and are not necessarily `ti_a_t` and `ti_b_t`. The "A" and "B" suffixes just
+/// denote the ordering of the generic indices of the RHS tensor expression. In
+/// the RHS tensor expression, it means `TensorIndexA` is the first index used
+/// and `TensorIndexB` is the second index used.
+///
+/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam TensorIndexTypeA the \ref SpacetimeIndex "TensorIndexType" of the
+/// first index of the RHS Tensor
+/// \tparam TensorIndexTypeB the \ref SpacetimeIndex "TensorIndexType" of the
+/// second index of the RHS Tensor
+/// \tparam TensorIndexA the type of the first TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_a_t`
+/// \tparam TensorIndexB the type of the second TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_B_t`
+/// \tparam ValenceA the valence of the first index used on the RHS of the
+/// TensorExpression
+/// \tparam ValenceB the valence of the second index used on the RHS of the
+/// TensorExpression
+/// \param tensorindex_a the first TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_a`
+/// \param tensorindex_b the second TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_B`
 template <
     typename Datatype, template <size_t, UpLo, typename> class TensorIndexTypeA,
     template <size_t, UpLo, typename> class TensorIndexTypeB, UpLo ValenceA,
@@ -71,11 +123,34 @@ void test_compute_rhs_tensor_index_rank_2_no_symmetry(
 #undef DIM_A
 }
 
-// Test all dimensions with grid and inertial frames
-// for symmetric indices
-//
-// TensorIndex refers to TensorIndex<#>
-// TensorIndexType refers to SpatialIndex or SpacetimeIndex
+/// \ingroup TestingFrameworkGroup
+/// \brief Iterate testing of computing the RHS tensor multi-index equivalent of
+/// the LHS tensor multi-index with rank 2 Tensors on multiple Frame types and
+/// dimension combinations for symmetric indices
+///
+/// \details `TensorIndexA` and `TensorIndexB` can be any type of TensorIndex
+/// and are not necessarily `ti_a_t` and `ti_b_t`. The "A" and "B" suffixes just
+/// denote the ordering of the generic indices of the RHS tensor expression. In
+/// the RHS tensor expression, it means `TensorIndexA` is the first index used
+/// and `TensorIndexB` is the second index used.
+///
+/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam TensorIndexTypeA the \ref SpacetimeIndex "TensorIndexType" of the
+/// first index of the RHS Tensor
+/// \tparam TensorIndexTypeB the \ref SpacetimeIndex "TensorIndexType" of the
+/// second index of the RHS Tensor
+/// \tparam TensorIndexA the type of the first TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_a_t`
+/// \tparam TensorIndexB the type of the second TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_B_t`
+/// \tparam ValenceA the valence of the first index used on the RHS of the
+/// TensorExpression
+/// \tparam ValenceB the valence of the second index used on the RHS of the
+/// TensorExpression
+/// \param tensorindex_a the first TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_a`
+/// \param tensorindex_b the second TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_B`
 template <
     typename Datatype, template <size_t, UpLo, typename> class TensorIndexTypeA,
     template <size_t, UpLo, typename> class TensorIndexTypeB, UpLo ValenceA,

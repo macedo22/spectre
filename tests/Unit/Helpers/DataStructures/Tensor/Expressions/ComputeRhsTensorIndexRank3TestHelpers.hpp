@@ -10,7 +10,40 @@
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/TMPL.hpp"
 
-// Check each element of each mapping
+/// \ingroup TestingFrameworkGroup
+/// \brief Test that the tensor multi-index of a rank 3 RHS Tensor is equivalent
+/// to the LHS tensor multi-index, according to the order of their generic
+/// indices
+///
+/// \details `TensorIndexA`, `TensorIndexB`, and `TensorIndexC` can be any type
+/// of TensorIndex and are not necessarily `ti_a_t`, `ti_b_t`, and `ti_c_t`. The
+/// "A", "B", and "C" suffixes just denote the ordering of the generic indices
+/// of the RHS tensor expression. In the RHS tensor expression, it means
+/// `TensorIndexA` is the first index used, `TensorIndexB` is the second index
+/// used, and `TensorIndexC` is the third index used.
+///
+/// If we consider the RHS tensor's generic indices to be (a, b, c), the
+/// possible orderings of the LHS tensor's generic indices are: (a, b, c),
+/// (a, c, b), (b, a, c), (b, c, a), (c, a, b), and (c, b, a). For each of these
+/// cases, this test checks that for each LHS component's tensor multi-index,
+/// the equivalent RHS tensor multi-index is correctly computed.
+///
+/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam RhsSymmetry the ::Symmetry of the RHS Tensor
+/// \tparam RhsTensorIndexTypeList the RHS Tensor's typelist of
+/// \ref SpacetimeIndex "TensorIndexType"s
+/// \tparam TensorIndexA the type of the first TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_a_t`
+/// \tparam TensorIndexB the type of the second TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_B_t`
+/// \tparam TensorIndexC the type of the third TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_c_t`
+/// \param tensorindex_a the first TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_a`
+/// \param tensorindex_b the second TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_B`
+/// \param tensorindex_c the third TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_c`
 template <typename Datatype, typename RhsSymmetry,
           typename RhsTensorIndexTypeList, typename TensorIndexA,
           typename TensorIndexB, typename TensorIndexC>
@@ -47,17 +80,22 @@ void test_compute_rhs_tensor_index_rank_3_core(
         const std::array<size_t, 3> kij = {k, i, j};
         const std::array<size_t, 3> kji = {k, j, i};
 
-        // RHS = {a, b, c}
+        // For L_{abc} = R_{abc}, check that L_{ijk} == R_{ijk}
         CHECK(R_abc.template compute_rhs_tensor_index<3>(
                   index_order_abc, index_order_abc, ijk) == ijk);
+        // For L_{acb} = R_{abc}, check that L_{ijk} == R_{ikj}
         CHECK(R_abc.template compute_rhs_tensor_index<3>(
                   index_order_acb, index_order_abc, ijk) == ikj);
+        // For L_{bac} = R_{abc}, check that L_{ijk} == R_{jik}
         CHECK(R_abc.template compute_rhs_tensor_index<3>(
                   index_order_bac, index_order_abc, ijk) == jik);
+        // For L_{bca} = R_{abc}, check that L_{ijk} == R_{kij}
         CHECK(R_abc.template compute_rhs_tensor_index<3>(
                   index_order_bca, index_order_abc, ijk) == kij);
+        // For L_{cab} = R_{abc}, check that L_{ijk} == R_{jki}
         CHECK(R_abc.template compute_rhs_tensor_index<3>(
                   index_order_cab, index_order_abc, ijk) == jki);
+        // For L_{cba} = R_{abc}, check that L_{ijk} == R_{kji}
         CHECK(R_abc.template compute_rhs_tensor_index<3>(
                   index_order_cba, index_order_abc, ijk) == kji);
       }
@@ -65,11 +103,43 @@ void test_compute_rhs_tensor_index_rank_3_core(
   }
 }
 
-// Test all dimension combinations with grid and inertial frames
-// for nonsymmetric indices
-//
-// TensorIndex refers to TensorIndex<#>
-// TensorIndexType refers to SpatialIndex or SpacetimeIndex
+/// \ingroup TestingFrameworkGroup
+/// \brief Iterate testing of computing the RHS tensor multi-index equivalent of
+/// the LHS tensor multi-index with rank 3 Tensors on multiple Frame types and
+/// dimension combinations for nonsymmetric indices
+///
+/// \details `TensorIndexA`, `TensorIndexB`, and `TensorIndexC` can be any type
+/// of TensorIndex and are not necessarily `ti_a_t`, `ti_b_t`, and `ti_c_t`. The
+/// "A", "B", and "C" suffixes just denote the ordering of the generic indices
+/// of the RHS tensor expression. In the RHS tensor expression, it means
+/// `TensorIndexA` is the first index used, `TensorIndexB` is the second index
+/// used, and `TensorIndexC` is the third index used..
+///
+/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam TensorIndexTypeA the \ref SpacetimeIndex "TensorIndexType" of the
+/// first index of the RHS Tensor
+/// \tparam TensorIndexTypeB the \ref SpacetimeIndex "TensorIndexType" of the
+/// second index of the RHS Tensor
+/// \tparam TensorIndexTypeC the \ref SpacetimeIndex "TensorIndexType" of the
+/// third index of the RHS Tensor
+/// \tparam TensorIndexA the type of the first TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_a_t`
+/// \tparam TensorIndexB the type of the second TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_B_t`
+/// \tparam TensorIndexC the type of the third TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_c_t`
+/// \tparam ValenceA the valence of the first index used on the RHS of the
+/// TensorExpression
+/// \tparam ValenceB the valence of the second index used on the RHS of the
+/// TensorExpression
+/// \tparam ValenceC the valence of the third index used on the RHS of the
+/// TensorExpression
+/// \param tensorindex_a the first TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_a`
+/// \param tensorindex_b the second TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_B`
+/// \param tensorindex_c the third TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_c`
 template <typename Datatype,
           template <size_t, UpLo, typename> class TensorIndexTypeA,
           template <size_t, UpLo, typename> class TensorIndexTypeB,
@@ -103,11 +173,44 @@ void test_compute_rhs_tensor_index_rank_3_no_symmetry(
 #undef DIM_A
 }
 
-// Test all dimension combinations with grid and inertial frames
-// for symmetric first and second indices
-//
-// TensorIndex refers to TensorIndex<#>
-// TensorIndexType refers to SpatialIndex or SpacetimeIndex
+/// \ingroup TestingFrameworkGroup
+/// \brief Iterate testing of computing the RHS tensor multi-index equivalent of
+/// the LHS tensor multi-index with rank 3 Tensors on multiple Frame types and
+/// dimension combinations for right hand side tensors whose first and second
+/// indices are symmetric
+///
+/// \details `TensorIndexA`, `TensorIndexB`, and `TensorIndexC` can be any type
+/// of TensorIndex and are not necessarily `ti_a_t`, `ti_b_t`, and `ti_c_t`. The
+/// "A", "B", and "C" suffixes just denote the ordering of the generic indices
+/// of the RHS tensor expression. In the RHS tensor expression, it means
+/// `TensorIndexA` is the first index used, `TensorIndexB` is the second index
+/// used, and `TensorIndexC` is the third index used..
+///
+/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam TensorIndexTypeA the \ref SpacetimeIndex "TensorIndexType" of the
+/// first index of the RHS Tensor
+/// \tparam TensorIndexTypeB the \ref SpacetimeIndex "TensorIndexType" of the
+/// second index of the RHS Tensor
+/// \tparam TensorIndexTypeC the \ref SpacetimeIndex "TensorIndexType" of the
+/// third index of the RHS Tensor
+/// \tparam TensorIndexA the type of the first TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_a_t`
+/// \tparam TensorIndexB the type of the second TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_B_t`
+/// \tparam TensorIndexC the type of the third TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_c_t`
+/// \tparam ValenceA the valence of the first index used on the RHS of the
+/// TensorExpression
+/// \tparam ValenceB the valence of the second index used on the RHS of the
+/// TensorExpression
+/// \tparam ValenceC the valence of the third index used on the RHS of the
+/// TensorExpression
+/// \param tensorindex_a the first TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_a`
+/// \param tensorindex_b the second TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_B`
+/// \param tensorindex_c the third TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_c`
 template <typename Datatype,
           template <size_t, UpLo, typename> class TensorIndexTypeA,
           template <size_t, UpLo, typename> class TensorIndexTypeB,
@@ -138,11 +241,44 @@ void test_compute_rhs_tensor_index_rank_3_ab_symmetry(
 #undef DIM_AB
 }
 
-// Test all dimension combinations with grid and inertial frames
-// for symmetric first and third indices
-//
-// TensorIndex refers to TensorIndex<#>
-// TensorIndexType refers to SpatialIndex or SpacetimeIndex
+/// \ingroup TestingFrameworkGroup
+/// \brief Iterate testing of computing the RHS tensor multi-index equivalent of
+/// the LHS tensor multi-index with rank 3 Tensors on multiple Frame types and
+/// dimension combinations for right hand side tensors whose first and third
+/// indices are symmetric
+///
+/// \details `TensorIndexA`, `TensorIndexB`, and `TensorIndexC` can be any type
+/// of TensorIndex and are not necessarily `ti_a_t`, `ti_b_t`, and `ti_c_t`. The
+/// "A", "B", and "C" suffixes just denote the ordering of the generic indices
+/// of the RHS tensor expression. In the RHS tensor expression, it means
+/// `TensorIndexA` is the first index used, `TensorIndexB` is the second index
+/// used, and `TensorIndexC` is the third index used..
+///
+/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam TensorIndexTypeA the \ref SpacetimeIndex "TensorIndexType" of the
+/// first index of the RHS Tensor
+/// \tparam TensorIndexTypeB the \ref SpacetimeIndex "TensorIndexType" of the
+/// second index of the RHS Tensor
+/// \tparam TensorIndexTypeC the \ref SpacetimeIndex "TensorIndexType" of the
+/// third index of the RHS Tensor
+/// \tparam TensorIndexA the type of the first TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_a_t`
+/// \tparam TensorIndexB the type of the second TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_B_t`
+/// \tparam TensorIndexC the type of the third TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_c_t`
+/// \tparam ValenceA the valence of the first index used on the RHS of the
+/// TensorExpression
+/// \tparam ValenceB the valence of the second index used on the RHS of the
+/// TensorExpression
+/// \tparam ValenceC the valence of the third index used on the RHS of the
+/// TensorExpression
+/// \param tensorindex_a the first TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_a`
+/// \param tensorindex_b the second TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_B`
+/// \param tensorindex_c the third TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_c`
 template <typename Datatype,
           template <size_t, UpLo, typename> class TensorIndexTypeA,
           template <size_t, UpLo, typename> class TensorIndexTypeB,
@@ -173,11 +309,44 @@ void test_compute_rhs_tensor_index_rank_3_ac_symmetry(
 #undef DIM_AC
 }
 
-// Test all dimension combinations with grid and inertial frames
-// for symmetric second and third indices
-//
-// TensorIndex refers to TensorIndex<#>
-// TensorIndexType refers to SpatialIndex or SpacetimeIndex
+/// \ingroup TestingFrameworkGroup
+/// \brief Iterate testing of computing the RHS tensor multi-index equivalent of
+/// the LHS tensor multi-index with rank 3 Tensors on multiple Frame types and
+/// dimension combinations for right hand side tensors whose second and third
+/// indices are symmetric
+///
+/// \details `TensorIndexA`, `TensorIndexB`, and `TensorIndexC` can be any type
+/// of TensorIndex and are not necessarily `ti_a_t`, `ti_b_t`, and `ti_c_t`. The
+/// "A", "B", and "C" suffixes just denote the ordering of the generic indices
+/// of the RHS tensor expression. In the RHS tensor expression, it means
+/// `TensorIndexA` is the first index used, `TensorIndexB` is the second index
+/// used, and `TensorIndexC` is the third index used..
+///
+/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam TensorIndexTypeA the \ref SpacetimeIndex "TensorIndexType" of the
+/// first index of the RHS Tensor
+/// \tparam TensorIndexTypeB the \ref SpacetimeIndex "TensorIndexType" of the
+/// second index of the RHS Tensor
+/// \tparam TensorIndexTypeC the \ref SpacetimeIndex "TensorIndexType" of the
+/// third index of the RHS Tensor
+/// \tparam TensorIndexA the type of the first TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_a_t`
+/// \tparam TensorIndexB the type of the second TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_B_t`
+/// \tparam TensorIndexC the type of the third TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_c_t`
+/// \tparam ValenceA the valence of the first index used on the RHS of the
+/// TensorExpression
+/// \tparam ValenceB the valence of the second index used on the RHS of the
+/// TensorExpression
+/// \tparam ValenceC the valence of the third index used on the RHS of the
+/// TensorExpression
+/// \param tensorindex_a the first TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_a`
+/// \param tensorindex_b the second TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_B`
+/// \param tensorindex_c the third TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_c`
 template <typename Datatype,
           template <size_t, UpLo, typename> class TensorIndexTypeA,
           template <size_t, UpLo, typename> class TensorIndexTypeB,
@@ -208,11 +377,43 @@ void test_compute_rhs_tensor_index_rank_3_bc_symmetry(
 #undef DIM_A
 }
 
-// Test all dimensions with grid and inertial frames
-// for symmetric indices
-//
-// TensorIndex refers to TensorIndex<#>
-// TensorIndexType refers to SpatialIndex or SpacetimeIndex
+/// \ingroup TestingFrameworkGroup
+/// \brief Iterate testing of computing the RHS tensor multi-index equivalent of
+/// the LHS tensor multi-index with rank 3 Tensors on multiple Frame types and
+/// dimension combinations for symmetric indices
+///
+/// \details `TensorIndexA`, `TensorIndexB`, and `TensorIndexC` can be any type
+/// of TensorIndex and are not necessarily `ti_a_t`, `ti_b_t`, and `ti_c_t`. The
+/// "A", "B", and "C" suffixes just denote the ordering of the generic indices
+/// of the RHS tensor expression. In the RHS tensor expression, it means
+/// `TensorIndexA` is the first index used, `TensorIndexB` is the second index
+/// used, and `TensorIndexC` is the third index used..
+///
+/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam TensorIndexTypeA the \ref SpacetimeIndex "TensorIndexType" of the
+/// first index of the RHS Tensor
+/// \tparam TensorIndexTypeB the \ref SpacetimeIndex "TensorIndexType" of the
+/// second index of the RHS Tensor
+/// \tparam TensorIndexTypeC the \ref SpacetimeIndex "TensorIndexType" of the
+/// third index of the RHS Tensor
+/// \tparam TensorIndexA the type of the first TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_a_t`
+/// \tparam TensorIndexB the type of the second TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_B_t`
+/// \tparam TensorIndexC the type of the third TensorIndex used on the RHS of
+/// the TensorExpression, e.g. `ti_c_t`
+/// \tparam ValenceA the valence of the first index used on the RHS of the
+/// TensorExpression
+/// \tparam ValenceB the valence of the second index used on the RHS of the
+/// TensorExpression
+/// \tparam ValenceC the valence of the third index used on the RHS of the
+/// TensorExpression
+/// \param tensorindex_a the first TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_a`
+/// \param tensorindex_b the second TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_B`
+/// \param tensorindex_c the third TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti_c`
 template <typename Datatype,
           template <size_t, UpLo, typename> class TensorIndexTypeA,
           template <size_t, UpLo, typename> class TensorIndexTypeB,

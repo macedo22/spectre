@@ -10,7 +10,17 @@
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/TMPL.hpp"
 
-// Check each element of each mapping
+/// \ingroup TestingFrameworkGroup
+/// \brief Test that the tensor multi-index of a rank 1 RHS Tensor is the same
+/// as the LHS tensor multi-index
+///
+/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam TensorIndexTypeList the Tensors' typelist containing their
+/// \ref SpacetimeIndex "TensorIndexType"
+/// \tparam TensorIndex the type of TensorIndex used in the TensorExpression,
+/// e.g. `ti_a_t`
+/// \param tensorindex the TensorIndex used in the the TensorExpression,
+/// e.g. `ti_a`
 template <typename Datatype, typename TensorIndexTypeList, typename TensorIndex>
 void test_compute_rhs_tensor_index_rank_1_core(const TensorIndex& tensorindex) {
   const Tensor<Datatype, Symmetry<1>, TensorIndexTypeList> rhs_tensor{};
@@ -20,6 +30,7 @@ void test_compute_rhs_tensor_index_rank_1_core(const TensorIndex& tensorindex) {
 
   const std::array<size_t, 1> index_order = {TensorIndex::value};
 
+  // For L_{a} = R_{a}, check that L_{i} == R_{i}
   for (size_t i = 0; i < dim; i++) {
     const std::array<size_t, 1> tensor_multi_index = {i};
     CHECK(R_a.template compute_rhs_tensor_index<1>(index_order, index_order,
@@ -28,10 +39,18 @@ void test_compute_rhs_tensor_index_rank_1_core(const TensorIndex& tensorindex) {
   }
 }
 
-// Test all dimensions with grid and inertial frames
-//
-// TensorIndex refers to TensorIndex<#>
-// TensorIndexType refers to SpatialIndex or SpacetimeIndex
+/// \ingroup TestingFrameworkGroup
+/// \brief Iterate testing of computing the RHS tensor multi-index equivalent of
+/// the LHS tensor multi-index with rank 1 Tensors on multiple Frame types and
+/// dimensions
+///
+/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam TensorIndexType the Tensors' \ref SpacetimeIndex "TensorIndexType"
+/// \tparam Valence the valence of the Tensors' index
+/// \tparam TensorIndex the type of TensorIndex used in the TensorExpression,
+/// e.g. `ti_a_t`
+/// \param tensorindex the TensorIndex used in the the TensorExpression,
+/// e.g. `ti_a`
 template <typename Datatype,
           template <size_t, UpLo, typename> class TensorIndexType, UpLo Valence,
           typename TensorIndex>
