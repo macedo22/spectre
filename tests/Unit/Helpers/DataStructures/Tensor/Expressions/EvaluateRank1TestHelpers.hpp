@@ -18,16 +18,16 @@
 /// single rank 1 tensor correctly assigns the data to the evaluated left hand
 /// side tensor
 ///
-/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam DataType the type of data being stored in the Tensors
 /// \tparam TensorIndexTypeList the Tensors' typelist containing their
 /// \ref SpacetimeIndex "TensorIndexType"
 /// \tparam TensorIndex the type of TensorIndex used in the TensorExpression,
 /// e.g. `ti_a_t`
 /// \param tensorindex the TensorIndex used in the the TensorExpression,
 /// e.g. `ti_a`
-template <typename Datatype, typename TensorIndexTypeList, typename TensorIndex>
+template <typename DataType, typename TensorIndexTypeList, typename TensorIndex>
 void test_evaluate_rank_1_core(const TensorIndex& tensorindex) {
-  Tensor<Datatype, Symmetry<1>, TensorIndexTypeList> R_a{};
+  Tensor<DataType, Symmetry<1>, TensorIndexTypeList> R_a{};
   std::iota(R_a.begin(), R_a.end(), 0.0);
 
   const size_t dim = tmpl::at_c<TensorIndexTypeList, 0>::dim;
@@ -46,14 +46,14 @@ void test_evaluate_rank_1_core(const TensorIndex& tensorindex) {
 /// \brief Iterate testing of evaluating a single rank 1 Tensors on multiple
 /// Frame types and dimensions
 ///
-/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam DataType the type of data being stored in the Tensors
 /// \tparam TensorIndexType the Tensors' \ref SpacetimeIndex "TensorIndexType"
 /// \tparam Valence the valence of the Tensors' index
 /// \tparam TensorIndex the type of TensorIndex used in the TensorExpression,
 /// e.g. `ti_a_t`
 /// \param tensorindex the TensorIndex used in the the TensorExpression,
 /// e.g. `ti_a`
-template <typename Datatype,
+template <typename DataType,
           template <size_t, UpLo, typename> class TensorIndexType, UpLo Valence,
           typename TensorIndex>
 void test_evaluate_rank_1(const TensorIndex& tensorindex) {
@@ -62,7 +62,7 @@ void test_evaluate_rank_1(const TensorIndex& tensorindex) {
 
 #define CALL_TEST_EVALUATE_RANK_1_CORE(_, data)                                \
   test_evaluate_rank_1_core<                                                   \
-      Datatype, index_list<TensorIndexType<DIM(data), Valence, FRAME(data)>>>( \
+      DataType, index_list<TensorIndexType<DIM(data), Valence, FRAME(data)>>>( \
       tensorindex);
 
   GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_1_CORE,

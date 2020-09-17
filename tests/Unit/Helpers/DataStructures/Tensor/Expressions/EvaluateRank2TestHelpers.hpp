@@ -30,7 +30,7 @@
 /// when the LHS tensor is evaluated with index order (a, b) and when it is
 /// evaluated with the index order (b, a).
 ///
-/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam DataType the type of data being stored in the Tensors
 /// \tparam RhsSymmetry the ::Symmetry of the RHS Tensor
 /// \tparam RhsTensorIndexTypeList the RHS Tensor's typelist of
 /// \ref SpacetimeIndex "TensorIndexType"s
@@ -42,12 +42,12 @@
 /// TensorExpression, e.g. `ti_a`
 /// \param tensorindex_b the second TensorIndex used on the RHS of the
 /// TensorExpression, e.g. `ti_B`
-template <typename Datatype, typename RhsSymmetry,
+template <typename DataType, typename RhsSymmetry,
           typename RhsTensorIndexTypeList, typename TensorIndexA,
           typename TensorIndexB>
 void test_evaluate_rank_2_core(
     const TensorIndexA& tensorindex_a, const TensorIndexB& tensorindex_b) {
-  Tensor<Datatype, RhsSymmetry, RhsTensorIndexTypeList> R_ab{};
+  Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> R_ab{};
   std::iota(R_ab.begin(), R_ab.end(), 0.0);
 
   const size_t dim_a = tmpl::at_c<RhsTensorIndexTypeList, 0>::dim;
@@ -80,7 +80,7 @@ void test_evaluate_rank_2_core(
 /// the RHS tensor expression, it means `TensorIndexA` is the first index used
 /// and `TensorIndexB` is the second index used.
 ///
-/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam DataType the type of data being stored in the Tensors
 /// \tparam TensorIndexTypeA the \ref SpacetimeIndex "TensorIndexType" of the
 /// first index of the RHS Tensor
 /// \tparam TensorIndexTypeB the \ref SpacetimeIndex "TensorIndexType" of the
@@ -97,7 +97,7 @@ void test_evaluate_rank_2_core(
 /// TensorExpression, e.g. `ti_a`
 /// \param tensorindex_b the second TensorIndex used on the RHS of the
 /// TensorExpression, e.g. `ti_B`
-template <typename Datatype,
+template <typename DataType,
           template <size_t, UpLo, typename> class TensorIndexTypeA,
           template <size_t, UpLo, typename> class TensorIndexTypeB,
           UpLo ValenceA, UpLo ValenceB, typename TensorIndexA,
@@ -110,7 +110,7 @@ void test_evaluate_rank_2_no_symmetry(const TensorIndexA& tensorindex_a,
 
 #define CALL_TEST_EVALUATE_RANK_2_CORE(_, data)                          \
   test_evaluate_rank_2_core<                                             \
-      Datatype, Symmetry<2, 1>,                                          \
+      DataType, Symmetry<2, 1>,                                          \
       index_list<TensorIndexTypeA<DIM_A(data), ValenceA, FRAME(data)>,   \
                  TensorIndexTypeB<DIM_B(data), ValenceB, FRAME(data)>>>( \
       tensorindex_a, tensorindex_b);
@@ -134,7 +134,7 @@ void test_evaluate_rank_2_no_symmetry(const TensorIndexA& tensorindex_a,
 /// the RHS tensor expression, it means `TensorIndexA` is the first index used
 /// and `TensorIndexB` is the second index used.
 ///
-/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam DataType the type of data being stored in the Tensors
 /// \tparam TensorIndexTypeA the \ref SpacetimeIndex "TensorIndexType" of the
 /// first index of the RHS Tensor
 /// \tparam TensorIndexTypeB the \ref SpacetimeIndex "TensorIndexType" of the
@@ -151,7 +151,7 @@ void test_evaluate_rank_2_no_symmetry(const TensorIndexA& tensorindex_a,
 /// TensorExpression, e.g. `ti_a`
 /// \param tensorindex_b the second TensorIndex used on the RHS of the
 /// TensorExpression, e.g. `ti_B`
-template <typename Datatype,
+template <typename DataType,
           template <size_t, UpLo, typename> class TensorIndexTypeA,
           template <size_t, UpLo, typename> class TensorIndexTypeB,
           UpLo ValenceA, UpLo ValenceB, typename TensorIndexA,
@@ -163,7 +163,7 @@ void test_evaluate_rank_2_symmetric(const TensorIndexA& tensorindex_a,
 
 #define CALL_TEST_EVALUATE_RANK_2_CORE(_, data)                       \
   test_evaluate_rank_2_core<                                          \
-      Datatype, Symmetry<1, 1>,                                       \
+      DataType, Symmetry<1, 1>,                                       \
       index_list<TensorIndexTypeA<DIM(data), ValenceA, FRAME(data)>,  \
                  TensorIndexTypeB<DIM(data), ValenceB, FRAME(data)>>, \
       TensorIndexA, TensorIndexB>(tensorindex_a, tensorindex_b);

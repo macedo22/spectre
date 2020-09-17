@@ -31,7 +31,7 @@
 /// are checked are when the LHS tensor is evaluated with index orders of all 24
 /// permutations of (a, b, c, d), e.g. (a, b, d, c), (a, c, b, d), ...
 ///
-/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam DataType the type of data being stored in the Tensors
 /// \tparam RhsSymmetry the ::Symmetry of the RHS Tensor
 /// \tparam RhsTensorIndexTypeList the RHS Tensor's typelist of
 /// \ref SpacetimeIndex "TensorIndexType"s
@@ -51,13 +51,13 @@
 /// TensorExpression, e.g. `ti_c`
 /// \param tensorindex_d the fourth TensorIndex used on the RHS of the
 /// TensorExpression, e.g. `ti_D`
-template <typename Datatype, typename RhsSymmetry,
+template <typename DataType, typename RhsSymmetry,
           typename RhsTensorIndexTypeList, typename TensorIndexA,
           typename TensorIndexB, typename TensorIndexC, typename TensorIndexD>
 void test_evaluate_rank_4(
     const TensorIndexA& tensorindex_a, const TensorIndexB& tensorindex_b,
     const TensorIndexC& tensorindex_c, const TensorIndexD& tensorindex_d) {
-  Tensor<Datatype, RhsSymmetry, RhsTensorIndexTypeList> R_abcd{};
+  Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> R_abcd{};
   std::iota(R_abcd.begin(), R_abcd.end(), 0.0);
 
   const size_t dim_a = tmpl::at_c<RhsTensorIndexTypeList, 0>::dim;
