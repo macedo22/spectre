@@ -11,7 +11,11 @@
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
+#include "Utilities/Literals.hpp"
 #include "Utilities/TMPL.hpp"
+
+namespace TestHelpers {
+namespace TensorExpressions {
 
 /// \ingroup TestingFrameworkGroup
 /// \brief Test that evaluating a right hand side tensor expression containing a
@@ -52,8 +56,8 @@ template <typename DataType, typename RhsSymmetry,
           typename TensorIndexB, typename TensorIndexC>
 void test_evaluate_rank_3_core(const TensorIndexA& tensorindex_a,
                                const TensorIndexB& tensorindex_b,
-                               const TensorIndexC& tensorindex_c) {
-  Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> R_abc{};
+                               const TensorIndexC& tensorindex_c) noexcept {
+  Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> R_abc(5_st);
   std::iota(R_abc.begin(), R_abc.end(), 0.0);
 
   const size_t dim_a = tmpl::at_c<RhsTensorIndexTypeList, 0>::dim;
@@ -62,32 +66,32 @@ void test_evaluate_rank_3_core(const TensorIndexA& tensorindex_a,
 
   // L_{abc} = R_{abc}
   const auto L_abc =
-      TensorExpressions::evaluate<TensorIndexA, TensorIndexB, TensorIndexC>(
+      ::TensorExpressions::evaluate<TensorIndexA, TensorIndexB, TensorIndexC>(
           R_abc(tensorindex_a, tensorindex_b, tensorindex_c));
 
   // L_{acb} = R_{abc}
   const auto L_acb =
-      TensorExpressions::evaluate<TensorIndexA, TensorIndexC, TensorIndexB>(
+      ::TensorExpressions::evaluate<TensorIndexA, TensorIndexC, TensorIndexB>(
           R_abc(tensorindex_a, tensorindex_b, tensorindex_c));
 
   // L_{bac} = R_{abc}
   const auto L_bac =
-      TensorExpressions::evaluate<TensorIndexB, TensorIndexA, TensorIndexC>(
+      ::TensorExpressions::evaluate<TensorIndexB, TensorIndexA, TensorIndexC>(
           R_abc(tensorindex_a, tensorindex_b, tensorindex_c));
 
   // L_{bca} = R_{abc}
   const auto L_bca =
-      TensorExpressions::evaluate<TensorIndexB, TensorIndexC, TensorIndexA>(
+      ::TensorExpressions::evaluate<TensorIndexB, TensorIndexC, TensorIndexA>(
           R_abc(tensorindex_a, tensorindex_b, tensorindex_c));
 
   // L_{cab} = R_{abc}
   const auto L_cab =
-      TensorExpressions::evaluate<TensorIndexC, TensorIndexA, TensorIndexB>(
+      ::TensorExpressions::evaluate<TensorIndexC, TensorIndexA, TensorIndexB>(
           R_abc(tensorindex_a, tensorindex_b, tensorindex_c));
 
   // L_{cba} = R_{abc}
   const auto L_cba =
-      TensorExpressions::evaluate<TensorIndexC, TensorIndexB, TensorIndexA>(
+      ::TensorExpressions::evaluate<TensorIndexC, TensorIndexB, TensorIndexA>(
           R_abc(tensorindex_a, tensorindex_b, tensorindex_c));
 
   for (size_t i = 0; i < dim_a; ++i) {
@@ -111,15 +115,15 @@ void test_evaluate_rank_3_core(const TensorIndexA& tensorindex_a,
 }
 
 /// \ingroup TestingFrameworkGroup
-/// \brief Iterate testing of evaluating a single rank 3 Tensors on multiple
-/// Frame types and dimension combinations for nonsymmetric indices
+/// \brief Iterate testing of evaluating single rank 3 Tensors on multiple Frame
+/// types and dimension combinations for nonsymmetric indices
 ///
 /// \details `TensorIndexA`, `TensorIndexB`, and `TensorIndexC` can be any type
 /// of TensorIndex and are not necessarily `ti_a_t`, `ti_b_t`, and `ti_c_t`. The
 /// "A", "B", and "C" suffixes just denote the ordering of the generic indices
 /// of the RHS tensor expression. In the RHS tensor expression, it means
 /// `TensorIndexA` is the first index used, `TensorIndexB` is the second index
-/// used, and `TensorIndexC` is the third index used..
+/// used, and `TensorIndexC` is the third index used.
 ///
 /// \tparam DataType the type of data being stored in the Tensors
 /// \tparam TensorIndexTypeA the \ref SpacetimeIndex "TensorIndexType" of the
@@ -150,11 +154,11 @@ template <typename DataType,
           template <size_t, UpLo, typename> class TensorIndexTypeA,
           template <size_t, UpLo, typename> class TensorIndexTypeB,
           template <size_t, UpLo, typename> class TensorIndexTypeC,
-          UpLo ValenceA, UpLo ValenceB, UpLo ValenceC,
-          typename TensorIndexA, typename TensorIndexB, typename TensorIndexC>
-void test_evaluate_rank_3_no_symmetry(const TensorIndexA& tensorindex_a,
-                                      const TensorIndexB& tensorindex_b,
-                                      const TensorIndexC& tensorindex_c) {
+          UpLo ValenceA, UpLo ValenceB, UpLo ValenceC, typename TensorIndexA,
+          typename TensorIndexB, typename TensorIndexC>
+void test_evaluate_rank_3_no_symmetry(
+    const TensorIndexA& tensorindex_a, const TensorIndexB& tensorindex_b,
+    const TensorIndexC& tensorindex_c) noexcept {
 #define DIM_A(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define DIM_B(data) BOOST_PP_TUPLE_ELEM(1, data)
 #define DIM_C(data) BOOST_PP_TUPLE_ELEM(2, data)
@@ -179,16 +183,16 @@ void test_evaluate_rank_3_no_symmetry(const TensorIndexA& tensorindex_a,
 }
 
 /// \ingroup TestingFrameworkGroup
-/// \brief Iterate testing of evaluating a single rank 3 Tensors on multiple
-/// Frame types and dimension combinations for right hand side tensors whose
-/// first and second indices are symmetric
+/// \brief Iterate testing of evaluating single rank 3 Tensors on multiple Frame
+/// types and dimension combinations for right hand side tensors whose first and
+/// second indices are symmetric
 ///
 /// \details `TensorIndexA`, `TensorIndexB`, and `TensorIndexC` can be any type
 /// of TensorIndex and are not necessarily `ti_a_t`, `ti_b_t`, and `ti_c_t`. The
 /// "A", "B", and "C" suffixes just denote the ordering of the generic indices
 /// of the RHS tensor expression. In the RHS tensor expression, it means
 /// `TensorIndexA` is the first index used, `TensorIndexB` is the second index
-/// used, and `TensorIndexC` is the third index used..
+/// used, and `TensorIndexC` is the third index used.
 ///
 /// \tparam DataType the type of data being stored in the Tensors
 /// \tparam TensorIndexTypeA the \ref SpacetimeIndex "TensorIndexType" of the
@@ -219,11 +223,11 @@ template <typename DataType,
           template <size_t, UpLo, typename> class TensorIndexTypeA,
           template <size_t, UpLo, typename> class TensorIndexTypeB,
           template <size_t, UpLo, typename> class TensorIndexTypeC,
-          UpLo ValenceA, UpLo ValenceB, UpLo ValenceC,
-          typename TensorIndexA, typename TensorIndexB, typename TensorIndexC>
-void test_evaluate_rank_3_ab_symmetry(const TensorIndexA& tensorindex_a,
-                                      const TensorIndexB& tensorindex_b,
-                                      const TensorIndexC& tensorindex_c) {
+          UpLo ValenceA, UpLo ValenceB, UpLo ValenceC, typename TensorIndexA,
+          typename TensorIndexB, typename TensorIndexC>
+void test_evaluate_rank_3_ab_symmetry(
+    const TensorIndexA& tensorindex_a, const TensorIndexB& tensorindex_b,
+    const TensorIndexC& tensorindex_c) noexcept {
 #define DIM_AB(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define DIM_C(data) BOOST_PP_TUPLE_ELEM(1, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(2, data)
@@ -246,16 +250,16 @@ void test_evaluate_rank_3_ab_symmetry(const TensorIndexA& tensorindex_a,
 }
 
 /// \ingroup TestingFrameworkGroup
-/// \brief Iterate testing of evaluating a single rank 3 Tensors on multiple
-/// Frame types and dimension combinations for right hand side tensors whose
-/// first and third indices are symmetric
+/// \brief Iterate testing of evaluating single rank 3 Tensors on multiple Frame
+/// types and dimension combinations for right hand side tensors whose first and
+/// third indices are symmetric
 ///
 /// \details `TensorIndexA`, `TensorIndexB`, and `TensorIndexC` can be any type
 /// of TensorIndex and are not necessarily `ti_a_t`, `ti_b_t`, and `ti_c_t`. The
 /// "A", "B", and "C" suffixes just denote the ordering of the generic indices
 /// of the RHS tensor expression. In the RHS tensor expression, it means
 /// `TensorIndexA` is the first index used, `TensorIndexB` is the second index
-/// used, and `TensorIndexC` is the third index used..
+/// used, and `TensorIndexC` is the third index used.
 ///
 /// \tparam DataType the type of data being stored in the Tensors
 /// \tparam TensorIndexTypeA the \ref SpacetimeIndex "TensorIndexType" of the
@@ -286,11 +290,11 @@ template <typename DataType,
           template <size_t, UpLo, typename> class TensorIndexTypeA,
           template <size_t, UpLo, typename> class TensorIndexTypeB,
           template <size_t, UpLo, typename> class TensorIndexTypeC,
-          UpLo ValenceA, UpLo ValenceB, UpLo ValenceC,
-          typename TensorIndexA, typename TensorIndexB, typename TensorIndexC>
-void test_evaluate_rank_3_ac_symmetry(const TensorIndexA& tensorindex_a,
-                                      const TensorIndexB& tensorindex_b,
-                                      const TensorIndexC& tensorindex_c) {
+          UpLo ValenceA, UpLo ValenceB, UpLo ValenceC, typename TensorIndexA,
+          typename TensorIndexB, typename TensorIndexC>
+void test_evaluate_rank_3_ac_symmetry(
+    const TensorIndexA& tensorindex_a, const TensorIndexB& tensorindex_b,
+    const TensorIndexC& tensorindex_c) noexcept {
 #define DIM_AC(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define DIM_B(data) BOOST_PP_TUPLE_ELEM(1, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(2, data)
@@ -313,16 +317,16 @@ void test_evaluate_rank_3_ac_symmetry(const TensorIndexA& tensorindex_a,
 }
 
 /// \ingroup TestingFrameworkGroup
-/// \brief Iterate testing of evaluating a single rank 3 Tensors on multiple
-/// Frame types and dimension combinations for right hand side tensors whose
-/// second and third indices are symmetric
+/// \brief Iterate testing of evaluating single rank 3 Tensors on multiple Frame
+/// types and dimension combinations for right hand side tensors whose second
+/// and third indices are symmetric
 ///
 /// \details `TensorIndexA`, `TensorIndexB`, and `TensorIndexC` can be any type
 /// of TensorIndex and are not necessarily `ti_a_t`, `ti_b_t`, and `ti_c_t`. The
 /// "A", "B", and "C" suffixes just denote the ordering of the generic indices
 /// of the RHS tensor expression. In the RHS tensor expression, it means
 /// `TensorIndexA` is the first index used, `TensorIndexB` is the second index
-/// used, and `TensorIndexC` is the third index used..
+/// used, and `TensorIndexC` is the third index used.
 ///
 /// \tparam DataType the type of data being stored in the Tensors
 /// \tparam TensorIndexTypeA the \ref SpacetimeIndex "TensorIndexType" of the
@@ -353,11 +357,11 @@ template <typename DataType,
           template <size_t, UpLo, typename> class TensorIndexTypeA,
           template <size_t, UpLo, typename> class TensorIndexTypeB,
           template <size_t, UpLo, typename> class TensorIndexTypeC,
-          UpLo ValenceA, UpLo ValenceB, UpLo ValenceC,
-          typename TensorIndexA, typename TensorIndexB, typename TensorIndexC>
-void test_evaluate_rank_3_bc_symmetry(const TensorIndexA& tensorindex_a,
-                                      const TensorIndexB& tensorindex_b,
-                                      const TensorIndexC& tensorindex_c) {
+          UpLo ValenceA, UpLo ValenceB, UpLo ValenceC, typename TensorIndexA,
+          typename TensorIndexB, typename TensorIndexC>
+void test_evaluate_rank_3_bc_symmetry(
+    const TensorIndexA& tensorindex_a, const TensorIndexB& tensorindex_b,
+    const TensorIndexC& tensorindex_c) noexcept {
 #define DIM_A(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define DIM_BC(data) BOOST_PP_TUPLE_ELEM(1, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(2, data)
@@ -380,15 +384,15 @@ void test_evaluate_rank_3_bc_symmetry(const TensorIndexA& tensorindex_a,
 }
 
 /// \ingroup TestingFrameworkGroup
-/// \brief Iterate testing of evaluating a single rank 3 Tensors on multiple
-/// Frame types and dimension combinations for symmetric indices
+/// \brief Iterate testing of evaluating single rank 3 Tensors on multiple Frame
+/// types and dimension combinations for symmetric indices
 ///
 /// \details `TensorIndexA`, `TensorIndexB`, and `TensorIndexC` can be any type
 /// of TensorIndex and are not necessarily `ti_a_t`, `ti_b_t`, and `ti_c_t`. The
 /// "A", "B", and "C" suffixes just denote the ordering of the generic indices
 /// of the RHS tensor expression. In the RHS tensor expression, it means
 /// `TensorIndexA` is the first index used, `TensorIndexB` is the second index
-/// used, and `TensorIndexC` is the third index used..
+/// used, and `TensorIndexC` is the third index used.
 ///
 /// \tparam DataType the type of data being stored in the Tensors
 /// \tparam TensorIndexTypeA the \ref SpacetimeIndex "TensorIndexType" of the
@@ -419,11 +423,11 @@ template <typename DataType,
           template <size_t, UpLo, typename> class TensorIndexTypeA,
           template <size_t, UpLo, typename> class TensorIndexTypeB,
           template <size_t, UpLo, typename> class TensorIndexTypeC,
-          UpLo ValenceA, UpLo ValenceB, UpLo ValenceC,
-          typename TensorIndexA, typename TensorIndexB, typename TensorIndexC>
-void test_evaluate_rank_3_abc_symmetry(const TensorIndexA& tensorindex_a,
-                                       const TensorIndexB& tensorindex_b,
-                                       const TensorIndexC& tensorindex_c) {
+          UpLo ValenceA, UpLo ValenceB, UpLo ValenceC, typename TensorIndexA,
+          typename TensorIndexB, typename TensorIndexC>
+void test_evaluate_rank_3_abc_symmetry(
+    const TensorIndexA& tensorindex_a, const TensorIndexB& tensorindex_b,
+    const TensorIndexC& tensorindex_c) noexcept {
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(1, data)
 
@@ -442,3 +446,6 @@ void test_evaluate_rank_3_abc_symmetry(const TensorIndexA& tensorindex_a,
 #undef FRAME
 #undef DIM
 }
+
+}  // namespace TensorExpressions
+}  // namespace TestHelpers

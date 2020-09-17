@@ -6,12 +6,16 @@
 #include <cstddef>
 #include <iterator>
 #include <numeric>
+//#include <iostream>
 
 #include "DataStructures/Tensor/Expressions/Evaluate.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/TMPL.hpp"
+
+namespace TestHelpers {
+namespace TensorExpressions {
 
 /// \ingroup TestingFrameworkGroup
 /// \brief Test that evaluating a right hand side tensor expression containing a
@@ -26,15 +30,19 @@
 /// \param tensorindex the TensorIndex used in the the TensorExpression,
 /// e.g. `ti_a`
 template <typename DataType, typename TensorIndexTypeList, typename TensorIndex>
-void test_evaluate_rank_1_core(const TensorIndex& tensorindex) {
-  Tensor<DataType, Symmetry<1>, TensorIndexTypeList> R_a{};
+void test_evaluate_rank_1_core(const TensorIndex& tensorindex) noexcept {
+  Tensor<DataType, Symmetry<1>, TensorIndexTypeList> R_a(5_st);
   std::iota(R_a.begin(), R_a.end(), 0.0);
+
+  /*std::cout << "Rank 1 elements\n\n";
+  for (auto it = R_a.begin(); it != R_a.end(); it++) {
+      std::cout << *it << std::endl;
+  }*/
 
   const size_t dim = tmpl::at_c<TensorIndexTypeList, 0>::dim;
 
   // L_a = R_a
-  const auto L_a = TensorExpressions::evaluate<TensorIndex>(
-      R_a(tensorindex));
+  const auto L_a = ::TensorExpressions::evaluate<TensorIndex>(R_a(tensorindex));
 
   // For L_a = R_a, check that L_i == R_i
   for (size_t i = 0; i < dim; ++i) {
@@ -43,8 +51,8 @@ void test_evaluate_rank_1_core(const TensorIndex& tensorindex) {
 }
 
 /// \ingroup TestingFrameworkGroup
-/// \brief Iterate testing of evaluating a single rank 1 Tensors on multiple
-/// Frame types and dimensions
+/// \brief Iterate testing of evaluating single rank 1 Tensors on multiple Frame
+/// types and dimensions
 ///
 /// \tparam DataType the type of data being stored in the Tensors
 /// \tparam TensorIndexType the Tensors' \ref SpacetimeIndex "TensorIndexType"
@@ -56,7 +64,7 @@ void test_evaluate_rank_1_core(const TensorIndex& tensorindex) {
 template <typename DataType,
           template <size_t, UpLo, typename> class TensorIndexType, UpLo Valence,
           typename TensorIndex>
-void test_evaluate_rank_1(const TensorIndex& tensorindex) {
+void test_evaluate_rank_1(const TensorIndex& tensorindex) noexcept {
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(1, data)
 
@@ -72,3 +80,6 @@ void test_evaluate_rank_1(const TensorIndex& tensorindex) {
 #undef FRAME
 #undef DIM
 }
+
+}  // namespace TensorExpressions
+}  // namespace TestHelpers

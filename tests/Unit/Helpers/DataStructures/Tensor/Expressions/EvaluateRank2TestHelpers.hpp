@@ -6,12 +6,16 @@
 #include <cstddef>
 #include <iterator>
 #include <numeric>
+//#include <iostream>
 
 #include "DataStructures/Tensor/Expressions/Evaluate.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/TMPL.hpp"
+
+namespace TestHelpers {
+namespace TensorExpressions {
 
 /// \ingroup TestingFrameworkGroup
 /// \brief Test that evaluating a right hand side tensor expression containing a
@@ -45,19 +49,35 @@
 template <typename DataType, typename RhsSymmetry,
           typename RhsTensorIndexTypeList, typename TensorIndexA,
           typename TensorIndexB>
-void test_evaluate_rank_2_core(
-    const TensorIndexA& tensorindex_a, const TensorIndexB& tensorindex_b) {
-  Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> R_ab{};
+void test_evaluate_rank_2_core(const TensorIndexA& tensorindex_a,
+                               const TensorIndexB& tensorindex_b) noexcept {
+  Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> R_ab(5_st);
   std::iota(R_ab.begin(), R_ab.end(), 0.0);
+
+  // Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> og_R_ab{};
+  // std::iota(og_R_ab.begin(), og_R_ab.end(), 0.0);
+  // std::cout << "size of rank 2 tensor: " <<
+  // Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList>::size();
+
+  // auto it = R_ab.begin();
+
+  // for (auto og_it = og_R_ab.begin(); og_it != og_R_ab.end(); og_it++, it++) {
+  //    CHECK((*it) == (*og_it));
+  //}
+
+  /*std::cout << "Rank 2 elements\n\n";
+  for (auto it = R_ab.begin(); it != R_ab.end(); it++) {
+        std::cout << *it << std::endl;
+  }*/
 
   const size_t dim_a = tmpl::at_c<RhsTensorIndexTypeList, 0>::dim;
   const size_t dim_b = tmpl::at_c<RhsTensorIndexTypeList, 1>::dim;
 
   // L_{ab} = R_{ab}
-  const auto L_ab = TensorExpressions::evaluate<TensorIndexA, TensorIndexB>(
+  const auto L_ab = ::TensorExpressions::evaluate<TensorIndexA, TensorIndexB>(
       R_ab(tensorindex_a, tensorindex_b));
   // L_{ba} = R_{ab}
-  const auto L_ba = TensorExpressions::evaluate<TensorIndexB, TensorIndexA>(
+  const auto L_ba = ::TensorExpressions::evaluate<TensorIndexB, TensorIndexA>(
       R_ab(tensorindex_a, tensorindex_b));
 
   for (size_t i = 0; i < dim_a; ++i) {
@@ -71,8 +91,8 @@ void test_evaluate_rank_2_core(
 }
 
 /// \ingroup TestingFrameworkGroup
-/// \brief Iterate testing of evaluating a single rank 2 Tensors on multiple
-/// Frame types and dimension combinations for nonsymmetric indices
+/// \brief Iterate testing of evaluating single rank 2 Tensors on multiple Frame
+/// types and dimension combinations for nonsymmetric indices
 ///
 /// \details `TensorIndexA` and `TensorIndexB` can be any type of TensorIndex
 /// and are not necessarily `ti_a_t` and `ti_b_t`. The "A" and "B" suffixes just
@@ -97,13 +117,13 @@ void test_evaluate_rank_2_core(
 /// TensorExpression, e.g. `ti_a`
 /// \param tensorindex_b the second TensorIndex used on the RHS of the
 /// TensorExpression, e.g. `ti_B`
-template <typename DataType,
-          template <size_t, UpLo, typename> class TensorIndexTypeA,
-          template <size_t, UpLo, typename> class TensorIndexTypeB,
-          UpLo ValenceA, UpLo ValenceB, typename TensorIndexA,
-          typename TensorIndexB>
-void test_evaluate_rank_2_no_symmetry(const TensorIndexA& tensorindex_a,
-                                      const TensorIndexB& tensorindex_b) {
+template <
+    typename DataType, template <size_t, UpLo, typename> class TensorIndexTypeA,
+    template <size_t, UpLo, typename> class TensorIndexTypeB, UpLo ValenceA,
+    UpLo ValenceB, typename TensorIndexA, typename TensorIndexB>
+void test_evaluate_rank_2_no_symmetry(
+    const TensorIndexA& tensorindex_a,
+    const TensorIndexB& tensorindex_b) noexcept {
 #define DIM_A(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define DIM_B(data) BOOST_PP_TUPLE_ELEM(1, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(2, data)
@@ -125,8 +145,8 @@ void test_evaluate_rank_2_no_symmetry(const TensorIndexA& tensorindex_a,
 }
 
 /// \ingroup TestingFrameworkGroup
-/// \brief Iterate testing of evaluating a single rank 2 Tensors on multiple
-/// Frame types and dimension combinations for symmetric indices
+/// \brief Iterate testing of evaluating single rank 2 Tensors on multiple Frame
+/// types and dimension combinations for symmetric indices
 ///
 /// \details `TensorIndexA` and `TensorIndexB` can be any type of TensorIndex
 /// and are not necessarily `ti_a_t` and `ti_b_t`. The "A" and "B" suffixes just
@@ -151,13 +171,13 @@ void test_evaluate_rank_2_no_symmetry(const TensorIndexA& tensorindex_a,
 /// TensorExpression, e.g. `ti_a`
 /// \param tensorindex_b the second TensorIndex used on the RHS of the
 /// TensorExpression, e.g. `ti_B`
-template <typename DataType,
-          template <size_t, UpLo, typename> class TensorIndexTypeA,
-          template <size_t, UpLo, typename> class TensorIndexTypeB,
-          UpLo ValenceA, UpLo ValenceB, typename TensorIndexA,
-          typename TensorIndexB>
-void test_evaluate_rank_2_symmetric(const TensorIndexA& tensorindex_a,
-                                    const TensorIndexB& tensorindex_b) {
+template <
+    typename DataType, template <size_t, UpLo, typename> class TensorIndexTypeA,
+    template <size_t, UpLo, typename> class TensorIndexTypeB, UpLo ValenceA,
+    UpLo ValenceB, typename TensorIndexA, typename TensorIndexB>
+void test_evaluate_rank_2_symmetric(
+    const TensorIndexA& tensorindex_a,
+    const TensorIndexB& tensorindex_b) noexcept {
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(1, data)
 
@@ -175,3 +195,6 @@ void test_evaluate_rank_2_symmetric(const TensorIndexA& tensorindex_a,
 #undef FRAME
 #undef DIM
 }
+
+}  // namespace TensorExpressions
+}  // namespace TestHelpers
