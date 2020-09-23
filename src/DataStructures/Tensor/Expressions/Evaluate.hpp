@@ -33,30 +33,34 @@ namespace TensorExpressions {
  */
 template <typename RhsTensorIndexList, typename LhsTensorIndexList,
           typename RhsSymmetry, typename RhsTensorIndexTypeList,
-          size_t NumIndices = tmpl::size<RhsSymmetry>::value,
-          typename IndexSequence = std::make_index_sequence<NumIndices>>
+          size_t RhsNumIndices = tmpl::size<RhsTensorIndexList>::value,
+          size_t LhsNumIndices = tmpl::size<LhsTensorIndexList>::value,
+          typename RhsIndexSequence = std::make_index_sequence<RhsNumIndices>,
+          typename LhsIndexSequence = std::make_index_sequence<LhsNumIndices>>
 struct LhsTensor;
 
 template <typename RhsTensorIndexList, typename... LhsTensorIndices,
           typename RhsSymmetry, typename RhsTensorIndexTypeList,
-          size_t NumIndices, size_t... Ints>
+          size_t RhsNumIndices, size_t LhsNumIndices, size_t... RhsInts,
+          size_t... LhsInts>
 struct LhsTensor<RhsTensorIndexList, tmpl::list<LhsTensorIndices...>,
-                 RhsSymmetry, RhsTensorIndexTypeList, NumIndices,
-                 std::index_sequence<Ints...>> {
-  static constexpr std::array<size_t, NumIndices> lhs_tensorindex_values = {
+                 RhsSymmetry, RhsTensorIndexTypeList, RhsNumIndices,
+                 LhsNumIndices, std::index_sequence<RhsInts...>,
+                 std::index_sequence<LhsInts...>> {
+  static constexpr std::array<size_t, LhsNumIndices> lhs_tensorindex_values = {
       {LhsTensorIndices::value...}};
-  static constexpr std::array<size_t, NumIndices> rhs_tensorindex_values = {
-      {tmpl::at_c<RhsTensorIndexList, Ints>::value...}};
-  static constexpr std::array<size_t, NumIndices> lhs_to_rhs_map = {
-      {std::distance(
-          rhs_tensorindex_values.begin(),
-          alg::find(rhs_tensorindex_values, lhs_tensorindex_values[Ints]))...}};
+  static constexpr std::array<size_t, RhsNumIndices> rhs_tensorindex_values = {
+      {tmpl::at_c<RhsTensorIndexList, RhsInts>::value...}};
+  static constexpr std::array<size_t, LhsNumIndices> lhs_to_rhs_map = {
+      {std::distance(rhs_tensorindex_values.begin(),
+                     alg::find(rhs_tensorindex_values,
+                               lhs_tensorindex_values[LhsInts]))...}};
 
   // Desired LHS Tensor's Symmetry and typelist of TensorIndexTypes
   using symmetry =
-      Symmetry<tmpl::at_c<RhsSymmetry, lhs_to_rhs_map[Ints]>::value...>;
-  using tensorindextype_list =
-      tmpl::list<tmpl::at_c<RhsTensorIndexTypeList, lhs_to_rhs_map[Ints]>...>;
+      Symmetry<tmpl::at_c<RhsSymmetry, lhs_to_rhs_map[LhsInts]>::value...>;
+  using tensorindextype_list = tmpl::list<
+      tmpl::at_c<RhsTensorIndexTypeList, lhs_to_rhs_map[LhsInts]>...>;
 };
 
 /*!
