@@ -98,8 +98,7 @@ struct TensorContract
   using type = X;
   using symmetry = typename new_type::symmetry;
   using index_list = typename new_type::index_list;
-  static constexpr auto num_tensor_indices =
-      tmpl::size<index_list>::value == 0 ? 1 : tmpl::size<index_list>::value;
+  static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
   using args_list = tmpl::sort<typename new_type::args_list>;
 
   explicit TensorContract(
@@ -141,7 +140,7 @@ struct TensorContract
   SPECTRE_ALWAYS_INLINE void fill_contracting_tensor_index(
       std::array<size_t, Rank>& tensor_index_in,
       const std::array<size_t, num_tensor_indices>& tensor_index) const {
-    tensor_index_in[I] = tensor_index[I - 2];
+    tensor_index_in[I] = I == Index2::value ? 20000 : tensor_index[I - 2];
   }
 
   template <typename... LhsIndices, typename U>
