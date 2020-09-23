@@ -108,10 +108,10 @@ struct TensorContract
 
   template <size_t I, size_t Rank, Requires<(I <= Index1::value)> = nullptr>
   SPECTRE_ALWAYS_INLINE void fill_contracting_tensor_index(
-      std::array<int, Rank>& tensor_index_in,
-      const std::array<int, num_tensor_indices>& tensor_index) const {
+      std::array<size_t, Rank>& tensor_index_in,
+      const std::array<size_t, num_tensor_indices>& tensor_index) const {
     // -100 is for the slot that will be set later. Easy to debug.
-    tensor_index_in[I] = I == Index1::value ? -100 : tensor_index[I];
+    tensor_index_in[I] = I == Index1::value ? 10000 : tensor_index[I];
     fill_contracting_tensor_index<I + 1>(tensor_index_in, tensor_index);
   }
 
@@ -119,19 +119,19 @@ struct TensorContract
             Requires<(I > Index1::value and I <= Index2::value and
                       I < Rank - 1)> = nullptr>
   SPECTRE_ALWAYS_INLINE void fill_contracting_tensor_index(
-      std::array<int, Rank>& tensor_index_in,
-      const std::array<int, Rank - 2>& tensor_index) const {
+      std::array<size_t, Rank>& tensor_index_in,
+      const std::array<size_t, Rank - 2>& tensor_index) const {
     // tensor_index is Rank - 2 since it shouldn't be called for Rank 2 case
     // -200 is for the slot that will be set later. Easy to debug.
-    tensor_index_in[I] = I == Index2::value ? -200 : tensor_index[I - 1];
+    tensor_index_in[I] = I == Index2::value ? 20000 : tensor_index[I - 1];
     fill_contracting_tensor_index<I + 1>(tensor_index_in, tensor_index);
   }
 
   template <size_t I, size_t Rank,
             Requires<(I > Index2::value and I < Rank - 1)> = nullptr>
   SPECTRE_ALWAYS_INLINE void fill_contracting_tensor_index(
-      std::array<int, Rank>& tensor_index_in,
-      const std::array<int, Rank - 2>& tensor_index) const {
+      std::array<size_t, Rank>& tensor_index_in,
+      const std::array<size_t, Rank - 2>& tensor_index) const {
     // Left as Rank - 2 since it should never be called for the Rank 2 case
     tensor_index_in[I] = tensor_index[I - 2];
     fill_contracting_tensor_index<I + 1>(tensor_index_in, tensor_index);
@@ -139,8 +139,8 @@ struct TensorContract
 
   template <size_t I, size_t Rank, Requires<(I == Rank - 1)> = nullptr>
   SPECTRE_ALWAYS_INLINE void fill_contracting_tensor_index(
-      std::array<int, Rank>& tensor_index_in,
-      const std::array<int, num_tensor_indices>& tensor_index) const {
+      std::array<size_t, Rank>& tensor_index_in,
+      const std::array<size_t, num_tensor_indices>& tensor_index) const {
     tensor_index_in[I] = tensor_index[I - 2];
   }
 
@@ -148,7 +148,7 @@ struct TensorContract
   SPECTRE_ALWAYS_INLINE type
   get(const std::array<U, num_tensor_indices>& new_tensor_index) const {
     // new_tensor_index is the one with _fewer_ components, ie post-contraction
-    std::array<int, tmpl::size<Symm>::value> tensor_index;
+    std::array<size_t, tmpl::size<Symm>::value> tensor_index;
     // Manually unrolled for loops to compute the tensor_index from the
     // new_tensor_index
     fill_contracting_tensor_index<0>(tensor_index, new_tensor_index);
