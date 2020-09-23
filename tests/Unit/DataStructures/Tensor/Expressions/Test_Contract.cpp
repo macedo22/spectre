@@ -45,7 +45,28 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
                     SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
                     SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
       AUlll{};
-  std::iota(All.begin(), All.end(), 0.0);
+  std::iota(AUlll.begin(), AUlll.end(), 0.0);
 
-  auto bc = AUlll(ti_A, ti_a, ti_b, ti_c);
+  auto Aabc = AUlll(ti_A, ti_a, ti_b, ti_c);
+
+  /*auto bc = TensorExpressions::evaluate<ti_b_t, ti_c_t>(Aabc);
+
+  Tensor<double, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      All{};
+
+  for (size_t i = 0; i < 3; i++) {
+    for (size_t j = 0; j < 3; j++) {
+      All.get(i, j) = 0;
+    }
+  }
+
+  for (size_t i = 0; i < 3; i++) { // b index value
+    for (size_t j = 0; j < 3; j++) { // c index value
+      for (size_t m = 0; m < 3; m++) {  // contracted index value (A and a)
+        All.get(i, j) += Aabc.get{{(m, m, i, j}});
+      }
+    }
+  }*/
 }
