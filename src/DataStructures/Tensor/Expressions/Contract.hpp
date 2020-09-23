@@ -21,9 +21,11 @@ namespace detail {
 
 template <typename I1, typename I2>
 using indices_contractible =
-    std::integral_constant<bool,
-                           I1::dim == I2::dim and I1::ul != I2::ul and
-                               I1::fr == I2::fr and I1::index == I2::index>;
+    std::integral_constant<
+        bool,
+        I1::dim == I2::dim and I1::ul != I2::ul and
+            std::is_same_v<typename I1::Frame, typename I2::Frame> and
+            I1::index_type == I2::index_type>;
 
 template <typename T, typename X, typename SymmList, typename IndexList,
           typename Args>
