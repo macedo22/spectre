@@ -121,4 +121,30 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
       CHECK(jLli_to_ji.get(j, i) == expected_sum);
     }
   }
+
+  Tensor<double, Symmetry<4, 3, 2, 1>,
+         index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
+                    SpatialIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpatialIndex<3, UpLo::Up, Frame::Grid>,
+                    SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
+      Aulul{};
+  std::iota(Aulul.begin(), Aulul.end(), 0.0);
+
+  auto KkLl = Aulul(ti_K, ti_k, ti_L, ti_l);
+
+  std::cout << "new number of TensorIndexs : "
+            << tmpl::size<decltype(KkLl)::new_type::args_list>::value
+            << std::endl;
+  std::cout << "new num_tensor_indices: "
+            << decltype(KkLl)::new_type::num_tensor_indices << std::endl;
+
+  auto KkLl_to_scalar = TensorExpressions::evaluate<>(KkLl);
+
+  double expected_scalar_2 = 0.0;
+  for (size_t k = 0; k < 3; k++) {
+    for (size_t l = 0; l < 3; l++) {
+      expected_scalar_2 += Aulul.get(k, k, l, l);
+    }
+  }
+  CHECK(KkLl_to_scalar.get() == expected_scalar_2);
 }

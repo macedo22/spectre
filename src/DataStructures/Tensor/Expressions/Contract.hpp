@@ -184,12 +184,13 @@ struct fully_contract_helper {
           tmpl::index_of<ReplacedArgList, ti_contracted_t<I::value>>::value,
           tmpl::index_of<ReplacedArgList,
                          ti_contracted_t<I::value + 1>>::value>(
-          fully_contract_helper<TE, ReplacedArgList, tmpl::next<I>,
+          fully_contract_helper<TE, ReplacedArgList,
+                                tmpl::int32_t<I::value + 1>,
                                 TotalContracted>::apply(t))) {
     return contract<
         tmpl::index_of<ReplacedArgList, ti_contracted_t<I::value>>::value,
         tmpl::index_of<ReplacedArgList, ti_contracted_t<I::value + 1>>::value>(
-        fully_contract_helper<TE, ReplacedArgList, tmpl::next<I>,
+        fully_contract_helper<TE, ReplacedArgList, tmpl::int32_t<I::value + 1>,
                               TotalContracted>::apply(t));
   }
 };
@@ -199,7 +200,7 @@ template <template <typename> class TE, typename ReplacedArgList,
 struct fully_contract_helper<TE, ReplacedArgList,
                              tmpl::int32_t<TotalContracted::value - 1>,
                              TotalContracted> {
-  using I = tmpl::int32_t<TotalContracted::value - 1>;
+  using I = tmpl::int32_t<2 * (TotalContracted::value - 1)>;
   template <typename T>
   SPECTRE_ALWAYS_INLINE static constexpr auto apply(const T& t) -> decltype(
       contract<
