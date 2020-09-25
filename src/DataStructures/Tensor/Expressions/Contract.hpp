@@ -121,42 +121,27 @@ struct TensorContract
       const TensorExpression<T, X, Symm, IndexList, ArgsList>& t)
       : t_(~t) {}
 
-  template <size_t I, size_t Rank, Requires<(I <= Index1::value)> = nullptr>
+  template <size_t I, size_t Rank>
   SPECTRE_ALWAYS_INLINE void fill_contracting_tensor_index(
       std::array<size_t, Rank>& tensor_index_in,
       const std::array<size_t, num_tensor_indices>& tensor_index) const {
-    // 10000 is for the slot that will be set later. Easy to debug.
-    tensor_index_in[I] = I == Index1::value ? 10000 : tensor_index[I];
-    fill_contracting_tensor_index<I + 1>(tensor_index_in, tensor_index);
-  }
-
-  template <size_t I, size_t Rank,
-            Requires<(I > Index1::value and I <= Index2::value and
-                      I < Rank - 1)> = nullptr>
-  SPECTRE_ALWAYS_INLINE void fill_contracting_tensor_index(
-      std::array<size_t, Rank>& tensor_index_in,
-      const std::array<size_t, Rank - 2>& tensor_index) const {
-    // tensor_index is Rank - 2 since it shouldn't be called for Rank 2 case
-    // 20000 is for the slot that will be set later. Easy to debug.
-    tensor_index_in[I] = I == Index2::value ? 20000 : tensor_index[I - 1];
-    fill_contracting_tensor_index<I + 1>(tensor_index_in, tensor_index);
-  }
-
-  template <size_t I, size_t Rank,
-            Requires<(I > Index2::value and I < Rank - 1)> = nullptr>
-  SPECTRE_ALWAYS_INLINE void fill_contracting_tensor_index(
-      std::array<size_t, Rank>& tensor_index_in,
-      const std::array<size_t, Rank - 2>& tensor_index) const {
-    // Left as Rank - 2 since it should never be called for the Rank 2 case
-    tensor_index_in[I] = tensor_index[I - 2];
-    fill_contracting_tensor_index<I + 1>(tensor_index_in, tensor_index);
-  }
-
-  template <size_t I, size_t Rank, Requires<(I == Rank - 1)> = nullptr>
-  SPECTRE_ALWAYS_INLINE void fill_contracting_tensor_index(
-      std::array<size_t, Rank>& tensor_index_in,
-      const std::array<size_t, num_tensor_indices>& tensor_index) const {
-    tensor_index_in[I] = I == Index2::value ? 20000 : tensor_index[I - 2];
+    if constexpr (I <= Index1::value) {
+      // 10000 is for the slot that will be set later. Easy to debug.
+      tensor_index_in[I] = I == Index1::value ? 10000 : tensor_index[I];
+      fill_contracting_tensor_index<I + 1>(tensor_index_in, tensor_index);
+    } else if constexpr (I > Index1::value and I <= Index2::value and
+                         I < Rank - 1) {
+      // tensor_index is Rank - 2 since it shouldn't be called for Rank 2 case
+      // 20000 is for the slot that will be set later. Easy to debug.
+      tensor_index_in[I] = I == Index2::value ? 20000 : tensor_index[I - 1];
+      fill_contracting_tensor_index<I + 1>(tensor_index_in, tensor_index);
+    } else if constexpr (I > Index2::value and I < Rank - 1) {
+      // Left as Rank - 2 since it should never be called for the Rank 2 case
+      tensor_index_in[I] = tensor_index[I - 2];
+      fill_contracting_tensor_index<I + 1>(tensor_index_in, tensor_index);
+    } else {
+      tensor_index_in[I] = I == Index2::value ? 20000 : tensor_index[I - 2];
+    }
   }
 
   template <typename... LhsIndices, typename U>
