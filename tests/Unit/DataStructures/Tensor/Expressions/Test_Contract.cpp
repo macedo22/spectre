@@ -172,10 +172,9 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
   }
   CHECK(KkLl_contracted.get() == expected_KkLl_sum);
 
-  // NOTE: doesn't pass - need to fix
   // Contract first and third indices and second and fourth indices of<2, 1, 1,
   // 2> symmetry rank 4 tensor to rank 0 tensor
-  /*Tensor<double, Symmetry<2, 1, 1, 2>,
+  Tensor<double, Symmetry<2, 1, 1, 2>,
          index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                     SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
                     SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
@@ -192,5 +191,5 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
       expected_cACa_sum += Aluul.get(c, a, c, a);
     }
   }
-  CHECK(cACa_contracted.get() == expected_cACa_sum);*/
+  CHECK(cACa_contracted.get() == expected_cACa_sum);
 }
