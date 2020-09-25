@@ -65,26 +65,6 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
     CHECK(Iij_contracted.get(j) == expected_sum);
   }
 
-  // Contract second and third indices of <2, 1, 2> symmetry rank 3 (upper,
-  // lower, upper) tensor to rank 1 tensor
-  Tensor<double, Symmetry<2, 1, 2>,
-         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                    SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                    SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
-      Aulu{};
-  std::iota(Aulu.begin(), Aulu.end(), 0.0);
-
-  auto BfF_contracted =
-      TensorExpressions::evaluate<ti_B_t>(Aulu(ti_B, ti_f, ti_F));
-
-  for (size_t b = 0; b < 4; b++) {
-    double expected_sum = 0.0;
-    for (size_t f = 0; f < 4; f++) {
-      expected_sum += Aulu.get(b, f, f);
-    }
-    CHECK(BfF_contracted.get(b) == expected_sum);
-  }
-
   // Contract first and third indices of <2, 2, 1> symmetry rank 3 (upper,
   // upper, lower) tensor to rank 1 tensor
   Tensor<double, Symmetry<2, 2, 1>,
@@ -105,26 +85,92 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
     CHECK(JLj_contracted.get(l) == expected_sum);
   }
 
-  // Contract second and fourth indices of nonsymmetric rank 4 (lower, upper,
-  // lower, lower) tensor to rank 2 tensor
+  // Contract second and third indices of <2, 1, 2> symmetry rank 3 (upper,
+  // lower, upper) tensor to rank 1 tensor
+  Tensor<double, Symmetry<2, 1, 2>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      Aulu{};
+  std::iota(Aulu.begin(), Aulu.end(), 0.0);
+
+  auto BfF_contracted =
+      TensorExpressions::evaluate<ti_B_t>(Aulu(ti_B, ti_f, ti_F));
+
+  for (size_t b = 0; b < 4; b++) {
+    double expected_sum = 0.0;
+    for (size_t f = 0; f < 4; f++) {
+      expected_sum += Aulu.get(b, f, f);
+    }
+    CHECK(BfF_contracted.get(b) == expected_sum);
+  }
+
+  // Contract first and second indices of nonsymmetric rank 4 (lower, upper,
+  // upper, lower) tensor to rank 2 tensor
   Tensor<double, Symmetry<4, 3, 2, 1>,
          index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
                     SpatialIndex<3, UpLo::Up, Frame::Inertial>,
-                    SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpatialIndex<3, UpLo::Up, Frame::Inertial>,
                     SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
-      Alull{};
-  std::iota(Alull.begin(), Alull.end(), 0.0);
+      Aluul{};
+  std::iota(Aluul.begin(), Aluul.end(), 0.0);
 
-  auto kJij_contracted = TensorExpressions::evaluate<ti_k_t, ti_i_t>(
-      Alull(ti_k, ti_J, ti_i, ti_j));
+  auto iIKj_contracted = TensorExpressions::evaluate<ti_K_t, ti_j_t>(
+      Aluul(ti_i, ti_I, ti_K, ti_j));
 
   for (size_t k = 0; k < 3; k++) {
+    for (size_t j = 0; j < 3; j++) {
+      double expected_sum = 0.0;
+      for (size_t i = 0; i < 3; i++) {
+        expected_sum += Aluul.get(i, i, k, j);
+      }
+      CHECK(iIKj_contracted.get(k, j) == expected_sum);
+    }
+  }
+
+  // Contract first and third indices of nonsymmetric rank 4 (upper, upper,
+  // upp, lower) tensor to rank 2 tensor
+  Tensor<double, Symmetry<4, 3, 2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      Auull{};
+  std::iota(Auull.begin(), Auull.end(), 0.0);
+
+  auto ABac_contracted = TensorExpressions::evaluate<ti_B_t, ti_c_t>(
+      Auull(ti_A, ti_B, ti_a, ti_c));
+
+  for (size_t b = 0; b < 4; b++) {
+    for (size_t c = 0; c < 4; c++) {
+      double expected_sum = 0.0;
+      for (size_t a = 0; a < 4; a++) {
+        expected_sum += Auull.get(a, b, a, c);
+      }
+      CHECK(ABac_contracted.get(b, c) == expected_sum);
+    }
+  }
+
+  // Contract first and fourth indices of <3, 2, 3, 1> symmetry rank 4 (upper,
+  // upper, upper, lower) tensor to rank 2 tensor
+  Tensor<double, Symmetry<3, 2, 3, 1>,
+         index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
+                    SpatialIndex<3, UpLo::Up, Frame::Grid>,
+                    SpatialIndex<3, UpLo::Up, Frame::Grid>,
+                    SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
+      Auuul{};
+  std::iota(Auuul.begin(), Auuul.end(), 0.0);
+
+  auto LJIl_contracted = TensorExpressions::evaluate<ti_J_t, ti_I_t>(
+      Auuul(ti_L, ti_J, ti_I, ti_l));
+
+  for (size_t j = 0; j < 3; j++) {
     for (size_t i = 0; i < 3; i++) {
       double expected_sum = 0.0;
-      for (size_t j = 0; j < 3; j++) {
-        expected_sum += Alull.get(k, j, i, j);
+      for (size_t l = 0; l < 3; l++) {
+        expected_sum += Auuul.get(l, j, i, l);
       }
-      CHECK(kJij_contracted.get(k, i) == expected_sum);
+      CHECK(LJIl_contracted.get(j, i) == expected_sum);
     }
   }
 
@@ -151,6 +197,52 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
     }
   }
 
+  // Contract second and fourth indices of nonsymmetric rank 4 (lower, upper,
+  // lower, lower) tensor to rank 2 tensor
+  Tensor<double, Symmetry<4, 3, 2, 1>,
+         index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpatialIndex<3, UpLo::Up, Frame::Inertial>,
+                    SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
+      Alull{};
+  std::iota(Alull.begin(), Alull.end(), 0.0);
+
+  auto kJij_contracted = TensorExpressions::evaluate<ti_k_t, ti_i_t>(
+      Alull(ti_k, ti_J, ti_i, ti_j));
+
+  for (size_t k = 0; k < 3; k++) {
+    for (size_t i = 0; i < 3; i++) {
+      double expected_sum = 0.0;
+      for (size_t j = 0; j < 3; j++) {
+        expected_sum += Alull.get(k, j, i, j);
+      }
+      CHECK(kJij_contracted.get(k, i) == expected_sum);
+    }
+  }
+
+  // Contract third and fourth indices of <3, 2, 2, 1> symmetry rank 4 (upper,
+  // lower, lower, upper) tensor to rank 2 tensor
+  Tensor<double, Symmetry<3, 2, 2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      Aullu{};
+  std::iota(Aullu.begin(), Aullu.end(), 0.0);
+
+  auto FcgG_contracted = TensorExpressions::evaluate<ti_F_t, ti_c_t>(
+      Aullu(ti_F, ti_c, ti_g, ti_G));
+
+  for (size_t f = 0; f < 4; f++) {
+    for (size_t c = 0; c < 4; c++) {
+      double expected_sum = 0.0;
+      for (size_t g = 0; g < 4; g++) {
+        expected_sum += Aullu.get(f, c, g, g);
+      }
+      CHECK(FcgG_contracted.get(f, c) == expected_sum);
+    }
+  }
+
   // Contract first and second indices and third and fourth indices of
   // nonsymmetric rank 4 tensor to rank 0 tensor
   Tensor<double, Symmetry<4, 3, 2, 1>,
@@ -172,24 +264,45 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
   }
   CHECK(KkLl_contracted.get() == expected_KkLl_sum);
 
-  // Contract first and third indices and second and fourth indices of<2, 1, 1,
+  // Contract first and third indices and second and fourth indices of <2, 1, 1,
   // 2> symmetry rank 4 tensor to rank 0 tensor
   Tensor<double, Symmetry<2, 1, 1, 2>,
          index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                     SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
                     SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
                     SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
-      Aluul{};
-  std::iota(Aluul.begin(), Aluul.end(), 0.0);
+      Bluul{};
+  std::iota(Bluul.begin(), Bluul.end(), 0.0);
 
-  auto cACa_contracted = TensorExpressions::evaluate(Aluul(ti_c, ti_A, ti_C,
-  ti_a));
+  auto cACa_contracted =
+      TensorExpressions::evaluate(Bluul(ti_c, ti_A, ti_C, ti_a));
 
   double expected_cACa_sum = 0.0;
   for (size_t c = 0; c < 4; c++) {
     for (size_t a = 0; a < 4; a++) {
-      expected_cACa_sum += Aluul.get(c, a, c, a);
+      expected_cACa_sum += Bluul.get(c, a, c, a);
     }
   }
   CHECK(cACa_contracted.get() == expected_cACa_sum);
+
+  // Contract first and fourth indices and second and third indices of <2, 1, 2,
+  // 1> symmetry rank 4 tensor to rank 0 tensor
+  Tensor<double, Symmetry<2, 1, 2, 1>,
+         index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpatialIndex<3, UpLo::Up, Frame::Inertial>,
+                    SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpatialIndex<3, UpLo::Up, Frame::Inertial>>>
+      Alulu{};
+  std::iota(Alulu.begin(), Alulu.end(), 0.0);
+
+  auto jIiJ_contracted =
+      TensorExpressions::evaluate(Alulu(ti_j, ti_I, ti_i, ti_J));
+
+  double expected_jIiJ_sum = 0.0;
+  for (size_t j = 0; j < 3; j++) {
+    for (size_t i = 0; i < 3; i++) {
+      expected_jIiJ_sum += Alulu.get(j, i, i, j);
+    }
+  }
+  CHECK(jIiJ_contracted.get() == expected_jIiJ_sum);
 }
