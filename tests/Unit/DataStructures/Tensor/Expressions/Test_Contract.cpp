@@ -305,4 +305,27 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
     }
   }
   CHECK(jIiJ_contracted.get() == expected_jIiJ_sum);
+
+  // Contract second and fourth indices of <2, 1, 1, 1> symmetry rank 4 (lower,
+  // upper, lower, lower) tensor to rank 2 tensor
+  Tensor<double, Symmetry<2, 1, 1, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      Aulll{};
+  std::iota(Aulll.begin(), Aulll.end(), 0.0);
+
+  auto Adba_contracted_to_bd = TensorExpressions::evaluate<ti_b_t, ti_d_t>(
+      Aulll(ti_A, ti_d, ti_b, ti_a));
+
+  for (size_t b = 0; b < 4; b++) {
+    for (size_t d = 0; d < 4; d++) {
+      double expected_sum = 0.0;
+      for (size_t a = 0; a < 4; a++) {
+        expected_sum += Aulll.get(a, d, b, a);
+      }
+      CHECK(Adba_contracted_to_bd.get(b, d) == expected_sum);
+    }
+  }
 }
