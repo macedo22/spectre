@@ -306,8 +306,8 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
   }
   CHECK(jIiJ_contracted.get() == expected_jIiJ_sum);
 
-  // Contract second and fourth indices of <2, 1, 1, 1> symmetry rank 4 (upper,
-  // lower, lower, lower) tensor to rank 2 tensor
+  // Contract first and fourth indices of <2, 1, 1, 1> symmetry rank 4 (upper,
+  // lower, lower, lower) tensor to rank 2 tensor and reorder indices
   Tensor<double, Symmetry<2, 1, 1, 1>,
          index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
                     SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
