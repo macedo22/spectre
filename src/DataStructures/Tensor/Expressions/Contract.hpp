@@ -182,12 +182,11 @@ struct TensorContract
     }
   }
 
-  template <size_t Rank>
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, Rank> test_copy(
-      const std::array<size_t, num_tensor_indices>& to_copy) {
-    std::array<size_t, Rank> test;
-    cpp20::copy(to_copy.begin(), to_copy.end(), test.begin());
-    return test;
+  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, num_tensor_indices>
+  test_copy(const std::array<size_t, num_tensor_indices>& to_copy) {
+    std::array<size_t, num_tensor_indices> copy;
+    cpp20::copy(to_copy.begin(), to_copy.end(), copy.begin());
+    return copy;
   }
 
   template <typename... LhsIndices, typename U>
@@ -206,8 +205,8 @@ struct TensorContract
 
     // this is to test constexpr std::copy (i.e. cpp20::copy) :
     // copy_returned isn't being assigned to constexpr return value
-    constexpr std::array<size_t, tmpl::size<Symm>::value> copy_returned =
-        test_copy<tmpl::size<Symm>::value>(new_tensor_index);
+    constexpr std::array<size_t, num_tensor_indices> copy_returned =
+        test_copy(new_tensor_index);
 
     return detail::ComputeContractionImpl<CI1::dim - 1, Index1, Index2>::
         template apply<LhsIndices...>(tensor_index, t_);
