@@ -169,6 +169,20 @@ constexpr InputIt find_if_not(InputIt first, InputIt last, UnaryPredicate q) {
   }
   return last;
 }
+
+/*!
+ * \ingroup UtilitiesGroup
+ * Reimplementation of std::copy that is constexpr
+ */
+template<class InputIt, class OutputIt>
+constexpr OutputIt copy(InputIt first, InputIt last,
+              OutputIt d_first)
+{
+    while (first != last) {
+        *d_first++ = *first++;
+    }
+    return d_first;
+}
 }  // namespace cpp20
 
 /*!
