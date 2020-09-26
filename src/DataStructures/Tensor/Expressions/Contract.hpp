@@ -122,25 +122,76 @@ struct TensorContract
       : t_(~t) {}
 
   template <size_t I, size_t Rank>
-  SPECTRE_ALWAYS_INLINE void fill_contracting_tensor_index(
-      std::array<size_t, Rank>& tensor_index_in,
-      const std::array<size_t, num_tensor_indices>& tensor_index) const {
+  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, Rank>
+  fill_contracting_tensor_index_first_helper(
+      const std::array<size_t, Rank>& tensor_index_in,
+      const std::array<size_t, num_tensor_indices>& tensor_index) {
+    std::array<size_t, Rank> temp = tensor_index_in;
+    // 10000 is for the slot that will be set later. Easy to debug.
+    temp[I] = I == Index1::value ? 10000 : tensor_index[I];
+    return temp;
+  }
+
+  template <size_t I, size_t Rank>
+  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, Rank>
+  fill_contracting_tensor_index_second_helper(
+      const std::array<size_t, Rank>& tensor_index_in,
+      const std::array<size_t, num_tensor_indices>& tensor_index) {
+    std::array<size_t, Rank> temp = tensor_index_in;
+    // tensor_index is Rank - 2 since it shouldn't be called for Rank 2 case
+    // 20000 is for the slot that will be set later. Easy to debug.
+    temp[I] = I == Index2::value ? 20000 : tensor_index[I - 1];
+    return temp;
+  }
+
+  template <size_t I, size_t Rank>
+  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, Rank>
+  fill_contracting_tensor_index_third_helper(
+      const std::array<size_t, Rank>& tensor_index_in,
+      const std::array<size_t, num_tensor_indices>& tensor_index) {
+    std::array<size_t, Rank> temp = tensor_index_in;
+    // Left as Rank - 2 since it should never be called for the Rank 2 case
+    temp[I] = tensor_index[I - 2];
+    return temp;
+  }
+
+  template <size_t I, size_t Rank>
+  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, Rank>
+  fill_contracting_tensor_index_fourth_helper(
+      const std::array<size_t, Rank>& tensor_index_in,
+      const std::array<size_t, num_tensor_indices>& tensor_index) {
+    std::array<size_t, Rank> temp = tensor_index_in;
+    // Left as Rank - 2 since it should never be called for the Rank 2 case
+    temp[I] = I == Index2::value ? 20000 : tensor_index[I - 2];
+    return temp;
+  }
+
+  template <size_t I, size_t Rank>
+  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, Rank>
+  fill_contracting_tensor_index(
+      const std::array<size_t, Rank>& tensor_index_in,
+      const std::array<size_t, num_tensor_indices>& tensor_index) {
     if constexpr (I <= Index1::value) {
-      // 10000 is for the slot that will be set later. Easy to debug.
-      tensor_index_in[I] = I == Index1::value ? 10000 : tensor_index[I];
-      fill_contracting_tensor_index<I + 1>(tensor_index_in, tensor_index);
+      constexpr std::array<size_t, Rank> temp =
+          fill_contracting_tensor_index_first_helper<I, Rank>(tensor_index_in,
+                                                              tensor_index);
+      return fill_contracting_tensor_index<I + 1>(temp, tensor_index);
     } else if constexpr (I > Index1::value and I <= Index2::value and
                          I < Rank - 1) {
-      // tensor_index is Rank - 2 since it shouldn't be called for Rank 2 case
-      // 20000 is for the slot that will be set later. Easy to debug.
-      tensor_index_in[I] = I == Index2::value ? 20000 : tensor_index[I - 1];
-      fill_contracting_tensor_index<I + 1>(tensor_index_in, tensor_index);
+      constexpr std::array<size_t, Rank> temp =
+          fill_contracting_tensor_index_second_helper<I, Rank>(tensor_index_in,
+                                                               tensor_index);
+      return fill_contracting_tensor_index<I + 1>(temp, tensor_index);
     } else if constexpr (I > Index2::value and I < Rank - 1) {
-      // Left as Rank - 2 since it should never be called for the Rank 2 case
-      tensor_index_in[I] = tensor_index[I - 2];
-      fill_contracting_tensor_index<I + 1>(tensor_index_in, tensor_index);
+      constexpr std::array<size_t, Rank> temp =
+          fill_contracting_tensor_index_third_helper<I, Rank>(tensor_index_in,
+                                                              tensor_index);
+      return fill_contracting_tensor_index<I + 1>(temp, tensor_index);
     } else {
-      tensor_index_in[I] = I == Index2::value ? 20000 : tensor_index[I - 2];
+      constexpr std::array<size_t, Rank> temp =
+          fill_contracting_tensor_index_fourth_helper<I, Rank>(tensor_index_in,
+                                                               tensor_index);
+      return temp;
     }
   }
 
@@ -148,10 +199,14 @@ struct TensorContract
   SPECTRE_ALWAYS_INLINE type
   get(const std::array<U, num_tensor_indices>& new_tensor_index) const {
     // new_tensor_index is the one with _fewer_ components, ie post-contraction
-    std::array<size_t, tmpl::size<Symm>::value> tensor_index;
+    // std::array<size_t, tmpl::size<Symm>::value> tensor_index;
+    std::array<size_t, tmpl::size<Symm>::value> temp;
     // Manually unrolled for loops to compute the tensor_index from the
     // new_tensor_index
-    fill_contracting_tensor_index<0>(tensor_index, new_tensor_index);
+    // fill_contracting_tensor_index<0>(tensor_index, new_tensor_index);
+    constexpr std::array<size_t, tmpl::size<Symm>::value> tensor_index =
+        fill_contracting_tensor_index<0, tmpl::size<Symm>::value>(
+            temp, new_tensor_index);
     return detail::ComputeContractionImpl<CI1::dim - 1, Index1, Index2>::
         template apply<LhsIndices...>(tensor_index, t_);
   }
