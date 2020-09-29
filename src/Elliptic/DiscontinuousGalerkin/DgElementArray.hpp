@@ -41,16 +41,6 @@ struct DgElementArray {
   using metavariables = Metavariables;
   using phase_dependent_action_list = PhaseDepActionList;
   using array_index = ElementId<volume_dim>;
-  using elemental_min_grid_spacing = double;
-
-  static constexpr bool exe_is_export_coordinates =
-      tmpl::list_contains_v<
-          phase_dependent_action_list,
-          Parallel::PhaseActions<
-                  typename Metavariables::Phase, Metavariables::Phase::Export,
-                  tmpl::list<::Actions::AdvanceTime,
-                             ::Actions::ExportCoordinates<Dim>,
-                             ::Actions::RunEventsAndTriggers>>>;
 
   using const_global_cache_tags = tmpl::list<domain::Tags::Domain<volume_dim>>;
 
@@ -70,22 +60,8 @@ struct DgElementArray {
       const typename Metavariables::Phase next_phase,
       Parallel::CProxy_GlobalCache<Metavariables>& global_cache) noexcept {
     auto& local_cache = *(global_cache.ckLocalBranch());
-    /*Parallel::get_parallel_component<DgElementArray>(local_cache)
-        .start_phase(next_phase);*/
-    // something like the below needs to happen somewhere to call
-    // the reduction from ExportCoordinates.hpp
-    auto& element_array =
-        Parallel::get_parallel_component<DgElementArray>(local_cache);
-    if constexpr (exe_is_export_coordinates) {
-      if (next_phase == Metavariables::Phase::CallArrayReduce) {
-        Parallel::simple_action<ArrayReduce<Dim>>(element_array);
-      } else {
-          element_array.start_phase(next_phase);
-      }
-    }
-    else {
-        element_array.start_phase(next_phase);
-    }
+    Parallel::get_parallel_component<DgElementArray>(local_cache)
+        .start_phase(next_phase);
   }
 };
 

@@ -6,7 +6,6 @@
 #include <string>
 
 #include "AlgorithmArray.hpp"
-#include "AlgorithmSingleton.hpp"
 #include "DataStructures/DataBox/DataBox.hpp"
 #include "Domain/Creators/RegisterDerivedWithCharm.hpp"
 #include "Domain/Creators/TimeDependence/RegisterDerivedWithCharm.hpp"
@@ -41,7 +40,6 @@
 #include "Time/TimeSteppers/TimeStepper.hpp"
 #include "Time/Triggers/TimeTriggers.hpp"
 #include "Utilities/Blas.hpp"
-#include "Utilities/Functional.hpp"
 #include "Utilities/MakeString.hpp"
 #include "Utilities/Requires.hpp"
 #include "Utilities/TMPL.hpp"
@@ -64,7 +62,7 @@ struct ExportCoordinates {
       typename ArrayIndex, typename ActionList, typename ParallelComponent,
       Requires<tmpl::list_contains_v<DbTagsList, domain::Tags::Mesh<Dim>>> =
           nullptr>
-  static auto /*std::tuple<db::DataBox<DbTagsList>&&>*/ apply(
+  static std::tuple<db::DataBox<DbTagsList>&&> apply(
       db::DataBox<DbTagsList>& box,
       const tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
       const Parallel::GlobalCache<Metavariables>& cache,
@@ -109,112 +107,10 @@ struct ExportCoordinates {
             std::add_pointer_t<ParallelComponent>{nullptr},
             Parallel::ArrayIndex<ElementId<Dim>>(array_index)),
         std::move(components), mesh.extents(), mesh.basis(), mesh.quadrature());
-    //return std::forward_as_tuple(std::move(box));
-    return std::forward_as_tuple(std::move(box), true);
-  }
-};
-
-struct PrintMinimumGridSpacing {
-  template <typename ParallelComponent, typename DbTags, typename Metavariables,
-            typename ArrayIndex>
-  static void apply(db::DataBox<DbTags>& /*box*/,
-                    const Parallel::CBase_GlobalCache<Metavariables>& /*cache*/,
-                    const ArrayIndex& /*array_index*/,
-                    const double& overall_min_grid_spacing) noexcept {
-    /*SPECTRE_PARALLEL_REQUIRE(number_of_1d_array_elements *
-                                 (number_of_1d_array_elements - 1) / 2 ==
-                             value);*/
-    printf("Overall inertial minimum grid spacing: %f\n\n",
-              overall_min_grid_spacing);
+    return std::forward_as_tuple(std::move(box));
   }
 };
 }  // namespace Actions
-
-//template <typename Metavariables>
-template <size_t Dim, typename Metavariables>
-struct SingletonParallelComponent {
-  using chare_type = Parallel::Algorithms::Singleton;
-  using const_global_cache_tag_list = tmpl::list<>;
-  //using options = tmpl::list<>;
-  using metavariables = Metavariables;
-  //using add_options_to_databox = Parallel::AddNoOptionsToDataBox;
-  using phase_dependent_action_list =
-      tmpl::list<Parallel::PhaseActions<typename Metavariables::Phase,
-                                        Metavariables::Phase::Initialization,
-                                        tmpl::list<>>>;
-  using initialization_tags = Parallel::get_initialization_tags<
-      Parallel::get_initialization_actions_list<phase_dependent_action_list>>;
-
-  static void initialize(
-      Parallel::CProxy_GlobalCache<Metavariables>& /*global_cache*/) {}
-
-  static void execute_next_phase(
-      const typename Metavariables::Phase /*next_phase*/,
-      const Parallel::CProxy_GlobalCache<
-          Metavariables>& /*global_cache*/) {}
-};
-
-
-// Probably need to use the DgElementArray in some way instead of the
-// ElementArray declared below, as was done in old PrintMinimumGridSpacing.hpp
-//template <size_t Dim, typename Metavariables>
-//struct ElementArray;
-
-template <size_t Dim>
-struct ArrayReduce {
-  template <typename ParallelComponent, typename DbTags, typename Metavariables,
-            typename ArrayIndex,
-            Requires<tmpl::list_contains_v<DbTags, Mesh<Dim>>> = nullptr>
-  static void apply(const db::DataBox<DbTags>& box,
-                    const Parallel::GlobalCache<Metavariables>& cache,
-                    const ArrayIndex& array_index) noexcept {
-    using ElementArray = DgElementArray<
-        Metavariables,
-        tmpl::list<
-            Parallel::PhaseActions<
-                typename Metavariables::Phase,
-                Metavariables::Phase::Initialization,
-                tmpl::list<
-                    Initialization::Actions::TimeAndTimeStep<Metavariables>,
-                    evolution::dg::Initialization::Domain<Dim>,
-                    ::Initialization::Actions::RemoveOptionsAndTerminatePhase>>,
-            Parallel::PhaseActions<
-                typename Metavariables::Phase,
-                Metavariables::Phase::RegisterWithObserver,
-                tmpl::list<observers::Actions::RegisterWithObservers<
-                               Actions::ExportCoordinates<Dim>>,
-                           Parallel::Actions::TerminatePhase>>,
-            Parallel::PhaseActions<typename Metavariables::Phase,
-                                   Metavariables::Phase::Export,
-                                   tmpl::list<Actions::AdvanceTime,
-                                              Actions::ExportCoordinates<Dim>,
-                                              Actions::RunEventsAndTriggers>>,
-            Parallel::PhaseActions<typename Metavariables::Phase,
-                                   Metavariables::Phase::CallArrayReduce,
-                                   tmpl::list<ArrayReduce<Dim>>>>>;
-
-    //static_assert(std::is_same_v<ParallelComponent,
-    //                               ElementArray<Dim, Metavariables>>,
-    //             "The ParallelComponent is not deduced to be the right type");
-    static_assert(std::is_same_v<ParallelComponent, ElementArray>,
-                  "The ParallelComponent is not deduced to be the right type");
-
-    //const auto& my_proxy =
-    //  Parallel::get_parallel_component<ElementArray/*<Dim, Metavariables>*/>(
-    //      cache)[array_index];
-    const auto& my_proxy =
-        Parallel::get_parallel_component<ElementArray>(
-            cache)[array_index];
-    const auto& singleton_proxy = Parallel::get_parallel_component<
-        SingletonParallelComponent<Dim, Metavariables>>(cache);
-
-    Parallel::ReductionData<Parallel::ReductionDatum<double, funcl::Min<>>>
-        elemental_min_grid_spacing{
-            get<domain::Tags::MinimumGridSpacing<Dim, Frame::Inertial>>(box)};
-    Parallel::contribute_to_reduction<Actions::PrintMinimumGridSpacing>(
-        elemental_min_grid_spacing, my_proxy, singleton_proxy);
-  }
-};
 
 template <size_t Dim>
 struct Metavariables {
@@ -235,13 +131,7 @@ struct Metavariables {
       "diagnostic of Domain quality: values far from unity indicate "
       "compression or expansion of the grid."};
 
-  enum class Phase {
-    Initialization,
-    RegisterWithObserver,
-    Export,
-    CallArrayReduce,
-    Exit
-  };
+  enum class Phase { Initialization, RegisterWithObserver, Export, Exit };
 
   using component_list = tmpl::list<
       DgElementArray<
@@ -261,14 +151,11 @@ struct Metavariables {
                   tmpl::list<observers::Actions::RegisterWithObservers<
                                  Actions::ExportCoordinates<Dim>>,
                              Parallel::Actions::TerminatePhase>>,
-              Parallel::PhaseActions<typename Metavariables::Phase,
-                                     Metavariables::Phase::Export,
-                                     tmpl::list<Actions::AdvanceTime,
-                                                Actions::ExportCoordinates<Dim>,
-                                                Actions::RunEventsAndTriggers>>,
-              Parallel::PhaseActions<typename Metavariables::Phase,
-                                     Metavariables::Phase::CallArrayReduce,
-                                     tmpl::list<ArrayReduce<Dim>>>>>,
+              Parallel::PhaseActions<
+                  typename Metavariables::Phase, Metavariables::Phase::Export,
+                  tmpl::list<Actions::AdvanceTime,
+                             Actions::ExportCoordinates<Dim>,
+                             Actions::RunEventsAndTriggers>>>>,
       observers::Observer<Metavariables>,
       observers::ObserverWriter<Metavariables>>;
 
@@ -284,8 +171,6 @@ struct Metavariables {
       case Phase::RegisterWithObserver:
         return Phase::Export;
       case Phase::Export:
-        return Phase::CallArrayReduce;
-      case Phase::CallArrayReduce:
         return Phase::Exit;
       case Phase::Exit:
         ERROR(
