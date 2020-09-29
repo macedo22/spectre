@@ -168,29 +168,30 @@ struct ArrayReduce {
   static void apply(const db::DataBox<DbTags>& box,
                     const Parallel::GlobalCache<Metavariables>& cache,
                     const ArrayIndex& array_index) noexcept {
-    using ElementArray =
-        DgElementArray<
-            Metavariables,
-            tmpl::list<
-                Parallel::PhaseActions<
-                    typename Metavariables::Phase,
-                    Metavariables::Phase::Initialization,
-                    tmpl::list<
-                        Initialization::Actions::TimeAndTimeStep<Metavariables>,
-                        evolution::dg::Initialization::Domain<Dim>,
-                        ::Initialization::Actions::
-                            RemoveOptionsAndTerminatePhase>>,
-                Parallel::PhaseActions<
-                    typename Metavariables::Phase,
-                    Metavariables::Phase::RegisterWithObserver,
-                    tmpl::list<observers::Actions::RegisterWithObservers<
-                                   Actions::ExportCoordinates<Dim>>,
-                               Parallel::Actions::TerminatePhase>>,
-                Parallel::PhaseActions<
-                    typename Metavariables::Phase, Metavariables::Phase::Export,
-                    tmpl::list<Actions::AdvanceTime,
-                               Actions::ExportCoordinates<Dim>,
-                               Actions::RunEventsAndTriggers>>>>;
+    using ElementArray = DgElementArray<
+        Metavariables,
+        tmpl::list<
+            Parallel::PhaseActions<
+                typename Metavariables::Phase,
+                Metavariables::Phase::Initialization,
+                tmpl::list<
+                    Initialization::Actions::TimeAndTimeStep<Metavariables>,
+                    evolution::dg::Initialization::Domain<Dim>,
+                    ::Initialization::Actions::RemoveOptionsAndTerminatePhase>>,
+            Parallel::PhaseActions<
+                typename Metavariables::Phase,
+                Metavariables::Phase::RegisterWithObserver,
+                tmpl::list<observers::Actions::RegisterWithObservers<
+                               Actions::ExportCoordinates<Dim>>,
+                           Parallel::Actions::TerminatePhase>>,
+            Parallel::PhaseActions<typename Metavariables::Phase,
+                                   Metavariables::Phase::Export,
+                                   tmpl::list<Actions::AdvanceTime,
+                                              Actions::ExportCoordinates<Dim>,
+                                              Actions::RunEventsAndTriggers>>,
+            Parallel::PhaseActions<typename Metavariables::Phase,
+                                   Metavariables::Phase::CallArrayReduce,
+                                   tmpl::list<ArrayReduce<Dim>>>>>;
 
     //static_assert(std::is_same_v<ParallelComponent,
     //                               ElementArray<Dim, Metavariables>>,
@@ -234,7 +235,13 @@ struct Metavariables {
       "diagnostic of Domain quality: values far from unity indicate "
       "compression or expansion of the grid."};
 
-  enum class Phase { Initialization, RegisterWithObserver, Export, Exit };
+  enum class Phase {
+    Initialization,
+    RegisterWithObserver,
+    Export,
+    CallArrayReduce,
+    Exit
+  };
 
   using component_list = tmpl::list<
       DgElementArray<
@@ -254,11 +261,14 @@ struct Metavariables {
                   tmpl::list<observers::Actions::RegisterWithObservers<
                                  Actions::ExportCoordinates<Dim>>,
                              Parallel::Actions::TerminatePhase>>,
-              Parallel::PhaseActions<
-                  typename Metavariables::Phase, Metavariables::Phase::Export,
-                  tmpl::list<Actions::AdvanceTime,
-                             Actions::ExportCoordinates<Dim>,
-                             Actions::RunEventsAndTriggers>>>>,
+              Parallel::PhaseActions<typename Metavariables::Phase,
+                                     Metavariables::Phase::Export,
+                                     tmpl::list<Actions::AdvanceTime,
+                                                Actions::ExportCoordinates<Dim>,
+                                                Actions::RunEventsAndTriggers>>,
+              Parallel::PhaseActions<typename Metavariables::Phase,
+                                     Metavariables::Phase::CallArrayReduce,
+                                     tmpl::list<ArrayReduce<Dim>>>>>,
       observers::Observer<Metavariables>,
       observers::ObserverWriter<Metavariables>>;
 
@@ -274,6 +284,8 @@ struct Metavariables {
       case Phase::RegisterWithObserver:
         return Phase::Export;
       case Phase::Export:
+        return Phase::CallArrayReduce;
+      case Phase::CallArrayReduce:
         return Phase::Exit;
       case Phase::Exit:
         ERROR(
