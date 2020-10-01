@@ -9,7 +9,6 @@
 
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
-#include "Utilities/Algorithm.hpp"
 #include "Utilities/Requires.hpp"
 
 /*!
@@ -122,43 +121,6 @@ struct TensorContract
       const TensorExpression<T, X, Symm, IndexList, ArgsList>& t)
       : t_(~t) {}
 
-  // Returning constexpr isn't working
-  /*template <size_t Rank>
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, Rank>
-  fill_contracting_tensor_index(
-      // std::array<size_t, Rank>& tensor_index_in,
-      const std::array<size_t, num_tensor_indices>& tensor_index) {
-    std::array<size_t, Rank> tensor_index_in;
-
-    // fill all I before Index1
-    cpp20::copy(tensor_index.begin(), tensor_index.begin() + Index1::value,
-                tensor_index_in.begin());
-    // fill I == Index1
-    tensor_index_in[Index1::value] = 10000;
-
-    // fill between Index1 and Index2
-    cpp20::copy(tensor_index.begin() + Index1::value,
-                tensor_index.begin() + Index2::value,
-                tensor_index_in.begin() + Index1::value + 1);
-
-    // if we're after Index2 but not at the last element
-    if constexpr (Index2::value + 1 < Rank - 1) {
-      cpp20::copy(tensor_index.begin() + Index2::value - 1,
-                  tensor_index.end() - 1,
-                  tensor_index_in.begin() + Index2::value + 1);
-    }
-
-    // Handle last element
-    // if Index2 is the last I
-    if constexpr (Index2::value == (Rank - 1)) {
-      tensor_index_in[Rank - 1] = 20000;
-    } else {
-      tensor_index_in[Index2::value] = 20000;
-      tensor_index_in[Rank - 1] = tensor_index[Rank - 3];
-    }
-    return tensor_index_in;
-  }*/
-
   template <size_t I, size_t Rank>
   SPECTRE_ALWAYS_INLINE void fill_contracting_tensor_index(
       std::array<size_t, Rank>& tensor_index_in,
@@ -182,13 +144,6 @@ struct TensorContract
     }
   }
 
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, num_tensor_indices>
-  test_copy(const std::array<size_t, num_tensor_indices>& to_copy) {
-    std::array<size_t, num_tensor_indices> copy;
-    cpp20::copy(to_copy.begin(), to_copy.end(), copy.begin());
-    return copy;
-  }
-
   template <typename... LhsIndices, typename U>
   SPECTRE_ALWAYS_INLINE type
   get(const std::array<U, num_tensor_indices>& new_tensor_index) const {
@@ -197,17 +152,6 @@ struct TensorContract
     // Manually unrolled for loops to compute the tensor_index from the
     // new_tensor_index
     fill_contracting_tensor_index<0>(tensor_index, new_tensor_index);
-
-    // tensor_index isn't being assigned to constexpr return value
-    /*constexpr std::array<size_t, tmpl::size<Symm>::value> tensor_index =
-        fill_contracting_tensor_index<tmpl::size<Symm>::value>(
-            new_tensor_index);*/
-
-    // this is to test constexpr std::copy (i.e. cpp20::copy) :
-    // copy_returned isn't being assigned to constexpr return value
-    constexpr std::array<size_t, num_tensor_indices> copy_returned =
-        test_copy(new_tensor_index);
-
     return detail::ComputeContractionImpl<CI1::dim - 1, Index1, Index2>::
         template apply<LhsIndices...>(tensor_index, t_);
   }
