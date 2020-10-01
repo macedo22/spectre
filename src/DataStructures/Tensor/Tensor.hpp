@@ -154,10 +154,10 @@ class Tensor<X, Symm, IndexList<Indices...>> {
         "the LHS of the equation to be F_{ab} rather than F_{ba}.");
     for (size_t i = 0; i < size(); ++i) {
       // PUT BACK, just temporary for testing current Contract.hpp code
-      /*gsl::at(data_, i) =
-          tensor_expression.template get<structure, LhsIndices...>(i);*/
-      gsl::at(data_, i) = tensor_expression.template get<LhsIndices...>(
-          structure::get_canonical_tensor_index(i));
+      gsl::at(data_, i) =
+          tensor_expression.template get<structure, LhsIndices...>(i);
+      /*gsl::at(data_, i) = tensor_expression.template get<LhsIndices...>(
+          structure::get_canonical_tensor_index(i));*/
 
     }
   }

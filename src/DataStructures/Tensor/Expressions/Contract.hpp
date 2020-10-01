@@ -116,6 +116,7 @@ struct TensorContract
   using index_list = typename new_type::index_list;
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
   using args_list = tmpl::sort<typename new_type::args_list>;
+  using structure = Tensor_detail::Structure<symmetry, index_list>;
 
   explicit TensorContract(
       const TensorExpression<T, X, Symm, IndexList, ArgsList>& t)
@@ -147,6 +148,20 @@ struct TensorContract
   template <typename... LhsIndices, typename U>
   SPECTRE_ALWAYS_INLINE type
   get(const std::array<U, num_tensor_indices>& new_tensor_index) const {
+    // new_tensor_index is the one with _fewer_ components, ie post-contraction
+    std::array<size_t, tmpl::size<Symm>::value> tensor_index;
+    // Manually unrolled for loops to compute the tensor_index from the
+    // new_tensor_index
+    fill_contracting_tensor_index<0>(tensor_index, new_tensor_index);
+    return detail::ComputeContractionImpl<CI1::dim - 1, Index1, Index2>::
+        template apply<LhsIndices...>(tensor_index, t_);
+  }
+
+  template <typename LhsStructure, typename... LhsIndices>
+  SPECTRE_ALWAYS_INLINE type get(const size_t lhs_storage_index) const {
+    const std::array<size_t, num_tensor_indices>& new_tensor_index =
+        LhsStructure::template get_canonical_tensor_index<num_tensor_indices>(
+            lhs_storage_index);
     // new_tensor_index is the one with _fewer_ components, ie post-contraction
     std::array<size_t, tmpl::size<Symm>::value> tensor_index;
     // Manually unrolled for loops to compute the tensor_index from the
