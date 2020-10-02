@@ -1,3 +1,4 @@
+
 // Distributed under the MIT License.
 // See LICENSE.txt for details.
 
@@ -7,19 +8,21 @@
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 
+namespace TestHelpers::TensorExpressions {
+
 /// \ingroup TestingFrameworkGroup
 /// \brief Test that evaluating a right hand side tensor expression containing a
 /// single rank 0 tensor correctly assigns the data to the evaluated left hand
 /// side tensor
 ///
-/// \tparam Datatype the type of data being stored in the Tensors
 /// \param data the data being stored in the Tensors
-template <typename Datatype>
-void test_evaluate_rank_0(const Datatype& data) {
-  Tensor<Datatype> rhs_tensor{};
-  rhs_tensor.get() = data;
+template <typename DataType>
+void test_evaluate_rank_0(const DataType& data) noexcept {
+  const Tensor<DataType> R{{{data}}};
 
-  auto lhs_tensor = TensorExpressions::evaluate(rhs_tensor());
+  const auto L = ::TensorExpressions::evaluate(R());
 
-  CHECK(lhs_tensor.get() == data);
+  CHECK(L.get() == data);
 }
+
+}  // namespace TestHelpers::TensorExpressions

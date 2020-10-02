@@ -10,10 +10,12 @@
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Utilities/TMPL.hpp"
 
+namespace TestHelpers::TensorExpressions {
+
 /// \ingroup TestingFrameworkGroup
-/// \brief Test that the tensor multi-index of a rank 3 RHS Tensor is equivalent
-/// to the LHS tensor multi-index, according to the order of their generic
-/// indices
+/// \brief Test that the computed tensor multi-index of a rank 4 RHS Tensor is
+/// equivalent to the given LHS tensor multi-index, according to the order of
+/// their generic indices
 ///
 /// \details `TensorIndexA`, `TensorIndexB`, `TensorIndexC`, and  `TensorIndexD`
 /// can be any type of TensorIndex and are not necessarily `ti_a_t`, `ti_b_t`,
@@ -29,18 +31,10 @@
 /// each of these cases, this test checks that for each LHS component's tensor
 /// multi-index, the equivalent RHS tensor multi-index is correctly computed.
 ///
-/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam DataType the type of data being stored in the Tensors
 /// \tparam RhsSymmetry the ::Symmetry of the RHS Tensor
 /// \tparam RhsTensorIndexTypeList the RHS Tensor's typelist of
 /// \ref SpacetimeIndex "TensorIndexType"s
-/// \tparam TensorIndexA the type of the first TensorIndex used on the RHS of
-/// the TensorExpression, e.g. `ti_a_t`
-/// \tparam TensorIndexB the type of the second TensorIndex used on the RHS of
-/// the TensorExpression, e.g. `ti_B_t`
-/// \tparam TensorIndexC the type of the third TensorIndex used on the RHS of
-/// the TensorExpression, e.g. `ti_c_t`
-/// \tparam TensorIndexD the type of the fourth TensorIndex used on the RHS of
-/// the TensorExpression, e.g. `ti_D_t`
 /// \param tensorindex_a the first TensorIndex used on the RHS of the
 /// TensorExpression, e.g. `ti_a`
 /// \param tensorindex_b the second TensorIndex used on the RHS of the
@@ -49,14 +43,14 @@
 /// TensorExpression, e.g. `ti_c`
 /// \param tensorindex_d the fourth TensorIndex used on the RHS of the
 /// TensorExpression, e.g. `ti_D`
-template <typename Datatype, typename RhsSymmetry,
+template <typename DataType, typename RhsSymmetry,
           typename RhsTensorIndexTypeList, typename TensorIndexA,
           typename TensorIndexB, typename TensorIndexC, typename TensorIndexD>
-void test_compute_rhs_tensor_index_rank_4(const TensorIndexA& tensorindex_a,
-                                          const TensorIndexB& tensorindex_b,
-                                          const TensorIndexC& tensorindex_c,
-                                          const TensorIndexD& tensorindex_d) {
-  const Tensor<Datatype, RhsSymmetry, RhsTensorIndexTypeList> rhs_tensor{};
+void test_compute_rhs_tensor_index_rank_4(
+    const TensorIndexA& tensorindex_a, const TensorIndexB& tensorindex_b,
+    const TensorIndexC& tensorindex_c,
+    const TensorIndexD& tensorindex_d) noexcept {
+  const Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> rhs_tensor(5_st);
   const auto R_abcd =
       rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d);
 
@@ -253,3 +247,5 @@ void test_compute_rhs_tensor_index_rank_4(const TensorIndexA& tensorindex_a,
     }
   }
 }
+
+}  // namespace TestHelpers::TensorExpressions

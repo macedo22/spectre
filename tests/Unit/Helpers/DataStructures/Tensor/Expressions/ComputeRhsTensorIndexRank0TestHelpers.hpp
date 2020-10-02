@@ -9,14 +9,16 @@
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Utilities/TMPL.hpp"
 
+namespace TestHelpers::TensorExpressions {
+
 /// \ingroup TestingFrameworkGroup
-/// \brief Test that the tensor multi-index of a rank 0 RHS Tensor is an empty
-/// array
+/// \brief Test that the computed tensor multi-index of a rank 0 RHS Tensor is
+/// equivalent to the given LHS tensor multi-index
 ///
-/// \tparam Datatype the type of data being stored in the Tensors
-template <typename Datatype>
-void test_compute_rhs_tensor_index_rank_0() {
-  const Tensor<Datatype> rhs_tensor{};
+/// \tparam DataType the type of data being stored in the Tensors
+template <typename DataType>
+void test_compute_rhs_tensor_index_rank_0() noexcept {
+  const Tensor<DataType> rhs_tensor{};
   const auto R = rhs_tensor();
 
   const std::array<size_t, 0> index_order = {};
@@ -26,3 +28,5 @@ void test_compute_rhs_tensor_index_rank_0() {
                                                tensor_multi_index) ==
         tensor_multi_index);
 }
+
+}  // namespace TestHelpers::TensorExpressions

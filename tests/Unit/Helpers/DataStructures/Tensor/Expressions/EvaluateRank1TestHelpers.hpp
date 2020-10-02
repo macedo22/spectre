@@ -13,56 +13,53 @@
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/TMPL.hpp"
 
+namespace TestHelpers::TensorExpressions {
+
 /// \ingroup TestingFrameworkGroup
 /// \brief Test that evaluating a right hand side tensor expression containing a
 /// single rank 1 tensor correctly assigns the data to the evaluated left hand
 /// side tensor
 ///
-/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam DataType the type of data being stored in the Tensors
 /// \tparam TensorIndexTypeList the Tensors' typelist containing their
 /// \ref SpacetimeIndex "TensorIndexType"
-/// \tparam TensorIndex the type of TensorIndex used in the TensorExpression,
-/// e.g. `ti_a_t`
 /// \param tensorindex the TensorIndex used in the the TensorExpression,
 /// e.g. `ti_a`
-template <typename Datatype, typename TensorIndexTypeList, typename TensorIndex>
-void test_evaluate_rank_1_core(const TensorIndex& tensorindex) {
-  Tensor<Datatype, Symmetry<1>, TensorIndexTypeList> rhs_tensor{};
-  std::iota(rhs_tensor.begin(), rhs_tensor.end(), 0.0);
+template <typename DataType, typename TensorIndexTypeList, typename TensorIndex>
+void test_evaluate_rank_1_core(const TensorIndex& tensorindex) noexcept {
+  Tensor<DataType, Symmetry<1>, TensorIndexTypeList> R_a(5_st);
+  std::iota(R_a.begin(), R_a.end(), 0.0);
 
-  size_t dim = tmpl::at_c<TensorIndexTypeList, 0>::dim;
+  const size_t dim = tmpl::at_c<TensorIndexTypeList, 0>::dim;
 
   // L_a = R_a
-  auto lhs_tensor = TensorExpressions::evaluate<TensorIndex>(
-      rhs_tensor(tensorindex));
+  const auto L_a = ::TensorExpressions::evaluate<TensorIndex>(R_a(tensorindex));
 
+  // For L_a = R_a, check that L_i == R_i
   for (size_t i = 0; i < dim; ++i) {
-    CHECK(lhs_tensor.get(i) == rhs_tensor.get(i));
+    CHECK(L_a.get(i) == R_a.get(i));
   }
 }
 
 /// \ingroup TestingFrameworkGroup
-/// \brief Iterate testing of evaluate for single rank 1 Tensors on multiple
-/// Frame types and dimensions
+/// \brief Iterate testing of evaluating single rank 1 Tensors on multiple Frame
+/// types and dimensions
 ///
-/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam DataType the type of data being stored in the Tensors
 /// \tparam TensorIndexType the Tensors' \ref SpacetimeIndex "TensorIndexType"
 /// \tparam Valence the valence of the Tensors' index
-/// \tparam TensorIndex the type of TensorIndex used in the TensorExpression,
-/// e.g. `ti_a_t`
 /// \param tensorindex the TensorIndex used in the the TensorExpression,
 /// e.g. `ti_a`
-template <typename Datatype,
+template <typename DataType,
           template <size_t, UpLo, typename> class TensorIndexType, UpLo Valence,
           typename TensorIndex>
-void test_evaluate_rank_1(const TensorIndex& tensorindex) {
+void test_evaluate_rank_1(const TensorIndex& tensorindex) noexcept {
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(1, data)
 
-#define CALL_TEST_EVALUATE_RANK_1_CORE(_, data)                             \
-  test_evaluate_rank_1_core<Datatype,                                       \
-                            index_list<TensorIndexType<DIM(data), Valence,  \
-                                                       FRAME(data)>>>(      \
+#define CALL_TEST_EVALUATE_RANK_1_CORE(_, data)                                \
+  test_evaluate_rank_1_core<                                                   \
+      DataType, index_list<TensorIndexType<DIM(data), Valence, FRAME(data)>>>( \
       tensorindex);
 
   GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_1_CORE,
@@ -72,3 +69,5 @@ void test_evaluate_rank_1(const TensorIndex& tensorindex) {
 #undef FRAME
 #undef DIM
 }
+
+}  // namespace TestHelpers::TensorExpressions

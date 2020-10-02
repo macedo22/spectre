@@ -442,7 +442,7 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   }
 
   /// \brief Computes the right hand side tensor multi-index that corresponds to
-  /// the left hand side tensor multi-index
+  /// the left hand side tensor multi-index, according to their generic indices
   ///
   /// \details
   /// Given the order of the generic indices for the left hand side (LHS) and
@@ -501,7 +501,7 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   }
 
   /// \brief Computes a mapping from the storage indices of the left hand side
-  /// to the right hand side
+  /// tensor to the right hand side tensor
   /// \tparam LhsStructure the Structure of the Tensor on the left hand side of
   /// the TensorExpression
   /// \tparam LhsIndices the TensorIndexs of the Tensor on the left hand side
@@ -530,8 +530,7 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
     return lhs_to_rhs_map;
   }
 
-  /// \brief return the value at the left hand side tensor's storage index
-  /// `lhs_tensor_index`
+  /// \brief return the value at a left hand side tensor's storage index
   ///
   /// \details
   /// If Derived is a TensorExpression, `storage_index` is forwarded onto the

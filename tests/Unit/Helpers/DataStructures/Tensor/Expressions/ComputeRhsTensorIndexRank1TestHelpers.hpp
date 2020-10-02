@@ -10,20 +10,21 @@
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/TMPL.hpp"
 
+namespace TestHelpers::TensorExpressions {
+
 /// \ingroup TestingFrameworkGroup
-/// \brief Test that the tensor multi-index of a rank 1 RHS Tensor is the same
-/// as the LHS tensor multi-index
+/// \brief Test that the computed tensor multi-index of a rank 1 RHS Tensor is
+/// equivalent to the given LHS tensor multi-index
 ///
-/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam DataType the type of data being stored in the Tensors
 /// \tparam TensorIndexTypeList the Tensors' typelist containing their
 /// \ref SpacetimeIndex "TensorIndexType"
-/// \tparam TensorIndex the type of TensorIndex used in the TensorExpression,
-/// e.g. `ti_a_t`
 /// \param tensorindex the TensorIndex used in the the TensorExpression,
 /// e.g. `ti_a`
-template <typename Datatype, typename TensorIndexTypeList, typename TensorIndex>
-void test_compute_rhs_tensor_index_rank_1_core(const TensorIndex& tensorindex) {
-  const Tensor<Datatype, Symmetry<1>, TensorIndexTypeList> rhs_tensor{};
+template <typename DataType, typename TensorIndexTypeList, typename TensorIndex>
+void test_compute_rhs_tensor_index_rank_1_core(
+    const TensorIndex& tensorindex) noexcept {
+  const Tensor<DataType, Symmetry<1>, TensorIndexTypeList> rhs_tensor(5_st);
   const auto R_a = rhs_tensor(tensorindex);
 
   const size_t dim = tmpl::at_c<TensorIndexTypeList, 0>::dim;
@@ -44,23 +45,22 @@ void test_compute_rhs_tensor_index_rank_1_core(const TensorIndex& tensorindex) {
 /// the LHS tensor multi-index with rank 1 Tensors on multiple Frame types and
 /// dimensions
 ///
-/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam DataType the type of data being stored in the Tensors
 /// \tparam TensorIndexType the Tensors' \ref SpacetimeIndex "TensorIndexType"
 /// \tparam Valence the valence of the Tensors' index
-/// \tparam TensorIndex the type of TensorIndex used in the TensorExpression,
-/// e.g. `ti_a_t`
 /// \param tensorindex the TensorIndex used in the the TensorExpression,
 /// e.g. `ti_a`
-template <typename Datatype,
+template <typename DataType,
           template <size_t, UpLo, typename> class TensorIndexType, UpLo Valence,
           typename TensorIndex>
-void test_compute_rhs_tensor_index_rank_1(const TensorIndex& tensorindex) {
+void test_compute_rhs_tensor_index_rank_1(
+    const TensorIndex& tensorindex) noexcept {
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(1, data)
 
 #define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_1_CORE(_, data)                \
   test_compute_rhs_tensor_index_rank_1_core<                                   \
-      Datatype, index_list<TensorIndexType<DIM(data), Valence, FRAME(data)>>>( \
+      DataType, index_list<TensorIndexType<DIM(data), Valence, FRAME(data)>>>( \
       tensorindex);
 
   GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_1_CORE,
@@ -70,3 +70,5 @@ void test_compute_rhs_tensor_index_rank_1(const TensorIndex& tensorindex) {
 #undef FRAME
 #undef DIM
 }
+
+}  // namespace TestHelpers::TensorExpressions

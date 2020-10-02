@@ -10,8 +10,9 @@
 #include "DataStructures/Tensor/Expressions/Evaluate.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
-#include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/TMPL.hpp"
+
+namespace TestHelpers::TensorExpressions {
 
 /// \ingroup TestingFrameworkGroup
 /// \brief Test that evaluating a right hand side tensor expression containing a
@@ -32,18 +33,10 @@
 /// are checked are when the LHS tensor is evaluated with index orders of all 24
 /// permutations of (a, b, c, d), e.g. (a, b, d, c), (a, c, b, d), ...
 ///
-/// \tparam Datatype the type of data being stored in the Tensors
+/// \tparam DataType the type of data being stored in the Tensors
 /// \tparam RhsSymmetry the ::Symmetry of the RHS Tensor
 /// \tparam RhsTensorIndexTypeList the RHS Tensor's typelist of
 /// \ref SpacetimeIndex "TensorIndexType"s
-/// \tparam TensorIndexA the type of the first TensorIndex used on the RHS of
-/// the TensorExpression, e.g. `ti_a_t`
-/// \tparam TensorIndexB the type of the second TensorIndex used on the RHS of
-/// the TensorExpression, e.g. `ti_B_t`
-/// \tparam TensorIndexC the type of the third TensorIndex used on the RHS of
-/// the TensorExpression, e.g. `ti_c_t`
-/// \tparam TensorIndexD the type of the fourth TensorIndex used on the RHS of
-/// the TensorExpression, e.g. `ti_D_t`
 /// \param tensorindex_a the first TensorIndex used on the RHS of the
 /// TensorExpression, e.g. `ti_a`
 /// \param tensorindex_b the second TensorIndex used on the RHS of the
@@ -52,218 +45,197 @@
 /// TensorExpression, e.g. `ti_c`
 /// \param tensorindex_d the fourth TensorIndex used on the RHS of the
 /// TensorExpression, e.g. `ti_D`
-template <typename Datatype, typename RhsSymmetry,
+template <typename DataType, typename RhsSymmetry,
           typename RhsTensorIndexTypeList, typename TensorIndexA,
           typename TensorIndexB, typename TensorIndexC, typename TensorIndexD>
-void test_evaluate_rank_4(
-    const TensorIndexA& tensorindex_a, const TensorIndexB& tensorindex_b,
-    const TensorIndexC& tensorindex_c, const TensorIndexD& tensorindex_d) {
-  Tensor<Datatype, RhsSymmetry, RhsTensorIndexTypeList> rhs_tensor{};
-  std::iota(rhs_tensor.begin(), rhs_tensor.end(), 0.0);
+void test_evaluate_rank_4(const TensorIndexA& tensorindex_a,
+                          const TensorIndexB& tensorindex_b,
+                          const TensorIndexC& tensorindex_c,
+                          const TensorIndexD& tensorindex_d) noexcept {
+  Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> R_abcd(5_st);
+  std::iota(R_abcd.begin(), R_abcd.end(), 0.0);
 
-  size_t dim_a = tmpl::at_c<RhsTensorIndexTypeList, 0>::dim;
-  size_t dim_b = tmpl::at_c<RhsTensorIndexTypeList, 1>::dim;
-  size_t dim_c = tmpl::at_c<RhsTensorIndexTypeList, 2>::dim;
-  size_t dim_d = tmpl::at_c<RhsTensorIndexTypeList, 3>::dim;
+  const size_t dim_a = tmpl::at_c<RhsTensorIndexTypeList, 0>::dim;
+  const size_t dim_b = tmpl::at_c<RhsTensorIndexTypeList, 1>::dim;
+  const size_t dim_c = tmpl::at_c<RhsTensorIndexTypeList, 2>::dim;
+  const size_t dim_d = tmpl::at_c<RhsTensorIndexTypeList, 3>::dim;
 
   // L_{abcd} = R_{abcd}
-  auto abcd_to_abcd =
-      TensorExpressions::evaluate<TensorIndexA, TensorIndexB, TensorIndexC,
-                                  TensorIndexD>(
-          rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c,
-                     tensorindex_d));
+  const auto L_abcd = ::TensorExpressions::evaluate<TensorIndexA, TensorIndexB,
+                                                    TensorIndexC, TensorIndexD>(
+      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{abdc} = R_{abcd}
-  auto abcd_to_abdc =
-      TensorExpressions::evaluate<TensorIndexA, TensorIndexB, TensorIndexD,
-                                  TensorIndexC>(
-          rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c,
-                     tensorindex_d));
+  const auto L_abdc = ::TensorExpressions::evaluate<TensorIndexA, TensorIndexB,
+                                                    TensorIndexD, TensorIndexC>(
+      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{acbd} = R_{abcd}
-  auto abcd_to_acbd =
-      TensorExpressions::evaluate<TensorIndexA, TensorIndexC, TensorIndexB,
-                                  TensorIndexD>(
-          rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c,
-                     tensorindex_d));
+  const auto L_acbd = ::TensorExpressions::evaluate<TensorIndexA, TensorIndexC,
+                                                    TensorIndexB, TensorIndexD>(
+      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{acdb} = R_{abcd}
-  auto abcd_to_acdb =
-      TensorExpressions::evaluate<TensorIndexA, TensorIndexC, TensorIndexD,
-                                  TensorIndexB>(
-          rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c,
-                     tensorindex_d));
+  const auto L_acdb = ::TensorExpressions::evaluate<TensorIndexA, TensorIndexC,
+                                                    TensorIndexD, TensorIndexB>(
+      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{adbc} = R_{abcd}
-  auto abcd_to_adbc =
-      TensorExpressions::evaluate<TensorIndexA, TensorIndexD, TensorIndexB,
-                                  TensorIndexC>(
-          rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c,
-                     tensorindex_d));
+  const auto L_adbc = ::TensorExpressions::evaluate<TensorIndexA, TensorIndexD,
+                                                    TensorIndexB, TensorIndexC>(
+      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{adcb} = R_{abcd}
-  auto abcd_to_adcb =
-      TensorExpressions::evaluate<TensorIndexA, TensorIndexD, TensorIndexC,
-                                  TensorIndexB>(
-          rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c,
-                     tensorindex_d));
+  const auto L_adcb = ::TensorExpressions::evaluate<TensorIndexA, TensorIndexD,
+                                                    TensorIndexC, TensorIndexB>(
+      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{bacd} = R_{abcd}
-  auto abcd_to_bacd =
-      TensorExpressions::evaluate<TensorIndexB, TensorIndexA, TensorIndexC,
-                                  TensorIndexD>(
-          rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c,
-                     tensorindex_d));
+  const auto L_bacd = ::TensorExpressions::evaluate<TensorIndexB, TensorIndexA,
+                                                    TensorIndexC, TensorIndexD>(
+      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{badc} = R_{abcd}
-  auto abcd_to_badc =
-      TensorExpressions::evaluate<TensorIndexB, TensorIndexA, TensorIndexD,
-                                  TensorIndexC>(
-          rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c,
-                     tensorindex_d));
+  const auto L_badc = ::TensorExpressions::evaluate<TensorIndexB, TensorIndexA,
+                                                    TensorIndexD, TensorIndexC>(
+      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{bcad} = R_{abcd}
-  auto abcd_to_bcad =
-      TensorExpressions::evaluate<TensorIndexB, TensorIndexC, TensorIndexA,
-                                  TensorIndexD>(
-          rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c,
-                     tensorindex_d));
+  const auto L_bcad = ::TensorExpressions::evaluate<TensorIndexB, TensorIndexC,
+                                                    TensorIndexA, TensorIndexD>(
+      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{bcda} = R_{abcd}
-  auto abcd_to_bcda =
-      TensorExpressions::evaluate<TensorIndexB, TensorIndexC, TensorIndexD,
-                                  TensorIndexA>(
-          rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c,
-                     tensorindex_d));
+  const auto L_bcda = ::TensorExpressions::evaluate<TensorIndexB, TensorIndexC,
+                                                    TensorIndexD, TensorIndexA>(
+      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{bdac} = R_{abcd}
-  auto abcd_to_bdac =
-      TensorExpressions::evaluate<TensorIndexB, TensorIndexD, TensorIndexA,
-                                  TensorIndexC>(
-          rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c,
-                     tensorindex_d));
+  const auto L_bdac = ::TensorExpressions::evaluate<TensorIndexB, TensorIndexD,
+                                                    TensorIndexA, TensorIndexC>(
+      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{bdca} = R_{abcd}
-  auto abcd_to_bdca =
-      TensorExpressions::evaluate<TensorIndexB, TensorIndexD, TensorIndexC,
-                                  TensorIndexA>(
-          rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c,
-                     tensorindex_d));
+  const auto L_bdca = ::TensorExpressions::evaluate<TensorIndexB, TensorIndexD,
+                                                    TensorIndexC, TensorIndexA>(
+      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{cabd} = R_{abcd}
-  auto abcd_to_cabd =
-      TensorExpressions::evaluate<TensorIndexC, TensorIndexA, TensorIndexB,
-                                  TensorIndexD>(
-          rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c,
-                     tensorindex_d));
+  const auto L_cabd = ::TensorExpressions::evaluate<TensorIndexC, TensorIndexA,
+                                                    TensorIndexB, TensorIndexD>(
+      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{cadb} = R_{abcd}
-  auto abcd_to_cadb =
-      TensorExpressions::evaluate<TensorIndexC, TensorIndexA, TensorIndexD,
-                                  TensorIndexB>(
-          rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c,
-                     tensorindex_d));
+  const auto L_cadb = ::TensorExpressions::evaluate<TensorIndexC, TensorIndexA,
+                                                    TensorIndexD, TensorIndexB>(
+      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{cbad} = R_{abcd}
-  auto abcd_to_cbad =
-      TensorExpressions::evaluate<TensorIndexC, TensorIndexB, TensorIndexA,
-                                  TensorIndexD>(
-          rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c,
-                     tensorindex_d));
+  const auto L_cbad = ::TensorExpressions::evaluate<TensorIndexC, TensorIndexB,
+                                                    TensorIndexA, TensorIndexD>(
+      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{cbda} = R_{abcd}
-  auto abcd_to_cbda =
-      TensorExpressions::evaluate<TensorIndexC, TensorIndexB, TensorIndexD,
-                                  TensorIndexA>(
-          rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c,
-                     tensorindex_d));
+  const auto L_cbda = ::TensorExpressions::evaluate<TensorIndexC, TensorIndexB,
+                                                    TensorIndexD, TensorIndexA>(
+      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{cdab} = R_{abcd}
-  auto abcd_to_cdab =
-      TensorExpressions::evaluate<TensorIndexC, TensorIndexD, TensorIndexA,
-                                  TensorIndexB>(
-          rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c,
-                     tensorindex_d));
+  const auto L_cdab = ::TensorExpressions::evaluate<TensorIndexC, TensorIndexD,
+                                                    TensorIndexA, TensorIndexB>(
+      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{cdba} = R_{abcd}
-  auto abcd_to_cdba =
-      TensorExpressions::evaluate<TensorIndexC, TensorIndexD, TensorIndexB,
-                                  TensorIndexA>(
-          rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c,
-                     tensorindex_d));
+  const auto L_cdba = ::TensorExpressions::evaluate<TensorIndexC, TensorIndexD,
+                                                    TensorIndexB, TensorIndexA>(
+      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{dabc} = R_{abcd}
-  auto abcd_to_dabc =
-      TensorExpressions::evaluate<TensorIndexD, TensorIndexA, TensorIndexB,
-                                  TensorIndexC>(
-          rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c,
-                     tensorindex_d));
+  const auto L_dabc = ::TensorExpressions::evaluate<TensorIndexD, TensorIndexA,
+                                                    TensorIndexB, TensorIndexC>(
+      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{dacb} = R_{abcd}
-  auto abcd_to_dacb =
-      TensorExpressions::evaluate<TensorIndexD, TensorIndexA, TensorIndexC,
-                                  TensorIndexB>(
-          rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c,
-                     tensorindex_d));
+  const auto L_dacb = ::TensorExpressions::evaluate<TensorIndexD, TensorIndexA,
+                                                    TensorIndexC, TensorIndexB>(
+      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{dbac} = R_{abcd}
-  auto abcd_to_dbac =
-      TensorExpressions::evaluate<TensorIndexD, TensorIndexB, TensorIndexA,
-                                  TensorIndexC>(
-          rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c,
-                     tensorindex_d));
+  const auto L_dbac = ::TensorExpressions::evaluate<TensorIndexD, TensorIndexB,
+                                                    TensorIndexA, TensorIndexC>(
+      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{dbca} = R_{abcd}
-  auto abcd_to_dbca =
-      TensorExpressions::evaluate<TensorIndexD, TensorIndexB, TensorIndexC,
-                                  TensorIndexA>(
-          rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c,
-                     tensorindex_d));
+  const auto L_dbca = ::TensorExpressions::evaluate<TensorIndexD, TensorIndexB,
+                                                    TensorIndexC, TensorIndexA>(
+      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{dcab} = R_{abcd}
-  auto abcd_to_dcab =
-      TensorExpressions::evaluate<TensorIndexD, TensorIndexC, TensorIndexA,
-                                  TensorIndexB>(
-          rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c,
-                     tensorindex_d));
+  const auto L_dcab = ::TensorExpressions::evaluate<TensorIndexD, TensorIndexC,
+                                                    TensorIndexA, TensorIndexB>(
+      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{dcba} = R_{abcd}
-  auto abcd_to_dcba =
-      TensorExpressions::evaluate<TensorIndexD, TensorIndexC, TensorIndexB,
-                                  TensorIndexA>(
-          rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c,
-                     tensorindex_d));
+  const auto L_dcba = ::TensorExpressions::evaluate<TensorIndexD, TensorIndexC,
+                                                    TensorIndexB, TensorIndexA>(
+      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   for (size_t i = 0; i < dim_a; ++i) {
     for (size_t j = 0; j < dim_b; ++j) {
       for (size_t k = 0; k < dim_c; ++k) {
           for (size_t l = 0; l < dim_d; ++l) {
-            CHECK(abcd_to_abcd.get(i, j, k, l) == rhs_tensor.get(i, j, k, l));
-            CHECK(abcd_to_abdc.get(i, j, l, k) == rhs_tensor.get(i, j, k, l));
-            CHECK(abcd_to_acbd.get(i, k, j, l) == rhs_tensor.get(i, j, k, l));
-            CHECK(abcd_to_acdb.get(i, k, l, j) == rhs_tensor.get(i, j, k, l));
-            CHECK(abcd_to_adbc.get(i, l, j, k) == rhs_tensor.get(i, j, k, l));
-            CHECK(abcd_to_adcb.get(i, l, k, j) == rhs_tensor.get(i, j, k, l));
-            CHECK(abcd_to_bacd.get(j, i, k, l) == rhs_tensor.get(i, j, k, l));
-            CHECK(abcd_to_badc.get(j, i, l, k) == rhs_tensor.get(i, j, k, l));
-            CHECK(abcd_to_bcad.get(j, k, i, l) == rhs_tensor.get(i, j, k, l));
-            CHECK(abcd_to_bcda.get(j, k, l, i) == rhs_tensor.get(i, j, k, l));
-            CHECK(abcd_to_bdac.get(j, l, i, k) == rhs_tensor.get(i, j, k, l));
-            CHECK(abcd_to_bdca.get(j, l, k, i) == rhs_tensor.get(i, j, k, l));
-            CHECK(abcd_to_cabd.get(k, i, j, l) == rhs_tensor.get(i, j, k, l));
-            CHECK(abcd_to_cadb.get(k, i, l, j) == rhs_tensor.get(i, j, k, l));
-            CHECK(abcd_to_cbad.get(k, j, i, l) == rhs_tensor.get(i, j, k, l));
-            CHECK(abcd_to_cbda.get(k, j, l, i) == rhs_tensor.get(i, j, k, l));
-            CHECK(abcd_to_cdab.get(k, l, i, j) == rhs_tensor.get(i, j, k, l));
-            CHECK(abcd_to_cdba.get(k, l, j, i) == rhs_tensor.get(i, j, k, l));
-            CHECK(abcd_to_dabc.get(l, i, j, k) == rhs_tensor.get(i, j, k, l));
-            CHECK(abcd_to_dacb.get(l, i, k, j) == rhs_tensor.get(i, j, k, l));
-            CHECK(abcd_to_dbac.get(l, j, i, k) == rhs_tensor.get(i, j, k, l));
-            CHECK(abcd_to_dbca.get(l, j, k, i) == rhs_tensor.get(i, j, k, l));
-            CHECK(abcd_to_dcab.get(l, k, i, j) == rhs_tensor.get(i, j, k, l));
-            CHECK(abcd_to_dcba.get(l, k, j, i) == rhs_tensor.get(i, j, k, l));
+            // For L_{abcd} = R_{abcd}, check that L_{ijkl} == R_{ijkl}
+            CHECK(L_abcd.get(i, j, k, l) == R_abcd.get(i, j, k, l));
+            // For L_{abdc} = R_{abcd}, check that L_{ijlk} == R_{ijkl}
+            CHECK(L_abdc.get(i, j, l, k) == R_abcd.get(i, j, k, l));
+            // For L_{acbd} = R_{abcd}, check that L_{ikjl} == R_{ijkl}
+            CHECK(L_acbd.get(i, k, j, l) == R_abcd.get(i, j, k, l));
+            // For L_{acdb} = R_{abcd}, check that L_{iklj} == R_{ijkl}
+            CHECK(L_acdb.get(i, k, l, j) == R_abcd.get(i, j, k, l));
+            // For L_{adbc} = R_{abcd}, check that L_{iljk} == R_{ijkl}
+            CHECK(L_adbc.get(i, l, j, k) == R_abcd.get(i, j, k, l));
+            // For L_{adcb} = R_{abcd}, check that L_{ilkj} == R_{ijkl}
+            CHECK(L_adcb.get(i, l, k, j) == R_abcd.get(i, j, k, l));
+            // For L_{bacd} = R_{abcd}, check that L_{jikl} == R_{ijkl}
+            CHECK(L_bacd.get(j, i, k, l) == R_abcd.get(i, j, k, l));
+            // For L_{badc} = R_{abcd}, check that L_{jilk} == R_{ijkl}
+            CHECK(L_badc.get(j, i, l, k) == R_abcd.get(i, j, k, l));
+            // For L_{bcad} = R_{abcd}, check that L_{jkil} == R_{ijkl}
+            CHECK(L_bcad.get(j, k, i, l) == R_abcd.get(i, j, k, l));
+            // For L_{bcda} = R_{abcd}, check that L_{jkli} == R_{ijkl}
+            CHECK(L_bcda.get(j, k, l, i) == R_abcd.get(i, j, k, l));
+            // For L_{bdac} = R_{abcd}, check that L_{jlik} == R_{ijkl}
+            CHECK(L_bdac.get(j, l, i, k) == R_abcd.get(i, j, k, l));
+            // For L_{bdca} = R_{abcd}, check that L_{jlki} == R_{ijkl}
+            CHECK(L_bdca.get(j, l, k, i) == R_abcd.get(i, j, k, l));
+            // For L_{cabd} = R_{abcd}, check that L_{kijl} == R_{ijkl}
+            CHECK(L_cabd.get(k, i, j, l) == R_abcd.get(i, j, k, l));
+            // For L_{cadb} = R_{abcd}, check that L_{kilj} == R_{ijkl}
+            CHECK(L_cadb.get(k, i, l, j) == R_abcd.get(i, j, k, l));
+            // For L_{cbad} = R_{abcd}, check that L_{kjil} == R_{ijkl}
+            CHECK(L_cbad.get(k, j, i, l) == R_abcd.get(i, j, k, l));
+            // For L_{cbda} = R_{abcd}, check that L_{kjli} == R_{ijkl}
+            CHECK(L_cbda.get(k, j, l, i) == R_abcd.get(i, j, k, l));
+            // For L_{cdab} = R_{abcd}, check that L_{klij} == R_{ijkl}
+            CHECK(L_cdab.get(k, l, i, j) == R_abcd.get(i, j, k, l));
+            // For L_{cdba} = R_{abcd}, check that L_{klji} == R_{ijkl}
+            CHECK(L_cdba.get(k, l, j, i) == R_abcd.get(i, j, k, l));
+            // For L_{dabc} = R_{abcd}, check that L_{lijk} == R_{ijkl}
+            CHECK(L_dabc.get(l, i, j, k) == R_abcd.get(i, j, k, l));
+            // For L_{dacb} = R_{abcd}, check that L_{likj} == R_{ijkl}
+            CHECK(L_dacb.get(l, i, k, j) == R_abcd.get(i, j, k, l));
+            // For L_{dbac} = R_{abcd}, check that L_{ljik} == R_{ijkl}
+            CHECK(L_dbac.get(l, j, i, k) == R_abcd.get(i, j, k, l));
+            // For L_{dbca} = R_{abcd}, check that L_{ljki} == R_{ijkl}
+            CHECK(L_dbca.get(l, j, k, i) == R_abcd.get(i, j, k, l));
+            // For L_{dcab} = R_{abcd}, check that L_{lkij} == R_{ijkl}
+            CHECK(L_dcab.get(l, k, i, j) == R_abcd.get(i, j, k, l));
+            // For L_{dcba} = R_{abcd}, check that L_{lkji} == R_{ijkl}
+            CHECK(L_dcba.get(l, k, j, i) == R_abcd.get(i, j, k, l));
         }
       }
     }
   }
 }
+
+}  // namespace TestHelpers::TensorExpressions
