@@ -11,6 +11,8 @@
 #include "Utilities/Algorithm.hpp"
 #include "Utilities/Requires.hpp"
 
+#include <iostream>
+
 namespace TensorExpressions {
 /*!
  * \ingroup TensorExpressionsGroup
@@ -121,6 +123,18 @@ auto evaluate(const T& rhs_te) {
   // the LHS tensor with index order specified by LhsTensorIndices
   using lhs_tensor = LhsTensor<rhs_tensorindex_list, lhs_tensorindex_list,
                                rhs_symmetry, rhs_tensorindextype_list>;
+
+  /*std::cout << "rhs valence of first index: " <<
+  tmpl::at_c<rhs_tensorindextype_list, 0>::ul << std::endl; std::cout << "rhs
+  valence of second index: " << tmpl::at_c<rhs_tensorindextype_list, 1>::ul <<
+  std::endl; std::cout << "rhs TensorIndex of first index: " <<
+  tmpl::at_c<rhs_tensorindex_list, 0>::value << std::endl; // <--  is j but
+  should be k std::cout << "rhs TensorIndex of second index: " <<
+  tmpl::at_c<rhs_tensorindex_list, 1>::value << std::endl;// <-- is k but should
+  be j std::cout << "lhs_tensor valence of first index: " << tmpl::at_c<typename
+  lhs_tensor::tensorindextype_list, 0>::ul << std::endl; std::cout <<
+  "lhs_tensor valence of second index: " << tmpl::at_c<typename
+  lhs_tensor::tensorindextype_list, 1>::ul << std::endl;*/
 
   // Construct and return LHS tensor
   return Tensor<typename T::type, typename lhs_tensor::symmetry,

@@ -115,7 +115,7 @@ struct TensorContract
   using symmetry = typename new_type::symmetry;
   using index_list = typename new_type::index_list;
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
-  using args_list = tmpl::sort<typename new_type::args_list>;
+  using args_list = typename new_type::args_list;
   using structure = Tensor_detail::Structure<symmetry, index_list>;
 
   explicit TensorContract(
