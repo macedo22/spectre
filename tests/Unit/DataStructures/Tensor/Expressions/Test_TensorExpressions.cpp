@@ -3,8 +3,16 @@
 
 #include "Framework/TestingFramework.hpp"
 
-#include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexTestHelpers.hpp"
-#include "Helpers/DataStructures/Tensor/Expressions/EvaluateTestHelpers.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank0TestHelpers.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank1TestHelpers.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank2TestHelpers.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank3TestHelpers.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/ComputeRhsTensorIndexRank4TestHelpers.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank0TestHelpers.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank1TestHelpers.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank2TestHelpers.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank3TestHelpers.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank4TestHelpers.hpp"
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
                   "[DataStructures][Unit]") {
@@ -204,7 +212,7 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ComputeRhsTensorIndex",
           DataVector, SpatialIndex, SpacetimeIndex, SpatialIndex, UpLo::Lo,
           UpLo::Lo, UpLo::Lo>(ti_i, ti_f, ti_j);
 
-  // Rank 3: DataVector;
+  // Rank 3: DataVector; second and third indices symmetric
   TestHelpers::TensorExpressions::
       test_compute_rhs_tensor_index_rank_3_bc_symmetry<
           DataVector, SpacetimeIndex, SpatialIndex, SpatialIndex, UpLo::Lo,
