@@ -43,15 +43,11 @@ namespace TestHelpers::TensorExpressions {
 template <typename DataType, typename RhsSymmetry,
           typename RhsTensorIndexTypeList, typename TensorIndexA,
           typename TensorIndexB, typename TensorIndexC>
-void test_compute_rhs_tensor_index_rank_3_core(
+void test_compute_rhs_tensor_index_rank_3_impl(
     const TensorIndexA& tensorindex_a, const TensorIndexB& tensorindex_b,
     const TensorIndexC& tensorindex_c) noexcept {
   const Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> rhs_tensor(5_st);
   const auto R_abc = rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c);
-
-  const size_t dim_a = tmpl::at_c<RhsTensorIndexTypeList, 0>::dim;
-  const size_t dim_b = tmpl::at_c<RhsTensorIndexTypeList, 1>::dim;
-  const size_t dim_c = tmpl::at_c<RhsTensorIndexTypeList, 2>::dim;
 
   const std::array<size_t, 3> index_order_abc = {
       TensorIndexA::value, TensorIndexB::value, TensorIndexC::value};
@@ -65,6 +61,10 @@ void test_compute_rhs_tensor_index_rank_3_core(
       TensorIndexC::value, TensorIndexA::value, TensorIndexB::value};
   const std::array<size_t, 3> index_order_cba = {
       TensorIndexC::value, TensorIndexB::value, TensorIndexA::value};
+
+  const size_t dim_a = tmpl::at_c<RhsTensorIndexTypeList, 0>::dim;
+  const size_t dim_b = tmpl::at_c<RhsTensorIndexTypeList, 1>::dim;
+  const size_t dim_c = tmpl::at_c<RhsTensorIndexTypeList, 2>::dim;
 
   for (size_t i = 0; i < dim_a; i++) {
     for (size_t j = 0; j < dim_b; j++) {
@@ -144,19 +144,19 @@ void test_compute_rhs_tensor_index_rank_3_no_symmetry(
 #define DIM_C(data) BOOST_PP_TUPLE_ELEM(2, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(3, data)
 
-#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_CORE(_, data)          \
-  test_compute_rhs_tensor_index_rank_3_core<                             \
+#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL(_, data)          \
+  test_compute_rhs_tensor_index_rank_3_impl<                             \
       DataType, Symmetry<3, 2, 1>,                                       \
       index_list<TensorIndexTypeA<DIM_A(data), ValenceA, FRAME(data)>,   \
                  TensorIndexTypeB<DIM_B(data), ValenceB, FRAME(data)>,   \
                  TensorIndexTypeC<DIM_C(data), ValenceC, FRAME(data)>>>( \
       tensorindex_a, tensorindex_b, tensorindex_c);
 
-  GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_CORE,
+  GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL,
                           (1, 2, 3), (1, 2, 3), (1, 2, 3),
                           (Frame::Grid, Frame::Inertial))
 
-#undef CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_CORE
+#undef CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL
 #undef FRAME
 #undef DIM_C
 #undef DIM_B
@@ -177,18 +177,18 @@ void test_compute_rhs_tensor_index_rank_3_ab_symmetry(
 #define DIM_C(data) BOOST_PP_TUPLE_ELEM(1, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(2, data)
 
-#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_CORE(_, data)          \
-  test_compute_rhs_tensor_index_rank_3_core<                             \
+#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL(_, data)          \
+  test_compute_rhs_tensor_index_rank_3_impl<                             \
       DataType, Symmetry<2, 2, 1>,                                       \
       index_list<TensorIndexTypeA<DIM_AB(data), ValenceA, FRAME(data)>,  \
                  TensorIndexTypeB<DIM_AB(data), ValenceB, FRAME(data)>,  \
                  TensorIndexTypeC<DIM_C(data), ValenceC, FRAME(data)>>>( \
       tensorindex_a, tensorindex_b, tensorindex_c);
 
-  GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_CORE,
+  GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL,
                           (1, 2, 3), (1, 2, 3), (Frame::Grid, Frame::Inertial))
 
-#undef CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_CORE
+#undef CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL
 #undef FRAME
 #undef DIM_C
 #undef DIM_AB
@@ -208,18 +208,18 @@ void test_compute_rhs_tensor_index_rank_3_ac_symmetry(
 #define DIM_B(data) BOOST_PP_TUPLE_ELEM(1, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(2, data)
 
-#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_CORE(_, data)           \
-  test_compute_rhs_tensor_index_rank_3_core<                              \
+#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL(_, data)           \
+  test_compute_rhs_tensor_index_rank_3_impl<                              \
       DataType, Symmetry<2, 1, 2>,                                        \
       index_list<TensorIndexTypeA<DIM_AC(data), ValenceA, FRAME(data)>,   \
                  TensorIndexTypeB<DIM_B(data), ValenceB, FRAME(data)>,    \
                  TensorIndexTypeC<DIM_AC(data), ValenceC, FRAME(data)>>>( \
       tensorindex_a, tensorindex_b, tensorindex_c);
 
-  GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_CORE,
+  GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL,
                           (1, 2, 3), (1, 2, 3), (Frame::Grid, Frame::Inertial))
 
-#undef CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_CORE
+#undef CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL
 #undef FRAME
 #undef DIM_B
 #undef DIM_AC
@@ -239,18 +239,18 @@ void test_compute_rhs_tensor_index_rank_3_bc_symmetry(
 #define DIM_BC(data) BOOST_PP_TUPLE_ELEM(1, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(2, data)
 
-#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_CORE(_, data)           \
-  test_compute_rhs_tensor_index_rank_3_core<                              \
+#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL(_, data)           \
+  test_compute_rhs_tensor_index_rank_3_impl<                              \
       DataType, Symmetry<2, 1, 1>,                                        \
       index_list<TensorIndexTypeA<DIM_A(data), ValenceA, FRAME(data)>,    \
                  TensorIndexTypeB<DIM_BC(data), ValenceB, FRAME(data)>,   \
                  TensorIndexTypeC<DIM_BC(data), ValenceC, FRAME(data)>>>( \
       tensorindex_a, tensorindex_b, tensorindex_c);
 
-  GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_CORE,
+  GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL,
                           (1, 2, 3), (1, 2, 3), (Frame::Grid, Frame::Inertial))
 
-#undef CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_CORE
+#undef CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL
 #undef FRAME
 #undef DIM_BC
 #undef DIM_A
@@ -269,18 +269,18 @@ void test_compute_rhs_tensor_index_rank_3_abc_symmetry(
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(1, data)
 
-#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_CORE(_, data)        \
-  test_compute_rhs_tensor_index_rank_3_core<                           \
+#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL(_, data)        \
+  test_compute_rhs_tensor_index_rank_3_impl<                           \
       DataType, Symmetry<1, 1, 1>,                                     \
       index_list<TensorIndexTypeA<DIM(data), ValenceA, FRAME(data)>,   \
                  TensorIndexTypeB<DIM(data), ValenceB, FRAME(data)>,   \
                  TensorIndexTypeC<DIM(data), ValenceC, FRAME(data)>>>( \
       tensorindex_a, tensorindex_b, tensorindex_c);
 
-  GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_CORE,
+  GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL,
                           (1, 2, 3), (Frame::Grid, Frame::Inertial))
 
-#undef CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_CORE
+#undef CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL
 #undef FRAME
 #undef DIM
 }

@@ -54,11 +54,6 @@ void test_compute_rhs_tensor_index_rank_4(
   const auto R_abcd =
       rhs_tensor(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d);
 
-  const size_t dim_a = tmpl::at_c<RhsTensorIndexTypeList, 0>::dim;
-  const size_t dim_b = tmpl::at_c<RhsTensorIndexTypeList, 1>::dim;
-  const size_t dim_c = tmpl::at_c<RhsTensorIndexTypeList, 2>::dim;
-  const size_t dim_d = tmpl::at_c<RhsTensorIndexTypeList, 3>::dim;
-
   const std::array<size_t, 4> index_order_abcd = {
       TensorIndexA::value, TensorIndexB::value, TensorIndexC::value,
       TensorIndexD::value};
@@ -134,6 +129,11 @@ void test_compute_rhs_tensor_index_rank_4(
   const std::array<size_t, 4> index_order_dcba = {
       TensorIndexD::value, TensorIndexC::value, TensorIndexB::value,
       TensorIndexA::value};
+
+  const size_t dim_a = tmpl::at_c<RhsTensorIndexTypeList, 0>::dim;
+  const size_t dim_b = tmpl::at_c<RhsTensorIndexTypeList, 1>::dim;
+  const size_t dim_c = tmpl::at_c<RhsTensorIndexTypeList, 2>::dim;
+  const size_t dim_d = tmpl::at_c<RhsTensorIndexTypeList, 3>::dim;
 
   for (size_t i = 0; i < dim_a; i++) {
     for (size_t j = 0; j < dim_b; j++) {

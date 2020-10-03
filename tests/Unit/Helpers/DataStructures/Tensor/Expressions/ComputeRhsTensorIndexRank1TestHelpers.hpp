@@ -22,14 +22,14 @@ namespace TestHelpers::TensorExpressions {
 /// \param tensorindex the TensorIndex used in the the TensorExpression,
 /// e.g. `ti_a`
 template <typename DataType, typename TensorIndexTypeList, typename TensorIndex>
-void test_compute_rhs_tensor_index_rank_1_core(
+void test_compute_rhs_tensor_index_rank_1_impl(
     const TensorIndex& tensorindex) noexcept {
   const Tensor<DataType, Symmetry<1>, TensorIndexTypeList> rhs_tensor(5_st);
   const auto R_a = rhs_tensor(tensorindex);
 
-  const size_t dim = tmpl::at_c<TensorIndexTypeList, 0>::dim;
-
   const std::array<size_t, 1> index_order = {TensorIndex::value};
+
+  const size_t dim = tmpl::at_c<TensorIndexTypeList, 0>::dim;
 
   // For L_a = R_a, check that L_i == R_i
   for (size_t i = 0; i < dim; i++) {
@@ -58,15 +58,15 @@ void test_compute_rhs_tensor_index_rank_1(
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(1, data)
 
-#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_1_CORE(_, data)                \
-  test_compute_rhs_tensor_index_rank_1_core<                                   \
+#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_1_IMPL(_, data)                \
+  test_compute_rhs_tensor_index_rank_1_impl<                                   \
       DataType, index_list<TensorIndexType<DIM(data), Valence, FRAME(data)>>>( \
       tensorindex);
 
-  GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_1_CORE,
+  GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_1_IMPL,
                           (1, 2, 3), (Frame::Grid, Frame::Inertial))
 
-#undef CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_1_CORE
+#undef CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_1_IMPL
 #undef FRAME
 #undef DIM
 }
