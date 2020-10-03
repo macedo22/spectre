@@ -35,14 +35,14 @@ template <typename RhsTensorIndexList, typename LhsTensorIndexList,
           typename RhsSymmetry, typename RhsTensorIndexTypeList,
           size_t NumIndices = tmpl::size<RhsSymmetry>::value,
           typename IndexSequence = std::make_index_sequence<NumIndices>>
-struct LhsTensor;
+struct LhsTensorSymmAndIndices;
 
 template <typename RhsTensorIndexList, typename... LhsTensorIndices,
           typename RhsSymmetry, typename RhsTensorIndexTypeList,
           size_t NumIndices, size_t... Ints>
-struct LhsTensor<RhsTensorIndexList, tmpl::list<LhsTensorIndices...>,
-                 RhsSymmetry, RhsTensorIndexTypeList, NumIndices,
-                 std::index_sequence<Ints...>> {
+struct LhsTensorSymmAndIndices<
+    RhsTensorIndexList, tmpl::list<LhsTensorIndices...>, RhsSymmetry,
+    RhsTensorIndexTypeList, NumIndices, std::index_sequence<Ints...>> {
   static constexpr std::array<size_t, NumIndices> lhs_tensorindex_values = {
       {LhsTensorIndices::value...}};
   static constexpr std::array<size_t, NumIndices> rhs_tensorindex_values = {
@@ -111,8 +111,9 @@ auto evaluate(const T& rhs_te) {
 
   // Stores (potentially reordered) symmetry and indices needed for constructing
   // the LHS tensor with index order specified by LhsTensorIndices
-  using lhs_tensor = LhsTensor<rhs_tensorindex_list, lhs_tensorindex_list,
-                               rhs_symmetry, rhs_tensorindextype_list>;
+  using lhs_tensor =
+      LhsTensorSymmAndIndices<rhs_tensorindex_list, lhs_tensorindex_list,
+                              rhs_symmetry, rhs_tensorindextype_list>;
 
   // Construct and return LHS tensor
   return Tensor<typename T::type, typename lhs_tensor::symmetry,
