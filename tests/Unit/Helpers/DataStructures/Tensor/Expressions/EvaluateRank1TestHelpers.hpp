@@ -31,7 +31,10 @@ void test_evaluate_rank_1_impl(const TensorIndex& tensorindex) noexcept {
   std::iota(R_a.begin(), R_a.end(), 0.0);
 
   // L_a = R_a
-  const auto L_a = ::TensorExpressions::evaluate<TensorIndex>(R_a(tensorindex));
+  // Use explicit type (vs auto) so the compiler checks return type of
+  // `evaluate`
+  const Tensor<DataType, Symmetry<1>, TensorIndexTypeList> L_a =
+      ::TensorExpressions::evaluate<TensorIndex>(R_a(tensorindex));
 
   const size_t dim = tmpl::at_c<TensorIndexTypeList, 0>::dim;
 

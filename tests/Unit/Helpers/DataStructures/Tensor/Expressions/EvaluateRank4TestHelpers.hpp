@@ -55,125 +55,300 @@ void test_evaluate_rank_4(const TensorIndexA& tensorindex_a,
   Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> R_abcd(5_st);
   std::iota(R_abcd.begin(), R_abcd.end(), 0.0);
 
+  // Used for enforcing the ordering of the symmetry and TensorIndexTypes of the
+  // LHS Tensor returned by `evaluate`
+  const std::int32_t rhs_symmetry_element_a = tmpl::at_c<RhsSymmetry, 0>::value;
+  const std::int32_t rhs_symmetry_element_b = tmpl::at_c<RhsSymmetry, 1>::value;
+  const std::int32_t rhs_symmetry_element_c = tmpl::at_c<RhsSymmetry, 2>::value;
+  const std::int32_t rhs_symmetry_element_d = tmpl::at_c<RhsSymmetry, 3>::value;
+  using rhs_tensorindextype_a = tmpl::at_c<RhsTensorIndexTypeList, 0>;
+  using rhs_tensorindextype_b = tmpl::at_c<RhsTensorIndexTypeList, 1>;
+  using rhs_tensorindextype_c = tmpl::at_c<RhsTensorIndexTypeList, 2>;
+  using rhs_tensorindextype_d = tmpl::at_c<RhsTensorIndexTypeList, 3>;
+
   // L_{abcd} = R_{abcd}
-  const auto L_abcd = ::TensorExpressions::evaluate<TensorIndexA, TensorIndexB,
-                                                    TensorIndexC, TensorIndexD>(
-      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+  // Use explicit type (vs auto) so the compiler checks the return type of
+  // `evaluate`
+  const Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> L_abcd =
+      ::TensorExpressions::evaluate<TensorIndexA, TensorIndexB, TensorIndexC,
+                                    TensorIndexD>(
+          R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{abdc} = R_{abcd}
-  const auto L_abdc = ::TensorExpressions::evaluate<TensorIndexA, TensorIndexB,
-                                                    TensorIndexD, TensorIndexC>(
-      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+  using L_abdc_symmetry =
+      Symmetry<rhs_symmetry_element_a, rhs_symmetry_element_b,
+               rhs_symmetry_element_d, rhs_symmetry_element_c>;
+  using L_abdc_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_a, rhs_tensorindextype_b,
+                 rhs_tensorindextype_d, rhs_tensorindextype_c>;
+  const Tensor<DataType, L_abdc_symmetry, L_abdc_tensorindextype_list> L_abdc =
+      ::TensorExpressions::evaluate<TensorIndexA, TensorIndexB, TensorIndexD,
+                                    TensorIndexC>(
+          R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{acbd} = R_{abcd}
-  const auto L_acbd = ::TensorExpressions::evaluate<TensorIndexA, TensorIndexC,
-                                                    TensorIndexB, TensorIndexD>(
-      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+  using L_acbd_symmetry =
+      Symmetry<rhs_symmetry_element_a, rhs_symmetry_element_c,
+               rhs_symmetry_element_b, rhs_symmetry_element_d>;
+  using L_acbd_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_a, rhs_tensorindextype_c,
+                 rhs_tensorindextype_b, rhs_tensorindextype_d>;
+  const Tensor<DataType, L_acbd_symmetry, L_acbd_tensorindextype_list> L_acbd =
+      ::TensorExpressions::evaluate<TensorIndexA, TensorIndexC, TensorIndexB,
+                                    TensorIndexD>(
+          R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{acdb} = R_{abcd}
-  const auto L_acdb = ::TensorExpressions::evaluate<TensorIndexA, TensorIndexC,
-                                                    TensorIndexD, TensorIndexB>(
-      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+  using L_acdb_symmetry =
+      Symmetry<rhs_symmetry_element_a, rhs_symmetry_element_c,
+               rhs_symmetry_element_d, rhs_symmetry_element_b>;
+  using L_acdb_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_a, rhs_tensorindextype_c,
+                 rhs_tensorindextype_d, rhs_tensorindextype_b>;
+  const Tensor<DataType, L_acdb_symmetry, L_acdb_tensorindextype_list> L_acdb =
+      ::TensorExpressions::evaluate<TensorIndexA, TensorIndexC, TensorIndexD,
+                                    TensorIndexB>(
+          R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{adbc} = R_{abcd}
-  const auto L_adbc = ::TensorExpressions::evaluate<TensorIndexA, TensorIndexD,
-                                                    TensorIndexB, TensorIndexC>(
-      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+  using L_adbc_symmetry =
+      Symmetry<rhs_symmetry_element_a, rhs_symmetry_element_d,
+               rhs_symmetry_element_b, rhs_symmetry_element_c>;
+  using L_adbc_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_a, rhs_tensorindextype_d,
+                 rhs_tensorindextype_b, rhs_tensorindextype_c>;
+  const Tensor<DataType, L_adbc_symmetry, L_adbc_tensorindextype_list> L_adbc =
+      ::TensorExpressions::evaluate<TensorIndexA, TensorIndexD, TensorIndexB,
+                                    TensorIndexC>(
+          R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{adcb} = R_{abcd}
-  const auto L_adcb = ::TensorExpressions::evaluate<TensorIndexA, TensorIndexD,
-                                                    TensorIndexC, TensorIndexB>(
-      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+  using L_adcb_symmetry =
+      Symmetry<rhs_symmetry_element_a, rhs_symmetry_element_d,
+               rhs_symmetry_element_c, rhs_symmetry_element_b>;
+  using L_adcb_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_a, rhs_tensorindextype_d,
+                 rhs_tensorindextype_c, rhs_tensorindextype_b>;
+  const Tensor<DataType, L_adcb_symmetry, L_adcb_tensorindextype_list> L_adcb =
+      ::TensorExpressions::evaluate<TensorIndexA, TensorIndexD, TensorIndexC,
+                                    TensorIndexB>(
+          R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{bacd} = R_{abcd}
-  const auto L_bacd = ::TensorExpressions::evaluate<TensorIndexB, TensorIndexA,
-                                                    TensorIndexC, TensorIndexD>(
-      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+  using L_bacd_symmetry =
+      Symmetry<rhs_symmetry_element_b, rhs_symmetry_element_a,
+               rhs_symmetry_element_c, rhs_symmetry_element_d>;
+  using L_bacd_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_b, rhs_tensorindextype_a,
+                 rhs_tensorindextype_c, rhs_tensorindextype_d>;
+  const Tensor<DataType, L_bacd_symmetry, L_bacd_tensorindextype_list> L_bacd =
+      ::TensorExpressions::evaluate<TensorIndexB, TensorIndexA, TensorIndexC,
+                                    TensorIndexD>(
+          R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{badc} = R_{abcd}
-  const auto L_badc = ::TensorExpressions::evaluate<TensorIndexB, TensorIndexA,
-                                                    TensorIndexD, TensorIndexC>(
-      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+  using L_badc_symmetry =
+      Symmetry<rhs_symmetry_element_b, rhs_symmetry_element_a,
+               rhs_symmetry_element_d, rhs_symmetry_element_c>;
+  using L_badc_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_b, rhs_tensorindextype_a,
+                 rhs_tensorindextype_d, rhs_tensorindextype_c>;
+  const Tensor<DataType, L_badc_symmetry, L_badc_tensorindextype_list> L_badc =
+      ::TensorExpressions::evaluate<TensorIndexB, TensorIndexA, TensorIndexD,
+                                    TensorIndexC>(
+          R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{bcad} = R_{abcd}
-  const auto L_bcad = ::TensorExpressions::evaluate<TensorIndexB, TensorIndexC,
-                                                    TensorIndexA, TensorIndexD>(
-      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+  using L_bcad_symmetry =
+      Symmetry<rhs_symmetry_element_b, rhs_symmetry_element_c,
+               rhs_symmetry_element_a, rhs_symmetry_element_d>;
+  using L_bcad_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_b, rhs_tensorindextype_c,
+                 rhs_tensorindextype_a, rhs_tensorindextype_d>;
+  const Tensor<DataType, L_bcad_symmetry, L_bcad_tensorindextype_list> L_bcad =
+      ::TensorExpressions::evaluate<TensorIndexB, TensorIndexC, TensorIndexA,
+                                    TensorIndexD>(
+          R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{bcda} = R_{abcd}
-  const auto L_bcda = ::TensorExpressions::evaluate<TensorIndexB, TensorIndexC,
-                                                    TensorIndexD, TensorIndexA>(
-      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+  using L_bcda_symmetry =
+      Symmetry<rhs_symmetry_element_b, rhs_symmetry_element_c,
+               rhs_symmetry_element_d, rhs_symmetry_element_a>;
+  using L_bcda_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_b, rhs_tensorindextype_c,
+                 rhs_tensorindextype_d, rhs_tensorindextype_a>;
+  const Tensor<DataType, L_bcda_symmetry, L_bcda_tensorindextype_list> L_bcda =
+      ::TensorExpressions::evaluate<TensorIndexB, TensorIndexC, TensorIndexD,
+                                    TensorIndexA>(
+          R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{bdac} = R_{abcd}
-  const auto L_bdac = ::TensorExpressions::evaluate<TensorIndexB, TensorIndexD,
-                                                    TensorIndexA, TensorIndexC>(
-      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+  using L_bdac_symmetry =
+      Symmetry<rhs_symmetry_element_b, rhs_symmetry_element_d,
+               rhs_symmetry_element_a, rhs_symmetry_element_c>;
+  using L_bdac_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_b, rhs_tensorindextype_d,
+                 rhs_tensorindextype_a, rhs_tensorindextype_c>;
+  const Tensor<DataType, L_bdac_symmetry, L_bdac_tensorindextype_list> L_bdac =
+      ::TensorExpressions::evaluate<TensorIndexB, TensorIndexD, TensorIndexA,
+                                    TensorIndexC>(
+          R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{bdca} = R_{abcd}
-  const auto L_bdca = ::TensorExpressions::evaluate<TensorIndexB, TensorIndexD,
-                                                    TensorIndexC, TensorIndexA>(
-      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+  using L_bdca_symmetry =
+      Symmetry<rhs_symmetry_element_b, rhs_symmetry_element_d,
+               rhs_symmetry_element_c, rhs_symmetry_element_a>;
+  using L_bdca_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_b, rhs_tensorindextype_d,
+                 rhs_tensorindextype_c, rhs_tensorindextype_a>;
+  const Tensor<DataType, L_bdca_symmetry, L_bdca_tensorindextype_list> L_bdca =
+      ::TensorExpressions::evaluate<TensorIndexB, TensorIndexD, TensorIndexC,
+                                    TensorIndexA>(
+          R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{cabd} = R_{abcd}
-  const auto L_cabd = ::TensorExpressions::evaluate<TensorIndexC, TensorIndexA,
-                                                    TensorIndexB, TensorIndexD>(
-      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+  using L_cabd_symmetry =
+      Symmetry<rhs_symmetry_element_c, rhs_symmetry_element_a,
+               rhs_symmetry_element_b, rhs_symmetry_element_d>;
+  using L_cabd_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_c, rhs_tensorindextype_a,
+                 rhs_tensorindextype_b, rhs_tensorindextype_d>;
+  const Tensor<DataType, L_cabd_symmetry, L_cabd_tensorindextype_list> L_cabd =
+      ::TensorExpressions::evaluate<TensorIndexC, TensorIndexA, TensorIndexB,
+                                    TensorIndexD>(
+          R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{cadb} = R_{abcd}
-  const auto L_cadb = ::TensorExpressions::evaluate<TensorIndexC, TensorIndexA,
-                                                    TensorIndexD, TensorIndexB>(
-      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+  using L_cadb_symmetry =
+      Symmetry<rhs_symmetry_element_c, rhs_symmetry_element_a,
+               rhs_symmetry_element_d, rhs_symmetry_element_b>;
+  using L_cadb_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_c, rhs_tensorindextype_a,
+                 rhs_tensorindextype_d, rhs_tensorindextype_b>;
+  const Tensor<DataType, L_cadb_symmetry, L_cadb_tensorindextype_list> L_cadb =
+      ::TensorExpressions::evaluate<TensorIndexC, TensorIndexA, TensorIndexD,
+                                    TensorIndexB>(
+          R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{cbad} = R_{abcd}
-  const auto L_cbad = ::TensorExpressions::evaluate<TensorIndexC, TensorIndexB,
-                                                    TensorIndexA, TensorIndexD>(
-      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+  using L_cbad_symmetry =
+      Symmetry<rhs_symmetry_element_c, rhs_symmetry_element_b,
+               rhs_symmetry_element_a, rhs_symmetry_element_d>;
+  using L_cbad_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_c, rhs_tensorindextype_b,
+                 rhs_tensorindextype_a, rhs_tensorindextype_d>;
+  const Tensor<DataType, L_cbad_symmetry, L_cbad_tensorindextype_list> L_cbad =
+      ::TensorExpressions::evaluate<TensorIndexC, TensorIndexB, TensorIndexA,
+                                    TensorIndexD>(
+          R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{cbda} = R_{abcd}
-  const auto L_cbda = ::TensorExpressions::evaluate<TensorIndexC, TensorIndexB,
-                                                    TensorIndexD, TensorIndexA>(
-      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+  using L_cbda_symmetry =
+      Symmetry<rhs_symmetry_element_c, rhs_symmetry_element_b,
+               rhs_symmetry_element_d, rhs_symmetry_element_a>;
+  using L_cbda_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_c, rhs_tensorindextype_b,
+                 rhs_tensorindextype_d, rhs_tensorindextype_a>;
+  const Tensor<DataType, L_cbda_symmetry, L_cbda_tensorindextype_list> L_cbda =
+      ::TensorExpressions::evaluate<TensorIndexC, TensorIndexB, TensorIndexD,
+                                    TensorIndexA>(
+          R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{cdab} = R_{abcd}
-  const auto L_cdab = ::TensorExpressions::evaluate<TensorIndexC, TensorIndexD,
-                                                    TensorIndexA, TensorIndexB>(
-      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+  using L_cdab_symmetry =
+      Symmetry<rhs_symmetry_element_c, rhs_symmetry_element_d,
+               rhs_symmetry_element_a, rhs_symmetry_element_b>;
+  using L_cdab_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_c, rhs_tensorindextype_d,
+                 rhs_tensorindextype_a, rhs_tensorindextype_b>;
+  const Tensor<DataType, L_cdab_symmetry, L_cdab_tensorindextype_list> L_cdab =
+      ::TensorExpressions::evaluate<TensorIndexC, TensorIndexD, TensorIndexA,
+                                    TensorIndexB>(
+          R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{cdba} = R_{abcd}
-  const auto L_cdba = ::TensorExpressions::evaluate<TensorIndexC, TensorIndexD,
-                                                    TensorIndexB, TensorIndexA>(
-      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+  using L_cdba_symmetry =
+      Symmetry<rhs_symmetry_element_c, rhs_symmetry_element_d,
+               rhs_symmetry_element_b, rhs_symmetry_element_a>;
+  using L_cdba_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_c, rhs_tensorindextype_d,
+                 rhs_tensorindextype_b, rhs_tensorindextype_a>;
+  const Tensor<DataType, L_cdba_symmetry, L_cdba_tensorindextype_list> L_cdba =
+      ::TensorExpressions::evaluate<TensorIndexC, TensorIndexD, TensorIndexB,
+                                    TensorIndexA>(
+          R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{dabc} = R_{abcd}
-  const auto L_dabc = ::TensorExpressions::evaluate<TensorIndexD, TensorIndexA,
-                                                    TensorIndexB, TensorIndexC>(
-      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+  using L_dabc_symmetry =
+      Symmetry<rhs_symmetry_element_d, rhs_symmetry_element_a,
+               rhs_symmetry_element_b, rhs_symmetry_element_c>;
+  using L_dabc_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_d, rhs_tensorindextype_a,
+                 rhs_tensorindextype_b, rhs_tensorindextype_c>;
+  const Tensor<DataType, L_dabc_symmetry, L_dabc_tensorindextype_list> L_dabc =
+      ::TensorExpressions::evaluate<TensorIndexD, TensorIndexA, TensorIndexB,
+                                    TensorIndexC>(
+          R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{dacb} = R_{abcd}
-  const auto L_dacb = ::TensorExpressions::evaluate<TensorIndexD, TensorIndexA,
-                                                    TensorIndexC, TensorIndexB>(
-      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+  using L_dacb_symmetry =
+      Symmetry<rhs_symmetry_element_d, rhs_symmetry_element_a,
+               rhs_symmetry_element_c, rhs_symmetry_element_b>;
+  using L_dacb_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_d, rhs_tensorindextype_a,
+                 rhs_tensorindextype_c, rhs_tensorindextype_b>;
+  const Tensor<DataType, L_dacb_symmetry, L_dacb_tensorindextype_list> L_dacb =
+      ::TensorExpressions::evaluate<TensorIndexD, TensorIndexA, TensorIndexC,
+                                    TensorIndexB>(
+          R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{dbac} = R_{abcd}
-  const auto L_dbac = ::TensorExpressions::evaluate<TensorIndexD, TensorIndexB,
-                                                    TensorIndexA, TensorIndexC>(
-      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+  using L_dbac_symmetry =
+      Symmetry<rhs_symmetry_element_d, rhs_symmetry_element_b,
+               rhs_symmetry_element_a, rhs_symmetry_element_c>;
+  using L_dbac_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_d, rhs_tensorindextype_b,
+                 rhs_tensorindextype_a, rhs_tensorindextype_c>;
+  const Tensor<DataType, L_dbac_symmetry, L_dbac_tensorindextype_list> L_dbac =
+      ::TensorExpressions::evaluate<TensorIndexD, TensorIndexB, TensorIndexA,
+                                    TensorIndexC>(
+          R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{dbca} = R_{abcd}
-  const auto L_dbca = ::TensorExpressions::evaluate<TensorIndexD, TensorIndexB,
-                                                    TensorIndexC, TensorIndexA>(
-      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+  using L_dbca_symmetry =
+      Symmetry<rhs_symmetry_element_d, rhs_symmetry_element_b,
+               rhs_symmetry_element_c, rhs_symmetry_element_a>;
+  using L_dbca_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_d, rhs_tensorindextype_b,
+                 rhs_tensorindextype_c, rhs_tensorindextype_a>;
+  const Tensor<DataType, L_dbca_symmetry, L_dbca_tensorindextype_list> L_dbca =
+      ::TensorExpressions::evaluate<TensorIndexD, TensorIndexB, TensorIndexC,
+                                    TensorIndexA>(
+          R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{dcab} = R_{abcd}
-  const auto L_dcab = ::TensorExpressions::evaluate<TensorIndexD, TensorIndexC,
-                                                    TensorIndexA, TensorIndexB>(
-      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+  using L_dcab_symmetry =
+      Symmetry<rhs_symmetry_element_d, rhs_symmetry_element_c,
+               rhs_symmetry_element_a, rhs_symmetry_element_b>;
+  using L_dcab_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_d, rhs_tensorindextype_c,
+                 rhs_tensorindextype_a, rhs_tensorindextype_b>;
+  const Tensor<DataType, L_dcab_symmetry, L_dcab_tensorindextype_list> L_dcab =
+      ::TensorExpressions::evaluate<TensorIndexD, TensorIndexC, TensorIndexA,
+                                    TensorIndexB>(
+          R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   // L_{dcba} = R_{abcd}
-  const auto L_dcba = ::TensorExpressions::evaluate<TensorIndexD, TensorIndexC,
-                                                    TensorIndexB, TensorIndexA>(
-      R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+  using L_dcba_symmetry =
+      Symmetry<rhs_symmetry_element_d, rhs_symmetry_element_c,
+               rhs_symmetry_element_b, rhs_symmetry_element_a>;
+  using L_dcba_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_d, rhs_tensorindextype_c,
+                 rhs_tensorindextype_b, rhs_tensorindextype_a>;
+  const Tensor<DataType, L_dcba_symmetry, L_dcba_tensorindextype_list> L_dcba =
+      ::TensorExpressions::evaluate<TensorIndexD, TensorIndexC, TensorIndexB,
+                                    TensorIndexA>(
+          R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
 
   const size_t dim_a = tmpl::at_c<RhsTensorIndexTypeList, 0>::dim;
   const size_t dim_b = tmpl::at_c<RhsTensorIndexTypeList, 1>::dim;

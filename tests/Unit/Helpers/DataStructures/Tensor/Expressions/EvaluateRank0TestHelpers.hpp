@@ -19,7 +19,9 @@ template <typename DataType>
 void test_evaluate_rank_0(const DataType& data) noexcept {
   const Tensor<DataType> R{{{data}}};
 
-  const auto L = ::TensorExpressions::evaluate(R());
+  // Use explicit type (vs auto) so the compiler checks the return type of
+  // `evaluate`
+  const Tensor<DataType> L = ::TensorExpressions::evaluate(R());
 
   CHECK(L.get() == data);
 }

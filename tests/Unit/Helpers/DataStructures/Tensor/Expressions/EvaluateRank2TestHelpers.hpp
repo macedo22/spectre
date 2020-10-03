@@ -49,11 +49,19 @@ void test_evaluate_rank_2_impl(const TensorIndexA& tensorindex_a,
   std::iota(R_ab.begin(), R_ab.end(), 0.0);
 
   // L_{ab} = R_{ab}
-  const auto L_ab = ::TensorExpressions::evaluate<TensorIndexA, TensorIndexB>(
-      R_ab(tensorindex_a, tensorindex_b));
+  // Use explicit type (vs auto) so the compiler checks the return type of
+  // `evaluate`
+  const Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> L_ab =
+      ::TensorExpressions::evaluate<TensorIndexA, TensorIndexB>(
+          R_ab(tensorindex_a, tensorindex_b));
+
   // L_{ba} = R_{ab}
-  const auto L_ba = ::TensorExpressions::evaluate<TensorIndexB, TensorIndexA>(
-      R_ab(tensorindex_a, tensorindex_b));
+  using L_ba_tensorindextype_list =
+      tmpl::list<tmpl::at_c<RhsTensorIndexTypeList, 1>,
+                 tmpl::at_c<RhsTensorIndexTypeList, 0>>;
+  const Tensor<DataType, RhsSymmetry, L_ba_tensorindextype_list> L_ba =
+      ::TensorExpressions::evaluate<TensorIndexB, TensorIndexA>(
+          R_ab(tensorindex_a, tensorindex_b));
 
   const size_t dim_a = tmpl::at_c<RhsTensorIndexTypeList, 0>::dim;
   const size_t dim_b = tmpl::at_c<RhsTensorIndexTypeList, 1>::dim;

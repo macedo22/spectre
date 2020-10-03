@@ -53,33 +53,74 @@ void test_evaluate_rank_3_impl(const TensorIndexA& tensorindex_a,
   Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> R_abc(5_st);
   std::iota(R_abc.begin(), R_abc.end(), 0.0);
 
+  // Used for enforcing the ordering of the symmetry and TensorIndexTypes of the
+  // LHS Tensor returned by `evaluate`
+  const std::int32_t rhs_symmetry_element_a = tmpl::at_c<RhsSymmetry, 0>::value;
+  const std::int32_t rhs_symmetry_element_b = tmpl::at_c<RhsSymmetry, 1>::value;
+  const std::int32_t rhs_symmetry_element_c = tmpl::at_c<RhsSymmetry, 2>::value;
+  using rhs_tensorindextype_a = tmpl::at_c<RhsTensorIndexTypeList, 0>;
+  using rhs_tensorindextype_b = tmpl::at_c<RhsTensorIndexTypeList, 1>;
+  using rhs_tensorindextype_c = tmpl::at_c<RhsTensorIndexTypeList, 2>;
+
   // L_{abc} = R_{abc}
-  const auto L_abc =
+  // Use explicit type (vs auto) so the compiler checks the return type of
+  // `evaluate`
+  const Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> L_abc =
       ::TensorExpressions::evaluate<TensorIndexA, TensorIndexB, TensorIndexC>(
           R_abc(tensorindex_a, tensorindex_b, tensorindex_c));
 
   // L_{acb} = R_{abc}
-  const auto L_acb =
+  using L_acb_symmetry =
+      Symmetry<rhs_symmetry_element_a, rhs_symmetry_element_c,
+               rhs_symmetry_element_b>;
+  using L_acb_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_a, rhs_tensorindextype_c,
+                 rhs_tensorindextype_b>;
+  const Tensor<DataType, L_acb_symmetry, L_acb_tensorindextype_list> L_acb =
       ::TensorExpressions::evaluate<TensorIndexA, TensorIndexC, TensorIndexB>(
           R_abc(tensorindex_a, tensorindex_b, tensorindex_c));
 
   // L_{bac} = R_{abc}
-  const auto L_bac =
+  using L_bac_symmetry =
+      Symmetry<rhs_symmetry_element_b, rhs_symmetry_element_a,
+               rhs_symmetry_element_c>;
+  using L_bac_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_b, rhs_tensorindextype_a,
+                 rhs_tensorindextype_c>;
+  const Tensor<DataType, L_bac_symmetry, L_bac_tensorindextype_list> L_bac =
       ::TensorExpressions::evaluate<TensorIndexB, TensorIndexA, TensorIndexC>(
           R_abc(tensorindex_a, tensorindex_b, tensorindex_c));
 
   // L_{bca} = R_{abc}
-  const auto L_bca =
+  using L_bca_symmetry =
+      Symmetry<rhs_symmetry_element_b, rhs_symmetry_element_c,
+               rhs_symmetry_element_a>;
+  using L_bca_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_b, rhs_tensorindextype_c,
+                 rhs_tensorindextype_a>;
+  const Tensor<DataType, L_bca_symmetry, L_bca_tensorindextype_list> L_bca =
       ::TensorExpressions::evaluate<TensorIndexB, TensorIndexC, TensorIndexA>(
           R_abc(tensorindex_a, tensorindex_b, tensorindex_c));
 
   // L_{cab} = R_{abc}
-  const auto L_cab =
+  using L_cab_symmetry =
+      Symmetry<rhs_symmetry_element_c, rhs_symmetry_element_a,
+               rhs_symmetry_element_b>;
+  using L_cab_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_c, rhs_tensorindextype_a,
+                 rhs_tensorindextype_b>;
+  const Tensor<DataType, L_cab_symmetry, L_cab_tensorindextype_list> L_cab =
       ::TensorExpressions::evaluate<TensorIndexC, TensorIndexA, TensorIndexB>(
           R_abc(tensorindex_a, tensorindex_b, tensorindex_c));
 
   // L_{cba} = R_{abc}
-  const auto L_cba =
+  using L_cba_symmetry =
+      Symmetry<rhs_symmetry_element_c, rhs_symmetry_element_b,
+               rhs_symmetry_element_a>;
+  using L_cba_tensorindextype_list =
+      tmpl::list<rhs_tensorindextype_c, rhs_tensorindextype_b,
+                 rhs_tensorindextype_a>;
+  const Tensor<DataType, L_cba_symmetry, L_cba_tensorindextype_list> L_cba =
       ::TensorExpressions::evaluate<TensorIndexC, TensorIndexB, TensorIndexA>(
           R_abc(tensorindex_a, tensorindex_b, tensorindex_c));
 
