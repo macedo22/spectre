@@ -61,9 +61,13 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Evaluate",
   TestHelpers::TensorExpressions::test_evaluate_rank_2_no_symmetry<
       double, SpacetimeIndex, SpacetimeIndex, UpLo::Up, UpLo::Up>(ti_D, ti_C);
   TestHelpers::TensorExpressions::test_evaluate_rank_2_no_symmetry<
-      double, SpacetimeIndex, SpacetimeIndex, UpLo::Up, UpLo::Lo>(ti_G, ti_b);
+      double, SpacetimeIndex, SpacetimeIndex, UpLo::Lo, UpLo::Up>(ti_e, ti_F);
   TestHelpers::TensorExpressions::test_evaluate_rank_2_no_symmetry<
-      double, SpacetimeIndex, SpacetimeIndex, UpLo::Lo, UpLo::Up>(ti_f, ti_G);
+      double, SpacetimeIndex, SpacetimeIndex, UpLo::Up, UpLo::Lo>(ti_F, ti_e);
+  TestHelpers::TensorExpressions::test_evaluate_rank_2_no_symmetry<
+      double, SpacetimeIndex, SpacetimeIndex, UpLo::Lo, UpLo::Up>(ti_g, ti_B);
+  TestHelpers::TensorExpressions::test_evaluate_rank_2_no_symmetry<
+      double, SpacetimeIndex, SpacetimeIndex, UpLo::Up, UpLo::Lo>(ti_G, ti_b);
 
   // Rank 2: double; nonsymmetric; spatial only
   TestHelpers::TensorExpressions::test_evaluate_rank_2_no_symmetry<
