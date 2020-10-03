@@ -16,6 +16,8 @@
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
                   "[DataStructures][Unit]") {
   // Contract rank 2 (upper, lower) tensor to rank 0 tensor
+  // Use explicit type (vs auto) so the compiler checks the return type of
+  // `evaluate`
   Tensor<double, Symmetry<2, 1>,
          index_list<SpatialIndex<3, UpLo::Up, Frame::Inertial>,
                     SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
