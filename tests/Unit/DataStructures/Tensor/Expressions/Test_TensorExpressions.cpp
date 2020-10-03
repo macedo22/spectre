@@ -12,7 +12,11 @@
 #include "DataStructures/Tensor/Expressions/Evaluate.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
-#include "Helpers/DataStructures/Tensor/Expressions/EvaluateTestHelpers.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank0TestHelpers.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank1TestHelpers.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank2TestHelpers.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank3TestHelpers.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank4TestHelpers.hpp"
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Evaluate",
                   "[DataStructures][Unit]") {
@@ -158,7 +162,7 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Evaluate",
       DataVector, SpatialIndex, SpacetimeIndex, SpatialIndex, UpLo::Lo,
       UpLo::Lo, UpLo::Lo>(ti_i, ti_f, ti_j);
 
-  // Rank 3: DataVector;
+  // Rank 3: DataVector; second and third indices symmetric
   TestHelpers::TensorExpressions::test_evaluate_rank_3_bc_symmetry<
       DataVector, SpacetimeIndex, SpatialIndex, SpatialIndex, UpLo::Lo,
       UpLo::Up, UpLo::Up>(ti_d, ti_J, ti_I);

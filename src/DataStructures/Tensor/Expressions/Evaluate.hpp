@@ -61,8 +61,8 @@ struct LhsTensor<RhsTensorIndexList, tmpl::list<LhsTensorIndices...>,
 
 /*!
  * \ingroup TensorExpressionsGroup
- * \brief Evaluate a right hand side tensor expression to a tensor with the LHS
- * index order set in the template parameters
+ * \brief Evaluate a RHS tensor expression to a tensor with the LHS index order
+ * set in the template parameters
  *
  * \details Uses the right hand side (RHS) TensorExpression's index ordering
  * (`T::args_list`) and the desired left hand side (LHS) tensor's index ordering
@@ -71,7 +71,7 @@ struct LhsTensor<RhsTensorIndexList, tmpl::list<LhsTensorIndices...>,
  * with the same index ordering, such as \f$L_{ab} = R_{ab}\f$, or different
  * ordering, such as \f$L_{ba} = R_{ab}\f$.
  *
- * ### Usage
+ * ### Example usage
  * Given two rank 2 Tensors `R` and `S` with index order (a, b), add them
  * together and generate the resultant LHS Tensor `L` with index order (b, a):
  * \code{.cpp}

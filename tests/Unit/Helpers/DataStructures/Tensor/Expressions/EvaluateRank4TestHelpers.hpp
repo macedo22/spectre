@@ -55,11 +55,6 @@ void test_evaluate_rank_4(const TensorIndexA& tensorindex_a,
   Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> R_abcd(5_st);
   std::iota(R_abcd.begin(), R_abcd.end(), 0.0);
 
-  const size_t dim_a = tmpl::at_c<RhsTensorIndexTypeList, 0>::dim;
-  const size_t dim_b = tmpl::at_c<RhsTensorIndexTypeList, 1>::dim;
-  const size_t dim_c = tmpl::at_c<RhsTensorIndexTypeList, 2>::dim;
-  const size_t dim_d = tmpl::at_c<RhsTensorIndexTypeList, 3>::dim;
-
   // L_{abcd} = R_{abcd}
   const auto L_abcd = ::TensorExpressions::evaluate<TensorIndexA, TensorIndexB,
                                                     TensorIndexC, TensorIndexD>(
@@ -179,6 +174,11 @@ void test_evaluate_rank_4(const TensorIndexA& tensorindex_a,
   const auto L_dcba = ::TensorExpressions::evaluate<TensorIndexD, TensorIndexC,
                                                     TensorIndexB, TensorIndexA>(
       R_abcd(tensorindex_a, tensorindex_b, tensorindex_c, tensorindex_d));
+
+  const size_t dim_a = tmpl::at_c<RhsTensorIndexTypeList, 0>::dim;
+  const size_t dim_b = tmpl::at_c<RhsTensorIndexTypeList, 1>::dim;
+  const size_t dim_c = tmpl::at_c<RhsTensorIndexTypeList, 2>::dim;
+  const size_t dim_d = tmpl::at_c<RhsTensorIndexTypeList, 3>::dim;
 
   for (size_t i = 0; i < dim_a; ++i) {
     for (size_t j = 0; j < dim_b; ++j) {
