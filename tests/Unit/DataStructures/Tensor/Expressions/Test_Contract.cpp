@@ -22,7 +22,8 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
       Aul{};
   std::iota(Aul.begin(), Aul.end(), 0.0);
 
-  auto Ii_contracted = TensorExpressions::evaluate(Aul(ti_I, ti_i));
+  const Tensor<double> Ii_contracted =
+      TensorExpressions::evaluate(Aul(ti_I, ti_i));
 
   double expected_Ii_sum = 0.0;
   for (size_t i = 0; i < 3; i++) {
@@ -37,7 +38,8 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
       Alu{};
   std::iota(Alu.begin(), Alu.end(), 0.0);
 
-  auto gG_contracted = TensorExpressions::evaluate(Alu(ti_g, ti_G));
+  const Tensor<double> gG_contracted =
+      TensorExpressions::evaluate(Alu(ti_g, ti_G));
 
   double expected_gG_sum = 0.0;
   for (size_t g = 0; g < 4; g++) {
@@ -54,8 +56,10 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
       Aull{};
   std::iota(Aull.begin(), Aull.end(), 0.0);
 
-  auto Iij_contracted =
-      TensorExpressions::evaluate<ti_j_t>(Aull(ti_I, ti_i, ti_j));
+  const Tensor<double, Symmetry<1>,
+               index_list<SpatialIndex<4, UpLo::Lo, Frame::Grid>>>
+      Iij_contracted =
+          TensorExpressions::evaluate<ti_j_t>(Aull(ti_I, ti_i, ti_j));
 
   for (size_t j = 0; j < 4; j++) {
     double expected_sum = 0.0;
@@ -74,8 +78,10 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
       Auul{};
   std::iota(Auul.begin(), Auul.end(), 0.0);
 
-  auto JLj_contracted =
-      TensorExpressions::evaluate<ti_L_t>(Auul(ti_J, ti_L, ti_j));
+  const Tensor<double, Symmetry<1>,
+               index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>>>
+      JLj_contracted =
+          TensorExpressions::evaluate<ti_L_t>(Auul(ti_J, ti_L, ti_j));
 
   for (size_t l = 0; l < 3; l++) {
     double expected_sum = 0.0;
@@ -94,8 +100,10 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
       Aulu{};
   std::iota(Aulu.begin(), Aulu.end(), 0.0);
 
-  auto BfF_contracted =
-      TensorExpressions::evaluate<ti_B_t>(Aulu(ti_B, ti_f, ti_F));
+  const Tensor<double, Symmetry<1>,
+               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      BfF_contracted =
+          TensorExpressions::evaluate<ti_B_t>(Aulu(ti_B, ti_f, ti_F));
 
   for (size_t b = 0; b < 4; b++) {
     double expected_sum = 0.0;
@@ -115,8 +123,11 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
       Aluul{};
   std::iota(Aluul.begin(), Aluul.end(), 0.0);
 
-  auto iIKj_contracted = TensorExpressions::evaluate<ti_K_t, ti_j_t>(
-      Aluul(ti_i, ti_I, ti_K, ti_j));
+  const Tensor<double, Symmetry<2, 1>,
+               index_list<SpatialIndex<4, UpLo::Up, Frame::Inertial>,
+                          SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
+      iIKj_contracted = TensorExpressions::evaluate<ti_K_t, ti_j_t>(
+          Aluul(ti_i, ti_I, ti_K, ti_j));
 
   for (size_t k = 0; k < 4; k++) {
     for (size_t j = 0; j < 3; j++) {
@@ -138,8 +149,11 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
       Auull{};
   std::iota(Auull.begin(), Auull.end(), 0.0);
 
-  auto ABac_contracted = TensorExpressions::evaluate<ti_B_t, ti_c_t>(
-      Auull(ti_A, ti_B, ti_a, ti_c));
+  const Tensor<double, Symmetry<2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                          SpacetimeIndex<4, UpLo::Lo, Frame::Grid>>>
+      ABac_contracted = TensorExpressions::evaluate<ti_B_t, ti_c_t>(
+          Auull(ti_A, ti_B, ti_a, ti_c));
 
   for (size_t b = 0; b < 4; b++) {
     for (size_t c = 0; c < 5; c++) {
@@ -161,8 +175,11 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
       Auuul{};
   std::iota(Auuul.begin(), Auuul.end(), 0.0);
 
-  auto LJIl_contracted = TensorExpressions::evaluate<ti_J_t, ti_I_t>(
-      Auuul(ti_L, ti_J, ti_I, ti_l));
+  const Tensor<double, Symmetry<2, 1>,
+               index_list<SpatialIndex<4, UpLo::Up, Frame::Grid>,
+                          SpatialIndex<3, UpLo::Up, Frame::Grid>>>
+      LJIl_contracted = TensorExpressions::evaluate<ti_J_t, ti_I_t>(
+          Auuul(ti_L, ti_J, ti_I, ti_l));
 
   for (size_t j = 0; j < 4; j++) {
     for (size_t i = 0; i < 3; i++) {
@@ -184,8 +201,11 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
       Auulu{};
   std::iota(Auulu.begin(), Auulu.end(), 0.0);
 
-  auto EDdA_contracted = TensorExpressions::evaluate<ti_E_t, ti_A_t>(
-      Auulu(ti_E, ti_D, ti_d, ti_A));
+  const Tensor<double, Symmetry<1, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+      EDdA_contracted = TensorExpressions::evaluate<ti_E_t, ti_A_t>(
+          Auulu(ti_E, ti_D, ti_d, ti_A));
 
   for (size_t e = 0; e < 4; e++) {
     for (size_t a = 0; a < 4; a++) {
@@ -207,8 +227,11 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
       Alull{};
   std::iota(Alull.begin(), Alull.end(), 0.0);
 
-  auto kJij_contracted = TensorExpressions::evaluate<ti_k_t, ti_i_t>(
-      Alull(ti_k, ti_J, ti_i, ti_j));
+  const Tensor<double, Symmetry<2, 1>,
+               index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+      kJij_contracted = TensorExpressions::evaluate<ti_k_t, ti_i_t>(
+          Alull(ti_k, ti_J, ti_i, ti_j));
 
   for (size_t k = 0; k < 3; k++) {
     for (size_t i = 0; i < 4; i++) {
@@ -230,8 +253,11 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
       Aullu{};
   std::iota(Aullu.begin(), Aullu.end(), 0.0);
 
-  auto FcgG_contracted = TensorExpressions::evaluate<ti_F_t, ti_c_t>(
-      Aullu(ti_F, ti_c, ti_g, ti_G));
+  const Tensor<double, Symmetry<2, 1>,
+               index_list<SpacetimeIndex<4, UpLo::Up, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+      FcgG_contracted = TensorExpressions::evaluate<ti_F_t, ti_c_t>(
+          Aullu(ti_F, ti_c, ti_g, ti_G));
 
   for (size_t f = 0; f < 5; f++) {
     for (size_t c = 0; c < 4; c++) {
@@ -253,8 +279,11 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
       Aulll{};
   std::iota(Aulll.begin(), Aulll.end(), 0.0);
 
-  auto Adba_contracted_to_bd = TensorExpressions::evaluate<ti_b_t, ti_d_t>(
-      Aulll(ti_A, ti_d, ti_b, ti_a));
+  const Tensor<double, Symmetry<1, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      Adba_contracted_to_bd = TensorExpressions::evaluate<ti_b_t, ti_d_t>(
+          Aulll(ti_A, ti_d, ti_b, ti_a));
 
   for (size_t b = 0; b < 4; b++) {
     for (size_t d = 0; d < 4; d++) {
@@ -276,8 +305,11 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
       Allul{};
   std::iota(Allul.begin(), Allul.end(), 0.0);
 
-  auto ljJi_contracted_to_il = TensorExpressions::evaluate<ti_i_t, ti_l_t>(
-      Allul(ti_l, ti_j, ti_J, ti_i));
+  const Tensor<double, Symmetry<2, 1>,
+               index_list<SpatialIndex<4, UpLo::Lo, Frame::Grid>,
+                          SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
+      ljJi_contracted_to_il = TensorExpressions::evaluate<ti_i_t, ti_l_t>(
+          Allul(ti_l, ti_j, ti_J, ti_i));
 
   for (size_t i = 0; i < 4; i++) {
     for (size_t l = 0; l < 3; l++) {
@@ -299,7 +331,7 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
       Aulul{};
   std::iota(Aulul.begin(), Aulul.end(), 0.0);
 
-  auto KkLl_contracted =
+  const Tensor<double> KkLl_contracted =
       TensorExpressions::evaluate(Aulul(ti_K, ti_k, ti_L, ti_l));
 
   double expected_KkLl_sum = 0.0;
@@ -320,7 +352,7 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
       Bluul{};
   std::iota(Bluul.begin(), Bluul.end(), 0.0);
 
-  auto cACa_contracted =
+  const Tensor<double> cACa_contracted =
       TensorExpressions::evaluate(Bluul(ti_c, ti_A, ti_C, ti_a));
 
   double expected_cACa_sum = 0.0;
@@ -341,7 +373,7 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
       Alulu{};
   std::iota(Alulu.begin(), Alulu.end(), 0.0);
 
-  auto jIiJ_contracted =
+  const Tensor<double> jIiJ_contracted =
       TensorExpressions::evaluate(Alulu(ti_j, ti_I, ti_i, ti_J));
 
   double expected_jIiJ_sum = 0.0;
