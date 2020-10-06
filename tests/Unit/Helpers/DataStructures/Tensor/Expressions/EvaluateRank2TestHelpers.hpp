@@ -13,7 +13,8 @@
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/TMPL.hpp"
 
-namespace TestHelpers::TensorExpressions {
+namespace TestHelpers {
+namespace TensorExpressions {
 
 /// \ingroup TestingFrameworkGroup
 /// \brief Test that evaluating a right hand side tensor expression containing a
@@ -150,4 +151,5 @@ void test_evaluate_rank_2_symmetric(
 #undef DIM
 }
 
-}  // namespace TestHelpers::TensorExpressions
+}  // namespace TensorExpressions
+}  // namespace TestHelpers
