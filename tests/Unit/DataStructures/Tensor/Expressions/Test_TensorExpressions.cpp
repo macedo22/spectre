@@ -107,15 +107,15 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Evaluate",
 
   // Rank 2: double; symmetric; spacetime
   TestHelpers::TensorExpressions::test_evaluate_rank_2_symmetric<
-      double, SpacetimeIndex, SpacetimeIndex, UpLo::Lo, UpLo::Lo>(ti_a, ti_d);
+      double, SpacetimeIndex, UpLo::Lo>(ti_a, ti_d);
   TestHelpers::TensorExpressions::test_evaluate_rank_2_symmetric<
-      double, SpacetimeIndex, SpacetimeIndex, UpLo::Up, UpLo::Up>(ti_G, ti_B);
+      double, SpacetimeIndex, UpLo::Up>(ti_G, ti_B);
 
   // Rank 2: double; symmetric; spatial
   TestHelpers::TensorExpressions::test_evaluate_rank_2_symmetric<
-      double, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Lo>(ti_j, ti_i);
+      double, SpatialIndex, UpLo::Lo>(ti_j, ti_i);
   TestHelpers::TensorExpressions::test_evaluate_rank_2_symmetric<
-      double, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Up>(ti_I, ti_J);
+      double, SpatialIndex, UpLo::Up>(ti_I, ti_J);
 
   // Rank 2: DataVector; nonsymmetric
   TestHelpers::TensorExpressions::test_evaluate_rank_2_no_symmetry<
@@ -124,7 +124,7 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Evaluate",
 
   // Rank 2: DataVector; symmetric
   TestHelpers::TensorExpressions::test_evaluate_rank_2_symmetric<
-      DataVector, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Lo>(ti_j, ti_i);
+      DataVector, SpatialIndex, UpLo::Lo>(ti_j, ti_i);
 
   // Rank 3: double; nonsymmetric
   TestHelpers::TensorExpressions::test_evaluate_rank_3_no_symmetry<
@@ -133,23 +133,22 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Evaluate",
 
   // Rank 3: double; first and second indices symmetric
   TestHelpers::TensorExpressions::test_evaluate_rank_3_ab_symmetry<
-      double, SpacetimeIndex, SpacetimeIndex, SpacetimeIndex, UpLo::Lo,
-      UpLo::Lo, UpLo::Up>(ti_b, ti_a, ti_C);
+      double, SpacetimeIndex, SpacetimeIndex, UpLo::Lo, UpLo::Up>(ti_b, ti_a,
+                                                                  ti_C);
 
   // Rank 3: double; first and third indices symmetric
   TestHelpers::TensorExpressions::test_evaluate_rank_3_ac_symmetry<
-      double, SpatialIndex, SpacetimeIndex, SpatialIndex, UpLo::Lo, UpLo::Lo,
-      UpLo::Lo>(ti_i, ti_f, ti_j);
+      double, SpatialIndex, SpacetimeIndex, UpLo::Lo, UpLo::Lo>(ti_i, ti_f,
+                                                                ti_j);
 
   // Rank 3: double; second and third indices symmetric
   TestHelpers::TensorExpressions::test_evaluate_rank_3_bc_symmetry<
-      double, SpacetimeIndex, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Up,
-      UpLo::Up>(ti_d, ti_J, ti_I);
+      double, SpacetimeIndex, SpatialIndex, UpLo::Lo, UpLo::Up>(ti_d, ti_J,
+                                                                ti_I);
 
   // Rank 3: double; symmetric
   TestHelpers::TensorExpressions::test_evaluate_rank_3_abc_symmetry<
-      double, SpacetimeIndex, SpacetimeIndex, SpacetimeIndex, UpLo::Lo,
-      UpLo::Lo, UpLo::Lo>(ti_f, ti_d, ti_a);
+      double, SpacetimeIndex, UpLo::Lo>(ti_f, ti_d, ti_a);
 
   // Rank 3: DataVector; nonsymmetric
   TestHelpers::TensorExpressions::test_evaluate_rank_3_no_symmetry<
@@ -158,23 +157,22 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Evaluate",
 
   // Rank 3: DataVector; first and second indices symmetric
   TestHelpers::TensorExpressions::test_evaluate_rank_3_ab_symmetry<
-      DataVector, SpacetimeIndex, SpacetimeIndex, SpacetimeIndex, UpLo::Lo,
-      UpLo::Lo, UpLo::Up>(ti_b, ti_a, ti_C);
+      DataVector, SpacetimeIndex, SpacetimeIndex, UpLo::Lo, UpLo::Up>(
+      ti_b, ti_a, ti_C);
 
   // Rank 3: DataVector; first and third indices symmetric
   TestHelpers::TensorExpressions::test_evaluate_rank_3_ac_symmetry<
-      DataVector, SpatialIndex, SpacetimeIndex, SpatialIndex, UpLo::Lo,
-      UpLo::Lo, UpLo::Lo>(ti_i, ti_f, ti_j);
+      DataVector, SpatialIndex, SpacetimeIndex, UpLo::Lo, UpLo::Lo>(ti_i, ti_f,
+                                                                    ti_j);
 
   // Rank 3: DataVector; second and third indices symmetric
   TestHelpers::TensorExpressions::test_evaluate_rank_3_bc_symmetry<
-      DataVector, SpacetimeIndex, SpatialIndex, SpatialIndex, UpLo::Lo,
-      UpLo::Up, UpLo::Up>(ti_d, ti_J, ti_I);
+      DataVector, SpacetimeIndex, SpatialIndex, UpLo::Lo, UpLo::Up>(ti_d, ti_J,
+                                                                    ti_I);
 
   // Rank 3: DataVector; symmetric
   TestHelpers::TensorExpressions::test_evaluate_rank_3_abc_symmetry<
-      DataVector, SpacetimeIndex, SpacetimeIndex, SpacetimeIndex, UpLo::Lo,
-      UpLo::Lo, UpLo::Lo>(ti_f, ti_d, ti_a);
+      DataVector, SpacetimeIndex, UpLo::Lo>(ti_f, ti_d, ti_a);
 
   // Rank 4: double; nonsymmetric
   TestHelpers::TensorExpressions::test_evaluate_rank_4<
