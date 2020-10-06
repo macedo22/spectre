@@ -128,131 +128,45 @@ struct PrintMinimumGridSpacing {
 };
 }  // namespace Actions
 
-template <size_t Dim, typename Metavars>
+template <typename Metavariables>
 struct SingletonParallelComponent {
   using chare_type = Parallel::Algorithms::Singleton;
   using const_global_cache_tag_list = tmpl::list<>;
-  using metavariables = Metavars;
-  using phase_dependent_action_list = tmpl::list<Parallel::PhaseActions<
-      typename Metavars::Phase, Metavars::Phase::Initialization, tmpl::list<>>>;
+  using metavariables = Metavariables;
+  using phase_dependent_action_list =
+      tmpl::list<Parallel::PhaseActions<typename Metavariables::Phase,
+                                        Metavariables::Phase::Initialization,
+                                        tmpl::list<>>>;
   using initialization_tags = Parallel::get_initialization_tags<
       Parallel::get_initialization_actions_list<phase_dependent_action_list>>;
 
   static void execute_next_phase(
-      const typename Metavars::Phase /*next_phase*/,
-      const Parallel::CProxy_GlobalCache<Metavars>& /*global_cache*/) {}
+      const typename Metavariables::Phase /*next_phase*/,
+      const Parallel::CProxy_GlobalCache<Metavariables>& /*global_cache*/) {}
 };
 
-template <typename Metavars, typename PhaseDepActionList,
-          class ImportInitialData = ImportNoInitialData>
-struct ElementArray;
+template <size_t Dim>
+struct FindGlobalMinimumGridSpacing {
+  template <typename DbTagsList, typename... InboxTags, typename Metavariables,
+            typename ArrayIndex, typename ActionList,
+            typename ParallelComponent>
+  static std::tuple<db::DataBox<DbTagsList>&&> apply(
+      db::DataBox<DbTagsList>& box,
+      const tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
+      const Parallel::GlobalCache<Metavariables>& cache,
+      const ArrayIndex& array_index, const ActionList /*meta*/,
+      const ParallelComponent* const /*meta*/) {
+    const auto& my_proxy =
+        Parallel::get_parallel_component<ParallelComponent>(cache)[array_index];
+    const auto& singleton_proxy = Parallel::get_parallel_component<
+        SingletonParallelComponent<Metavariables>>(cache);
 
-template <size_t Dim, typename PhaseDepActionList, class ImportInitialData>
-struct ArrayReduce {
-  template <typename ParallelComponent, typename DbTags, typename Metavars,
-            typename ArrayIndex>
-  static void apply(const db::DataBox<DbTags>& box,
-                    const Parallel::GlobalCache<Metavars>& cache,
-                    const ArrayIndex& array_index) noexcept {
-    if constexpr (db::tag_is_retrievable_v<
-                      domain::Tags::MinimumGridSpacing<Dim, Frame::Inertial>,
-                      db::DataBox<DbTags>>) {
-      static_assert(
-          std::is_same_v<
-              ParallelComponent,
-              ElementArray<Metavars, PhaseDepActionList, ImportInitialData>>,
-          "The ParallelComponent is not deduced to be the right type");
-
-      const auto& my_proxy = Parallel::get_parallel_component<
-          ElementArray<Metavars, PhaseDepActionList, ImportInitialData>>(
-          cache)[array_index];
-      const auto& singleton_proxy = Parallel::get_parallel_component<
-          SingletonParallelComponent<Dim, Metavars>>(cache);
-
-      Parallel::ReductionData<Parallel::ReductionDatum<double, funcl::Min<>>>
-          elemental_min_grid_spacing{
-              get<domain::Tags::MinimumGridSpacing<Dim, Frame::Inertial>>(box)};
-      Parallel::contribute_to_reduction<Actions::PrintMinimumGridSpacing>(
-          elemental_min_grid_spacing, my_proxy, singleton_proxy);
-
-    } else {
-      ERROR(
-          "You're missing the domain::Tags::MinimumGridSpacing<Dim, "
-          "Frame::Inertial> in the DataBox.");
-    }
-  }
-};
-
-template <typename Metavars, typename PhaseDepActionList,
-          class ImportInitialData>
-struct ElementArray
-    : public DgElementArray<Metavars, PhaseDepActionList, ImportInitialData> {
-  using base_type =
-      DgElementArray<Metavars, PhaseDepActionList, ImportInitialData>;
-  using elemental_min_grid_spacing = double;
-  static constexpr size_t volume_dim = base_type::volume_dim;
-
-  using const_global_cache_tags =
-      tmpl::list<domain::Tags::Domain<volume_dim>,
-                 typename DgElementArray_detail::import_numeric_data_cache_tags<
-                     ElementArray, ImportInitialData>::type>;
-
-  static void allocate_array(
-      Parallel::CProxy_GlobalCache<Metavars>& global_cache,
-      const tuples::tagged_tuple_from_typelist<
-          typename base_type::initialization_tags>&
-          initialization_items) noexcept {
-    auto& local_cache = *(global_cache.ckLocalBranch());
-    auto& dg_element_array =
-        Parallel::get_parallel_component<ElementArray>(local_cache);
-    const auto& domain =
-        Parallel::get<domain::Tags::Domain<volume_dim>>(local_cache);
-    const auto& initial_refinement_levels =
-        get<domain::Tags::InitialRefinementLevels<volume_dim>>(
-            initialization_items);
-    int which_proc = 0;
-    for (const auto& block : domain.blocks()) {
-      const auto initial_ref_levs = initial_refinement_levels[block.id()];
-      const std::vector<ElementId<volume_dim>> element_ids =
-          initial_element_ids(block.id(), initial_ref_levs);
-      const int number_of_procs = Parallel::number_of_procs();
-      for (size_t i = 0; i < element_ids.size(); ++i) {
-        dg_element_array(ElementId<volume_dim>(element_ids[i]))
-            .insert(global_cache, initialization_items, which_proc);
-        which_proc = which_proc + 1 == number_of_procs ? 0 : which_proc + 1;
-      }
-    }
-    dg_element_array.doneInserting();
-  }
-
-  static void execute_next_phase(
-      const typename Metavars::Phase next_phase,
-      Parallel::CProxy_GlobalCache<Metavars>& global_cache) noexcept {
-    auto& local_cache = *(global_cache.ckLocalBranch());
-    auto& element_array =
-        Parallel::get_parallel_component<ElementArray>(local_cache);
-    if (next_phase == Metavars::Phase::CallArrayReduce) {
-      Parallel::simple_action<
-          ArrayReduce<volume_dim, PhaseDepActionList, ImportInitialData>>(
-          element_array);
-    } else {
-      element_array.start_phase(next_phase);
-    }
-
-    if constexpr (not std::is_same_v<ImportInitialData, ImportNoInitialData>) {
-      static_assert(
-          std::is_same_v<typename ImportInitialData::phase_type,
-                         typename Metavars::Phase>,
-          "Make sure the 'ImportNumericInitialData' type uses a 'Phase' "
-          "that is defined in the Metavariables.");
-      if (next_phase == ImportInitialData::import_phase) {
-        Parallel::threaded_action<
-            DgElementArray_detail::read_element_data_action<
-                ElementArray, typename ImportInitialData::initial_data>>(
-            Parallel::get_parallel_component<
-                importers::VolumeDataReader<Metavars>>(local_cache));
-      }
-    }
+    Parallel::ReductionData<Parallel::ReductionDatum<double, funcl::Min<>>>
+        elemental_min_grid_spacing{
+            get<domain::Tags::MinimumGridSpacing<Dim, Frame::Inertial>>(box)};
+    Parallel::contribute_to_reduction<Actions::PrintMinimumGridSpacing>(
+        elemental_min_grid_spacing, my_proxy, singleton_proxy);
+    return std::forward_as_tuple(std::move(box));
   }
 };
 
@@ -275,16 +189,10 @@ struct Metavariables {
       "diagnostic of Domain quality: values far from unity indicate "
       "compression or expansion of the grid."};
 
-  enum class Phase {
-    Initialization,
-    RegisterWithObserver,
-    Export,
-    CallArrayReduce,
-    Exit
-  };
+  enum class Phase { Initialization, RegisterWithObserver, Export, Exit };
 
   using component_list = tmpl::list<
-      ElementArray<
+      DgElementArray<
           Metavariables,
           tmpl::list<
               Parallel::PhaseActions<
@@ -308,10 +216,11 @@ struct Metavariables {
                   typename Metavariables::Phase, Metavariables::Phase::Export,
                   tmpl::list<Actions::AdvanceTime,
                              Actions::ExportCoordinates<Dim>,
-                             Actions::RunEventsAndTriggers>>>>,
+                             Actions::RunEventsAndTriggers,
+                             FindGlobalMinimumGridSpacing<Dim>>>>>,
       observers::Observer<Metavariables>,
       observers::ObserverWriter<Metavariables>,
-      SingletonParallelComponent<Dim, Metavariables>>;
+      SingletonParallelComponent<Metavariables>>;
 
   using observed_reduction_data_tags = tmpl::list<>;
 
@@ -325,8 +234,6 @@ struct Metavariables {
       case Phase::RegisterWithObserver:
         return Phase::Export;
       case Phase::Export:
-        return Phase::CallArrayReduce;
-      case Phase::CallArrayReduce:
         return Phase::Exit;
       case Phase::Exit:
         ERROR(
