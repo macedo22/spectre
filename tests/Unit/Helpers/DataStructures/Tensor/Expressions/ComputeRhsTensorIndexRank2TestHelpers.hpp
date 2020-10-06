@@ -71,13 +71,23 @@ void test_compute_rhs_tensor_index_rank_2_impl(
 /// \ingroup TestingFrameworkGroup
 /// \brief Iterate testing of computing the RHS tensor multi-index equivalent of
 /// the LHS tensor multi-index with rank 2 Tensors on multiple Frame types and
-/// dimension combinations for nonsymmetric indices
+/// dimension combinations
+///
+/// We test nonsymmetric indices and symmetric indices across two functions to
+/// ensure that the code works correctly with symmetries. This function tests
+/// one of the following symmetries:
+/// - <2, 1> (`test_compute_rhs_tensor_index_rank_2_no_symmetry`)
+/// - <1, 1> (`test_compute_rhs_tensor_index_rank_2_symmetric`)
 ///
 /// \details `TensorIndexA` and `TensorIndexB` can be any type of TensorIndex
 /// and are not necessarily `ti_a_t` and `ti_b_t`. The "A" and "B" suffixes just
 /// denote the ordering of the generic indices of the RHS tensor expression. In
 /// the RHS tensor expression, it means `TensorIndexA` is the first index used
 /// and `TensorIndexB` is the second index used.
+///
+/// Note: `test_compute_rhs_tensor_index_rank_2_symmetric` has fewer template
+/// parameters due to the two indices having a shared \ref SpacetimeIndex
+/// "TensorIndexType" and and valence
 ///
 /// \tparam DataType the type of data being stored in the Tensors
 /// \tparam TensorIndexTypeA the \ref SpacetimeIndex "TensorIndexType" of the
@@ -121,20 +131,19 @@ void test_compute_rhs_tensor_index_rank_2_no_symmetry(
 
 /// \copydoc test_compute_rhs_tensor_index_rank_2_no_symmetry()
 template <
-    typename DataType, template <size_t, UpLo, typename> class TensorIndexTypeA,
-    template <size_t, UpLo, typename> class TensorIndexTypeB, UpLo ValenceA,
-    UpLo ValenceB, typename TensorIndexA, typename TensorIndexB>
+    typename DataType, template <size_t, UpLo, typename> class TensorIndexType,
+    UpLo Valence, typename TensorIndexA, typename TensorIndexB>
 void test_compute_rhs_tensor_index_rank_2_symmetric(
     const TensorIndexA& tensorindex_a,
     const TensorIndexB& tensorindex_b) noexcept {
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(1, data)
 
-#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_2_IMPL(_, data)       \
-  test_compute_rhs_tensor_index_rank_2_impl<                          \
-      DataType, Symmetry<1, 1>,                                       \
-      index_list<TensorIndexTypeA<DIM(data), ValenceA, FRAME(data)>,  \
-                 TensorIndexTypeB<DIM(data), ValenceB, FRAME(data)>>, \
+#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_2_IMPL(_, data)     \
+  test_compute_rhs_tensor_index_rank_2_impl<                        \
+      DataType, Symmetry<1, 1>,                                     \
+      index_list<TensorIndexType<DIM(data), Valence, FRAME(data)>,  \
+                 TensorIndexType<DIM(data), Valence, FRAME(data)>>, \
       TensorIndexA, TensorIndexB>(tensorindex_a, tensorindex_b);
 
   GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_2_IMPL,

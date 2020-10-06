@@ -104,12 +104,25 @@ void test_compute_rhs_tensor_index_rank_3_impl(
 /// the LHS tensor multi-index with rank 3 Tensors on multiple Frame types and
 /// dimension combinations for nonsymmetric indices
 ///
+/// We test various different symmetries across several functions to ensure that
+/// the code works correctly with symmetries. This function tests one of the
+/// following symmetries:
+/// - <3, 2, 1> (`test_compute_rhs_tensor_index_rank_3_no_symmetry`)
+/// - <2, 2, 1> (`test_compute_rhs_tensor_index_rank_3_ab_symmetry`)
+/// - <2, 1, 2> (`test_compute_rhs_tensor_index_rank_3_ac_symmetry`)
+/// - <2, 1, 1> (`test_compute_rhs_tensor_index_rank_3_bc_symmetry`)
+/// - <1, 1, 1> (`test_compute_rhs_tensor_index_rank_3_abc_symmetry`)
+///
 /// \details `TensorIndexA`, `TensorIndexB`, and `TensorIndexC` can be any type
 /// of TensorIndex and are not necessarily `ti_a_t`, `ti_b_t`, and `ti_c_t`. The
 /// "A", "B", and "C" suffixes just denote the ordering of the generic indices
 /// of the RHS tensor expression. In the RHS tensor expression, it means
 /// `TensorIndexA` is the first index used, `TensorIndexB` is the second index
-/// used, and `TensorIndexC` is the third index used..
+/// used, and `TensorIndexC` is the third index used.
+///
+/// Note: the functions dealing with symmetric indices have fewer template
+/// parameters due to the indices having a shared \ref SpacetimeIndex
+/// "TensorIndexType" and valence
 ///
 /// \tparam DataType the type of data being stored in the Tensors
 /// \tparam TensorIndexTypeA the \ref SpacetimeIndex "TensorIndexType" of the
@@ -165,10 +178,9 @@ void test_compute_rhs_tensor_index_rank_3_no_symmetry(
 
 /// \copydoc test_compute_rhs_tensor_index_rank_3_no_symmetry()
 template <typename DataType,
-          template <size_t, UpLo, typename> class TensorIndexTypeA,
-          template <size_t, UpLo, typename> class TensorIndexTypeB,
+          template <size_t, UpLo, typename> class TensorIndexTypeAB,
           template <size_t, UpLo, typename> class TensorIndexTypeC,
-          UpLo ValenceA, UpLo ValenceB, UpLo ValenceC, typename TensorIndexA,
+          UpLo ValenceAB, UpLo ValenceC, typename TensorIndexA,
           typename TensorIndexB, typename TensorIndexC>
 void test_compute_rhs_tensor_index_rank_3_ab_symmetry(
     const TensorIndexA& tensorindex_a, const TensorIndexB& tensorindex_b,
@@ -177,12 +189,12 @@ void test_compute_rhs_tensor_index_rank_3_ab_symmetry(
 #define DIM_C(data) BOOST_PP_TUPLE_ELEM(1, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(2, data)
 
-#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL(_, data)          \
-  test_compute_rhs_tensor_index_rank_3_impl<                             \
-      DataType, Symmetry<2, 2, 1>,                                       \
-      index_list<TensorIndexTypeA<DIM_AB(data), ValenceA, FRAME(data)>,  \
-                 TensorIndexTypeB<DIM_AB(data), ValenceB, FRAME(data)>,  \
-                 TensorIndexTypeC<DIM_C(data), ValenceC, FRAME(data)>>>( \
+#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL(_, data)            \
+  test_compute_rhs_tensor_index_rank_3_impl<                               \
+      DataType, Symmetry<2, 2, 1>,                                         \
+      index_list<TensorIndexTypeAB<DIM_AB(data), ValenceAB, FRAME(data)>,  \
+                 TensorIndexTypeAB<DIM_AB(data), ValenceAB, FRAME(data)>,  \
+                 TensorIndexTypeC<DIM_C(data), ValenceC, FRAME(data)>>>(   \
       tensorindex_a, tensorindex_b, tensorindex_c);
 
   GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL,
@@ -196,10 +208,9 @@ void test_compute_rhs_tensor_index_rank_3_ab_symmetry(
 
 /// \copydoc test_compute_rhs_tensor_index_rank_3_no_symmetry()
 template <typename DataType,
-          template <size_t, UpLo, typename> class TensorIndexTypeA,
+          template <size_t, UpLo, typename> class TensorIndexTypeAC,
           template <size_t, UpLo, typename> class TensorIndexTypeB,
-          template <size_t, UpLo, typename> class TensorIndexTypeC,
-          UpLo ValenceA, UpLo ValenceB, UpLo ValenceC, typename TensorIndexA,
+          UpLo ValenceAC, UpLo ValenceB, typename TensorIndexA,
           typename TensorIndexB, typename TensorIndexC>
 void test_compute_rhs_tensor_index_rank_3_ac_symmetry(
     const TensorIndexA& tensorindex_a, const TensorIndexB& tensorindex_b,
@@ -208,12 +219,12 @@ void test_compute_rhs_tensor_index_rank_3_ac_symmetry(
 #define DIM_B(data) BOOST_PP_TUPLE_ELEM(1, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(2, data)
 
-#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL(_, data)           \
-  test_compute_rhs_tensor_index_rank_3_impl<                              \
-      DataType, Symmetry<2, 1, 2>,                                        \
-      index_list<TensorIndexTypeA<DIM_AC(data), ValenceA, FRAME(data)>,   \
-                 TensorIndexTypeB<DIM_B(data), ValenceB, FRAME(data)>,    \
-                 TensorIndexTypeC<DIM_AC(data), ValenceC, FRAME(data)>>>( \
+#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL(_, data)             \
+  test_compute_rhs_tensor_index_rank_3_impl<                                \
+      DataType, Symmetry<2, 1, 2>,                                          \
+      index_list<TensorIndexTypeAC<DIM_AC(data), ValenceAC, FRAME(data)>,   \
+                 TensorIndexTypeB<DIM_B(data), ValenceB, FRAME(data)>,      \
+                 TensorIndexTypeAC<DIM_AC(data), ValenceAC, FRAME(data)>>>( \
       tensorindex_a, tensorindex_b, tensorindex_c);
 
   GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL,
@@ -228,9 +239,8 @@ void test_compute_rhs_tensor_index_rank_3_ac_symmetry(
 /// \copydoc test_compute_rhs_tensor_index_rank_3_no_symmetry()
 template <typename DataType,
           template <size_t, UpLo, typename> class TensorIndexTypeA,
-          template <size_t, UpLo, typename> class TensorIndexTypeB,
-          template <size_t, UpLo, typename> class TensorIndexTypeC,
-          UpLo ValenceA, UpLo ValenceB, UpLo ValenceC, typename TensorIndexA,
+          template <size_t, UpLo, typename> class TensorIndexTypeBC,
+          UpLo ValenceA, UpLo ValenceBC, typename TensorIndexA,
           typename TensorIndexB, typename TensorIndexC>
 void test_compute_rhs_tensor_index_rank_3_bc_symmetry(
     const TensorIndexA& tensorindex_a, const TensorIndexB& tensorindex_b,
@@ -239,12 +249,12 @@ void test_compute_rhs_tensor_index_rank_3_bc_symmetry(
 #define DIM_BC(data) BOOST_PP_TUPLE_ELEM(1, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(2, data)
 
-#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL(_, data)           \
-  test_compute_rhs_tensor_index_rank_3_impl<                              \
-      DataType, Symmetry<2, 1, 1>,                                        \
-      index_list<TensorIndexTypeA<DIM_A(data), ValenceA, FRAME(data)>,    \
-                 TensorIndexTypeB<DIM_BC(data), ValenceB, FRAME(data)>,   \
-                 TensorIndexTypeC<DIM_BC(data), ValenceC, FRAME(data)>>>( \
+#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL(_, data)             \
+  test_compute_rhs_tensor_index_rank_3_impl<                                \
+      DataType, Symmetry<2, 1, 1>,                                          \
+      index_list<TensorIndexTypeA<DIM_A(data), ValenceA, FRAME(data)>,      \
+                 TensorIndexTypeBC<DIM_BC(data), ValenceBC, FRAME(data)>,   \
+                 TensorIndexTypeBC<DIM_BC(data), ValenceBC, FRAME(data)>>>( \
       tensorindex_a, tensorindex_b, tensorindex_c);
 
   GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL,
@@ -258,23 +268,20 @@ void test_compute_rhs_tensor_index_rank_3_bc_symmetry(
 
 /// \copydoc test_compute_rhs_tensor_index_rank_3_no_symmetry()
 template <typename DataType,
-          template <size_t, UpLo, typename> class TensorIndexTypeA,
-          template <size_t, UpLo, typename> class TensorIndexTypeB,
-          template <size_t, UpLo, typename> class TensorIndexTypeC,
-          UpLo ValenceA, UpLo ValenceB, UpLo ValenceC, typename TensorIndexA,
-          typename TensorIndexB, typename TensorIndexC>
+          template <size_t, UpLo, typename> class TensorIndexType, UpLo Valence,
+          typename TensorIndexA, typename TensorIndexB, typename TensorIndexC>
 void test_compute_rhs_tensor_index_rank_3_abc_symmetry(
     const TensorIndexA& tensorindex_a, const TensorIndexB& tensorindex_b,
     const TensorIndexC& tensorindex_c) noexcept {
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(1, data)
 
-#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL(_, data)        \
-  test_compute_rhs_tensor_index_rank_3_impl<                           \
-      DataType, Symmetry<1, 1, 1>,                                     \
-      index_list<TensorIndexTypeA<DIM(data), ValenceA, FRAME(data)>,   \
-                 TensorIndexTypeB<DIM(data), ValenceB, FRAME(data)>,   \
-                 TensorIndexTypeC<DIM(data), ValenceC, FRAME(data)>>>( \
+#define CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL(_, data)      \
+  test_compute_rhs_tensor_index_rank_3_impl<                         \
+      DataType, Symmetry<1, 1, 1>,                                   \
+      index_list<TensorIndexType<DIM(data), Valence, FRAME(data)>,   \
+                 TensorIndexType<DIM(data), Valence, FRAME(data)>,   \
+                 TensorIndexType<DIM(data), Valence, FRAME(data)>>>( \
       tensorindex_a, tensorindex_b, tensorindex_c);
 
   GENERATE_INSTANTIATIONS(CALL_TEST_COMPUTE_RHS_TENSOR_INDEX_RANK_3_IMPL,
