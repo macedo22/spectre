@@ -129,6 +129,7 @@ void test_compute_rhs_tensor_index_rank_2_no_symmetry(
 #undef DIM_A
 }
 
+/// \ingroup TestingFrameworkGroup
 /// \copydoc test_compute_rhs_tensor_index_rank_2_no_symmetry()
 template <
     typename DataType, template <size_t, UpLo, typename> class TensorIndexType,

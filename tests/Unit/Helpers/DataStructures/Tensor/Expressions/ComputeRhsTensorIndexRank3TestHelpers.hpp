@@ -176,6 +176,7 @@ void test_compute_rhs_tensor_index_rank_3_no_symmetry(
 #undef DIM_A
 }
 
+/// \ingroup TestingFrameworkGroup
 /// \copydoc test_compute_rhs_tensor_index_rank_3_no_symmetry()
 template <typename DataType,
           template <size_t, UpLo, typename> class TensorIndexTypeAB,
@@ -206,6 +207,7 @@ void test_compute_rhs_tensor_index_rank_3_ab_symmetry(
 #undef DIM_AB
 }
 
+/// \ingroup TestingFrameworkGroup
 /// \copydoc test_compute_rhs_tensor_index_rank_3_no_symmetry()
 template <typename DataType,
           template <size_t, UpLo, typename> class TensorIndexTypeAC,
@@ -236,6 +238,7 @@ void test_compute_rhs_tensor_index_rank_3_ac_symmetry(
 #undef DIM_AC
 }
 
+/// \ingroup TestingFrameworkGroup
 /// \copydoc test_compute_rhs_tensor_index_rank_3_no_symmetry()
 template <typename DataType,
           template <size_t, UpLo, typename> class TensorIndexTypeA,
@@ -266,6 +269,7 @@ void test_compute_rhs_tensor_index_rank_3_bc_symmetry(
 #undef DIM_A
 }
 
+/// \ingroup TestingFrameworkGroup
 /// \copydoc test_compute_rhs_tensor_index_rank_3_no_symmetry()
 template <typename DataType,
           template <size_t, UpLo, typename> class TensorIndexType, UpLo Valence,
