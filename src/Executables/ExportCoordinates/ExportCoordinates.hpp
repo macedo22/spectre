@@ -118,12 +118,15 @@ struct ExportCoordinates {
 struct PrintMinimumGridSpacing {
   template <typename ParallelComponent, typename DbTags, typename Metavariables,
             typename ArrayIndex>
-  static void apply(db::DataBox<DbTags>& /*box*/,
+  static void apply(db::DataBox<DbTags>& box,
                     const Parallel::CBase_GlobalCache<Metavariables>& /*cache*/,
                     const ArrayIndex& /*array_index*/,
-                    const double& overall_min_grid_spacing) noexcept {
-    printf("Overall inertial minimum grid spacing: %f\n\n",
-           overall_min_grid_spacing);
+                    const double& global_min_grid_spacing) noexcept {
+    //const double time = get<Tags::Time>(box);
+    //printf("Time: %f, Global inertial minimum grid spacing: %f\n", time,
+    //         global_min_grid_spacing);
+    printf("Global inertial minimum grid spacing: %f\n",
+           global_min_grid_spacing);
   }
 };
 }  // namespace Actions
@@ -156,6 +159,8 @@ struct FindGlobalMinimumGridSpacing {
       const Parallel::GlobalCache<Metavariables>& cache,
       const ArrayIndex& array_index, const ActionList /*meta*/,
       const ParallelComponent* const /*meta*/) {
+    const double time = get<Tags::Time>(box);
+    printf("Time: %f", time);
     const auto& my_proxy =
         Parallel::get_parallel_component<ParallelComponent>(cache)[array_index];
     const auto& singleton_proxy = Parallel::get_parallel_component<
