@@ -8,10 +8,27 @@
 #include <iterator>
 #include <numeric>
 
+#include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/Expressions/Contract.hpp"
 #include "DataStructures/Tensor/Expressions/Evaluate.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
+#include "Helpers/DataStructures/MakeWithRandomValues.hpp"
+#include "Utilities/Requires.hpp"
+#include "Utilities/TMPL.hpp"
+
+template <typename T,
+          Requires<std::is_same_v<typename T::type, DataVector>> = nullptr>
+void assign_unique_datavector_tensor_values(T& tensor) {
+  double value = 0.0;
+  for (auto index_it = tensor.begin(); index_it != tensor.end(); index_it++) {
+    for (auto vector_it = index_it->begin(); vector_it != index_it->end();
+         vector_it++) {
+      *vector_it = value;
+      value += 1.0;
+    }
+  }
+}
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
                   "[DataStructures][Unit]") {
@@ -21,54 +38,104 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
   Tensor<double, Symmetry<2, 1>,
          index_list<SpatialIndex<3, UpLo::Up, Frame::Inertial>,
                     SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
-      Aul{};
-  std::iota(Aul.begin(), Aul.end(), 0.0);
+      Rul{};
+  std::iota(Rul.begin(), Rul.end(), 0.0);
 
-  const Tensor<double> Ii_contracted =
-      TensorExpressions::evaluate(Aul(ti_I, ti_i));
+  const Tensor<double> RIi_contracted =
+      TensorExpressions::evaluate(Rul(ti_I, ti_i));
 
-  double expected_Ii_sum = 0.0;
+  double expected_RIi_sum = 0.0;
   for (size_t i = 0; i < 3; i++) {
-    expected_Ii_sum += Aul.get(i, i);
+    expected_RIi_sum += Rul.get(i, i);
   }
-  CHECK(Ii_contracted.get() == expected_Ii_sum);
+  CHECK(RIi_contracted.get() == expected_RIi_sum);
+
+  Tensor<DataVector, Symmetry<2, 1>,
+         index_list<SpatialIndex<3, UpLo::Up, Frame::Inertial>,
+                    SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
+      Sul(4_st);
+  assign_unique_datavector_tensor_values(Sul);
+
+  const Tensor<DataVector> SIi_contracted =
+      TensorExpressions::evaluate(Sul(ti_I, ti_i));
+
+  DataVector expected_SIi_sum(4, 0.0);
+  for (size_t i = 0; i < 3; i++) {
+    expected_SIi_sum += Sul.get(i, i);
+  }
+  CHECK(SIi_contracted.get() == expected_SIi_sum);
 
   // Contract rank 2 (lower, upper) tensor to rank 0 tensor
   Tensor<double, Symmetry<2, 1>,
          index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
                     SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
-      Alu{};
-  std::iota(Alu.begin(), Alu.end(), 0.0);
+      Rlu{};
+  std::iota(Rlu.begin(), Rlu.end(), 0.0);
 
-  const Tensor<double> gG_contracted =
-      TensorExpressions::evaluate(Alu(ti_g, ti_G));
+  const Tensor<double> RgG_contracted =
+      TensorExpressions::evaluate(Rlu(ti_g, ti_G));
 
-  double expected_gG_sum = 0.0;
+  double expected_RgG_sum = 0.0;
   for (size_t g = 0; g < 4; g++) {
-    expected_gG_sum += Alu.get(g, g);
+    expected_RgG_sum += Rlu.get(g, g);
   }
-  CHECK(gG_contracted.get() == expected_gG_sum);
+  CHECK(RgG_contracted.get() == expected_RgG_sum);
+
+  Tensor<DataVector, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+      Slu(2_st);
+  assign_unique_datavector_tensor_values(Slu);
+
+  const Tensor<DataVector> SgG_contracted =
+      TensorExpressions::evaluate(Slu(ti_g, ti_G));
+
+  DataVector expected_SgG_sum(2, 0.0);
+  for (size_t g = 0; g < 4; g++) {
+    expected_SgG_sum += Slu.get(g, g);
+  }
+  CHECK(SgG_contracted.get() == expected_SgG_sum);
 
   // Contract first and second indices of nonsymmetric rank 3 (upper, lower,
   // lower) tensor to rank 1 tensor
   Tensor<double, Symmetry<3, 2, 1>,
-         index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
-                    SpatialIndex<3, UpLo::Lo, Frame::Grid>,
+         index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpatialIndex<3, UpLo::Up, Frame::Grid>,
                     SpatialIndex<4, UpLo::Lo, Frame::Grid>>>
-      Aull{};
-  std::iota(Aull.begin(), Aull.end(), 0.0);
+      Rlul{};
+  std::iota(Rlul.begin(), Rlul.end(), 0.0);
 
   const Tensor<double, Symmetry<1>,
                index_list<SpatialIndex<4, UpLo::Lo, Frame::Grid>>>
-      Iij_contracted =
-          TensorExpressions::evaluate<ti_j_t>(Aull(ti_I, ti_i, ti_j));
+      RiIj_contracted =
+          TensorExpressions::evaluate<ti_j_t>(Rlul(ti_i, ti_I, ti_j));
 
   for (size_t j = 0; j < 4; j++) {
     double expected_sum = 0.0;
     for (size_t i = 0; i < 3; i++) {
-      expected_sum += Aull.get(i, i, j);
+      expected_sum += Rlul.get(i, i, j);
     }
-    CHECK(Iij_contracted.get(j) == expected_sum);
+    CHECK(RiIj_contracted.get(j) == expected_sum);
+  }
+
+  Tensor<DataVector, Symmetry<3, 2, 1>,
+         index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpatialIndex<3, UpLo::Up, Frame::Grid>,
+                    SpatialIndex<4, UpLo::Lo, Frame::Grid>>>
+      Slul(4_st);
+  assign_unique_datavector_tensor_values(Slul);
+
+  const Tensor<DataVector, Symmetry<1>,
+               index_list<SpatialIndex<4, UpLo::Lo, Frame::Grid>>>
+      SiIj_contracted =
+          TensorExpressions::evaluate<ti_j_t>(Slul(ti_i, ti_I, ti_j));
+
+  for (size_t j = 0; j < 4; j++) {
+    DataVector expected_sum(4, 0.0);
+    for (size_t i = 0; i < 3; i++) {
+      expected_sum += Slul.get(i, i, j);
+    }
+    CHECK(SiIj_contracted.get(j) == expected_sum);
   }
 
   // Contract first and third indices of <2, 2, 1> symmetry rank 3 (upper,
@@ -77,20 +144,40 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
          index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
                     SpatialIndex<3, UpLo::Up, Frame::Grid>,
                     SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
-      Auul{};
-  std::iota(Auul.begin(), Auul.end(), 0.0);
+      Ruul{};
+  std::iota(Ruul.begin(), Ruul.end(), 0.0);
 
   const Tensor<double, Symmetry<1>,
                index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>>>
-      JLj_contracted =
-          TensorExpressions::evaluate<ti_L_t>(Auul(ti_J, ti_L, ti_j));
+      RJLj_contracted =
+          TensorExpressions::evaluate<ti_L_t>(Ruul(ti_J, ti_L, ti_j));
 
   for (size_t l = 0; l < 3; l++) {
     double expected_sum = 0.0;
     for (size_t j = 0; j < 3; j++) {
-      expected_sum += Auul.get(j, l, j);
+      expected_sum += Ruul.get(j, l, j);
     }
-    CHECK(JLj_contracted.get(l) == expected_sum);
+    CHECK(RJLj_contracted.get(l) == expected_sum);
+  }
+
+  Tensor<DataVector, Symmetry<2, 2, 1>,
+         index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
+                    SpatialIndex<3, UpLo::Up, Frame::Grid>,
+                    SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
+      Suul(3_st);
+  assign_unique_datavector_tensor_values(Suul);
+
+  const Tensor<DataVector, Symmetry<1>,
+               index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>>>
+      SJLj_contracted =
+          TensorExpressions::evaluate<ti_L_t>(Suul(ti_J, ti_L, ti_j));
+
+  for (size_t l = 0; l < 3; l++) {
+    DataVector expected_sum(3_st, 0.0);
+    for (size_t j = 0; j < 3; j++) {
+      expected_sum += Suul.get(j, l, j);
+    }
+    CHECK(SJLj_contracted.get(l) == expected_sum);
   }
 
   // Contract second and third indices of <2, 1, 2> symmetry rank 3 (upper,
@@ -99,20 +186,40 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
          index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
                     SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                     SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
-      Aulu{};
-  std::iota(Aulu.begin(), Aulu.end(), 0.0);
+      Rulu{};
+  std::iota(Rulu.begin(), Rulu.end(), 0.0);
 
   const Tensor<double, Symmetry<1>,
                index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
-      BfF_contracted =
-          TensorExpressions::evaluate<ti_B_t>(Aulu(ti_B, ti_f, ti_F));
+      RBfF_contracted =
+          TensorExpressions::evaluate<ti_B_t>(Rulu(ti_B, ti_f, ti_F));
 
   for (size_t b = 0; b < 4; b++) {
     double expected_sum = 0.0;
     for (size_t f = 0; f < 4; f++) {
-      expected_sum += Aulu.get(b, f, f);
+      expected_sum += Rulu.get(b, f, f);
     }
-    CHECK(BfF_contracted.get(b) == expected_sum);
+    CHECK(RBfF_contracted.get(b) == expected_sum);
+  }
+
+  Tensor<DataVector, Symmetry<2, 1, 2>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      Sulu(2_st);
+  assign_unique_datavector_tensor_values(Sulu);
+
+  const Tensor<DataVector, Symmetry<1>,
+               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      SBfF_contracted =
+          TensorExpressions::evaluate<ti_B_t>(Sulu(ti_B, ti_f, ti_F));
+
+  for (size_t b = 0; b < 4; b++) {
+    DataVector expected_sum(2, 0.0);
+    for (size_t f = 0; f < 4; f++) {
+      expected_sum += Sulu.get(b, f, f);
+    }
+    CHECK(SBfF_contracted.get(b) == expected_sum);
   }
 
   // Contract first and second indices of nonsymmetric rank 4 (lower, upper,
@@ -122,22 +229,46 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
                     SpatialIndex<3, UpLo::Up, Frame::Inertial>,
                     SpatialIndex<4, UpLo::Up, Frame::Inertial>,
                     SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
-      Aluul{};
-  std::iota(Aluul.begin(), Aluul.end(), 0.0);
+      Rluul{};
+  std::iota(Rluul.begin(), Rluul.end(), 0.0);
 
   const Tensor<double, Symmetry<2, 1>,
                index_list<SpatialIndex<4, UpLo::Up, Frame::Inertial>,
                           SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
-      iIKj_contracted = TensorExpressions::evaluate<ti_K_t, ti_j_t>(
-          Aluul(ti_i, ti_I, ti_K, ti_j));
+      RiIKj_contracted = TensorExpressions::evaluate<ti_K_t, ti_j_t>(
+          Rluul(ti_i, ti_I, ti_K, ti_j));
 
   for (size_t k = 0; k < 4; k++) {
     for (size_t j = 0; j < 3; j++) {
       double expected_sum = 0.0;
       for (size_t i = 0; i < 3; i++) {
-        expected_sum += Aluul.get(i, i, k, j);
+        expected_sum += Rluul.get(i, i, k, j);
       }
-      CHECK(iIKj_contracted.get(k, j) == expected_sum);
+      CHECK(RiIKj_contracted.get(k, j) == expected_sum);
+    }
+  }
+
+  Tensor<DataVector, Symmetry<4, 3, 2, 1>,
+         index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpatialIndex<3, UpLo::Up, Frame::Inertial>,
+                    SpatialIndex<4, UpLo::Up, Frame::Inertial>,
+                    SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
+      Sluul(3_st);
+  assign_unique_datavector_tensor_values(Sluul);
+
+  const Tensor<DataVector, Symmetry<2, 1>,
+               index_list<SpatialIndex<4, UpLo::Up, Frame::Inertial>,
+                          SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
+      SiIKj_contracted = TensorExpressions::evaluate<ti_K_t, ti_j_t>(
+          Sluul(ti_i, ti_I, ti_K, ti_j));
+
+  for (size_t k = 0; k < 4; k++) {
+    for (size_t j = 0; j < 3; j++) {
+      DataVector expected_sum(3, 0.0);
+      for (size_t i = 0; i < 3; i++) {
+        expected_sum += Sluul.get(i, i, k, j);
+      }
+      CHECK(SiIKj_contracted.get(k, j) == expected_sum);
     }
   }
 
@@ -148,22 +279,46 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
                     SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
                     SpacetimeIndex<4, UpLo::Lo, Frame::Grid>,
                     SpacetimeIndex<4, UpLo::Lo, Frame::Grid>>>
-      Auull{};
-  std::iota(Auull.begin(), Auull.end(), 0.0);
+      Ruull{};
+  std::iota(Ruull.begin(), Ruull.end(), 0.0);
 
   const Tensor<double, Symmetry<2, 1>,
                index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
                           SpacetimeIndex<4, UpLo::Lo, Frame::Grid>>>
-      ABac_contracted = TensorExpressions::evaluate<ti_B_t, ti_c_t>(
-          Auull(ti_A, ti_B, ti_a, ti_c));
+      RABac_contracted = TensorExpressions::evaluate<ti_B_t, ti_c_t>(
+          Ruull(ti_A, ti_B, ti_a, ti_c));
 
   for (size_t b = 0; b < 4; b++) {
     for (size_t c = 0; c < 5; c++) {
       double expected_sum = 0.0;
       for (size_t a = 0; a < 5; a++) {
-        expected_sum += Auull.get(a, b, a, c);
+        expected_sum += Ruull.get(a, b, a, c);
       }
-      CHECK(ABac_contracted.get(b, c) == expected_sum);
+      CHECK(RABac_contracted.get(b, c) == expected_sum);
+    }
+  }
+
+  Tensor<DataVector, Symmetry<4, 3, 2, 1>,
+         index_list<SpacetimeIndex<4, UpLo::Up, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                    SpacetimeIndex<4, UpLo::Lo, Frame::Grid>,
+                    SpacetimeIndex<4, UpLo::Lo, Frame::Grid>>>
+      Suull(1_st);
+  assign_unique_datavector_tensor_values(Suull);
+
+  const Tensor<DataVector, Symmetry<2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                          SpacetimeIndex<4, UpLo::Lo, Frame::Grid>>>
+      SABac_contracted = TensorExpressions::evaluate<ti_B_t, ti_c_t>(
+          Suull(ti_A, ti_B, ti_a, ti_c));
+
+  for (size_t b = 0; b < 4; b++) {
+    for (size_t c = 0; c < 5; c++) {
+      DataVector expected_sum(1, 0.0);
+      for (size_t a = 0; a < 5; a++) {
+        expected_sum += Suull.get(a, b, a, c);
+      }
+      CHECK(SABac_contracted.get(b, c) == expected_sum);
     }
   }
 
@@ -174,22 +329,46 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
                     SpatialIndex<4, UpLo::Up, Frame::Grid>,
                     SpatialIndex<3, UpLo::Up, Frame::Grid>,
                     SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
-      Auuul{};
-  std::iota(Auuul.begin(), Auuul.end(), 0.0);
+      Ruuul{};
+  std::iota(Ruuul.begin(), Ruuul.end(), 0.0);
 
   const Tensor<double, Symmetry<2, 1>,
                index_list<SpatialIndex<4, UpLo::Up, Frame::Grid>,
                           SpatialIndex<3, UpLo::Up, Frame::Grid>>>
-      LJIl_contracted = TensorExpressions::evaluate<ti_J_t, ti_I_t>(
-          Auuul(ti_L, ti_J, ti_I, ti_l));
+      RLJIl_contracted = TensorExpressions::evaluate<ti_J_t, ti_I_t>(
+          Ruuul(ti_L, ti_J, ti_I, ti_l));
 
   for (size_t j = 0; j < 4; j++) {
     for (size_t i = 0; i < 3; i++) {
       double expected_sum = 0.0;
       for (size_t l = 0; l < 3; l++) {
-        expected_sum += Auuul.get(l, j, i, l);
+        expected_sum += Ruuul.get(l, j, i, l);
       }
-      CHECK(LJIl_contracted.get(j, i) == expected_sum);
+      CHECK(RLJIl_contracted.get(j, i) == expected_sum);
+    }
+  }
+
+  Tensor<DataVector, Symmetry<3, 2, 3, 1>,
+         index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
+                    SpatialIndex<4, UpLo::Up, Frame::Grid>,
+                    SpatialIndex<3, UpLo::Up, Frame::Grid>,
+                    SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
+      Suuul(2_st);
+  assign_unique_datavector_tensor_values(Suuul);
+
+  const Tensor<DataVector, Symmetry<2, 1>,
+               index_list<SpatialIndex<4, UpLo::Up, Frame::Grid>,
+                          SpatialIndex<3, UpLo::Up, Frame::Grid>>>
+      SLJIl_contracted = TensorExpressions::evaluate<ti_J_t, ti_I_t>(
+          Suuul(ti_L, ti_J, ti_I, ti_l));
+
+  for (size_t j = 0; j < 4; j++) {
+    for (size_t i = 0; i < 3; i++) {
+      DataVector expected_sum(2, 0.0);
+      for (size_t l = 0; l < 3; l++) {
+        expected_sum += Suuul.get(l, j, i, l);
+      }
+      CHECK(SLJIl_contracted.get(j, i) == expected_sum);
     }
   }
 
@@ -200,22 +379,46 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
                     SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
                     SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
                     SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
-      Auulu{};
-  std::iota(Auulu.begin(), Auulu.end(), 0.0);
+      Ruulu{};
+  std::iota(Ruulu.begin(), Ruulu.end(), 0.0);
 
   const Tensor<double, Symmetry<1, 1>,
                index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
                           SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
-      EDdA_contracted = TensorExpressions::evaluate<ti_E_t, ti_A_t>(
-          Auulu(ti_E, ti_D, ti_d, ti_A));
+      REDdA_contracted = TensorExpressions::evaluate<ti_E_t, ti_A_t>(
+          Ruulu(ti_E, ti_D, ti_d, ti_A));
 
   for (size_t e = 0; e < 4; e++) {
     for (size_t a = 0; a < 4; a++) {
       double expected_sum = 0.0;
       for (size_t d = 0; d < 4; d++) {
-        expected_sum += Auulu.get(e, d, d, a);
+        expected_sum += Ruulu.get(e, d, d, a);
       }
-      CHECK(EDdA_contracted.get(e, a) == expected_sum);
+      CHECK(REDdA_contracted.get(e, a) == expected_sum);
+    }
+  }
+
+  Tensor<DataVector, Symmetry<2, 2, 1, 2>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+      Suulu(3_st);
+  assign_unique_datavector_tensor_values(Suulu);
+
+  const Tensor<DataVector, Symmetry<1, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+      SEDdA_contracted = TensorExpressions::evaluate<ti_E_t, ti_A_t>(
+          Suulu(ti_E, ti_D, ti_d, ti_A));
+
+  for (size_t e = 0; e < 4; e++) {
+    for (size_t a = 0; a < 4; a++) {
+      DataVector expected_sum(3, 0.0);
+      for (size_t d = 0; d < 4; d++) {
+        expected_sum += Suulu.get(e, d, d, a);
+      }
+      CHECK(SEDdA_contracted.get(e, a) == expected_sum);
     }
   }
 
@@ -226,22 +429,46 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
                     SpatialIndex<3, UpLo::Up, Frame::Inertial>,
                     SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
                     SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
-      Alull{};
-  std::iota(Alull.begin(), Alull.end(), 0.0);
+      Rlull{};
+  std::iota(Rlull.begin(), Rlull.end(), 0.0);
 
   const Tensor<double, Symmetry<2, 1>,
                index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
                           SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
-      kJij_contracted = TensorExpressions::evaluate<ti_k_t, ti_i_t>(
-          Alull(ti_k, ti_J, ti_i, ti_j));
+      RkJij_contracted = TensorExpressions::evaluate<ti_k_t, ti_i_t>(
+          Rlull(ti_k, ti_J, ti_i, ti_j));
 
   for (size_t k = 0; k < 3; k++) {
     for (size_t i = 0; i < 4; i++) {
       double expected_sum = 0.0;
       for (size_t j = 0; j < 3; j++) {
-        expected_sum += Alull.get(k, j, i, j);
+        expected_sum += Rlull.get(k, j, i, j);
       }
-      CHECK(kJij_contracted.get(k, i) == expected_sum);
+      CHECK(RkJij_contracted.get(k, i) == expected_sum);
+    }
+  }
+
+  Tensor<DataVector, Symmetry<4, 3, 2, 1>,
+         index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpatialIndex<3, UpLo::Up, Frame::Inertial>,
+                    SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                    SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
+      Slull(2_st);
+  assign_unique_datavector_tensor_values(Slull);
+
+  const Tensor<DataVector, Symmetry<2, 1>,
+               index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+      SkJij_contracted = TensorExpressions::evaluate<ti_k_t, ti_i_t>(
+          Slull(ti_k, ti_J, ti_i, ti_j));
+
+  for (size_t k = 0; k < 3; k++) {
+    for (size_t i = 0; i < 4; i++) {
+      DataVector expected_sum(2, 0.0);
+      for (size_t j = 0; j < 3; j++) {
+        expected_sum += Slull.get(k, j, i, j);
+      }
+      CHECK(SkJij_contracted.get(k, i) == expected_sum);
     }
   }
 
@@ -252,22 +479,46 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
                     SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                     SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                     SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
-      Aullu{};
-  std::iota(Aullu.begin(), Aullu.end(), 0.0);
+      Rullu{};
+  std::iota(Rullu.begin(), Rullu.end(), 0.0);
 
   const Tensor<double, Symmetry<2, 1>,
                index_list<SpacetimeIndex<4, UpLo::Up, Frame::Inertial>,
                           SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
-      FcgG_contracted = TensorExpressions::evaluate<ti_F_t, ti_c_t>(
-          Aullu(ti_F, ti_c, ti_g, ti_G));
+      RFcgG_contracted = TensorExpressions::evaluate<ti_F_t, ti_c_t>(
+          Rullu(ti_F, ti_c, ti_g, ti_G));
 
   for (size_t f = 0; f < 5; f++) {
     for (size_t c = 0; c < 4; c++) {
       double expected_sum = 0.0;
       for (size_t g = 0; g < 4; g++) {
-        expected_sum += Aullu.get(f, c, g, g);
+        expected_sum += Rullu.get(f, c, g, g);
       }
-      CHECK(FcgG_contracted.get(f, c) == expected_sum);
+      CHECK(RFcgG_contracted.get(f, c) == expected_sum);
+    }
+  }
+
+  Tensor<DataVector, Symmetry<3, 2, 2, 1>,
+         index_list<SpacetimeIndex<4, UpLo::Up, Frame::Inertial>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      Sullu(1_st);
+  assign_unique_datavector_tensor_values(Sullu);
+
+  const Tensor<DataVector, Symmetry<2, 1>,
+               index_list<SpacetimeIndex<4, UpLo::Up, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+      SFcgG_contracted = TensorExpressions::evaluate<ti_F_t, ti_c_t>(
+          Sullu(ti_F, ti_c, ti_g, ti_G));
+
+  for (size_t f = 0; f < 5; f++) {
+    for (size_t c = 0; c < 4; c++) {
+      DataVector expected_sum(1, 0.0);
+      for (size_t g = 0; g < 4; g++) {
+        expected_sum += Sullu.get(f, c, g, g);
+      }
+      CHECK(SFcgG_contracted.get(f, c) == expected_sum);
     }
   }
 
@@ -278,22 +529,46 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
                     SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
                     SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
                     SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
-      Aulll{};
-  std::iota(Aulll.begin(), Aulll.end(), 0.0);
+      Rulll{};
+  std::iota(Rulll.begin(), Rulll.end(), 0.0);
 
   const Tensor<double, Symmetry<1, 1>,
                index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
                           SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
-      Adba_contracted_to_bd = TensorExpressions::evaluate<ti_b_t, ti_d_t>(
-          Aulll(ti_A, ti_d, ti_b, ti_a));
+      RAdba_contracted_to_bd = TensorExpressions::evaluate<ti_b_t, ti_d_t>(
+          Rulll(ti_A, ti_d, ti_b, ti_a));
 
   for (size_t b = 0; b < 4; b++) {
     for (size_t d = 0; d < 4; d++) {
       double expected_sum = 0.0;
       for (size_t a = 0; a < 4; a++) {
-        expected_sum += Aulll.get(a, d, b, a);
+        expected_sum += Rulll.get(a, d, b, a);
       }
-      CHECK(Adba_contracted_to_bd.get(b, d) == expected_sum);
+      CHECK(RAdba_contracted_to_bd.get(b, d) == expected_sum);
+    }
+  }
+
+  Tensor<DataVector, Symmetry<2, 1, 1, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      Sulll(2_st);
+  assign_unique_datavector_tensor_values(Sulll);
+
+  const Tensor<DataVector, Symmetry<1, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      SAdba_contracted_to_bd = TensorExpressions::evaluate<ti_b_t, ti_d_t>(
+          Sulll(ti_A, ti_d, ti_b, ti_a));
+
+  for (size_t b = 0; b < 4; b++) {
+    for (size_t d = 0; d < 4; d++) {
+      DataVector expected_sum(2, 0.0);
+      for (size_t a = 0; a < 4; a++) {
+        expected_sum += Sulll.get(a, d, b, a);
+      }
+      CHECK(SAdba_contracted_to_bd.get(b, d) == expected_sum);
     }
   }
 
@@ -304,22 +579,46 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
                     SpatialIndex<3, UpLo::Lo, Frame::Grid>,
                     SpatialIndex<3, UpLo::Up, Frame::Grid>,
                     SpatialIndex<4, UpLo::Lo, Frame::Grid>>>
-      Allul{};
-  std::iota(Allul.begin(), Allul.end(), 0.0);
+      Rllul{};
+  std::iota(Rllul.begin(), Rllul.end(), 0.0);
 
   const Tensor<double, Symmetry<2, 1>,
                index_list<SpatialIndex<4, UpLo::Lo, Frame::Grid>,
                           SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
-      ljJi_contracted_to_il = TensorExpressions::evaluate<ti_i_t, ti_l_t>(
-          Allul(ti_l, ti_j, ti_J, ti_i));
+      RljJi_contracted_to_il = TensorExpressions::evaluate<ti_i_t, ti_l_t>(
+          Rllul(ti_l, ti_j, ti_J, ti_i));
 
   for (size_t i = 0; i < 4; i++) {
     for (size_t l = 0; l < 3; l++) {
       double expected_sum = 0.0;
       for (size_t j = 0; j < 3; j++) {
-        expected_sum += Allul.get(l, j, j, i);
+        expected_sum += Rllul.get(l, j, j, i);
       }
-      CHECK(ljJi_contracted_to_il.get(i, l) == expected_sum);
+      CHECK(RljJi_contracted_to_il.get(i, l) == expected_sum);
+    }
+  }
+
+  Tensor<DataVector, Symmetry<4, 3, 2, 1>,
+         index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpatialIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpatialIndex<3, UpLo::Up, Frame::Grid>,
+                    SpatialIndex<4, UpLo::Lo, Frame::Grid>>>
+      Sllul(2_st);
+  assign_unique_datavector_tensor_values(Sllul);
+
+  const Tensor<DataVector, Symmetry<2, 1>,
+               index_list<SpatialIndex<4, UpLo::Lo, Frame::Grid>,
+                          SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
+      SljJi_contracted_to_il = TensorExpressions::evaluate<ti_i_t, ti_l_t>(
+          Sllul(ti_l, ti_j, ti_J, ti_i));
+
+  for (size_t i = 0; i < 4; i++) {
+    for (size_t l = 0; l < 3; l++) {
+      DataVector expected_sum(2, 0.0);
+      for (size_t j = 0; j < 3; j++) {
+        expected_sum += Sllul.get(l, j, j, i);
+      }
+      CHECK(SljJi_contracted_to_il.get(i, l) == expected_sum);
     }
   }
 
@@ -330,40 +629,78 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
                     SpatialIndex<3, UpLo::Lo, Frame::Grid>,
                     SpatialIndex<4, UpLo::Up, Frame::Grid>,
                     SpatialIndex<4, UpLo::Lo, Frame::Grid>>>
-      Aulul{};
-  std::iota(Aulul.begin(), Aulul.end(), 0.0);
+      Rulul{};
+  std::iota(Rulul.begin(), Rulul.end(), 0.0);
 
-  const Tensor<double> KkLl_contracted =
-      TensorExpressions::evaluate(Aulul(ti_K, ti_k, ti_L, ti_l));
+  const Tensor<double> RKkLl_contracted =
+      TensorExpressions::evaluate(Rulul(ti_K, ti_k, ti_L, ti_l));
 
-  double expected_KkLl_sum = 0.0;
+  double expected_RKkLl_sum = 0.0;
   for (size_t k = 0; k < 3; k++) {
     for (size_t l = 0; l < 4; l++) {
-      expected_KkLl_sum += Aulul.get(k, k, l, l);
+      expected_RKkLl_sum += Rulul.get(k, k, l, l);
     }
   }
-  CHECK(KkLl_contracted.get() == expected_KkLl_sum);
+  CHECK(RKkLl_contracted.get() == expected_RKkLl_sum);
+
+  Tensor<DataVector, Symmetry<4, 3, 2, 1>,
+         index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
+                    SpatialIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpatialIndex<4, UpLo::Up, Frame::Grid>,
+                    SpatialIndex<4, UpLo::Lo, Frame::Grid>>>
+      Sulul(1_st);
+  assign_unique_datavector_tensor_values(Sulul);
+
+  const Tensor<DataVector> SKkLl_contracted =
+      TensorExpressions::evaluate(Sulul(ti_K, ti_k, ti_L, ti_l));
+
+  DataVector expected_SKkLl_sum(1, 0.0);
+  for (size_t k = 0; k < 3; k++) {
+    for (size_t l = 0; l < 4; l++) {
+      expected_SKkLl_sum += Sulul.get(k, k, l, l);
+    }
+  }
+  CHECK(SKkLl_contracted.get() == expected_SKkLl_sum);
 
   // Contract first and third indices and second and fourth indices of
-  // <2, 1, 1, 2> symmetry rank 4 tensor to rank 0 tensor
-  Tensor<double, Symmetry<2, 1, 1, 2>,
+  // <2, 2, 1, 1> symmetry rank 4 tensor to rank 0 tensor
+  Tensor<double, Symmetry<2, 2, 1, 1>,
          index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                     SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                    SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                    SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
-      Bluul{};
-  std::iota(Bluul.begin(), Bluul.end(), 0.0);
+                    SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      Rlluu{};
+  std::iota(Rlluu.begin(), Rlluu.end(), 0.0);
 
-  const Tensor<double> cACa_contracted =
-      TensorExpressions::evaluate(Bluul(ti_c, ti_A, ti_C, ti_a));
+  const Tensor<double> RcaCA_contracted =
+      TensorExpressions::evaluate(Rlluu(ti_c, ti_a, ti_C, ti_A));
 
-  double expected_cACa_sum = 0.0;
+  double expected_RcaCA_sum = 0.0;
   for (size_t c = 0; c < 4; c++) {
     for (size_t a = 0; a < 4; a++) {
-      expected_cACa_sum += Bluul.get(c, a, c, a);
+      expected_RcaCA_sum += Rlluu.get(c, a, c, a);
     }
   }
-  CHECK(cACa_contracted.get() == expected_cACa_sum);
+  CHECK(RcaCA_contracted.get() == expected_RcaCA_sum);
+
+  Tensor<DataVector, Symmetry<2, 2, 1, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                    SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      Slluu(2_st);
+  assign_unique_datavector_tensor_values(Slluu);
+
+  const Tensor<DataVector> ScaCA_contracted =
+      TensorExpressions::evaluate(Slluu(ti_c, ti_a, ti_C, ti_A));
+
+  DataVector expected_ScaCA_sum(2, 0.0);
+  for (size_t c = 0; c < 4; c++) {
+    for (size_t a = 0; a < 4; a++) {
+      expected_ScaCA_sum += Slluu.get(c, a, c, a);
+    }
+  }
+  CHECK(ScaCA_contracted.get() == expected_ScaCA_sum);
 
   // Contract first and fourth indices and second and third indices of
   // <2, 1, 2, 1> symmetry rank 4 tensor to rank 0 tensor
@@ -372,17 +709,36 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
                     SpatialIndex<3, UpLo::Up, Frame::Inertial>,
                     SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
                     SpatialIndex<3, UpLo::Up, Frame::Inertial>>>
-      Alulu{};
-  std::iota(Alulu.begin(), Alulu.end(), 0.0);
+      Rlulu{};
+  std::iota(Rlulu.begin(), Rlulu.end(), 0.0);
 
-  const Tensor<double> jIiJ_contracted =
-      TensorExpressions::evaluate(Alulu(ti_j, ti_I, ti_i, ti_J));
+  const Tensor<double> RjIiJ_contracted =
+      TensorExpressions::evaluate(Rlulu(ti_j, ti_I, ti_i, ti_J));
 
-  double expected_jIiJ_sum = 0.0;
+  double expected_RjIiJ_sum = 0.0;
   for (size_t j = 0; j < 3; j++) {
     for (size_t i = 0; i < 3; i++) {
-      expected_jIiJ_sum += Alulu.get(j, i, i, j);
+      expected_RjIiJ_sum += Rlulu.get(j, i, i, j);
     }
   }
-  CHECK(jIiJ_contracted.get() == expected_jIiJ_sum);
+  CHECK(RjIiJ_contracted.get() == expected_RjIiJ_sum);
+
+  Tensor<DataVector, Symmetry<2, 1, 2, 1>,
+         index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpatialIndex<3, UpLo::Up, Frame::Inertial>,
+                    SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpatialIndex<3, UpLo::Up, Frame::Inertial>>>
+      Slulu(2_st);
+  assign_unique_datavector_tensor_values(Slulu);
+
+  const Tensor<DataVector> SjIiJ_contracted =
+      TensorExpressions::evaluate(Slulu(ti_j, ti_I, ti_i, ti_J));
+
+  DataVector expected_SjIiJ_sum(2, 0.0);
+  for (size_t j = 0; j < 3; j++) {
+    for (size_t i = 0; i < 3; i++) {
+      expected_SjIiJ_sum += Slulu.get(j, i, i, j);
+    }
+  }
+  CHECK(SjIiJ_contracted.get() == expected_SjIiJ_sum);
 }
