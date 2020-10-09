@@ -115,17 +115,14 @@ struct ExportCoordinates {
   }
 };
 
-struct PrintMinimumGridSpacing {
+struct PrintGlobalMinimumGridSpacing {
   template <typename ParallelComponent, typename DbTags, typename Metavariables,
             typename ArrayIndex>
-  static void apply(db::DataBox<DbTags>& box,
+  static void apply(db::DataBox<DbTags>& /*box*/,
                     const Parallel::CBase_GlobalCache<Metavariables>& /*cache*/,
-                    const ArrayIndex& /*array_index*/,
+                    const ArrayIndex& /*array_index*/, const double& time,
                     const double& global_min_grid_spacing) noexcept {
-    //const double time = get<Tags::Time>(box);
-    //printf("Time: %f, Global inertial minimum grid spacing: %f\n", time,
-    //         global_min_grid_spacing);
-    printf("Global inertial minimum grid spacing: %f\n",
+    printf("Time: %f, Global inertial minimum grid spacing: %f\n", time,
            global_min_grid_spacing);
   }
 };
@@ -148,30 +145,31 @@ struct SingletonParallelComponent {
       const Parallel::CProxy_GlobalCache<Metavariables>& /*global_cache*/) {}
 };
 
-template <size_t Dim>
 struct FindGlobalMinimumGridSpacing {
   template <typename DbTagsList, typename... InboxTags, typename Metavariables,
-            typename ArrayIndex, typename ActionList,
+            size_t Dim, typename ActionList,
             typename ParallelComponent>
   static std::tuple<db::DataBox<DbTagsList>&&> apply(
       db::DataBox<DbTagsList>& box,
       const tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
       const Parallel::GlobalCache<Metavariables>& cache,
-      const ArrayIndex& array_index, const ActionList /*meta*/,
+      const ElementId<Dim>& element_id, const ActionList /*meta*/,
       const ParallelComponent* const /*meta*/) {
-    const double time = get<Tags::Time>(box);
-    printf("Time: %f", time);
-    const auto& my_proxy =
-        Parallel::get_parallel_component<ParallelComponent>(cache)[array_index];
+    const auto& element_proxy =
+        Parallel::get_parallel_component<ParallelComponent>(cache)[element_id];
     const auto& singleton_proxy = Parallel::get_parallel_component<
         SingletonParallelComponent<Metavariables>>(cache);
 
-    Parallel::ReductionData<Parallel::ReductionDatum<double, funcl::Min<>>>
-        elemental_min_grid_spacing{
-            get<domain::Tags::MinimumGridSpacing<Dim, Frame::Inertial>>(box)};
-    Parallel::contribute_to_reduction<Actions::PrintMinimumGridSpacing>(
-        elemental_min_grid_spacing, my_proxy, singleton_proxy);
-    return std::forward_as_tuple(std::move(box));
+    Parallel::ReductionData<
+        Parallel::ReductionDatum<double, funcl::AssertEqual<>>,
+        Parallel::ReductionDatum<double, funcl::Min<>>>
+        time_and_elemental_min_grid_spacing(
+            get<Tags::Time>(box),
+            get<domain::Tags::MinimumGridSpacing<Dim, Frame::Inertial>>(box));
+    Parallel::contribute_to_reduction<Actions::PrintGlobalMinimumGridSpacing>(
+        time_and_elemental_min_grid_spacing, element_proxy, singleton_proxy);
+
+    return {std::move(box)};
   }
 };
 
@@ -221,8 +219,8 @@ struct Metavariables {
                   typename Metavariables::Phase, Metavariables::Phase::Export,
                   tmpl::list<Actions::AdvanceTime,
                              Actions::ExportCoordinates<Dim>,
-                             Actions::RunEventsAndTriggers,
-                             FindGlobalMinimumGridSpacing<Dim>>>>>,
+                             FindGlobalMinimumGridSpacing,
+                             Actions::RunEventsAndTriggers>>>>,
       observers::Observer<Metavariables>,
       observers::ObserverWriter<Metavariables>,
       SingletonParallelComponent<Metavariables>>;
