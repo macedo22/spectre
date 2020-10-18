@@ -157,8 +157,14 @@ struct TensorContract
         template apply<LhsIndices...>(tensor_index, t_);
   }
 
+  // TODO: find a way to propagate using the storage index
   template <typename LhsStructure, typename... LhsIndices>
   SPECTRE_ALWAYS_INLINE type get(const size_t lhs_storage_index) const {
+    // maybe make a map from LHS storage index to the new array oh LHS
+    // indices to add
+    // maybe use LhsSymmAndIndices to get the expanded LHS symm and indices
+    // to and may need to update LhsStructure and LhsIndices for recursive
+    // calls to get
     const std::array<size_t, num_tensor_indices>& new_tensor_index =
         LhsStructure::template get_canonical_tensor_index<num_tensor_indices>(
             lhs_storage_index);
