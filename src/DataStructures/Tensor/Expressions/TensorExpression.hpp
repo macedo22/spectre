@@ -241,7 +241,6 @@ struct repeated_vals_helper {
 
 /*template <typename Seq, typename S, typename E>
 struct repeated_vals_helper;
-
 template <typename... Is, typename S, typename E>
 struct repeated_vals_helper<tmpl::list<Is...>, S, E> {
   using type = typename std::conditional<
@@ -346,7 +345,6 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   /// Typelist of the tensor indices, e.g. `_a_t` and `_b_t` in `F(_a, _b)`
   using args_list = ArgsList<Args...>;
   using structure = Tensor_detail::Structure<symmetry, Indices...>;
-  using derived_type = Derived;
 
   // @{
   /// If Derived is a TensorExpression, it is casted down to the derived
@@ -444,8 +442,7 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   /// \tparam LhsIndices the tensor indices on the LHS on the expression
   /// \param tensor_index the tensor component to retrieve
   /// \return the value of the DataType of component `tensor_index`
-  template <typename LhsStructure, typename... LhsIndices,
-            typename ArrayValueType>
+  template <typename... LhsIndices, typename ArrayValueType>
   SPECTRE_ALWAYS_INLINE type
   get(const std::array<ArrayValueType, num_tensor_indices>& tensor_index)
       const noexcept {
@@ -466,7 +463,7 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
       ASSERT(t_ == nullptr,
              "A TensorExpression that shouldn't be holding a pointer to a "
              "Tensor is holding one.");
-      return (~*this).template get<LhsStructure, LhsIndices...>(tensor_index);
+      return (~*this).template get<LhsIndices...>(tensor_index);
     }
   }
 
