@@ -55,25 +55,42 @@ using ComputeContractedType = typename ComputeContractedTypeImpl<
 
 template <int I, typename Index1, typename Index2>
 struct ComputeContractionImpl {
-  template <typename... LhsIndices, typename T, typename S>
+  template <typename RhsStructure, typename LhsStructure,
+            typename... LhsIndices, typename T, typename S>
   static SPECTRE_ALWAYS_INLINE typename T::type apply(S tensor_index,
                                                       const T& t1) {
     tensor_index[Index1::value] = I;
     tensor_index[Index2::value] = I;
-    return t1.template get<LhsIndices...>(tensor_index) +
-           ComputeContractionImpl<I - 1, Index1, Index2>::template apply<
-               LhsIndices...>(tensor_index, t1);
+
+    if constexpr (tt::is_a_v<Tensor, typename T::derived_type>) {
+      const size_t storage_index =
+          RhsStructure::get_storage_index(tensor_index);
+      return t1.template get<LhsStructure, LhsIndices...>(storage_index) +
+             ComputeContractionImpl<I - 1, Index1, Index2>::template apply<
+                 RhsStructure, LhsStructure, LhsIndices...>(tensor_index, t1);
+    } else {
+      return t1.template get<LhsStructure, LhsIndices...>(tensor_index) +
+             ComputeContractionImpl<I - 1, Index1, Index2>::template apply<
+                 RhsStructure, LhsStructure, LhsIndices...>(tensor_index, t1);
+    }
   }
 };
 
 template <typename Index1, typename Index2>
 struct ComputeContractionImpl<0, Index1, Index2> {
-  template <typename... LhsIndices, typename T, typename S>
+  template <typename RhsStructure, typename LhsStructure,
+            typename... LhsIndices, typename T, typename S>
   static SPECTRE_ALWAYS_INLINE typename T::type apply(S tensor_index,
                                                       const T& t1) {
     tensor_index[Index1::value] = 0;
     tensor_index[Index2::value] = 0;
-    return t1.template get<LhsIndices...>(tensor_index);
+    if constexpr (tt::is_a_v<Tensor, typename T::derived_type>) {
+      const size_t storage_index =
+          RhsStructure::get_storage_index(tensor_index);
+      return t1.template get<LhsStructure, LhsIndices...>(storage_index);
+    } else {
+      return t1.template get<LhsStructure, LhsIndices...>(tensor_index);
+    }
   }
 };
 }  // namespace detail
@@ -83,19 +100,27 @@ struct ComputeContractionImpl<0, Index1, Index2> {
  */
 template <typename ReplacedArg1, typename ReplacedArg2, typename T, typename X,
           typename Symm, typename IndexList, typename ArgsList>
-struct TensorContract
-    : public TensorExpression<TensorContract<ReplacedArg1, ReplacedArg2, T, X,
-                                             Symm, IndexList, ArgsList>,
-                              X,
-                              typename detail::ComputeContractedType<
-                                  ReplacedArg1, ReplacedArg2, T, X, Symm,
-                                  IndexList, ArgsList>::symmetry,
-                              typename detail::ComputeContractedType<
-                                  ReplacedArg1, ReplacedArg2, T, X, Symm,
-                                  IndexList, ArgsList>::index_list,
-                              typename detail::ComputeContractedType<
-                                  ReplacedArg1, ReplacedArg2, T, X, Symm,
-                                  IndexList, ArgsList>::args_list> {
+struct TensorContract;
+
+template <typename ReplacedArg1, typename ReplacedArg2, typename T, typename X,
+          typename Symm, typename... Indices, typename ArgsList>
+struct TensorContract<ReplacedArg1, ReplacedArg2, T, X, Symm,
+                      tmpl::list<Indices...>, ArgsList>
+    : public TensorExpression<
+          TensorContract<ReplacedArg1, ReplacedArg2, T, X, Symm,
+                         tmpl::list<Indices...>, ArgsList>,
+          X,
+          typename detail::ComputeContractedType<
+              ReplacedArg1, ReplacedArg2, T, X, Symm, tmpl::list<Indices...>,
+              ArgsList>::symmetry,
+          typename detail::ComputeContractedType<
+              ReplacedArg1, ReplacedArg2, T, X, Symm, tmpl::list<Indices...>,
+              ArgsList>::index_list,
+          typename detail::ComputeContractedType<
+              ReplacedArg1, ReplacedArg2, T, X, Symm, tmpl::list<Indices...>,
+              ArgsList>::args_list> {
+  using uncontracted_structure = Tensor_detail::Structure<Symm, Indices...>;
+  using IndexList = tmpl::list<Indices...>;
   using Index1 = tmpl::int32_t<
       tmpl::index_of<ArgsList, TensorIndex<ReplacedArg1::value>>::value>;
   using Index2 = tmpl::int32_t<
@@ -145,7 +170,7 @@ struct TensorContract
     }
   }
 
-  template <typename... LhsIndices, typename U>
+  template <typename LhsStructure, typename... LhsIndices, typename U>
   SPECTRE_ALWAYS_INLINE type
   get(const std::array<U, num_tensor_indices>& new_tensor_index) const {
     // new_tensor_index is the one with _fewer_ components, ie post-contraction
@@ -154,7 +179,8 @@ struct TensorContract
     // new_tensor_index
     fill_contracting_tensor_index<0>(tensor_index, new_tensor_index);
     return detail::ComputeContractionImpl<CI1::dim - 1, Index1, Index2>::
-        template apply<LhsIndices...>(tensor_index, t_);
+        template apply<uncontracted_structure, LhsStructure, LhsIndices...>(
+            tensor_index, t_);
   }
 
   template <typename LhsStructure, typename... LhsIndices>

@@ -83,15 +83,15 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
 
   AddSub(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
 
-  template <typename... LhsIndices, typename T>
+  template <typename LhsStructure, typename... LhsIndices, typename T>
   SPECTRE_ALWAYS_INLINE type
   get(const std::array<T, num_tensor_indices>& tensor_index) const {
     if constexpr (Sign == 1) {
-      return t1_.template get<LhsIndices...>(tensor_index) +
-             t2_.template get<LhsIndices...>(tensor_index);
+      return t1_.template get<LhsStructure, LhsIndices...>(tensor_index) +
+             t2_.template get<LhsStructure, LhsIndices...>(tensor_index);
     } else {
-      return t1_.template get<LhsIndices...>(tensor_index) -
-             t2_.template get<LhsIndices...>(tensor_index);
+      return t1_.template get<LhsStructure, LhsIndices...>(tensor_index) -
+             t2_.template get<LhsStructure, LhsIndices...>(tensor_index);
     }
   }
 
