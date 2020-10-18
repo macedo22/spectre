@@ -162,13 +162,7 @@ struct TensorContract
     const std::array<size_t, num_tensor_indices>& new_tensor_index =
         LhsStructure::template get_canonical_tensor_index<num_tensor_indices>(
             lhs_storage_index);
-    // new_tensor_index is the one with _fewer_ components, ie post-contraction
-    std::array<size_t, tmpl::size<Symm>::value> tensor_index;
-    // Manually unrolled for loops to compute the tensor_index from the
-    // new_tensor_index
-    fill_contracting_tensor_index<0>(tensor_index, new_tensor_index);
-    return detail::ComputeContractionImpl<CI1::dim - 1, Index1, Index2>::
-        template apply<LhsIndices...>(tensor_index, t_);
+    return get<LhsStructure, LhsIndices...>(new_tensor_index);
   }
 
  private:
