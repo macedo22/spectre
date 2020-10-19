@@ -314,6 +314,13 @@ struct TensorContract
     //     lhs_storage_indices_to_add =
     //
 
+    /*constexpr size_t num_contracted_components = LhsStructure::size();
+    constexpr std::make_index_sequence<num_contracted_components> map_seq{};
+    constexpr std::array<std::array<size_t, C1::dim>, num_contracted_components>
+    map = get_sum_map<num_contracted_components, C1::dim,
+    UncontractedLhsStructure, LhsStructure, Index1, Index2,
+                  num_tensor_indices, tmpl::size<Symm>::value>(map_seq);*/
+
     const std::array<size_t, num_tensor_indices>& new_tensor_index =
         LhsStructure::template get_canonical_tensor_index<num_tensor_indices>(
             lhs_storage_index);

@@ -125,6 +125,48 @@ get_sum_map(const std::index_sequence<Ints...>& /*index_seq*/) noexcept {
   return map;
 }
 
+template <size_t I, size_t NumUncontractedIndices, size_t NumContractedIndices,
+          typename CI1, typename CI2, size_t Index1, size_t Index2,
+          typename ContractedLhsTensorIndexList,
+          typename Seq = std::make_index_sequence<NumUncontractedIndices>>
+struct GetUncontractedLhsTensorindices;
+
+template <size_t I, size_t NumUncontractedIndices, size_t NumContractedIndices,
+          typename CI1, typename CI2, size_t Index1, size_t Index2,
+          typename... ContractedLhsTensorIndices, size_t... Ints>
+struct GetUncontractedLhsTensorindices<
+    I, NumUncontractedIndices, NumContractedIndices, CI1, CI2, Index1, Index2,
+    tmpl::list<ContractedLhsTensorIndices...>, std::index_sequence<Ints...>> {
+  static constexpr std::array<size_t, NumContractedIndices>
+      contracted_lhs_tensorindices = {{ContractedLhsTensorIndices::value...}};
+  std::array<size_t, NumUncontractedIndices> uncontracted_lhs_tensorindices{};
+
+  /*
+  for (size_t i = 0; i < Index1; i++) {
+      uncontracted_lhs_tensorindices[i] = contracted_lhs_tensorindices[i];
+  }
+  uncontracted_lhs_tensorindices[Index1] = 0;
+  for (size_t i = Index1 + 1; i < Index2; i++) {
+      uncontracted_lhs_tensorindices[i] = contracted_lhs_tensorindices[i - 1];
+  }
+  uncontracted_lhs_tensorindices[Index2] = 0;
+  for (size_t i = Index2 + 1; i < NumUncontractedIndices; i++) {
+      uncontracted_lhs_tensorindices[i] = contracted_lhs_tensorindices[i - 2];
+  }*/
+  // return contracting_tensor_index;
+
+  /*constexpr std::array<size_t, NumUncontractedIndices>
+     contracted_lhs_tensorindices =
+      {{
+          std::conditional_t<Ints == Index1, T,
+                         TensorExpression<T, X, Symm, IndexList, ArgsList>>
+      }};*/
+  /*using type = tmpl::list<
+      std::conditional_t<std::is_base_of<Expression, T>::value, T,
+                         TensorExpression<T, X, Symm, IndexList, ArgsList>>8/
+  >;*/
+};
+
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Stuff",
                   "[DataStructures][Unit]") {
   // Contract first and fourth indices of <2, 1, 1, 1> symmetry rank 4 (upper,
@@ -136,6 +178,11 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Stuff",
                     SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
       Rulll{};
   std::iota(Rulll.begin(), Rulll.end(), 0.0);
+  using rhs_tensorindextype_list =
+      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>;
 
   const auto RAdba = Rulll(ti_A, ti_d, ti_b, ti_a);
   using RAdba_type = decltype(RAdba);
@@ -162,7 +209,11 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Stuff",
                                SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
                                SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
                                SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>;
-  using LhsTensorIndexList = tmpl::list<ti_b_t, ti_d_t>;
+
+  /*using rhs_tensorindex_list = tmpl::list<ti_A_t, ti_d_t, ti_b_t, ti_a_t>;
+  using uncontracted_lhs_tensorindex_list = tmpl::list<ti_A_t, ti_b_t, ti_d_t,
+  ti_a_t>; using contracted_lhs_tensorindex_list = tmpl::list<ti_b_t, ti_d_t>;*/
+
   constexpr size_t I = 0;
   constexpr size_t Index1 = RAdba_type::Index1::value;
   constexpr size_t Index2 = RAdba_type::Index2::value;
