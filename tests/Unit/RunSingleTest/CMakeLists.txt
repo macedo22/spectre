@@ -36,7 +36,6 @@ add_spectre_executable(
   ../DataStructures/Tensor/Expressions/Test_AddSubtract.cpp
   ../DataStructures/Tensor/Expressions/Test_Contract.cpp
   ../DataStructures/Tensor/Expressions/Test_Product.cpp
-  ../DataStructures/Tensor/Expressions/Test_Stuff.cpp
   )
 
 # Modify which libraries to link for your test case.
