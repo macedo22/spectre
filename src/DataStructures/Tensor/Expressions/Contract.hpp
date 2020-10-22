@@ -54,12 +54,26 @@ template <typename ReplacedArg1, typename ReplacedArg2, typename T, typename X,
           typename Symm, typename IndexList, typename Args>
 using ComputeContractedType = typename ComputeContractedTypeImpl<
     T, X,
-    tmpl::erase<tmpl::erase<Symm, tmpl::index_of<Args, ReplacedArg2>>,
-                tmpl::index_of<Args, ReplacedArg1>>,
-    tmpl::erase<tmpl::erase<IndexList, tmpl::index_of<Args, ReplacedArg2>>,
-                tmpl::index_of<Args, ReplacedArg1>>,
-    tmpl::erase<tmpl::erase<Args, tmpl::index_of<Args, ReplacedArg2>>,
-                tmpl::index_of<Args, ReplacedArg1>>>::type;
+    tmpl::erase<
+        tmpl::erase<Symm, tmpl::index_of<Args, ReplacedArg2>>,
+        tmpl::index_of<tmpl::erase<Args, tmpl::index_of<Args, ReplacedArg2>>,
+                       ReplacedArg1>>,
+    // tmpl::index_of<tmpl::erase<Symm, tmpl::index_of<Args, ReplacedArg2>>,
+    // ReplacedArg1>>,
+    tmpl::erase<
+        tmpl::erase<IndexList, tmpl::index_of<Args, ReplacedArg2>>,
+        tmpl::index_of<tmpl::erase<Args, tmpl::index_of<Args, ReplacedArg2>>,
+                       ReplacedArg1>>,
+    tmpl::erase<
+        tmpl::erase<Args, tmpl::index_of<Args, ReplacedArg2>>,
+        tmpl::index_of<tmpl::erase<Args, tmpl::index_of<Args, ReplacedArg2>>,
+                       ReplacedArg1>>>::type;
+/*tmpl::erase<tmpl::erase<Symm, tmpl::index_of<Args, ReplacedArg2>>,
+            tmpl::index_of<Args, ReplacedArg1>>,
+tmpl::erase<tmpl::erase<IndexList, tmpl::index_of<Args, ReplacedArg2>>,
+            tmpl::index_of<Args, ReplacedArg1>>,
+tmpl::erase<tmpl::erase<Args, tmpl::index_of<Args, ReplacedArg2>>,
+            tmpl::index_of<Args, ReplacedArg1>>>::type;*/
 
 template <int I, typename Index1, typename Index2>
 struct ComputeContractionImpl {
@@ -354,6 +368,7 @@ SPECTRE_ALWAYS_INLINE auto contract(
   /*return TensorContract<tmpl::size_t<ReplacedArg1>,
                         tmpl::size_t<ReplacedArg2>, T, X, Symm, IndexList,
                         Args>(~t);*/
+
   return TensorContract<ReplacedArg1, ReplacedArg2, T, X, Symm, IndexList,
                         Args>(~t);
 }
@@ -364,14 +379,33 @@ namespace detail {
 template <template <typename> class TE, typename ReplacedArgList, typename I,
           typename TotalContracted>
 struct fully_contract_helper {
-  template <typename T>
+  using lower_tensorindex = ti_contracted_t<I::value, UpLo::Lo>;
+  using upper_tensorindex = TensorIndex<lower_tensorindex::value + 1, UpLo::Up>;
+  using ReplacedArg1 = tmpl::conditional_t<
+      (tmpl::index_of<ReplacedArgList, lower_tensorindex>::value <
+       tmpl::index_of<ReplacedArgList, upper_tensorindex>::value),
+      lower_tensorindex, upper_tensorindex>;
+  using ReplacedArg2 = tmpl::conditional_t<
+      (tmpl::index_of<ReplacedArgList, lower_tensorindex>::value <
+       tmpl::index_of<ReplacedArgList, upper_tensorindex>::value),
+      upper_tensorindex, lower_tensorindex>;
+
+  /*template <typename T>
   SPECTRE_ALWAYS_INLINE static constexpr auto apply(const T& t) -> decltype(
-      contract<ti_contracted_t<I::value /*, UpLo::Lo*/> /*::value*/,
-               ti_contracted_t<I::value + 1 /*, UpLo::Up*/> /*::value*/>(
+      contract<ti_contracted_t<I::value, UpLo::Lo>,
+               ti_contracted_t<I::value + 1, UpLo::Up>>(
           fully_contract_helper<TE, ReplacedArgList, tmpl::size_t<I::value + 1>,
                                 TotalContracted>::apply(t))) {
-    return contract<ti_contracted_t<I::value /*, UpLo::Lo*/> /*::value*/,
-                    ti_contracted_t<I::value + 1 /*, UpLo::Up*/> /*::value*/>(
+    return contract<ti_contracted_t<I::value, UpLo::Lo>,
+                    ti_contracted_t<I::value + 1, UpLo::Up>>(
+        fully_contract_helper<TE, ReplacedArgList, tmpl::size_t<I::value + 1>,
+                              TotalContracted>::apply(t));*/
+  template <typename T>
+  SPECTRE_ALWAYS_INLINE static constexpr auto apply(const T& t)
+      -> decltype(contract<ReplacedArg1, ReplacedArg2>(
+          fully_contract_helper<TE, ReplacedArgList, tmpl::size_t<I::value + 1>,
+                                TotalContracted>::apply(t))) {
+    return contract<ReplacedArg1, ReplacedArg2>(
         fully_contract_helper<TE, ReplacedArgList, tmpl::size_t<I::value + 1>,
                               TotalContracted>::apply(t));
   }
@@ -383,14 +417,28 @@ struct fully_contract_helper<TE, ReplacedArgList,
                              tmpl::size_t<TotalContracted::value - 1>,
                              TotalContracted> {
   using I = tmpl::size_t<2 * (TotalContracted::value - 1)>;
+  using lower_tensorindex = ti_contracted_t<I::value, UpLo::Lo>;
+  using upper_tensorindex = TensorIndex<lower_tensorindex::value + 1, UpLo::Up>;
+  using ReplacedArg1 = tmpl::conditional_t<
+      (tmpl::index_of<ReplacedArgList, lower_tensorindex>::value <
+       tmpl::index_of<ReplacedArgList, upper_tensorindex>::value),
+      lower_tensorindex, upper_tensorindex>;
+  using ReplacedArg2 = tmpl::conditional_t<
+      (tmpl::index_of<ReplacedArgList, lower_tensorindex>::value <
+       tmpl::index_of<ReplacedArgList, upper_tensorindex>::value),
+      upper_tensorindex, lower_tensorindex>;
+  /*template <typename T>
+  SPECTRE_ALWAYS_INLINE static constexpr auto apply(const T& t) -> decltype(
+      contract<ti_contracted_t<I::value, UpLo::Lo>,
+               ti_contracted_t<I::value + 1, UpLo::Up>>(
+          TE<ReplacedArgList>(t))) {
+    return contract<ti_contracted_t<I::value, UpLo::Lo>,
+                    ti_contracted_t<I::value + 1, UpLo::Up>>(
+        TE<ReplacedArgList>(t));*/
   template <typename T>
   SPECTRE_ALWAYS_INLINE static constexpr auto apply(const T& t) -> decltype(
-      contract<ti_contracted_t<I::value /*, UpLo::Lo*/> /*::value*/,
-               ti_contracted_t<I::value + 1 /*, UpLo::Up*/> /*::value*/>(
-          TE<ReplacedArgList>(t))) {
-    return contract<ti_contracted_t<I::value /*, UpLo::Lo*/> /*::value*/,
-                    ti_contracted_t<I::value + 1 /*, UpLo::Up*/> /*::value*/>(
-        TE<ReplacedArgList>(t));
+      contract<ReplacedArg1, ReplacedArg2>(TE<ReplacedArgList>(t))) {
+    return contract<ReplacedArg1, ReplacedArg2>(TE<ReplacedArgList>(t));
   }
 };
 }  // namespace detail

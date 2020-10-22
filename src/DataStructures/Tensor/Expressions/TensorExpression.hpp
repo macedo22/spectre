@@ -32,24 +32,20 @@
  * `ti_a` and `ti_b` are place holders for objects of type `TensorIndex<0>` and
  * `TensorIndex<1>` respectively.
  */
-template <std::size_t I>
+template <std::size_t I, UpLo Valence>
 struct TensorIndex {
   using value_type = std::size_t;
-  using type = TensorIndex<I>;
+  using type = TensorIndex<I, Valence>;
   static constexpr value_type value = I;
+  static constexpr UpLo valence = Valence;
   static constexpr bool is_spacetime = I < 8;
 };
 
 /// \ingroup TensorExpressionsGroup
-/// Given an `TensorIndex<size_t>` return `TensorIndex<size_t + 1>`
+/// Given an `TensorIndex<size_t, UpLo>` return `TensorIndex<size_t + 1, UpLo>`
 /// \tparam T the args to increment
-template <typename T>
-using next_tensor_index = TensorIndex<T::value + 1>;
-
-/// \ingroup TensorExpressionsGroup
-/// Metafunction to return the sum of two TensorIndex's
-template <typename A, typename B>
-using plus_tensor_index = TensorIndex<A::value + B::value>;
+template <typename T, UpLo Valence>
+using next_tensor_index = TensorIndex<T::value + 1, Valence>;
 
 // @{
 /*!
@@ -59,30 +55,30 @@ using plus_tensor_index = TensorIndex<A::value + B::value>;
  * Available tensor indices to use in a Tensor Expression.
  * \snippet Test_TensorExpressions.cpp use_tensor_index
  */
-static TensorIndex<0> ti_a{};
-static TensorIndex<0> ti_A{};
-static TensorIndex<1> ti_b{};
-static TensorIndex<1> ti_B{};
-static TensorIndex<2> ti_c{};
-static TensorIndex<2> ti_C{};
-static TensorIndex<3> ti_d{};
-static TensorIndex<3> ti_D{};
-static TensorIndex<4> ti_e{};
-static TensorIndex<4> ti_E{};
-static TensorIndex<5> ti_f{};
-static TensorIndex<5> ti_F{};
-static TensorIndex<6> ti_g{};
-static TensorIndex<6> ti_G{};
-static TensorIndex<7> ti_h{};
-static TensorIndex<7> ti_H{};
-static TensorIndex<8> ti_i{};
-static TensorIndex<8> ti_I{};
-static TensorIndex<9> ti_j{};
-static TensorIndex<9> ti_J{};
-static TensorIndex<10> ti_k{};
-static TensorIndex<10> ti_K{};
-static TensorIndex<11> ti_l{};
-static TensorIndex<11> ti_L{};
+static TensorIndex<0, UpLo::Lo> ti_a{};
+static TensorIndex<0, UpLo::Up> ti_A{};
+static TensorIndex<1, UpLo::Lo> ti_b{};
+static TensorIndex<1, UpLo::Up> ti_B{};
+static TensorIndex<2, UpLo::Lo> ti_c{};
+static TensorIndex<2, UpLo::Up> ti_C{};
+static TensorIndex<3, UpLo::Lo> ti_d{};
+static TensorIndex<3, UpLo::Up> ti_D{};
+static TensorIndex<4, UpLo::Lo> ti_e{};
+static TensorIndex<4, UpLo::Up> ti_E{};
+static TensorIndex<5, UpLo::Lo> ti_f{};
+static TensorIndex<5, UpLo::Up> ti_F{};
+static TensorIndex<6, UpLo::Lo> ti_g{};
+static TensorIndex<6, UpLo::Up> ti_G{};
+static TensorIndex<7, UpLo::Lo> ti_h{};
+static TensorIndex<7, UpLo::Up> ti_H{};
+static TensorIndex<8, UpLo::Lo> ti_i{};
+static TensorIndex<8, UpLo::Up> ti_I{};
+static TensorIndex<9, UpLo::Lo> ti_j{};
+static TensorIndex<9, UpLo::Up> ti_J{};
+static TensorIndex<10, UpLo::Lo> ti_k{};
+static TensorIndex<10, UpLo::Up> ti_K{};
+static TensorIndex<11, UpLo::Lo> ti_l{};
+static TensorIndex<11, UpLo::Up> ti_L{};
 
 using ti_a_t = decltype(ti_a);
 using ti_A_t = decltype(ti_A);
@@ -114,12 +110,12 @@ using ti_L_t = decltype(ti_L);
 /// \ingroup TensorExpressionsGroup
 /// Type alias used when Tensor Expressions manipulate indices. These are used
 /// to denote contracted as opposed to free indices.
-template <int I>
-using ti_contracted_t = TensorIndex<static_cast<size_t>(I + 1000)>;
+template <int I, UpLo Valence>
+using ti_contracted_t = TensorIndex<static_cast<size_t>(I + 1000), Valence>;
 
 /// \ingroup TensorExpressionsGroup
-template <int I>
-TensorIndex<static_cast<size_t>(I + 1000)> ti_contracted();
+template <int I, UpLo Valence>
+TensorIndex<static_cast<size_t>(I + 1000), Valence> ti_contracted();
 /// \endcond
 
 namespace tt {
@@ -129,8 +125,8 @@ namespace tt {
  */
 template <typename T>
 struct is_tensor_index : std::false_type {};
-template <size_t I>
-struct is_tensor_index<TensorIndex<I>> : std::true_type {};
+template <size_t I, UpLo Valence>
+struct is_tensor_index<TensorIndex<I, Valence>> : std::true_type {};
 }  // namespace tt
 
 namespace detail {
@@ -176,14 +172,16 @@ template <typename Element, typename Iteration, typename Lhs, typename Rhs,
 struct generate_transformation_helper {
   using tensor_index_to_find = tmpl::at<RhsWithOnlyLhs, IndexInLhs>;
   using index_to_replace_with = tmpl::index_of<Rhs, tensor_index_to_find>;
-  using type = TensorIndex<index_to_replace_with::value>;
+  using type =
+      TensorIndex<index_to_replace_with::value, tensor_index_to_find::valence>;
 };
 
 template <typename Element, typename Iteration, typename Lhs, typename Rhs,
           typename RhsWithOnlyLhs>
 struct generate_transformation_helper<Element, Iteration, Lhs, Rhs,
                                       RhsWithOnlyLhs, tmpl::no_such_type_> {
-  using type = TensorIndex<Iteration::value>;
+  // TODO: does it matter what valence this gets? is it just a placeholder?
+  using type = TensorIndex<Iteration::value, UpLo::Lo>;
 };
 
 template <typename State, typename Element, typename Iteration, typename Lhs,
@@ -279,17 +277,15 @@ template <typename TensorIndexList, typename Element,
 using index_replace = tmpl::replace_at<
     tmpl::replace_at<
         TensorIndexList,
-        tmpl::index_of<TensorIndexList,
-                       TensorIndex<Element::value /*, UplLo::Up*/>>,
+        tmpl::index_of<TensorIndexList, TensorIndex<Element::value, UpLo::Lo>>,
         ContractedLowerTensorIndex>,
     tmpl::index_of<
-        tmpl::replace_at<
-            TensorIndexList,
-            tmpl::index_of<TensorIndexList,
-                           TensorIndex<Element::value /*, UplLo::Lo*/>>,
-            ContractedLowerTensorIndex>,
-        TensorIndex<Element::value /*, UplLo::Up*/>>,
-    TensorIndex<ContractedLowerTensorIndex::value + 1 /*, UpLo::Up*/>>;
+        tmpl::replace_at<TensorIndexList,
+                         tmpl::index_of<TensorIndexList,
+                                        TensorIndex<Element::value, UpLo::Lo>>,
+                         ContractedLowerTensorIndex>,
+        TensorIndex<Element::value, UpLo::Up>>,
+    TensorIndex<ContractedLowerTensorIndex::value + 1, UpLo::Up>>;
 
 /*/// \cond HIDDEN_SYMBOLS
 template <typename List, typename ReplaceList, int I>
@@ -305,7 +301,7 @@ struct replace_indices_impl
     : replace_indices_impl<
           index_replace<TensorIndexList,
                         tmpl::front<ReplaceTensorIndexValueList>,
-                        ti_contracted_t<2 * I /*, UpLo::Lo*/>>,
+                        ti_contracted_t<2 * I, UpLo::Lo>>,
           tmpl::pop_front<ReplaceTensorIndexValueList>, I + 1> {};
 /// \endcond
 
