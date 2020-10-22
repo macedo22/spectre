@@ -172,6 +172,7 @@ template <typename Element, typename Iteration, typename Lhs, typename Rhs,
 struct generate_transformation_helper {
   using tensor_index_to_find = tmpl::at<RhsWithOnlyLhs, IndexInLhs>;
   using index_to_replace_with = tmpl::index_of<Rhs, tensor_index_to_find>;
+  // TODO: does it matter what valence this gets? is it just a placeholder?
   using type =
       TensorIndex<index_to_replace_with::value, tensor_index_to_find::valence>;
 };
@@ -265,13 +266,6 @@ using repeated_vals = tmpl::fold<
         tmpl::pin<List>, tmpl::_state, tmpl::_element>>;*/
 
 namespace detail {
-/*template <typename List, typename Element, typename R>
-using index_replace = tmpl::replace_at<
-    tmpl::replace_at<List, tmpl::index_of<List, Element>, R>,
-    tmpl::index_of<tmpl::replace_at<List, tmpl::index_of<List, Element>, R>,
-                   Element>,
-    next_tensor_index<R>>;*/
-
 template <typename TensorIndexList, typename Element,
           typename ContractedLowerTensorIndex>
 using index_replace = tmpl::replace_at<
@@ -287,14 +281,6 @@ using index_replace = tmpl::replace_at<
         TensorIndex<Element::value, UpLo::Up>>,
     TensorIndex<ContractedLowerTensorIndex::value + 1, UpLo::Up>>;
 
-/*/// \cond HIDDEN_SYMBOLS
-template <typename List, typename ReplaceList, int I>
-struct replace_indices_impl
-    : replace_indices_impl<
-          index_replace<List, tmpl::front<ReplaceList>, ti_contracted_t<2 * I>>,
-          tmpl::pop_front<ReplaceList>, I + 1> {};
-/// \endcond*/
-
 /// \cond HIDDEN_SYMBOLS
 template <typename TensorIndexList, typename ReplaceTensorIndexValueList, int I>
 struct replace_indices_impl
@@ -305,11 +291,6 @@ struct replace_indices_impl
           tmpl::pop_front<ReplaceTensorIndexValueList>, I + 1> {};
 /// \endcond
 
-/*template <typename List, int I>
-struct replace_indices_impl<List, tmpl::list<>, I> {
-  using type = List;
-};*/
-
 template <typename TensorIndexList, int I>
 struct replace_indices_impl<TensorIndexList, tmpl::list<>, I> {
   using type = TensorIndexList;
@@ -319,9 +300,6 @@ struct replace_indices_impl<TensorIndexList, tmpl::list<>, I> {
 /*!
  * \ingroup TensorExpressionsGroup
  */
-/*template <typename List, typename ReplaceList>
-using replace_indices =
-    typename detail::replace_indices_impl<List, ReplaceList, 0>::type;*/
 template <typename TensorIndexList, typename ReplaceTensorIndexValueList>
 using replace_indices =
     typename detail::replace_indices_impl<TensorIndexList,

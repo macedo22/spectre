@@ -38,18 +38,6 @@ struct ComputeContractedTypeImpl<T, X, SymmList<Symm...>, IndexList, Args> {
       TensorExpression<T, X, Symmetry<Symm::value...>, IndexList, Args>;
 };
 
-/*template <typename ReplacedArg1, typename ReplacedArg2, typename T, typename
-X, typename Symm, typename IndexList, typename Args> using ComputeContractedType
-= typename ComputeContractedTypeImpl< T, X, tmpl::erase<tmpl::erase<Symm,
-tmpl::index_of< Args, TensorIndex<ReplacedArg2::value>>>, tmpl::index_of<Args,
-TensorIndex<ReplacedArg1::value>>>, tmpl::erase< tmpl::erase<IndexList,
-                    tmpl::index_of<Args, TensorIndex<ReplacedArg2::value>>>,
-        tmpl::index_of<Args, TensorIndex<ReplacedArg1::value>>>,
-    tmpl::erase<tmpl::erase<Args, tmpl::index_of<
-                                      Args, TensorIndex<ReplacedArg2::value>>>,
-                tmpl::index_of<Args,
-TensorIndex<ReplacedArg1::value>>>>::type;*/
-
 template <typename ReplacedArg1, typename ReplacedArg2, typename T, typename X,
           typename Symm, typename IndexList, typename Args>
 using ComputeContractedType = typename ComputeContractedTypeImpl<
@@ -58,8 +46,6 @@ using ComputeContractedType = typename ComputeContractedTypeImpl<
         tmpl::erase<Symm, tmpl::index_of<Args, ReplacedArg2>>,
         tmpl::index_of<tmpl::erase<Args, tmpl::index_of<Args, ReplacedArg2>>,
                        ReplacedArg1>>,
-    // tmpl::index_of<tmpl::erase<Symm, tmpl::index_of<Args, ReplacedArg2>>,
-    // ReplacedArg1>>,
     tmpl::erase<
         tmpl::erase<IndexList, tmpl::index_of<Args, ReplacedArg2>>,
         tmpl::index_of<tmpl::erase<Args, tmpl::index_of<Args, ReplacedArg2>>,
@@ -68,12 +54,6 @@ using ComputeContractedType = typename ComputeContractedTypeImpl<
         tmpl::erase<Args, tmpl::index_of<Args, ReplacedArg2>>,
         tmpl::index_of<tmpl::erase<Args, tmpl::index_of<Args, ReplacedArg2>>,
                        ReplacedArg1>>>::type;
-/*tmpl::erase<tmpl::erase<Symm, tmpl::index_of<Args, ReplacedArg2>>,
-            tmpl::index_of<Args, ReplacedArg1>>,
-tmpl::erase<tmpl::erase<IndexList, tmpl::index_of<Args, ReplacedArg2>>,
-            tmpl::index_of<Args, ReplacedArg1>>,
-tmpl::erase<tmpl::erase<Args, tmpl::index_of<Args, ReplacedArg2>>,
-            tmpl::index_of<Args, ReplacedArg1>>>::type;*/
 
 template <int I, typename Index1, typename Index2>
 struct ComputeContractionImpl {
@@ -148,10 +128,6 @@ struct TensorContract
                               typename detail::ComputeContractedType<
                                   ReplacedArg1, ReplacedArg2, T, X, Symm,
                                   IndexList, ArgsList>::args_list> {
-  /*using Index1 = tmpl::size_t<
-      tmpl::index_of<ArgsList, TensorIndex<ReplacedArg1::value>>::value>;
-  using Index2 = tmpl::size_t<
-      tmpl::index_of<ArgsList, TensorIndex<ReplacedArg2::value>>::value>;*/
   using Index1 = tmpl::size_t<tmpl::index_of<ArgsList, ReplacedArg1>::value>;
   using Index2 = tmpl::size_t<tmpl::index_of<ArgsList, ReplacedArg2>::value>;
   using CI1 = tmpl::at<IndexList, Index1>;
@@ -360,15 +336,11 @@ struct TensorContract
 /*!
  * \ingroup TensorExpressionsGroup
  */
-template </*int*/ typename ReplacedArg1, /*int*/ typename ReplacedArg2,
+template <typename ReplacedArg1, typename ReplacedArg2,
           typename T, typename X, typename Symm, typename IndexList,
           typename Args>
 SPECTRE_ALWAYS_INLINE auto contract(
     const TensorExpression<T, X, Symm, IndexList, Args>& t) {
-  /*return TensorContract<tmpl::size_t<ReplacedArg1>,
-                        tmpl::size_t<ReplacedArg2>, T, X, Symm, IndexList,
-                        Args>(~t);*/
-
   return TensorContract<ReplacedArg1, ReplacedArg2, T, X, Symm, IndexList,
                         Args>(~t);
 }
@@ -390,16 +362,6 @@ struct fully_contract_helper {
        tmpl::index_of<ReplacedArgList, upper_tensorindex>::value),
       upper_tensorindex, lower_tensorindex>;
 
-  /*template <typename T>
-  SPECTRE_ALWAYS_INLINE static constexpr auto apply(const T& t) -> decltype(
-      contract<ti_contracted_t<I::value, UpLo::Lo>,
-               ti_contracted_t<I::value + 1, UpLo::Up>>(
-          fully_contract_helper<TE, ReplacedArgList, tmpl::size_t<I::value + 1>,
-                                TotalContracted>::apply(t))) {
-    return contract<ti_contracted_t<I::value, UpLo::Lo>,
-                    ti_contracted_t<I::value + 1, UpLo::Up>>(
-        fully_contract_helper<TE, ReplacedArgList, tmpl::size_t<I::value + 1>,
-                              TotalContracted>::apply(t));*/
   template <typename T>
   SPECTRE_ALWAYS_INLINE static constexpr auto apply(const T& t)
       -> decltype(contract<ReplacedArg1, ReplacedArg2>(
@@ -427,14 +389,7 @@ struct fully_contract_helper<TE, ReplacedArgList,
       (tmpl::index_of<ReplacedArgList, lower_tensorindex>::value <
        tmpl::index_of<ReplacedArgList, upper_tensorindex>::value),
       upper_tensorindex, lower_tensorindex>;
-  /*template <typename T>
-  SPECTRE_ALWAYS_INLINE static constexpr auto apply(const T& t) -> decltype(
-      contract<ti_contracted_t<I::value, UpLo::Lo>,
-               ti_contracted_t<I::value + 1, UpLo::Up>>(
-          TE<ReplacedArgList>(t))) {
-    return contract<ti_contracted_t<I::value, UpLo::Lo>,
-                    ti_contracted_t<I::value + 1, UpLo::Up>>(
-        TE<ReplacedArgList>(t));*/
+
   template <typename T>
   SPECTRE_ALWAYS_INLINE static constexpr auto apply(const T& t) -> decltype(
       contract<ReplacedArg1, ReplacedArg2>(TE<ReplacedArgList>(t))) {
