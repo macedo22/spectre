@@ -126,9 +126,9 @@ struct TensorContract
                               typename detail::ComputeContractedType<
                                   ReplacedArg1, ReplacedArg2, T, X, Symm,
                                   IndexList, ArgsList>::args_list> {
-  using Index1 = tmpl::int32_t<
+  using Index1 = tmpl::size_t<
       tmpl::index_of<ArgsList, TensorIndex<ReplacedArg1::value>>::value>;
-  using Index2 = tmpl::int32_t<
+  using Index2 = tmpl::size_t<
       tmpl::index_of<ArgsList, TensorIndex<ReplacedArg2::value>>::value>;
   using CI1 = tmpl::at<IndexList, Index1>;
   using CI2 = tmpl::at<IndexList, Index2>;
@@ -340,8 +340,8 @@ template <int ReplacedArg1, int ReplacedArg2, typename T, typename X,
           typename Symm, typename IndexList, typename Args>
 SPECTRE_ALWAYS_INLINE auto contract(
     const TensorExpression<T, X, Symm, IndexList, Args>& t) {
-  return TensorContract<tmpl::int32_t<ReplacedArg1>,
-                        tmpl::int32_t<ReplacedArg2>, T, X, Symm, IndexList,
+  return TensorContract<tmpl::size_t<ReplacedArg1>,
+                        tmpl::size_t<ReplacedArg2>, T, X, Symm, IndexList,
                         Args>(~t);
 }
 
@@ -355,11 +355,11 @@ struct fully_contract_helper {
   SPECTRE_ALWAYS_INLINE static constexpr auto apply(
       const T& t) -> decltype(contract<ti_contracted_t<I::value>::value,
                                        ti_contracted_t<I::value + 1>::value>(
-      fully_contract_helper<TE, ReplacedArgList, tmpl::int32_t<I::value + 1>,
+      fully_contract_helper<TE, ReplacedArgList, tmpl::size_t<I::value + 1>,
                             TotalContracted>::apply(t))) {
     return contract<ti_contracted_t<I::value>::value,
                     ti_contracted_t<I::value + 1>::value>(
-        fully_contract_helper<TE, ReplacedArgList, tmpl::int32_t<I::value + 1>,
+        fully_contract_helper<TE, ReplacedArgList, tmpl::size_t<I::value + 1>,
                               TotalContracted>::apply(t));
   }
 };
@@ -367,9 +367,9 @@ struct fully_contract_helper {
 template <template <typename> class TE, typename ReplacedArgList,
           typename TotalContracted>
 struct fully_contract_helper<TE, ReplacedArgList,
-                             tmpl::int32_t<TotalContracted::value - 1>,
+                             tmpl::size_t<TotalContracted::value - 1>,
                              TotalContracted> {
-  using I = tmpl::int32_t<2 * (TotalContracted::value - 1)>;
+  using I = tmpl::size_t<2 * (TotalContracted::value - 1)>;
   template <typename T>
   SPECTRE_ALWAYS_INLINE static constexpr auto apply(const T& t) -> decltype(
       contract<ti_contracted_t<I::value>::value,
