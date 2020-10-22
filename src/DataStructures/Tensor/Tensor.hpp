@@ -281,14 +281,24 @@ class Tensor<X, Symm, IndexList<Indices...>> {
   SPECTRE_ALWAYS_INLINE constexpr auto operator()(N... /*meta*/) const noexcept
       -> decltype(
           TensorExpressions::fully_contracted<
-              TE, replace_indices<tmpl::list<N...>, repeated<tmpl::list<N...>>>,
+              TE,
+              replace_indices<
+                  tmpl::list<N...>,
+                  repeated<tmpl::list<tmpl::int32_t<N::value>... /*N...*/>>>,
               tmpl::int32_t<0>,
-              tmpl::size<repeated<tmpl::list<N...>>>>::apply(*this)) {
+              tmpl::size<repeated<tmpl::list<
+                  tmpl::int32_t<N::value>... /*N...*/>>>>::apply(*this)) {
     using args_list = tmpl::list<N...>;
-    using repeated_args_list = repeated<args_list>;
-    return TensorExpressions::fully_contracted<
+    using tensorindex_values = tmpl::list<tmpl::int32_t<N::value>...>;
+    // using repeated_args_list = repeated<args_list>;
+    using repeated_tensorindex_values = repeated<tensorindex_values>;
+    /*return TensorExpressions::fully_contracted<
         TE, replace_indices<args_list, repeated_args_list>, tmpl::int32_t<0>,
-        tmpl::size<repeated_args_list>>::apply(*this);
+        tmpl::size<repeated_args_list>>::apply(*this);*/
+    return TensorExpressions::fully_contracted<
+        TE, replace_indices<args_list, repeated_tensorindex_values>,
+        tmpl::int32_t<0>,
+        tmpl::size<repeated_tensorindex_values>>::apply(*this);
   }
   // @}
 

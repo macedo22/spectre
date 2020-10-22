@@ -267,33 +267,69 @@ using repeated_vals = tmpl::fold<
         tmpl::pin<List>, tmpl::_state, tmpl::_element>>;*/
 
 namespace detail {
-template <typename List, typename Element, typename R>
+/*template <typename List, typename Element, typename R>
 using index_replace = tmpl::replace_at<
     tmpl::replace_at<List, tmpl::index_of<List, Element>, R>,
     tmpl::index_of<tmpl::replace_at<List, tmpl::index_of<List, Element>, R>,
                    Element>,
-    next_tensor_index<R>>;
+    next_tensor_index<R>>;*/
 
-/// \cond HIDDEN_SYMBOLS
+template <typename TensorIndexList, typename Element,
+          typename ContractedLowerTensorIndex>
+using index_replace = tmpl::replace_at<
+    tmpl::replace_at<
+        TensorIndexList,
+        tmpl::index_of<TensorIndexList,
+                       TensorIndex<Element::value /*, UplLo::Up*/>>,
+        ContractedLowerTensorIndex>,
+    tmpl::index_of<
+        tmpl::replace_at<
+            TensorIndexList,
+            tmpl::index_of<TensorIndexList,
+                           TensorIndex<Element::value /*, UplLo::Lo*/>>,
+            ContractedLowerTensorIndex>,
+        TensorIndex<Element::value /*, UplLo::Up*/>>,
+    TensorIndex<ContractedLowerTensorIndex::value + 1 /*, UpLo::Up*/>>;
+
+/*/// \cond HIDDEN_SYMBOLS
 template <typename List, typename ReplaceList, int I>
 struct replace_indices_impl
     : replace_indices_impl<
           index_replace<List, tmpl::front<ReplaceList>, ti_contracted_t<2 * I>>,
           tmpl::pop_front<ReplaceList>, I + 1> {};
+/// \endcond*/
+
+/// \cond HIDDEN_SYMBOLS
+template <typename TensorIndexList, typename ReplaceTensorIndexValueList, int I>
+struct replace_indices_impl
+    : replace_indices_impl<
+          index_replace<TensorIndexList,
+                        tmpl::front<ReplaceTensorIndexValueList>,
+                        ti_contracted_t<2 * I /*, UpLo::Lo*/>>,
+          tmpl::pop_front<ReplaceTensorIndexValueList>, I + 1> {};
 /// \endcond
 
-template <typename List, int I>
+/*template <typename List, int I>
 struct replace_indices_impl<List, tmpl::list<>, I> {
   using type = List;
+};*/
+
+template <typename TensorIndexList, int I>
+struct replace_indices_impl<TensorIndexList, tmpl::list<>, I> {
+  using type = TensorIndexList;
 };
 }  // namespace detail
 
 /*!
  * \ingroup TensorExpressionsGroup
  */
-template <typename List, typename ReplaceList>
+/*template <typename List, typename ReplaceList>
 using replace_indices =
-    typename detail::replace_indices_impl<List, ReplaceList, 0>::type;
+    typename detail::replace_indices_impl<List, ReplaceList, 0>::type;*/
+template <typename TensorIndexList, typename ReplaceTensorIndexValueList>
+using replace_indices =
+    typename detail::replace_indices_impl<TensorIndexList,
+                                          ReplaceTensorIndexValueList, 0>::type;
 
 /// \ingroup TensorExpressionsGroup
 /// \brief Marks a class as being a TensorExpression
