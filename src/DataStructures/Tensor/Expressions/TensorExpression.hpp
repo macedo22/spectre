@@ -172,17 +172,14 @@ template <typename Element, typename Iteration, typename Lhs, typename Rhs,
 struct generate_transformation_helper {
   using tensor_index_to_find = tmpl::at<RhsWithOnlyLhs, IndexInLhs>;
   using index_to_replace_with = tmpl::index_of<Rhs, tensor_index_to_find>;
-  // TODO: does it matter what valence this gets? is it just a placeholder?
-  using type =
-      TensorIndex<index_to_replace_with::value, tensor_index_to_find::valence>;
+  using type = tmpl::size_t<index_to_replace_with::value>;
 };
 
 template <typename Element, typename Iteration, typename Lhs, typename Rhs,
           typename RhsWithOnlyLhs>
 struct generate_transformation_helper<Element, Iteration, Lhs, Rhs,
                                       RhsWithOnlyLhs, tmpl::no_such_type_> {
-  // TODO: does it matter what valence this gets? is it just a placeholder?
-  using type = TensorIndex<Iteration::value, UpLo::Lo>;
+  using type = tmpl::size_t<Iteration::value>;
 };
 
 template <typename State, typename Element, typename Iteration, typename Lhs,
