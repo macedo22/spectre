@@ -297,6 +297,61 @@ struct replace_indices_impl<TensorIndexList, tmpl::list<>, I> {
 };
 }  // namespace detail
 
+namespace TensorExpressions {
+/*!
+ * \ingroup TensorExpressionsGroup
+ * \brief Determines and stores a LHS tensor's symmetry and index list from a
+ * RHS tensor expression and desired LHS index order
+ *
+ * \details Given the generic index order of a RHS TensorExpression and the
+ * generic index order of the desired LHS Tensor, this creates a mapping between
+ * the two that is used to determine the (potentially reordered) ordering of the
+ * elements of the desired LHS Tensor`s ::Symmetry and typelist of
+ * \ref SpacetimeIndex "TensorIndexType"s.
+ *
+ * @tparam RhsTensorIndexList the typelist of TensorIndex of the RHS
+ * TensorExpression, e.g. `ti_a_t`, `ti_b_t`, `ti_c_t`
+ * @tparam LhsTensorIndexList the typelist of TensorIndexs of the desired LHS
+ * tensor, e.g. `ti_b_t`, `ti_c_t`, `ti_a_t`
+ * @tparam RhsSymmetry the ::Symmetry of the RHS indices
+ * @tparam RhsTensorIndexTypeList the RHS TensorExpression's typelist of
+ * \ref SpacetimeIndex "TensorIndexType"s
+ */
+template <typename RhsTensorIndexList, typename LhsTensorIndexList,
+          typename RhsSymmetry, typename RhsTensorIndexTypeList,
+          size_t RhsNumIndices = tmpl::size<RhsTensorIndexList>::value,
+          size_t LhsNumIndices = tmpl::size<LhsTensorIndexList>::value,
+          typename RhsIndexSequence = std::make_index_sequence<RhsNumIndices>,
+          typename LhsIndexSequence = std::make_index_sequence<LhsNumIndices>>
+struct LhsTensor;
+
+template <typename RhsTensorIndexList, typename... LhsTensorIndices,
+          typename RhsSymmetry, typename RhsTensorIndexTypeList,
+          size_t RhsNumIndices, size_t LhsNumIndices, size_t... RhsInts,
+          size_t... LhsInts>
+struct LhsTensor<RhsTensorIndexList, tmpl::list<LhsTensorIndices...>,
+                 RhsSymmetry, RhsTensorIndexTypeList, RhsNumIndices,
+                 LhsNumIndices, std::index_sequence<RhsInts...>,
+                 std::index_sequence<LhsInts...>> {
+  static constexpr std::array<size_t, LhsNumIndices> lhs_tensorindex_values = {
+      {LhsTensorIndices::value...}};
+  static constexpr std::array<size_t, RhsNumIndices> rhs_tensorindex_values = {
+      {tmpl::at_c<RhsTensorIndexList, RhsInts>::value...}};
+  static constexpr std::array<size_t, LhsNumIndices> lhs_to_rhs_map = {
+      {std::distance(rhs_tensorindex_values.begin(),
+                     alg::find(rhs_tensorindex_values,
+                               lhs_tensorindex_values[LhsInts]))...}};
+
+  // Desired LHS Tensor's Symmetry and typelist of TensorIndexTypes
+  using symmetry =
+      Symmetry<tmpl::at_c<RhsSymmetry, lhs_to_rhs_map[LhsInts]>::value...>;
+  using tensorindextype_list = tmpl::list<
+      tmpl::at_c<RhsTensorIndexTypeList, lhs_to_rhs_map[LhsInts]>...>;
+  using structure = Tensor_detail::Structure<
+      symmetry, tmpl::at_c<RhsTensorIndexTypeList, lhs_to_rhs_map[LhsInts]>...>;
+};
+}  // namespace TensorExpressions
+
 /*!
  * \ingroup TensorExpressionsGroup
  */

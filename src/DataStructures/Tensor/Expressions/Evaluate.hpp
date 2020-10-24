@@ -7,6 +7,7 @@
 #pragma once
 
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
+//#include "DataStructures/Tensor/Structure.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Utilities/Algorithm.hpp"
 #include "Utilities/Requires.hpp"
@@ -33,7 +34,7 @@ namespace TensorExpressions {
  * @tparam RhsTensorIndexTypeList the RHS TensorExpression's typelist of
  * \ref SpacetimeIndex "TensorIndexType"s
  */
-template <typename RhsTensorIndexList, typename LhsTensorIndexList,
+/*template <typename RhsTensorIndexList, typename LhsTensorIndexList,
           typename RhsSymmetry, typename RhsTensorIndexTypeList,
           size_t RhsNumIndices = tmpl::size<RhsTensorIndexList>::value,
           size_t LhsNumIndices = tmpl::size<LhsTensorIndexList>::value,
@@ -63,7 +64,10 @@ struct LhsTensor<RhsTensorIndexList, tmpl::list<LhsTensorIndices...>,
       Symmetry<tmpl::at_c<RhsSymmetry, lhs_to_rhs_map[LhsInts]>::value...>;
   using tensorindextype_list = tmpl::list<
       tmpl::at_c<RhsTensorIndexTypeList, lhs_to_rhs_map[LhsInts]>...>;
-};
+  using structure = Tensor_detail::Structure<
+      symmetry,
+      tmpl::at_c<RhsTensorIndexTypeList, lhs_to_rhs_map[LhsInts]>...>;
+};*/
 
 /*!
  * \ingroup TensorExpressionsGroup

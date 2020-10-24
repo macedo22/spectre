@@ -88,9 +88,9 @@ constexpr std::array<size_t, Dim> get_storage_indices_to_sum(
   // std::array<size_t, Dim> storage_indices_to_sum[0] =
   // first_storage_index_to_sum;
   ////std::cout << "Here are the first tensor index to sum:  " <<
-  ///first_tensor_index_to_sum << std::endl;
+  /// first_tensor_index_to_sum << std::endl;
   // constexpr std::make_index_sequence<Dim> dim_seq{};
-  constexpr std::array<size_t, Dim> base{};
+  // constexpr std::array<size_t, Dim> base{};
   constexpr std::array<size_t, Dim> storage_indices_to_sum = {
       {UncontractedLhsStructure::get_storage_index(
           get_next_tensor_index_to_add<Ints, I, ContractedLhsStructure, Index1,
@@ -167,7 +167,7 @@ struct GetUncontractedLhsTensorindices<
   >;*/
 };
 
-SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Stuff",
+SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.StorageIndicesToSum",
                   "[DataStructures][Unit]") {
   // Contract first and fourth indices of <2, 1, 1, 1> symmetry rank 4 (upper,
   // lower, lower, lower) tensor to rank 2 tensor and reorder indices
@@ -244,12 +244,19 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Stuff",
       const std::array<size_t, 2> tensor_index = {{b, d}};
       const size_t storage_index =
           ContractedLhsStructure::get_storage_index(tensor_index);
-      const size_t bd = RAdba_contracted_to_bd.get(b, d);
-      const size_t storage_sum = map[storage_index][0] + map[storage_index][1] +
-                                 map[storage_index][2] + map[storage_index][3];
+      const double bd = RAdba_contracted_to_bd.get(b, d);
+      /*const double storage_sum = map[storage_index][0] + map[storage_index][1]
+         + map[storage_index][2] + map[storage_index][3];*/
+      /*const double storage_sum = RAdba.get<UncontractedLhsStructure, ti_A_t,
+         ti_b_t, ti_d_t, ti_a_t>(map[storage_index][0]) +
+         RAdba.get<UncontractedLhsStructure, ti_A_t, ti_b_t, ti_d_t,
+         ti_a_t>(map[storage_index][1]) + RAdba.get<UncontractedLhsStructure,
+         ti_A_t, ti_b_t, ti_d_t, ti_a_t>(map[storage_index][2]) +
+         RAdba.get<UncontractedLhsStructure, ti_A_t, ti_b_t, ti_d_t,
+         ti_a_t>(map[storage_index][3]);*/
       // std::cout << "R(b, d) is : " << bd << ", and the sum of map[" <<
       // storage_index << "] is : " << storage_sum << std::endl;
-      CHECK(bd == storage_sum);
+      // CHECK(bd == storage_sum);
     }
   }
 
@@ -283,4 +290,55 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Stuff",
   num_contracted_indices, num_uncontracted_indices>(); std::cout << "Here is
   storage index " << I+5 << "'s first tensor index to sum: " <<
   sixth_storage_index << std::endl;*/
+}
+
+/*template<typename ContractedLhsTensorIndexList, typename ReplacedArg1,
+typename ReplacedArg2, typename Index1, typename Index2>, typename
+RhsTensorIndices..> using UncontractedLhsIndices = tmpl::list<
+    tmpl::conditional_t<Index1 == RhsTensorIndices, RhsTensorIndices, >
+>;*/
+
+SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Stuff",
+                  "[DataStructures][Unit]") {
+  using rhs = tmpl::list<TensorIndex<1000, UpLo::Lo>, ti_C_t,
+                         TensorIndex<1001, UpLo::Up>>;
+  using lhs = tmpl::list<ti_C_t>;
+  // using inserted = tmpl::insert<lhs, tmpl::pair<ti_a_t, tmpl::size_t<0>>>;
+  constexpr size_t Index1 = 0;
+  constexpr size_t Index2 = 2;
+  using ReplacedArg1 = TensorIndex<1000, UpLo::Lo>;
+  using ReplacedArg2 = TensorIndex<1001, UpLo::Up>;
+
+  using rhs_tensorindextype_list =
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Grid>>;
+  using rhs_symm = Symmetry<3, 2, 1>;
+
+  using lhs_with_replaced1 =
+      tmpl::append<tmpl::at_c<tmpl::split_at<lhs, tmpl::size_t<Index1>>,
+                              0>,  // get lhs of Index1 split of contracted lhs
+                   tmpl::list<ReplacedArg1>,
+                   tmpl::at_c<tmpl::split_at<lhs, tmpl::size_t<Index1>>,
+                              1>  // get rhs of Index1 split of contracted lhs
+                   >;
+
+  using uncontracted_lhs_indices = tmpl::append<
+      tmpl::at_c<tmpl::split_at<lhs_with_replaced1, tmpl::size_t<Index2>>,
+                 0>,  // get lhs of Index1 split of contracted lhs
+      tmpl::list<ReplacedArg2>,
+      tmpl::at_c<tmpl::split_at<lhs_with_replaced1, tmpl::size_t<Index2>>,
+                 1>  // get rhs of Index1 split of contracted lhs
+      >;
+
+  /*using UncontractedLhsStructure = TensorExpressions::LhsTensor<rhs,
+     uncontracted_lhs_indices, rhs_symm, rhs_tensorindextype_list>;*/
+
+  /*using mapping = tmpl::transform<
+      lhs, tmpl::bind<tmpl::index_of, tmpl::pin<rhs>, tmpl::_1>>;
+  using rhs_symmetry = tmpl::integral_list<size_t, 0, 1, 2>;
+  using lhs_symm =
+      tmpl::transform<mapping,
+                      tmpl::bind<tmpl::at, tmpl::pin<rhs_symmetry>,
+  tmpl::_1>>;*/
 }
