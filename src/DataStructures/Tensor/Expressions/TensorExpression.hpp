@@ -228,26 +228,6 @@ struct repeated_helper {
           std::is_same<tmpl::index_of<S, E>, tmpl::no_such_type_>::value,
       tmpl::push_back<S, E>, S>::type;
 };
-
-/*template <typename Seq, typename S, typename E>
-struct repeated_vals_helper {
-  using type = typename std::conditional<
-      std::is_same<tmpl::count_if<Seq, std::is_same<E::value, tmpl::_1::value>>,
-                   tmpl::size_t<2>>::value and
-          std::is_same<tmpl::index_of<S, E::value>, tmpl::no_such_type_>::value,
-      tmpl::push_back<S, E::value>, S>::type;
-};*/
-
-/*template <typename Seq, typename S, typename E>
-struct repeated_vals_helper;
-template <typename... Is, typename S, typename E>
-struct repeated_vals_helper<tmpl::list<Is...>, S, E> {
-  using type = typename std::conditional<
-      std::is_same<tmpl::count_if<Is::value..., std::is_same<E, tmpl::_1>>,
-                   tmpl::size_t<2>>::value and
-          std::is_same<tmpl::index_of<S, E>, tmpl::no_such_type_>::value,
-      tmpl::push_back<S, E>, S>::type;
-};*/
 }  // namespace detail
 
 /*!
@@ -258,12 +238,6 @@ template <typename List>
 using repeated = tmpl::fold<
     List, tmpl::list<>,
     detail::repeated_helper<tmpl::pin<List>, tmpl::_state, tmpl::_element>>;
-
-/*template <typename List>
-using repeated_vals = tmpl::fold<
-    List, tmpl::list<>,
-    detail::repeated_vals_helper<
-        tmpl::pin<List>, tmpl::_state, tmpl::_element>>;*/
 
 namespace detail {
 template <typename TensorIndexList, typename Element,

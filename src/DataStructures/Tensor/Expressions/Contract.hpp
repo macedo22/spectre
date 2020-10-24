@@ -7,7 +7,6 @@
 
 #pragma once
 
-//#include "DataStructures/Tensor/Expressions/Evaluate.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
 #include "Utilities/Requires.hpp"
@@ -79,36 +78,6 @@ struct ComputeContractionImpl<0, Index1, Index2> {
     return t1.template get<LhsIndices...>(tensor_index);
   }
 };
-
-/*template <typename LhsTensorIndexList, typename LhsNumComponents, typename
-RhsTensorIndexList, typename RhsTensorIndexTypeList, typename RhsSymmetry,
-typename RhsDim, size_t RhsNumComponents, typename LhsIndexSequence =
-std::make_index_sequence<LhsNumIndices>, typename RhsIndexSequence =
-std::make_index_sequence<RhsNumComponents>> struct LhsStorageToIndexMap;
-
-template <typename... LhsTensorIndices, typename LhsNumComponents, typename...
-RhsTensorIndices, typename RhsTensorTypeIndexList, typename RhsSymmetry,
-typename RhsDim, size_t RhsNumComponents, size_t... LhsInts, size_t... RhsInts>
-struct LhsStorageToIndexMap<tmpl::list<LhsTensorIndices...>, LhsNumComponents,
-tmpl::list<RhsTensorIndices...>, RhsTensorTypeIndexList, RhsSymmetry, RhsDim,
-RhsNumComponents, std::index_sequence<LhsInts...>,
-std::index_sequence<RhsInts...>>{ SPECTRE_ALWAYS_INLINE static constexpr
-std::array<std::array<size_t, RhsDim>, LhsNumComponents> {
-//constexpr size_t lhs_num_components = sizeof...(LhsTensorIndices);
-//constexpr size_t rhs_num_indices = sizeof...(RhsTensorIndices);
- apply() noexcept {
-     //constexpr size_t num_components = CI1::dim;
-     std::array<std::array<size_t, RhsDim>, LhsNumComponents>
-         lhs_storage_sum_map{};
-     //using rhs_structure = uncontracted_structure;
-     using rhs_tensorindex_list = tmpl::list<RhsTensorIndices...>;
-     using lhs_tensorindex_list = //somehow fill this
-     //using rhs_symmetry = RhsSymmetry;
-     //using rhs_tensorindextype_list = tmpl::list<>
-     auto lhs_storage_to_tensor_indices =
-lhs_structure::storage_to_tensor_index();
-}
-};*/
 }  // namespace detail
 
 /*!
@@ -190,118 +159,7 @@ struct TensorContract
         template apply<LhsIndices...>(tensor_index, t_);
   }
 
-  /*template<typename LhsNumIndices, typename LhsTensorIndexList, typename
-  RhsTensorIndexList> SPECTRE_ALWAYS_INLINE static constexpr
-  std::array<std::array<size_t, CI1::dim>, sizeof... (LhsInts)>
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, CI1::dim>
-  compute_lhs_storage_indices(const std::array<size_t, LhsNumIndices>&
-  lhs_tensor_index) {
-
-  }*/
-
-  /*template<size_t I, typename LhsTensorIndexList, typename RhsTensorIndexList,
- typename UnContractedLhsTensorIndexList = tmpl::list<>> struct
- LhsUncontractedIndices;
-
-  template<size_t I, typename... LhsTensorIndices, typename... RhsTensorIndices,
- typename UnContractedLhsTensorIndexList> struct LhsUncontractedIndices<I,
- tmpl::list<LhsTensorIndices...>, tmpl::list<RhsTensorIndices...>,
- UnContractedLhsTensorIndexList> { static constexpr size_t lhs_num_indices =
- tmpl::size<Symm>::value - 1; using lhs_tensorindex_list =
- tmpl::list<LhsTensorIndices...>; using rhs_tensorindex_list =
- tmpl::list<RhsTensorIndices...>;
-    //using type = tmpl::list<std::conditional_t<I == Index1, CI1,
- std::conditional_t<I == Index1, CI2, ?>>::value>; using type = brigand::insert<
-        UnContractedLhsTensorIndexList,
-        LhsUncontractedIndices<I+1, tmpl::list<LhsTensorIndices...>,
- tmpl::list<RhsTensorIndices...>, tmpl::list<>>::type>
-     >;
-  };
-
-  template<size_t I, typename... LhsTensorIndices, typename... RhsTensorIndices,
- typename UnContractedLhsTensorIndex = tmpl::list<>> struct
- LhsUncontractedIndices<tmpl::size<Symm>::value - 1,
- tmpl::list<LhsTensorIndices...>, tmpl::list<RhsTensorIndices...>> { static
- constexpr size_t rhs_num_indices = tmpl::size<Symm>::value; using
- lhs_tensorindex_list = tmpl::list<LhsTensorIndices...>; using
- rhs_tensorindex_list = tmpl::list<RhsTensorIndices...>;
-    //using type = tmpl::list<std::conditional_t<I == Index1, CI1,
- std::conditional_t<I == Index1, CI2, ?>>::value>; using type = brigand::insert<
-        UnContractedLhsTensorIndex,
-        std::conditional_t<
-           I == Index1,
-           CI1,
-           std::conditional_t<
-             I == Index2,
-             CI2,
-             tmpl::at_c<lhs_tensorindex_list, I>
-           >
-        >
-     >;
-
-  };
-
- template <size_t I, typename LhsStructure, typename... LhsTensorIndices,
- size_t... MapInts> SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t,
- tmpl::size<Symm>::value> fill_contracting_tensor_index( const
- std::index_sequence<MapInts...>& map_seq) noexcept { constexpr size_t
- number_of_indices = tmpl::size<Symm>::value; std::array<size_t,
- number_of_indices> contracting_tensor_index{}; constexpr std::array<size_t,
- number_of_indices> lhs_multi_index =
- LhsStructure::get_canonical_tensor_index(I); contracting_tensor_index[Index1] =
- 0; contracting_tensor_index[Index2] = 0;
-
-   for (int i = 0; i < Index1; i++) {
-     contracting_tensor_index[i] = lhs_multi_index[i];
-   }
-   contracting_tensor_index[Index1] = 0;
-   for (int i = Index1 + 1; i < Index2; i++) {
-     contracting_tensor_index[i] = lhs_multi_index[i - 1];
-   }
-   contracting_tensor_index[Index2] = 0;
-   for (int i = Index2 + 1; i < number_of_indices; i++) {
-     contracting_tensor_index[i] = lhs_multi_index[i - 2];
-   }
-   return rhs_tensor_multi_index;
- }
-
-  template<size_t NumComponents, typename LhsStructure, typename...
- LhsTensorIndices, typename... LhsInts, typename... RhsInts, typename...
- MapInts> SPECTRE_ALWAYS_INLINE static constexpr std::array<std::array<size_t,
-                                                  CI1::dim>,
-                                                  sizeof... (LhsInts)>
-  compute_lhs_storage_to_tensor_map(const std::integer_sequence<T, LhsInts...>&
- rhs_seq, const std::integer_sequence<T, RhsInts...>& lhs_seq, const
- std::integer_sequence<T, MapInts...>& map_seq) noexcept { constexpr size_t
- lhs_num_components = sizeof... (LhsInts); constexpr size_t lhs_num_indices =
- tmpl::size<LhsStructure::index_list>::value; constexpr size_t rhs_dim =
- CI1::dim; static constexpr size_t rhs_num_indices = tmpl::size<Symm>::value;
-    constexpr std::make_index_sequence<NumComponents> map_seq{};
-    //std::array<std::array<size_t, rhs_dim>, lhs_num_components>
-    //    lhs_storage_sum_map{};
-    constexpr auto lhs_storage_to_tensor_indices =
- LhsStructure::storage_to_tensor_index();
-    //for (int i = 0; i < lhs_num_components; i++) {
-    //  //const std::conditional_t<std::is_base_of<Expression, T>::value, T,
-    //  //                    TensorExpression<T, X, Symm, IndexList, ArgsList>>
-    //  lhs_storage_sum_map[i] = compute_lhs_storage_indices<lhs_num_indices,
- tmpl::list<LhsTensorIndices>, IndexList>(lhs_storage_to_tensor_indices[i]);
-    //}
-    //using rhs_structure = uncontracted_structure;
-    using rhs_tensorindex_list = tmpl::list<RhsTensorIndices...>;
-    //using lhs_tensorindex_list = somehow fill this
-    constexpr std::array<std::array<size_t, rhs_dim>, lhs_num_components>
-        lhs_storage_sum_map = {{fill_contracting_tensor_index<MapInts,
- LhsTensorIndices...>(multi_index_seq)...}};
-    //using rhs_symmetry = RhsSymmetry;
-    //using rhs_tensorindextype_list = tmpl::list<>
-    auto lhs_storage_to_tensor_indices =
- lhs_structure::storage_to_tensor_index();
- }*/
-
-  template <size_t I, typename ContractedLhsStructure /*, size_t Index1,*/
-                                                      /*size_t Index2,*/
-            /*size_t NumContractedIndices, size_t NumUncontractedIndices*/>
+  template <size_t I, typename ContractedLhsStructure>
   SPECTRE_ALWAYS_INLINE static constexpr std::array<
       size_t, num_uncontracted_tensor_indices>
   fill_contracting_tensor_index() noexcept {
@@ -326,23 +184,15 @@ struct TensorContract
     return contracting_tensor_index;
   }
 
-  // template <size_t ToAdd, size_t Index1, size_t Index2, size_t
-  // NumUncontractedIndices>
-  template <size_t ToAdd, size_t I/*, typename ContractedLhsStructure,*/
-            /*size_t Index1, size_t Index2, size_t NumContractedIndices,
-            size_t NumUncontractedIndices*/>
-  SPECTRE_ALWAYS_INLINE static constexpr
-  std::array<size_t, num_uncontracted_tensor_indices>
+  template <size_t ToAdd, size_t I>
+  SPECTRE_ALWAYS_INLINE static constexpr std::array<
+      size_t, num_uncontracted_tensor_indices>
   get_next_tensor_index_to_add(
       const std::array<size_t, num_uncontracted_tensor_indices>
-      current_contracting_tensor_index) noexcept {
+          current_contracting_tensor_index) noexcept {
     if constexpr (ToAdd == 0) {
-      //(void)current_contracting_tensor_index;
-      // return fill_contracting_tensor_index<I, ContractedLhsStructure, Index1,
-      // Index2, NumContractedIndices, NumUncontractedIndices>();
       return current_contracting_tensor_index;
     } else {
-      // constexpr size_t number_of_indices = sizeof...(MultiIndexInts);
       std::array<size_t, num_uncontracted_tensor_indices>
           next_contracting_tensor_index{};
 
@@ -364,47 +214,24 @@ struct TensorContract
     }
   }
 
-  template <size_t I, /*size_t Dim,*/ typename UncontractedLhsStructure,
-            typename ContractedLhsStructure, /*size_t Index1, size_t Index2,*/
-            /*size_t NumContractedIndices, size_t NumUncontractedIndices,*/
-            size_t... Ints>
+  template <size_t I, typename UncontractedLhsStructure,
+            typename ContractedLhsStructure, size_t... Ints>
   SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, CI1::dim>
   get_storage_indices_to_sum(
       const std::index_sequence<Ints...>& /*dim_seq*/) noexcept {
-    // std::array<size_t, CI1::dim> storage_indices_to_sum{};
     constexpr std::array<size_t, num_uncontracted_tensor_indices>
         first_tensor_index_to_sum =
             fill_contracting_tensor_index<I, ContractedLhsStructure>();
-    // constexpr size_t first_storage_index_to_sum =
-    // UncontractedLhsStructure::get_storage_index(first_tensor_index_to_sum);
-    // std::array<size_t, CI1::dim> storage_indices_to_sum[0] =
-    // first_storage_index_to_sum;
-    ////std::cout << "Here are the first tensor index to sum:  " <<
-    /// first_tensor_index_to_sum << std::endl;
-    // constexpr std::make_index_sequence<CI1::dim> dim_seq{};
-    // constexpr std::array<size_t, CI1::dim> base{};
     constexpr std::array<size_t, CI1::dim> storage_indices_to_sum = {
         {UncontractedLhsStructure::get_storage_index(
             get_next_tensor_index_to_add<Ints, I>(
                 first_tensor_index_to_sum))...}};
 
-    /*for (int i = 1; i < CI1::dim; i++) {
-
-         storage_indices_to_sum[i] =
-    UncontractedLhsStructure::get_storage_index(
-             get_next_tensor_index_to_add<Ints, Index1::value, Index2::value,
-    NumUncontractedIndices>(first_tensor_index_to_sum)
-         );
-    }*/
-
     return storage_indices_to_sum;
   }
 
-  template <size_t NumContractedComponents, /*size_t Dim,*/
-            typename UncontractedLhsStructure, typename ContractedLhsStructure,
-            /*size_t Index1, size_t Index2, size_t NumContractedIndices,
-            size_t NumUncontractedIndices,*/
-            size_t... Ints>
+  template <size_t NumContractedComponents, typename UncontractedLhsStructure,
+            typename ContractedLhsStructure, size_t... Ints>
   SPECTRE_ALWAYS_INLINE static constexpr std::array<
       std::array<size_t, CI1::dim>, NumContractedComponents>
   get_sum_map(const std::index_sequence<Ints...>& /*index_seq*/) noexcept {
@@ -447,21 +274,6 @@ struct TensorContract
   // TODO: find a way to propagate using the storage index
   template <typename LhsStructure, typename... LhsIndices>
   SPECTRE_ALWAYS_INLINE type get(const size_t lhs_storage_index) const {
-    // maybe make a map from LHS storage index to the new array oh LHS
-    // indices to add
-    // maybe use LhsSymmAndIndices to get the expanded LHS symm and indices
-    // to and may need to update LhsStructure and LhsIndices for recursive
-    // calls to get
-    // maybe need to use an index sequence for figuring out the storage
-    // indices that need to be added
-
-    // Possible implementation:
-    //
-    // constexpr std::array<std::array<size_t, num_tensor_indices>,
-    // num_components>
-    //     lhs_storage_indices_to_add =
-    //
-
     constexpr size_t num_contracted_components = LhsStructure::size();
 
     using lhs_with_replaced1 = tmpl::append<
@@ -485,15 +297,6 @@ struct TensorContract
         typename LhsTensorSymmAndIndices<ArgsList,
                                          uncontracted_lhs_tensorindex_list,
                                          Symm, IndexList>::structure;
-    /*ArgsList a = 7;
-    uncontracted_lhs_tensorindex_list b = 10;
-    Symm c = 12;
-    IndexList d = 9;*/
-
-    /*using uncontracted_lhs_tensorindex_list =
-        tmpl::insert<tmpl::insert<tmpl::list<LhsIndices...>,
-       tmpl::pair<ReplacedArg1, Index1>>, tmpl::pair<ReplacedArg2, Index2>>;*/
-    // uncontracted_lhs_tensorindex_list x = 7;
 
     // constexpr size_t num_contracted_components = LhsStructure::size();
     constexpr std::make_index_sequence<num_contracted_components> map_seq{};
@@ -502,21 +305,10 @@ struct TensorContract
         map = get_sum_map<num_contracted_components, UncontractedLhsStructure,
                           LhsStructure>(map_seq);
 
-    /*type contraction_sum = t1.template get<LhsIndices...>(map[i][0]);
-
-    for (size_t j = 1; j < CI1::dim; j++) {
-      t1.template get<LhsIndices...>(map[i][j])
-    }*/
-
     return ComputeContraction<
         UncontractedLhsStructure, uncontracted_lhs_tensorindex_list,
         num_contracted_components, decltype(t_)>::apply(map, t_,
                                                         lhs_storage_index);
-
-    /*const std::array<size_t, num_tensor_indices>& new_tensor_index =
-        LhsStructure::template get_canonical_tensor_index<num_tensor_indices>(
-            lhs_storage_index);
-    return get<LhsStructure, LhsIndices...>(new_tensor_index);*/
   }
 
  private:
