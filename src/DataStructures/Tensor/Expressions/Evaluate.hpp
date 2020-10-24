@@ -125,8 +125,9 @@ auto evaluate(const T& rhs_te) {
 
   // Stores (potentially reordered) symmetry and indices needed for constructing
   // the LHS tensor with index order specified by LhsTensorIndices
-  using lhs_tensor = LhsTensor<rhs_tensorindex_list, lhs_tensorindex_list,
-                               rhs_symmetry, rhs_tensorindextype_list>;
+  using lhs_tensor =
+      LhsTensorSymmAndIndices<rhs_tensorindex_list, lhs_tensorindex_list,
+                         rhs_symmetry, rhs_tensorindextype_list>;
 
   /*std::cout << "rhs valence of first index: " <<
   tmpl::at_c<rhs_tensorindextype_list, 0>::ul << std::endl; std::cout << "rhs

@@ -331,8 +331,9 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Stuff",
                  1>  // get rhs of Index1 split of contracted lhs
       >;
 
-  /*using UncontractedLhsStructure = TensorExpressions::LhsTensor<rhs,
-     uncontracted_lhs_indices, rhs_symm, rhs_tensorindextype_list>;*/
+  /*using UncontractedLhsStructure =
+     TensorExpressions::LhsTensorSymmAndIndices<rhs, uncontracted_lhs_indices,
+     rhs_symm, rhs_tensorindextype_list>;*/
 
   /*using mapping = tmpl::transform<
       lhs, tmpl::bind<tmpl::index_of, tmpl::pin<rhs>, tmpl::_1>>;

@@ -482,8 +482,9 @@ struct TensorContract
                      >;
 
     using UncontractedLhsStructure =
-        typename LhsTensor<ArgsList, uncontracted_lhs_tensorindex_list, Symm,
-                           IndexList>::structure;
+        typename LhsTensorSymmAndIndices<ArgsList,
+                                         uncontracted_lhs_tensorindex_list,
+                                         Symm, IndexList>::structure;
     /*ArgsList a = 7;
     uncontracted_lhs_tensorindex_list b = 10;
     Symm c = 12;
