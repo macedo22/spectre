@@ -243,6 +243,24 @@ struct TensorContract
     return map;
   }
 
+  template <typename... LhsIndices>
+  using uncontracted_lhs_tensorindex_list_helper = tmpl::append<
+      tmpl::at_c<tmpl::split_at<tmpl::list<LhsIndices...>, Index1>, 0>,
+      tmpl::list<ReplacedArg1>,
+      tmpl::at_c<tmpl::split_at<tmpl::list<LhsIndices...>, Index1>, 1>>;
+
+  template <typename... LhsIndices>
+  using uncontracted_lhs_tensorindex_list = tmpl::append<
+      tmpl::at_c<
+          tmpl::split_at<
+              uncontracted_lhs_tensorindex_list_helper<LhsIndices...>, Index2>,
+          0>,
+      tmpl::list<ReplacedArg2>,
+      tmpl::at_c<
+          tmpl::split_at<
+              uncontracted_lhs_tensorindex_list_helper<LhsIndices...>, Index2>,
+          1>>;
+
   template <typename UncontractedLhsStructure,
             typename UncontractedLhsTensorIndexList,
             size_t NumContractedComponents, typename T1>
@@ -271,34 +289,18 @@ struct TensorContract
     }
   };
 
-  // TODO: find a way to propagate using the storage index
   template <typename LhsStructure, typename... LhsIndices>
   SPECTRE_ALWAYS_INLINE type get(const size_t lhs_storage_index) const {
     constexpr size_t num_contracted_components = LhsStructure::size();
 
-    using lhs_with_replaced1 = tmpl::append<
-        tmpl::at_c<tmpl::split_at<tmpl::list<LhsIndices...>, Index1>,
-                   0>,  // get lhs of Index1 split of contracted lhs
-        tmpl::list<ReplacedArg1>,
-        tmpl::at_c<tmpl::split_at<tmpl::list<LhsIndices...>, Index1>,
-                   1>  // get rhs of Index1 split of contracted lhs
-        >;
-
     using uncontracted_lhs_tensorindex_list =
-        tmpl::append<tmpl::at_c<tmpl::split_at<lhs_with_replaced1, Index2>,
-                                0>,  // get lhs of Index1 split of contracted
-                                     // lhs
-                     tmpl::list<ReplacedArg2>,
-                     tmpl::at_c<tmpl::split_at<lhs_with_replaced1, Index2>,
-                                1>  // get rhs of Index1 split of contracted lhs
-                     >;
+        uncontracted_lhs_tensorindex_list<LhsIndices...>;
 
     using UncontractedLhsStructure =
         typename LhsTensorSymmAndIndices<ArgsList,
                                          uncontracted_lhs_tensorindex_list,
                                          Symm, IndexList>::structure;
 
-    // constexpr size_t num_contracted_components = LhsStructure::size();
     constexpr std::make_index_sequence<num_contracted_components> map_seq{};
     constexpr std::array<std::array<size_t, CI1::dim>,
                          num_contracted_components>
