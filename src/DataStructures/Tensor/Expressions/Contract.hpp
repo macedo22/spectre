@@ -412,11 +412,11 @@ SPECTRE_ALWAYS_INLINE auto contract(
 namespace detail {
 // Helper struct to allow contractions by using repeated indices in operator()
 // calls to tensor.
-template <template <typename> class TE, typename ReplacedArgList, typename I,
-          typename TotalContracted>
+template <template <typename> class TE, typename ReplacedArgList, size_t I,
+          size_t TotalContracted>
 struct fully_contract_helper {
-  using lower_tensorindex = ti_contracted_t<I::value, UpLo::Lo>;
-  using upper_tensorindex = TensorIndex<lower_tensorindex::value + 1, UpLo::Up>;
+  using lower_tensorindex = ti_contracted_t<I, UpLo::Lo>;
+  using upper_tensorindex = ti_contracted_t<I, UpLo::Up>;
   using ReplacedArg1 = tmpl::conditional_t<
       (tmpl::index_of<ReplacedArgList, lower_tensorindex>::value <
        tmpl::index_of<ReplacedArgList, upper_tensorindex>::value),
@@ -429,22 +429,23 @@ struct fully_contract_helper {
   template <typename T>
   SPECTRE_ALWAYS_INLINE static constexpr auto apply(const T& t)
       -> decltype(contract<ReplacedArg1, ReplacedArg2>(
-          fully_contract_helper<TE, ReplacedArgList, tmpl::size_t<I::value + 2>,
+          fully_contract_helper<TE, ReplacedArgList, I + 1,
                                 TotalContracted>::apply(t))) {
     return contract<ReplacedArg1, ReplacedArg2>(
-        fully_contract_helper<TE, ReplacedArgList, tmpl::size_t<I::value + 2>,
+        fully_contract_helper<TE, ReplacedArgList, I + 1,
                               TotalContracted>::apply(t));
   }
 };
 
 template <template <typename> class TE, typename ReplacedArgList,
-          typename TotalContracted>
-struct fully_contract_helper<TE, ReplacedArgList,
-                             tmpl::size_t<2 * (TotalContracted::value - 1)>,
+          size_t TotalContracted>
+struct fully_contract_helper<TE, ReplacedArgList, TotalContracted,
                              TotalContracted> {
-  using I = tmpl::size_t<2 * (TotalContracted::value - 1)>;
-  using lower_tensorindex = ti_contracted_t<I::value, UpLo::Lo>;
-  using upper_tensorindex = TensorIndex<lower_tensorindex::value + 1, UpLo::Up>;
+  // using I = tmpl::size_t<TotalContracted::value - 1>;//tmpl::size_t<2 *
+  // (TotalContracted::value - 1)>;
+  static constexpr size_t I = TotalContracted;
+  using lower_tensorindex = ti_contracted_t<I, UpLo::Lo>;
+  using upper_tensorindex = ti_contracted_t<I, UpLo::Up>;
   using ReplacedArg1 = tmpl::conditional_t<
       (tmpl::index_of<ReplacedArgList, lower_tensorindex>::value <
        tmpl::index_of<ReplacedArgList, upper_tensorindex>::value),
@@ -466,8 +467,8 @@ struct fully_contract_helper<TE, ReplacedArgList,
  * \ingroup TensorExpressionsGroup
  * \brief Represents a fully contracted Tensor
  */
-template <template <typename> class TE, typename ReplacedArgList, typename I,
-          typename TotalContracted>
+template <template <typename> class TE, typename ReplacedArgList, size_t I,
+          size_t TotalContracted>
 using fully_contracted =
     detail::fully_contract_helper<TE, ReplacedArgList, I, TotalContracted>;
 }  // namespace TensorExpressions
