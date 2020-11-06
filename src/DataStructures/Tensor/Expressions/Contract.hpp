@@ -429,10 +429,10 @@ struct fully_contract_helper {
   template <typename T>
   SPECTRE_ALWAYS_INLINE static constexpr auto apply(const T& t)
       -> decltype(contract<ReplacedArg1, ReplacedArg2>(
-          fully_contract_helper<TE, ReplacedArgList, tmpl::size_t<I::value + 1>,
+          fully_contract_helper<TE, ReplacedArgList, tmpl::size_t<I::value + 2>,
                                 TotalContracted>::apply(t))) {
     return contract<ReplacedArg1, ReplacedArg2>(
-        fully_contract_helper<TE, ReplacedArgList, tmpl::size_t<I::value + 1>,
+        fully_contract_helper<TE, ReplacedArgList, tmpl::size_t<I::value + 2>,
                               TotalContracted>::apply(t));
   }
 };
@@ -440,7 +440,7 @@ struct fully_contract_helper {
 template <template <typename> class TE, typename ReplacedArgList,
           typename TotalContracted>
 struct fully_contract_helper<TE, ReplacedArgList,
-                             tmpl::size_t<TotalContracted::value - 1>,
+                             tmpl::size_t<2 * (TotalContracted::value - 1)>,
                              TotalContracted> {
   using I = tmpl::size_t<2 * (TotalContracted::value - 1)>;
   using lower_tensorindex = ti_contracted_t<I::value, UpLo::Lo>;
