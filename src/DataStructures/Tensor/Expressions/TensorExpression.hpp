@@ -355,8 +355,7 @@ class Tensor;
 /// \tparam Args the tensor indices, e.g. `_a` and `_b` in `F(_a, _b)`
 /// \cond HIDDEN_SYMBOLS
 template <typename Derived, typename DataType, typename Symm,
-          typename IndexList, typename Args = tmpl::list<>,
-          typename ReducedArgs = tmpl::list<>>
+          typename IndexList, typename Args = tmpl::list<>>
 struct TensorExpression;
 /// \endcond
 
