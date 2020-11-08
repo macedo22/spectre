@@ -183,7 +183,7 @@ namespace detail {
 // Helper struct to allow contractions by using repeated indices in operator()
 // calls to tensor.
 template <template <typename> class TE, typename ReplacedArgList, size_t I,
-          typename TotalContracted, typename T>
+          size_t TotalContracted, typename T>
 SPECTRE_ALWAYS_INLINE static constexpr auto fully_contract(const T& t) {
   // TensorIndex types of pair of indices to contract
   using lower_tensorindex = ti_contracted_t<I, UpLo::Lo>;
@@ -206,7 +206,7 @@ SPECTRE_ALWAYS_INLINE static constexpr auto fully_contract(const T& t) {
        tmpl::index_of<ReplacedArgList, upper_tensorindex>::value),
       upper_tensorindex, lower_tensorindex>;
 
-  if constexpr (I == 2 * (TotalContracted::value - 1)) {
+  if constexpr (I == 2 * (TotalContracted - 1)) {
     return contract<first_replaced_tensorindex, second_replaced_tensorindex>(
         TE<ReplacedArgList>(t));
   } else {
