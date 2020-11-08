@@ -31,7 +31,7 @@
  * UpLo::Lo> ti_a;`, that is, `ti_a` and `ti_B` are place holders for objects of
  * type `TensorIndex<0, UpLo::Lo>` and `TensorIndex<1, UpLo::Up>` respectively.
  */
-template <std::size_t I, UpLo Valence, bool IsSpacetime = I < 8>
+template <std::size_t I, UpLo Valence, bool IsSpacetime = (I < 8)>
 struct TensorIndex {
   using value_type = std::size_t;
   using type = TensorIndex<I, Valence>;
