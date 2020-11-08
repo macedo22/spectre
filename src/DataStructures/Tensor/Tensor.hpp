@@ -276,13 +276,17 @@ class Tensor<X, Symm, IndexList<Indices...>> {
   SPECTRE_ALWAYS_INLINE constexpr auto operator()(N... /*meta*/) const noexcept
       -> decltype(
           TensorExpressions::detail::fully_contract<
-              TE, replace_indices<tmpl::list<N...>, repeated<tmpl::list<N...>>>,
-              0, tmpl::size<repeated<tmpl::list<N...>>>>(*this)) {
+              TE,
+              replace_indices<tmpl::list<N...>,
+                              repeated<tmpl::list<tmpl::int32_t<N::value>...>>>,
+              0, tmpl::size<repeated<tmpl::list<tmpl::int32_t<N::value>...>>>>(
+              *this)) {
     using args_list = tmpl::list<N...>;
-    using repeated_args_list = repeated<args_list>;
+    using tensorindex_values = tmpl::list<tmpl::int32_t<N::value>...>;
+    using repeated_tensorindex_values = repeated<tensorindex_values>;
     return TensorExpressions::detail::fully_contract<
-        TE, replace_indices<args_list, repeated_args_list>, 0,
-        tmpl::size<repeated_args_list>>(*this);
+        TE, replace_indices<args_list, repeated_tensorindex_values>, 0,
+        tmpl::size<repeated_tensorindex_values>>(*this);
   }
   // @}
 
