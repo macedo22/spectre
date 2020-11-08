@@ -187,7 +187,7 @@ template <template <typename> class TE, typename ReplacedArgList, size_t I,
 SPECTRE_ALWAYS_INLINE static constexpr auto fully_contract(const T& t) {
   // TensorIndex types of pair of indices to contract
   using lower_tensorindex = ti_contracted_t<I, UpLo::Lo>;
-  using upper_tensorindex = TensorIndex<lower_tensorindex::value + 1, UpLo::Up>;
+  using upper_tensorindex = ti_contracted_t<I, UpLo::Up>;
 
   // "first" and "second" refer to the position of the indices to contract
   // in the list of generic indices, with "first" denoting leftmost
@@ -206,12 +206,12 @@ SPECTRE_ALWAYS_INLINE static constexpr auto fully_contract(const T& t) {
        tmpl::index_of<ReplacedArgList, upper_tensorindex>::value),
       upper_tensorindex, lower_tensorindex>;
 
-  if constexpr (I == 2 * (TotalContracted - 1)) {
+  if constexpr (I == TotalContracted) {
     return contract<first_replaced_tensorindex, second_replaced_tensorindex>(
         TE<ReplacedArgList>(t));
   } else {
     return contract<first_replaced_tensorindex, second_replaced_tensorindex>(
-        fully_contract<TE, ReplacedArgList, I + 2, TotalContracted>(t));
+        fully_contract<TE, ReplacedArgList, I + 1, TotalContracted>(t));
   }
 }
 }  // namespace detail
