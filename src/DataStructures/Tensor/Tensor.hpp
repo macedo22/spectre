@@ -276,12 +276,14 @@ class Tensor<X, Symm, IndexList<Indices...>> {
     if constexpr (tmpl::is_set<tmpl::size_t<N::value>...>::value) {
       return TE<tmpl::list<N...>>(*this);
     } else {
-      using args_list = tmpl::list<N...>;
-      using tensorindex_values = tmpl::list<tmpl::size_t<N::value>...>;
-      using repeated_tensorindex_values = repeated<tensorindex_values>;
+      using rhs_tensorindex_list = tmpl::list<N...>;
+      using rhs_tensorindex_values = tmpl::list<tmpl::size_t<N::value>...>;
+      using repeated_rhs_tensorindex_values = repeated<rhs_tensorindex_values>;
       return TensorExpressions::detail::fully_contract<
-          TE, replace_indices<args_list, repeated_tensorindex_values>, 1,
-          tmpl::size<repeated_tensorindex_values>::value>(*this);
+          TE,
+          replace_indices<rhs_tensorindex_list,
+                          repeated_rhs_tensorindex_values>,
+          1, tmpl::size<repeated_rhs_tensorindex_values>::value>(*this);
     }
   }
   // @}
