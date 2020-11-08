@@ -279,14 +279,14 @@ class Tensor<X, Symm, IndexList<Indices...>> {
           TE,
           replace_indices<tmpl::list<N...>,
                           repeated<tmpl::list<tmpl::size_t<N::value>...>>>,
-          0,
+          1,
           tmpl::size<repeated<tmpl::list<tmpl::size_t<N::value>...>>>::value>(
           *this)) {
     using args_list = tmpl::list<N...>;
     using tensorindex_values = tmpl::list<tmpl::size_t<N::value>...>;
     using repeated_tensorindex_values = repeated<tensorindex_values>;
     return TensorExpressions::detail::fully_contract<
-        TE, replace_indices<args_list, repeated_tensorindex_values>, 0,
+        TE, replace_indices<args_list, repeated_tensorindex_values>, 1,
         tmpl::size<repeated_tensorindex_values>::value>(*this);
   }
   // @}
