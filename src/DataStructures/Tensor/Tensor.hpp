@@ -265,6 +265,10 @@ class Tensor<X, Symm, IndexList<Indices...>> {
             Requires<std::conjunction_v<tt::is_tensor_index<N>...>> = nullptr>
   SPECTRE_ALWAYS_INLINE constexpr auto operator()(
       N... /*meta*/) const noexcept {
+    static_assert(tmpl::is_set<N...>::value,
+                  "Cannot create a tensor expression with a repeated generic "
+                  "index. If you intend to contract, ensure that the indices "
+                  "to contract have opposite valences.");
     if constexpr (tmpl::is_set<tmpl::size_t<N::value>...>::value) {
       return TE<tmpl::list<N...>>(*this);
     } else {
