@@ -263,15 +263,16 @@ class Tensor<X, Symm, IndexList<Indices...>> {
   /// Retrieve a TensorExpression object with the index structure passed in
   template <typename... N,
             Requires<std::conjunction_v<tt::is_tensor_index<N>...> and
-                     tmpl::is_set<N...>::value> = nullptr>
+                     tmpl::is_set<tmpl::int32_t<N::value>...>::value> = nullptr>
   SPECTRE_ALWAYS_INLINE constexpr TE<tmpl::list<N...>> operator()(
       N... /*meta*/) const noexcept {
     return TE<tmpl::list<N...>>(*this);
   }
 
-  template <typename... N,
-            Requires<std::conjunction_v<tt::is_tensor_index<N>...> and
-                     not tmpl::is_set<N...>::value> = nullptr>
+  template <
+      typename... N,
+      Requires<std::conjunction_v<tt::is_tensor_index<N>...> and
+               not tmpl::is_set<tmpl::int32_t<N::value>...>::value> = nullptr>
   SPECTRE_ALWAYS_INLINE constexpr auto operator()(N... /*meta*/) const noexcept
       -> decltype(
           TensorExpressions::detail::fully_contract<
