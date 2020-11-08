@@ -269,6 +269,10 @@ class Tensor<X, Symm, IndexList<Indices...>> {
                   "Cannot create a tensor expression with a repeated generic "
                   "index. If you intend to contract, ensure that the indices "
                   "to contract have opposite valences.");
+    static_assert(std::is_same_v<tmpl::integral_list<UpLo, N::valence...>,
+                                 tmpl::integral_list<UpLo, Indices::ul...>>,
+                  "The valences of the generic indices in the expression do "
+                  "not match the valences of the indices in the Tensor.");
     if constexpr (tmpl::is_set<tmpl::size_t<N::value>...>::value) {
       return TE<tmpl::list<N...>>(*this);
     } else {
