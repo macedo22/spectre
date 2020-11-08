@@ -185,11 +185,32 @@ namespace detail {
 template <template <typename> class TE, typename ReplacedArgList, size_t I,
           typename TotalContracted, typename T>
 SPECTRE_ALWAYS_INLINE static constexpr auto fully_contract(const T& t) {
+  // TensorIndex types of pair of indices to contract
+  using lower_tensorindex = ti_contracted_t<I, UpLo::Lo>;
+  using upper_tensorindex = TensorIndex<lower_tensorindex::value + 1, UpLo::Up>;
+
+  // "first" and "second" refer to the position of the indices to contract
+  // in the list of generic indices, with "first" denoting leftmost
+  //
+  // e.g. R(ti_A, ti_b, ti_a) :
+  // - `first_replaced_tensorindex` refers to the contracted TensorIndex type
+  // for `ti_A`
+  // - `second_replaced_tensorindex` refers to the contracted TensorIndex type
+  // for `ti_a`
+  using first_replaced_tensorindex = tmpl::conditional_t<
+      (tmpl::index_of<ReplacedArgList, lower_tensorindex>::value <
+       tmpl::index_of<ReplacedArgList, upper_tensorindex>::value),
+      lower_tensorindex, upper_tensorindex>;
+  using second_replaced_tensorindex = tmpl::conditional_t<
+      (tmpl::index_of<ReplacedArgList, lower_tensorindex>::value <
+       tmpl::index_of<ReplacedArgList, upper_tensorindex>::value),
+      upper_tensorindex, lower_tensorindex>;
+
   if constexpr (I == 2 * (TotalContracted::value - 1)) {
-    return contract<ti_contracted_t<I>, ti_contracted_t<I + 1>>(
+    return contract<first_replaced_tensorindex, second_replaced_tensorindex>(
         TE<ReplacedArgList>(t));
   } else {
-    return contract<ti_contracted_t<I>, ti_contracted_t<I + 1>>(
+    return contract<first_replaced_tensorindex, second_replaced_tensorindex>(
         fully_contract<TE, ReplacedArgList, I + 2, TotalContracted>(t));
   }
 }
