@@ -27,16 +27,18 @@
  * \code{.cpp}
  * auto T = evaluate<ti_a_t, ti_B_t>(F(ti_a, ti_B) + S(ti_B, ti_a));
  * \endcode
- * where `using ti_a_t = TensorIndex<0, UpLo::Lo>;` and `TensorIndex<0,
- * UpLo::Lo> ti_a;`, that is, `ti_a` and `ti_B` are place holders for objects of
- * type `TensorIndex<0, UpLo::Lo>` and `TensorIndex<1, UpLo::Up>` respectively.
+ * where `using ti_a_t = TensorIndex<0, UpLo::Lo, true>;` and `TensorIndex<0,
+ * UpLo::Lo, true> ti_a;`, that is, `ti_a` and `ti_B` are place holders for
+ * objects of type `TensorIndex<0, UpLo::Lo, true>` and
+ * `TensorIndex<1, UpLo::Up, true>` respectively.
  */
-template <std::size_t I, UpLo Valence>
+template <std::size_t I, UpLo Valence, bool IsSpacetime = (I < 8)>
 struct TensorIndex {
   using value_type = std::size_t;
-  using type = TensorIndex<I, Valence>;
+  using type = TensorIndex<I, Valence, IsSpacetime>;
   static constexpr value_type value = I;
   static constexpr UpLo valence = Valence;
+  static constexpr bool is_spacetime = IsSpacetime;
 };
 
 // @{
@@ -102,15 +104,13 @@ using ti_L_t = decltype(ti_L);
 /// \ingroup TensorExpressionsGroup
 /// Type alias used when Tensor Expressions manipulate indices. These are used
 /// to denote contracted as opposed to free indices.
-template <size_t I, UpLo Valence>
+template <size_t I, UpLo Valence, bool IsSpacetime>
 using ti_contracted_t =
-    TensorIndex<static_cast<size_t>(I * 1000 + static_cast<size_t>(Valence)),
-                Valence>;
+    TensorIndex<I * 1000 + static_cast<size_t>(Valence), Valence, IsSpacetime>;
 
 /// \ingroup TensorExpressionsGroup
-template <size_t I, UpLo Valence>
-TensorIndex<static_cast<size_t>(I * 1000 + static_cast<size_t>(Valence)),
-            Valence>
+template <size_t I, UpLo Valence, bool IsSpacetime>
+TensorIndex<I * 1000 + static_cast<size_t>(Valence), Valence, IsSpacetime>
 ti_contracted();
 /// \endcond
 
@@ -238,14 +238,14 @@ using index_replace = tmpl::replace_at<
     tmpl::replace_at<
         TensorIndexList,
         tmpl::index_of<TensorIndexList, TensorIndex<Element::value, UpLo::Lo>>,
-        ti_contracted_t<I, UpLo::Lo>>,
+        ti_contracted_t<I, UpLo::Lo, (Element::value < 8)>>,
     tmpl::index_of<
         tmpl::replace_at<TensorIndexList,
                          tmpl::index_of<TensorIndexList,
                                         TensorIndex<Element::value, UpLo::Lo>>,
-                         ti_contracted_t<I, UpLo::Lo>>,
+                         ti_contracted_t<I, UpLo::Lo, (Element::value < 8)>>,
         TensorIndex<Element::value, UpLo::Up>>,
-    ti_contracted_t<I, UpLo::Up>>;
+    ti_contracted_t<I, UpLo::Up, (Element::value < 8)>>;
 
 /// \cond HIDDEN_SYMBOLS
 template <typename TensorIndexList, typename ReplaceTensorIndexValueList,

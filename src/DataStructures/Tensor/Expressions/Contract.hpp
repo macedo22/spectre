@@ -186,8 +186,16 @@ template <template <typename> class TE, typename ReplacedArgList, size_t I,
           size_t TotalContracted, typename T>
 SPECTRE_ALWAYS_INLINE static constexpr auto fully_contract(const T& t) {
   // TensorIndex types of pair of indices to contract
-  using lower_tensorindex = ti_contracted_t<I, UpLo::Lo>;
-  using upper_tensorindex = ti_contracted_t<I, UpLo::Up>;
+  using lower_tensorindex = std::conditional_t<
+      std::is_same_v<
+          tmpl::index_of<ReplacedArgList, ti_contracted_t<I, UpLo::Lo, true>>,
+          tmpl::no_such_type_>,
+      ti_contracted_t<I, UpLo::Lo, false>, ti_contracted_t<I, UpLo::Lo, true>>;
+  using upper_tensorindex = std::conditional_t<
+      std::is_same_v<
+          tmpl::index_of<ReplacedArgList, ti_contracted_t<I, UpLo::Up, true>>,
+          tmpl::no_such_type_>,
+      ti_contracted_t<I, UpLo::Up, false>, ti_contracted_t<I, UpLo::Up, true>>;
 
   // "first" and "second" refer to the position of the indices to contract
   // in the list of generic indices, with "first" denoting leftmost
