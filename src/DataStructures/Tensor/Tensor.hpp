@@ -263,25 +263,31 @@ class Tensor<X, Symm, IndexList<Indices...>> {
   /// Retrieve a TensorExpression object with the index structure passed in
   template <typename... N,
             Requires<std::conjunction_v<tt::is_tensor_index<N>...> and
-                     tmpl::is_set<N...>::value> = nullptr>
+                     tmpl::is_set<tmpl::size_t<N::value>...>::value> = nullptr>
   SPECTRE_ALWAYS_INLINE constexpr TE<tmpl::list<N...>> operator()(
       N... /*meta*/) const noexcept {
     return TE<tmpl::list<N...>>(*this);
   }
 
-  template <typename... N,
-            Requires<std::conjunction_v<tt::is_tensor_index<N>...> and
-                     not tmpl::is_set<N...>::value> = nullptr>
-  SPECTRE_ALWAYS_INLINE constexpr auto operator()(N... /*meta*/) const noexcept
-      -> decltype(
-          TensorExpressions::detail::fully_contract<
-              TE, replace_indices<tmpl::list<N...>, repeated<tmpl::list<N...>>>,
-              0, tmpl::size<repeated<tmpl::list<N...>>>>(*this)) {
+  template <
+      typename... N,
+      Requires<std::conjunction_v<tt::is_tensor_index<N>...> and
+               not tmpl::is_set<tmpl::size_t<N::value>...>::value> = nullptr>
+  SPECTRE_ALWAYS_INLINE constexpr auto
+  operator()(N... /*meta*/) const noexcept -> decltype(
+      TensorExpressions::detail::fully_contract<
+          TE,
+          replace_indices<tmpl::list<N...>,
+                          repeated<tmpl::list<tmpl::size_t<N::value>...>>>,
+          0,
+          tmpl::size<repeated<tmpl::list<tmpl::size_t<N::value>...>>>::value>(
+          *this)) {
     using args_list = tmpl::list<N...>;
-    using repeated_args_list = repeated<args_list>;
+    using tensorindex_values = tmpl::list<tmpl::size_t<N::value>...>;
+    using repeated_tensorindex_values = repeated<tensorindex_values>;
     return TensorExpressions::detail::fully_contract<
-        TE, replace_indices<args_list, repeated_args_list>, 0,
-        tmpl::size<repeated_args_list>>(*this);
+        TE, replace_indices<args_list, repeated_tensorindex_values>, 0,
+        tmpl::size<repeated_tensorindex_values>::value>(*this);
   }
   // @}
 
