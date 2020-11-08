@@ -40,12 +40,18 @@ template <typename ReplacedArg1, typename ReplacedArg2, typename T, typename X,
           typename Symm, typename IndexList, typename Args>
 using ComputeContractedType = typename ComputeContractedTypeImpl<
     T, X,
-    tmpl::erase<tmpl::erase<Symm, tmpl::index_of<Args, ReplacedArg2>>,
-                tmpl::index_of<Args, ReplacedArg1>>,
-    tmpl::erase<tmpl::erase<IndexList, tmpl::index_of<Args, ReplacedArg2>>,
-                tmpl::index_of<Args, ReplacedArg1>>,
-    tmpl::erase<tmpl::erase<Args, tmpl::index_of<Args, ReplacedArg2>>,
-                tmpl::index_of<Args, ReplacedArg1>>>::type;
+    tmpl::erase<
+        tmpl::erase<Symm, tmpl::index_of<Args, ReplacedArg2>>,
+        tmpl::index_of<tmpl::erase<Args, tmpl::index_of<Args, ReplacedArg2>>,
+                       ReplacedArg1>>,
+    tmpl::erase<
+        tmpl::erase<IndexList, tmpl::index_of<Args, ReplacedArg2>>,
+        tmpl::index_of<tmpl::erase<Args, tmpl::index_of<Args, ReplacedArg2>>,
+                       ReplacedArg1>>,
+    tmpl::erase<
+        tmpl::erase<Args, tmpl::index_of<Args, ReplacedArg2>>,
+        tmpl::index_of<tmpl::erase<Args, tmpl::index_of<Args, ReplacedArg2>>,
+                       ReplacedArg1>>>::type;
 
 template <size_t I, size_t Index1, size_t Index2, typename... LhsIndices,
           typename T, typename S>
