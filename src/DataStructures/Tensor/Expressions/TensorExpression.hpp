@@ -106,13 +106,11 @@ using ti_L_t = decltype(ti_L);
 /// to denote contracted as opposed to free indices.
 template <size_t I, UpLo Valence, bool IsSpacetime>
 using ti_contracted_t =
-    TensorIndex<static_cast<size_t>(I * 1000 + static_cast<size_t>(Valence)),
-                Valence, IsSpacetime>;
+    TensorIndex<I * 1000 + static_cast<size_t>(Valence), Valence, IsSpacetime>;
 
 /// \ingroup TensorExpressionsGroup
 template <size_t I, UpLo Valence, bool IsSpacetime>
-TensorIndex<static_cast<size_t>(I * 1000 + static_cast<size_t>(Valence)),
-            Valence, IsSpacetime>
+TensorIndex<I * 1000 + static_cast<size_t>(Valence), Valence, IsSpacetime>
 ti_contracted();
 /// \endcond
 
