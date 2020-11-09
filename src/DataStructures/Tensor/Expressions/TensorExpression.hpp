@@ -27,14 +27,15 @@
  * \code{.cpp}
  * auto T = evaluate<ti_a_t, ti_B_t>(F(ti_a, ti_B) + S(ti_B, ti_a));
  * \endcode
- * where `using ti_a_t = TensorIndex<0, UpLo::Lo>;` and `TensorIndex<0,
- * UpLo::Lo> ti_a;`, that is, `ti_a` and `ti_B` are place holders for objects of
- * type `TensorIndex<0, UpLo::Lo>` and `TensorIndex<1, UpLo::Up>` respectively.
+ * where `using ti_a_t = TensorIndex<0, UpLo::Lo, true>;` and `TensorIndex<0,
+ * UpLo::Lo, true> ti_a;`, that is, `ti_a` and `ti_B` are place holders for
+ * objects of type `TensorIndex<0, UpLo::Lo, true>` and
+ * `TensorIndex<1, UpLo::Up, true>` respectively.
  */
 template <std::size_t I, UpLo Valence, bool IsSpacetime = (I < 8)>
 struct TensorIndex {
   using value_type = std::size_t;
-  using type = TensorIndex<I, Valence>;
+  using type = TensorIndex<I, Valence, IsSpacetime>;
   static constexpr value_type value = I;
   static constexpr UpLo valence = Valence;
   static constexpr bool is_spacetime = IsSpacetime;
