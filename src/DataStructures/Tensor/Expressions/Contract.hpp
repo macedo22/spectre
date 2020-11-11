@@ -27,31 +27,34 @@ using indices_contractible = std::integral_constant<
 
 template <typename T, typename X, typename SymmList, typename IndexList,
           typename Args>
-struct ComputeContractedTypeImpl;
+struct ContractedTypeImpl;
 
 template <typename T, typename X, template <typename...> class SymmList,
           typename IndexList, typename Args, typename... Symm>
-struct ComputeContractedTypeImpl<T, X, SymmList<Symm...>, IndexList, Args> {
+struct ContractedTypeImpl<T, X, SymmList<Symm...>, IndexList, Args> {
   using type =
       TensorExpression<T, X, Symmetry<Symm::value...>, IndexList, Args>;
 };
 
 template <typename ReplacedArg1, typename ReplacedArg2, typename T, typename X,
           typename Symm, typename IndexList, typename Args>
-using ComputeContractedType = typename ComputeContractedTypeImpl<
-    T, X,
-    tmpl::erase<
-        tmpl::erase<Symm, tmpl::index_of<Args, ReplacedArg2>>,
-        tmpl::index_of<tmpl::erase<Args, tmpl::index_of<Args, ReplacedArg2>>,
-                       ReplacedArg1>>,
-    tmpl::erase<
-        tmpl::erase<IndexList, tmpl::index_of<Args, ReplacedArg2>>,
-        tmpl::index_of<tmpl::erase<Args, tmpl::index_of<Args, ReplacedArg2>>,
-                       ReplacedArg1>>,
-    tmpl::erase<
-        tmpl::erase<Args, tmpl::index_of<Args, ReplacedArg2>>,
-        tmpl::index_of<tmpl::erase<Args, tmpl::index_of<Args, ReplacedArg2>>,
-                       ReplacedArg1>>>::type;
+struct ContractedType {
+  using contracted_symmetry = tmpl::erase<
+      tmpl::erase<Symm, tmpl::index_of<Args, ReplacedArg2>>,
+      tmpl::index_of<tmpl::erase<Args, tmpl::index_of<Args, ReplacedArg2>>,
+                     ReplacedArg1>>;
+  using contracted_index_list = tmpl::erase<
+      tmpl::erase<IndexList, tmpl::index_of<Args, ReplacedArg2>>,
+      tmpl::index_of<tmpl::erase<Args, tmpl::index_of<Args, ReplacedArg2>>,
+                     ReplacedArg1>>;
+  using contracted_tensorindex_list = tmpl::erase<
+      tmpl::erase<Args, tmpl::index_of<Args, ReplacedArg2>>,
+      tmpl::index_of<tmpl::erase<Args, tmpl::index_of<Args, ReplacedArg2>>,
+                     ReplacedArg1>>;
+  using type = typename ContractedTypeImpl<T, X, contracted_symmetry,
+                                           contracted_index_list,
+                                           contracted_tensorindex_list>::type;
+};
 
 template <size_t I, size_t Index1, size_t Index2, typename... LhsIndices,
           typename T, typename S>
@@ -80,15 +83,15 @@ struct TensorContract
     : public TensorExpression<TensorContract<ReplacedArg1, ReplacedArg2, T, X,
                                              Symm, IndexList, ArgsList>,
                               X,
-                              typename detail::ComputeContractedType<
+                              typename detail::ContractedType<
                                   ReplacedArg1, ReplacedArg2, T, X, Symm,
-                                  IndexList, ArgsList>::symmetry,
-                              typename detail::ComputeContractedType<
+                                  IndexList, ArgsList>::type::symmetry,
+                              typename detail::ContractedType<
                                   ReplacedArg1, ReplacedArg2, T, X, Symm,
-                                  IndexList, ArgsList>::index_list,
-                              typename detail::ComputeContractedType<
+                                  IndexList, ArgsList>::type::index_list,
+                              typename detail::ContractedType<
                                   ReplacedArg1, ReplacedArg2, T, X, Symm,
-                                  IndexList, ArgsList>::args_list> {
+                                  IndexList, ArgsList>::type::args_list> {
   static constexpr size_t Index1 =
       tmpl::index_of<ArgsList, ReplacedArg1>::value;
   static constexpr size_t Index2 =
@@ -101,8 +104,9 @@ struct TensorContract
   static_assert(detail::indices_contractible<CI1, CI2>::value,
                 "Cannot contract the requested indices.");
 
-  using new_type = detail::ComputeContractedType<ReplacedArg1, ReplacedArg2, T,
-                                                 X, Symm, IndexList, ArgsList>;
+  using new_type =
+      typename detail::ContractedType<ReplacedArg1, ReplacedArg2, T, X, Symm,
+                                      IndexList, ArgsList>::type;
 
   using type = X;
   using symmetry = typename new_type::symmetry;
