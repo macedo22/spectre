@@ -276,17 +276,11 @@ class Tensor<X, Symm, IndexList<Indices...>> {
                        tmpl::integral_list<UpLo, Indices::ul...>>,
         "The valences of the generic indices in the expression do "
         "not match the valences of the indices in the Tensor.");
-    static_assert(
-        std::is_same_v<
-            tmpl::integral_list<bool, TensorIndices::is_spacetime...>,
-            tmpl::integral_list<
-                bool, std::is_same_v<tmpl::integral_constant<
-                                         IndexType, Indices::index_type>,
-                                     tmpl::integral_constant<
-                                         IndexType, IndexType::Spacetime>>...>>,
-        "The index types (SpatialIndex or SpacetimeIndex) of the "
-        "generic indices in the expression do not match the index "
-        "types of the indices in the Tensor.");
+    static_assert((... and (TensorIndices::is_spacetime ==
+                            (Indices::index_type == IndexType::Spacetime))),
+                  "The index types (SpatialIndex or SpacetimeIndex) of the "
+                  "generic indices in the expression do not match the index "
+                  "types of the indices in the Tensor.");
     if constexpr (tmpl::is_set<tmpl::size_t<TensorIndices::value>...>::value) {
       return TE<tmpl::list<TensorIndices...>>(*this);
     } else {

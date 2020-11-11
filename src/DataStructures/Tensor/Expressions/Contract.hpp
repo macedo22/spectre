@@ -204,7 +204,7 @@ SPECTRE_ALWAYS_INLINE static constexpr auto fully_contract(const T& t) {
   // "first" and "second" refer to the position of the indices to contract
   // in the list of generic indices, with "first" denoting leftmost
   //
-  // e.g. R(ti_A, ti_b, ti_a) :
+  // e.g. `R(ti_A, ti_b, ti_a)` :
   // - `first_replaced_tensorindex` refers to the contracted TensorIndex type
   // for `ti_A`
   // - `second_replaced_tensorindex` refers to the contracted TensorIndex type
