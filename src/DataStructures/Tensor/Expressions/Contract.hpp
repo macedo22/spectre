@@ -163,7 +163,7 @@ struct TensorContract
     const std::array<size_t, num_tensor_indices>& new_tensor_index =
         LhsStructure::template get_canonical_tensor_index<num_tensor_indices>(
             lhs_storage_index);
-    return get<LhsStructure, LhsIndices...>(new_tensor_index);
+    return get<LhsIndices...>(new_tensor_index);
   }
 
  private:
