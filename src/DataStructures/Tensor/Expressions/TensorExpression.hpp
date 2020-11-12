@@ -104,13 +104,15 @@ using ti_L_t = decltype(ti_L);
 /// \ingroup TensorExpressionsGroup
 /// Type alias used when Tensor Expressions manipulate indices. These are used
 /// to denote contracted as opposed to free indices.
-template <size_t I, UpLo Valence, bool IsSpacetime>
+template <typename T>
 using ti_contracted_t =
-    TensorIndex<I * 1000 + static_cast<size_t>(Valence), Valence, IsSpacetime>;
+    TensorIndex<((T::value + 1) * 1000) + static_cast<size_t>(T::valence),
+                T::valence, T::is_spacetime>;
 
 /// \ingroup TensorExpressionsGroup
-template <size_t I, UpLo Valence, bool IsSpacetime>
-TensorIndex<I * 1000 + static_cast<size_t>(Valence), Valence, IsSpacetime>
+template <typename T>
+TensorIndex<((T::value + 1) * 1000) + static_cast<size_t>(T::valence),
+            T::valence, T::is_spacetime>
 ti_contracted();
 /// \endcond
 
@@ -233,32 +235,31 @@ using repeated = tmpl::fold<
     detail::repeated_helper<tmpl::pin<List>, tmpl::_state, tmpl::_element>>;
 
 namespace detail {
-template <typename TensorIndexList, typename Element, size_t I>
+template <typename TensorIndexList, typename Element>
 using index_replace = tmpl::replace_at<
     tmpl::replace_at<
         TensorIndexList,
         tmpl::index_of<TensorIndexList, TensorIndex<Element::value, UpLo::Lo>>,
-        ti_contracted_t<I, UpLo::Lo, (Element::value < 100)>>,
-    tmpl::index_of<
-        tmpl::replace_at<TensorIndexList,
-                         tmpl::index_of<TensorIndexList,
-                                        TensorIndex<Element::value, UpLo::Lo>>,
-                         ti_contracted_t<I, UpLo::Lo, (Element::value < 100)>>,
-        TensorIndex<Element::value, UpLo::Up>>,
-    ti_contracted_t<I, UpLo::Up, (Element::value < 100)>>;
+        ti_contracted_t<TensorIndex<Element::value, UpLo::Lo>>>,
+    tmpl::index_of<tmpl::replace_at<
+                       TensorIndexList,
+                       tmpl::index_of<TensorIndexList,
+                                      TensorIndex<Element::value, UpLo::Lo>>,
+                       ti_contracted_t<TensorIndex<Element::value, UpLo::Lo>>>,
+                   TensorIndex<Element::value, UpLo::Up>>,
+    ti_contracted_t<TensorIndex<Element::value, UpLo::Up>>>;
 
 /// \cond HIDDEN_SYMBOLS
-template <typename TensorIndexList, typename ReplaceTensorIndexValueList,
-          size_t I>
+template <typename TensorIndexList, typename ReplaceTensorIndexValueList>
 struct replace_indices_impl
     : replace_indices_impl<
           index_replace<TensorIndexList,
-                        tmpl::front<ReplaceTensorIndexValueList>, I>,
-          tmpl::pop_front<ReplaceTensorIndexValueList>, I + 1> {};
+                        tmpl::front<ReplaceTensorIndexValueList>>,
+          tmpl::pop_front<ReplaceTensorIndexValueList>> {};
 /// \endcond
 
-template <typename TensorIndexList, size_t I>
-struct replace_indices_impl<TensorIndexList, tmpl::list<>, I> {
+template <typename TensorIndexList>
+struct replace_indices_impl<TensorIndexList, tmpl::list<>> {
   using type = TensorIndexList;
 };
 }  // namespace detail
@@ -269,7 +270,7 @@ struct replace_indices_impl<TensorIndexList, tmpl::list<>, I> {
 template <typename TensorIndexList, typename ReplaceTensorIndexValueList>
 using replace_indices =
     typename detail::replace_indices_impl<TensorIndexList,
-                                          ReplaceTensorIndexValueList, 1>::type;
+                                          ReplaceTensorIndexValueList>::type;
 
 /// \ingroup TensorExpressionsGroup
 /// \brief Marks a class as being a TensorExpression

@@ -175,56 +175,50 @@ struct TensorContract
 /*!
  * \ingroup TensorExpressionsGroup
  */
-template <typename ReplacedArg1, typename ReplacedArg2, typename T, typename X,
-          typename Symm, typename IndexList, typename Args>
-SPECTRE_ALWAYS_INLINE auto contract(
-    const TensorExpression<T, X, Symm, IndexList, Args>& t) {
-  return TensorContract<ReplacedArg1, ReplacedArg2, T, X, Symm, IndexList,
-                        Args>(~t);
-}
-
-namespace detail {
-// Helper struct to allow contractions by using repeated indices in operator()
-// calls to tensor.
-template <template <typename> class TE, typename ReplacedArgList, size_t I,
-          size_t TotalContracted, typename T>
-SPECTRE_ALWAYS_INLINE static constexpr auto fully_contract(const T& t) {
-  // TensorIndex types of pair of indices to contract
-  using lower_tensorindex = std::conditional_t<
-      std::is_same_v<
-          tmpl::index_of<ReplacedArgList, ti_contracted_t<I, UpLo::Lo, true>>,
-          tmpl::no_such_type_>,
-      ti_contracted_t<I, UpLo::Lo, false>, ti_contracted_t<I, UpLo::Lo, true>>;
-  using upper_tensorindex = std::conditional_t<
-      std::is_same_v<
-          tmpl::index_of<ReplacedArgList, ti_contracted_t<I, UpLo::Up, true>>,
-          tmpl::no_such_type_>,
-      ti_contracted_t<I, UpLo::Up, false>, ti_contracted_t<I, UpLo::Up, true>>;
-
-  // "first" and "second" refer to the position of the indices to contract
-  // in the list of generic indices, with "first" denoting leftmost
-  //
-  // e.g. `R(ti_A, ti_b, ti_a)` :
-  // - `first_replaced_tensorindex` refers to the contracted TensorIndex type
-  // for `ti_A`
-  // - `second_replaced_tensorindex` refers to the contracted TensorIndex type
-  // for `ti_a`
-  using first_replaced_tensorindex = tmpl::conditional_t<
-      (tmpl::index_of<ReplacedArgList, lower_tensorindex>::value <
-       tmpl::index_of<ReplacedArgList, upper_tensorindex>::value),
-      lower_tensorindex, upper_tensorindex>;
-  using second_replaced_tensorindex = tmpl::conditional_t<
-      (tmpl::index_of<ReplacedArgList, lower_tensorindex>::value <
-       tmpl::index_of<ReplacedArgList, upper_tensorindex>::value),
-      upper_tensorindex, lower_tensorindex>;
-
-  if constexpr (I == TotalContracted) {
-    return contract<first_replaced_tensorindex, second_replaced_tensorindex>(
-        TE<ReplacedArgList>(t));
+template <typename RepeatedTensorIndexValueList, typename T, typename X,
+          typename Symm, typename IndexList, typename ReplacedTensorIndexList>
+SPECTRE_ALWAYS_INLINE static constexpr auto contract(
+    const TensorExpression<T, X, Symm, IndexList, ReplacedTensorIndexList>&
+        t) noexcept {
+  if constexpr (tmpl::size<RepeatedTensorIndexValueList>::value == 0) {
+    // There aren't any repeated indices, so we just return the input
+    return ~t;
   } else {
-    return contract<first_replaced_tensorindex, second_replaced_tensorindex>(
-        fully_contract<TE, ReplacedArgList, I + 1, TotalContracted>(t));
+    // We have repeated indices so we must contract
+    constexpr size_t index_value_to_contract =
+        tmpl::front<RepeatedTensorIndexValueList>::value;
+
+    using lower_tensorindex =
+        ti_contracted_t<TensorIndex<index_value_to_contract, UpLo::Lo>>;
+    using upper_tensorindex =
+        ti_contracted_t<TensorIndex<index_value_to_contract, UpLo::Up>>;
+
+    constexpr size_t lower_tensorindex_position =
+        tmpl::index_of<ReplacedTensorIndexList, lower_tensorindex>::value;
+    constexpr size_t upper_tensorindex_position =
+        tmpl::index_of<ReplacedTensorIndexList, upper_tensorindex>::value;
+
+    // "first" and "second" refer to the position of the indices to contract
+    // in the list of generic indices, with "first" denoting leftmost
+    //
+    // e.g. `R(ti_A, ti_b, ti_a)` :
+    // - `first_replaced_tensorindex` refers to the contracted TensorIndex type
+    // for `ti_A`
+    // - `second_replaced_tensorindex` refers to the contracted TensorIndex type
+    // for `ti_a`
+    using first_tensorindex_to_contract =
+        tmpl::conditional_t<(lower_tensorindex_position <
+                             upper_tensorindex_position),
+                            lower_tensorindex, upper_tensorindex>;
+    using second_tensorindex_to_contract =
+        tmpl::conditional_t<(lower_tensorindex_position <
+                             upper_tensorindex_position),
+                            upper_tensorindex, lower_tensorindex>;
+
+    return contract<tmpl::pop_front<RepeatedTensorIndexValueList>>(
+        TensorContract<first_tensorindex_to_contract,
+                       second_tensorindex_to_contract, T, X, Symm, IndexList,
+                       ReplacedTensorIndexList>{t});
   }
 }
-}  // namespace detail
 }  // namespace TensorExpressions
