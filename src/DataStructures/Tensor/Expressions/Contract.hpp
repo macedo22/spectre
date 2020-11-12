@@ -92,12 +92,31 @@ struct TensorContract
                               typename detail::ContractedType<
                                   ReplacedArg1, ReplacedArg2, T, X, Symm,
                                   IndexList, ArgsList>::type::args_list> {
-  static constexpr size_t Index1 =
+  static constexpr size_t replaced_arg1_position =
       tmpl::index_of<ArgsList, ReplacedArg1>::value;
-  static constexpr size_t Index2 =
+  static constexpr size_t replaced_arg2_position =
       tmpl::index_of<ArgsList, ReplacedArg2>::value;
-  using CI1 = tmpl::at_c<IndexList, Index1>;
-  using CI2 = tmpl::at_c<IndexList, Index2>;
+
+  // "first" and "second" here refer to the position of the indices to contract
+  // in the list of generic indices, with "first" denoting leftmost
+  //
+  // e.g. `R(ti_A, ti_b, ti_a)` :
+  // - `first_replaced_tensorindex` refers to the contracted TensorIndex type
+  //   for `ti_A`
+  // - `second_replaced_tensorindex` refers to the contracted TensorIndex type
+  //   for `ti_a`
+  static constexpr size_t first_position_to_contract =
+      (replaced_arg1_position < replaced_arg2_position)
+          ? replaced_arg1_position
+          : replaced_arg2_position;
+  static constexpr size_t second_position_to_contract =
+      (replaced_arg1_position < replaced_arg2_position)
+          ? replaced_arg2_position
+          : replaced_arg1_position;
+
+  // first and second \ref SpacetimeIndex "TensorIndexType"s to contract
+  using CI1 = tmpl::at_c<IndexList, first_position_to_contract>;
+  using CI2 = tmpl::at_c<IndexList, second_position_to_contract>;
   static_assert(tmpl::size<Symm>::value > 1 and
                     tmpl::size<IndexList>::value > 1,
                 "Cannot contract indices on a Tensor with rank less than 2");
@@ -122,23 +141,25 @@ struct TensorContract
   SPECTRE_ALWAYS_INLINE void fill_contracting_tensor_index(
       std::array<size_t, Rank>& tensor_index_in,
       const std::array<size_t, num_tensor_indices>& tensor_index) const {
-    if constexpr (I < Index1) {
+    if constexpr (I < first_position_to_contract) {
       tensor_index_in[I] = tensor_index[I];
       fill_contracting_tensor_index<I + 1>(tensor_index_in, tensor_index);
-    } else if constexpr (I == Index1) {
+    } else if constexpr (I == first_position_to_contract) {
       // 10000 is for the slot that will be set later. Easy to debug.
       tensor_index_in[I] = 10000;
       fill_contracting_tensor_index<I + 1>(tensor_index_in, tensor_index);
-    } else if constexpr (I > Index1 and I <= Index2 and I < Rank - 1) {
+    } else if constexpr (I > first_position_to_contract and
+                         I <= second_position_to_contract and I < Rank - 1) {
       // tensor_index is Rank - 2 since it shouldn't be called for Rank 2 case
       // 20000 is for the slot that will be set later. Easy to debug.
-      tensor_index_in[I] = I == Index2 ? 20000 : tensor_index[I - 1];
+      tensor_index_in[I] =
+          I == second_position_to_contract ? 20000 : tensor_index[I - 1];
       fill_contracting_tensor_index<I + 1>(tensor_index_in, tensor_index);
-    } else if constexpr (I > Index2 and I < Rank - 1) {
+    } else if constexpr (I > second_position_to_contract and I < Rank - 1) {
       // Left as Rank - 2 since it should never be called for the Rank 2 case
       tensor_index_in[I] = tensor_index[I - 2];
       fill_contracting_tensor_index<I + 1>(tensor_index_in, tensor_index);
-    } else if constexpr (I == Index2) {
+    } else if constexpr (I == second_position_to_contract) {
       tensor_index_in[I] = 20000;
     } else {
       tensor_index_in[I] = tensor_index[I - 2];
@@ -153,7 +174,8 @@ struct TensorContract
     // Manually unrolled for loops to compute the tensor_index from the
     // new_tensor_index
     fill_contracting_tensor_index<0>(tensor_index, new_tensor_index);
-    return detail::compute_contraction<CI1::dim - 1, Index1, Index2,
+    return detail::compute_contraction<CI1::dim - 1, first_position_to_contract,
+                                       second_position_to_contract,
                                        LhsIndices...>(tensor_index, t_);
   }
 
@@ -187,38 +209,14 @@ SPECTRE_ALWAYS_INLINE static constexpr auto contract(
     // We have repeated indices so we must contract
     constexpr size_t index_value_to_contract =
         tmpl::front<RepeatedTensorIndexValueList>::value;
-
     using lower_tensorindex =
         ti_contracted_t<TensorIndex<index_value_to_contract, UpLo::Lo>>;
     using upper_tensorindex =
         ti_contracted_t<TensorIndex<index_value_to_contract, UpLo::Up>>;
 
-    constexpr size_t lower_tensorindex_position =
-        tmpl::index_of<ReplacedTensorIndexList, lower_tensorindex>::value;
-    constexpr size_t upper_tensorindex_position =
-        tmpl::index_of<ReplacedTensorIndexList, upper_tensorindex>::value;
-
-    // "first" and "second" refer to the position of the indices to contract
-    // in the list of generic indices, with "first" denoting leftmost
-    //
-    // e.g. `R(ti_A, ti_b, ti_a)` :
-    // - `first_replaced_tensorindex` refers to the contracted TensorIndex type
-    // for `ti_A`
-    // - `second_replaced_tensorindex` refers to the contracted TensorIndex type
-    // for `ti_a`
-    using first_tensorindex_to_contract =
-        tmpl::conditional_t<(lower_tensorindex_position <
-                             upper_tensorindex_position),
-                            lower_tensorindex, upper_tensorindex>;
-    using second_tensorindex_to_contract =
-        tmpl::conditional_t<(lower_tensorindex_position <
-                             upper_tensorindex_position),
-                            upper_tensorindex, lower_tensorindex>;
-
     return contract<tmpl::pop_front<RepeatedTensorIndexValueList>>(
-        TensorContract<first_tensorindex_to_contract,
-                       second_tensorindex_to_contract, T, X, Symm, IndexList,
-                       ReplacedTensorIndexList>{t});
+        TensorContract<lower_tensorindex, upper_tensorindex, T, X, Symm,
+                       IndexList, ReplacedTensorIndexList>{t});
   }
 }
 }  // namespace TensorExpressions
