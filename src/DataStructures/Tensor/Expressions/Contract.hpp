@@ -196,27 +196,41 @@ struct TensorContract
 
 /*!
  * \ingroup TensorExpressionsGroup
+ * \brief Creates a contraction expression from a tensor expression if there are
+ * any indices to contract
+ *
+ * \details If there are no indices to contract, the input TensorExpression is
+ * simply returned. If not, a contraction expression is created for contracting
+ * one pair of upper and lower indices. If there is more than one pair of
+ * indices to contract, subsequent contraction expressions are recursively
+ * created, nesting one contraction expression inside another.
+ *
+ * For example, if we have tensor \f${R^{ab}}_{ab}\f$ represented by the tensor
+ * expression, `R(ti_A, ti_B, ti_a, ti_b)`, then one contraction expression is
+ * created to represent contracting \f${R^{ab}}_ab\f$ to \f${R^b}_b\f$, and a
+ * second to represent contracting \f${R^b}_b\f$ to the scalar, \f${R}\f$.
+ *
+ * @tparam IndicesToContract a list containing one TensorIndex from each pair of
+ * indices to contract
+ * @param t the TensorExpression to potentially contract
+ * @return the input tensor expression or a contraction expression
  */
-template <typename RepeatedTensorIndexValueList, typename T, typename X,
-          typename Symm, typename IndexList, typename ReplacedTensorIndexList>
+template <typename IndicesToContract, typename T, typename X, typename Symm,
+          typename IndexList, typename TensorIndexList>
 SPECTRE_ALWAYS_INLINE static constexpr auto contract(
-    const TensorExpression<T, X, Symm, IndexList, ReplacedTensorIndexList>&
+    const TensorExpression<T, X, Symm, IndexList, TensorIndexList>&
         t) noexcept {
-  if constexpr (tmpl::size<RepeatedTensorIndexValueList>::value == 0) {
+  if constexpr (tmpl::size<IndicesToContract>::value == 0) {
     // There aren't any repeated indices, so we just return the input
     return ~t;
   } else {
     // We have repeated indices so we must contract
-    constexpr size_t index_value_to_contract =
-        tmpl::front<RepeatedTensorIndexValueList>::value;
-    using lower_tensorindex =
-        ti_contracted_t<TensorIndex<index_value_to_contract, UpLo::Lo>>;
-    using upper_tensorindex =
-        ti_contracted_t<TensorIndex<index_value_to_contract, UpLo::Up>>;
-
-    return contract<tmpl::pop_front<RepeatedTensorIndexValueList>>(
-        TensorContract<lower_tensorindex, upper_tensorindex, T, X, Symm,
-                       IndexList, ReplacedTensorIndexList>{t});
+    using index_to_contract = tmpl::front<IndicesToContract>;
+    using opposite_index_to_contract =
+        tensorindex_with_opposite_valence<index_to_contract>;
+    return contract<tmpl::pop_front<IndicesToContract>>(
+        TensorContract<index_to_contract, opposite_index_to_contract, T, X,
+                       Symm, IndexList, TensorIndexList>{t});
   }
 }
 }  // namespace TensorExpressions

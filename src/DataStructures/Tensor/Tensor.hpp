@@ -281,14 +281,10 @@ class Tensor<X, Symm, IndexList<Indices...>> {
                   "The index types (SpatialIndex or SpacetimeIndex) of the "
                   "generic indices in the expression do not match the index "
                   "types of the indices in the Tensor.");
-    using tensorindex_value_list =
-        tmpl::list<tmpl::size_t<TensorIndices::value>...>;
-    using repeated_tensorindex_value_list = repeated<tensorindex_value_list>;
-    using replaced_tensorindex_list =
-        replace_indices<tmpl::list<TensorIndices...>,
-                        repeated_tensorindex_value_list>;
-    return TensorExpressions::contract<repeated_tensorindex_value_list>(
-        TE<replaced_tensorindex_list>{*this});
+    using tensorindex_list = tmpl::list<TensorIndices...>;
+    using indices_to_contract = contracted_indices<tensorindex_list>;
+    return TensorExpressions::contract<indices_to_contract>(
+        TE<tensorindex_list>{*this});
   }
   // @}
 
