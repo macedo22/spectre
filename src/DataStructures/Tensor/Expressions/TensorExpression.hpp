@@ -70,7 +70,7 @@ struct TensorIndex {
        (I >= spatial_sentinel and I < upper_spatial_sentinel))
           ? UpLo::Lo
           : UpLo::Up;
-  static constexpr bool is_spacetime = (I < spatial_sentinel) ? true : false;
+  static constexpr bool is_spacetime = I < spatial_sentinel;
 };
 
 /*!
