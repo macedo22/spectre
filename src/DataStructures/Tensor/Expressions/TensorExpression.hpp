@@ -63,14 +63,29 @@ struct TensorIndex {
 
 /*!
  * \ingroup TensorExpressionsGroup
- * Given a TensorIndex type T, returns the TensorIndex type with opposite
- * valence. For example, if `T == ti_a_t`, then
- * `tensorindex_with_opposite_valence == ti_A_t`
+ * \brief Returns the TensorIndex value of with opposite valence.
+ *
+ * \details The input value represents a TensorIndex value, which encodes
+ * both the valence of the index and whether the index is spacetime or
+ * spatial. This function returns the value that corresponds to the encoding of
+ * the TensorIndex with the same index type, but opposite valence.
+ *
+ * For example, 0 is the TensorIndex value for `ti_a_t`. If `i == 0`,
+ * then 100 will be returned, which is the TensorIndex value for `ti_A_t`.
+ * If `i == 100` (representing `ti_A_t`), then 0 (representing `ti_a_t`) is
+ * returned.
+ *
+ * @param i a TensorIndex value that represents a generic index
+ * @return the TensorIndex value that encodes the generic index with the
+ * opposite valence
  */
-template <typename T>
-using tensorindex_with_opposite_valence =
-    TensorIndex<T::valence == UpLo::Up ? T::value - upper_sentinel
-                                       : T::value + upper_sentinel>;
+SPECTRE_ALWAYS_INLINE static constexpr size_t
+get_tensorindex_value_with_opposite_valence(const size_t& i) noexcept {
+  return ((i >= upper_sentinel and i < spatial_sentinel) or
+          (i >= upper_spatial_sentinel))
+             ? (i - upper_sentinel)
+             : (i + upper_sentinel);
+};
 
 // @{
 /*!
@@ -228,34 +243,6 @@ using generate_transformation = tmpl::enumerated_fold<
     detail::generate_transformation_impl<tmpl::_state, tmpl::_element, tmpl::_3,
                                          tmpl::pin<Lhs>, tmpl::pin<Rhs>,
                                          tmpl::pin<RhsOnyWithLhs>>>;
-
-namespace detail {
-template <typename Seq, typename S, typename E>
-struct contracted_indices_helper {
-  using type = typename std::conditional<
-      std::is_same<tmpl::count_if<
-                       Seq, std::is_same<::tensorindex_with_opposite_valence<E>,
-                                         tmpl::_1>>,
-                   tmpl::size_t<1>>::value and
-          std::is_same<
-              tmpl::index_of<S, ::tensorindex_with_opposite_valence<E>>,
-              tmpl::no_such_type_>::value,
-      tmpl::push_back<S, E>, S>::type;
-};
-}  // namespace detail
-
-/*!
- * \ingroup TensorExpressionsGroup
- * Returns a list containing one TensorIndex from each pair of indices to
- * contract. For example, if
- * `TensorIndexList == tmpl::list<ti_a_t, ti_B_t, ti_b_t, ti_c_t, ti_A_t>`, then
- * `contracted_indices == tmpl::list<ti_a_t, ti_B_t>`
- */
-template <typename TensorIndexList>
-using contracted_indices =
-    tmpl::fold<TensorIndexList, tmpl::list<>,
-               detail::contracted_indices_helper<tmpl::pin<TensorIndexList>,
-                                                 tmpl::_state, tmpl::_element>>;
 
 /// \ingroup TensorExpressionsGroup
 /// \brief Marks a class as being a TensorExpression

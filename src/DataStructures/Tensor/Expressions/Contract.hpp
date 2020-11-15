@@ -196,6 +196,46 @@ struct TensorContract
 
 /*!
  * \ingroup TensorExpressionsGroup
+ * \brief Returns the values of the first TensorIndexs to contract in an
+ * expression
+ *
+ * \details Given a list of values that represent an expression's generic index
+ * encodings, this function looks to see if it can find a pair of values that
+ * encode one generic index and the generic index with opposite valence, such as
+ * `ti_A_t` and `ti_a_t`. This denotes a pair of indices that will need to be
+ * contracted. If there exists more than one such pair of indices in the
+ * expression, the first pair of values found will be returned.
+ *
+ * For example, if we have tensor \f${R^{ab}}_{ab}\f$ represented by the tensor
+ * expression, `R(ti_A, ti_B, ti_a, ti_b)`, then this will return the pair of
+ * values encoding `ti_A_t` and `ti_a_t`.
+ *
+ * @param tensorindex_values the TensorIndex values of a tensor expression
+ * @return the first pair of TensorIndex values to contract
+ */
+template <size_t NumIndices>
+SPECTRE_ALWAYS_INLINE static constexpr std::pair<size_t, size_t>
+get_first_tensorindex_values_to_contract(
+    const std::array<size_t, NumIndices>& tensorindex_values) noexcept {
+  for (size_t i = 0; i < tensorindex_values.size(); ++i) {
+    const size_t current_value = gsl::at(tensorindex_values, i);
+    const size_t opposite_value_to_find =
+        get_tensorindex_value_with_opposite_valence(current_value);
+    for (size_t j = i + 1; j < tensorindex_values.size(); ++j) {
+      if (opposite_value_to_find == gsl::at(tensorindex_values, j)) {
+        // We found both the lower and upper version of a generic index in the
+        // list of generic indices, so we return this pair
+        return std::pair{current_value, opposite_value_to_find};
+      }
+    }
+  }
+  // We couldn't find a single pair of indices that needs to be contracted
+  return std::pair{std::numeric_limits<size_t>::max(),
+                   std::numeric_limits<size_t>::max()};
+};
+
+/*!
+ * \ingroup TensorExpressionsGroup
  * \brief Creates a contraction expression from a tensor expression if there are
  * any indices to contract
  *
@@ -210,27 +250,34 @@ struct TensorContract
  * created to represent contracting \f${R^{ab}}_ab\f$ to \f${R^b}_b\f$, and a
  * second to represent contracting \f${R^b}_b\f$ to the scalar, \f${R}\f$.
  *
- * @tparam IndicesToContract a list containing one TensorIndex from each pair of
- * indices to contract
  * @param t the TensorExpression to potentially contract
- * @return the input tensor expression or a contraction expression
+ * @return the input tensor expression or a contraction expression of the input
  */
-template <typename IndicesToContract, typename T, typename X, typename Symm,
-          typename IndexList, typename TensorIndexList>
+template <typename T, typename X, typename Symm, typename IndexList,
+          typename... TensorIndices>
 SPECTRE_ALWAYS_INLINE static constexpr auto contract(
-    const TensorExpression<T, X, Symm, IndexList, TensorIndexList>&
+    const TensorExpression<T, X, Symm, IndexList, tmpl::list<TensorIndices...>>&
         t) noexcept {
-  if constexpr (tmpl::size<IndicesToContract>::value == 0) {
-    // There aren't any repeated indices, so we just return the input
+  constexpr std::array<size_t, sizeof...(TensorIndices)> tensorindex_values = {
+      {TensorIndices::value...}};
+  constexpr std::pair first_tensorindex_values_to_contract =
+      get_first_tensorindex_values_to_contract(tensorindex_values);
+  constexpr std::pair no_indices_to_contract_sentinel{
+      std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max()};
+
+  if constexpr (first_tensorindex_values_to_contract ==
+                no_indices_to_contract_sentinel) {
+    // There aren't any indices to contract, so we just return the input
     return ~t;
   } else {
-    // We have repeated indices so we must contract
-    using index_to_contract = tmpl::front<IndicesToContract>;
-    using opposite_index_to_contract =
-        tensorindex_with_opposite_valence<index_to_contract>;
-    return contract<tmpl::pop_front<IndicesToContract>>(
-        TensorContract<index_to_contract, opposite_index_to_contract, T, X,
-                       Symm, IndexList, TensorIndexList>{t});
+    // We have a pair of indices to be contract
+    using tensorindex_to_contract =
+        TensorIndex<first_tensorindex_values_to_contract.first>;
+    using opposite_tensorindex_to_contract =
+        TensorIndex<first_tensorindex_values_to_contract.second>;
+    return contract(TensorContract<tensorindex_to_contract,
+                                   opposite_tensorindex_to_contract, T, X, Symm,
+                                   IndexList, tmpl::list<TensorIndices...>>{t});
   }
 }
 }  // namespace TensorExpressions
