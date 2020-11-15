@@ -17,8 +17,20 @@
 #include "Utilities/TMPL.hpp"
 #include "Utilities/TypeTraits/IsA.hpp"  // IWYU pragma: keep
 
-// TensorIndex values to separate upper indices from lower indices and spatial
-// indices from spacetime indices.
+// The below values are used to separate upper indices from lower indices and
+// spatial indices from spacetime indices.
+//
+// Tensor expressions perform as many calculations as possible in a constexpr
+// context, which means working with fundamental types, specifically integer
+// types, is easiest. By using sentinel values defined in one location we can
+// easily control the encoding without having magic values floating around in
+// many places. Furthermore, encoding all the information in the `size_t` means
+// that when a failure occurs in one of the constexpr calculations it is
+// reasonably easy to debug because, while encoded, the full type information is
+// present. This approach can effectively be thought of as using specific bits
+// in the `size_t` to mark information, using the size_t more as a bitfield than
+// anything else. For human readability, we use base-10 numbers instead of
+// base-2 values that would truly set individual bits.
 //
 // Spacetime indices are represented by values [0, `spatial_sentinel`) and
 // spatial indices are represented by values including and upwards of
