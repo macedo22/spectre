@@ -97,7 +97,7 @@ get_tensorindex_value_with_opposite_valence(const size_t& i) noexcept {
           (i >= upper_spatial_sentinel))
              ? (i - upper_sentinel)
              : (i + upper_sentinel);
-};
+}
 
 // @{
 /*!

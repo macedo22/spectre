@@ -232,7 +232,7 @@ get_first_tensorindex_values_to_contract(
   // We couldn't find a single pair of indices that needs to be contracted
   return std::pair{std::numeric_limits<size_t>::max(),
                    std::numeric_limits<size_t>::max()};
-};
+}
 
 /*!
  * \ingroup TensorExpressionsGroup
