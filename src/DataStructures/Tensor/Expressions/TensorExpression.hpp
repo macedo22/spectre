@@ -70,7 +70,7 @@ struct TensorIndex {
        (I >= spatial_sentinel and I < upper_spatial_sentinel))
           ? UpLo::Lo
           : UpLo::Up;
-  static constexpr bool is_spacetime = (I < spatial_sentinel) ? true : false;
+  static constexpr bool is_spacetime = I < spatial_sentinel;
 };
 
 /*!
@@ -97,7 +97,7 @@ get_tensorindex_value_with_opposite_valence(const size_t& i) noexcept {
           (i >= upper_spatial_sentinel))
              ? (i - upper_sentinel)
              : (i + upper_sentinel);
-};
+}
 
 // @{
 /*!
