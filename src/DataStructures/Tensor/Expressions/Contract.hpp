@@ -26,14 +26,14 @@ using indices_contractible = std::integral_constant<
               I1::index_type == I2::index_type>;
 
 template <typename T, typename X, typename SymmList, typename IndexList,
-          typename Args>
+          typename TensorIndexList>
 struct ContractedTypeImpl;
 
 template <typename T, typename X, template <typename...> class SymmList,
-          typename IndexList, typename Args, typename... Symm>
-struct ContractedTypeImpl<T, X, SymmList<Symm...>, IndexList, Args> {
-  using type =
-      TensorExpression<T, X, Symmetry<Symm::value...>, IndexList, Args>;
+          typename IndexList, typename TensorIndexList, typename... Symm>
+struct ContractedTypeImpl<T, X, SymmList<Symm...>, IndexList, TensorIndexList> {
+  using type = TensorExpression<T, X, Symmetry<Symm::value...>, IndexList,
+                                TensorIndexList>;
 };
 
 template <size_t FirstContractedIndexPos, size_t SecondContractedIndexPos,
