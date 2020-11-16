@@ -261,12 +261,13 @@ class Tensor<X, Symm, IndexList<Indices...>> {
 
   // @{
   /// Retrieve a TensorExpression object with the index structure passed in
-  template <
-      typename... TensorIndices,
-      Requires<std::conjunction_v<tt::is_tensor_index<TensorIndices>...>> =
-          nullptr>
+  template <typename... TensorIndices>
   SPECTRE_ALWAYS_INLINE constexpr auto operator()(
       TensorIndices... /*meta*/) const noexcept {
+    static_assert(std::conjunction_v<tt::is_tensor_index<TensorIndices>...>,
+                  "The tensor expression must be created using TensorIndex "
+                  "objects to represent generic indices, e.g. ti_a, ti_b, "
+                  "etc.");
     static_assert(tmpl::is_set<TensorIndices...>::value,
                   "Cannot create a tensor expression with a repeated generic "
                   "index. If you intend to contract, ensure that the indices "
