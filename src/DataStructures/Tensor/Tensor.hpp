@@ -264,7 +264,7 @@ class Tensor<X, Symm, IndexList<Indices...>> {
   template <typename... TensorIndices>
   SPECTRE_ALWAYS_INLINE constexpr auto operator()(
       TensorIndices... /*meta*/) const noexcept {
-    static_assert(std::conjunction_v<tt::is_tensor_index<TensorIndices>...>,
+    static_assert((... and tt::is_tensor_index<TensorIndices>::value),
                   "The tensor expression must be created using TensorIndex "
                   "objects to represent generic indices, e.g. ti_a, ti_b, "
                   "etc.");

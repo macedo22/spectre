@@ -92,7 +92,7 @@ struct TensorIndex {
  * opposite valence
  */
 SPECTRE_ALWAYS_INLINE static constexpr size_t
-get_tensorindex_value_with_opposite_valence(const size_t& i) noexcept {
+get_tensorindex_value_with_opposite_valence(const size_t i) noexcept {
   if ((i >= upper_sentinel and i < spatial_sentinel) or
       (i >= upper_spatial_sentinel)) {
     // `i` represents an upper index, so return the lower index's encoding
