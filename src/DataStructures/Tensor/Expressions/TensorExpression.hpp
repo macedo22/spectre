@@ -33,18 +33,20 @@
 // base-2 values that would truly set individual bits.
 //
 // Spacetime indices are represented by values [0, `spatial_sentinel`) and
-// spatial indices are represented by values including and upwards of
-// `spatial_sentinel`. Lower spacetime indices are represented by values
-// [0, `upper_sentinel`), and upper spacetime indices are represented by values
-// [`upper_sentinel`, `spatial_sentinel`). Lower spatial indices are
+// spatial indices are represented by values
+// [`spatial_sentinel`, `max_sentinel`). Lower spacetime indices are represented
+// by values [0, `upper_sentinel`), and upper spacetime indices are represented
+// by values [`upper_sentinel`, `spatial_sentinel`). Lower spatial indices are
 // represented by values
 // [`spatial_sentinel`, `spatial_sentinel` + `upper_sentinel`), and upper
-// spatial indices are represented by values including and upwards of
-// `spatial_sentinel` + `upper_sentinel`.
+// spatial indices are represented by values
+// [`spatial_sentinel` + `upper_sentinel`, `max_sentinel`). Values above
+// `max_sentinel` are considered invalid for representing an index.
 static constexpr size_t spatial_sentinel = 1000;
-static constexpr size_t upper_sentinel = 100;
+static constexpr size_t upper_sentinel = 500;
 static constexpr size_t upper_spatial_sentinel =
     spatial_sentinel + upper_sentinel;
+static constexpr size_t max_sentinel = 2000;
 
 /*!
  * \ingroup TensorExpressionsGroup
@@ -54,13 +56,13 @@ static constexpr size_t upper_spatial_sentinel =
  * Used to denote a tensor index in a tensor slot. This allows the following
  * type of expressions to work:
  * \code{.cpp}
- * auto T = evaluate<ti_a_t, ti_B_t>(F(ti_a, ti_B) + S(ti_B, ti_a));
+ * auto T = evaluate<ti_a_t, ti_b_t>(F(ti_a, ti_b) + S(ti_b, ti_a));
  * \endcode
  * where `using ti_a_t = TensorIndex<0>;` and `TensorIndex<0> ti_a;`, that is,
  * `ti_a` and `ti_b` are place holders for objects of type `TensorIndex<0>` and
  * `TensorIndex<1>` respectively.
  */
-template <std::size_t I>
+template <std::size_t I, Requires<(I < max_sentinel)> = nullptr>
 struct TensorIndex {
   using value_type = std::size_t;
   using type = TensorIndex<I>;
@@ -83,8 +85,8 @@ struct TensorIndex {
  * the TensorIndex with the same index type, but opposite valence.
  *
  * For example, 0 is the TensorIndex value for `ti_a_t`. If `i == 0`,
- * then 100 will be returned, which is the TensorIndex value for `ti_A_t`.
- * If `i == 100` (representing `ti_A_t`), then 0 (representing `ti_a_t`) is
+ * then 500 will be returned, which is the TensorIndex value for `ti_A_t`.
+ * If `i == 500` (representing `ti_A_t`), then 0 (representing `ti_a_t`) is
  * returned.
  *
  * @param i a TensorIndex value that represents a generic index
@@ -93,6 +95,7 @@ struct TensorIndex {
  */
 SPECTRE_ALWAYS_INLINE static constexpr size_t
 get_tensorindex_value_with_opposite_valence(const size_t i) noexcept {
+  assert(i < max_sentinel);
   if ((i >= upper_sentinel and i < spatial_sentinel) or
       (i >= upper_spatial_sentinel)) {
     // `i` represents an upper index, so return the lower index's encoding

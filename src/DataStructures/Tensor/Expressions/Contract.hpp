@@ -233,10 +233,10 @@ get_first_index_positions_to_contract(
  * any indices to contract
  *
  * \details If there are no indices to contract, the input TensorExpression is
- * simply returned. If not, a contraction expression is created for contracting
- * one pair of upper and lower indices. If there is more than one pair of
- * indices to contract, subsequent contraction expressions are recursively
- * created, nesting one contraction expression inside another.
+ * simply returned. Otherwise, a contraction expression is created for
+ * contracting one pair of upper and lower indices. If there is more than one
+ * pair of indices to contract, subsequent contraction expressions are
+ * recursively created, nesting one contraction expression inside another.
  *
  * For example, if we have tensor \f${R^{ab}}_{ab}\f$ represented by the tensor
  * expression, `R(ti_A, ti_B, ti_a, ti_b)`, then one contraction expression is
