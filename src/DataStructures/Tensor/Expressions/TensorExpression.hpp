@@ -40,8 +40,8 @@
 // represented by values
 // [`spatial_sentinel`, `spatial_sentinel` + `upper_sentinel`), and upper
 // spatial indices are represented by values
-// [`spatial_sentinel` + `upper_sentinel`, `max_sentinel`). Values above
-// `max_sentinel` are considered invalid for representing an index.
+// [`spatial_sentinel` + `upper_sentinel`, `max_sentinel`). Values equal to or
+// above `max_sentinel` are considered invalid for representing an index.
 static constexpr size_t spatial_sentinel = 1000;
 static constexpr size_t upper_sentinel = 500;
 static constexpr size_t upper_spatial_sentinel =
