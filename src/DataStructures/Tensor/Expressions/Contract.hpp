@@ -357,12 +357,6 @@ struct TensorContract
 
   /// \brief Helper struct for computing the contraction of one pair of indices
   ///
-  /// \details
-  /// This struct has two template specializations to enable computing a
-  /// contraction by recursively iterating over lists of storage indices of
-  /// uncontracted LHS components to sum to compute the components of the
-  /// contracted LHS expression.
-  ///
   /// \tparam UncontractedLhsStructure the Structure of the uncontracted LHS
   /// \tparam UncontractedLhsTensorIndexList the typelist of TensorIndexs of the
   /// uncontracted LHS expression
