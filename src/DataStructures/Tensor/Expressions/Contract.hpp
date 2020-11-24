@@ -278,12 +278,35 @@ struct TensorContract
     return storage_indices_to_sum;
   }
 
-  // Computes and returns a mapping between the contracted LHS storage indices
-  // and the lists of uncontracted LHS storage indices to sum to determine the
-  // values of the components at those contracted LHS storage indices
-  //
-  // See the comment above the storage index get function below for a more
-  // concrete explanation and example of what this mapping is
+  /// \brief Computes a mapping between the storage indices of the contracted
+  /// LHS components and the uncontracted LHS components to sum for a
+  /// contraction
+  ///
+  /// \details
+  /// Given a RHS tensor to be contracted, the uncontracted LHS represents the
+  /// uncontracted RHS tensor arranged with the LHS's generic index order. The
+  /// contracted LHS represents the result of contracting this uncontracted
+  /// LHS. For example, if we have RHS tensor \f${R^{a}}_{abc}\f$ and we want to
+  /// contract it to the LHS tensor \f$L_{cb}\f$, then \f$L_{cb}\f$ represents
+  /// the contracted LHS, while \f${L^{a}}_{acb}\f$ represents the uncontracted
+  /// LHS. Note that the relative ordering of the LHS generic indices \f$c\f$
+  /// and \f$b\f$ in the contracted LHS is preserved in the uncontracted LHS.
+  ///
+  /// To compute a contraction, we need to get all the uncontracted LHS
+  /// components to sum. In the example above, this means that in order to
+  /// compute \f$L_{cb}\f$ for some \f$c\f$ and \f$b\f$, we need to sum the
+  /// components \f${L^{a}}_{acb}\f$ for all values of \f$a\f$. This function
+  /// computes and returns a mapping between the storage indices of each
+  /// component of \f$L_{cb}\f$ and the corresponding lists of components of
+  /// \f${L^{a}}_{acb}\f$ to sum to compute each component of \f$L_{cb}\f$.
+  ///
+  /// \tparam NumContractedComponents the number of components in the
+  /// contracted LHS tensor
+  /// \tparam UncontractedLhsStructure the Structure of the uncontracted LHS
+  /// \tparam ContractedLhsStructure the Structure of the contracted LHS
+  /// \tparam Ints a sequence of integers from [0, `NumContractedComponents`)
+  /// \return a mapping between the storage indices of the contracted LHS
+  /// components and the uncontracted LHS components to sum for a contraction
   template <size_t NumContractedComponents, typename UncontractedLhsStructure,
             typename ContractedLhsStructure, size_t... Ints>
   SPECTRE_ALWAYS_INLINE static constexpr std::array<
