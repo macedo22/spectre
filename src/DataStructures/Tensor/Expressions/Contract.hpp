@@ -232,10 +232,36 @@ struct TensorContract
     return contracting_tensor_index;
   }
 
-  // Helper function that gets the uncontracted LHS storage indices that
-  // need to be summed to determine the value of the component at storage
-  // index I in the contracted LHS expression. In other words, this computes
-  // the entry for one storage index (I) in the map computed by `get_sum_map`.
+  /// \brief return the storage indices of the uncontracted LHS components to
+  /// be summed to compute a contracted LHS component
+  ///
+  /// \details
+  /// Given a RHS tensor to be contracted, the uncontracted LHS represents the
+  /// uncontracted RHS tensor arranged with the LHS's generic index order. The
+  /// contracted LHS represents the result of contracting this uncontracted
+  /// LHS. For example, if we have RHS tensor \f${R^{a}}_{abc}\f$ and we want to
+  /// contract it to the LHS tensor \f$L_{cb}\f$, then \f$L_{cb}\f$ represents
+  /// the contracted LHS, while \f${L^{a}}_{acb}\f$ represents the uncontracted
+  /// LHS. Note that the relative ordering of the LHS generic indices \f$c\f$
+  /// and \f$b\f$ in the contracted LHS is preserved in the uncontracted LHS.
+  ///
+  /// To compute a contraction, we need to get all the uncontracted LHS
+  /// components to sum. In the example above, this means that in order to
+  /// compute \f$L_{cb}\f$ for some \f$c\f$ and \f$b\f$, we need to sum the
+  /// components \f${L^{a}}_{acb}\f$ for all values of \f$a\f$. `I`
+  /// represents the storage index of \f$L_{cb}\f$ for some \f$c\f$ and \f$b\f$,
+  /// an uncontracted LHS component that we wish to compute. This function
+  /// computes and returns the storage indices corresponding to
+  /// \f${L^{a}}_{acb}\f$ for all values of \f$a\f$, the components to sum to
+  /// compute \f$L_{cb}\f$.
+  ///
+  /// \tparam I the storage index of a contracted LHS component to be computed
+  /// \tparam UncontractedLhsStructure the Structure of the uncontracted LHS
+  /// \tparam ContractedLhsStructure the Structure of the contracted LHS
+  /// \tparam Ints a sequence of integers from [0, dimension of contracted
+  /// index)
+  /// \return the storage indices of the uncontracted LHS components to be
+  /// summed to compute a contracted LHS component
   template <size_t I, typename UncontractedLhsStructure,
             typename ContractedLhsStructure, size_t... Ints>
   SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t,
