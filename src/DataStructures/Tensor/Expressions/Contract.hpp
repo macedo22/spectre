@@ -294,37 +294,42 @@ struct TensorContract
   // sum, gets the components at those indices, and returns their sum
   template <typename UncontractedLhsStructure,
             typename UncontractedLhsTensorIndexList,
-            size_t NumContractedComponents, typename T1>
+            size_t NumContractedComponents, typename T1, size_t Index>
   struct ComputeContraction;
 
   template <typename UncontractedLhsStructure,
             typename... UncontractedLhsTensorIndices,
-            size_t NumContractedComponents, typename T1>
+            size_t NumContractedComponents, typename T1, size_t Index>
   struct ComputeContraction<UncontractedLhsStructure,
                             tmpl::list<UncontractedLhsTensorIndices...>,
-                            NumContractedComponents, T1> {
-    static SPECTRE_ALWAYS_INLINE typename T1::type apply(
+                            NumContractedComponents, T1, Index> {
+    static SPECTRE_ALWAYS_INLINE decltype(auto) apply(
         const std::array<std::array<size_t, first_contracted_index::dim>,
                          NumContractedComponents>& map,
         const T1& t1, const size_t& lhs_storage_index) noexcept {
-      // This is the first component/value to sum. It assumes that the dimension
-      // of the contracted indices is > 0
-      //
-      // map[lhs_storage_index][0] is the uncontracted LHS storage index of the
-      // first component to sum to compute the value of the component at
-      // `lhs_storage_index` in the contracted LHS.
-      type contraction_sum = t1.template get<UncontractedLhsStructure,
-                                             UncontractedLhsTensorIndices...>(
-          map[lhs_storage_index][0]);
+      return ComputeContraction<UncontractedLhsStructure,
+                                tmpl::list<UncontractedLhsTensorIndices...>,
+                                NumContractedComponents, decltype(t_),
+                                Index + 1>::apply(map, t1, lhs_storage_index) +
+             t1.template get<UncontractedLhsStructure,
+                             UncontractedLhsTensorIndices...>(
+                 map[lhs_storage_index][Index]);
+    }
+  };
 
-      // This accumulates the sum of the contraction by getting the values of
-      // the other components to sum
-      for (size_t i = 1; i < first_contracted_index::dim; i++) {
-        contraction_sum += t1.template get<UncontractedLhsStructure,
-                                           UncontractedLhsTensorIndices...>(
-            map[lhs_storage_index][i]);
-      }
-      return contraction_sum;
+  template <typename UncontractedLhsStructure,
+            typename... UncontractedLhsTensorIndices,
+            size_t NumContractedComponents, typename T1>
+  struct ComputeContraction<
+      UncontractedLhsStructure, tmpl::list<UncontractedLhsTensorIndices...>,
+      NumContractedComponents, T1, first_contracted_index::dim - 1> {
+    static SPECTRE_ALWAYS_INLINE decltype(auto) apply(
+        const std::array<std::array<size_t, first_contracted_index::dim>,
+                         NumContractedComponents>& map,
+        const T1& t1, const size_t& lhs_storage_index) noexcept {
+      return t1.template get<UncontractedLhsStructure,
+                             UncontractedLhsTensorIndices...>(
+          map[lhs_storage_index][first_contracted_index::dim - 1]);
     }
   };
 
@@ -412,8 +417,8 @@ struct TensorContract
     // the contracted LHS.
     return ComputeContraction<UncontractedLhsStructure,
                               uncontracted_lhs_tensorindex_list<LhsIndices...>,
-                              num_contracted_components,
-                              decltype(t_)>::apply(map, t_, lhs_storage_index);
+                              num_contracted_components, decltype(t_),
+                              0>::apply(map, t_, lhs_storage_index);
   }
 
  private:
