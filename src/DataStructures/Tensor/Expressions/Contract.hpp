@@ -176,8 +176,8 @@ struct TensorContract
         tensor_index, t_);
   }
 
-  /// \brief return a tensor multi-index of the uncontracted LHS to be summed in
-  /// a contraction
+  /// \brief return the tensor multi-index of one uncontracted LHS component to
+  /// be summed to compute a contracted LHS component
   ///
   /// \details
   /// Given a RHS tensor to be contracted, the uncontracted LHS represents the
@@ -190,24 +190,24 @@ struct TensorContract
   /// and \f$b\f$ in the contracted LHS is preserved in the uncontracted LHS.
   ///
   /// To compute a contraction, we need to get all the uncontracted LHS
-  /// multi-indices to sum. In the example above, this means that in order to
+  /// components to sum. In the example above, this means that in order to
   /// compute \f$L_{cb}\f$ for some \f$c\f$ and \f$b\f$, we need to sum the
   /// components \f${L^{a}}_{acb}\f$ for all values of \f$a\f$. This function
   /// takes a concrete contracted LHS multi-index as input, representing the
-  /// multi-index of a component of the contracted LHS. For example, if
-  /// `lhs_contracted_multi_index == [1, 2]`, this represents \f$L_{12}\f$.
-  /// In this case, we need to sum \f${L^{a}}_{a12}\f$ for all values of
-  /// \f$a\f$. `ContractedIndexValue` represents on such concrete value that is
-  /// filled in for \f$a\f$. In this way, what is constructed and returned is
-  /// one such concrete uncontracted LHS multi-index to be summed as part of
-  /// contracting a pair of indices.
+  /// multi-index of a component of the contracted LHS that we wish to compute.
+  /// For example, if `lhs_contracted_multi_index == [1, 2]`, this represents
+  /// \f$L_{12}\f$. In this case, we need to sum \f${L^{a}}_{a12}\f$ for all
+  /// values of \f$a\f$. `ContractedIndexValue` represents on such concrete
+  /// value that is filled in for \f$a\f$. In this way, what is constructed and
+  /// returned is one such concrete uncontracted LHS multi-index to be summed as
+  /// part of contracting a pair of indices.
   ///
-  /// \tparam ContractedIndexValue concrete value inserted for the indices to
-  /// contract
-  /// \param lhs_contracted_multi_index a tensor multi-index of the contracted
-  /// LHS
-  /// \return a tensor multi-index of the uncontracted LHS to be summed in a
-  /// contraction
+  /// \tparam ContractedIndexValue the concrete value inserted for the indices
+  /// to contract
+  /// \param lhs_contracted_multi_index the tensor multi-index of a contracted
+  /// LHS component to be computed
+  /// \return the tensor multi-index of one uncontracted LHS component to be
+  /// summed for computing a contracted LHS component
   template <size_t ContractedIndexValue>
   SPECTRE_ALWAYS_INLINE static constexpr std::array<
       size_t, num_uncontracted_tensor_indices>
