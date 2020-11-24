@@ -193,7 +193,7 @@ struct TensorContract
   //
   // When this function is called for each value of `ContractedIndexValue`, we
   // effectively get a list of tensor indices to sum for a contraction.
-  template <size_t ContractedIndexValue, typename ContractedLhsStructure>
+  template <size_t ContractedIndexValue>
   SPECTRE_ALWAYS_INLINE static constexpr std::array<
       size_t, num_uncontracted_tensor_indices>
   get_tensor_index_to_add(const std::array<size_t, num_tensor_indices>&
@@ -232,8 +232,7 @@ struct TensorContract
             ContractedLhsStructure::get_canonical_tensor_index(I);
     constexpr std::array<size_t, first_contracted_index::dim>
         storage_indices_to_sum = {{UncontractedLhsStructure::get_storage_index(
-            get_tensor_index_to_add<Ints, ContractedLhsStructure>(
-                lhs_contracted_multi_index))...}};
+            get_tensor_index_to_add<Ints>(lhs_contracted_multi_index))...}};
 
     return storage_indices_to_sum;
   }
