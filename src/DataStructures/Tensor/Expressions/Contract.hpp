@@ -402,7 +402,7 @@ struct TensorContract
         get_uncontracted_lhs_tensorindex_list<LhsIndices...>;
 
     // structure of the uncontracted LHS (LHS with contracted indices inserted)
-    using UncontractedLhsStructure =
+    using uncontracted_lhs_structure =
         typename LhsTensorSymmAndIndices<ArgsList,
                                          uncontracted_lhs_tensorindex_list,
                                          Symm, IndexList>::structure;
@@ -413,13 +413,13 @@ struct TensorContract
     // storage indices of components to sum for contraction
     constexpr std::array<std::array<size_t, first_contracted_index::dim>,
                          num_contracted_components>
-        map = get_sum_map<num_contracted_components, UncontractedLhsStructure,
+        map = get_sum_map<num_contracted_components, uncontracted_lhs_structure,
                           LhsStructure>(map_seq);
 
     // This returns the contracted component value at the `lhs_storage_index` in
     // the contracted LHS.
     return ComputeContraction<
-        UncontractedLhsStructure, uncontracted_lhs_tensorindex_list,
+        uncontracted_lhs_structure, uncontracted_lhs_tensorindex_list,
         num_contracted_components, decltype(t_), 0>::apply(map, t_,
                                                            lhs_storage_index);
   }
