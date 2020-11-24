@@ -260,7 +260,7 @@ struct TensorContract
 
   // This is a helper that inserts the first contracted index into `LhsIndices`
   template <typename... LhsIndices>
-  using uncontracted_lhs_tensorindex_list_helper = tmpl::append<
+  using get_uncontracted_lhs_tensorindex_list_helper = tmpl::append<
       tmpl::at_c<tmpl::split_at<tmpl::list<LhsIndices...>,
                                 tmpl::size_t<FirstContractedIndexPos>>,
                  0>,
@@ -274,18 +274,18 @@ struct TensorContract
   //
   // e.g. If we contracted RHS R_Abac to LHS L_cb, then this means inserting
   // A and a back in to L_cb in their original spots, which is: L_Acab.
-  // Specifically, `uncontracted_lhs_tensorindex_list` would be:
+  // Specifically, `get_uncontracted_lhs_tensorindex_list` would be:
   // `tmpl::list<ti_A_t, ti_c_t, ti_a_t, ti_b_t>`
   template <typename... LhsIndices>
-  using uncontracted_lhs_tensorindex_list = tmpl::append<
-      tmpl::at_c<tmpl::split_at<
-                     uncontracted_lhs_tensorindex_list_helper<LhsIndices...>,
-                     tmpl::size_t<SecondContractedIndexPos>>,
+  using get_uncontracted_lhs_tensorindex_list = tmpl::append<
+      tmpl::at_c<tmpl::split_at<get_uncontracted_lhs_tensorindex_list_helper<
+                                    LhsIndices...>,
+                                tmpl::size_t<SecondContractedIndexPos>>,
                  0>,
       tmpl::list<tmpl::at_c<ArgsList, SecondContractedIndexPos>>,
-      tmpl::at_c<tmpl::split_at<
-                     uncontracted_lhs_tensorindex_list_helper<LhsIndices...>,
-                     tmpl::size_t<SecondContractedIndexPos>>,
+      tmpl::at_c<tmpl::split_at<get_uncontracted_lhs_tensorindex_list_helper<
+                                    LhsIndices...>,
+                                tmpl::size_t<SecondContractedIndexPos>>,
                  1>>;
 
   // This returns the contracted component value at the `lhs_storage_index` in
@@ -398,11 +398,14 @@ struct TensorContract
       const size_t lhs_storage_index) const {
     // number of components in the contracted LHS
     constexpr size_t num_contracted_components = LhsStructure::size();
+    using uncontracted_lhs_tensorindex_list =
+        get_uncontracted_lhs_tensorindex_list<LhsIndices...>;
 
     // structure of the uncontracted LHS (LHS with contracted indices inserted)
-    using UncontractedLhsStructure = typename LhsTensorSymmAndIndices<
-        ArgsList, uncontracted_lhs_tensorindex_list<LhsIndices...>, Symm,
-        IndexList>::structure;
+    using UncontractedLhsStructure =
+        typename LhsTensorSymmAndIndices<ArgsList,
+                                         uncontracted_lhs_tensorindex_list,
+                                         Symm, IndexList>::structure;
 
     constexpr std::make_index_sequence<num_contracted_components> map_seq{};
 
@@ -415,10 +418,10 @@ struct TensorContract
 
     // This returns the contracted component value at the `lhs_storage_index` in
     // the contracted LHS.
-    return ComputeContraction<UncontractedLhsStructure,
-                              uncontracted_lhs_tensorindex_list<LhsIndices...>,
-                              num_contracted_components, decltype(t_),
-                              0>::apply(map, t_, lhs_storage_index);
+    return ComputeContraction<
+        UncontractedLhsStructure, uncontracted_lhs_tensorindex_list,
+        num_contracted_components, decltype(t_), 0>::apply(map, t_,
+                                                           lhs_storage_index);
   }
 
  private:
