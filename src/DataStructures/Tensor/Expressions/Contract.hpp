@@ -176,23 +176,38 @@ struct TensorContract
         tensor_index, t_);
   }
 
-  // This is a helper function for determining sequential tensor multi-indices
-  // that need to be summed in a contraction by setting `ContractedIndexValue`
-  // to the values of the indices that were contracted.
-  //
-  // e.g. Say we contracted R_Aba to L_b. To compute L_1, we need to sum:
-  // L_010 + L_111 + L_212. As arrays: [0, 1, 0], [1, 1, 1], and [2, 1, 2]
-  //
-  // This function is called for
-  // `ContractedIndexValue` = [0, dimension of contracted indices). In this
-  // example, it means this function is called for the following values for
-  // `ContractedIndexValue`: [0, 3). When `ContractedIndexValue` == 0, we return
-  // [0, 1, 0], when `ContractedIndexValue` == 1, we return the next index to
-  // sum, [1, 1, 1], and finally, when `ContractedIndexValue` == 2, we return
-  // the final index to sum, [2, 1, 2].
-  //
-  // When this function is called for each value of `ContractedIndexValue`, we
-  // effectively get a list of tensor indices to sum for a contraction.
+  /// \brief return a tensor multi-index of the uncontracted LHS to be summed in
+  /// a contraction
+  ///
+  /// \details
+  /// Given a RHS tensor to be contracted, the uncontracted LHS represents the
+  /// uncontracted RHS tensor arranged with the LHS's generic index order. The
+  /// contracted LHS represents the result of contracting this uncontracted
+  /// LHS. For example, if we have RHS tensor \f${R^{a}}_{abc}\f$ and we want to
+  /// contract it to the LHS tensor \f$L_{cb}\f$, then \f$L_{cb}\f$ represents
+  /// the contracted LHS, while \f${L^{a}}_{acb}\f$ represents the uncontracted
+  /// LHS. Note that the relative ordering of the LHS generic indices \f$c\f$
+  /// and \f$b\f$ in the contracted LHS is preserved in the uncontracted LHS.
+  ///
+  /// To compute a contraction, we need to get all the uncontracted LHS
+  /// multi-indices to sum. In the example above, this means that in order to
+  /// compute \f$L_{cb}\f$ for some \f$c\f$ and \f$b\f$, we need to sum the
+  /// components \f${L^{a}}_{acb}\f$ for all values of \f$a\f$. This function
+  /// takes a concrete contracted LHS multi-index as input, representing the
+  /// multi-index of a component of the contracted LHS. For example, if
+  /// `lhs_contracted_multi_index == [1, 2]`, this represents \f$L_{12}\f$.
+  /// In this case, we need to sum \f${L^{a}}_{a12}\f$ for all values of
+  /// \f$a\f$. `ContractedIndexValue` represents on such concrete value that is
+  /// filled in for \f$a\f$. In this way, what is constructed and returned is
+  /// one such concrete uncontracted LHS multi-index to be summed as part of
+  /// contracting a pair of indices.
+  ///
+  /// \tparam ContractedIndexValue concrete value inserted for the indices to
+  /// contract
+  /// \param lhs_contracted_multi_index a tensor multi-index of the contracted
+  /// LHS
+  /// \return a tensor multi-index of the uncontracted LHS to be summed in a
+  /// contraction
   template <size_t ContractedIndexValue>
   SPECTRE_ALWAYS_INLINE static constexpr std::array<
       size_t, num_uncontracted_tensor_indices>
