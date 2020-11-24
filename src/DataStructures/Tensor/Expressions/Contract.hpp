@@ -321,7 +321,8 @@ struct TensorContract
     return map;
   }
 
-  // This is a helper that inserts the first contracted index into `LhsIndices`
+  // Inserts the first contracted `TensorIndex` into the list of contracted LHS
+  // `TensorIndex`s
   template <typename... LhsIndices>
   using get_uncontracted_lhs_tensorindex_list_helper = tmpl::append<
       tmpl::at_c<tmpl::split_at<tmpl::list<LhsIndices...>,
@@ -332,13 +333,16 @@ struct TensorContract
                                 tmpl::size_t<FirstContractedIndexPos>>,
                  1>>;
 
-  // This represents the uncontracted LHS indices, where you take the
-  // `LhsIndices` and insert the indices that were contracted.
-  //
-  // e.g. If we contracted RHS R_Abac to LHS L_cb, then this means inserting
-  // A and a back in to L_cb in their original spots, which is: L_Acab.
-  // Specifically, `get_uncontracted_lhs_tensorindex_list` would be:
-  // `tmpl::list<ti_A_t, ti_c_t, ti_a_t, ti_b_t>`
+  /// Constructs the uncontracted LHS's list of `TensorIndex`s by inserting the
+  /// pair of indices being contracted into the LHS list of contracted
+  /// `TensorIndex`s
+  ///
+  /// Example: If we contract RHS tensor \f${R^{a}}_{bac}\f$ to LHS tensor
+  /// \f$L_{cb}\f$, the RHS list of generic indices (`ArgsList`) is
+  /// `tmpl::list<ti_A_t, ti_b_t, ti_a_t, ti_c_t>` and the LHS generic indices
+  /// (`LhsIndices`) are `ti_c_t, ti_b_t`. `ti_A_t` and `ti_a_t` are inserted
+  /// into `LhsIndices` at their positions in the RHS, which yields:
+  /// `tmpl::list<ti_A_t, ti_c_t, ti_a_t, ti_b_t>`.
   template <typename... LhsIndices>
   using get_uncontracted_lhs_tensorindex_list = tmpl::append<
       tmpl::at_c<tmpl::split_at<get_uncontracted_lhs_tensorindex_list_helper<
