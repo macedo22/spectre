@@ -355,10 +355,24 @@ struct TensorContract
                                 tmpl::size_t<SecondContractedIndexPos>>,
                  1>>;
 
-  // This returns the contracted component value at the `lhs_storage_index` in
-  // the contracted LHS.
-  // Iterates over list of uncontracted LHS storage indices of components to
-  // sum, gets the components at those indices, and returns their sum
+  /// \brief Helper struct for computing the contraction of one pair of indices
+  ///
+  /// \details
+  /// This struct has two template specializations to enable computing a
+  /// contraction by recursively iterating over lists of storage indices of
+  /// uncontracted LHS components to sum to compute the components of the
+  /// contracted LHS expression.
+  ///
+  /// \tparam UncontractedLhsStructure the Structure of the uncontracted LHS
+  /// \tparam UncontractedLhsTensorIndexList the typelist of TensorIndexs of the
+  /// uncontracted LHS expression
+  /// \tparam NumContractedComponents the number of components in the
+  /// contracted LHS tensor
+  /// \tparam T1 the expression type contained within the RHS contraction
+  /// expression
+  /// \tparam Index for a given list of contracted LHS storage indices whose
+  /// components are summed to compute a contracted component, this is the
+  /// position of one such storage index in that list
   template <typename UncontractedLhsStructure,
             typename UncontractedLhsTensorIndexList,
             size_t NumContractedComponents, typename T1, size_t Index>
