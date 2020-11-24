@@ -378,11 +378,28 @@ struct TensorContract
   struct ComputeContraction<UncontractedLhsStructure,
                             tmpl::list<UncontractedLhsTensorIndices...>,
                             NumContractedComponents, T1, Index> {
+    /// \brief Computes the value of the component in the contracted LHS
+    /// expression at a given storage index
+    ///
+    /// \details
+    /// This function recursively computes the value of the component in the
+    /// contracted LHS expression at a given storage index by iterating over the
+    /// list of storage indices of uncontracted LHS components to sum. This list
+    /// is stored at `map[lhs_storage_index]`.
+    ///
+    /// \param map a mapping between the storage indices of the contracted LHS
+    /// components and the uncontracted LHS components to sum for a contraction
+    /// \param t1 the expression contained within the RHS contraction expression
+    /// \param lhs_storage_index the storage index of the LHS expression
+    /// component to compute
+    /// \return the computed value of the component at `lhs_storage_index` in
+    /// the contracted LHS expression
     static SPECTRE_ALWAYS_INLINE decltype(auto) apply(
         const std::array<std::array<size_t, first_contracted_index::dim>,
                          NumContractedComponents>& map,
         const T1& t1, const size_t& lhs_storage_index) noexcept {
       if constexpr (Index < first_contracted_index::dim - 1) {
+        // We have more than one component left to sum
         return ComputeContraction<UncontractedLhsStructure,
                                   tmpl::list<UncontractedLhsTensorIndices...>,
                                   NumContractedComponents, T1,
@@ -392,6 +409,7 @@ struct TensorContract
                                UncontractedLhsTensorIndices...>(
                    map[lhs_storage_index][Index]);
       } else {
+        // We only have one final component to sum
         return t1.template get<UncontractedLhsStructure,
                                UncontractedLhsTensorIndices...>(
             map[lhs_storage_index][first_contracted_index::dim - 1]);
