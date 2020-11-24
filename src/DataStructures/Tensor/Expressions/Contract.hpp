@@ -388,29 +388,20 @@ struct TensorContract
         const std::array<std::array<size_t, first_contracted_index::dim>,
                          NumContractedComponents>& map,
         const T1& t1, const size_t& lhs_storage_index) noexcept {
-      return ComputeContraction<UncontractedLhsStructure,
-                                tmpl::list<UncontractedLhsTensorIndices...>,
-                                NumContractedComponents, decltype(t_),
-                                Index + 1>::apply(map, t1, lhs_storage_index) +
-             t1.template get<UncontractedLhsStructure,
-                             UncontractedLhsTensorIndices...>(
-                 map[lhs_storage_index][Index]);
-    }
-  };
-
-  template <typename UncontractedLhsStructure,
-            typename... UncontractedLhsTensorIndices,
-            size_t NumContractedComponents, typename T1>
-  struct ComputeContraction<
-      UncontractedLhsStructure, tmpl::list<UncontractedLhsTensorIndices...>,
-      NumContractedComponents, T1, first_contracted_index::dim - 1> {
-    static SPECTRE_ALWAYS_INLINE decltype(auto) apply(
-        const std::array<std::array<size_t, first_contracted_index::dim>,
-                         NumContractedComponents>& map,
-        const T1& t1, const size_t& lhs_storage_index) noexcept {
-      return t1.template get<UncontractedLhsStructure,
-                             UncontractedLhsTensorIndices...>(
-          map[lhs_storage_index][first_contracted_index::dim - 1]);
+      if constexpr (Index < first_contracted_index::dim - 1) {
+        return ComputeContraction<UncontractedLhsStructure,
+                                  tmpl::list<UncontractedLhsTensorIndices...>,
+                                  NumContractedComponents, T1,
+                                  Index + 1>::apply(map, t1,
+                                                    lhs_storage_index) +
+               t1.template get<UncontractedLhsStructure,
+                               UncontractedLhsTensorIndices...>(
+                   map[lhs_storage_index][Index]);
+      } else {
+        return t1.template get<UncontractedLhsStructure,
+                               UncontractedLhsTensorIndices...>(
+            map[lhs_storage_index][first_contracted_index::dim - 1]);
+      }
     }
   };
 
