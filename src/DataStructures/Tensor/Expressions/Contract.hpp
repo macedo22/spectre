@@ -372,22 +372,25 @@ struct TensorContract
   /// expression
   template <typename UncontractedLhsStructure,
             typename UncontractedLhsTensorIndexList,
-            size_t NumContractedComponents, typename T1>
+            size_t NumContractedComponents, typename T1, size_t Index>
   struct ComputeContraction;
 
   template <typename UncontractedLhsStructure,
             typename... UncontractedLhsTensorIndices,
-            size_t NumContractedComponents, typename T1>
+            size_t NumContractedComponents, typename T1, size_t Index>
   struct ComputeContraction<UncontractedLhsStructure,
                             tmpl::list<UncontractedLhsTensorIndices...>,
-                            NumContractedComponents, T1> {
-    template <size_t Index>
+                            NumContractedComponents, T1, Index> {
     static SPECTRE_ALWAYS_INLINE decltype(auto) apply(
         const std::array<std::array<size_t, first_contracted_index::dim>,
                          NumContractedComponents>& map,
         const T1& t1, const size_t& lhs_storage_index) noexcept {
       if constexpr (Index < first_contracted_index::dim - 1) {
-        return apply<Index + 1>(map, t1, lhs_storage_index) +
+        return ComputeContraction<UncontractedLhsStructure,
+                                  tmpl::list<UncontractedLhsTensorIndices...>,
+                                  NumContractedComponents, T1,
+                                  Index + 1>::apply(map, t1,
+                                                    lhs_storage_index) +
                t1.template get<UncontractedLhsStructure,
                                UncontractedLhsTensorIndices...>(
                    map[lhs_storage_index][Index]);
@@ -460,7 +463,7 @@ struct TensorContract
     // the contracted LHS.
     return ComputeContraction<
         uncontracted_lhs_structure, uncontracted_lhs_tensorindex_list,
-        num_contracted_components, decltype(t_)>::apply<0>(map, t_,
+        num_contracted_components, decltype(t_), 0>::apply(map, t_,
                                                            lhs_storage_index);
   }
 
