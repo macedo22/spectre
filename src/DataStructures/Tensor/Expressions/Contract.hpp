@@ -370,41 +370,31 @@ struct TensorContract
   /// contracted LHS tensor
   /// \tparam T1 the expression type contained within the RHS contraction
   /// expression
-  /// \tparam Index for a given list of contracted LHS storage indices whose
-  /// components are summed to compute a contracted component, this is the
-  /// position of one such storage index in that list
   template <typename UncontractedLhsStructure,
             typename UncontractedLhsTensorIndexList,
-            size_t NumContractedComponents, typename T1, size_t Index>
+            size_t NumContractedComponents, typename T1>
   struct ComputeContraction;
 
   template <typename UncontractedLhsStructure,
             typename... UncontractedLhsTensorIndices,
-            size_t NumContractedComponents, typename T1, size_t Index>
+            size_t NumContractedComponents, typename T1>
   struct ComputeContraction<UncontractedLhsStructure,
                             tmpl::list<UncontractedLhsTensorIndices...>,
-                            NumContractedComponents, T1, Index> {
+                            NumContractedComponents, T1> {
+    template <size_t Index>
     static SPECTRE_ALWAYS_INLINE decltype(auto) apply(
         const std::array<std::array<size_t, first_contracted_index::dim>,
                          NumContractedComponents>& map,
         const T1& t1, const size_t& lhs_storage_index) noexcept {
-      return ComputeContraction<UncontractedLhsStructure,
-                                tmpl::list<UncontractedLhsTensorIndices...>,
-                                NumContractedComponents, decltype(t_),
-                                Index + 1>::apply(map, t1, lhs_storage_index) +
+      return apply<Index + 1>(map, t1, lhs_storage_index) +
              t1.template get<UncontractedLhsStructure,
                              UncontractedLhsTensorIndices...>(
                  map[lhs_storage_index][Index]);
     }
-  };
 
-  template <typename UncontractedLhsStructure,
-            typename... UncontractedLhsTensorIndices,
-            size_t NumContractedComponents, typename T1>
-  struct ComputeContraction<
-      UncontractedLhsStructure, tmpl::list<UncontractedLhsTensorIndices...>,
-      NumContractedComponents, T1, first_contracted_index::dim - 1> {
-    static SPECTRE_ALWAYS_INLINE decltype(auto) apply(
+    template <>
+    static SPECTRE_ALWAYS_INLINE decltype(auto)
+    apply<first_contracted_index::dim - 1>(
         const std::array<std::array<size_t, first_contracted_index::dim>,
                          NumContractedComponents>& map,
         const T1& t1, const size_t& lhs_storage_index) noexcept {
@@ -475,7 +465,7 @@ struct TensorContract
     // the contracted LHS.
     return ComputeContraction<
         uncontracted_lhs_structure, uncontracted_lhs_tensorindex_list,
-        num_contracted_components, decltype(t_), 0>::apply(map, t_,
+        num_contracted_components, decltype(t_)>::apply<0>(map, t_,
                                                            lhs_storage_index);
   }
 
