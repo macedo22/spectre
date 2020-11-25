@@ -197,34 +197,34 @@ struct TensorContract
   /// multi-index of a component of the contracted LHS that we wish to compute.
   /// For example, if `lhs_contracted_multi_index == [1, 2]`, this represents
   /// \f$L_{12}\f$. In this case, we need to sum \f${L^{a}}_{a12}\f$ for all
-  /// values of \f$a\f$. `ContractedIndexValue` represents on such concrete
+  /// values of \f$a\f$. `contracted_index_value` represents on such concrete
   /// value that is filled in for \f$a\f$. In this way, what is constructed and
   /// returned is one such concrete uncontracted LHS multi-index to be summed as
   /// part of contracting a pair of indices.
   ///
-  /// \tparam ContractedIndexValue the concrete value inserted for the indices
-  /// to contract
   /// \param lhs_contracted_multi_index the tensor multi-index of a contracted
   /// LHS component to be computed
+  /// \param contracted_index_value the concrete value inserted for the indices
+  /// to contract
   /// \return the tensor multi-index of one uncontracted LHS component to be
   /// summed for computing a contracted LHS component
-  template <size_t ContractedIndexValue>
   SPECTRE_ALWAYS_INLINE static constexpr std::array<
       size_t, num_uncontracted_tensor_indices>
-  get_tensor_index_to_sum(const std::array<size_t, num_tensor_indices>&
-                              lhs_contracted_multi_index) noexcept {
+  get_tensor_index_to_sum(
+      const std::array<size_t, num_tensor_indices>& lhs_contracted_multi_index,
+      const size_t contracted_index_value) noexcept {
     std::array<size_t, num_uncontracted_tensor_indices>
         contracting_tensor_index{};
 
     for (size_t i = 0; i < FirstContractedIndexPos; i++) {
       contracting_tensor_index[i] = lhs_contracted_multi_index[i];
     }
-    contracting_tensor_index[FirstContractedIndexPos] = ContractedIndexValue;
+    contracting_tensor_index[FirstContractedIndexPos] = contracted_index_value;
     for (size_t i = FirstContractedIndexPos + 1; i < SecondContractedIndexPos;
          i++) {
       contracting_tensor_index[i] = lhs_contracted_multi_index[i - 1];
     }
-    contracting_tensor_index[SecondContractedIndexPos] = ContractedIndexValue;
+    contracting_tensor_index[SecondContractedIndexPos] = contracted_index_value;
     for (size_t i = SecondContractedIndexPos + 1;
          i < num_uncontracted_tensor_indices; i++) {
       contracting_tensor_index[i] = lhs_contracted_multi_index[i - 2];
@@ -273,7 +273,7 @@ struct TensorContract
             ContractedLhsStructure::get_canonical_tensor_index(I);
     constexpr std::array<size_t, first_contracted_index::dim>
         storage_indices_to_sum = {{UncontractedLhsStructure::get_storage_index(
-            get_tensor_index_to_sum<Ints>(lhs_contracted_multi_index))...}};
+            get_tensor_index_to_sum(lhs_contracted_multi_index, Ints))...}};
 
     return storage_indices_to_sum;
   }
