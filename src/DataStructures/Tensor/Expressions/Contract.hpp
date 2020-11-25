@@ -180,27 +180,18 @@ struct TensorContract
   /// be summed to compute a contracted LHS component
   ///
   /// \details
-  /// Given a RHS tensor to be contracted, the uncontracted LHS represents the
-  /// uncontracted RHS tensor arranged with the LHS's generic index order. The
-  /// contracted LHS represents the result of contracting this uncontracted
-  /// LHS. For example, if we have RHS tensor \f${R^{a}}_{abc}\f$ and we want to
-  /// contract it to the LHS tensor \f$L_{cb}\f$, then \f$L_{cb}\f$ represents
-  /// the contracted LHS, while \f${L^{a}}_{acb}\f$ represents the uncontracted
-  /// LHS. Note that the relative ordering of the LHS generic indices \f$c\f$
-  /// and \f$b\f$ in the contracted LHS is preserved in the uncontracted LHS.
-  ///
-  /// To compute a contraction, we need to get all the uncontracted LHS
-  /// components to sum. In the example above, this means that in order to
-  /// compute \f$L_{cb}\f$ for some \f$c\f$ and \f$b\f$, we need to sum the
-  /// components \f${L^{a}}_{acb}\f$ for all values of \f$a\f$. This function
-  /// takes a concrete contracted LHS multi-index as input, representing the
-  /// multi-index of a component of the contracted LHS that we wish to compute.
-  /// For example, if `lhs_contracted_multi_index == [1, 2]`, this represents
-  /// \f$L_{12}\f$. In this case, we need to sum \f${L^{a}}_{a12}\f$ for all
-  /// values of \f$a\f$. `contracted_index_value` represents on such concrete
-  /// value that is filled in for \f$a\f$. In this way, what is constructed and
-  /// returned is one such concrete multi-index of the uncontracted LHS tensor
-  /// to be summed as part of computing the contraction of one pair of indices.
+  /// Example: If we have RHS tensor \f${R^{a}}_{abc}\f$ and we want to contract
+  /// it to the LHS tensor \f$L_{cb}\f$, then \f$L_{cb}\f$ represents the
+  /// contracted LHS, while \f${L^{a}}_{acb}\f$ represents the uncontracted
+  /// LHS. This function takes a concrete contracted LHS multi-index as input,
+  /// representing the  multi-index of a component of the contracted LHS that we
+  /// wish to compute. If `lhs_contracted_multi_index == [1, 2]`, this
+  /// represents \f$L_{12}\f$, the contracted LHS component we wish to compute.
+  /// In this case, we will need to sum \f${L^{a}}_{a12}\f$ for all values of
+  /// \f$a\f$. `contracted_index_value` represents on such concrete value that
+  /// is filled in for \f$a\f$. In this way, what is constructed and returned is
+  /// one such concrete multi-index of the uncontracted LHS tensor to be summed
+  /// as part of computing the component \f$L_{12}\f$.
   ///
   /// \param lhs_contracted_multi_index the tensor multi-index of a contracted
   /// LHS component to be computed
@@ -237,23 +228,15 @@ struct TensorContract
   /// be summed to compute a contracted LHS component
   ///
   /// \details
-  /// Given a RHS tensor to be contracted, the uncontracted LHS represents the
-  /// uncontracted RHS tensor arranged with the LHS's generic index order. The
-  /// contracted LHS represents the result of contracting this uncontracted
-  /// LHS. For example, if we have RHS tensor \f${R^{a}}_{abc}\f$ and we want to
-  /// contract it to the LHS tensor \f$L_{cb}\f$, then \f$L_{cb}\f$ represents
-  /// the contracted LHS, while \f${L^{a}}_{acb}\f$ represents the uncontracted
-  /// LHS. Note that the relative ordering of the LHS generic indices \f$c\f$
-  /// and \f$b\f$ in the contracted LHS is preserved in the uncontracted LHS.
-  ///
-  /// To compute a contraction, we need to get all the uncontracted LHS
-  /// components to sum. In the example above, this means that in order to
-  /// compute \f$L_{cb}\f$ for some \f$c\f$ and \f$b\f$, we need to sum the
-  /// components \f${L^{a}}_{acb}\f$ for all values of \f$a\f$. `I` represents
-  /// the storage index of \f$L_{cb}\f$ for some \f$c\f$ and \f$b\f$, an
-  /// uncontracted LHS component that we wish to compute. This function computes
-  /// and returns the storage indices corresponding to \f${L^{a}}_{acb}\f$
-  /// for all values of \f$a\f$ - the components to sum to compute \f$L_{cb}\f$.
+  /// Example: If we have RHS tensor \f${R^{a}}_{abc}\f$ and we want to contract
+  /// it to the LHS tensor \f$L_{cb}\f$, then \f$L_{cb}\f$ represents the
+  /// contracted LHS, while \f${L^{a}}_{acb}\f$ represents the uncontracted
+  /// LHS. `I` represents the storage index of the component \f$L_{cb}\f$ for
+  /// some \f$c\f$ and \f$b\f$, an uncontracted LHS component that we wish to
+  /// compute. If `c == 1` and `b == 2`, then this function computes and returns
+  /// the list of storage indices of components \f${L^{a}}_{acb}\f$ for all
+  /// values of \f$a\f$, i.e. the components to sum to compute the component
+  /// \f$L_{12}\f$.
   ///
   /// \tparam I the storage index of a contracted LHS component to be computed
   /// \tparam UncontractedLhsStructure the Structure of the uncontracted LHS
@@ -284,22 +267,13 @@ struct TensorContract
   /// contraction
   ///
   /// \details
-  /// Given a RHS tensor to be contracted, the uncontracted LHS represents the
-  /// uncontracted RHS tensor arranged with the LHS's generic index order. The
-  /// contracted LHS represents the result of contracting this uncontracted
-  /// LHS. For example, if we have RHS tensor \f${R^{a}}_{abc}\f$ and we want to
-  /// contract it to the LHS tensor \f$L_{cb}\f$, then \f$L_{cb}\f$ represents
-  /// the contracted LHS, while \f${L^{a}}_{acb}\f$ represents the uncontracted
-  /// LHS. Note that the relative ordering of the LHS generic indices \f$c\f$
-  /// and \f$b\f$ in the contracted LHS is preserved in the uncontracted LHS.
-  ///
-  /// To compute a contraction, we need to get all the uncontracted LHS
-  /// components to sum. In the example above, this means that in order to
-  /// compute \f$L_{cb}\f$ for some \f$c\f$ and \f$b\f$, we need to sum the
-  /// components \f${L^{a}}_{acb}\f$ for all values of \f$a\f$. This function
-  /// computes and returns a mapping between the storage indices of each
-  /// component of \f$L_{cb}\f$ and the corresponding lists of components of
-  /// \f${L^{a}}_{acb}\f$ to sum to compute each component of \f$L_{cb}\f$.
+  /// Example: If we have RHS tensor \f${R^{a}}_{abc}\f$ and we want to contract
+  /// it to the LHS tensor \f$L_{cb}\f$, then \f$L_{cb}\f$ represents the
+  /// contracted LHS, while \f${L^{a}}_{acb}\f$ represents the uncontracted
+  /// LHS. This function computes and returns a mapping between the storage
+  /// indices of (1) each component of \f$L_{cb}\f$ and (2) the corresponding
+  /// lists of components of \f${L^{a}}_{acb}\f$ to sum to compute each
+  /// component of \f$L_{cb}\f$.
   ///
   /// \tparam ContractedLhsNumComponents the number of components in the
   /// contracted LHS tensor
