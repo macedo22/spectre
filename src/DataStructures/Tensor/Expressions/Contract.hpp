@@ -300,21 +300,23 @@ struct TensorContract
   /// component of \f$L_{cb}\f$ and the corresponding lists of components of
   /// \f${L^{a}}_{acb}\f$ to sum to compute each component of \f$L_{cb}\f$.
   ///
-  /// \tparam NumContractedComponents the number of components in the
+  /// \tparam ContractedLhsNumComponents the number of components in the
   /// contracted LHS tensor
   /// \tparam UncontractedLhsStructure the Structure of the uncontracted LHS
   /// \tparam ContractedLhsStructure the Structure of the contracted LHS
-  /// \tparam Ints a sequence of integers from [0, `NumContractedComponents`)
+  /// \tparam Ints a sequence of integers from [0, `ContractedLhsNumComponents`)
   /// \return a mapping between the storage indices of the contracted LHS
   /// components and the uncontracted LHS components to sum for a contraction
-  template <size_t NumContractedComponents, typename UncontractedLhsStructure,
-            typename ContractedLhsStructure, size_t... Ints>
+  template <size_t ContractedLhsNumComponents,
+            typename UncontractedLhsStructure, typename ContractedLhsStructure,
+            size_t... Ints>
   SPECTRE_ALWAYS_INLINE static constexpr std::array<
-      std::array<size_t, first_contracted_index::dim>, NumContractedComponents>
+      std::array<size_t, first_contracted_index::dim>,
+      ContractedLhsNumComponents>
   get_sum_map(const std::index_sequence<Ints...>& /*index_seq*/) noexcept {
     constexpr std::make_index_sequence<first_contracted_index::dim> dim_seq{};
     constexpr std::array<std::array<size_t, first_contracted_index::dim>,
-                         NumContractedComponents>
+                         ContractedLhsNumComponents>
         map = {
             {get_storage_indices_to_sum<Ints, UncontractedLhsStructure,
                                         ContractedLhsStructure>(dim_seq)...}};
@@ -360,7 +362,7 @@ struct TensorContract
   /// \tparam UncontractedLhsStructure the Structure of the uncontracted LHS
   /// \tparam UncontractedLhsTensorIndexList the typelist of TensorIndexs of the
   /// uncontracted LHS expression
-  /// \tparam NumContractedComponents the number of components in the
+  /// \tparam ContractedLhsNumComponents the number of components in the
   /// contracted LHS tensor
   /// \tparam T1 the expression type contained within the RHS contraction
   /// expression
@@ -369,15 +371,15 @@ struct TensorContract
   /// position of one such storage index in that list
   template <typename UncontractedLhsStructure,
             typename UncontractedLhsTensorIndexList,
-            size_t NumContractedComponents, typename T1, size_t Index>
+            size_t ContractedLhsNumComponents, typename T1, size_t Index>
   struct ComputeContraction;
 
   template <typename UncontractedLhsStructure,
             typename... UncontractedLhsTensorIndices,
-            size_t NumContractedComponents, typename T1, size_t Index>
+            size_t ContractedLhsNumComponents, typename T1, size_t Index>
   struct ComputeContraction<UncontractedLhsStructure,
                             tmpl::list<UncontractedLhsTensorIndices...>,
-                            NumContractedComponents, T1, Index> {
+                            ContractedLhsNumComponents, T1, Index> {
     /// \brief Computes the value of the component in the contracted LHS
     /// expression at a given storage index
     ///
@@ -396,13 +398,13 @@ struct TensorContract
     /// the contracted LHS expression
     static SPECTRE_ALWAYS_INLINE decltype(auto) apply(
         const std::array<std::array<size_t, first_contracted_index::dim>,
-                         NumContractedComponents>& map,
+                         ContractedLhsNumComponents>& map,
         const T1& t1, const size_t& lhs_storage_index) noexcept {
       if constexpr (Index < first_contracted_index::dim - 1) {
         // We have more than one component left to sum
         return ComputeContraction<UncontractedLhsStructure,
                                   tmpl::list<UncontractedLhsTensorIndices...>,
-                                  NumContractedComponents, T1,
+                                  ContractedLhsNumComponents, T1,
                                   Index + 1>::apply(map, t1,
                                                     lhs_storage_index) +
                t1.template get<UncontractedLhsStructure,
