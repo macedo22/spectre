@@ -289,7 +289,8 @@ struct TensorContract
   SPECTRE_ALWAYS_INLINE static constexpr std::array<
       std::array<size_t, first_contracted_index::dim>,
       ContractedLhsNumComponents>
-  get_sum_map(const std::index_sequence<Ints...>& /*index_seq*/) noexcept {
+  get_map_of_components_to_sum(
+      const std::index_sequence<Ints...>& /*index_seq*/) noexcept {
     constexpr std::make_index_sequence<first_contracted_index::dim> dim_seq{};
     constexpr std::array<std::array<size_t, first_contracted_index::dim>,
                          ContractedLhsNumComponents>
@@ -450,8 +451,9 @@ struct TensorContract
     constexpr std::array<std::array<size_t, first_contracted_index::dim>,
                          contracted_lhs_num_components>
         map_of_components_to_sum =
-            get_sum_map<contracted_lhs_num_components,
-                        uncontracted_lhs_structure, LhsStructure>(map_seq);
+            get_map_of_components_to_sum<contracted_lhs_num_components,
+                                         uncontracted_lhs_structure,
+                                         LhsStructure>(map_seq);
 
     // This returns the value of the component stored at `lhs_storage_index` in
     // the contracted LHS tensor
