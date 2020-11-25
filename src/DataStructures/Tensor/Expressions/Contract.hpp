@@ -455,7 +455,7 @@ struct TensorContract
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
       const size_t lhs_storage_index) const {
     // number of components in the contracted LHS
-    constexpr size_t num_contracted_components = LhsStructure::size();
+    constexpr size_t contracted_lhs_num_components = LhsStructure::size();
     using uncontracted_lhs_tensorindex_list =
         get_uncontracted_lhs_tensorindex_list<LhsIndices...>;
 
@@ -465,21 +465,21 @@ struct TensorContract
                                          uncontracted_lhs_tensorindex_list,
                                          Symm, IndexList>::structure;
 
-    constexpr std::make_index_sequence<num_contracted_components> map_seq{};
+    constexpr std::make_index_sequence<contracted_lhs_num_components> map_seq{};
 
     // map from contracted LHS storage indices to lists of uncontracted LHS
     // storage indices of components to sum for contraction
     constexpr std::array<std::array<size_t, first_contracted_index::dim>,
-                         num_contracted_components>
-        map = get_sum_map<num_contracted_components, uncontracted_lhs_structure,
-                          LhsStructure>(map_seq);
+                         contracted_lhs_num_components>
+        map = get_sum_map<contracted_lhs_num_components,
+                          uncontracted_lhs_structure, LhsStructure>(map_seq);
 
     // This returns the contracted component value at the `lhs_storage_index` in
     // the contracted LHS.
-    return ComputeContraction<
-        uncontracted_lhs_structure, uncontracted_lhs_tensorindex_list,
-        num_contracted_components, decltype(t_), 0>::apply(map, t_,
-                                                           lhs_storage_index);
+    return ComputeContraction<uncontracted_lhs_structure,
+                              uncontracted_lhs_tensorindex_list,
+                              contracted_lhs_num_components, decltype(t_),
+                              0>::apply(map, t_, lhs_storage_index);
   }
 
  private:
