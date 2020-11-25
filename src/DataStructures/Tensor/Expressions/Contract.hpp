@@ -293,10 +293,10 @@ struct TensorContract
     constexpr std::make_index_sequence<first_contracted_index::dim> dim_seq{};
     constexpr std::array<std::array<size_t, first_contracted_index::dim>,
                          ContractedLhsNumComponents>
-        map = {
+        map_of_components_to_sum = {
             {get_storage_indices_to_sum<Ints, UncontractedLhsStructure,
                                         ContractedLhsStructure>(dim_seq)...}};
-    return map;
+    return map_of_components_to_sum;
   }
 
   // Inserts the first contracted TensorIndex into the list of contracted LHS
@@ -364,11 +364,11 @@ struct TensorContract
     /// This function recursively computes the value of the component in the
     /// contracted LHS tensor at a given storage index by iterating over the
     /// list of storage indices of uncontracted LHS components to sum. This list
-    /// is stored at `map[lhs_storage_index]`.
+    /// is stored at `map_of_components_to_sum[lhs_storage_index]`.
     ///
-    /// \param map a mapping between the storage indices of the contracted LHS
-    /// components and the uncontracted LHS components to sum to compute the
-    /// former
+    /// \param map_of_components_to_sum a mapping between the storage indices of
+    /// the contracted LHS components and the uncontracted LHS components to sum
+    /// to compute the former
     /// \param t1 the expression contained within the RHS contraction expression
     /// \param lhs_storage_index the storage index of the LHS tensor component
     /// to compute
@@ -376,23 +376,24 @@ struct TensorContract
     /// the contracted LHS tensor
     static SPECTRE_ALWAYS_INLINE decltype(auto) apply(
         const std::array<std::array<size_t, first_contracted_index::dim>,
-                         ContractedLhsNumComponents>& map,
+                         ContractedLhsNumComponents>& map_of_components_to_sum,
         const T1& t1, const size_t& lhs_storage_index) noexcept {
       if constexpr (Index < first_contracted_index::dim - 1) {
         // We have more than one component left to sum
         return ComputeContraction<UncontractedLhsStructure,
                                   tmpl::list<UncontractedLhsTensorIndices...>,
                                   ContractedLhsNumComponents, T1,
-                                  Index + 1>::apply(map, t1,
-                                                    lhs_storage_index) +
+                                  Index + 1>::apply(map_of_components_to_sum,
+                                                    t1, lhs_storage_index) +
                t1.template get<UncontractedLhsStructure,
                                UncontractedLhsTensorIndices...>(
-                   map[lhs_storage_index][Index]);
+                   map_of_components_to_sum[lhs_storage_index][Index]);
       } else {
         // We only have one final component to sum
         return t1.template get<UncontractedLhsStructure,
                                UncontractedLhsTensorIndices...>(
-            map[lhs_storage_index][first_contracted_index::dim - 1]);
+            map_of_components_to_sum[lhs_storage_index]
+                                    [first_contracted_index::dim - 1]);
       }
     }
   };
@@ -448,15 +449,17 @@ struct TensorContract
     // storage indices of components to sum for contraction
     constexpr std::array<std::array<size_t, first_contracted_index::dim>,
                          contracted_lhs_num_components>
-        map = get_sum_map<contracted_lhs_num_components,
-                          uncontracted_lhs_structure, LhsStructure>(map_seq);
+        map_of_components_to_sum =
+            get_sum_map<contracted_lhs_num_components,
+                        uncontracted_lhs_structure, LhsStructure>(map_seq);
 
     // This returns the value of the component stored at `lhs_storage_index` in
     // the contracted LHS tensor
     return ComputeContraction<uncontracted_lhs_structure,
                               uncontracted_lhs_tensorindex_list,
                               contracted_lhs_num_components, decltype(t_),
-                              0>::apply(map, t_, lhs_storage_index);
+                              0>::apply(map_of_components_to_sum, t_,
+                                        lhs_storage_index);
   }
 
  private:
