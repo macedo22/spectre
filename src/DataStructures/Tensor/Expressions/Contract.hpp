@@ -209,17 +209,20 @@ struct TensorContract
         contracting_tensor_index{};
 
     for (size_t i = 0; i < FirstContractedIndexPos; i++) {
-      contracting_tensor_index[i] = lhs_contracted_multi_index[i];
+      gsl::at(contracting_tensor_index, i) =
+          gsl::at(lhs_contracted_multi_index, i);
     }
     contracting_tensor_index[FirstContractedIndexPos] = contracted_index_value;
     for (size_t i = FirstContractedIndexPos + 1; i < SecondContractedIndexPos;
          i++) {
-      contracting_tensor_index[i] = lhs_contracted_multi_index[i - 1];
+      gsl::at(contracting_tensor_index, i) =
+          gsl::at(lhs_contracted_multi_index, i - 1);
     }
     contracting_tensor_index[SecondContractedIndexPos] = contracted_index_value;
     for (size_t i = SecondContractedIndexPos + 1;
          i < num_uncontracted_tensor_indices; i++) {
-      contracting_tensor_index[i] = lhs_contracted_multi_index[i - 2];
+      gsl::at(contracting_tensor_index, i) =
+          gsl::at(lhs_contracted_multi_index, i - 2);
     }
     return contracting_tensor_index;
   }
@@ -388,13 +391,14 @@ struct TensorContract
                                                     t1, lhs_storage_index) +
                t1.template get<UncontractedLhsStructure,
                                UncontractedLhsTensorIndices...>(
-                   map_of_components_to_sum[lhs_storage_index][Index]);
+                   gsl::at(gsl::at(map_of_components_to_sum, lhs_storage_index),
+                           Index));
       } else {
         // We only have one final component to sum
         return t1.template get<UncontractedLhsStructure,
                                UncontractedLhsTensorIndices...>(
-            map_of_components_to_sum[lhs_storage_index]
-                                    [first_contracted_index::dim - 1]);
+            gsl::at(gsl::at(map_of_components_to_sum, lhs_storage_index),
+                    first_contracted_index::dim - 1));
       }
     }
   };
