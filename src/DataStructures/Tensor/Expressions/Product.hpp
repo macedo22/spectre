@@ -211,8 +211,8 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
       tmpl::bind<tmpl::found, tmpl::pin<ArgsList2<Args2...>>,
                  tmpl::bind<std::is_same, tmpl::_1, tmpl::parent<tmpl::_1>>>>;
 
-  template <class... T>
-  struct td;
+//   template <class... T>
+//   struct td;
 
   // TODO: The args will need to be reduced in a careful manner, which means
   // they need to be reduced together, then split at the correct length so that
@@ -224,10 +224,10 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
     //        t2_.template get<LhsIndices...>(tensor_index);
     using first_op_tensorindex_list =
         get_first_op_tensorindex_list<tmpl::list<LhsIndices...>>;
-    td<first_op_tensorindex_list> first;
+    // td<first_op_tensorindex_list> first;
     using second_op_tensorindex_list =
         get_second_op_tensorindex_list<tmpl::list<LhsIndices...>>;
-    td<second_op_tensorindex_list> second;
+    // td<second_op_tensorindex_list> second;
 
     std::cout << "=== PRODUCT GET === " << std::endl;
     std::array<size_t, num_tensor_indices_first_operand>
