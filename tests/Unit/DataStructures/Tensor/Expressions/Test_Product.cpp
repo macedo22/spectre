@@ -451,6 +451,112 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.OuterProduct1By1By1",
   }
 }
 
+SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.OuterProduct1By2By1",
+                  "[DataStructures][Unit]") {
+  Tensor<double, Symmetry<1>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+      Ru{};
+  std::iota(Ru.begin(), Ru.end(), 0.0);
+  Tensor<double, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+      Slu{};
+  std::iota(Slu.begin(), Slu.end(), 0.0);
+  Tensor<double, Symmetry<1>,
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      Tl{};
+  std::iota(Tl.begin(), Tl.end(), 0.0);
+
+  auto L_aBCd = TensorExpressions::evaluate<ti_a_t, ti_B_t, ti_C_t, ti_d_t>(
+      Ru(ti_B) * Slu(ti_d, ti_C) * Tl(ti_a));
+  auto L_aBdC = TensorExpressions::evaluate<ti_a_t, ti_B_t, ti_d_t, ti_C_t>(
+      Ru(ti_B) * Slu(ti_d, ti_C) * Tl(ti_a));
+  auto L_aCBd = TensorExpressions::evaluate<ti_a_t, ti_C_t, ti_B_t, ti_d_t>(
+      Ru(ti_B) * Slu(ti_d, ti_C) * Tl(ti_a));
+  auto L_aCdB = TensorExpressions::evaluate<ti_a_t, ti_C_t, ti_d_t, ti_B_t>(
+      Ru(ti_B) * Slu(ti_d, ti_C) * Tl(ti_a));
+  auto L_adBC = TensorExpressions::evaluate<ti_a_t, ti_d_t, ti_B_t, ti_C_t>(
+      Ru(ti_B) * Slu(ti_d, ti_C) * Tl(ti_a));
+  auto L_adCB = TensorExpressions::evaluate<ti_a_t, ti_d_t, ti_C_t, ti_B_t>(
+      Ru(ti_B) * Slu(ti_d, ti_C) * Tl(ti_a));
+
+  auto L_BaCd = TensorExpressions::evaluate<ti_B_t, ti_a_t, ti_C_t, ti_d_t>(
+      Ru(ti_B) * Slu(ti_d, ti_C) * Tl(ti_a));
+  auto L_BadC = TensorExpressions::evaluate<ti_B_t, ti_a_t, ti_d_t, ti_C_t>(
+      Ru(ti_B) * Slu(ti_d, ti_C) * Tl(ti_a));
+  auto L_BCad = TensorExpressions::evaluate<ti_B_t, ti_C_t, ti_a_t, ti_d_t>(
+      Ru(ti_B) * Slu(ti_d, ti_C) * Tl(ti_a));
+  auto L_BCda = TensorExpressions::evaluate<ti_B_t, ti_C_t, ti_d_t, ti_a_t>(
+      Ru(ti_B) * Slu(ti_d, ti_C) * Tl(ti_a));
+  auto L_BdaC = TensorExpressions::evaluate<ti_B_t, ti_d_t, ti_a_t, ti_C_t>(
+      Ru(ti_B) * Slu(ti_d, ti_C) * Tl(ti_a));
+  auto L_BdCa = TensorExpressions::evaluate<ti_B_t, ti_d_t, ti_C_t, ti_a_t>(
+      Ru(ti_B) * Slu(ti_d, ti_C) * Tl(ti_a));
+
+  auto L_CaBd = TensorExpressions::evaluate<ti_C_t, ti_a_t, ti_B_t, ti_d_t>(
+      Ru(ti_B) * Slu(ti_d, ti_C) * Tl(ti_a));
+  auto L_CadB = TensorExpressions::evaluate<ti_C_t, ti_a_t, ti_d_t, ti_B_t>(
+      Ru(ti_B) * Slu(ti_d, ti_C) * Tl(ti_a));
+  auto L_CBad = TensorExpressions::evaluate<ti_C_t, ti_B_t, ti_a_t, ti_d_t>(
+      Ru(ti_B) * Slu(ti_d, ti_C) * Tl(ti_a));
+  auto L_CBda = TensorExpressions::evaluate<ti_C_t, ti_B_t, ti_d_t, ti_a_t>(
+      Ru(ti_B) * Slu(ti_d, ti_C) * Tl(ti_a));
+  auto L_CdaB = TensorExpressions::evaluate<ti_C_t, ti_d_t, ti_a_t, ti_B_t>(
+      Ru(ti_B) * Slu(ti_d, ti_C) * Tl(ti_a));
+  auto L_CdBa = TensorExpressions::evaluate<ti_C_t, ti_d_t, ti_B_t, ti_a_t>(
+      Ru(ti_B) * Slu(ti_d, ti_C) * Tl(ti_a));
+
+  auto L_daBC = TensorExpressions::evaluate<ti_d_t, ti_a_t, ti_B_t, ti_C_t>(
+      Ru(ti_B) * Slu(ti_d, ti_C) * Tl(ti_a));
+  auto L_daCB = TensorExpressions::evaluate<ti_d_t, ti_a_t, ti_C_t, ti_B_t>(
+      Ru(ti_B) * Slu(ti_d, ti_C) * Tl(ti_a));
+  auto L_dBaC = TensorExpressions::evaluate<ti_d_t, ti_B_t, ti_a_t, ti_C_t>(
+      Ru(ti_B) * Slu(ti_d, ti_C) * Tl(ti_a));
+  auto L_dBCa = TensorExpressions::evaluate<ti_d_t, ti_B_t, ti_C_t, ti_a_t>(
+      Ru(ti_B) * Slu(ti_d, ti_C) * Tl(ti_a));
+  auto L_dCaB = TensorExpressions::evaluate<ti_d_t, ti_C_t, ti_a_t, ti_B_t>(
+      Ru(ti_B) * Slu(ti_d, ti_C) * Tl(ti_a));
+  auto L_dCBa = TensorExpressions::evaluate<ti_d_t, ti_C_t, ti_B_t, ti_a_t>(
+      Ru(ti_B) * Slu(ti_d, ti_C) * Tl(ti_a));
+
+  for (size_t a = 0; a < 4; a++) {
+    for (size_t b = 0; b < 4; b++) {
+      for (size_t c = 0; c < 4; c++) {
+        for (size_t d = 0; d < 4; d++) {
+          double expected_product = Ru.get(b) * Slu.get(d, c) * Tl.get(a);
+          CHECK(L_aBCd.get(a, b, c, d) == expected_product);
+          CHECK(L_aBdC.get(a, b, d, c) == expected_product);
+          CHECK(L_aCBd.get(a, c, b, d) == expected_product);
+          CHECK(L_aCdB.get(a, c, d, b) == expected_product);
+          CHECK(L_adBC.get(a, d, b, c) == expected_product);
+          CHECK(L_adCB.get(a, d, c, b) == expected_product);
+
+          CHECK(L_BaCd.get(b, a, c, d) == expected_product);
+          CHECK(L_BadC.get(b, a, d, c) == expected_product);
+          CHECK(L_BCad.get(b, c, a, d) == expected_product);
+          CHECK(L_BCda.get(b, c, d, a) == expected_product);
+          CHECK(L_BdaC.get(b, d, a, c) == expected_product);
+          CHECK(L_BdCa.get(b, d, c, a) == expected_product);
+
+          CHECK(L_CaBd.get(c, a, b, d) == expected_product);
+          CHECK(L_CadB.get(c, a, d, b) == expected_product);
+          CHECK(L_CBad.get(c, b, a, d) == expected_product);
+          CHECK(L_CBda.get(c, b, d, a) == expected_product);
+          CHECK(L_CdaB.get(c, d, a, b) == expected_product);
+          CHECK(L_CdBa.get(c, d, b, a) == expected_product);
+
+          CHECK(L_daBC.get(d, a, b, c) == expected_product);
+          CHECK(L_daCB.get(d, a, c, b) == expected_product);
+          CHECK(L_dBaC.get(d, b, a, c) == expected_product);
+          CHECK(L_dBCa.get(d, b, c, a) == expected_product);
+          CHECK(L_dCaB.get(d, c, a, b) == expected_product);
+          CHECK(L_dCBa.get(d, c, b, a) == expected_product);
+        }
+      }
+    }
+  }
+}
+
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.InnerAndOuterProduct",
                   "[DataStructures][Unit]") {
   Tensor<double, Symmetry<2, 1>,
