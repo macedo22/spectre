@@ -156,18 +156,47 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
         size_t, num_tensor_indices_first_operand>
     apply(
         const std::array<size_t, num_tensor_indices>& lhs_tensor_multi_index) {
+      //   std::cout << "=== PRODUCT GetFirstTensorMultiIndexOperand === "
+      //             << std::endl;
+      //   std::cout << "lhs_tensor_multi_index: " << lhs_tensor_multi_index
+      //             << std::endl;
       // e.g. <ti_c, ti_B, ti_b, ti_a, ti_A, ti_d>
       constexpr std::array<size_t, sizeof...(LhsIndices)> lhs_tensorindex_vals =
           {{LhsIndices::value...}};
+      //   std::cout << "lhs_tensorindex_vals: " << lhs_tensorindex_vals
+      //             << std::endl;
       // e.g. <ti_A, ti_b, ti_c>
       constexpr std::array<size_t, num_tensor_indices_first_operand>
           first_op_tensorindex_vals = {
               {FirstOperandLhsTensorIndices::value...}};
+      //   std::cout << "first_op_tensorindex_vals: " <<
+      //   first_op_tensorindex_vals
+      //             << std::endl;
       // to fill
       std::array<size_t, num_tensor_indices_first_operand>
           first_lhs_tensor_multi_index_operand;
 
       for (size_t i = 0; i < num_tensor_indices_first_operand; i++) {
+        // std::cout << "i: " << i << std::endl;
+        // std::cout << "gsl::at(first_op_tensorindex_vals, i): "
+        //           << gsl::at(first_op_tensorindex_vals, i) << std::endl;
+        // std::cout << "pos of gsl::at(first_op_tensorindex_vals, i) in "
+        //              "lhs_tensorindex_vals: "
+        //           << static_cast<unsigned long>(std::distance(
+        //                  lhs_tensorindex_vals.begin(),
+        //                  alg::find(lhs_tensorindex_vals,
+        //                            gsl::at(first_op_tensorindex_vals, i))))
+        //           << std::endl;
+        // std::cout << "value being assigned at "
+        //              "first_lhs_tensor_multi_index_operand[i] : "
+        //           << gsl::at(
+        //                  lhs_tensor_multi_index,
+        //                  static_cast<unsigned long>(std::distance(
+        //                      lhs_tensorindex_vals.begin(),
+        //                      alg::find(lhs_tensorindex_vals,
+        //                                gsl::at(first_op_tensorindex_vals,
+        //                                i)))))
+        //           << std::endl;
         first_lhs_tensor_multi_index_operand[i] =
             gsl::at(lhs_tensor_multi_index,
                     static_cast<unsigned long>(std::distance(
@@ -253,26 +282,27 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
                                           num_tensor_indices_second_operand>
   get_second_tensor_index_operand(const std::array<size_t, num_tensor_indices>&
                                       lhs_tensor_multi_index) noexcept {
-    std::cout << "=== GET SECOND TENSOR INDEX OPERAND === " << std::endl;
+    // std::cout << "=== GET SECOND TENSOR INDEX OPERAND === " << std::endl;
     constexpr std::array<size_t, sizeof...(LhsIndices)> lhs_tensorindex_vals = {
         {LhsIndices::value...}};
-    std::cout << "lhs_tensorindex_vals: " << lhs_tensorindex_vals << std::endl;
+    // std::cout << "lhs_tensorindex_vals: " << lhs_tensorindex_vals <<
+    // std::endl;
     constexpr std::array<size_t, num_tensor_indices_second_operand>
         second_op_tensorindex_vals = {{Args2::value...}};
-    std::cout << "second_op_tensorindex_vals: " << second_op_tensorindex_vals
-              << std::endl;
+    // std::cout << "second_op_tensorindex_vals: " << second_op_tensorindex_vals
+    //           << std::endl;
     std::array<size_t, num_tensor_indices_second_operand>
         second_tensor_index_operand;
     for (size_t i = 0; i < num_tensor_indices_second_operand; i++) {
-      std::cout << "i: " << i << std::endl;
-      std::cout << "second_op_tensorindex_vals[i]: "
-                << gsl::at(second_op_tensorindex_vals, i) << std::endl;
-      std::cout << "index of second_op_tensor_index_vals[i]: "
-                << static_cast<unsigned long>(std::distance(
-                       lhs_tensorindex_vals.begin(),
-                       alg::find(lhs_tensorindex_vals,
-                                 gsl::at(second_op_tensorindex_vals, i))))
-                << std::endl;
+      //   std::cout << "i: " << i << std::endl;
+      //   std::cout << "second_op_tensorindex_vals[i]: "
+      //             << gsl::at(second_op_tensorindex_vals, i) << std::endl;
+      //   std::cout << "index of second_op_tensor_index_vals[i]: "
+      //             << static_cast<unsigned long>(std::distance(
+      //                    lhs_tensorindex_vals.begin(),
+      //                    alg::find(lhs_tensorindex_vals,
+      //                              gsl::at(second_op_tensorindex_vals, i))))
+      //             << std::endl;
 
       // next 4 lines will assign <pos of second op's index in LHS> of
       // second_tensor_index_operand to lhs_tensor_multi_index[second op's
@@ -410,7 +440,7 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
     // std::cout << "lhs_tensor_multi_index: " << lhs_tensor_multi_index
     //           << std::endl;
     // std::cout << "first_tensor_index_operand: " << first_tensor_index_operand
-    // << std::endl;
+    //           << std::endl;
     // std::cout << "second_tensor_index_operand: " <<
     // second_tensor_index_operand
     //           << std::endl
@@ -422,6 +452,13 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
         second_op_tensorindex_list>::apply(first_tensor_index_operand,
                                            second_tensor_index_operand, t1_,
                                            t2_);
+  }
+
+  template <typename LhsStructure, typename... LhsIndices>
+  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+      const size_t lhs_storage_index) const {
+    return get<LhsIndices...>(
+        LhsStructure::get_canonical_tensor_index(lhs_storage_index));
   }
 
  private:

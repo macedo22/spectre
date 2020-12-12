@@ -17,37 +17,91 @@ struct td;
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.OuterProduct1By1",
                   "[DataStructures][Unit]") {
-  Tensor<double, Symmetry<1>,
-         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
-      Ru{};
-  std::iota(Ru.begin(), Ru.end(), 0.0);
-  Tensor<double, Symmetry<1>,
-         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
-      Su{};
-  std::iota(Su.begin(), Su.end(), 0.0);
-  auto L_ab = TensorExpressions::evaluate<ti_A_t, ti_B_t>(Ru(ti_A) * Su(ti_B));
+  // Tensor<double, Symmetry<1>,
+  //        index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+  //     Ru{};
+  // std::iota(Ru.begin(), Ru.end(), 0.0);
+  // Tensor<double, Symmetry<1>,
+  //        index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+  //     Su{};
+  // std::iota(Su.begin(), Su.end(), 0.0);
+  // auto L_ab = TensorExpressions::evaluate<ti_A_t, ti_B_t>(Ru(ti_A) *
+  // Su(ti_B));
 
-  for (size_t a = 0; a < 4; a++) {
-    for (size_t b = 0; b < 4; b++) {
-      CHECK(L_ab.get(a, b) == Ru.get(a) * Su.get(b));
-    }
-  }
+  // for (size_t a = 0; a < 4; a++) {
+  //   for (size_t b = 0; b < 4; b++) {
+  //     CHECK(L_ab.get(a, b) == Ru.get(a) * Su.get(b));
+  //   }
+  // }
 
-  Tensor<double, Symmetry<1>,
-         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
-      Sl{};
-  std::iota(Sl.begin(), Sl.end(), 0.0);
+  // Tensor<double, Symmetry<1>,
+  //        index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+  //     Sl{};
+  // std::iota(Sl.begin(), Sl.end(), 0.0);
 
-  // auto L_expr = Ru(ti_A) * Sl(ti_a);
-  // td<decltype(L_expr)::args_list>idk1;
-  // td<decltype(L_expr)>idk2;
+  // // auto L_expr = Ru(ti_A) * Sl(ti_a);
+  // // td<decltype(L_expr)::args_list>idk1;
+  // // td<decltype(L_expr)>idk2;
 
-  // inner product
-  auto L = TensorExpressions::evaluate(Ru(ti_A) * Sl(ti_a));
+  // // inner product
+  // auto L = TensorExpressions::evaluate(Ru(ti_A) * Sl(ti_a));
+
+  // double expected_sum = 0.0;
+  // for (size_t a = 0; a < 4; a++) {
+  //   expected_sum += (Ru.get(a) * Su.get(a));
+  // }
+  // CHECK(L.get() == expected_sum);
+}
+
+SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.InnerProduct2By2",
+                  "[DataStructures][Unit]") {
+  Tensor<double, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      Rll{};
+  std::iota(Rll.begin(), Rll.end(), 0.0);
+  Tensor<double, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      Sll{};
+  std::iota(Sll.begin(), Sll.end(), 0.0);
+  Tensor<double, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+      Ruu{};
+  std::iota(Ruu.begin(), Ruu.end(), 0.0);
+  Tensor<double, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+      Suu{};
+  std::iota(Suu.begin(), Suu.end(), 0.0);
+  Tensor<double, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+      Rlu{};
+  std::iota(Rlu.begin(), Rlu.end(), 0.0);
+  Tensor<double, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+      Slu{};
+  std::iota(Slu.begin(), Slu.end(), 0.0);
+  Tensor<double, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      Rul{};
+  std::iota(Rul.begin(), Rul.end(), 0.0);
+  Tensor<double, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      Sul{};
+  std::iota(Sul.begin(), Sul.end(), 0.0);
+  auto L = TensorExpressions::evaluate(Rll(ti_a, ti_b) * Suu(ti_A, ti_B));
 
   double expected_sum = 0.0;
   for (size_t a = 0; a < 4; a++) {
-    expected_sum += (Ru.get(a) * Su.get(a));
+    for (size_t b = 0; b < 4; b++) {
+      expected_sum += (Rll.get(a, b) * Suu.get(a, b));
+    }
   }
   CHECK(L.get() == expected_sum);
 }
