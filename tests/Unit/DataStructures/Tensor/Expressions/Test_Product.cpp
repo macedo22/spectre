@@ -12,6 +12,20 @@
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 
+SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.OuterProduct0By1",
+                  "[DataStructures][Unit]") {
+  const Tensor<double> R{{{3.7}}};
+  Tensor<double, Symmetry<1>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+      Su{};
+  std::iota(Su.begin(), Su.end(), 0.0);
+  auto L_A = TensorExpressions::evaluate<ti_A_t>(R() * Su(ti_A));
+
+  for (size_t a = 0; a < 4; a++) {
+    CHECK(L_A.get(a) == 3.7 * Su.get(a));
+  }
+}
+
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.OuterProduct1By1",
                   "[DataStructures][Unit]") {
   Tensor<double, Symmetry<1>,
