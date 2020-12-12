@@ -66,41 +66,146 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
   Product(const T1& t1, const T2& t2)
       : t1_(std::move(t1)), t2_(std::move(t2)) {}
 
-  template <typename... LhsIndices>
-  SPECTRE_ALWAYS_INLINE static std::array<size_t,
-                                          num_tensor_indices_first_operand>
-  get_first_tensor_index_operand(const std::array<size_t, num_tensor_indices>&
-                                     lhs_tensor_multi_index) noexcept {
-    // std::cout << "=== GET FIRST TENSOR INDEX OPERAND === " << std::endl;
-    constexpr std::array<size_t, sizeof...(LhsIndices)> lhs_tensorindex_vals = {
-        {LhsIndices::value...}};
-    constexpr std::array<size_t, num_tensor_indices_first_operand>
-        first_op_tensorindex_vals = {{Args1::value...}};
-    std::array<size_t, num_tensor_indices_first_operand>
-        first_tensor_index_operand;
-    for (size_t i = 0; i < num_tensor_indices_first_operand; i++) {
-      //   // next 4 lines will assign <pos of first op's index in LHS> of
-      //   first_tensor_index_operand
-      //   // to lhs_tensor_multi_index[first op's index]
-      //   gsl::at(first_tensor_index_operand,
-      //           // next 3 lines get position of first op's index in LHS
-      //           static_cast<unsigned long>(std::distance(
-      //               lhs_tensorindex_vals.begin(),
-      //               alg::find(lhs_tensorindex_vals,
-      //               gsl::at(first_op_tensorindex_vals, i))))) =
-      //       gsl::at(lhs_tensor_multi_index, i);
-      // next 4 lines will assign <pos of first op's index in LHS> of
-      // first_tensor_index_operand to lhs_tensor_multi_index[first op's index]
-      first_tensor_index_operand[i] =
-          gsl::at(lhs_tensor_multi_index,
-                  // next 3 lines get position of first op's index in LHS
-                  static_cast<unsigned long>(std::distance(
-                      lhs_tensorindex_vals.begin(),
-                      alg::find(lhs_tensorindex_vals,
-                                gsl::at(first_op_tensorindex_vals, i)))));
+  //   template <typename... LhsIndices>
+  //   SPECTRE_ALWAYS_INLINE static std::array<size_t,
+  //                                           num_tensor_indices_first_operand>
+  //   get_first_tensor_index_operand(const std::array<size_t,
+  //   num_tensor_indices>&
+  //                                      lhs_tensor_multi_index) noexcept {
+  //     // std::cout << "=== GET FIRST TENSOR INDEX OPERAND === " << std::endl;
+  //     constexpr std::array<size_t, sizeof...(LhsIndices)>
+  //     lhs_tensorindex_vals = {
+  //         {LhsIndices::value...}};
+  //     constexpr std::array<size_t, num_tensor_indices_first_operand>
+  //         first_op_tensorindex_vals = {{Args1::value...}};
+  //     std::array<size_t, num_tensor_indices_first_operand>
+  //         first_tensor_index_operand;
+  //     for (size_t i = 0; i < num_tensor_indices_first_operand; i++) {
+  //       //   // next 4 lines will assign <pos of first op's index in LHS> of
+  //       //   first_tensor_index_operand
+  //       //   // to lhs_tensor_multi_index[first op's index]
+  //       //   gsl::at(first_tensor_index_operand,
+  //       //           // next 3 lines get position of first op's index in LHS
+  //       //           static_cast<unsigned long>(std::distance(
+  //       //               lhs_tensorindex_vals.begin(),
+  //       //               alg::find(lhs_tensorindex_vals,
+  //       //               gsl::at(first_op_tensorindex_vals, i))))) =
+  //       //       gsl::at(lhs_tensor_multi_index, i);
+  //       // next 4 lines will assign <pos of first op's index in LHS> of
+  //       // first_tensor_index_operand to lhs_tensor_multi_index[first op's
+  //       index] first_tensor_index_operand[i] =
+  //           gsl::at(lhs_tensor_multi_index,
+  //                   // next 3 lines get position of first op's index in LHS
+  //                   static_cast<unsigned long>(std::distance(
+  //                       lhs_tensorindex_vals.begin(),
+  //                       alg::find(lhs_tensorindex_vals,
+  //                                 gsl::at(first_op_tensorindex_vals, i)))));
+  //     }
+  //     return first_tensor_index_operand;
+  //   }
+
+  template <typename FirstOperandLhsTensorIndexList>
+  struct GetFirstTensorMultiIndexOperand;
+
+  template <typename... FirstOperandLhsTensorIndices>
+  struct GetFirstTensorMultiIndexOperand<
+      tmpl::list<FirstOperandLhsTensorIndices...>> {
+    template <typename... LhsIndices>
+    static SPECTRE_ALWAYS_INLINE constexpr std::array<
+        size_t, num_tensor_indices_first_operand>
+    apply(
+        const std::array<size_t, num_tensor_indices>& lhs_tensor_multi_index) {
+      // e.g. <ti_c, ti_B, ti_b, ti_a, ti_A, ti_d>
+      constexpr std::array<size_t, sizeof...(LhsIndices)> lhs_tensorindex_vals =
+          {{LhsIndices::value...}};
+      // e.g. <ti_A, ti_b, ti_c>
+      constexpr std::array<size_t, num_tensor_indices_first_operand>
+          first_op_tensorindex_vals = {
+              {FirstOperandLhsTensorIndices::value...}};
+      // to fill
+      std::array<size_t, num_tensor_indices_first_operand>
+          first_lhs_tensor_multi_index_operand;
+
+      for (size_t i = 0; i < num_tensor_indices_first_operand; i++) {
+        first_lhs_tensor_multi_index_operand[i] =
+            gsl::at(lhs_tensor_multi_index,
+                    static_cast<unsigned long>(std::distance(
+                        lhs_tensorindex_vals.begin(),
+                        alg::find(lhs_tensorindex_vals,
+                                  gsl::at(first_op_tensorindex_vals, i)))));
+      }
+      return first_lhs_tensor_multi_index_operand;
     }
-    return first_tensor_index_operand;
-  }
+  };
+
+  template <typename SecondOperandLhsTensorIndexList>
+  struct GetSecondTensorMultiIndexOperand;
+
+  template <typename... SecondOperandLhsTensorIndices>
+  struct GetSecondTensorMultiIndexOperand<
+      tmpl::list<SecondOperandLhsTensorIndices...>> {
+    template <typename... LhsIndices>
+    static SPECTRE_ALWAYS_INLINE constexpr std::array<
+        size_t, num_tensor_indices_second_operand>
+    apply(
+        const std::array<size_t, num_tensor_indices>& lhs_tensor_multi_index) {
+      // e.g. <ti_c, ti_B, ti_b, ti_a, ti_A, ti_d>
+      constexpr std::array<size_t, sizeof...(LhsIndices)> lhs_tensorindex_vals =
+          {{LhsIndices::value...}};
+      // e.g. <ti_A, ti_b, ti_c>
+      constexpr std::array<size_t, num_tensor_indices_second_operand>
+          second_op_tensorindex_vals = {
+              {SecondOperandLhsTensorIndices::value...}};
+      // to fill
+      std::array<size_t, num_tensor_indices_second_operand>
+          second_lhs_tensor_multi_index_operand;
+
+      for (size_t i = 0; i < num_tensor_indices_second_operand; i++) {
+        second_lhs_tensor_multi_index_operand[i] =
+            gsl::at(lhs_tensor_multi_index,
+                    static_cast<unsigned long>(std::distance(
+                        lhs_tensorindex_vals.begin(),
+                        alg::find(lhs_tensorindex_vals,
+                                  gsl::at(second_op_tensorindex_vals, i)))));
+      }
+      return second_lhs_tensor_multi_index_operand;
+    }
+  };
+
+  //   get_first_tensor_index_operand(const std::array<size_t,
+  //   num_tensor_indices>&
+  //                                      lhs_tensor_multi_index) noexcept {
+  //     // std::cout << "=== GET FIRST TENSOR INDEX OPERAND === " << std::endl;
+  //     constexpr std::array<size_t, sizeof...(LhsIndices)>
+  //     lhs_tensorindex_vals = {
+  //         {LhsIndices::value...}};
+  //     constexpr std::array<size_t, num_tensor_indices_first_operand>
+  //         first_op_tensorindex_vals = {{Args1::value...}};
+  //     std::array<size_t, num_tensor_indices_first_operand>
+  //         first_tensor_index_operand;
+  //     for (size_t i = 0; i < num_tensor_indices_first_operand; i++) {
+  //       //   // next 4 lines will assign <pos of first op's index in LHS> of
+  //       //   first_tensor_index_operand
+  //       //   // to lhs_tensor_multi_index[first op's index]
+  //       //   gsl::at(first_tensor_index_operand,
+  //       //           // next 3 lines get position of first op's index in LHS
+  //       //           static_cast<unsigned long>(std::distance(
+  //       //               lhs_tensorindex_vals.begin(),
+  //       //               alg::find(lhs_tensorindex_vals,
+  //       //               gsl::at(first_op_tensorindex_vals, i))))) =
+  //       //       gsl::at(lhs_tensor_multi_index, i);
+  //       // next 4 lines will assign <pos of first op's index in LHS> of
+  //       // first_tensor_index_operand to lhs_tensor_multi_index[first op's
+  //       index] first_tensor_index_operand[i] =
+  //           gsl::at(lhs_tensor_multi_index,
+  //                   // next 3 lines get position of first op's index in LHS
+  //                   static_cast<unsigned long>(std::distance(
+  //                       lhs_tensorindex_vals.begin(),
+  //                       alg::find(lhs_tensorindex_vals,
+  //                                 gsl::at(first_op_tensorindex_vals, i)))));
+  //     }
+  //     return first_tensor_index_operand;
+  //   }
 
   template <typename... LhsIndices>
   SPECTRE_ALWAYS_INLINE static std::array<size_t,
@@ -211,6 +316,27 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
       tmpl::bind<tmpl::found, tmpl::pin<ArgsList2<Args2...>>,
                  tmpl::bind<std::is_same, tmpl::_1, tmpl::parent<tmpl::_1>>>>;
 
+  template <typename FirstOperandLhsTensorIndexList,
+            typename SecondOperandLhsTensorIndexList>
+  struct ComputeProduct;
+
+  template <typename... FirstOperandLhsTensorIndices,
+            typename... SecondOperandLhsTensorIndices>
+  struct ComputeProduct<tmpl::list<FirstOperandLhsTensorIndices...>,
+                        tmpl::list<SecondOperandLhsTensorIndices...>> {
+    static SPECTRE_ALWAYS_INLINE decltype(auto) apply(
+        const std::array<size_t, num_tensor_indices_first_operand>&
+            first_tensor_index_operand,
+        const std::array<size_t, num_tensor_indices_second_operand>&
+            second_tensor_index_operand,
+        const T1& t1, const T2& t2) {
+      return t1.template get<FirstOperandLhsTensorIndices...>(
+                 first_tensor_index_operand) *
+             t2.template get<SecondOperandLhsTensorIndices...>(
+                 second_tensor_index_operand);
+    }
+  };
+
 //   template <class... T>
 //   struct td;
 
@@ -232,12 +358,16 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
     std::cout << "=== PRODUCT GET === " << std::endl;
     std::array<size_t, num_tensor_indices_first_operand>
         first_tensor_index_operand =
-            get_first_tensor_index_operand<LhsIndices...>(
-                lhs_tensor_multi_index);
+            GetFirstTensorMultiIndexOperand<first_op_tensorindex_list>::
+                template apply<LhsIndices...>(lhs_tensor_multi_index);
+    // get_first_tensor_index_operand<LhsIndices...>(
+    //     lhs_tensor_multi_index);
     std::array<size_t, num_tensor_indices_second_operand>
         second_tensor_index_operand =
-            get_second_tensor_index_operand<LhsIndices...>(
-                lhs_tensor_multi_index);
+            GetSecondTensorMultiIndexOperand<second_op_tensorindex_list>::
+                template apply<LhsIndices...>(lhs_tensor_multi_index);
+    // get_second_tensor_index_operand<LhsIndices...>(
+    //     lhs_tensor_multi_index);
 
     std::cout << "lhs_tensor_multi_index: " << lhs_tensor_multi_index
               << std::endl;
@@ -246,8 +376,13 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
     std::cout << "second_tensor_index_operand: " << second_tensor_index_operand
               << std::endl
               << std::endl;
-    return t1_.template get<LhsIndices...>(first_tensor_index_operand) *
-           t2_.template get<LhsIndices...>(second_tensor_index_operand);
+    // return t1_.template get<LhsIndices...>(first_tensor_index_operand) *
+    //        t2_.template get<LhsIndices...>(second_tensor_index_operand);
+    return ComputeProduct<
+        first_op_tensorindex_list,
+        second_op_tensorindex_list>::apply(first_tensor_index_operand,
+                                           second_tensor_index_operand, t1_,
+                                           t2_);
   }
 
  private:
