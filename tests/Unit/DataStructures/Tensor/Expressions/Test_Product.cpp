@@ -416,44 +416,74 @@ struct td;
 //   }
 // }
 
-SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.OuterProduct1By1By1",
-                  "[DataStructures][Unit]") {
-  Tensor<double, Symmetry<1>,
-         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
-      Ru{};
-  std::iota(Ru.begin(), Ru.end(), 0.0);
-  Tensor<double, Symmetry<1>,
-         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
-      Sl{};
-  std::iota(Sl.begin(), Sl.end(), 0.0);
-  Tensor<double, Symmetry<1>,
-         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
-      Tu{};
-  std::iota(Tu.begin(), Tu.end(), 0.0);
+// SPECTRE_TEST_CASE(
+//   "Unit.DataStructures.Tensor.Expression.OuterProduct1By1By1",
+//                   "[DataStructures][Unit]") {
+//   Tensor<double, Symmetry<1>,
+//          index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+//       Ru{};
+//   std::iota(Ru.begin(), Ru.end(), 0.0);
+//   Tensor<double, Symmetry<1>,
+//          index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+//       Sl{};
+//   std::iota(Sl.begin(), Sl.end(), 0.0);
+//   Tensor<double, Symmetry<1>,
+//          index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+//       Tu{};
+//   std::iota(Tu.begin(), Tu.end(), 0.0);
 
-  auto L_AbC = TensorExpressions::evaluate<ti_A_t, ti_b_t, ti_C_t>(
-      Ru(ti_A) * Sl(ti_b) * Tu(ti_C));
-  auto L_ACb = TensorExpressions::evaluate<ti_A_t, ti_C_t, ti_b_t>(
-      Ru(ti_A) * Sl(ti_b) * Tu(ti_C));
-  auto L_bAC = TensorExpressions::evaluate<ti_b_t, ti_A_t, ti_C_t>(
-      Ru(ti_A) * Sl(ti_b) * Tu(ti_C));
-  auto L_bCA = TensorExpressions::evaluate<ti_b_t, ti_C_t, ti_A_t>(
-      Ru(ti_A) * Sl(ti_b) * Tu(ti_C));
-  auto L_CAb = TensorExpressions::evaluate<ti_C_t, ti_A_t, ti_b_t>(
-      Ru(ti_A) * Sl(ti_b) * Tu(ti_C));
-  auto L_CbA = TensorExpressions::evaluate<ti_C_t, ti_b_t, ti_A_t>(
-      Ru(ti_A) * Sl(ti_b) * Tu(ti_C));
+//   auto L_AbC = TensorExpressions::evaluate<ti_A_t, ti_b_t, ti_C_t>(
+//       Ru(ti_A) * Sl(ti_b) * Tu(ti_C));
+//   auto L_ACb = TensorExpressions::evaluate<ti_A_t, ti_C_t, ti_b_t>(
+//       Ru(ti_A) * Sl(ti_b) * Tu(ti_C));
+//   auto L_bAC = TensorExpressions::evaluate<ti_b_t, ti_A_t, ti_C_t>(
+//       Ru(ti_A) * Sl(ti_b) * Tu(ti_C));
+//   auto L_bCA = TensorExpressions::evaluate<ti_b_t, ti_C_t, ti_A_t>(
+//       Ru(ti_A) * Sl(ti_b) * Tu(ti_C));
+//   auto L_CAb = TensorExpressions::evaluate<ti_C_t, ti_A_t, ti_b_t>(
+//       Ru(ti_A) * Sl(ti_b) * Tu(ti_C));
+//   auto L_CbA = TensorExpressions::evaluate<ti_C_t, ti_b_t, ti_A_t>(
+//       Ru(ti_A) * Sl(ti_b) * Tu(ti_C));
+
+//   for (size_t a = 0; a < 4; a++) {
+//     for (size_t b = 0; b < 4; b++) {
+//       for (size_t c = 0; c < 4; c++) {
+//         CHECK(L_AbC.get(a, b, c) == Ru.get(a) * Sl.get(b) * Tu.get(c));
+//         CHECK(L_ACb.get(a, c, b) == Ru.get(a) * Sl.get(b) * Tu.get(c));
+//         CHECK(L_bAC.get(b, a, c) == Ru.get(a) * Sl.get(b) * Tu.get(c));
+//         CHECK(L_bCA.get(b, c, a) == Ru.get(a) * Sl.get(b) * Tu.get(c));
+//         CHECK(L_CAb.get(c, a, b) == Ru.get(a) * Sl.get(b) * Tu.get(c));
+//         CHECK(L_CbA.get(c, b, a) == Ru.get(a) * Sl.get(b) * Tu.get(c));
+//       }
+//     }
+//   }
+// }
+
+SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.InnerAndOuterProduct",
+                  "[DataStructures][Unit]") {
+  Tensor<double, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      Rll{};
+  std::iota(Rll.begin(), Rll.end(), 0.0);
+  Tensor<double, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      Sul{};
+  std::iota(Sul.begin(), Sul.end(), 0.0);
+  auto L_abBc_to_ac = TensorExpressions::evaluate<ti_a_t, ti_c_t>(
+      Rll(ti_a, ti_b) * Sul(ti_B, ti_c));
+  auto L_abBc_to_ca = TensorExpressions::evaluate<ti_c_t, ti_a_t>(
+      Rll(ti_a, ti_b) * Sul(ti_B, ti_c));
 
   for (size_t a = 0; a < 4; a++) {
-    for (size_t b = 0; b < 4; b++) {
-      for (size_t c = 0; c < 4; c++) {
-        CHECK(L_AbC.get(a, b, c) == Ru.get(a) * Sl.get(b) * Tu.get(c));
-        CHECK(L_ACb.get(a, c, b) == Ru.get(a) * Sl.get(b) * Tu.get(c));
-        CHECK(L_bAC.get(b, a, c) == Ru.get(a) * Sl.get(b) * Tu.get(c));
-        CHECK(L_bCA.get(b, c, a) == Ru.get(a) * Sl.get(b) * Tu.get(c));
-        CHECK(L_CAb.get(c, a, b) == Ru.get(a) * Sl.get(b) * Tu.get(c));
-        CHECK(L_CbA.get(c, b, a) == Ru.get(a) * Sl.get(b) * Tu.get(c));
+    for (size_t c = 0; c < 4; c++) {
+      double expected_sum = 0.0;
+      for (size_t b = 0; b < 4; b++) {
+        expected_sum += (Rll.get(a, b) * Sul.get(b, c));
       }
+      CHECK(L_abBc_to_ac.get(a, c) == expected_sum);
+      CHECK(L_abBc_to_ca.get(c, a) == expected_sum);
     }
   }
 }
