@@ -12,6 +12,9 @@
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 
+template <class... T>
+struct td;
+
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.OuterProduct0By1",
                   "[DataStructures][Unit]") {
   const Tensor<double> R{{{3.7}}};
@@ -267,6 +270,96 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.InnerProduct2By2",
     }
   }
   CHECK(L_bABa_product.get() == L_bABa_expected_sum);
+}
+
+SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.InnerProduct2By2By2",
+                  "[DataStructures][Unit]") {
+  Tensor<double, Symmetry<1, 1>,
+         index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
+      Rll{};
+  std::iota(Rll.begin(), Rll.end(), 0.0);
+  Tensor<double, Symmetry<1, 1>,
+         index_list<SpatialIndex<3, UpLo::Up, Frame::Inertial>,
+                    SpatialIndex<3, UpLo::Up, Frame::Inertial>>>
+      Suu{};
+  std::iota(Suu.begin(), Suu.end(), 0.0);
+  Tensor<double, Symmetry<1, 1>,
+         index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
+      Tll{};
+  std::iota(Tll.begin(), Tll.end(), 0.0);
+
+  // ((extrinsic_curvature(ti_k, ti_l) *
+  //             inverse_spatial_metric(ti_K, ti_L)) *
+  //            extrinsic_curvature(ti_i, ti_j))
+  auto L_klKLij_to_ij = TensorExpressions::evaluate<ti_i_t, ti_j_t>(
+      (Rll(ti_k, ti_l) * Suu(ti_K, ti_L)) * Tll(ti_i, ti_j));
+
+  auto test = Rll(ti_k, ti_l) * Suu(ti_K, ti_L);
+  // td<decltype(test)>idk;
+  // /home/alexmacedo/spectre/tests/Unit/DataStructures/Tensor/Expressions/
+  // Test_Product.cpp:300:21:
+  // error: implicit instantiation of undefined template
+  // 'td<TensorExpressions::TensorContract<0, 1,
+  // TensorExpressions::TensorContract<0, 2,
+  // TensorExpressions::Product<TensorExpression<Tensor<double,
+  // brigand::list<brigand::integral_constant<int, 1>,
+  // brigand::integral_constant<int, 1> >,
+  // brigand::list<Tensor_detail::TensorIndexType<3, UpLo::Lo, Frame::Inertial,
+  // IndexType::Spatial>, Tensor_detail::TensorIndexType<3, UpLo::Lo,
+  // Frame::Inertial, IndexType::Spatial> > >, double,
+  // brigand::list<brigand::integral_constant<int, 1>,
+  // brigand::integral_constant<int, 1> >,
+  // brigand::list<Tensor_detail::TensorIndexType<3, UpLo::Lo, Frame::Inertial,
+  // IndexType::Spatial>, Tensor_detail::TensorIndexType<3, UpLo::Lo,
+  // Frame::Inertial, IndexType::Spatial> >, brigand::list<TensorIndex<1002,
+  // nullptr>, TensorIndex<1003, nullptr> >, brigand::list<> >,
+  // TensorExpression<Tensor<double,
+  // brigand::list<brigand::integral_constant<int, 1>,
+  // brigand::integral_constant<int, 1> >,
+  // brigand::list<Tensor_detail::TensorIndexType<3, UpLo::Up, Frame::Inertial,
+  // IndexType::Spatial>, Tensor_detail::TensorIndexType<3, UpLo::Up,
+  // Frame::Inertial, IndexType::Spatial> > >, double,
+  // brigand::list<brigand::integral_constant<int, 1>,
+  // brigand::integral_constant<int, 1> >,
+  // brigand::list<Tensor_detail::TensorIndexType<3, UpLo::Up, Frame::Inertial,
+  // IndexType::Spatial>, Tensor_detail::TensorIndexType<3, UpLo::Up,
+  // Frame::Inertial, IndexType::Spatial> >, brigand::list<TensorIndex<1502,
+  // nullptr>, TensorIndex<1503, nullptr> >, brigand::list<> >,
+  // brigand::list<TensorIndex<1002, nullptr>, TensorIndex<1003, nullptr> >,
+  // brigand::list<TensorIndex<1502, nullptr>, TensorIndex<1503, nullptr> > >,
+  // double, brigand::list<brigand::integral_constant<int, 2>,
+  // brigand::integral_constant<int, 2>, brigand::integral_constant<int, 1>,
+  // brigand::integral_constant<int, 1> >,
+  // brigand::list<Tensor_detail::TensorIndexType<3, UpLo::Lo, Frame::Inertial,
+  // IndexType::Spatial>, Tensor_detail::TensorIndexType<3, UpLo::Lo,
+  // Frame::Inertial, IndexType::Spatial>, Tensor_detail::TensorIndexType<3,
+  // UpLo::Up, Frame::Inertial, IndexType::Spatial>,
+  // Tensor_detail::TensorIndexType<3, UpLo::Up, Frame::Inertial,
+  // IndexType::Spatial> >, brigand::list<TensorIndex<1002, nullptr>,
+  // TensorIndex<1003, nullptr>, TensorIndex<1502, nullptr>, TensorIndex<1503,
+  // nullptr> > >, double, brigand::list<brigand::integral_constant<int, 2>,
+  // brigand::integral_constant<int, 1> >,
+  // brigand::list<Tensor_detail::TensorIndexType<3, UpLo::Lo, Frame::Inertial,
+  // IndexType::Spatial>, Tensor_detail::TensorIndexType<3, UpLo::Up,
+  // Frame::Inertial, IndexType::Spatial> >, brigand::list<TensorIndex<1003,
+  // nullptr>, TensorIndex<1503, nullptr> > > >'
+
+  double trace = 0.0;
+  for (size_t k = 0; k < 3; k++) {
+    for (size_t l = 0; l < 3; l++) {
+      trace += (Rll.get(k, l) * Suu.get(k, l));
+    }
+  }
+
+  CHECK(TensorExpressions::evaluate(test).get() == trace);
+
+  for (size_t i = 0; i < 3; i++) {
+    for (size_t j = 0; j < 3; j++) {
+      // CHECK(L_klKLij_to_ij.get(i, j) == (trace * Tll.get(i, j))); // fails
+    }
+  }
 }
 
 // SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.InnerProduct3By3",
