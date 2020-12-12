@@ -257,6 +257,35 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.InnerProduct2By2",
   CHECK(L_bABa_product.get() == L_bABa_expected_sum);
 }
 
+SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.InnerProduct3By3",
+                  "[DataStructures][Unit]") {
+  // Tensor<double, Symmetry<3, 2, 1>,
+  //        index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+  //                   SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+  //                   SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+  //     Rlul{};
+  // std::iota(Rlul.begin(), Rlul.end(), 0.0);
+  // Tensor<double, Symmetry<3, 2, 1>,
+  //        index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+  //                   SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+  //                   SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+  //     Suul{};
+  // std::iota(Suul.begin(), Suul.end(), 0.0);
+
+  // auto L_aBcCAb_product =
+  //     TensorExpressions::evaluate(Rlul(ti_a, ti_B, ti_c) * Suul(ti_C, ti_A,
+  //     ti_b));
+  // double L_aBcCAb_expected_sum = 0.0;
+  // for (size_t a = 0; a < 4; a++) {
+  //   for (size_t b = 0; b < 4; b++) {
+  //     for (size_t c = 0; c < 4; c++) {
+  //       L_aBcCAb_expected_sum += (Rlul.get(a, b, c) * Suul.get(c, a, b));
+  //     }
+  //   }
+  // }
+  // CHECK(L_aBcCAb_product.get() == L_aBcCAb_expected_sum);
+}
+
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.OuterProduct2By2",
                   "[DataStructures][Unit]") {
   // Tensor<double, Symmetry<1, 1>,
