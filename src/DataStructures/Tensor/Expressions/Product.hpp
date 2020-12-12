@@ -355,7 +355,7 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
         get_second_op_tensorindex_list<tmpl::list<LhsIndices...>>;
     // td<second_op_tensorindex_list> second;
 
-    std::cout << "=== PRODUCT GET === " << std::endl;
+    // std::cout << "=== PRODUCT GET === " << std::endl;
     std::array<size_t, num_tensor_indices_first_operand>
         first_tensor_index_operand =
             GetFirstTensorMultiIndexOperand<first_op_tensorindex_list>::
@@ -369,13 +369,14 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
     // get_second_tensor_index_operand<LhsIndices...>(
     //     lhs_tensor_multi_index);
 
-    std::cout << "lhs_tensor_multi_index: " << lhs_tensor_multi_index
-              << std::endl;
+    // std::cout << "lhs_tensor_multi_index: " << lhs_tensor_multi_index
+    //           << std::endl;
     // std::cout << "first_tensor_index_operand: " << first_tensor_index_operand
     // << std::endl;
-    std::cout << "second_tensor_index_operand: " << second_tensor_index_operand
-              << std::endl
-              << std::endl;
+    // std::cout << "second_tensor_index_operand: " <<
+    // second_tensor_index_operand
+    //           << std::endl
+    //           << std::endl;
     // return t1_.template get<LhsIndices...>(first_tensor_index_operand) *
     //        t2_.template get<LhsIndices...>(second_tensor_index_operand);
     return ComputeProduct<
