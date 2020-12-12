@@ -97,6 +97,7 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
   //   using args_list =
   //       tmpl::append<typename T1::args_list, typename T2::args_list>;
   using args_list = typename ProductType<T1, T2>::tensorindex_list;
+  //   td<args_list>ehh;
   // tmpl::sort<tmpl::append<typename T1::args_list, typename T2::args_list>>;
 
   // using second_operand_first_index_pos = tmpl::size(T1::index_list)::value;

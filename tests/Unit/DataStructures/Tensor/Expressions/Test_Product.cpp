@@ -12,6 +12,9 @@
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 
+template <class... T>
+struct td;
+
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.OuterProduct1By1",
                   "[DataStructures][Unit]") {
   Tensor<double, Symmetry<1>,
@@ -29,6 +32,24 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.OuterProduct1By1",
       CHECK(L_ab.get(a, b) == Ru.get(a) * Su.get(b));
     }
   }
+
+  Tensor<double, Symmetry<1>,
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      Sl{};
+  std::iota(Sl.begin(), Sl.end(), 0.0);
+
+  // auto L_expr = Ru(ti_A) * Sl(ti_a);
+  // td<decltype(L_expr)::args_list>idk1;
+  // td<decltype(L_expr)>idk2;
+
+  // inner product
+  auto L = TensorExpressions::evaluate(Ru(ti_A) * Sl(ti_a));
+
+  double expected_sum = 0.0;
+  for (size_t a = 0; a < 4; a++) {
+    expected_sum += (Ru.get(a) * Su.get(a));
+  }
+  CHECK(L.get() == expected_sum);
 }
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.OuterProduct2By2",
