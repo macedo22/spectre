@@ -10,12 +10,40 @@
 #include <cstddef>
 #include <iostream>  // REMOVE
 
+#include "DataStructures/Tensor/Expressions/Contract.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
 #include "Utilities/Algorithm.hpp"
 #include "Utilities/TMPL.hpp"
 
 namespace TensorExpressions {
+template <class... T>
+struct td;
+
+template <typename T1, typename T2>
+struct ProductType {
+  using max_symm2 = tmpl::fold<typename T2::symmetry, tmpl::uint32_t<0>,
+                               tmpl::max<tmpl::_state, tmpl::_element>>;
+
+  // TODO: this symmetry has type int, but it needs to be type size_t
+  using symmetry = tmpl::append<
+      tmpl::transform<typename T1::symmetry, tmpl::plus<tmpl::_1, max_symm2>>,
+      typename T2::symmetry>;
+
+  using index_list =
+      tmpl::append<typename T1::index_list, typename T2::index_list>;
+  using tensorindex_list =
+      tmpl::append<typename T1::args_list, typename T2::args_list>;
+};
+
+template <typename SymmList1, typename SymmList2>
+struct ProductSymmetry;
+
+template <template <typename...> class SymmList1, typename... Symm1,
+          template <typename...> class SymmList2, typename... Symm2>
+struct ProductSymmetry<SymmList1<Symm1...>, SymmList2<Symm2...>> {
+  using type = Symmetry<(Symm1::value + sizeof...(Symm2))..., Symm2::value...>;
+};
 
 /*!
  * \ingroup TensorExpressionsGroup
@@ -34,29 +62,41 @@ template <typename T1, typename T2, template <typename...> class ArgsList1,
 struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
     : public TensorExpression<
           Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>,
-          typename T1::type, double,
+          typename T1::type,
+          typename ProductSymmetry<
+              typename T1::symmetry, typename T2::symmetry>::type,
+          //typename ProductType<T1, T2>::symmetry,
+          typename ProductType<T1, T2>::index_list,
+          typename ProductType<T1, T2>::tensorindex_list
+          // note: the commented out part below shouldn't be sorted anymore
+          /*typename T1::type, double,
           tmpl::append<typename T1::index_list, typename T2::index_list>,
           tmpl::sort<
-              tmpl::append<typename T1::args_list, typename T2::args_list>>> {
+              tmpl::append<typename T1::args_list, typename T2::args_list>>*/> {
   static_assert(std::is_same<typename T1::type, typename T2::type>::value,
                 "Cannot product Tensors holding different data types.");
-  using max_symm2 = tmpl::fold<typename T2::symmetry, tmpl::uint32_t<0>,
-                               tmpl::max<tmpl::_state, tmpl::_element>>;
+  //   using max_symm2 = tmpl::fold<typename T2::symmetry, tmpl::uint32_t<0>,
+  //                                tmpl::max<tmpl::_state, tmpl::_element>>;
 
   using type = typename T1::type;
-  using symmetry = tmpl::append<
-      tmpl::transform<typename T1::symmetry, tmpl::plus<tmpl::_1, max_symm2>>,
-      typename T2::symmetry>;
-  using index_list =
-      tmpl::append<typename T1::index_list, typename T2::index_list>;
+  //   using symmetry = tmpl::append<
+  //       tmpl::transform<typename T1::symmetry, tmpl::plus<tmpl::_1,
+  //       max_symm2>>, typename T2::symmetry>;
+  using symmetry =
+      typename ProductSymmetry<typename T1::symmetry, typename T2::symmetry>::
+          type;  // typename ProductType<T1, T2>::symmetry;
+  using index_list = typename ProductType<T1, T2>::index_list;
+  //   using index_list =
+  //       tmpl::append<typename T1::index_list, typename T2::index_list>;
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
   static constexpr auto num_tensor_indices_first_operand =
       tmpl::size<typename T1::index_list>::value;
   static constexpr auto num_tensor_indices_second_operand =
       num_tensor_indices - num_tensor_indices_first_operand;
   // tmpl::size<index_list>::value == 0 ? 1 : tmpl::size<index_list>::value;
-  using args_list =
-      tmpl::append<typename T1::args_list, typename T2::args_list>;
+  //   using args_list =
+  //       tmpl::append<typename T1::args_list, typename T2::args_list>;
+  using args_list = typename ProductType<T1, T2>::tensorindex_list;
   // tmpl::sort<tmpl::append<typename T1::args_list, typename T2::args_list>>;
 
   // using second_operand_first_index_pos = tmpl::size(T1::index_list)::value;
@@ -337,9 +377,6 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
     }
   };
 
-//   template <class... T>
-//   struct td;
-
   // TODO: The args will need to be reduced in a careful manner, which means
   // they need to be reduced together, then split at the correct length so that
   // the indexing is correct.
@@ -393,6 +430,9 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
 
 }  // namespace TensorExpressions
 
+template <class... T>
+struct td;
+
 /*!
  * @ingroup TensorExpressionsGroup
  *
@@ -422,7 +462,17 @@ SPECTRE_ALWAYS_INLINE auto operator*(
   //               "The indices when adding two tensors must be equal. This
   //               error "
   //               "occurs from expressions like A(_a, _b) + B(_c, _a)");
-  return TensorExpressions::Product<
+
+  //   return TensorExpressions::Product<
+  //       typename std::conditional<
+  //           std::is_base_of<Expression, T1>::value, T1,
+  //           TensorExpression<T1, X, Symm1, IndexList1, Args1>>::type,
+  //       typename std::conditional<
+  //           std::is_base_of<Expression, T2>::value, T2,
+  //           TensorExpression<T2, X, Symm2, IndexList2, Args2>>::type,
+  //       Args1, Args2>(~t1, ~t2);
+
+  auto prod_expr = TensorExpressions::Product<
       typename std::conditional<
           std::is_base_of<Expression, T1>::value, T1,
           TensorExpression<T1, X, Symm1, IndexList1, Args1>>::type,
@@ -430,6 +480,43 @@ SPECTRE_ALWAYS_INLINE auto operator*(
           std::is_base_of<Expression, T2>::value, T2,
           TensorExpression<T2, X, Symm2, IndexList2, Args2>>::type,
       Args1, Args2>(~t1, ~t2);
+
+  // td<decltype(prod_expr)> idk;
+  // /home/alexmacedo/spectre/src/DataStructures/Tensor/Expressions/
+  // Product.hpp:447:29:
+  // error: implicit instantiation of undefined template
+  // 'td<TensorExpressions::Product<TensorExpression<Tensor<double,
+  // brigand::list<brigand::integral_constant<int, 1> >,
+  // brigand::list<Tensor_detail::TensorIndexType<3, UpLo::Up, Frame::Grid,
+  // IndexType::Spacetime> > >, double,
+  // brigand::list<brigand::integral_constant<int, 1> >,
+  // brigand::list<Tensor_detail::TensorIndexType<3, UpLo::Up, Frame::Grid,
+  // IndexType::Spacetime> >, brigand::list<TensorIndex<500, nullptr> >,
+  // brigand::list<> >, TensorExpression<Tensor<double,
+  // brigand::list<brigand::integral_constant<int, 1> >,
+  // brigand::list<Tensor_detail::TensorIndexType<3, UpLo::Up, Frame::Grid,
+  // IndexType::Spacetime> > >, double,
+  // brigand::list<brigand::integral_constant<int, 1> >,
+  // brigand::list<Tensor_detail::TensorIndexType<3, UpLo::Up, Frame::Grid,
+  // IndexType::Spacetime> >, brigand::list<TensorIndex<501, nullptr> >,
+  // brigand::list<> >, brigand::list<TensorIndex<500, nullptr> >,
+  // brigand::list<TensorIndex<501, nullptr> > > >' td<decltype(prod_expr)> idk;
+  return TensorExpressions::contract(prod_expr);
+
+  //   return TensorExpressions::contract(
+  //       TensorExpression<Tensor<X, Symm, tmpl::list<Indices...>>, X, Symm,
+  //                               tmpl::list<Indices...>, ArgsList>{
+  //           <product expression here>
+  //       }
+  //   );
+
+  // return
+  // TensorExpressions::contract(TE<tmpl::list<TensorIndices...>>{*this});
+  //   template <typename ArgsList>
+  //   using TE = TensorExpression<Tensor<X, Symm, tmpl::list<Indices...>>, X,
+  //   Symm,
+  //                               tmpl::list<Indices...>, ArgsList>;
+
   // return contract(TensorExpressions::Product<
   //     typename std::conditional<
   //         std::is_base_of<Expression, T1>::value, T1,
