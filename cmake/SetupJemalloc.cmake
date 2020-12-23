@@ -22,3 +22,31 @@ set_property(
   GLOBAL APPEND PROPERTY SPECTRE_THIRD_PARTY_LIBS
   Jemalloc
   )
+
+# Determine whether we are using JEMALLOC as a shared or static library.
+# Since libraries can be named, e.g. libjemalloc.so.2 we just search for
+# the extension after stripping the directories. It's unlikely jemalloc
+# will rename themselves to "alloc.so" and then we'd have libs like
+# "alloc.so.a"
+get_filename_component(
+  JEMALLOC_LIB_NAME
+  ${JEMALLOC_LIBRARIES}
+  NAME
+  )
+if(APPLE)
+  string(FIND "${JEMALLOC_LIB_NAME}" ".dylib" FOUND_SHARED)
+else()
+  string(FIND "${JEMALLOC_LIB_NAME}" ".so" FOUND_SHARED)
+endif()
+if(${FOUND_SHARED} STREQUAL -1)
+  string(FIND "${JEMALLOC_LIB_NAME}" ".a" FOUND_STATIC)
+  if(${FOUND_STATIC} EQUAL -1)
+    message(FATAL_ERROR "Failed to determine whether JEMALLOC is a shared or "
+      "static library. Found: ${JEMALLOC_LIBRARIES}")
+  endif()
+  set(JEMALLOC_LIB_TYPE STATIC)
+else()
+  set(JEMALLOC_LIB_TYPE SHARED)
+endif()
+
+mark_as_advanced(JEMALLOC_LIB_TYPE)
