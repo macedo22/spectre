@@ -315,7 +315,7 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.InnerProduct2By2By2",
   // auto L_klKLij_to_ij = TensorExpressions::evaluate<ti_i_t, ti_j_t>(
   //     Rll(ti_k, ti_l) * (Suu(ti_K, ti_L) * Tll(ti_i, ti_j)));
   auto L_klKLij_to_ij = TensorExpressions::evaluate<ti_i_t, ti_j_t>(
-      (Rll(ti_k, ti_l) * Suu(ti_K, ti_L)) * Tll(ti_i, ti_j));
+      Rll(ti_k, ti_l) * Suu(ti_K, ti_L) * Tll(ti_i, ti_j));
 
   //auto test = Rll(ti_k, ti_l) * Suu(ti_K, ti_L);
   // td<decltype(test)> idk1;
