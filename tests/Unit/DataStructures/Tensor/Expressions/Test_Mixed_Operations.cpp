@@ -2,7 +2,6 @@
 // See LICENSE.txt for details.
 
 #include "Framework/TestingFramework.hpp"
-//#include "PointwiseFunctions/GeneralRelativity/WeylElectric.hpp"
 
 #include <cstddef>
 #include <iterator>
