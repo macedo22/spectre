@@ -524,8 +524,68 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
   template <typename LhsStructure, typename... LhsIndices>
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
       const size_t lhs_storage_index) const {
-    return get<LhsIndices...>(
-        LhsStructure::get_canonical_tensor_index(lhs_storage_index));
+    const std::array<size_t, num_tensor_indices>& lhs_tensor_multi_index =
+        LhsStructure::get_canonical_tensor_index(lhs_storage_index);
+
+    // return t1_.template get<LhsIndices...>(tensor_index) *
+    //        t2_.template get<LhsIndices...>(tensor_index);
+    using first_op_tensorindex_list =
+        get_first_op_tensorindex_list<tmpl::list<LhsIndices...>>;
+    // td<first_op_tensorindex_list> first;
+    using second_op_tensorindex_list =
+        get_second_op_tensorindex_list<tmpl::list<LhsIndices...>>;
+    // td<second_op_tensorindex_list> second;
+
+    // std::cout << "=== PRODUCT GET === " << std::endl;
+    std::array<size_t, num_tensor_indices_first_operand>
+        first_tensor_index_operand =
+            GetFirstTensorMultiIndexOperand<first_op_tensorindex_list>::
+                template apply<LhsIndices...>(lhs_tensor_multi_index);
+    // get_first_tensor_index_operand<LhsIndices...>(
+    //     lhs_tensor_multi_index);
+    std::array<size_t, num_tensor_indices_second_operand>
+        second_tensor_index_operand =
+            GetSecondTensorMultiIndexOperand<second_op_tensorindex_list>::
+                template apply<LhsIndices...>(lhs_tensor_multi_index);
+    // get_second_tensor_index_operand<LhsIndices...>(
+    //     lhs_tensor_multi_index);
+
+    // std::cout << "lhs_tensor_multi_index: " << lhs_tensor_multi_index
+    //           << std::endl;
+    // std::cout << "first_tensor_index_operand: " << first_tensor_index_operand
+    //           << std::endl;
+    // std::cout << "second_tensor_index_operand: "
+    //           << second_tensor_index_operand
+    //           << std::endl
+    //           << std::endl;
+    // return t1_.template get<LhsIndices...>(first_tensor_index_operand) *
+    //        t2_.template get<LhsIndices...>(second_tensor_index_operand);
+
+    using uncontracted_lhs_structure_first_op =
+        typename LhsTensorSymmAndIndices<
+            ArgsList1<Args1...>, first_op_tensorindex_list,
+            typename T1::symmetry, typename T1::index_list>::structure;
+    const size_t first_storage_index_operand =
+        uncontracted_lhs_structure_first_op::get_storage_index(
+            first_tensor_index_operand);
+    using uncontracted_lhs_structure_second_op =
+        typename LhsTensorSymmAndIndices<
+            ArgsList2<Args2...>, second_op_tensorindex_list,
+            typename T2::symmetry, typename T2::index_list>::structure;
+    const size_t second_storage_index_operand =
+        uncontracted_lhs_structure_second_op::get_storage_index(
+            second_tensor_index_operand);
+    // return ComputeProduct<
+    //     first_op_tensorindex_list,
+    //     second_op_tensorindex_list>::apply(first_tensor_index_operand,
+    //                                        second_tensor_index_operand, t1_,
+    //                                        t2_);
+    return ComputeProduct<first_op_tensorindex_list,
+                          second_op_tensorindex_list>::
+        template apply<uncontracted_lhs_structure_first_op,
+                       uncontracted_lhs_structure_second_op>(
+            first_storage_index_operand, second_storage_index_operand, t1_,
+            t2_);
   }
 
  private:
