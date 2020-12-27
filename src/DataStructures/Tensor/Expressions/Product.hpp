@@ -156,21 +156,21 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
         size_t, num_tensor_indices_first_operand>
     apply(
         const std::array<size_t, num_tensor_indices>& lhs_tensor_multi_index) {
-      std::cout << "=== PRODUCT GetFirstTensorMultiIndexOperand === "
-                << std::endl;
-      std::cout << "lhs_tensor_multi_index: " << lhs_tensor_multi_index
-                << std::endl;
+    //   std::cout << "=== PRODUCT GetFirstTensorMultiIndexOperand === "
+    //             << std::endl;
+    //   std::cout << "lhs_tensor_multi_index: " << lhs_tensor_multi_index
+    //             << std::endl;
       // e.g. <ti_c, ti_B, ti_b, ti_a, ti_A, ti_d>
       constexpr std::array<size_t, sizeof...(LhsIndices)> lhs_tensorindex_vals =
           {{LhsIndices::value...}};
-      std::cout << "lhs_tensorindex_vals: " << lhs_tensorindex_vals
-                << std::endl;
+    //   std::cout << "lhs_tensorindex_vals: " << lhs_tensorindex_vals
+    //             << std::endl;
       // e.g. <ti_A, ti_b, ti_c>
       constexpr std::array<size_t, num_tensor_indices_first_operand>
           first_op_tensorindex_vals = {
               {FirstOperandLhsTensorIndices::value...}};
-      std::cout << "first_op_tensorindex_vals: " << first_op_tensorindex_vals
-                << std::endl;
+    //   std::cout << "first_op_tensorindex_vals: " << first_op_tensorindex_vals
+    //             << std::endl;
       // to fill
       std::array<size_t, num_tensor_indices_first_operand>
           first_lhs_tensor_multi_index_operand;
@@ -203,8 +203,8 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
                         alg::find(lhs_tensorindex_vals,
                                   gsl::at(first_op_tensorindex_vals, i)))));
       }
-      std::cout << "returning first_lhs_tensor_multi_index_operand : "
-                << first_lhs_tensor_multi_index_operand << std::endl;
+    //   std::cout << "returning first_lhs_tensor_multi_index_operand : "
+    //             << first_lhs_tensor_multi_index_operand << std::endl;
       return first_lhs_tensor_multi_index_operand;
     }
   };
@@ -220,21 +220,22 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
         size_t, num_tensor_indices_second_operand>
     apply(
         const std::array<size_t, num_tensor_indices>& lhs_tensor_multi_index) {
-      std::cout << "=== PRODUCT GetSecondTensorMultiIndexOperand === "
-                << std::endl;
-      std::cout << "lhs_tensor_multi_index: " << lhs_tensor_multi_index
-                << std::endl;
+    //   std::cout << "=== PRODUCT GetSecondTensorMultiIndexOperand === "
+    //             << std::endl;
+    //   std::cout << "lhs_tensor_multi_index: " << lhs_tensor_multi_index
+    //             << std::endl;
       // e.g. <ti_c, ti_B, ti_b, ti_a, ti_A, ti_d>
       constexpr std::array<size_t, sizeof...(LhsIndices)> lhs_tensorindex_vals =
           {{LhsIndices::value...}};
-      std::cout << "lhs_tensorindex_vals: " << lhs_tensorindex_vals
-                << std::endl;
+    //   std::cout << "lhs_tensorindex_vals: " << lhs_tensorindex_vals
+    //             << std::endl;
       // e.g. <ti_A, ti_b, ti_c>
       constexpr std::array<size_t, num_tensor_indices_second_operand>
           second_op_tensorindex_vals = {
               {SecondOperandLhsTensorIndices::value...}};
-      std::cout << "second_op_tensorindex_vals: " << second_op_tensorindex_vals
-                << std::endl;
+    //   std::cout << "second_op_tensorindex_vals: "
+    //             << second_op_tensorindex_vals
+    //             << std::endl;
       // to fill
       std::array<size_t, num_tensor_indices_second_operand>
           second_lhs_tensor_multi_index_operand;
@@ -247,8 +248,8 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
                         alg::find(lhs_tensorindex_vals,
                                   gsl::at(second_op_tensorindex_vals, i)))));
       }
-      std::cout << "returning second_lhs_tensor_multi_index_operand : "
-                << second_lhs_tensor_multi_index_operand << std::endl;
+    //   std::cout << "returning second_lhs_tensor_multi_index_operand : "
+    //             << second_lhs_tensor_multi_index_operand << std::endl;
       return second_lhs_tensor_multi_index_operand;
     }
   };
@@ -336,8 +337,8 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
                       alg::find(lhs_tensorindex_vals,
                                 gsl::at(second_op_tensorindex_vals, i)))));
     }
-    std::cout << "=== RETURNING FROM GET SECOND TENSOR INDEX OPERAND === "
-              << std::endl;
+    // std::cout << "=== RETURNING FROM GET SECOND TENSOR INDEX OPERAND === "
+    //           << std::endl;
     return second_tensor_index_operand;
   }
 
@@ -430,19 +431,19 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
       //          t2.template get<SecondOperandLhsTensorIndices...>(
       //              second_tensor_index_operand);
 
-      auto res1 = (t1.template get<UncontractedLhsStructureFirstOp,
-                                   FirstOperandLhsTensorIndices...>(
-          first_storage_index_operand));
-      auto res2 = (t2.template get<UncontractedLhsStructureSecondOp,
-                                   SecondOperandLhsTensorIndices...>(
-          second_storage_index_operand));
-      std::cout << "first_storage_index_operand : "
-                << first_storage_index_operand << std::endl;
-      std::cout << res1 << std::endl;
-      std::cout << "second_storage_index_operand : "
-                << second_storage_index_operand << std::endl;
-      std::cout << res2 << std::endl;
-      std::cout << "product : " << res1 * res2 << std::endl;
+    //   auto res1 = (t1.template get<UncontractedLhsStructureFirstOp,
+    //                                FirstOperandLhsTensorIndices...>(
+    //       first_storage_index_operand));
+    //   auto res2 = (t2.template get<UncontractedLhsStructureSecondOp,
+    //                                SecondOperandLhsTensorIndices...>(
+    //       second_storage_index_operand));
+    //   std::cout << "first_storage_index_operand : "
+    //             << first_storage_index_operand << std::endl;
+    //   std::cout << res1 << std::endl;
+    //   std::cout << "second_storage_index_operand : "
+    //             << second_storage_index_operand << std::endl;
+    //   std::cout << res2 << std::endl;
+    //   std::cout << "product : " << res1 * res2 << std::endl;
 
       return t1.template get<UncontractedLhsStructureFirstOp,
                              FirstOperandLhsTensorIndices...>(
@@ -468,7 +469,7 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
         get_second_op_tensorindex_list<tmpl::list<LhsIndices...>>;
     // td<second_op_tensorindex_list> second;
 
-    std::cout << "=== PRODUCT GET === " << std::endl;
+    // std::cout << "=== PRODUCT GET === " << std::endl;
     std::array<size_t, num_tensor_indices_first_operand>
         first_tensor_index_operand =
             GetFirstTensorMultiIndexOperand<first_op_tensorindex_list>::
@@ -482,13 +483,14 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
     // get_second_tensor_index_operand<LhsIndices...>(
     //     lhs_tensor_multi_index);
 
-    std::cout << "lhs_tensor_multi_index: " << lhs_tensor_multi_index
-              << std::endl;
-    std::cout << "first_tensor_index_operand: " << first_tensor_index_operand
-              << std::endl;
-    std::cout << "second_tensor_index_operand: " << second_tensor_index_operand
-              << std::endl
-              << std::endl;
+    // std::cout << "lhs_tensor_multi_index: " << lhs_tensor_multi_index
+    //           << std::endl;
+    // std::cout << "first_tensor_index_operand: " << first_tensor_index_operand
+    //           << std::endl;
+    // std::cout << "second_tensor_index_operand: "
+    //           << second_tensor_index_operand
+    //           << std::endl
+    //           << std::endl;
     // return t1_.template get<LhsIndices...>(first_tensor_index_operand) *
     //        t2_.template get<LhsIndices...>(second_tensor_index_operand);
 
