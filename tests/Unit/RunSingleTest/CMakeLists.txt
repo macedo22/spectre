@@ -33,6 +33,7 @@ add_spectre_executable(
   # The following lines list the source files with tests in them to be
   # compiled into the executable.
   ../DataStructures/Tensor/Expressions/Test_Product.cpp
+  ../DataStructures/Tensor/Expressions/Test_Mixed_Operations.cpp
   )
 
 # Modify which libraries to link for your test case.
