@@ -82,12 +82,12 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.TEWeylElectric",
          index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
                     SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
       TE_weyl_electric_tensor = TensorExpressions::evaluate<ti_i_t, ti_j_t>(
-          (spatial_ricci(ti_i, ti_j)) +
-          ((extrinsic_curvature(ti_k, ti_l) *
-            inverse_spatial_metric(ti_K, ti_L)) *
+          spatial_ricci(ti_i, ti_j) +
+          (extrinsic_curvature(ti_k, ti_l) *
+            inverse_spatial_metric(ti_K, ti_L) *
            extrinsic_curvature(ti_i, ti_j)) -
-          ((extrinsic_curvature(ti_i, ti_l) *
-            inverse_spatial_metric(ti_K, ti_L)) *
+          (extrinsic_curvature(ti_i, ti_l) *
+            inverse_spatial_metric(ti_K, ti_L) *
            extrinsic_curvature(ti_k, ti_j)));
 
   for (size_t i = 0; i < 3; i++) {

@@ -39,10 +39,6 @@ ResultTensor compute_expected_result(const R_t& R, const S_t& S, const G_t& G,
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.MixedOperations",
                   "[DataStructures][Unit]") {
-  // R_{ab} S_B + G_a - H_{baB} T
-  // result type:
-  // Tensor<double, Symmetry<1>, index_list<SpacetimeIndex<3, UpLo::Lo,
-  // Frame::Inertial>>> For R_{ab}
   Tensor<double, Symmetry<2, 1>,
          index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                     SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
