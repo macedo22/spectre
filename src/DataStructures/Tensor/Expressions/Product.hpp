@@ -127,24 +127,55 @@ struct OuterProduct<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
     }
   };
 
+  /// \brief Helper struct for computing a component of the LHS outer product
+  ///
+  /// \tparam FirstOpLhsTensorIndexList the list of TensorIndexs of the first
+  /// operand in the RHS expression
+  /// \tparam SecondOpLhsTensorIndexList the list of TensorIndexs of the second
+  /// operand in the RHS expression
   template <typename FirstOpLhsTensorIndexList,
             typename SecondOpLhsTensorIndexList>
-  struct ComputeOuterProduct;
+  struct ComputeOuterProductComponent;
 
   template <typename... FirstOpLhsTensorIndices,
             typename... SecondOpLhsTensorIndices>
-  struct ComputeOuterProduct<tmpl::list<FirstOpLhsTensorIndices...>,
-                             tmpl::list<SecondOpLhsTensorIndices...>> {
-    template <typename FirstOpUncontractedLhsStructure,
-              typename SecondOpUncontractedLhsStructure>
+  struct ComputeOuterProductComponent<tmpl::list<FirstOpLhsTensorIndices...>,
+                                      tmpl::list<SecondOpLhsTensorIndices...>> {
+    /// \brief Computes the value of a component in the LHS outer product
+    ///
+    /// \details
+    /// \details
+    /// This function recursively computes the value of the component in the
+    /// contracted LHS tensor at a given storage index by iterating over the
+    /// list of storage indices of uncontracted LHS components to sum. This list
+    /// is stored at `map_of_components_to_sum[lhs_storage_index]`, and the
+    /// current component being summed is at
+    /// `map_of_components_to_sum[lhs_storage_index][Index]`.
+    ///
+    /// \tparam FirstOpLhsStructure the structure of the first operand with
+    /// generic indices
+    /// \tparam UncontractedLhsStructure the Structure of the uncontracted LHS
+    /// tensor
+    /// \tparam ContractedLhsNumComponents the number of components in the
+    /// contracted LHS tensor
+    /// \tparam Index for a given list of uncontracted LHS storage indices whose
+    /// components are summed to compute a contracted LHS component, this is the
+    /// position of one such storage index in that list
+    /// \param map_of_components_to_sum a mapping between the storage indices of
+    /// the contracted LHS components and the uncontracted LHS components to sum
+    /// to compute the former
+    /// \param t1 the expression contained within the RHS contraction expression
+    /// \param lhs_storage_index the storage index of the LHS tensor component
+    /// to compute
+    /// \return the computed value of the component at `lhs_storage_index` in
+    /// the contracted LHS tensor
+    template <typename FirstOpLhsStructure, typename SecondOpLhsStructure>
     static SPECTRE_ALWAYS_INLINE decltype(auto) apply(
         const size_t first_op_lhs_storage_index,
         const size_t second_op_lhs_storage_index, const T1& t1, const T2& t2) {
-      return t1.template get<FirstOpUncontractedLhsStructure,
-                             FirstOpLhsTensorIndices...>(
+      return t1.template get<FirstOpLhsStructure, FirstOpLhsTensorIndices...>(
                  first_op_lhs_storage_index) *
-             t2.template get<SecondOpUncontractedLhsStructure,
-                             SecondOpLhsTensorIndices...>(
+             t2.template get<SecondOpLhsStructure, SecondOpLhsTensorIndices...>(
                  second_op_lhs_storage_index);
     }
   };
@@ -186,8 +217,8 @@ struct OuterProduct<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
         second_op_uncontracted_lhs_structure::get_storage_index(
             second_op_lhs_tensor_multi_index);
 
-    return ComputeOuterProduct<first_op_lhs_tensorindex_list,
-                               second_op_lhs_tensorindex_list>::
+    return ComputeOuterProductComponent<first_op_lhs_tensorindex_list,
+                                        second_op_lhs_tensorindex_list>::
         template apply<first_op_uncontracted_lhs_structure,
                        second_op_uncontracted_lhs_structure>(
             first_storage_index_operand, second_storage_index_operand, t1_,
