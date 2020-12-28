@@ -138,43 +138,43 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
     const std::array<size_t, num_tensor_indices>& lhs_tensor_multi_index =
         LhsStructure::get_canonical_tensor_index(lhs_storage_index);
 
-    using first_op_tensorindex_list =
+    using first_op_lhs_tensorindex_list =
         detail::get_operand_lhs_tensorindex_list<tmpl::list<LhsIndices...>,
                                                  ArgsList1<Args1...>>;
 
-    using second_op_tensorindex_list =
+    using second_op_lhs_tensorindex_list =
         detail::get_operand_lhs_tensorindex_list<tmpl::list<LhsIndices...>,
                                                  ArgsList2<Args2...>>;
 
     std::array<size_t, num_tensor_indices_first_operand>
-        first_tensor_index_operand =
-            GetOperandTensorMultiIndex<first_op_tensorindex_list>::
+        first_op_lhs_tensor_multi_index =
+            GetOperandTensorMultiIndex<first_op_lhs_tensorindex_list>::
                 template apply<LhsIndices...>(lhs_tensor_multi_index);
 
     std::array<size_t, num_tensor_indices_second_operand>
-        second_tensor_index_operand =
-            GetOperandTensorMultiIndex<second_op_tensorindex_list>::
+        second_op_lhs_tensor_multi_index =
+            GetOperandTensorMultiIndex<second_op_lhs_tensorindex_list>::
                 template apply<LhsIndices...>(lhs_tensor_multi_index);
 
-    using uncontracted_lhs_structure_first_op =
+    using first_op_uncontracted_lhs_structure =
         typename LhsTensorSymmAndIndices<
-            ArgsList1<Args1...>, first_op_tensorindex_list,
+            ArgsList1<Args1...>, first_op_lhs_tensorindex_list,
             typename T1::symmetry, typename T1::index_list>::structure;
     const size_t first_storage_index_operand =
-        uncontracted_lhs_structure_first_op::get_storage_index(
-            first_tensor_index_operand);
-    using uncontracted_lhs_structure_second_op =
+        first_op_uncontracted_lhs_structure::get_storage_index(
+            first_op_lhs_tensor_multi_index);
+    using second_op_uncontracted_lhs_structure =
         typename LhsTensorSymmAndIndices<
-            ArgsList2<Args2...>, second_op_tensorindex_list,
+            ArgsList2<Args2...>, second_op_lhs_tensorindex_list,
             typename T2::symmetry, typename T2::index_list>::structure;
     const size_t second_storage_index_operand =
-        uncontracted_lhs_structure_second_op::get_storage_index(
-            second_tensor_index_operand);
+        second_op_uncontracted_lhs_structure::get_storage_index(
+            second_op_lhs_tensor_multi_index);
 
-    return ComputeProduct<first_op_tensorindex_list,
-                          second_op_tensorindex_list>::
-        template apply<uncontracted_lhs_structure_first_op,
-                       uncontracted_lhs_structure_second_op>(
+    return ComputeProduct<first_op_lhs_tensorindex_list,
+                          second_op_lhs_tensorindex_list>::
+        template apply<first_op_uncontracted_lhs_structure,
+                       second_op_uncontracted_lhs_structure>(
             first_storage_index_operand, second_storage_index_operand, t1_,
             t2_);
   }
