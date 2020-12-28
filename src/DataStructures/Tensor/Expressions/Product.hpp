@@ -104,15 +104,15 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
     }
   };
 
-  template <typename LhsIndexList>
+  template <typename LhsTensorIndexList>
   using get_first_op_tensorindex_list = tmpl::filter<
-      LhsIndexList,
+      LhsTensorIndexList,
       tmpl::bind<tmpl::found, tmpl::pin<ArgsList1<Args1...>>,
                  tmpl::bind<std::is_same, tmpl::_1, tmpl::parent<tmpl::_1>>>>;
 
-  template <typename LhsIndexList>
+  template <typename LhsTensorIndexList>
   using get_second_op_tensorindex_list = tmpl::filter<
-      LhsIndexList,
+      LhsTensorIndexList,
       tmpl::bind<tmpl::found, tmpl::pin<ArgsList2<Args2...>>,
                  tmpl::bind<std::is_same, tmpl::_1, tmpl::parent<tmpl::_1>>>>;
 
