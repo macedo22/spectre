@@ -33,6 +33,12 @@ struct ProductType<T1, T2, SymmList1<Symm1...>, SymmList2<Symm2...>> {
   using tensorindex_list =
       tmpl::append<typename T1::args_list, typename T2::args_list>;
 };
+
+template <typename LhsTensorIndexList, typename OperandRhsTensorIndexList>
+using get_operand_lhs_tensorindex_list = tmpl::filter<
+    LhsTensorIndexList,
+    tmpl::bind<tmpl::found, tmpl::pin<OperandRhsTensorIndexList>,
+               tmpl::bind<std::is_same, tmpl::_1, tmpl::parent<tmpl::_1>>>>;
 }  // namespace detail
 
 /*!
@@ -104,18 +110,6 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
     }
   };
 
-  template <typename LhsTensorIndexList>
-  using get_first_op_tensorindex_list = tmpl::filter<
-      LhsTensorIndexList,
-      tmpl::bind<tmpl::found, tmpl::pin<ArgsList1<Args1...>>,
-                 tmpl::bind<std::is_same, tmpl::_1, tmpl::parent<tmpl::_1>>>>;
-
-  template <typename LhsTensorIndexList>
-  using get_second_op_tensorindex_list = tmpl::filter<
-      LhsTensorIndexList,
-      tmpl::bind<tmpl::found, tmpl::pin<ArgsList2<Args2...>>,
-                 tmpl::bind<std::is_same, tmpl::_1, tmpl::parent<tmpl::_1>>>>;
-
   template <typename FirstOperandLhsTensorIndexList,
             typename SecondOperandLhsTensorIndexList>
   struct ComputeProduct;
@@ -145,10 +139,12 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
         LhsStructure::get_canonical_tensor_index(lhs_storage_index);
 
     using first_op_tensorindex_list =
-        get_first_op_tensorindex_list<tmpl::list<LhsIndices...>>;
+        detail::get_operand_lhs_tensorindex_list<tmpl::list<LhsIndices...>,
+                                                 ArgsList1<Args1...>>;
 
     using second_op_tensorindex_list =
-        get_second_op_tensorindex_list<tmpl::list<LhsIndices...>>;
+        detail::get_operand_lhs_tensorindex_list<tmpl::list<LhsIndices...>,
+                                                 ArgsList2<Args2...>>;
 
     std::array<size_t, num_tensor_indices_first_operand>
         first_tensor_index_operand =
