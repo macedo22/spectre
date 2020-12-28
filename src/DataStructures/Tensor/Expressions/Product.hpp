@@ -16,6 +16,7 @@
 #include "Utilities/TMPL.hpp"
 
 namespace TensorExpressions {
+namespace detail {
 template <typename T1, typename T2, typename SymmList1 = typename T1::symmetry,
           typename SymmList2 = typename T2::symmetry>
 struct ProductType;
@@ -31,6 +32,7 @@ struct ProductType<T1, T2, SymmList1<Symm1...>, SymmList2<Symm2...>> {
   using tensorindex_list =
       tmpl::append<typename T1::args_list, typename T2::args_list>;
 };
+}  // namespace detail
 
 /*!
  * \ingroup TensorExpressionsGroup
@@ -49,15 +51,15 @@ template <typename T1, typename T2, template <typename...> class ArgsList1,
 struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
     : public TensorExpression<
           Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>,
-          typename T1::type, typename ProductType<T1, T2>::symmetry,
-          typename ProductType<T1, T2>::index_list,
-          typename ProductType<T1, T2>::tensorindex_list> {
+          typename T1::type, typename detail::ProductType<T1, T2>::symmetry,
+          typename detail::ProductType<T1, T2>::index_list,
+          typename detail::ProductType<T1, T2>::tensorindex_list> {
   static_assert(std::is_same<typename T1::type, typename T2::type>::value,
                 "Cannot product Tensors holding different data types.");
   using type = typename T1::type;
-  using symmetry = typename ProductType<T1, T2>::symmetry;
-  using index_list = typename ProductType<T1, T2>::index_list;
-  using args_list = typename ProductType<T1, T2>::tensorindex_list;
+  using symmetry = typename detail::ProductType<T1, T2>::symmetry;
+  using index_list = typename detail::ProductType<T1, T2>::index_list;
+  using args_list = typename detail::ProductType<T1, T2>::tensorindex_list;
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
   static constexpr auto num_tensor_indices_first_operand =
       tmpl::size<typename T1::index_list>::value;
