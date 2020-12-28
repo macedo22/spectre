@@ -41,8 +41,6 @@ struct OuterProductType<T1, T2, SymmList1<Symm1...>, SymmList2<Symm2...>> {
 /// \tparam T2 eh
 /// \tparam ArgsList1 eh
 /// \tparam ArgsList2 eh
-// template <typename T1, typename T2, typename ArgsList1, typename ArgsList2>
-// struct OuterProduct;
 template <typename T1, typename T2, typename Symm1 = typename T1::symmetry,
           typename IndexList1 = typename T1::index_list,
           typename ArgsList1 = typename T1::args_list,
@@ -50,11 +48,6 @@ template <typename T1, typename T2, typename Symm1 = typename T1::symmetry,
           typename IndexList2 = typename T2::index_list,
           typename ArgsList2 = typename T2::args_list>
 struct OuterProduct;
-
-// template <typename T1, typename T2, template <typename...> class ArgsList1,
-//           template <typename...> class ArgsList2, typename... Args1,
-//           typename... Args2>
-// struct OuterProduct<T1, Symm1, ArgsList1<Args1...>, ArgsList2<Args2...>>
 
 template <typename T1, typename T2, typename Symm1,
           template <typename...> class IndexList1, typename... Indices1,
@@ -65,7 +58,6 @@ template <typename T1, typename T2, typename Symm1,
 struct OuterProduct<T1, T2, Symm1, IndexList1<Indices1...>, ArgsList1<Args1...>,
                     Symm2, IndexList2<Indices2...>, ArgsList2<Args2...>>
     : public TensorExpression<
-          // OuterProduct<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>,
           OuterProduct<T1, T2, Symm1, IndexList1<Indices1...>,
                        ArgsList1<Args1...>, Symm2, IndexList2<Indices2...>,
                        ArgsList2<Args2...>>,
