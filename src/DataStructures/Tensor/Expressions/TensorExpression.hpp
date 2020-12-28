@@ -524,9 +524,17 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
     if constexpr (not tt::is_a_v<Tensor, Derived>) {
       return static_cast<const Derived&>(*this)
           .template get<LhsStructure, LhsIndices...>(lhs_storage_index);
-    } else if constexpr (sizeof...(LhsIndices) < 2) {
+    } else if constexpr (sizeof...(LhsIndices) < 2 or
+                         (std::is_same<LhsStructure, structure>::value and
+                          std::is_same<tmpl::list<LhsIndices...>,
+                                       tmpl::list<Args...>>::value)) {
+      // the LHS and RHS tensors have the same structure and generic index
+      // order, so the RHS storage index is equivalent to the LHS storage index
       return (*t_)[lhs_storage_index];
     } else {
+      // the LHS and RHS tensors do not have the same structure or generic index
+      // order, so we must map the LHS storage index to its corresponding RHS
+      // storage index
       constexpr std::array<size_t, LhsStructure::size()> lhs_to_rhs_map =
           compute_lhs_to_rhs_map<LhsStructure, LhsIndices...>();
       return (*t_)[gsl::at(lhs_to_rhs_map, lhs_storage_index)];
