@@ -73,9 +73,9 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, ArgsList1<Args1...>,
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
 
   using first_op_structure =
-      Tensor_detail::Structure<typename T1::symmetry, IndexList1<Indices1...>>;
+      Tensor_detail::Structure<typename T1::symmetry, Indices1...>;
   using second_op_structure =
-      Tensor_detail::Structure<typename T2::symmetry, IndexList2<Indices2...>>;
+      Tensor_detail::Structure<typename T2::symmetry, Indices2...>;
   static constexpr auto num_tensor_indices_first_operand =
       tmpl::size<typename T1::index_list>::value;
   static constexpr auto num_tensor_indices_second_operand =
@@ -109,10 +109,10 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, ArgsList1<Args1...>,
                  tmpl::bind<std::is_same, tmpl::_1, tmpl::parent<tmpl::_1>>>>;
 
   template <typename OperandRhsTensorIndexList>
-  struct GetOperandTensorMultiIndex;
+  struct GetOpTensorMultiIndex;
 
   template <typename... OperandRhsTensorIndices>
-  struct GetOperandTensorMultiIndex<tmpl::list<OperandRhsTensorIndices...>> {
+  struct GetOpTensorMultiIndex<tmpl::list<OperandRhsTensorIndices...>> {
     template <typename... LhsTensorIndices>
     static SPECTRE_ALWAYS_INLINE constexpr std::array<
         size_t, sizeof...(OperandRhsTensorIndices)>
@@ -174,43 +174,24 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, ArgsList1<Args1...>,
     const std::array<size_t, num_tensor_indices>& lhs_tensor_multi_index =
         LhsStructure::get_canonical_tensor_index(lhs_storage_index);
 
-    using first_op_lhs_tensorindex_list =
-        get_operand_lhs_tensorindex_list<tmpl::list<LhsIndices...>,
-                                         ArgsList1<Args1...>>;
-    using second_op_lhs_tensorindex_list =
-        get_operand_lhs_tensorindex_list<tmpl::list<LhsIndices...>,
-                                         ArgsList2<Args2...>>;
+    const std::array<size_t, num_tensor_indices_first_operand>
+        first_op_tensor_multi_index =
+            GetOpTensorMultiIndex<ArgsList1<Args1...>>::template apply<
+                LhsIndices...>(lhs_tensor_multi_index);
+    const std::array<size_t, num_tensor_indices_second_operand>
+        second_op_tensor_multi_index =
+            GetOpTensorMultiIndex<ArgsList2<Args2...>>::template apply<
+                LhsIndices...>(lhs_tensor_multi_index);
 
-    std::array<size_t, num_tensor_indices_first_operand>
-        first_op_lhs_tensor_multi_index =
-            GetOperandTensorMultiIndex<first_op_lhs_tensorindex_list>::
-                template apply<LhsIndices...>(lhs_tensor_multi_index);
-    std::array<size_t, num_tensor_indices_second_operand>
-        second_op_lhs_tensor_multi_index =
-            GetOperandTensorMultiIndex<second_op_lhs_tensorindex_list>::
-                template apply<LhsIndices...>(lhs_tensor_multi_index);
+    const size_t first_op_storage_index =
+        first_op_structure::get_storage_index(first_op_tensor_multi_index);
+    const size_t second_op_storage_index =
+        second_op_structure::get_storage_index(second_op_tensor_multi_index);
 
-    using first_op_uncontracted_lhs_structure =
-        typename LhsTensorSymmAndIndices<
-            ArgsList1<Args1...>, first_op_lhs_tensorindex_list,
-            typename T1::symmetry, typename T1::index_list>::structure;
-    const size_t first_storage_index_operand =
-        first_op_uncontracted_lhs_structure::get_storage_index(
-            first_op_lhs_tensor_multi_index);
-    using second_op_uncontracted_lhs_structure =
-        typename LhsTensorSymmAndIndices<
-            ArgsList2<Args2...>, second_op_lhs_tensorindex_list,
-            typename T2::symmetry, typename T2::index_list>::structure;
-    const size_t second_storage_index_operand =
-        second_op_uncontracted_lhs_structure::get_storage_index(
-            second_op_lhs_tensor_multi_index);
-
-    return ComputeOuterProductComponent<first_op_lhs_tensorindex_list,
-                                        second_op_lhs_tensorindex_list>::
-        template apply<first_op_uncontracted_lhs_structure,
-                       second_op_uncontracted_lhs_structure>(
-            first_storage_index_operand, second_storage_index_operand, t1_,
-            t2_);
+    return ComputeOuterProductComponent<ArgsList1<Args1...>,
+                                        ArgsList2<Args2...>>::
+        template apply<first_op_structure, second_op_structure>(
+            first_op_storage_index, second_op_storage_index, t1_, t2_);
   }
 
  private:
