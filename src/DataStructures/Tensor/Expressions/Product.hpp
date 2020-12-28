@@ -12,6 +12,7 @@
 #include "DataStructures/Tensor/Expressions/Contract.hpp"
 #include "DataStructures/Tensor/Expressions/LhsTensorSymmAndIndices.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
+#include "DataStructures/Tensor/Structure.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
 #include "Utilities/Algorithm.hpp"
 #include "Utilities/TMPL.hpp"
@@ -64,11 +65,17 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, ArgsList1<Args1...>,
           typename detail::OuterProductType<T1, T2>::tensorindex_list> {
   static_assert(std::is_same<typename T1::type, typename T2::type>::value,
                 "Cannot product Tensors holding different data types.");
+
   using type = typename T1::type;
   using symmetry = typename detail::OuterProductType<T1, T2>::symmetry;
   using index_list = typename detail::OuterProductType<T1, T2>::index_list;
   using args_list = typename detail::OuterProductType<T1, T2>::tensorindex_list;
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
+
+  using first_op_structure =
+      Tensor_detail::Structure<typename T1::symmetry, IndexList1<Indices1...>>;
+  using second_op_structure =
+      Tensor_detail::Structure<typename T2::symmetry, IndexList2<Indices2...>>;
   static constexpr auto num_tensor_indices_first_operand =
       tmpl::size<typename T1::index_list>::value;
   static constexpr auto num_tensor_indices_second_operand =
