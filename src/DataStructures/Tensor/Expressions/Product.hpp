@@ -156,24 +156,24 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
 /// \tparam Symm2 eh
 /// \tparam IndexList1 eh
 /// \tparam IndexList2 eh
-/// \tparam Args1 eh
-/// \tparam Args2 eh
+/// \tparam ArgsList1 eh
+/// \tparam ArgsList2 eh
 /// \param t1 eh
 /// \param t2 eh
 /// \return eh
 template <typename T1, typename T2, typename X, typename Symm1, typename Symm2,
-          typename IndexList1, typename IndexList2, typename Args1,
-          typename Args2>
+          typename IndexList1, typename IndexList2, typename ArgsList1,
+          typename ArgsList2>
 SPECTRE_ALWAYS_INLINE auto operator*(
-    const TensorExpression<T1, X, Symm1, IndexList1, Args1>& t1,
-    const TensorExpression<T2, X, Symm2, IndexList2, Args2>& t2) {
+    const TensorExpression<T1, X, Symm1, IndexList1, ArgsList1>& t1,
+    const TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>& t2) {
   return TensorExpressions::contract(
       TensorExpressions::OuterProduct<
           typename std::conditional<
               std::is_base_of<Expression, T1>::value, T1,
-              TensorExpression<T1, X, Symm1, IndexList1, Args1>>::type,
+              TensorExpression<T1, X, Symm1, IndexList1, ArgsList1>>::type,
           typename std::conditional<
               std::is_base_of<Expression, T2>::value, T2,
-              TensorExpression<T2, X, Symm2, IndexList2, Args2>>::type>(~t1,
-                                                                        ~t2));
+              TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>>::type>(
+          ~t1, ~t2));
 }
