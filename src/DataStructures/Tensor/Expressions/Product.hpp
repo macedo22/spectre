@@ -110,25 +110,25 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
     }
   };
 
-  template <typename FirstOperandLhsTensorIndexList,
-            typename SecondOperandLhsTensorIndexList>
+  template <typename FirstOpLhsTensorIndexList,
+            typename SecondOpLhsTensorIndexList>
   struct ComputeProduct;
 
-  template <typename... FirstOperandLhsTensorIndices,
-            typename... SecondOperandLhsTensorIndices>
-  struct ComputeProduct<tmpl::list<FirstOperandLhsTensorIndices...>,
-                        tmpl::list<SecondOperandLhsTensorIndices...>> {
-    template <typename UncontractedLhsStructureFirstOp,
-              typename UncontractedLhsStructureSecondOp>
+  template <typename... FirstOpLhsTensorIndices,
+            typename... SecondOpLhsTensorIndices>
+  struct ComputeProduct<tmpl::list<FirstOpLhsTensorIndices...>,
+                        tmpl::list<SecondOpLhsTensorIndices...>> {
+    template <typename FirstOpUncontractedLhsStructure,
+              typename SecondOpUncontractedLhsStructure>
     static SPECTRE_ALWAYS_INLINE decltype(auto) apply(
-        const size_t first_storage_index_operand,
-        const size_t second_storage_index_operand, const T1& t1, const T2& t2) {
-      return t1.template get<UncontractedLhsStructureFirstOp,
-                             FirstOperandLhsTensorIndices...>(
-                 first_storage_index_operand) *
-             t2.template get<UncontractedLhsStructureSecondOp,
-                             SecondOperandLhsTensorIndices...>(
-                 second_storage_index_operand);
+        const size_t first_op_lhs_storage_index,
+        const size_t second_op_lhs_storage_index, const T1& t1, const T2& t2) {
+      return t1.template get<FirstOpUncontractedLhsStructure,
+                             FirstOpLhsTensorIndices...>(
+                 first_op_lhs_storage_index) *
+             t2.template get<SecondOpUncontractedLhsStructure,
+                             SecondOpLhsTensorIndices...>(
+                 second_op_lhs_storage_index);
     }
   };
 
