@@ -35,14 +35,12 @@ struct OuterProductType<T1, T2, SymmList1<Symm1...>, SymmList2<Symm2...>> {
 };
 }  // namespace detail
 
-/*!
- * \ingroup TensorExpressionsGroup
- *
- * @tparam T1 eh
- * @tparam T2 eh
- * @tparam ArgsList1 eh
- * @tparam ArgsList2 eh
- */
+/// \ingroup TensorExpressionsGroup
+///
+/// \tparam T1 eh
+/// \tparam T2 eh
+/// \tparam ArgsList1 eh
+/// \tparam ArgsList2 eh
 template <typename T1, typename T2, typename ArgsList1, typename ArgsList2>
 struct OuterProduct;
 
@@ -203,22 +201,20 @@ struct OuterProduct<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
 
 }  // namespace TensorExpressions
 
-/*!
- * @ingroup TensorExpressionsGroup
- *
- * @tparam T1 eh
- * @tparam T2 eh
- * @tparam X eh
- * @tparam Symm1 eh
- * @tparam Symm2 eh
- * @tparam IndexList1 eh
- * @tparam IndexList2 eh
- * @tparam Args1 eh
- * @tparam Args2 eh
- * @param t1 eh
- * @param t2 eh
- * @return eh
- */
+/// \ingroup TensorExpressionsGroup
+///
+/// \tparam T1 eh
+/// \tparam T2 eh
+/// \tparam X eh
+/// \tparam Symm1 eh
+/// \tparam Symm2 eh
+/// \tparam IndexList1 eh
+/// \tparam IndexList2 eh
+/// \tparam Args1 eh
+/// \tparam Args2 eh
+/// \param t1 eh
+/// \param t2 eh
+/// \return eh
 template <typename T1, typename T2, typename X, typename Symm1, typename Symm2,
           typename IndexList1, typename IndexList2, typename Args1,
           typename Args2>
