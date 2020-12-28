@@ -93,37 +93,37 @@ struct OuterProduct<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
       tmpl::bind<tmpl::found, tmpl::pin<OperandRhsTensorIndexList>,
                  tmpl::bind<std::is_same, tmpl::_1, tmpl::parent<tmpl::_1>>>>;
 
-  template <typename OperandLhsTensorIndexList>
+  template <typename OperandRhsTensorIndexList>
   struct GetOperandTensorMultiIndex;
 
-  template <typename... OperandLhsTensorIndices>
-  struct GetOperandTensorMultiIndex<tmpl::list<OperandLhsTensorIndices...>> {
+  template <typename... OperandRhsTensorIndices>
+  struct GetOperandTensorMultiIndex<tmpl::list<OperandRhsTensorIndices...>> {
     template <typename... LhsTensorIndices>
     static SPECTRE_ALWAYS_INLINE constexpr std::array<
-        size_t, sizeof...(OperandLhsTensorIndices)>
+        size_t, sizeof...(OperandRhsTensorIndices)>
     apply(
         const std::array<size_t, num_tensor_indices>& lhs_tensor_multi_index) {
       constexpr size_t operand_num_tensor_indices =
-          sizeof...(OperandLhsTensorIndices);
+          sizeof...(OperandRhsTensorIndices);
       // e.g. <ti_c, ti_B, ti_b, ti_a, ti_A, ti_d>
       constexpr std::array<size_t, sizeof...(LhsTensorIndices)>
           lhs_tensorindex_vals = {{LhsTensorIndices::value...}};
       // e.g. <ti_A, ti_b, ti_c>
       constexpr std::array<size_t, operand_num_tensor_indices>
-          operand_lhs_tensorindex_vals = {{OperandLhsTensorIndices::value...}};
+          operand_rhs_tensorindex_vals = {{OperandRhsTensorIndices::value...}};
       // to fill
       std::array<size_t, operand_num_tensor_indices>
-          operand_lhs_tensor_multi_index;
+          operand_rhs_tensor_multi_index;
 
       for (size_t i = 0; i < operand_num_tensor_indices; i++) {
-        gsl::at(operand_lhs_tensor_multi_index, i) =
+        gsl::at(operand_rhs_tensor_multi_index, i) =
             gsl::at(lhs_tensor_multi_index,
                     static_cast<unsigned long>(std::distance(
                         lhs_tensorindex_vals.begin(),
                         alg::find(lhs_tensorindex_vals,
-                                  gsl::at(operand_lhs_tensorindex_vals, i)))));
+                                  gsl::at(operand_rhs_tensorindex_vals, i)))));
       }
-      return operand_lhs_tensor_multi_index;
+      return operand_rhs_tensor_multi_index;
     }
   };
 
@@ -142,33 +142,6 @@ struct OuterProduct<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
   struct ComputeOuterProductComponent<tmpl::list<FirstOpLhsTensorIndices...>,
                                       tmpl::list<SecondOpLhsTensorIndices...>> {
     /// \brief Computes the value of a component in the LHS outer product
-    ///
-    /// \details
-    /// \details
-    /// This function recursively computes the value of the component in the
-    /// contracted LHS tensor at a given storage index by iterating over the
-    /// list of storage indices of uncontracted LHS components to sum. This list
-    /// is stored at `map_of_components_to_sum[lhs_storage_index]`, and the
-    /// current component being summed is at
-    /// `map_of_components_to_sum[lhs_storage_index][Index]`.
-    ///
-    /// \tparam FirstOpLhsStructure the structure of the first operand with
-    /// generic indices
-    /// \tparam UncontractedLhsStructure the Structure of the uncontracted LHS
-    /// tensor
-    /// \tparam ContractedLhsNumComponents the number of components in the
-    /// contracted LHS tensor
-    /// \tparam Index for a given list of uncontracted LHS storage indices whose
-    /// components are summed to compute a contracted LHS component, this is the
-    /// position of one such storage index in that list
-    /// \param map_of_components_to_sum a mapping between the storage indices of
-    /// the contracted LHS components and the uncontracted LHS components to sum
-    /// to compute the former
-    /// \param t1 the expression contained within the RHS contraction expression
-    /// \param lhs_storage_index the storage index of the LHS tensor component
-    /// to compute
-    /// \return the computed value of the component at `lhs_storage_index` in
-    /// the contracted LHS tensor
     template <typename FirstOpLhsStructure, typename SecondOpLhsStructure>
     static SPECTRE_ALWAYS_INLINE decltype(auto) apply(
         const size_t first_op_lhs_storage_index,
