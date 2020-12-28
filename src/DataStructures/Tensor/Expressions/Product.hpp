@@ -87,7 +87,7 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
           lhs_tensorindex_vals = {{LhsTensorIndices::value...}};
       // e.g. <ti_A, ti_b, ti_c>
       constexpr std::array<size_t, operand_num_tensor_indices>
-          op_tensorindex_vals = {{OperandLhsTensorIndices::value...}};
+          operand_lhs_tensorindex_vals = {{OperandLhsTensorIndices::value...}};
       // to fill
       std::array<size_t, operand_num_tensor_indices>
           operand_lhs_tensor_multi_index;
@@ -98,7 +98,7 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
                     static_cast<unsigned long>(std::distance(
                         lhs_tensorindex_vals.begin(),
                         alg::find(lhs_tensorindex_vals,
-                                  gsl::at(op_tensorindex_vals, i)))));
+                                  gsl::at(operand_lhs_tensorindex_vals, i)))));
       }
       return operand_lhs_tensor_multi_index;
     }
