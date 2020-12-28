@@ -8,7 +8,6 @@
 
 #include <array>
 #include <cstddef>
-#include <iostream>  // REMOVE
 
 #include "DataStructures/Tensor/Expressions/Contract.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
@@ -17,32 +16,20 @@
 #include "Utilities/TMPL.hpp"
 
 namespace TensorExpressions {
-template <class... T>
-struct td;
+template <typename T1, typename T2, typename SymmList1 = typename T1::symmetry,
+          typename SymmList2 = typename T2::symmetry>
+struct ProductType;
 
-template <typename T1, typename T2>
-struct ProductType {
-  using max_symm2 = tmpl::fold<typename T2::symmetry, tmpl::uint32_t<0>,
-                               tmpl::max<tmpl::_state, tmpl::_element>>;
-
-  // TODO: this symmetry has type int, but it needs to be type size_t
-  using symmetry = tmpl::append<
-      tmpl::transform<typename T1::symmetry, tmpl::plus<tmpl::_1, max_symm2>>,
-      typename T2::symmetry>;
-
+template <typename T1, typename T2, template <typename...> class SymmList1,
+          typename... Symm1, template <typename...> class SymmList2,
+          typename... Symm2>
+struct ProductType<T1, T2, SymmList1<Symm1...>, SymmList2<Symm2...>> {
+  using symmetry =
+      Symmetry<(Symm1::value + sizeof...(Symm2))..., Symm2::value...>;
   using index_list =
       tmpl::append<typename T1::index_list, typename T2::index_list>;
   using tensorindex_list =
       tmpl::append<typename T1::args_list, typename T2::args_list>;
-};
-
-template <typename SymmList1, typename SymmList2>
-struct ProductSymmetry;
-
-template <template <typename...> class SymmList1, typename... Symm1,
-          template <typename...> class SymmList2, typename... Symm2>
-struct ProductSymmetry<SymmList1<Symm1...>, SymmList2<Symm2...>> {
-  using type = Symmetry<(Symm1::value + sizeof...(Symm2))..., Symm2::value...>;
 };
 
 /*!
@@ -63,8 +50,9 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
     : public TensorExpression<
           Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>,
           typename T1::type,
-          typename ProductSymmetry<
-              typename T1::symmetry, typename T2::symmetry>::type,
+          //typename ProductSymmetry<
+          //    typename T1::symmetry, typename T2::symmetry>::type,
+          typename ProductType<T1, T2>::symmetry,
           //typename ProductType<T1, T2>::symmetry,
           typename ProductType<T1, T2>::index_list,
           typename ProductType<T1, T2>::tensorindex_list
@@ -82,9 +70,11 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
   //   using symmetry = tmpl::append<
   //       tmpl::transform<typename T1::symmetry, tmpl::plus<tmpl::_1,
   //       max_symm2>>, typename T2::symmetry>;
-  using symmetry =
-      typename ProductSymmetry<typename T1::symmetry, typename T2::symmetry>::
-          type;  // typename ProductType<T1, T2>::symmetry;
+  //   using symmetry =
+  //       typename ProductSymmetry<typename T1::symmetry, typename
+  //       T2::symmetry>::
+  //           type;  // typename ProductType<T1, T2>::symmetry;
+  using symmetry = typename ProductType<T1, T2>::symmetry;
   using index_list = typename ProductType<T1, T2>::index_list;
   //   using index_list =
   //       tmpl::append<typename T1::index_list, typename T2::index_list>;
