@@ -43,13 +43,18 @@ struct OuterProductType<T1, T2, SymmList1<Symm1...>, SymmList2<Symm2...>> {
 /// \tparam IndexList2 eh
 template <typename T1, typename T2,
           typename IndexList1 = typename T1::index_list,
-          typename IndexList2 = typename T2::index_list>
+          typename IndexList2 = typename T2::index_list,
+          typename ArgsList1 = typename T1::args_list,
+          typename ArgsList2 = typename T2::args_list>
 struct OuterProduct;
 
 template <typename T1, typename T2, template <typename...> class IndexList1,
           typename... Indices1, template <typename...> class IndexList2,
-          typename... Indices2>
-struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>>
+          typename... Indices2, template <typename...> class ArgsList1,
+          typename... Args1, template <typename...> class ArgsList2,
+          typename... Args2>
+struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
+                    ArgsList1<Args1...>, ArgsList2<Args2...>>
     : public TensorExpression<
           OuterProduct<T1, T2>, typename T1::type,
           typename detail::OuterProductType<T1, T2>::symmetry,
@@ -109,32 +114,6 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>>
     }
   };
 
-  /// \brief Helper struct for computing a component of the LHS outer product
-  ///
-  /// \tparam FirstOpLhsTensorIndexList the list of TensorIndexs of the first
-  /// operand in the RHS expression
-  /// \tparam SecondOpLhsTensorIndexList the list of TensorIndexs of the second
-  /// operand in the RHS expression
-  template <typename FirstOpLhsTensorIndexList,
-            typename SecondOpLhsTensorIndexList>
-  struct ComputeOuterProductComponent;
-
-  template <typename... FirstOpLhsTensorIndices,
-            typename... SecondOpLhsTensorIndices>
-  struct ComputeOuterProductComponent<tmpl::list<FirstOpLhsTensorIndices...>,
-                                      tmpl::list<SecondOpLhsTensorIndices...>> {
-    /// \brief Computes the value of a component in the LHS outer product
-    template <typename FirstOpLhsStructure, typename SecondOpLhsStructure>
-    static SPECTRE_ALWAYS_INLINE decltype(auto) apply(
-        const size_t first_op_lhs_storage_index,
-        const size_t second_op_lhs_storage_index, const T1& t1, const T2& t2) {
-      return t1.template get<FirstOpLhsStructure, FirstOpLhsTensorIndices...>(
-                 first_op_lhs_storage_index) *
-             t2.template get<SecondOpLhsStructure, SecondOpLhsTensorIndices...>(
-                 second_op_lhs_storage_index);
-    }
-  };
-
   template <typename LhsStructure, typename... LhsIndices>
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
       const size_t lhs_storage_index) const {
@@ -143,11 +122,11 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>>
 
     const std::array<size_t, num_tensor_indices_first_operand>
         first_op_tensor_multi_index =
-            GetOpTensorMultiIndex<typename T1::args_list>::template apply<
+            GetOpTensorMultiIndex<ArgsList1<Args1...>>::template apply<
                 LhsIndices...>(lhs_tensor_multi_index);
     const std::array<size_t, num_tensor_indices_second_operand>
         second_op_tensor_multi_index =
-            GetOpTensorMultiIndex<typename T2::args_list>::template apply<
+            GetOpTensorMultiIndex<ArgsList2<Args2...>>::template apply<
                 LhsIndices...>(lhs_tensor_multi_index);
 
     const size_t first_op_storage_index =
@@ -155,10 +134,10 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>>
     const size_t second_op_storage_index =
         second_op_structure::get_storage_index(second_op_tensor_multi_index);
 
-    return ComputeOuterProductComponent<typename T1::args_list,
-                                        typename T2::args_list>::
-        template apply<first_op_structure, second_op_structure>(
-            first_op_storage_index, second_op_storage_index, t1_, t2_);
+    return t1_.template get<first_op_structure, Args1...>(
+               first_op_storage_index) *
+           t2_.template get<second_op_structure, Args2...>(
+               second_op_storage_index);
   }
 
  private:
