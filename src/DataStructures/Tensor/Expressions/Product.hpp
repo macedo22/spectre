@@ -40,26 +40,19 @@ struct OuterProductType<T1, T2, SymmList1<Symm1...>, SymmList2<Symm2...>> {
 ///
 /// \tparam T1 eh
 /// \tparam T2 eh
-/// \tparam ArgsList1 eh
-/// \tparam ArgsList2 eh
+/// \tparam IndexList1 eh
+/// \tparam IndexList2 eh
 template <typename T1, typename T2,
           typename IndexList1 = typename T1::index_list,
-          typename ArgsList1 = typename T1::args_list,
-          typename IndexList2 = typename T2::index_list,
-          typename ArgsList2 = typename T2::args_list>
+          typename IndexList2 = typename T2::index_list>
 struct OuterProduct;
 
 template <typename T1, typename T2, template <typename...> class IndexList1,
-          typename... Indices1, template <typename...> class ArgsList1,
-          typename... Args1, template <typename...> class IndexList2,
-          typename... Indices2, template <typename...> class ArgsList2,
-          typename... Args2>
-struct OuterProduct<T1, T2, IndexList1<Indices1...>, ArgsList1<Args1...>,
-                    IndexList2<Indices2...>, ArgsList2<Args2...>>
+          typename... Indices1, template <typename...> class IndexList2,
+          typename... Indices2>
+struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>>
     : public TensorExpression<
-          OuterProduct<T1, T2, IndexList1<Indices1...>, ArgsList1<Args1...>,
-                       IndexList2<Indices2...>, ArgsList2<Args2...>>,
-          typename T1::type,
+          OuterProduct<T1, T2>, typename T1::type,
           typename detail::OuterProductType<T1, T2>::symmetry,
           typename detail::OuterProductType<T1, T2>::index_list,
           typename detail::OuterProductType<T1, T2>::tensorindex_list> {
@@ -151,11 +144,11 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, ArgsList1<Args1...>,
 
     const std::array<size_t, num_tensor_indices_first_operand>
         first_op_tensor_multi_index =
-            GetOpTensorMultiIndex<ArgsList1<Args1...>>::template apply<
+            GetOpTensorMultiIndex<typename T1::args_list>::template apply<
                 LhsIndices...>(lhs_tensor_multi_index);
     const std::array<size_t, num_tensor_indices_second_operand>
         second_op_tensor_multi_index =
-            GetOpTensorMultiIndex<ArgsList2<Args2...>>::template apply<
+            GetOpTensorMultiIndex<typename T2::args_list>::template apply<
                 LhsIndices...>(lhs_tensor_multi_index);
 
     const size_t first_op_storage_index =
@@ -163,8 +156,8 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, ArgsList1<Args1...>,
     const size_t second_op_storage_index =
         second_op_structure::get_storage_index(second_op_tensor_multi_index);
 
-    return ComputeOuterProductComponent<ArgsList1<Args1...>,
-                                        ArgsList2<Args2...>>::
+    return ComputeOuterProductComponent<typename T1::args_list,
+                                        typename T2::args_list>::
         template apply<first_op_structure, second_op_structure>(
             first_op_storage_index, second_op_storage_index, t1_, t2_);
   }
