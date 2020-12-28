@@ -34,6 +34,18 @@ struct ProductType<T1, T2, SymmList1<Symm1...>, SymmList2<Symm2...>> {
       tmpl::append<typename T1::args_list, typename T2::args_list>;
 };
 
+// Get an operand's generic indices according to the ordering of the LHS generic
+// indices.
+//
+// `LhsTensorIndexList` represents the combined list of generic indices of the
+// two operands from the RHS product expression, potentially reordered on the
+// LHS. `OperandRhsTensorIndexList` represents one such operand's generic
+// indices in the order they appear in the RHS expression.
+//
+// Example: Let `ti_a_t` denote the type of `ti_a`, and apply the same
+// convention for other generic indices. If `LhsTensorIndexList` is
+// <ti_a_t, ti_A_t, ti_c_t, ti_b_t> and `OperandRhsTensorIndexList` is
+// <ti_b_t, ti_A_t>, then this alias will evaluate to <ti_A_t, ti_b_t>
 template <typename LhsTensorIndexList, typename OperandRhsTensorIndexList>
 using get_operand_lhs_tensorindex_list = tmpl::filter<
     LhsTensorIndexList,
@@ -141,7 +153,6 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
     using first_op_lhs_tensorindex_list =
         detail::get_operand_lhs_tensorindex_list<tmpl::list<LhsIndices...>,
                                                  ArgsList1<Args1...>>;
-
     using second_op_lhs_tensorindex_list =
         detail::get_operand_lhs_tensorindex_list<tmpl::list<LhsIndices...>,
                                                  ArgsList2<Args2...>>;
@@ -150,7 +161,6 @@ struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
         first_op_lhs_tensor_multi_index =
             GetOperandTensorMultiIndex<first_op_lhs_tensorindex_list>::
                 template apply<LhsIndices...>(lhs_tensor_multi_index);
-
     std::array<size_t, num_tensor_indices_second_operand>
         second_op_lhs_tensor_multi_index =
             GetOperandTensorMultiIndex<second_op_lhs_tensorindex_list>::
