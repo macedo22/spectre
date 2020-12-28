@@ -49,91 +49,24 @@ template <typename T1, typename T2, template <typename...> class ArgsList1,
 struct Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>
     : public TensorExpression<
           Product<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>>,
-          typename T1::type,
-          //typename ProductSymmetry<
-          //    typename T1::symmetry, typename T2::symmetry>::type,
-          typename ProductType<T1, T2>::symmetry,
-          //typename ProductType<T1, T2>::symmetry,
+          typename T1::type, typename ProductType<T1, T2>::symmetry,
           typename ProductType<T1, T2>::index_list,
-          typename ProductType<T1, T2>::tensorindex_list
-          // note: the commented out part below shouldn't be sorted anymore
-          /*typename T1::type, double,
-          tmpl::append<typename T1::index_list, typename T2::index_list>,
-          tmpl::sort<
-              tmpl::append<typename T1::args_list, typename T2::args_list>>*/> {
+          typename ProductType<T1, T2>::tensorindex_list> {
   static_assert(std::is_same<typename T1::type, typename T2::type>::value,
                 "Cannot product Tensors holding different data types.");
-  //   using max_symm2 = tmpl::fold<typename T2::symmetry, tmpl::uint32_t<0>,
-  //                                tmpl::max<tmpl::_state, tmpl::_element>>;
-
   using type = typename T1::type;
-  //   using symmetry = tmpl::append<
-  //       tmpl::transform<typename T1::symmetry, tmpl::plus<tmpl::_1,
-  //       max_symm2>>, typename T2::symmetry>;
-  //   using symmetry =
-  //       typename ProductSymmetry<typename T1::symmetry, typename
-  //       T2::symmetry>::
-  //           type;  // typename ProductType<T1, T2>::symmetry;
   using symmetry = typename ProductType<T1, T2>::symmetry;
   using index_list = typename ProductType<T1, T2>::index_list;
-  //   using index_list =
-  //       tmpl::append<typename T1::index_list, typename T2::index_list>;
+  using args_list = typename ProductType<T1, T2>::tensorindex_list;
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
   static constexpr auto num_tensor_indices_first_operand =
       tmpl::size<typename T1::index_list>::value;
   static constexpr auto num_tensor_indices_second_operand =
       num_tensor_indices - num_tensor_indices_first_operand;
-  // tmpl::size<index_list>::value == 0 ? 1 : tmpl::size<index_list>::value;
-  //   using args_list =
-  //       tmpl::append<typename T1::args_list, typename T2::args_list>;
-  using args_list = typename ProductType<T1, T2>::tensorindex_list;
-  //   td<args_list>ehh;
-  // tmpl::sort<tmpl::append<typename T1::args_list, typename T2::args_list>>;
 
-  // using second_operand_first_index_pos = tmpl::size(T1::index_list)::value;
-
-  // Product(const T1& t1, const T2& t2) : t1_(t1), t2_(t2) {}
   // not sure if std::move is necessary, but it's used in AddSub constructor
   Product(const T1& t1, const T2& t2)
       : t1_(std::move(t1)), t2_(std::move(t2)) {}
-
-  //   template <typename... LhsIndices>
-  //   SPECTRE_ALWAYS_INLINE static std::array<size_t,
-  //                                           num_tensor_indices_first_operand>
-  //   get_first_tensor_index_operand(const std::array<size_t,
-  //   num_tensor_indices>&
-  //                                      lhs_tensor_multi_index) noexcept {
-  //     // std::cout << "=== GET FIRST TENSOR INDEX OPERAND === " << std::endl;
-  //     constexpr std::array<size_t, sizeof...(LhsIndices)>
-  //     lhs_tensorindex_vals = {
-  //         {LhsIndices::value...}};
-  //     constexpr std::array<size_t, num_tensor_indices_first_operand>
-  //         first_op_tensorindex_vals = {{Args1::value...}};
-  //     std::array<size_t, num_tensor_indices_first_operand>
-  //         first_tensor_index_operand;
-  //     for (size_t i = 0; i < num_tensor_indices_first_operand; i++) {
-  //       //   // next 4 lines will assign <pos of first op's index in LHS> of
-  //       //   first_tensor_index_operand
-  //       //   // to lhs_tensor_multi_index[first op's index]
-  //       //   gsl::at(first_tensor_index_operand,
-  //       //           // next 3 lines get position of first op's index in LHS
-  //       //           static_cast<unsigned long>(std::distance(
-  //       //               lhs_tensorindex_vals.begin(),
-  //       //               alg::find(lhs_tensorindex_vals,
-  //       //               gsl::at(first_op_tensorindex_vals, i))))) =
-  //       //       gsl::at(lhs_tensor_multi_index, i);
-  //       // next 4 lines will assign <pos of first op's index in LHS> of
-  //       // first_tensor_index_operand to lhs_tensor_multi_index[first op's
-  //       index] first_tensor_index_operand[i] =
-  //           gsl::at(lhs_tensor_multi_index,
-  //                   // next 3 lines get position of first op's index in LHS
-  //                   static_cast<unsigned long>(std::distance(
-  //                       lhs_tensorindex_vals.begin(),
-  //                       alg::find(lhs_tensorindex_vals,
-  //                                 gsl::at(first_op_tensorindex_vals, i)))));
-  //     }
-  //     return first_tensor_index_operand;
-  //   }
 
   template <typename FirstOperandLhsTensorIndexList>
   struct GetFirstTensorMultiIndexOperand;
