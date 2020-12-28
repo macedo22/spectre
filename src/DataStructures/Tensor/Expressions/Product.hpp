@@ -90,55 +90,54 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, ArgsList1<Args1...>,
   /// \details
   /// `LhsTensorIndexList` represents the list of generic indices of the outer
   /// product of the two operands from the RHS product expression, potentially
-  /// reordered on the LHS. `OperandRhsTensorIndexList` represents one such
+  /// reordered on the LHS. `OperandTensorIndexList` represents one such
   /// operand's generic indices in the order they appear in the RHS expression.
   ///
   /// Example: Let `ti_a_t` denote the type of `ti_a`, and apply the same
   /// convention for other generic indices. If `LhsTensorIndexList` is
-  /// <ti_a_t, ti_A_t, ti_c_t, ti_b_t> and `OperandRhsTensorIndexList` is
+  /// <ti_a_t, ti_A_t, ti_c_t, ti_b_t> and `OperandTensorIndexList` is
   /// <ti_b_t, ti_A_t>, then this alias will evaluate to <ti_A_t, ti_b_t>.
   ///
   /// \tparam LhsTensorIndexList the list of TensorIndexs of the outer product
   /// on the LHS
-  /// \tparam OperandRhsTensorIndexList the list of TensorIndexs of an operand
-  /// in the RHS expression
-  template <typename LhsTensorIndexList, typename OperandRhsTensorIndexList>
+  /// \tparam OperandTensorIndexList the list of TensorIndexs of an operand in
+  /// the RHS expression
+  template <typename LhsTensorIndexList, typename OperandTensorIndexList>
   using get_operand_lhs_tensorindex_list = tmpl::filter<
       LhsTensorIndexList,
-      tmpl::bind<tmpl::found, tmpl::pin<OperandRhsTensorIndexList>,
+      tmpl::bind<tmpl::found, tmpl::pin<OperandTensorIndexList>,
                  tmpl::bind<std::is_same, tmpl::_1, tmpl::parent<tmpl::_1>>>>;
 
-  template <typename OperandRhsTensorIndexList>
+  template <typename OperandTensorIndexList>
   struct GetOpTensorMultiIndex;
 
-  template <typename... OperandRhsTensorIndices>
-  struct GetOpTensorMultiIndex<tmpl::list<OperandRhsTensorIndices...>> {
+  template <typename... OperandTensorIndices>
+  struct GetOpTensorMultiIndex<tmpl::list<OperandTensorIndices...>> {
     template <typename... LhsTensorIndices>
     static SPECTRE_ALWAYS_INLINE constexpr std::array<
-        size_t, sizeof...(OperandRhsTensorIndices)>
+        size_t, sizeof...(OperandTensorIndices)>
     apply(
         const std::array<size_t, num_tensor_indices>& lhs_tensor_multi_index) {
       constexpr size_t operand_num_tensor_indices =
-          sizeof...(OperandRhsTensorIndices);
+          sizeof...(OperandTensorIndices);
       // e.g. <ti_c, ti_B, ti_b, ti_a, ti_A, ti_d>
       constexpr std::array<size_t, sizeof...(LhsTensorIndices)>
           lhs_tensorindex_vals = {{LhsTensorIndices::value...}};
       // e.g. <ti_A, ti_b, ti_c>
       constexpr std::array<size_t, operand_num_tensor_indices>
-          operand_rhs_tensorindex_vals = {{OperandRhsTensorIndices::value...}};
+          operand_tensorindex_vals = {{OperandTensorIndices::value...}};
       // to fill
-      std::array<size_t, operand_num_tensor_indices>
-          operand_rhs_tensor_multi_index;
+      std::array<size_t, operand_num_tensor_indices> operand_tensor_multi_index;
 
       for (size_t i = 0; i < operand_num_tensor_indices; i++) {
-        gsl::at(operand_rhs_tensor_multi_index, i) =
+        gsl::at(operand_tensor_multi_index, i) =
             gsl::at(lhs_tensor_multi_index,
                     static_cast<unsigned long>(std::distance(
                         lhs_tensorindex_vals.begin(),
                         alg::find(lhs_tensorindex_vals,
-                                  gsl::at(operand_rhs_tensorindex_vals, i)))));
+                                  gsl::at(operand_tensorindex_vals, i)))));
       }
-      return operand_rhs_tensor_multi_index;
+      return operand_tensor_multi_index;
     }
   };
 
