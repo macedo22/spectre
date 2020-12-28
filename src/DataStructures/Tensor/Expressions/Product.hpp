@@ -10,7 +10,6 @@
 #include <cstddef>
 
 #include "DataStructures/Tensor/Expressions/Contract.hpp"
-#include "DataStructures/Tensor/Expressions/LhsTensorSymmAndIndices.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Structure.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
