@@ -84,30 +84,6 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, ArgsList1<Args1...>,
   OuterProduct(const T1& t1, const T2& t2)
       : t1_(std::move(t1)), t2_(std::move(t2)) {}
 
-  /// \brief Get a product expression operand's generic indices in the order
-  /// they appear in the generic indices of the LHS outer product
-  ///
-  /// \details
-  /// `LhsTensorIndexList` represents the list of generic indices of the outer
-  /// product of the two operands from the RHS product expression, potentially
-  /// reordered on the LHS. `OperandTensorIndexList` represents one such
-  /// operand's generic indices in the order they appear in the RHS expression.
-  ///
-  /// Example: Let `ti_a_t` denote the type of `ti_a`, and apply the same
-  /// convention for other generic indices. If `LhsTensorIndexList` is
-  /// <ti_a_t, ti_A_t, ti_c_t, ti_b_t> and `OperandTensorIndexList` is
-  /// <ti_b_t, ti_A_t>, then this alias will evaluate to <ti_A_t, ti_b_t>.
-  ///
-  /// \tparam LhsTensorIndexList the list of TensorIndexs of the outer product
-  /// on the LHS
-  /// \tparam OperandTensorIndexList the list of TensorIndexs of an operand in
-  /// the RHS expression
-  template <typename LhsTensorIndexList, typename OperandTensorIndexList>
-  using get_operand_lhs_tensorindex_list = tmpl::filter<
-      LhsTensorIndexList,
-      tmpl::bind<tmpl::found, tmpl::pin<OperandTensorIndexList>,
-                 tmpl::bind<std::is_same, tmpl::_1, tmpl::parent<tmpl::_1>>>>;
-
   template <typename OperandTensorIndexList>
   struct GetOpTensorMultiIndex;
 
