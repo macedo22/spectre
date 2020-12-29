@@ -69,40 +69,40 @@ void test_rank_0_outer_product(const DataType& used_for_size) noexcept {
   Tensor<DataType, Symmetry<2, 1>,
          index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                     SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
-      Sll(used_for_size);
-  create_tensor(make_not_null(&Sll));
+      Tll(used_for_size);
+  create_tensor(make_not_null(&Tll));
 
-  // \f$L_{ai} = R * S_{ai}\f$
+  // \f$L_{ai} = R * T_{ai}\f$
   const Tensor<DataType, Symmetry<2, 1>,
                index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                           SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
-      Lai_from_R_Sai =
-          TensorExpressions::evaluate<ti_a, ti_i>(R() * Sll(ti_a, ti_i));
-  // \f$L_{ia} = R * S_{ai}\f$
+      Lai_from_R_Tai =
+          TensorExpressions::evaluate<ti_a, ti_i>(R() * Tll(ti_a, ti_i));
+  // \f$L_{ia} = R * T_{ai}\f$
   const Tensor<DataType, Symmetry<2, 1>,
                index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
                           SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
-      Lia_from_R_Sai =
-          TensorExpressions::evaluate<ti_i, ti_a>(R() * Sll(ti_a, ti_i));
-  // \f$L_{ai} = S_{ai} * R\f$
+      Lia_from_R_Tai =
+          TensorExpressions::evaluate<ti_i, ti_a>(R() * Tll(ti_a, ti_i));
+  // \f$L_{ai} = T_{ai} * R\f$
   const Tensor<DataType, Symmetry<2, 1>,
                index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                           SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
-      Lai_from_Sai_R =
-          TensorExpressions::evaluate<ti_a, ti_i>(Sll(ti_a, ti_i) * R());
-  // \f$L_{ia} = S_{ai} * R\f$
+      Lai_from_Tai_R =
+          TensorExpressions::evaluate<ti_a, ti_i>(Tll(ti_a, ti_i) * R());
+  // \f$L_{ia} = T_{ai} * R\f$
   const Tensor<DataType, Symmetry<2, 1>,
                index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
                           SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
-      Lia_from_Sai_R =
-          TensorExpressions::evaluate<ti_i, ti_a>(Sll(ti_a, ti_i) * R());
+      Lia_from_Tai_R =
+          TensorExpressions::evaluate<ti_i, ti_a>(Tll(ti_a, ti_i) * R());
 
   for (size_t a = 0; a < 4; a++) {
     for (size_t i = 0; i < 4; i++) {
-      CHECK(Lai_from_R_Sai.get(a, i) == R.get() * Sll.get(a, i));
-      CHECK(Lia_from_R_Sai.get(i, a) == R.get() * Sll.get(a, i));
-      CHECK(Lai_from_Sai_R.get(a, i) == Sll.get(a, i) * R.get());
-      CHECK(Lia_from_Sai_R.get(i, a) == Sll.get(a, i) * R.get());
+      CHECK(Lai_from_R_Tai.get(a, i) == R.get() * Tll.get(a, i));
+      CHECK(Lia_from_R_Tai.get(i, a) == R.get() * Tll.get(a, i));
+      CHECK(Lai_from_Tai_R.get(a, i) == Tll.get(a, i) * R.get());
+      CHECK(Lia_from_Tai_R.get(i, a) == Tll.get(a, i) * R.get());
     }
   }
 }
