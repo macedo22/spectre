@@ -568,25 +568,6 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.OuterProduct1By1",
   }
 }
 
-SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.InnerProduct1By1",
-                  "[DataStructures][Unit]") {
-  Tensor<double, Symmetry<1>,
-         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
-      Ru{};
-  std::iota(Ru.begin(), Ru.end(), 0.0);
-  Tensor<double, Symmetry<1>,
-         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
-      Sl{};
-  std::iota(Sl.begin(), Sl.end(), 0.0);
-  auto L = TensorExpressions::evaluate(Ru(ti_A) * Sl(ti_a));
-
-  double expected_sum = 0.0;
-  for (size_t a = 0; a < 4; a++) {
-    expected_sum += (Ru.get(a) * Sl.get(a));
-  }
-  CHECK(L.get() == expected_sum);
-}
-
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.InnerProduct2By2",
                   "[DataStructures][Unit]") {
   Tensor<double, Symmetry<2, 1>,
