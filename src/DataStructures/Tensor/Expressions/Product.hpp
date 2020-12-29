@@ -36,11 +36,10 @@ struct OuterProductType<T1, T2, SymmList1<Symm1...>, SymmList2<Symm2...>> {
 }  // namespace detail
 
 /// \ingroup TensorExpressionsGroup
+/// \brief Defines ET for the outer product of two tensor expressions
 ///
-/// \tparam T1 eh
-/// \tparam T2 eh
-/// \tparam IndexList1 eh
-/// \tparam IndexList2 eh
+/// \tparam T1 the first operand in the outer product expression
+/// \tparam T2 the second operand in the outer product expression
 template <typename T1, typename T2,
           typename IndexList1 = typename T1::index_list,
           typename IndexList2 = typename T2::index_list,
