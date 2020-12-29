@@ -43,7 +43,9 @@ void test_rank_0_outer_product(const DataType& used_for_size) noexcept {
     create_tensor(make_not_null(&R));
   }
 
+  // \f$L = R * R\f$
   CHECK(TensorExpressions::evaluate(R() * R()).get() == R.get() * R.get());
+  // \f$L = R * R * R\f$
   CHECK(TensorExpressions::evaluate(R() * R() * R()).get() ==
         R.get() * R.get() * R.get());
 
@@ -115,24 +117,6 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Product",
                   "[DataStructures][Unit]") {
   test_products(std::numeric_limits<double>::signaling_NaN());
   test_products(DataVector(5, std::numeric_limits<double>::signaling_NaN()));
-}
-
-SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.OuterProduct0By2",
-                  "[DataStructures][Unit]") {
-  const Tensor<double> R{{{4.2}}};
-  Tensor<double, Symmetry<1, 1>,
-         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
-                    SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
-      Sll{};
-  std::iota(Sll.begin(), Sll.end(), 0.0);
-  auto L_ab =
-      TensorExpressions::evaluate<ti_a, ti_b>(R() * Sll(ti_a, ti_b));
-
-  for (size_t a = 0; a < 4; a++) {
-    for (size_t b = 0; b < 4; b++) {
-      CHECK(L_ab.get(a, b) == 4.2 * Sll.get(a, b));
-    }
-  }
 }
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.OuterProduct1By1",
