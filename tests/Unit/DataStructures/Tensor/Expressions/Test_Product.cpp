@@ -809,66 +809,66 @@ void test_rank_2_inner_product(const DataType& used_for_size) noexcept {
       Rll(used_for_size);
   create_tensor(make_not_null(&Rll));
   Tensor<DataType, Symmetry<2, 1>,
-         index_list<lower_spacetime_index, lower_spacetime_index>>
-      Sll(used_for_size);
-  create_tensor(make_not_null(&Sll));
-  Tensor<DataType, Symmetry<2, 1>,
          index_list<upper_spacetime_index, upper_spacetime_index>>
       Ruu(used_for_size);
   create_tensor(make_not_null(&Ruu));
-  Tensor<DataType, Symmetry<2, 1>,
-         index_list<upper_spacetime_index, upper_spacetime_index>>
-      Suu(used_for_size);
-  create_tensor(make_not_null(&Suu));
   Tensor<DataType, Symmetry<2, 1>,
          index_list<lower_spacetime_index, upper_spacetime_index>>
       Rlu(used_for_size);
   create_tensor(make_not_null(&Rlu));
   Tensor<DataType, Symmetry<2, 1>,
-         index_list<lower_spacetime_index, upper_spacetime_index>>
-      Slu(used_for_size);
-  create_tensor(make_not_null(&Slu));
-  Tensor<DataType, Symmetry<2, 1>,
          index_list<upper_spacetime_index, lower_spacetime_index>>
       Rul(used_for_size);
   create_tensor(make_not_null(&Rul));
-  Tensor<DataType, Symmetry<2, 1>,
-         index_list<upper_spacetime_index, lower_spacetime_index>>
-      Sul(used_for_size);
-  create_tensor(make_not_null(&Sul));
 
+  // \f$L = R_{ab} * R^{ab}\f$
   const Tensor<DataType> L_abAB_product =
-      TensorExpressions::evaluate(Rll(ti_a, ti_b) * Suu(ti_A, ti_B));
+      TensorExpressions::evaluate(Rll(ti_a, ti_b) * Ruu(ti_A, ti_B));
+  // \f$L = R_{ab} * R^{ba}\f$
   const Tensor<DataType> L_abBA_product =
-      TensorExpressions::evaluate(Rll(ti_a, ti_b) * Suu(ti_B, ti_A));
+      TensorExpressions::evaluate(Rll(ti_a, ti_b) * Ruu(ti_B, ti_A));
+  // \f$L = R_{ba} * R^{ab}\f$
   const Tensor<DataType> L_baAB_product =
-      TensorExpressions::evaluate(Rll(ti_b, ti_a) * Suu(ti_A, ti_B));
+      TensorExpressions::evaluate(Rll(ti_b, ti_a) * Ruu(ti_A, ti_B));
+  // \f$L = R_{ba} * R^{ba}\f$
   const Tensor<DataType> L_baBA_product =
-      TensorExpressions::evaluate(Rll(ti_b, ti_a) * Suu(ti_B, ti_A));
+      TensorExpressions::evaluate(Rll(ti_b, ti_a) * Ruu(ti_B, ti_A));
+  // \f$L = R^{ab} * R_{ab}\f$
   const Tensor<DataType> L_ABab_product =
-      TensorExpressions::evaluate(Ruu(ti_A, ti_B) * Sll(ti_a, ti_b));
+      TensorExpressions::evaluate(Ruu(ti_A, ti_B) * Rll(ti_a, ti_b));
+  // \f$L = R^{ab} * R_{ba}\f$
   const Tensor<DataType> L_ABba_product =
-      TensorExpressions::evaluate(Ruu(ti_A, ti_B) * Sll(ti_b, ti_a));
+      TensorExpressions::evaluate(Ruu(ti_A, ti_B) * Rll(ti_b, ti_a));
+  // \f$L = R^{ba} * R_{ab}\f$
   const Tensor<DataType> L_BAab_product =
-      TensorExpressions::evaluate(Ruu(ti_B, ti_A) * Sll(ti_a, ti_b));
+      TensorExpressions::evaluate(Ruu(ti_B, ti_A) * Rll(ti_a, ti_b));
+  // \f$L = R^{ba} * R_{ba}\f$
   const Tensor<DataType> L_BAba_product =
-      TensorExpressions::evaluate(Ruu(ti_B, ti_A) * Sll(ti_b, ti_a));
+      TensorExpressions::evaluate(Ruu(ti_B, ti_A) * Rll(ti_b, ti_a));
+  // \f$L = R_{a}{}^{b} * R^{a}{}_{b}\f$
   const Tensor<DataType> L_aBAb_product =
-      TensorExpressions::evaluate(Rlu(ti_a, ti_B) * Sul(ti_A, ti_b));
-  const Tensor<DataType> L_AbaB_product =
-      TensorExpressions::evaluate(Rul(ti_A, ti_b) * Slu(ti_a, ti_B));
+      TensorExpressions::evaluate(Rlu(ti_a, ti_B) * Rul(ti_A, ti_b));
+  // \f$L = R_{a}{}^{b} * R_{b}{}^{a}\f$
   const Tensor<DataType> L_aBbA_product =
-      TensorExpressions::evaluate(Rlu(ti_a, ti_B) * Slu(ti_b, ti_A));
+      TensorExpressions::evaluate(Rlu(ti_a, ti_B) * Rlu(ti_b, ti_A));
+  // \f$L = R^{b}{}_{a} * R^{a}{}_{b}\f$
   const Tensor<DataType> L_BaAb_product =
-      TensorExpressions::evaluate(Rul(ti_B, ti_a) * Sul(ti_A, ti_b));
-  const Tensor<DataType> L_AbBa_product =
-      TensorExpressions::evaluate(Rul(ti_A, ti_b) * Sul(ti_B, ti_a));
+      TensorExpressions::evaluate(Rul(ti_B, ti_a) * Rul(ti_A, ti_b));
+  // \f$L = R^{b}{}_{a} * R_{b}{}^{a}\f$
   const Tensor<DataType> L_BabA_product =
-      TensorExpressions::evaluate(Rul(ti_B, ti_a) * Slu(ti_b, ti_A));
+      TensorExpressions::evaluate(Rul(ti_B, ti_a) * Rlu(ti_b, ti_A));
+  // \f$L = R^{a}{}_{b} * R_{a}{}^{b}\f$
+  const Tensor<DataType> L_AbaB_product =
+      TensorExpressions::evaluate(Rul(ti_A, ti_b) * Rlu(ti_a, ti_B));
+  // \f$L = R^{a}{}_{b} * R^{b}{}_{a}\f$
+  const Tensor<DataType> L_AbBa_product =
+      TensorExpressions::evaluate(Rul(ti_A, ti_b) * Rul(ti_B, ti_a));
+  // \f$L = R_{b}{}^{a} * R_{a}{}^{b}\f$
   const Tensor<DataType> L_bAaB_product =
-      TensorExpressions::evaluate(Rlu(ti_b, ti_A) * Slu(ti_a, ti_B));
+      TensorExpressions::evaluate(Rlu(ti_b, ti_A) * Rlu(ti_a, ti_B));
+  // \f$L = R_{b}{}^{a} * R^{b}{}_{a}\f$
   const Tensor<DataType> L_bABa_product =
-      TensorExpressions::evaluate(Rlu(ti_b, ti_A) * Sul(ti_B, ti_a));
+      TensorExpressions::evaluate(Rlu(ti_b, ti_A) * Rul(ti_B, ti_a));
 
   DataType L_abAB_expected_product =
       make_with_value<DataType>(used_for_size, 0.0);
@@ -905,22 +905,22 @@ void test_rank_2_inner_product(const DataType& used_for_size) noexcept {
 
   for (size_t a = 0; a < 4; a++) {
     for (size_t b = 0; b < 4; b++) {
-      L_abAB_expected_product += (Rll.get(a, b) * Suu.get(a, b));
-      L_abBA_expected_product += (Rll.get(a, b) * Suu.get(b, a));
-      L_baAB_expected_product += (Rll.get(b, a) * Suu.get(a, b));
-      L_baBA_expected_product += (Rll.get(b, a) * Suu.get(b, a));
-      L_ABab_expected_product += (Ruu.get(a, b) * Sll.get(a, b));
-      L_ABba_expected_product += (Ruu.get(a, b) * Sll.get(b, a));
-      L_BAab_expected_product += (Ruu.get(b, a) * Sll.get(a, b));
-      L_BAba_expected_product += (Ruu.get(b, a) * Sll.get(b, a));
-      L_aBAb_expected_product += (Rlu.get(a, b) * Sul.get(a, b));
-      L_AbaB_expected_product += (Rul.get(a, b) * Slu.get(a, b));
-      L_aBbA_expected_product += (Rlu.get(a, b) * Slu.get(b, a));
-      L_BaAb_expected_product += (Rlu.get(b, a) * Sul.get(a, b));
-      L_AbBa_expected_product += (Rul.get(a, b) * Sul.get(b, a));
-      L_BabA_expected_product += (Ruu.get(b, a) * Sll.get(b, a));
-      L_bAaB_expected_product += (Ruu.get(b, a) * Sll.get(a, b));
-      L_bABa_expected_product += (Ruu.get(b, a) * Sll.get(b, a));
+      L_abAB_expected_product += (Rll.get(a, b) * Ruu.get(a, b));
+      L_abBA_expected_product += (Rll.get(a, b) * Ruu.get(b, a));
+      L_baAB_expected_product += (Rll.get(b, a) * Ruu.get(a, b));
+      L_baBA_expected_product += (Rll.get(b, a) * Ruu.get(b, a));
+      L_ABab_expected_product += (Ruu.get(a, b) * Rll.get(a, b));
+      L_ABba_expected_product += (Ruu.get(a, b) * Rll.get(b, a));
+      L_BAab_expected_product += (Ruu.get(b, a) * Rll.get(a, b));
+      L_BAba_expected_product += (Ruu.get(b, a) * Rll.get(b, a));
+      L_aBAb_expected_product += (Rlu.get(a, b) * Rul.get(a, b));
+      L_AbaB_expected_product += (Rul.get(a, b) * Rlu.get(a, b));
+      L_aBbA_expected_product += (Rlu.get(a, b) * Rlu.get(b, a));
+      L_BaAb_expected_product += (Rlu.get(b, a) * Rul.get(a, b));
+      L_AbBa_expected_product += (Rul.get(a, b) * Rul.get(b, a));
+      L_BabA_expected_product += (Ruu.get(b, a) * Rll.get(b, a));
+      L_bAaB_expected_product += (Ruu.get(b, a) * Rll.get(a, b));
+      L_bABa_expected_product += (Ruu.get(b, a) * Rll.get(b, a));
     }
   }
   CHECK(L_abAB_product.get() == L_abAB_expected_product);
