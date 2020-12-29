@@ -70,9 +70,9 @@ void test_rank_0_outer_product(const DataType& used_for_size) noexcept {
       Su(used_for_size);
   create_tensor(make_not_null(&Su));
 
+  // \f$L^{a} = R * S^{a}\f$
   // Use explicit type (vs auto) for LHS Tensor so the compiler checks the
   // return type of `evaluate`
-  // \f$L^{a} = R * S^{a}\f$
   const decltype(Su) LA_from_R_SA =
       TensorExpressions::evaluate<ti_A>(R() * Su(ti_A));
   // \f$L^{a} = S^{a} * R\f$
@@ -267,9 +267,9 @@ void test_ranks_0_1_2_outer_product(const DataType& used_for_size) noexcept {
 
   // \f$R * S^{a} * T_{bi}\f$
   const auto R_SA_Tbi_expr = R() * Su(ti_A) * Tll(ti_b, ti_i);
+  // \f$L^{a}{}_{bi} = R * S^{a} * T_{bi}\f$
   // Use explicit type (vs auto) for LHS Tensor so the compiler checks the
   // return type of `evaluate`
-  // \f$L^{a}{}_{bi} = R * S^{a} * T_{bi}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
                index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
                           SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
