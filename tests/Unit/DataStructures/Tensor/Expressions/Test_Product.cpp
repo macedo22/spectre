@@ -908,6 +908,97 @@ void test_rank_2_inner_product(const DataType& used_for_size) noexcept {
   CHECK(L_AiIa_product.get() == L_AiIa_expected_product);
 }
 
+/// \ingroup TestingFrameworkGroup
+/// \brief Test products involving both inner and outer products of indices is
+/// correctly evaluated
+///
+/// \details
+/// The inner product cases tested are:
+/// - (rank 0) = (upper rank 1) x (lower rank 1)
+/// - (rank 0) = (lower rank 1) x (upper rank 1)
+///
+/// \tparam DataType the type of data being stored in the product operands
+template <typename DataType>
+void test_inner_and_outer_product(const DataType& used_for_size) noexcept {
+  Tensor<DataType, Symmetry<1, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      Rll(used_for_size);
+  create_tensor(make_not_null(&Rll));
+  Tensor<DataType, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                    SpacetimeIndex<2, UpLo::Lo, Frame::Grid>>>
+      Sul(used_for_size);
+  create_tensor(make_not_null(&Sul));
+  const Tensor<DataType, Symmetry<2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                          SpacetimeIndex<2, UpLo::Lo, Frame::Grid>>>
+      L_abBc_to_ac = TensorExpressions::evaluate<ti_a, ti_c>(Rll(ti_a, ti_b) *
+                                                             Sul(ti_B, ti_c));
+  const Tensor<DataType, Symmetry<2, 1>,
+               index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Grid>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      L_abBc_to_ca = TensorExpressions::evaluate<ti_c, ti_a>(Rll(ti_a, ti_b) *
+                                                             Sul(ti_B, ti_c));
+
+  for (size_t a = 0; a < 4; a++) {
+    for (size_t c = 0; c < 3; c++) {
+      DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
+      ;
+      for (size_t b = 0; b < 4; b++) {
+        expected_sum += (Rll.get(a, b) * Sul.get(b, c));
+      }
+      CHECK(L_abBc_to_ac.get(a, c) == expected_sum);
+      CHECK(L_abBc_to_ca.get(c, a) == expected_sum);
+    }
+  }
+
+  Tensor<DataType, Symmetry<1>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+      Ru(used_for_size);
+  create_tensor(make_not_null(&Ru));
+  Tensor<DataType, Symmetry<1>,
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      Sl(used_for_size);
+  create_tensor(make_not_null(&Sl));
+  Tensor<DataType, Symmetry<1>,
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      Tl(used_for_size);
+  create_tensor(make_not_null(&Tl));
+
+  const Tensor<DataType, Symmetry<1>,
+               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      L_Aab_to_b =
+          TensorExpressions::evaluate<ti_b>(Ru(ti_A) * Sl(ti_a) * Tl(ti_b));
+
+  for (size_t b = 0; b < 4; b++) {
+    DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
+    for (size_t a = 0; a < 4; a++) {
+      expected_sum += (Ru.get(a) * Sl.get(a) * Tl.get(b));
+    }
+    CHECK(L_Aab_to_b.get(b) == expected_sum);
+  }
+
+  Tensor<DataType, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      Tll(used_for_size);
+  create_tensor(make_not_null(&Tll));
+
+  const decltype(Tll) L_Aabc_to_bc = TensorExpressions::evaluate<ti_b, ti_c>(
+      Ru(ti_A) * Sl(ti_a) * Tll(ti_b, ti_c));
+
+  for (size_t c = 0; c < 4; c++) {
+    for (size_t b = 0; b < 4; b++) {
+      DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
+      for (size_t a = 0; a < 4; a++) {
+        expected_sum += (Ru.get(a) * Sl.get(a) * Tll.get(b, c));
+      }
+      CHECK(L_Aabc_to_bc.get(b, c) == expected_sum);
+    }
+  }
+}
+
 template <typename DataType>
 void test_products(const DataType& used_for_size) noexcept {
   test_rank_0_outer_product(used_for_size);
@@ -917,6 +1008,8 @@ void test_products(const DataType& used_for_size) noexcept {
 
   test_rank_1_inner_product(used_for_size);
   test_rank_2_inner_product(used_for_size);
+
+  test_inner_and_outer_product(used_for_size);
 }
 }  // namespace
 
