@@ -148,14 +148,28 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
 }  // namespace TensorExpressions
 
 /// \ingroup TensorExpressionsGroup
+/// \brief Returns the expression representing the product of two tensor
+/// expressions
 ///
-/// \tparam T1 eh
-/// \tparam T2 eh
-/// \tparam ArgsList1 eh
-/// \tparam ArgsList2 eh
-/// \param t1 eh
-/// \param t2 eh
-/// \return eh
+/// \details
+/// If the two operands have N pairs of indices that need to be contracted, the
+/// returned expression will be an `OuterProduct` expression nested inside N
+/// `TensorContract` expressions. This represents computing the inner product
+/// of the outer product of the two operands. If the operands do not have any
+/// indices to be contracted, the returned expression will be an `OuterProduct`.
+///
+/// The two arguments are expressions that contain the two operands of the
+/// product, where the types of the operands are `T1` and `T2`.
+///
+/// \tparam T1 the type of the first operand of the product, a Tensor or
+/// TensorExpression
+/// \tparam T2 the type of the second operand of the product, a Tensor or
+/// TensorExpression
+/// \tparam ArgsList1 the `TensorIndex`s of the first operand
+/// \tparam ArgsList2 the `TensorIndex`s of the second operand
+/// \param t1 the expression of the first operand of the product
+/// \param t2 the expression of the second operand of the product
+/// \return the expression representing the product of two tensor expressions
 template <typename T1, typename T2, typename ArgsList1, typename ArgsList2>
 SPECTRE_ALWAYS_INLINE auto operator*(
     const TensorExpression<T1, typename T1::type, typename T1::symmetry,
