@@ -197,8 +197,8 @@ void test_rank_1_outer_product(const DataType& used_for_size) noexcept {
   create_tensor(make_not_null(&Tu));
 
   Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                    SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpatialIndex<4, UpLo::Lo, Frame::Grid>>>
       Gll(used_for_size);
   create_tensor(make_not_null(&Gll));
 
@@ -230,6 +230,30 @@ void test_rank_1_outer_product(const DataType& used_for_size) noexcept {
       for (size_t i = 0; i < 3; i++) {
         CHECK(LJAi_from_Ri_SA_TJ.get(j, a, i) ==
               Rl.get(i) * Su.get(a) * Tu.get(j));
+      }
+    }
+  }
+
+  // \f$L_{k}{}^{c}{}_{d} = S^{c} * G_{dk}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpatialIndex<4, UpLo::Lo, Frame::Grid>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      LkCd_from_SC_Gdk = TensorExpressions::evaluate<ti_k, ti_C, ti_d>(
+          Su(ti_C) * Gll(ti_d, ti_k));
+  // \f$L^{c}{}_{dk} = G_{dk} * S^{c}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Grid>>>
+      LCdk_from_Gdk_SC = TensorExpressions::evaluate<ti_C, ti_d, ti_k>(
+          Gll(ti_d, ti_k) * Su(ti_C));
+
+  for (size_t k = 0; k < 4; k++) {
+    for (size_t c = 0; c < 4; c++) {
+      for (size_t d = 0; d < 4; d++) {
+        CHECK(LkCd_from_SC_Gdk.get(k, c, d) == Su.get(c) * Gll.get(d, k));
+        CHECK(LCdk_from_Gdk_SC.get(c, d, k) == Gll.get(d, k) * Su.get(c));
       }
     }
   }
