@@ -794,95 +794,118 @@ void test_rank_1_inner_product(const DataType& used_for_size) noexcept {
 /// \brief Test the inner product of two rank 2 tensors is correctly evaluated
 ///
 /// \details
-/// The sixteen inner product cases all contract both pairs of indices of the
-/// two tensor operands to a resulting rank 0 tensor. The sixteen cases are
-/// permutations of the positions of contracted pairs and their valences.
+/// All cases in this test contract both pairs of indices of the two tensor
+/// operands to a resulting rank 0 tensor. For each case, the two tensor
+/// operands have one spacetime and one spatial index. Each case is a
+/// permutation of the positions of contracted pairs and their valences.
 ///
 /// \tparam DataType the type of data being stored in the product operands
 template <typename DataType>
 void test_rank_2_inner_product(const DataType& used_for_size) noexcept {
   using lower_spacetime_index = SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>;
   using upper_spacetime_index = SpacetimeIndex<3, UpLo::Up, Frame::Inertial>;
+  using lower_spatial_index = SpatialIndex<2, UpLo::Lo, Frame::Inertial>;
+  using upper_spatial_index = SpatialIndex<2, UpLo::Up, Frame::Inertial>;
 
+  // All tensor variables starting with 'R' refer to tensors whose first index
+  // is a spacetime index and whose second index is a spatial index. Conversely,
+  // all tensor variables starting with 'S' refer to tensors whose first index
+  // is a spatial index and whose second index is a spacetime index.
   Tensor<DataType, Symmetry<2, 1>,
-         index_list<lower_spacetime_index, lower_spacetime_index>>
+         index_list<lower_spacetime_index, lower_spatial_index>>
       Rll(used_for_size);
   create_tensor(make_not_null(&Rll));
   Tensor<DataType, Symmetry<2, 1>,
-         index_list<upper_spacetime_index, upper_spacetime_index>>
+         index_list<lower_spatial_index, lower_spacetime_index>>
+      Sll(used_for_size);
+  create_tensor(make_not_null(&Sll));
+  Tensor<DataType, Symmetry<2, 1>,
+         index_list<upper_spacetime_index, upper_spatial_index>>
       Ruu(used_for_size);
   create_tensor(make_not_null(&Ruu));
   Tensor<DataType, Symmetry<2, 1>,
-         index_list<lower_spacetime_index, upper_spacetime_index>>
+         index_list<upper_spatial_index, upper_spacetime_index>>
+      Suu(used_for_size);
+  create_tensor(make_not_null(&Suu));
+  Tensor<DataType, Symmetry<2, 1>,
+         index_list<lower_spacetime_index, upper_spatial_index>>
       Rlu(used_for_size);
   create_tensor(make_not_null(&Rlu));
   Tensor<DataType, Symmetry<2, 1>,
-         index_list<upper_spacetime_index, lower_spacetime_index>>
+         index_list<lower_spatial_index, upper_spacetime_index>>
+      Slu(used_for_size);
+  create_tensor(make_not_null(&Slu));
+  Tensor<DataType, Symmetry<2, 1>,
+         index_list<upper_spacetime_index, lower_spatial_index>>
       Rul(used_for_size);
   create_tensor(make_not_null(&Rul));
+  Tensor<DataType, Symmetry<2, 1>,
+         index_list<upper_spatial_index, lower_spacetime_index>>
+      Sul(used_for_size);
+  create_tensor(make_not_null(&Sul));
 
-  // \f$L = R_{ab} * R^{ab}\f$
-  const Tensor<DataType> L_abAB_product =
-      TensorExpressions::evaluate(Rll(ti_a, ti_b) * Ruu(ti_A, ti_B));
-  // \f$L = R_{ab} * R^{ba}\f$
-  const Tensor<DataType> L_abBA_product =
-      TensorExpressions::evaluate(Rll(ti_a, ti_b) * Ruu(ti_B, ti_A));
-  // \f$L = R^{ab} * R_{ab}\f$
-  const Tensor<DataType> L_ABab_product =
-      TensorExpressions::evaluate(Ruu(ti_A, ti_B) * Rll(ti_a, ti_b));
-  // \f$L = R^{ab} * R_{ba}\f$
-  const Tensor<DataType> L_ABba_product =
-      TensorExpressions::evaluate(Ruu(ti_A, ti_B) * Rll(ti_b, ti_a));
-  // \f$L = R_{a}{}^{b} * R^{a}{}_{b}\f$
-  const Tensor<DataType> L_aBAb_product =
-      TensorExpressions::evaluate(Rlu(ti_a, ti_B) * Rul(ti_A, ti_b));
-  // \f$L = R_{a}{}^{b} * R_{b}{}^{a}\f$
-  const Tensor<DataType> L_aBbA_product =
-      TensorExpressions::evaluate(Rlu(ti_a, ti_B) * Rlu(ti_b, ti_A));
-  // \f$L = R^{a}{}_{b} * R_{a}{}^{b}\f$
-  const Tensor<DataType> L_AbaB_product =
-      TensorExpressions::evaluate(Rul(ti_A, ti_b) * Rlu(ti_a, ti_B));
-  // \f$L = R^{a}{}_{b} * R^{b}{}_{a}\f$
-  const Tensor<DataType> L_AbBa_product =
-      TensorExpressions::evaluate(Rul(ti_A, ti_b) * Rul(ti_B, ti_a));
+  // \f$L = R_{ai} * R^{ai}\f$
+  const Tensor<DataType> L_aiAI_product =
+      TensorExpressions::evaluate(Rll(ti_a, ti_i) * Ruu(ti_A, ti_I));
+  // \f$L = R_{ai} * R^{ia}\f$
+  const Tensor<DataType> L_aiIA_product =
+      TensorExpressions::evaluate(Rll(ti_a, ti_i) * Suu(ti_I, ti_A));
+  // \f$L = R^{ai} * R_{ai}\f$
+  const Tensor<DataType> L_AIai_product =
+      TensorExpressions::evaluate(Ruu(ti_A, ti_I) * Rll(ti_a, ti_i));
+  // \f$L = R^{ai} * R_{ia}\f$
+  const Tensor<DataType> L_AIia_product =
+      TensorExpressions::evaluate(Ruu(ti_A, ti_I) * Sll(ti_i, ti_a));
+  // \f$L = R_{a}{}^{i} * R^{a}{}_{i}\f$
+  const Tensor<DataType> L_aIAi_product =
+      TensorExpressions::evaluate(Rlu(ti_a, ti_I) * Rul(ti_A, ti_i));
+  // \f$L = R_{a}{}^{i} * R_{i}{}^{a}\f$
+  const Tensor<DataType> L_aIiA_product =
+      TensorExpressions::evaluate(Rlu(ti_a, ti_I) * Slu(ti_i, ti_A));
+  // \f$L = R^{a}{}_{i} * R_{a}{}^{i}\f$
+  const Tensor<DataType> L_AiaI_product =
+      TensorExpressions::evaluate(Rul(ti_A, ti_i) * Rlu(ti_a, ti_I));
+  // \f$L = R^{a}{}_{i} * R^{i}{}_{a}\f$
+  const Tensor<DataType> L_AiIa_product =
+      TensorExpressions::evaluate(Rul(ti_A, ti_i) * Sul(ti_I, ti_a));
 
-  DataType L_abAB_expected_product =
+  DataType L_aiAI_expected_product =
       make_with_value<DataType>(used_for_size, 0.0);
-  DataType L_abBA_expected_product =
+  DataType L_aiIA_expected_product =
       make_with_value<DataType>(used_for_size, 0.0);
-  DataType L_ABab_expected_product =
+  DataType L_AIai_expected_product =
       make_with_value<DataType>(used_for_size, 0.0);
-  DataType L_ABba_expected_product =
+  DataType L_AIia_expected_product =
       make_with_value<DataType>(used_for_size, 0.0);
-  DataType L_aBAb_expected_product =
+  DataType L_aIAi_expected_product =
       make_with_value<DataType>(used_for_size, 0.0);
-  DataType L_aBbA_expected_product =
+  DataType L_aIiA_expected_product =
       make_with_value<DataType>(used_for_size, 0.0);
-  DataType L_AbaB_expected_product =
+  DataType L_AiaI_expected_product =
       make_with_value<DataType>(used_for_size, 0.0);
-  DataType L_AbBa_expected_product =
+  DataType L_AiIa_expected_product =
       make_with_value<DataType>(used_for_size, 0.0);
 
-  for (size_t a = 0; a < 4; a++) {
-    for (size_t b = 0; b < 4; b++) {
-      L_abAB_expected_product += (Rll.get(a, b) * Ruu.get(a, b));
-      L_abBA_expected_product += (Rll.get(a, b) * Ruu.get(b, a));
-      L_ABab_expected_product += (Ruu.get(a, b) * Rll.get(a, b));
-      L_ABba_expected_product += (Ruu.get(a, b) * Rll.get(b, a));
-      L_aBAb_expected_product += (Rlu.get(a, b) * Rul.get(a, b));
-      L_aBbA_expected_product += (Rlu.get(a, b) * Rlu.get(b, a));
-      L_AbaB_expected_product += (Rul.get(a, b) * Rlu.get(a, b));
-      L_AbBa_expected_product += (Rul.get(a, b) * Rul.get(b, a));
+  for (size_t a = 0; a < lower_spacetime_index::dim; a++) {
+    for (size_t i = 0; i < lower_spatial_index::dim; i++) {
+      L_aiAI_expected_product += (Rll.get(a, i) * Ruu.get(a, i));
+      L_aiIA_expected_product += (Rll.get(a, i) * Suu.get(i, a));
+      L_AIai_expected_product += (Ruu.get(a, i) * Rll.get(a, i));
+      L_AIia_expected_product += (Ruu.get(a, i) * Sll.get(i, a));
+      L_aIAi_expected_product += (Rlu.get(a, i) * Rul.get(a, i));
+      L_aIiA_expected_product += (Rlu.get(a, i) * Slu.get(i, a));
+      L_AiaI_expected_product += (Rul.get(a, i) * Rlu.get(a, i));
+      L_AiIa_expected_product += (Rul.get(a, i) * Sul.get(i, a));
     }
   }
-  CHECK(L_abAB_product.get() == L_abAB_expected_product);
-  CHECK(L_abBA_product.get() == L_abBA_expected_product);
-  CHECK(L_ABab_product.get() == L_ABab_expected_product);
-  CHECK(L_ABba_product.get() == L_ABba_expected_product);
-  CHECK(L_aBAb_product.get() == L_aBAb_expected_product);
-  CHECK(L_aBbA_product.get() == L_aBbA_expected_product);
-  CHECK(L_AbaB_product.get() == L_AbaB_expected_product);
-  CHECK(L_AbBa_product.get() == L_AbBa_expected_product);
+  CHECK(L_aiAI_product.get() == L_aiAI_expected_product);
+  CHECK(L_aiIA_product.get() == L_aiIA_expected_product);
+  CHECK(L_AIai_product.get() == L_AIai_expected_product);
+  CHECK(L_AIia_product.get() == L_AIia_expected_product);
+  CHECK(L_aIAi_product.get() == L_aIAi_expected_product);
+  CHECK(L_aIiA_product.get() == L_aIiA_expected_product);
+  CHECK(L_AiaI_product.get() == L_AiaI_expected_product);
+  CHECK(L_AiIa_product.get() == L_AiIa_expected_product);
 }
 
 template <typename DataType>
