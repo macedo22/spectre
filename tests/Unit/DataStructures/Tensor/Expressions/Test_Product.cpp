@@ -213,35 +213,26 @@ void test_rank_1_outer_product(const DataType& used_for_size) noexcept {
 
   for (size_t i = 0; i < 3; i++) {
     for (size_t a = 0; a < 4; a++) {
-      const DataType expected_product = Rl.get(i) * Su.get(a);
-      CHECK(LAi_from_Ri_SA.get(a, i) == expected_product);
+      CHECK(LAi_from_Ri_SA.get(a, i) == Rl.get(i) * Su.get(a));
     }
   }
 
-  // // \f$L_{i}{}^{ab} = R_{i} * S^{a} * T^{b}\f$
-  // const Tensor<DataType, Symmetry<2, 1>,
-  //              index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
-  //                         SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
-  //                         SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
-  //     LiAB_from_Ri_SA_TB =
-  //         TensorExpressions::evaluate<ti_i, ti_A, ti_B>(Rl(ti_i) * Su(ti_A) *
-  //         Tu(ti_B));
-  // // \f$L^{i}{}_{ba} = R_{i} * S^{a} * T^{b}\f$
-  // const Tensor<DataType, Symmetry<2, 1>,
-  //              index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
-  //                         SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
-  //                         SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
-  //     LiAB_from_Ri_SA_TB =
-  //         TensorExpressions::evaluate<ti_i, ti_A, ti_B>(Rl(ti_i) * Su(ti_A) *
-  //         Tu(ti_B));
+  // \f$L_{ja}{}^{i} = R_{i} * S^{a} * T^{j}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                          SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
+      LJAi_from_Ri_SA_TJ = TensorExpressions::evaluate<ti_J, ti_A, ti_i>(
+          Rl(ti_i) * Su(ti_A) * Tu(ti_J));
 
-  // for (size_t i = 0; i < 3; i++) {
-  //   for (size_t a = 0; a < 4; a++) {
-  //     const DataType expected_product = Rl.get(i) * Su.get(a);
-  //     CHECK(LiA_from_Ri_SA.get(i, a) == expected_product);
-  //     CHECK(LAi_from_Ri_SA.get(a, i) == expected_product);
-  //   }
-  // }
+  for (size_t j = 0; j < 3; j++) {
+    for (size_t a = 0; a < 4; a++) {
+      for (size_t i = 0; i < 3; i++) {
+        CHECK(LJAi_from_Ri_SA_TJ.get(j, a, i) ==
+              Rl.get(i) * Su.get(a) * Tu.get(j));
+      }
+    }
+  }
 }
 
 /// \ingroup TestingFrameworkGroup
