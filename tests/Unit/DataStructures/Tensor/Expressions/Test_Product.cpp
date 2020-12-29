@@ -99,10 +99,13 @@ void test_rank_0_outer_product(const DataType& used_for_size) noexcept {
 
   for (size_t a = 0; a < 4; a++) {
     for (size_t i = 0; i < 4; i++) {
-      CHECK(Lai_from_R_Tai.get(a, i) == R.get() * Tll.get(a, i));
-      CHECK(Lia_from_R_Tai.get(i, a) == R.get() * Tll.get(a, i));
-      CHECK(Lai_from_Tai_R.get(a, i) == Tll.get(a, i) * R.get());
-      CHECK(Lia_from_Tai_R.get(i, a) == Tll.get(a, i) * R.get());
+      const DataType expected_R_Tai_product = R.get() * Tll.get(a, i);
+      CHECK(Lai_from_R_Tai.get(a, i) == expected_R_Tai_product);
+      CHECK(Lia_from_R_Tai.get(i, a) == expected_R_Tai_product);
+
+      const DataType expected_Tai_R_product = Tll.get(a, i) * R.get();
+      CHECK(Lai_from_Tai_R.get(a, i) == expected_Tai_R_product);
+      CHECK(Lia_from_Tai_R.get(i, a) == expected_Tai_R_product);
     }
   }
 }
@@ -132,7 +135,6 @@ void test_ranks_0_1_2_outer_product(const DataType& used_for_size) noexcept {
 
   // \f$R * S^{a} * T_{bi}\f$
   const auto R_SA_Tbi_expr = R() * Su(ti_A) * Tll(ti_b, ti_i);
-
   // \f$L^{a}{}_{bi} = R * S^{a} * T_{bi}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
                index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
@@ -153,28 +155,253 @@ void test_ranks_0_1_2_outer_product(const DataType& used_for_size) noexcept {
                           SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
                           SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
       LbAi_from_R_SA_Tbi =
-          TensorExpressions::evaluate<ti_A, ti_b, ti_i>(R_SA_Tbi_expr);
+          TensorExpressions::evaluate<ti_b, ti_A, ti_i>(R_SA_Tbi_expr);
   // \f$L_{bi}{}^{a} = R * S^{a} * T_{bi}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
                index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                           SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
                           SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
       LbiA_from_R_SA_Tbi =
-          TensorExpressions::evaluate<ti_A, ti_b, ti_i>(R_SA_Tbi_expr);
+          TensorExpressions::evaluate<ti_b, ti_i, ti_A>(R_SA_Tbi_expr);
   // \f$L_{i}{}^{a}{}_{b} = R * S^{a} * T_{bi}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
                index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
       LiAb_from_R_SA_Tbi =
           TensorExpressions::evaluate<ti_i, ti_A, ti_b>(R_SA_Tbi_expr);
   // \f$L_{ib}{}^{a} = R * S^{a} * T_{bi}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
                index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
       LibA_from_R_SA_Tbi =
           TensorExpressions::evaluate<ti_i, ti_b, ti_A>(R_SA_Tbi_expr);
+
+  // \f$R * T_{bi} * S^{a}\f$
+  const auto R_Tbi_SA_expr = R() * Tll(ti_b, ti_i) * Su(ti_A);
+  // \f$L^{a}{}_{bi} = R * T_{bi} * S^{a}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+      LAbi_from_R_Tbi_SA =
+          TensorExpressions::evaluate<ti_A, ti_b, ti_i>(R_Tbi_SA_expr);
+  // \f$L^{a}{}_{ib} = R * T_{bi} * S^{a}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+      LAib_from_R_Tbi_SA =
+          TensorExpressions::evaluate<ti_A, ti_i, ti_b>(R_Tbi_SA_expr);
+  // \f$L_{b}{}^{a}{}_{i} = R * T_{bi} * S^{a}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+      LbAi_from_R_Tbi_SA =
+          TensorExpressions::evaluate<ti_b, ti_A, ti_i>(R_Tbi_SA_expr);
+  // \f$L_{bi}{}^{a} = R * R * T_{bi} * S^{a}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      LbiA_from_R_Tbi_SA =
+          TensorExpressions::evaluate<ti_b, ti_i, ti_A>(R_Tbi_SA_expr);
+  // \f$L_{i}{}^{a}{}_{b} = R * T_{bi} * S^{a}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+      LiAb_from_R_Tbi_SA =
+          TensorExpressions::evaluate<ti_i, ti_A, ti_b>(R_Tbi_SA_expr);
+  // \f$L_{ib}{}^{a} = R * T_{bi} * S^{a}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      LibA_from_R_Tbi_SA =
+          TensorExpressions::evaluate<ti_i, ti_b, ti_A>(R_Tbi_SA_expr);
+
+  // \f$S^{a} * R * T_{bi}\f$
+  const auto SA_R_Tbi_expr = Su(ti_A) * R() * Tll(ti_b, ti_i);
+  // \f$L^{a}{}_{bi} = S^{a} * R * T_{bi}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+      LAbi_from_SA_R_Tbi =
+          TensorExpressions::evaluate<ti_A, ti_b, ti_i>(SA_R_Tbi_expr);
+  // \f$L^{a}{}_{ib} = S^{a} * R * T_{bi}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+      LAib_from_SA_R_Tbi =
+          TensorExpressions::evaluate<ti_A, ti_i, ti_b>(SA_R_Tbi_expr);
+  // \f$L_{b}{}^{a}{}_{i} = S^{a} * R * T_{bi}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+      LbAi_from_SA_R_Tbi =
+          TensorExpressions::evaluate<ti_b, ti_A, ti_i>(SA_R_Tbi_expr);
+  // \f$L_{bi}{}^{a} = S^{a} * R * T_{bi}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      LbiA_from_SA_R_Tbi =
+          TensorExpressions::evaluate<ti_b, ti_i, ti_A>(SA_R_Tbi_expr);
+  // \f$L_{i}{}^{a}{}_{b} = S^{a} * R * T_{bi}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+      LiAb_from_SA_R_Tbi =
+          TensorExpressions::evaluate<ti_i, ti_A, ti_b>(SA_R_Tbi_expr);
+  // \f$L_{ib}{}^{a} = S^{a} * R * T_{bi}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      LibA_from_SA_R_Tbi =
+          TensorExpressions::evaluate<ti_i, ti_b, ti_A>(SA_R_Tbi_expr);
+
+  // \f$S^{a} * T_{bi} * R\f$
+  const auto SA_Tbi_R_expr = Su(ti_A) * Tll(ti_b, ti_i) * R();
+  // \f$L^{a}{}_{bi} = S^{a} * T_{bi} * R\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+      LAbi_from_SA_Tbi_R =
+          TensorExpressions::evaluate<ti_A, ti_b, ti_i>(SA_Tbi_R_expr);
+  // \f$L^{a}{}_{ib} = S^{a} * T_{bi} * R\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+      LAib_from_SA_Tbi_R =
+          TensorExpressions::evaluate<ti_A, ti_i, ti_b>(SA_Tbi_R_expr);
+  // \f$L_{b}{}^{a}{}_{i} = S^{a} * T_{bi} * R\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+      LbAi_from_SA_Tbi_R =
+          TensorExpressions::evaluate<ti_b, ti_A, ti_i>(SA_Tbi_R_expr);
+  // \f$L_{bi}{}^{a} = S^{a} * T_{bi} * R\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      LbiA_from_SA_Tbi_R =
+          TensorExpressions::evaluate<ti_b, ti_i, ti_A>(SA_Tbi_R_expr);
+  // \f$L_{i}{}^{a}{}_{b} = S^{a} * T_{bi} * R\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+      LiAb_from_SA_Tbi_R =
+          TensorExpressions::evaluate<ti_i, ti_A, ti_b>(SA_Tbi_R_expr);
+  // \f$L_{ib}{}^{a} = S^{a} * T_{bi} * R\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      LibA_from_SA_Tbi_R =
+          TensorExpressions::evaluate<ti_i, ti_b, ti_A>(SA_Tbi_R_expr);
+
+  // \f$T_{bi} * R * S^{a}\f$
+  const auto Tbi_R_SA_expr = Tll(ti_b, ti_i) * R() * Su(ti_A);
+  // \f$L^{a}{}_{bi} = T_{bi} * R * S^{a}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+      LAbi_from_Tbi_R_SA =
+          TensorExpressions::evaluate<ti_A, ti_b, ti_i>(Tbi_R_SA_expr);
+  // \f$L^{a}{}_{ib} = T_{bi} * R * S^{a}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+      LAib_from_Tbi_R_SA =
+          TensorExpressions::evaluate<ti_A, ti_i, ti_b>(Tbi_R_SA_expr);
+  // \f$L_{b}{}^{a}{}_{i} = T_{bi} * R * S^{a}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+      LbAi_from_Tbi_R_SA =
+          TensorExpressions::evaluate<ti_b, ti_A, ti_i>(Tbi_R_SA_expr);
+  // \f$L_{bi}{}^{a} = T_{bi} * R * S^{a}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      LbiA_from_Tbi_R_SA =
+          TensorExpressions::evaluate<ti_b, ti_i, ti_A>(Tbi_R_SA_expr);
+  // \f$L_{i}{}^{a}{}_{b} = T_{bi} * R * S^{a}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+      LiAb_from_Tbi_R_SA =
+          TensorExpressions::evaluate<ti_i, ti_A, ti_b>(Tbi_R_SA_expr);
+  // \f$L_{ib}{}^{a} = T_{bi} * R * S^{a}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      LibA_from_Tbi_R_SA =
+          TensorExpressions::evaluate<ti_i, ti_b, ti_A>(Tbi_R_SA_expr);
+
+  // \f$T_{bi} * S^{a} * R\f$
+  const auto Tbi_SA_R_expr = Tll(ti_b, ti_i) * Su(ti_A) * R();
+  // \f$L^{a}{}_{bi} = T_{bi} * R * S^{a}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+      LAbi_from_Tbi_SA_R =
+          TensorExpressions::evaluate<ti_A, ti_b, ti_i>(Tbi_SA_R_expr);
+  // \f$L^{a}{}_{ib} = T_{bi} * R * S^{a}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+      LAib_from_Tbi_SA_R =
+          TensorExpressions::evaluate<ti_A, ti_i, ti_b>(Tbi_SA_R_expr);
+  // \f$L_{b}{}^{a}{}_{i} = T_{bi} * R * S^{a}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+      LbAi_from_Tbi_SA_R =
+          TensorExpressions::evaluate<ti_b, ti_A, ti_i>(Tbi_SA_R_expr);
+  // \f$L_{bi}{}^{a} = T_{bi} * R * S^{a}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      LbiA_from_Tbi_SA_R =
+          TensorExpressions::evaluate<ti_b, ti_i, ti_A>(Tbi_SA_R_expr);
+  // \f$L_{i}{}^{a}{}_{b} = T_{bi} * R * S^{a}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+      LiAb_from_Tbi_SA_R =
+          TensorExpressions::evaluate<ti_i, ti_A, ti_b>(Tbi_SA_R_expr);
+  // \f$L_{ib}{}^{a} = T_{bi} * R * S^{a}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      LibA_from_Tbi_SA_R =
+          TensorExpressions::evaluate<ti_i, ti_b, ti_A>(Tbi_SA_R_expr);
 
   for (size_t a = 0; a < 4; a++) {
     for (size_t b = 0; b < 4; b++) {
@@ -187,6 +414,51 @@ void test_ranks_0_1_2_outer_product(const DataType& used_for_size) noexcept {
         CHECK(LbiA_from_R_SA_Tbi.get(b, i, a) == expected_R_SA_Tbi_product);
         CHECK(LiAb_from_R_SA_Tbi.get(i, a, b) == expected_R_SA_Tbi_product);
         CHECK(LibA_from_R_SA_Tbi.get(i, b, a) == expected_R_SA_Tbi_product);
+
+        const DataType expected_R_Tbi_SA_product =
+            R.get() * Tll.get(b, i) * Su.get(a);
+        CHECK(LAbi_from_R_Tbi_SA.get(a, b, i) == expected_R_Tbi_SA_product);
+        CHECK(LAib_from_R_Tbi_SA.get(a, i, b) == expected_R_Tbi_SA_product);
+        CHECK(LbAi_from_R_Tbi_SA.get(b, a, i) == expected_R_Tbi_SA_product);
+        CHECK(LbiA_from_R_Tbi_SA.get(b, i, a) == expected_R_Tbi_SA_product);
+        CHECK(LiAb_from_R_Tbi_SA.get(i, a, b) == expected_R_Tbi_SA_product);
+        CHECK(LibA_from_R_Tbi_SA.get(i, b, a) == expected_R_Tbi_SA_product);
+
+        const DataType expected_SA_R_Tbi_product =
+            Su.get(a) * R.get() * Tll.get(b, i);
+        CHECK(LAbi_from_SA_R_Tbi.get(a, b, i) == expected_SA_R_Tbi_product);
+        CHECK(LAib_from_SA_R_Tbi.get(a, i, b) == expected_SA_R_Tbi_product);
+        CHECK(LbAi_from_SA_R_Tbi.get(b, a, i) == expected_SA_R_Tbi_product);
+        CHECK(LbiA_from_SA_R_Tbi.get(b, i, a) == expected_SA_R_Tbi_product);
+        CHECK(LiAb_from_SA_R_Tbi.get(i, a, b) == expected_SA_R_Tbi_product);
+        CHECK(LibA_from_SA_R_Tbi.get(i, b, a) == expected_SA_R_Tbi_product);
+
+        const DataType expected_SA_Tbi_R_product =
+            Su.get(a) * Tll.get(b, i) * R.get();
+        CHECK(LAbi_from_SA_Tbi_R.get(a, b, i) == expected_SA_Tbi_R_product);
+        CHECK(LAib_from_SA_Tbi_R.get(a, i, b) == expected_SA_Tbi_R_product);
+        CHECK(LbAi_from_SA_Tbi_R.get(b, a, i) == expected_SA_Tbi_R_product);
+        CHECK(LbiA_from_SA_Tbi_R.get(b, i, a) == expected_SA_Tbi_R_product);
+        CHECK(LiAb_from_SA_Tbi_R.get(i, a, b) == expected_SA_Tbi_R_product);
+        CHECK(LibA_from_SA_Tbi_R.get(i, b, a) == expected_SA_Tbi_R_product);
+
+        const DataType expected_Tbi_R_SA_product =
+            Tll.get(b, i) * R.get() * Su.get(a);
+        CHECK(LAbi_from_Tbi_R_SA.get(a, b, i) == expected_Tbi_R_SA_product);
+        CHECK(LAib_from_Tbi_R_SA.get(a, i, b) == expected_Tbi_R_SA_product);
+        CHECK(LbAi_from_Tbi_R_SA.get(b, a, i) == expected_Tbi_R_SA_product);
+        CHECK(LbiA_from_Tbi_R_SA.get(b, i, a) == expected_Tbi_R_SA_product);
+        CHECK(LiAb_from_Tbi_R_SA.get(i, a, b) == expected_Tbi_R_SA_product);
+        CHECK(LibA_from_Tbi_R_SA.get(i, b, a) == expected_Tbi_R_SA_product);
+
+        const DataType expected_Tbi_SA_R_product =
+            Tll.get(b, i) * Su.get(a) * R.get();
+        CHECK(LAbi_from_Tbi_SA_R.get(a, b, i) == expected_Tbi_SA_R_product);
+        CHECK(LAib_from_Tbi_SA_R.get(a, i, b) == expected_Tbi_SA_R_product);
+        CHECK(LbAi_from_Tbi_SA_R.get(b, a, i) == expected_Tbi_SA_R_product);
+        CHECK(LbiA_from_Tbi_SA_R.get(b, i, a) == expected_Tbi_SA_R_product);
+        CHECK(LiAb_from_Tbi_SA_R.get(i, a, b) == expected_Tbi_SA_R_product);
+        CHECK(LibA_from_Tbi_SA_R.get(i, b, a) == expected_Tbi_SA_R_product);
       }
     }
   }
@@ -195,6 +467,7 @@ void test_ranks_0_1_2_outer_product(const DataType& used_for_size) noexcept {
 template <typename DataType>
 void test_products(const DataType& used_for_size) noexcept {
   test_rank_0_outer_product(used_for_size);
+  test_ranks_0_1_2_outer_product(used_for_size);
 }
 }  // namespace
 
