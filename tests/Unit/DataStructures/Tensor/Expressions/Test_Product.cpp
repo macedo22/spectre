@@ -105,40 +105,6 @@ void test_rank_0_outer_product(const DataType& used_for_size) noexcept {
       CHECK(Lia_from_Tai_R.get(i, a) == Tll.get(a, i) * R.get());
     }
   }
-
-  // // \f$L^{A}{}_{bi} = R * S^{a} * T_{bi}\f$
-  // const Tensor<DataType, Symmetry<3, 2, 1>,
-  //              index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-  //                         SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-  //                         SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
-  //     LAbi_from_R_SA_Tbi =
-  //         TensorExpressions::evaluate<ti_A, ti_b, ti_i>(R() * Su(ti_A) *
-  //         Tll(ti_b, ti_i));
-  // // \f$L^{A}{}_{bi} = R * S^{a} * T_{bi}\f$
-  // const Tensor<DataType, Symmetry<3, 2, 1>,
-  //              index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-  //                         SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-  //                         SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
-  //     LAbi_from_R_SA_Tbi =
-  //         TensorExpressions::evaluate<ti_A, ti_b, ti_i>(R() * Su(ti_A) *
-  //         Tll(ti_b, ti_i));
-  // // \f$L^{A}{}_{bi} = R * S^{a} * T_{bi}\f$
-  // const Tensor<DataType, Symmetry<3, 2, 1>,
-  //              index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-  //                         SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-  //                         SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
-  //     LAbi_from_R_SA_Tbi =
-  //         TensorExpressions::evaluate<ti_A, ti_b, ti_i>(R() * Su(ti_A) *
-  //         Tll(ti_b, ti_i));
-
-  // for (size_t a = 0; a < 4; a++) {
-  //   for (size_t b = 0; b < 4; b++) {
-  //     for (size_t i = 0; i < 4; i++) {
-  //       CHECK(LAbi_from_R_SA_Tbi.get(a, b, i) == R.get() * Su.get(a) *
-  //       Tll.get(b, i));
-  //     }
-  //   }
-  // }
 }
 
 template <typename DataType>
