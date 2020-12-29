@@ -43,6 +43,10 @@ void test_rank_0_outer_product(const DataType& used_for_size) noexcept {
     create_tensor(make_not_null(&R));
   }
 
+  CHECK(TensorExpressions::evaluate(R() * R()).get() == R.get() * R.get());
+  CHECK(TensorExpressions::evaluate(R() * R() * R()).get() ==
+        R.get() * R.get() * R.get());
+
   Tensor<DataType, Symmetry<1>,
          index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
       Su(used_for_size);
@@ -58,6 +62,46 @@ void test_rank_0_outer_product(const DataType& used_for_size) noexcept {
   for (size_t a = 0; a < 4; a++) {
     CHECK(LA_from_R_SA.get(a) == R.get() * Su.get(a));
     CHECK(LA_from_SA_R.get(a) == Su.get(a) * R.get());
+  }
+
+  Tensor<DataType, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+      Sll(used_for_size);
+  create_tensor(make_not_null(&Sll));
+
+  // \f$L_{ai} = R * S_{ai}\f$
+  const Tensor<DataType, Symmetry<2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+      Lai_from_R_Sai =
+          TensorExpressions::evaluate<ti_a, ti_i>(R() * Sll(ti_a, ti_i));
+  // \f$L_{ia} = R * S_{ai}\f$
+  const Tensor<DataType, Symmetry<2, 1>,
+               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+      Lia_from_R_Sai =
+          TensorExpressions::evaluate<ti_i, ti_a>(R() * Sll(ti_a, ti_i));
+  // \f$L_{ai} = S_{ai} * R\f$
+  const Tensor<DataType, Symmetry<2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+      Lai_from_Sai_R =
+          TensorExpressions::evaluate<ti_a, ti_i>(Sll(ti_a, ti_i) * R());
+  // \f$L_{ia} = S_{ai} * R\f$
+  const Tensor<DataType, Symmetry<2, 1>,
+               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+      Lia_from_Sai_R =
+          TensorExpressions::evaluate<ti_i, ti_a>(Sll(ti_a, ti_i) * R());
+
+  for (size_t a = 0; a < 4; a++) {
+    for (size_t i = 0; i < 4; i++) {
+      CHECK(Lai_from_R_Sai.get(a, i) == R.get() * Sll.get(a, i));
+      CHECK(Lia_from_R_Sai.get(i, a) == R.get() * Sll.get(a, i));
+      CHECK(Lai_from_Sai_R.get(a, i) == Sll.get(a, i) * R.get());
+      CHECK(Lia_from_Sai_R.get(i, a) == Sll.get(a, i) * R.get());
+    }
   }
 }
 
