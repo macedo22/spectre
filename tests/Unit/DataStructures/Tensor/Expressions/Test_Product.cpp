@@ -139,12 +139,12 @@ void test_rank_0_outer_product(const DataType& used_for_size) noexcept {
 /// \tparam DataType the type of data being stored in the product operands
 template <typename DataType>
 void test_rank_1_inner_product(const DataType& used_for_size) noexcept {
-  Tensor<double, Symmetry<1>,
+  Tensor<DataType, Symmetry<1>,
          index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
       Ru(used_for_size);
   create_tensor(make_not_null(&Ru));
 
-  Tensor<double, Symmetry<1>,
+  Tensor<DataType, Symmetry<1>,
          index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
       Sl(used_for_size);
   create_tensor(make_not_null(&Sl));
@@ -181,17 +181,17 @@ void test_rank_1_inner_product(const DataType& used_for_size) noexcept {
 /// \tparam DataType the type of data being stored in the product operands
 template <typename DataType>
 void test_rank_1_outer_product(const DataType& used_for_size) noexcept {
-  Tensor<double, Symmetry<1>,
+  Tensor<DataType, Symmetry<1>,
          index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
       Rl(used_for_size);
   create_tensor(make_not_null(&Rl));
 
-  Tensor<double, Symmetry<1>,
+  Tensor<DataType, Symmetry<1>,
          index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
       Su(used_for_size);
   create_tensor(make_not_null(&Su));
 
-  Tensor<double, Symmetry<1>,
+  Tensor<DataType, Symmetry<1>,
          index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>>>
       Tu(used_for_size);
   create_tensor(make_not_null(&Tu));
@@ -212,8 +212,8 @@ void test_rank_1_outer_product(const DataType& used_for_size) noexcept {
           TensorExpressions::evaluate<ti_i, ti_A>(Rl(ti_i) * Su(ti_A));
   // \f$L^{a}{}_{i} = R_{i} * S^{a}\f$
   const Tensor<DataType, Symmetry<2, 1>,
-               index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                          SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
       LAi_from_Ri_SA =
           TensorExpressions::evaluate<ti_A, ti_i>(Rl(ti_i) * Su(ti_A));
 
@@ -221,7 +221,7 @@ void test_rank_1_outer_product(const DataType& used_for_size) noexcept {
     for (size_t a = 0; a < 4; a++) {
       const DataType expected_product = Rl.get(i) * Su.get(a);
       CHECK(LiA_from_Ri_SA.get(i, a) == expected_product);
-      CHECK(LiA_from_Ri_SA.get(i, a) == expected_product);
+      CHECK(LAi_from_Ri_SA.get(a, i) == expected_product);
     }
   }
 }
@@ -601,6 +601,8 @@ void test_ranks_0_1_2_outer_product(const DataType& used_for_size) noexcept {
 template <typename DataType>
 void test_products(const DataType& used_for_size) noexcept {
   test_rank_0_outer_product(used_for_size);
+  test_rank_1_outer_product(used_for_size);
+  test_rank_1_inner_product(used_for_size);
   test_ranks_0_1_2_outer_product(used_for_size);
 }
 }  // namespace
