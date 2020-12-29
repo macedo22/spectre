@@ -165,6 +165,68 @@ void test_rank_1_inner_product(const DataType& used_for_size) noexcept {
 }
 
 /// \ingroup TestingFrameworkGroup
+/// \brief Test the outer product of rank 1 tensors with another tensor is
+/// correctly evaluated
+///
+/// \details
+/// The outer product cases tested are:
+/// - (rank 2) = (rank 1) x (rank 1)
+/// - (rank 3) = (rank 1) x (rank 1)
+/// - (rank 3) = (rank 1) x (rank 1) x (rank 1)
+/// - (rank 3) = (rank 1) x (rank 2)
+/// - (rank 3) = (rank 2) x (rank 1)
+///
+/// For all cases, all LHS index orderings are tested.
+///
+/// \tparam DataType the type of data being stored in the product operands
+template <typename DataType>
+void test_rank_1_outer_product(const DataType& used_for_size) noexcept {
+  Tensor<double, Symmetry<1>,
+         index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
+      Rl(used_for_size);
+  create_tensor(make_not_null(&Rl));
+
+  Tensor<double, Symmetry<1>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+      Su(used_for_size);
+  create_tensor(make_not_null(&Su));
+
+  Tensor<double, Symmetry<1>,
+         index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>>>
+      Tu(used_for_size);
+  create_tensor(make_not_null(&Tu));
+
+  Tensor<DataType, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+      Gll(used_for_size);
+  create_tensor(make_not_null(&Gll));
+
+  // \f$L_{i}{}^{a} = R_{i} * S^{a}\f$
+  // Use explicit type (vs auto) for LHS Tensor so the compiler checks the
+  // return type of `evaluate`
+  const Tensor<DataType, Symmetry<2, 1>,
+               index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+      LiA_from_Ri_SA =
+          TensorExpressions::evaluate<ti_i, ti_A>(Rl(ti_i) * Su(ti_A));
+  // \f$L^{a}{}_{i} = R_{i} * S^{a}\f$
+  const Tensor<DataType, Symmetry<2, 1>,
+               index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+      LAi_from_Ri_SA =
+          TensorExpressions::evaluate<ti_A, ti_i>(Rl(ti_i) * Su(ti_A));
+
+  for (size_t i = 0; i < 3; i++) {
+    for (size_t a = 0; a < 4; a++) {
+      const DataType expected_product = Rl.get(i) * Su.get(a);
+      CHECK(LiA_from_Ri_SA.get(i, a) == expected_product);
+      CHECK(LiA_from_Ri_SA.get(i, a) == expected_product);
+    }
+  }
+}
+
+/// \ingroup TestingFrameworkGroup
 /// \brief Test the outer product of a rank 0, rank 1, and rank 2 tensor is
 /// correctly evaluated
 ///
