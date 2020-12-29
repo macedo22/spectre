@@ -175,7 +175,8 @@ void test_rank_1_inner_product(const DataType& used_for_size) noexcept {
 /// - (rank 3) = (rank 1) x (rank 2)
 /// - (rank 3) = (rank 2) x (rank 1)
 ///
-/// For all cases, all LHS index orderings are tested.
+/// For each case, the LHS index order is different from the order in the
+/// operands.
 ///
 /// \tparam DataType the type of data being stored in the product operands
 template <typename DataType>
@@ -201,15 +202,9 @@ void test_rank_1_outer_product(const DataType& used_for_size) noexcept {
       Gll(used_for_size);
   create_tensor(make_not_null(&Gll));
 
-  // \f$L_{i}{}^{a} = R_{i} * S^{a}\f$
+  // \f$L^{a}{}_{i} = R_{i} * S^{a}\f$
   // Use explicit type (vs auto) for LHS Tensor so the compiler checks the
   // return type of `evaluate`
-  const Tensor<DataType, Symmetry<2, 1>,
-               index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
-      LiA_from_Ri_SA =
-          TensorExpressions::evaluate<ti_i, ti_A>(Rl(ti_i) * Su(ti_A));
-  // \f$L^{a}{}_{i} = R_{i} * S^{a}\f$
   const Tensor<DataType, Symmetry<2, 1>,
                index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
                           SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
@@ -219,10 +214,34 @@ void test_rank_1_outer_product(const DataType& used_for_size) noexcept {
   for (size_t i = 0; i < 3; i++) {
     for (size_t a = 0; a < 4; a++) {
       const DataType expected_product = Rl.get(i) * Su.get(a);
-      CHECK(LiA_from_Ri_SA.get(i, a) == expected_product);
       CHECK(LAi_from_Ri_SA.get(a, i) == expected_product);
     }
   }
+
+  // // \f$L_{i}{}^{ab} = R_{i} * S^{a} * T^{b}\f$
+  // const Tensor<DataType, Symmetry<2, 1>,
+  //              index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
+  //                         SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+  //                         SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+  //     LiAB_from_Ri_SA_TB =
+  //         TensorExpressions::evaluate<ti_i, ti_A, ti_B>(Rl(ti_i) * Su(ti_A) *
+  //         Tu(ti_B));
+  // // \f$L^{i}{}_{ba} = R_{i} * S^{a} * T^{b}\f$
+  // const Tensor<DataType, Symmetry<2, 1>,
+  //              index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
+  //                         SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+  //                         SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+  //     LiAB_from_Ri_SA_TB =
+  //         TensorExpressions::evaluate<ti_i, ti_A, ti_B>(Rl(ti_i) * Su(ti_A) *
+  //         Tu(ti_B));
+
+  // for (size_t i = 0; i < 3; i++) {
+  //   for (size_t a = 0; a < 4; a++) {
+  //     const DataType expected_product = Rl.get(i) * Su.get(a);
+  //     CHECK(LiA_from_Ri_SA.get(i, a) == expected_product);
+  //     CHECK(LAi_from_Ri_SA.get(a, i) == expected_product);
+  //   }
+  // }
 }
 
 /// \ingroup TestingFrameworkGroup
