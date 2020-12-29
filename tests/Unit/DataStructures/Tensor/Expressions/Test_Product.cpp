@@ -11,6 +11,67 @@
 #include "DataStructures/Tensor/Expressions/Product.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
+#include "Utilities/MakeWithValue.hpp"
+
+namespace {
+template <typename... Ts>
+void create_tensor(gsl::not_null<Tensor<double, Ts...>*> tensor) noexcept {
+  std::iota(tensor->begin(), tensor->end(), 0.0);
+}
+
+template <typename... Ts>
+void create_tensor(gsl::not_null<Tensor<DataVector, Ts...>*> tensor) noexcept {
+  double value = 0.0;
+  for (auto index_it = tensor->begin(); index_it != tensor->end(); index_it++) {
+    for (auto vector_it = index_it->begin(); vector_it != index_it->end();
+         vector_it++) {
+      *vector_it = value;
+      value += 1.0;
+    }
+  }
+}
+
+template <typename DataType>
+void test_rank_0_outer_product(const DataType& used_for_size) noexcept {
+  Tensor<DataType> R{{{used_for_size}}};
+  if constexpr (std::is_same_v<DataType, double>) {
+    // Instead of the tensor's value being the whole number, `used_for_size`
+    R.get() = -3.7;
+  } else {
+    // Instead of the tensor's `DataVector` having elements with all the same
+    // whole number value
+    create_tensor(make_not_null(&R));
+  }
+
+  Tensor<DataType, Symmetry<1>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+      Su(used_for_size);
+  create_tensor(make_not_null(&Su));
+
+  // \f$L^{a} = R * S^{a}\f$
+  const decltype(Su) LA_from_R_SA =
+      TensorExpressions::evaluate<ti_A>(R() * Su(ti_A));
+  // \f$L^{a} = S^{a} * R\f$
+  const decltype(Su) LA_from_SA_R =
+      TensorExpressions::evaluate<ti_A>(Su(ti_A) * R());
+
+  for (size_t a = 0; a < 4; a++) {
+    CHECK(LA_from_R_SA.get(a) == R.get() * Su.get(a));
+    CHECK(LA_from_SA_R.get(a) == Su.get(a) * R.get());
+  }
+}
+
+template <typename DataType>
+void test_products(const DataType& used_for_size) noexcept {
+  test_rank_0_outer_product(used_for_size);
+}
+}  // namespace
+
+SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Product",
+                  "[DataStructures][Unit]") {
+  test_products(std::numeric_limits<double>::signaling_NaN());
+  test_products(DataVector(5, std::numeric_limits<double>::signaling_NaN()));
+}
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.OuterProduct0By1",
                   "[DataStructures][Unit]") {
