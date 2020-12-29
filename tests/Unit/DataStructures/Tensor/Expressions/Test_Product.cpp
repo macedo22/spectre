@@ -50,7 +50,7 @@ void test_rank_0_outer_product(const DataType& used_for_size) noexcept {
         R.get() * R.get() * R.get());
 
   Tensor<DataType, Symmetry<1>,
-         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
       Su(used_for_size);
   create_tensor(make_not_null(&Su));
 
@@ -103,6 +103,126 @@ void test_rank_0_outer_product(const DataType& used_for_size) noexcept {
       CHECK(Lia_from_R_Tai.get(i, a) == R.get() * Tll.get(a, i));
       CHECK(Lai_from_Tai_R.get(a, i) == Tll.get(a, i) * R.get());
       CHECK(Lia_from_Tai_R.get(i, a) == Tll.get(a, i) * R.get());
+    }
+  }
+
+  // // \f$L^{A}{}_{bi} = R * S^{a} * T_{bi}\f$
+  // const Tensor<DataType, Symmetry<3, 2, 1>,
+  //              index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+  //                         SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+  //                         SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+  //     LAbi_from_R_SA_Tbi =
+  //         TensorExpressions::evaluate<ti_A, ti_b, ti_i>(R() * Su(ti_A) *
+  //         Tll(ti_b, ti_i));
+  // // \f$L^{A}{}_{bi} = R * S^{a} * T_{bi}\f$
+  // const Tensor<DataType, Symmetry<3, 2, 1>,
+  //              index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+  //                         SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+  //                         SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+  //     LAbi_from_R_SA_Tbi =
+  //         TensorExpressions::evaluate<ti_A, ti_b, ti_i>(R() * Su(ti_A) *
+  //         Tll(ti_b, ti_i));
+  // // \f$L^{A}{}_{bi} = R * S^{a} * T_{bi}\f$
+  // const Tensor<DataType, Symmetry<3, 2, 1>,
+  //              index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+  //                         SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+  //                         SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+  //     LAbi_from_R_SA_Tbi =
+  //         TensorExpressions::evaluate<ti_A, ti_b, ti_i>(R() * Su(ti_A) *
+  //         Tll(ti_b, ti_i));
+
+  // for (size_t a = 0; a < 4; a++) {
+  //   for (size_t b = 0; b < 4; b++) {
+  //     for (size_t i = 0; i < 4; i++) {
+  //       CHECK(LAbi_from_R_SA_Tbi.get(a, b, i) == R.get() * Su.get(a) *
+  //       Tll.get(b, i));
+  //     }
+  //   }
+  // }
+}
+
+template <typename DataType>
+void test_ranks_0_1_2_outer_product(const DataType& used_for_size) noexcept {
+  Tensor<DataType> R{{{used_for_size}}};
+  if constexpr (std::is_same_v<DataType, double>) {
+    // Instead of the tensor's value being the whole number, `used_for_size`
+    R.get() = 4.3;
+  } else {
+    // Instead of the tensor's `DataVector` having elements with all the same
+    // whole number value
+    create_tensor(make_not_null(&R));
+  }
+
+  Tensor<DataType, Symmetry<1>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      Su(used_for_size);
+  create_tensor(make_not_null(&Su));
+
+  Tensor<DataType, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+      Tll(used_for_size);
+  create_tensor(make_not_null(&Tll));
+
+  // \f$L^{a}{}_{bi} = R * S^{a} * T_{bi}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+      LAbi_from_R_SA_Tbi = TensorExpressions::evaluate<ti_A, ti_b, ti_i>(
+          R() * Su(ti_A) * Tll(ti_b, ti_i));
+  // \f$L^{a}{}_{ib} = R * S^{a} * T_{bi}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+      LAib_from_R_SA_Tbi = TensorExpressions::evaluate<ti_A, ti_i, ti_b>(
+          R() * Su(ti_A) * Tll(ti_b, ti_i));
+  // \f$L_{b}{}^{a}{}_{i} = R * S^{a} * T_{bi}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+      LbAi_from_R_SA_Tbi = TensorExpressions::evaluate<ti_A, ti_b, ti_i>(
+          R() * Su(ti_A) * Tll(ti_b, ti_i));
+  // \f$L_{bi}{}^{a} = R * S^{a} * T_{bi}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      LbiA_from_R_SA_Tbi = TensorExpressions::evaluate<ti_A, ti_b, ti_i>(
+          R() * Su(ti_A) * Tll(ti_b, ti_i));
+  // \f$L_{i}{}^{a}{}_{b} = R * S^{a} * T_{bi}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      LiAb_from_R_SA_Tbi = TensorExpressions::evaluate<ti_i, ti_A, ti_b>(
+          R() * Su(ti_A) * Tll(ti_b, ti_i));
+  // \f$L_{ib}{}^{a} = R * S^{a} * T_{bi}\f$
+  const Tensor<DataType, Symmetry<3, 2, 1>,
+               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+      LibA_from_R_SA_Tbi = TensorExpressions::evaluate<ti_i, ti_b, ti_A>(
+          R() * Su(ti_A) * Tll(ti_b, ti_i));
+
+  for (size_t a = 0; a < 4; a++) {
+    for (size_t b = 0; b < 4; b++) {
+      for (size_t i = 0; i < 4; i++) {
+        CHECK(LAbi_from_R_SA_Tbi.get(a, b, i) ==
+              R.get() * Su.get(a) * Tll.get(b, i));
+        CHECK(LAib_from_R_SA_Tbi.get(a, i, b) ==
+              R.get() * Su.get(a) * Tll.get(b, i));
+        CHECK(LbAi_from_R_SA_Tbi.get(b, a, i) ==
+              R.get() * Su.get(a) * Tll.get(b, i));
+        CHECK(LbiA_from_R_SA_Tbi.get(b, i, a) ==
+              R.get() * Su.get(a) * Tll.get(b, i));
+        CHECK(LiAb_from_R_SA_Tbi.get(i, a, b) ==
+              R.get() * Su.get(a) * Tll.get(b, i));
+        CHECK(LibA_from_R_SA_Tbi.get(i, b, a) ==
+              R.get() * Su.get(a) * Tll.get(b, i));
+      }
     }
   }
 }
