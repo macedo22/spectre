@@ -171,7 +171,6 @@ void test_rank_1_inner_product(const DataType& used_for_size) noexcept {
 /// \details
 /// The outer product cases tested are:
 /// - (rank 2) = (rank 1) x (rank 1)
-/// - (rank 3) = (rank 1) x (rank 1)
 /// - (rank 3) = (rank 1) x (rank 1) x (rank 1)
 /// - (rank 3) = (rank 1) x (rank 2)
 /// - (rank 3) = (rank 2) x (rank 1)
