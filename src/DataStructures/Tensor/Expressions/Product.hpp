@@ -114,6 +114,26 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
     }
   };
 
+  /// \brief Return the value of the component of the outer product tensor at a
+  /// given storage index
+  ///
+  /// \details
+  /// This function takes the storage index of some component of the LHS outer
+  /// product to compute. The component is computed by computing the storage
+  /// indices of the pair of components in the two RHS operand expressions that
+  /// need to be multiplied, then multiplying their values. For example, say we
+  /// are evaluating \f$L_abc = R_{b} * S_{ca}\f$. Let `lhs_storage_index` refer
+  /// to the component, \f$L_{012}\f$, the component we wish to compute. This
+  /// function will compute the storage indices of the operands that correspond
+  /// to \f$R_{1}\f$ and \f$S_{20}\f$, retrieve their values, and return their
+  /// product.
+  ///
+  /// \tparam LhsStructure the Structure of the outer product tensor
+  /// \tparam LhsIndices the TensorIndexs of the outer product tensor
+  /// \param lhs_storage_index the storage index of the component of the outer
+  /// product tensor to retrieve
+  /// \return the value of the component at `lhs_storage_index` in the
+  /// outer product tensor
   template <typename LhsStructure, typename... LhsIndices>
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
       const size_t lhs_storage_index) const {
