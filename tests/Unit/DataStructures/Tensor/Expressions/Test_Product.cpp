@@ -224,6 +224,165 @@ void test_rank_1_outer_product(const DataType& used_for_size) noexcept {
 }
 
 /// \ingroup TestingFrameworkGroup
+/// \brief Test the outer product of two rank 2 tensors is correctly evaluated
+///
+/// \details
+/// All LHS index orders are tested.
+///
+/// \tparam DataType the type of data being stored in the product operands
+template <typename DataType>
+void test_rank_2_outer_product(const DataType& used_for_size) noexcept {
+  using R_index = SpacetimeIndex<3, UpLo::Lo, Frame::Grid>;
+  using S_first_index = SpatialIndex<4, UpLo::Up, Frame::Grid>;
+  using S_second_index = SpacetimeIndex<2, UpLo::Lo, Frame::Grid>;
+
+  Tensor<DataType, Symmetry<1, 1>, index_list<R_index, R_index>> Rll(
+      used_for_size);
+  create_tensor(make_not_null(&Rll));
+  Tensor<DataType, Symmetry<2, 1>, index_list<S_first_index, S_second_index>>
+      Sul(used_for_size);
+  create_tensor(make_not_null(&Sul));
+
+  // Use explicit type (vs auto) for LHS Tensor so the compiler checks the
+  // return type of `evaluate`
+  const Tensor<DataType, Symmetry<3, 3, 2, 1>,
+               index_list<R_index, R_index, S_first_index, S_second_index>>
+      L_abIc = TensorExpressions::evaluate<ti_a, ti_b, ti_I, ti_c>(
+          Rll(ti_a, ti_b) * Sul(ti_I, ti_c));
+  const Tensor<DataType, Symmetry<3, 3, 2, 1>,
+               index_list<R_index, R_index, S_second_index, S_first_index>>
+      L_abcI = TensorExpressions::evaluate<ti_a, ti_b, ti_c, ti_I>(
+          Rll(ti_a, ti_b) * Sul(ti_I, ti_c));
+  const Tensor<DataType, Symmetry<3, 2, 3, 1>,
+               index_list<R_index, S_first_index, R_index, S_second_index>>
+      L_aIbc = TensorExpressions::evaluate<ti_a, ti_I, ti_b, ti_c>(
+          Rll(ti_a, ti_b) * Sul(ti_I, ti_c));
+  const Tensor<DataType, Symmetry<3, 2, 1, 3>,
+               index_list<R_index, S_first_index, S_second_index, R_index>>
+      L_aIcb = TensorExpressions::evaluate<ti_a, ti_I, ti_c, ti_b>(
+          Rll(ti_a, ti_b) * Sul(ti_I, ti_c));
+  const Tensor<DataType, Symmetry<3, 2, 3, 1>,
+               index_list<R_index, S_second_index, R_index, S_first_index>>
+      L_acbI = TensorExpressions::evaluate<ti_a, ti_c, ti_b, ti_I>(
+          Rll(ti_a, ti_b) * Sul(ti_I, ti_c));
+  const Tensor<DataType, Symmetry<3, 2, 1, 3>,
+               index_list<R_index, S_second_index, S_first_index, R_index>>
+      L_acIb = TensorExpressions::evaluate<ti_a, ti_c, ti_I, ti_b>(
+          Rll(ti_a, ti_b) * Sul(ti_I, ti_c));
+
+  const Tensor<DataType, Symmetry<3, 3, 2, 1>,
+               index_list<R_index, R_index, S_first_index, S_second_index>>
+      L_baIc = TensorExpressions::evaluate<ti_b, ti_a, ti_I, ti_c>(
+          Rll(ti_a, ti_b) * Sul(ti_I, ti_c));
+  const Tensor<DataType, Symmetry<3, 3, 2, 1>,
+               index_list<R_index, R_index, S_second_index, S_first_index>>
+      L_bacI = TensorExpressions::evaluate<ti_b, ti_a, ti_c, ti_I>(
+          Rll(ti_a, ti_b) * Sul(ti_I, ti_c));
+  const Tensor<DataType, Symmetry<3, 2, 3, 1>,
+               index_list<R_index, S_first_index, R_index, S_second_index>>
+      L_bIac = TensorExpressions::evaluate<ti_b, ti_I, ti_a, ti_c>(
+          Rll(ti_a, ti_b) * Sul(ti_I, ti_c));
+  const Tensor<DataType, Symmetry<3, 2, 1, 3>,
+               index_list<R_index, S_first_index, S_second_index, R_index>>
+      L_bIca = TensorExpressions::evaluate<ti_b, ti_I, ti_c, ti_a>(
+          Rll(ti_a, ti_b) * Sul(ti_I, ti_c));
+  const Tensor<DataType, Symmetry<3, 2, 3, 1>,
+               index_list<R_index, S_second_index, R_index, S_first_index>>
+      L_bcaI = TensorExpressions::evaluate<ti_b, ti_c, ti_a, ti_I>(
+          Rll(ti_a, ti_b) * Sul(ti_I, ti_c));
+  const Tensor<DataType, Symmetry<3, 2, 1, 3>,
+               index_list<R_index, S_second_index, S_first_index, R_index>>
+      L_bcIa = TensorExpressions::evaluate<ti_b, ti_c, ti_I, ti_a>(
+          Rll(ti_a, ti_b) * Sul(ti_I, ti_c));
+
+  const Tensor<DataType, Symmetry<3, 2, 2, 1>,
+               index_list<S_first_index, R_index, R_index, S_second_index>>
+      L_Iabc = TensorExpressions::evaluate<ti_I, ti_a, ti_b, ti_c>(
+          Rll(ti_a, ti_b) * Sul(ti_I, ti_c));
+  const Tensor<DataType, Symmetry<3, 2, 1, 2>,
+               index_list<S_first_index, R_index, S_second_index, R_index>>
+      L_Iacb = TensorExpressions::evaluate<ti_I, ti_a, ti_c, ti_b>(
+          Rll(ti_a, ti_b) * Sul(ti_I, ti_c));
+  const Tensor<DataType, Symmetry<3, 2, 2, 1>,
+               index_list<S_first_index, R_index, R_index, S_second_index>>
+      L_Ibac = TensorExpressions::evaluate<ti_I, ti_b, ti_a, ti_c>(
+          Rll(ti_a, ti_b) * Sul(ti_I, ti_c));
+  const Tensor<DataType, Symmetry<3, 2, 1, 2>,
+               index_list<S_first_index, R_index, S_second_index, R_index>>
+      L_Ibca = TensorExpressions::evaluate<ti_I, ti_b, ti_c, ti_a>(
+          Rll(ti_a, ti_b) * Sul(ti_I, ti_c));
+  const Tensor<DataType, Symmetry<3, 2, 1, 1>,
+               index_list<S_first_index, S_second_index, R_index, R_index>>
+      L_Icab = TensorExpressions::evaluate<ti_I, ti_c, ti_a, ti_b>(
+          Rll(ti_a, ti_b) * Sul(ti_I, ti_c));
+  const Tensor<DataType, Symmetry<3, 2, 1, 1>,
+               index_list<S_first_index, S_second_index, R_index, R_index>>
+      L_Icba = TensorExpressions::evaluate<ti_I, ti_c, ti_b, ti_a>(
+          Rll(ti_a, ti_b) * Sul(ti_I, ti_c));
+
+  const Tensor<DataType, Symmetry<3, 2, 2, 1>,
+               index_list<S_second_index, R_index, R_index, S_first_index>>
+      L_cabI = TensorExpressions::evaluate<ti_c, ti_a, ti_b, ti_I>(
+          Rll(ti_a, ti_b) * Sul(ti_I, ti_c));
+  const Tensor<DataType, Symmetry<3, 2, 1, 2>,
+               index_list<S_second_index, R_index, S_first_index, R_index>>
+      L_caIb = TensorExpressions::evaluate<ti_c, ti_a, ti_I, ti_b>(
+          Rll(ti_a, ti_b) * Sul(ti_I, ti_c));
+  const Tensor<DataType, Symmetry<3, 2, 2, 1>,
+               index_list<S_second_index, R_index, R_index, S_first_index>>
+      L_cbaI = TensorExpressions::evaluate<ti_c, ti_b, ti_a, ti_I>(
+          Rll(ti_a, ti_b) * Sul(ti_I, ti_c));
+  const Tensor<DataType, Symmetry<3, 2, 1, 2>,
+               index_list<S_second_index, R_index, S_first_index, R_index>>
+      L_cbIa = TensorExpressions::evaluate<ti_c, ti_b, ti_I, ti_a>(
+          Rll(ti_a, ti_b) * Sul(ti_I, ti_c));
+  const Tensor<DataType, Symmetry<3, 2, 1, 1>,
+               index_list<S_second_index, S_first_index, R_index, R_index>>
+      L_cIab = TensorExpressions::evaluate<ti_c, ti_I, ti_a, ti_b>(
+          Rll(ti_a, ti_b) * Sul(ti_I, ti_c));
+  const Tensor<DataType, Symmetry<3, 2, 1, 1>,
+               index_list<S_second_index, S_first_index, R_index, R_index>>
+      L_cIba = TensorExpressions::evaluate<ti_c, ti_I, ti_b, ti_a>(
+          Rll(ti_a, ti_b) * Sul(ti_I, ti_c));
+
+  for (size_t a = 0; a < R_index::dim; a++) {
+    for (size_t b = 0; b < R_index::dim; b++) {
+      for (size_t i = 0; i < S_first_index::dim; i++) {
+        for (size_t c = 0; c < S_second_index::dim; c++) {
+          CHECK(L_abIc.get(a, b, i, c) == Rll.get(a, b) * Sul.get(i, c));
+          CHECK(L_abcI.get(a, b, c, i) == Rll.get(a, b) * Sul.get(i, c));
+          CHECK(L_aIbc.get(a, i, b, c) == Rll.get(a, b) * Sul.get(i, c));
+          CHECK(L_aIcb.get(a, i, c, b) == Rll.get(a, b) * Sul.get(i, c));
+          CHECK(L_acbI.get(a, c, b, i) == Rll.get(a, b) * Sul.get(i, c));
+          CHECK(L_acIb.get(a, c, i, b) == Rll.get(a, b) * Sul.get(i, c));
+
+          CHECK(L_baIc.get(b, a, i, c) == Rll.get(a, b) * Sul.get(i, c));
+          CHECK(L_bacI.get(b, a, c, i) == Rll.get(a, b) * Sul.get(i, c));
+          CHECK(L_bIac.get(b, i, a, c) == Rll.get(a, b) * Sul.get(i, c));
+          CHECK(L_bIca.get(b, i, c, a) == Rll.get(a, b) * Sul.get(i, c));
+          CHECK(L_bcaI.get(b, c, a, i) == Rll.get(a, b) * Sul.get(i, c));
+          CHECK(L_bcIa.get(b, c, i, a) == Rll.get(a, b) * Sul.get(i, c));
+
+          CHECK(L_Iabc.get(i, a, b, c) == Rll.get(a, b) * Sul.get(i, c));
+          CHECK(L_Iacb.get(i, a, c, b) == Rll.get(a, b) * Sul.get(i, c));
+          CHECK(L_Ibac.get(i, b, a, c) == Rll.get(a, b) * Sul.get(i, c));
+          CHECK(L_Ibca.get(i, b, c, a) == Rll.get(a, b) * Sul.get(i, c));
+          CHECK(L_Icab.get(i, c, a, b) == Rll.get(a, b) * Sul.get(i, c));
+          CHECK(L_Icba.get(i, c, b, a) == Rll.get(a, b) * Sul.get(i, c));
+
+          CHECK(L_cabI.get(c, a, b, i) == Rll.get(a, b) * Sul.get(i, c));
+          CHECK(L_caIb.get(c, a, i, b) == Rll.get(a, b) * Sul.get(i, c));
+          CHECK(L_cbaI.get(c, b, a, i) == Rll.get(a, b) * Sul.get(i, c));
+          CHECK(L_cbIa.get(c, b, i, a) == Rll.get(a, b) * Sul.get(i, c));
+          CHECK(L_cIab.get(c, i, a, b) == Rll.get(a, b) * Sul.get(i, c));
+          CHECK(L_cIba.get(c, i, b, a) == Rll.get(a, b) * Sul.get(i, c));
+        }
+      }
+    }
+  }
+}
+
+/// \ingroup TestingFrameworkGroup
 /// \brief Test the outer product of a rank 0, rank 1, and rank 2 tensor is
 /// correctly evaluated
 ///
@@ -635,8 +794,10 @@ template <typename DataType>
 void test_products(const DataType& used_for_size) noexcept {
   test_rank_0_outer_product(used_for_size);
   test_rank_1_outer_product(used_for_size);
-  test_rank_1_inner_product(used_for_size);
+  test_rank_2_outer_product(used_for_size);
   test_ranks_0_1_2_outer_product(used_for_size);
+
+  test_rank_1_inner_product(used_for_size);
 }
 }  // namespace
 
