@@ -39,8 +39,8 @@ struct OuterProductType<T1, T2, SymmList1<Symm1...>, SymmList2<Symm2...>> {
 /// \brief Defines the tensor expression representing the outer product of two
 /// tensor expressions
 ///
-/// \tparam T1 the first operand in the outer product expression
-/// \tparam T2 the second operand in the outer product expression
+/// \tparam T1 the first operand expression of the outer product expression
+/// \tparam T2 the second operand expression of the outer product expression
 template <typename T1, typename T2,
           typename IndexList1 = typename T1::index_list,
           typename IndexList2 = typename T2::index_list,
@@ -107,8 +107,8 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
     /// \details
     /// Example: Let's say we are evaluating \f$L_abc = R_{b} * S_{ca}\f$. Let
     /// `ti_a_t` denote the type of `ti_a`, and apply the same convention for
-    /// other generic indices. `LhsTensorIndices == ti_a_t, ti_b_t, ti_c_t`, and
-    /// `OperandTensorIndices` is either `ti_b_t` or `ti_c_t, ti_a_t`. Let
+    /// other generic indices. Let `LhsTensorIndices == ti_a_t, ti_b_t, ti_c_t`,
+    /// and `OperandTensorIndices` is either `ti_b_t` or `ti_c_t, ti_a_t`. Let
     /// `lhs_tensor_multi_index == [0, 1, 2]`, representing the multi-index of
     /// the component \f$L_{012}\f$. If
     /// `OperandTensorIndices == ti_c_t, ti_a_t`, this function will return the
@@ -154,7 +154,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// indices of the pair of components in the two RHS operand expressions that
   /// need to be multiplied, then multiplying their values. For example, say we
   /// are evaluating \f$L_abc = R_{b} * S_{ca}\f$. Let `lhs_storage_index` refer
-  /// to the component, \f$L_{012}\f$, the component we wish to compute. This
+  /// to the component \f$L_{012}\f$, the component we wish to compute. This
   /// function will compute the storage indices of the operands that correspond
   /// to \f$R_{1}\f$ and \f$S_{20}\f$, retrieve their values, and return their
   /// product.
@@ -216,10 +216,10 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
 /// TensorExpression
 /// \tparam T2 the type of the second operand of the product, a Tensor or
 /// TensorExpression
-/// \tparam ArgsList1 the `TensorIndex`s of the first operand
-/// \tparam ArgsList2 the `TensorIndex`s of the second operand
-/// \param t1 the expression of the first operand of the product
-/// \param t2 the expression of the second operand of the product
+/// \tparam ArgsList1 the TensorIndexs of the first operand
+/// \tparam ArgsList2 the TensorIndexs of the second operand
+/// \param t1 first operand expression of the product
+/// \param t2 the second operand expression of the product
 /// \return the expression representing the product of two tensor expressions
 template <typename T1, typename T2, typename ArgsList1, typename ArgsList2>
 SPECTRE_ALWAYS_INLINE auto operator*(
