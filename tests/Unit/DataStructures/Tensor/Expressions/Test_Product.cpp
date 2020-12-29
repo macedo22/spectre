@@ -790,6 +790,223 @@ void test_rank_1_inner_product(const DataType& used_for_size) noexcept {
   CHECK(L_from_Sa_RA.get() == expected_sum);
 }
 
+/// \ingroup TestingFrameworkGroup
+/// \brief Test the inner product of two rank 2 tensors is correctly evaluated
+///
+/// \details
+/// The inner product cases tested are:
+/// - (rank 0) = (upper rank 1) x (lower rank 1)
+/// - (rank 0) = (lower rank 1) x (upper rank 1)
+///
+/// \tparam DataType the type of data being stored in the product operands
+template <typename DataType>
+void test_rank_2_inner_product(const DataType& used_for_size) noexcept {
+  Tensor<DataType, Symmetry<1>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      Ru(used_for_size);
+  create_tensor(make_not_null(&Ru));
+
+  Tensor<DataType, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+      Rll(used_for_size);
+  create_tensor(make_not_null(&Rll));
+  Tensor<DataType, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+      Sll(used_for_size);
+  create_tensor(make_not_null(&Sll));
+  Tensor<DataType, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                    SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      Ruu(used_for_size);
+  create_tensor(make_not_null(&Ruu));
+  Tensor<DataType, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                    SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      Suu(used_for_size);
+  create_tensor(make_not_null(&Suu));
+  Tensor<DataType, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      Rlu(used_for_size);
+  create_tensor(make_not_null(&Rlu));
+  Tensor<DataType, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                    SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+      Slu(used_for_size);
+  create_tensor(make_not_null(&Slu));
+  Tensor<DataType, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+      Rul(used_for_size);
+  create_tensor(make_not_null(&Rul));
+  Tensor<DataType, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+      Sul(used_for_size);
+  create_tensor(make_not_null(&Sul));
+  const Tensor<DataType> L_abAB_product =
+      TensorExpressions::evaluate(Rll(ti_a, ti_b) * Suu(ti_A, ti_B));
+  DataType L_abAB_expected_sum = make_with_value<DataType>(used_for_size, 0.0);
+  for (size_t a = 0; a < 4; a++) {
+    for (size_t b = 0; b < 4; b++) {
+      L_abAB_expected_sum += (Rll.get(a, b) * Suu.get(a, b));
+    }
+  }
+  CHECK(L_abAB_product.get() == L_abAB_expected_sum);
+
+  const Tensor<DataType> L_abBA_product =
+      TensorExpressions::evaluate(Rll(ti_a, ti_b) * Suu(ti_B, ti_A));
+  DataType L_abBA_expected_sum = make_with_value<DataType>(used_for_size, 0.0);
+  for (size_t a = 0; a < 4; a++) {
+    for (size_t b = 0; b < 4; b++) {
+      L_abBA_expected_sum += (Rll.get(a, b) * Suu.get(b, a));
+    }
+  }
+  CHECK(L_abBA_product.get() == L_abBA_expected_sum);
+
+  const Tensor<DataType> L_baAB_product =
+      TensorExpressions::evaluate(Rll(ti_b, ti_a) * Suu(ti_A, ti_B));
+  DataType L_baAB_expected_sum = make_with_value<DataType>(used_for_size, 0.0);
+  for (size_t a = 0; a < 4; a++) {
+    for (size_t b = 0; b < 4; b++) {
+      L_baAB_expected_sum += (Rll.get(b, a) * Suu.get(a, b));
+    }
+  }
+  CHECK(L_baAB_product.get() == L_baAB_expected_sum);
+
+  const Tensor<DataType> L_baBA_product =
+      TensorExpressions::evaluate(Rll(ti_b, ti_a) * Suu(ti_B, ti_A));
+  DataType L_baBA_expected_sum = make_with_value<DataType>(used_for_size, 0.0);
+  for (size_t a = 0; a < 4; a++) {
+    for (size_t b = 0; b < 4; b++) {
+      L_baBA_expected_sum += (Rll.get(b, a) * Suu.get(b, a));
+    }
+  }
+  CHECK(L_baBA_product.get() == L_baBA_expected_sum);
+
+  const Tensor<DataType> L_ABab_product =
+      TensorExpressions::evaluate(Ruu(ti_A, ti_B) * Sll(ti_a, ti_b));
+  DataType L_ABab_expected_sum = make_with_value<DataType>(used_for_size, 0.0);
+  for (size_t a = 0; a < 4; a++) {
+    for (size_t b = 0; b < 4; b++) {
+      L_ABab_expected_sum += (Ruu.get(a, b) * Sll.get(a, b));
+    }
+  }
+  CHECK(L_ABab_product.get() == L_ABab_expected_sum);
+
+  const Tensor<DataType> L_ABba_product =
+      TensorExpressions::evaluate(Ruu(ti_A, ti_B) * Sll(ti_b, ti_a));
+  DataType L_ABba_expected_sum = make_with_value<DataType>(used_for_size, 0.0);
+  for (size_t a = 0; a < 4; a++) {
+    for (size_t b = 0; b < 4; b++) {
+      L_ABba_expected_sum += (Ruu.get(a, b) * Sll.get(b, a));
+    }
+  }
+  CHECK(L_ABba_product.get() == L_ABba_expected_sum);
+
+  const Tensor<DataType> L_BAab_product =
+      TensorExpressions::evaluate(Ruu(ti_B, ti_A) * Sll(ti_a, ti_b));
+  DataType L_BAab_expected_sum = make_with_value<DataType>(used_for_size, 0.0);
+  for (size_t a = 0; a < 4; a++) {
+    for (size_t b = 0; b < 4; b++) {
+      L_BAab_expected_sum += (Ruu.get(b, a) * Sll.get(a, b));
+    }
+  }
+  CHECK(L_BAab_product.get() == L_BAab_expected_sum);
+
+  const Tensor<DataType> L_BAba_product =
+      TensorExpressions::evaluate(Ruu(ti_B, ti_A) * Sll(ti_b, ti_a));
+  DataType L_BAba_expected_sum = make_with_value<DataType>(used_for_size, 0.0);
+  for (size_t a = 0; a < 4; a++) {
+    for (size_t b = 0; b < 4; b++) {
+      L_BAba_expected_sum += (Ruu.get(b, a) * Sll.get(b, a));
+    }
+  }
+  CHECK(L_BAba_product.get() == L_BAba_expected_sum);
+
+  const Tensor<DataType> L_aBAb_product =
+      TensorExpressions::evaluate(Rlu(ti_a, ti_B) * Sul(ti_A, ti_b));
+  DataType L_aBAb_expected_sum = make_with_value<DataType>(used_for_size, 0.0);
+  for (size_t a = 0; a < 4; a++) {
+    for (size_t b = 0; b < 4; b++) {
+      L_aBAb_expected_sum += (Rlu.get(a, b) * Sul.get(a, b));
+    }
+  }
+  CHECK(L_aBAb_product.get() == L_aBAb_expected_sum);
+
+  const Tensor<DataType> L_AbaB_product =
+      TensorExpressions::evaluate(Rul(ti_A, ti_b) * Slu(ti_a, ti_B));
+  DataType L_AbaB_expected_sum = make_with_value<DataType>(used_for_size, 0.0);
+  for (size_t a = 0; a < 4; a++) {
+    for (size_t b = 0; b < 4; b++) {
+      L_AbaB_expected_sum += (Rul.get(a, b) * Slu.get(a, b));
+    }
+  }
+  CHECK(L_AbaB_product.get() == L_AbaB_expected_sum);
+
+  const Tensor<DataType> L_aBbA_product =
+      TensorExpressions::evaluate(Rlu(ti_a, ti_B) * Slu(ti_b, ti_A));
+  DataType L_aBbA_expected_sum = make_with_value<DataType>(used_for_size, 0.0);
+  for (size_t a = 0; a < 4; a++) {
+    for (size_t b = 0; b < 4; b++) {
+      L_aBbA_expected_sum += (Rlu.get(a, b) * Slu.get(b, a));
+    }
+  }
+  CHECK(L_aBbA_product.get() == L_aBbA_expected_sum);
+
+  const Tensor<DataType> L_BaAb_product =
+      TensorExpressions::evaluate(Rul(ti_B, ti_a) * Sul(ti_A, ti_b));
+  DataType L_BaAb_expected_sum = make_with_value<DataType>(used_for_size, 0.0);
+  for (size_t a = 0; a < 4; a++) {
+    for (size_t b = 0; b < 4; b++) {
+      L_BaAb_expected_sum += (Rlu.get(b, a) * Sul.get(a, b));
+    }
+  }
+  CHECK(L_BaAb_product.get() == L_BaAb_expected_sum);
+
+  const Tensor<DataType> L_AbBa_product =
+      TensorExpressions::evaluate(Rul(ti_A, ti_b) * Sul(ti_B, ti_a));
+  DataType L_AbBa_expected_sum = make_with_value<DataType>(used_for_size, 0.0);
+  for (size_t a = 0; a < 4; a++) {
+    for (size_t b = 0; b < 4; b++) {
+      L_AbBa_expected_sum += (Rul.get(a, b) * Sul.get(b, a));
+    }
+  }
+  CHECK(L_AbBa_product.get() == L_AbBa_expected_sum);
+
+  const Tensor<DataType> L_BabA_product =
+      TensorExpressions::evaluate(Rul(ti_B, ti_a) * Slu(ti_b, ti_A));
+  DataType L_BabA_expected_sum = make_with_value<DataType>(used_for_size, 0.0);
+  for (size_t a = 0; a < 4; a++) {
+    for (size_t b = 0; b < 4; b++) {
+      L_BabA_expected_sum += (Ruu.get(b, a) * Sll.get(b, a));
+    }
+  }
+  CHECK(L_BabA_product.get() == L_BabA_expected_sum);
+
+  const Tensor<DataType> L_bAaB_product =
+      TensorExpressions::evaluate(Rlu(ti_b, ti_A) * Slu(ti_a, ti_B));
+  DataType L_bAaB_expected_sum = make_with_value<DataType>(used_for_size, 0.0);
+  for (size_t a = 0; a < 4; a++) {
+    for (size_t b = 0; b < 4; b++) {
+      L_bAaB_expected_sum += (Ruu.get(b, a) * Sll.get(a, b));
+    }
+  }
+  CHECK(L_bAaB_product.get() == L_bAaB_expected_sum);
+
+  const Tensor<DataType> L_bABa_product =
+      TensorExpressions::evaluate(Rlu(ti_b, ti_A) * Sul(ti_B, ti_a));
+  DataType L_bABa_expected_sum = make_with_value<DataType>(used_for_size, 0.0);
+  for (size_t a = 0; a < 4; a++) {
+    for (size_t b = 0; b < 4; b++) {
+      L_bABa_expected_sum += (Ruu.get(b, a) * Sll.get(b, a));
+    }
+  }
+  CHECK(L_bABa_product.get() == L_bABa_expected_sum);
+}
+
 template <typename DataType>
 void test_products(const DataType& used_for_size) noexcept {
   test_rank_0_outer_product(used_for_size);
@@ -798,6 +1015,7 @@ void test_products(const DataType& used_for_size) noexcept {
   test_ranks_0_1_2_outer_product(used_for_size);
 
   test_rank_1_inner_product(used_for_size);
+  test_rank_2_inner_product(used_for_size);
 }
 }  // namespace
 
