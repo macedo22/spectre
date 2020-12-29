@@ -794,9 +794,9 @@ void test_rank_1_inner_product(const DataType& used_for_size) noexcept {
 /// \brief Test the inner product of two rank 2 tensors is correctly evaluated
 ///
 /// \details
-/// The inner product cases tested are:
-/// - (rank 0) = (upper rank 1) x (lower rank 1)
-/// - (rank 0) = (lower rank 1) x (upper rank 1)
+/// The sixteen inner product cases all contract both pairs of indices of the
+/// two tensor operands to a resulting rank 0 tensor. The sixteen cases are
+/// permutations of the positions of contracted pairs and their valences.
 ///
 /// \tparam DataType the type of data being stored in the product operands
 template <typename DataType>
