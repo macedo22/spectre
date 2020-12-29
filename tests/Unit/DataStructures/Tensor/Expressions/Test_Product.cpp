@@ -128,6 +128,22 @@ void test_rank_0_outer_product(const DataType& used_for_size) noexcept {
   }
 }
 
+/// \ingroup TestingFrameworkGroup
+/// \brief Test the outer product of a rank 0, rank 1, and rank 2 tensor is
+/// correctly evaluated
+///
+/// \details
+/// The outer product cases tested are:
+/// - rank 0 x rank 1 x rank 2
+/// - rank 0 x rank 2 x rank 1
+/// - rank 1 x rank 0 x rank 2
+/// - rank 1 x rank 2 x rank 0
+/// - rank 2 x rank 0 x rank 1
+/// - rank 2 x rank 1 x rank 0
+///
+/// For all cases, all LHS index orderings are tested.
+///
+/// \tparam DataType the type of data being stored in the product operands
 template <typename DataType>
 void test_ranks_0_1_2_outer_product(const DataType& used_for_size) noexcept {
   Tensor<DataType> R{{{used_for_size}}};
@@ -153,6 +169,8 @@ void test_ranks_0_1_2_outer_product(const DataType& used_for_size) noexcept {
 
   // \f$R * S^{a} * T_{bi}\f$
   const auto R_SA_Tbi_expr = R() * Su(ti_A) * Tll(ti_b, ti_i);
+  // Use explicit type (vs auto) for LHS Tensor so the compiler checks the
+  // return type of `evaluate`
   // \f$L^{a}{}_{bi} = R * S^{a} * T_{bi}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
                index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
