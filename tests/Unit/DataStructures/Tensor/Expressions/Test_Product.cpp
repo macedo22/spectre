@@ -37,12 +37,12 @@ void create_tensor(gsl::not_null<Tensor<DataVector, Ts...>*> tensor) noexcept {
 ///
 /// \details
 /// The outer product cases tested are:
-/// - rank 0 x rank 0
-/// - rank 0 x rank 0 x rank 0
-/// - rank 0 x rank 1
-/// - rank 1 x rank 0
-/// - rank 0 x rank 2
-/// - rank 2 x rank 0
+/// - (rank 0) = (rank 0) x (rank 0)
+/// - (rank 0) = (rank 0) x (rank 0) x (rank 0)
+/// - (rank 1) = (rank 0) x (rank 1)
+/// - (rank 1) = (rank 1) x (rank 0)
+/// - (rank 2) = (rank 0) x (rank 2)
+/// - (rank 2) = (rank 2) x (rank 0)
 ///
 /// For the last two cases, both LHS index orderings are tested.
 ///
@@ -129,17 +129,53 @@ void test_rank_0_outer_product(const DataType& used_for_size) noexcept {
 }
 
 /// \ingroup TestingFrameworkGroup
+/// \brief Test the inner product of two rank 1 tensors is correctly evaluated
+///
+/// \details
+/// The inner product cases tested are:
+/// - (rank 0) = (upper rank 1) x (lower rank 1)
+/// - (rank 0) = (lower rank 1) x (upper rank 1)
+///
+/// \tparam DataType the type of data being stored in the product operands
+template <typename DataType>
+void test_rank_1_inner_product(const DataType& used_for_size) noexcept {
+  Tensor<double, Symmetry<1>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+      Ru(used_for_size);
+  create_tensor(make_not_null(&Ru));
+
+  Tensor<double, Symmetry<1>,
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      Sl(used_for_size);
+  create_tensor(make_not_null(&Sl));
+
+  // \f$L = R^{a} * S_{a}\f$
+  const Tensor<DataType> L_from_RA_Sa =
+      TensorExpressions::evaluate(Ru(ti_A) * Sl(ti_a));
+  // \f$L = S_{a} * R^{a}\f$
+  const Tensor<DataType> L_from_Sa_RA =
+      TensorExpressions::evaluate(Sl(ti_a) * Ru(ti_A));
+
+  DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
+  for (size_t a = 0; a < 4; a++) {
+    expected_sum += (Ru.get(a) * Sl.get(a));
+  }
+  CHECK(L_from_RA_Sa.get() == expected_sum);
+  CHECK(L_from_Sa_RA.get() == expected_sum);
+}
+
+/// \ingroup TestingFrameworkGroup
 /// \brief Test the outer product of a rank 0, rank 1, and rank 2 tensor is
 /// correctly evaluated
 ///
 /// \details
 /// The outer product cases tested are:
-/// - rank 0 x rank 1 x rank 2
-/// - rank 0 x rank 2 x rank 1
-/// - rank 1 x rank 0 x rank 2
-/// - rank 1 x rank 2 x rank 0
-/// - rank 2 x rank 0 x rank 1
-/// - rank 2 x rank 1 x rank 0
+/// - (rank 3) = (rank 0) x (rank 1) x (rank 2)
+/// - (rank 3) = (rank 0) x (rank 2) x (rank 1)
+/// - (rank 3) = (rank 1) x (rank 0) x (rank 2)
+/// - (rank 3) = (rank 1) x (rank 2) x (rank 0)
+/// - (rank 3) = (rank 2) x (rank 0) x (rank 1)
+/// - (rank 3) = (rank 2) x (rank 1) x (rank 0)
 ///
 /// For all cases, all LHS index orderings are tested.
 ///
