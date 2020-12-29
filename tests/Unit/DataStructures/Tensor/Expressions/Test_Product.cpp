@@ -801,49 +801,39 @@ void test_rank_1_inner_product(const DataType& used_for_size) noexcept {
 /// \tparam DataType the type of data being stored in the product operands
 template <typename DataType>
 void test_rank_2_inner_product(const DataType& used_for_size) noexcept {
-  Tensor<DataType, Symmetry<1>,
-         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
-      Ru(used_for_size);
-  create_tensor(make_not_null(&Ru));
+  using lower_spacetime_index = SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>;
+  using upper_spacetime_index = SpacetimeIndex<3, UpLo::Up, Frame::Inertial>;
 
   Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                    SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+         index_list<lower_spacetime_index, lower_spacetime_index>>
       Rll(used_for_size);
   create_tensor(make_not_null(&Rll));
   Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                    SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+         index_list<lower_spacetime_index, lower_spacetime_index>>
       Sll(used_for_size);
   create_tensor(make_not_null(&Sll));
   Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                    SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+         index_list<upper_spacetime_index, upper_spacetime_index>>
       Ruu(used_for_size);
   create_tensor(make_not_null(&Ruu));
   Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                    SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+         index_list<upper_spacetime_index, upper_spacetime_index>>
       Suu(used_for_size);
   create_tensor(make_not_null(&Suu));
   Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                    SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+         index_list<lower_spacetime_index, upper_spacetime_index>>
       Rlu(used_for_size);
   create_tensor(make_not_null(&Rlu));
   Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                    SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+         index_list<lower_spacetime_index, upper_spacetime_index>>
       Slu(used_for_size);
   create_tensor(make_not_null(&Slu));
   Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                    SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+         index_list<upper_spacetime_index, lower_spacetime_index>>
       Rul(used_for_size);
   create_tensor(make_not_null(&Rul));
   Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                    SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+         index_list<upper_spacetime_index, lower_spacetime_index>>
       Sul(used_for_size);
   create_tensor(make_not_null(&Sul));
   const Tensor<DataType> L_abAB_product =
