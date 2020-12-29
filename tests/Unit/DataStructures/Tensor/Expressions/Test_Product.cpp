@@ -976,48 +976,6 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.OuterProduct2By2",
   }
 }
 
-SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.OuterProduct1By1By1",
-                  "[DataStructures][Unit]") {
-  Tensor<double, Symmetry<1>,
-         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
-      Ru{};
-  std::iota(Ru.begin(), Ru.end(), 0.0);
-  Tensor<double, Symmetry<1>,
-         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
-      Sl{};
-  std::iota(Sl.begin(), Sl.end(), 0.0);
-  Tensor<double, Symmetry<1>,
-         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
-      Tu{};
-  std::iota(Tu.begin(), Tu.end(), 0.0);
-
-  auto L_AbC = TensorExpressions::evaluate<ti_A, ti_b, ti_C>(
-      Ru(ti_A) * Sl(ti_b) * Tu(ti_C));
-  auto L_ACb = TensorExpressions::evaluate<ti_A, ti_C, ti_b>(
-      Ru(ti_A) * Sl(ti_b) * Tu(ti_C));
-  auto L_bAC = TensorExpressions::evaluate<ti_b, ti_A, ti_C>(
-      Ru(ti_A) * Sl(ti_b) * Tu(ti_C));
-  auto L_bCA = TensorExpressions::evaluate<ti_b, ti_C, ti_A>(
-      Ru(ti_A) * Sl(ti_b) * Tu(ti_C));
-  auto L_CAb = TensorExpressions::evaluate<ti_C, ti_A, ti_b>(
-      Ru(ti_A) * Sl(ti_b) * Tu(ti_C));
-  auto L_CbA = TensorExpressions::evaluate<ti_C, ti_b, ti_A>(
-      Ru(ti_A) * Sl(ti_b) * Tu(ti_C));
-
-  for (size_t a = 0; a < 4; a++) {
-    for (size_t b = 0; b < 4; b++) {
-      for (size_t c = 0; c < 4; c++) {
-        CHECK(L_AbC.get(a, b, c) == Ru.get(a) * Sl.get(b) * Tu.get(c));
-        CHECK(L_ACb.get(a, c, b) == Ru.get(a) * Sl.get(b) * Tu.get(c));
-        CHECK(L_bAC.get(b, a, c) == Ru.get(a) * Sl.get(b) * Tu.get(c));
-        CHECK(L_bCA.get(b, c, a) == Ru.get(a) * Sl.get(b) * Tu.get(c));
-        CHECK(L_CAb.get(c, a, b) == Ru.get(a) * Sl.get(b) * Tu.get(c));
-        CHECK(L_CbA.get(c, b, a) == Ru.get(a) * Sl.get(b) * Tu.get(c));
-      }
-    }
-  }
-}
-
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.OuterProduct1By2By1",
                   "[DataStructures][Unit]") {
   Tensor<double, Symmetry<1>,
