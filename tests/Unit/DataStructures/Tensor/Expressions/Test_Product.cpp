@@ -934,27 +934,35 @@ void test_rank2_inner_outer_product(const DataType& used_for_size) noexcept {
       Slu(used_for_size);
   create_tensor(make_not_null(&Slu));
 
+  // \f$L_{ac} = R_{ab} * S^{b}_{c}\f$
   const Tensor<DataType, Symmetry<2, 1>, index_list<R_index, S_lower_index>>
       L_abBc_to_ac = TensorExpressions::evaluate<ti_a, ti_c>(Rll(ti_a, ti_b) *
                                                              Sul(ti_B, ti_c));
+  // \f$L_{ca} = R_{ab} * S^{b}_{c}\f$
   const Tensor<DataType, Symmetry<2, 1>, index_list<S_lower_index, R_index>>
       L_abBc_to_ca = TensorExpressions::evaluate<ti_c, ti_a>(Rll(ti_a, ti_b) *
                                                              Sul(ti_B, ti_c));
+  // \f$L_{ac} = R_{ab} * S_{c}^{b}\f$
   const Tensor<DataType, Symmetry<2, 1>, index_list<R_index, S_lower_index>>
       L_abcB_to_ac = TensorExpressions::evaluate<ti_a, ti_c>(Rll(ti_a, ti_b) *
                                                              Slu(ti_c, ti_B));
+  // \f$L_{ca} = R_{ab} * S_{c}^{b}\f$
   const Tensor<DataType, Symmetry<2, 1>, index_list<S_lower_index, R_index>>
       L_abcB_to_ca = TensorExpressions::evaluate<ti_c, ti_a>(Rll(ti_a, ti_b) *
                                                              Slu(ti_c, ti_B));
+  // \f$L_{ac} = R_{ba} * S^{b}_{c}\f$
   const Tensor<DataType, Symmetry<2, 1>, index_list<R_index, S_lower_index>>
       L_baBc_to_ac = TensorExpressions::evaluate<ti_a, ti_c>(Rll(ti_b, ti_a) *
                                                              Sul(ti_B, ti_c));
+  // \f$L_{ca} = R_{ba} * S^{b}_{c}\f$
   const Tensor<DataType, Symmetry<2, 1>, index_list<S_lower_index, R_index>>
       L_baBc_to_ca = TensorExpressions::evaluate<ti_c, ti_a>(Rll(ti_b, ti_a) *
                                                              Sul(ti_B, ti_c));
+  // \f$L_{ac} = R_{ba} * S_{c}^{b}\f$
   const Tensor<DataType, Symmetry<2, 1>, index_list<R_index, S_lower_index>>
       L_bacB_to_ac = TensorExpressions::evaluate<ti_a, ti_c>(Rll(ti_b, ti_a) *
                                                              Slu(ti_c, ti_B));
+  // \f$L_{ca} = R_{ba} * S_{c}^{b}\f$
   const Tensor<DataType, Symmetry<2, 1>, index_list<S_lower_index, R_index>>
       L_bacB_to_ca = TensorExpressions::evaluate<ti_c, ti_a>(Rll(ti_b, ti_a) *
                                                              Slu(ti_c, ti_B));
