@@ -405,14 +405,14 @@ void test_ranks_0_1_2_outer_product(const DataType& used_for_size) noexcept {
     create_tensor(make_not_null(&R));
   }
 
-  Tensor<DataType, Symmetry<1>,
-         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
-      Su(used_for_size);
+  using S_index = SpacetimeIndex<3, UpLo::Up, Frame::Inertial>;
+  using T_first_index = SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>;
+  using T_second_index = SpatialIndex<4, UpLo::Lo, Frame::Inertial>;
+
+  Tensor<DataType, Symmetry<1>, index_list<S_index>> Su(used_for_size);
   create_tensor(make_not_null(&Su));
 
-  Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                    SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+  Tensor<DataType, Symmetry<2, 1>, index_list<T_first_index, T_second_index>>
       Tll(used_for_size);
   create_tensor(make_not_null(&Tll));
 
@@ -422,44 +422,32 @@ void test_ranks_0_1_2_outer_product(const DataType& used_for_size) noexcept {
   // Use explicit type (vs auto) for LHS Tensor so the compiler checks the
   // return type of `evaluate`
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+               index_list<S_index, T_first_index, T_second_index>>
       LAbi_from_R_SA_Tbi =
           TensorExpressions::evaluate<ti_A, ti_b, ti_i>(R_SA_Tbi_expr);
   // \f$L^{a}{}_{ib} = R * S^{a} * T_{bi}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+               index_list<S_index, T_second_index, T_first_index>>
       LAib_from_R_SA_Tbi =
           TensorExpressions::evaluate<ti_A, ti_i, ti_b>(R_SA_Tbi_expr);
   // \f$L_{b}{}^{a}{}_{i} = R * S^{a} * T_{bi}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+               index_list<T_first_index, S_index, T_second_index>>
       LbAi_from_R_SA_Tbi =
           TensorExpressions::evaluate<ti_b, ti_A, ti_i>(R_SA_Tbi_expr);
   // \f$L_{bi}{}^{a} = R * S^{a} * T_{bi}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+               index_list<T_first_index, T_second_index, S_index>>
       LbiA_from_R_SA_Tbi =
           TensorExpressions::evaluate<ti_b, ti_i, ti_A>(R_SA_Tbi_expr);
   // \f$L_{i}{}^{a}{}_{b} = R * S^{a} * T_{bi}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+               index_list<T_second_index, S_index, T_first_index>>
       LiAb_from_R_SA_Tbi =
           TensorExpressions::evaluate<ti_i, ti_A, ti_b>(R_SA_Tbi_expr);
   // \f$L_{ib}{}^{a} = R * S^{a} * T_{bi}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+               index_list<T_second_index, T_first_index, S_index>>
       LibA_from_R_SA_Tbi =
           TensorExpressions::evaluate<ti_i, ti_b, ti_A>(R_SA_Tbi_expr);
 
@@ -467,44 +455,32 @@ void test_ranks_0_1_2_outer_product(const DataType& used_for_size) noexcept {
   const auto R_Tbi_SA_expr = R() * Tll(ti_b, ti_i) * Su(ti_A);
   // \f$L^{a}{}_{bi} = R * T_{bi} * S^{a}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+               index_list<S_index, T_first_index, T_second_index>>
       LAbi_from_R_Tbi_SA =
           TensorExpressions::evaluate<ti_A, ti_b, ti_i>(R_Tbi_SA_expr);
   // \f$L^{a}{}_{ib} = R * T_{bi} * S^{a}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+               index_list<S_index, T_second_index, T_first_index>>
       LAib_from_R_Tbi_SA =
           TensorExpressions::evaluate<ti_A, ti_i, ti_b>(R_Tbi_SA_expr);
   // \f$L_{b}{}^{a}{}_{i} = R * T_{bi} * S^{a}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+               index_list<T_first_index, S_index, T_second_index>>
       LbAi_from_R_Tbi_SA =
           TensorExpressions::evaluate<ti_b, ti_A, ti_i>(R_Tbi_SA_expr);
   // \f$L_{bi}{}^{a} = R * R * T_{bi} * S^{a}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+               index_list<T_first_index, T_second_index, S_index>>
       LbiA_from_R_Tbi_SA =
           TensorExpressions::evaluate<ti_b, ti_i, ti_A>(R_Tbi_SA_expr);
   // \f$L_{i}{}^{a}{}_{b} = R * T_{bi} * S^{a}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+               index_list<T_second_index, S_index, T_first_index>>
       LiAb_from_R_Tbi_SA =
           TensorExpressions::evaluate<ti_i, ti_A, ti_b>(R_Tbi_SA_expr);
   // \f$L_{ib}{}^{a} = R * T_{bi} * S^{a}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+               index_list<T_second_index, T_first_index, S_index>>
       LibA_from_R_Tbi_SA =
           TensorExpressions::evaluate<ti_i, ti_b, ti_A>(R_Tbi_SA_expr);
 
@@ -512,44 +488,32 @@ void test_ranks_0_1_2_outer_product(const DataType& used_for_size) noexcept {
   const auto SA_R_Tbi_expr = Su(ti_A) * R() * Tll(ti_b, ti_i);
   // \f$L^{a}{}_{bi} = S^{a} * R * T_{bi}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+               index_list<S_index, T_first_index, T_second_index>>
       LAbi_from_SA_R_Tbi =
           TensorExpressions::evaluate<ti_A, ti_b, ti_i>(SA_R_Tbi_expr);
   // \f$L^{a}{}_{ib} = S^{a} * R * T_{bi}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+               index_list<S_index, T_second_index, T_first_index>>
       LAib_from_SA_R_Tbi =
           TensorExpressions::evaluate<ti_A, ti_i, ti_b>(SA_R_Tbi_expr);
   // \f$L_{b}{}^{a}{}_{i} = S^{a} * R * T_{bi}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+               index_list<T_first_index, S_index, T_second_index>>
       LbAi_from_SA_R_Tbi =
           TensorExpressions::evaluate<ti_b, ti_A, ti_i>(SA_R_Tbi_expr);
   // \f$L_{bi}{}^{a} = S^{a} * R * T_{bi}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+               index_list<T_first_index, T_second_index, S_index>>
       LbiA_from_SA_R_Tbi =
           TensorExpressions::evaluate<ti_b, ti_i, ti_A>(SA_R_Tbi_expr);
   // \f$L_{i}{}^{a}{}_{b} = S^{a} * R * T_{bi}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+               index_list<T_second_index, S_index, T_first_index>>
       LiAb_from_SA_R_Tbi =
           TensorExpressions::evaluate<ti_i, ti_A, ti_b>(SA_R_Tbi_expr);
   // \f$L_{ib}{}^{a} = S^{a} * R * T_{bi}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+               index_list<T_second_index, T_first_index, S_index>>
       LibA_from_SA_R_Tbi =
           TensorExpressions::evaluate<ti_i, ti_b, ti_A>(SA_R_Tbi_expr);
 
@@ -557,44 +521,32 @@ void test_ranks_0_1_2_outer_product(const DataType& used_for_size) noexcept {
   const auto SA_Tbi_R_expr = Su(ti_A) * Tll(ti_b, ti_i) * R();
   // \f$L^{a}{}_{bi} = S^{a} * T_{bi} * R\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+               index_list<S_index, T_first_index, T_second_index>>
       LAbi_from_SA_Tbi_R =
           TensorExpressions::evaluate<ti_A, ti_b, ti_i>(SA_Tbi_R_expr);
   // \f$L^{a}{}_{ib} = S^{a} * T_{bi} * R\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+               index_list<S_index, T_second_index, T_first_index>>
       LAib_from_SA_Tbi_R =
           TensorExpressions::evaluate<ti_A, ti_i, ti_b>(SA_Tbi_R_expr);
   // \f$L_{b}{}^{a}{}_{i} = S^{a} * T_{bi} * R\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+               index_list<T_first_index, S_index, T_second_index>>
       LbAi_from_SA_Tbi_R =
           TensorExpressions::evaluate<ti_b, ti_A, ti_i>(SA_Tbi_R_expr);
   // \f$L_{bi}{}^{a} = S^{a} * T_{bi} * R\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+               index_list<T_first_index, T_second_index, S_index>>
       LbiA_from_SA_Tbi_R =
           TensorExpressions::evaluate<ti_b, ti_i, ti_A>(SA_Tbi_R_expr);
   // \f$L_{i}{}^{a}{}_{b} = S^{a} * T_{bi} * R\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+               index_list<T_second_index, S_index, T_first_index>>
       LiAb_from_SA_Tbi_R =
           TensorExpressions::evaluate<ti_i, ti_A, ti_b>(SA_Tbi_R_expr);
   // \f$L_{ib}{}^{a} = S^{a} * T_{bi} * R\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+               index_list<T_second_index, T_first_index, S_index>>
       LibA_from_SA_Tbi_R =
           TensorExpressions::evaluate<ti_i, ti_b, ti_A>(SA_Tbi_R_expr);
 
@@ -602,44 +554,32 @@ void test_ranks_0_1_2_outer_product(const DataType& used_for_size) noexcept {
   const auto Tbi_R_SA_expr = Tll(ti_b, ti_i) * R() * Su(ti_A);
   // \f$L^{a}{}_{bi} = T_{bi} * R * S^{a}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+               index_list<S_index, T_first_index, T_second_index>>
       LAbi_from_Tbi_R_SA =
           TensorExpressions::evaluate<ti_A, ti_b, ti_i>(Tbi_R_SA_expr);
   // \f$L^{a}{}_{ib} = T_{bi} * R * S^{a}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+               index_list<S_index, T_second_index, T_first_index>>
       LAib_from_Tbi_R_SA =
           TensorExpressions::evaluate<ti_A, ti_i, ti_b>(Tbi_R_SA_expr);
   // \f$L_{b}{}^{a}{}_{i} = T_{bi} * R * S^{a}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+               index_list<T_first_index, S_index, T_second_index>>
       LbAi_from_Tbi_R_SA =
           TensorExpressions::evaluate<ti_b, ti_A, ti_i>(Tbi_R_SA_expr);
   // \f$L_{bi}{}^{a} = T_{bi} * R * S^{a}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+               index_list<T_first_index, T_second_index, S_index>>
       LbiA_from_Tbi_R_SA =
           TensorExpressions::evaluate<ti_b, ti_i, ti_A>(Tbi_R_SA_expr);
   // \f$L_{i}{}^{a}{}_{b} = T_{bi} * R * S^{a}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+               index_list<T_second_index, S_index, T_first_index>>
       LiAb_from_Tbi_R_SA =
           TensorExpressions::evaluate<ti_i, ti_A, ti_b>(Tbi_R_SA_expr);
   // \f$L_{ib}{}^{a} = T_{bi} * R * S^{a}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+               index_list<T_second_index, T_first_index, S_index>>
       LibA_from_Tbi_R_SA =
           TensorExpressions::evaluate<ti_i, ti_b, ti_A>(Tbi_R_SA_expr);
 
@@ -647,50 +587,38 @@ void test_ranks_0_1_2_outer_product(const DataType& used_for_size) noexcept {
   const auto Tbi_SA_R_expr = Tll(ti_b, ti_i) * Su(ti_A) * R();
   // \f$L^{a}{}_{bi} = T_{bi} * R * S^{a}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+               index_list<S_index, T_first_index, T_second_index>>
       LAbi_from_Tbi_SA_R =
           TensorExpressions::evaluate<ti_A, ti_b, ti_i>(Tbi_SA_R_expr);
   // \f$L^{a}{}_{ib} = T_{bi} * R * S^{a}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+               index_list<S_index, T_second_index, T_first_index>>
       LAib_from_Tbi_SA_R =
           TensorExpressions::evaluate<ti_A, ti_i, ti_b>(Tbi_SA_R_expr);
   // \f$L_{b}{}^{a}{}_{i} = T_{bi} * R * S^{a}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>>>
+               index_list<T_first_index, S_index, T_second_index>>
       LbAi_from_Tbi_SA_R =
           TensorExpressions::evaluate<ti_b, ti_A, ti_i>(Tbi_SA_R_expr);
   // \f$L_{bi}{}^{a} = T_{bi} * R * S^{a}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+               index_list<T_first_index, T_second_index, S_index>>
       LbiA_from_Tbi_SA_R =
           TensorExpressions::evaluate<ti_b, ti_i, ti_A>(Tbi_SA_R_expr);
   // \f$L_{i}{}^{a}{}_{b} = T_{bi} * R * S^{a}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+               index_list<T_second_index, S_index, T_first_index>>
       LiAb_from_Tbi_SA_R =
           TensorExpressions::evaluate<ti_i, ti_A, ti_b>(Tbi_SA_R_expr);
   // \f$L_{ib}{}^{a} = T_{bi} * R * S^{a}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpatialIndex<4, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>
+               index_list<T_second_index, T_first_index, S_index>>
       LibA_from_Tbi_SA_R =
           TensorExpressions::evaluate<ti_i, ti_b, ti_A>(Tbi_SA_R_expr);
 
-  for (size_t a = 0; a < 4; a++) {
-    for (size_t b = 0; b < 4; b++) {
-      for (size_t i = 0; i < 4; i++) {
+  for (size_t a = 0; a < S_index::dim; a++) {
+    for (size_t b = 0; b < T_first_index::dim; b++) {
+      for (size_t i = 0; i < T_second_index::dim; i++) {
         const DataType expected_R_SA_Tbi_product =
             R.get() * Su.get(a) * Tll.get(b, i);
         CHECK(LAbi_from_R_SA_Tbi.get(a, b, i) == expected_R_SA_Tbi_product);
