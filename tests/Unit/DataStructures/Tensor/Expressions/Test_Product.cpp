@@ -909,17 +909,17 @@ void test_rank_2_inner_product(const DataType& used_for_size) noexcept {
 }
 
 /// \ingroup TestingFrameworkGroup
-/// \brief Test products involving both inner and outer products of indices is
-/// correctly evaluated
+/// \brief Test the product of two rank 2 tensors with one pair of indices to
+/// contract is correctly evaluated
 ///
 /// \details
-/// The inner product cases tested are:
-/// - (rank 0) = (upper rank 1) x (lower rank 1)
-/// - (rank 0) = (lower rank 1) x (upper rank 1)
+/// All cases in this test contract one pair of indices of the two tensor
+/// operands to a resulting rank 2 tensor. Each case is a permutation of the
+/// position of the contracted pair and the ordering of the LHS indices.
 ///
 /// \tparam DataType the type of data being stored in the product operands
 template <typename DataType>
-void test_inner_and_outer_product(const DataType& used_for_size) noexcept {
+void test_rank2_inner_outer_product(const DataType& used_for_size) noexcept {
   using R_index = SpacetimeIndex<3, UpLo::Lo, Frame::Grid>;
   using S_lower_index = SpacetimeIndex<2, UpLo::Lo, Frame::Grid>;
   using S_upper_index = SpacetimeIndex<3, UpLo::Up, Frame::Grid>;
@@ -985,7 +985,21 @@ void test_inner_and_outer_product(const DataType& used_for_size) noexcept {
       CHECK(L_bacB_to_ca.get(c, a) == L_bacB_expected_product);
     }
   }
+}
 
+/// \ingroup TestingFrameworkGroup
+/// \brief Test products involving both inner and outer products of indices is
+/// correctly evaluated
+///
+/// \details
+/// The inner product cases tested are:
+/// - (rank 0) = (upper rank 1) x (lower rank 1)
+/// - (rank 0) = (lower rank 1) x (upper rank 1)
+///
+/// \tparam DataType the type of data being stored in the product operands
+template <typename DataType>
+void test_three_term_inner_outer_product(
+    const DataType& used_for_size) noexcept {
   Tensor<DataType, Symmetry<1>,
          index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
       Ru(used_for_size);
@@ -1042,7 +1056,8 @@ void test_products(const DataType& used_for_size) noexcept {
   test_rank_1_inner_product(used_for_size);
   test_rank_2_inner_product(used_for_size);
 
-  test_inner_and_outer_product(used_for_size);
+  test_rank2_inner_outer_product(used_for_size);
+  test_three_term_inner_outer_product(used_for_size);
 }
 }  // namespace
 
