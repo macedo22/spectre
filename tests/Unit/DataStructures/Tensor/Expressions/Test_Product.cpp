@@ -48,7 +48,7 @@ void create_tensor(gsl::not_null<Tensor<DataVector, Ts...>*> tensor) noexcept {
 ///
 /// \tparam DataType the type of data being stored in the product operands
 template <typename DataType>
-void test_rank_0_outer_product(const DataType& used_for_size) noexcept {
+void test_outer_product_rank_0_operand(const DataType& used_for_size) noexcept {
   Tensor<DataType> R{{{used_for_size}}};
   if constexpr (std::is_same_v<DataType, double>) {
     // Instead of the tensor's value being the whole number, `used_for_size`
@@ -144,7 +144,7 @@ void test_rank_0_outer_product(const DataType& used_for_size) noexcept {
 ///
 /// \tparam DataType the type of data being stored in the product operands
 template <typename DataType>
-void test_rank_1_outer_product(const DataType& used_for_size) noexcept {
+void test_outer_product_rank_1_operand(const DataType& used_for_size) noexcept {
   Tensor<DataType, Symmetry<1>,
          index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
       Rl(used_for_size);
@@ -232,7 +232,8 @@ void test_rank_1_outer_product(const DataType& used_for_size) noexcept {
 ///
 /// \tparam DataType the type of data being stored in the product operands
 template <typename DataType>
-void test_rank_2_outer_product(const DataType& used_for_size) noexcept {
+void test_outer_product_rank_2x2_operands(
+    const DataType& used_for_size) noexcept {
   using R_index = SpacetimeIndex<3, UpLo::Lo, Frame::Grid>;
   using S_first_index = SpatialIndex<4, UpLo::Up, Frame::Grid>;
   using S_second_index = SpacetimeIndex<2, UpLo::Lo, Frame::Grid>;
@@ -395,7 +396,8 @@ void test_rank_2_outer_product(const DataType& used_for_size) noexcept {
 ///
 /// \tparam DataType the type of data being stored in the product operands
 template <typename DataType>
-void test_ranks_0_1_2_outer_product(const DataType& used_for_size) noexcept {
+void test_outer_product_rank_0x1x2_operands(
+    const DataType& used_for_size) noexcept {
   Tensor<DataType> R{{{used_for_size}}};
   if constexpr (std::is_same_v<DataType, double>) {
     // Instead of the tensor's value being the whole number, `used_for_size`
@@ -678,7 +680,8 @@ void test_ranks_0_1_2_outer_product(const DataType& used_for_size) noexcept {
 ///
 /// \tparam DataType the type of data being stored in the product operands
 template <typename DataType>
-void test_rank_1_inner_product(const DataType& used_for_size) noexcept {
+void test_inner_product_rank_1x1_operands(
+    const DataType& used_for_size) noexcept {
   Tensor<DataType, Symmetry<1>,
          index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
       Ru(used_for_size);
@@ -716,7 +719,8 @@ void test_rank_1_inner_product(const DataType& used_for_size) noexcept {
 ///
 /// \tparam DataType the type of data being stored in the product operands
 template <typename DataType>
-void test_rank_2_inner_product(const DataType& used_for_size) noexcept {
+void test_inner_product_rank_2x2_operands(
+    const DataType& used_for_size) noexcept {
   using lower_spacetime_index = SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>;
   using upper_spacetime_index = SpacetimeIndex<3, UpLo::Up, Frame::Inertial>;
   using lower_spatial_index = SpatialIndex<2, UpLo::Lo, Frame::Inertial>;
@@ -1076,13 +1080,13 @@ void test_three_term_inner_outer_product(
 
 template <typename DataType>
 void test_products(const DataType& used_for_size) noexcept {
-  test_rank_0_outer_product(used_for_size);
-  test_rank_1_outer_product(used_for_size);
-  test_rank_2_outer_product(used_for_size);
-  test_ranks_0_1_2_outer_product(used_for_size);
+  test_outer_product_rank_0_operand(used_for_size);
+  test_outer_product_rank_1_operand(used_for_size);
+  test_outer_product_rank_2x2_operands(used_for_size);
+  test_outer_product_rank_0x1x2_operands(used_for_size);
 
-  test_rank_1_inner_product(used_for_size);
-  test_rank_2_inner_product(used_for_size);
+  test_inner_product_rank_1x1_operands(used_for_size);
+  test_inner_product_rank_2x2_operands(used_for_size);
 
   test_two_term_inner_outer_product(used_for_size);
   test_three_term_inner_outer_product(used_for_size);
