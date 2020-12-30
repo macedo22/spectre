@@ -154,11 +154,6 @@ void test_outer_product_rank_1_operand(const DataType& used_for_size) noexcept {
       Su(used_for_size);
   create_tensor(make_not_null(&Su));
 
-  Tensor<DataType, Symmetry<1>,
-         index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>>>
-      Tu(used_for_size);
-  create_tensor(make_not_null(&Tu));
-
   // \f$L^{a}{}_{i} = R_{i} * S^{a}\f$
   // Use explicit type (vs auto) for LHS Tensor so the compiler checks the
   // return type of `evaluate`
@@ -173,6 +168,11 @@ void test_outer_product_rank_1_operand(const DataType& used_for_size) noexcept {
       CHECK(LAi_from_Ri_SA.get(a, i) == Rl.get(i) * Su.get(a));
     }
   }
+
+  Tensor<DataType, Symmetry<1>,
+         index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>>>
+      Tu(used_for_size);
+  create_tensor(make_not_null(&Tu));
 
   // \f$L_{ja}{}^{i} = R_{i} * S^{a} * T^{j}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
