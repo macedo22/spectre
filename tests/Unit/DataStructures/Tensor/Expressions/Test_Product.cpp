@@ -1015,15 +1015,15 @@ void test_three_term_inner_outer_product(
 
   const Tensor<DataType, Symmetry<1>,
                index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
-      L_Aab_to_b =
+      L_Jji_to_i =
           TensorExpressions::evaluate<ti_i>(Ru(ti_J) * Sl(ti_j) * Tl(ti_i));
 
   for (size_t i = 0; i < 3; i++) {
-    DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
+    DataType expected_product = make_with_value<DataType>(used_for_size, 0.0);
     for (size_t j = 0; j < 3; j++) {
-      expected_sum += (Ru.get(j) * Sl.get(j) * Tl.get(i));
+      expected_product += (Ru.get(j) * Sl.get(j) * Tl.get(i));
     }
-    CHECK(L_Aab_to_b.get(i) == expected_sum);
+    CHECK(L_Jji_to_i.get(i) == expected_product);
   }
 
   Tensor<DataType, Symmetry<2, 1>,
@@ -1032,16 +1032,16 @@ void test_three_term_inner_outer_product(
       Gll(used_for_size);
   create_tensor(make_not_null(&Gll));
 
-  const decltype(Gll) L_Aabc_to_bc = TensorExpressions::evaluate<ti_l, ti_k>(
+  const decltype(Gll) L_Jjlk_to_lk = TensorExpressions::evaluate<ti_l, ti_k>(
       Ru(ti_J) * Sl(ti_j) * Gll(ti_l, ti_k));
 
   for (size_t l = 0; l < 2; l++) {
     for (size_t k = 0; k < 3; k++) {
-      DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
+      DataType expected_product = make_with_value<DataType>(used_for_size, 0.0);
       for (size_t j = 0; j < 3; j++) {
-        expected_sum += (Ru.get(j) * Sl.get(j) * Gll.get(l, k));
+        expected_product += (Ru.get(j) * Sl.get(j) * Gll.get(l, k));
       }
-      CHECK(L_Aabc_to_bc.get(l, k) == expected_sum);
+      CHECK(L_Jjlk_to_lk.get(l, k) == expected_product);
     }
   }
 }
