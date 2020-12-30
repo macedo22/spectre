@@ -1076,38 +1076,23 @@ void test_three_term_inner_outer_product(
 
   for (size_t k = 0; k < G_index::dim; k++) {
     for (size_t i = 0; i < T_index::dim; i++) {
-      DataType Sj_Ti_GJK_expected_product =
-          make_with_value<DataType>(used_for_size, 0.0);
-      DataType Sj_GJK_Ti_expected_product =
-          make_with_value<DataType>(used_for_size, 0.0);
-      DataType Ti_Sj_GJK_expected_product =
-          make_with_value<DataType>(used_for_size, 0.0);
-      DataType Ti_GJK_Sj_expected_product =
-          make_with_value<DataType>(used_for_size, 0.0);
-      DataType GJK_Sj_Ti_expected_product =
-          make_with_value<DataType>(used_for_size, 0.0);
-      DataType GJK_Ti_Sj_expected_product =
+      DataType expected_product =
           make_with_value<DataType>(used_for_size, 0.0);
       for (size_t j = 0; j < G_index::dim; j++) {
-        Sj_Ti_GJK_expected_product += (Sl.get(j) * Tl.get(i) * Guu.get(j, k));
-        Sj_GJK_Ti_expected_product += (Sl.get(j) * Guu.get(j, k) * Tl.get(i));
-        Ti_Sj_GJK_expected_product += (Tl.get(i) * Sl.get(j) * Guu.get(j, k));
-        Ti_GJK_Sj_expected_product += (Tl.get(i) * Guu.get(j, k) * Sl.get(j));
-        GJK_Sj_Ti_expected_product += (Guu.get(j, k) * Sl.get(j) * Tl.get(i));
-        GJK_Ti_Sj_expected_product += (Guu.get(j, k) * Sl.get(j) * Tl.get(i));
+        expected_product += (Sl.get(j) * Tl.get(i) * Guu.get(j, k));
       }
-      CHECK(LiK_from_Sj_Ti_GJK.get(i, k) == Sj_Ti_GJK_expected_product);
-      CHECK(LKi_from_Sj_Ti_GJK.get(k, i) == Sj_Ti_GJK_expected_product);
-      CHECK(LiK_from_Sj_GJK_Ti.get(i, k) == Sj_GJK_Ti_expected_product);
-      CHECK(LKi_from_Sj_GJK_Ti.get(k, i) == Sj_GJK_Ti_expected_product);
-      CHECK(LiK_from_Ti_Sj_GJK.get(i, k) == Ti_Sj_GJK_expected_product);
-      CHECK(LKi_from_Ti_Sj_GJK.get(k, i) == Ti_Sj_GJK_expected_product);
-      CHECK(LiK_from_Ti_GJK_Sj.get(i, k) == Ti_GJK_Sj_expected_product);
-      CHECK(LKi_from_Ti_GJK_Sj.get(k, i) == Ti_GJK_Sj_expected_product);
-      CHECK(LiK_from_GJK_Sj_Ti.get(i, k) == GJK_Sj_Ti_expected_product);
-      CHECK(LKi_from_GJK_Sj_Ti.get(k, i) == GJK_Sj_Ti_expected_product);
-      CHECK(LiK_from_GJK_Ti_Sj.get(i, k) == GJK_Ti_Sj_expected_product);
-      CHECK(LKi_from_GJK_Ti_Sj.get(k, i) == GJK_Ti_Sj_expected_product);
+      CHECK(LiK_from_Sj_Ti_GJK.get(i, k) == expected_product);
+      CHECK(LKi_from_Sj_Ti_GJK.get(k, i) == expected_product);
+      CHECK(LiK_from_Sj_GJK_Ti.get(i, k) == expected_product);
+      CHECK(LKi_from_Sj_GJK_Ti.get(k, i) == expected_product);
+      CHECK(LiK_from_Ti_Sj_GJK.get(i, k) == expected_product);
+      CHECK(LKi_from_Ti_Sj_GJK.get(k, i) == expected_product);
+      CHECK(LiK_from_Ti_GJK_Sj.get(i, k) == expected_product);
+      CHECK(LKi_from_Ti_GJK_Sj.get(k, i) == expected_product);
+      CHECK(LiK_from_GJK_Sj_Ti.get(i, k) == expected_product);
+      CHECK(LKi_from_GJK_Sj_Ti.get(k, i) == expected_product);
+      CHECK(LiK_from_GJK_Ti_Sj.get(i, k) == expected_product);
+      CHECK(LKi_from_GJK_Ti_Sj.get(k, i) == expected_product);
     }
   }
 }
