@@ -160,12 +160,6 @@ void test_rank_1_outer_product(const DataType& used_for_size) noexcept {
       Tu(used_for_size);
   create_tensor(make_not_null(&Tu));
 
-  Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
-                    SpatialIndex<4, UpLo::Lo, Frame::Grid>>>
-      Gll(used_for_size);
-  create_tensor(make_not_null(&Gll));
-
   // \f$L^{a}{}_{i} = R_{i} * S^{a}\f$
   // Use explicit type (vs auto) for LHS Tensor so the compiler checks the
   // return type of `evaluate`
@@ -198,6 +192,12 @@ void test_rank_1_outer_product(const DataType& used_for_size) noexcept {
     }
   }
 
+  Tensor<DataType, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpatialIndex<4, UpLo::Lo, Frame::Grid>>>
+      Gll(used_for_size);
+  create_tensor(make_not_null(&Gll));
+
   // \f$L_{k}{}^{c}{}_{d} = S^{c} * G_{dk}\f$
   const Tensor<DataType, Symmetry<3, 2, 1>,
                index_list<SpatialIndex<4, UpLo::Lo, Frame::Grid>,
@@ -227,7 +227,8 @@ void test_rank_1_outer_product(const DataType& used_for_size) noexcept {
 /// \brief Test the outer product of two rank 2 tensors is correctly evaluated
 ///
 /// \details
-/// All LHS index orders are tested.
+/// All LHS index orders are tested. On such example case:
+/// \f$L_{abc}{}^{i} = R_{ab} * S^{i}{}_{c}\f$
 ///
 /// \tparam DataType the type of data being stored in the product operands
 template <typename DataType>
@@ -707,10 +708,11 @@ void test_rank_1_inner_product(const DataType& used_for_size) noexcept {
 /// \brief Test the inner product of two rank 2 tensors is correctly evaluated
 ///
 /// \details
-/// All cases in this test contract both pairs of indices of the two tensor
-/// operands to a resulting rank 0 tensor. For each case, the two tensor
+/// All cases in this test contract both pairs of indices of the two rank 2
+/// tensor operands to a resulting rank 0 tensor. For each case, the two tensor
 /// operands have one spacetime and one spatial index. Each case is a
-/// permutation of the positions of contracted pairs and their valences.
+/// permutation of the positions of contracted pairs and their valences. One
+/// such example case: \f$L = R_{ai} * S^{ai}\f$
 ///
 /// \tparam DataType the type of data being stored in the product operands
 template <typename DataType>
@@ -826,9 +828,10 @@ void test_rank_2_inner_product(const DataType& used_for_size) noexcept {
 /// contract is correctly evaluated
 ///
 /// \details
-/// All cases in this test contract one pair of indices of the two tensor
+/// All cases in this test contract one pair of indices of the two rank 2 tensor
 /// operands to a resulting rank 2 tensor. Each case is a permutation of the
-/// position of the contracted pair and the ordering of the LHS indices.
+/// position of the contracted pair and the ordering of the LHS indices. One
+/// such example case: \f$L_{ac} = R_{ab} * S^{b}_{c}\f$
 ///
 /// \tparam DataType the type of data being stored in the product operands
 template <typename DataType>
