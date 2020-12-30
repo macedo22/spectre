@@ -398,7 +398,7 @@ void test_ranks_0_1_2_outer_product(const DataType& used_for_size) noexcept {
   Tensor<DataType> R{{{used_for_size}}};
   if constexpr (std::is_same_v<DataType, double>) {
     // Instead of the tensor's value being the whole number, `used_for_size`
-    R.get() = 4.3;
+    R.get() = 4.5;
   } else {
     // Instead of the tensor's `DataVector` having elements with all the same
     // whole number value
@@ -619,59 +619,49 @@ void test_ranks_0_1_2_outer_product(const DataType& used_for_size) noexcept {
   for (size_t a = 0; a < S_index::dim; a++) {
     for (size_t b = 0; b < T_first_index::dim; b++) {
       for (size_t i = 0; i < T_second_index::dim; i++) {
-        const DataType expected_R_SA_Tbi_product =
-            R.get() * Su.get(a) * Tll.get(b, i);
-        CHECK(LAbi_from_R_SA_Tbi.get(a, b, i) == expected_R_SA_Tbi_product);
-        CHECK(LAib_from_R_SA_Tbi.get(a, i, b) == expected_R_SA_Tbi_product);
-        CHECK(LbAi_from_R_SA_Tbi.get(b, a, i) == expected_R_SA_Tbi_product);
-        CHECK(LbiA_from_R_SA_Tbi.get(b, i, a) == expected_R_SA_Tbi_product);
-        CHECK(LiAb_from_R_SA_Tbi.get(i, a, b) == expected_R_SA_Tbi_product);
-        CHECK(LibA_from_R_SA_Tbi.get(i, b, a) == expected_R_SA_Tbi_product);
+        const DataType expected_product = R.get() * Su.get(a) * Tll.get(b, i);
 
-        const DataType expected_R_Tbi_SA_product =
-            R.get() * Tll.get(b, i) * Su.get(a);
-        CHECK(LAbi_from_R_Tbi_SA.get(a, b, i) == expected_R_Tbi_SA_product);
-        CHECK(LAib_from_R_Tbi_SA.get(a, i, b) == expected_R_Tbi_SA_product);
-        CHECK(LbAi_from_R_Tbi_SA.get(b, a, i) == expected_R_Tbi_SA_product);
-        CHECK(LbiA_from_R_Tbi_SA.get(b, i, a) == expected_R_Tbi_SA_product);
-        CHECK(LiAb_from_R_Tbi_SA.get(i, a, b) == expected_R_Tbi_SA_product);
-        CHECK(LibA_from_R_Tbi_SA.get(i, b, a) == expected_R_Tbi_SA_product);
+        CHECK(LAbi_from_R_SA_Tbi.get(a, b, i) == expected_product);
+        CHECK(LAib_from_R_SA_Tbi.get(a, i, b) == expected_product);
+        CHECK(LbAi_from_R_SA_Tbi.get(b, a, i) == expected_product);
+        CHECK(LbiA_from_R_SA_Tbi.get(b, i, a) == expected_product);
+        CHECK(LiAb_from_R_SA_Tbi.get(i, a, b) == expected_product);
+        CHECK(LibA_from_R_SA_Tbi.get(i, b, a) == expected_product);
 
-        const DataType expected_SA_R_Tbi_product =
-            Su.get(a) * R.get() * Tll.get(b, i);
-        CHECK(LAbi_from_SA_R_Tbi.get(a, b, i) == expected_SA_R_Tbi_product);
-        CHECK(LAib_from_SA_R_Tbi.get(a, i, b) == expected_SA_R_Tbi_product);
-        CHECK(LbAi_from_SA_R_Tbi.get(b, a, i) == expected_SA_R_Tbi_product);
-        CHECK(LbiA_from_SA_R_Tbi.get(b, i, a) == expected_SA_R_Tbi_product);
-        CHECK(LiAb_from_SA_R_Tbi.get(i, a, b) == expected_SA_R_Tbi_product);
-        CHECK(LibA_from_SA_R_Tbi.get(i, b, a) == expected_SA_R_Tbi_product);
+        CHECK(LAbi_from_R_Tbi_SA.get(a, b, i) == expected_product);
+        CHECK(LAib_from_R_Tbi_SA.get(a, i, b) == expected_product);
+        CHECK(LbAi_from_R_Tbi_SA.get(b, a, i) == expected_product);
+        CHECK(LbiA_from_R_Tbi_SA.get(b, i, a) == expected_product);
+        CHECK(LiAb_from_R_Tbi_SA.get(i, a, b) == expected_product);
+        CHECK(LibA_from_R_Tbi_SA.get(i, b, a) == expected_product);
 
-        const DataType expected_SA_Tbi_R_product =
-            Su.get(a) * Tll.get(b, i) * R.get();
-        CHECK(LAbi_from_SA_Tbi_R.get(a, b, i) == expected_SA_Tbi_R_product);
-        CHECK(LAib_from_SA_Tbi_R.get(a, i, b) == expected_SA_Tbi_R_product);
-        CHECK(LbAi_from_SA_Tbi_R.get(b, a, i) == expected_SA_Tbi_R_product);
-        CHECK(LbiA_from_SA_Tbi_R.get(b, i, a) == expected_SA_Tbi_R_product);
-        CHECK(LiAb_from_SA_Tbi_R.get(i, a, b) == expected_SA_Tbi_R_product);
-        CHECK(LibA_from_SA_Tbi_R.get(i, b, a) == expected_SA_Tbi_R_product);
+        CHECK(LAbi_from_SA_R_Tbi.get(a, b, i) == expected_product);
+        CHECK(LAib_from_SA_R_Tbi.get(a, i, b) == expected_product);
+        CHECK(LbAi_from_SA_R_Tbi.get(b, a, i) == expected_product);
+        CHECK(LbiA_from_SA_R_Tbi.get(b, i, a) == expected_product);
+        CHECK(LiAb_from_SA_R_Tbi.get(i, a, b) == expected_product);
+        CHECK(LibA_from_SA_R_Tbi.get(i, b, a) == expected_product);
 
-        const DataType expected_Tbi_R_SA_product =
-            Tll.get(b, i) * R.get() * Su.get(a);
-        CHECK(LAbi_from_Tbi_R_SA.get(a, b, i) == expected_Tbi_R_SA_product);
-        CHECK(LAib_from_Tbi_R_SA.get(a, i, b) == expected_Tbi_R_SA_product);
-        CHECK(LbAi_from_Tbi_R_SA.get(b, a, i) == expected_Tbi_R_SA_product);
-        CHECK(LbiA_from_Tbi_R_SA.get(b, i, a) == expected_Tbi_R_SA_product);
-        CHECK(LiAb_from_Tbi_R_SA.get(i, a, b) == expected_Tbi_R_SA_product);
-        CHECK(LibA_from_Tbi_R_SA.get(i, b, a) == expected_Tbi_R_SA_product);
+        CHECK(LAbi_from_SA_Tbi_R.get(a, b, i) == expected_product);
+        CHECK(LAib_from_SA_Tbi_R.get(a, i, b) == expected_product);
+        CHECK(LbAi_from_SA_Tbi_R.get(b, a, i) == expected_product);
+        CHECK(LbiA_from_SA_Tbi_R.get(b, i, a) == expected_product);
+        CHECK(LiAb_from_SA_Tbi_R.get(i, a, b) == expected_product);
+        CHECK(LibA_from_SA_Tbi_R.get(i, b, a) == expected_product);
 
-        const DataType expected_Tbi_SA_R_product =
-            Tll.get(b, i) * Su.get(a) * R.get();
-        CHECK(LAbi_from_Tbi_SA_R.get(a, b, i) == expected_Tbi_SA_R_product);
-        CHECK(LAib_from_Tbi_SA_R.get(a, i, b) == expected_Tbi_SA_R_product);
-        CHECK(LbAi_from_Tbi_SA_R.get(b, a, i) == expected_Tbi_SA_R_product);
-        CHECK(LbiA_from_Tbi_SA_R.get(b, i, a) == expected_Tbi_SA_R_product);
-        CHECK(LiAb_from_Tbi_SA_R.get(i, a, b) == expected_Tbi_SA_R_product);
-        CHECK(LibA_from_Tbi_SA_R.get(i, b, a) == expected_Tbi_SA_R_product);
+        CHECK(LAbi_from_Tbi_R_SA.get(a, b, i) == expected_product);
+        CHECK(LAib_from_Tbi_R_SA.get(a, i, b) == expected_product);
+        CHECK(LbAi_from_Tbi_R_SA.get(b, a, i) == expected_product);
+        CHECK(LbiA_from_Tbi_R_SA.get(b, i, a) == expected_product);
+        CHECK(LiAb_from_Tbi_R_SA.get(i, a, b) == expected_product);
+        CHECK(LibA_from_Tbi_R_SA.get(i, b, a) == expected_product);
+
+        CHECK(LAbi_from_Tbi_SA_R.get(a, b, i) == expected_product);
+        CHECK(LAib_from_Tbi_SA_R.get(a, i, b) == expected_product);
+        CHECK(LbAi_from_Tbi_SA_R.get(b, a, i) == expected_product);
+        CHECK(LbiA_from_Tbi_SA_R.get(b, i, a) == expected_product);
+        CHECK(LiAb_from_Tbi_SA_R.get(i, a, b) == expected_product);
+        CHECK(LibA_from_Tbi_SA_R.get(i, b, a) == expected_product);
       }
     }
   }
