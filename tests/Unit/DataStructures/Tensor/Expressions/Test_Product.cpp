@@ -1013,11 +1013,11 @@ void test_three_term_inner_outer_product(
       Tl(used_for_size);
   create_tensor(make_not_null(&Tl));
 
-  const decltype(Tl) L_Jji_to_i =
+  const decltype(Tl) Li_from_Jji =
       TensorExpressions::evaluate<ti_i>(Ru(ti_J) * Sl(ti_j) * Tl(ti_i));
-  const decltype(Tl) L_Jij_to_i =
+  const decltype(Tl) Li_from_Jij =
       TensorExpressions::evaluate<ti_i>(Ru(ti_J) * Tl(ti_i) * Sl(ti_j));
-  const decltype(Tl) L_ijJ_to_i =
+  const decltype(Tl) Li_from_ijJ =
       TensorExpressions::evaluate<ti_i>(Tl(ti_i) * Sl(ti_j) * Ru(ti_J));
 
   for (size_t i = 0; i < 3; i++) {
@@ -1025,9 +1025,9 @@ void test_three_term_inner_outer_product(
     for (size_t j = 0; j < 3; j++) {
       expected_product += (Ru.get(j) * Sl.get(j) * Tl.get(i));
     }
-    CHECK(L_Jji_to_i.get(i) == expected_product);
-    CHECK(L_Jij_to_i.get(i) == expected_product);
-    CHECK(L_ijJ_to_i.get(i) == expected_product);
+    CHECK(Li_from_Jji.get(i) == expected_product);
+    CHECK(Li_from_Jij.get(i) == expected_product);
+    CHECK(Li_from_ijJ.get(i) == expected_product);
   }
 
   using T_index = tmpl::front<typename decltype(Tl)::index_list>;
