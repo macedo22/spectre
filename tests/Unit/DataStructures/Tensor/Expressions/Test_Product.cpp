@@ -992,9 +992,12 @@ void test_rank2_inner_outer_product(const DataType& used_for_size) noexcept {
 /// products of indices is correctly evaluated
 ///
 /// \details
-/// The inner product cases tested are:
-/// - (rank 0) = (upper rank 1) x (lower rank 1)
-/// - (rank 0) = (lower rank 1) x (upper rank 1)
+/// The product cases tested are:
+/// - \f$L_{i} = R^{j} * S_{j} * T_{i}\f$
+/// - \f$L_{i}{}^{k} = S_{j} * T_{i} * G^{jk}\f$
+///
+/// For each case, multiple operand orderings are tested. For the second case,
+/// both LHS index orderings are also tested.
 ///
 /// \tparam DataType the type of data being stored in the product operands
 template <typename DataType>
@@ -1013,10 +1016,13 @@ void test_three_term_inner_outer_product(
       Tl(used_for_size);
   create_tensor(make_not_null(&Tl));
 
+  // \f$L_{i} = R^{j} * S_{j} * T_{i}\f$
   const decltype(Tl) Li_from_Jji =
       TensorExpressions::evaluate<ti_i>(Ru(ti_J) * Sl(ti_j) * Tl(ti_i));
+  // \f$L_{i} = R^{j} * T_{i} * S_{j}\f$
   const decltype(Tl) Li_from_Jij =
       TensorExpressions::evaluate<ti_i>(Ru(ti_J) * Tl(ti_i) * Sl(ti_j));
+  // \f$L_{i} = T_{i} * S_{j} * R^{j}\f$
   const decltype(Tl) Li_from_ijJ =
       TensorExpressions::evaluate<ti_i>(Tl(ti_i) * Sl(ti_j) * Ru(ti_J));
 
@@ -1037,39 +1043,51 @@ void test_three_term_inner_outer_product(
       used_for_size);
   create_tensor(make_not_null(&Guu));
 
+  // \f$L_{i}{}^{k} = S_{j} * T_{i} * G^{jk}\f$
   const Tensor<DataType, Symmetry<2, 1>, index_list<T_index, G_index>>
       LiK_from_Sj_Ti_GJK = TensorExpressions::evaluate<ti_i, ti_K>(
           Sl(ti_j) * Tl(ti_i) * Guu(ti_J, ti_K));
+  // \f$L^{k}{}_{i} = S_{j} * T_{i} * G^{jk}\f$
   const Tensor<DataType, Symmetry<2, 1>, index_list<G_index, T_index>>
       LKi_from_Sj_Ti_GJK = TensorExpressions::evaluate<ti_K, ti_i>(
           Sl(ti_j) * Tl(ti_i) * Guu(ti_J, ti_K));
+  // \f$L_{i}{}^{k} = S_{j} *  G^{jk} * T_{i}\f$
   const Tensor<DataType, Symmetry<2, 1>, index_list<T_index, G_index>>
       LiK_from_Sj_GJK_Ti = TensorExpressions::evaluate<ti_i, ti_K>(
           Sl(ti_j) * Guu(ti_J, ti_K) * Tl(ti_i));
+  // \f$L^{k}{}_{i} = S_{j} *  G^{jk} * T_{i}\f$
   const Tensor<DataType, Symmetry<2, 1>, index_list<G_index, T_index>>
       LKi_from_Sj_GJK_Ti = TensorExpressions::evaluate<ti_K, ti_i>(
           Sl(ti_j) * Guu(ti_J, ti_K) * Tl(ti_i));
+  // \f$L_{i}{}^{k} = T_{i} * S_{j} * G^{jk}\f$
   const Tensor<DataType, Symmetry<2, 1>, index_list<T_index, G_index>>
       LiK_from_Ti_Sj_GJK = TensorExpressions::evaluate<ti_i, ti_K>(
           Tl(ti_i) * Sl(ti_j) * Guu(ti_J, ti_K));
+  // \f$L^{k}{}_{i} = T_{i} * S_{j} * G^{jk}\f$
   const Tensor<DataType, Symmetry<2, 1>, index_list<G_index, T_index>>
       LKi_from_Ti_Sj_GJK = TensorExpressions::evaluate<ti_K, ti_i>(
           Tl(ti_i) * Sl(ti_j) * Guu(ti_J, ti_K));
+  // \f$L_{i}{}^{k} = T_{i} * G^{jk} * S_{j}\f$
   const Tensor<DataType, Symmetry<2, 1>, index_list<T_index, G_index>>
       LiK_from_Ti_GJK_Sj = TensorExpressions::evaluate<ti_i, ti_K>(
           Tl(ti_i) * Guu(ti_J, ti_K) * Sl(ti_j));
+  // \f$L^{k}{}_{i} = T_{i} * G^{jk} * S_{j}\f$
   const Tensor<DataType, Symmetry<2, 1>, index_list<G_index, T_index>>
       LKi_from_Ti_GJK_Sj = TensorExpressions::evaluate<ti_K, ti_i>(
           Tl(ti_i) * Guu(ti_J, ti_K) * Sl(ti_j));
+  // \f$L_{i}{}^{k} = G^{jk} * S_{j} * T_{i}\f$
   const Tensor<DataType, Symmetry<2, 1>, index_list<T_index, G_index>>
       LiK_from_GJK_Sj_Ti = TensorExpressions::evaluate<ti_i, ti_K>(
           Guu(ti_J, ti_K) * Sl(ti_j) * Tl(ti_i));
+  // \f$L^{k}{}_{i} = G^{jk} * S_{j} * T_{i}\f$
   const Tensor<DataType, Symmetry<2, 1>, index_list<G_index, T_index>>
       LKi_from_GJK_Sj_Ti = TensorExpressions::evaluate<ti_K, ti_i>(
           Guu(ti_J, ti_K) * Sl(ti_j) * Tl(ti_i));
+  // \f$L_{i}{}^{k} = G^{jk} * T_{i} * S_{j}\f$
   const Tensor<DataType, Symmetry<2, 1>, index_list<T_index, G_index>>
       LiK_from_GJK_Ti_Sj = TensorExpressions::evaluate<ti_i, ti_K>(
           Guu(ti_J, ti_K) * Tl(ti_i) * Sl(ti_j));
+  // \f$L^{k}{}_{i} = G^{jk} * T_{i} * S_{j}\f$
   const Tensor<DataType, Symmetry<2, 1>, index_list<G_index, T_index>>
       LKi_from_GJK_Ti_Sj = TensorExpressions::evaluate<ti_K, ti_i>(
           Guu(ti_J, ti_K) * Tl(ti_i) * Sl(ti_j));
