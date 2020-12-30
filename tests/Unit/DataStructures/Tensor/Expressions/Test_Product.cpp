@@ -1031,25 +1031,83 @@ void test_three_term_inner_outer_product(
   }
 
   using T_index = tmpl::front<typename decltype(Tl)::index_list>;
-  using G_contracted_index = SpatialIndex<3, UpLo::Up, Frame::Inertial>;
-  using G_uncontracted_index = SpatialIndex<2, UpLo::Up, Frame::Inertial>;
-  Tensor<DataType, Symmetry<2, 1>,
-         index_list<G_contracted_index, G_uncontracted_index>>
-      Guu(used_for_size);
+  using G_index = SpatialIndex<3, UpLo::Up, Frame::Inertial>;
+
+  Tensor<DataType, Symmetry<2, 1>, index_list<G_index, G_index>> Guu(
+      used_for_size);
   create_tensor(make_not_null(&Guu));
 
-  const Tensor<DataType, Symmetry<2, 1>,
-               index_list<G_uncontracted_index, T_index>>
+  const Tensor<DataType, Symmetry<2, 1>, index_list<T_index, G_index>>
+      LiK_from_Sj_Ti_GJK = TensorExpressions::evaluate<ti_i, ti_K>(
+          Sl(ti_j) * Tl(ti_i) * Guu(ti_J, ti_K));
+  const Tensor<DataType, Symmetry<2, 1>, index_list<G_index, T_index>>
+      LKi_from_Sj_Ti_GJK = TensorExpressions::evaluate<ti_K, ti_i>(
+          Sl(ti_j) * Tl(ti_i) * Guu(ti_J, ti_K));
+  const Tensor<DataType, Symmetry<2, 1>, index_list<T_index, G_index>>
+      LiK_from_Sj_GJK_Ti = TensorExpressions::evaluate<ti_i, ti_K>(
+          Sl(ti_j) * Guu(ti_J, ti_K) * Tl(ti_i));
+  const Tensor<DataType, Symmetry<2, 1>, index_list<G_index, T_index>>
       LKi_from_Sj_GJK_Ti = TensorExpressions::evaluate<ti_K, ti_i>(
           Sl(ti_j) * Guu(ti_J, ti_K) * Tl(ti_i));
+  const Tensor<DataType, Symmetry<2, 1>, index_list<T_index, G_index>>
+      LiK_from_Ti_Sj_GJK = TensorExpressions::evaluate<ti_i, ti_K>(
+          Tl(ti_i) * Sl(ti_j) * Guu(ti_J, ti_K));
+  const Tensor<DataType, Symmetry<2, 1>, index_list<G_index, T_index>>
+      LKi_from_Ti_Sj_GJK = TensorExpressions::evaluate<ti_K, ti_i>(
+          Tl(ti_i) * Sl(ti_j) * Guu(ti_J, ti_K));
+  const Tensor<DataType, Symmetry<2, 1>, index_list<T_index, G_index>>
+      LiK_from_Ti_GJK_Sj = TensorExpressions::evaluate<ti_i, ti_K>(
+          Tl(ti_i) * Guu(ti_J, ti_K) * Sl(ti_j));
+  const Tensor<DataType, Symmetry<2, 1>, index_list<G_index, T_index>>
+      LKi_from_Ti_GJK_Sj = TensorExpressions::evaluate<ti_K, ti_i>(
+          Tl(ti_i) * Guu(ti_J, ti_K) * Sl(ti_j));
+  const Tensor<DataType, Symmetry<2, 1>, index_list<T_index, G_index>>
+      LiK_from_GJK_Sj_Ti = TensorExpressions::evaluate<ti_i, ti_K>(
+          Guu(ti_J, ti_K) * Sl(ti_j) * Tl(ti_i));
+  const Tensor<DataType, Symmetry<2, 1>, index_list<G_index, T_index>>
+      LKi_from_GJK_Sj_Ti = TensorExpressions::evaluate<ti_K, ti_i>(
+          Guu(ti_J, ti_K) * Sl(ti_j) * Tl(ti_i));
+  const Tensor<DataType, Symmetry<2, 1>, index_list<T_index, G_index>>
+      LiK_from_GJK_Ti_Sj = TensorExpressions::evaluate<ti_i, ti_K>(
+          Guu(ti_J, ti_K) * Tl(ti_i) * Sl(ti_j));
+  const Tensor<DataType, Symmetry<2, 1>, index_list<G_index, T_index>>
+      LKi_from_GJK_Ti_Sj = TensorExpressions::evaluate<ti_K, ti_i>(
+          Guu(ti_J, ti_K) * Tl(ti_i) * Sl(ti_j));
 
-  for (size_t k = 0; k < G_uncontracted_index::dim; k++) {
+  for (size_t k = 0; k < G_index::dim; k++) {
     for (size_t i = 0; i < T_index::dim; i++) {
-      DataType expected_product = make_with_value<DataType>(used_for_size, 0.0);
-      for (size_t j = 0; j < G_contracted_index::dim; j++) {
-        expected_product += (Sl.get(j) * Guu.get(j, k) * Tl.get(i));
+      DataType Sj_Ti_GJK_expected_product =
+          make_with_value<DataType>(used_for_size, 0.0);
+      DataType Sj_GJK_Ti_expected_product =
+          make_with_value<DataType>(used_for_size, 0.0);
+      DataType Ti_Sj_GJK_expected_product =
+          make_with_value<DataType>(used_for_size, 0.0);
+      DataType Ti_GJK_Sj_expected_product =
+          make_with_value<DataType>(used_for_size, 0.0);
+      DataType GJK_Sj_Ti_expected_product =
+          make_with_value<DataType>(used_for_size, 0.0);
+      DataType GJK_Ti_Sj_expected_product =
+          make_with_value<DataType>(used_for_size, 0.0);
+      for (size_t j = 0; j < G_index::dim; j++) {
+        Sj_Ti_GJK_expected_product += (Sl.get(j) * Tl.get(i) * Guu.get(j, k));
+        Sj_GJK_Ti_expected_product += (Sl.get(j) * Guu.get(j, k) * Tl.get(i));
+        Ti_Sj_GJK_expected_product += (Tl.get(i) * Sl.get(j) * Guu.get(j, k));
+        Ti_GJK_Sj_expected_product += (Tl.get(i) * Guu.get(j, k) * Sl.get(j));
+        GJK_Sj_Ti_expected_product += (Guu.get(j, k) * Sl.get(j) * Tl.get(i));
+        GJK_Ti_Sj_expected_product += (Guu.get(j, k) * Sl.get(j) * Tl.get(i));
       }
-      CHECK(LKi_from_Sj_GJK_Ti.get(k, i) == expected_product);
+      CHECK(LiK_from_Sj_Ti_GJK.get(i, k) == Sj_Ti_GJK_expected_product);
+      CHECK(LKi_from_Sj_Ti_GJK.get(k, i) == Sj_Ti_GJK_expected_product);
+      CHECK(LiK_from_Sj_GJK_Ti.get(i, k) == Sj_GJK_Ti_expected_product);
+      CHECK(LKi_from_Sj_GJK_Ti.get(k, i) == Sj_GJK_Ti_expected_product);
+      CHECK(LiK_from_Ti_Sj_GJK.get(i, k) == Ti_Sj_GJK_expected_product);
+      CHECK(LKi_from_Ti_Sj_GJK.get(k, i) == Ti_Sj_GJK_expected_product);
+      CHECK(LiK_from_Ti_GJK_Sj.get(i, k) == Ti_GJK_Sj_expected_product);
+      CHECK(LKi_from_Ti_GJK_Sj.get(k, i) == Ti_GJK_Sj_expected_product);
+      CHECK(LiK_from_GJK_Sj_Ti.get(i, k) == GJK_Sj_Ti_expected_product);
+      CHECK(LKi_from_GJK_Sj_Ti.get(k, i) == GJK_Sj_Ti_expected_product);
+      CHECK(LiK_from_GJK_Ti_Sj.get(i, k) == GJK_Ti_Sj_expected_product);
+      CHECK(LKi_from_GJK_Ti_Sj.get(k, i) == GJK_Ti_Sj_expected_product);
     }
   }
 }
