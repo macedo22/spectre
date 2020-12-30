@@ -1013,18 +1013,12 @@ void test_three_term_inner_outer_product(
       Tl(used_for_size);
   create_tensor(make_not_null(&Tl));
 
-  const Tensor<DataType, Symmetry<1>,
-               index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
-      L_Jji_to_i =
-          TensorExpressions::evaluate<ti_i>(Ru(ti_J) * Sl(ti_j) * Tl(ti_i));
-  const Tensor<DataType, Symmetry<1>,
-               index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
-      L_Jij_to_i =
-          TensorExpressions::evaluate<ti_i>(Ru(ti_J) * Tl(ti_i) * Sl(ti_j));
-  const Tensor<DataType, Symmetry<1>,
-               index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
-      L_ijJ_to_i =
-          TensorExpressions::evaluate<ti_i>(Tl(ti_i) * Sl(ti_j) * Ru(ti_J));
+  const decltype(Tl) L_Jji_to_i =
+      TensorExpressions::evaluate<ti_i>(Ru(ti_J) * Sl(ti_j) * Tl(ti_i));
+  const decltype(Tl) L_Jij_to_i =
+      TensorExpressions::evaluate<ti_i>(Ru(ti_J) * Tl(ti_i) * Sl(ti_j));
+  const decltype(Tl) L_ijJ_to_i =
+      TensorExpressions::evaluate<ti_i>(Tl(ti_i) * Sl(ti_j) * Ru(ti_J));
 
   for (size_t i = 0; i < 3; i++) {
     DataType expected_product = make_with_value<DataType>(used_for_size, 0.0);
