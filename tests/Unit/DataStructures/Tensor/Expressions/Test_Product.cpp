@@ -920,36 +920,69 @@ void test_rank_2_inner_product(const DataType& used_for_size) noexcept {
 /// \tparam DataType the type of data being stored in the product operands
 template <typename DataType>
 void test_inner_and_outer_product(const DataType& used_for_size) noexcept {
-  Tensor<DataType, Symmetry<1, 1>,
-         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
-                    SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
-      Rll(used_for_size);
+  using R_index = SpacetimeIndex<3, UpLo::Lo, Frame::Grid>;
+  using S_lower_index = SpacetimeIndex<2, UpLo::Lo, Frame::Grid>;
+  using S_upper_index = SpacetimeIndex<3, UpLo::Up, Frame::Grid>;
+
+  Tensor<DataType, Symmetry<1, 1>, index_list<R_index, R_index>> Rll(
+      used_for_size);
   create_tensor(make_not_null(&Rll));
-  Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
-                    SpacetimeIndex<2, UpLo::Lo, Frame::Grid>>>
+  Tensor<DataType, Symmetry<2, 1>, index_list<S_upper_index, S_lower_index>>
       Sul(used_for_size);
   create_tensor(make_not_null(&Sul));
-  const Tensor<DataType, Symmetry<2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
-                          SpacetimeIndex<2, UpLo::Lo, Frame::Grid>>>
+  Tensor<DataType, Symmetry<2, 1>, index_list<S_lower_index, S_upper_index>>
+      Slu(used_for_size);
+  create_tensor(make_not_null(&Slu));
+
+  const Tensor<DataType, Symmetry<2, 1>, index_list<R_index, S_lower_index>>
       L_abBc_to_ac = TensorExpressions::evaluate<ti_a, ti_c>(Rll(ti_a, ti_b) *
                                                              Sul(ti_B, ti_c));
-  const Tensor<DataType, Symmetry<2, 1>,
-               index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Grid>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+  const Tensor<DataType, Symmetry<2, 1>, index_list<S_lower_index, R_index>>
       L_abBc_to_ca = TensorExpressions::evaluate<ti_c, ti_a>(Rll(ti_a, ti_b) *
                                                              Sul(ti_B, ti_c));
+  const Tensor<DataType, Symmetry<2, 1>, index_list<R_index, S_lower_index>>
+      L_abcB_to_ac = TensorExpressions::evaluate<ti_a, ti_c>(Rll(ti_a, ti_b) *
+                                                             Slu(ti_c, ti_B));
+  const Tensor<DataType, Symmetry<2, 1>, index_list<S_lower_index, R_index>>
+      L_abcB_to_ca = TensorExpressions::evaluate<ti_c, ti_a>(Rll(ti_a, ti_b) *
+                                                             Slu(ti_c, ti_B));
+  const Tensor<DataType, Symmetry<2, 1>, index_list<R_index, S_lower_index>>
+      L_baBc_to_ac = TensorExpressions::evaluate<ti_a, ti_c>(Rll(ti_b, ti_a) *
+                                                             Sul(ti_B, ti_c));
+  const Tensor<DataType, Symmetry<2, 1>, index_list<S_lower_index, R_index>>
+      L_baBc_to_ca = TensorExpressions::evaluate<ti_c, ti_a>(Rll(ti_b, ti_a) *
+                                                             Sul(ti_B, ti_c));
+  const Tensor<DataType, Symmetry<2, 1>, index_list<R_index, S_lower_index>>
+      L_bacB_to_ac = TensorExpressions::evaluate<ti_a, ti_c>(Rll(ti_b, ti_a) *
+                                                             Slu(ti_c, ti_B));
+  const Tensor<DataType, Symmetry<2, 1>, index_list<S_lower_index, R_index>>
+      L_bacB_to_ca = TensorExpressions::evaluate<ti_c, ti_a>(Rll(ti_b, ti_a) *
+                                                             Slu(ti_c, ti_B));
 
-  for (size_t a = 0; a < 4; a++) {
-    for (size_t c = 0; c < 3; c++) {
-      DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
-      ;
+  for (size_t a = 0; a < R_index::dim; a++) {
+    for (size_t c = 0; c < S_lower_index::dim; c++) {
+      DataType L_abBc_expected_product =
+          make_with_value<DataType>(used_for_size, 0.0);
+      DataType L_abcB_expected_product =
+          make_with_value<DataType>(used_for_size, 0.0);
+      DataType L_baBc_expected_product =
+          make_with_value<DataType>(used_for_size, 0.0);
+      DataType L_bacB_expected_product =
+          make_with_value<DataType>(used_for_size, 0.0);
       for (size_t b = 0; b < 4; b++) {
-        expected_sum += (Rll.get(a, b) * Sul.get(b, c));
+        L_abBc_expected_product += (Rll.get(a, b) * Sul.get(b, c));
+        L_abcB_expected_product += (Rll.get(a, b) * Slu.get(c, b));
+        L_baBc_expected_product += (Rll.get(b, a) * Sul.get(b, c));
+        L_bacB_expected_product += (Rll.get(b, a) * Slu.get(c, b));
       }
-      CHECK(L_abBc_to_ac.get(a, c) == expected_sum);
-      CHECK(L_abBc_to_ca.get(c, a) == expected_sum);
+      CHECK(L_abBc_to_ac.get(a, c) == L_abBc_expected_product);
+      CHECK(L_abBc_to_ca.get(c, a) == L_abBc_expected_product);
+      CHECK(L_abcB_to_ac.get(a, c) == L_abcB_expected_product);
+      CHECK(L_abcB_to_ca.get(c, a) == L_abcB_expected_product);
+      CHECK(L_baBc_to_ac.get(a, c) == L_baBc_expected_product);
+      CHECK(L_baBc_to_ca.get(c, a) == L_baBc_expected_product);
+      CHECK(L_bacB_to_ac.get(a, c) == L_bacB_expected_product);
+      CHECK(L_bacB_to_ca.get(c, a) == L_bacB_expected_product);
     }
   }
 
