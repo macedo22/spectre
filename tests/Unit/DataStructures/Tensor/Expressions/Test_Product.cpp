@@ -835,7 +835,7 @@ void test_rank_2_inner_product(const DataType& used_for_size) noexcept {
 ///
 /// \tparam DataType the type of data being stored in the product operands
 template <typename DataType>
-void test_rank2_inner_outer_product(const DataType& used_for_size) noexcept {
+void test_two_term_inner_outer_product(const DataType& used_for_size) noexcept {
   using R_index = SpacetimeIndex<3, UpLo::Lo, Frame::Grid>;
   using S_lower_index = SpacetimeIndex<2, UpLo::Lo, Frame::Grid>;
   using S_upper_index = SpacetimeIndex<3, UpLo::Up, Frame::Grid>;
@@ -1049,7 +1049,7 @@ void test_products(const DataType& used_for_size) noexcept {
   test_rank_1_inner_product(used_for_size);
   test_rank_2_inner_product(used_for_size);
 
-  test_rank2_inner_outer_product(used_for_size);
+  test_two_term_inner_outer_product(used_for_size);
   test_three_term_inner_outer_product(used_for_size);
 }
 }  // namespace
