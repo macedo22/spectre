@@ -387,15 +387,10 @@ void test_rank_2_outer_product(const DataType& used_for_size) noexcept {
 /// correctly evaluated
 ///
 /// \details
-/// The outer product cases tested are:
-/// - (rank 3) = (rank 0) x (rank 1) x (rank 2)
-/// - (rank 3) = (rank 0) x (rank 2) x (rank 1)
-/// - (rank 3) = (rank 1) x (rank 0) x (rank 2)
-/// - (rank 3) = (rank 1) x (rank 2) x (rank 0)
-/// - (rank 3) = (rank 2) x (rank 0) x (rank 1)
-/// - (rank 3) = (rank 2) x (rank 1) x (rank 0)
+/// The outer product cases tested are permutations of the form:
+/// - \f$L^{a}{}_{ib} = R * S^{a} * T_{bi}\f$
 ///
-/// For all cases, all LHS index orderings are tested.
+/// Each case represents an ordering for the operands and the LHS indices.
 ///
 /// \tparam DataType the type of data being stored in the product operands
 template <typename DataType>
@@ -759,8 +754,8 @@ void test_ranks_0_1_2_outer_product(const DataType& used_for_size) noexcept {
 ///
 /// \details
 /// The inner product cases tested are:
-/// - (rank 0) = (upper rank 1) x (lower rank 1)
-/// - (rank 0) = (lower rank 1) x (upper rank 1)
+/// - \f$L = R^{a} * S_{a}\f$
+/// - \f$L = S_{a} * R^{a}\f$
 ///
 /// \tparam DataType the type of data being stored in the product operands
 template <typename DataType>
