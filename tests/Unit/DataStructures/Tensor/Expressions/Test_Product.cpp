@@ -1030,26 +1030,23 @@ void test_three_term_inner_outer_product(
     CHECK(L_ijJ_to_i.get(i) == expected_product);
   }
 
+  using T_index = tmpl::front<typename decltype(Tl)::index_list>;
+  using G_contracted_index = SpatialIndex<3, UpLo::Up, Frame::Inertial>;
+  using G_uncontracted_index = SpatialIndex<2, UpLo::Up, Frame::Inertial>;
   Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpatialIndex<3, UpLo::Up, Frame::Inertial>,
-                    SpatialIndex<2, UpLo::Up, Frame::Inertial>>>
+         index_list<G_contracted_index, G_uncontracted_index>>
       Guu(used_for_size);
   create_tensor(make_not_null(&Guu));
 
   const Tensor<DataType, Symmetry<2, 1>,
-               index_list<SpatialIndex<2, UpLo::Up, Frame::Inertial>,
-                          SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
+               index_list<G_uncontracted_index, T_index>>
       LKi_from_Sj_GJK_Ti = TensorExpressions::evaluate<ti_K, ti_i>(
           Sl(ti_j) * Guu(ti_J, ti_K) * Tl(ti_i));
-  // const decltype(Guu) L_Jjlk_to_lk = TensorExpressions::evaluate<ti_l, ti_k>(
-  //     Ru(ti_J) * Sl(ti_j) * Guu(ti_l, ti_k));
-  // const decltype(Guu) L_Jjlk_to_lk = TensorExpressions::evaluate<ti_l, ti_k>(
-  //     Ru(ti_J) * Sl(ti_j) * Guu(ti_l, ti_k));
 
-  for (size_t k = 0; k < 2; k++) {
-    for (size_t i = 0; i < 3; i++) {
+  for (size_t k = 0; k < G_uncontracted_index::dim; k++) {
+    for (size_t i = 0; i < T_index::dim; i++) {
       DataType expected_product = make_with_value<DataType>(used_for_size, 0.0);
-      for (size_t j = 0; j < 3; j++) {
+      for (size_t j = 0; j < G_contracted_index::dim; j++) {
         expected_product += (Sl.get(j) * Guu.get(j, k) * Tl.get(i));
       }
       CHECK(LKi_from_Sj_GJK_Ti.get(k, i) == expected_product);
