@@ -824,25 +824,60 @@ void test_rank_2_inner_product(const DataType& used_for_size) noexcept {
 }
 
 /// \ingroup TestingFrameworkGroup
-/// \brief Test the product of two rank 2 tensors with one pair of indices to
-/// contract is correctly evaluated
+/// \brief Test the product of two tensors with one pair of indices to contract
+/// is correctly evaluated
 ///
 /// \details
-/// All cases in this test contract one pair of indices of the two rank 2 tensor
-/// operands to a resulting rank 2 tensor. Each case is a permutation of the
-/// position of the contracted pair and the ordering of the LHS indices. One
-/// such example case: \f$L_{ac} = R_{ab} * S^{b}_{c}\f$
+/// The product cases tested are:
+/// - \f$L_{b} = R_{ab} * T^{a}\f$
+/// - \f$L_{ac} = R_{ab} * S^{b}_{c}\f$
+///
+/// All cases in this test contract one pair of indices of the two tensor
+/// operands. Each case is a permutation of the position of the contracted pair
+/// and the ordering of the LHS indices.
 ///
 /// \tparam DataType the type of data being stored in the product operands
 template <typename DataType>
 void test_two_term_inner_outer_product(const DataType& used_for_size) noexcept {
   using R_index = SpacetimeIndex<3, UpLo::Lo, Frame::Grid>;
-  using S_lower_index = SpacetimeIndex<2, UpLo::Lo, Frame::Grid>;
-  using S_upper_index = SpacetimeIndex<3, UpLo::Up, Frame::Grid>;
+  using T_index = SpacetimeIndex<3, UpLo::Up, Frame::Grid>;
 
   Tensor<DataType, Symmetry<1, 1>, index_list<R_index, R_index>> Rll(
       used_for_size);
   create_tensor(make_not_null(&Rll));
+  Tensor<DataType, Symmetry<1>, index_list<T_index>> Tu(used_for_size);
+  create_tensor(make_not_null(&Tu));
+
+  // \f$L_{b} = R_{ab} * T^{a}\f$
+  // Use explicit type (vs auto) for LHS Tensor so the compiler checks the
+  // return type of `evaluate`
+  using Lb = Tensor<DataType, Symmetry<1>, index_list<R_index>>;
+  const Lb Lb_from_Rab_TA =
+      TensorExpressions::evaluate<ti_b>(Rll(ti_a, ti_b) * Tu(ti_A));
+  // \f$L_{b} = R_{ba} * T^{a}\f$
+  const Lb Lb_from_Rba_TA =
+      TensorExpressions::evaluate<ti_b>(Rll(ti_b, ti_a) * Tu(ti_A));
+  // \f$L_{b} = T^{a} * R_{ab}\f$
+  const Lb Lb_from_TA_Rab =
+      TensorExpressions::evaluate<ti_b>(Tu(ti_A) * Rll(ti_a, ti_b));
+  // \f$L_{b} = T^{a} * R_{ba}\f$
+  const Lb Lb_from_TA_Rba =
+      TensorExpressions::evaluate<ti_b>(Tu(ti_A) * Rll(ti_b, ti_a));
+
+  for (size_t b = 0; b < R_index::dim; b++) {
+    DataType expected_product = make_with_value<DataType>(used_for_size, 0.0);
+    for (size_t a = 0; a < T_index::dim; a++) {
+      expected_product += (Rll.get(a, b) * Tu.get(a));
+    }
+    CHECK(Lb_from_Rab_TA.get(b) == expected_product);
+    CHECK(Lb_from_Rba_TA.get(b) == expected_product);
+    CHECK(Lb_from_TA_Rab.get(b) == expected_product);
+    CHECK(Lb_from_TA_Rba.get(b) == expected_product);
+  }
+
+  using S_lower_index = SpacetimeIndex<2, UpLo::Lo, Frame::Grid>;
+  using S_upper_index = SpacetimeIndex<3, UpLo::Up, Frame::Grid>;
+
   Tensor<DataType, Symmetry<2, 1>, index_list<S_upper_index, S_lower_index>>
       Sul(used_for_size);
   create_tensor(make_not_null(&Sul));
