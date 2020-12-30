@@ -988,8 +988,8 @@ void test_rank2_inner_outer_product(const DataType& used_for_size) noexcept {
 }
 
 /// \ingroup TestingFrameworkGroup
-/// \brief Test products involving both inner and outer products of indices is
-/// correctly evaluated
+/// \brief Test the product of three tensors involving both inner and outer
+/// products of indices is correctly evaluated
 ///
 /// \details
 /// The inner product cases tested are:
@@ -1001,47 +1001,47 @@ template <typename DataType>
 void test_three_term_inner_outer_product(
     const DataType& used_for_size) noexcept {
   Tensor<DataType, Symmetry<1>,
-         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
+         index_list<SpatialIndex<3, UpLo::Up, Frame::Inertial>>>
       Ru(used_for_size);
   create_tensor(make_not_null(&Ru));
   Tensor<DataType, Symmetry<1>,
-         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+         index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
       Sl(used_for_size);
   create_tensor(make_not_null(&Sl));
   Tensor<DataType, Symmetry<1>,
-         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+         index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
       Tl(used_for_size);
   create_tensor(make_not_null(&Tl));
 
   const Tensor<DataType, Symmetry<1>,
-               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+               index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
       L_Aab_to_b =
-          TensorExpressions::evaluate<ti_b>(Ru(ti_A) * Sl(ti_a) * Tl(ti_b));
+          TensorExpressions::evaluate<ti_i>(Ru(ti_J) * Sl(ti_j) * Tl(ti_i));
 
-  for (size_t b = 0; b < 4; b++) {
+  for (size_t i = 0; i < 3; i++) {
     DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
-    for (size_t a = 0; a < 4; a++) {
-      expected_sum += (Ru.get(a) * Sl.get(a) * Tl.get(b));
+    for (size_t j = 0; j < 3; j++) {
+      expected_sum += (Ru.get(j) * Sl.get(j) * Tl.get(i));
     }
-    CHECK(L_Aab_to_b.get(b) == expected_sum);
+    CHECK(L_Aab_to_b.get(i) == expected_sum);
   }
 
   Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Grid>,
-                    SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
-      Tll(used_for_size);
-  create_tensor(make_not_null(&Tll));
+         index_list<SpatialIndex<2, UpLo::Lo, Frame::Inertial>,
+                    SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
+      Gll(used_for_size);
+  create_tensor(make_not_null(&Gll));
 
-  const decltype(Tll) L_Aabc_to_bc = TensorExpressions::evaluate<ti_b, ti_c>(
-      Ru(ti_A) * Sl(ti_a) * Tll(ti_b, ti_c));
+  const decltype(Gll) L_Aabc_to_bc = TensorExpressions::evaluate<ti_l, ti_k>(
+      Ru(ti_J) * Sl(ti_j) * Gll(ti_l, ti_k));
 
-  for (size_t c = 0; c < 4; c++) {
-    for (size_t b = 0; b < 4; b++) {
+  for (size_t l = 0; l < 2; l++) {
+    for (size_t k = 0; k < 3; k++) {
       DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
-      for (size_t a = 0; a < 4; a++) {
-        expected_sum += (Ru.get(a) * Sl.get(a) * Tll.get(b, c));
+      for (size_t j = 0; j < 3; j++) {
+        expected_sum += (Ru.get(j) * Sl.get(j) * Gll.get(l, k));
       }
-      CHECK(L_Aabc_to_bc.get(b, c) == expected_sum);
+      CHECK(L_Aabc_to_bc.get(l, k) == expected_sum);
     }
   }
 }
