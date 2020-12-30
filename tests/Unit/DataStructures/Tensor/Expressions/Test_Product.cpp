@@ -37,14 +37,13 @@ void create_tensor(gsl::not_null<Tensor<DataVector, Ts...>*> tensor) noexcept {
 ///
 /// \details
 /// The outer product cases tested are:
-/// - (rank 0) = (rank 0) x (rank 0)
-/// - (rank 0) = (rank 0) x (rank 0) x (rank 0)
-/// - (rank 1) = (rank 0) x (rank 1)
-/// - (rank 1) = (rank 1) x (rank 0)
-/// - (rank 2) = (rank 0) x (rank 2)
-/// - (rank 2) = (rank 2) x (rank 0)
+/// - \f$L = R * R\f$
+/// - \f$L = R * R * R\f$
+/// - \f$L^{a} = R * S^{a}\f$
+/// - \f$L_{ai} = R * T_{ai}\f$
 ///
-/// For the last two cases, both LHS index orderings are tested.
+/// For the last two cases, both operand orderings are tested. For the last
+/// case, both LHS index orderings are tested.
 ///
 /// \tparam DataType the type of data being stored in the product operands
 template <typename DataType>
@@ -134,10 +133,10 @@ void test_outer_product_rank_0_operand(const DataType& used_for_size) noexcept {
 ///
 /// \details
 /// The outer product cases tested are:
-/// - (rank 2) = (rank 1) x (rank 1)
-/// - (rank 3) = (rank 1) x (rank 1) x (rank 1)
-/// - (rank 3) = (rank 1) x (rank 2)
-/// - (rank 3) = (rank 2) x (rank 1)
+/// - \f$L^{a}{}_{i} = R_{i} * S^{a}\f$
+/// - \f$L_{ja}{}^{i} = R_{i} * S^{a} * T^{j}\f$
+/// - \f$L_{k}{}^{c}{}_{d} = S^{c} * G_{dk}\f$
+/// - \f$L^{c}{}_{dk} = G_{dk} * S^{c}\f$
 ///
 /// For each case, the LHS index order is different from the order in the
 /// operands.
@@ -763,28 +762,28 @@ void test_inner_product_rank_2x2_operands(
       Sul(used_for_size);
   create_tensor(make_not_null(&Sul));
 
-  // \f$L = R_{ai} * R^{ai}\f$
+  // \f$L = Rll_{ai} * Ruu^{ai}\f$
   const Tensor<DataType> L_aiAI_product =
       TensorExpressions::evaluate(Rll(ti_a, ti_i) * Ruu(ti_A, ti_I));
-  // \f$L = R_{ai} * R^{ia}\f$
+  // \f$L = Rll_{ai} * Suu^{ia}\f$
   const Tensor<DataType> L_aiIA_product =
       TensorExpressions::evaluate(Rll(ti_a, ti_i) * Suu(ti_I, ti_A));
-  // \f$L = R^{ai} * R_{ai}\f$
+  // \f$L = Ruu^{ai} * Rll_{ai}\f$
   const Tensor<DataType> L_AIai_product =
       TensorExpressions::evaluate(Ruu(ti_A, ti_I) * Rll(ti_a, ti_i));
-  // \f$L = R^{ai} * R_{ia}\f$
+  // \f$L = Ruu^{ai} * Sll_{ia}\f$
   const Tensor<DataType> L_AIia_product =
       TensorExpressions::evaluate(Ruu(ti_A, ti_I) * Sll(ti_i, ti_a));
-  // \f$L = R_{a}{}^{i} * R^{a}{}_{i}\f$
+  // \f$L = Rlu_{a}{}^{i} * Rul^{a}{}_{i}\f$
   const Tensor<DataType> L_aIAi_product =
       TensorExpressions::evaluate(Rlu(ti_a, ti_I) * Rul(ti_A, ti_i));
-  // \f$L = R_{a}{}^{i} * R_{i}{}^{a}\f$
+  // \f$L = Rlu_{a}{}^{i} * Slu_{i}{}^{a}\f$
   const Tensor<DataType> L_aIiA_product =
       TensorExpressions::evaluate(Rlu(ti_a, ti_I) * Slu(ti_i, ti_A));
-  // \f$L = R^{a}{}_{i} * R_{a}{}^{i}\f$
+  // \f$L = Rul^{a}{}_{i} * Rlu_{a}{}^{i}\f$
   const Tensor<DataType> L_AiaI_product =
       TensorExpressions::evaluate(Rul(ti_A, ti_i) * Rlu(ti_a, ti_I));
-  // \f$L = R^{a}{}_{i} * R^{i}{}_{a}\f$
+  // \f$L = Rul^{a}{}_{i} * Sul^{i}{}_{a}\f$
   const Tensor<DataType> L_AiIa_product =
       TensorExpressions::evaluate(Rul(ti_A, ti_i) * Sul(ti_I, ti_a));
 
