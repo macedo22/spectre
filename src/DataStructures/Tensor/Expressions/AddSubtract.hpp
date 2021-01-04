@@ -147,45 +147,26 @@ SPECTRE_ALWAYS_INLINE auto operator+(
       Args1, Args2, 1>(~t1, ~t2);
 }
 
+template <typename X>
+using rank_0_tensorexpression =
+    TensorExpression<Tensor<X>, X, tmpl::list<>, tmpl::list<>>;
+
 /*!
  * \ingroup TensorExpressionsGroup
  */
-template <typename T2, typename X, typename Symm2, typename IndexList2,
-          typename Args2>
-SPECTRE_ALWAYS_INLINE auto operator+(
-    const X& t1, const TensorExpression<T2, X, Symm2, IndexList2, Args2>& t2) {
+template <typename X>
+SPECTRE_ALWAYS_INLINE auto operator+(const X& t1,
+                                     const rank_0_tensorexpression<X>& t2) {
   return TensorExpressions::ScalarOrDataVector(t1) + t2;
-  // // Tensor<DataType> t1{{{used_for_size}}};
-  // std::cout << "t1 : " << t1 << std::endl;
-  // // const Tensor<X> t1_tensor(t1);
-  // // return t1_tensor() + t2;
-  // const auto tensor_expression =
-  //     TensorExpression<Tensor<X, tmpl::list<>, tmpl::list<>>, X,
-  //     tmpl::list<>,
-  //                      tmpl::list<>, tmpl::list<>>{Tensor<X>(t1)};
-  // return tensor_expression + t2;
+}
 
-  // const TensorExpression<Tensor<X, tmpl::list<>, tmpl::list<>>, X,
-  // tmpl::list<>, tmpl::list<>, tmpl::list<>> t1_te = t1_tensor(); std::cout <<
-  // "t1_tensor : " << t1_tensor.get() << std::endl; std::cout << "t1 : " << t1
-  // << std::endl; std::cout << "hello" << std::endl;
-  // return TensorExpressions::AddSub<
-  //     TensorExpression<Tensor<X, tmpl::list<>, tmpl::list<>>, X,
-  //     tmpl::list<>, tmpl::list<>, tmpl::list<>>,
-  //     tmpl::conditional_t<std::is_base_of<Expression, T2>::value, T2,
-  //                         TensorExpression<T2, X, Symm2, IndexList2, Args2>>,
-  //                         tmpl::list<>, Args2, 1>(std::move(t1_tensor()),
-  //                         ~t2);
-  //     //tmpl::list<>, Args2, 1>(TensorExpression<Tensor<X, tmpl::list<>,
-  //     tmpl::list<>>, X, tmpl::list<>, tmpl::list<>,
-  //     tmpl::list<>>{Tensor<X>{{{t1}}}}, ~t2);
-  //     // tmpl::list<>, Args2, 1>(Tensor<X, tmpl::list<>,
-  //     tmpl::list<>>{{{t1}}}, ~t2);
-
-  //     // TE<tmpl::list<TensorIndices...>>{*this}
-  //     //using TE = TensorExpression<Tensor<X, Symm, tmpl::list<Indices...>>,
-  //     X, Symm,
-  //     //                        tmpl::list<Indices...>, ArgsList>;
+/*!
+ * \ingroup TensorExpressionsGroup
+ */
+template <typename X>
+SPECTRE_ALWAYS_INLINE auto operator+(const rank_0_tensorexpression<X>& t1,
+                                     const X& t2) {
+  return t1 + TensorExpressions::ScalarOrDataVector(t2);
 }
 
 /*!
@@ -208,4 +189,22 @@ SPECTRE_ALWAYS_INLINE auto operator-(
       tmpl::conditional_t<std::is_base_of<Expression, T2>::value, T2,
                           TensorExpression<T2, X, Symm2, IndexList2, Args2>>,
       Args1, Args2, -1>(~t1, ~t2);
+}
+
+/*!
+ * \ingroup TensorExpressionsGroup
+ */
+template <typename X>
+SPECTRE_ALWAYS_INLINE auto operator-(const X& t1,
+                                     const rank_0_tensorexpression<X>& t2) {
+  return TensorExpressions::ScalarOrDataVector(t1) - t2;
+}
+
+/*!
+ * \ingroup TensorExpressionsGroup
+ */
+template <typename X>
+SPECTRE_ALWAYS_INLINE auto operator-(const rank_0_tensorexpression<X>& t1,
+                                     const X& t2) {
+  return t1 - TensorExpressions::ScalarOrDataVector(t2);
 }
