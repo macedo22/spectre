@@ -192,6 +192,11 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   /// Typelist of the tensor indices, e.g. `_a_t` and `_b_t` in `F(_a, _b)`
   using args_list = ArgsList<Args...>;
 
+  virtual ~TensorExpression() = default;
+
+  // Just to make TensorExpression abstract
+  virtual void f() = 0;
+
   // @{
   /// Derived is casted down to the derived class. This is enabled by the
   /// [CRTP](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern)
@@ -202,40 +207,5 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
       return static_cast<const Derived&>(*this);
   }
   // @}
-
-  /// \brief Returns the value of type DataType with tensor index `tensor_index`
-  ///
-  /// \details
-  /// `tensor_index` is forwarded onto the concrete derived TensorExpression.
-  ///
-  /// \tparam LhsIndices the tensor indices on the LHS on the expression
-  /// \param tensor_index the tensor component to retrieve
-  /// \return the value of the DataType of component `tensor_index`
-  template <typename... LhsIndices, typename ArrayValueType>
-  SPECTRE_ALWAYS_INLINE decltype(auto)
-  get(const std::array<ArrayValueType, num_tensor_indices>& tensor_index)
-      const noexcept {
-    return (~*this).template get<LhsIndices...>(tensor_index);
-  }
-
-  /// \brief Returns the value at a left hand side tensor's storage index
-  ///
-  /// \details
-  /// `storage_index` is forwarded onto the concrete derived TensorExpression.
-  ///
-  /// \tparam LhsStructure the Structure of the Tensor on the LHS of the
-  /// TensorExpression
-  /// \tparam LhsIndices the TensorIndexs of the Tensor on the LHS of the tensor
-  /// expression
-  /// \param lhs_storage_index the storage index of the LHS tensor component to
-  /// retrieve
-  /// \return the value of the DataType of the component at `lhs_storage_index`
-  /// in the LHS tensor
-  template <typename LhsStructure, typename... LhsIndices>
-  SPECTRE_ALWAYS_INLINE decltype(auto)
-  get(const size_t lhs_storage_index) const noexcept {
-      return static_cast<const Derived&>(*this)
-          .template get<LhsStructure, LhsIndices...>(lhs_storage_index);
-  }
 };
 // @}

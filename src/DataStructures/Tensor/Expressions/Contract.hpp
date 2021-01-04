@@ -139,6 +139,9 @@ struct TensorContract
       const TensorExpression<T, X, Symm, IndexList, ArgsList>& t)
       : t_(~t) {}
 
+  // Just to make TensorExpression abstract
+  void f(){};
+
   template <size_t I, size_t Rank>
   SPECTRE_ALWAYS_INLINE void fill_contracting_tensor_index(
       std::array<size_t, Rank>& tensor_index_in,

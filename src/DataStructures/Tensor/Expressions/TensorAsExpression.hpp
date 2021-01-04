@@ -146,6 +146,9 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
   explicit TensorAsExpression(const Tensor<X, Symm, IndexList<Indices...>>& t)
       : t_(&t) {}
 
+  // Just to make TensorExpression abstract
+  void f(){};
+
   // @{
   /// \cond HIDDEN_SYMBOLS
   /// \ingroup TensorExpressionsGroup
