@@ -142,6 +142,10 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
   using args_list = ArgsList<Args...>;
   using structure = Tensor_detail::Structure<symmetry, Indices...>;
 
+  /// Construct an expression from a Tensor
+  explicit TensorAsExpression(const Tensor<X, Symm, IndexList<Indices...>>& t)
+      : t_(&t) {}
+
   // @{
   /// \cond HIDDEN_SYMBOLS
   /// \ingroup TensorExpressionsGroup
@@ -352,10 +356,6 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
   SPECTRE_ALWAYS_INLINE type operator[](const size_t i) const {
     return t_->operator[](i);
   }
-
-  /// Construct an expression from a Tensor
-  explicit TensorAsExpression(const Tensor<X, Symm, IndexList<Indices...>>& t)
-      : t_(&t) {}
 
  private:
   const Tensor<X, Symm, IndexList<Indices...>>* t_ = nullptr;
