@@ -175,13 +175,10 @@ struct TensorAsExpression<T, IndexList<Indices...>, ArgsList<Args...>>
   /// \brief return the value of type DataType with tensor index `tensor_index`
   ///
   /// \details
-  /// If Derived is a TensorExpression, `tensor_index` is forwarded onto the
-  /// concrete derived TensorExpression.
-  ///
-  /// Otherwise, it is a Tensor, where one big challenge with TensorExpression
-  /// implementation is the reordering of the Indices on the RHS and LHS of the
-  /// expression. This algorithm implemented in ::rhs_elements_in_lhs and
-  /// ::generate_transformation handles the index sorting.
+  /// One big challenge with TensorExpression implementation is the reordering
+  /// of the Indices on the RHS and LHS of the expression. This algorithm
+  /// implemented in ::rhs_elements_in_lhs and ::generate_transformation handles
+  /// the index sorting.
   ///
   /// Here are some examples of what the algorithm does:
   ///
@@ -331,15 +328,11 @@ struct TensorAsExpression<T, IndexList<Indices...>, ArgsList<Args...>>
   /// \brief return the value at a left hand side tensor's storage index
   ///
   /// \details
-  /// If Derived is a TensorExpression, `storage_index` is forwarded onto the
-  /// concrete derived TensorExpression.
-  ///
-  /// Otherwise, it is a Tensor, where one big challenge with TensorExpression
-  /// implementation is the reordering of the indices on the left hand side
-  /// (LHS) and right hand side (RHS) of the expression. The algorithms
-  /// implemented in `compute_lhs_to_rhs_map` and `compute_rhs_tensor_index`
-  /// handle the index sorting by mapping between the generic index orders of
-  /// the LHS and RHS.
+  /// One big challenge with TensorExpression implementation is the reordering
+  /// of the indices on the left hand side (LHS) and right hand side (RHS) of
+  /// the expression. The algorithms implemented in `compute_lhs_to_rhs_map` and
+  /// `compute_rhs_tensor_index` handle the index sorting by mapping between the
+  /// generic index orders of the LHS and RHS.
   ///
   /// \tparam LhsStructure the Structure of the Tensor on the LHS of the
   /// TensorExpression
