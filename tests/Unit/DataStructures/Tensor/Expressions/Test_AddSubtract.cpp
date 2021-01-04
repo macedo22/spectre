@@ -8,6 +8,7 @@
 #include <numeric>
 
 #include "DataStructures/Tensor/Expressions/AddSubtract.hpp"
+#include "DataStructures/Tensor/Expressions/Contract.hpp"
 #include "DataStructures/Tensor/Expressions/Evaluate.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
@@ -15,32 +16,29 @@
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.AddSubtract",
                   "[DataStructures][Unit]") {
   // Test adding and subtracting rank 0 tensors
-  const double value_1 = 2.5;
-  const double value_2 = -1.25;
-  const Tensor<double> scalar_1{{{value_1}}};
-  const Tensor<double> scalar_2{{{value_2}}};
-  const double expected_sum = value_1 + value_2;
-  const double expected_difference = value_1 - value_2;
+  const double R_value = 2.5;
+  const double S_value = -1.25;
+  const Tensor<double> R{{{R_value}}};
+  const Tensor<double> S{{{S_value}}};
+  const double expected_R_S_sum = R_value + S_value;
+  const double expected_R_S_difference = R_value - S_value;
 
-  const Tensor<double> sum_1 =
-      TensorExpressions::evaluate(scalar_1() + scalar_2());
-  const Tensor<double> sum_2 =
-      TensorExpressions::evaluate(scalar_1() + value_2);
-  const Tensor<double> sum_3 =
-      TensorExpressions::evaluate(value_1 + scalar_2());
-  const Tensor<double> difference_1 =
-      TensorExpressions::evaluate(scalar_1() - scalar_2());
-  const Tensor<double> difference_2 =
-      TensorExpressions::evaluate(scalar_1() - value_2);
-  const Tensor<double> difference_3 =
-      TensorExpressions::evaluate(value_1 - scalar_2());
+  const Tensor<double> R_S_sum_1 = TensorExpressions::evaluate(R() + S());
+  const Tensor<double> R_S_sum_2 = TensorExpressions::evaluate(R() + S_value);
+  const Tensor<double> R_S_sum_3 = TensorExpressions::evaluate(R_value + S());
+  const Tensor<double> R_S_difference_1 =
+      TensorExpressions::evaluate(R() - S());
+  const Tensor<double> R_S_difference_2 =
+      TensorExpressions::evaluate(R() - S_value);
+  const Tensor<double> R_S_difference_3 =
+      TensorExpressions::evaluate(R_value - S());
 
-  CHECK(sum_1.get() == expected_sum);
-  CHECK(sum_2.get() == expected_sum);
-  CHECK(sum_3.get() == expected_sum);
-  CHECK(difference_1.get() == expected_difference);
-  CHECK(difference_2.get() == expected_difference);
-  CHECK(difference_3.get() == expected_difference);
+  CHECK(R_S_sum_1.get() == expected_R_S_sum);
+  CHECK(R_S_sum_2.get() == expected_R_S_sum);
+  CHECK(R_S_sum_3.get() == expected_R_S_sum);
+  CHECK(R_S_difference_1.get() == expected_R_S_difference);
+  CHECK(R_S_difference_2.get() == expected_R_S_difference);
+  CHECK(R_S_difference_3.get() == expected_R_S_difference);
 
   // Test adding and subtracting rank 2 tensors
   Tensor<double, Symmetry<1, 1>,
@@ -98,4 +96,49 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.AddSubtract",
       }
     }
   }
+
+  // Test adding and subtracting a scalar with a contraction
+  Tensor<double, Symmetry<2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      Tul{};
+  std::iota(Tul.begin(), Tul.end(), 0.0);
+
+  double expected_trace = 0.0;
+  for (size_t a = 0; a < 4; a++) {
+    expected_trace += Tul.get(a, a);
+  }
+  const double expected_R_TAa_sum = R_value + expected_trace;
+  const double expected_R_TAa_difference_1 = R_value - expected_trace;
+  const double expected_R_TAa_difference_2 = expected_trace - R_value;
+
+  const Tensor<double> scalar_with_contraction_sum_1 =
+      TensorExpressions::evaluate(R() + Tul(ti_A, ti_a));
+  const Tensor<double> scalar_with_contraction_sum_2 =
+      TensorExpressions::evaluate(Tul(ti_A, ti_a) + R());
+  const Tensor<double> scalar_with_contraction_sum_3 =
+      TensorExpressions::evaluate(R_value + Tul(ti_A, ti_a));
+  const Tensor<double> scalar_with_contraction_sum_4 =
+      TensorExpressions::evaluate(Tul(ti_A, ti_a) + R_value);
+  const Tensor<double> scalar_with_contraction_difference_1 =
+      TensorExpressions::evaluate(R() - Tul(ti_A, ti_a));
+  const Tensor<double> scalar_with_contraction_difference_2 =
+      TensorExpressions::evaluate(Tul(ti_A, ti_a) - R());
+  const Tensor<double> scalar_with_contraction_difference_3 =
+      TensorExpressions::evaluate(R_value - Tul(ti_A, ti_a));
+  const Tensor<double> scalar_with_contraction_difference_4 =
+      TensorExpressions::evaluate(Tul(ti_A, ti_a) - R_value);
+
+  CHECK(scalar_with_contraction_sum_1.get() == expected_R_TAa_sum);
+  CHECK(scalar_with_contraction_sum_2.get() == expected_R_TAa_sum);
+  CHECK(scalar_with_contraction_sum_3.get() == expected_R_TAa_sum);
+  CHECK(scalar_with_contraction_sum_4.get() == expected_R_TAa_sum);
+  CHECK(scalar_with_contraction_difference_1.get() ==
+        expected_R_TAa_difference_1);
+  CHECK(scalar_with_contraction_difference_2.get() ==
+        expected_R_TAa_difference_2);
+  CHECK(scalar_with_contraction_difference_3.get() ==
+        expected_R_TAa_difference_1);
+  CHECK(scalar_with_contraction_difference_4.get() ==
+        expected_R_TAa_difference_2);
 }
