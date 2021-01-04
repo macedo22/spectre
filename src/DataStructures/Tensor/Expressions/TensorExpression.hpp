@@ -249,10 +249,10 @@ using generate_transformation = tmpl::enumerated_fold<
 /// 2) The tensor indices will be swapped to conform with mathematical notation
 struct Expression {};
 
-/// \cond
-template <typename DataType, typename Symm, typename IndexList>
-class Tensor;
-/// \endcond
+// /// \cond
+// template <typename DataType, typename Symm, typename IndexList>
+// class Tensor;
+// /// \endcond
 
 // @{
 /// \ingroup TensorExpressionsGroup
@@ -302,11 +302,7 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   /// \returns const TensorExpression<Derived, DataType, Symm, IndexList,
   /// ArgsList<Args...>>&
   SPECTRE_ALWAYS_INLINE const auto& operator~() const noexcept {
-    if constexpr (tt::is_a_v<Tensor, Derived>) {
-      return *this;
-    } else {
       return static_cast<const Derived&>(*this);
-    }
   }
 
   // @}
@@ -387,114 +383,10 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   SPECTRE_ALWAYS_INLINE decltype(auto)
   get(const std::array<ArrayValueType, num_tensor_indices>& tensor_index)
       const noexcept {
-    if constexpr (tt::is_a_v<Tensor, Derived>) {
-      ASSERT(t_ != nullptr,
-             "A TensorExpression that should be holding a pointer to a Tensor "
-             "is holding a nullptr.");
-      using rhs = args_list;
-      // To deal with Tensor products we need the ordering of only the subset of
-      // tensor indices present in this term
-      using lhs = rhs_elements_in_lhs<rhs, tmpl::list<LhsIndices...>>;
-      using rhs_only_with_lhs = rhs_elements_in_lhs<lhs, rhs>;
-      using transformation =
-          generate_transformation<rhs, lhs, rhs_only_with_lhs>;
-      return t_->get(
-          ComputeCorrectTensorIndex<transformation>::apply(tensor_index));
-    } else {
-      ASSERT(t_ == nullptr,
-             "A TensorExpression that shouldn't be holding a pointer to a "
-             "Tensor is holding one.");
-      return (~*this).template get<LhsIndices...>(tensor_index);
-    }
-  }
-
-  /// \brief Computes the right hand side tensor multi-index that corresponds to
-  /// the left hand side tensor multi-index, according to their generic indices
-  ///
-  /// \details
-  /// Given the order of the generic indices for the left hand side (LHS) and
-  /// right hand side (RHS) and a specific LHS tensor multi-index, the
-  /// computation of the equivalent multi-index for the RHS tensor accounts for
-  /// differences in the ordering of the generic indices on the LHS and RHS.
-  ///
-  /// Here, the elements of `lhs_index_order` and `rhs_index_order` refer to
-  /// TensorIndex::values that correspond to generic tensor indices,
-  /// `lhs_tensor_multi_index` is a multi-index for the LHS tensor, and the
-  /// equivalent RHS tensor multi-index is returned. If we have LHS tensor
-  /// \f$L_{ab}\f$, RHS tensor \f$R_{ba}\f$, and the LHS component \f$L_{31}\f$,
-  /// the corresponding RHS component is \f$R_{13}\f$.
-  ///
-  /// Here is an example of what the algorithm does:
-  ///
-  /// `lhs_index_order`:
-  /// \code
-  /// [0, 1, 2] // i.e. abc
-  /// \endcode
-  /// `rhs_index_order`:
-  /// \code
-  /// [1, 2, 0] // i.e. bca
-  /// \endcode
-  /// `lhs_tensor_multi_index`:
-  /// \code
-  /// [4, 0, 3] // i.e. a = 4, b = 0, c = 3
-  /// \endcode
-  /// returned RHS tensor multi-index:
-  /// \code
-  /// [0, 3, 4] // i.e. b = 0, c = 3, a = 4
-  /// \endcode
-  ///
-  /// \param lhs_index_order the generic index order of the LHS tensor
-  /// \param rhs_index_order the generic index order of the RHS tensor
-  /// \param lhs_tensor_multi_index the specific LHS tensor multi-index
-  /// \return the RHS tensor multi-index that corresponds to
-  /// `lhs_tensor_multi_index`, according to the index orders in
-  /// `lhs_index_order` and `rhs_index_order`
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, sizeof...(Indices)>
-  compute_rhs_tensor_index(
-      const std::array<size_t, sizeof...(Indices)>& lhs_index_order,
-      const std::array<size_t, sizeof...(Indices)>& rhs_index_order,
-      const std::array<size_t, sizeof...(Indices)>&
-          lhs_tensor_multi_index) noexcept {
-    std::array<size_t, sizeof...(Indices)> rhs_tensor_multi_index{};
-    for (size_t i = 0; i < sizeof...(Indices); ++i) {
-      gsl::at(rhs_tensor_multi_index,
-              static_cast<unsigned long>(std::distance(
-                  rhs_index_order.begin(),
-                  alg::find(rhs_index_order, gsl::at(lhs_index_order, i))))) =
-          gsl::at(lhs_tensor_multi_index, i);
-    }
-    return rhs_tensor_multi_index;
-  }
-
-  /// \brief Computes a mapping from the storage indices of the left hand side
-  /// tensor to the right hand side tensor
-  ///
-  /// \tparam LhsStructure the Structure of the Tensor on the left hand side of
-  /// the TensorExpression
-  /// \tparam LhsIndices the TensorIndexs of the Tensor on the left hand side
-  /// \return the mapping from the left hand side to the right hand side storage
-  /// indices
-  template <typename LhsStructure, typename... LhsIndices>
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t,
-                                                    LhsStructure::size()>
-  compute_lhs_to_rhs_map() noexcept {
-    constexpr size_t num_components = LhsStructure::size();
-    std::array<size_t, num_components> lhs_to_rhs_map{};
-    const auto lhs_storage_to_tensor_indices =
-        LhsStructure::storage_to_tensor_index();
-    for (size_t lhs_storage_index = 0; lhs_storage_index < num_components;
-         ++lhs_storage_index) {
-      // `compute_rhs_tensor_index` will return the RHS tensor multi-index that
-      // corresponds to the LHS tensor multi-index, according to the order of
-      // the generic indices for the LHS and RHS. structure::get_storage_index
-      // will then get the RHS storage index that corresponds to this RHS
-      // tensor multi-index.
-      gsl::at(lhs_to_rhs_map, lhs_storage_index) =
-          structure::get_storage_index(compute_rhs_tensor_index(
-              {{LhsIndices::value...}}, {{Args::value...}},
-              lhs_storage_to_tensor_indices[lhs_storage_index]));
-    }
-    return lhs_to_rhs_map;
+    // ASSERT(t_ == nullptr,
+    //        "A TensorExpression that shouldn't be holding a pointer to a "
+    //        "Tensor is holding one.");
+    return (~*this).template get<LhsIndices...>(tensor_index);
   }
 
   /// \brief return the value at a left hand side tensor's storage index
@@ -521,39 +413,31 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   template <typename LhsStructure, typename... LhsIndices>
   SPECTRE_ALWAYS_INLINE decltype(auto)
   get(const size_t lhs_storage_index) const noexcept {
-    if constexpr (not tt::is_a_v<Tensor, Derived>) {
       return static_cast<const Derived&>(*this)
           .template get<LhsStructure, LhsIndices...>(lhs_storage_index);
-    } else if constexpr (sizeof...(LhsIndices) < 2) {
-      return (*t_)[lhs_storage_index];
-    } else {
-      constexpr std::array<size_t, LhsStructure::size()> lhs_to_rhs_map =
-          compute_lhs_to_rhs_map<LhsStructure, LhsIndices...>();
-      return (*t_)[gsl::at(lhs_to_rhs_map, lhs_storage_index)];
-    }
   }
 
-  /// Retrieve the i'th entry of the Tensor being held
-  template <typename V = Derived,
-            Requires<tt::is_a<Tensor, V>::value> = nullptr>
-  SPECTRE_ALWAYS_INLINE type operator[](const size_t i) const {
-    return t_->operator[](i);
-  }
+  // /// Retrieve the i'th entry of the Tensor being held
+  // template <typename V = Derived,
+  //           Requires<tt::is_a<Tensor, V>::value> = nullptr>
+  // SPECTRE_ALWAYS_INLINE type operator[](const size_t i) const {
+  //   return t_->operator[](i);
+  // } // TODO: move to new tensor file?
 
   /// \brief Construct a TensorExpression from another TensorExpression.
   ///
   /// In this case we do not need to store a pointer to the TensorExpression
   /// since we can cast back to the derived class using operator~.
-  template <typename V = Derived,
-            Requires<not tt::is_a<Tensor, V>::value> = nullptr>
-  TensorExpression() {}  // NOLINT
+  // template <typename V = Derived,
+  //           Requires<not tt::is_a<Tensor, V>::value> = nullptr>
+  // TensorExpression() {}  // NOLINT
 
   /// \brief Construct a TensorExpression from a Tensor.
   ///
   /// We need to store a pointer to the Tensor in a member variable in order
   /// to be able to access the data when later evaluating the tensor expression.
-  explicit TensorExpression(const Tensor<DataType, Symm, index_list>& t)
-      : t_(&t) {}
+  // explicit TensorExpression(const Tensor<DataType, Symm, index_list>& t)
+  //     : t_(&t) {} // TODO remove from here
 
  private:
   /// Holds a pointer to a Tensor if the TensorExpression represents one.
@@ -568,6 +452,6 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   /// Benchmarking shows that GCC 6 and Clang 3.9.0 can derive off of 672 base
   /// classes with compilation time of about 5 seconds, while the Intel compiler
   /// v16.3 takes around 8 minutes. These tests were done on a Haswell Core i5.
-  const Derived* t_ = nullptr;
+  // const Derived* t_ = nullptr;
 };
 // @}
