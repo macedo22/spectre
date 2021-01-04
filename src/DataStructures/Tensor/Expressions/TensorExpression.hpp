@@ -9,7 +9,7 @@
 #include <array>
 #include <cstddef>
 
-#include "DataStructures/Tensor/Structure.hpp"
+#include "DataStructures/Tensor/IndexType.hpp"
 #include "ErrorHandling/Assert.hpp"  // IWYU pragma: keep
 #include "Utilities/Algorithm.hpp"
 #include "Utilities/ForceInline.hpp"
@@ -193,7 +193,6 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
   /// Typelist of the tensor indices, e.g. `_a_t` and `_b_t` in `F(_a, _b)`
   using args_list = ArgsList<Args...>;
-  using structure = Tensor_detail::Structure<symmetry, Indices...>;
 
   // @{
   /// Derived is casted down to the derived class. This is enabled by the
