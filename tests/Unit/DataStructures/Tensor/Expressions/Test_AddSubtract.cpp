@@ -14,13 +14,35 @@
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.AddSubtract",
                   "[DataStructures][Unit]") {
-  // Test adding scalars
-  const Tensor<double> scalar_1{{{2.1}}};
-  const Tensor<double> scalar_2{{{-0.8}}};
-  Tensor<double> lhs_scalar =
-      TensorExpressions::evaluate(scalar_1() + scalar_2());
-  CHECK(lhs_scalar.get() == 1.3);
+  // Test adding and subtracting rank 0 tensors
+  const double value_1 = 2.5;
+  const double value_2 = -1.25;
+  const Tensor<double> scalar_1{{{value_1}}};
+  const Tensor<double> scalar_2{{{value_2}}};
+  const double expected_sum = value_1 + value_2;
+  const double expected_difference = value_1 - value_2;
 
+  const Tensor<double> sum_1 =
+      TensorExpressions::evaluate(scalar_1() + scalar_2());
+  const Tensor<double> sum_2 =
+      TensorExpressions::evaluate(scalar_1() + value_2);
+  const Tensor<double> sum_3 =
+      TensorExpressions::evaluate(value_1 + scalar_2());
+  const Tensor<double> difference_1 =
+      TensorExpressions::evaluate(scalar_1() - scalar_2());
+  const Tensor<double> difference_2 =
+      TensorExpressions::evaluate(scalar_1() - value_2);
+  const Tensor<double> difference_3 =
+      TensorExpressions::evaluate(value_1 - scalar_2());
+
+  CHECK(sum_1.get() == expected_sum);
+  CHECK(sum_2.get() == expected_sum);
+  CHECK(sum_3.get() == expected_sum);
+  CHECK(difference_1.get() == expected_difference);
+  CHECK(difference_2.get() == expected_difference);
+  CHECK(difference_3.get() == expected_difference);
+
+  // Test adding and subtracting rank 2 tensors
   Tensor<double, Symmetry<1, 1>,
          index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
                     SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
@@ -46,7 +68,8 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.AddSubtract",
       CHECK(Gll3.get(i, j) == 2.0 * All.get(i, j));
     }
   }
-  // Test 3 indices add subtract
+
+  // Test adding and subtracting rank 3 tensors
   Tensor<double, Symmetry<1, 1, 2>,
          index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
                     SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
