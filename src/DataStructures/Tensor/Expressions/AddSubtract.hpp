@@ -9,8 +9,11 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <iostream>
 
+#include "DataStructures/Tensor/Expressions/ScalarOrDataVector.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
+#include "DataStructures/Tensor/Tensor.hpp"
 #include "Utilities/Requires.hpp"
 #include "Utilities/TMPL.hpp"
 #include "Utilities/TypeTraits.hpp"
@@ -82,6 +85,7 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   using args_list = tmpl::sort<typename T1::args_list>;
 
   AddSub(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
+  // AddSub(const T1& t1, const T2& t2) : t1_(t1), t2_(t2) {}
 
   template <typename... LhsIndices, typename T>
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
@@ -141,6 +145,47 @@ SPECTRE_ALWAYS_INLINE auto operator+(
       tmpl::conditional_t<std::is_base_of<Expression, T2>::value, T2,
                           TensorExpression<T2, X, Symm2, IndexList2, Args2>>,
       Args1, Args2, 1>(~t1, ~t2);
+}
+
+/*!
+ * \ingroup TensorExpressionsGroup
+ */
+template <typename T2, typename X, typename Symm2, typename IndexList2,
+          typename Args2>
+SPECTRE_ALWAYS_INLINE auto operator+(
+    const X& t1, const TensorExpression<T2, X, Symm2, IndexList2, Args2>& t2) {
+  return TensorExpressions::ScalarOrDataVector(t1) + t2;
+  // // Tensor<DataType> t1{{{used_for_size}}};
+  // std::cout << "t1 : " << t1 << std::endl;
+  // // const Tensor<X> t1_tensor(t1);
+  // // return t1_tensor() + t2;
+  // const auto tensor_expression =
+  //     TensorExpression<Tensor<X, tmpl::list<>, tmpl::list<>>, X,
+  //     tmpl::list<>,
+  //                      tmpl::list<>, tmpl::list<>>{Tensor<X>(t1)};
+  // return tensor_expression + t2;
+
+  // const TensorExpression<Tensor<X, tmpl::list<>, tmpl::list<>>, X,
+  // tmpl::list<>, tmpl::list<>, tmpl::list<>> t1_te = t1_tensor(); std::cout <<
+  // "t1_tensor : " << t1_tensor.get() << std::endl; std::cout << "t1 : " << t1
+  // << std::endl; std::cout << "hello" << std::endl;
+  // return TensorExpressions::AddSub<
+  //     TensorExpression<Tensor<X, tmpl::list<>, tmpl::list<>>, X,
+  //     tmpl::list<>, tmpl::list<>, tmpl::list<>>,
+  //     tmpl::conditional_t<std::is_base_of<Expression, T2>::value, T2,
+  //                         TensorExpression<T2, X, Symm2, IndexList2, Args2>>,
+  //                         tmpl::list<>, Args2, 1>(std::move(t1_tensor()),
+  //                         ~t2);
+  //     //tmpl::list<>, Args2, 1>(TensorExpression<Tensor<X, tmpl::list<>,
+  //     tmpl::list<>>, X, tmpl::list<>, tmpl::list<>,
+  //     tmpl::list<>>{Tensor<X>{{{t1}}}}, ~t2);
+  //     // tmpl::list<>, Args2, 1>(Tensor<X, tmpl::list<>,
+  //     tmpl::list<>>{{{t1}}}, ~t2);
+
+  //     // TE<tmpl::list<TensorIndices...>>{*this}
+  //     //using TE = TensorExpression<Tensor<X, Symm, tmpl::list<Indices...>>,
+  //     X, Symm,
+  //     //                        tmpl::list<Indices...>, ArgsList>;
 }
 
 /*!
