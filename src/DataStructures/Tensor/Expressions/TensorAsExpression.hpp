@@ -13,6 +13,7 @@
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Structure.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
+#include "DataStructures/Tensor/Tensor.hpp"
 #include "ErrorHandling/Assert.hpp"  // IWYU pragma: keep
 #include "Utilities/Algorithm.hpp"
 #include "Utilities/ForceInline.hpp"
@@ -132,19 +133,20 @@ using generate_transformation = tmpl::enumerated_fold<
                                          tmpl::pin<Lhs>, tmpl::pin<Rhs>,
                                          tmpl::pin<RhsOnyWithLhs>>>;
 
-template <typename T, typename IndexList, typename ArgsList>
+template <typename T, typename ArgsList>
 struct TensorAsExpression;
 
-template <typename T, template <typename...> class IndexList,
+template <typename X, typename Symm, template <typename...> class IndexList,
           typename... Indices, template <typename...> class ArgsList,
           typename... Args>
-struct TensorAsExpression<T, IndexList<Indices...>, ArgsList<Args...>>
+struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
+                          ArgsList<Args...>>
     : public TensorExpression<
-          TensorAsExpression<T, IndexList<Indices...>, ArgsList<Args...>>,
-          typename T::type, typename T::symmetry, typename T::index_list,
-          ArgsList<Args...>> {
-  using type = typename T::type;
-  using symmetry = typename T::symmetry;
+          TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
+                             ArgsList<Args...>>,
+          X, Symm, IndexList<Indices...>, ArgsList<Args...>> {
+  using type = X;
+  using symmetry = Symm;
   using index_list = IndexList<Indices...>;
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
   using args_list = ArgsList<Args...>;
@@ -361,11 +363,12 @@ struct TensorAsExpression<T, IndexList<Indices...>, ArgsList<Args...>>
     return t_->operator[](i);
   }
 
-  explicit TensorAsExpression(const T& t) : t_(&t) {}
+  explicit TensorAsExpression(const Tensor<X, Symm, IndexList<Indices...>>& t)
+      : t_(&t) {}
 
  private:
   /// We need to store a pointer to the Tensor in a member variable in order
   /// to be able to access the data when later evaluating the tensor expression.
-  const T* t_ = nullptr;
+  const Tensor<X, Symm, IndexList<Indices...>>* t_ = nullptr;
 };
 }  // namespace TensorExpressions

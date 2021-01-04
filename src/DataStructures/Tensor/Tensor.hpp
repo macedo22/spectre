@@ -128,7 +128,7 @@ class Tensor<X, Symm, IndexList<Indices...>> {
   /// tensor expression.
   template <typename ArgsList>
   using TE = TensorExpressions::TensorAsExpression<
-      Tensor<X, Symm, IndexList<Indices...>>, IndexList<Indices...>, ArgsList>;
+      Tensor<X, Symm, IndexList<Indices...>>, ArgsList>;
 
   Tensor() = default;
   ~Tensor() = default;
