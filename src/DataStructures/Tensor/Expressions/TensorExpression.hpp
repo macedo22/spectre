@@ -2,7 +2,7 @@
 // See LICENSE.txt for details.
 
 /// \file
-/// Defines class
+/// Defines base class for all tensor expressions
 
 #pragma once
 
