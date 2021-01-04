@@ -164,7 +164,7 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
   /// \endcond
   // @}
 
-  /// \brief return the value of type DataType with tensor index `tensor_index`
+  /// \brief Returns the value of type DataType with tensor index `tensor_index`
   ///
   /// \details
   /// One big challenge with TensorExpression implementation is the reordering
@@ -317,7 +317,7 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
     return lhs_to_rhs_map;
   }
 
-  /// \brief return the value at a left hand side tensor's storage index
+  /// \brief Returns the value at a left hand side tensor's storage index
   ///
   /// \details
   /// One big challenge with TensorExpression implementation is the reordering

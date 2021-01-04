@@ -202,7 +202,7 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   }
   // @}
 
-  /// \brief return the value of type DataType with tensor index `tensor_index`
+  /// \brief Returns the value of type DataType with tensor index `tensor_index`
   ///
   /// \details
   /// `tensor_index` is forwarded onto the concrete derived TensorExpression.
@@ -217,7 +217,7 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
     return (~*this).template get<LhsIndices...>(tensor_index);
   }
 
-  /// \brief return the value at a left hand side tensor's storage index
+  /// \brief Returns the value at a left hand side tensor's storage index
   ///
   /// \details
   /// `storage_index` is forwarded onto the concrete derived TensorExpression.
