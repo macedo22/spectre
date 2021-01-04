@@ -14,12 +14,11 @@
 #include "DataStructures/Tensor/Structure.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
-#include "ErrorHandling/Assert.hpp"  // IWYU pragma: keep
+#include "ErrorHandling/Assert.hpp"
 #include "Utilities/Algorithm.hpp"
 #include "Utilities/ForceInline.hpp"
-#include "Utilities/Requires.hpp"
 #include "Utilities/TMPL.hpp"
-#include "Utilities/TypeTraits/IsA.hpp"  // IWYU pragma: keep
+#include "Utilities/TypeTraits/IsA.hpp"
 
 namespace TensorExpressions {
 namespace detail {

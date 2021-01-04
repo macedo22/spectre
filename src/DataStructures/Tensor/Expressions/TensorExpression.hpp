@@ -10,12 +10,9 @@
 #include <cstddef>
 
 #include "DataStructures/Tensor/IndexType.hpp"
-#include "ErrorHandling/Assert.hpp"  // IWYU pragma: keep
-#include "Utilities/Algorithm.hpp"
 #include "Utilities/ForceInline.hpp"
 #include "Utilities/Requires.hpp"
 #include "Utilities/TMPL.hpp"
-#include "Utilities/TypeTraits/IsA.hpp"  // IWYU pragma: keep
 
 // The below values are used to separate upper indices from lower indices and
 // spatial indices from spacetime indices.
