@@ -20,6 +20,29 @@
 #include "Utilities/TMPL.hpp"
 #include "Utilities/TypeTraits/IsA.hpp"  // IWYU pragma: keep
 
+// from TensorExpression operator~ details
+// Otherwise, it is a Tensor. Since Tensor is not derived from
+// TensorExpression (because of complications arising from the indices being
+// part of the expression, specifically Tensor may need to derive off of
+// hundreds or thousands of base classes, which is not feasible), return a
+// reference to a TensorExpression, which has a sufficient interface to
+// evaluate the expression.
+
+// from TensorExpression t_
+// Holds a pointer to a Tensor if the TensorExpression represents one.
+//
+// The pointer is needed so that the Tensor class need not derive from
+// TensorExpression. The reason deriving off of TensorExpression is
+// problematic for Tensor is that the index structure is part of the type
+// of the TensorExpression, so every possible permutation and combination of
+// indices must be derived from. For a rank-3 tensor this is already over 500
+// base classes, which the Intel compiler takes too long to compile.
+//
+// Benchmarking shows that GCC 6 and Clang 3.9.0 can derive off of 672 base
+// classes with compilation time of about 5 seconds, while the Intel compiler
+// v16.3 takes around 8 minutes. These tests were done on a Haswell Core i5.
+// const Derived* t_ = nullptr;
+
 namespace TensorExpressions {
 
 namespace detail {
@@ -348,6 +371,8 @@ struct TensorAsExpression<T, IndexList<Indices...>, ArgsList<Args...>>
   explicit TensorAsExpression(const T& t) : t_(&t) {}
 
  private:
+  /// We need to store a pointer to the Tensor in a member variable in order
+  /// to be able to access the data when later evaluating the tensor expression.
   const T* t_ = nullptr;
 };
 }  // namespace TensorExpressions

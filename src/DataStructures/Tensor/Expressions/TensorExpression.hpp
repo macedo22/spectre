@@ -162,11 +162,6 @@ struct is_tensor_index<TensorIndex<I>> : std::true_type {};
 /// 2) The tensor indices will be swapped to conform with mathematical notation
 struct Expression {};
 
-// /// \cond
-// template <typename DataType, typename Symm, typename IndexList>
-// class Tensor;
-// /// \endcond
-
 // @{
 /// \ingroup TensorExpressionsGroup
 /// \brief The base class all tensor expression implementations derive from
@@ -201,93 +196,20 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   using structure = Tensor_detail::Structure<symmetry, Indices...>;
 
   // @{
-  /// If Derived is a TensorExpression, it is casted down to the derived
-  /// class. This is enabled by the
+  /// Derived is casted down to the derived class. This is enabled by the
   /// [CRTP](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern)
-  ///
-  /// Otherwise, it is a Tensor. Since Tensor is not derived from
-  /// TensorExpression (because of complications arising from the indices being
-  /// part of the expression, specifically Tensor may need to derive off of
-  /// hundreds or thousands of base classes, which is not feasible), return a
-  /// reference to a TensorExpression, which has a sufficient interface to
-  /// evaluate the expression.
   ///
   /// \returns const TensorExpression<Derived, DataType, Symm, IndexList,
   /// ArgsList<Args...>>&
   SPECTRE_ALWAYS_INLINE const auto& operator~() const noexcept {
       return static_cast<const Derived&>(*this);
   }
-
-  // @}
-
-  // @{
-  /// \cond HIDDEN_SYMBOLS
-  /// \ingroup TensorExpressionsGroup
-  /// Helper struct to compute the correct tensor index array from a
-  /// typelist of std::integral_constant's indicating the ordering. This is
-  /// needed for dealing with expressions such as \f$T_{ab} = F_{ba}\f$ and gets
-  /// the ordering on the RHS to be correct compared with where the indices are
-  /// on the LHS.
-  template <typename U>
-  struct ComputeCorrectTensorIndex;
-
-  template <template <typename...> class RedArgsList, typename... RedArgs>
-  struct ComputeCorrectTensorIndex<RedArgsList<RedArgs...>> {
-    template <typename U, std::size_t Size>
-    SPECTRE_ALWAYS_INLINE static constexpr std::array<U, Size> apply(
-        const std::array<U, Size>& tensor_index) {
-      return std::array<U, Size>{{tensor_index[RedArgs::value]...}};
-    }
-  };
-  /// \endcond
   // @}
 
   /// \brief return the value of type DataType with tensor index `tensor_index`
   ///
   /// \details
-  /// If Derived is a TensorExpression, `tensor_index` is forwarded onto the
-  /// concrete derived TensorExpression.
-  ///
-  /// Otherwise, it is a Tensor, where one big challenge with TensorExpression
-  /// implementation is the reordering of the Indices on the RHS and LHS of the
-  /// expression. This algorithm implemented in ::rhs_elements_in_lhs and
-  /// ::generate_transformation handles the index sorting.
-  ///
-  /// Here are some examples of what the algorithm does:
-  ///
-  /// LhsIndices is the desired ordering.
-  ///
-  /// LHS:
-  /// \code
-  /// <0, 1>
-  /// \endcode
-  /// RHS:
-  /// \code
-  /// <1, 2, 3, 0> -Transform> <3, 1, 2, 0>
-  /// \endcode
-  ///
-  /// LHS:
-  /// \code
-  /// <0, 1, 2> <a, b, c>
-  /// \endcode
-  /// RHS:
-  /// \code
-  /// <2, 0, 1> -Transform> <2 , 1, 0>
-  /// \endcode
-  ///
-  /// Below is pseudo-code of the algorithm written in a non-functional way
-  /// \verbatim
-  /// for Element in RHS:
-  ///   if (Element in LHS):
-  ///     index_in_LHS = index_of<LHS, Element>
-  ///     tensor_index_to_find = at<RHS_with_only_LHS, index_in_LHS>
-  ///     index_to_replace_with = index_of<RHS, tensor_index_to_find>
-  ///     T_RHS = push_back<T_RHS, index_to_replace_with>
-  ///   else:
-  ///     T_RHS = push_back<T_RHS, iteration>
-  ///   endif
-  /// end for
-  /// \endverbatim
+  /// `tensor_index` is forwarded onto the concrete derived TensorExpression.
   ///
   /// \tparam LhsIndices the tensor indices on the LHS on the expression
   /// \param tensor_index the tensor component to retrieve
@@ -296,24 +218,13 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   SPECTRE_ALWAYS_INLINE decltype(auto)
   get(const std::array<ArrayValueType, num_tensor_indices>& tensor_index)
       const noexcept {
-    // ASSERT(t_ == nullptr,
-    //        "A TensorExpression that shouldn't be holding a pointer to a "
-    //        "Tensor is holding one.");
     return (~*this).template get<LhsIndices...>(tensor_index);
   }
 
   /// \brief return the value at a left hand side tensor's storage index
   ///
   /// \details
-  /// If Derived is a TensorExpression, `storage_index` is forwarded onto the
-  /// concrete derived TensorExpression.
-  ///
-  /// Otherwise, it is a Tensor, where one big challenge with TensorExpression
-  /// implementation is the reordering of the indices on the left hand side
-  /// (LHS) and right hand side (RHS) of the expression. The algorithms
-  /// implemented in `compute_lhs_to_rhs_map` and `compute_rhs_tensor_index`
-  /// handle the index sorting by mapping between the generic index orders of
-  /// the LHS and RHS.
+  /// `storage_index` is forwarded onto the concrete derived TensorExpression.
   ///
   /// \tparam LhsStructure the Structure of the Tensor on the LHS of the
   /// TensorExpression
@@ -329,42 +240,5 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
       return static_cast<const Derived&>(*this)
           .template get<LhsStructure, LhsIndices...>(lhs_storage_index);
   }
-
-  // /// Retrieve the i'th entry of the Tensor being held
-  // template <typename V = Derived,
-  //           Requires<tt::is_a<Tensor, V>::value> = nullptr>
-  // SPECTRE_ALWAYS_INLINE type operator[](const size_t i) const {
-  //   return t_->operator[](i);
-  // } // TODO: move to new tensor file?
-
-  /// \brief Construct a TensorExpression from another TensorExpression.
-  ///
-  /// In this case we do not need to store a pointer to the TensorExpression
-  /// since we can cast back to the derived class using operator~.
-  // template <typename V = Derived,
-  //           Requires<not tt::is_a<Tensor, V>::value> = nullptr>
-  // TensorExpression() {}  // NOLINT
-
-  /// \brief Construct a TensorExpression from a Tensor.
-  ///
-  /// We need to store a pointer to the Tensor in a member variable in order
-  /// to be able to access the data when later evaluating the tensor expression.
-  // explicit TensorExpression(const Tensor<DataType, Symm, index_list>& t)
-  //     : t_(&t) {} // TODO remove from here
-
- private:
-  /// Holds a pointer to a Tensor if the TensorExpression represents one.
-  ///
-  /// The pointer is needed so that the Tensor class need not derive from
-  /// TensorExpression. The reason deriving off of TensorExpression is
-  /// problematic for Tensor is that the index structure is part of the type
-  /// of the TensorExpression, so every possible permutation and combination of
-  /// indices must be derived from. For a rank-3 tensor this is already over 500
-  /// base classes, which the Intel compiler takes too long to compile.
-  ///
-  /// Benchmarking shows that GCC 6 and Clang 3.9.0 can derive off of 672 base
-  /// classes with compilation time of about 5 seconds, while the Intel compiler
-  /// v16.3 takes around 8 minutes. These tests were done on a Haswell Core i5.
-  // const Derived* t_ = nullptr;
 };
 // @}
