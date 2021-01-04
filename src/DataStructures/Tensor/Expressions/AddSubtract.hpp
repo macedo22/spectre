@@ -147,25 +147,25 @@ SPECTRE_ALWAYS_INLINE auto operator+(
       Args1, Args2, 1>(~t1, ~t2);
 }
 
-template <typename X>
+template <typename T>
 using rank_0_tensorexpression =
-    TensorExpression<Tensor<X>, X, tmpl::list<>, tmpl::list<>>;
+    TensorExpression<T, typename T::type, tmpl::list<>, tmpl::list<>>;
 
 /*!
  * \ingroup TensorExpressionsGroup
  */
-template <typename X>
-SPECTRE_ALWAYS_INLINE auto operator+(const X& t1,
-                                     const rank_0_tensorexpression<X>& t2) {
+template <typename T>
+SPECTRE_ALWAYS_INLINE auto operator+(const typename T::type& t1,
+                                     const rank_0_tensorexpression<T>& t2) {
   return TensorExpressions::ScalarOrDataVector(t1) + t2;
 }
 
 /*!
  * \ingroup TensorExpressionsGroup
  */
-template <typename X>
-SPECTRE_ALWAYS_INLINE auto operator+(const rank_0_tensorexpression<X>& t1,
-                                     const X& t2) {
+template <typename T>
+SPECTRE_ALWAYS_INLINE auto operator+(const rank_0_tensorexpression<T>& t1,
+                                     const typename T::type& t2) {
   return t1 + TensorExpressions::ScalarOrDataVector(t2);
 }
 
@@ -194,17 +194,17 @@ SPECTRE_ALWAYS_INLINE auto operator-(
 /*!
  * \ingroup TensorExpressionsGroup
  */
-template <typename X>
-SPECTRE_ALWAYS_INLINE auto operator-(const X& t1,
-                                     const rank_0_tensorexpression<X>& t2) {
+template <typename T>
+SPECTRE_ALWAYS_INLINE auto operator-(const typename T::type& t1,
+                                     const rank_0_tensorexpression<T>& t2) {
   return TensorExpressions::ScalarOrDataVector(t1) - t2;
 }
 
 /*!
  * \ingroup TensorExpressionsGroup
  */
-template <typename X>
-SPECTRE_ALWAYS_INLINE auto operator-(const rank_0_tensorexpression<X>& t1,
-                                     const X& t2) {
+template <typename T>
+SPECTRE_ALWAYS_INLINE auto operator-(const rank_0_tensorexpression<T>& t1,
+                                     const typename T::type& t2) {
   return t1 - TensorExpressions::ScalarOrDataVector(t2);
 }
