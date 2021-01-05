@@ -8,18 +8,11 @@
 
 #include <array>
 #include <cstddef>
-#include <iostream>
 
-#include "DataStructures/Tensor/Expressions/LhsTensorSymmAndIndices.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Structure.hpp"
-#include "DataStructures/Tensor/Symmetry.hpp"
-#include "DataStructures/Tensor/Tensor.hpp"
-#include "ErrorHandling/Assert.hpp"
-#include "Utilities/Algorithm.hpp"
 #include "Utilities/ForceInline.hpp"
 #include "Utilities/TMPL.hpp"
-#include "Utilities/TypeTraits/IsA.hpp"
 
 namespace TensorExpressions {
 /// \ingroup TensorExpressionsGroup
