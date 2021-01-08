@@ -195,6 +195,7 @@ SPECTRE_ALWAYS_INLINE auto operator-(
     const X& t1, const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t2) {
   return TensorExpressions::ScalarDataType(t1) - t2;
 }
+
 /*!
  * \ingroup TensorExpressionsGroup
  */
