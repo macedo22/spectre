@@ -230,7 +230,7 @@ SPECTRE_ALWAYS_INLINE auto operator+(
 /// - `(R(ti_A, ti_B) * S(ti_a, ti_b))`
 ///
 /// This overload is necessary so that DataVector r-values are moved to an
-/// expression instead of simply refered to by one via pointer.
+/// expression instead of pointing to an object that will go out of scope.
 ///
 /// \tparam T the derived TensorExpression type of the tensor expression operand
 /// of the sum
@@ -259,7 +259,7 @@ SPECTRE_ALWAYS_INLINE auto operator+(
 /// - `(R(ti_A, ti_B) * S(ti_a, ti_b))`
 ///
 /// This overload is necessary so that DataVector r-values are moved to an
-/// expression instead of simply refered to by one via pointer.
+/// expression instead of pointing to an object that will go out of scope.
 ///
 /// \tparam T the derived TensorExpression type of the tensor expression operand
 /// of the sum
@@ -386,7 +386,7 @@ SPECTRE_ALWAYS_INLINE auto operator-(
 /// - `(R(ti_A, ti_B) * S(ti_a, ti_b))`
 ///
 /// This overload is necessary so that DataVector r-values are moved to an
-/// expression instead of simply refered to by one via pointer.
+/// expression instead of pointing to an object that will go out of scope.
 ///
 /// \tparam T the derived TensorExpression type of the tensor expression operand
 /// of the difference
@@ -416,7 +416,7 @@ SPECTRE_ALWAYS_INLINE auto operator-(
 /// - `(R(ti_A, ti_B) * S(ti_a, ti_b))`
 ///
 /// This overload is necessary so that DataVector r-values are moved to an
-/// expression instead of simply refered to by one via pointer.
+/// expression instead of pointing to an object that will go out of scope.
 ///
 /// \tparam T the derived TensorExpression type of the tensor expression operand
 /// of the difference
