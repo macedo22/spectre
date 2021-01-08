@@ -11,7 +11,7 @@
 #include <cstddef>
 #include <iostream>
 
-#include "DataStructures/Tensor/Expressions/ScalarOrDataVector.hpp"
+#include "DataStructures/Tensor/Expressions/ScalarDataType.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Utilities/Requires.hpp"
@@ -157,7 +157,7 @@ using rank_0_tensorexpression =
 template <typename T>
 SPECTRE_ALWAYS_INLINE auto operator+(const typename T::type& t1,
                                      const rank_0_tensorexpression<T>& t2) {
-  return TensorExpressions::ScalarOrDataVector(t1) + t2;
+  return TensorExpressions::ScalarDataType(t1) + t2;
 }
 
 /*!
@@ -166,7 +166,7 @@ SPECTRE_ALWAYS_INLINE auto operator+(const typename T::type& t1,
 template <typename T>
 SPECTRE_ALWAYS_INLINE auto operator+(const rank_0_tensorexpression<T>& t1,
                                      const typename T::type& t2) {
-  return t1 + TensorExpressions::ScalarOrDataVector(t2);
+  return t1 + TensorExpressions::ScalarDataType(t2);
 }
 
 /*!
@@ -197,7 +197,7 @@ SPECTRE_ALWAYS_INLINE auto operator-(
 template <typename T>
 SPECTRE_ALWAYS_INLINE auto operator-(const typename T::type& t1,
                                      const rank_0_tensorexpression<T>& t2) {
-  return TensorExpressions::ScalarOrDataVector(t1) - t2;
+  return TensorExpressions::ScalarDataType(t1) - t2;
 }
 
 /*!
@@ -206,5 +206,5 @@ SPECTRE_ALWAYS_INLINE auto operator-(const typename T::type& t1,
 template <typename T>
 SPECTRE_ALWAYS_INLINE auto operator-(const rank_0_tensorexpression<T>& t1,
                                      const typename T::type& t2) {
-  return t1 - TensorExpressions::ScalarOrDataVector(t2);
+  return t1 - TensorExpressions::ScalarDataType(t2);
 }

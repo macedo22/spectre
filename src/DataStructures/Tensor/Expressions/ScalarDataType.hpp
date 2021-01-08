@@ -20,8 +20,8 @@ namespace TensorExpressions {
 ///
 /// \tparam DataType the type being represented, a double or DataVector
 template <typename DataType>
-struct ScalarOrDataVector
-    : public TensorExpression<ScalarOrDataVector<DataType>, DataType,
+struct ScalarDataType
+    : public TensorExpression<ScalarDataType<DataType>, DataType,
                               tmpl::list<>, tmpl::list<>, tmpl::list<>> {
   using type = DataType;
   using symmetry = tmpl::list<>;
@@ -30,12 +30,12 @@ struct ScalarOrDataVector
   using structure = Tensor_detail::Structure<symmetry>;
   static constexpr auto num_tensor_indices = 0;
 
-  ScalarOrDataVector(const DataType t) : t_(std::move(t)) {}
+  ScalarDataType(const DataType t) : t_(std::move(t)) {}
 
   /// \brief Returns the value represented by the expression
   ///
   /// \details
-  /// While a ScalarOrDataVector expression does not store a rank 0 Tensor, it
+  /// While a ScalarDataType expression does not store a rank 0 Tensor, it
   /// does represent one. This is why, unlike other derived TensorExpression
   /// types, there is no second variadic template parameter for the generic
   /// indices. In addition, this is why this template is only instantiated for
