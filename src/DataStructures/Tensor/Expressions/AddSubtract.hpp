@@ -241,8 +241,7 @@ SPECTRE_ALWAYS_INLINE auto operator+(
 /// and a `double` or DataVector
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
-    const X&& scalar,
-    const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t) {
+    X&& scalar, const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t) {
   return TensorExpressions::ScalarDataType(std::move(scalar)) + t;
 }
 
@@ -271,8 +270,7 @@ SPECTRE_ALWAYS_INLINE auto operator+(
 /// and a `double` or DataVector
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
-    const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t,
-    const X&& scalar) {
+    const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t, X&& scalar) {
   return t + TensorExpressions::ScalarDataType(std::move(scalar));
 }
 
@@ -400,8 +398,7 @@ SPECTRE_ALWAYS_INLINE auto operator-(
 /// DataVector and a tensor expression
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator-(
-    const X&& scalar,
-    const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t) {
+    X&& scalar, const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t) {
   return TensorExpressions::ScalarDataType(std::move(scalar)) - t;
 }
 
@@ -431,7 +428,6 @@ SPECTRE_ALWAYS_INLINE auto operator-(
 /// expression and a `double` or DataVector
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator-(
-    const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t,
-    const X&& scalar) {
+    const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t, X&& scalar) {
   return t - TensorExpressions::ScalarDataType(std::move(scalar));
 }

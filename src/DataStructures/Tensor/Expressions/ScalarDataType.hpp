@@ -33,7 +33,7 @@ struct ScalarDataType
   ScalarDataType(const DataType& t)
       : t_(std::numeric_limits<double>::signaling_NaN()), t_ptr_(&t) {}
 
-  ScalarDataType(const DataType&& t) : t_(std::move(t)), t_ptr_(&t_) {}
+  ScalarDataType(DataType&& t) : t_(std::move(t)), t_ptr_(&t_) {}
 
   /// \brief Returns the value represented by the expression
   ///
