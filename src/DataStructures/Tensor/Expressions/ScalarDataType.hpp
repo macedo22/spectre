@@ -19,7 +19,7 @@ namespace TensorExpressions {
 /// \brief Defines an expression representating a scalar or a DataVector of
 /// scalars
 ///
-/// \tparam DataType the type being represented, a double or DataVector
+/// \tparam DataType the type being represented, a `double` or DataVector
 template <typename DataType>
 struct ScalarDataType
     : public TensorExpression<ScalarDataType<DataType>, DataType, tmpl::list<>,
