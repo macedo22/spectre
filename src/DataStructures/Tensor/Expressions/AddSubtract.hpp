@@ -170,7 +170,8 @@ SPECTRE_ALWAYS_INLINE auto operator+(
  */
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
-    X&& t1, const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t2) {
+    const X&& t1,
+    const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t2) {
   return TensorExpressions::ScalarDataType(t1) + t2;
 }
 
@@ -179,7 +180,8 @@ SPECTRE_ALWAYS_INLINE auto operator+(
  */
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
-    const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t1, X&& t2) {
+    const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t1,
+    const X&& t2) {
   return t1 + TensorExpressions::ScalarDataType(t2);
 }
 
@@ -228,7 +230,8 @@ SPECTRE_ALWAYS_INLINE auto operator-(
  */
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator-(
-    X&& t1, const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t2) {
+    const X&& t1,
+    const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t2) {
   return TensorExpressions::ScalarDataType(t1) - t2;
 }
 
@@ -237,6 +240,7 @@ SPECTRE_ALWAYS_INLINE auto operator-(
  */
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator-(
-    const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t1, X&& t2) {
+    const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t1,
+    const X&& t2) {
   return t1 - TensorExpressions::ScalarDataType(t2);
 }
