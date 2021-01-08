@@ -21,8 +21,8 @@ namespace TensorExpressions {
 /// \tparam DataType the type being represented, a double or DataVector
 template <typename DataType>
 struct ScalarDataType
-    : public TensorExpression<ScalarDataType<DataType>, DataType,
-                              tmpl::list<>, tmpl::list<>, tmpl::list<>> {
+    : public TensorExpression<ScalarDataType<DataType>, DataType, tmpl::list<>,
+                              tmpl::list<>, tmpl::list<>> {
   using type = DataType;
   using symmetry = tmpl::list<>;
   using index_list = tmpl::list<>;
@@ -30,7 +30,10 @@ struct ScalarDataType
   using structure = Tensor_detail::Structure<symmetry>;
   static constexpr auto num_tensor_indices = 0;
 
-  ScalarDataType(const DataType t) : t_(std::move(t)) {}
+  ScalarDataType(const DataType& t)
+      : t_(std::numeric_limits<double>::signaling_NaN()), t_ptr_(&t) {}
+
+  ScalarDataType(const DataType&& t) : t_(std::move(t)), t_ptr_(&t_) {}
 
   /// \brief Returns the value represented by the expression
   ///
@@ -51,10 +54,11 @@ struct ScalarDataType
   template <>
   SPECTRE_ALWAYS_INLINE const DataType& get<structure>(
       const size_t /*storage_index*/) const noexcept {
-    return t_;
+    return *t_ptr_;
   }
 
  private:
   const DataType t_;
+  const DataType* const t_ptr_ = nullptr;
 };
 }  // namespace TensorExpressions

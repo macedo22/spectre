@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
-#include <iostream>
 
 #include "DataStructures/Tensor/Expressions/ScalarDataType.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
@@ -85,7 +84,6 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   using args_list = tmpl::sort<typename T1::args_list>;
 
   AddSub(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
-  // AddSub(const T1& t1, const T2& t2) : t1_(t1), t2_(t2) {}
 
   template <typename... LhsIndices, typename T>
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
@@ -172,7 +170,7 @@ template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     const X&& t1,
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t2) {
-  return TensorExpressions::ScalarDataType(t1) + t2;
+  return TensorExpressions::ScalarDataType(std::move(t1)) + t2;
 }
 
 /*!
@@ -182,7 +180,7 @@ template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t1,
     const X&& t2) {
-  return t1 + TensorExpressions::ScalarDataType(t2);
+  return t1 + TensorExpressions::ScalarDataType(std::move(t2));
 }
 
 /*!
@@ -232,7 +230,7 @@ template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator-(
     const X&& t1,
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t2) {
-  return TensorExpressions::ScalarDataType(t1) - t2;
+  return TensorExpressions::ScalarDataType(std::move(t1)) - t2;
 }
 
 /*!
@@ -242,5 +240,5 @@ template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator-(
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t1,
     const X&& t2) {
-  return t1 - TensorExpressions::ScalarDataType(t2);
+  return t1 - TensorExpressions::ScalarDataType(std::move(t2));
 }
