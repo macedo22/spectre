@@ -125,6 +125,10 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
 };
 }  // namespace TensorExpressions
 
+template <typename T>
+using rank_0_tensorexpression =
+    TensorExpression<T, typename T::type, tmpl::list<>, tmpl::list<>>;
+
 /*!
  * \ingroup TensorExpressionsGroup
  */
@@ -146,10 +150,6 @@ SPECTRE_ALWAYS_INLINE auto operator+(
                           TensorExpression<T2, X, Symm2, IndexList2, Args2>>,
       Args1, Args2, 1>(~t1, ~t2);
 }
-
-template <typename T>
-using rank_0_tensorexpression =
-    TensorExpression<T, typename T::type, tmpl::list<>, tmpl::list<>>;
 
 /*!
  * \ingroup TensorExpressionsGroup
