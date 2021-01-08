@@ -123,31 +123,65 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
 };
 }  // namespace TensorExpressions
 
-/*!
- * \ingroup TensorExpressionsGroup
- */
+/// \ingroup TensorExpressionsGroup
+/// \brief Returns the tensor expression representing the sum of two tensor
+/// expressions
+///
+/// \tparam T1 the derived TensorExpression type of the first operand of the sum
+/// \tparam T2 the derived TensorExpression type of the second operand of the
+/// sum
+/// \tparam Symm1 the Symmetry of the first operand
+/// \tparam Symm2 the Symmetry of the second operand
+/// \tparam IndexList1 the \ref SpacetimeIndex "TensorIndexType"s of the first
+/// operand
+/// \tparam IndexList2 the \ref SpacetimeIndex "TensorIndexType"s of the second
+/// operand
+/// \tparam ArgsList1 the TensorIndexs of the first operand
+/// \tparam ArgsList2 the TensorIndexs of the second operand
+/// \param t1 first operand expression of the sum
+/// \param t2 second operand expression of the sum
+/// \return the tensor expression representing the sum of two tensor expressions
 template <typename T1, typename T2, typename X, typename Symm1, typename Symm2,
-          typename IndexList1, typename IndexList2, typename Args1,
-          typename Args2>
+          typename IndexList1, typename IndexList2, typename ArgsList1,
+          typename ArgsList2>
 SPECTRE_ALWAYS_INLINE auto operator+(
-    const TensorExpression<T1, X, Symm1, IndexList1, Args1>& t1,
-    const TensorExpression<T2, X, Symm2, IndexList2, Args2>& t2) {
-  static_assert(tmpl::size<Args1>::value == tmpl::size<Args2>::value,
+    const TensorExpression<T1, X, Symm1, IndexList1, ArgsList1>& t1,
+    const TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>& t2) {
+  static_assert(tmpl::size<ArgsList1>::value == tmpl::size<ArgsList2>::value,
                 "Tensor addition is only possible with the same rank tensors");
-  static_assert(tmpl::equal_members<Args1, Args2>::value,
+  static_assert(tmpl::equal_members<ArgsList1, ArgsList2>::value,
                 "The indices when adding two tensors must be equal. This error "
                 "occurs from expressions like A(_a, _b) + B(_c, _a)");
   return TensorExpressions::AddSub<
-      tmpl::conditional_t<std::is_base_of<Expression, T1>::value, T1,
-                          TensorExpression<T1, X, Symm1, IndexList1, Args1>>,
-      tmpl::conditional_t<std::is_base_of<Expression, T2>::value, T2,
-                          TensorExpression<T2, X, Symm2, IndexList2, Args2>>,
-      Args1, Args2, 1>(~t1, ~t2);
+      tmpl::conditional_t<
+          std::is_base_of<Expression, T1>::value, T1,
+          TensorExpression<T1, X, Symm1, IndexList1, ArgsList1>>,
+      tmpl::conditional_t<
+          std::is_base_of<Expression, T2>::value, T2,
+          TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>>,
+      ArgsList1, ArgsList2, 1>(~t1, ~t2);
 }
 
-/*!
- * \ingroup TensorExpressionsGroup
- */
+/// \ingroup TensorExpressionsGroup
+/// \brief Returns the tensor expression representing the sum of a tensor
+/// expression and a `double` or DataVector
+///
+/// \details
+/// The tensor expression operand must represent an expression that, when
+/// evaluated, would be a rank 0 tensor. For example, if `R` and `S` are
+/// Tensors, here is a non-exhaustive list of some of the acceptable forms that
+/// the tensor expression operand could take:
+/// - `R()`
+/// - `R(ti_A, ti_a)`
+/// - `(R(ti_A, ti_B) * S(ti_a, ti_b))`
+///
+/// \tparam T the derived TensorExpression type of the tensor expression operand
+/// of the sum
+/// \tparam X the data type of the operands, `double` or DataVector
+/// \param scalar the scalar type operand of the sum, a `double` or DataVector
+/// \param t the expression operand of the sum
+/// \return the tensor expression representing the sum of a tensor expression
+/// and a `double` or DataVector
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     const X& scalar,
@@ -155,9 +189,26 @@ SPECTRE_ALWAYS_INLINE auto operator+(
   return TensorExpressions::ScalarDataType(scalar) + t;
 }
 
-/*!
- * \ingroup TensorExpressionsGroup
- */
+/// \ingroup TensorExpressionsGroup
+/// \brief Returns the tensor expression representing the sum of a tensor
+/// expression and a `double` or DataVector
+///
+/// \details
+/// The tensor expression operand must represent an expression that, when
+/// evaluated, would be a rank 0 tensor. For example, if `R` and `S` are
+/// Tensors, here is a non-exhaustive list of some of the acceptable forms that
+/// the tensor expression operand could take:
+/// - `R()`
+/// - `R(ti_A, ti_a)`
+/// - `(R(ti_A, ti_B) * S(ti_a, ti_b))`
+///
+/// \tparam T the derived TensorExpression type of the tensor expression operand
+/// of the sum
+/// \tparam X the data type of the operands, `double` or DataVector
+/// \param t the expression operand of the sum
+/// \param scalar the scalar type operand of the sum, a `double` or DataVector
+/// \return the tensor expression representing the sum of a tensor expression
+/// and a `double` or DataVector
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t,
@@ -165,9 +216,29 @@ SPECTRE_ALWAYS_INLINE auto operator+(
   return t + TensorExpressions::ScalarDataType(scalar);
 }
 
-/*!
- * \ingroup TensorExpressionsGroup
- */
+/// \ingroup TensorExpressionsGroup
+/// \brief Returns the tensor expression representing the sum of a tensor
+/// expression and a `double` or DataVector r-value
+///
+/// \details
+/// The tensor expression operand must represent an expression that, when
+/// evaluated, would be a rank 0 tensor. For example, if `R` and `S` are
+/// Tensors, here is a non-exhaustive list of some of the acceptable forms that
+/// the tensor expression operand could take:
+/// - `R()`
+/// - `R(ti_A, ti_a)`
+/// - `(R(ti_A, ti_B) * S(ti_a, ti_b))`
+///
+/// This overload is necessary so that DataVector r-values are moved to an
+/// expression instead of simply refered to by one via pointer.
+///
+/// \tparam T the derived TensorExpression type of the tensor expression operand
+/// of the sum
+/// \tparam X the data type of the operands, `double` or DataVector
+/// \param scalar the scalar type operand of the sum, a `double` or DataVector
+/// \param t the expression operand of the sum
+/// \return the tensor expression representing the sum of a tensor expression
+/// and a `double` or DataVector
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     const X&& scalar,
@@ -175,9 +246,29 @@ SPECTRE_ALWAYS_INLINE auto operator+(
   return TensorExpressions::ScalarDataType(std::move(scalar)) + t;
 }
 
-/*!
- * \ingroup TensorExpressionsGroup
- */
+/// \ingroup TensorExpressionsGroup
+/// \brief Returns the tensor expression representing the sum of a tensor
+/// expression and a `double` or DataVector r-value
+///
+/// \details
+/// The tensor expression operand must represent an expression that, when
+/// evaluated, would be a rank 0 tensor. For example, if `R` and `S` are
+/// Tensors, here is a non-exhaustive list of some of the acceptable forms that
+/// the tensor expression operand could take:
+/// - `R()`
+/// - `R(ti_A, ti_a)`
+/// - `(R(ti_A, ti_B) * S(ti_a, ti_b))`
+///
+/// This overload is necessary so that DataVector r-values are moved to an
+/// expression instead of simply refered to by one via pointer.
+///
+/// \tparam T the derived TensorExpression type of the tensor expression operand
+/// of the sum
+/// \tparam X the data type of the operands, `double` or DataVector
+/// \param t the expression operand of the sum
+/// \param scalar the scalar type operand of the sum, a `double` or DataVector
+/// \return the tensor expression representing the sum of a tensor expression
+/// and a `double` or DataVector
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t,
@@ -185,31 +276,69 @@ SPECTRE_ALWAYS_INLINE auto operator+(
   return t + TensorExpressions::ScalarDataType(std::move(scalar));
 }
 
-/*!
- * \ingroup TensorExpressionsGroup
- */
+/// \ingroup TensorExpressionsGroup
+/// \brief Returns the tensor expression representing the difference of two
+/// tensor expressions
+///
+/// \tparam T1 the derived TensorExpression type of the first operand of the
+/// difference
+/// \tparam T2 the derived TensorExpression type of the second operand of the
+/// difference
+/// \tparam Symm1 the Symmetry of the first operand
+/// \tparam Symm2 the Symmetry of the second operand
+/// \tparam IndexList1 the \ref SpacetimeIndex "TensorIndexType"s of the first
+/// operand
+/// \tparam IndexList2 the \ref SpacetimeIndex "TensorIndexType"s of the second
+/// operand
+/// \tparam ArgsList1 the TensorIndexs of the first operand
+/// \tparam ArgsList2 the TensorIndexs of the second operand
+/// \param t1 first operand expression of the difference
+/// \param t2 second operand expression of the difference
+/// \return the tensor expression representing the difference of two tensor
+/// expressions
 template <typename T1, typename T2, typename X, typename Symm1, typename Symm2,
-          typename IndexList1, typename IndexList2, typename Args1,
-          typename Args2>
+          typename IndexList1, typename IndexList2, typename ArgsList1,
+          typename ArgsList2>
 SPECTRE_ALWAYS_INLINE auto operator-(
-    const TensorExpression<T1, X, Symm1, IndexList1, Args1>& t1,
-    const TensorExpression<T2, X, Symm2, IndexList2, Args2>& t2) {
-  static_assert(tmpl::size<Args1>::value == tmpl::size<Args2>::value,
-                "Tensor addition is only possible with the same rank tensors");
-  static_assert(tmpl::equal_members<Args1, Args2>::value,
-                "The indices when adding two tensors must be equal. This error "
-                "occurs from expressions like A(_a, _b) - B(_c, _a)");
+    const TensorExpression<T1, X, Symm1, IndexList1, ArgsList1>& t1,
+    const TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>& t2) {
+  static_assert(
+      tmpl::size<ArgsList1>::value == tmpl::size<ArgsList2>::value,
+      "Tensor subtraction is only possible with the same rank tensors");
+  static_assert(tmpl::equal_members<ArgsList1, ArgsList2>::value,
+                "The indices when subtracting two tensors must be equal. This "
+                "error occurs from expressions like A(_a, _b) - B(_c, _a)");
   return TensorExpressions::AddSub<
-      tmpl::conditional_t<std::is_base_of<Expression, T1>::value, T1,
-                          TensorExpression<T1, X, Symm1, IndexList1, Args1>>,
-      tmpl::conditional_t<std::is_base_of<Expression, T2>::value, T2,
-                          TensorExpression<T2, X, Symm2, IndexList2, Args2>>,
-      Args1, Args2, -1>(~t1, ~t2);
+      tmpl::conditional_t<
+          std::is_base_of<Expression, T1>::value, T1,
+          TensorExpression<T1, X, Symm1, IndexList1, ArgsList1>>,
+      tmpl::conditional_t<
+          std::is_base_of<Expression, T2>::value, T2,
+          TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>>,
+      ArgsList1, ArgsList2, -1>(~t1, ~t2);
 }
 
-/*!
- * \ingroup TensorExpressionsGroup
- */
+/// \ingroup TensorExpressionsGroup
+/// \brief Returns the tensor expression representing the difference of a
+/// `double` or DataVector and a tensor expression
+///
+/// \details
+/// The tensor expression operand must represent an expression that, when
+/// evaluated, would be a rank 0 tensor. For example, if `R` and `S` are
+/// Tensors, here is a non-exhaustive list of some of the acceptable forms that
+/// the tensor expression operand could take:
+/// - `R()`
+/// - `R(ti_A, ti_a)`
+/// - `(R(ti_A, ti_B) * S(ti_a, ti_b))`
+///
+/// \tparam T the derived TensorExpression type of the tensor expression operand
+/// of the difference
+/// \tparam X the data type of the operands, `double` or DataVector
+/// \param scalar the scalar type operand of the difference, a `double` or
+/// DataVector
+/// \param t the expression operand of the difference
+/// \return the tensor expression representing the difference of a `double` or
+/// DataVector and a tensor expression
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator-(
     const X& scalar,
@@ -217,9 +346,27 @@ SPECTRE_ALWAYS_INLINE auto operator-(
   return TensorExpressions::ScalarDataType(scalar) - t;
 }
 
-/*!
- * \ingroup TensorExpressionsGroup
- */
+/// \ingroup TensorExpressionsGroup
+/// \brief Returns the tensor expression representing the difference of a
+/// tensor expression and a `double` or DataVector
+///
+/// \details
+/// The tensor expression operand must represent an expression that, when
+/// evaluated, would be a rank 0 tensor. For example, if `R` and `S` are
+/// Tensors, here is a non-exhaustive list of some of the acceptable forms that
+/// the tensor expression operand could take:
+/// - `R()`
+/// - `R(ti_A, ti_a)`
+/// - `(R(ti_A, ti_B) * S(ti_a, ti_b))`
+///
+/// \tparam T the derived TensorExpression type of the tensor expression operand
+/// of the difference
+/// \tparam X the data type of the operands, `double` or DataVector
+/// \param t the expression operand of the difference
+/// \param scalar the scalar type operand of the difference, a `double` or
+/// DataVector
+/// \return the tensor expression representing the difference of a tensor
+/// expression and a `double` or DataVector
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator-(
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t,
@@ -227,9 +374,30 @@ SPECTRE_ALWAYS_INLINE auto operator-(
   return t - TensorExpressions::ScalarDataType(scalar);
 }
 
-/*!
- * \ingroup TensorExpressionsGroup
- */
+/// \ingroup TensorExpressionsGroup
+/// \brief Returns the tensor expression representing the difference of a
+/// `double` or DataVector and a tensor expression
+///
+/// \details
+/// The tensor expression operand must represent an expression that, when
+/// evaluated, would be a rank 0 tensor. For example, if `R` and `S` are
+/// Tensors, here is a non-exhaustive list of some of the acceptable forms that
+/// the tensor expression operand could take:
+/// - `R()`
+/// - `R(ti_A, ti_a)`
+/// - `(R(ti_A, ti_B) * S(ti_a, ti_b))`
+///
+/// This overload is necessary so that DataVector r-values are moved to an
+/// expression instead of simply refered to by one via pointer.
+///
+/// \tparam T the derived TensorExpression type of the tensor expression operand
+/// of the difference
+/// \tparam X the data type of the operands, `double` or DataVector
+/// \param scalar the scalar type operand of the difference, a `double` or
+/// DataVector
+/// \param t the expression operand of the difference
+/// \return the tensor expression representing the difference of a `double` or
+/// DataVector and a tensor expression
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator-(
     const X&& scalar,
@@ -237,9 +405,30 @@ SPECTRE_ALWAYS_INLINE auto operator-(
   return TensorExpressions::ScalarDataType(std::move(scalar)) - t;
 }
 
-/*!
- * \ingroup TensorExpressionsGroup
- */
+/// \ingroup TensorExpressionsGroup
+/// \brief Returns the tensor expression representing the difference of a
+/// tensor expression and a `double` or DataVector
+///
+/// \details
+/// The tensor expression operand must represent an expression that, when
+/// evaluated, would be a rank 0 tensor. For example, if `R` and `S` are
+/// Tensors, here is a non-exhaustive list of some of the acceptable forms that
+/// the tensor expression operand could take:
+/// - `R()`
+/// - `R(ti_A, ti_a)`
+/// - `(R(ti_A, ti_B) * S(ti_a, ti_b))`
+///
+/// This overload is necessary so that DataVector r-values are moved to an
+/// expression instead of simply refered to by one via pointer.
+///
+/// \tparam T the derived TensorExpression type of the tensor expression operand
+/// of the difference
+/// \tparam X the data type of the operands, `double` or DataVector
+/// \param t the expression operand of the difference
+/// \param scalar the scalar type operand of the difference, a `double` or
+/// DataVector
+/// \return the tensor expression representing the difference of a tensor
+/// expression and a `double` or DataVector
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator-(
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t,
