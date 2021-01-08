@@ -175,6 +175,17 @@ SPECTRE_ALWAYS_INLINE auto operator+(
 /// - `R(ti_A, ti_a)`
 /// - `(R(ti_A, ti_B) * S(ti_a, ti_b))`
 ///
+/// There are four separate overloads for the sum of a tensor expression and a
+/// a `double` or DataVector, where this function is one of them:
+/// - `operator+(const X& scalar, const Expression& t)` : `scalar + expression`
+/// - `operator+(const Expression& t, const X& scalar)` : `expression + scalar`
+/// - `operator+(X&& scalar, const Expression& t)` : `scalar + expression`
+/// - `operator+(const Expression& t, X&& scalar)` : `expression + scalar`
+///
+/// The last two overloads are necessary so that DataVector r-values can be
+/// moved to an expression instead of the expression pointing to an object that
+/// will go out of scope.
+///
 /// \tparam T the derived TensorExpression type of the tensor expression operand
 /// of the sum
 /// \tparam X the data type of the operands, `double` or DataVector
@@ -190,25 +201,7 @@ SPECTRE_ALWAYS_INLINE auto operator+(
 }
 
 /// \ingroup TensorExpressionsGroup
-/// \brief Returns the tensor expression representing the sum of a tensor
-/// expression and a `double` or DataVector
-///
-/// \details
-/// The tensor expression operand must represent an expression that, when
-/// evaluated, would be a rank 0 tensor. For example, if `R` and `S` are
-/// Tensors, here is a non-exhaustive list of some of the acceptable forms that
-/// the tensor expression operand could take:
-/// - `R()`
-/// - `R(ti_A, ti_a)`
-/// - `(R(ti_A, ti_B) * S(ti_a, ti_b))`
-///
-/// \tparam T the derived TensorExpression type of the tensor expression operand
-/// of the sum
-/// \tparam X the data type of the operands, `double` or DataVector
-/// \param t the expression operand of the sum
-/// \param scalar the scalar type operand of the sum, a `double` or DataVector
-/// \return the tensor expression representing the sum of a tensor expression
-/// and a `double` or DataVector
+/// \copydoc operator+(double,Expression)
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t,
@@ -217,28 +210,7 @@ SPECTRE_ALWAYS_INLINE auto operator+(
 }
 
 /// \ingroup TensorExpressionsGroup
-/// \brief Returns the tensor expression representing the sum of a tensor
-/// expression and a `double` or DataVector r-value
-///
-/// \details
-/// The tensor expression operand must represent an expression that, when
-/// evaluated, would be a rank 0 tensor. For example, if `R` and `S` are
-/// Tensors, here is a non-exhaustive list of some of the acceptable forms that
-/// the tensor expression operand could take:
-/// - `R()`
-/// - `R(ti_A, ti_a)`
-/// - `(R(ti_A, ti_B) * S(ti_a, ti_b))`
-///
-/// This overload is necessary so that DataVector r-values are moved to an
-/// expression instead of pointing to an object that will go out of scope.
-///
-/// \tparam T the derived TensorExpression type of the tensor expression operand
-/// of the sum
-/// \tparam X the data type of the operands, `double` or DataVector
-/// \param scalar the scalar type operand of the sum, a `double` or DataVector
-/// \param t the expression operand of the sum
-/// \return the tensor expression representing the sum of a tensor expression
-/// and a `double` or DataVector
+/// \copydoc operator+(const double&,const Expression&)
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     X&& scalar, const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t) {
@@ -246,28 +218,8 @@ SPECTRE_ALWAYS_INLINE auto operator+(
 }
 
 /// \ingroup TensorExpressionsGroup
-/// \brief Returns the tensor expression representing the sum of a tensor
-/// expression and a `double` or DataVector r-value
-///
-/// \details
-/// The tensor expression operand must represent an expression that, when
-/// evaluated, would be a rank 0 tensor. For example, if `R` and `S` are
-/// Tensors, here is a non-exhaustive list of some of the acceptable forms that
-/// the tensor expression operand could take:
-/// - `R()`
-/// - `R(ti_A, ti_a)`
-/// - `(R(ti_A, ti_B) * S(ti_a, ti_b))`
-///
-/// This overload is necessary so that DataVector r-values are moved to an
-/// expression instead of pointing to an object that will go out of scope.
-///
-/// \tparam T the derived TensorExpression type of the tensor expression operand
-/// of the sum
-/// \tparam X the data type of the operands, `double` or DataVector
-/// \param t the expression operand of the sum
-/// \param scalar the scalar type operand of the sum, a `double` or DataVector
-/// \return the tensor expression representing the sum of a tensor expression
-/// and a `double` or DataVector
+/// \copydoc operator+(const X&,const TensorExpression<T, X, tmpl::list<>,
+/// tmpl::list<>>&)
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t, X&& scalar) {
@@ -317,8 +269,8 @@ SPECTRE_ALWAYS_INLINE auto operator-(
 }
 
 /// \ingroup TensorExpressionsGroup
-/// \brief Returns the tensor expression representing the difference of a
-/// `double` or DataVector and a tensor expression
+/// \brief Returns the tensor expression representing the difference of a tensor
+/// expression and a `double` or DataVector
 ///
 /// \details
 /// The tensor expression operand must represent an expression that, when
@@ -329,14 +281,25 @@ SPECTRE_ALWAYS_INLINE auto operator-(
 /// - `R(ti_A, ti_a)`
 /// - `(R(ti_A, ti_B) * S(ti_a, ti_b))`
 ///
+/// There are four separate overloads for the difference of a tensor expression
+/// and a `double` or DataVector, where this function is one of them:
+/// - `operator-(const X& scalar, const Expression& t)` : `scalar - expression`
+/// - `operator-(const Expression& t, const X& scalar)` : `expression - scalar`
+/// - `operator-(X&& scalar, const Expression& t)` : `scalar - expression`
+/// - `operator-(const Expression& t, X&& scalar)` : `expression - scalar`
+///
+/// The last two overloads are necessary so that DataVector r-values can be
+/// moved to an expression instead of the expression pointing to an object that
+/// will go out of scope.
+///
 /// \tparam T the derived TensorExpression type of the tensor expression operand
 /// of the difference
 /// \tparam X the data type of the operands, `double` or DataVector
 /// \param scalar the scalar type operand of the difference, a `double` or
 /// DataVector
 /// \param t the expression operand of the difference
-/// \return the tensor expression representing the difference of a `double` or
-/// DataVector and a tensor expression
+/// \return the tensor expression representing the difference of a tensor
+/// expression and a `double` or DataVector
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator-(
     const X& scalar,
@@ -345,26 +308,7 @@ SPECTRE_ALWAYS_INLINE auto operator-(
 }
 
 /// \ingroup TensorExpressionsGroup
-/// \brief Returns the tensor expression representing the difference of a
-/// tensor expression and a `double` or DataVector
-///
-/// \details
-/// The tensor expression operand must represent an expression that, when
-/// evaluated, would be a rank 0 tensor. For example, if `R` and `S` are
-/// Tensors, here is a non-exhaustive list of some of the acceptable forms that
-/// the tensor expression operand could take:
-/// - `R()`
-/// - `R(ti_A, ti_a)`
-/// - `(R(ti_A, ti_B) * S(ti_a, ti_b))`
-///
-/// \tparam T the derived TensorExpression type of the tensor expression operand
-/// of the difference
-/// \tparam X the data type of the operands, `double` or DataVector
-/// \param t the expression operand of the difference
-/// \param scalar the scalar type operand of the difference, a `double` or
-/// DataVector
-/// \return the tensor expression representing the difference of a tensor
-/// expression and a `double` or DataVector
+/// \copydoc operator-()
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator-(
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t,
