@@ -177,10 +177,10 @@ SPECTRE_ALWAYS_INLINE auto operator+(
 ///
 /// There are four separate overloads for the sum of a tensor expression and a
 /// a `double` or DataVector, where this function is one of them:
-/// - `operator+(const X& scalar, const Expression& t)` : `scalar + expression`
-/// - `operator+(const Expression& t, const X& scalar)` : `expression + scalar`
-/// - `operator+(X&& scalar, const Expression& t)` : `scalar + expression`
-/// - `operator+(const Expression& t, X&& scalar)` : `expression + scalar`
+/// - `operator+(const X& scalar, const Expression& t)`
+/// - `operator+(const Expression& t, const X& scalar)`
+/// - `operator+(X&& scalar, const Expression& t)`
+/// - `operator+(const Expression& t, X&& scalar)`
 ///
 /// The last two overloads are necessary so that DataVector r-values can be
 /// moved to an expression instead of the expression pointing to an object that
@@ -285,10 +285,10 @@ SPECTRE_ALWAYS_INLINE auto operator-(
 ///
 /// There are four separate overloads for the difference of a tensor expression
 /// and a `double` or DataVector, where this function is one of them:
-/// - `operator-(const X& scalar, const Expression& t)` : `scalar - expression`
-/// - `operator-(const Expression& t, const X& scalar)` : `expression - scalar`
-/// - `operator-(X&& scalar, const Expression& t)` : `scalar - expression`
-/// - `operator-(const Expression& t, X&& scalar)` : `expression - scalar`
+/// - `operator-(const X& scalar, const Expression& t)`
+/// - `operator-(const Expression& t, const X& scalar)`
+/// - `operator-(X&& scalar, const Expression& t)`
+/// - `operator-(const Expression& t, X&& scalar)`
 ///
 /// The last two overloads are necessary so that DataVector r-values can be
 /// moved to an expression instead of the expression pointing to an object that
