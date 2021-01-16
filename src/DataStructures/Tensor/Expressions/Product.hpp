@@ -79,6 +79,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
       num_tensor_indices - num_tensor_indices_first_operand;
 
   OuterProduct(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
+  ~OuterProduct() override = default;
 
   /// \ingroup TensorExpressionsGroup
   /// \brief Helper struct for computing the multi-index of a component of an
@@ -229,14 +230,5 @@ SPECTRE_ALWAYS_INLINE auto operator*(
     const TensorExpression<T2, typename T2::type, typename T2::symmetry,
                            typename T2::index_list, ArgsList2>& t2) {
   return TensorExpressions::contract(
-      TensorExpressions::OuterProduct<
-          typename std::conditional<
-              std::is_base_of<Expression, T1>::value, T1,
-              TensorExpression<T1, typename T1::type, typename T1::symmetry,
-                               typename T1::index_list, ArgsList1>>::type,
-          typename std::conditional<
-              std::is_base_of<Expression, T2>::value, T2,
-              TensorExpression<T2, typename T2::type, typename T2::symmetry,
-                               typename T2::index_list, ArgsList2>>::type>(
-          ~t1, ~t2));
+      TensorExpressions::OuterProduct<T1, T2>(~t1, ~t2));
 }
