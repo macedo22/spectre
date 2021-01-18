@@ -37,11 +37,20 @@ void create_tensor(gsl::not_null<Tensor<DataVector, Ts...>*> tensor) noexcept {
 // template <class...T>
 // struct td;
 
-template <typename DataType>
-void test_addsub_scalar_datatype(DataType&& scalar) noexcept {
+template <typename DataType,
+          typename DecayedDataType = typename std::decay<DataType>::type>
+void test_addsub_scalar_datatype(
+    DataType&& scalar, const Tensor<DecayedDataType>& tensor) noexcept {
   // td<decltype(scalar)> idk;
-  using decayed_datatype = typename std::decay<DataType>::type;
-  const Tensor<decayed_datatype> R{{{6.0}}};
+  // using decayed_datatype = typename std::decay<DataType>::type;
+  // const Tensor<decayed_datatype> R{{{6.0}}};
+  // Tensor<DataType> T{{{used_for_size}}};
+  // if constexpr (std::is_same_v<DataType, double>) {
+  //   // Replace tensor's value from `used_for_size` with a proper test value
+  //   T.get() = -2.2;
+  // } else {
+  //   assign_unique_values_to_tensor(make_not_null(&T));
+  // }
 
   //   const auto R_S_sum_expr = R() + std::forward<decltype(scalar)>(scalar);
   //   // <- this one const Tensor<double> R_S_sum_1 =
@@ -49,8 +58,10 @@ void test_addsub_scalar_datatype(DataType&& scalar) noexcept {
 
   //   const Tensor<DataType> R_S_sum_1 = TensorExpressions::evaluate(R() +
   //   std::forward<DataType&&>(scalar));
-  const Tensor<decayed_datatype> R_S_sum_1 = TensorExpressions::evaluate(
-      R() + std::forward<decltype(scalar)>(scalar));  // <- this one
+  const Tensor<DecayedDataType> R_S_sum_1 =
+      TensorExpressions::evaluate(  // <- this
+          tensor() +
+          std::forward<DataType>(scalar));  // <- this one  // <- this
   // const Tensor<DataType> R_S_sum_1 = TensorExpressions::evaluate(R() +
   // scalar);
 
@@ -103,9 +114,20 @@ void test_addsub_scalar_datatype(DataType&& scalar) noexcept {
 SPECTRE_TEST_CASE(
     "Unit.DataStructures.Tensor.Expression.AddSubtractScalarDataType",
     "[DataStructures][Unit]") {
-  test_addsub_scalar_datatype(-2.5);
-  const double x = 8.2;
-  test_addsub_scalar_datatype(x);
+  // const Tensor<double> tensor1{{{7.4}}};
+  // test_addsub_scalar_datatype(-2.5, tensor1);
+  // const double scalar1 = 8.2;
+  // test_addsub_scalar_datatype(scalar1, tensor1);
+
+  // const DataVector dv{12.3, -1.1, -2.4};
+  const Tensor<DataVector> tensor2{{{DataVector{12.3, -1.1, -2.4} /*dv*/}}};
+  // const Tensor<DataVector>sum = TensorExpressions::evaluate(
+  //     tensor2() + DataVector{-2.1, 0.0, -5.6});
+  test_addsub_scalar_datatype(DataVector{-2.1, 0.0, -5.6}, tensor2);
+  const DataVector scalar2{0.0, -7.8, 6.9};
+  test_addsub_scalar_datatype(scalar2, tensor2);
+
+  // test_addsub_scalar_datatype(DataVector{-2.1, 0.0, 5.6});
   //   const double x = 8.2;
   //   const double& ref = x;
   //   test_addsub_scalar_datatype(ref);

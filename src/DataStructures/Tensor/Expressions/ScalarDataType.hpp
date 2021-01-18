@@ -8,6 +8,7 @@
 
 #include <array>
 #include <cstddef>
+#include <iostream>
 
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Structure.hpp"
@@ -32,6 +33,7 @@ struct ScalarDataType
   static constexpr auto num_tensor_indices = 0;
 
   /// \brief Create an expression from a scalar type l-value
+  /// TODO: make note about DataVector default value for t_ for this
   ScalarDataType(const DataType& t)
       : t_(std::numeric_limits<double>::signaling_NaN()), t_ptr_(&t) {}
 
@@ -40,7 +42,10 @@ struct ScalarDataType
   /// \details
   /// This overload is necessary so that DataVector r-values are moved to this
   /// expression instead of pointing to an object that will go out of scope.
-  ScalarDataType(DataType&& t) : t_(std::move(t)), t_ptr_(&t_) {}
+  ScalarDataType(DataType&& t)
+      : t_((/*std::cout << "t : " << t << std::endl,*/ std::move(t))),
+        t_ptr_(&t_) { /*std::cout << "t_ : " << t_ << std::endl;*/
+  }
 
   /// \brief Returns the value represented by the expression
   ///

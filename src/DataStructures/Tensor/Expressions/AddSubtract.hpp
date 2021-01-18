@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <iostream>
 
 #include "DataStructures/Tensor/Expressions/ScalarDataType.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
@@ -225,6 +226,8 @@ SPECTRE_ALWAYS_INLINE auto operator+(
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t, X&& scalar) {
+  // std::cout << "t : " << t << std::endl;
+  // std::cout << "scalar : " << scalar << std::endl;
   return t + TensorExpressions::ScalarDataType(std::move(scalar));
 }
 
