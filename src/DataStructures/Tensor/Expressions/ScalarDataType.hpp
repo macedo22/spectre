@@ -21,21 +21,25 @@ namespace TensorExpressions {
 /// scalars
 ///
 /// \tparam DataType the type being represented, a `double` or DataVector
-template <typename DataType>
+template <typename DataType, bool isRValue>
 struct ScalarDataType
-    : public TensorExpression<ScalarDataType<DataType>, DataType, tmpl::list<>,
-                              tmpl::list<>, tmpl::list<>> {
+    : public TensorExpression<ScalarDataType<DataType, isRValue>, DataType,
+                              tmpl::list<>, tmpl::list<>, tmpl::list<>> {
   using type = DataType;
   using symmetry = tmpl::list<>;
   using index_list = tmpl::list<>;
   using args_list = tmpl::list<>;
   using structure = Tensor_detail::Structure<symmetry>;
   static constexpr auto num_tensor_indices = 0;
+  static constexpr bool is_rvalue = isRValue;
 
   /// \brief Create an expression from a scalar type l-value
   /// TODO: make note about DataVector default value for t_ for this
   ScalarDataType(const DataType& t)
-      : t_(std::numeric_limits<double>::signaling_NaN()), t_ptr_(&t) {}
+      : t_(std::numeric_limits<double>::signaling_NaN()),
+        t_ptr_(&t) { /*std::cout << "lvalue constructor, t_ is : " << t_ << ", t
+                        is " << t << std::endl;*/
+  }
 
   /// \brief Create an expression from a scalar type r-value
   ///
@@ -43,8 +47,55 @@ struct ScalarDataType
   /// This overload is necessary so that DataVector r-values are moved to this
   /// expression instead of pointing to an object that will go out of scope.
   ScalarDataType(DataType&& t)
-      : t_((/*std::cout << "t : " << t << std::endl,*/ std::move(t))),
-        t_ptr_(&t_) { /*std::cout << "t_ : " << t_ << std::endl;*/
+      : t_(std::move(t)),
+        t_ptr_(&t_) { /*std::cout << "rvalue constructor, t_ is : " << t_ << ",
+                         t is " << t << std::endl;*/
+    // std::cout << "rvalue constructor body, t_ is : " << t_ << std::endl;
+    // std::cout << "rvalue constructor body, *t_ptr_ is : " << *t_ptr_ <<
+    // std::endl; std::cout << "rvalue constructor body, t_ptr_ is : " << t_ptr_
+    // << std::endl;
+  }
+
+  // ScalarDataType(DataType&& t)
+  //     : t_((std::cout << "&t in rvalue constructor : " << &t << std::endl,
+  //     std::move(t))),
+  //       t_ptr_((std::cout << "&t_ in rvalue constructor : " << &t_ <<
+  //       std::endl, &t_)) { /*std::cout << "rvalue constructor, t_ is : " <<
+  //       t_ << ", t is " << t << std::endl;*/ std::cout << "rvalue constructor
+  //       body, t_ is : " << t_ << std::endl;
+  //     std::cout << "rvalue constructor body, *t_ptr_ is : " << *t_ptr_ <<
+  //     std::endl; std::cout << "rvalue constructor body, t_ptr_ is : " <<
+  //     t_ptr_ << std::endl;
+  // }
+
+  //   ScalarDataType(const ScalarDataType& other)
+  //       : t_(std::move(other.t_)), t_ptr_( &t_) { /*std::cout << "rvalue
+  //       constructor, t_ is : " << t_ << ", t is " << t << std::endl;*/
+  //       // std::cout << "rvalue constructor body, t_ is : " << t_ <<
+  //       std::endl;
+  //       // std::cout << "rvalue constructor body, *t_ptr_ is : " << *t_ptr_
+  //       << std::endl;
+  //       // std::cout << "rvalue constructor body, t_ptr_ is : " << t_ptr_ <<
+  //       std::endl;
+  //   }
+
+  ScalarDataType(const ScalarDataType<DataType, true>& other)
+      : t_(other.t_), t_ptr_(&t_) { /*std::cout << "rvalue constructor, t_ is :
+                                       " << t_ << ", t is " << t << std::endl;*/
+    // std::cout << "rvalue constructor body, t_ is : " << t_ << std::endl;
+    // std::cout << "rvalue constructor body, *t_ptr_ is : " << *t_ptr_ <<
+    // std::endl; std::cout << "rvalue constructor body, t_ptr_ is : " << t_ptr_
+    // << std::endl;
+  }
+
+  ScalarDataType(const ScalarDataType<DataType, false>& other)
+      : t_(other.t_),
+        t_ptr_(other.t_ptr_) { /*std::cout << "rvalue constructor, t_ is : " <<
+                                  t_ << ", t is " << t << std::endl;*/
+    // std::cout << "rvalue constructor body, t_ is : " << t_ << std::endl;
+    // std::cout << "rvalue constructor body, *t_ptr_ is : " << *t_ptr_ <<
+    // std::endl; std::cout << "rvalue constructor body, t_ptr_ is : " << t_ptr_
+    // << std::endl;
   }
 
   /// \brief Returns the value represented by the expression
@@ -63,9 +114,17 @@ struct ScalarDataType
   SPECTRE_ALWAYS_INLINE const DataType& get(
       const size_t storage_index) const noexcept;
 
+  // template <class...T>
+  // struct td;
+
   template <>
   SPECTRE_ALWAYS_INLINE const DataType& get<structure>(
       const size_t /*storage_index*/) const noexcept {
+    // std::cout << "in get" << std::endl;
+    // std::cout << "t_ : " << t_ << std::endl;
+    // std::cout << "t_ptr_ : " << t_ptr_ << std::endl;
+    // std::cout << "*t_ptr_ : " << *t_ptr_ << std::endl;
+    // td<DataType>idk;
     return *t_ptr_;
   }
 
