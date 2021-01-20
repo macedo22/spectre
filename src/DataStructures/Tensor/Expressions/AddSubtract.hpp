@@ -146,8 +146,8 @@ template <typename T1, typename T2, typename X, typename Symm1, typename Symm2,
           typename IndexList1, typename IndexList2, typename ArgsList1,
           typename ArgsList2>
 SPECTRE_ALWAYS_INLINE auto operator+(
-    TensorExpression<T1, X, Symm1, IndexList1, ArgsList1>&& t1,
-    TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>&& t2) {
+    const TensorExpression<T1, X, Symm1, IndexList1, ArgsList1>& t1,
+    const TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>& t2) {
   static_assert(tmpl::size<ArgsList1>::value == tmpl::size<ArgsList2>::value,
                 "Tensor addition is only possible with the same rank tensors");
   static_assert(tmpl::equal_members<ArgsList1, ArgsList2>::value,
@@ -162,7 +162,7 @@ SPECTRE_ALWAYS_INLINE auto operator+(
           TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>>,
       ArgsList1, ArgsList2, 1>(~t1, ~t2);
 }  // R(ti_a) + T(ti_b)
-// delete const reference, delete non-const reference
+// delete const reference, delete non-const reference version of above?
 // take t1 and t2 by value and move?
 // take t1 and t2 by rvalue? (and move)
 
