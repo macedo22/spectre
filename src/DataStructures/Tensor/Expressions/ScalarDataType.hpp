@@ -21,9 +21,9 @@ namespace TensorExpressions {
 /// scalars
 ///
 /// \tparam DataType the type being represented, a `double` or DataVector
-template <typename DataType, bool isRValue>
+template <typename DataType, bool IsRValue>
 struct ScalarDataType
-    : public TensorExpression<ScalarDataType<DataType, isRValue>, DataType,
+    : public TensorExpression<ScalarDataType<DataType, IsRValue>, DataType,
                               tmpl::list<>, tmpl::list<>, tmpl::list<>> {
   using type = DataType;
   using symmetry = tmpl::list<>;
@@ -31,30 +31,43 @@ struct ScalarDataType
   using args_list = tmpl::list<>;
   using structure = Tensor_detail::Structure<symmetry>;
   static constexpr auto num_tensor_indices = 0;
-  static constexpr bool is_rvalue = isRValue;
+  static constexpr bool is_rvalue = IsRValue;
 
   /// \brief Create an expression from a scalar type l-value
   /// TODO: make note about DataVector default value for t_ for this
-  ScalarDataType(const DataType& t)
-      : t_(std::numeric_limits<double>::signaling_NaN()),
-        t_ptr_(&t) { /*std::cout << "lvalue constructor, t_ is : " << t_ << ", t
-                        is " << t << std::endl;*/
+  ScalarDataType(std::conditional_t<IsRValue, DataType, const DataType&> t)
+      : t_(IsRValue ? std::move(t)
+                    : std::numeric_limits<double>::signaling_NaN()),
+        t_ptr_(IsRValue ? &t_ : &t) { /*std::cout << "lvalue constructor, t_ is
+                        : " << t_ << ", t is " << t << std::endl;*/
   }
 
-  /// \brief Create an expression from a scalar type r-value
-  ///
-  /// \details
-  /// This overload is necessary so that DataVector r-values are moved to this
-  /// expression instead of pointing to an object that will go out of scope.
-  ScalarDataType(DataType&& t)
-      : t_(std::move(t)),
-        t_ptr_(&t_) { /*std::cout << "rvalue constructor, t_ is : " << t_ << ",
-                         t is " << t << std::endl;*/
-    // std::cout << "rvalue constructor body, t_ is : " << t_ << std::endl;
-    // std::cout << "rvalue constructor body, *t_ptr_ is : " << *t_ptr_ <<
-    // std::endl; std::cout << "rvalue constructor body, t_ptr_ is : " << t_ptr_
-    // << std::endl;
-  }
+  //   /// \brief Create an expression from a scalar type l-value
+  //   /// TODO: make note about DataVector default value for t_ for this
+  //   ScalarDataType(const DataType& t)
+  //       : t_(std::numeric_limits<double>::signaling_NaN()),
+  //         t_ptr_(&t) { /*std::cout << "lvalue constructor, t_ is : " << t_ <<
+  //         ", t
+  //                         is " << t << std::endl;*/
+  //   }
+
+  //   /// \brief Create an expression from a scalar type r-value
+  //   ///
+  //   /// \details
+  //   /// This overload is necessary so that DataVector r-values are moved to
+  //   this
+  //   /// expression instead of pointing to an object that will go out of
+  //   scope. ScalarDataType(DataType&& t)
+  //       : t_(std::move(t)),
+  //         t_ptr_(&t_) { /*std::cout << "rvalue constructor, t_ is : " << t_
+  //         << ",
+  //                          t is " << t << std::endl;*/
+  //     // std::cout << "rvalue constructor body, t_ is : " << t_ << std::endl;
+  //     // std::cout << "rvalue constructor body, *t_ptr_ is : " << *t_ptr_ <<
+  //     // std::endl; std::cout << "rvalue constructor body, t_ptr_ is : " <<
+  //     t_ptr_
+  //     // << std::endl;
+  //   }
 
   // ScalarDataType(DataType&& t)
   //     : t_((std::cout << "&t in rvalue constructor : " << &t << std::endl,
