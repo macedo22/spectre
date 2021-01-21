@@ -89,10 +89,10 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   }
 
   // copy constructor to see if and when it's called
-  // AddSub(const AddSub& other) : t1_(other.t1_), t2_(other.t2_) {
-  //   std::cout << "AddSub copy constructor" << std::endl;
-  // }
-  AddSub(const AddSub& other) = delete;
+  AddSub(const AddSub& other) : t1_(other.t1_), t2_(other.t2_) {
+    std::cout << "AddSub copy constructor" << std::endl;
+  }
+  // AddSub(const AddSub& other) = delete;
 
   // move constructor to see if and when it's called
   AddSub(AddSub&& other)
