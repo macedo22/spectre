@@ -222,7 +222,13 @@ SPECTRE_ALWAYS_INLINE auto operator+(
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     X&& scalar, const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t) {
-  return TensorExpressions::ScalarDataTypeRValue(std::move(scalar)) + t;
+  return TensorExpressions::AddSub<
+      TensorExpressions::ScalarDataTypeRValue<X>,
+      tmpl::conditional_t<std::is_base_of<Expression, T>::value, T,
+                          TensorExpression<T, X, tmpl::list<>, tmpl::list<>>>,
+      tmpl::list<>, tmpl::list<>, 1>(
+      std::move(TensorExpressions::ScalarDataTypeRValue(std::move(scalar))),
+      ~t);
 }
 
 /// \ingroup TensorExpressionsGroup

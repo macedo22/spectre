@@ -38,6 +38,16 @@ struct ScalarDataTypeRValue
     //           << std::endl;
   }
 
+  // copy constructor to see if and when it's called
+  ScalarDataTypeRValue(const ScalarDataTypeRValue& other) : t_(other.t_) {
+    std::cout << "rvalue copy constructor, t_ is : " << t_ << std::endl;
+  }
+
+  // Note: if copy constructor is defined, this must be too, or move
+  // will default to the copy? seems to be this way from experimenting,
+  // but would be good to confirm otherwise
+  ScalarDataTypeRValue(ScalarDataTypeRValue&&) noexcept = default;
+
   /// \brief Returns the value represented by the expression
   ///
   /// \details
