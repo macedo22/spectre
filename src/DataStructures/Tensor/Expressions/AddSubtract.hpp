@@ -84,7 +84,21 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
   using args_list = tmpl::sort<typename T1::args_list>;
 
-  AddSub(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
+  AddSub(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {
+    std::cout << "AddSub regular constructor" << std::endl;
+  }
+
+  // copy constructor to see if and when it's called
+  // AddSub(const AddSub& other) : t1_(other.t1_), t2_(other.t2_) {
+  //   std::cout << "AddSub copy constructor" << std::endl;
+  // }
+  AddSub(const AddSub& other) = delete;
+
+  // move constructor to see if and when it's called
+  AddSub(AddSub&& other)
+      : t1_(std::move(other.t1_)), t2_(std::move(other.t2_)) {
+    std::cout << "AddSub move constructor" << std::endl;
+  }
 
   template <typename... LhsIndices, typename T>
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
@@ -119,8 +133,8 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   }
 
  private:
-  const T1 t1_;
-  const T2 t2_;
+  T1 t1_;
+  T2 t2_;
 };
 }  // namespace TensorExpressions
 
@@ -153,6 +167,7 @@ SPECTRE_ALWAYS_INLINE auto operator+(
   static_assert(tmpl::equal_members<ArgsList1, ArgsList2>::value,
                 "The indices when adding two tensors must be equal. This error "
                 "occurs from expressions like A(_a, _b) + B(_c, _a)");
+  std::cout << "1" << std::endl;
   return TensorExpressions::AddSub<
       tmpl::conditional_t<
           std::is_base_of<Expression, T1>::value, T1,
@@ -165,6 +180,72 @@ SPECTRE_ALWAYS_INLINE auto operator+(
 // delete const reference, delete non-const reference version of above?
 // take t1 and t2 by value and move?
 // take t1 and t2 by rvalue? (and move)
+
+template <typename T1, typename T2, typename X, typename Symm1, typename Symm2,
+          typename IndexList1, typename IndexList2, typename ArgsList1,
+          typename ArgsList2>
+SPECTRE_ALWAYS_INLINE auto operator+(
+    const TensorExpression<T1, X, Symm1, IndexList1, ArgsList1>& t1,
+    TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>&& t2) {
+  static_assert(tmpl::size<ArgsList1>::value == tmpl::size<ArgsList2>::value,
+                "Tensor addition is only possible with the same rank tensors");
+  static_assert(tmpl::equal_members<ArgsList1, ArgsList2>::value,
+                "The indices when adding two tensors must be equal. This error "
+                "occurs from expressions like A(_a, _b) + B(_c, _a)");
+  std::cout << "2" << std::endl;
+  return TensorExpressions::AddSub<
+      tmpl::conditional_t<
+          std::is_base_of<Expression, T1>::value, T1,
+          TensorExpression<T1, X, Symm1, IndexList1, ArgsList1>>,
+      tmpl::conditional_t<
+          std::is_base_of<Expression, T2>::value, T2,
+          TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>>,
+      ArgsList1, ArgsList2, 1>(~t1, std::move(~t2));
+}
+
+template <typename T1, typename T2, typename X, typename Symm1, typename Symm2,
+          typename IndexList1, typename IndexList2, typename ArgsList1,
+          typename ArgsList2>
+SPECTRE_ALWAYS_INLINE auto operator+(
+    TensorExpression<T1, X, Symm1, IndexList1, ArgsList1>&& t1,
+    const TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>& t2) {
+  static_assert(tmpl::size<ArgsList1>::value == tmpl::size<ArgsList2>::value,
+                "Tensor addition is only possible with the same rank tensors");
+  static_assert(tmpl::equal_members<ArgsList1, ArgsList2>::value,
+                "The indices when adding two tensors must be equal. This error "
+                "occurs from expressions like A(_a, _b) + B(_c, _a)");
+  std::cout << "3" << std::endl;
+  return TensorExpressions::AddSub<
+      tmpl::conditional_t<
+          std::is_base_of<Expression, T1>::value, T1,
+          TensorExpression<T1, X, Symm1, IndexList1, ArgsList1>>,
+      tmpl::conditional_t<
+          std::is_base_of<Expression, T2>::value, T2,
+          TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>>,
+      ArgsList1, ArgsList2, 1>(std::move(~t1), ~t2);
+}
+
+template <typename T1, typename T2, typename X, typename Symm1, typename Symm2,
+          typename IndexList1, typename IndexList2, typename ArgsList1,
+          typename ArgsList2>
+SPECTRE_ALWAYS_INLINE auto operator+(
+    TensorExpression<T1, X, Symm1, IndexList1, ArgsList1>&& t1,
+    TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>&& t2) {
+  static_assert(tmpl::size<ArgsList1>::value == tmpl::size<ArgsList2>::value,
+                "Tensor addition is only possible with the same rank tensors");
+  static_assert(tmpl::equal_members<ArgsList1, ArgsList2>::value,
+                "The indices when adding two tensors must be equal. This error "
+                "occurs from expressions like A(_a, _b) + B(_c, _a)");
+  std::cout << "4" << std::endl;
+  return TensorExpressions::AddSub<
+      tmpl::conditional_t<
+          std::is_base_of<Expression, T1>::value, T1,
+          TensorExpression<T1, X, Symm1, IndexList1, ArgsList1>>,
+      tmpl::conditional_t<
+          std::is_base_of<Expression, T2>::value, T2,
+          TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>>,
+      ArgsList1, ArgsList2, 1>(std::move(~t1), std::move(~t2));
+}
 
 /// \ingroup TensorExpressionsGroup
 /// \brief Returns the tensor expression representing the sum of a tensor
@@ -201,6 +282,7 @@ template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     const X& scalar,
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t) {
+  std::cout << "5" << std::endl;
   return TensorExpressions::ScalarDataTypeLValue(scalar) + t;
 }
 
@@ -211,7 +293,7 @@ template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t,
     const X& scalar) {
-  // std::cout << "lvalue" << std::endl;
+  std::cout << "6" << std::endl;
   return t + TensorExpressions::ScalarDataTypeLValue(scalar);
 }
 
@@ -221,6 +303,7 @@ SPECTRE_ALWAYS_INLINE auto operator+(
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     X&& scalar, const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t) {
+  std::cout << "7" << std::endl;
   return TensorExpressions::AddSub<
       TensorExpressions::ScalarDataTypeRValue<X>,
       tmpl::conditional_t<std::is_base_of<Expression, T>::value, T,
@@ -235,7 +318,64 @@ SPECTRE_ALWAYS_INLINE auto operator+(
 /// tmpl::list<>>&)
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
+    TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t, X&& scalar) {
+  std::cout << "8" << std::endl;
+  // std::cout << "t : " << t << std::endl;
+  std::cout << "scalar : " << scalar << std::endl;
+  // std::cout << "rvalue" << std::endl;
+  return TensorExpressions::AddSub<
+      tmpl::conditional_t<std::is_base_of<Expression, T>::value, T,
+                          TensorExpression<T, X, tmpl::list<>, tmpl::list<>>>,
+      TensorExpressions::ScalarDataTypeRValue<X>, tmpl::list<>, tmpl::list<>,
+      1>(
+      std::move(
+          ~std::forward<TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&&>(
+              t)),
+      std::move(TensorExpressions::ScalarDataTypeRValue(std::move(scalar))));
+}
+
+template <typename T, typename X>
+SPECTRE_ALWAYS_INLINE auto operator+(
+    const X& scalar, TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t) {
+  std::cout << "9" << std::endl;
+  return TensorExpressions::ScalarDataTypeLValue(scalar) + std::move(~t);
+}
+
+/// \ingroup TensorExpressionsGroup
+/// \copydoc operator+(const X&,const TensorExpression<T, X, tmpl::list<>,
+/// tmpl::list<>>&)
+template <typename T, typename X>
+SPECTRE_ALWAYS_INLINE auto operator+(
+    TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t, const X& scalar) {
+  // std::cout << "lvalue" << std::endl;
+  std::cout << "10" << std::endl;
+  return std::move(~t) + TensorExpressions::ScalarDataTypeLValue(scalar);
+}
+
+/// \ingroup TensorExpressionsGroup
+/// \copydoc operator+(const X&,const TensorExpression<T, X, tmpl::list<>,
+/// tmpl::list<>>&)
+template <typename T, typename X>
+SPECTRE_ALWAYS_INLINE auto operator+(
+    X&& scalar, TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t) {
+  std::cout << "11" << std::endl;
+  std::cout << "scalar : " << scalar << std::endl;
+  return TensorExpressions::AddSub<
+      TensorExpressions::ScalarDataTypeRValue<X>,
+      tmpl::conditional_t<std::is_base_of<Expression, T>::value, T,
+                          TensorExpression<T, X, tmpl::list<>, tmpl::list<>>>,
+      tmpl::list<>, tmpl::list<>, 1>(
+      std::move(TensorExpressions::ScalarDataTypeRValue(std::move(scalar))),
+      std::move(~std::move(t)));
+}
+
+/// \ingroup TensorExpressionsGroup
+/// \copydoc operator+(const X&,const TensorExpression<T, X, tmpl::list<>,
+/// tmpl::list<>>&)
+template <typename T, typename X>
+SPECTRE_ALWAYS_INLINE auto operator+(
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t, X&& scalar) {
+  std::cout << "12" << std::endl;
   // std::cout << "t : " << t << std::endl;
   // std::cout << "scalar : " << scalar << std::endl;
   // std::cout << "rvalue" << std::endl;

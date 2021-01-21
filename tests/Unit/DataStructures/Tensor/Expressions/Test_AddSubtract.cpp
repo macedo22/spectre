@@ -178,20 +178,24 @@ void test_addsub_scalar_rvalue(const Tensor<DataVector>& tensor) noexcept {
 SPECTRE_TEST_CASE(
     "Unit.DataStructures.Tensor.Expression.AddSubtractScalarDataType",
     "[DataStructures][Unit]") {
+  // put back below 4 lines
   const Tensor<double> tensor1{{{7.4}}};
-  const double scalar1 = 8.2;
-  test_addsub_scalar_lvalue(scalar1, tensor1);
-  test_addsub_scalar_rvalue(tensor1);
+  // const double scalar1 = 8.2;
+  // test_addsub_scalar_lvalue(scalar1, tensor1);
+  // test_addsub_scalar_rvalue(tensor1);
+
+  auto expr = 5000.0 + tensor1() + 10000.0;
 
   // const double expected_sum = 7.4 + 2.5;
   // const Tensor<double> actual_sum =
   //     TensorExpressions::evaluate(tensor1() + 2.5);
   // CHECK(actual_sum.get() == expected_sum);
 
-  const Tensor<DataVector> tensor2{{{DataVector{12.3, -1.1, -2.4}}}};
-  const DataVector scalar2{0.0, -7.8, 6.9};
-  test_addsub_scalar_lvalue(scalar2, tensor2);
-  test_addsub_scalar_rvalue(tensor2);
+  // put back below 4 lines
+  // const Tensor<DataVector> tensor2{{{DataVector{12.3, -1.1, -2.4}}}};
+  // const DataVector scalar2{0.0, -7.8, 6.9};
+  // test_addsub_scalar_lvalue(scalar2, tensor2);
+  // test_addsub_scalar_rvalue(tensor2);
 
   // test_tensor_plus_scalar(-2.5, tensor1);
   // test_scalar_plus_tensor(0.8, tensor1);

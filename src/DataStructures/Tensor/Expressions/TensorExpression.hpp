@@ -8,6 +8,7 @@
 
 #include <array>
 #include <cstddef>
+#include <iostream>
 
 #include "DataStructures/Tensor/Structure.hpp"
 #include "ErrorHandling/Assert.hpp"  // IWYU pragma: keep
@@ -301,11 +302,21 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   ///
   /// \returns const TensorExpression<Derived, DataType, Symm, IndexList,
   /// ArgsList<Args...>>&
-  SPECTRE_ALWAYS_INLINE const auto& operator~() const noexcept {
+  SPECTRE_ALWAYS_INLINE const auto& operator~() const& noexcept {
+    std::cout << "lvalue operator~" << std::endl;
     if constexpr (tt::is_a_v<Tensor, Derived>) {
       return *this;
     } else {
-      return static_cast<const Derived&>(*this);
+      return static_cast<Derived&>(*this);
+    }
+  }
+
+  SPECTRE_ALWAYS_INLINE auto& operator~() && noexcept {
+    std::cout << "rvalue operator~" << std::endl;
+    if constexpr (tt::is_a_v<Tensor, Derived>) {
+      return *this;
+    } else {
+      return static_cast<Derived&>(*this);
     }
   }
 

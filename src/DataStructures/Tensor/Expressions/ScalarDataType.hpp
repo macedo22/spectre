@@ -103,14 +103,18 @@ struct ScalarDataTypeRValue
   }
 
   // copy constructor to see if and when it's called
-  ScalarDataTypeRValue(const ScalarDataTypeRValue& other) : t_(other.t_) {
-    std::cout << "rvalue copy constructor, t_ is : " << t_ << std::endl;
-  }
+  // ScalarDataTypeRValue(const ScalarDataTypeRValue& other) : t_(other.t_) {
+  //   std::cout << "rvalue copy constructor, t_ is : " << t_ << std::endl;
+  // }
+
+  ScalarDataTypeRValue(const ScalarDataTypeRValue& other) = delete;
 
   // Note: if copy constructor is defined, this must be too, or move
   // will default to the copy? seems to be this way from experimenting,
   // but would be good to confirm otherwise
-  ScalarDataTypeRValue(ScalarDataTypeRValue&&) noexcept = default;
+  ScalarDataTypeRValue(ScalarDataTypeRValue&& other) : t_(std::move(other.t_)) {
+    std::cout << "rvalue move constructor, t_ is : " << t_ << std::endl;
+  }
 
   /// \brief Returns the value represented by the expression
   ///
@@ -147,7 +151,7 @@ struct ScalarDataTypeRValue
   /// expression was constructed with an r-value, this will store the moved
   /// value. Otherwise, the represented value is instead referred to by
   /// `t_ptr_`.
-  const DataType t_;
+  DataType t_;
   //   /// Refers to the scalar type value being represented as an expression.
   //   If the
   //   /// expression was constructed with an r-value, this will point to `t_`.
