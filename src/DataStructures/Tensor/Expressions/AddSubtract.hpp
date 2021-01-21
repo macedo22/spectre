@@ -11,8 +11,7 @@
 #include <cstddef>
 #include <iostream>
 
-#include "DataStructures/Tensor/Expressions/ScalarDataTypeLValue.hpp"
-#include "DataStructures/Tensor/Expressions/ScalarDataTypeRValue.hpp"
+#include "DataStructures/Tensor/Expressions/ScalarDataType.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Utilities/Requires.hpp"

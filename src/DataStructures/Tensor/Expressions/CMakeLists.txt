@@ -10,7 +10,6 @@ spectre_target_headers(
   Evaluate.hpp
   LhsTensorSymmAndIndices.hpp
   Product.hpp
-  ScalarDataTypeLValue.hpp
-  ScalarDataTypeRValue.hpp
+  ScalarDataType.hpp
   TensorExpression.hpp
   )
