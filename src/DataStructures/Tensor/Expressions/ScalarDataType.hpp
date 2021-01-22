@@ -107,7 +107,7 @@ struct ScalarDataTypeRValue
   //   std::cout << "rvalue copy constructor, t_ is : " << t_ << std::endl;
   // }
 
-  ScalarDataTypeRValue(const ScalarDataTypeRValue& other) = delete;
+  ScalarDataTypeRValue(const ScalarDataTypeRValue<DataVector>& other) = delete;
 
   // Note: if copy constructor is defined, this must be too, or move
   // will default to the copy? seems to be this way from experimenting,
