@@ -13,6 +13,7 @@
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Structure.hpp"
 #include "Utilities/ForceInline.hpp"
+#include "Utilities/Requires.hpp"
 #include "Utilities/TMPL.hpp"
 
 namespace TensorExpressions {
@@ -21,7 +22,9 @@ namespace TensorExpressions {
 /// scalars
 ///
 /// \tparam DataType the type being represented, a `double` or DataVector
-template <typename DataType>
+template <typename DataType,
+          Requires<std::is_same_v<DataType, double> or
+                   std::is_same_v<DataType, DataVector>> = nullptr>
 struct ScalarDataTypeLValue
     : public TensorExpression<ScalarDataTypeLValue<DataType>, DataType,
                               tmpl::list<>, tmpl::list<>, tmpl::list<>> {
@@ -85,7 +88,9 @@ struct ScalarDataTypeLValue
 /// scalars
 ///
 /// \tparam DataType the type being represented, a `double` or DataVector
-template <typename DataType>
+template <typename DataType,
+          Requires<std::is_same_v<DataType, double> or
+                   std::is_same_v<DataType, DataVector>> = nullptr>
 struct ScalarDataTypeRValue
     : public TensorExpression<ScalarDataTypeRValue<DataType>, DataType,
                               tmpl::list<>, tmpl::list<>, tmpl::list<>> {
