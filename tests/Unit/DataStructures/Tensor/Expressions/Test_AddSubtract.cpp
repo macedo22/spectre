@@ -131,47 +131,49 @@ void test_scalar_plus_tensor(DataType&& scalar,
   CHECK(actual_sum.get() == expected_sum);
 }
 
-template <typename DataType,
-          typename DecayedDataType = typename std::decay<DataType>::type>
-void test_tensor_minus_scalar(DataType&& scalar,
-                              const Tensor<DecayedDataType>& tensor) noexcept {
-  const DecayedDataType expected_difference = tensor.get() - scalar;
-  const Tensor<DecayedDataType> actual_difference =
-      TensorExpressions::evaluate(tensor() - std::forward<DataType>(scalar));
-  CHECK(actual_difference.get() == expected_difference);
-}
+// template <typename DataType,
+//           typename DecayedDataType = typename std::decay<DataType>::type>
+// void test_tensor_minus_scalar(DataType&& scalar,
+//                               const Tensor<DecayedDataType>& tensor) noexcept
+//                               {
+//   const DecayedDataType expected_difference = tensor.get() - scalar;
+//   const Tensor<DecayedDataType> actual_difference =
+//       TensorExpressions::evaluate(tensor() - std::forward<DataType>(scalar));
+//   CHECK(actual_difference.get() == expected_difference);
+// }
 
-template <typename DataType,
-          typename DecayedDataType = typename std::decay<DataType>::type>
-void test_scalar_minus_tensor(DataType&& scalar,
-                              const Tensor<DecayedDataType>& tensor) noexcept {
-  const DecayedDataType expected_difference = scalar - tensor.get();
-  const Tensor<DecayedDataType> actual_difference =
-      TensorExpressions::evaluate(std::forward<DataType>(scalar) - tensor());
-  CHECK(actual_difference.get() == expected_difference);
-}
+// template <typename DataType,
+//           typename DecayedDataType = typename std::decay<DataType>::type>
+// void test_scalar_minus_tensor(DataType&& scalar,
+//                               const Tensor<DecayedDataType>& tensor) noexcept
+//                               {
+//   const DecayedDataType expected_difference = scalar - tensor.get();
+//   const Tensor<DecayedDataType> actual_difference =
+//       TensorExpressions::evaluate(std::forward<DataType>(scalar) - tensor());
+//   CHECK(actual_difference.get() == expected_difference);
+// }
 
 template <typename DataType>
 void test_addsub_scalar_lvalue(const DataType& scalar,
                                const Tensor<DataType>& tensor) noexcept {
   test_tensor_plus_scalar(scalar, tensor);
   test_scalar_plus_tensor(scalar, tensor);
-  test_tensor_minus_scalar(scalar, tensor);
-  test_scalar_minus_tensor(scalar, tensor);
+  // test_tensor_minus_scalar(scalar, tensor);
+  // test_scalar_minus_tensor(scalar, tensor);
 }
 
 void test_addsub_scalar_rvalue(const Tensor<double>& tensor) noexcept {
   test_tensor_plus_scalar(-2.5, tensor);
   test_scalar_plus_tensor(0.8, tensor);
-  test_tensor_minus_scalar(1.2, tensor);
-  test_scalar_minus_tensor(3.4, tensor);
+  // test_tensor_minus_scalar(1.2, tensor);
+  // test_scalar_minus_tensor(3.4, tensor);
 }
 
 void test_addsub_scalar_rvalue(const Tensor<DataVector>& tensor) noexcept {
   test_tensor_plus_scalar(DataVector{2.0, -1.1, 12.4}, tensor);
   test_scalar_plus_tensor(DataVector{-7.2, 4.9, 0.0}, tensor);
-  test_tensor_minus_scalar(DataVector{0.5, -2.7, 3.6}, tensor);
-  test_scalar_minus_tensor(DataVector{0.0, 9.2, -0.7}, tensor);
+  // test_tensor_minus_scalar(DataVector{0.5, -2.7, 3.6}, tensor);
+  // test_scalar_minus_tensor(DataVector{0.0, 9.2, -0.7}, tensor);
 }
 }  // namespace
 
@@ -179,12 +181,12 @@ SPECTRE_TEST_CASE(
     "Unit.DataStructures.Tensor.Expression.AddSubtractScalarDataType",
     "[DataStructures][Unit]") {
   // put back below 4 lines
-  const Tensor<double> tensor1{{{7.4}}};
+  // const Tensor<double> tensor1{{{7.4}}};
   // const double scalar1 = 8.2;
   // test_addsub_scalar_lvalue(scalar1, tensor1);
   // test_addsub_scalar_rvalue(tensor1);
 
-  auto expr = 5000.0 + tensor1() + 10000.0;
+  // auto expr = 5000.0 + tensor1() + 10000.0;
 
   // const double expected_sum = 7.4 + 2.5;
   // const Tensor<double> actual_sum =
@@ -192,10 +194,12 @@ SPECTRE_TEST_CASE(
   // CHECK(actual_sum.get() == expected_sum);
 
   // put back below 4 lines
-  // const Tensor<DataVector> tensor2{{{DataVector{12.3, -1.1, -2.4}}}};
-  // const DataVector scalar2{0.0, -7.8, 6.9};
-  // test_addsub_scalar_lvalue(scalar2, tensor2);
-  // test_addsub_scalar_rvalue(tensor2);
+  const Tensor<DataVector> tensor2{{{DataVector{12.3, -1.1, -2.4}}}};
+  const DataVector scalar2{0.0, -7.8, 6.9};
+  test_addsub_scalar_lvalue(scalar2, tensor2);
+  test_addsub_scalar_rvalue(tensor2);
+
+  auto expr = tensor2() + DataVector{1.0, 2.0, 3.0} + tensor2();
 
   // test_tensor_plus_scalar(-2.5, tensor1);
   // test_scalar_plus_tensor(0.8, tensor1);
