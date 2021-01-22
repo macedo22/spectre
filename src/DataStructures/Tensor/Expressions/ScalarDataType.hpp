@@ -102,22 +102,32 @@ struct ScalarDataTypeRValue
   static constexpr auto num_tensor_indices = 0;
 
   /// \brief Create an expression from a scalar type r-value
-  ScalarDataTypeRValue(DataType t) : t_(std::move(t)) {
+  ScalarDataTypeRValue(DataType t) : t_(std::move(t)), t_ptr_(&t_) {
     // std::cout << "rvalue constructor, t_ is : " << t_ << ", t is " << t
     //           << std::endl;
   }
 
-  // copy constructor to see if and when it's called
-  // ScalarDataTypeRValue(const ScalarDataTypeRValue& other) : t_(other.t_) {
-  //   std::cout << "rvalue copy constructor, t_ is : " << t_ << std::endl;
-  // }
+  // copy constructor
+  ScalarDataTypeRValue(const ScalarDataTypeRValue& other) {
+    if constexpr (std::is_same_v<DataType, double>) {
+      t_ = std::numeric_limits<double>::signaling_NaN();
+      t_ptr_ = &other.t_ptr_;
+    } else {
+      t_ = DataVector(1, std::numeric_limits<double>::signaling_NaN());
+      t_ptr_ = &other.t_ptr_;
+    }
+    std::cout << "rvalue copy constructor, *t_ptr_ is : " << *t_ptr_
+              << std::endl;
+  }
 
-  ScalarDataTypeRValue(const ScalarDataTypeRValue<DataVector>& other) = delete;
+  // ScalarDataTypeRValue(const ScalarDataTypeRValue<DataVector>& other) =
+  // delete;
 
   // Note: if copy constructor is defined, this must be too, or move
   // will default to the copy? seems to be this way from experimenting,
   // but would be good to confirm otherwise
-  ScalarDataTypeRValue(ScalarDataTypeRValue&& other) : t_(std::move(other.t_)) {
+  ScalarDataTypeRValue(ScalarDataTypeRValue&& other)
+      : t_(std::move(other.t_)), t_ptr_(&t_) {
     std::cout << "rvalue move constructor, t_ is : " << t_ << std::endl;
   }
 
@@ -148,7 +158,7 @@ struct ScalarDataTypeRValue
     // std::cout << "t_ptr_ : " << t_ptr_ << std::endl;
     // std::cout << "*t_ptr_ : " << *t_ptr_ << std::endl;
     // td<DataType>idk;
-    return t_;
+    return *t_ptr_;
   }
 
  private:
@@ -157,10 +167,10 @@ struct ScalarDataTypeRValue
   /// value. Otherwise, the represented value is instead referred to by
   /// `t_ptr_`.
   DataType t_;
-  //   /// Refers to the scalar type value being represented as an expression.
-  //   If the
-  //   /// expression was constructed with an r-value, this will point to `t_`.
-  //   /// Otherwise, it points to an outside value being represented.
-  //   const DataType* const t_ptr_ = nullptr;
+  /// Refers to the scalar type value being represented as an expression.
+  /// If the
+  /// expression was constructed with an r-value, this will point to `t_`.
+  /// Otherwise, it points to an outside value being represented.
+  DataType* t_ptr_ = nullptr;
 };
 }  // namespace TensorExpressions
