@@ -41,7 +41,7 @@ struct ScalarDataType
       // double or DataVector rvalue
       t_ = std::move(t);
       t_ptr_ = &t_;
-    } else if (std::is_same_v<DataType, double>) {
+    } else if constexpr (std::is_same_v<DataType, double>) {
       // double lvalue
       t_ = std::numeric_limits<double>::signaling_NaN();
       t_ptr_ = &t;
