@@ -311,12 +311,12 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
     }
   }
 
-  SPECTRE_ALWAYS_INLINE auto& operator~() && noexcept {
+  SPECTRE_ALWAYS_INLINE auto operator~() && noexcept {
     std::cout << "rvalue operator~" << std::endl;
     if constexpr (tt::is_a_v<Tensor, Derived>) {
-      return *this;
+      return std::move(*this);
     } else {
-      return static_cast<Derived&>(*this);
+      return static_cast<Derived&&>(*this);
     }
   }
 
