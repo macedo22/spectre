@@ -16,6 +16,8 @@
 #include "Utilities/Requires.hpp"
 #include "Utilities/TMPL.hpp"
 
+// TODO: need to fix moving of DataVectors
+
 namespace TensorExpressions {
 /// \ingroup TensorExpressionsGroup
 /// \brief Defines an expression representating a scalar or a DataVector of
@@ -50,7 +52,7 @@ struct ScalarDataType
       t_ = DataVector(1, std::numeric_limits<double>::signaling_NaN());
       t_ptr_ = &t;
     }
-    std::cout << "constructor, *t_ptr_ is : " << *t_ptr_ << std::endl;
+    //std::cout << "constructor, *t_ptr_ is : " << *t_ptr_ << std::endl;
   }
 
   // copy constructor
@@ -77,7 +79,7 @@ struct ScalarDataType
       t_ = DataVector(1, std::numeric_limits<double>::signaling_NaN());
     }
     t_ptr_ = other.t_ptr_;
-    std::cout << "move constructor, *t_ptr_ is : " << *t_ptr_ << std::endl;
+    //std::cout << "move constructor, *t_ptr_ is : " << *t_ptr_ << std::endl;
   }
 
   /// \brief Returns the value represented by the expression

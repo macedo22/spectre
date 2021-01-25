@@ -303,7 +303,7 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   /// \returns const TensorExpression<Derived, DataType, Symm, IndexList,
   /// ArgsList<Args...>>&
   SPECTRE_ALWAYS_INLINE const auto& operator~() const& noexcept {
-    std::cout << "lvalue operator~" << std::endl;
+    //std::cout << "lvalue operator~" << std::endl;
     if constexpr (tt::is_a_v<Tensor, Derived>) {
       return *this;
     } else {
@@ -312,7 +312,7 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   }
 
   SPECTRE_ALWAYS_INLINE auto operator~() && noexcept {
-    std::cout << "rvalue operator~" << std::endl;
+    //std::cout << "rvalue operator~" << std::endl;
     if constexpr (tt::is_a_v<Tensor, Derived>) {
       return std::move(*this);
     } else {

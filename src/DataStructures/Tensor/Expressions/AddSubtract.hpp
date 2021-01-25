@@ -85,7 +85,7 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   using args_list = tmpl::sort<typename T1::args_list>;
 
   AddSub(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {
-    std::cout << "AddSub regular constructor" << std::endl;
+    // std::cout << "AddSub regular constructor" << std::endl;
   }
 
   // copy constructor to see if and when it's called
@@ -97,7 +97,7 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   // move constructor to see if and when it's called
   AddSub(AddSub&& other)
       : t1_(std::move(other.t1_)), t2_(std::move(other.t2_)) {
-    std::cout << "AddSub move constructor" << std::endl;
+    // std::cout << "AddSub move constructor" << std::endl;
   }
 
   template <typename... LhsIndices, typename T>
@@ -200,10 +200,7 @@ SPECTRE_ALWAYS_INLINE auto operator+(
       tmpl::conditional_t<
           std::is_base_of<Expression, T2>::value, T2,
           TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>>,
-      ArgsList1, ArgsList2, 1>(
-      ~t1,
-      std::move(~std::forward<
-                TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>&&>(t2)));
+      ArgsList1, ArgsList2, 1>(~t1, ~std::move(t2));
 }
 
 template <typename T1, typename T2, typename X, typename Symm1, typename Symm2,
@@ -225,10 +222,7 @@ SPECTRE_ALWAYS_INLINE auto operator+(
       tmpl::conditional_t<
           std::is_base_of<Expression, T2>::value, T2,
           TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>>,
-      ArgsList1, ArgsList2, 1>(
-      std::move(~std::forward<
-                TensorExpression<T1, X, Symm1, IndexList1, ArgsList1>&&>(t1)),
-      ~t2);
+      ArgsList1, ArgsList2, 1>(~std::move(t1), ~t2);
 }
 
 template <typename T1, typename T2, typename X, typename Symm1, typename Symm2,
@@ -250,11 +244,7 @@ SPECTRE_ALWAYS_INLINE auto operator+(
       tmpl::conditional_t<
           std::is_base_of<Expression, T2>::value, T2,
           TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>>,
-      ArgsList1, ArgsList2, 1>(
-      std::move(~std::forward<
-                TensorExpression<T1, X, Symm1, IndexList1, ArgsList1>&&>(t1)),
-      std::move(~std::forward<
-                TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>&&>(t2)));
+      ArgsList1, ArgsList2, 1>(~std::move(t1), ~std::move(t2));
 }
 
 /// \ingroup TensorExpressionsGroup
@@ -325,9 +315,9 @@ SPECTRE_ALWAYS_INLINE auto operator+(
     TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t, X&& scalar) {
   std::cout << "8" << std::endl;
   // std::cout << "t : " << t << std::endl;
-  std::cout << "scalar : " << scalar << std::endl;
+  // std::cout << "scalar : " << scalar << std::endl;
   // std::cout << "rvalue" << std::endl;
-  return std::forward<TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&&>(t) +
+  return std::move(t) +
          TensorExpressions::ScalarDataType<X, true>(std::move(scalar));
 }
 
@@ -335,8 +325,7 @@ template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     const X& scalar, TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t) {
   std::cout << "9" << std::endl;
-  return TensorExpressions::ScalarDataType<X, false>(scalar) +
-         ~std::forward<TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&&>(t);
+  return TensorExpressions::ScalarDataType<X, false>(scalar) + std::move(t);
 }
 
 /// \ingroup TensorExpressionsGroup
@@ -353,9 +342,7 @@ SPECTRE_ALWAYS_INLINE auto operator+(
   // decltype(~(std::forward<TensorExpression<T, X, tmpl::list<>,
   // tmpl::list<>>&&>(
   //            t))) y = "hello";
-  return (~(std::forward<TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&&>(
-             t))) +
-         TensorExpressions::ScalarDataType<X, false>(scalar);
+  return std::move(t) + TensorExpressions::ScalarDataType<X, false>(scalar);
 }
 
 /// \ingroup TensorExpressionsGroup
@@ -365,9 +352,9 @@ template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     X&& scalar, TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t) {
   std::cout << "11" << std::endl;
-  std::cout << "scalar : " << scalar << std::endl;
+  // std::cout << "scalar : " << scalar << std::endl;
   return TensorExpressions::ScalarDataType<X, true>(std::move(scalar)) +
-         std::forward<TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&&>(t);
+         std::move(t);
 }
 
 /// \ingroup TensorExpressionsGroup
@@ -444,10 +431,7 @@ SPECTRE_ALWAYS_INLINE auto operator-(
       tmpl::conditional_t<
           std::is_base_of<Expression, T2>::value, T2,
           TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>>,
-      ArgsList1, ArgsList2, -1>(
-      ~t1,
-      std::move(~std::forward<
-                TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>&&>(t2)));
+      ArgsList1, ArgsList2, -1>(~t1, ~std::move(t2));
 }
 
 template <typename T1, typename T2, typename X, typename Symm1, typename Symm2,
@@ -469,10 +453,7 @@ SPECTRE_ALWAYS_INLINE auto operator-(
       tmpl::conditional_t<
           std::is_base_of<Expression, T2>::value, T2,
           TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>>,
-      ArgsList1, ArgsList2, -1>(
-      std::move(~std::forward<
-                TensorExpression<T1, X, Symm1, IndexList1, ArgsList1>&&>(t1)),
-      ~t2);
+      ArgsList1, ArgsList2, -1>(~std::move(t1), ~t2);
 }
 
 template <typename T1, typename T2, typename X, typename Symm1, typename Symm2,
@@ -494,11 +475,7 @@ SPECTRE_ALWAYS_INLINE auto operator-(
       tmpl::conditional_t<
           std::is_base_of<Expression, T2>::value, T2,
           TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>>,
-      ArgsList1, ArgsList2, -1>(
-      std::move(~std::forward<
-                TensorExpression<T1, X, Symm1, IndexList1, ArgsList1>&&>(t1)),
-      std::move(~std::forward<
-                TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>&&>(t2)));
+      ArgsList1, ArgsList2, -1>(~std::move(t1), ~std::move(t2));
 }
 
 /// \ingroup TensorExpressionsGroup
@@ -570,9 +547,9 @@ SPECTRE_ALWAYS_INLINE auto operator-(
     TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t, X&& scalar) {
   std::cout << "8" << std::endl;
   // std::cout << "t : " << t << std::endl;
-  std::cout << "scalar : " << scalar << std::endl;
+  // std::cout << "scalar : " << scalar << std::endl;
   // std::cout << "rvalue" << std::endl;
-  return std::forward<TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&&>(t) -
+  return std::move(t) -
          TensorExpressions::ScalarDataType<X, true>(std::move(scalar));
 }
 
@@ -580,8 +557,7 @@ template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator-(
     const X& scalar, TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t) {
   std::cout << "9" << std::endl;
-  return TensorExpressions::ScalarDataType<X, false>(scalar) -
-         ~std::forward<TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&&>(t);
+  return TensorExpressions::ScalarDataType<X, false>(scalar) - std::move(t);
 }
 
 /// \ingroup TensorExpressionsGroup
@@ -592,9 +568,7 @@ SPECTRE_ALWAYS_INLINE auto operator-(
     TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t, const X& scalar) {
   // std::cout << "lvalue" << std::endl;
   std::cout << "10" << std::endl;
-  return ~std::forward<TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&&>(
-             t) -
-         TensorExpressions::ScalarDataType<X, false>(scalar);
+  return std::move(t) - TensorExpressions::ScalarDataType<X, false>(scalar);
 }
 
 /// \ingroup TensorExpressionsGroup
@@ -604,9 +578,9 @@ template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator-(
     X&& scalar, TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t) {
   std::cout << "11" << std::endl;
-  std::cout << "scalar : " << scalar << std::endl;
+  // std::cout << "scalar : " << scalar << std::endl;
   return TensorExpressions::ScalarDataType<X, true>(std::move(scalar)) -
-         std::forward<TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&&>(t);
+         std::move(t);
 }
 
 /// \ingroup TensorExpressionsGroup
