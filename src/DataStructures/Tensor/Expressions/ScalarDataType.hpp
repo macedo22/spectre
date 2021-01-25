@@ -16,8 +16,6 @@
 #include "Utilities/Requires.hpp"
 #include "Utilities/TMPL.hpp"
 
-// TODO: need to fix moving of DataVectors
-
 namespace TensorExpressions {
 /// \ingroup TensorExpressionsGroup
 /// \brief Defines an expression representating a scalar or a DataVector of
