@@ -226,11 +226,10 @@ struct ScalarDataTypeRValue
   ScalarDataTypeRValue(const ScalarDataTypeRValue& other) {
     if constexpr (std::is_same_v<DataType, double>) {
       t_ = std::numeric_limits<double>::signaling_NaN();
-      t_ptr_ = &other.t_ptr_;
     } else {
       t_ = DataVector(1, std::numeric_limits<double>::signaling_NaN());
-      t_ptr_ = &other.t_ptr_;
     }
+    t_ptr_ = &other.t_ptr_;
     std::cout << "rvalue copy constructor, *t_ptr_ is : " << *t_ptr_
               << std::endl;
   }
