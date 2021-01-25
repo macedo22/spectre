@@ -69,6 +69,22 @@ struct ScalarDataType
   // ScalarDataType(const ScalarDataType<DataVector>& other) =
   // delete;
 
+  // copy assignment
+  ScalarDataType& operator=(const ScalarDataType& other) {
+    std::cout << "copy assignment " << std::endl;
+    if (this != &other) {
+      if constexpr (std::is_same_v<DataType, double>) {
+        t_ = std::numeric_limits<double>::signaling_NaN();
+      } else {
+        t_ = DataVector(1, std::numeric_limits<double>::signaling_NaN());
+      }
+      t_ptr_ = other.t_ptr_;
+    }
+    std::cout << "end of copy assignment, *t_ptr_ is : " << *t_ptr_
+              << std::endl;
+    return *this;
+  }
+
   // Note: if copy constructor is defined, this must be too, or move
   // will default to the copy? seems to be this way from experimenting,
   // but would be good to confirm otherwise
@@ -87,6 +103,29 @@ struct ScalarDataType
       t_ptr_ = other.t_ptr_;
     }
     //std::cout << "move constructor, *t_ptr_ is : " << *t_ptr_ << std::endl;
+  }
+
+  // move assignment
+  ScalarDataType& operator=(ScalarDataType&& other) {
+    // std::cout << "move assignment "<< std::endl;
+    if (this != &other) {
+      if constexpr (IsRValue) {
+        // double or DataVector rvalue
+        t_ = std::move(other.t_);
+        t_ptr_ = &t_;
+      } else if constexpr (std::is_same_v<DataType, double>) {
+        // double lvalue
+        t_ = std::numeric_limits<double>::signaling_NaN();
+        t_ptr_ = other.t_ptr_;
+      } else {
+        // DataVector lvalue
+        t_ = DataVector(1, std::numeric_limits<double>::signaling_NaN());
+        t_ptr_ = other.t_ptr_;
+      }
+    }
+    // std::cout << "end of move assignment, *t_ptr_ is : " << *t_ptr_ <<
+    // std::endl;
+    return *this;
   }
 
   /// \brief Returns the value represented by the expression
@@ -237,12 +276,41 @@ struct ScalarDataTypeRValue
   // ScalarDataTypeRValue(const ScalarDataTypeRValue<DataVector>& other) =
   // delete;
 
+  // copy assignment
+  ScalarDataTypeRValue& operator=(const ScalarDataTypeRValue& other) {
+    std::cout << "rvalue copy assignment " << std::endl;
+    if (this != &other) {
+      if constexpr (std::is_same_v<DataType, double>) {
+        t_ = std::numeric_limits<double>::signaling_NaN();
+      } else {
+        t_ = DataVector(1, std::numeric_limits<double>::signaling_NaN());
+      }
+      t_ptr_ = other.t_ptr_;
+    }
+    std::cout << "end of rvalue copy assignment, *t_ptr_ is : " << *t_ptr_
+              << std::endl;
+    return *this;
+  }
+
   // Note: if copy constructor is defined, this must be too, or move
   // will default to the copy? seems to be this way from experimenting,
   // but would be good to confirm otherwise
   ScalarDataTypeRValue(ScalarDataTypeRValue&& other)
       : t_(std::move(other.t_)), t_ptr_(&t_) {
     std::cout << "rvalue move constructor, t_ is : " << t_ << std::endl;
+  }
+
+  // move assignment
+  ScalarDataTypeRValue& operator=(ScalarDataTypeRValue&& other) {
+    // std::cout << "rvalue move assignment "<< std::endl;
+    if (this != &other) {
+      // double or DataVector rvalue
+      t_ = std::move(other.t_);
+      t_ptr_ = &t_;
+    }
+    // std::cout << "end of rvalue move assignment, *t_ptr_ is : " << *t_ptr_ <<
+    // std::endl;
+    return *this;
   }
 
   /// \brief Returns the value represented by the expression
