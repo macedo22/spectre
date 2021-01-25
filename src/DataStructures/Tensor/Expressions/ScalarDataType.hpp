@@ -295,7 +295,8 @@ struct ScalarDataTypeRValue
   // but would be good to confirm otherwise
   ScalarDataTypeRValue(ScalarDataTypeRValue&& other)
       : t_(std::move(other.t_)), t_ptr_(&t_) {
-    std::cout << "rvalue move constructor, t_ is : " << t_ << std::endl;
+    // std::cout << "rvalue move constructor, *t_ptr_ is : " << *t_ptr_
+    //           << ", t_ is : " << t_ << std::endl;
   }
 
   // move assignment
