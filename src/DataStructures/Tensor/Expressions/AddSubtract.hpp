@@ -283,14 +283,14 @@ SPECTRE_ALWAYS_INLINE auto operator+(
     const X& scalar,
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t) {
   std::cout << "5" << std::endl;
-  return TensorExpressions::ScalarDataTypeLValue<X>(scalar) + t;
+  return TensorExpressions::ScalarDataTypeLValue(scalar) + t;
 }
 
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     const X& scalar, TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t) {
   std::cout << "6" << std::endl;
-  return TensorExpressions::ScalarDataTypeLValue<X>(scalar) + std::move(t);
+  return TensorExpressions::ScalarDataTypeLValue(scalar) + std::move(t);
 }
 
 /// \ingroup TensorExpressionsGroup
@@ -300,7 +300,7 @@ template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     X&& scalar, const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t) {
   std::cout << "7" << std::endl;
-  return TensorExpressions::ScalarDataTypeRValue<X>(std::move(scalar)) + t;
+  return TensorExpressions::ScalarDataTypeRValue(std::move(scalar)) + t;
 }
 
 /// \ingroup TensorExpressionsGroup
@@ -311,7 +311,7 @@ SPECTRE_ALWAYS_INLINE auto operator+(
     X&& scalar, TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t) {
   std::cout << "8" << std::endl;
   // std::cout << "scalar : " << scalar << std::endl;
-  return TensorExpressions::ScalarDataTypeRValue<X>(std::move(scalar)) +
+  return TensorExpressions::ScalarDataTypeRValue(std::move(scalar)) +
          std::move(t);
 }
 
@@ -323,7 +323,7 @@ SPECTRE_ALWAYS_INLINE auto operator+(
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t,
     const X& scalar) {
   std::cout << "9" << std::endl;
-  return t + TensorExpressions::ScalarDataTypeLValue<X>(scalar);
+  return t + TensorExpressions::ScalarDataTypeLValue(scalar);
 }
 
 /// \ingroup TensorExpressionsGroup
@@ -336,7 +336,7 @@ SPECTRE_ALWAYS_INLINE auto operator+(
   // std::cout << "t : " << t << std::endl;
   // std::cout << "scalar : " << scalar << std::endl;
   // std::cout << "rvalue" << std::endl;
-  return t + TensorExpressions::ScalarDataTypeRValue<X>(std::move(scalar));
+  return t + TensorExpressions::ScalarDataTypeRValue(std::move(scalar));
 }
 
 /// \ingroup TensorExpressionsGroup
@@ -353,7 +353,7 @@ SPECTRE_ALWAYS_INLINE auto operator+(
   // decltype(~(std::forward<TensorExpression<T, X, tmpl::list<>,
   // tmpl::list<>>&&>(
   //            t))) y = "hello";
-  return std::move(t) + TensorExpressions::ScalarDataTypeLValue<X>(scalar);
+  return std::move(t) + TensorExpressions::ScalarDataTypeLValue(scalar);
 }
 
 /// \ingroup TensorExpressionsGroup
@@ -367,7 +367,7 @@ SPECTRE_ALWAYS_INLINE auto operator+(
   // std::cout << "scalar : " << scalar << std::endl;
   // std::cout << "rvalue" << std::endl;
   return std::move(t) +
-         TensorExpressions::ScalarDataTypeRValue<X>(std::move(scalar));
+         TensorExpressions::ScalarDataTypeRValue(std::move(scalar));
 }
 
 /// \ingroup TensorExpressionsGroup
@@ -515,14 +515,14 @@ SPECTRE_ALWAYS_INLINE auto operator-(
     const X& scalar,
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t) {
   std::cout << "5" << std::endl;
-  return TensorExpressions::ScalarDataTypeLValue<X>(scalar) - t;
+  return TensorExpressions::ScalarDataTypeLValue(scalar) - t;
 }
 
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator-(
     const X& scalar, TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t) {
   std::cout << "6" << std::endl;
-  return TensorExpressions::ScalarDataTypeLValue<X>(scalar) - std::move(t);
+  return TensorExpressions::ScalarDataTypeLValue(scalar) - std::move(t);
 }
 
 /// \ingroup TensorExpressionsGroup
@@ -532,7 +532,7 @@ template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator-(
     X&& scalar, const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t) {
   std::cout << "7" << std::endl;
-  return TensorExpressions::ScalarDataTypeRValue<X>(std::move(scalar)) - t;
+  return TensorExpressions::ScalarDataTypeRValue(std::move(scalar)) - t;
 }
 
 /// \ingroup TensorExpressionsGroup
@@ -543,7 +543,7 @@ SPECTRE_ALWAYS_INLINE auto operator-(
     X&& scalar, TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t) {
   std::cout << "8" << std::endl;
   // std::cout << "scalar : " << scalar << std::endl;
-  return TensorExpressions::ScalarDataTypeRValue<X>(std::move(scalar)) -
+  return TensorExpressions::ScalarDataTypeRValue(std::move(scalar)) -
          std::move(t);
 }
 
@@ -555,7 +555,7 @@ SPECTRE_ALWAYS_INLINE auto operator-(
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t,
     const X& scalar) {
   std::cout << "9" << std::endl;
-  return t - TensorExpressions::ScalarDataTypeLValue<X>(scalar);
+  return t - TensorExpressions::ScalarDataTypeLValue(scalar);
 }
 
 /// \ingroup TensorExpressionsGroup
@@ -568,7 +568,7 @@ SPECTRE_ALWAYS_INLINE auto operator-(
   // std::cout << "t : " << t << std::endl;
   // std::cout << "scalar : " << scalar << std::endl;
   // std::cout << "rvalue" << std::endl;
-  return t - TensorExpressions::ScalarDataTypeRValue<X>(std::move(scalar));
+  return t - TensorExpressions::ScalarDataTypeRValue(std::move(scalar));
 }
 
 /// \ingroup TensorExpressionsGroup
@@ -579,7 +579,7 @@ SPECTRE_ALWAYS_INLINE auto operator-(
     TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t, const X& scalar) {
   // std::cout << "lvalue" << std::endl;
   std::cout << "11" << std::endl;
-  return std::move(t) - TensorExpressions::ScalarDataTypeLValue<X>(scalar);
+  return std::move(t) - TensorExpressions::ScalarDataTypeLValue(scalar);
 }
 
 /// \ingroup TensorExpressionsGroup
@@ -593,5 +593,5 @@ SPECTRE_ALWAYS_INLINE auto operator-(
   // std::cout << "scalar : " << scalar << std::endl;
   // std::cout << "rvalue" << std::endl;
   return std::move(t) -
-         TensorExpressions::ScalarDataTypeRValue<X>(std::move(scalar));
+         TensorExpressions::ScalarDataTypeRValue(std::move(scalar));
 }
