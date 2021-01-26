@@ -470,31 +470,6 @@ get_first_index_positions_to_contract(
 template <typename T, typename X, typename Symm, typename IndexList,
           typename... TensorIndices>
 SPECTRE_ALWAYS_INLINE static constexpr auto contract(
-    const TensorExpression<T, X, Symm, IndexList, tmpl::list<TensorIndices...>>&
-        t) noexcept {
-  constexpr std::array<size_t, sizeof...(TensorIndices)> tensorindex_values = {
-      {TensorIndices::value...}};
-  constexpr std::pair first_index_positions_to_contract =
-      get_first_index_positions_to_contract(tensorindex_values);
-  constexpr std::pair no_indices_to_contract_sentinel{
-      std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max()};
-
-  if constexpr (first_index_positions_to_contract ==
-                no_indices_to_contract_sentinel) {
-    // There aren't any indices to contract, so we just return the input
-    return ~t;
-  } else {
-    // We have a pair of indices to be contracted
-    return contract(
-        TensorContract<first_index_positions_to_contract.first,
-                       first_index_positions_to_contract.second, T, X, Symm,
-                       IndexList, tmpl::list<TensorIndices...>>{t});
-  }
-}
-
-template <typename T, typename X, typename Symm, typename IndexList,
-          typename... TensorIndices>
-SPECTRE_ALWAYS_INLINE static constexpr auto contract(
     TensorExpression<T, X, Symm, IndexList, tmpl::list<TensorIndices...>>&&
         t) noexcept {
   constexpr std::array<size_t, sizeof...(TensorIndices)> tensorindex_values = {
@@ -507,13 +482,14 @@ SPECTRE_ALWAYS_INLINE static constexpr auto contract(
   if constexpr (first_index_positions_to_contract ==
                 no_indices_to_contract_sentinel) {
     // There aren't any indices to contract, so we just return the input
-    return ~std::move(t);
+    return ~std::forward<decltype(t)>(t);
   } else {
     // We have a pair of indices to be contracted
     return contract(
         TensorContract<first_index_positions_to_contract.first,
                        first_index_positions_to_contract.second, T, X, Symm,
-                       IndexList, tmpl::list<TensorIndices...>>{~std::move(t)});
+                       IndexList, tmpl::list<TensorIndices...>>{
+            ~std::forward<decltype(t)>(t)});
   }
 }
 }  // namespace TensorExpressions
