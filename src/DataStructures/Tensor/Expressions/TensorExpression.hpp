@@ -198,7 +198,7 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   ///
   /// \returns const TensorExpression<Derived, DataType, Symm, IndexList,
   /// ArgsList<Args...>>&
-  SPECTRE_ALWAYS_INLINE const auto& operator~() const& noexcept {
+  SPECTRE_ALWAYS_INLINE const Derived& operator~() const& noexcept {
       // std::cout << "lvalue operator~" << std::endl;
       return static_cast<const Derived&>(*this);
   }
@@ -210,7 +210,7 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   ///
   /// \returns TensorExpression<Derived, DataType, Symm, IndexList,
   /// ArgsList<Args...>>&&
-  SPECTRE_ALWAYS_INLINE auto operator~() && noexcept {
+  SPECTRE_ALWAYS_INLINE Derived&& operator~() && noexcept {
     // std::cout << "rvalue operator~" << std::endl;
     return static_cast<Derived&&>(*this);
   }

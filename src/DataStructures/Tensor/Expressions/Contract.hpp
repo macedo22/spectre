@@ -118,9 +118,13 @@ struct TensorContract
   using args_list = typename new_type::args_list;
   using structure = Tensor_detail::Structure<symmetry, index_list>;
 
-  explicit TensorContract(
-      const TensorExpression<T, X, Symm, IndexList, ArgsList>& t)
-      : t_(~t) {}
+  //   TensorContract(TensorExpression<T, X, Symm, IndexList, ArgsList> t)
+  //       : t_(~std::move(t)) {}
+  TensorContract(T t) : t_(std::move(t)) {}
+  TensorContract(const TensorContract& other) = default;
+  TensorContract(TensorContract&& other) = default;
+  TensorContract& operator=(const TensorContract& other) = default;
+  TensorContract& operator=(TensorContract&& other) = default;
   ~TensorContract() override = default;
 
   /// \brief Return the tensor multi-index of one uncontracted LHS component to
@@ -401,7 +405,7 @@ struct TensorContract
   }
 
  private:
-  const T t_;
+  T t_;
 };
 
 /*!
@@ -480,11 +484,36 @@ SPECTRE_ALWAYS_INLINE static constexpr auto contract(
     // There aren't any indices to contract, so we just return the input
     return ~t;
   } else {
-    // We have a pair of indices to be contract
+    // We have a pair of indices to be contracted
     return contract(
         TensorContract<first_index_positions_to_contract.first,
                        first_index_positions_to_contract.second, T, X, Symm,
                        IndexList, tmpl::list<TensorIndices...>>{t});
+  }
+}
+
+template <typename T, typename X, typename Symm, typename IndexList,
+          typename... TensorIndices>
+SPECTRE_ALWAYS_INLINE static constexpr auto contract(
+    TensorExpression<T, X, Symm, IndexList, tmpl::list<TensorIndices...>>&&
+        t) noexcept {
+  constexpr std::array<size_t, sizeof...(TensorIndices)> tensorindex_values = {
+      {TensorIndices::value...}};
+  constexpr std::pair first_index_positions_to_contract =
+      get_first_index_positions_to_contract(tensorindex_values);
+  constexpr std::pair no_indices_to_contract_sentinel{
+      std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max()};
+
+  if constexpr (first_index_positions_to_contract ==
+                no_indices_to_contract_sentinel) {
+    // There aren't any indices to contract, so we just return the input
+    return ~std::move(t);
+  } else {
+    // We have a pair of indices to be contracted
+    return contract(
+        TensorContract<first_index_positions_to_contract.first,
+                       first_index_positions_to_contract.second, T, X, Symm,
+                       IndexList, tmpl::list<TensorIndices...>>{~std::move(t)});
   }
 }
 }  // namespace TensorExpressions
