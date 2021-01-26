@@ -9,6 +9,7 @@
 
 #include <array>
 #include <cstddef>
+// #include <iostream>
 
 #include "DataStructures/Tensor/IndexType.hpp"
 #include "Utilities/ForceInline.hpp"
@@ -197,8 +198,21 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   ///
   /// \returns const TensorExpression<Derived, DataType, Symm, IndexList,
   /// ArgsList<Args...>>&
-  SPECTRE_ALWAYS_INLINE const auto& operator~() const noexcept {
+  SPECTRE_ALWAYS_INLINE const auto& operator~() const& noexcept {
+      // std::cout << "lvalue operator~" << std::endl;
       return static_cast<const Derived&>(*this);
+  }
+  // @}
+
+  // @{
+  /// Derived is casted down to the derived class. This is enabled by the
+  /// [CRTP](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern)
+  ///
+  /// \returns TensorExpression<Derived, DataType, Symm, IndexList,
+  /// ArgsList<Args...>>&&
+  SPECTRE_ALWAYS_INLINE auto operator~() && noexcept {
+    // std::cout << "rvalue operator~" << std::endl;
+    return static_cast<Derived&&>(*this);
   }
   // @}
 };
