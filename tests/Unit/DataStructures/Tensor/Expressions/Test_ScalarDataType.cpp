@@ -13,6 +13,7 @@
 #include "DataStructures/Tensor/Expressions/AddSubtract.hpp"
 #include "DataStructures/Tensor/Expressions/Contract.hpp"
 #include "DataStructures/Tensor/Expressions/Evaluate.hpp"
+#include "DataStructures/Tensor/Expressions/Product.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 
@@ -153,27 +154,56 @@ void test_scalar_minus_tensor(DataType&& scalar,
   CHECK(actual_difference.get() == expected_difference);
 }
 
+template <typename DataType,
+          typename DecayedDataType = typename std::decay<DataType>::type>
+void test_tensor_times_scalar(DataType&& scalar,
+                             const Tensor<DecayedDataType>& tensor) noexcept {
+  //std::cout << "test_tensor_plus_scalar" << std::endl;
+  const DecayedDataType expected_product = tensor.get() * scalar;
+  const Tensor<DecayedDataType> actual_product =
+      TensorExpressions::evaluate(tensor() * std::forward<DataType>(scalar));
+  // std::cout << "actual_sum tensor : " << actual_sum << std::endl;
+  CHECK(actual_product.get() == expected_product);
+}
+
+template <typename DataType,
+          typename DecayedDataType = typename std::decay<DataType>::type>
+void test_scalar_times_tensor(DataType&& scalar,
+                             const Tensor<DecayedDataType>& tensor) noexcept {
+  //std::cout << "test_scalar_plus_tensor" << std::endl;
+  const DecayedDataType expected_product = scalar * tensor.get();
+  const Tensor<DecayedDataType> actual_product =
+      TensorExpressions::evaluate(std::forward<DataType>(scalar) * tensor());
+  CHECK(actual_product.get() == expected_product);
+}
+
 template <typename DataType>
-void test_addsub_scalar_lvalue(const DataType& scalar,
+void test_op_scalar_lvalue(const DataType& scalar,
                                const Tensor<DataType>& tensor) noexcept {
   test_tensor_plus_scalar(scalar, tensor);
   test_scalar_plus_tensor(scalar, tensor);
   test_tensor_minus_scalar(scalar, tensor);
   test_scalar_minus_tensor(scalar, tensor);
+  test_tensor_times_scalar(scalar, tensor);
+  test_scalar_times_tensor(scalar, tensor);
 }
 
-void test_addsub_scalar_rvalue(const Tensor<double>& tensor) noexcept {
+void test_op_scalar_rvalue(const Tensor<double>& tensor) noexcept {
   test_tensor_plus_scalar(-2.5, tensor);
   test_scalar_plus_tensor(0.8, tensor);
   test_tensor_minus_scalar(1.2, tensor);
   test_scalar_minus_tensor(3.4, tensor);
+  test_tensor_times_scalar(-6.7, tensor);
+  test_scalar_times_tensor(0.9, tensor);
 }
 
-void test_addsub_scalar_rvalue(const Tensor<DataVector>& tensor) noexcept {
+void test_op_scalar_rvalue(const Tensor<DataVector>& tensor) noexcept {
   test_tensor_plus_scalar(DataVector{2.0, -1.1, 12.4}, tensor);
   test_scalar_plus_tensor(DataVector{-7.2, 4.9, 0.0}, tensor);
   test_tensor_minus_scalar(DataVector{0.5, -2.7, 3.6}, tensor);
   test_scalar_minus_tensor(DataVector{0.0, 9.2, -0.7}, tensor);
+  test_tensor_times_scalar(DataVector{6.1, -5.2, 0.0}, tensor);
+  test_scalar_times_tensor(DataVector{-8.4, 0.0, 4.7}, tensor);
 }
 }  // namespace
 
@@ -181,10 +211,10 @@ SPECTRE_TEST_CASE(
     "Unit.DataStructures.Tensor.Expression.AddSubtractScalarDataType",
     "[DataStructures][Unit]") {
   // put back below 4 lines
-//   const Tensor<double> tensor1{{{7.4}}};
-//   const double scalar1 = 8.2;
-//   test_addsub_scalar_lvalue(scalar1, tensor1);
-//   test_addsub_scalar_rvalue(tensor1);
+  const Tensor<double> tensor1{{{7.4}}};
+  const double scalar1 = 8.2;
+  test_op_scalar_lvalue(scalar1, tensor1);
+  test_op_scalar_rvalue(tensor1);
 
   // auto expr = 5000.0 + tensor1() + 10000.0;
 
@@ -195,12 +225,12 @@ SPECTRE_TEST_CASE(
 
   // put back below 4 lines
   const Tensor<DataVector> tensor2{{{DataVector{12.3, -1.1, -2.4}}}};
-//   const DataVector scalar2{0.0, -7.8, 6.9};
-//   test_addsub_scalar_lvalue(scalar2, tensor2);
-//   test_addsub_scalar_rvalue(tensor2);
+  const DataVector scalar2{0.0, -7.8, 6.9};
+  test_op_scalar_lvalue(scalar2, tensor2);
+  test_op_scalar_rvalue(tensor2);
 
-  auto expr = tensor2() + DataVector{1.0, 2.0, 3.0} + tensor2();
-  auto res = TensorExpressions::evaluate(expr);
+//   auto expr = tensor2() + DataVector{1.0, 2.0, 3.0} + tensor2();
+//   auto res = TensorExpressions::evaluate(expr);
 
   // test_tensor_plus_scalar(-2.5, tensor1);
   // test_scalar_plus_tensor(0.8, tensor1);
