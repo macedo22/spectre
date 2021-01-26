@@ -269,54 +269,65 @@ SPECTRE_ALWAYS_INLINE auto operator*(
       TensorExpressions::OuterProduct<T1, T2>(~std::move(t1), ~std::move(t2)));
 }
 
-template <typename T, typename X>
+template <typename T, typename X, typename ArgsList>
 SPECTRE_ALWAYS_INLINE auto operator*(
     const X& scalar,
-    const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t) {
+    const TensorExpression<T, X, typename T::symmetry, typename T::index_list,
+                           ArgsList>& t) {
   return TensorExpressions::ScalarDataTypeLValue(scalar) * t;
 }
 
-template <typename T, typename X>
+template <typename T, typename X, typename ArgsList>
 SPECTRE_ALWAYS_INLINE auto operator*(
-    const X& scalar, TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t) {
+    const X& scalar, TensorExpression<T, X, typename T::symmetry,
+                                      typename T::index_list, ArgsList>&& t) {
   return TensorExpressions::ScalarDataTypeLValue(scalar) * std::move(t);
 }
 
-template <typename T, typename X>
+template <typename T, typename X, typename ArgsList>
 SPECTRE_ALWAYS_INLINE auto operator*(
-    X&& scalar, const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t) {
+    X&& scalar, const TensorExpression<T, X, typename T::symmetry,
+                                       typename T::index_list, ArgsList>& t) {
   return TensorExpressions::ScalarDataTypeRValue(std::move(scalar)) * t;
 }
 
-template <typename T, typename X>
+template <typename T, typename X, typename ArgsList>
 SPECTRE_ALWAYS_INLINE auto operator*(
-    X&& scalar, TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t) {
+    X&& scalar, TensorExpression<T, X, typename T::symmetry,
+                                 typename T::index_list, ArgsList>&& t) {
   return TensorExpressions::ScalarDataTypeRValue(std::move(scalar)) *
          std::move(t);
 }
 
-template <typename T, typename X>
+template <typename T, typename X, typename ArgsList>
 SPECTRE_ALWAYS_INLINE auto operator*(
-    const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t,
+    const TensorExpression<T, X, typename T::symmetry, typename T::index_list,
+                           ArgsList>& t,
     const X& scalar) {
   return t * TensorExpressions::ScalarDataTypeLValue(scalar);
 }
 
-template <typename T, typename X>
+template <typename T, typename X, typename ArgsList>
 SPECTRE_ALWAYS_INLINE auto operator*(
-    const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t, X&& scalar) {
+    const TensorExpression<T, X, typename T::symmetry, typename T::index_list,
+                           ArgsList>& t,
+    X&& scalar) {
   return t * TensorExpressions::ScalarDataTypeRValue(std::move(scalar));
 }
 
-template <typename T, typename X>
+template <typename T, typename X, typename ArgsList>
 SPECTRE_ALWAYS_INLINE auto operator*(
-    TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t, const X& scalar) {
+    TensorExpression<T, X, typename T::symmetry, typename T::index_list,
+                     ArgsList>&& t,
+    const X& scalar) {
   return std::move(t) * TensorExpressions::ScalarDataTypeLValue(scalar);
 }
 
-template <typename T, typename X>
+template <typename T, typename X, typename ArgsList>
 SPECTRE_ALWAYS_INLINE auto operator*(
-    TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t, X&& scalar) {
+    TensorExpression<T, X, typename T::symmetry, typename T::index_list,
+                     ArgsList>&& t,
+    X&& scalar) {
   return std::move(t) *
          TensorExpressions::ScalarDataTypeRValue(std::move(scalar));
 }
