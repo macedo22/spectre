@@ -18,15 +18,16 @@
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Utilities/Requires.hpp"
 
-// TODO update create_tensor with the version in Test_Product.cpp
 namespace {
 template <typename... Ts>
-void create_tensor(gsl::not_null<Tensor<double, Ts...>*> tensor) noexcept {
+void assign_unique_values_to_tensor(
+    gsl::not_null<Tensor<double, Ts...>*> tensor) noexcept {
   std::iota(tensor->begin(), tensor->end(), 0.0);
 }
 
 template <typename... Ts>
-void create_tensor(gsl::not_null<Tensor<DataVector, Ts...>*> tensor) noexcept {
+void assign_unique_values_to_tensor(
+    gsl::not_null<Tensor<DataVector, Ts...>*> tensor) noexcept {
   double value = 0.0;
   for (auto index_it = tensor->begin(); index_it != tensor->end(); index_it++) {
     for (auto vector_it = index_it->begin(); vector_it != index_it->end();
@@ -75,7 +76,7 @@ void test_addsub_scalar_datatype(
   //          index_list<SpatialIndex<3, UpLo::Up, Frame::Inertial>,
   //                     SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>
   //       Rul(used_for_size);
-  //   create_tensor(make_not_null(&Rul));
+  //   assign_unique_values_to_tensor(make_not_null(&Rul));
 
   //   const auto RIi_expr = Rul(ti_I, ti_i);
   //   const Tensor<DataType> RIi_contracted =
@@ -96,7 +97,7 @@ void test_addsub_scalar_datatype(
   //          index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
   //                     SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
   //       Rlu(used_for_size);
-  //   create_tensor(make_not_null(&Rlu));
+  //   assign_unique_values_to_tensor(make_not_null(&Rlu));
 
   //   const auto RgG_expr = Rlu(ti_g, ti_G);
   //   const Tensor<DataType> RgG_contracted =
@@ -266,7 +267,7 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ScalarDataType",
          index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
                     SpatialIndex<3, UpLo::Up, Frame::Grid>>>
       product_test_tensor1(1_st);
-  create_tensor(make_not_null(&product_test_tensor1));
+  assign_unique_values_to_tensor(make_not_null(&product_test_tensor1));
   const double product_test_scalar1 = 2.3;
   test_product_scalar_lvalue(product_test_scalar1, product_test_tensor1);
   test_product_scalar_rvalue(product_test_tensor1);
@@ -275,7 +276,7 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.ScalarDataType",
          index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Grid>,
                     SpatialIndex<3, UpLo::Up, Frame::Grid>>>
       product_test_tensor2(3_st);
-  create_tensor(make_not_null(&product_test_tensor2));
+  assign_unique_values_to_tensor(make_not_null(&product_test_tensor2));
   const DataVector product_test_scalar2{1.1, 0.0, -3.9};
   test_product_scalar_lvalue(product_test_scalar2, product_test_tensor2);
   test_product_scalar_rvalue(product_test_tensor2);
