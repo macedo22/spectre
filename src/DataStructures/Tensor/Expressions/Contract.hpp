@@ -118,9 +118,7 @@ struct TensorContract
   using args_list = typename new_type::args_list;
   using structure = Tensor_detail::Structure<symmetry, index_list>;
 
-  explicit TensorContract(
-      const TensorExpression<T, X, Symm, IndexList, ArgsList>& t)
-      : t_(~t) {}
+  explicit TensorContract(T t) : t_(std::move(t)) {}
   TensorContract(const TensorContract& other) = default;
   TensorContract(TensorContract&& other) = default;
   TensorContract& operator=(const TensorContract& other) = default;
@@ -470,7 +468,7 @@ get_first_index_positions_to_contract(
 template <typename T, typename X, typename Symm, typename IndexList,
           typename... TensorIndices>
 SPECTRE_ALWAYS_INLINE static constexpr auto contract(
-    const TensorExpression<T, X, Symm, IndexList, tmpl::list<TensorIndices...>>&
+    TensorExpression<T, X, Symm, IndexList, tmpl::list<TensorIndices...>>&&
         t) noexcept {
   constexpr std::array<size_t, sizeof...(TensorIndices)> tensorindex_values = {
       {TensorIndices::value...}};
@@ -482,13 +480,13 @@ SPECTRE_ALWAYS_INLINE static constexpr auto contract(
   if constexpr (first_index_positions_to_contract ==
                 no_indices_to_contract_sentinel) {
     // There aren't any indices to contract, so we just return the input
-    return ~t;
+    return ~std::move(t);
   } else {
-    // We have a pair of indices to be contract
+    // We have a pair of indices to be contracted
     return contract(
         TensorContract<first_index_positions_to_contract.first,
                        first_index_positions_to_contract.second, T, X, Symm,
-                       IndexList, tmpl::list<TensorIndices...>>{t});
+                       IndexList, tmpl::list<TensorIndices...>>{~std::move(t)});
   }
 }
 }  // namespace TensorExpressions

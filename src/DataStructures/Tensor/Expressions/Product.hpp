@@ -230,10 +230,10 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
 /// expressions
 template <typename T1, typename T2, typename ArgsList1, typename ArgsList2>
 SPECTRE_ALWAYS_INLINE auto operator*(
-    const TensorExpression<T1, typename T1::type, typename T1::symmetry,
-                           typename T1::index_list, ArgsList1>& t1,
-    const TensorExpression<T2, typename T2::type, typename T2::symmetry,
-                           typename T2::index_list, ArgsList2>& t2) {
+    TensorExpression<T1, typename T1::type, typename T1::symmetry,
+                     typename T1::index_list, ArgsList1>&& t1,
+    TensorExpression<T2, typename T2::type, typename T2::symmetry,
+                     typename T2::index_list, ArgsList2>&& t2) {
   return TensorExpressions::contract(
-      TensorExpressions::OuterProduct<T1, T2>(~t1, ~t2));
+      TensorExpressions::OuterProduct<T1, T2>(~std::move(t1), ~std::move(t2)));
 }

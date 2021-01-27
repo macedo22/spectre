@@ -121,14 +121,15 @@ template <typename T1, typename T2, typename X, typename Symm1, typename Symm2,
           typename IndexList1, typename IndexList2, typename Args1,
           typename Args2>
 SPECTRE_ALWAYS_INLINE auto operator+(
-    const TensorExpression<T1, X, Symm1, IndexList1, Args1>& t1,
-    const TensorExpression<T2, X, Symm2, IndexList2, Args2>& t2) {
+    TensorExpression<T1, X, Symm1, IndexList1, Args1>&& t1,
+    TensorExpression<T2, X, Symm2, IndexList2, Args2>&& t2) {
   static_assert(tmpl::size<Args1>::value == tmpl::size<Args2>::value,
                 "Tensor addition is only possible with the same rank tensors");
   static_assert(tmpl::equal_members<Args1, Args2>::value,
                 "The indices when adding two tensors must be equal. This error "
                 "occurs from expressions like A(_a, _b) + B(_c, _a)");
-  return TensorExpressions::AddSub<T1, T2, Args1, Args2, 1>(~t1, ~t2);
+  return TensorExpressions::AddSub<T1, T2, Args1, Args2, 1>(~std::move(t1),
+                                                            ~std::move(t2));
 }
 
 /*!
@@ -138,12 +139,13 @@ template <typename T1, typename T2, typename X, typename Symm1, typename Symm2,
           typename IndexList1, typename IndexList2, typename Args1,
           typename Args2>
 SPECTRE_ALWAYS_INLINE auto operator-(
-    const TensorExpression<T1, X, Symm1, IndexList1, Args1>& t1,
-    const TensorExpression<T2, X, Symm2, IndexList2, Args2>& t2) {
+    TensorExpression<T1, X, Symm1, IndexList1, Args1>&& t1,
+    TensorExpression<T2, X, Symm2, IndexList2, Args2>&& t2) {
   static_assert(tmpl::size<Args1>::value == tmpl::size<Args2>::value,
                 "Tensor addition is only possible with the same rank tensors");
   static_assert(tmpl::equal_members<Args1, Args2>::value,
                 "The indices when adding two tensors must be equal. This error "
                 "occurs from expressions like A(_a, _b) - B(_c, _a)");
-  return TensorExpressions::AddSub<T1, T2, Args1, Args2, -1>(~t1, ~t2);
+  return TensorExpressions::AddSub<T1, T2, Args1, Args2, -1>(~std::move(t1),
+                                                             ~std::move(t2));
 }
