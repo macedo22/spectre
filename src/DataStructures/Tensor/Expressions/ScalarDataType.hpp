@@ -2,7 +2,7 @@
 // See LICENSE.txt for details.
 
 /// \file
-/// Defines expressions that represent scalars and DataVectors
+/// Defines expressions that represent doubles and DataVectors
 
 #pragma once
 
@@ -19,8 +19,11 @@
 
 namespace TensorExpressions {
 /// \ingroup TensorExpressionsGroup
-/// \brief Defines an expression representating a scalar or a DataVector of
-/// scalars
+/// \brief Defines an expression representing a `double` or DataVector lvalue
+///
+/// \details
+/// Assumes the scalar used to construct the expression outlives the
+/// expression, itself
 ///
 /// \tparam DataType the type being represented, a `double` or DataVector
 template <typename DataType,
@@ -36,11 +39,13 @@ struct ScalarDataTypeLValue
   using structure = Tensor_detail::Structure<symmetry>;
   static constexpr auto num_tensor_indices = 0;
 
-  /// \brief Create an expression from a scalar type l-value
-  ScalarDataTypeLValue(const DataType& t) : t_(&t) {
-    // std::cout << "lvalue constructor, t_ is : " << t_ << ", t is " << t
-    //           << std::endl;
-  }
+  /// \brief Create an expression from a scalar type lvalue
+  ScalarDataTypeLValue(const DataType& t) : t_(&t) {}
+  ScalarDataTypeLValue(const ScalarDataTypeLValue& other) = default;
+  ScalarDataTypeLValue(ScalarDataTypeLValue&& other) = default;
+  ScalarDataTypeLValue& operator=(const ScalarDataTypeLValue& other) = default;
+  ScalarDataTypeLValue& operator=(ScalarDataTypeLValue&& other) = default;
+  ~ScalarDataTypeLValue() override = default;
 
   /// \brief Returns the value represented by the expression
   ///
@@ -58,35 +63,23 @@ struct ScalarDataTypeLValue
   SPECTRE_ALWAYS_INLINE const DataType& get(
       const size_t storage_index) const noexcept;
 
-  // template <class...T>
-  // struct td;
-
   template <>
   SPECTRE_ALWAYS_INLINE const DataType& get<structure>(
       const size_t /*storage_index*/) const noexcept {
-    // std::cout << "in lvalue get" << std::endl;
-    // std::cout << "t_ : " << t_ << std::endl;
-    // std::cout << "t_ptr_ : " << t_ptr_ << std::endl;
-    // std::cout << "*t_ptr_ : " << *t_ptr_ << std::endl;
-    // td<DataType>idk;
     return *t_;
   }
 
  private:
-  //   /// The scalar type value being represented as an expression. If the
-  //   /// expression was constructed with an r-value, this will store the moved
-  //   /// value. Otherwise, the represented value is instead referred to by
-  //   /// `t_ptr_`.
-  //   const DataType t_;
-  /// Refers to the scalar type value being represented as an expression. If the
-  /// expression was constructed with an r-value, this will point to `t_`.
-  /// Otherwise, it points to an outside value being represented.
+  /// Refers to the externally stored scalar type lvalue being represented as
+  /// an expression
   const DataType* const t_ = nullptr;
 };
 
 /// \ingroup TensorExpressionsGroup
-/// \brief Defines an expression representating a scalar or a DataVector of
-/// scalars
+/// \brief Defines an expression representing a `double` or DataVector rvalue
+///
+/// \details
+/// Unless copy constructed, owns the scalar used to construct the expression
 ///
 /// \tparam DataType the type being represented, a `double` or DataVector
 template <typename DataType,
@@ -102,13 +95,18 @@ struct ScalarDataTypeRValue
   using structure = Tensor_detail::Structure<symmetry>;
   static constexpr auto num_tensor_indices = 0;
 
-  /// \brief Create an expression from a scalar type r-value
+  /// \brief Create an expression from a scalar type rvalue
   ScalarDataTypeRValue(DataType t) : t_(std::move(t)), t_ptr_(&t_) {
     std::cout << "rvalue constructor, t_ is : " << t_ << ", t is " << t
               << std::endl;
   }
 
-  // copy constructor
+  /// \brief Copy constructor
+  ///
+  /// \details
+  /// Instead of deep copying the other ScalarDataTypeRValue, this will simply
+  /// copy the other's pointer. This assumes the other ScalarDataTypeRValue
+  /// being copied from will outlive this new ScalarDataTypeRValue.
   ScalarDataTypeRValue(const ScalarDataTypeRValue& other) {
     if constexpr (std::is_same_v<DataType, double>) {
       t_ = std::numeric_limits<double>::signaling_NaN();
@@ -116,23 +114,22 @@ struct ScalarDataTypeRValue
       t_ = DataVector(1, std::numeric_limits<double>::signaling_NaN());
     }
     t_ptr_ = other.t_ptr_;
-    std::cout << "rvalue copy constructor, *t_ptr_ is : " << *t_ptr_
-              << std::endl;
   }
 
-  // ScalarDataTypeRValue(const ScalarDataTypeRValue<DataVector>& other) =
-  // delete;
-
-  // Note: if copy constructor is defined, this must be too, or move
-  // will default to the copy? seems to be this way from experimenting,
-  // but would be good to confirm otherwise
+  /// \brief Move constructor
+  ///
+  /// \details
+  /// This takes ownership of the other ScalarDataTypeRValue's value, which is
+  /// relevant for when `DataType==DataVector`.
   ScalarDataTypeRValue(ScalarDataTypeRValue&& other)
-      : t_(std::move(other.t_)), t_ptr_(&t_) {
-    std::cout << "rvalue move constructor, *t_ptr_ is : " << *t_ptr_
-              << ", t_ is : " << t_ << std::endl;
-  }
+      : t_(std::move(other.t_)), t_ptr_(&t_) {}
 
-  // copy assignment
+  /// \brief Copy assignment operator
+  ///
+  /// \details
+  /// Instead of deep copying the other ScalarDataTypeRValue, this will simply
+  /// copy the other's pointer. This assumes the other ScalarDataTypeRValue
+  /// being copied from will outlive this new ScalarDataTypeRValue.
   ScalarDataTypeRValue& operator=(const ScalarDataTypeRValue& other) {
     std::cout << "rvalue copy assignment " << std::endl;
     if (this != &other) {
@@ -143,23 +140,23 @@ struct ScalarDataTypeRValue
       }
       t_ptr_ = other.t_ptr_;
     }
-    std::cout << "end of rvalue copy assignment, *t_ptr_ is : " << *t_ptr_
-              << std::endl;
     return *this;
   }
 
-  // move assignment
+  /// \brief Move assignment operator
+  ///
+  /// \details
+  /// This takes ownership of the other ScalarDataTypeRValue's value, which is
+  /// relevant for when `DataType==DataVector`.
   ScalarDataTypeRValue& operator=(ScalarDataTypeRValue&& other) {
-    // std::cout << "rvalue move assignment "<< std::endl;
     if (this != &other) {
-      // double or DataVector rvalue
       t_ = std::move(other.t_);
       t_ptr_ = &t_;
     }
-    // std::cout << "end of rvalue move assignment, *t_ptr_ is : " << *t_ptr_ <<
-    // std::endl;
     return *this;
   }
+
+  ~ScalarDataTypeRValue() override = default;
 
   /// \brief Returns the value represented by the expression
   ///
@@ -177,30 +174,25 @@ struct ScalarDataTypeRValue
   SPECTRE_ALWAYS_INLINE const DataType& get(
       const size_t storage_index) const noexcept;
 
-  // template <class...T>
-  // struct td;
-
   template <>
   SPECTRE_ALWAYS_INLINE const DataType& get<structure>(
       const size_t /*storage_index*/) const noexcept {
-    // std::cout << "in rvalue get" << std::endl;
-    // std::cout << "t_ : " << t_ << std::endl;
-    // std::cout << "t_ptr_ : " << t_ptr_ << std::endl;
-    // std::cout << "*t_ptr_ : " << *t_ptr_ << std::endl;
-    // td<DataType>idk;
     return *t_ptr_;
   }
 
  private:
-  /// The scalar type value being represented as an expression. If the
-  /// expression was constructed with an r-value, this will store the moved
-  /// value. Otherwise, the represented value is instead referred to by
-  /// `t_ptr_`.
+  /// If the expression was constructed with a scalar rvalue, this will store
+  /// the moved value. Otherwise, if the expression was copy or move
+  /// constructed from another ScalarDataTypeRValue, this stores NaN in the
+  /// case `DataType==double` and `DataVector{NaN}` in the case `DataType==NaN`.
   DataType t_;
   /// Refers to the scalar type value being represented as an expression.
-  /// If the
-  /// expression was constructed with an r-value, this will point to `t_`.
-  /// Otherwise, it points to an outside value being represented.
+  /// If the expression was constructed with a scalar rvalue, this refer to the
+  /// internally stored value, `t_`. Otherwise, if the expression was copy or
+  /// move constructed from another ScalarDataTypeRValue, this refers to the
+  /// scalar that the other expression's `t_ptr_` refers to, which may be its
+  /// own `t_`, or another ScalarDataTypeRValue's `t_`, if it was also copy or
+  /// move constructed.
   const DataType* t_ptr_ = nullptr;
 };
 }  // namespace TensorExpressions

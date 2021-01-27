@@ -120,6 +120,17 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
 /// \brief Returns the tensor expression representing the sum of two tensor
 /// expressions
 ///
+/// \details
+/// There are four separate overloads for the sum of two tensor expressions,
+/// where this overload is one of them:
+/// - `operator+(const Expression& t1, const Expression& t2)`
+/// - `operator+(const Expression& t1, Expression&& t2)`
+/// - `operator+(Expression&& t1, const Expression& t2)`
+/// - `operator+(Expression&& t1, Expression&& t2)`
+///
+/// The last three overloads are necessary so that if an rvalue operand is a
+/// ScalarDataTypeRValue containing a DataVector, it is properly moved.
+///
 /// \tparam T1 the derived TensorExpression type of the first operand of the sum
 /// \tparam T2 the derived TensorExpression type of the second operand of the
 /// sum
@@ -145,13 +156,12 @@ SPECTRE_ALWAYS_INLINE auto operator+(
   static_assert(tmpl::equal_members<ArgsList1, ArgsList2>::value,
                 "The indices when adding two tensors must be equal. This error "
                 "occurs from expressions like A(_a, _b) + B(_c, _a)");
-  std::cout << "1" << std::endl;
   return TensorExpressions::AddSub<T1, T2, ArgsList1, ArgsList2, 1>(~t1, ~t2);
-}  // R(ti_a) + T(ti_b)
-// delete const reference, delete non-const reference version of above?
-// take t1 and t2 by value and move?
-// take t1 and t2 by rvalue? (and move)
+}
 
+/// \ingroup TensorExpressionsGroup
+/// \copydoc operator+(const TensorExpression<T1, X, Symm1, IndexList1,
+/// ArgsList1>&,const TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>&)
 template <typename T1, typename T2, typename X, typename Symm1, typename Symm2,
           typename IndexList1, typename IndexList2, typename ArgsList1,
           typename ArgsList2>
@@ -163,11 +173,13 @@ SPECTRE_ALWAYS_INLINE auto operator+(
   static_assert(tmpl::equal_members<ArgsList1, ArgsList2>::value,
                 "The indices when adding two tensors must be equal. This error "
                 "occurs from expressions like A(_a, _b) + B(_c, _a)");
-  std::cout << "2" << std::endl;
   return TensorExpressions::AddSub<T1, T2, ArgsList1, ArgsList2, 1>(
       ~t1, ~std::move(t2));
 }
 
+/// \ingroup TensorExpressionsGroup
+/// \copydoc operator+(const TensorExpression<T1, X, Symm1, IndexList1,
+/// ArgsList1>&,const TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>&)
 template <typename T1, typename T2, typename X, typename Symm1, typename Symm2,
           typename IndexList1, typename IndexList2, typename ArgsList1,
           typename ArgsList2>
@@ -179,11 +191,13 @@ SPECTRE_ALWAYS_INLINE auto operator+(
   static_assert(tmpl::equal_members<ArgsList1, ArgsList2>::value,
                 "The indices when adding two tensors must be equal. This error "
                 "occurs from expressions like A(_a, _b) + B(_c, _a)");
-  std::cout << "3" << std::endl;
   return TensorExpressions::AddSub<T1, T2, ArgsList1, ArgsList2, 1>(
       ~std::move(t1), ~t2);
 }
 
+/// \ingroup TensorExpressionsGroup
+/// \copydoc operator+(const TensorExpression<T1, X, Symm1, IndexList1,
+/// ArgsList1>&,const TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>&)
 template <typename T1, typename T2, typename X, typename Symm1, typename Symm2,
           typename IndexList1, typename IndexList2, typename ArgsList1,
           typename ArgsList2>
@@ -195,7 +209,6 @@ SPECTRE_ALWAYS_INLINE auto operator+(
   static_assert(tmpl::equal_members<ArgsList1, ArgsList2>::value,
                 "The indices when adding two tensors must be equal. This error "
                 "occurs from expressions like A(_a, _b) + B(_c, _a)");
-  std::cout << "4" << std::endl;
   return TensorExpressions::AddSub<T1, T2, ArgsList1, ArgsList2, 1>(
       ~std::move(t1), ~std::move(t2));
 }
@@ -213,16 +226,20 @@ SPECTRE_ALWAYS_INLINE auto operator+(
 /// - `R(ti_A, ti_a)`
 /// - `(R(ti_A, ti_B) * S(ti_a, ti_b))`
 ///
-/// There are four separate overloads for the sum of a tensor expression and a
-/// a `double` or DataVector, where this function is one of them:
+/// There are eight separate overloads for the sum of a tensor expression and a
+/// a `double` or DataVector, where this overload is one of them:
 /// - `operator+(const X& scalar, const Expression& t)`
-/// - `operator+(const Expression& t, const X& scalar)`
+/// - `operator+(const X& scalar, Expression&& t)`
 /// - `operator+(X&& scalar, const Expression& t)`
+/// - `operator+(X&& scalar, Expression&& t)`
+/// - `operator+(const Expression& t, const X& scalar)`
 /// - `operator+(const Expression& t, X&& scalar)`
+/// - `operator+(Expression&& t, const X& scalar)`
+/// - `operator+(Expression&& t, X&& scalar)`
 ///
-/// The last two overloads are necessary so that DataVector r-values can be
-/// moved to an expression instead of the expression pointing to an object that
-/// will go out of scope.
+/// The last overloads with rvalue arguments are necessary so that DataVector
+/// rvalues can be moved into a ScalarDataTypeRValue expression instead of going
+/// out of scope.
 ///
 /// \tparam T the derived TensorExpression type of the tensor expression operand
 /// of the sum
@@ -235,14 +252,15 @@ template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     const X& scalar,
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t) {
-  std::cout << "5" << std::endl;
   return TensorExpressions::ScalarDataTypeLValue(scalar) + t;
 }
 
+/// \ingroup TensorExpressionsGroup
+/// \copydoc operator+(const X&,const TensorExpression<T, X, tmpl::list<>,
+/// tmpl::list<>>&)
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     const X& scalar, TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t) {
-  std::cout << "6" << std::endl;
   return TensorExpressions::ScalarDataTypeLValue(scalar) + std::move(t);
 }
 
@@ -252,7 +270,6 @@ SPECTRE_ALWAYS_INLINE auto operator+(
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     X&& scalar, const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t) {
-  std::cout << "7" << std::endl;
   return TensorExpressions::ScalarDataTypeRValue(std::move(scalar)) + t;
 }
 
@@ -262,8 +279,6 @@ SPECTRE_ALWAYS_INLINE auto operator+(
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     X&& scalar, TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t) {
-  std::cout << "8" << std::endl;
-  // std::cout << "scalar : " << scalar << std::endl;
   return TensorExpressions::ScalarDataTypeRValue(std::move(scalar)) +
          std::move(t);
 }
@@ -275,7 +290,6 @@ template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t,
     const X& scalar) {
-  std::cout << "9" << std::endl;
   return t + TensorExpressions::ScalarDataTypeLValue(scalar);
 }
 
@@ -285,10 +299,6 @@ SPECTRE_ALWAYS_INLINE auto operator+(
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t, X&& scalar) {
-  std::cout << "10" << std::endl;
-  // std::cout << "t : " << t << std::endl;
-  // std::cout << "scalar : " << scalar << std::endl;
-  // std::cout << "rvalue" << std::endl;
   return t + TensorExpressions::ScalarDataTypeRValue(std::move(scalar));
 }
 
@@ -298,14 +308,6 @@ SPECTRE_ALWAYS_INLINE auto operator+(
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t, const X& scalar) {
-  // std::cout << "lvalue" << std::endl;
-  std::cout << "11" << std::endl;
-  // decltype(std::forward<TensorExpression<T, X, tmpl::list<>,
-  // tmpl::list<>>&&>(
-  //            t)) x = "hello";
-  // decltype(~(std::forward<TensorExpression<T, X, tmpl::list<>,
-  // tmpl::list<>>&&>(
-  //            t))) y = "hello";
   return std::move(t) + TensorExpressions::ScalarDataTypeLValue(scalar);
 }
 
@@ -315,10 +317,6 @@ SPECTRE_ALWAYS_INLINE auto operator+(
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator+(
     TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t, X&& scalar) {
-  std::cout << "12" << std::endl;
-  // std::cout << "t : " << t << std::endl;
-  // std::cout << "scalar : " << scalar << std::endl;
-  // std::cout << "rvalue" << std::endl;
   return std::move(t) +
          TensorExpressions::ScalarDataTypeRValue(std::move(scalar));
 }
@@ -326,6 +324,17 @@ SPECTRE_ALWAYS_INLINE auto operator+(
 /// \ingroup TensorExpressionsGroup
 /// \brief Returns the tensor expression representing the difference of two
 /// tensor expressions
+///
+/// \details
+/// There are four separate overloads for the sum of two tensor expressions,
+/// where this overload is one of them:
+/// - `operator-(const Expression& t1, const Expression& t2)`
+/// - `operator-(const Expression& t1, Expression&& t2)`
+/// - `operator-(Expression&& t1, const Expression& t2)`
+/// - `operator-(Expression&& t1, Expression&& t2)`
+///
+/// The last three overloads are necessary so that if an rvalue operand is a
+/// ScalarDataTypeRValue containing a DataVector, it is properly moved.
 ///
 /// \tparam T1 the derived TensorExpression type of the first operand of the
 /// difference
@@ -354,10 +363,12 @@ SPECTRE_ALWAYS_INLINE auto operator-(
   static_assert(tmpl::equal_members<ArgsList1, ArgsList2>::value,
                 "The indices when adding two tensors must be equal. This error "
                 "occurs from expressions like A(_a, _b) + B(_c, _a)");
-  std::cout << "1" << std::endl;
   return TensorExpressions::AddSub<T1, T2, ArgsList1, ArgsList2, -1>(~t1, ~t2);
 }
 
+/// \ingroup TensorExpressionsGroup
+/// \copydoc operator-(const TensorExpression<T1, X, Symm1, IndexList1,
+/// ArgsList1>&,const TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>&)
 template <typename T1, typename T2, typename X, typename Symm1, typename Symm2,
           typename IndexList1, typename IndexList2, typename ArgsList1,
           typename ArgsList2>
@@ -369,11 +380,13 @@ SPECTRE_ALWAYS_INLINE auto operator-(
   static_assert(tmpl::equal_members<ArgsList1, ArgsList2>::value,
                 "The indices when adding two tensors must be equal. This error "
                 "occurs from expressions like A(_a, _b) + B(_c, _a)");
-  std::cout << "2" << std::endl;
   return TensorExpressions::AddSub<T1, T2, ArgsList1, ArgsList2, -1>(
       ~t1, ~std::move(t2));
 }
 
+/// \ingroup TensorExpressionsGroup
+/// \copydoc operator-(const TensorExpression<T1, X, Symm1, IndexList1,
+/// ArgsList1>&,const TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>&)
 template <typename T1, typename T2, typename X, typename Symm1, typename Symm2,
           typename IndexList1, typename IndexList2, typename ArgsList1,
           typename ArgsList2>
@@ -385,11 +398,13 @@ SPECTRE_ALWAYS_INLINE auto operator-(
   static_assert(tmpl::equal_members<ArgsList1, ArgsList2>::value,
                 "The indices when adding two tensors must be equal. This error "
                 "occurs from expressions like A(_a, _b) + B(_c, _a)");
-  std::cout << "3" << std::endl;
   return TensorExpressions::AddSub<T1, T2, ArgsList1, ArgsList2, -1>(
       ~std::move(t1), ~t2);
 }
 
+/// \ingroup TensorExpressionsGroup
+/// \copydoc operator-(const TensorExpression<T1, X, Symm1, IndexList1,
+/// ArgsList1>&,const TensorExpression<T2, X, Symm2, IndexList2, ArgsList2>&)
 template <typename T1, typename T2, typename X, typename Symm1, typename Symm2,
           typename IndexList1, typename IndexList2, typename ArgsList1,
           typename ArgsList2>
@@ -401,7 +416,6 @@ SPECTRE_ALWAYS_INLINE auto operator-(
   static_assert(tmpl::equal_members<ArgsList1, ArgsList2>::value,
                 "The indices when adding two tensors must be equal. This error "
                 "occurs from expressions like A(_a, _b) + B(_c, _a)");
-  std::cout << "4" << std::endl;
   return TensorExpressions::AddSub<T1, T2, ArgsList1, ArgsList2, -1>(
       ~std::move(t1), ~std::move(t2));
 }
@@ -419,16 +433,20 @@ SPECTRE_ALWAYS_INLINE auto operator-(
 /// - `R(ti_A, ti_a)`
 /// - `(R(ti_A, ti_B) * S(ti_a, ti_b))`
 ///
-/// There are four separate overloads for the difference of a tensor expression
-/// and a `double` or DataVector, where this function is one of them:
+/// There are eight separate overloads for the sum of a tensor expression and a
+/// a `double` or DataVector, where this overload is one of them:
 /// - `operator-(const X& scalar, const Expression& t)`
-/// - `operator-(const Expression& t, const X& scalar)`
+/// - `operator-(const X& scalar, Expression&& t)`
 /// - `operator-(X&& scalar, const Expression& t)`
+/// - `operator-(X&& scalar, Expression&& t)`
+/// - `operator-(const Expression& t, const X& scalar)`
 /// - `operator-(const Expression& t, X&& scalar)`
+/// - `operator-(Expression&& t, const X& scalar)`
+/// - `operator-(Expression&& t, X&& scalar)`
 ///
-/// The last two overloads are necessary so that DataVector r-values can be
-/// moved to an expression instead of the expression pointing to an object that
-/// will go out of scope.
+/// The last overloads with rvalue arguments are necessary so that DataVector
+/// rvalues can be moved into a ScalarDataTypeRValue expression instead of going
+/// out of scope.
 ///
 /// \tparam T the derived TensorExpression type of the tensor expression operand
 /// of the difference
@@ -442,14 +460,15 @@ template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator-(
     const X& scalar,
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t) {
-  std::cout << "5" << std::endl;
   return TensorExpressions::ScalarDataTypeLValue(scalar) - t;
 }
 
+/// \ingroup TensorExpressionsGroup
+/// \copydoc operator-(const X&,const TensorExpression<T, X, tmpl::list<>,
+/// tmpl::list<>>&)
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator-(
     const X& scalar, TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t) {
-  std::cout << "6" << std::endl;
   return TensorExpressions::ScalarDataTypeLValue(scalar) - std::move(t);
 }
 
@@ -459,7 +478,6 @@ SPECTRE_ALWAYS_INLINE auto operator-(
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator-(
     X&& scalar, const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t) {
-  std::cout << "7" << std::endl;
   return TensorExpressions::ScalarDataTypeRValue(std::move(scalar)) - t;
 }
 
@@ -469,8 +487,6 @@ SPECTRE_ALWAYS_INLINE auto operator-(
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator-(
     X&& scalar, TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t) {
-  std::cout << "8" << std::endl;
-  // std::cout << "scalar : " << scalar << std::endl;
   return TensorExpressions::ScalarDataTypeRValue(std::move(scalar)) -
          std::move(t);
 }
@@ -482,7 +498,6 @@ template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator-(
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t,
     const X& scalar) {
-  std::cout << "9" << std::endl;
   return t - TensorExpressions::ScalarDataTypeLValue(scalar);
 }
 
@@ -492,10 +507,6 @@ SPECTRE_ALWAYS_INLINE auto operator-(
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator-(
     const TensorExpression<T, X, tmpl::list<>, tmpl::list<>>& t, X&& scalar) {
-  std::cout << "10" << std::endl;
-  // std::cout << "t : " << t << std::endl;
-  // std::cout << "scalar : " << scalar << std::endl;
-  // std::cout << "rvalue" << std::endl;
   return t - TensorExpressions::ScalarDataTypeRValue(std::move(scalar));
 }
 
@@ -505,8 +516,6 @@ SPECTRE_ALWAYS_INLINE auto operator-(
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator-(
     TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t, const X& scalar) {
-  // std::cout << "lvalue" << std::endl;
-  std::cout << "11" << std::endl;
   return std::move(t) - TensorExpressions::ScalarDataTypeLValue(scalar);
 }
 
@@ -516,10 +525,6 @@ SPECTRE_ALWAYS_INLINE auto operator-(
 template <typename T, typename X>
 SPECTRE_ALWAYS_INLINE auto operator-(
     TensorExpression<T, X, tmpl::list<>, tmpl::list<>>&& t, X&& scalar) {
-  std::cout << "12" << std::endl;
-  // std::cout << "t : " << t << std::endl;
-  // std::cout << "scalar : " << scalar << std::endl;
-  // std::cout << "rvalue" << std::endl;
   return std::move(t) -
          TensorExpressions::ScalarDataTypeRValue(std::move(scalar));
 }
