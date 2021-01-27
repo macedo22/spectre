@@ -82,6 +82,10 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   using args_list = typename T1::args_list;
 
   AddSub(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
+  AddSub(const AddSub& other) = default;
+  AddSub(AddSub&& other) = default;
+  AddSub& operator=(const AddSub& other) = default;
+  AddSub& operator=(AddSub&& other) = default;
   ~AddSub() override = default;
 
   template <typename LhsStructure, typename... LhsIndices>

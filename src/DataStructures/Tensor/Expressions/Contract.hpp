@@ -121,6 +121,10 @@ struct TensorContract
   explicit TensorContract(
       const TensorExpression<T, X, Symm, IndexList, ArgsList>& t)
       : t_(~t) {}
+  TensorContract(const TensorContract& other) = default;
+  TensorContract(TensorContract&& other) = default;
+  TensorContract& operator=(const TensorContract& other) = default;
+  TensorContract& operator=(TensorContract&& other) = default;
   ~TensorContract() override = default;
 
   /// \brief Return the tensor multi-index of one uncontracted LHS component to

@@ -58,6 +58,10 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
   /// Construct an expression from a Tensor
   explicit TensorAsExpression(const Tensor<X, Symm, IndexList<Indices...>>& t)
       : t_(&t) {}
+  TensorAsExpression(const TensorAsExpression& other) = default;
+  TensorAsExpression(TensorAsExpression&& other) = default;
+  TensorAsExpression& operator=(const TensorAsExpression& other) = default;
+  TensorAsExpression& operator=(TensorAsExpression&& other) = default;
   ~TensorAsExpression() override = default;
 
   /// \brief Computes the right hand side tensor multi-index that corresponds to

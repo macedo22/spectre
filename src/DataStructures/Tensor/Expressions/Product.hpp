@@ -79,6 +79,10 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
       num_tensor_indices - num_tensor_indices_first_operand;
 
   OuterProduct(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
+  OuterProduct(const OuterProduct& other) = default;
+  OuterProduct(OuterProduct&& other) = default;
+  OuterProduct& operator=(const OuterProduct& other) = default;
+  OuterProduct& operator=(OuterProduct&& other) = default;
   ~OuterProduct() override = default;
 
   /// \ingroup TensorExpressionsGroup
