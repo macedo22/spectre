@@ -201,11 +201,11 @@ struct TensorContract
   /// summed to compute a contracted LHS component
   template <size_t I, typename UncontractedLhsStructure,
             typename ContractedLhsStructure, size_t... Ints>
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t,
-                                                    first_contracted_index::dim>
+  SPECTRE_ALWAYS_INLINE static const std::array<size_t,
+                                                first_contracted_index::dim>
   get_storage_indices_to_sum(
       const std::index_sequence<Ints...>& /*dim_seq*/) noexcept {
-    constexpr std::array<size_t, num_tensor_indices>
+    const std::array<size_t, num_tensor_indices>
         lhs_contracted_multi_index =
             ContractedLhsStructure::get_canonical_tensor_index(I);
     return {{UncontractedLhsStructure::get_storage_index(
@@ -236,7 +236,7 @@ struct TensorContract
   template <size_t ContractedLhsNumComponents,
             typename UncontractedLhsStructure, typename ContractedLhsStructure,
             size_t... Ints>
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<
+  SPECTRE_ALWAYS_INLINE static const std::array<
       std::array<size_t, first_contracted_index::dim>,
       ContractedLhsNumComponents>
   get_map_of_components_to_sum(
@@ -361,8 +361,8 @@ struct TensorContract
   /// components in the uncontracted LHS tensor that need to be summed to
   /// compute each contracted LHS component. Finally, the `ComputeContraction`
   /// helper struct is used to compute the contracted component at
-  /// `lhs_storage_index` by leveraging this precomputed map's lists of indices
-  /// to sum for each contracted LHS component's storage index.
+  /// `lhs_storage_index` by leveraging this map's lists of indices to sum for
+  /// each contracted LHS component's storage index.
   ///
   /// \tparam LhsStructure the Structure of the contracted LHS tensor
   /// \tparam LhsIndices the TensorIndexs of the contracted LHS tensor
@@ -385,8 +385,8 @@ struct TensorContract
 
     // A map from contracted LHS storage indices to lists of uncontracted LHS
     // storage indices of components to sum for contraction
-    constexpr std::array<std::array<size_t, first_contracted_index::dim>,
-                         contracted_lhs_num_components>
+    static const std::array<std::array<size_t, first_contracted_index::dim>,
+                            contracted_lhs_num_components>
         map_of_components_to_sum =
             get_map_of_components_to_sum<contracted_lhs_num_components,
                                          uncontracted_lhs_structure,
