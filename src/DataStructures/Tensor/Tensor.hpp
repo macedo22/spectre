@@ -7,6 +7,7 @@
 #pragma once
 
 #include <cstddef>
+#include <iostream>
 #include <pup.h>
 #include <pup_stl.h>
 
@@ -130,12 +131,42 @@ class Tensor<X, Symm, IndexList<Indices...>> {
   using TE = TensorExpressions::TensorAsExpression<
       Tensor<X, Symm, IndexList<Indices...>>, ArgsList>;
 
-  Tensor() = default;
-  ~Tensor() = default;
-  Tensor(const Tensor&) = default;
-  Tensor(Tensor&&) noexcept = default;
-  Tensor& operator=(const Tensor&) = default;
-  Tensor& operator=(Tensor&&) noexcept = default;
+  Tensor() {
+    std::cout << "defaulting constructing Tensor at " << this << " with "
+              << (sizeof...(Indices)) << " indices" << std::endl;
+  }
+  ~Tensor() {
+    std::cout << "destroying Tensor at " << this << " with "
+              << (sizeof...(Indices)) << " indices" << std::endl;
+  }
+  // Tensor(const Tensor&) = default;
+  Tensor(const Tensor& other) : data_(other.data_) {
+    std::cout << "copy constructing Tensor at " << this << " from Tensor at "
+              << &other << " with " << (sizeof...(Indices)) << " indices"
+              << std::endl;
+  }
+  // Tensor(Tensor&&) noexcept = default;
+  Tensor(Tensor&& other) : data_(std::move(other.data_)) {
+    std::cout << "move constructing Tensor at " << this << " from Tensor at "
+              << &other << " with " << (sizeof...(Indices)) << " indices"
+              << std::endl;
+  }
+  // Tensor& operator=(const Tensor&) = default;
+  Tensor& operator=(const Tensor& other) {
+    std::cout << "copy assigning Tensor at " << this << " from Tensor at "
+              << &other << " with " << (sizeof...(Indices)) << " indices"
+              << std::endl;
+    data_ = other.data_;
+    return *this;
+  }
+  // Tensor& operator=(Tensor&&) noexcept = default;
+  Tensor& operator=(Tensor&& other) {
+    std::cout << "move assigning Tensor at " << this << " from Tensor at "
+              << &other << " with " << (sizeof...(Indices)) << " indices"
+              << std::endl;
+    data_ = std::move(other.data_);
+    return *this;
+  }
 
   /// \cond HIDDEN_SYMBOLS
   /// Constructor from a TensorExpression.
@@ -154,10 +185,15 @@ class Tensor<X, Symm, IndexList<Indices...>> {
         "indices on the resulting tensor. For example, auto F = "
         "evaluate<_a_t, _b_t>(G); if G has 2 free indices and you want "
         "the LHS of the equation to be F_{ab} rather than F_{ba}.");
+    std::cout << "constructing Tensor from TensorExpression at " << this
+              << " with " << (sizeof...(Indices)) << " indices" << std::endl;
     for (size_t i = 0; i < size(); ++i) {
       gsl::at(data_, i) =
           tensor_expression.template get<structure, LhsIndices...>(i);
     }
+    std::cout << "done filling elements of new Tensor being constructed at "
+              << this << " with " << (sizeof...(Indices)) << " indices"
+              << std::endl;
   }
   /// \endcond
 
@@ -285,6 +321,8 @@ class Tensor<X, Symm, IndexList<Indices...>> {
                   "The index types (SpatialIndex or SpacetimeIndex) of the "
                   "generic indices in the expression do not match the index "
                   "types of the indices in the Tensor.");
+    std::cout << "Tensor operator() call for Tensor at " << this << " with "
+              << (sizeof...(Indices)) << " indices" << std::endl;
     return TensorExpressions::contract(TE<tmpl::list<TensorIndices...>>{*this});
   }
   // @}
@@ -501,7 +539,10 @@ template <typename X, typename Symm, template <typename...> class IndexList,
           typename... Indices>
 template <size_t NumberOfIndices, Requires<(NumberOfIndices <= 1)>>
 Tensor<X, Symm, IndexList<Indices...>>::Tensor(storage_type data) noexcept
-    : data_(std::move(data)) {}
+    : data_(std::move(data)) {
+  std::cout << "constructing Tensor from data at " << this << " with "
+            << (sizeof...(Indices)) << " indices" << std::endl;
+}
 
 // The std::disjunction is used to prevent the compiler from matching this
 // function when it should select the move constructor.
@@ -514,7 +555,10 @@ template <typename... Args,
                        sizeof...(Args) == 1) and
                    std::is_constructible_v<X, Args...>>>
 Tensor<X, Symm, IndexList<Indices...>>::Tensor(Args&&... args) noexcept
-    : data_(make_array<size(), X>(std::forward<Args>(args)...)) {}
+    : data_(make_array<size(), X>(std::forward<Args>(args)...)) {
+  std::cout << "constructing Tensor from Args at " << this << " with "
+            << (sizeof...(Indices)) << " indices" << std::endl;
+}
 
 template <typename X, typename Symm, template <typename...> class IndexList,
           typename... Indices>
