@@ -27,14 +27,14 @@ struct ScalarAsExpression
   ScalarAsExpression(double s) : s_(s) {}
   ~ScalarAsExpression() override = default;
 
-  /// \brief Returns the value represented by the expression
+  /// \brief Returns the scalar value represented by the expression
   ///
   /// \details
   /// While a ScalarAsExpression does not store a rank 0 Tensor, it does
   /// represent one. This is why, unlike other derived TensorExpression types,
   /// there is no second variadic template parameter for the generic indices.
   /// In addition, this is why this template is only instantiated for the case
-  /// where `Structure` is equal to the Structure of such a Tensor.
+  /// where `Structure` is equal to the Structure of a rank 0 Tensor.
   ///
   /// \tparam Structure the Structure of the rank 0 Tensor represented by this
   /// expression

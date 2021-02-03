@@ -34,8 +34,7 @@ void assign_unique_values_to_tensor(
 }
 
 /// \ingroup TestingFrameworkGroup
-/// \brief Test the outer product of a `double` and tensor is correctly
-/// evaluated
+/// \brief Test the outer product of a scalar and tensor is correctly evaluated
 ///
 /// \details
 /// The outer product cases tested are:
@@ -44,17 +43,14 @@ void assign_unique_values_to_tensor(
 /// - \f$L_{ij} = R * S_{ij} * T\f$
 ///
 /// where R and T are `double`s and S and L are Tensors
-///
-/// \tparam DataType the type of data being stored in the product operands
-template <typename DataType>
-void test_outer_product_scalar(const DataType& used_for_size) noexcept {
+void test_outer_product_scalar() noexcept {
   constexpr size_t dim = 3;
   using tensor_type =
-      Tensor<DataType, Symmetry<1, 1>,
+      Tensor<double, Symmetry<1, 1>,
              index_list<SpatialIndex<dim, UpLo::Lo, Frame::Inertial>,
                         SpatialIndex<dim, UpLo::Lo, Frame::Inertial>>>;
 
-  tensor_type S(used_for_size);
+  tensor_type S{};
   assign_unique_values_to_tensor(make_not_null(&S));
 
   // \f$L_{ij} = R * S_{ij}\f$
@@ -1137,7 +1133,7 @@ void test_products(const DataType& used_for_size) noexcept {
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Product",
                   "[DataStructures][Unit]") {
-  test_outer_product_scalar(std::numeric_limits<double>::signaling_NaN());
+  test_outer_product_scalar();
   test_products(std::numeric_limits<double>::signaling_NaN());
   test_products(DataVector(5, std::numeric_limits<double>::signaling_NaN()));
 }
