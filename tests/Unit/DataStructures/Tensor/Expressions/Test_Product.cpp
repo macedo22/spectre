@@ -34,6 +34,51 @@ void assign_unique_values_to_tensor(
 }
 
 /// \ingroup TestingFrameworkGroup
+/// \brief Test the outer product of a `double` and tensor is correctly
+/// evaluated
+///
+/// \details
+/// The outer product cases tested are:
+/// - \f$L_{ij} = R * S_{ij}\f$
+/// - \f$L_{ij} = S_{ij} * R\f$
+/// - \f$L_{ij} = R * S_{ij} * T\f$
+///
+/// where R and T are `double`s and S and L are Tensors
+///
+/// \tparam DataType the type of data being stored in the product operands
+template <typename DataType>
+void test_outer_product_scalar(const DataType& used_for_size) noexcept {
+  constexpr size_t dim = 3;
+  using tensor_type =
+      Tensor<DataType, Symmetry<1, 1>,
+             index_list<SpatialIndex<dim, UpLo::Lo, Frame::Inertial>,
+                        SpatialIndex<dim, UpLo::Lo, Frame::Inertial>>>;
+
+  tensor_type S(used_for_size);
+  assign_unique_values_to_tensor(make_not_null(&S));
+
+  // \f$L_{ij} = R * S_{ij}\f$
+  // Use explicit type (vs auto) for LHS Tensor so the compiler checks the
+  // return type of `evaluate`
+  const tensor_type Lij_from_R_Sij =
+      TensorExpressions::evaluate<ti_i, ti_j>(5.6 * S(ti_i, ti_j));
+  // \f$L_{ij} = S_{ij} * R\f$
+  const tensor_type Lij_from_Sij_R =
+      TensorExpressions::evaluate<ti_i, ti_j>(S(ti_i, ti_j) * -8.1);
+  // \f$L_{ij} = R * S_{ij} * T\f$
+  const tensor_type Lij_from_R_Sij_T =
+      TensorExpressions::evaluate<ti_i, ti_j>(-1.7 * S(ti_i, ti_j) * 0.6);
+
+  for (size_t i = 0; i < dim; i++) {
+    for (size_t j = 0; j < dim; j++) {
+      CHECK(Lij_from_R_Sij.get(i, j) == 5.6 * S.get(i, j));
+      CHECK(Lij_from_Sij_R.get(i, j) == S.get(i, j) * -8.1);
+      CHECK(Lij_from_R_Sij_T.get(i, j) == -1.7 * S.get(i, j) * 0.6);
+    }
+  }
+}
+
+/// \ingroup TestingFrameworkGroup
 /// \brief Test the outer product of a rank 0 tensor with another tensor is
 /// correctly evaluated
 ///
@@ -1092,6 +1137,7 @@ void test_products(const DataType& used_for_size) noexcept {
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Product",
                   "[DataStructures][Unit]") {
+  test_outer_product_scalar(std::numeric_limits<double>::signaling_NaN());
   test_products(std::numeric_limits<double>::signaling_NaN());
   test_products(DataVector(5, std::numeric_limits<double>::signaling_NaN()));
 }

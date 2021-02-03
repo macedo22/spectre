@@ -237,164 +237,36 @@ SPECTRE_ALWAYS_INLINE auto operator*(
 
 /// \ingroup TensorExpressionsGroup
 /// \brief Returns the tensor expression representing the product of a tensor
-/// expression and a `double` or DataVector
-///
-/// \details
-/// There are four separate overloads for the product of a tensor expression and
-/// a `double` or DataVector, where this overload is one of them:
-/// - `operator*(const double, const Expression&)`
-/// - `operator*(const Expression&, const double)`
-/// - `operator*(const DataVector&, const Expression&)`
-/// - `operator*(const Expression&, const DataVector&)`
-///
-/// Multiplication with DataVector temporaries is not supported. The two
-/// overloads with DataVector operands assume the DataVector will outlive the
-/// expression contructed from it, much like TensorAsExpression assumes it will
-/// be outlived by the Tensor used to construct it.
-///
-/// \tparam T the derived TensorExpression type of the tensor expression operand
-/// of the product
-/// \tparam X the data type of the operands, `double` or DataVector
-/// \param d the scalar type operand of the product
-/// \param t the tensor expression operand of the product
-/// \return the tensor expression representing the product of a tensor
-/// expression and a `double` or DataVector
-template <typename T, typename ArgsList>
-SPECTRE_ALWAYS_INLINE auto operator*(
-    const double d,
-    const TensorExpression<T, double, typename T::symmetry,
-                           typename T::index_list, ArgsList>& t) {
-  return TensorExpressions::DoubleAsExpression(d) * t;
-}
-
-/// \ingroup TensorExpressionsGroup
-/// \copydoc operator*(const X&,const TensorExpression<T, X, typename
-/// T::symmetry,typename T::index_list, ArgsList>&)
-template <typename T, typename X, typename ArgsList>
-SPECTRE_ALWAYS_INLINE auto operator*(
-    const TensorExpression<T, X, typename T::symmetry, typename T::index_list,
-                           ArgsList>& t,
-    const double d) {
-  return t * TensorExpressions::DoubleAsExpression(d);
-}
-
-/// \ingroup TensorExpressionsGroup
-/// \brief Returns the tensor expression representing the product of a tensor
-/// expression and a `double` rvalue
+/// expression and a scalar
 ///
 /// \details
 /// There are two separate overloads for the product of a tensor expression and
-/// a `double` rvalue, where this overload is one of them:
-/// - `operator*(X&& scalar, const Expression& t)`
-/// - `operator*(const Expression& t, X&& scalar)`
-///
-/// These overloads assume that the lifetime of the scalar lvalue outlives the
-/// expression contructed from it, much like how a TensorAsExpression assumes
-/// the Tensor used to construct it will outlive the expression.
+/// a scalar, where this overload is one of them:
+/// - `operator*(const Expression&, const double)`
+/// - `operator*(const double, const Expression&)`
 ///
 /// \tparam T the derived TensorExpression type of the tensor expression operand
 /// of the product
-/// \tparam X the data type of the operands, `double` or DataVector
-/// \param scalar the scalar type operand of the product
+/// \tparam ArgsList the TensorIndexs of the tensor expression operand
 /// \param t the tensor expression operand of the product
+/// \param s the scalar operand of the product
 /// \return the tensor expression representing the product of a tensor
-/// expression and a `double` or DataVector
-template <typename T, typename X, typename ArgsList>
-SPECTRE_ALWAYS_INLINE auto operator*(
-    X&& scalar, const TensorExpression<T, X, typename T::symmetry,
-                                       typename T::index_list, ArgsList>& t) {
-  return TensorExpressions::ScalarDataTypeRValue(std::move(scalar)) * t;
-}
-
+/// expression and a scalar
 template <typename T, typename X, typename ArgsList>
 SPECTRE_ALWAYS_INLINE auto operator*(
     const TensorExpression<T, X, typename T::symmetry, typename T::index_list,
                            ArgsList>& t,
-    X&& scalar) {
-  return t * TensorExpressions::ScalarDataTypeRValue(std::move(scalar));
+    const double s) {
+  return t * TensorExpressions::ScalarAsExpression(s);
 }
 
-// /// \ingroup TensorExpressionsGroup
-// /// \brief Returns the tensor expression representing the product of a tensor
-// /// expression and a `double` or DataVector lvalue
-// ///
-// /// \details
-// /// There are two separate overloads for the product of a tensor expression
-// and
-// /// a `double` or DataVector lvalue, where this overload is one of them:
-// /// - `operator*(const X& scalar, const Expression& t)`
-// /// - `operator*(const Expression& t, const X& scalar)`
-// ///
-// /// These overloads assume that the lifetime of the scalar lvalue outlives
-// the
-// /// expression contructed from it, much like how a TensorAsExpression assumes
-// /// the Tensor used to construct it will outlive the expression.
-// ///
-// /// \tparam T the derived TensorExpression type of the tensor expression
-// operand
-// /// of the product
-// /// \tparam X the data type of the operands, `double` or DataVector
-// /// \param scalar the scalar type operand of the product
-// /// \param t the tensor expression operand of the product
-// /// \return the tensor expression representing the product of a tensor
-// /// expression and a `double` or DataVector
-// template <typename T, typename X, typename ArgsList>
-// SPECTRE_ALWAYS_INLINE auto operator*(
-//     const X& scalar,
-//     const TensorExpression<T, X, typename T::symmetry, typename
-//     T::index_list,
-//                            ArgsList>& t) {
-//   return TensorExpressions::ScalarDataTypeLValue(scalar) * t;
-// }
-
-// /// \ingroup TensorExpressionsGroup
-// /// \copydoc operator*(const X&,const TensorExpression<T, X, typename
-// T::symmetry,typename T::index_list, ArgsList>&) template <typename T,
-// typename X, typename ArgsList> SPECTRE_ALWAYS_INLINE auto operator*(
-//     const TensorExpression<T, X, typename T::symmetry, typename
-//     T::index_list,
-//                            ArgsList>& t,
-//     const X& scalar) {
-//   return t * TensorExpressions::ScalarDataTypeLValue(scalar);
-// }
-
-// /// \ingroup TensorExpressionsGroup
-// /// \brief Returns the tensor expression representing the product of a tensor
-// /// expression and a `double` rvalue
-// ///
-// /// \details
-// /// There are two separate overloads for the product of a tensor expression
-// and
-// /// a `double` rvalue, where this overload is one of them:
-// /// - `operator*(X&& scalar, const Expression& t)`
-// /// - `operator*(const Expression& t, X&& scalar)`
-// ///
-// /// These overloads assume that the lifetime of the scalar lvalue outlives
-// the
-// /// expression contructed from it, much like how a TensorAsExpression assumes
-// /// the Tensor used to construct it will outlive the expression.
-// ///
-// /// \tparam T the derived TensorExpression type of the tensor expression
-// operand
-// /// of the product
-// /// \tparam X the data type of the operands, `double` or DataVector
-// /// \param scalar the scalar type operand of the product
-// /// \param t the tensor expression operand of the product
-// /// \return the tensor expression representing the product of a tensor
-// /// expression and a `double` or DataVector
-// template <typename T, typename X, typename ArgsList>
-// SPECTRE_ALWAYS_INLINE auto operator*(
-//     X&& scalar, const TensorExpression<T, X, typename T::symmetry,
-//                                        typename T::index_list, ArgsList>& t)
-//                                        {
-//   return TensorExpressions::ScalarDataTypeRValue(std::move(scalar)) * t;
-// }
-
-// template <typename T, typename X, typename ArgsList>
-// SPECTRE_ALWAYS_INLINE auto operator*(
-//     const TensorExpression<T, X, typename T::symmetry, typename
-//     T::index_list,
-//                            ArgsList>& t,
-//     X&& scalar) {
-//   return t * TensorExpressions::ScalarDataTypeRValue(std::move(scalar));
-// }
+/// \ingroup TensorExpressionsGroup
+/// \copydoc operator*(const TensorExpression<T, double, typename
+/// T::symmetry,typename T::index_list, ArgsList>&,const double)
+template <typename T, typename ArgsList>
+SPECTRE_ALWAYS_INLINE auto operator*(
+    const double s,
+    const TensorExpression<T, double, typename T::symmetry,
+                           typename T::index_list, ArgsList>& t) {
+  return TensorExpressions::ScalarAsExpression(s) * t;
+}
