@@ -10,7 +10,7 @@
 #include <cstddef>
 
 #include "DataStructures/Tensor/Expressions/Contract.hpp"
-#include "DataStructures/Tensor/Expressions/ScalarDataType.hpp"
+#include "DataStructures/Tensor/Expressions/ScalarAsExpression.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Structure.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
