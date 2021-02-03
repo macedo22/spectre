@@ -252,10 +252,10 @@ SPECTRE_ALWAYS_INLINE auto operator*(
 /// \param s the scalar operand of the product
 /// \return the tensor expression representing the product of a tensor
 /// expression and a scalar
-template <typename T, typename X, typename ArgsList>
+template <typename T, typename ArgsList>
 SPECTRE_ALWAYS_INLINE auto operator*(
-    const TensorExpression<T, X, typename T::symmetry, typename T::index_list,
-                           ArgsList>& t,
+    const TensorExpression<T, double, typename T::symmetry,
+                           typename T::index_list, ArgsList>& t,
     const double s) {
   return t * TensorExpressions::ScalarAsExpression(s);
 }
