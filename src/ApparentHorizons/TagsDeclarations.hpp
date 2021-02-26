@@ -53,6 +53,9 @@ struct MaxRicciScalar;
 struct MaxRicciScalarCompute;
 struct MinRicciScalar;
 struct MinRicciScalarCompute;
+struct DimensionfulSpinVector;
+template <typename Frame>
+struct DimensionfulSpinVectorCompute;
 
 }  // namespace StrahlkorperTags
 

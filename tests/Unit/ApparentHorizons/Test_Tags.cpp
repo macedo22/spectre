@@ -378,6 +378,8 @@ SPECTRE_TEST_CASE("Unit.ApparentHorizons.StrahlkorperDataBox",
   TestHelpers::db::test_simple_tag<
       StrahlkorperGr::Tags::SurfaceIntegral<SomeTag, Frame::Inertial>>(
       "SurfaceIntegral(SomeTag)");
+  TestHelpers::db::test_simple_tag<
+      StrahlkorperGr::Tags::DimensionfulSpinVector>("DimensionfulSpinVector");
   TestHelpers::db::test_compute_tag<
       StrahlkorperTags::ThetaPhiCompute<Frame::Inertial>>("ThetaPhi");
   TestHelpers::db::test_compute_tag<
@@ -459,4 +461,7 @@ SPECTRE_TEST_CASE("Unit.ApparentHorizons.StrahlkorperDataBox",
   TestHelpers::db::test_compute_tag<
       StrahlkorperGr::Tags::ChristodoulouMassCompute<Frame::Inertial>>(
       "ChristodoulouMass");
+  TestHelpers::db::test_compute_tag<
+      StrahlkorperGr::Tags::DimensionfulSpinVectorCompute<Frame::Inertial>>(
+      "DimensionfulSpinVector");
 }
