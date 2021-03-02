@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstddef>
 
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
@@ -35,15 +36,14 @@ struct NumberAsExpression
   /// In addition, this is why this template is only instantiated for the case
   /// where `Structure` is equal to the Structure of a rank 0 Tensor.
   ///
-  /// \tparam Structure the Structure of the rank 0 Tensor represented by this
-  /// expression
   /// \return the number represented by this expression
-  template <typename Structure>
+  template <typename... LhsIndices>
   SPECTRE_ALWAYS_INLINE double get(
-      const size_t /*storage_index*/) const noexcept {
-    static_assert(std::is_same_v<Structure, structure>,
-                  "In retrieving the number stored by a NumberAsExpression, "
-                  "the provided Structure should be that of a rank 0 Tensor.");
+      const std::array<size_t, 0>& /*multi_index*/) const noexcept;
+
+  template <>
+  SPECTRE_ALWAYS_INLINE double get(
+      const std::array<size_t, 0>& /*multi_index*/) const noexcept {
     return number_;
   }
 

@@ -177,6 +177,33 @@ struct TensorContract
     return contracting_tensor_index;
   }
 
+  SPECTRE_ALWAYS_INLINE static constexpr std::array<
+      size_t, num_uncontracted_tensor_indices>
+  get_first_uncontracted_lhs_multi_index_to_sum(
+      const std::array<size_t, num_tensor_indices>&
+          contracted_lhs_multi_index) noexcept {
+    std::array<size_t, num_uncontracted_tensor_indices>
+        first_uncontracted_lhs_multi_index{};
+
+    for (size_t i = 0; i < FirstContractedIndexPos; i++) {
+      gsl::at(first_uncontracted_lhs_multi_index, i) =
+          gsl::at(contracted_lhs_multi_index, i);
+    }
+    first_uncontracted_lhs_multi_index[FirstContractedIndexPos] = 0;
+    for (size_t i = FirstContractedIndexPos + 1; i < SecondContractedIndexPos;
+         i++) {
+      gsl::at(first_uncontracted_lhs_multi_index, i) =
+          gsl::at(contracted_lhs_multi_index, i - 1);
+    }
+    first_uncontracted_lhs_multi_index[SecondContractedIndexPos] = 0;
+    for (size_t i = SecondContractedIndexPos + 1;
+         i < num_uncontracted_tensor_indices; i++) {
+      gsl::at(first_uncontracted_lhs_multi_index, i) =
+          gsl::at(contracted_lhs_multi_index, i - 2);
+    }
+    return first_uncontracted_lhs_multi_index;
+  }
+
   /// \brief Return the storage indices of the uncontracted LHS components to
   /// be summed to compute a contracted LHS component
   ///
@@ -277,62 +304,100 @@ struct TensorContract
           get_uncontracted_lhs_tensorindex_list_helper<LhsIndices...>,
           tmpl::size_t<SecondContractedIndexPos>>>>;
 
-  /// \brief Helper struct for computing the contraction of one pair of indices
-  ///
-  /// \tparam UncontractedLhsTensorIndexList the typelist of TensorIndexs of the
-  /// uncontracted LHS tensor
+  // /// \brief Helper struct for computing the contraction of one pair of
+  // indices
+  // ///
+  // /// \tparam UncontractedLhsTensorIndexList the typelist of TensorIndexs of
+  // the
+  // /// uncontracted LHS tensor
+  // template <typename UncontractedLhsTensorIndexList>
+  // struct ComputeContraction;
+
+  // template <typename... UncontractedLhsTensorIndices>
+  // struct ComputeContraction<tmpl::list<UncontractedLhsTensorIndices...>> {
+  //   /// \brief Computes the value of the component in the contracted LHS
+  //   tensor
+  //   /// at a given storage index
+  //   ///
+  //   /// \details
+  //   /// This function recursively computes the value of the component in the
+  //   /// contracted LHS tensor at a given storage index by iterating over the
+  //   /// list of storage indices of uncontracted LHS components to sum. This
+  //   list
+  //   /// is stored at `map_of_components_to_sum[lhs_storage_index]`, and the
+  //   /// current component being summed is at
+  //   /// `map_of_components_to_sum[lhs_storage_index][Index]`.
+  //   ///
+  //   /// \tparam UncontractedLhsStructure the Structure of the uncontracted
+  //   LHS
+  //   /// tensor
+  //   /// \tparam ContractedLhsNumComponents the number of components in the
+  //   /// contracted LHS tensor
+  //   /// \tparam Index for a given list of uncontracted LHS storage indices
+  //   whose
+  //   /// components are summed to compute a contracted LHS component, this is
+  //   the
+  //   /// position of one such storage index in that list
+  //   /// \param map_of_components_to_sum a mapping between the storage indices
+  //   of
+  //   /// the contracted LHS components and the uncontracted LHS components to
+  //   sum
+  //   /// to compute the former
+  //   /// \param t1 the expression contained within the RHS contraction
+  //   expression
+  //   /// \param lhs_storage_index the storage index of the LHS tensor
+  //   component
+  //   /// to compute
+  //   /// \return the computed value of the component at `lhs_storage_index` in
+  //   /// the contracted LHS tensor
+  //   template <typename UncontractedLhsStructure,
+  //             size_t ContractedLhsNumComponents, size_t Index, typename T1>
+  //   static SPECTRE_ALWAYS_INLINE decltype(auto) apply(
+  //       const std::array<std::array<size_t, first_contracted_index::dim>,
+  //                        ContractedLhsNumComponents>&
+  //                        map_of_components_to_sum,
+  //       const T1& t1, const size_t& lhs_storage_index) noexcept {
+  //     if constexpr (Index < first_contracted_index::dim - 1) {
+  //       // We have more than one component left to sum
+  //       return apply<UncontractedLhsStructure, ContractedLhsNumComponents,
+  //                    Index + 1>(map_of_components_to_sum, t1,
+  //                               lhs_storage_index) +
+  //              t1.template get<UncontractedLhsStructure,
+  //                              UncontractedLhsTensorIndices...>(
+  //                  gsl::at(gsl::at(map_of_components_to_sum,
+  //                  lhs_storage_index),
+  //                          Index));
+  //     } else {
+  //       // We only have one final component to sum
+  //       return t1.template get<UncontractedLhsStructure,
+  //                              UncontractedLhsTensorIndices...>(
+  //           gsl::at(gsl::at(map_of_components_to_sum, lhs_storage_index),
+  //                   first_contracted_index::dim - 1));
+  //     }
+  //   }
+  // };
+
   template <typename UncontractedLhsTensorIndexList>
   struct ComputeContraction;
 
   template <typename... UncontractedLhsTensorIndices>
   struct ComputeContraction<tmpl::list<UncontractedLhsTensorIndices...>> {
-    /// \brief Computes the value of the component in the contracted LHS tensor
-    /// at a given storage index
-    ///
-    /// \details
-    /// This function recursively computes the value of the component in the
-    /// contracted LHS tensor at a given storage index by iterating over the
-    /// list of storage indices of uncontracted LHS components to sum. This list
-    /// is stored at `map_of_components_to_sum[lhs_storage_index]`, and the
-    /// current component being summed is at
-    /// `map_of_components_to_sum[lhs_storage_index][Index]`.
-    ///
-    /// \tparam UncontractedLhsStructure the Structure of the uncontracted LHS
-    /// tensor
-    /// \tparam ContractedLhsNumComponents the number of components in the
-    /// contracted LHS tensor
-    /// \tparam Index for a given list of uncontracted LHS storage indices whose
-    /// components are summed to compute a contracted LHS component, this is the
-    /// position of one such storage index in that list
-    /// \param map_of_components_to_sum a mapping between the storage indices of
-    /// the contracted LHS components and the uncontracted LHS components to sum
-    /// to compute the former
-    /// \param t1 the expression contained within the RHS contraction expression
-    /// \param lhs_storage_index the storage index of the LHS tensor component
-    /// to compute
-    /// \return the computed value of the component at `lhs_storage_index` in
-    /// the contracted LHS tensor
-    template <typename UncontractedLhsStructure,
-              size_t ContractedLhsNumComponents, size_t Index, typename T1>
+    template <size_t I>
     static SPECTRE_ALWAYS_INLINE decltype(auto) apply(
-        const std::array<std::array<size_t, first_contracted_index::dim>,
-                         ContractedLhsNumComponents>& map_of_components_to_sum,
-        const T1& t1, const size_t& lhs_storage_index) noexcept {
-      if constexpr (Index < first_contracted_index::dim - 1) {
+        const T& t, std::array<size_t, num_uncontracted_tensor_indices>
+                        uncontracted_lhs_multi_index_to_sum) noexcept {
+      uncontracted_lhs_multi_index_to_sum[FirstContractedIndexPos] = I;
+      uncontracted_lhs_multi_index_to_sum[SecondContractedIndexPos] = I;
+
+      if constexpr (I < first_contracted_index::dim - 1) {
         // We have more than one component left to sum
-        return apply<UncontractedLhsStructure, ContractedLhsNumComponents,
-                     Index + 1>(map_of_components_to_sum, t1,
-                                lhs_storage_index) +
-               t1.template get<UncontractedLhsStructure,
-                               UncontractedLhsTensorIndices...>(
-                   gsl::at(gsl::at(map_of_components_to_sum, lhs_storage_index),
-                           Index));
+        return t.template get<UncontractedLhsTensorIndices...>(
+                   uncontracted_lhs_multi_index_to_sum) +
+               apply<I + 1>(t, uncontracted_lhs_multi_index_to_sum);
       } else {
         // We only have one final component to sum
-        return t1.template get<UncontractedLhsStructure,
-                               UncontractedLhsTensorIndices...>(
-            gsl::at(gsl::at(map_of_components_to_sum, lhs_storage_index),
-                    first_contracted_index::dim - 1));
+        return t.template get<UncontractedLhsTensorIndices...>(
+            uncontracted_lhs_multi_index_to_sum);
       }
     }
   };
@@ -364,40 +429,44 @@ struct TensorContract
   /// `lhs_storage_index` by leveraging this precomputed map's lists of indices
   /// to sum for each contracted LHS component's storage index.
   ///
-  /// \tparam LhsStructure the Structure of the contracted LHS tensor
   /// \tparam LhsIndices the TensorIndexs of the contracted LHS tensor
-  /// \param lhs_storage_index the storage index of the contracted LHS tensor
-  /// component to retrieve
-  /// \return the value of the component at `lhs_storage_index` in the
+  /// \param contracted_lhs_multi_index the multi-index of the contracted LHS
+  /// tensor component to retrieve
+  /// \return the value of the component at `contracted_lhs_multi_index` in the
   /// contracted LHS tensor
-  template <typename LhsStructure, typename... LhsIndices>
+  template <typename... LhsIndices>
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
-      const size_t lhs_storage_index) const {
-    constexpr size_t contracted_lhs_num_components = LhsStructure::size();
+      const std::array<size_t, num_tensor_indices>& contracted_lhs_multi_index)
+      const {
+    // constexpr size_t contracted_lhs_num_components = LhsStructure::size();
     using uncontracted_lhs_tensorindex_list =
         get_uncontracted_lhs_tensorindex_list<LhsIndices...>;
-    using uncontracted_lhs_structure =
-        typename LhsTensorSymmAndIndices<ArgsList,
-                                         uncontracted_lhs_tensorindex_list,
-                                         Symm, IndexList>::structure;
-
-    constexpr std::make_index_sequence<contracted_lhs_num_components> map_seq{};
-
-    // A map from contracted LHS storage indices to lists of uncontracted LHS
-    // storage indices of components to sum for contraction
-    constexpr std::array<std::array<size_t, first_contracted_index::dim>,
-                         contracted_lhs_num_components>
-        map_of_components_to_sum =
-            get_map_of_components_to_sum<contracted_lhs_num_components,
-                                         uncontracted_lhs_structure,
-                                         LhsStructure>(map_seq);
-
-    // This returns the value of the component stored at `lhs_storage_index` in
-    // the contracted LHS tensor
+    // using uncontracted_lhs_structure =
+    //     typename LhsTensorSymmAndIndices<ArgsList,
+    //                                      uncontracted_lhs_tensorindex_list,
+    //                                      Symm, IndexList>::structure;
     return ComputeContraction<uncontracted_lhs_tensorindex_list>::
-        template apply<uncontracted_lhs_structure,
-                       contracted_lhs_num_components, 0>(
-            map_of_components_to_sum, t_, lhs_storage_index);
+        template apply<0>(t_, get_first_uncontracted_lhs_multi_index_to_sum(
+                                  contracted_lhs_multi_index));
+    // constexpr std::make_index_sequence<contracted_lhs_num_components>
+    // map_seq{};
+
+    // // A map from contracted LHS storage indices to lists of uncontracted LHS
+    // // storage indices of components to sum for contraction
+    // constexpr std::array<std::array<size_t, first_contracted_index::dim>,
+    //                      contracted_lhs_num_components>
+    //     map_of_components_to_sum =
+    //         get_map_of_components_to_sum<contracted_lhs_num_components,
+    //                                      uncontracted_lhs_structure,
+    //                                      LhsStructure>(map_seq);
+
+    // // This returns the value of the component stored at `lhs_storage_index`
+    // in
+    // // the contracted LHS tensor
+    // return ComputeContraction<uncontracted_lhs_tensorindex_list>::
+    //     template apply<uncontracted_lhs_structure,
+    //                    contracted_lhs_num_components, 0>(
+    //         map_of_components_to_sum, t_, lhs_storage_index);
   }
 
  private:

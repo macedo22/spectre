@@ -149,6 +149,32 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
     return lhs_to_rhs_map;
   }
 
+  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, num_tensor_indices>
+  compute_transformation(
+      const std::array<size_t, num_tensor_indices>& lhs_tensorindices,
+      const std::array<size_t, num_tensor_indices>&
+          rhs_tensorindices) noexcept {
+    std::array<size_t, num_tensor_indices> transformation{};
+    for (size_t i = 0; i < num_tensor_indices; i++) {
+      gsl::at(transformation, i) = static_cast<size_t>(std::distance(
+          lhs_tensorindices.begin(),
+          alg::find(lhs_tensorindices, gsl::at(rhs_tensorindices, i))));
+    }
+    return transformation;
+  }
+
+  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, num_tensor_indices>
+  compute_rhs_multi_index(
+      const std::array<size_t, num_tensor_indices>& lhs_multi_index,
+      const std::array<size_t, num_tensor_indices>& transformation) noexcept {
+    std::array<size_t, num_tensor_indices> rhs_multi_index{};
+    for (size_t i = 0; i < num_tensor_indices; i++) {
+      gsl::at(rhs_multi_index, i) =
+          gsl::at(lhs_multi_index, gsl::at(transformation, i));
+    }
+    return rhs_multi_index;
+  }
+
   /// \brief Returns the value at a left hand side tensor's storage index
   ///
   /// \details
@@ -158,25 +184,23 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
   /// `compute_rhs_tensor_index` handle the index sorting by mapping between the
   /// generic index orders of the LHS and RHS.
   ///
-  /// \tparam LhsStructure the Structure of the Tensor on the LHS of the
-  /// TensorExpression
   /// \tparam LhsIndices the TensorIndexs of the Tensor on the LHS of the tensor
   /// expression
-  /// \param lhs_storage_index the storage index of the LHS tensor component to
+  /// \param lhs_multi_index the multi-index of the LHS tensor component to
   /// retrieve
   /// \return the value of the DataType of the component at `lhs_storage_index`
   /// in the LHS tensor
-  template <typename LhsStructure, typename... LhsIndices>
+  template <typename... LhsIndices>
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
-      const size_t lhs_storage_index) const noexcept {
-    if constexpr (std::is_same_v<LhsStructure, structure> and
-                  std::is_same_v<tmpl::list<LhsIndices...>,
+      const std::array<size_t, num_tensor_indices>& lhs_multi_index)
+      const noexcept {
+    if constexpr (std::is_same_v<tmpl::list<LhsIndices...>,
                                  tmpl::list<Args...>>) {
-      return (*t_)[lhs_storage_index];
+      return t_->get(lhs_multi_index);
     } else {
-      constexpr std::array<size_t, LhsStructure::size()> lhs_to_rhs_map =
-          compute_lhs_to_rhs_map<LhsStructure, LhsIndices...>();
-      return (*t_)[gsl::at(lhs_to_rhs_map, lhs_storage_index)];
+      constexpr std::array<size_t, num_tensor_indices> transformation =
+          compute_transformation({{LhsIndices::value...}}, {{Args::value...}});
+      return t_->get(compute_rhs_multi_index(lhs_multi_index, transformation));
     }
   }
 

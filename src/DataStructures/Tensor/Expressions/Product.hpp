@@ -200,6 +200,22 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
                second_op_storage_index);
   }
 
+  template <typename... LhsIndices>
+  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+      const std::array<size_t, num_tensor_indices>& lhs_multi_index) const {
+    const std::array<size_t, num_tensor_indices_first_operand>
+        first_op_tensor_multi_index =
+            GetOpTensorMultiIndex<ArgsList1<Args1...>>::template apply<
+                LhsIndices...>(lhs_multi_index);
+    const std::array<size_t, num_tensor_indices_second_operand>
+        second_op_tensor_multi_index =
+            GetOpTensorMultiIndex<ArgsList2<Args2...>>::template apply<
+                LhsIndices...>(lhs_multi_index);
+
+    return t1_.template get<Args1...>(first_op_tensor_multi_index) *
+           t2_.template get<Args2...>(second_op_tensor_multi_index);
+  }
+
  private:
   T1 t1_;
   T2 t2_;
