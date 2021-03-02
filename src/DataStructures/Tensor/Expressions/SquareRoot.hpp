@@ -7,7 +7,6 @@
 #include <cstddef>
 
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
-#include "Utilities/ErrorHandling/Assert.hpp"
 #include "Utilities/ForceInline.hpp"
 #include "Utilities/TMPL.hpp"
 
