@@ -11,6 +11,7 @@
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
+#include "Utilities/Gsl.hpp"
 #include "Utilities/Literals.hpp"
 #include "Utilities/TMPL.hpp"
 
@@ -63,9 +64,13 @@ void test_evaluate_rank_3_impl() noexcept {
   // L_{abc} = R_{abc}
   // Use explicit type (vs auto) so the compiler checks the return type of
   // `evaluate`
-  const Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> L_abc =
+  const Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> L_abc_returned =
       ::TensorExpressions::evaluate<TensorIndexA, TensorIndexB, TensorIndexC>(
           R_abc(TensorIndexA, TensorIndexB, TensorIndexC));
+  Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> L_abc_filled{};
+  ::TensorExpressions::evaluate<TensorIndexA, TensorIndexB, TensorIndexC>(
+      make_not_null(&L_abc_filled),
+      R_abc(TensorIndexA, TensorIndexB, TensorIndexC));
 
   // L_{acb} = R_{abc}
   using L_acb_symmetry =
@@ -74,9 +79,14 @@ void test_evaluate_rank_3_impl() noexcept {
   using L_acb_tensorindextype_list =
       tmpl::list<rhs_tensorindextype_a, rhs_tensorindextype_c,
                  rhs_tensorindextype_b>;
-  const Tensor<DataType, L_acb_symmetry, L_acb_tensorindextype_list> L_acb =
-      ::TensorExpressions::evaluate<TensorIndexA, TensorIndexC, TensorIndexB>(
+  const Tensor<DataType, L_acb_symmetry, L_acb_tensorindextype_list>
+      L_acb_returned = ::TensorExpressions::evaluate<TensorIndexA, TensorIndexC,
+                                                     TensorIndexB>(
           R_abc(TensorIndexA, TensorIndexB, TensorIndexC));
+  Tensor<DataType, L_acb_symmetry, L_acb_tensorindextype_list> L_acb_filled{};
+  ::TensorExpressions::evaluate<TensorIndexA, TensorIndexC, TensorIndexB>(
+      make_not_null(&L_acb_filled),
+      R_abc(TensorIndexA, TensorIndexB, TensorIndexC));
 
   // L_{bac} = R_{abc}
   using L_bac_symmetry =
@@ -85,9 +95,14 @@ void test_evaluate_rank_3_impl() noexcept {
   using L_bac_tensorindextype_list =
       tmpl::list<rhs_tensorindextype_b, rhs_tensorindextype_a,
                  rhs_tensorindextype_c>;
-  const Tensor<DataType, L_bac_symmetry, L_bac_tensorindextype_list> L_bac =
-      ::TensorExpressions::evaluate<TensorIndexB, TensorIndexA, TensorIndexC>(
+  const Tensor<DataType, L_bac_symmetry, L_bac_tensorindextype_list>
+      L_bac_returned = ::TensorExpressions::evaluate<TensorIndexB, TensorIndexA,
+                                                     TensorIndexC>(
           R_abc(TensorIndexA, TensorIndexB, TensorIndexC));
+  Tensor<DataType, L_bac_symmetry, L_bac_tensorindextype_list> L_bac_filled{};
+  ::TensorExpressions::evaluate<TensorIndexB, TensorIndexA, TensorIndexC>(
+      make_not_null(&L_bac_filled),
+      R_abc(TensorIndexA, TensorIndexB, TensorIndexC));
 
   // L_{bca} = R_{abc}
   using L_bca_symmetry =
@@ -96,9 +111,14 @@ void test_evaluate_rank_3_impl() noexcept {
   using L_bca_tensorindextype_list =
       tmpl::list<rhs_tensorindextype_b, rhs_tensorindextype_c,
                  rhs_tensorindextype_a>;
-  const Tensor<DataType, L_bca_symmetry, L_bca_tensorindextype_list> L_bca =
-      ::TensorExpressions::evaluate<TensorIndexB, TensorIndexC, TensorIndexA>(
+  const Tensor<DataType, L_bca_symmetry, L_bca_tensorindextype_list>
+      L_bca_returned = ::TensorExpressions::evaluate<TensorIndexB, TensorIndexC,
+                                                     TensorIndexA>(
           R_abc(TensorIndexA, TensorIndexB, TensorIndexC));
+  Tensor<DataType, L_bca_symmetry, L_bca_tensorindextype_list> L_bca_filled{};
+  ::TensorExpressions::evaluate<TensorIndexB, TensorIndexC, TensorIndexA>(
+      make_not_null(&L_bca_filled),
+      R_abc(TensorIndexA, TensorIndexB, TensorIndexC));
 
   // L_{cab} = R_{abc}
   using L_cab_symmetry =
@@ -107,9 +127,14 @@ void test_evaluate_rank_3_impl() noexcept {
   using L_cab_tensorindextype_list =
       tmpl::list<rhs_tensorindextype_c, rhs_tensorindextype_a,
                  rhs_tensorindextype_b>;
-  const Tensor<DataType, L_cab_symmetry, L_cab_tensorindextype_list> L_cab =
-      ::TensorExpressions::evaluate<TensorIndexC, TensorIndexA, TensorIndexB>(
+  const Tensor<DataType, L_cab_symmetry, L_cab_tensorindextype_list>
+      L_cab_returned = ::TensorExpressions::evaluate<TensorIndexC, TensorIndexA,
+                                                     TensorIndexB>(
           R_abc(TensorIndexA, TensorIndexB, TensorIndexC));
+  Tensor<DataType, L_cab_symmetry, L_cab_tensorindextype_list> L_cab_filled{};
+  ::TensorExpressions::evaluate<TensorIndexC, TensorIndexA, TensorIndexB>(
+      make_not_null(&L_cab_filled),
+      R_abc(TensorIndexA, TensorIndexB, TensorIndexC));
 
   // L_{cba} = R_{abc}
   using L_cba_symmetry =
@@ -118,9 +143,14 @@ void test_evaluate_rank_3_impl() noexcept {
   using L_cba_tensorindextype_list =
       tmpl::list<rhs_tensorindextype_c, rhs_tensorindextype_b,
                  rhs_tensorindextype_a>;
-  const Tensor<DataType, L_cba_symmetry, L_cba_tensorindextype_list> L_cba =
-      ::TensorExpressions::evaluate<TensorIndexC, TensorIndexB, TensorIndexA>(
+  const Tensor<DataType, L_cba_symmetry, L_cba_tensorindextype_list>
+      L_cba_returned = ::TensorExpressions::evaluate<TensorIndexC, TensorIndexB,
+                                                     TensorIndexA>(
           R_abc(TensorIndexA, TensorIndexB, TensorIndexC));
+  Tensor<DataType, L_cba_symmetry, L_cba_tensorindextype_list> L_cba_filled{};
+  ::TensorExpressions::evaluate<TensorIndexC, TensorIndexB, TensorIndexA>(
+      make_not_null(&L_cba_filled),
+      R_abc(TensorIndexA, TensorIndexB, TensorIndexC));
 
   const size_t dim_a = tmpl::at_c<RhsTensorIndexTypeList, 0>::dim;
   const size_t dim_b = tmpl::at_c<RhsTensorIndexTypeList, 1>::dim;
@@ -130,17 +160,23 @@ void test_evaluate_rank_3_impl() noexcept {
     for (size_t j = 0; j < dim_b; ++j) {
       for (size_t k = 0; k < dim_c; ++k) {
         // For L_{abc} = R_{abc}, check that L_{ijk} == R_{ijk}
-        CHECK(L_abc.get(i, j, k) == R_abc.get(i, j, k));
+        CHECK(L_abc_returned.get(i, j, k) == R_abc.get(i, j, k));
+        CHECK(L_abc_filled.get(i, j, k) == R_abc.get(i, j, k));
         // For L_{acb} = R_{abc}, check that L_{ikj} == R_{ijk}
-        CHECK(L_acb.get(i, k, j) == R_abc.get(i, j, k));
+        CHECK(L_acb_returned.get(i, k, j) == R_abc.get(i, j, k));
+        CHECK(L_acb_filled.get(i, k, j) == R_abc.get(i, j, k));
         // For L_{bac} = R_{abc}, check that L_{jik} == R_{ijk}
-        CHECK(L_bac.get(j, i, k) == R_abc.get(i, j, k));
+        CHECK(L_bac_returned.get(j, i, k) == R_abc.get(i, j, k));
+        CHECK(L_bac_filled.get(j, i, k) == R_abc.get(i, j, k));
         // For L_{bca} = R_{abc}, check that L_{jki} == R_{ijk}
-        CHECK(L_bca.get(j, k, i) == R_abc.get(i, j, k));
+        CHECK(L_bca_returned.get(j, k, i) == R_abc.get(i, j, k));
+        CHECK(L_bca_filled.get(j, k, i) == R_abc.get(i, j, k));
         // For L_{cab} = R_{abc}, check that L_{kij} == R_{ijk}
-        CHECK(L_cab.get(k, i, j) == R_abc.get(i, j, k));
+        CHECK(L_cab_returned.get(k, i, j) == R_abc.get(i, j, k));
+        CHECK(L_cab_filled.get(k, i, j) == R_abc.get(i, j, k));
         // For L_{cba} = R_{abc}, check that L_{kji} == R_{ijk}
-        CHECK(L_cba.get(k, j, i) == R_abc.get(i, j, k));
+        CHECK(L_cba_returned.get(k, j, i) == R_abc.get(i, j, k));
+        CHECK(L_cba_filled.get(k, j, i) == R_abc.get(i, j, k));
       }
     }
   }

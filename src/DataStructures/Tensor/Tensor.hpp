@@ -100,13 +100,6 @@ class Tensor<X, Symm, IndexList<Indices...>> {
       "allowed. While other types are technically possible it is not "
       "clear that Tensor is the correct container for them. Please "
       "seek advice on the topic by discussing with the SpECTRE developers.");
-  /// The Tensor_detail::Structure for the particular tensor index structure
-  ///
-  /// Each tensor index structure, e.g. \f$T_{ab}\f$, \f$T_a{}^b\f$ or
-  /// \f$T^{ab}\f$ has its own Tensor_detail::TensorStructure that holds
-  /// information about how the data is stored, what the multiplicity of the
-  /// stored indices are, the number of (independent) components, etc.
-  using structure = Tensor_detail::Structure<Symm, Indices...>;
 
  public:
   /// The type of the sequence that holds the data
@@ -124,6 +117,13 @@ class Tensor<X, Symm, IndexList<Indices...>> {
   /// Typelist of the \ref SpacetimeIndex "TensorIndexType"'s that the
   /// Tensor has
   using index_list = tmpl::list<Indices...>;
+  /// The Tensor_detail::Structure for the particular tensor index structure
+  ///
+  /// Each tensor index structure, e.g. \f$T_{ab}\f$, \f$T_a{}^b\f$ or
+  /// \f$T^{ab}\f$ has its own Tensor_detail::TensorStructure that holds
+  /// information about how the data is stored, what the multiplicity of the
+  /// stored indices are, the number of (independent) components, etc.
+  using structure = Tensor_detail::Structure<Symm, Indices...>;
   /// The type of the TensorExpression that would represent this Tensor in a
   /// tensor expression.
   template <typename ArgsList>

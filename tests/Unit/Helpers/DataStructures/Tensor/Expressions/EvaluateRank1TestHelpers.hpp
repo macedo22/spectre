@@ -11,6 +11,7 @@
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
+#include "Utilities/Gsl.hpp"
 #include "Utilities/TMPL.hpp"
 
 namespace TestHelpers::TensorExpressions {
@@ -33,14 +34,18 @@ void test_evaluate_rank_1_impl() noexcept {
   // L_a = R_a
   // Use explicit type (vs auto) so the compiler checks return type of
   // `evaluate`
-  const Tensor<DataType, Symmetry<1>, TensorIndexTypeList> L_a =
+  const Tensor<DataType, Symmetry<1>, TensorIndexTypeList> L_a_returned =
       ::TensorExpressions::evaluate<TensorIndex>(R_a(TensorIndex));
+  Tensor<DataType, Symmetry<1>, TensorIndexTypeList> L_a_filled{};
+  ::TensorExpressions::evaluate<TensorIndex>(make_not_null(&L_a_filled),
+                                             R_a(TensorIndex));
 
   const size_t dim = tmpl::at_c<TensorIndexTypeList, 0>::dim;
 
   // For L_a = R_a, check that L_i == R_i
   for (size_t i = 0; i < dim; ++i) {
-    CHECK(L_a.get(i) == R_a.get(i));
+    CHECK(L_a_returned.get(i) == R_a.get(i));
+    CHECK(L_a_filled.get(i) == R_a.get(i));
   }
 }
 

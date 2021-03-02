@@ -11,6 +11,7 @@
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
+#include "Utilities/Gsl.hpp"
 #include "Utilities/TMPL.hpp"
 
 namespace TestHelpers::TensorExpressions {
@@ -50,17 +51,23 @@ void test_evaluate_rank_2_impl() noexcept {
   // L_{ab} = R_{ab}
   // Use explicit type (vs auto) so the compiler checks the return type of
   // `evaluate`
-  const Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> L_ab =
+  const Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> L_ab_returned =
       ::TensorExpressions::evaluate<TensorIndexA, TensorIndexB>(
           R_ab(TensorIndexA, TensorIndexB));
+  Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> L_ab_filled{};
+  ::TensorExpressions::evaluate<TensorIndexA, TensorIndexB>(
+      make_not_null(&L_ab_filled), R_ab(TensorIndexA, TensorIndexB));
 
   // L_{ba} = R_{ab}
   using L_ba_tensorindextype_list =
       tmpl::list<tmpl::at_c<RhsTensorIndexTypeList, 1>,
                  tmpl::at_c<RhsTensorIndexTypeList, 0>>;
-  const Tensor<DataType, RhsSymmetry, L_ba_tensorindextype_list> L_ba =
+  const Tensor<DataType, RhsSymmetry, L_ba_tensorindextype_list> L_ba_returned =
       ::TensorExpressions::evaluate<TensorIndexB, TensorIndexA>(
           R_ab(TensorIndexA, TensorIndexB));
+  Tensor<DataType, RhsSymmetry, L_ba_tensorindextype_list> L_ba_filled{};
+  ::TensorExpressions::evaluate<TensorIndexB, TensorIndexA>(
+      make_not_null(&L_ba_filled), R_ab(TensorIndexA, TensorIndexB));
 
   const size_t dim_a = tmpl::at_c<RhsTensorIndexTypeList, 0>::dim;
   const size_t dim_b = tmpl::at_c<RhsTensorIndexTypeList, 1>::dim;
@@ -68,9 +75,11 @@ void test_evaluate_rank_2_impl() noexcept {
   for (size_t i = 0; i < dim_a; ++i) {
     for (size_t j = 0; j < dim_b; ++j) {
       // For L_{ab} = R_{ab}, check that L_{ij} == R_{ij}
-      CHECK(L_ab.get(i, j) == R_ab.get(i, j));
+      CHECK(L_ab_returned.get(i, j) == R_ab.get(i, j));
+      CHECK(L_ab_filled.get(i, j) == R_ab.get(i, j));
       // For L_{ba} = R_{ab}, check that L_{ji} == R_{ij}
-      CHECK(L_ba.get(j, i) == R_ab.get(i, j));
+      CHECK(L_ba_returned.get(j, i) == R_ab.get(i, j));
+      CHECK(L_ba_filled.get(j, i) == R_ab.get(i, j));
     }
   }
 }

@@ -12,6 +12,7 @@
 #include "DataStructures/Tensor/Expressions/Product.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
+#include "Utilities/Gsl.hpp"
 #include "Utilities/MakeWithValue.hpp"
 #include "Utilities/TMPL.hpp"
 
@@ -97,11 +98,18 @@ void test_mixed_operations(const DataType& used_for_size) noexcept {
   result_tensor_type expected_result_tensor =
       compute_expected_result(R, S, G, H, T, used_for_size);
   // \f$L_{a} = R_{ab}* S^{b} + G_{a} - H_{ba}{}^{b} * T\f$
-  result_tensor_type actual_result_tensor = TensorExpressions::evaluate<ti_a>(
+  result_tensor_type actual_result_tensor_returned =
+      TensorExpressions::evaluate<ti_a>(R(ti_a, ti_b) * S(ti_B) + G(ti_a) -
+                                        H(ti_b, ti_a, ti_B) * T());
+  result_tensor_type actual_result_tensor_filled{};
+  TensorExpressions::evaluate<ti_a>(
+      make_not_null(&actual_result_tensor_filled),
       R(ti_a, ti_b) * S(ti_B) + G(ti_a) - H(ti_b, ti_a, ti_B) * T());
 
   for (size_t a = 0; a < 4; a++) {
-    CHECK_ITERABLE_APPROX(actual_result_tensor.get(a),
+    CHECK_ITERABLE_APPROX(actual_result_tensor_returned.get(a),
+                          expected_result_tensor.get(a));
+    CHECK_ITERABLE_APPROX(actual_result_tensor_filled.get(a),
                           expected_result_tensor.get(a));
   }
 }
