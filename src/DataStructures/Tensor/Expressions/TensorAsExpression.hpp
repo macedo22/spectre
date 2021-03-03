@@ -84,14 +84,13 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
   /// \endcode
   ///
   /// \param `lhs_tensorindices` the TensorIndexs of the LHS tensor
-  /// \param `rhs_tensorindices` the TensorIndexs of the RHS tensor
   /// \return a transformation from the LHS tensor's multi-indices to the
   /// equivalent RHS tensor's multi-indices
   SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, num_tensor_indices>
-  compute_index_transformation(
-      const std::array<size_t, num_tensor_indices>& lhs_tensorindices,
-      const std::array<size_t, num_tensor_indices>&
-          rhs_tensorindices) noexcept {
+  compute_index_transformation(const std::array<size_t, num_tensor_indices>&
+                                   lhs_tensorindices) noexcept {
+    constexpr std::array<size_t, num_tensor_indices> rhs_tensorindices = {
+        {Args::value...}};
     std::array<size_t, num_tensor_indices> index_transformation{};
     for (size_t i = 0; i < num_tensor_indices; i++) {
       gsl::at(index_transformation, i) = static_cast<size_t>(std::distance(
@@ -165,8 +164,7 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
       return t_->get(lhs_multi_index);
     } else {
       constexpr std::array<size_t, num_tensor_indices> index_transformation =
-          compute_index_transformation({{LhsIndices::value...}},
-                                       {{Args::value...}});
+          compute_index_transformation({{LhsIndices::value...}});
       return t_->get(
           compute_rhs_multi_index(lhs_multi_index, index_transformation));
     }
