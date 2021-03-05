@@ -36,7 +36,8 @@ void test_tensor_as_expression_rank_2(
     const TensorIndexA& tensorindex_a,
     const TensorIndexB& tensorindex_b) noexcept {
   const size_t dim_a = 3;
-  const size_t dim_b = 3;
+  const size_t dim_b = 4;
+
   const IndexType indextype_a =
       TensorIndexA::is_spacetime ? IndexType::Spacetime : IndexType::Spatial;
   const IndexType indextype_b =
@@ -48,7 +49,7 @@ void test_tensor_as_expression_rank_2(
                                                 Frame::Inertial, indextype_a>,
                  Tensor_detail::TensorIndexType<dim_b, TensorIndexB::valence,
                                                 Frame::Inertial, indextype_b>>>
-      rhs_tensor(5_st);
+      rhs_tensor{};
   std::iota(rhs_tensor.begin(), rhs_tensor.end(), 0.0);
   // Get TensorExpression from RHS tensor
   const auto R_ab_expr = rhs_tensor(tensorindex_a, tensorindex_b);
@@ -61,12 +62,12 @@ void test_tensor_as_expression_rank_2(
   const std::array<size_t, 2> actual_ab_to_ab_transformation =
       R_ab_expr.compute_index_transformation(index_order_ab);
   const std::array<size_t, 2> expected_ab_to_ab_transformation = {{0, 1}};
-  const std::array<size_t, 2> actual_ab_to_ba_transformation =
+  const std::array<size_t, 2> actual_ba_to_ab_transformation =
       R_ab_expr.compute_index_transformation(index_order_ba);
-  const std::array<size_t, 2> expected_ab_to_ba_transformation = {{1, 0}};
+  const std::array<size_t, 2> expected_ba_to_ab_transformation = {{1, 0}};
 
   CHECK(actual_ab_to_ab_transformation == expected_ab_to_ab_transformation);
-  CHECK(actual_ab_to_ba_transformation == expected_ab_to_ba_transformation);
+  CHECK(actual_ba_to_ab_transformation == expected_ba_to_ab_transformation);
 
   for (size_t i = 0; i < dim_a; i++) {
     for (size_t j = 0; j < dim_b; j++) {
@@ -78,7 +79,7 @@ void test_tensor_as_expression_rank_2(
                 ij, expected_ab_to_ab_transformation) == ij);
       // For L_{ba} = R_{ab}, check that L_{ij} == R_{ji}
       CHECK(R_ab_expr.compute_rhs_multi_index(
-                ij, expected_ab_to_ba_transformation) == ji);
+                ij, expected_ba_to_ab_transformation) == ji);
     }
   }
 }
