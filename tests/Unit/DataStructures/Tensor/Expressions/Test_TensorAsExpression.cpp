@@ -4,6 +4,7 @@
 #include "Framework/TestingFramework.hpp"
 
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/TensorAsExpressionRank0TestHelpers.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/TensorAsExpressionRank1TestHelpers.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/TensorAsExpressionRank2TestHelpers.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/TensorAsExpressionRank3TestHelpers.hpp"
@@ -11,6 +12,9 @@
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.TensorAsExpression",
                   "[DataStructures][Unit]") {
+  // Rank 0
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_0();
+
   // Rank 1
   TestHelpers::TensorExpressions::test_tensor_as_expression_rank_1(ti_k);
 

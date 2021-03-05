@@ -42,7 +42,6 @@ void test_tensor_as_expression_rank_1(const TensorIndex& tensorindex) noexcept {
   const std::array<size_t, 1> actual_transformation =
       R_a_expr.compute_index_transformation(index_order);
   const std::array<size_t, 1> expected_transformation = {0};
-
   CHECK(actual_transformation == expected_transformation);
 
   // For L_a = R_a, check that L_i == R_i
