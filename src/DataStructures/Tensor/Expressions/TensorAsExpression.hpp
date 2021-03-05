@@ -83,7 +83,7 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
   /// {1, 2, 0} // positions of RHS indices {c, a, b} in LHS indices {a, b, c}
   /// \endcode
   ///
-  /// \param `lhs_tensorindices` the TensorIndexs of the LHS tensor
+  /// \param lhs_tensorindices the TensorIndexs of the LHS tensor
   /// \return a transformation from the LHS tensor's multi-indices to the
   /// equivalent RHS tensor's multi-indices
   SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, num_tensor_indices>
