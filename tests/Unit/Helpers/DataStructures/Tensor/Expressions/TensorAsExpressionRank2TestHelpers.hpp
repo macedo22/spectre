@@ -61,10 +61,10 @@ void test_tensor_as_expression_rank_2(
 
   const std::array<size_t, 2> actual_ab_to_ab_transformation =
       R_ab_expr.compute_index_transformation(index_order_ab);
-  const std::array<size_t, 2> expected_ab_to_ab_transformation = {{0, 1}};
+  const std::array<size_t, 2> expected_ab_to_ab_transformation = {0, 1};
   const std::array<size_t, 2> actual_ba_to_ab_transformation =
       R_ab_expr.compute_index_transformation(index_order_ba);
-  const std::array<size_t, 2> expected_ba_to_ab_transformation = {{1, 0}};
+  const std::array<size_t, 2> expected_ba_to_ab_transformation = {1, 0};
 
   CHECK(actual_ab_to_ab_transformation == expected_ab_to_ab_transformation);
   CHECK(actual_ba_to_ab_transformation == expected_ba_to_ab_transformation);

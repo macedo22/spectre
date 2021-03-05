@@ -6,6 +6,7 @@
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/TensorAsExpressionRank2TestHelpers.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/TensorAsExpressionRank3TestHelpers.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/TensorAsExpressionRank4TestHelpers.hpp"
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.TensorAsExpression",
                   "[DataStructures][Unit]") {
@@ -26,4 +27,57 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.TensorAsExpression",
                                                                    ti_b);
   TestHelpers::TensorExpressions::test_tensor_as_expression_rank_3(ti_c, ti_b,
                                                                    ti_a);
+
+  // Rank 4
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_4(ti_a, ti_b,
+                                                                   ti_c, ti_d);
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_4(ti_a, ti_b,
+                                                                   ti_d, ti_c);
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_4(ti_a, ti_c,
+                                                                   ti_b, ti_d);
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_4(ti_a, ti_c,
+                                                                   ti_d, ti_b);
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_4(ti_a, ti_d,
+                                                                   ti_b, ti_c);
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_4(ti_a, ti_d,
+                                                                   ti_c, ti_b);
+
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_4(ti_b, ti_a,
+                                                                   ti_c, ti_d);
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_4(ti_b, ti_a,
+                                                                   ti_c, ti_d);
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_4(ti_b, ti_c,
+                                                                   ti_a, ti_d);
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_4(ti_b, ti_c,
+                                                                   ti_d, ti_a);
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_4(ti_b, ti_d,
+                                                                   ti_a, ti_c);
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_4(ti_b, ti_d,
+                                                                   ti_c, ti_a);
+
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_4(ti_c, ti_a,
+                                                                   ti_b, ti_d);
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_4(ti_c, ti_a,
+                                                                   ti_d, ti_b);
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_4(ti_c, ti_b,
+                                                                   ti_a, ti_d);
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_4(ti_c, ti_b,
+                                                                   ti_d, ti_a);
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_4(ti_c, ti_d,
+                                                                   ti_a, ti_b);
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_4(ti_c, ti_d,
+                                                                   ti_b, ti_a);
+
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_4(ti_d, ti_a,
+                                                                   ti_b, ti_c);
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_4(ti_d, ti_a,
+                                                                   ti_c, ti_b);
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_4(ti_d, ti_b,
+                                                                   ti_a, ti_c);
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_4(ti_d, ti_b,
+                                                                   ti_c, ti_a);
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_4(ti_d, ti_c,
+                                                                   ti_a, ti_b);
+  TestHelpers::TensorExpressions::test_tensor_as_expression_rank_4(ti_d, ti_c,
+                                                                   ti_b, ti_a);
 }

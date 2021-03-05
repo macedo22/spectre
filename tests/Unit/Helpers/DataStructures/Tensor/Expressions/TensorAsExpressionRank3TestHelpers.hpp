@@ -77,22 +77,22 @@ void test_tensor_as_expression_rank_3(
 
   const std::array<size_t, 3> actual_abc_to_abc_transformation =
       R_abc_expr.compute_index_transformation(index_order_abc);
-  const std::array<size_t, 3> expected_abc_to_abc_transformation = {{0, 1, 2}};
+  const std::array<size_t, 3> expected_abc_to_abc_transformation = {0, 1, 2};
   const std::array<size_t, 3> actual_acb_to_abc_transformation =
       R_abc_expr.compute_index_transformation(index_order_acb);
-  const std::array<size_t, 3> expected_acb_to_abc_transformation = {{0, 2, 1}};
+  const std::array<size_t, 3> expected_acb_to_abc_transformation = {0, 2, 1};
   const std::array<size_t, 3> actual_bac_to_abc_transformation =
       R_abc_expr.compute_index_transformation(index_order_bac);
-  const std::array<size_t, 3> expected_bac_to_abc_transformation = {{1, 0, 2}};
+  const std::array<size_t, 3> expected_bac_to_abc_transformation = {1, 0, 2};
   const std::array<size_t, 3> actual_bca_to_abc_transformation =
       R_abc_expr.compute_index_transformation(index_order_bca);
-  const std::array<size_t, 3> expected_bca_to_abc_transformation = {{2, 0, 1}};
+  const std::array<size_t, 3> expected_bca_to_abc_transformation = {2, 0, 1};
   const std::array<size_t, 3> actual_cab_to_abc_transformation =
       R_abc_expr.compute_index_transformation(index_order_cab);
-  const std::array<size_t, 3> expected_cab_to_abc_transformation = {{1, 2, 0}};
+  const std::array<size_t, 3> expected_cab_to_abc_transformation = {1, 2, 0};
   const std::array<size_t, 3> actual_cba_to_abc_transformation =
       R_abc_expr.compute_index_transformation(index_order_cba);
-  const std::array<size_t, 3> expected_cba_to_abc_transformation = {{2, 1, 0}};
+  const std::array<size_t, 3> expected_cba_to_abc_transformation = {2, 1, 0};
 
   CHECK(actual_abc_to_abc_transformation == expected_abc_to_abc_transformation);
   CHECK(actual_acb_to_abc_transformation == expected_acb_to_abc_transformation);
