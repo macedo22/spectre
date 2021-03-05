@@ -385,18 +385,18 @@ struct Structure {
 
   /// A mapping between each collapsed_index and its storage_index. See
   /// \ref compute_collapsed_to_storage for details.
-  static constexpr auto collapsed_to_storage_ =
+  static const inline auto collapsed_to_storage_ =
       compute_collapsed_to_storage<Symm, number_of_components()>(
           make_cpp20_array_from_list<tmpl::conditional_t<
               sizeof...(Indices) == 0, size_t, index_list>>());
   /// A 1-1 mapping between each storage_index and its canonical tensor_index.
   /// See \ref compute_storage_to_tensor for details.
-  static constexpr auto storage_to_tensor_ = compute_storage_to_tensor<Symm,
-                                                                       size()>(
-      collapsed_to_storage_,
-      make_cpp20_array_from_list<
-          tmpl::conditional_t<sizeof...(Indices) == 0, size_t, index_list>>());
-  static constexpr auto multiplicity_ =
+  static const inline auto storage_to_tensor_ =
+      compute_storage_to_tensor<Symm, size()>(
+          collapsed_to_storage_,
+          make_cpp20_array_from_list<tmpl::conditional_t<
+              sizeof...(Indices) == 0, size_t, index_list>>());
+  static const inline auto multiplicity_ =
       compute_multiplicity<size()>(collapsed_to_storage_);
 
   // Retrieves the dimensionality of the I'th index
@@ -454,11 +454,10 @@ struct Structure {
   /// tensor_index
   /// \return the canonical tensor_index array of a storage_index
   template <size_t Rank = sizeof...(Indices)>
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, Rank>
+  SPECTRE_ALWAYS_INLINE static const std::array<size_t, Rank>
   get_canonical_tensor_index(const size_t storage_index) noexcept {
     if constexpr (Rank != 0) {
-      constexpr auto storage_to_tensor = storage_to_tensor_;
-      return gsl::at(storage_to_tensor, storage_index);
+      return gsl::at(storage_to_tensor_, storage_index);
     } else {
       (void)storage_index;
 
@@ -477,13 +476,12 @@ struct Structure {
   /// storage_index
   /// \return the storage_index of a tensor_index
   template <typename... N>
-  SPECTRE_ALWAYS_INLINE static constexpr std::size_t get_storage_index(
+  SPECTRE_ALWAYS_INLINE static std::size_t get_storage_index(
       const N... args) noexcept {
     static_assert(sizeof...(Indices) == sizeof...(N),
                   "the number arguments must be equal to rank_");
-    constexpr auto collapsed_to_storage = collapsed_to_storage_;
     return gsl::at(
-        collapsed_to_storage,
+        collapsed_to_storage_,
         compute_collapsed_index(
             cpp20::array<size_t, sizeof...(N)>{{static_cast<size_t>(args)...}},
             make_cpp20_array_from_list<tmpl::conditional_t<
@@ -500,10 +498,9 @@ struct Structure {
   /// \param tensor_index the tensor_index of which to get the storage_index
   /// \return the storage_index of a tensor_index
   template <typename I>
-  SPECTRE_ALWAYS_INLINE static constexpr std::size_t get_storage_index(
+  SPECTRE_ALWAYS_INLINE static std::size_t get_storage_index(
       const std::array<I, sizeof...(Indices)>& tensor_index) noexcept {
-    constexpr auto collapsed_to_storage = collapsed_to_storage_;
-    return gsl::at(collapsed_to_storage,
+    return gsl::at(collapsed_to_storage_,
                    compute_collapsed_index(
                        convert_to_cpp20_array(tensor_index),
                        make_cpp20_array_from_list<tmpl::conditional_t<
@@ -521,11 +518,11 @@ struct Structure {
   /// storage_index
   /// \return the storage_index of a tensor_index
   template <int... N, Requires<(sizeof...(N) > 0)> = nullptr>
-  SPECTRE_ALWAYS_INLINE static constexpr std::size_t
+  SPECTRE_ALWAYS_INLINE static std::size_t
   get_storage_index() noexcept {
     static_assert(sizeof...(Indices) == sizeof...(N),
                   "the number arguments must be equal to rank_");
-    constexpr std::size_t storage_index =
+    const std::size_t storage_index =
         collapsed_to_storage_[compute_collapsed_index(
             cpp20::array<size_t, sizeof...(N)>{{N...}},
             make_cpp20_array_from_list<index_list>())];
@@ -534,34 +531,30 @@ struct Structure {
 
   /// Get the multiplicity of the storage_index
   /// \param storage_index the storage_index of which to get the multiplicity
-  SPECTRE_ALWAYS_INLINE static constexpr size_t multiplicity(
+  SPECTRE_ALWAYS_INLINE static size_t multiplicity(
       const size_t storage_index) noexcept {
-    constexpr auto multiplicity = multiplicity_;
-    return gsl::at(multiplicity, storage_index);
+    return gsl::at(multiplicity_, storage_index);
   }
 
   /// Get the array of collapsed index to storage_index
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t,
+  SPECTRE_ALWAYS_INLINE static const std::array<size_t,
                                                     number_of_components()>
   collapsed_to_storage() noexcept {
-    constexpr auto collapsed_to_storage = collapsed_to_storage_;
-    return collapsed_to_storage;
+    return collapsed_to_storage_;
   }
 
   /// Get the storage_index for the specified collapsed index
-  SPECTRE_ALWAYS_INLINE static constexpr int collapsed_to_storage(
+  SPECTRE_ALWAYS_INLINE static int collapsed_to_storage(
       const size_t i) noexcept {
-    constexpr auto collapsed_to_storage = collapsed_to_storage_;
-    return gsl::at(collapsed_to_storage, i);
+    return gsl::at(collapsed_to_storage_, i);
   }
 
   /// Get the array of tensor_index's corresponding to the storage_index's.
-  SPECTRE_ALWAYS_INLINE static constexpr const cpp20::array<
+  SPECTRE_ALWAYS_INLINE static const cpp20::array<
       cpp20::array<size_t, sizeof...(Indices) == 0 ? 1 : sizeof...(Indices)>,
       size()>
   storage_to_tensor_index() noexcept {
-    constexpr auto storage_to_tensor = storage_to_tensor_;
-    return storage_to_tensor;
+    return storage_to_tensor_;
   }
 
   template <typename T>

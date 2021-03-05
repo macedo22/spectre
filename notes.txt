@@ -1,0 +1,18 @@
+// Distributed under the MIT License.
+// See LICENSE.txt for details.
+
+Compile time for:
+make -j4 RunSingleTest
+
+Case: Test_Product.cpp with everything commented out but
+test_high_rank_intermediate for the double case commented out (see file).
+A baseline implementation is timed:
+
+real    0m6.223s
+user    0m5.753s
+sys     0m1.358s
+
+Run time for the above compiled executable with ./bin/RunSingleTest:
+real    0m0.057s
+user    0m0.017s
+sys     0m0.041s

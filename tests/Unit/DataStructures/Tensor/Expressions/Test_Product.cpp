@@ -1206,30 +1206,38 @@ void test_high_rank_intermediate(const DataType& used_for_size) noexcept {
   assign_unique_values_to_tensor(make_not_null(&T));
 
   // \f$L^{c}{}_{dkl} = R_{ijb}{}^{a} * (S_{da}{}^{BC} * T^{j}{}_{kl}{}^{i})\f$
-  const Tensor<DataType, Symmetry<4, 3, 2, 1>,
-               index_list<C_index, d_index, k_index, l_index>>
-      actual_result = TensorExpressions::evaluate<ti_C, ti_d, ti_k, ti_l>(
-          R(ti_i, ti_j, ti_b, ti_A) *
-          (S(ti_d, ti_a, ti_B, ti_C) * T(ti_J, ti_k, ti_l, ti_I)));
+  //   const Tensor<DataType, Symmetry<4, 3, 2, 1>,
+  //                index_list<C_index, d_index, k_index, l_index>>
+  //       actual_result = TensorExpressions::evaluate<ti_C, ti_d, ti_k, ti_l>(
+  //           (R(ti_i, ti_j, ti_b, ti_A) *
+  //           S(ti_d, ti_a, ti_B, ti_C)) * T(ti_J, ti_k, ti_l, ti_I));
+
+  Tensor<DataType, Symmetry<4, 3, 2, 1>,
+         index_list<C_index, d_index, k_index, l_index>>
+      expected_result{};
 
   for (size_t c = 0; c < C_index::dim; c++) {
     for (size_t d = 0; d < d_index::dim; d++) {
       for (size_t k = 0; k < k_index::dim; k++) {
         for (size_t l = 0; l < l_index::dim; l++) {
-          DataType expected_product_component =
+          expected_result.get(c, d, k, l) =
               make_with_value<DataType>(used_for_size, 0.0);
+          //   DataType expected_product_component =
+          //       make_with_value<DataType>(used_for_size, 0.0);
           for (size_t i = 0; i < i_index::dim; i++) {
             for (size_t j = 0; j < j_index::dim; j++) {
               for (size_t b = 0; b < b_index::dim; b++) {
                 for (size_t a = 0; a < a_index::dim; a++) {
-                  expected_product_component +=
+                  //   expected_product_component +=
+                  expected_result.get(c, d, k, l) +=
                       R.get(i, j, b, a) * S.get(d, a, b, c) * T.get(j, k, l, i);
                 }
               }
             }
           }
-          CHECK_ITERABLE_APPROX(actual_result.get(c, d, k, l),
-                                expected_product_component);
+          //   expected_result.get(c, d, k, l) = expected_product_component;
+          //   CHECK_ITERABLE_APPROX(actual_result.get(c, d, k, l),
+          //                         expected_product_component);
         }
       }
     }

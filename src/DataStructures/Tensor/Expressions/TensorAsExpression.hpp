@@ -127,8 +127,7 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
   /// \return the mapping from the left hand side to the right hand side storage
   /// indices
   template <typename LhsStructure, typename... LhsIndices>
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t,
-                                                    LhsStructure::size()>
+  SPECTRE_ALWAYS_INLINE static const std::array<size_t, LhsStructure::size()>
   compute_lhs_to_rhs_map() noexcept {
     constexpr size_t num_components = LhsStructure::size();
     std::array<size_t, num_components> lhs_to_rhs_map{};
@@ -174,7 +173,7 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
                                  tmpl::list<Args...>>) {
       return (*t_)[lhs_storage_index];
     } else {
-      constexpr std::array<size_t, LhsStructure::size()> lhs_to_rhs_map =
+      static const std::array<size_t, LhsStructure::size()> lhs_to_rhs_map =
           compute_lhs_to_rhs_map<LhsStructure, LhsIndices...>();
       return (*t_)[gsl::at(lhs_to_rhs_map, lhs_storage_index)];
     }
