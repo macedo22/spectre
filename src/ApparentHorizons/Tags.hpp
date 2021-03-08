@@ -686,27 +686,23 @@ struct DimensionfulSpinMagnitudeCompute : DimensionfulSpinMagnitude,
 };
 
 /// The dimensionful spin angular momentum vector.
+template <typename Frame>
 struct DimensionfulSpinVector : db::SimpleTag {
   using type = std::array<double, 3>;
 };
 
 /// Computes the dimensionful spin angular momentum vector.
 template <typename Frame>
-struct DimensionfulSpinVectorCompute : DimensionfulSpinVector, db::ComputeTag {
-  using base = DimensionfulSpinVector;
+struct DimensionfulSpinVectorCompute : DimensionfulSpinVector<Frame>,
+                                       db::ComputeTag {
+  using base = DimensionfulSpinVector<Frame>;
   using return_type = std::array<double, 3>;
-  static std::array<double, 3> function(
-      const double& dimensionful_spin_magnitude,
-      const Scalar<DataVector>& area_element, const DataVector& radius,
-      const tnsr::i<DataVector, 3, Frame>& r_hat,
-      const Scalar<DataVector>& ricci_scalar,
-      const Scalar<DataVector>& spin_function,
-      const YlmSpherepack& ylm) noexcept {
-    return StrahlkorperGr::spin_vector<Frame>(
-        dimensionful_spin_magnitude, area_element,
-        Scalar<DataVector>{std::move(radius)}, r_hat, ricci_scalar,
-        spin_function, ylm);
-  }
+  static constexpr auto function = static_cast<void (*)(
+      const gsl::not_null<std::array<double, 3>*>, double,
+      const Scalar<DataVector>&, const DataVector&,
+      const tnsr::i<DataVector, 3, Frame>&, const Scalar<DataVector>&,
+      const Scalar<DataVector>&, const Strahlkorper<Frame>&) noexcept>(
+      &StrahlkorperGr::spin_vector);
   using argument_tags =
       tmpl::list<DimensionfulSpinMagnitude, AreaElement<Frame>,
                  StrahlkorperTags::Radius<Frame>, StrahlkorperTags::Rhat<Frame>,
