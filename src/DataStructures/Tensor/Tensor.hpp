@@ -137,30 +137,6 @@ class Tensor<X, Symm, IndexList<Indices...>> {
   Tensor& operator=(const Tensor&) = default;
   Tensor& operator=(Tensor&&) noexcept = default;
 
-  /// \cond HIDDEN_SYMBOLS
-  /// Constructor from a TensorExpression.
-  ///
-  /// \tparam LhsIndices the indices on the LHS of the tensor expression
-  /// \tparam T the type of the TensorExpression
-  /// \param tensor_expression the tensor expression being evaluated
-  template <typename... LhsIndices, typename T,
-            Requires<std::is_base_of<Expression, T>::value> = nullptr>
-  Tensor(const T& tensor_expression,
-         tmpl::list<LhsIndices...> /*meta*/) noexcept {
-    static_assert(
-        sizeof...(LhsIndices) == sizeof...(Indices),
-        "When calling evaluate<...>(...) you must pass the same "
-        "number of indices as template parameters as there are free "
-        "indices on the resulting tensor. For example, auto F = "
-        "evaluate<_a_t, _b_t>(G); if G has 2 free indices and you want "
-        "the LHS of the equation to be F_{ab} rather than F_{ba}.");
-    for (size_t i = 0; i < size(); ++i) {
-      gsl::at(data_, i) =
-          tensor_expression.template get<structure, LhsIndices...>(i);
-    }
-  }
-  /// \endcond
-
   /// Initialize a vector or scalar from an array
   ///
   /// \example
