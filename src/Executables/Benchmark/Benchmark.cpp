@@ -3,7 +3,7 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wredundant-decls"
-#include <benchmark/benchmark.h>
+#include <benchmark.h>
 #pragma GCC diagnostic pop
 #include <string>
 #include <vector>
@@ -100,7 +100,7 @@ void bench_all_gradient(benchmark::State& state) {  // NOLINT
   const auto grid_coords = map(logical_coordinates(mesh));
   Variables<VarTags> vars(mesh.number_of_grid_points(), 0.0);
 
-  while (state.KeepRunning()) {
+  for(auto _ : state) {
     benchmark::DoNotOptimize(partial_derivatives<VarTags>(vars, mesh, inv_jac));
   }
 }
