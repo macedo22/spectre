@@ -6,10 +6,13 @@
 #include <cstddef>
 #include <iterator>
 #include <numeric>
+#include <type_traits>
 
+#include "DataStructures/Tags/TempTensor.hpp"
 #include "DataStructures/Tensor/Expressions/Evaluate.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
+#include "DataStructures/Variables.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/TMPL.hpp"
@@ -45,16 +48,18 @@ template <typename DataType, typename RhsSymmetry,
           typename RhsTensorIndexTypeList, auto& TensorIndexA,
           auto& TensorIndexB>
 void test_evaluate_rank_2_impl() noexcept {
-  Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> R_ab(5_st);
+  const size_t used_for_size = 5;
+  Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> R_ab(used_for_size);
   std::iota(R_ab.begin(), R_ab.end(), 0.0);
 
   // L_{ab} = R_{ab}
   // Use explicit type (vs auto) so the compiler checks the return type of
   // `evaluate`
-  const Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> L_ab_returned =
+  using L_ab_type = decltype(R_ab);
+  const L_ab_type L_ab_returned =
       ::TensorExpressions::evaluate<TensorIndexA, TensorIndexB>(
           R_ab(TensorIndexA, TensorIndexB));
-  Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> L_ab_filled{};
+  L_ab_type L_ab_filled{};
   ::TensorExpressions::evaluate<TensorIndexA, TensorIndexB>(
       make_not_null(&L_ab_filled), R_ab(TensorIndexA, TensorIndexB));
 
@@ -62,10 +67,11 @@ void test_evaluate_rank_2_impl() noexcept {
   using L_ba_tensorindextype_list =
       tmpl::list<tmpl::at_c<RhsTensorIndexTypeList, 1>,
                  tmpl::at_c<RhsTensorIndexTypeList, 0>>;
-  const Tensor<DataType, RhsSymmetry, L_ba_tensorindextype_list> L_ba_returned =
+  using L_ba_type = Tensor<DataType, RhsSymmetry, L_ba_tensorindextype_list>;
+  const L_ba_type L_ba_returned =
       ::TensorExpressions::evaluate<TensorIndexB, TensorIndexA>(
           R_ab(TensorIndexA, TensorIndexB));
-  Tensor<DataType, RhsSymmetry, L_ba_tensorindextype_list> L_ba_filled{};
+  L_ba_type L_ba_filled{};
   ::TensorExpressions::evaluate<TensorIndexB, TensorIndexA>(
       make_not_null(&L_ba_filled), R_ab(TensorIndexA, TensorIndexB));
 
@@ -80,6 +86,32 @@ void test_evaluate_rank_2_impl() noexcept {
       // For L_{ba} = R_{ab}, check that L_{ji} == R_{ij}
       CHECK(L_ba_returned.get(j, i) == R_ab.get(i, j));
       CHECK(L_ba_filled.get(j, i) == R_ab.get(i, j));
+    }
+  }
+
+  // Test with TempTensor for LHS tensor
+  if constexpr (not std::is_same_v<DataType, double>) {
+    // L_{ab} = R_{ab}
+    Variables<tmpl::list<::Tags::TempTensor<1, L_ab_type>>> L_ab_var{
+        used_for_size};
+    auto& L_ab_temp = get<::Tags::TempTensor<1, L_ab_type>>(L_ab_var);
+    ::TensorExpressions::evaluate<TensorIndexA, TensorIndexB>(
+        make_not_null(&L_ab_temp), R_ab(TensorIndexA, TensorIndexB));
+
+    // L_{ba} = R_{ab}
+    Variables<tmpl::list<::Tags::TempTensor<1, L_ba_type>>> L_ba_var{
+        used_for_size};
+    auto& L_ba_temp = get<::Tags::TempTensor<1, L_ba_type>>(L_ba_var);
+    ::TensorExpressions::evaluate<TensorIndexB, TensorIndexA>(
+        make_not_null(&L_ba_temp), R_ab(TensorIndexA, TensorIndexB));
+
+    for (size_t i = 0; i < dim_a; ++i) {
+      for (size_t j = 0; j < dim_b; ++j) {
+        // For L_{ab} = R_{ab}, check that L_{ij} == R_{ij}
+        CHECK(L_ab_temp.get(i, j) == R_ab.get(i, j));
+        // For L_{ba} = R_{ab}, check that L_{ji} == R_{ij}
+        CHECK(L_ba_temp.get(j, i) == R_ab.get(i, j));
+      }
     }
   }
 }
