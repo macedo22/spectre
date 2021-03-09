@@ -94,14 +94,14 @@ void test_evaluate_rank_2_impl() noexcept {
     // L_{ab} = R_{ab}
     Variables<tmpl::list<::Tags::TempTensor<1, L_ab_type>>> L_ab_var{
         used_for_size};
-    auto& L_ab_temp = get<::Tags::TempTensor<1, L_ab_type>>(L_ab_var);
+    L_ab_type& L_ab_temp = get<::Tags::TempTensor<1, L_ab_type>>(L_ab_var);
     ::TensorExpressions::evaluate<TensorIndexA, TensorIndexB>(
         make_not_null(&L_ab_temp), R_ab(TensorIndexA, TensorIndexB));
 
     // L_{ba} = R_{ab}
     Variables<tmpl::list<::Tags::TempTensor<1, L_ba_type>>> L_ba_var{
         used_for_size};
-    auto& L_ba_temp = get<::Tags::TempTensor<1, L_ba_type>>(L_ba_var);
+    L_ba_type& L_ba_temp = get<::Tags::TempTensor<1, L_ba_type>>(L_ba_var);
     ::TensorExpressions::evaluate<TensorIndexB, TensorIndexA>(
         make_not_null(&L_ba_temp), R_ab(TensorIndexA, TensorIndexB));
 

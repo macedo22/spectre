@@ -37,7 +37,8 @@ void test_evaluate_rank_0(const DataType& data) noexcept {
   if constexpr (not std::is_same_v<DataType, double>) {
     Variables<tmpl::list<::Tags::TempTensor<1, Tensor<DataType>>>> L_var{
         data.size()};
-    auto& L_temp = get<::Tags::TempTensor<1, Tensor<DataType>>>(L_var);
+    Tensor<DataType>& L_temp =
+        get<::Tags::TempTensor<1, Tensor<DataType>>>(L_var);
     ::TensorExpressions::evaluate(make_not_null(&L_temp), R());
 
     CHECK(L_temp.get() == data);

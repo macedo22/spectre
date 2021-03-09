@@ -610,7 +610,8 @@ void test_evaluate_rank_4() noexcept {
     // L_{abcd} = R_{abcd}
     Variables<tmpl::list<::Tags::TempTensor<1, L_abcd_type>>> L_abcd_var{
         used_for_size};
-    auto& L_abcd_temp = get<::Tags::TempTensor<1, L_abcd_type>>(L_abcd_var);
+    L_abcd_type& L_abcd_temp =
+        get<::Tags::TempTensor<1, L_abcd_type>>(L_abcd_var);
     ::TensorExpressions::evaluate<TensorIndexA, TensorIndexB, TensorIndexC,
                                   TensorIndexD>(
         make_not_null(&L_abcd_temp),
@@ -619,7 +620,8 @@ void test_evaluate_rank_4() noexcept {
     // L_{abdc} = R_{abcd}
     Variables<tmpl::list<::Tags::TempTensor<1, L_abdc_type>>> L_abdc_var{
         used_for_size};
-    auto& L_abdc_temp = get<::Tags::TempTensor<1, L_abdc_type>>(L_abdc_var);
+    L_abdc_type& L_abdc_temp =
+        get<::Tags::TempTensor<1, L_abdc_type>>(L_abdc_var);
     ::TensorExpressions::evaluate<TensorIndexA, TensorIndexB, TensorIndexD,
                                   TensorIndexC>(
         make_not_null(&L_abdc_temp),
@@ -628,7 +630,8 @@ void test_evaluate_rank_4() noexcept {
     // L_{acbd} = R_{abcd}
     Variables<tmpl::list<::Tags::TempTensor<1, L_acbd_type>>> L_acbd_var{
         used_for_size};
-    auto& L_acbd_temp = get<::Tags::TempTensor<1, L_acbd_type>>(L_acbd_var);
+    L_acbd_type& L_acbd_temp =
+        get<::Tags::TempTensor<1, L_acbd_type>>(L_acbd_var);
     ::TensorExpressions::evaluate<TensorIndexA, TensorIndexC, TensorIndexB,
                                   TensorIndexD>(
         make_not_null(&L_acbd_temp),
@@ -637,7 +640,8 @@ void test_evaluate_rank_4() noexcept {
     // L_{acdb} = R_{abcd}
     Variables<tmpl::list<::Tags::TempTensor<1, L_acdb_type>>> L_acdb_var{
         used_for_size};
-    auto& L_acdb_temp = get<::Tags::TempTensor<1, L_acdb_type>>(L_acdb_var);
+    L_acdb_type& L_acdb_temp =
+        get<::Tags::TempTensor<1, L_acdb_type>>(L_acdb_var);
     ::TensorExpressions::evaluate<TensorIndexA, TensorIndexC, TensorIndexD,
                                   TensorIndexB>(
         make_not_null(&L_acdb_temp),
@@ -646,7 +650,8 @@ void test_evaluate_rank_4() noexcept {
     // L_{adbc} = R_{abcd}
     Variables<tmpl::list<::Tags::TempTensor<1, L_adbc_type>>> L_adbc_var{
         used_for_size};
-    auto& L_adbc_temp = get<::Tags::TempTensor<1, L_adbc_type>>(L_adbc_var);
+    L_adbc_type& L_adbc_temp =
+        get<::Tags::TempTensor<1, L_adbc_type>>(L_adbc_var);
     ::TensorExpressions::evaluate<TensorIndexA, TensorIndexD, TensorIndexB,
                                   TensorIndexC>(
         make_not_null(&L_adbc_temp),
@@ -655,7 +660,8 @@ void test_evaluate_rank_4() noexcept {
     // L_{adcb} = R_{abcd}
     Variables<tmpl::list<::Tags::TempTensor<1, L_adcb_type>>> L_adcb_var{
         used_for_size};
-    auto& L_adcb_temp = get<::Tags::TempTensor<1, L_adcb_type>>(L_adcb_var);
+    L_adcb_type& L_adcb_temp =
+        get<::Tags::TempTensor<1, L_adcb_type>>(L_adcb_var);
     ::TensorExpressions::evaluate<TensorIndexA, TensorIndexD, TensorIndexC,
                                   TensorIndexB>(
         make_not_null(&L_adcb_temp),
@@ -664,7 +670,8 @@ void test_evaluate_rank_4() noexcept {
     // L_{bacd} = R_{abcd}
     Variables<tmpl::list<::Tags::TempTensor<1, L_bacd_type>>> L_bacd_var{
         used_for_size};
-    auto& L_bacd_temp = get<::Tags::TempTensor<1, L_bacd_type>>(L_bacd_var);
+    L_bacd_type& L_bacd_temp =
+        get<::Tags::TempTensor<1, L_bacd_type>>(L_bacd_var);
     ::TensorExpressions::evaluate<TensorIndexB, TensorIndexA, TensorIndexC,
                                   TensorIndexD>(
         make_not_null(&L_bacd_temp),
@@ -673,7 +680,8 @@ void test_evaluate_rank_4() noexcept {
     // L_{badc} = R_{abcd}
     Variables<tmpl::list<::Tags::TempTensor<1, L_badc_type>>> L_badc_var{
         used_for_size};
-    auto& L_badc_temp = get<::Tags::TempTensor<1, L_badc_type>>(L_badc_var);
+    L_badc_type& L_badc_temp =
+        get<::Tags::TempTensor<1, L_badc_type>>(L_badc_var);
     ::TensorExpressions::evaluate<TensorIndexB, TensorIndexA, TensorIndexD,
                                   TensorIndexC>(
         make_not_null(&L_badc_temp),
@@ -682,7 +690,8 @@ void test_evaluate_rank_4() noexcept {
     // L_{bcad} = R_{abcd}
     Variables<tmpl::list<::Tags::TempTensor<1, L_bcad_type>>> L_bcad_var{
         used_for_size};
-    auto& L_bcad_temp = get<::Tags::TempTensor<1, L_bcad_type>>(L_bcad_var);
+    L_bcad_type& L_bcad_temp =
+        get<::Tags::TempTensor<1, L_bcad_type>>(L_bcad_var);
     ::TensorExpressions::evaluate<TensorIndexB, TensorIndexC, TensorIndexA,
                                   TensorIndexD>(
         make_not_null(&L_bcad_temp),
@@ -691,7 +700,8 @@ void test_evaluate_rank_4() noexcept {
     // L_{bcda} = R_{abcd}
     Variables<tmpl::list<::Tags::TempTensor<1, L_bcda_type>>> L_bcda_var{
         used_for_size};
-    auto& L_bcda_temp = get<::Tags::TempTensor<1, L_bcda_type>>(L_bcda_var);
+    L_bcda_type& L_bcda_temp =
+        get<::Tags::TempTensor<1, L_bcda_type>>(L_bcda_var);
     ::TensorExpressions::evaluate<TensorIndexB, TensorIndexC, TensorIndexD,
                                   TensorIndexA>(
         make_not_null(&L_bcda_temp),
@@ -700,7 +710,8 @@ void test_evaluate_rank_4() noexcept {
     // L_{bdac} = R_{abcd}
     Variables<tmpl::list<::Tags::TempTensor<1, L_bdac_type>>> L_bdac_var{
         used_for_size};
-    auto& L_bdac_temp = get<::Tags::TempTensor<1, L_bdac_type>>(L_bdac_var);
+    L_bdac_type& L_bdac_temp =
+        get<::Tags::TempTensor<1, L_bdac_type>>(L_bdac_var);
     ::TensorExpressions::evaluate<TensorIndexB, TensorIndexD, TensorIndexA,
                                   TensorIndexC>(
         make_not_null(&L_bdac_temp),
@@ -709,7 +720,8 @@ void test_evaluate_rank_4() noexcept {
     // L_{bdca} = R_{abcd}
     Variables<tmpl::list<::Tags::TempTensor<1, L_bdca_type>>> L_bdca_var{
         used_for_size};
-    auto& L_bdca_temp = get<::Tags::TempTensor<1, L_bdca_type>>(L_bdca_var);
+    L_bdca_type& L_bdca_temp =
+        get<::Tags::TempTensor<1, L_bdca_type>>(L_bdca_var);
     ::TensorExpressions::evaluate<TensorIndexB, TensorIndexD, TensorIndexC,
                                   TensorIndexA>(
         make_not_null(&L_bdca_temp),
@@ -718,7 +730,8 @@ void test_evaluate_rank_4() noexcept {
     // L_{cabd} = R_{abcd}
     Variables<tmpl::list<::Tags::TempTensor<1, L_cabd_type>>> L_cabd_var{
         used_for_size};
-    auto& L_cabd_temp = get<::Tags::TempTensor<1, L_cabd_type>>(L_cabd_var);
+    L_cabd_type& L_cabd_temp =
+        get<::Tags::TempTensor<1, L_cabd_type>>(L_cabd_var);
     ::TensorExpressions::evaluate<TensorIndexC, TensorIndexA, TensorIndexB,
                                   TensorIndexD>(
         make_not_null(&L_cabd_temp),
@@ -727,7 +740,8 @@ void test_evaluate_rank_4() noexcept {
     // L_{cadb} = R_{abcd}
     Variables<tmpl::list<::Tags::TempTensor<1, L_cadb_type>>> L_cadb_var{
         used_for_size};
-    auto& L_cadb_temp = get<::Tags::TempTensor<1, L_cadb_type>>(L_cadb_var);
+    L_cadb_type& L_cadb_temp =
+        get<::Tags::TempTensor<1, L_cadb_type>>(L_cadb_var);
     ::TensorExpressions::evaluate<TensorIndexC, TensorIndexA, TensorIndexD,
                                   TensorIndexB>(
         make_not_null(&L_cadb_temp),
@@ -736,7 +750,8 @@ void test_evaluate_rank_4() noexcept {
     // L_{cbad} = R_{abcd}
     Variables<tmpl::list<::Tags::TempTensor<1, L_cbad_type>>> L_cbad_var{
         used_for_size};
-    auto& L_cbad_temp = get<::Tags::TempTensor<1, L_cbad_type>>(L_cbad_var);
+    L_cbad_type& L_cbad_temp =
+        get<::Tags::TempTensor<1, L_cbad_type>>(L_cbad_var);
     ::TensorExpressions::evaluate<TensorIndexC, TensorIndexB, TensorIndexA,
                                   TensorIndexD>(
         make_not_null(&L_cbad_temp),
@@ -745,7 +760,8 @@ void test_evaluate_rank_4() noexcept {
     // L_{cbda} = R_{abcd}
     Variables<tmpl::list<::Tags::TempTensor<1, L_cbda_type>>> L_cbda_var{
         used_for_size};
-    auto& L_cbda_temp = get<::Tags::TempTensor<1, L_cbda_type>>(L_cbda_var);
+    L_cbda_type& L_cbda_temp =
+        get<::Tags::TempTensor<1, L_cbda_type>>(L_cbda_var);
     ::TensorExpressions::evaluate<TensorIndexC, TensorIndexB, TensorIndexD,
                                   TensorIndexA>(
         make_not_null(&L_cbda_temp),
@@ -754,7 +770,8 @@ void test_evaluate_rank_4() noexcept {
     // L_{cdab} = R_{abcd}
     Variables<tmpl::list<::Tags::TempTensor<1, L_cdab_type>>> L_cdab_var{
         used_for_size};
-    auto& L_cdab_temp = get<::Tags::TempTensor<1, L_cdab_type>>(L_cdab_var);
+    L_cdab_type& L_cdab_temp =
+        get<::Tags::TempTensor<1, L_cdab_type>>(L_cdab_var);
     ::TensorExpressions::evaluate<TensorIndexC, TensorIndexD, TensorIndexA,
                                   TensorIndexB>(
         make_not_null(&L_cdab_temp),
@@ -763,7 +780,8 @@ void test_evaluate_rank_4() noexcept {
     // L_{cdba} = R_{abcd}
     Variables<tmpl::list<::Tags::TempTensor<1, L_cdba_type>>> L_cdba_var{
         used_for_size};
-    auto& L_cdba_temp = get<::Tags::TempTensor<1, L_cdba_type>>(L_cdba_var);
+    L_cdba_type& L_cdba_temp =
+        get<::Tags::TempTensor<1, L_cdba_type>>(L_cdba_var);
     ::TensorExpressions::evaluate<TensorIndexC, TensorIndexD, TensorIndexB,
                                   TensorIndexA>(
         make_not_null(&L_cdba_temp),
@@ -772,7 +790,8 @@ void test_evaluate_rank_4() noexcept {
     // L_{dabc} = R_{abcd}
     Variables<tmpl::list<::Tags::TempTensor<1, L_dabc_type>>> L_dabc_var{
         used_for_size};
-    auto& L_dabc_temp = get<::Tags::TempTensor<1, L_dabc_type>>(L_dabc_var);
+    L_dabc_type& L_dabc_temp =
+        get<::Tags::TempTensor<1, L_dabc_type>>(L_dabc_var);
     ::TensorExpressions::evaluate<TensorIndexD, TensorIndexA, TensorIndexB,
                                   TensorIndexC>(
         make_not_null(&L_dabc_temp),
@@ -781,7 +800,8 @@ void test_evaluate_rank_4() noexcept {
     // L_{dacb} = R_{abcd}
     Variables<tmpl::list<::Tags::TempTensor<1, L_dacb_type>>> L_dacb_var{
         used_for_size};
-    auto& L_dacb_temp = get<::Tags::TempTensor<1, L_dacb_type>>(L_dacb_var);
+    L_dacb_type& L_dacb_temp =
+        get<::Tags::TempTensor<1, L_dacb_type>>(L_dacb_var);
     ::TensorExpressions::evaluate<TensorIndexD, TensorIndexA, TensorIndexC,
                                   TensorIndexB>(
         make_not_null(&L_dacb_temp),
@@ -790,7 +810,8 @@ void test_evaluate_rank_4() noexcept {
     // L_{dbac} = R_{abcd}
     Variables<tmpl::list<::Tags::TempTensor<1, L_dbac_type>>> L_dbac_var{
         used_for_size};
-    auto& L_dbac_temp = get<::Tags::TempTensor<1, L_dbac_type>>(L_dbac_var);
+    L_dbac_type& L_dbac_temp =
+        get<::Tags::TempTensor<1, L_dbac_type>>(L_dbac_var);
     ::TensorExpressions::evaluate<TensorIndexD, TensorIndexB, TensorIndexA,
                                   TensorIndexC>(
         make_not_null(&L_dbac_temp),
@@ -799,7 +820,8 @@ void test_evaluate_rank_4() noexcept {
     // L_{dbca} = R_{abcd}
     Variables<tmpl::list<::Tags::TempTensor<1, L_dbca_type>>> L_dbca_var{
         used_for_size};
-    auto& L_dbca_temp = get<::Tags::TempTensor<1, L_dbca_type>>(L_dbca_var);
+    L_dbca_type& L_dbca_temp =
+        get<::Tags::TempTensor<1, L_dbca_type>>(L_dbca_var);
     ::TensorExpressions::evaluate<TensorIndexD, TensorIndexB, TensorIndexC,
                                   TensorIndexA>(
         make_not_null(&L_dbca_temp),
@@ -808,7 +830,8 @@ void test_evaluate_rank_4() noexcept {
     // L_{dcab} = R_{abcd}
     Variables<tmpl::list<::Tags::TempTensor<1, L_dcab_type>>> L_dcab_var{
         used_for_size};
-    auto& L_dcab_temp = get<::Tags::TempTensor<1, L_dcab_type>>(L_dcab_var);
+    L_dcab_type& L_dcab_temp =
+        get<::Tags::TempTensor<1, L_dcab_type>>(L_dcab_var);
     ::TensorExpressions::evaluate<TensorIndexD, TensorIndexC, TensorIndexA,
                                   TensorIndexB>(
         make_not_null(&L_dcab_temp),
@@ -817,7 +840,8 @@ void test_evaluate_rank_4() noexcept {
     // L_{dcba} = R_{abcd}
     Variables<tmpl::list<::Tags::TempTensor<1, L_dcba_type>>> L_dcba_var{
         used_for_size};
-    auto& L_dcba_temp = get<::Tags::TempTensor<1, L_dcba_type>>(L_dcba_var);
+    L_dcba_type& L_dcba_temp =
+        get<::Tags::TempTensor<1, L_dcba_type>>(L_dcba_var);
     ::TensorExpressions::evaluate<TensorIndexD, TensorIndexC, TensorIndexB,
                                   TensorIndexA>(
         make_not_null(&L_dcba_temp),

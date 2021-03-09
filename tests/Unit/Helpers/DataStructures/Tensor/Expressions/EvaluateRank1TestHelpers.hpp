@@ -58,7 +58,7 @@ void test_evaluate_rank_1_impl() noexcept {
     // L_a = R_a
     Variables<tmpl::list<::Tags::TempTensor<1, tensor_type>>> L_a_var{
         used_for_size};
-    auto& L_a_temp = get<::Tags::TempTensor<1, tensor_type>>(L_a_var);
+    tensor_type& L_a_temp = get<::Tags::TempTensor<1, tensor_type>>(L_a_var);
     ::TensorExpressions::evaluate<TensorIndex>(make_not_null(&L_a_temp),
                                                R_a(TensorIndex));
 
