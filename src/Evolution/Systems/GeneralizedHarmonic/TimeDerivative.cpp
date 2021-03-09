@@ -83,17 +83,21 @@ void TimeDerivative<Dim>::apply(
   GeneralizedHarmonic::spacetime_derivative_of_spacetime_metric(
       da_spacetime_metric, *lapse, *shift, pi, phi);
   gr::christoffel_first_kind(christoffel_first_kind, *da_spacetime_metric);
+  // time this and TE implementation of it
   raise_or_lower_first_index(christoffel_second_kind, *christoffel_first_kind,
                              *inverse_spacetime_metric);
+  // time this and TE implementation of it
   trace_last_indices(trace_christoffel, *christoffel_first_kind,
                      *inverse_spacetime_metric);
   gr::spacetime_normal_vector(normal_spacetime_vector, *lapse, *shift);
   gr::spacetime_normal_one_form(normal_spacetime_one_form, *lapse);
 
+  // time this and TE implementation of it
   get(*gamma1gamma2) = get(gamma1) * get(gamma2);
   const DataVector& gamma12 = get(*gamma1gamma2);
 
-  for (size_t m = 0; m < Dim; ++m) {
+  // time this and TE implementation of it, as well as the other loops below
+  for (size_t m = 0; m < Dim; ++m) {  // *
     for (size_t mu = 0; mu < Dim + 1; ++mu) {
       for (size_t nu = mu; nu < Dim + 1; ++nu) {
         phi_1_up->get(m, mu, nu) =
