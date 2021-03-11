@@ -5,24 +5,20 @@
 #pragma GCC diagnostic ignored "-Wredundant-decls"
 #include <benchmark.h>
 #pragma GCC diagnostic pop
+#include <cstddef>
 #include <string>
+#include <type_traits>
 #include <vector>
 
-#include "DataStructures/DataBox/Tag.hpp"
 #include "DataStructures/DataVector.hpp"
+#include "DataStructures/Tags/TempTensor.hpp"
+#include "DataStructures/TempBuffer.hpp"
+#include "DataStructures/Tensor/Expressions/Evaluate.hpp"
+#include "DataStructures/Tensor/Expressions/Product.hpp"
+#include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
-#include "DataStructures/Variables.hpp"
-#include "Domain/CoordinateMaps/Affine.hpp"
-#include "Domain/CoordinateMaps/CoordinateMap.hpp"
-#include "Domain/CoordinateMaps/CoordinateMap.tpp"
-#include "Domain/CoordinateMaps/ProductMaps.hpp"
-#include "Domain/CoordinateMaps/ProductMaps.tpp"
-#include "Domain/LogicalCoordinates.hpp"
-#include "Domain/Structure/Element.hpp"
-#include "NumericalAlgorithms/LinearOperators/PartialDerivatives.tpp"
-#include "NumericalAlgorithms/Spectral/Mesh.hpp"
-#include "NumericalAlgorithms/Spectral/Spectral.hpp"
-#include "PointwiseFunctions/MathFunctions/PowX.hpp"
+#include "DataStructures/Tensor/TypeAliases.hpp"
+#include "Executables/Benchmark/BenchmarkedImpls.hpp"
 
 // Charm looks for this function but since we build without a main function or
 // main module we just have it be empty
@@ -68,43 +64,180 @@ namespace {
 }  // namespace
 
 namespace {
-// In this anonymous namespace is an example of microbenchmarking the
-// all_gradient routine for the GH system
+// // In this anonymous namespace is an example of microbenchmarking the
+// // all_gradient routine for the GH system
 
-template <size_t Dim>
-struct Kappa : db::SimpleTag {
-  using type = tnsr::abb<DataVector, Dim, Frame::Grid>;
-};
-template <size_t Dim>
-struct Psi : db::SimpleTag {
-  using type = tnsr::aa<DataVector, Dim, Frame::Grid>;
-};
+// template <size_t Dim>
+// struct Kappa : db::SimpleTag {
+//   using type = tnsr::abb<DataVector, Dim, Frame::Grid>;
+// };
+// template <size_t Dim>
+// struct Psi : db::SimpleTag {
+//   using type = tnsr::aa<DataVector, Dim, Frame::Grid>;
+// };
 
-// clang-tidy: don't pass be non-const reference
-void bench_all_gradient(benchmark::State& state) {  // NOLINT
-  constexpr const size_t pts_1d = 4;
-  constexpr const size_t Dim = 3;
-  const Mesh<Dim> mesh{pts_1d, Spectral::Basis::Legendre,
-                       Spectral::Quadrature::GaussLobatto};
-  domain::CoordinateMaps::Affine map1d(-1.0, 1.0, -1.0, 1.0);
-  using Map3d =
-      domain::CoordinateMaps::ProductOf3Maps<domain::CoordinateMaps::Affine,
-                                             domain::CoordinateMaps::Affine,
-                                             domain::CoordinateMaps::Affine>;
-  domain::CoordinateMap<Frame::Logical, Frame::Grid, Map3d> map(
-      Map3d{map1d, map1d, map1d});
+// // clang-tidy: don't pass be non-const reference
+// void bench_all_gradient(benchmark::State& state) {  // NOLINT
+//   constexpr const size_t pts_1d = 4;
+//   constexpr const size_t Dim = 3;
+//   const Mesh<Dim> mesh{pts_1d, Spectral::Basis::Legendre,
+//                        Spectral::Quadrature::GaussLobatto};
+//   domain::CoordinateMaps::Affine map1d(-1.0, 1.0, -1.0, 1.0);
+//   using Map3d =
+//       domain::CoordinateMaps::ProductOf3Maps<domain::CoordinateMaps::Affine,
+//                                              domain::CoordinateMaps::Affine,
+//                                              domain::CoordinateMaps::Affine>;
+//   domain::CoordinateMap<Frame::Logical, Frame::Grid, Map3d> map(
+//       Map3d{map1d, map1d, map1d});
 
-  using VarTags = tmpl::list<Kappa<Dim>, Psi<Dim>>;
-  const InverseJacobian<DataVector, Dim, Frame::Logical, Frame::Grid> inv_jac =
-      map.inv_jacobian(logical_coordinates(mesh));
-  const auto grid_coords = map(logical_coordinates(mesh));
-  Variables<VarTags> vars(mesh.number_of_grid_points(), 0.0);
+//   using VarTags = tmpl::list<Kappa<Dim>, Psi<Dim>>;
+//   const InverseJacobian<DataVector, Dim, Frame::Logical, Frame::Grid> inv_jac
+//   =
+//       map.inv_jacobian(logical_coordinates(mesh));
+//   const auto grid_coords = map(logical_coordinates(mesh));
+//   Variables<VarTags> vars(mesh.number_of_grid_points(), 0.0);
 
-  for(auto _ : state) {
-    benchmark::DoNotOptimize(partial_derivatives<VarTags>(vars, mesh, inv_jac));
+//   for(auto _ : state) {
+//     benchmark::DoNotOptimize(partial_derivatives<VarTags>(vars, mesh,
+//     inv_jac));
+//   }
+// }
+// BENCHMARK(bench_all_gradient);  // NOLINT
+}  // namespace
+
+namespace {
+// set up shared variables and aliases
+constexpr size_t num_grid_points = BenchmarkImpl::num_grid_points;
+
+using phi_1_up_type = BenchmarkImpl::phi_1_up_type;
+using inverse_spatial_metric_type = BenchmarkImpl::inverse_spatial_metric_type;
+using phi_type = BenchmarkImpl::phi_type;
+
+void bench_manual_tensor_equation_without_buffer(
+    benchmark::State& state) {  // NOLINT
+  // inverse_spatial_metric
+  inverse_spatial_metric_type inverse_spatial_metric(num_grid_points);
+  BenchmarkHelpers::zero_initialize_tensor(
+      make_not_null(&inverse_spatial_metric));
+
+  // phi
+  phi_type phi(num_grid_points);
+  BenchmarkHelpers::zero_initialize_tensor(make_not_null(&phi));
+
+  // LHS: phi_1_up
+  phi_1_up_type phi_1_up(num_grid_points);
+
+  for (auto _ : state) {
+    BenchmarkImpl::manual_impl(make_not_null(&phi_1_up),
+                               make_not_null(&inverse_spatial_metric), phi);
+    benchmark::DoNotOptimize(phi_1_up);
+    benchmark::ClobberMemory();
   }
 }
-BENCHMARK(bench_all_gradient);  // NOLINT
+
+void bench_manual_tensor_equation_with_buffer(
+    benchmark::State& state) {  // NOLINT
+  TempBuffer<tmpl::list<::Tags::TempTensor<0, phi_1_up_type>,
+                        ::Tags::TempTensor<1, inverse_spatial_metric_type>,
+                        ::Tags::TempTensor<2, phi_type>>>
+      vars{num_grid_points};
+
+  // inverse_spatial_metric
+  inverse_spatial_metric_type& inverse_spatial_metric =
+      get<::Tags::TempTensor<1, inverse_spatial_metric_type>>(vars);
+  BenchmarkHelpers::zero_initialize_tensor(
+      make_not_null(&inverse_spatial_metric));
+
+  // phi
+  phi_type& phi = get<::Tags::TempTensor<2, phi_type>>(vars);
+  BenchmarkHelpers::zero_initialize_tensor(make_not_null(&phi));
+
+  // LHS: phi_1_up
+  phi_1_up_type& phi_1_up = get<::Tags::TempTensor<0, phi_1_up_type>>(vars);
+
+  for (auto _ : state) {
+    BenchmarkImpl::manual_impl(make_not_null(&phi_1_up),
+                               make_not_null(&inverse_spatial_metric), phi);
+    benchmark::DoNotOptimize(phi_1_up);
+    benchmark::ClobberMemory();
+  }
+}
+
+void bench_tensorexpression_return_lhs_tensor(
+    benchmark::State& state) {  // NOLINT
+  // inverse_spatial_metric
+  inverse_spatial_metric_type inverse_spatial_metric(num_grid_points);
+  BenchmarkHelpers::zero_initialize_tensor(
+      make_not_null(&inverse_spatial_metric));
+
+  // phi
+  phi_type phi(num_grid_points);
+  BenchmarkHelpers::zero_initialize_tensor(make_not_null(&phi));
+
+  for(auto _ : state) {
+    // LHS: phi_1_up
+    const phi_1_up_type phi_1_up = BenchmarkImpl::tensorexpression_impl_return(
+        make_not_null(&inverse_spatial_metric), phi);
+    benchmark::DoNotOptimize(phi_1_up);
+    benchmark::ClobberMemory();
+  }
+}
+
+void bench_tensorexpression_lhs_tensor_as_arg_without_buffer(
+    benchmark::State& state) {  // NOLINT
+  // inverse_spatial_metric
+  inverse_spatial_metric_type inverse_spatial_metric(num_grid_points);
+  BenchmarkHelpers::zero_initialize_tensor(
+      make_not_null(&inverse_spatial_metric));
+
+  // phi
+  phi_type phi(num_grid_points);
+  BenchmarkHelpers::zero_initialize_tensor(make_not_null(&phi));
+
+  // LHS: phi_1_up
+  phi_1_up_type phi_1_up(num_grid_points);
+
+  for (auto _ : state) {
+    BenchmarkImpl::tensorexpression_impl_lhs_as_arg(
+        make_not_null(&phi_1_up), make_not_null(&inverse_spatial_metric), phi);
+    benchmark::DoNotOptimize(phi_1_up);
+    benchmark::ClobberMemory();
+  }
+}
+
+void bench_tensorexpression_lhs_tensor_as_arg_with_buffer(
+    benchmark::State& state) {  // NOLINT
+  TempBuffer<tmpl::list<::Tags::TempTensor<0, phi_1_up_type>,
+                        ::Tags::TempTensor<1, inverse_spatial_metric_type>,
+                        ::Tags::TempTensor<2, phi_type>>>
+      vars{num_grid_points};
+
+  // inverse_spatial_metric
+  inverse_spatial_metric_type& inverse_spatial_metric =
+      get<::Tags::TempTensor<1, inverse_spatial_metric_type>>(vars);
+  BenchmarkHelpers::zero_initialize_tensor(
+      make_not_null(&inverse_spatial_metric));
+
+  // phi
+  phi_type& phi = get<::Tags::TempTensor<2, phi_type>>(vars);
+  BenchmarkHelpers::zero_initialize_tensor(make_not_null(&phi));
+
+  // LHS: phi_1_up
+  phi_1_up_type& phi_1_up = get<::Tags::TempTensor<0, phi_1_up_type>>(vars);
+
+  for (auto _ : state) {
+    BenchmarkImpl::tensorexpression_impl_lhs_as_arg(
+        make_not_null(&phi_1_up), make_not_null(&inverse_spatial_metric), phi);
+    benchmark::DoNotOptimize(phi_1_up);
+    benchmark::ClobberMemory();
+  }
+}
+
+BENCHMARK(bench_manual_tensor_equation_without_buffer);              // NOLINT
+BENCHMARK(bench_manual_tensor_equation_with_buffer);                 // NOLINT
+BENCHMARK(bench_tensorexpression_return_lhs_tensor);                 // NOLINT
+BENCHMARK(bench_tensorexpression_lhs_tensor_as_arg_without_buffer);  // NOLINT
+BENCHMARK(bench_tensorexpression_lhs_tensor_as_arg_with_buffer);     // NOLINT
 }  // namespace
 
 // Ignore the warning about an extra ';' because some versions of benchmark
