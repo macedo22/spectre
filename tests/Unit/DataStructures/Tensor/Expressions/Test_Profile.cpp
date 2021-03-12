@@ -4,7 +4,10 @@
 #include "Framework/TestingFramework.hpp"
 
 #include <cstddef>
+#include <type_traits>
 
+#include "DataStructures/Tags/TempTensor.hpp"
+#include "DataStructures/TempBuffer.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Tensor/TypeAliases.hpp"
 #include "Executables/Benchmark/BenchmarkedImpls.hpp"
@@ -37,7 +40,7 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Benchmark",
 
   constexpr size_t Dim = BenchmarkImpl::Dim;
   using DataType = BenchmarkImpl::DataType;
-  constexpr size_t num_grid_points = 0;
+  constexpr size_t num_grid_points = 5;
 
   using phi_1_up_type = tnsr::Iaa<DataType, Dim>;
   using inverse_spatial_metric_type = tnsr::II<DataType, Dim>;
@@ -75,6 +78,39 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Benchmark",
                               phi_1_up_te_returned.get(i, a, b));
         CHECK_ITERABLE_APPROX(phi_1_up_manual.get(i, a, b),
                               phi_1_up_te_filled.get(i, a, b));
+      }
+    }
+  }
+
+  if constexpr (not std::is_same_v<DataType, double>) {
+    TempBuffer<tmpl::list<::Tags::TempTensor<0, phi_1_up_type>,
+                          ::Tags::TempTensor<1, inverse_spatial_metric_type>,
+                          ::Tags::TempTensor<2, phi_type>>>
+        vars{num_grid_points};
+
+    // inverse_spatial_metric
+    inverse_spatial_metric_type& inverse_spatial_metric_te_temp =
+        get<::Tags::TempTensor<1, inverse_spatial_metric_type>>(vars);
+    assign_unique_values_to_tensor(
+        make_not_null(&inverse_spatial_metric_te_temp));
+
+    // phi
+    phi_type& phi_te_temp = get<::Tags::TempTensor<2, phi_type>>(vars);
+    assign_unique_values_to_tensor(make_not_null(&phi_te_temp));
+
+    // LHS: phi_1_up
+    phi_1_up_type& phi_1_up_te_temp =
+        get<::Tags::TempTensor<0, phi_1_up_type>>(vars);
+    BenchmarkImpl::tensorexpression_impl_lhs_as_arg(
+        make_not_null(&phi_1_up_te_temp),
+        make_not_null(&inverse_spatial_metric_te_temp), phi_te_temp);
+
+    for (size_t i = 0; i < Dim; i++) {
+      for (size_t a = 0; a < Dim + 1; a++) {
+        for (size_t b = 0; b < Dim + 1; b++) {
+          CHECK_ITERABLE_APPROX(phi_1_up_manual.get(i, a, b),
+                                phi_1_up_te_temp.get(i, a, b));
+        }
       }
     }
   }
