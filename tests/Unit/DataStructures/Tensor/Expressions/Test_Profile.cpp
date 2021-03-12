@@ -5,7 +5,6 @@
 
 #include <cstddef>
 
-#include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Tensor/TypeAliases.hpp"
 #include "Executables/Benchmark/BenchmarkedImpls.hpp"
@@ -37,11 +36,12 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Benchmark",
   // Make sure TE impl matches manual impl
 
   constexpr size_t Dim = BenchmarkImpl::Dim;
-  constexpr size_t num_grid_points = 5;
+  using DataType = BenchmarkImpl::DataType;
+  constexpr size_t num_grid_points = 0;
 
-  using phi_1_up_type = tnsr::Iaa<DataVector, Dim>;
-  using inverse_spatial_metric_type = tnsr::II<DataVector, Dim>;
-  using phi_type = tnsr::iaa<DataVector, Dim>;
+  using phi_1_up_type = tnsr::Iaa<DataType, Dim>;
+  using inverse_spatial_metric_type = tnsr::II<DataType, Dim>;
+  using phi_type = tnsr::iaa<DataType, Dim>;
 
   // inverse_spatial_metric
   inverse_spatial_metric_type inverse_spatial_metric(num_grid_points);
