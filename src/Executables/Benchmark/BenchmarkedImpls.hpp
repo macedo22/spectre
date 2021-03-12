@@ -5,7 +5,6 @@
 
 #include <cstddef>
 
-#include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/Expressions/Evaluate.hpp"
 #include "DataStructures/Tensor/Expressions/Product.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
@@ -41,7 +40,7 @@ void zero_initialize_tensor(
 namespace BenchmarkImpl {
 
 // compile time config for profile case
-using DataType = DataVector;
+using DataType = double;
 static constexpr size_t Dim = 3;
 
 // tensor types in tensor equation being profiles
