@@ -37,7 +37,7 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Benchmark",
   // Make sure TE impl matches manual impl
 
   constexpr size_t Dim = BenchmarkImpl::Dim;
-  constexpr size_t num_grid_points = BenchmarkImpl::num_grid_points;
+  constexpr size_t num_grid_points = 5;
 
   using phi_1_up_type = tnsr::Iaa<DataVector, Dim>;
   using inverse_spatial_metric_type = tnsr::II<DataVector, Dim>;

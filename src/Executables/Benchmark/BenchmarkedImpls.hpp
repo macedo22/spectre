@@ -37,14 +37,19 @@ void zero_initialize_tensor(
 }
 }  // namespace BenchmarkHelpers
 
+// Implementations benchmarked
 namespace BenchmarkImpl {
-constexpr size_t Dim = 3;
-constexpr size_t num_grid_points = 5;
 
-using phi_1_up_type = tnsr::Iaa<DataVector, Dim>;
-using inverse_spatial_metric_type = tnsr::II<DataVector, Dim>;
-using phi_type = tnsr::iaa<DataVector, Dim>;
+// compile time config for profile case
+using DataType = DataVector;
+static constexpr size_t Dim = 3;
 
+// tensor types in tensor equation being profiles
+using phi_1_up_type = tnsr::Iaa<DataType, Dim>;
+using inverse_spatial_metric_type = tnsr::II<DataType, Dim>;
+using phi_type = tnsr::iaa<DataType, Dim>;
+
+// manual implementation profiled
 SPECTRE_ALWAYS_INLINE void manual_impl(
     const gsl::not_null<phi_1_up_type*> phi_1_up,
     const gsl::not_null<inverse_spatial_metric_type*> inverse_spatial_metric,
@@ -63,13 +68,15 @@ SPECTRE_ALWAYS_INLINE void manual_impl(
   }
 }
 
-SPECTRE_ALWAYS_INLINE tnsr::Iaa<DataVector, Dim> tensorexpression_impl_return(
+// TensorExpression implementation profiled that returns LHS tensor
+SPECTRE_ALWAYS_INLINE phi_1_up_type tensorexpression_impl_return(
     const gsl::not_null<inverse_spatial_metric_type*> inverse_spatial_metric,
-    const tnsr::iaa<DataVector, Dim>& phi) noexcept {
+    const phi_type& phi) noexcept {
   return TensorExpressions::evaluate<ti_I, ti_a, ti_b>(
       (*inverse_spatial_metric)(ti_I, ti_J) * phi(ti_j, ti_a, ti_b));
 }
 
+// TensorExpression implementation profiled that takes LHS tensor as argument
 SPECTRE_ALWAYS_INLINE void tensorexpression_impl_lhs_as_arg(
     const gsl::not_null<phi_1_up_type*> phi_1_up,
     const gsl::not_null<inverse_spatial_metric_type*> inverse_spatial_metric,

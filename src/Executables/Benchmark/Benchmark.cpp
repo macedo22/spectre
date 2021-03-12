@@ -6,18 +6,10 @@
 #include <benchmark.h>
 #pragma GCC diagnostic pop
 #include <cstddef>
-#include <string>
-#include <type_traits>
-#include <vector>
 
-#include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tags/TempTensor.hpp"
 #include "DataStructures/TempBuffer.hpp"
-#include "DataStructures/Tensor/Expressions/Evaluate.hpp"
-#include "DataStructures/Tensor/Expressions/Product.hpp"
-#include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
-#include "DataStructures/Tensor/TypeAliases.hpp"
 #include "Executables/Benchmark/BenchmarkedImpls.hpp"
 
 // Charm looks for this function but since we build without a main function or
@@ -106,15 +98,16 @@ namespace {
 }  // namespace
 
 namespace {
-// set up shared variables and aliases
-constexpr size_t num_grid_points = BenchmarkImpl::num_grid_points;
-
+// set up shared stuff
 using phi_1_up_type = BenchmarkImpl::phi_1_up_type;
 using inverse_spatial_metric_type = BenchmarkImpl::inverse_spatial_metric_type;
 using phi_type = BenchmarkImpl::phi_type;
 
+// profile manual implementation, equation terms not in buffer
 void bench_manual_tensor_equation_without_buffer(
     benchmark::State& state) {  // NOLINT
+  const size_t num_grid_points = static_cast<size_t>(state.range(0));
+
   // inverse_spatial_metric
   inverse_spatial_metric_type inverse_spatial_metric(num_grid_points);
   BenchmarkHelpers::zero_initialize_tensor(
@@ -135,8 +128,11 @@ void bench_manual_tensor_equation_without_buffer(
   }
 }
 
+// profile manual implementation, equation terms in buffer
 void bench_manual_tensor_equation_with_buffer(
     benchmark::State& state) {  // NOLINT
+  const size_t num_grid_points = static_cast<size_t>(state.range(0));
+
   TempBuffer<tmpl::list<::Tags::TempTensor<0, phi_1_up_type>,
                         ::Tags::TempTensor<1, inverse_spatial_metric_type>,
                         ::Tags::TempTensor<2, phi_type>>>
@@ -163,8 +159,11 @@ void bench_manual_tensor_equation_with_buffer(
   }
 }
 
+// profile TE implementation, returns LHS tensor
 void bench_tensorexpression_return_lhs_tensor(
     benchmark::State& state) {  // NOLINT
+  const size_t num_grid_points = static_cast<size_t>(state.range(0));
+
   // inverse_spatial_metric
   inverse_spatial_metric_type inverse_spatial_metric(num_grid_points);
   BenchmarkHelpers::zero_initialize_tensor(
@@ -183,8 +182,11 @@ void bench_tensorexpression_return_lhs_tensor(
   }
 }
 
+// profile TE implementation, takes LHS as arg, equation terms not in buffer
 void bench_tensorexpression_lhs_tensor_as_arg_without_buffer(
     benchmark::State& state) {  // NOLINT
+  const size_t num_grid_points = static_cast<size_t>(state.range(0));
+
   // inverse_spatial_metric
   inverse_spatial_metric_type inverse_spatial_metric(num_grid_points);
   BenchmarkHelpers::zero_initialize_tensor(
@@ -205,8 +207,11 @@ void bench_tensorexpression_lhs_tensor_as_arg_without_buffer(
   }
 }
 
+// profile TE implementation, takes LHS as arg, equation terms in buffer
 void bench_tensorexpression_lhs_tensor_as_arg_with_buffer(
     benchmark::State& state) {  // NOLINT
+  const size_t num_grid_points = static_cast<size_t>(state.range(0));
+
   TempBuffer<tmpl::list<::Tags::TempTensor<0, phi_1_up_type>,
                         ::Tags::TempTensor<1, inverse_spatial_metric_type>,
                         ::Tags::TempTensor<2, phi_type>>>
@@ -233,11 +238,38 @@ void bench_tensorexpression_lhs_tensor_as_arg_with_buffer(
   }
 }
 
-BENCHMARK(bench_manual_tensor_equation_without_buffer);              // NOLINT
-BENCHMARK(bench_manual_tensor_equation_with_buffer);                 // NOLINT
-BENCHMARK(bench_tensorexpression_return_lhs_tensor);                 // NOLINT
-BENCHMARK(bench_tensorexpression_lhs_tensor_as_arg_without_buffer);  // NOLINT
-BENCHMARK(bench_tensorexpression_lhs_tensor_as_arg_with_buffer);     // NOLINT
+// Profile with each of these number of grid points for DataVector
+const std::array<size_t, 4> num_grid_point_values = {5, 100, 500, 1000};
+
+// Profile manual implementation with and without using a buffer for tensor
+// equation terms, TE implementation that returns LHS tensor, and TE
+// implementation that takes LHS tensor as an argument with and without using a
+// buffer for tensor equation terms
+BENCHMARK(bench_manual_tensor_equation_without_buffer)
+    ->Arg(num_grid_point_values[0])
+    ->Arg(num_grid_point_values[1])
+    ->Arg(num_grid_point_values[2])
+    ->Arg(num_grid_point_values[3]);  // NOLINT
+BENCHMARK(bench_manual_tensor_equation_with_buffer)
+    ->Arg(num_grid_point_values[0])
+    ->Arg(num_grid_point_values[1])
+    ->Arg(num_grid_point_values[2])
+    ->Arg(num_grid_point_values[3]);  // NOLINT
+BENCHMARK(bench_tensorexpression_return_lhs_tensor)
+    ->Arg(num_grid_point_values[0])
+    ->Arg(num_grid_point_values[1])
+    ->Arg(num_grid_point_values[2])
+    ->Arg(num_grid_point_values[3]);  // NOLINT
+BENCHMARK(bench_tensorexpression_lhs_tensor_as_arg_without_buffer)
+    ->Arg(num_grid_point_values[0])
+    ->Arg(num_grid_point_values[1])
+    ->Arg(num_grid_point_values[2])
+    ->Arg(num_grid_point_values[3]);  // NOLINT
+BENCHMARK(bench_tensorexpression_lhs_tensor_as_arg_with_buffer)
+    ->Arg(num_grid_point_values[0])
+    ->Arg(num_grid_point_values[1])
+    ->Arg(num_grid_point_values[2])
+    ->Arg(num_grid_point_values[3]);  // NOLINT
 }  // namespace
 
 // Ignore the warning about an extra ';' because some versions of benchmark
