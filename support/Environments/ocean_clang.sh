@@ -63,7 +63,7 @@ spectre_load_modules() {
     module load charm-6.10.2-libs
 }
 
-spectre_run_cmake() {
+spectre_run_cmake_clang() {
     if [ -z ${SPECTRE_HOME} ]; then
         echo "You must set SPECTRE_HOME to the cloned SpECTRE directory"
         return 1
@@ -74,6 +74,23 @@ spectre_run_cmake() {
           -D CMAKE_BUILD_TYPE=Release \
           -D CMAKE_C_COMPILER=clang \
           -D CMAKE_CXX_COMPILER=clang++ \
+          -D CMAKE_Fortran_COMPILER=${GCC_HOME}/gfortran \
+          -DGOOGLE_BENCHMARK_ROOT=$GOOGLE_BENCHMARK_BUILD \
+          "$@" \
+          $SPECTRE_HOME
+}
+
+spectre_run_cmake_gcc() {
+    if [ -z ${SPECTRE_HOME} ]; then
+        echo "You must set SPECTRE_HOME to the cloned SpECTRE directory"
+        return 1
+    fi
+    spectre_load_modules
+    export GCC_HOME=/opt/ohpc/pub/compiler/gcc/7.3.0/bin
+    cmake -D CHARM_ROOT=$CHARM_ROOT \
+          -D CMAKE_BUILD_TYPE=Release \
+          -D CMAKE_C_COMPILER=gcc \
+          -D CMAKE_CXX_COMPILER=g++ \
           -D CMAKE_Fortran_COMPILER=${GCC_HOME}/gfortran \
           -DGOOGLE_BENCHMARK_ROOT=$GOOGLE_BENCHMARK_BUILD \
           "$@" \
