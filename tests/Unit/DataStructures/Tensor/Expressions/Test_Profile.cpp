@@ -42,9 +42,10 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Benchmark",
   using DataType = BenchmarkImpl::DataType;
   constexpr size_t num_grid_points = 5;
 
-  using phi_1_up_type = tnsr::Iaa<DataType, Dim>;
-  using inverse_spatial_metric_type = tnsr::II<DataType, Dim>;
-  using phi_type = tnsr::iaa<DataType, Dim>;
+  using phi_1_up_type = BenchmarkImpl::phi_1_up_type;
+  using inverse_spatial_metric_type =
+      BenchmarkImpl::inverse_spatial_metric_type;
+  using phi_type = BenchmarkImpl::phi_type;
 
   // inverse_spatial_metric
   inverse_spatial_metric_type inverse_spatial_metric(num_grid_points);
