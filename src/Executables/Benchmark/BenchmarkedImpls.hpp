@@ -5,11 +5,13 @@
 
 #include <cstddef>
 
+#include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/Expressions/Evaluate.hpp"
 #include "DataStructures/Tensor/Expressions/Product.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Tensor/TypeAliases.hpp"
+#include "PointwiseFunctions/GeneralRelativity/IndexManipulation.hpp"
 #include "Utilities/ForceInline.hpp"
 #include "Utilities/Gsl.hpp"
 
@@ -40,47 +42,39 @@ void zero_initialize_tensor(
 namespace BenchmarkImpl {
 
 // compile time config for profile case
-using DataType = double;
+using DataType = DataVector;
 static constexpr size_t Dim = 3;
 
 // tensor types in tensor equation being profiles
-using phi_1_up_type = tnsr::Iaa<DataType, Dim>;
-using inverse_spatial_metric_type = tnsr::II<DataType, Dim>;
-using phi_type = tnsr::iaa<DataType, Dim>;
+using christoffel_second_kind_type = tnsr::Abb<DataVector, Dim>;
+using christoffel_first_kind_type = tnsr::abb<DataVector, Dim>;
+using inverse_spacetime_metric_type = tnsr::AA<DataVector, Dim>;
 
 // manual implementation profiled
 SPECTRE_ALWAYS_INLINE void manual_impl(
-    const gsl::not_null<phi_1_up_type*> phi_1_up,
-    const gsl::not_null<inverse_spatial_metric_type*> inverse_spatial_metric,
-    const phi_type& phi) noexcept {
-  for (size_t m = 0; m < Dim; ++m) {  // *
-    for (size_t mu = 0; mu < Dim + 1; ++mu) {
-      for (size_t nu = mu; nu < Dim + 1; ++nu) {
-        phi_1_up->get(m, mu, nu) =
-            inverse_spatial_metric->get(m, 0) * phi.get(0, mu, nu);
-        for (size_t n = 1; n < Dim; ++n) {
-          phi_1_up->get(m, mu, nu) +=
-              inverse_spatial_metric->get(m, n) * phi.get(n, mu, nu);
-        }
-      }
-    }
-  }
+    const gsl::not_null<christoffel_second_kind_type*> christoffel_second_kind,
+    const christoffel_first_kind_type& christoffel_first_kind,
+    const inverse_spacetime_metric_type& inverse_spacetime_metric) noexcept {
+  raise_or_lower_first_index(christoffel_second_kind, christoffel_first_kind,
+                             inverse_spacetime_metric);
 }
 
 // TensorExpression implementation profiled that returns LHS tensor
-SPECTRE_ALWAYS_INLINE phi_1_up_type tensorexpression_impl_return(
-    const gsl::not_null<inverse_spatial_metric_type*> inverse_spatial_metric,
-    const phi_type& phi) noexcept {
-  return TensorExpressions::evaluate<ti_I, ti_a, ti_b>(
-      (*inverse_spatial_metric)(ti_I, ti_J) * phi(ti_j, ti_a, ti_b));
+SPECTRE_ALWAYS_INLINE christoffel_second_kind_type tensorexpression_impl_return(
+    const christoffel_first_kind_type& christoffel_first_kind,
+    const inverse_spacetime_metric_type& inverse_spacetime_metric) noexcept {
+  return TensorExpressions::evaluate<ti_A, ti_b, ti_c>(
+      christoffel_first_kind(ti_d, ti_b, ti_c) *
+      inverse_spacetime_metric(ti_A, ti_D));
 }
 
 // TensorExpression implementation profiled that takes LHS tensor as argument
 SPECTRE_ALWAYS_INLINE void tensorexpression_impl_lhs_as_arg(
-    const gsl::not_null<phi_1_up_type*> phi_1_up,
-    const gsl::not_null<inverse_spatial_metric_type*> inverse_spatial_metric,
-    const phi_type& phi) noexcept {
-  TensorExpressions::evaluate<ti_I, ti_a, ti_b>(
-      phi_1_up, (*inverse_spatial_metric)(ti_I, ti_J) * phi(ti_j, ti_a, ti_b));
+    const gsl::not_null<christoffel_second_kind_type*> christoffel_second_kind,
+    const christoffel_first_kind_type& christoffel_first_kind,
+    const inverse_spacetime_metric_type& inverse_spacetime_metric) noexcept {
+  TensorExpressions::evaluate<ti_A, ti_b, ti_c>(
+      christoffel_second_kind, christoffel_first_kind(ti_d, ti_b, ti_c) *
+                                   inverse_spacetime_metric(ti_A, ti_D));
 }
 }  // namespace BenchmarkImpl

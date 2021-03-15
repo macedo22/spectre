@@ -42,75 +42,80 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Benchmark",
   using DataType = BenchmarkImpl::DataType;
   constexpr size_t num_grid_points = 5;
 
-  using phi_1_up_type = BenchmarkImpl::phi_1_up_type;
-  using inverse_spatial_metric_type =
-      BenchmarkImpl::inverse_spatial_metric_type;
-  using phi_type = BenchmarkImpl::phi_type;
+  using christoffel_second_kind_type =
+      BenchmarkImpl::christoffel_second_kind_type;
+  using christoffel_first_kind_type =
+      BenchmarkImpl::christoffel_first_kind_type;
+  using inverse_spacetime_metric_type =
+      BenchmarkImpl::inverse_spacetime_metric_type;
 
-  // inverse_spatial_metric
-  inverse_spatial_metric_type inverse_spatial_metric(num_grid_points);
-  assign_unique_values_to_tensor(make_not_null(&inverse_spatial_metric));
+  // christoffel_first_kind
+  christoffel_first_kind_type christoffel_first_kind(num_grid_points);
+  assign_unique_values_to_tensor(make_not_null(&christoffel_first_kind));
 
-  // phi
-  phi_type phi(num_grid_points);
-  assign_unique_values_to_tensor(make_not_null(&phi));
+  // inverse_spacetime_metric
+  inverse_spacetime_metric_type inverse_spacetime_metric(num_grid_points);
+  assign_unique_values_to_tensor(make_not_null(&inverse_spacetime_metric));
 
-  // LHS: phi_1_up for manual implementation
-  phi_1_up_type phi_1_up_manual(num_grid_points);
+  // LHS: christoffel_second_kind for manual implementation
+  christoffel_second_kind_type christoffel_second_kind_manual(num_grid_points);
 
-  BenchmarkImpl::manual_impl(make_not_null(&phi_1_up_manual),
-                             make_not_null(&inverse_spatial_metric), phi);
+  BenchmarkImpl::manual_impl(make_not_null(&christoffel_second_kind_manual),
+                             christoffel_first_kind, inverse_spacetime_metric);
 
-  // LHS: phi_1_up for TE implementation with LHS returned
-  const phi_1_up_type phi_1_up_te_returned =
-      BenchmarkImpl::tensorexpression_impl_return(
-          make_not_null(&inverse_spatial_metric), phi);
+  // LHS: christoffel_second_kind for TE implementation with LHS returned
+  const christoffel_second_kind_type christoffel_second_kind_te_returned =
+      BenchmarkImpl::tensorexpression_impl_return(christoffel_first_kind,
+                                                  inverse_spacetime_metric);
 
-  // LHS: phi_1_up for TE implementation with LHS pass as arg
-  phi_1_up_type phi_1_up_te_filled(num_grid_points);
+  // LHS: christoffel_second_kind for TE implementation with LHS pass as arg
+  christoffel_second_kind_type christoffel_second_kind_te_filled(
+      num_grid_points);
   BenchmarkImpl::tensorexpression_impl_lhs_as_arg(
-      make_not_null(&phi_1_up_te_filled),
-      make_not_null(&inverse_spatial_metric), phi);
+      make_not_null(&christoffel_second_kind_te_filled), christoffel_first_kind,
+      inverse_spacetime_metric);
 
-  for (size_t i = 0; i < Dim; i++) {
-    for (size_t a = 0; a < Dim + 1; a++) {
-      for (size_t b = 0; b < Dim + 1; b++) {
-        CHECK_ITERABLE_APPROX(phi_1_up_manual.get(i, a, b),
-                              phi_1_up_te_returned.get(i, a, b));
-        CHECK_ITERABLE_APPROX(phi_1_up_manual.get(i, a, b),
-                              phi_1_up_te_filled.get(i, a, b));
+  for (size_t a = 0; a < Dim + 1; a++) {
+    for (size_t b = 0; b < Dim + 1; b++) {
+      for (size_t c = 0; c < Dim + 1; c++) {
+        CHECK_ITERABLE_APPROX(christoffel_second_kind_manual.get(a, b, c),
+                              christoffel_second_kind_te_returned.get(a, b, c));
+        CHECK_ITERABLE_APPROX(christoffel_second_kind_manual.get(a, b, c),
+                              christoffel_second_kind_te_filled.get(a, b, c));
       }
     }
   }
 
   if constexpr (not std::is_same_v<DataType, double>) {
-    TempBuffer<tmpl::list<::Tags::TempTensor<0, phi_1_up_type>,
-                          ::Tags::TempTensor<1, inverse_spatial_metric_type>,
-                          ::Tags::TempTensor<2, phi_type>>>
+    TempBuffer<tmpl::list<::Tags::TempTensor<0, christoffel_second_kind_type>,
+                          ::Tags::TempTensor<1, christoffel_first_kind_type>,
+                          ::Tags::TempTensor<2, inverse_spacetime_metric_type>>>
         vars{num_grid_points};
 
-    // inverse_spatial_metric
-    inverse_spatial_metric_type& inverse_spatial_metric_te_temp =
-        get<::Tags::TempTensor<1, inverse_spatial_metric_type>>(vars);
+    // christoffel_first_kind
+    christoffel_first_kind_type& christoffel_first_kind_te_temp =
+        get<::Tags::TempTensor<1, christoffel_first_kind_type>>(vars);
     assign_unique_values_to_tensor(
-        make_not_null(&inverse_spatial_metric_te_temp));
+        make_not_null(&christoffel_first_kind_te_temp));
 
-    // phi
-    phi_type& phi_te_temp = get<::Tags::TempTensor<2, phi_type>>(vars);
-    assign_unique_values_to_tensor(make_not_null(&phi_te_temp));
+    // inverse_spacetime_metric
+    inverse_spacetime_metric_type& inverse_spacetime_metric_te_temp =
+        get<::Tags::TempTensor<2, inverse_spacetime_metric_type>>(vars);
+    assign_unique_values_to_tensor(
+        make_not_null(&inverse_spacetime_metric_te_temp));
 
-    // LHS: phi_1_up
-    phi_1_up_type& phi_1_up_te_temp =
-        get<::Tags::TempTensor<0, phi_1_up_type>>(vars);
+    // LHS: christoffel_second_kind
+    christoffel_second_kind_type& christoffel_second_kind_te_temp =
+        get<::Tags::TempTensor<0, christoffel_second_kind_type>>(vars);
     BenchmarkImpl::tensorexpression_impl_lhs_as_arg(
-        make_not_null(&phi_1_up_te_temp),
-        make_not_null(&inverse_spatial_metric_te_temp), phi_te_temp);
+        make_not_null(&christoffel_second_kind_te_temp),
+        christoffel_first_kind_te_temp, inverse_spacetime_metric_te_temp);
 
-    for (size_t i = 0; i < Dim; i++) {
-      for (size_t a = 0; a < Dim + 1; a++) {
-        for (size_t b = 0; b < Dim + 1; b++) {
-          CHECK_ITERABLE_APPROX(phi_1_up_manual.get(i, a, b),
-                                phi_1_up_te_temp.get(i, a, b));
+    for (size_t a = 0; a < Dim + 1; a++) {
+      for (size_t b = 0; b < Dim + 1; b++) {
+        for (size_t c = 0; c < Dim + 1; c++) {
+          CHECK_ITERABLE_APPROX(christoffel_second_kind_manual.get(a, b, c),
+                                christoffel_second_kind_te_temp.get(a, b, c));
         }
       }
     }
