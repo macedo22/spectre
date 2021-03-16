@@ -19,6 +19,7 @@ if("${GoogleBenchmark_FOUND}" AND NOT "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
     ${executable}
     PRIVATE
     DataStructures
+    GeneralizedHarmonic
     Informer
     GoogleBenchmark
     )

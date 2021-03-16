@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <type_traits>
 
+#include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tags/TempTensor.hpp"
 #include "DataStructures/TempBuffer.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
@@ -34,31 +35,28 @@ void assign_unique_values_to_tensor(
 }
 }  // namespace
 
-SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Benchmark",
-                  "[DataStructures][Unit]") {
-  // Make sure TE impl matches manual impl
-
-  constexpr size_t Dim = BenchmarkImpl::Dim;
-  using DataType = BenchmarkImpl::DataType;
-  constexpr size_t num_grid_points = 5;
-
+// Make sure TE impl matches manual impl
+template <size_t Dim, typename DataType>
+void test_benchmarked_implementations_core(
+    const DataType& used_for_size) noexcept {
+  using BenchmarkImpl = BenchmarkImpl<DataType, Dim>;
   using christoffel_second_kind_type =
-      BenchmarkImpl::christoffel_second_kind_type;
+      typename BenchmarkImpl::christoffel_second_kind_type;
   using christoffel_first_kind_type =
-      BenchmarkImpl::christoffel_first_kind_type;
+      typename BenchmarkImpl::christoffel_first_kind_type;
   using inverse_spacetime_metric_type =
-      BenchmarkImpl::inverse_spacetime_metric_type;
+      typename BenchmarkImpl::inverse_spacetime_metric_type;
 
   // christoffel_first_kind
-  christoffel_first_kind_type christoffel_first_kind(num_grid_points);
+  christoffel_first_kind_type christoffel_first_kind(used_for_size);
   assign_unique_values_to_tensor(make_not_null(&christoffel_first_kind));
 
   // inverse_spacetime_metric
-  inverse_spacetime_metric_type inverse_spacetime_metric(num_grid_points);
+  inverse_spacetime_metric_type inverse_spacetime_metric(used_for_size);
   assign_unique_values_to_tensor(make_not_null(&inverse_spacetime_metric));
 
   // LHS: christoffel_second_kind for manual implementation
-  christoffel_second_kind_type christoffel_second_kind_manual(num_grid_points);
+  christoffel_second_kind_type christoffel_second_kind_manual(used_for_size);
 
   BenchmarkImpl::manual_impl(make_not_null(&christoffel_second_kind_manual),
                              christoffel_first_kind, inverse_spacetime_metric);
@@ -69,8 +67,7 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Benchmark",
                                                   inverse_spacetime_metric);
 
   // LHS: christoffel_second_kind for TE implementation with LHS pass as arg
-  christoffel_second_kind_type christoffel_second_kind_te_filled(
-      num_grid_points);
+  christoffel_second_kind_type christoffel_second_kind_te_filled(used_for_size);
   BenchmarkImpl::tensorexpression_impl_lhs_as_arg(
       make_not_null(&christoffel_second_kind_te_filled), christoffel_first_kind,
       inverse_spacetime_metric);
@@ -90,7 +87,7 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Benchmark",
     TempBuffer<tmpl::list<::Tags::TempTensor<0, christoffel_second_kind_type>,
                           ::Tags::TempTensor<1, christoffel_first_kind_type>,
                           ::Tags::TempTensor<2, inverse_spacetime_metric_type>>>
-        vars{num_grid_points};
+        vars{used_for_size.size()};
 
     // christoffel_first_kind
     christoffel_first_kind_type& christoffel_first_kind_te_temp =
@@ -120,4 +117,19 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Benchmark",
       }
     }
   }
+}
+
+template <typename DataType>
+void test_benchmarked_implementations(const DataType& used_for_size) noexcept {
+  test_benchmarked_implementations_core<1>(used_for_size);
+  test_benchmarked_implementations_core<2>(used_for_size);
+  test_benchmarked_implementations_core<3>(used_for_size);
+}
+
+SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Benchmark",
+                  "[DataStructures][Unit]") {
+  test_benchmarked_implementations(
+      std::numeric_limits<double>::signaling_NaN());
+  test_benchmarked_implementations(
+      DataVector(5, std::numeric_limits<double>::signaling_NaN()));
 }
