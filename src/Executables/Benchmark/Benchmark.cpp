@@ -99,7 +99,7 @@ namespace {
 
 namespace {
 // set up shared stuff
-using DataType = DataVector;
+using DataType = double;
 constexpr size_t Dim = 3;
 using BenchmarkImpl = BenchmarkImpl<DataType, Dim>;
 using christoffel_second_kind_type =
@@ -111,9 +111,7 @@ using inverse_spacetime_metric_type =
 // profile manual implementation, equation terms not in buffer
 void bench_manual_tensor_equation_without_buffer(
     benchmark::State& state) {  // NOLINT
-  const size_t num_grid_points = static_cast<size_t>(state.range(0));
-  const DataType used_for_size =
-      DataVector(num_grid_points, std::numeric_limits<double>::signaling_NaN());
+  const DataType used_for_size = 0.0;
 
   // christoffel_first_kind
   christoffel_first_kind_type christoffel_first_kind(used_for_size);
@@ -137,47 +135,10 @@ void bench_manual_tensor_equation_without_buffer(
   }
 }
 
-// profile manual implementation, equation terms in buffer
-void bench_manual_tensor_equation_with_buffer(
-    benchmark::State& state) {  // NOLINT
-  const size_t num_grid_points = static_cast<size_t>(state.range(0));
-
-  TempBuffer<tmpl::list<::Tags::TempTensor<0, christoffel_second_kind_type>,
-                        ::Tags::TempTensor<1, christoffel_first_kind_type>,
-                        ::Tags::TempTensor<2, inverse_spacetime_metric_type>>>
-      vars{num_grid_points};
-
-  // christoffel_first_kind
-  christoffel_first_kind_type& christoffel_first_kind =
-      get<::Tags::TempTensor<1, christoffel_first_kind_type>>(vars);
-  BenchmarkHelpers::zero_initialize_tensor(
-      make_not_null(&christoffel_first_kind));
-
-  // inverse_spacetime_metric
-  inverse_spacetime_metric_type& inverse_spacetime_metric =
-      get<::Tags::TempTensor<2, inverse_spacetime_metric_type>>(vars);
-  BenchmarkHelpers::zero_initialize_tensor(
-      make_not_null(&inverse_spacetime_metric));
-
-  // LHS: christoffel_second_kind
-  christoffel_second_kind_type& christoffel_second_kind =
-      get<::Tags::TempTensor<0, christoffel_second_kind_type>>(vars);
-
-  for (auto _ : state) {
-    BenchmarkImpl::manual_impl(make_not_null(&christoffel_second_kind),
-                               christoffel_first_kind,
-                               inverse_spacetime_metric);
-    benchmark::DoNotOptimize(christoffel_second_kind);
-    benchmark::ClobberMemory();
-  }
-}
-
 // profile TE implementation, returns LHS tensor
 void bench_tensorexpression_return_lhs_tensor(
     benchmark::State& state) {  // NOLINT
-  const size_t num_grid_points = static_cast<size_t>(state.range(0));
-  const DataType used_for_size =
-      DataVector(num_grid_points, std::numeric_limits<double>::signaling_NaN());
+  const DataType used_for_size = 0.0;
 
   // christoffel_first_kind
   christoffel_first_kind_type christoffel_first_kind(used_for_size);
@@ -202,9 +163,7 @@ void bench_tensorexpression_return_lhs_tensor(
 // profile TE implementation, takes LHS as arg, equation terms not in buffer
 void bench_tensorexpression_lhs_tensor_as_arg_without_buffer(
     benchmark::State& state) {  // NOLINT
-  const size_t num_grid_points = static_cast<size_t>(state.range(0));
-  const DataType used_for_size =
-      DataVector(num_grid_points, std::numeric_limits<double>::signaling_NaN());
+  const DataType used_for_size = 0.0;
 
   // christoffel_first_kind
   christoffel_first_kind_type christoffel_first_kind(used_for_size);
@@ -228,73 +187,11 @@ void bench_tensorexpression_lhs_tensor_as_arg_without_buffer(
   }
 }
 
-// profile TE implementation, takes LHS as arg, equation terms in buffer
-void bench_tensorexpression_lhs_tensor_as_arg_with_buffer(
-    benchmark::State& state) {  // NOLINT
-  const size_t num_grid_points = static_cast<size_t>(state.range(0));
-
-  TempBuffer<tmpl::list<::Tags::TempTensor<0, christoffel_second_kind_type>,
-                        ::Tags::TempTensor<1, christoffel_first_kind_type>,
-                        ::Tags::TempTensor<2, inverse_spacetime_metric_type>>>
-      vars{num_grid_points};
-
-  // christoffel_first_kind
-  christoffel_first_kind_type& christoffel_first_kind =
-      get<::Tags::TempTensor<1, christoffel_first_kind_type>>(vars);
-  BenchmarkHelpers::zero_initialize_tensor(
-      make_not_null(&christoffel_first_kind));
-
-  // inverse_spacetime_metric
-  inverse_spacetime_metric_type& inverse_spacetime_metric =
-      get<::Tags::TempTensor<2, inverse_spacetime_metric_type>>(vars);
-  BenchmarkHelpers::zero_initialize_tensor(
-      make_not_null(&inverse_spacetime_metric));
-
-  // LHS: christoffel_second_kind
-  christoffel_second_kind_type& christoffel_second_kind =
-      get<::Tags::TempTensor<0, christoffel_second_kind_type>>(vars);
-
-  for (auto _ : state) {
-    BenchmarkImpl::tensorexpression_impl_lhs_as_arg(
-        make_not_null(&christoffel_second_kind), christoffel_first_kind,
-        inverse_spacetime_metric);
-    benchmark::DoNotOptimize(christoffel_second_kind);
-    benchmark::ClobberMemory();
-  }
-}
-
-// Profile with each of these number of grid points for DataVector
-const std::array<long int, 4> num_grid_point_values = {5, 100, 500, 1000};
-
-// Profile manual implementation with and without using a buffer for tensor
-// equation terms, TE implementation that returns LHS tensor, and TE
-// implementation that takes LHS tensor as an argument with and without using a
-// buffer for tensor equation terms
-BENCHMARK(bench_manual_tensor_equation_without_buffer)
-    ->Arg(num_grid_point_values[0])
-    ->Arg(num_grid_point_values[1])
-    ->Arg(num_grid_point_values[2])
-    ->Arg(num_grid_point_values[3]);  // NOLINT
-BENCHMARK(bench_manual_tensor_equation_with_buffer)
-    ->Arg(num_grid_point_values[0])
-    ->Arg(num_grid_point_values[1])
-    ->Arg(num_grid_point_values[2])
-    ->Arg(num_grid_point_values[3]);  // NOLINT
-BENCHMARK(bench_tensorexpression_return_lhs_tensor)
-    ->Arg(num_grid_point_values[0])
-    ->Arg(num_grid_point_values[1])
-    ->Arg(num_grid_point_values[2])
-    ->Arg(num_grid_point_values[3]);  // NOLINT
-BENCHMARK(bench_tensorexpression_lhs_tensor_as_arg_without_buffer)
-    ->Arg(num_grid_point_values[0])
-    ->Arg(num_grid_point_values[1])
-    ->Arg(num_grid_point_values[2])
-    ->Arg(num_grid_point_values[3]);  // NOLINT
-BENCHMARK(bench_tensorexpression_lhs_tensor_as_arg_with_buffer)
-    ->Arg(num_grid_point_values[0])
-    ->Arg(num_grid_point_values[1])
-    ->Arg(num_grid_point_values[2])
-    ->Arg(num_grid_point_values[3]);  // NOLINT
+// Profile manual implementation, TE implementation that returns LHS tensor, and
+// TE implementation that takes LHS tensor as an argument
+BENCHMARK(bench_manual_tensor_equation_without_buffer);              // NOLINT
+BENCHMARK(bench_tensorexpression_return_lhs_tensor);                 // NOLINT
+BENCHMARK(bench_tensorexpression_lhs_tensor_as_arg_without_buffer);  // NOLINT
 }  // namespace
 
 // Ignore the warning about an extra ';' because some versions of benchmark
