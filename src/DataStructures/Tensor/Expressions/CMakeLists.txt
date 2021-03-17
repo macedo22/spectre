@@ -8,6 +8,7 @@ spectre_target_headers(
   AddSubtract.hpp
   Contract.hpp
   Evaluate.hpp
+  Expressions.hpp
   LhsTensorSymmAndIndices.hpp
   Product.hpp
   NumberAsExpression.hpp

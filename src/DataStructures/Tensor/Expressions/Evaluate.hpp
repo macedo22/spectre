@@ -77,7 +77,7 @@ constexpr bool contains_indices_to_contract(
  */
 template <auto&... LhsTensorIndices, typename X, typename LhsSymmetry,
           typename LhsIndexList, typename RhsTE,
-          Requires<std::is_base_of_v<Expression, RhsTE>> = nullptr>
+          Requires<std::is_base_of_v<TensorExpressionBase, RhsTE>> = nullptr>
 void evaluate(
     const gsl::not_null<Tensor<X, LhsSymmetry, LhsIndexList>*> lhs_tensor,
     const RhsTE& rhs_tensorexpression) {
@@ -174,7 +174,7 @@ void evaluate(
  * LhsTensorIndices
  */
 template <auto&... LhsTensorIndices, typename RhsTE,
-          Requires<std::is_base_of_v<Expression, RhsTE>> = nullptr>
+          Requires<std::is_base_of_v<TensorExpressionBase, RhsTE>> = nullptr>
 auto evaluate(const RhsTE& rhs_tensorexpression) {
   using lhs_tensorindex_list =
       tmpl::list<std::decay_t<decltype(LhsTensorIndices)>...>;

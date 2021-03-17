@@ -155,7 +155,7 @@ struct is_tensor_index<TensorIndex<I>> : std::true_type {};
 /// \details
 /// The empty base class provides a simple means for checking if a type is a
 /// TensorExpression.
-struct Expression {};
+struct TensorExpressionBase {};
 
 // @{
 /// \ingroup TensorExpressionsGroup
@@ -178,7 +178,7 @@ template <typename Derived, typename DataType, typename Symm,
           typename... Indices, template <typename...> class ArgsList,
           typename... Args>
 struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
-                        ArgsList<Args...>> : public Expression {
+                        ArgsList<Args...>> : public TensorExpressionBase {
   static_assert(sizeof...(Args) == 0 or sizeof...(Args) == sizeof...(Indices),
                 "the number of Tensor indices must match the number of "
                 "components specified in an expression.");
