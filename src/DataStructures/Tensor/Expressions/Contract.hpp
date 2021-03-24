@@ -220,7 +220,7 @@ struct TensorContract
     /// uncontracted LHS tensor component to sum for contraction
     /// \return the value of a component of the contracted LHS tensor
     template <size_t ContractedIndexValue>
-    static SPECTRE_ALWAYS_INLINE decltype(auto) apply(
+    static /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) apply(
         const T& t, std::array<size_t, num_uncontracted_tensor_indices>
                         uncontracted_lhs_multi_index_to_fill) noexcept {
       // Fill contracted indices in multi-index with `ContractedIndexValue`
