@@ -100,7 +100,7 @@ namespace {
 
 namespace {
 // set up shared stuff
-using DataType = DataVector;
+using DataType = double;
 constexpr size_t Dim = 3;
 using BenchmarkImpl = BenchmarkImpl<DataType, Dim>;
 using L_type = typename BenchmarkImpl::L_type;
@@ -111,9 +111,7 @@ using T_type = typename BenchmarkImpl::T_type;
 // benchmark TE implementation, returns LHS tensor
 void bench_manual_tensor_equation_return_lhs_tensor(
     benchmark::State& state) {  // NOLINT
-  const size_t num_grid_points = static_cast<size_t>(state.range(0));
-  const DataType used_for_size =
-      DataVector(num_grid_points, std::numeric_limits<double>::signaling_NaN());
+  const DataType used_for_size = 0.0;
 
   // R
   R_type R(used_for_size);
@@ -138,9 +136,7 @@ void bench_manual_tensor_equation_return_lhs_tensor(
 // benchmark manual implementation, equation terms not in buffer
 void bench_manual_tensor_equation_lhs_tensor_as_arg_without_buffer(
     benchmark::State& state) {  // NOLINT
-  const size_t num_grid_points = static_cast<size_t>(state.range(0));
-  const DataType used_for_size =
-      DataVector(num_grid_points, std::numeric_limits<double>::signaling_NaN());
+  const DataType used_for_size = 0.0;
 
   // R
   R_type R(used_for_size);
@@ -164,44 +160,10 @@ void bench_manual_tensor_equation_lhs_tensor_as_arg_without_buffer(
   }
 }
 
-// benchmark manual implementation, equation terms in buffer
-void bench_manual_tensor_equation_lhs_tensor_as_arg_with_buffer(
-    benchmark::State& state) {  // NOLINT
-  const size_t num_grid_points = static_cast<size_t>(state.range(0));
-
-  TempBuffer<
-      tmpl::list<::Tags::TempTensor<0, L_type>, ::Tags::TempTensor<1, R_type>,
-                 ::Tags::TempTensor<2, S_type>, ::Tags::TempTensor<3, T_type>>>
-      vars{num_grid_points};
-
-  // R
-  R_type& R = get<::Tags::TempTensor<1, R_type>>(vars);
-  BenchmarkHelpers::zero_initialize_tensor(make_not_null(&R));
-
-  // S
-  S_type& S = get<::Tags::TempTensor<2, S_type>>(vars);
-  BenchmarkHelpers::zero_initialize_tensor(make_not_null(&S));
-
-  // T
-  T_type& T = get<::Tags::TempTensor<3, T_type>>(vars);
-  BenchmarkHelpers::zero_initialize_tensor(make_not_null(&T));
-
-  // LHS: L
-  L_type& L = get<::Tags::TempTensor<0, L_type>>(vars);
-
-  for (auto _ : state) {
-    BenchmarkImpl::manual_impl_lhs_as_arg(make_not_null(&L), R, S, T);
-    benchmark::DoNotOptimize(L);
-    benchmark::ClobberMemory();
-  }
-}
-
 // benchmark TE implementation, returns LHS tensor
 void bench_tensorexpression_return_lhs_tensor(
     benchmark::State& state) {  // NOLINT
-  const size_t num_grid_points = static_cast<size_t>(state.range(0));
-  const DataType used_for_size =
-      DataVector(num_grid_points, std::numeric_limits<double>::signaling_NaN());
+  const DataType used_for_size = 0.0;
 
   // R
   R_type R(used_for_size);
@@ -226,9 +188,7 @@ void bench_tensorexpression_return_lhs_tensor(
 // benchmark TE implementation, takes LHS as arg, equation terms not in buffer
 void bench_tensorexpression_lhs_tensor_as_arg_without_buffer(
     benchmark::State& state) {  // NOLINT
-  const size_t num_grid_points = static_cast<size_t>(state.range(0));
-  const DataType used_for_size =
-      DataVector(num_grid_points, std::numeric_limits<double>::signaling_NaN());
+  const DataType used_for_size = 0.0;
 
   // R
   R_type R(used_for_size);
@@ -252,75 +212,14 @@ void bench_tensorexpression_lhs_tensor_as_arg_without_buffer(
   }
 }
 
-// benchmark TE implementation, takes LHS as arg, equation terms in buffer
-void bench_tensorexpression_lhs_tensor_as_arg_with_buffer(
-    benchmark::State& state) {  // NOLINT
-  const size_t num_grid_points = static_cast<size_t>(state.range(0));
-
-  TempBuffer<
-      tmpl::list<::Tags::TempTensor<0, L_type>, ::Tags::TempTensor<1, R_type>,
-                 ::Tags::TempTensor<2, S_type>, ::Tags::TempTensor<3, T_type>>>
-      vars{num_grid_points};
-
-  // R
-  R_type& R = get<::Tags::TempTensor<1, R_type>>(vars);
-  BenchmarkHelpers::zero_initialize_tensor(make_not_null(&R));
-
-  // S
-  S_type& S = get<::Tags::TempTensor<2, S_type>>(vars);
-  BenchmarkHelpers::zero_initialize_tensor(make_not_null(&S));
-
-  // T
-  T_type& T = get<::Tags::TempTensor<3, T_type>>(vars);
-  BenchmarkHelpers::zero_initialize_tensor(make_not_null(&T));
-
-  // LHS: L
-  L_type& L = get<::Tags::TempTensor<0, L_type>>(vars);
-
-  for (auto _ : state) {
-    BenchmarkImpl::tensorexpression_impl_lhs_as_arg(make_not_null(&L), R, S, T);
-    benchmark::DoNotOptimize(L);
-    benchmark::ClobberMemory();
-  }
-}
-
-// Benchmark with each of these number of grid points for DataVector
-const std::array<long int, 4> num_grid_point_values = {5, 100, 500, 1000};
-
 // Benchmark manual implementations and TensorExpression implementations that:
 // (i) return LHS tensor
 // (ii) take LHS tensor as an argument and do not use a buffer
-// (iii) take LHS tensor as an argument and do use a buffer
-BENCHMARK(bench_manual_tensor_equation_return_lhs_tensor)
-    ->Arg(num_grid_point_values[0])
-    ->Arg(num_grid_point_values[1])
-    ->Arg(num_grid_point_values[2])
-    ->Arg(num_grid_point_values[3]);  // NOLINT
-BENCHMARK(bench_manual_tensor_equation_lhs_tensor_as_arg_without_buffer)
-    ->Arg(num_grid_point_values[0])
-    ->Arg(num_grid_point_values[1])
-    ->Arg(num_grid_point_values[2])
-    ->Arg(num_grid_point_values[3]);  // NOLINT
-BENCHMARK(bench_manual_tensor_equation_lhs_tensor_as_arg_with_buffer)
-    ->Arg(num_grid_point_values[0])
-    ->Arg(num_grid_point_values[1])
-    ->Arg(num_grid_point_values[2])
-    ->Arg(num_grid_point_values[3]);  // NOLINT
-BENCHMARK(bench_tensorexpression_return_lhs_tensor)
-    ->Arg(num_grid_point_values[0])
-    ->Arg(num_grid_point_values[1])
-    ->Arg(num_grid_point_values[2])
-    ->Arg(num_grid_point_values[3]);  // NOLINT
-BENCHMARK(bench_tensorexpression_lhs_tensor_as_arg_without_buffer)
-    ->Arg(num_grid_point_values[0])
-    ->Arg(num_grid_point_values[1])
-    ->Arg(num_grid_point_values[2])
-    ->Arg(num_grid_point_values[3]);  // NOLINT
-BENCHMARK(bench_tensorexpression_lhs_tensor_as_arg_with_buffer)
-    ->Arg(num_grid_point_values[0])
-    ->Arg(num_grid_point_values[1])
-    ->Arg(num_grid_point_values[2])
-    ->Arg(num_grid_point_values[3]);  // NOLINT
+BENCHMARK(bench_manual_tensor_equation_return_lhs_tensor);  // NOLINT
+BENCHMARK(
+    bench_manual_tensor_equation_lhs_tensor_as_arg_without_buffer);  // NOLINT
+BENCHMARK(bench_tensorexpression_return_lhs_tensor);                 // NOLINT
+BENCHMARK(bench_tensorexpression_lhs_tensor_as_arg_without_buffer);  // NOLINT
 }  // namespace
 
 // Ignore the warning about an extra ';' because some versions of benchmark
