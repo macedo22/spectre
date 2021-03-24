@@ -18,11 +18,9 @@ if("${GoogleBenchmark_FOUND}" AND NOT "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
   target_link_libraries(
     ${executable}
     PRIVATE
-    CoordinateMaps
-    Domain
+    DataStructures
     Informer
     GoogleBenchmark
-    Spectral
     )
 
   set_target_properties(
