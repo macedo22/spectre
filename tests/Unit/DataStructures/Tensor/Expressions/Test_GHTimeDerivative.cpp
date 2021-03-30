@@ -252,20 +252,24 @@ void compute_te_result(
   // auto christoffel_first_kind_3_up = evaluate<ti_a, ti_b, ti_C>(  //abC
   //     inverse_spacetime_metric(ti_C, ti_D) *                  // AA
   //     christoffel_first_kind(ti_a, ti_b, ti_d));              // abb
-  for (size_t mu = 0; mu < Dim + 1; ++mu) {
-    for (size_t nu = 0; nu < Dim + 1; ++nu) {
-      for (size_t alpha = 0; alpha < Dim + 1; ++alpha) {
-        christoffel_first_kind_3_up->get(mu, nu, alpha) =
-            inverse_spacetime_metric->get(alpha, 0) *
-            christoffel_first_kind->get(mu, nu, 0);
-        for (size_t beta = 1; beta < Dim + 1; ++beta) {
-          christoffel_first_kind_3_up->get(mu, nu, alpha) +=
-              inverse_spacetime_metric->get(alpha, beta) *
-              christoffel_first_kind->get(mu, nu, beta);
-        }
-      }
-    }
-  }
+  // for (size_t mu = 0; mu < Dim + 1; ++mu) {
+  //   for (size_t nu = 0; nu < Dim + 1; ++nu) {
+  //     for (size_t alpha = 0; alpha < Dim + 1; ++alpha) {
+  //       christoffel_first_kind_3_up->get(mu, nu, alpha) =
+  //           inverse_spacetime_metric->get(alpha, 0) *
+  //           christoffel_first_kind->get(mu, nu, 0);
+  //       for (size_t beta = 1; beta < Dim + 1; ++beta) {
+  //         christoffel_first_kind_3_up->get(mu, nu, alpha) +=
+  //             inverse_spacetime_metric->get(alpha, beta) *
+  //             christoffel_first_kind->get(mu, nu, beta);
+  //       }
+  //     }
+  //   }
+  // }
+  TensorExpressions::evaluate<ti_a, ti_b, ti_C>(
+      christoffel_first_kind_3_up,
+      (*inverse_spacetime_metric)(ti_C, ti_D) *
+          (*christoffel_first_kind)(ti_a, ti_b, ti_d));
 
   // auto pi_one_normal = evaluate<ti_a>(  // a
   //     normal_spacetime_vector(ti_B) *   // A
@@ -657,6 +661,16 @@ void test_gh_timederivative_impl(
   for (size_t a = 0; a < Dim + 1; a++) {
     for (size_t b = 0; b < Dim + 1; b++) {
       CHECK_ITERABLE_APPROX(pi_2_up_spectre.get(a, b), pi_2_up_te.get(a, b));
+    }
+  }
+
+  // CHECK christoffel_first_kind_3_up (abC)
+  for (size_t a = 0; a < Dim + 1; a++) {
+    for (size_t b = 0; b < Dim + 1; b++) {
+      for (size_t c = 0; c < Dim + 1; c++) {
+        CHECK_ITERABLE_APPROX(christoffel_first_kind_3_up_spectre.get(a, b, c),
+                              christoffel_first_kind_3_up_te.get(a, b, c));
+      }
     }
   }
 
