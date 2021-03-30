@@ -580,8 +580,11 @@ void compute_te_result(
   // auto trace_christoffel = evaluate<ti_a>(
   //    christoffel_first_kind(ti_a, ti_b, ti_c) *
   //    inverse_spacetime_metric(ti_B, ti_C));
-  trace_last_indices(trace_christoffel, *christoffel_first_kind,
-                     *inverse_spacetime_metric);
+  // trace_last_indices(trace_christoffel, *christoffel_first_kind,
+  //                    *inverse_spacetime_metric);
+  TensorExpressions::evaluate<ti_a>(
+      trace_christoffel, (*christoffel_first_kind)(ti_a, ti_b, ti_c) *
+                             (*inverse_spacetime_metric)(ti_B, ti_C));
   // can't do with TE's yet
   gr::spacetime_normal_vector(normal_spacetime_vector, *lapse, *shift);
   // can't do with TE's yet
@@ -926,6 +929,12 @@ void test_gh_timederivative_impl(
                               christoffel_second_kind_te.get(a, b, c));
       }
     }
+  }
+
+  // CHECK trace_christoffel (a)
+  for (size_t a = 0; a < Dim + 1; a++) {
+    CHECK_ITERABLE_APPROX(trace_christoffel_spectre.get(a),
+                          trace_christoffel_te.get(a));
   }
 
   // CHECK dt_spacetime_metric (aa)
