@@ -274,23 +274,28 @@ void compute_te_result(
   // auto pi_one_normal = evaluate<ti_a>(  // a
   //     normal_spacetime_vector(ti_B) *   // A
   //     pi(ti_b, ti_a));                  // aa
-  for (size_t mu = 0; mu < Dim + 1; ++mu) {
-    pi_one_normal->get(mu) = get<0>(*normal_spacetime_vector) * pi.get(0, mu);
-    for (size_t nu = 1; nu < Dim + 1; ++nu) {
-      pi_one_normal->get(mu) +=
-          normal_spacetime_vector->get(nu) * pi.get(nu, mu);
-    }
-  }
+  // for (size_t mu = 0; mu < Dim + 1; ++mu) {
+  //   pi_one_normal->get(mu) = get<0>(*normal_spacetime_vector)
+  //                                * pi.get(0, mu);
+  //   for (size_t nu = 1; nu < Dim + 1; ++nu) {
+  //     pi_one_normal->get(mu) +=
+  //         normal_spacetime_vector->get(nu) * pi.get(nu, mu);
+  //   }
+  // }
+  TensorExpressions::evaluate<ti_a>(
+      pi_one_normal, (*normal_spacetime_vector)(ti_B)*pi(ti_b, ti_a));
 
   // auto pi_two_normals = evaluate(       // scalar
   //     normal_spacetime_vector(ti_A) *   // A
   //     pi_one_normal(ti_a));             // a
-  get(*pi_two_normals) =
-      get<0>(*normal_spacetime_vector) * get<0>(*pi_one_normal);
-  for (size_t mu = 1; mu < Dim + 1; ++mu) {
-    get(*pi_two_normals) +=
-        normal_spacetime_vector->get(mu) * pi_one_normal->get(mu);
-  }
+  // get(*pi_two_normals) =
+  //     get<0>(*normal_spacetime_vector) * get<0>(*pi_one_normal);
+  // for (size_t mu = 1; mu < Dim + 1; ++mu) {
+  //   get(*pi_two_normals) +=
+  //       normal_spacetime_vector->get(mu) * pi_one_normal->get(mu);
+  // }
+  TensorExpressions::evaluate(pi_two_normals, (*normal_spacetime_vector)(ti_A) *
+                                                  (*pi_one_normal)(ti_a));
 
   // auto phi_one_normal = evaluate<ti_i, ti_a>(  // ia
   //     normal_spacetime_vector(ti_B) *          // A
@@ -673,6 +678,15 @@ void test_gh_timederivative_impl(
       }
     }
   }
+
+  // CHECK pi_one_normal (a)
+  for (size_t a = 0; a < Dim + 1; a++) {
+    CHECK_ITERABLE_APPROX(pi_one_normal_spectre.get(a),
+                          pi_one_normal_te.get(a));
+  }
+
+  // CHECK pi_two_normals (scalar)
+  CHECK_ITERABLE_APPROX(pi_two_normals_spectre.get(), pi_two_normals_te.get());
 
   // CHECK dt_spacetime_metric (aa)
   for (size_t a = 0; a < Dim + 1; a++) {
