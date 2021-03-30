@@ -189,7 +189,8 @@ void compute_te_result(
   gr::spacetime_normal_one_form(normal_spacetime_one_form, *lapse);
 
   // auto gamma1gamma2 = evaluate(gamma1 * gamma 2);
-  get(*gamma1gamma2) = get(gamma1) * get(gamma2);
+  // get(*gamma1gamma2) = get(gamma1) * get(gamma2);
+  TensorExpressions::evaluate(gamma1gamma2, gamma1() * gamma2());
   // not an eq
   const DataVector& gamma12 = get(*gamma1gamma2);
 
@@ -620,6 +621,9 @@ void test_gh_timederivative_impl(
     CHECK_ITERABLE_APPROX(trace_christoffel_spectre.get(a),
                           trace_christoffel_te.get(a));
   }
+
+  // CHECK gamma1gamma2 (scalar)
+  CHECK_ITERABLE_APPROX(gamma1gamma2_spectre.get(), gamma1gamma2_te.get());
 
   // CHECK dt_spacetime_metric (aa)
   for (size_t a = 0; a < Dim + 1; a++) {
