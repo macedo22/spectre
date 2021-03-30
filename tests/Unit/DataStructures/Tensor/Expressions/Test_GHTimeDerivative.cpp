@@ -571,8 +571,12 @@ void compute_te_result(
   // auto christoffel_second_kind = evaluate<ti_A, ti_b, ti_c>(
   //    christoffel_first_kind(ti_d, ti_b, ti_c) *
   //    inverse_spacetime_metric(ti_A, ti_D));
-  raise_or_lower_first_index(christoffel_second_kind, *christoffel_first_kind,
-                             *inverse_spacetime_metric);
+  // raise_or_lower_first_index(
+  //     christoffel_second_kind, *christoffel_first_kind,
+  //     *inverse_spacetime_metric);
+  TensorExpressions::evaluate<ti_A, ti_b, ti_c>(
+      christoffel_second_kind, (*christoffel_first_kind)(ti_d, ti_b, ti_c) *
+                                   (*inverse_spacetime_metric)(ti_A, ti_D));
   // auto trace_christoffel = evaluate<ti_a>(
   //    christoffel_first_kind(ti_a, ti_b, ti_c) *
   //    inverse_spacetime_metric(ti_B, ti_C));
@@ -910,6 +914,16 @@ void test_gh_timederivative_impl(
       for (size_t c = 0; c < Dim + 1; c++) {
         CHECK_ITERABLE_APPROX(christoffel_first_kind_spectre.get(a, b, c),
                               christoffel_first_kind_te.get(a, b, c));
+      }
+    }
+  }
+
+  // CHECK christoffel_second_kind (Abb)
+  for (size_t a = 0; a < Dim + 1; a++) {
+    for (size_t b = 0; b < Dim + 1; b++) {
+      for (size_t c = 0; c < Dim + 1; c++) {
+        CHECK_ITERABLE_APPROX(christoffel_second_kind_spectre.get(a, b, c),
+                              christoffel_second_kind_te.get(a, b, c));
       }
     }
   }
