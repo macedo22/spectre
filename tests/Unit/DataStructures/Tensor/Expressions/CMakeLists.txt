@@ -18,5 +18,5 @@ add_test_library(
   ${LIBRARY}
   "DataStructures/Tensor/Expressions"
   "${LIBRARY_SOURCES}"
-  "DataStructures;Utilities"
+  "DataStructures;GeneralizedHarmonic;GeneralRelativity;GeneralRelativityHelpers;Spectral;Utilities"
   )
