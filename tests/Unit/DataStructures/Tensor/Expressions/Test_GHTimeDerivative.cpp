@@ -4,8 +4,6 @@
 #include "Framework/TestingFramework.hpp"
 
 #include <cstddef>
-#include <cstdlib>  // needed for rand, srand, and RAND_MAX?
-#include <ctime>    // try time.h is this doesn't work
 #include <iostream>
 #include <iterator>
 #include <numeric>
@@ -48,78 +46,9 @@
 #include "Utilities/TMPL.hpp"
 
 namespace {
-double get_random_double_in_range(const double min, const double max) {
-  return (max - min) *
-             (static_cast<double>(rand()) / static_cast<double>(RAND_MAX)) +
-         min;
-}
-
-template <typename... Ts>
-void assign_random_values_to_tensor(
-    const gsl::not_null<Tensor<double, Ts...>*> tensor, const double min,
-    const double max) noexcept {
-  for (auto component_it = tensor->begin(); component_it != tensor->end();
-       component_it++) {
-    *component_it = get_random_double_in_range(min, max);
-  }
-}
-
-template <typename... Ts>
-void assign_random_values_to_tensor(
-    const gsl::not_null<Tensor<DataVector, Ts...>*> tensor, const double min,
-    const double max) noexcept {
-  for (auto index_it = tensor->begin(); index_it != tensor->end(); index_it++) {
-    for (auto vector_it = index_it->begin(); vector_it != index_it->end();
-         vector_it++) {
-      *vector_it = get_random_double_in_range(min, max);
-    }
-  }
-}
-
-template <typename... Ts>
-void assign_unique_values_to_tensor(
-    const gsl::not_null<Tensor<double, Ts...>*> tensor) noexcept {
-  std::iota(tensor->begin(), tensor->end(), 0.0);
-}
-
-template <typename... Ts>
-void assign_unique_values_to_tensor(
-    const gsl::not_null<Tensor<DataVector, Ts...>*> tensor) noexcept {
-  double value = 0.0;
-  for (auto index_it = tensor->begin(); index_it != tensor->end(); index_it++) {
-    for (auto vector_it = index_it->begin(); vector_it != index_it->end();
-         vector_it++) {
-      *vector_it = value;
-      value += 1.0;
-    }
-  }
-}
-
-template <typename... Ts>
-void zero_initialize_tensor(
-    gsl::not_null<Tensor<double, Ts...>*> tensor) noexcept {
-  std::iota(tensor->begin(), tensor->end(), 0.0);
-  for (auto tensor_it = tensor->begin(); tensor_it != tensor->end();
-       tensor_it++) {
-    *tensor_it = 0.0;
-  }
-}
-
-template <typename... Ts>
-void zero_initialize_tensor(
-    gsl::not_null<Tensor<DataVector, Ts...>*> tensor) noexcept {
-  for (auto index_it = tensor->begin(); index_it != tensor->end(); index_it++) {
-    for (auto vector_it = index_it->begin(); vector_it != index_it->end();
-         vector_it++) {
-      *vector_it = 0.0;
-    }
-  }
-}
 
 constexpr size_t Dim = 3;
 constexpr size_t num_grid_points = 5;
-// const double min = 0.1;
-// const double max = 2.0;
 
 using dt_spacetime_metric_type = tnsr::aa<DataVector, Dim>;
 using dt_pi_type = tnsr::aa<DataVector, Dim>;
@@ -164,7 +93,6 @@ using gamma2_type = Scalar<DataVector>;
 using gauge_function_type = tnsr::a<DataVector, Dim>;
 using spacetime_deriv_gauge_function_type = tnsr::ab<DataVector, Dim>;
 
-// template <size_t Dim>
 void compute_expected_result_impl(
     const gsl::not_null<tnsr::aa<DataVector, Dim>*> dt_spacetime_metric,
     const gsl::not_null<dt_pi_type*> dt_pi,
@@ -430,7 +358,6 @@ void compute_expected_result_impl(
   }
 }
 
-// template <size_t Dim>
 void compute_expected_result(
     gsl::not_null<dt_spacetime_metric_type*> dt_spacetime_metric,
     const d_spacetime_metric_type& d_spacetime_metric, const d_pi_type& d_pi,
@@ -441,7 +368,6 @@ void compute_expected_result(
     const spacetime_deriv_gauge_function_type&
         spacetime_deriv_gauge_function) noexcept {
   // create tensors to be filled by implementation
-  // dt_spacetime_metric_type dt_spacetime_metric(num_grid_points);
   dt_pi_type dt_pi(num_grid_points);
   dt_phi_type dt_phi(num_grid_points);
   temp_gamma1_type temp_gamma1(num_grid_points);
@@ -567,6 +493,158 @@ void compute_spectre_result(
       spacetime_deriv_gauge_function);
 }
 
+void test_gh_timederivative_impl(
+    const d_spacetime_metric_type& d_spacetime_metric, const d_pi_type& d_pi,
+    const d_phi_type& d_phi, const spacetime_metric_type& spacetime_metric,
+    const pi_type& pi, const phi_type& phi, const gamma0_type& gamma0,
+    const gamma1_type& gamma1, const gamma2_type& gamma2,
+    const gauge_function_type& gauge_function,
+    const spacetime_deriv_gauge_function_type&
+        spacetime_deriv_gauge_function) noexcept {
+  // Create tensors to be filled by SpECTRE implementation
+  dt_spacetime_metric_type dt_spacetime_metric_spectre(num_grid_points);
+  dt_pi_type dt_pi_spectre(num_grid_points);
+  dt_phi_type dt_phi_spectre(num_grid_points);
+  temp_gamma1_type temp_gamma1_spectre(num_grid_points);
+  temp_gamma2_type temp_gamma2_spectre(num_grid_points);
+  gamma1gamma2_type gamma1gamma2_spectre(num_grid_points);
+  pi_two_normals_type pi_two_normals_spectre(num_grid_points);
+  normal_dot_gauge_constraint_type normal_dot_gauge_constraint_spectre(
+      num_grid_points);
+  gamma1_plus_1_type gamma1_plus_1_spectre(num_grid_points);
+  pi_one_normal_type pi_one_normal_spectre(num_grid_points);
+  gauge_constraint_type gauge_constraint_spectre(num_grid_points);
+  phi_two_normals_type phi_two_normals_spectre(num_grid_points);
+  shift_dot_three_index_constraint_type
+      shift_dot_three_index_constraint_spectre(num_grid_points);
+  phi_one_normal_type phi_one_normal_spectre(num_grid_points);
+  pi_2_up_type pi_2_up_spectre(num_grid_points);
+  three_index_constraint_type three_index_constraint_spectre(num_grid_points);
+  phi_1_up_type phi_1_up_spectre(num_grid_points);
+  phi_3_up_type phi_3_up_spectre(num_grid_points);
+  christoffel_first_kind_3_up_type christoffel_first_kind_3_up_spectre(
+      num_grid_points);
+  lapse_type lapse_spectre(num_grid_points);
+  shift_type shift_spectre(num_grid_points);
+  spatial_metric_type spatial_metric_spectre(num_grid_points);
+  inverse_spatial_metric_type inverse_spatial_metric_spectre(num_grid_points);
+  det_spatial_metric_type det_spatial_metric_spectre(num_grid_points);
+  inverse_spacetime_metric_type inverse_spacetime_metric_spectre(
+      num_grid_points);
+  christoffel_first_kind_type christoffel_first_kind_spectre(num_grid_points);
+  christoffel_second_kind_type christoffel_second_kind_spectre(num_grid_points);
+  trace_christoffel_type trace_christoffel_spectre(num_grid_points);
+  normal_spacetime_vector_type normal_spacetime_vector_spectre(num_grid_points);
+  normal_spacetime_one_form_type normal_spacetime_one_form_spectre(
+      num_grid_points);
+  da_spacetime_metric_type da_spacetime_metric_spectre(num_grid_points);
+
+  // Create tensors to be filled by TensorExpression implementation
+  dt_spacetime_metric_type dt_spacetime_metric_te(num_grid_points);
+  dt_pi_type dt_pi_te(num_grid_points);
+  dt_phi_type dt_phi_te(num_grid_points);
+  temp_gamma1_type temp_gamma1_te(num_grid_points);
+  temp_gamma2_type temp_gamma2_te(num_grid_points);
+  gamma1gamma2_type gamma1gamma2_te(num_grid_points);
+  pi_two_normals_type pi_two_normals_te(num_grid_points);
+  normal_dot_gauge_constraint_type normal_dot_gauge_constraint_te(
+      num_grid_points);
+  gamma1_plus_1_type gamma1_plus_1_te(num_grid_points);
+  pi_one_normal_type pi_one_normal_te(num_grid_points);
+  gauge_constraint_type gauge_constraint_te(num_grid_points);
+  phi_two_normals_type phi_two_normals_te(num_grid_points);
+  shift_dot_three_index_constraint_type shift_dot_three_index_constraint_te(
+      num_grid_points);
+  phi_one_normal_type phi_one_normal_te(num_grid_points);
+  pi_2_up_type pi_2_up_te(num_grid_points);
+  three_index_constraint_type three_index_constraint_te(num_grid_points);
+  phi_1_up_type phi_1_up_te(num_grid_points);
+  phi_3_up_type phi_3_up_te(num_grid_points);
+  christoffel_first_kind_3_up_type christoffel_first_kind_3_up_te(
+      num_grid_points);
+  lapse_type lapse_te(num_grid_points);
+  shift_type shift_te(num_grid_points);
+  spatial_metric_type spatial_metric_te(num_grid_points);
+  inverse_spatial_metric_type inverse_spatial_metric_te(num_grid_points);
+  det_spatial_metric_type det_spatial_metric_te(num_grid_points);
+  inverse_spacetime_metric_type inverse_spacetime_metric_te(num_grid_points);
+  christoffel_first_kind_type christoffel_first_kind_te(num_grid_points);
+  christoffel_second_kind_type christoffel_second_kind_te(num_grid_points);
+  trace_christoffel_type trace_christoffel_te(num_grid_points);
+  normal_spacetime_vector_type normal_spacetime_vector_te(num_grid_points);
+  normal_spacetime_one_form_type normal_spacetime_one_form_te(num_grid_points);
+  da_spacetime_metric_type da_spacetime_metric_te(num_grid_points);
+
+  // Compute SpECTRE result
+  GeneralizedHarmonic::TimeDerivative<Dim>::apply(
+      make_not_null(&dt_spacetime_metric_spectre),
+      make_not_null(&dt_pi_spectre), make_not_null(&dt_phi_spectre),
+      make_not_null(&temp_gamma1_spectre), make_not_null(&temp_gamma2_spectre),
+      make_not_null(&gamma1gamma2_spectre),
+      make_not_null(&pi_two_normals_spectre),
+      make_not_null(&normal_dot_gauge_constraint_spectre),
+      make_not_null(&gamma1_plus_1_spectre),
+      make_not_null(&pi_one_normal_spectre),
+      make_not_null(&gauge_constraint_spectre),
+      make_not_null(&phi_two_normals_spectre),
+      make_not_null(&shift_dot_three_index_constraint_spectre),
+      make_not_null(&phi_one_normal_spectre), make_not_null(&pi_2_up_spectre),
+      make_not_null(&three_index_constraint_spectre),
+      make_not_null(&phi_1_up_spectre), make_not_null(&phi_3_up_spectre),
+      make_not_null(&christoffel_first_kind_3_up_spectre),
+      make_not_null(&lapse_spectre), make_not_null(&shift_spectre),
+      make_not_null(&spatial_metric_spectre),
+      make_not_null(&inverse_spatial_metric_spectre),
+      make_not_null(&det_spatial_metric_spectre),
+      make_not_null(&inverse_spacetime_metric_spectre),
+      make_not_null(&christoffel_first_kind_spectre),
+      make_not_null(&christoffel_second_kind_spectre),
+      make_not_null(&trace_christoffel_spectre),
+      make_not_null(&normal_spacetime_vector_spectre),
+      make_not_null(&normal_spacetime_one_form_spectre),
+      make_not_null(&da_spacetime_metric_spectre), d_spacetime_metric, d_pi,
+      d_phi, spacetime_metric, pi, phi, gamma0, gamma1, gamma2, gauge_function,
+      spacetime_deriv_gauge_function);
+
+  // // Compute TensorExpression result
+  // GeneralizedHarmonic::TimeDerivative<Dim>::apply(
+  //     make_not_null(&dt_spacetime_metric_te),
+  //     make_not_null(&dt_pi_te), make_not_null(&dt_phi_te),
+  //     make_not_null(&temp_gamma1_te), make_not_null(&temp_gamma2_te),
+  //     make_not_null(&gamma1gamma2_te),
+  //     make_not_null(&pi_two_normals_te),
+  //     make_not_null(&normal_dot_gauge_constraint_te),
+  //     make_not_null(&gamma1_plus_1_te),
+  //     make_not_null(&pi_one_normal_te),
+  //     make_not_null(&gauge_constraint_te),
+  //     make_not_null(&phi_two_normals_te),
+  //     make_not_null(&shift_dot_three_index_constraint_te),
+  //     make_not_null(&phi_one_normal_te), make_not_null(&pi_2_up_te),
+  //     make_not_null(&three_index_constraint_te),
+  //     make_not_null(&phi_1_up_te), make_not_null(&phi_3_up_te),
+  //     make_not_null(&christoffel_first_kind_3_up_te),
+  //     make_not_null(&lapse_te), make_not_null(&shift_te),
+  //     make_not_null(&spatial_metric_te),
+  //     make_not_null(&inverse_spatial_metric_te),
+  //     make_not_null(&det_spatial_metric_te),
+  //     make_not_null(&inverse_spacetime_metric_te),
+  //     make_not_null(&christoffel_first_kind_te),
+  //     make_not_null(&christoffel_second_kind_te),
+  //     make_not_null(&trace_christoffel_te),
+  //     make_not_null(&normal_spacetime_vector_te),
+  //     make_not_null(&normal_spacetime_one_form_te),
+  //     make_not_null(&da_spacetime_metric_te), d_spacetime_metric, d_pi,
+  //     d_phi, spacetime_metric, pi, phi, gamma0, gamma1, gamma2,
+  //     gauge_function, spacetime_deriv_gauge_function);
+
+  // for (size_t a = 0; a < Dim + 1; a++) {
+  //   for (size_t b = 0; b < Dim + 1; b++) {
+  //     CHECK_ITERABLE_APPROX(dt_spacetime_metric_spectre.get(a, b),
+  //                           dt_spacetime_metric_te.get(a, b));
+  //   }
+  // }
+}
+
 template <typename Generator>
 void test_gh_timederivative(
     const gsl::not_null<Generator*> generator) noexcept {
@@ -633,28 +711,9 @@ void test_gh_timederivative(
       make_with_random_values<tnsr::ab<DataVector, Dim>>(
           generator, make_not_null(&distribution), used_for_size);
 
-  // equation results to check
-  dt_spacetime_metric_type dt_spacetime_metric_rewritten(num_grid_points);
-
-  compute_expected_result(make_not_null(&dt_spacetime_metric_rewritten),
-                          d_spacetime_metric, d_pi, d_phi, spacetime_metric, pi,
-                          phi, gamma0, gamma1, gamma2, gauge_function,
-                          spacetime_deriv_gauge_function);
-
-  // SpECTRE implementation to check against
-  dt_spacetime_metric_type dt_spacetime_metric_spectre(num_grid_points);
-
-  compute_spectre_result(make_not_null(&dt_spacetime_metric_spectre),
-                         d_spacetime_metric, d_pi, d_phi, spacetime_metric, pi,
-                         phi, gamma0, gamma1, gamma2, gauge_function,
-                         spacetime_deriv_gauge_function);
-
-  for (size_t a = 0; a < Dim + 1; a++) {
-    for (size_t b = 0; b < Dim + 1; b++) {
-      CHECK_ITERABLE_APPROX(dt_spacetime_metric_rewritten.get(a, b),
-                            dt_spacetime_metric_spectre.get(a, b));
-    }
-  }
+  test_gh_timederivative_impl(d_spacetime_metric, d_pi, d_phi, spacetime_metric,
+                              pi, phi, gamma0, gamma1, gamma2, gauge_function,
+                              spacetime_deriv_gauge_function);
 }
 }  // namespace
 
@@ -662,90 +721,4 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.GHTimeDerivative",
                   "[DataStructures][Unit]") {
   MAKE_GENERATOR(generator);
   test_gh_timederivative(make_not_null(&generator));
-
-  // srand (time(NULL));
-
-  // Set up constant input tensors
-  // d_spacetime_metric_type d_spacetime_metric(num_grid_points);
-  // assign_random_values_to_tensor(make_not_null(&d_spacetime_metric), min,
-  // max);
-
-  // d_pi_type d_pi(num_grid_points);
-  // assign_random_values_to_tensor(make_not_null(&d_pi), min, max);
-
-  // d_phi_type d_phi(num_grid_points);
-  // assign_random_values_to_tensor(make_not_null(&d_phi), min, max);
-
-  // spacetime_metric_type spacetime_metric(num_grid_points);
-  // assign_random_values_to_tensor(make_not_null(&spacetime_metric), min, max);
-
-  // pi_type pi(num_grid_points);
-  // assign_random_values_to_tensor(make_not_null(&pi), min, max);
-
-  // phi_type phi(num_grid_points);
-  // assign_random_values_to_tensor(make_not_null(&phi), min, max);
-
-  // gamma0_type gamma0(num_grid_points);
-  // assign_random_values_to_tensor(make_not_null(&gamma0), min, max);
-
-  // gamma1_type gamma1(num_grid_points);
-  // assign_random_values_to_tensor(make_not_null(&gamma1), min, max);
-
-  // gamma2_type gamma2(num_grid_points);
-  // assign_random_values_to_tensor(make_not_null(&gamma2), min, max);
-
-  // gauge_function_type gauge_function(num_grid_points);
-  // assign_random_values_to_tensor(make_not_null(&gauge_function), min, max);
-
-  // spacetime_deriv_gauge_function_type
-  // spacetime_deriv_gauge_function(num_grid_points);
-  // assign_random_values_to_tensor(
-  // make_not_null(&spacetime_deriv_gauge_function), min, max);
-
-  // // equation results to check
-  // dt_spacetime_metric_type dt_spacetime_metric_rewritten(num_grid_points);
-
-  // compute_expected_result(
-  //     make_not_null(&dt_spacetime_metric_rewritten),
-  //     d_spacetime_metric,
-  //     d_pi,
-  //     d_phi,
-  //     spacetime_metric,
-  //     pi,
-  //     phi,
-  //     gamma0,
-  //     gamma1,
-  //     gamma2,
-  //     gauge_function,
-  //     spacetime_deriv_gauge_function
-  // );
-
-  // // SpECTRE implementation to check against
-  // dt_spacetime_metric_type dt_spacetime_metric_spectre(num_grid_points);
-
-  // compute_spectre_result(
-  //     make_not_null(&dt_spacetime_metric_spectre),
-  //     d_spacetime_metric,
-  //     d_pi,
-  //     d_phi,
-  //     spacetime_metric,
-  //     pi,
-  //     phi,
-  //     gamma0,
-  //     gamma1,
-  //     gamma2,
-  //     gauge_function,
-  //     spacetime_deriv_gauge_function
-  // );
-
-  // for (size_t a = 0; a < Dim + 1; a++) {
-  //   for (size_t b = 0; b < Dim + 1; b++) {
-  //     CHECK_ITERABLE_APPROX(dt_spacetime_metric_rewritten.get(a, b),
-  //     dt_spacetime_metric_spectre.get(a, b));
-  //   }
-  // }
-
-  // test_mixed_operations(std::numeric_limits<double>::signaling_NaN());
-  // test_mixed_operations(
-  //     DataVector(5, std::numeric_limits<double>::signaling_NaN()));
 }
