@@ -198,18 +198,20 @@ void compute_te_result(
   // auto phi_1_up = evaluate<ti_I, ti_a, ti_b>(
   //     inverse_spatial_metric(ti_I, ti_J) * // II
   //     phi(ti_j, ti_a, ti_b));              // iaa
-  for (size_t m = 0; m < Dim; ++m) {
-    for (size_t mu = 0; mu < Dim + 1; ++mu) {
-      for (size_t nu = mu; nu < Dim + 1; ++nu) {
-        phi_1_up->get(m, mu, nu) =
-            inverse_spatial_metric->get(m, 0) * phi.get(0, mu, nu);
-        for (size_t n = 1; n < Dim; ++n) {
-          phi_1_up->get(m, mu, nu) +=
-              inverse_spatial_metric->get(m, n) * phi.get(n, mu, nu);
-        }
-      }
-    }
-  }
+  // for (size_t m = 0; m < Dim; ++m) {
+  //   for (size_t mu = 0; mu < Dim + 1; ++mu) {
+  //     for (size_t nu = mu; nu < Dim + 1; ++nu) {
+  //       phi_1_up->get(m, mu, nu) =
+  //           inverse_spatial_metric->get(m, 0) * phi.get(0, mu, nu);
+  //       for (size_t n = 1; n < Dim; ++n) {
+  //         phi_1_up->get(m, mu, nu) +=
+  //             inverse_spatial_metric->get(m, n) * phi.get(n, mu, nu);
+  //       }
+  //     }
+  //   }
+  // }
+  TensorExpressions::evaluate<ti_I, ti_a, ti_b>(
+      phi_1_up, (*inverse_spatial_metric)(ti_I, ti_J) * phi(ti_j, ti_a, ti_b));
 
   // auto phi_3_up = evaluate<ti_i, ti_a, ti_B>( // iaB
   //     inverse_spacetime_metric(ti_B, ti_C) *  // AA
@@ -624,6 +626,16 @@ void test_gh_timederivative_impl(
 
   // CHECK gamma1gamma2 (scalar)
   CHECK_ITERABLE_APPROX(gamma1gamma2_spectre.get(), gamma1gamma2_te.get());
+
+  // CHECK phi_1_up (Iaa)
+  for (size_t i = 0; i < Dim; i++) {
+    for (size_t a = 0; a < Dim + 1; a++) {
+      for (size_t b = 0; b < Dim + 1; b++) {
+        CHECK_ITERABLE_APPROX(phi_1_up_spectre.get(i, a, b),
+                              phi_1_up_te.get(i, a, b));
+      }
+    }
+  }
 
   // CHECK dt_spacetime_metric (aa)
   for (size_t a = 0; a < Dim + 1; a++) {
