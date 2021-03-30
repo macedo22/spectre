@@ -236,16 +236,18 @@ void compute_te_result(
   // auto pi_2_up = evaluate<ti_a, ti_B>(        // aB
   //     inverse_spacetime_metric(ti_B, ti_C) *  // AA
   //     pi(ti_a, ti_c));                        // aa
-  for (size_t nu = 0; nu < Dim + 1; ++nu) {
-    for (size_t alpha = 0; alpha < Dim + 1; ++alpha) {
-      pi_2_up->get(nu, alpha) =
-          inverse_spacetime_metric->get(alpha, 0) * pi.get(nu, 0);
-      for (size_t beta = 1; beta < Dim + 1; ++beta) {
-        pi_2_up->get(nu, alpha) +=
-            inverse_spacetime_metric->get(alpha, beta) * pi.get(nu, beta);
-      }
-    }
-  }
+  // for (size_t nu = 0; nu < Dim + 1; ++nu) {
+  //   for (size_t alpha = 0; alpha < Dim + 1; ++alpha) {
+  //     pi_2_up->get(nu, alpha) =
+  //         inverse_spacetime_metric->get(alpha, 0) * pi.get(nu, 0);
+  //     for (size_t beta = 1; beta < Dim + 1; ++beta) {
+  //       pi_2_up->get(nu, alpha) +=
+  //           inverse_spacetime_metric->get(alpha, beta) * pi.get(nu, beta);
+  //     }
+  //   }
+  // }
+  TensorExpressions::evaluate<ti_a, ti_B>(
+      pi_2_up, (*inverse_spacetime_metric)(ti_B, ti_C) * pi(ti_a, ti_c));
 
   // auto christoffel_first_kind_3_up = evaluate<ti_a, ti_b, ti_C>(  //abC
   //     inverse_spacetime_metric(ti_C, ti_D) *                  // AA
@@ -648,6 +650,13 @@ void test_gh_timederivative_impl(
         CHECK_ITERABLE_APPROX(phi_3_up_spectre.get(i, a, b),
                               phi_3_up_te.get(i, a, b));
       }
+    }
+  }
+
+  // CHECK pi_2_up (aB)
+  for (size_t a = 0; a < Dim + 1; a++) {
+    for (size_t b = 0; b < Dim + 1; b++) {
+      CHECK_ITERABLE_APPROX(pi_2_up_spectre.get(a, b), pi_2_up_te.get(a, b));
     }
   }
 
