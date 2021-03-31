@@ -415,10 +415,18 @@ void compute_te_result(
   //     }
   //   }
   // }
-  TensorExpressions::evaluate<ti_a, ti_b> (dt_spacetime_metric,
-     -1.0 * (*lapse)() * pi(ti_a, ti_b) +
-      (*gamma1_plus_1)() * (*shift_dot_three_index_constraint)(ti_a, ti_b) +
-      (*shift)(ti_I) * phi(ti_i, ti_a, ti_b));
+  // Written using all terms thus far
+  // TensorExpressions::evaluate<ti_a, ti_b> (dt_spacetime_metric,
+  //    -1.0 * (*lapse)() * pi(ti_a, ti_b) +
+  //     (*gamma1_plus_1)() * (*shift_dot_three_index_constraint)(ti_a, ti_b) +
+  //     (*shift)(ti_I) * phi(ti_i, ti_a, ti_b));
+  // Written with all expandable terms
+  TensorExpressions::evaluate<ti_a, ti_b>(
+      dt_spacetime_metric,
+      -1.0 * (*lapse)() * pi(ti_a, ti_b) +
+          (1.0 + gamma1()) * (*shift)(ti_I) *
+              (d_spacetime_metric(ti_i, ti_a, ti_b) - phi(ti_i, ti_a, ti_b)) +
+          (*shift)(ti_I) * phi(ti_i, ti_a, ti_b));
 
   // can't do with TE's yet
   // Equation for dt_pi
