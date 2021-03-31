@@ -596,11 +596,26 @@ void compute_te_result(
   //     }
   //   }
   // }
+  // Written using all terms thus far
+  // TensorExpressions::evaluate<ti_i, ti_a, ti_b>(
+  //     dt_phi,
+  //     (0.5 * pi(ti_a, ti_b) * (*phi_two_normals)(ti_i)-d_pi(ti_i, ti_a, ti_b)
+  //     +
+  //      gamma2() * (*three_index_constraint)(ti_i, ti_a, ti_b) +
+  //      (*phi_one_normal_spatial)(ti_i, ti_j) * (*phi_1_up)(ti_J, ti_a, ti_b))
+  //      *
+  //             (*lapse)() +
+  //         (*shift)(ti_K)*d_phi(ti_k, ti_i, ti_a, ti_b));
+  // Written with all expandable terms
   TensorExpressions::evaluate<ti_i, ti_a, ti_b>(
       dt_phi,
-      (0.5 * pi(ti_a, ti_b) * (*phi_two_normals)(ti_i)-d_pi(ti_i, ti_a, ti_b) +
-       gamma2() * (*three_index_constraint)(ti_i, ti_a, ti_b) +
-       (*phi_one_normal_spatial)(ti_i, ti_j) * (*phi_1_up)(ti_J, ti_a, ti_b)) *
+      (0.5 * pi(ti_a, ti_b) * (*normal_spacetime_vector)(ti_C) *
+           (*normal_spacetime_vector)(ti_D)*phi(ti_i, ti_d, ti_c) -
+       d_pi(ti_i, ti_a, ti_b) +
+       gamma2() *
+           (d_spacetime_metric(ti_i, ti_a, ti_b) - phi(ti_i, ti_a, ti_b)) +
+       (*phi_one_normal_spatial)(ti_i, ti_j) *
+           (*inverse_spatial_metric)(ti_J, ti_K) * phi(ti_k, ti_a, ti_b)) *
               (*lapse)() +
           (*shift)(ti_K)*d_phi(ti_k, ti_i, ti_a, ti_b));
 }
