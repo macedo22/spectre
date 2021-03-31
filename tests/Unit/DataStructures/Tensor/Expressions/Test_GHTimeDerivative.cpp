@@ -357,31 +357,38 @@ void compute_te_result(
   // auto normal_dot_gauge_constraint = evaluate( // scalar
   //     normal_spacetime_vector(ti_A) *          // A
   //     gauge_constraint(ti_a));                 // a
-  get(*normal_dot_gauge_constraint) =
-      get<0>(*normal_spacetime_vector) * get<0>(*gauge_constraint);
-  for (size_t mu = 1; mu < Dim + 1; ++mu) {
-    get(*normal_dot_gauge_constraint) +=
-        normal_spacetime_vector->get(mu) * gauge_constraint->get(mu);
-  }
+  // get(*normal_dot_gauge_constraint) =
+  //     get<0>(*normal_spacetime_vector) * get<0>(*gauge_constraint);
+  // for (size_t mu = 1; mu < Dim + 1; ++mu) {
+  //   get(*normal_dot_gauge_constraint) +=
+  //       normal_spacetime_vector->get(mu) * gauge_constraint->get(mu);
+  // }
+  TensorExpressions::evaluate(
+      normal_dot_gauge_constraint,
+      (*normal_spacetime_vector)(ti_A) * (*gauge_constraint)(ti_a));
 
   // auto gamma1_plus_1 = evaluate(1.0 + gamma1()); // scalar
-  get(*gamma1_plus_1) = 1.0 + gamma1.get();
+  // get(*gamma1_plus_1) = 1.0 + gamma1.get();
+  TensorExpressions::evaluate(gamma1_plus_1, 1.0 + gamma1());
   // not an eq
   const DataVector& gamma1p1 = get(*gamma1_plus_1);
 
   // auto shift_dot_three_index_constraint = evaluate<ti_a, ti_b>( // aa
-  //     shift(ti_I) +                                             // I
+  //     shift(ti_I) *                                             // I
   //     three_index_constraint(ti_i, ti_a, ti_b));                // iaa
-  for (size_t mu = 0; mu < Dim + 1; ++mu) {
-    for (size_t nu = mu; nu < Dim + 1; ++nu) {
-      shift_dot_three_index_constraint->get(mu, nu) =
-          get<0>(*shift) * three_index_constraint->get(0, mu, nu);
-      for (size_t m = 1; m < Dim; ++m) {
-        shift_dot_three_index_constraint->get(mu, nu) +=
-            shift->get(m) * three_index_constraint->get(m, mu, nu);
-      }
-    }
-  }
+  // for (size_t mu = 0; mu < Dim + 1; ++mu) {
+  //   for (size_t nu = mu; nu < Dim + 1; ++nu) {
+  //     shift_dot_three_index_constraint->get(mu, nu) =
+  //         get<0>(*shift) * three_index_constraint->get(0, mu, nu);
+  //     for (size_t m = 1; m < Dim; ++m) {
+  //       shift_dot_three_index_constraint->get(mu, nu) +=
+  //           shift->get(m) * three_index_constraint->get(m, mu, nu);
+  //     }
+  //   }
+  // }
+  TensorExpressions::evaluate<ti_a, ti_b>(
+      shift_dot_three_index_constraint,
+      (*shift)(ti_I) * (*three_index_constraint)(ti_i, ti_a, ti_b));
 
   // Here are the actual equations
 
@@ -726,6 +733,21 @@ void test_gh_timederivative_impl(
   for (size_t a = 0; a < Dim + 1; a++) {
     CHECK_ITERABLE_APPROX(gauge_constraint_spectre.get(a),
                           gauge_constraint_te.get(a));
+  }
+
+  // CHECK normal_dot_gauge_constraint (scalar)
+  CHECK_ITERABLE_APPROX(normal_dot_gauge_constraint_spectre.get(),
+                        normal_dot_gauge_constraint_te.get());
+
+  // CHECK gamma1_plus_1 (scalar)
+  CHECK_ITERABLE_APPROX(gamma1_plus_1_spectre.get(), gamma1_plus_1_te.get());
+
+  // CHECK shift_dot_three_index_constraint (aa)
+  for (size_t a = 0; a < Dim + 1; a++) {
+    for (size_t b = 0; b < Dim + 1; b++) {
+      CHECK_ITERABLE_APPROX(shift_dot_three_index_constraint_spectre.get(a, b),
+                            shift_dot_three_index_constraint_te.get(a, b));
+    }
   }
 
   // CHECK dt_spacetime_metric (aa)
