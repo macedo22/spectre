@@ -332,22 +332,27 @@ void compute_te_result(
   // auto three_index_constraint = evaluate<ti_i, ti_a, ti_b>( // iaa
   //     d_spacetime_metric(ti_i, ti_a, ti_b) -                // iaa
   //     phi(ti_i, ti_a, ti_b));                               // iaa
-  for (size_t n = 0; n < Dim; ++n) {
-    for (size_t mu = 0; mu < Dim + 1; ++mu) {
-      for (size_t nu = mu; nu < Dim + 1; ++nu) {
-        three_index_constraint->get(n, mu, nu) =
-            d_spacetime_metric.get(n, mu, nu) - phi.get(n, mu, nu);
-      }
-    }
-  }
+  // for (size_t n = 0; n < Dim; ++n) {
+  //   for (size_t mu = 0; mu < Dim + 1; ++mu) {
+  //     for (size_t nu = mu; nu < Dim + 1; ++nu) {
+  //       three_index_constraint->get(n, mu, nu) =
+  //           d_spacetime_metric.get(n, mu, nu) - phi.get(n, mu, nu);
+  //     }
+  //   }
+  // }
+  TensorExpressions::evaluate<ti_i, ti_a, ti_b>(
+      three_index_constraint,
+      d_spacetime_metric(ti_i, ti_a, ti_b) - phi(ti_i, ti_a, ti_b));
 
   // auto gauge_constraint = evaluate<ti_a>( // a
   //     gauge_function(ti_a) +              // a
   //     trace_christoffel(ti_a));           // a
-  for (size_t nu = 0; nu < Dim + 1; ++nu) {
-    gauge_constraint->get(nu) =
-        gauge_function.get(nu) + trace_christoffel->get(nu);
-  }
+  // for (size_t nu = 0; nu < Dim + 1; ++nu) {
+  //   gauge_constraint->get(nu) =
+  //       gauge_function.get(nu) + trace_christoffel->get(nu);
+  // }
+  TensorExpressions::evaluate<ti_a>(
+      gauge_constraint, gauge_function(ti_a) + (*trace_christoffel)(ti_a));
 
   // auto normal_dot_gauge_constraint = evaluate( // scalar
   //     normal_spacetime_vector(ti_A) *          // A
@@ -705,6 +710,22 @@ void test_gh_timederivative_impl(
   for (size_t i = 0; i < Dim; i++) {
     CHECK_ITERABLE_APPROX(phi_two_normals_spectre.get(i),
                           phi_two_normals_te.get(i));
+  }
+
+  // CHECK three_index_constraint (iaa)
+  for (size_t i = 0; i < Dim; i++) {
+    for (size_t a = 0; a < Dim + 1; a++) {
+      for (size_t b = 0; b < Dim + 1; b++) {
+        CHECK_ITERABLE_APPROX(three_index_constraint_spectre.get(i, a, b),
+                              three_index_constraint_te.get(i, a, b));
+      }
+    }
+  }
+
+  // CHECK gauge_constraint (a)
+  for (size_t a = 0; a < Dim + 1; a++) {
+    CHECK_ITERABLE_APPROX(gauge_constraint_spectre.get(a),
+                          gauge_constraint_te.get(a));
   }
 
   // CHECK dt_spacetime_metric (aa)
