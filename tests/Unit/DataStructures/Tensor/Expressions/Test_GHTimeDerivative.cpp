@@ -59,7 +59,6 @@ using pi_two_normals_type = Scalar<DataVector>;
 using normal_dot_gauge_constraint_type = Scalar<DataVector>;
 using gamma1_plus_1_type = Scalar<DataVector>;
 using pi_one_normal_type = tnsr::a<DataVector, Dim>;
-using pi_one_normal_spatial_type = tnsr::i<DataVector, Dim>;
 using gauge_constraint_type = tnsr::a<DataVector, Dim>;
 using phi_two_normals_type = tnsr::i<DataVector, Dim>;
 using shift_dot_three_index_constraint_type = tnsr::aa<DataVector, Dim>;
@@ -92,6 +91,11 @@ using gamma1_type = Scalar<DataVector>;
 using gamma2_type = Scalar<DataVector>;
 using gauge_function_type = tnsr::a<DataVector, Dim>;
 using spacetime_deriv_gauge_function_type = tnsr::ab<DataVector, Dim>;
+
+// types not in SpECTRE implementation, but needed by TE implementation since
+// TEs can't yet iterate over the spatial components of a spacetime index
+using pi_one_normal_spatial_type = tnsr::i<DataVector, Dim>;
+using phi_one_normal_spatial_type = tnsr::ij<DataVector, Dim>;
 
 void compute_te_result(
     const gsl::not_null<tnsr::aa<DataVector, Dim>*> dt_spacetime_metric,
@@ -136,8 +140,9 @@ void compute_te_result(
     const gamma1_type& gamma1, const gamma2_type& gamma2,
     const gauge_function_type& gauge_function,
     const spacetime_deriv_gauge_function_type& spacetime_deriv_gauge_function,
-    const gsl::not_null<pi_one_normal_spatial_type*>
-        pi_one_normal_spatial) noexcept {
+    const gsl::not_null<pi_one_normal_spatial_type*> pi_one_normal_spatial,
+    const gsl::not_null<phi_one_normal_spatial_type*>
+        phi_one_normal_spatial) noexcept {
   // Need constraint damping on interfaces in DG schemes
   *temp_gamma1 = gamma1;
   *temp_gamma2 = gamma2;
@@ -319,6 +324,11 @@ void compute_te_result(
   // }
   TensorExpressions::evaluate<ti_i, ti_a>(
       phi_one_normal, (*normal_spacetime_vector)(ti_B)*phi(ti_i, ti_b, ti_a));
+  for (size_t i = 0; i < Dim; i++) {
+    for (size_t j = 0; j < Dim; j++) {
+      phi_one_normal_spatial->get(i, j) = phi_one_normal->get(i, j + 1);
+    }
+  }
 
   // auto phi_two_normals = evaluate<ti_i, ti_a>( // i
   //     normal_spacetime_vector(ti_A) *          // A
@@ -566,26 +576,33 @@ void compute_te_result(
   // lapse: scalar
   // shift : I
   // d_phi : ijaa
-  for (size_t i = 0; i < Dim; ++i) {
-    for (size_t mu = 0; mu < Dim + 1; ++mu) {
-      for (size_t nu = mu; nu < Dim + 1; ++nu) {
-        dt_phi->get(i, mu, nu) =
-            0.5 * pi.get(mu, nu) * phi_two_normals->get(i) -
-            d_pi.get(i, mu, nu) +
-            get(gamma2) * three_index_constraint->get(i, mu, nu);
-        for (size_t n = 0; n < Dim; ++n) {
-          // can't do with TE's yet
-          dt_phi->get(i, mu, nu) +=
-              phi_one_normal->get(i, n + 1) * phi_1_up->get(n, mu, nu);
-        }
+  // for (size_t i = 0; i < Dim; ++i) {
+  //   for (size_t mu = 0; mu < Dim + 1; ++mu) {
+  //     for (size_t nu = mu; nu < Dim + 1; ++nu) {
+  //       dt_phi->get(i, mu, nu) =
+  //           0.5 * pi.get(mu, nu) * phi_two_normals->get(i) -
+  //           d_pi.get(i, mu, nu) +
+  //           get(gamma2) * three_index_constraint->get(i, mu, nu);
+  //       for (size_t n = 0; n < Dim; ++n) {
+  //         // can't do with TE's yet
+  //         dt_phi->get(i, mu, nu) +=
+  //             phi_one_normal->get(i, n + 1) * phi_1_up->get(n, mu, nu);
+  //       }
 
-        dt_phi->get(i, mu, nu) *= get(*lapse);
-        for (size_t m = 0; m < Dim; ++m) {
-          dt_phi->get(i, mu, nu) += shift->get(m) * d_phi.get(m, i, mu, nu);
-        }
-      }
-    }
-  }
+  //       dt_phi->get(i, mu, nu) *= get(*lapse);
+  //       for (size_t m = 0; m < Dim; ++m) {
+  //         dt_phi->get(i, mu, nu) += shift->get(m) * d_phi.get(m, i, mu, nu);
+  //       }
+  //     }
+  //   }
+  // }
+  TensorExpressions::evaluate<ti_i, ti_a, ti_b>(
+      dt_phi,
+      (0.5 * pi(ti_a, ti_b) * (*phi_two_normals)(ti_i)-d_pi(ti_i, ti_a, ti_b) +
+       gamma2() * (*three_index_constraint)(ti_i, ti_a, ti_b) +
+       (*phi_one_normal_spatial)(ti_i, ti_j) * (*phi_1_up)(ti_J, ti_a, ti_b)) *
+              (*lapse)() +
+          (*shift)(ti_K)*d_phi(ti_k, ti_i, ti_a, ti_b));
 }
 
 void test_gh_timederivative_impl(
@@ -673,6 +690,7 @@ void test_gh_timederivative_impl(
   // TEs can't iterate over only spatial indices of a spacetime index yet, so it
   // will be manually computed to enable writing the equation for dt_pi
   pi_one_normal_spatial_type pi_one_normal_spatial(num_grid_points);
+  phi_one_normal_spatial_type phi_one_normal_spatial(num_grid_points);
 
   // Compute SpECTRE result
   GeneralizedHarmonic::TimeDerivative<Dim>::apply(
@@ -730,7 +748,8 @@ void test_gh_timederivative_impl(
       make_not_null(&normal_spacetime_one_form_te),
       make_not_null(&da_spacetime_metric_te), d_spacetime_metric, d_pi, d_phi,
       spacetime_metric, pi, phi, gamma0, gamma1, gamma2, gauge_function,
-      spacetime_deriv_gauge_function, make_not_null(&pi_one_normal_spatial));
+      spacetime_deriv_gauge_function, make_not_null(&pi_one_normal_spatial),
+      make_not_null(&phi_one_normal_spatial));
 
   // CHECK christoffel_first_kind (abb)
   for (size_t a = 0; a < Dim + 1; a++) {
