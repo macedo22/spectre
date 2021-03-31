@@ -607,16 +607,30 @@ void compute_te_result(
   //             (*lapse)() +
   //         (*shift)(ti_K)*d_phi(ti_k, ti_i, ti_a, ti_b));
   // Written with all expandable terms
+  // TensorExpressions::evaluate<ti_i, ti_a, ti_b>(
+  //     dt_phi,
+  //     (0.5 * pi(ti_a, ti_b) * (*normal_spacetime_vector)(ti_C) *
+  //          (*normal_spacetime_vector)(ti_D)*phi(ti_i, ti_d, ti_c) -
+  //      d_pi(ti_i, ti_a, ti_b) +
+  //      gamma2() *
+  //          (d_spacetime_metric(ti_i, ti_a, ti_b) - phi(ti_i, ti_a, ti_b)) +
+  //      (*phi_one_normal_spatial)(ti_i, ti_j) *
+  //          (*inverse_spatial_metric)(ti_J, ti_K) * phi(ti_k, ti_a, ti_b)) *
+  //             (*lapse)() +
+  //         (*shift)(ti_K)*d_phi(ti_k, ti_i, ti_a, ti_b));
+  // Written with all expandable terms rearranged to match solving for dt_phi
+  // equation referenced by SpECTRE documentation
   TensorExpressions::evaluate<ti_i, ti_a, ti_b>(
       dt_phi,
-      (0.5 * pi(ti_a, ti_b) * (*normal_spacetime_vector)(ti_C) *
-           (*normal_spacetime_vector)(ti_D)*phi(ti_i, ti_d, ti_c) -
-       d_pi(ti_i, ti_a, ti_b) +
-       gamma2() *
-           (d_spacetime_metric(ti_i, ti_a, ti_b) - phi(ti_i, ti_a, ti_b)) +
-       (*phi_one_normal_spatial)(ti_i, ti_j) *
-           (*inverse_spatial_metric)(ti_J, ti_K) * phi(ti_k, ti_a, ti_b)) *
-              (*lapse)() +
+      (*lapse)() * (0.5 * (*normal_spacetime_vector)(ti_C) *
+                        (*normal_spacetime_vector)(ti_D)*phi(ti_i, ti_d, ti_c) *
+                        pi(ti_a, ti_b) +
+                    (*inverse_spatial_metric)(ti_J, ti_K) *
+                        (*phi_one_normal_spatial)(ti_i, ti_j) *
+                        phi(ti_k, ti_a, ti_b) +
+                    gamma2() * (d_spacetime_metric(ti_i, ti_a, ti_b) -
+                                phi(ti_i, ti_a, ti_b)) -
+                    d_pi(ti_i, ti_a, ti_b)) +
           (*shift)(ti_K)*d_phi(ti_k, ti_i, ti_a, ti_b));
 }
 
