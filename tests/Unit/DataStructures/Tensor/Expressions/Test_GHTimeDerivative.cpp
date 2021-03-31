@@ -371,7 +371,7 @@ void compute_te_result(
   // get(*gamma1_plus_1) = 1.0 + gamma1.get();
   TensorExpressions::evaluate(gamma1_plus_1, 1.0 + gamma1());
   // not an eq
-  const DataVector& gamma1p1 = get(*gamma1_plus_1);
+  // const DataVector& gamma1p1 = get(*gamma1_plus_1);
 
   // auto shift_dot_three_index_constraint = evaluate<ti_a, ti_b>( // aa
   //     shift(ti_I) *                                             // I
@@ -403,17 +403,22 @@ void compute_te_result(
   // auto dt_spacetime_metric = evaluate<ti_a, ti_b> (
   //    -1.0 * lapse() * pi(ti_a, ti_b) +
   //     gamma1_plus_1() * shift_dot_three_index_constraint(ti_a, ti_b) +
-  //     + shift(ti_I) * phi(ti_i, ti_a, ti_b)));
-  for (size_t mu = 0; mu < Dim + 1; ++mu) {
-    for (size_t nu = mu; nu < Dim + 1; ++nu) {
-      dt_spacetime_metric->get(mu, nu) = -get(*lapse) * pi.get(mu, nu);
-      dt_spacetime_metric->get(mu, nu) +=
-          gamma1p1 * shift_dot_three_index_constraint->get(mu, nu);
-      for (size_t m = 0; m < Dim; ++m) {
-        dt_spacetime_metric->get(mu, nu) += shift->get(m) * phi.get(m, mu, nu);
-      }
-    }
-  }
+  //     shift(ti_I) * phi(ti_i, ti_a, ti_b));
+  // for (size_t mu = 0; mu < Dim + 1; ++mu) {
+  //   for (size_t nu = mu; nu < Dim + 1; ++nu) {
+  //     dt_spacetime_metric->get(mu, nu) = -get(*lapse) * pi.get(mu, nu);
+  //     dt_spacetime_metric->get(mu, nu) +=
+  //         gamma1p1 * shift_dot_three_index_constraint->get(mu, nu);
+  //     for (size_t m = 0; m < Dim; ++m) {
+  //       dt_spacetime_metric->get(mu, nu) += shift->get(m) * phi.get(m, mu,
+  //       nu);
+  //     }
+  //   }
+  // }
+  TensorExpressions::evaluate<ti_a, ti_b> (dt_spacetime_metric,
+     -1.0 * (*lapse)() * pi(ti_a, ti_b) +
+      (*gamma1_plus_1)() * (*shift_dot_three_index_constraint)(ti_a, ti_b) +
+      (*shift)(ti_I) * phi(ti_i, ti_a, ti_b));
 
   // Equation for dt_pi
   for (size_t mu = 0; mu < Dim + 1; ++mu) {
