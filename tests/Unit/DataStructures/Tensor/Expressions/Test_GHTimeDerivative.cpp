@@ -420,7 +420,31 @@ void compute_te_result(
       (*gamma1_plus_1)() * (*shift_dot_three_index_constraint)(ti_a, ti_b) +
       (*shift)(ti_I) * phi(ti_i, ti_a, ti_b));
 
+  // can't do with TE's yet
   // Equation for dt_pi
+  // dt_pi : aa
+  // spacetime_deriv_gauge_function : ab
+  // pi_two_normals : scalar
+  // pi : aa
+  // gamma0 : scalar
+  // normal_spacetime_one_form : a
+  // gauge_constraint : a
+  // spacetime_metric : aa
+  // normal_dot_gauge_constraint : scalar
+  // christoffel_second_kind :  Abb
+  // gauge_function : a
+  // pi_2_up : aB
+  // phi_1_up : Iaa
+  // phi_3_up : iaB
+  // christoffel_first_kind_3_up : abC
+  // pi_one_normal : a
+  // inverse_spatial_metric : II
+  // d_phi : ijaa
+  // lapse: scalar
+  // gamma1gamma2 : scalar
+  // shift_dot_three_index_constraint : aa
+  // shift : I
+  // d_pi : iaa
   for (size_t mu = 0; mu < Dim + 1; ++mu) {
     for (size_t nu = mu; nu < Dim + 1; ++nu) {
       dt_pi->get(mu, nu) =
@@ -451,6 +475,7 @@ void compute_te_result(
       }
 
       for (size_t m = 0; m < Dim; ++m) {
+        // can't do with TE's yet
         dt_pi->get(mu, nu) -=
             pi_one_normal->get(m + 1) * phi_1_up->get(m, mu, nu);
 
@@ -472,7 +497,18 @@ void compute_te_result(
     }
   }
 
+  // can't do with TE's yet
   // Equation for dt_phi
+  // dt_phi : iaa
+  // phi_two_normals : i
+  // d_pi : iaa
+  // gamma2 : scalar
+  // three_index_constraint : iaa
+  // phi_one_normal : ia
+  // phi_1_up : Iaa
+  // lapse: scalar
+  // shift : I
+  // d_phi : ijaa
   for (size_t i = 0; i < Dim; ++i) {
     for (size_t mu = 0; mu < Dim + 1; ++mu) {
       for (size_t nu = mu; nu < Dim + 1; ++nu) {
@@ -481,6 +517,7 @@ void compute_te_result(
             d_pi.get(i, mu, nu) +
             get(gamma2) * three_index_constraint->get(i, mu, nu);
         for (size_t n = 0; n < Dim; ++n) {
+          // can't do with TE's yet
           dt_phi->get(i, mu, nu) +=
               phi_one_normal->get(i, n + 1) * phi_1_up->get(n, mu, nu);
         }
