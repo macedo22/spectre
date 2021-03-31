@@ -300,28 +300,33 @@ void compute_te_result(
   // auto phi_one_normal = evaluate<ti_i, ti_a>(  // ia
   //     normal_spacetime_vector(ti_B) *          // A
   //     phi(ti_i, ti_b, ti_a));                  // iaa
-  for (size_t n = 0; n < Dim; ++n) {
-    for (size_t nu = 0; nu < Dim + 1; ++nu) {
-      phi_one_normal->get(n, nu) =
-          get<0>(*normal_spacetime_vector) * phi.get(n, 0, nu);
-      for (size_t mu = 1; mu < Dim + 1; ++mu) {
-        phi_one_normal->get(n, nu) +=
-            normal_spacetime_vector->get(mu) * phi.get(n, mu, nu);
-      }
-    }
-  }
+  // for (size_t n = 0; n < Dim; ++n) {
+  //   for (size_t nu = 0; nu < Dim + 1; ++nu) {
+  //     phi_one_normal->get(n, nu) =
+  //         get<0>(*normal_spacetime_vector) * phi.get(n, 0, nu);
+  //     for (size_t mu = 1; mu < Dim + 1; ++mu) {
+  //       phi_one_normal->get(n, nu) +=
+  //           normal_spacetime_vector->get(mu) * phi.get(n, mu, nu);
+  //     }
+  //   }
+  // }
+  TensorExpressions::evaluate<ti_i, ti_a>(
+      phi_one_normal, (*normal_spacetime_vector)(ti_B)*phi(ti_i, ti_b, ti_a));
 
   // auto phi_two_normals = evaluate<ti_i, ti_a>( // i
   //     normal_spacetime_vector(ti_A) *          // A
   //     phi_one_normal(ti_i, ti_a));             // ia
-  for (size_t n = 0; n < Dim; ++n) {
-    phi_two_normals->get(n) =
-        get<0>(*normal_spacetime_vector) * phi_one_normal->get(n, 0);
-    for (size_t mu = 1; mu < Dim + 1; ++mu) {
-      phi_two_normals->get(n) +=
-          normal_spacetime_vector->get(mu) * phi_one_normal->get(n, mu);
-    }
-  }
+  // for (size_t n = 0; n < Dim; ++n) {
+  //   phi_two_normals->get(n) =
+  //       get<0>(*normal_spacetime_vector) * phi_one_normal->get(n, 0);
+  //   for (size_t mu = 1; mu < Dim + 1; ++mu) {
+  //     phi_two_normals->get(n) +=
+  //         normal_spacetime_vector->get(mu) * phi_one_normal->get(n, mu);
+  //   }
+  // }
+  TensorExpressions::evaluate<ti_i>(
+      phi_two_normals,
+      (*normal_spacetime_vector)(ti_A) * (*phi_one_normal)(ti_i, ti_a));
 
   // Note: 2nd and 3rd indices of result are symmetric
   // auto three_index_constraint = evaluate<ti_i, ti_a, ti_b>( // iaa
@@ -687,6 +692,20 @@ void test_gh_timederivative_impl(
 
   // CHECK pi_two_normals (scalar)
   CHECK_ITERABLE_APPROX(pi_two_normals_spectre.get(), pi_two_normals_te.get());
+
+  // CHECK phi_one_normal (ia)
+  for (size_t i = 0; i < Dim; i++) {
+    for (size_t a = 0; a < Dim + 1; a++) {
+      CHECK_ITERABLE_APPROX(phi_one_normal_spectre.get(i, a),
+                            phi_one_normal_te.get(i, a));
+    }
+  }
+
+  // CHECK phi_two_normals (i)
+  for (size_t i = 0; i < Dim; i++) {
+    CHECK_ITERABLE_APPROX(phi_two_normals_spectre.get(i),
+                          phi_two_normals_te.get(i));
+  }
 
   // CHECK dt_spacetime_metric (aa)
   for (size_t a = 0; a < Dim + 1; a++) {
