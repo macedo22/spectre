@@ -441,8 +441,8 @@ void compute_te_result(
   TensorExpressions::evaluate<ti_a, ti_b>(
       dt_spacetime_metric,
       -1.0 * (*lapse)() * pi(ti_a, ti_b) +
-          (1.0 + gamma1()) * (*shift)(ti_I) *
-              (d_spacetime_metric(ti_i, ti_a, ti_b) - phi(ti_i, ti_a, ti_b)) +
+          (1.0 + gamma1()) * (*shift)(ti_K) *
+              (d_spacetime_metric(ti_k, ti_a, ti_b) - phi(ti_k, ti_a, ti_b)) +
           (*shift)(ti_I) * phi(ti_i, ti_a, ti_b));
 
   // can't do with TE's yet - using pi_one_normal_spatial to enable it
