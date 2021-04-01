@@ -391,18 +391,18 @@ void compute_te_result(
   // }
   //
   // Written using all terms thus far:
-  /*TensorExpressions::evaluate<ti_a, ti_b> (dt_spacetime_metric,
+  TensorExpressions::evaluate<ti_a, ti_b> (dt_spacetime_metric,
       -1.0 * (*lapse)() * pi(ti_a, ti_b) +
        (*gamma1_plus_1)() * (*shift_dot_three_index_constraint)(ti_a, ti_b) +
-       (*shift)(ti_I) * phi(ti_i, ti_a, ti_b));*/
+       (*shift)(ti_I) * phi(ti_i, ti_a, ti_b));
   //
   // Written with all expandable terms expanded :
-  TensorExpressions::evaluate<ti_a, ti_b>(
+  /*TensorExpressions::evaluate<ti_a, ti_b>(
       dt_spacetime_metric,
       -1.0 * (*lapse)() * pi(ti_a, ti_b) +
           (1.0 + gamma1()) * (*shift)(ti_K) *
               (d_spacetime_metric(ti_k, ti_a, ti_b) - phi(ti_k, ti_a, ti_b)) +
-          (*shift)(ti_I) * phi(ti_i, ti_a, ti_b));
+          (*shift)(ti_I) * phi(ti_i, ti_a, ti_b));*/
 
   // Note: can't do with TE's yet - using pi_one_normal_spatial to enable it
   //
@@ -489,7 +489,7 @@ void compute_te_result(
   //
   // Written using all terms thus far :
   // Note: Whole file compiles in ~30 seconds when this one is used
-  /*TensorExpressions::evaluate<ti_a, ti_b>(
+  TensorExpressions::evaluate<ti_a, ti_b>(
       dt_pi,
       ((-1.0 * spacetime_deriv_gauge_function(ti_a, ti_b)) -
        spacetime_deriv_gauge_function(ti_b, ti_a) -
@@ -509,7 +509,7 @@ void compute_te_result(
        (*inverse_spatial_metric)(ti_J, ti_K) * d_phi(ti_j, ti_k, ti_a, ti_b)) *
               (*lapse)() +
           (*gamma1gamma2)() * (*shift_dot_three_index_constraint)(ti_a, ti_b) +
-          (*shift)(ti_I)*d_pi(ti_i, ti_a, ti_b));*/
+          (*shift)(ti_I)*d_pi(ti_i, ti_a, ti_b));
   //
   // Written with all expandable terms expanded :
   // Note: Whole file takes ~35-40 min to compile with clang with -j4...
@@ -576,7 +576,7 @@ void compute_te_result(
   // Written with terms seen in equation reference by SpECTRE documentation :
   // (i.e. some terms in the above fully expanded version have been collapsed)
   // Note: Whole file takes ~18 min to compile with clang with -j4...
-  TensorExpressions::evaluate<ti_a, ti_b>(
+  /*TensorExpressions::evaluate<ti_a, ti_b>(
       dt_pi,
       ((-1.0 * spacetime_deriv_gauge_function(ti_a, ti_b)) -
        spacetime_deriv_gauge_function(ti_b, ti_a) -
@@ -606,7 +606,7 @@ void compute_te_result(
               (*lapse)() +
           gamma1() * gamma2() * (*shift)(ti_I) *
               (d_spacetime_metric(ti_i, ti_a, ti_b) - phi(ti_i, ti_a, ti_b)) +
-          (*shift)(ti_I)*d_pi(ti_i, ti_a, ti_b));
+          (*shift)(ti_I)*d_pi(ti_i, ti_a, ti_b));*/
 
   // Note: can't do with TE's yet - using phi_one_normal_spatial to enable it
   //
@@ -643,7 +643,7 @@ void compute_te_result(
   // }
   //
   // Written using all terms thus far :
-  /*TensorExpressions::evaluate<ti_i, ti_a, ti_b>(
+  TensorExpressions::evaluate<ti_i, ti_a, ti_b>(
       dt_phi,
       (0.5 * pi(ti_a, ti_b) * (*phi_two_normals)(ti_i)-d_pi(ti_i, ti_a, ti_b)
       +
@@ -651,7 +651,7 @@ void compute_te_result(
        (*phi_one_normal_spatial)(ti_i, ti_j) * (*phi_1_up)(ti_J, ti_a, ti_b))
        *
               (*lapse)() +
-          (*shift)(ti_K)*d_phi(ti_k, ti_i, ti_a, ti_b));*/
+          (*shift)(ti_K)*d_phi(ti_k, ti_i, ti_a, ti_b));
   //
   // Written with all expandable terms expanded :
   /*TensorExpressions::evaluate<ti_i, ti_a, ti_b>(
@@ -668,7 +668,7 @@ void compute_te_result(
   //
   // Written with all expandable terms rearranged to match solving for dt_phi
   // equation referenced by SpECTRE documentation :
-  TensorExpressions::evaluate<ti_i, ti_a, ti_b>(
+  /*TensorExpressions::evaluate<ti_i, ti_a, ti_b>(
       dt_phi,
       (*lapse)() * (0.5 * (*normal_spacetime_vector)(ti_C) *
                         (*normal_spacetime_vector)(ti_D)*phi(ti_i, ti_d, ti_c) *
@@ -679,7 +679,7 @@ void compute_te_result(
                     gamma2() * (d_spacetime_metric(ti_i, ti_a, ti_b) -
                                 phi(ti_i, ti_a, ti_b)) -
                     d_pi(ti_i, ti_a, ti_b)) +
-          (*shift)(ti_K)*d_phi(ti_k, ti_i, ti_a, ti_b));
+          (*shift)(ti_K)*d_phi(ti_k, ti_i, ti_a, ti_b));*/
 }
 
 void test_gh_timederivative_impl(
