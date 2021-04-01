@@ -552,31 +552,30 @@ void compute_te_result(
   //   }
   // }
   // Written using all terms thus far
-  // TensorExpressions::evaluate<ti_a, ti_b>(
-  //     dt_pi,
-  //     ((-1.0 * spacetime_deriv_gauge_function(ti_a, ti_b)) -
-  //      spacetime_deriv_gauge_function(ti_b, ti_a) -
-  //      0.5 * (*pi_two_normals)() * pi(ti_a, ti_b) +
-  //      gamma0() *
-  //          ((*normal_spacetime_one_form)(ti_a) * (*gauge_constraint)(ti_b) +
-  //           (*normal_spacetime_one_form)(ti_b) * (*gauge_constraint)(ti_a)) -
-  //      gamma0() * spacetime_metric(ti_a, ti_b) *
-  //          (*normal_dot_gauge_constraint)() +
-  //      2.0 * (*christoffel_second_kind)(ti_C, ti_a, ti_b) *
-  //          gauge_function(ti_c) -
-  //      2.0 * pi(ti_a, ti_c) * (*pi_2_up)(ti_b, ti_C) +
-  //      2.0 * (*phi_1_up)(ti_I, ti_a, ti_c) * (*phi_3_up)(ti_i, ti_b, ti_C) -
-  //      2.0 * (*christoffel_first_kind_3_up)(ti_a, ti_d, ti_C) *
-  //          (*christoffel_first_kind_3_up)(ti_b, ti_c, ti_D) -
-  //      (*pi_one_normal_spatial)(ti_j) * (*phi_1_up)(ti_J, ti_a, ti_b) -
-  //      (*inverse_spatial_metric)(ti_J, ti_K) * d_phi(ti_j, ti_k, ti_a, ti_b))
-  //      *
-  //             (*lapse)() +
-  //         (*gamma1gamma2)() * (*shift_dot_three_index_constraint)(ti_a, ti_b)
-  //         +
-  //         (*shift)(ti_I)*d_pi(ti_i, ti_a, ti_b));
+  // Note: Whole file compiles in ~30 seconds when this one is used
+  TensorExpressions::evaluate<ti_a, ti_b>(
+      dt_pi,
+      ((-1.0 * spacetime_deriv_gauge_function(ti_a, ti_b)) -
+       spacetime_deriv_gauge_function(ti_b, ti_a) -
+       0.5 * (*pi_two_normals)() * pi(ti_a, ti_b) +
+       gamma0() *
+           ((*normal_spacetime_one_form)(ti_a) * (*gauge_constraint)(ti_b) +
+            (*normal_spacetime_one_form)(ti_b) * (*gauge_constraint)(ti_a)) -
+       gamma0() * spacetime_metric(ti_a, ti_b) *
+           (*normal_dot_gauge_constraint)() +
+       2.0 * (*christoffel_second_kind)(ti_C, ti_a, ti_b) *
+           gauge_function(ti_c) -
+       2.0 * pi(ti_a, ti_c) * (*pi_2_up)(ti_b, ti_C) +
+       2.0 * (*phi_1_up)(ti_I, ti_a, ti_c) * (*phi_3_up)(ti_i, ti_b, ti_C) -
+       2.0 * (*christoffel_first_kind_3_up)(ti_a, ti_d, ti_C) *
+           (*christoffel_first_kind_3_up)(ti_b, ti_c, ti_D) -
+       (*pi_one_normal_spatial)(ti_j) * (*phi_1_up)(ti_J, ti_a, ti_b) -
+       (*inverse_spatial_metric)(ti_J, ti_K) * d_phi(ti_j, ti_k, ti_a, ti_b)) *
+              (*lapse)() +
+          (*gamma1gamma2)() * (*shift_dot_three_index_constraint)(ti_a, ti_b) +
+          (*shift)(ti_I)*d_pi(ti_i, ti_a, ti_b));
   // Written with all expandable terms
-  // Note: Takes ~35-40 min to compile with clang with -j4...
+  // Note: Whole file takes ~35-40 min to compile with clang with -j4...
   /*TensorExpressions::evaluate<ti_a, ti_b>(
       dt_pi,
       ((-1.0 * spacetime_deriv_gauge_function(ti_a, ti_b)) -
@@ -639,7 +638,7 @@ void compute_te_result(
   // Written with terms seen in equation reference by SpECTRE documentation
   // (i.e. some terms in the above fully expanded version have been collapsed)
   // TODO : needs to be tested for accuracy and compile time needs to be timed
-  TensorExpressions::evaluate<ti_a, ti_b>(
+  /*TensorExpressions::evaluate<ti_a, ti_b>(
       dt_pi,
       ((-1.0 * spacetime_deriv_gauge_function(ti_a, ti_b)) -
        spacetime_deriv_gauge_function(ti_b, ti_a) -
@@ -669,7 +668,7 @@ void compute_te_result(
               (*lapse)() +
           gamma1() * gamma2() * (*shift)(ti_I) *
               (d_spacetime_metric(ti_i, ti_a, ti_b) - phi(ti_i, ti_a, ti_b)) +
-          (*shift)(ti_I)*d_pi(ti_i, ti_a, ti_b));
+          (*shift)(ti_I)*d_pi(ti_i, ti_a, ti_b));*/
 
   // can't do with TE's yet
   // Equation for dt_phi
