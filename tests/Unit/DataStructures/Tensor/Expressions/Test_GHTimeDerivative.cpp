@@ -576,8 +576,8 @@ void compute_te_result(
   //         +
   //         (*shift)(ti_I)*d_pi(ti_i, ti_a, ti_b));
   // Written with all expandable terms
-  // Note: Takes ~35-40 min to compile...
-  TensorExpressions::evaluate<ti_a, ti_b>(
+  // Note: Takes ~35-40 min to compile with clang with -j4...
+  /*TensorExpressions::evaluate<ti_a, ti_b>(
       dt_pi,
       ((-1.0 * spacetime_deriv_gauge_function(ti_a, ti_b)) -
        spacetime_deriv_gauge_function(ti_b, ti_a) -
@@ -629,6 +629,40 @@ void compute_te_result(
            (0.5 * ((*da_spacetime_metric)(ti_c, ti_f, ti_b) +
                    (*da_spacetime_metric)(ti_f, ti_c, ti_b) -
                    (*da_spacetime_metric)(ti_b, ti_c, ti_f))) -
+       (*pi_one_normal_spatial)(ti_j) * (*inverse_spatial_metric)(ti_J, ti_I) *
+           phi(ti_i, ti_a, ti_b) -
+       (*inverse_spatial_metric)(ti_J, ti_K) * d_phi(ti_j, ti_k, ti_a, ti_b)) *
+              (*lapse)() +
+          gamma1() * gamma2() * (*shift)(ti_I) *
+              (d_spacetime_metric(ti_i, ti_a, ti_b) - phi(ti_i, ti_a, ti_b)) +
+          (*shift)(ti_I)*d_pi(ti_i, ti_a, ti_b));*/
+  // Written with terms seen in equation reference by SpECTRE documentation
+  // (i.e. some terms in the above fully expanded version have been collapsed)
+  // TODO : needs to be tested for accuracy and compile time needs to be timed
+  TensorExpressions::evaluate<ti_a, ti_b>(
+      dt_pi,
+      ((-1.0 * spacetime_deriv_gauge_function(ti_a, ti_b)) -
+       spacetime_deriv_gauge_function(ti_b, ti_a) -
+       0.5 * (*normal_spacetime_vector)(ti_C) *
+           (*normal_spacetime_vector)(ti_D)*pi(ti_c, ti_d) * pi(ti_a, ti_b) +
+       gamma0() * ((*normal_spacetime_one_form)(ti_a) *
+                       (gauge_function(ti_b) + (*trace_christoffel)(ti_b)) +
+                   (*normal_spacetime_one_form)(ti_b) *
+                       (gauge_function(ti_a) + (*trace_christoffel)(ti_a))) -
+       gamma0() * spacetime_metric(ti_a, ti_b) *
+           (*normal_spacetime_vector)(ti_C) *
+            (gauge_function(ti_c) + (*trace_christoffel)(ti_c)) +
+       2.0 * (*christoffel_first_kind)(ti_d, ti_a, ti_b) *
+         (*inverse_spacetime_metric)(ti_C, ti_D) *
+           gauge_function(ti_c) -
+       2.0 * pi(ti_a, ti_c) * (*inverse_spacetime_metric)(ti_C, ti_D) *
+           pi(ti_b, ti_d) +
+       2.0 * (*inverse_spatial_metric)(ti_I, ti_J) * phi(ti_j, ti_a, ti_c) *
+           (*inverse_spacetime_metric)(ti_C, ti_D) * phi(ti_i, ti_b, ti_d) -
+       2.0 * (*inverse_spacetime_metric)(ti_C, ti_E) *
+         (*christoffel_first_kind)(ti_a, ti_d, ti_e) *
+           (*inverse_spacetime_metric)(ti_D, ti_F) *
+             (*christoffel_first_kind)(ti_b, ti_c, ti_f) -
        (*pi_one_normal_spatial)(ti_j) * (*inverse_spatial_metric)(ti_J, ti_I) *
            phi(ti_i, ti_a, ti_b) -
        (*inverse_spatial_metric)(ti_J, ti_K) * d_phi(ti_j, ti_k, ti_a, ti_b)) *
