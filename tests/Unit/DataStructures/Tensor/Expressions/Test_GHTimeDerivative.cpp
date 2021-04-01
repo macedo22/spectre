@@ -268,11 +268,9 @@ void compute_te_result(
   // workaround to enable writing the equation almost exactly as the loops
   TensorExpressions::evaluate<ti_i, ti_a, ti_b>(
       dt_phi,
-      (0.5 * pi(ti_a, ti_b) * (*phi_two_normals)(ti_i)-d_pi(ti_i, ti_a, ti_b)
-      +
+      (0.5 * pi(ti_a, ti_b) * (*phi_two_normals)(ti_i)-d_pi(ti_i, ti_a, ti_b) +
        gamma2() * (*three_index_constraint)(ti_i, ti_a, ti_b) +
-       (*phi_one_normal_spatial)(ti_i, ti_j) * (*phi_1_up)(ti_J, ti_a, ti_b))
-       *
+       (*phi_one_normal_spatial)(ti_i, ti_j) * (*phi_1_up)(ti_J, ti_a, ti_b)) *
               (*lapse)() +
           (*shift)(ti_K)*d_phi(ti_k, ti_i, ti_a, ti_b));
 }
