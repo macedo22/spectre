@@ -147,129 +147,47 @@ void compute_te_result(
   *temp_gamma1 = gamma1;
   *temp_gamma2 = gamma2;
 
-  // can't do with TE's yet
   gr::spatial_metric(spatial_metric, spacetime_metric);
-  // can't do with TE's yet
   determinant_and_inverse(det_spatial_metric, inverse_spatial_metric,
                           *spatial_metric);
-  // can't do with TE's yet
   gr::shift(shift, spacetime_metric, *inverse_spatial_metric);
-  // can't do with TE's yet
   gr::lapse(lapse, *shift, spacetime_metric);
-  // can't do with TE's yet
   gr::inverse_spacetime_metric(inverse_spacetime_metric, *lapse, *shift,
                                *inverse_spatial_metric);
-  // can't do with TE's yet
   GeneralizedHarmonic::spacetime_derivative_of_spacetime_metric(
       da_spacetime_metric, *lapse, *shift, pi, phi);
-  // gr::christoffel_first_kind(christoffel_first_kind, *da_spacetime_metric);
   TensorExpressions::evaluate<ti_c, ti_a, ti_b>(
       christoffel_first_kind, 0.5 * ((*da_spacetime_metric)(ti_a, ti_b, ti_c) +
                                      (*da_spacetime_metric)(ti_b, ti_a, ti_c) -
                                      (*da_spacetime_metric)(ti_c, ti_a, ti_b)));
-
-  // raise_or_lower_first_index(christoffel_second_kind,
-  // *christoffel_first_kind, *inverse_spacetime_metric);
   TensorExpressions::evaluate<ti_A, ti_b, ti_c>(
       christoffel_second_kind, (*christoffel_first_kind)(ti_d, ti_b, ti_c) *
                                    (*inverse_spacetime_metric)(ti_A, ti_D));
-  // trace_last_indices(trace_christoffel, *christoffel_first_kind,
-  //                    *inverse_spacetime_metric);
   TensorExpressions::evaluate<ti_a>(
       trace_christoffel, (*christoffel_first_kind)(ti_a, ti_b, ti_c) *
                              (*inverse_spacetime_metric)(ti_B, ti_C));
-  // Expanded expression for trace_christoffel
-  // TensorExpressions::evaluate<ti_c>(
-  //     trace_christoffel, 0.5 * ((*da_spacetime_metric)(ti_a, ti_b, ti_c) +
-  //                               (*da_spacetime_metric)(ti_b, ti_a, ti_c) -
-  //                               (*da_spacetime_metric)(ti_c, ti_a, ti_b)) *
-  //                            (*inverse_spacetime_metric)(ti_A, ti_B));
-  //
-  // can't do with TE's yet
   gr::spacetime_normal_vector(normal_spacetime_vector, *lapse, *shift);
-  // can't do with TE's yet
   gr::spacetime_normal_one_form(normal_spacetime_one_form, *lapse);
 
-  // get(*gamma1gamma2) = get(gamma1) * get(gamma2);
   TensorExpressions::evaluate(gamma1gamma2, gamma1() * gamma2());
-  // not used in TE equations
-  // const DataVector& gamma12 = get(*gamma1gamma2);
 
-  // for (size_t m = 0; m < Dim; ++m) {
-  //   for (size_t mu = 0; mu < Dim + 1; ++mu) {
-  //     for (size_t nu = mu; nu < Dim + 1; ++nu) {
-  //       phi_1_up->get(m, mu, nu) =
-  //           inverse_spatial_metric->get(m, 0) * phi.get(0, mu, nu);
-  //       for (size_t n = 1; n < Dim; ++n) {
-  //         phi_1_up->get(m, mu, nu) +=
-  //             inverse_spatial_metric->get(m, n) * phi.get(n, mu, nu);
-  //       }
-  //     }
-  //   }
-  // }
   TensorExpressions::evaluate<ti_I, ti_a, ti_b>(
       phi_1_up, (*inverse_spatial_metric)(ti_I, ti_J) * phi(ti_j, ti_a, ti_b));
 
-  // for (size_t m = 0; m < Dim; ++m) {
-  //   for (size_t nu = 0; nu < Dim + 1; ++nu) {
-  //     for (size_t alpha = 0; alpha < Dim + 1; ++alpha) {
-  //       phi_3_up->get(m, nu, alpha) =
-  //           inverse_spacetime_metric->get(alpha, 0) * phi.get(m, nu, 0);
-  //       for (size_t beta = 1; beta < Dim + 1; ++beta) {
-  //         phi_3_up->get(m, nu, alpha) +=
-  //             inverse_spacetime_metric->get(alpha, beta) *
-  //                 phi.get(m, nu, beta);
-  //       }
-  //     }
-  //   }
-  // }
   TensorExpressions::evaluate<ti_i, ti_a, ti_B>(
       phi_3_up,
       (*inverse_spacetime_metric)(ti_B, ti_C) * phi(ti_i, ti_a, ti_c));
 
-  // for (size_t nu = 0; nu < Dim + 1; ++nu) {
-  //   for (size_t alpha = 0; alpha < Dim + 1; ++alpha) {
-  //     pi_2_up->get(nu, alpha) =
-  //         inverse_spacetime_metric->get(alpha, 0) * pi.get(nu, 0);
-  //     for (size_t beta = 1; beta < Dim + 1; ++beta) {
-  //       pi_2_up->get(nu, alpha) +=
-  //           inverse_spacetime_metric->get(alpha, beta) * pi.get(nu, beta);
-  //     }
-  //   }
-  // }
   TensorExpressions::evaluate<ti_a, ti_B>(
       pi_2_up, (*inverse_spacetime_metric)(ti_B, ti_C) * pi(ti_a, ti_c));
 
-  // for (size_t mu = 0; mu < Dim + 1; ++mu) {
-  //   for (size_t nu = 0; nu < Dim + 1; ++nu) {
-  //     for (size_t alpha = 0; alpha < Dim + 1; ++alpha) {
-  //       christoffel_first_kind_3_up->get(mu, nu, alpha) =
-  //           inverse_spacetime_metric->get(alpha, 0) *
-  //           christoffel_first_kind->get(mu, nu, 0);
-  //       for (size_t beta = 1; beta < Dim + 1; ++beta) {
-  //         christoffel_first_kind_3_up->get(mu, nu, alpha) +=
-  //             inverse_spacetime_metric->get(alpha, beta) *
-  //             christoffel_first_kind->get(mu, nu, beta);
-  //       }
-  //     }
-  //   }
-  // }
   TensorExpressions::evaluate<ti_a, ti_b, ti_C>(
       christoffel_first_kind_3_up,
       (*inverse_spacetime_metric)(ti_C, ti_D) *
           (*christoffel_first_kind)(ti_a, ti_b, ti_d));
 
-  // for (size_t mu = 0; mu < Dim + 1; ++mu) {
-  //   pi_one_normal->get(mu) = get<0>(*normal_spacetime_vector)
-  //                                * pi.get(0, mu);
-  //   for (size_t nu = 1; nu < Dim + 1; ++nu) {
-  //     pi_one_normal->get(mu) +=
-  //         normal_spacetime_vector->get(nu) * pi.get(nu, mu);
-  //   }
-  // }
   TensorExpressions::evaluate<ti_a>(
       pi_one_normal, (*normal_spacetime_vector)(ti_B)*pi(ti_b, ti_a));
-
   // can't get spatial components of spacetime indices with TE's yet
   // (i.e. the m + 1), so copying over spatial components of pi_one_normal into
   // a new tensor
@@ -277,25 +195,9 @@ void compute_te_result(
     pi_one_normal_spatial->get(m) = pi_one_normal->get(m + 1);
   }
 
-  // get(*pi_two_normals) =
-  //     get<0>(*normal_spacetime_vector) * get<0>(*pi_one_normal);
-  // for (size_t mu = 1; mu < Dim + 1; ++mu) {
-  //   get(*pi_two_normals) +=
-  //       normal_spacetime_vector->get(mu) * pi_one_normal->get(mu);
-  // }
   TensorExpressions::evaluate(pi_two_normals, (*normal_spacetime_vector)(ti_A) *
                                                   (*pi_one_normal)(ti_a));
 
-  // for (size_t n = 0; n < Dim; ++n) {
-  //   for (size_t nu = 0; nu < Dim + 1; ++nu) {
-  //     phi_one_normal->get(n, nu) =
-  //         get<0>(*normal_spacetime_vector) * phi.get(n, 0, nu);
-  //     for (size_t mu = 1; mu < Dim + 1; ++mu) {
-  //       phi_one_normal->get(n, nu) +=
-  //           normal_spacetime_vector->get(mu) * phi.get(n, mu, nu);
-  //     }
-  //   }
-  // }
   TensorExpressions::evaluate<ti_i, ti_a>(
       phi_one_normal, (*normal_spacetime_vector)(ti_B)*phi(ti_i, ti_b, ti_a));
   // can't get spatial components of spacetime indices with TE's yet
@@ -307,62 +209,23 @@ void compute_te_result(
     }
   }
 
-  // for (size_t n = 0; n < Dim; ++n) {
-  //   phi_two_normals->get(n) =
-  //       get<0>(*normal_spacetime_vector) * phi_one_normal->get(n, 0);
-  //   for (size_t mu = 1; mu < Dim + 1; ++mu) {
-  //     phi_two_normals->get(n) +=
-  //         normal_spacetime_vector->get(mu) * phi_one_normal->get(n, mu);
-  //   }
-  // }
   TensorExpressions::evaluate<ti_i>(
       phi_two_normals,
       (*normal_spacetime_vector)(ti_A) * (*phi_one_normal)(ti_i, ti_a));
 
-  // for (size_t n = 0; n < Dim; ++n) {
-  //   for (size_t mu = 0; mu < Dim + 1; ++mu) {
-  //     for (size_t nu = mu; nu < Dim + 1; ++nu) {
-  //       three_index_constraint->get(n, mu, nu) =
-  //           d_spacetime_metric.get(n, mu, nu) - phi.get(n, mu, nu);
-  //     }
-  //   }
-  // }
   TensorExpressions::evaluate<ti_i, ti_a, ti_b>(
       three_index_constraint,
       d_spacetime_metric(ti_i, ti_a, ti_b) - phi(ti_i, ti_a, ti_b));
 
-  // for (size_t nu = 0; nu < Dim + 1; ++nu) {
-  //   gauge_constraint->get(nu) =
-  //       gauge_function.get(nu) + trace_christoffel->get(nu);
-  // }
   TensorExpressions::evaluate<ti_a>(
       gauge_constraint, gauge_function(ti_a) + (*trace_christoffel)(ti_a));
 
-  // get(*normal_dot_gauge_constraint) =
-  //     get<0>(*normal_spacetime_vector) * get<0>(*gauge_constraint);
-  // for (size_t mu = 1; mu < Dim + 1; ++mu) {
-  //   get(*normal_dot_gauge_constraint) +=
-  //       normal_spacetime_vector->get(mu) * gauge_constraint->get(mu);
-  // }
   TensorExpressions::evaluate(
       normal_dot_gauge_constraint,
       (*normal_spacetime_vector)(ti_A) * (*gauge_constraint)(ti_a));
 
-  // get(*gamma1_plus_1) = 1.0 + gamma1.get();
   TensorExpressions::evaluate(gamma1_plus_1, 1.0 + gamma1());
-  // not used in TE equations
-  // const DataVector& gamma1p1 = get(*gamma1_plus_1);
 
-  // for (size_t mu = 0; mu < Dim + 1; ++mu) {
-  //   for (size_t nu = mu; nu < Dim + 1; ++nu) {
-  //     shift_dot_three_index_constraint->get(mu, nu) =
-  //         get<0>(*shift) * three_index_constraint->get(0, mu, nu);
-  //     for (size_t m = 1; m < Dim; ++m) {
-  //       shift_dot_three_index_constraint->get(mu, nu) +=
-  //           shift->get(m) * three_index_constraint->get(m, mu, nu);
-  //     }
-  //   }
-  // }
   TensorExpressions::evaluate<ti_a, ti_b>(
       shift_dot_three_index_constraint,
       (*shift)(ti_I) * (*three_index_constraint)(ti_i, ti_a, ti_b));
@@ -370,125 +233,14 @@ void compute_te_result(
   // Here are the actual equations
 
   // Equation for dt_spacetime_metric
-  // dt_spacetime_metric : aa
-  // lapse: scalar
-  // pi: aa
-  // gamma1p1 (gamma1_plus_1) : scalar
-  // shift_dot_three_index_constraint : aa
-  // shift : I
-  // phi : iaa
-  //
-  // for (size_t mu = 0; mu < Dim + 1; ++mu) {
-  //   for (size_t nu = mu; nu < Dim + 1; ++nu) {
-  //     dt_spacetime_metric->get(mu, nu) = -get(*lapse) * pi.get(mu, nu);
-  //     dt_spacetime_metric->get(mu, nu) +=
-  //         gamma1p1 * shift_dot_three_index_constraint->get(mu, nu);
-  //     for (size_t m = 0; m < Dim; ++m) {
-  //       dt_spacetime_metric->get(mu, nu) += shift->get(m) * phi.get(m, mu,
-  //       nu);
-  //     }
-  //   }
-  // }
-  //
-  // Written using all terms thus far:
   TensorExpressions::evaluate<ti_a, ti_b> (dt_spacetime_metric,
       -1.0 * (*lapse)() * pi(ti_a, ti_b) +
        (*gamma1_plus_1)() * (*shift_dot_three_index_constraint)(ti_a, ti_b) +
        (*shift)(ti_I) * phi(ti_i, ti_a, ti_b));
-  //
-  // Written with all expandable terms expanded :
-  /*TensorExpressions::evaluate<ti_a, ti_b>(
-      dt_spacetime_metric,
-      -1.0 * (*lapse)() * pi(ti_a, ti_b) +
-          (1.0 + gamma1()) * (*shift)(ti_K) *
-              (d_spacetime_metric(ti_k, ti_a, ti_b) - phi(ti_k, ti_a, ti_b)) +
-          (*shift)(ti_I) * phi(ti_i, ti_a, ti_b));*/
 
-  // Note: can't do with TE's yet - using pi_one_normal_spatial to enable it
-  //
   // Equation for dt_pi
-  // dt_pi : aa
-  // spacetime_deriv_gauge_function : ab
-  // pi_two_normals : scalar
-  // pi : aa
-  // gamma0 : scalar
-  // normal_spacetime_one_form : a
-  // gauge_constraint : a
-  // spacetime_metric : aa
-  // normal_dot_gauge_constraint : scalar
-  // christoffel_second_kind :  Abb
-  // gauge_function : a
-  // pi_2_up : aB
-  // phi_1_up : Iaa
-  // phi_3_up : iaB
-  // christoffel_first_kind_3_up : abC
-  // pi_one_normal : a
-  // inverse_spatial_metric : II
-  // d_phi : ijaa
-  // lapse: scalar
-  // gamma1gamma2 : scalar
-  // shift_dot_three_index_constraint : aa
-  // shift : I
-  // d_pi : iaa
-  //
-  // for (size_t mu = 0; mu < Dim + 1; ++mu) {
-  //   for (size_t nu = mu; nu < Dim + 1; ++nu) {
-  //     dt_pi->get(mu, nu) =
-  //         -spacetime_deriv_gauge_function.get(mu, nu) -
-  //         spacetime_deriv_gauge_function.get(nu, mu) -
-  //         0.5 * get(*pi_two_normals) * pi.get(mu, nu) +
-  //         get(gamma0) *
-  //             (normal_spacetime_one_form->get(mu) * gauge_constraint->get(nu)
-  //             +
-  //              normal_spacetime_one_form->get(nu) *
-  //              gauge_constraint->get(mu)) -
-  //         get(gamma0) * spacetime_metric.get(mu, nu) *
-  //             get(*normal_dot_gauge_constraint);
-
-  //     for (size_t delta = 0; delta < Dim + 1; ++delta) {
-  //       dt_pi->get(mu, nu) += 2 * christoffel_second_kind->get(delta, mu, nu)
-  //       *
-  //                                 gauge_function.get(delta) -
-  //                             2 * pi.get(mu, delta) * pi_2_up->get(nu,
-  //                             delta);
-
-  //       for (size_t n = 0; n < Dim; ++n) {
-  //         dt_pi->get(mu, nu) +=
-  //             2 * phi_1_up->get(n, mu, delta) * phi_3_up->get(n, nu, delta);
-  //       }
-
-  //       for (size_t alpha = 0; alpha < Dim + 1; ++alpha) {
-  //         dt_pi->get(mu, nu) -=
-  //             2. * christoffel_first_kind_3_up->get(mu, alpha, delta) *
-  //             christoffel_first_kind_3_up->get(nu, delta, alpha);
-  //       }
-  //     }
-
-  //     for (size_t m = 0; m < Dim; ++m) {
-  //       // can't do with TE's yet
-  //       dt_pi->get(mu, nu) -=
-  //           pi_one_normal->get(m + 1) * phi_1_up->get(m, mu, nu);
-
-  //       for (size_t n = 0; n < Dim; ++n) {
-  //         dt_pi->get(mu, nu) -=
-  //             inverse_spatial_metric->get(m, n) * d_phi.get(m, n, mu, nu);
-  //       }
-  //     }
-
-  //     dt_pi->get(mu, nu) *= get(*lapse);
-
-  //     dt_pi->get(mu, nu) +=
-  //         gamma12 * shift_dot_three_index_constraint->get(mu, nu);
-
-  //     for (size_t m = 0; m < Dim; ++m) {
-  //       // DualFrame term
-  //       dt_pi->get(mu, nu) += shift->get(m) * d_pi.get(m, mu, nu);
-  //     }
-  //   }
-  // }
-  //
-  // Written using all terms thus far :
-  // Note: Whole file compiles in ~30 seconds when this one is used
+  // Note: can't completely do with TE's yet - using pi_one_normal_spatial as a
+  // workaround to enable writing the equation almost exactly as the loops
   TensorExpressions::evaluate<ti_a, ti_b>(
       dt_pi,
       ((-1.0 * spacetime_deriv_gauge_function(ti_a, ti_b)) -
@@ -510,139 +262,10 @@ void compute_te_result(
               (*lapse)() +
           (*gamma1gamma2)() * (*shift_dot_three_index_constraint)(ti_a, ti_b) +
           (*shift)(ti_I)*d_pi(ti_i, ti_a, ti_b));
-  //
-  // Written with all expandable terms expanded :
-  // Note: Whole file takes ~35-40 min to compile with clang with -j4...
-  /*TensorExpressions::evaluate<ti_a, ti_b>(
-      dt_pi,
-      ((-1.0 * spacetime_deriv_gauge_function(ti_a, ti_b)) -
-       spacetime_deriv_gauge_function(ti_b, ti_a) -
-       0.5 * (*normal_spacetime_vector)(ti_C) *
-           (*normal_spacetime_vector)(ti_D)*pi(ti_c, ti_d) * pi(ti_a, ti_b) +
-       gamma0() * ((*normal_spacetime_one_form)(ti_a) *
-                       // gauge_function(ti_b) + (*trace_christoffel)(ti_b)
-                       (gauge_function(ti_b) +
-                        ((0.5 * ((*da_spacetime_metric)(ti_c, ti_d, ti_b) +
-                                 (*da_spacetime_metric)(ti_d, ti_c, ti_b) -
-                                 (*da_spacetime_metric)(ti_b, ti_c, ti_d))) *
-                         (*inverse_spacetime_metric)(ti_C, ti_D))) +
-                   (*normal_spacetime_one_form)(ti_b) *
-                       // gauge_function(ti_a) + (*trace_christoffel)(ti_a)
-                       (gauge_function(ti_a) +
-                        ((0.5 * ((*da_spacetime_metric)(ti_c, ti_d, ti_a) +
-                                 (*da_spacetime_metric)(ti_d, ti_c, ti_a) -
-                                 (*da_spacetime_metric)(ti_a, ti_c, ti_d))) *
-                         (*inverse_spacetime_metric)(ti_C, ti_D)))) -
-       gamma0() * spacetime_metric(ti_a, ti_b) *
-           ((*normal_spacetime_vector)(ti_C) *
-            // gauge_function(ti_c) + (*trace_christoffel)(ti_c)
-            (gauge_function(ti_c) +
-             (((0.5 * ((*da_spacetime_metric)(ti_d, ti_e, ti_c) +
-                       (*da_spacetime_metric)(ti_e, ti_d, ti_c) -
-                       (*da_spacetime_metric)(ti_c, ti_d, ti_e))) *
-               (*inverse_spacetime_metric)(ti_D, ti_E))))) +
-       // 2.0 * (*christoffel_first_kind)(ti_d, ti_a, ti_b) *
-       //   (*inverse_spacetime_metric)(ti_C, ti_D) *
-       2.0 *
-           ((((0.5 * ((*da_spacetime_metric)(ti_a, ti_b, ti_d) +
-                      (*da_spacetime_metric)(ti_b, ti_a, ti_d) -
-                      (*da_spacetime_metric)(ti_d, ti_a, ti_b))) *
-              (*inverse_spacetime_metric)(ti_C, ti_D)))) *
-           gauge_function(ti_c) -
-       2.0 * pi(ti_a, ti_c) * (*inverse_spacetime_metric)(ti_C, ti_D) *
-           pi(ti_b, ti_d) +
-       2.0 * (*inverse_spatial_metric)(ti_I, ti_J) * phi(ti_j, ti_a, ti_c) *
-           (*inverse_spacetime_metric)(ti_C, ti_D) * phi(ti_i, ti_b, ti_d) -
-       // 2.0 * (*inverse_spacetime_metric)(ti_C, ti_E) *
-       //   (*christoffel_first_kind)(ti_a, ti_d, ti_e) *
-       2.0 * (*inverse_spacetime_metric)(ti_C, ti_E) *
-           (0.5 * ((*da_spacetime_metric)(ti_d, ti_e, ti_a) +
-                   (*da_spacetime_metric)(ti_e, ti_d, ti_a) -
-                   (*da_spacetime_metric)(ti_a, ti_d, ti_e))) *
-           // (*inverse_spacetime_metric)(ti_D, ti_F) *
-           //   (*christoffel_first_kind)(ti_b, ti_c, ti_f) -
-           (*inverse_spacetime_metric)(ti_D, ti_F) *
-           (0.5 * ((*da_spacetime_metric)(ti_c, ti_f, ti_b) +
-                   (*da_spacetime_metric)(ti_f, ti_c, ti_b) -
-                   (*da_spacetime_metric)(ti_b, ti_c, ti_f))) -
-       (*pi_one_normal_spatial)(ti_j) * (*inverse_spatial_metric)(ti_J, ti_I) *
-           phi(ti_i, ti_a, ti_b) -
-       (*inverse_spatial_metric)(ti_J, ti_K) * d_phi(ti_j, ti_k, ti_a, ti_b)) *
-              (*lapse)() +
-          gamma1() * gamma2() * (*shift)(ti_I) *
-              (d_spacetime_metric(ti_i, ti_a, ti_b) - phi(ti_i, ti_a, ti_b)) +
-          (*shift)(ti_I)*d_pi(ti_i, ti_a, ti_b));*/
-  //
-  // Written with terms seen in equation reference by SpECTRE documentation :
-  // (i.e. some terms in the above fully expanded version have been collapsed)
-  // Note: Whole file takes ~18 min to compile with clang with -j4...
-  /*TensorExpressions::evaluate<ti_a, ti_b>(
-      dt_pi,
-      ((-1.0 * spacetime_deriv_gauge_function(ti_a, ti_b)) -
-       spacetime_deriv_gauge_function(ti_b, ti_a) -
-       0.5 * (*normal_spacetime_vector)(ti_C) *
-           (*normal_spacetime_vector)(ti_D)*pi(ti_c, ti_d) * pi(ti_a, ti_b) +
-       gamma0() * ((*normal_spacetime_one_form)(ti_a) *
-                       (gauge_function(ti_b) + (*trace_christoffel)(ti_b)) +
-                   (*normal_spacetime_one_form)(ti_b) *
-                       (gauge_function(ti_a) + (*trace_christoffel)(ti_a))) -
-       gamma0() * spacetime_metric(ti_a, ti_b) *
-           (*normal_spacetime_vector)(ti_C) *
-            (gauge_function(ti_c) + (*trace_christoffel)(ti_c)) +
-       2.0 * (*christoffel_first_kind)(ti_d, ti_a, ti_b) *
-         (*inverse_spacetime_metric)(ti_C, ti_D) *
-           gauge_function(ti_c) -
-       2.0 * pi(ti_a, ti_c) * (*inverse_spacetime_metric)(ti_C, ti_D) *
-           pi(ti_b, ti_d) +
-       2.0 * (*inverse_spatial_metric)(ti_I, ti_J) * phi(ti_j, ti_a, ti_c) *
-           (*inverse_spacetime_metric)(ti_C, ti_D) * phi(ti_i, ti_b, ti_d) -
-       2.0 * (*inverse_spacetime_metric)(ti_C, ti_E) *
-         (*christoffel_first_kind)(ti_a, ti_d, ti_e) *
-           (*inverse_spacetime_metric)(ti_D, ti_F) *
-             (*christoffel_first_kind)(ti_b, ti_c, ti_f) -
-       (*pi_one_normal_spatial)(ti_j) * (*inverse_spatial_metric)(ti_J, ti_I) *
-           phi(ti_i, ti_a, ti_b) -
-       (*inverse_spatial_metric)(ti_J, ti_K) * d_phi(ti_j, ti_k, ti_a, ti_b)) *
-              (*lapse)() +
-          gamma1() * gamma2() * (*shift)(ti_I) *
-              (d_spacetime_metric(ti_i, ti_a, ti_b) - phi(ti_i, ti_a, ti_b)) +
-          (*shift)(ti_I)*d_pi(ti_i, ti_a, ti_b));*/
 
-  // Note: can't do with TE's yet - using phi_one_normal_spatial to enable it
-  //
   // Equation for dt_phi
-  // dt_phi : iaa
-  // phi_two_normals : i
-  // d_pi : iaa
-  // gamma2 : scalar
-  // three_index_constraint : iaa
-  // phi_one_normal : ia
-  // phi_1_up : Iaa
-  // lapse: scalar
-  // shift : I
-  // d_phi : ijaa
-  // for (size_t i = 0; i < Dim; ++i) {
-  //   for (size_t mu = 0; mu < Dim + 1; ++mu) {
-  //     for (size_t nu = mu; nu < Dim + 1; ++nu) {
-  //       dt_phi->get(i, mu, nu) =
-  //           0.5 * pi.get(mu, nu) * phi_two_normals->get(i) -
-  //           d_pi.get(i, mu, nu) +
-  //           get(gamma2) * three_index_constraint->get(i, mu, nu);
-  //       for (size_t n = 0; n < Dim; ++n) {
-  //         // can't do with TE's yet
-  //         dt_phi->get(i, mu, nu) +=
-  //             phi_one_normal->get(i, n + 1) * phi_1_up->get(n, mu, nu);
-  //       }
-
-  //       dt_phi->get(i, mu, nu) *= get(*lapse);
-  //       for (size_t m = 0; m < Dim; ++m) {
-  //         dt_phi->get(i, mu, nu) += shift->get(m) * d_phi.get(m, i, mu, nu);
-  //       }
-  //     }
-  //   }
-  // }
-  //
-  // Written using all terms thus far :
+  // Note: can't completely do with TE's yet - using phi_one_normal_spatial as a
+  // workaround to enable writing the equation almost exactly as the loops
   TensorExpressions::evaluate<ti_i, ti_a, ti_b>(
       dt_phi,
       (0.5 * pi(ti_a, ti_b) * (*phi_two_normals)(ti_i)-d_pi(ti_i, ti_a, ti_b)
@@ -652,34 +275,6 @@ void compute_te_result(
        *
               (*lapse)() +
           (*shift)(ti_K)*d_phi(ti_k, ti_i, ti_a, ti_b));
-  //
-  // Written with all expandable terms expanded :
-  /*TensorExpressions::evaluate<ti_i, ti_a, ti_b>(
-      dt_phi,
-      (0.5 * pi(ti_a, ti_b) * (*normal_spacetime_vector)(ti_C) *
-           (*normal_spacetime_vector)(ti_D)*phi(ti_i, ti_d, ti_c) -
-       d_pi(ti_i, ti_a, ti_b) +
-       gamma2() *
-           (d_spacetime_metric(ti_i, ti_a, ti_b) - phi(ti_i, ti_a, ti_b)) +
-       (*phi_one_normal_spatial)(ti_i, ti_j) *
-           (*inverse_spatial_metric)(ti_J, ti_K) * phi(ti_k, ti_a, ti_b)) *
-              (*lapse)() +
-          (*shift)(ti_K)*d_phi(ti_k, ti_i, ti_a, ti_b));*/
-  //
-  // Written with all expandable terms rearranged to match solving for dt_phi
-  // equation referenced by SpECTRE documentation :
-  /*TensorExpressions::evaluate<ti_i, ti_a, ti_b>(
-      dt_phi,
-      (*lapse)() * (0.5 * (*normal_spacetime_vector)(ti_C) *
-                        (*normal_spacetime_vector)(ti_D)*phi(ti_i, ti_d, ti_c) *
-                        pi(ti_a, ti_b) +
-                    (*inverse_spatial_metric)(ti_J, ti_K) *
-                        (*phi_one_normal_spatial)(ti_i, ti_j) *
-                        phi(ti_k, ti_a, ti_b) +
-                    gamma2() * (d_spacetime_metric(ti_i, ti_a, ti_b) -
-                                phi(ti_i, ti_a, ti_b)) -
-                    d_pi(ti_i, ti_a, ti_b)) +
-          (*shift)(ti_K)*d_phi(ti_k, ti_i, ti_a, ti_b));*/
 }
 
 void test_gh_timederivative_impl(
@@ -764,8 +359,10 @@ void test_gh_timederivative_impl(
   normal_spacetime_vector_type normal_spacetime_vector_te(num_grid_points);
   normal_spacetime_one_form_type normal_spacetime_one_form_te(num_grid_points);
   da_spacetime_metric_type da_spacetime_metric_te(num_grid_points);
-  // TEs can't iterate over only spatial indices of a spacetime index yet, so it
-  // will be manually computed to enable writing the equation for dt_pi
+  // TEs can't iterate over only spatial indices of a spacetime index yet, so
+  // where this is needed for the dt_pi and dt_phi calculations, these tensors
+  // will be used, which hold only the spatial components to enable writing the
+  // equations as closely as possible to how they appear in the manual loops
   pi_one_normal_spatial_type pi_one_normal_spatial(num_grid_points);
   phi_one_normal_spatial_type phi_one_normal_spatial(num_grid_points);
 
@@ -974,6 +571,7 @@ void test_gh_timederivative_impl(
   }
 }
 
+// Taken from tests/Unit/Evoluation/Systems/GeneralizedHarmonic/Test_DuDt.cpp
 template <typename Generator>
 void test_gh_timederivative(
     const gsl::not_null<Generator*> generator) noexcept {
