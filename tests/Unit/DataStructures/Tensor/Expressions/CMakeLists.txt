@@ -5,12 +5,12 @@ set(LIBRARY "Test_Expressions")
 
 set(LIBRARY_SOURCES
   Test_AddSubtract.cpp
+  Test_Benchmark.cpp
   Test_Contract.cpp
   Test_Evaluate.cpp
   Test_MixedOperations.cpp
   Test_Product.cpp
   Test_ProductHighRankIntermediate.cpp
-  Test_Profile.cpp
   Test_SquareRoot.cpp
   Test_TensorAsExpression.cpp
   Test_TensorExpressions.cpp
