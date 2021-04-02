@@ -10,6 +10,7 @@ set(LIBRARY_SOURCES
   Test_MixedOperations.cpp
   Test_Product.cpp
   Test_ProductHighRankIntermediate.cpp
+  Test_Profile.cpp
   Test_SquareRoot.cpp
   Test_TensorAsExpression.cpp
   Test_TensorExpressions.cpp
@@ -19,5 +20,5 @@ add_test_library(
   ${LIBRARY}
   "DataStructures/Tensor/Expressions"
   "${LIBRARY_SOURCES}"
-  "DataStructures;Utilities"
+  "DataStructures;Domain;GeneralizedHarmonic;GeneralRelativity;GeneralRelativityHelpers;Spectral;Utilities"
   )
