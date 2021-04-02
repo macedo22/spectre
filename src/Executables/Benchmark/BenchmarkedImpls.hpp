@@ -79,7 +79,7 @@ void copy_tensor(const Tensor<Ts...>& tensor_source,
 }  // namespace BenchmarkHelpers
 
 // Implementations benchmarked
-template <typename DataType, size_t Dim>
+template <size_t Dim>
 struct BenchmarkImpl {
   // tensor types in tensor equation being benchmarked
   using dt_spacetime_metric_type = tnsr::aa<DataVector, Dim>;

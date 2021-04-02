@@ -114,9 +114,8 @@ namespace {
 
 namespace {
 // set up shared stuff
-using DataType = DataVector;
 constexpr size_t Dim = 3;
-using BenchmarkImpl = BenchmarkImpl<DataType, Dim>;
+using BenchmarkImpl = BenchmarkImpl<Dim>;
 // tensor types in tensor equation being benchmarked
 using dt_spacetime_metric_type =
     typename BenchmarkImpl::dt_spacetime_metric_type;
@@ -196,7 +195,7 @@ void bench_manual_tensor_equation_lhs_tensor_as_arg_without_buffer(
   const size_t num_grid_points_1d = static_cast<size_t>(state.range(0));
   const Mesh<Dim> mesh(num_grid_points_1d, Spectral::Basis::Legendre,
                        Spectral::Quadrature::GaussLobatto);
-  const DataType used_for_size(mesh.number_of_grid_points());
+  const DataVector used_for_size(mesh.number_of_grid_points());
 
   Variables<gh_tags_list> evolved_vars(mesh.number_of_grid_points());
   fill_with_random_values(make_not_null(&evolved_vars),
@@ -213,13 +212,13 @@ void bench_manual_tensor_equation_lhs_tensor_as_arg_without_buffer(
       TestHelpers::gr::random_spatial_metric<Dim>(make_not_null(&generator),
                                                   used_for_size));
 
-  InverseJacobian<DataType, Dim, Frame::Logical, Frame::Inertial> inv_jac{};
+  InverseJacobian<DataVector, Dim, Frame::Logical, Frame::Inertial> inv_jac{};
   for (size_t i = 0; i < Dim; ++i) {
     for (size_t j = 0; j < Dim; ++j) {
       if (i == j) {
-        inv_jac.get(i, j) = DataType(mesh.number_of_grid_points(), 1.0);
+        inv_jac.get(i, j) = DataVector(mesh.number_of_grid_points(), 1.0);
       } else {
-        inv_jac.get(i, j) = DataType(mesh.number_of_grid_points(), 0.0);
+        inv_jac.get(i, j) = DataVector(mesh.number_of_grid_points(), 0.0);
       }
     }
   }
@@ -242,18 +241,18 @@ void bench_manual_tensor_equation_lhs_tensor_as_arg_without_buffer(
                       Frame::Inertial>>(partial_derivs);
   ;
 
-  const gamma0_type gamma0 = make_with_random_values<Scalar<DataType>>(
+  const gamma0_type gamma0 = make_with_random_values<Scalar<DataVector>>(
       make_not_null(&generator), make_not_null(&distribution), used_for_size);
-  const gamma1_type gamma1 = make_with_random_values<Scalar<DataType>>(
+  const gamma1_type gamma1 = make_with_random_values<Scalar<DataVector>>(
       make_not_null(&generator), make_not_null(&distribution), used_for_size);
-  const gamma2_type gamma2 = make_with_random_values<Scalar<DataType>>(
+  const gamma2_type gamma2 = make_with_random_values<Scalar<DataVector>>(
       make_not_null(&generator), make_not_null(&distribution), used_for_size);
   const gauge_function_type gauge_function =
-      make_with_random_values<tnsr::a<DataType, Dim>>(
+      make_with_random_values<tnsr::a<DataVector, Dim>>(
           make_not_null(&generator), make_not_null(&distribution),
           used_for_size);
   const spacetime_deriv_gauge_function_type spacetime_deriv_gauge_function =
-      make_with_random_values<tnsr::ab<DataType, Dim>>(
+      make_with_random_values<tnsr::ab<DataVector, Dim>>(
           make_not_null(&generator), make_not_null(&distribution),
           used_for_size);
 
@@ -344,7 +343,7 @@ void bench_manual_tensor_equation_lhs_tensor_as_arg_with_buffer(
   const size_t num_grid_points_1d = static_cast<size_t>(state.range(0));
   const Mesh<Dim> mesh(num_grid_points_1d, Spectral::Basis::Legendre,
                        Spectral::Quadrature::GaussLobatto);
-  const DataType used_for_size(mesh.number_of_grid_points());
+  const DataVector used_for_size(mesh.number_of_grid_points());
 
   Variables<gh_tags_list> evolved_vars(mesh.number_of_grid_points());
   fill_with_random_values(make_not_null(&evolved_vars),
@@ -361,13 +360,13 @@ void bench_manual_tensor_equation_lhs_tensor_as_arg_with_buffer(
       TestHelpers::gr::random_spatial_metric<Dim>(make_not_null(&generator),
                                                   used_for_size));
 
-  InverseJacobian<DataType, Dim, Frame::Logical, Frame::Inertial> inv_jac{};
+  InverseJacobian<DataVector, Dim, Frame::Logical, Frame::Inertial> inv_jac{};
   for (size_t i = 0; i < Dim; ++i) {
     for (size_t j = 0; j < Dim; ++j) {
       if (i == j) {
-        inv_jac.get(i, j) = DataType(mesh.number_of_grid_points(), 1.0);
+        inv_jac.get(i, j) = DataVector(mesh.number_of_grid_points(), 1.0);
       } else {
-        inv_jac.get(i, j) = DataType(mesh.number_of_grid_points(), 0.0);
+        inv_jac.get(i, j) = DataVector(mesh.number_of_grid_points(), 0.0);
       }
     }
   }
@@ -390,18 +389,18 @@ void bench_manual_tensor_equation_lhs_tensor_as_arg_with_buffer(
                       Frame::Inertial>>(partial_derivs);
   ;
 
-  const gamma0_type gamma0 = make_with_random_values<Scalar<DataType>>(
+  const gamma0_type gamma0 = make_with_random_values<Scalar<DataVector>>(
       make_not_null(&generator), make_not_null(&distribution), used_for_size);
-  const gamma1_type gamma1 = make_with_random_values<Scalar<DataType>>(
+  const gamma1_type gamma1 = make_with_random_values<Scalar<DataVector>>(
       make_not_null(&generator), make_not_null(&distribution), used_for_size);
-  const gamma2_type gamma2 = make_with_random_values<Scalar<DataType>>(
+  const gamma2_type gamma2 = make_with_random_values<Scalar<DataVector>>(
       make_not_null(&generator), make_not_null(&distribution), used_for_size);
   const gauge_function_type gauge_function =
-      make_with_random_values<tnsr::a<DataType, Dim>>(
+      make_with_random_values<tnsr::a<DataVector, Dim>>(
           make_not_null(&generator), make_not_null(&distribution),
           used_for_size);
   const spacetime_deriv_gauge_function_type spacetime_deriv_gauge_function =
-      make_with_random_values<tnsr::ab<DataType, Dim>>(
+      make_with_random_values<tnsr::ab<DataVector, Dim>>(
           make_not_null(&generator), make_not_null(&distribution),
           used_for_size);
 
@@ -679,7 +678,7 @@ void bench_tensorexpression_lhs_tensor_as_arg_without_buffer(
   const size_t num_grid_points_1d = static_cast<size_t>(state.range(0));
   const Mesh<Dim> mesh(num_grid_points_1d, Spectral::Basis::Legendre,
                        Spectral::Quadrature::GaussLobatto);
-  const DataType used_for_size(mesh.number_of_grid_points());
+  const DataVector used_for_size(mesh.number_of_grid_points());
 
   Variables<gh_tags_list> evolved_vars(mesh.number_of_grid_points());
   fill_with_random_values(make_not_null(&evolved_vars),
@@ -696,13 +695,13 @@ void bench_tensorexpression_lhs_tensor_as_arg_without_buffer(
       TestHelpers::gr::random_spatial_metric<Dim>(make_not_null(&generator),
                                                   used_for_size));
 
-  InverseJacobian<DataType, Dim, Frame::Logical, Frame::Inertial> inv_jac{};
+  InverseJacobian<DataVector, Dim, Frame::Logical, Frame::Inertial> inv_jac{};
   for (size_t i = 0; i < Dim; ++i) {
     for (size_t j = 0; j < Dim; ++j) {
       if (i == j) {
-        inv_jac.get(i, j) = DataType(mesh.number_of_grid_points(), 1.0);
+        inv_jac.get(i, j) = DataVector(mesh.number_of_grid_points(), 1.0);
       } else {
-        inv_jac.get(i, j) = DataType(mesh.number_of_grid_points(), 0.0);
+        inv_jac.get(i, j) = DataVector(mesh.number_of_grid_points(), 0.0);
       }
     }
   }
@@ -725,18 +724,18 @@ void bench_tensorexpression_lhs_tensor_as_arg_without_buffer(
                       Frame::Inertial>>(partial_derivs);
   ;
 
-  const gamma0_type gamma0 = make_with_random_values<Scalar<DataType>>(
+  const gamma0_type gamma0 = make_with_random_values<Scalar<DataVector>>(
       make_not_null(&generator), make_not_null(&distribution), used_for_size);
-  const gamma1_type gamma1 = make_with_random_values<Scalar<DataType>>(
+  const gamma1_type gamma1 = make_with_random_values<Scalar<DataVector>>(
       make_not_null(&generator), make_not_null(&distribution), used_for_size);
-  const gamma2_type gamma2 = make_with_random_values<Scalar<DataType>>(
+  const gamma2_type gamma2 = make_with_random_values<Scalar<DataVector>>(
       make_not_null(&generator), make_not_null(&distribution), used_for_size);
   const gauge_function_type gauge_function =
-      make_with_random_values<tnsr::a<DataType, Dim>>(
+      make_with_random_values<tnsr::a<DataVector, Dim>>(
           make_not_null(&generator), make_not_null(&distribution),
           used_for_size);
   const spacetime_deriv_gauge_function_type spacetime_deriv_gauge_function =
-      make_with_random_values<tnsr::ab<DataType, Dim>>(
+      make_with_random_values<tnsr::ab<DataVector, Dim>>(
           make_not_null(&generator), make_not_null(&distribution),
           used_for_size);
 
@@ -828,7 +827,7 @@ void bench_tensorexpression_lhs_tensor_as_arg_with_buffer(
   const size_t num_grid_points_1d = static_cast<size_t>(state.range(0));
   const Mesh<Dim> mesh(num_grid_points_1d, Spectral::Basis::Legendre,
                        Spectral::Quadrature::GaussLobatto);
-  const DataType used_for_size(mesh.number_of_grid_points());
+  const DataVector used_for_size(mesh.number_of_grid_points());
 
   Variables<gh_tags_list> evolved_vars(mesh.number_of_grid_points());
   fill_with_random_values(make_not_null(&evolved_vars),
@@ -845,13 +844,13 @@ void bench_tensorexpression_lhs_tensor_as_arg_with_buffer(
       TestHelpers::gr::random_spatial_metric<Dim>(make_not_null(&generator),
                                                   used_for_size));
 
-  InverseJacobian<DataType, Dim, Frame::Logical, Frame::Inertial> inv_jac{};
+  InverseJacobian<DataVector, Dim, Frame::Logical, Frame::Inertial> inv_jac{};
   for (size_t i = 0; i < Dim; ++i) {
     for (size_t j = 0; j < Dim; ++j) {
       if (i == j) {
-        inv_jac.get(i, j) = DataType(mesh.number_of_grid_points(), 1.0);
+        inv_jac.get(i, j) = DataVector(mesh.number_of_grid_points(), 1.0);
       } else {
-        inv_jac.get(i, j) = DataType(mesh.number_of_grid_points(), 0.0);
+        inv_jac.get(i, j) = DataVector(mesh.number_of_grid_points(), 0.0);
       }
     }
   }
@@ -874,18 +873,18 @@ void bench_tensorexpression_lhs_tensor_as_arg_with_buffer(
                       Frame::Inertial>>(partial_derivs);
   ;
 
-  const gamma0_type gamma0 = make_with_random_values<Scalar<DataType>>(
+  const gamma0_type gamma0 = make_with_random_values<Scalar<DataVector>>(
       make_not_null(&generator), make_not_null(&distribution), used_for_size);
-  const gamma1_type gamma1 = make_with_random_values<Scalar<DataType>>(
+  const gamma1_type gamma1 = make_with_random_values<Scalar<DataVector>>(
       make_not_null(&generator), make_not_null(&distribution), used_for_size);
-  const gamma2_type gamma2 = make_with_random_values<Scalar<DataType>>(
+  const gamma2_type gamma2 = make_with_random_values<Scalar<DataVector>>(
       make_not_null(&generator), make_not_null(&distribution), used_for_size);
   const gauge_function_type gauge_function =
-      make_with_random_values<tnsr::a<DataType, Dim>>(
+      make_with_random_values<tnsr::a<DataVector, Dim>>(
           make_not_null(&generator), make_not_null(&distribution),
           used_for_size);
   const spacetime_deriv_gauge_function_type spacetime_deriv_gauge_function =
-      make_with_random_values<tnsr::ab<DataType, Dim>>(
+      make_with_random_values<tnsr::ab<DataVector, Dim>>(
           make_not_null(&generator), make_not_null(&distribution),
           used_for_size);
 

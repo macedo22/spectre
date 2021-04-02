@@ -42,10 +42,10 @@ void copy_tensor(const Tensor<Ts...>& tensor_source,
 }  // namespace
 
 // Make sure TE impl matches manual impl
-template <size_t Dim, typename DataType, typename Generator>
-void test_benchmarked_implementations_core(
+template <size_t Dim, typename Generator>
+void test_benchmarked_implementations(
     const gsl::not_null<Generator*> generator) noexcept {
-  using BenchmarkImpl = BenchmarkImpl<DataType, Dim>;
+  using BenchmarkImpl = BenchmarkImpl<Dim>;
   using dt_spacetime_metric_type =
       typename BenchmarkImpl::dt_spacetime_metric_type;
   using dt_pi_type = typename BenchmarkImpl::dt_pi_type;
@@ -501,7 +501,6 @@ void test_benchmarked_implementations_core(
   }
 
   // For DataVectors, check TE implementation with TempTensors
-  if constexpr (not std::is_same_v<DataType, double>) {
     TempBuffer<tmpl::list<
         ::Tags::TempTensor<0, dt_spacetime_metric_type>,
         ::Tags::TempTensor<1, dt_pi_type>, ::Tags::TempTensor<2, dt_phi_type>,
@@ -928,21 +927,13 @@ void test_benchmarked_implementations_core(
         }
       }
     }
-  }
-}
-
-template <typename DataType, typename Generator>
-void test_benchmarked_implementations(
-    const gsl::not_null<Generator*> generator) noexcept {
-  test_benchmarked_implementations_core<1, DataType>(generator);
-  test_benchmarked_implementations_core<2, DataType>(generator);
-  test_benchmarked_implementations_core<3, DataType>(generator);
 }
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Benchmark",
                   "[DataStructures][Unit]") {
   MAKE_GENERATOR(generator);
 
-  test_benchmarked_implementations<double>(make_not_null(&generator));
-  test_benchmarked_implementations<DataVector>(make_not_null(&generator));
+  test_benchmarked_implementations<1>(make_not_null(&generator));
+  test_benchmarked_implementations<2>(make_not_null(&generator));
+  test_benchmarked_implementations<3>(make_not_null(&generator));
 }
