@@ -757,9 +757,10 @@ void test_benchmarked_implementations_core(
         make_not_null(&trace_christoffel_te_temp),
         make_not_null(&normal_spacetime_vector_te_temp),
         make_not_null(&normal_spacetime_one_form_te_temp),
-        make_not_null(&da_spacetime_metric_te_temp), d_spacetime_metric, d_pi,
-        d_phi, spacetime_metric, pi, phi, gamma0, gamma1, gamma2,
-        gauge_function, spacetime_deriv_gauge_function,
+        make_not_null(&da_spacetime_metric_te_temp), d_spacetime_metric_te_temp,
+        d_pi_te_temp, d_phi_te_temp, spacetime_metric_te_temp, pi_te_temp,
+        phi_te_temp, gamma0_te_temp, gamma1_te_temp, gamma2_te_temp,
+        gauge_function_te_temp, spacetime_deriv_gauge_function_te_temp,
         make_not_null(&pi_one_normal_spatial_te_temp),
         make_not_null(&phi_one_normal_spatial_te_temp));
 
