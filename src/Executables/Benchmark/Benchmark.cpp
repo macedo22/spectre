@@ -183,7 +183,8 @@ using phi_one_normal_spatial_type =
 constexpr size_t seed = 17;
 std::mt19937 generator(seed);
 
-// benchmark manual implementation, equation terms not in buffer
+// benchmark manual implementation, takes LHS as arg, equation terms not in
+// buffer
 void bench_manual_tensor_equation_lhs_tensor_as_arg_without_buffer(
     benchmark::State& state) {  // NOLINT
   // Set up input constant tensors in equations
@@ -327,6 +328,341 @@ void bench_manual_tensor_equation_lhs_tensor_as_arg_without_buffer(
     benchmark::DoNotOptimize(dt_spacetime_metric);
     benchmark::DoNotOptimize(dt_pi);
     benchmark::DoNotOptimize(dt_phi);
+    benchmark::ClobberMemory();
+  }
+}
+
+// benchmark manual implementation, takes LHS as arg, equation terms in buffer
+void bench_manual_tensor_equation_lhs_tensor_as_arg_with_buffer(
+    benchmark::State& state) {  // NOLINT
+  // Set up input constant tensors in equations
+  std::uniform_real_distribution<> distribution(0.1, 1.0);
+  using gh_tags_list = tmpl::list<gr::Tags::SpacetimeMetric<Dim>,
+                                  GeneralizedHarmonic::Tags::Pi<Dim>,
+                                  GeneralizedHarmonic::Tags::Phi<Dim>>;
+
+  const size_t num_grid_points_1d = static_cast<size_t>(state.range(0));
+  const Mesh<Dim> mesh(num_grid_points_1d, Spectral::Basis::Legendre,
+                       Spectral::Quadrature::GaussLobatto);
+  const DataType used_for_size(mesh.number_of_grid_points());
+
+  Variables<gh_tags_list> evolved_vars(mesh.number_of_grid_points());
+  fill_with_random_values(make_not_null(&evolved_vars),
+                          make_not_null(&generator),
+                          make_not_null(&distribution));
+  // In order to satisfy the physical requirements on the spacetime metric we
+  // compute it from the helper functions that generate a physical lapse, shift,
+  // and spatial metric.
+  gr::spacetime_metric(
+      make_not_null(&get<gr::Tags::SpacetimeMetric<Dim>>(evolved_vars)),
+      TestHelpers::gr::random_lapse(make_not_null(&generator), used_for_size),
+      TestHelpers::gr::random_shift<Dim>(make_not_null(&generator),
+                                         used_for_size),
+      TestHelpers::gr::random_spatial_metric<Dim>(make_not_null(&generator),
+                                                  used_for_size));
+
+  InverseJacobian<DataType, Dim, Frame::Logical, Frame::Inertial> inv_jac{};
+  for (size_t i = 0; i < Dim; ++i) {
+    for (size_t j = 0; j < Dim; ++j) {
+      if (i == j) {
+        inv_jac.get(i, j) = DataType(mesh.number_of_grid_points(), 1.0);
+      } else {
+        inv_jac.get(i, j) = DataType(mesh.number_of_grid_points(), 0.0);
+      }
+    }
+  }
+
+  const auto partial_derivs =
+      partial_derivatives<gh_tags_list>(evolved_vars, mesh, inv_jac);
+
+  const spacetime_metric_type& spacetime_metric =
+      get<gr::Tags::SpacetimeMetric<Dim>>(evolved_vars);
+  const phi_type& phi = get<GeneralizedHarmonic::Tags::Phi<Dim>>(evolved_vars);
+  const pi_type& pi = get<GeneralizedHarmonic::Tags::Pi<Dim>>(evolved_vars);
+  const d_spacetime_metric_type& d_spacetime_metric =
+      get<Tags::deriv<gr::Tags::SpacetimeMetric<Dim>, tmpl::size_t<Dim>,
+                      Frame::Inertial>>(partial_derivs);
+  const d_phi_type& d_phi =
+      get<Tags::deriv<GeneralizedHarmonic::Tags::Phi<Dim>, tmpl::size_t<Dim>,
+                      Frame::Inertial>>(partial_derivs);
+  const d_pi_type& d_pi =
+      get<Tags::deriv<GeneralizedHarmonic::Tags::Pi<Dim>, tmpl::size_t<Dim>,
+                      Frame::Inertial>>(partial_derivs);
+  ;
+
+  const gamma0_type gamma0 = make_with_random_values<Scalar<DataType>>(
+      make_not_null(&generator), make_not_null(&distribution), used_for_size);
+  const gamma1_type gamma1 = make_with_random_values<Scalar<DataType>>(
+      make_not_null(&generator), make_not_null(&distribution), used_for_size);
+  const gamma2_type gamma2 = make_with_random_values<Scalar<DataType>>(
+      make_not_null(&generator), make_not_null(&distribution), used_for_size);
+  const gauge_function_type gauge_function =
+      make_with_random_values<tnsr::a<DataType, Dim>>(
+          make_not_null(&generator), make_not_null(&distribution),
+          used_for_size);
+  const spacetime_deriv_gauge_function_type spacetime_deriv_gauge_function =
+      make_with_random_values<tnsr::ab<DataType, Dim>>(
+          make_not_null(&generator), make_not_null(&distribution),
+          used_for_size);
+
+  const size_t num_grid_points = mesh.number_of_grid_points();
+
+  TempBuffer<tmpl::list<
+      ::Tags::TempTensor<0, dt_spacetime_metric_type>,
+      ::Tags::TempTensor<1, dt_pi_type>, ::Tags::TempTensor<2, dt_phi_type>,
+      ::Tags::TempTensor<3, temp_gamma1_type>,
+      ::Tags::TempTensor<4, temp_gamma2_type>,
+      ::Tags::TempTensor<5, gamma1gamma2_type>,
+      ::Tags::TempTensor<6, pi_two_normals_type>,
+      ::Tags::TempTensor<7, normal_dot_gauge_constraint_type>,
+      ::Tags::TempTensor<8, gamma1_plus_1_type>,
+      ::Tags::TempTensor<9, pi_one_normal_type>,
+      ::Tags::TempTensor<10, gauge_constraint_type>,
+      ::Tags::TempTensor<11, phi_two_normals_type>,
+      ::Tags::TempTensor<12, shift_dot_three_index_constraint_type>,
+      ::Tags::TempTensor<13, phi_one_normal_type>,
+      ::Tags::TempTensor<14, pi_2_up_type>,
+      ::Tags::TempTensor<15, three_index_constraint_type>,
+      ::Tags::TempTensor<16, phi_1_up_type>,
+      ::Tags::TempTensor<17, phi_3_up_type>,
+      ::Tags::TempTensor<18, christoffel_first_kind_3_up_type>,
+      ::Tags::TempTensor<19, lapse_type>, ::Tags::TempTensor<20, shift_type>,
+      ::Tags::TempTensor<21, spatial_metric_type>,
+      ::Tags::TempTensor<22, inverse_spatial_metric_type>,
+      ::Tags::TempTensor<23, det_spatial_metric_type>,
+      ::Tags::TempTensor<24, inverse_spacetime_metric_type>,
+      ::Tags::TempTensor<25, christoffel_first_kind_type>,
+      ::Tags::TempTensor<26, christoffel_second_kind_type>,
+      ::Tags::TempTensor<27, trace_christoffel_type>,
+      ::Tags::TempTensor<28, normal_spacetime_vector_type>,
+      ::Tags::TempTensor<29, normal_spacetime_one_form_type>,
+      ::Tags::TempTensor<30, da_spacetime_metric_type>,
+      ::Tags::TempTensor<31, d_spacetime_metric_type>,
+      ::Tags::TempTensor<32, d_pi_type>, ::Tags::TempTensor<33, d_phi_type>,
+      ::Tags::TempTensor<34, spacetime_metric_type>,
+      ::Tags::TempTensor<35, pi_type>, ::Tags::TempTensor<36, phi_type>,
+      ::Tags::TempTensor<37, gamma0_type>, ::Tags::TempTensor<38, gamma1_type>,
+      ::Tags::TempTensor<39, gamma2_type>,
+      ::Tags::TempTensor<40, gauge_function_type>,
+      ::Tags::TempTensor<41, spacetime_deriv_gauge_function_type>,
+      ::Tags::TempTensor<42, pi_one_normal_spatial_type>,
+      ::Tags::TempTensor<43, phi_one_normal_spatial_type>>>
+      vars{num_grid_points};
+
+  // dt_spacetime_metric
+  dt_spacetime_metric_type& dt_spacetime_metric_temp =
+      get<::Tags::TempTensor<0, dt_spacetime_metric_type>>(vars);
+
+  // dt_pi
+  dt_pi_type& dt_pi_temp = get<::Tags::TempTensor<1, dt_pi_type>>(vars);
+
+  // dt_phi
+  dt_phi_type& dt_phi_temp = get<::Tags::TempTensor<2, dt_phi_type>>(vars);
+
+  // temp_gamma1
+  temp_gamma1_type& temp_gamma1_temp =
+      get<::Tags::TempTensor<3, temp_gamma1_type>>(vars);
+
+  // temp_gamma2
+  temp_gamma2_type& temp_gamma2_temp =
+      get<::Tags::TempTensor<4, temp_gamma2_type>>(vars);
+
+  // gamma1gamma2
+  gamma1gamma2_type& gamma1gamma2_temp =
+      get<::Tags::TempTensor<5, gamma1gamma2_type>>(vars);
+
+  // pi_two_normals
+  pi_two_normals_type& pi_two_normals_temp =
+      get<::Tags::TempTensor<6, pi_two_normals_type>>(vars);
+
+  // normal_dot_gauge_constraint
+  normal_dot_gauge_constraint_type& normal_dot_gauge_constraint_temp =
+      get<::Tags::TempTensor<7, normal_dot_gauge_constraint_type>>(vars);
+
+  // gamma1_plus_1
+  gamma1_plus_1_type& gamma1_plus_1_temp =
+      get<::Tags::TempTensor<8, gamma1_plus_1_type>>(vars);
+
+  // pi_one_normal
+  pi_one_normal_type& pi_one_normal_temp =
+      get<::Tags::TempTensor<9, pi_one_normal_type>>(vars);
+
+  // gauge_constraint
+  gauge_constraint_type& gauge_constraint_temp =
+      get<::Tags::TempTensor<10, gauge_constraint_type>>(vars);
+
+  // phi_two_normals
+  phi_two_normals_type& phi_two_normals_temp =
+      get<::Tags::TempTensor<11, phi_two_normals_type>>(vars);
+
+  // shift_dot_three_index_constraint
+  shift_dot_three_index_constraint_type& shift_dot_three_index_constraint_temp =
+      get<::Tags::TempTensor<12, shift_dot_three_index_constraint_type>>(vars);
+
+  // phi_one_normal
+  phi_one_normal_type& phi_one_normal_temp =
+      get<::Tags::TempTensor<13, phi_one_normal_type>>(vars);
+
+  // pi_2_up
+  pi_2_up_type& pi_2_up_temp = get<::Tags::TempTensor<14, pi_2_up_type>>(vars);
+
+  // three_index_constraint
+  three_index_constraint_type& three_index_constraint_temp =
+      get<::Tags::TempTensor<15, three_index_constraint_type>>(vars);
+
+  // phi_1_up
+  phi_1_up_type& phi_1_up_temp =
+      get<::Tags::TempTensor<16, phi_1_up_type>>(vars);
+
+  // phi_3_up
+  phi_3_up_type& phi_3_up_temp =
+      get<::Tags::TempTensor<17, phi_3_up_type>>(vars);
+
+  // christoffel_first_kind_3_up
+  christoffel_first_kind_3_up_type& christoffel_first_kind_3_up_temp =
+      get<::Tags::TempTensor<18, christoffel_first_kind_3_up_type>>(vars);
+
+  // lapse
+  lapse_type& lapse_temp = get<::Tags::TempTensor<19, lapse_type>>(vars);
+
+  // shift
+  shift_type& shift_temp = get<::Tags::TempTensor<20, shift_type>>(vars);
+
+  // spatial_metric
+  spatial_metric_type& spatial_metric_temp =
+      get<::Tags::TempTensor<21, spatial_metric_type>>(vars);
+
+  // inverse_spatial_metric
+  inverse_spatial_metric_type& inverse_spatial_metric_temp =
+      get<::Tags::TempTensor<22, inverse_spatial_metric_type>>(vars);
+
+  // det_spatial_metric
+  det_spatial_metric_type& det_spatial_metric_temp =
+      get<::Tags::TempTensor<23, det_spatial_metric_type>>(vars);
+
+  // inverse_spacetime_metric
+  inverse_spacetime_metric_type& inverse_spacetime_metric_temp =
+      get<::Tags::TempTensor<24, inverse_spacetime_metric_type>>(vars);
+
+  // christoffel_first_kind
+  christoffel_first_kind_type& christoffel_first_kind_temp =
+      get<::Tags::TempTensor<25, christoffel_first_kind_type>>(vars);
+
+  // christoffel_second_kind
+  christoffel_second_kind_type& christoffel_second_kind_temp =
+      get<::Tags::TempTensor<26, christoffel_second_kind_type>>(vars);
+
+  // trace_christoffel
+  trace_christoffel_type& trace_christoffel_temp =
+      get<::Tags::TempTensor<27, trace_christoffel_type>>(vars);
+
+  // normal_spacetime_vector
+  normal_spacetime_vector_type& normal_spacetime_vector_temp =
+      get<::Tags::TempTensor<28, normal_spacetime_vector_type>>(vars);
+
+  // normal_spacetime_one_form
+  normal_spacetime_one_form_type& normal_spacetime_one_form_temp =
+      get<::Tags::TempTensor<29, normal_spacetime_one_form_type>>(vars);
+
+  // da_spacetime_metric
+  da_spacetime_metric_type& da_spacetime_metric_temp =
+      get<::Tags::TempTensor<30, da_spacetime_metric_type>>(vars);
+
+  // d_spacetime_metric
+  d_spacetime_metric_type& d_spacetime_metric_temp =
+      get<::Tags::TempTensor<31, d_spacetime_metric_type>>(vars);
+  BenchmarkHelpers::copy_tensor(d_spacetime_metric,
+                                make_not_null(&d_spacetime_metric_temp));
+
+  // d_pi
+  d_pi_type& d_pi_temp = get<::Tags::TempTensor<32, d_pi_type>>(vars);
+  BenchmarkHelpers::copy_tensor(d_pi, make_not_null(&d_pi_temp));
+
+  // d_phi
+  d_phi_type& d_phi_temp = get<::Tags::TempTensor<33, d_phi_type>>(vars);
+  BenchmarkHelpers::copy_tensor(d_phi, make_not_null(&d_phi_temp));
+
+  // spacetime_metric
+  spacetime_metric_type& spacetime_metric_temp =
+      get<::Tags::TempTensor<34, spacetime_metric_type>>(vars);
+  BenchmarkHelpers::copy_tensor(spacetime_metric,
+                                make_not_null(&spacetime_metric_temp));
+
+  // pi
+  pi_type& pi_temp = get<::Tags::TempTensor<35, pi_type>>(vars);
+  BenchmarkHelpers::copy_tensor(pi, make_not_null(&pi_temp));
+
+  // phi
+  phi_type& phi_temp = get<::Tags::TempTensor<36, phi_type>>(vars);
+  BenchmarkHelpers::copy_tensor(phi, make_not_null(&phi_temp));
+
+  // gamma0
+  gamma0_type& gamma0_temp = get<::Tags::TempTensor<37, gamma0_type>>(vars);
+  BenchmarkHelpers::copy_tensor(gamma0, make_not_null(&gamma0_temp));
+
+  // gamma1
+  gamma1_type& gamma1_temp = get<::Tags::TempTensor<38, gamma1_type>>(vars);
+  BenchmarkHelpers::copy_tensor(gamma1, make_not_null(&gamma1_temp));
+
+  // gamma2
+  gamma2_type& gamma2_temp = get<::Tags::TempTensor<39, gamma2_type>>(vars);
+  BenchmarkHelpers::copy_tensor(gamma2, make_not_null(&gamma2_temp));
+
+  // gauge_function
+  gauge_function_type& gauge_function_temp =
+      get<::Tags::TempTensor<40, gauge_function_type>>(vars);
+  BenchmarkHelpers::copy_tensor(gauge_function,
+                                make_not_null(&gauge_function_temp));
+
+  // spacetime_deriv_gauge_function
+  spacetime_deriv_gauge_function_type& spacetime_deriv_gauge_function_temp =
+      get<::Tags::TempTensor<41, spacetime_deriv_gauge_function_type>>(vars);
+  BenchmarkHelpers::copy_tensor(
+      spacetime_deriv_gauge_function,
+      make_not_null(&spacetime_deriv_gauge_function_temp));
+
+  // pi_one_normal_spatial
+  pi_one_normal_spatial_type& pi_one_normal_spatial_temp =
+      get<::Tags::TempTensor<42, pi_one_normal_spatial_type>>(vars);
+
+  // phi_one_normal_spatial
+  phi_one_normal_spatial_type& phi_one_normal_spatial_temp =
+      get<::Tags::TempTensor<43, phi_one_normal_spatial_type>>(vars);
+
+  for (auto _ : state) {
+    BenchmarkImpl::manual_impl_lhs_as_arg(
+        make_not_null(&dt_spacetime_metric_temp), make_not_null(&dt_pi_temp),
+        make_not_null(&dt_phi_temp), make_not_null(&temp_gamma1_temp),
+        make_not_null(&temp_gamma2_temp), make_not_null(&gamma1gamma2_temp),
+        make_not_null(&pi_two_normals_temp),
+        make_not_null(&normal_dot_gauge_constraint_temp),
+        make_not_null(&gamma1_plus_1_temp), make_not_null(&pi_one_normal_temp),
+        make_not_null(&gauge_constraint_temp),
+        make_not_null(&phi_two_normals_temp),
+        make_not_null(&shift_dot_three_index_constraint_temp),
+        make_not_null(&phi_one_normal_temp), make_not_null(&pi_2_up_temp),
+        make_not_null(&three_index_constraint_temp),
+        make_not_null(&phi_1_up_temp), make_not_null(&phi_3_up_temp),
+        make_not_null(&christoffel_first_kind_3_up_temp),
+        make_not_null(&lapse_temp), make_not_null(&shift_temp),
+        make_not_null(&spatial_metric_temp),
+        make_not_null(&inverse_spatial_metric_temp),
+        make_not_null(&det_spatial_metric_temp),
+        make_not_null(&inverse_spacetime_metric_temp),
+        make_not_null(&christoffel_first_kind_temp),
+        make_not_null(&christoffel_second_kind_temp),
+        make_not_null(&trace_christoffel_temp),
+        make_not_null(&normal_spacetime_vector_temp),
+        make_not_null(&normal_spacetime_one_form_temp),
+        make_not_null(&da_spacetime_metric_temp), d_spacetime_metric_temp,
+        d_pi_temp, d_phi_temp, spacetime_metric_temp, pi_temp, phi_temp,
+        gamma0_temp, gamma1_temp, gamma2_temp, gauge_function_temp,
+        spacetime_deriv_gauge_function_temp,
+        make_not_null(&pi_one_normal_spatial_temp),
+        make_not_null(&phi_one_normal_spatial_temp));
+    benchmark::DoNotOptimize(dt_spacetime_metric_temp);
+    benchmark::DoNotOptimize(dt_pi_temp);
+    benchmark::DoNotOptimize(dt_phi_temp);
     benchmark::ClobberMemory();
   }
 }
@@ -480,6 +816,341 @@ void bench_tensorexpression_lhs_tensor_as_arg_without_buffer(
   }
 }
 
+// benchmark TE implementation, takes LHS as arg, equation terms in buffer
+void bench_tensorexpression_lhs_tensor_as_arg_with_buffer(
+    benchmark::State& state) {  // NOLINT
+  // Set up input constant tensors in equations
+  std::uniform_real_distribution<> distribution(0.1, 1.0);
+  using gh_tags_list = tmpl::list<gr::Tags::SpacetimeMetric<Dim>,
+                                  GeneralizedHarmonic::Tags::Pi<Dim>,
+                                  GeneralizedHarmonic::Tags::Phi<Dim>>;
+
+  const size_t num_grid_points_1d = static_cast<size_t>(state.range(0));
+  const Mesh<Dim> mesh(num_grid_points_1d, Spectral::Basis::Legendre,
+                       Spectral::Quadrature::GaussLobatto);
+  const DataType used_for_size(mesh.number_of_grid_points());
+
+  Variables<gh_tags_list> evolved_vars(mesh.number_of_grid_points());
+  fill_with_random_values(make_not_null(&evolved_vars),
+                          make_not_null(&generator),
+                          make_not_null(&distribution));
+  // In order to satisfy the physical requirements on the spacetime metric we
+  // compute it from the helper functions that generate a physical lapse, shift,
+  // and spatial metric.
+  gr::spacetime_metric(
+      make_not_null(&get<gr::Tags::SpacetimeMetric<Dim>>(evolved_vars)),
+      TestHelpers::gr::random_lapse(make_not_null(&generator), used_for_size),
+      TestHelpers::gr::random_shift<Dim>(make_not_null(&generator),
+                                         used_for_size),
+      TestHelpers::gr::random_spatial_metric<Dim>(make_not_null(&generator),
+                                                  used_for_size));
+
+  InverseJacobian<DataType, Dim, Frame::Logical, Frame::Inertial> inv_jac{};
+  for (size_t i = 0; i < Dim; ++i) {
+    for (size_t j = 0; j < Dim; ++j) {
+      if (i == j) {
+        inv_jac.get(i, j) = DataType(mesh.number_of_grid_points(), 1.0);
+      } else {
+        inv_jac.get(i, j) = DataType(mesh.number_of_grid_points(), 0.0);
+      }
+    }
+  }
+
+  const auto partial_derivs =
+      partial_derivatives<gh_tags_list>(evolved_vars, mesh, inv_jac);
+
+  const spacetime_metric_type& spacetime_metric =
+      get<gr::Tags::SpacetimeMetric<Dim>>(evolved_vars);
+  const phi_type& phi = get<GeneralizedHarmonic::Tags::Phi<Dim>>(evolved_vars);
+  const pi_type& pi = get<GeneralizedHarmonic::Tags::Pi<Dim>>(evolved_vars);
+  const d_spacetime_metric_type& d_spacetime_metric =
+      get<Tags::deriv<gr::Tags::SpacetimeMetric<Dim>, tmpl::size_t<Dim>,
+                      Frame::Inertial>>(partial_derivs);
+  const d_phi_type& d_phi =
+      get<Tags::deriv<GeneralizedHarmonic::Tags::Phi<Dim>, tmpl::size_t<Dim>,
+                      Frame::Inertial>>(partial_derivs);
+  const d_pi_type& d_pi =
+      get<Tags::deriv<GeneralizedHarmonic::Tags::Pi<Dim>, tmpl::size_t<Dim>,
+                      Frame::Inertial>>(partial_derivs);
+  ;
+
+  const gamma0_type gamma0 = make_with_random_values<Scalar<DataType>>(
+      make_not_null(&generator), make_not_null(&distribution), used_for_size);
+  const gamma1_type gamma1 = make_with_random_values<Scalar<DataType>>(
+      make_not_null(&generator), make_not_null(&distribution), used_for_size);
+  const gamma2_type gamma2 = make_with_random_values<Scalar<DataType>>(
+      make_not_null(&generator), make_not_null(&distribution), used_for_size);
+  const gauge_function_type gauge_function =
+      make_with_random_values<tnsr::a<DataType, Dim>>(
+          make_not_null(&generator), make_not_null(&distribution),
+          used_for_size);
+  const spacetime_deriv_gauge_function_type spacetime_deriv_gauge_function =
+      make_with_random_values<tnsr::ab<DataType, Dim>>(
+          make_not_null(&generator), make_not_null(&distribution),
+          used_for_size);
+
+  const size_t num_grid_points = mesh.number_of_grid_points();
+
+  TempBuffer<tmpl::list<
+      ::Tags::TempTensor<0, dt_spacetime_metric_type>,
+      ::Tags::TempTensor<1, dt_pi_type>, ::Tags::TempTensor<2, dt_phi_type>,
+      ::Tags::TempTensor<3, temp_gamma1_type>,
+      ::Tags::TempTensor<4, temp_gamma2_type>,
+      ::Tags::TempTensor<5, gamma1gamma2_type>,
+      ::Tags::TempTensor<6, pi_two_normals_type>,
+      ::Tags::TempTensor<7, normal_dot_gauge_constraint_type>,
+      ::Tags::TempTensor<8, gamma1_plus_1_type>,
+      ::Tags::TempTensor<9, pi_one_normal_type>,
+      ::Tags::TempTensor<10, gauge_constraint_type>,
+      ::Tags::TempTensor<11, phi_two_normals_type>,
+      ::Tags::TempTensor<12, shift_dot_three_index_constraint_type>,
+      ::Tags::TempTensor<13, phi_one_normal_type>,
+      ::Tags::TempTensor<14, pi_2_up_type>,
+      ::Tags::TempTensor<15, three_index_constraint_type>,
+      ::Tags::TempTensor<16, phi_1_up_type>,
+      ::Tags::TempTensor<17, phi_3_up_type>,
+      ::Tags::TempTensor<18, christoffel_first_kind_3_up_type>,
+      ::Tags::TempTensor<19, lapse_type>, ::Tags::TempTensor<20, shift_type>,
+      ::Tags::TempTensor<21, spatial_metric_type>,
+      ::Tags::TempTensor<22, inverse_spatial_metric_type>,
+      ::Tags::TempTensor<23, det_spatial_metric_type>,
+      ::Tags::TempTensor<24, inverse_spacetime_metric_type>,
+      ::Tags::TempTensor<25, christoffel_first_kind_type>,
+      ::Tags::TempTensor<26, christoffel_second_kind_type>,
+      ::Tags::TempTensor<27, trace_christoffel_type>,
+      ::Tags::TempTensor<28, normal_spacetime_vector_type>,
+      ::Tags::TempTensor<29, normal_spacetime_one_form_type>,
+      ::Tags::TempTensor<30, da_spacetime_metric_type>,
+      ::Tags::TempTensor<31, d_spacetime_metric_type>,
+      ::Tags::TempTensor<32, d_pi_type>, ::Tags::TempTensor<33, d_phi_type>,
+      ::Tags::TempTensor<34, spacetime_metric_type>,
+      ::Tags::TempTensor<35, pi_type>, ::Tags::TempTensor<36, phi_type>,
+      ::Tags::TempTensor<37, gamma0_type>, ::Tags::TempTensor<38, gamma1_type>,
+      ::Tags::TempTensor<39, gamma2_type>,
+      ::Tags::TempTensor<40, gauge_function_type>,
+      ::Tags::TempTensor<41, spacetime_deriv_gauge_function_type>,
+      ::Tags::TempTensor<42, pi_one_normal_spatial_type>,
+      ::Tags::TempTensor<43, phi_one_normal_spatial_type>>>
+      vars{num_grid_points};
+
+  // dt_spacetime_metric
+  dt_spacetime_metric_type& dt_spacetime_metric_temp =
+      get<::Tags::TempTensor<0, dt_spacetime_metric_type>>(vars);
+
+  // dt_pi
+  dt_pi_type& dt_pi_temp = get<::Tags::TempTensor<1, dt_pi_type>>(vars);
+
+  // dt_phi
+  dt_phi_type& dt_phi_temp = get<::Tags::TempTensor<2, dt_phi_type>>(vars);
+
+  // temp_gamma1
+  temp_gamma1_type& temp_gamma1_temp =
+      get<::Tags::TempTensor<3, temp_gamma1_type>>(vars);
+
+  // temp_gamma2
+  temp_gamma2_type& temp_gamma2_temp =
+      get<::Tags::TempTensor<4, temp_gamma2_type>>(vars);
+
+  // gamma1gamma2
+  gamma1gamma2_type& gamma1gamma2_temp =
+      get<::Tags::TempTensor<5, gamma1gamma2_type>>(vars);
+
+  // pi_two_normals
+  pi_two_normals_type& pi_two_normals_temp =
+      get<::Tags::TempTensor<6, pi_two_normals_type>>(vars);
+
+  // normal_dot_gauge_constraint
+  normal_dot_gauge_constraint_type& normal_dot_gauge_constraint_temp =
+      get<::Tags::TempTensor<7, normal_dot_gauge_constraint_type>>(vars);
+
+  // gamma1_plus_1
+  gamma1_plus_1_type& gamma1_plus_1_temp =
+      get<::Tags::TempTensor<8, gamma1_plus_1_type>>(vars);
+
+  // pi_one_normal
+  pi_one_normal_type& pi_one_normal_temp =
+      get<::Tags::TempTensor<9, pi_one_normal_type>>(vars);
+
+  // gauge_constraint
+  gauge_constraint_type& gauge_constraint_temp =
+      get<::Tags::TempTensor<10, gauge_constraint_type>>(vars);
+
+  // phi_two_normals
+  phi_two_normals_type& phi_two_normals_temp =
+      get<::Tags::TempTensor<11, phi_two_normals_type>>(vars);
+
+  // shift_dot_three_index_constraint
+  shift_dot_three_index_constraint_type& shift_dot_three_index_constraint_temp =
+      get<::Tags::TempTensor<12, shift_dot_three_index_constraint_type>>(vars);
+
+  // phi_one_normal
+  phi_one_normal_type& phi_one_normal_temp =
+      get<::Tags::TempTensor<13, phi_one_normal_type>>(vars);
+
+  // pi_2_up
+  pi_2_up_type& pi_2_up_temp = get<::Tags::TempTensor<14, pi_2_up_type>>(vars);
+
+  // three_index_constraint
+  three_index_constraint_type& three_index_constraint_temp =
+      get<::Tags::TempTensor<15, three_index_constraint_type>>(vars);
+
+  // phi_1_up
+  phi_1_up_type& phi_1_up_temp =
+      get<::Tags::TempTensor<16, phi_1_up_type>>(vars);
+
+  // phi_3_up
+  phi_3_up_type& phi_3_up_temp =
+      get<::Tags::TempTensor<17, phi_3_up_type>>(vars);
+
+  // christoffel_first_kind_3_up
+  christoffel_first_kind_3_up_type& christoffel_first_kind_3_up_temp =
+      get<::Tags::TempTensor<18, christoffel_first_kind_3_up_type>>(vars);
+
+  // lapse
+  lapse_type& lapse_temp = get<::Tags::TempTensor<19, lapse_type>>(vars);
+
+  // shift
+  shift_type& shift_temp = get<::Tags::TempTensor<20, shift_type>>(vars);
+
+  // spatial_metric
+  spatial_metric_type& spatial_metric_temp =
+      get<::Tags::TempTensor<21, spatial_metric_type>>(vars);
+
+  // inverse_spatial_metric
+  inverse_spatial_metric_type& inverse_spatial_metric_temp =
+      get<::Tags::TempTensor<22, inverse_spatial_metric_type>>(vars);
+
+  // det_spatial_metric
+  det_spatial_metric_type& det_spatial_metric_temp =
+      get<::Tags::TempTensor<23, det_spatial_metric_type>>(vars);
+
+  // inverse_spacetime_metric
+  inverse_spacetime_metric_type& inverse_spacetime_metric_temp =
+      get<::Tags::TempTensor<24, inverse_spacetime_metric_type>>(vars);
+
+  // christoffel_first_kind
+  christoffel_first_kind_type& christoffel_first_kind_temp =
+      get<::Tags::TempTensor<25, christoffel_first_kind_type>>(vars);
+
+  // christoffel_second_kind
+  christoffel_second_kind_type& christoffel_second_kind_temp =
+      get<::Tags::TempTensor<26, christoffel_second_kind_type>>(vars);
+
+  // trace_christoffel
+  trace_christoffel_type& trace_christoffel_temp =
+      get<::Tags::TempTensor<27, trace_christoffel_type>>(vars);
+
+  // normal_spacetime_vector
+  normal_spacetime_vector_type& normal_spacetime_vector_temp =
+      get<::Tags::TempTensor<28, normal_spacetime_vector_type>>(vars);
+
+  // normal_spacetime_one_form
+  normal_spacetime_one_form_type& normal_spacetime_one_form_temp =
+      get<::Tags::TempTensor<29, normal_spacetime_one_form_type>>(vars);
+
+  // da_spacetime_metric
+  da_spacetime_metric_type& da_spacetime_metric_temp =
+      get<::Tags::TempTensor<30, da_spacetime_metric_type>>(vars);
+
+  // d_spacetime_metric
+  d_spacetime_metric_type& d_spacetime_metric_temp =
+      get<::Tags::TempTensor<31, d_spacetime_metric_type>>(vars);
+  BenchmarkHelpers::copy_tensor(d_spacetime_metric,
+                                make_not_null(&d_spacetime_metric_temp));
+
+  // d_pi
+  d_pi_type& d_pi_temp = get<::Tags::TempTensor<32, d_pi_type>>(vars);
+  BenchmarkHelpers::copy_tensor(d_pi, make_not_null(&d_pi_temp));
+
+  // d_phi
+  d_phi_type& d_phi_temp = get<::Tags::TempTensor<33, d_phi_type>>(vars);
+  BenchmarkHelpers::copy_tensor(d_phi, make_not_null(&d_phi_temp));
+
+  // spacetime_metric
+  spacetime_metric_type& spacetime_metric_temp =
+      get<::Tags::TempTensor<34, spacetime_metric_type>>(vars);
+  BenchmarkHelpers::copy_tensor(spacetime_metric,
+                                make_not_null(&spacetime_metric_temp));
+
+  // pi
+  pi_type& pi_temp = get<::Tags::TempTensor<35, pi_type>>(vars);
+  BenchmarkHelpers::copy_tensor(pi, make_not_null(&pi_temp));
+
+  // phi
+  phi_type& phi_temp = get<::Tags::TempTensor<36, phi_type>>(vars);
+  BenchmarkHelpers::copy_tensor(phi, make_not_null(&phi_temp));
+
+  // gamma0
+  gamma0_type& gamma0_temp = get<::Tags::TempTensor<37, gamma0_type>>(vars);
+  BenchmarkHelpers::copy_tensor(gamma0, make_not_null(&gamma0_temp));
+
+  // gamma1
+  gamma1_type& gamma1_temp = get<::Tags::TempTensor<38, gamma1_type>>(vars);
+  BenchmarkHelpers::copy_tensor(gamma1, make_not_null(&gamma1_temp));
+
+  // gamma2
+  gamma2_type& gamma2_temp = get<::Tags::TempTensor<39, gamma2_type>>(vars);
+  BenchmarkHelpers::copy_tensor(gamma2, make_not_null(&gamma2_temp));
+
+  // gauge_function
+  gauge_function_type& gauge_function_temp =
+      get<::Tags::TempTensor<40, gauge_function_type>>(vars);
+  BenchmarkHelpers::copy_tensor(gauge_function,
+                                make_not_null(&gauge_function_temp));
+
+  // spacetime_deriv_gauge_function
+  spacetime_deriv_gauge_function_type& spacetime_deriv_gauge_function_temp =
+      get<::Tags::TempTensor<41, spacetime_deriv_gauge_function_type>>(vars);
+  BenchmarkHelpers::copy_tensor(
+      spacetime_deriv_gauge_function,
+      make_not_null(&spacetime_deriv_gauge_function_temp));
+
+  // pi_one_normal_spatial
+  pi_one_normal_spatial_type& pi_one_normal_spatial_temp =
+      get<::Tags::TempTensor<42, pi_one_normal_spatial_type>>(vars);
+
+  // phi_one_normal_spatial
+  phi_one_normal_spatial_type& phi_one_normal_spatial_temp =
+      get<::Tags::TempTensor<43, phi_one_normal_spatial_type>>(vars);
+
+  for (auto _ : state) {
+    BenchmarkImpl::tensorexpression_impl_lhs_as_arg(
+        make_not_null(&dt_spacetime_metric_temp), make_not_null(&dt_pi_temp),
+        make_not_null(&dt_phi_temp), make_not_null(&temp_gamma1_temp),
+        make_not_null(&temp_gamma2_temp), make_not_null(&gamma1gamma2_temp),
+        make_not_null(&pi_two_normals_temp),
+        make_not_null(&normal_dot_gauge_constraint_temp),
+        make_not_null(&gamma1_plus_1_temp), make_not_null(&pi_one_normal_temp),
+        make_not_null(&gauge_constraint_temp),
+        make_not_null(&phi_two_normals_temp),
+        make_not_null(&shift_dot_three_index_constraint_temp),
+        make_not_null(&phi_one_normal_temp), make_not_null(&pi_2_up_temp),
+        make_not_null(&three_index_constraint_temp),
+        make_not_null(&phi_1_up_temp), make_not_null(&phi_3_up_temp),
+        make_not_null(&christoffel_first_kind_3_up_temp),
+        make_not_null(&lapse_temp), make_not_null(&shift_temp),
+        make_not_null(&spatial_metric_temp),
+        make_not_null(&inverse_spatial_metric_temp),
+        make_not_null(&det_spatial_metric_temp),
+        make_not_null(&inverse_spacetime_metric_temp),
+        make_not_null(&christoffel_first_kind_temp),
+        make_not_null(&christoffel_second_kind_temp),
+        make_not_null(&trace_christoffel_temp),
+        make_not_null(&normal_spacetime_vector_temp),
+        make_not_null(&normal_spacetime_one_form_temp),
+        make_not_null(&da_spacetime_metric_temp), d_spacetime_metric_temp,
+        d_pi_temp, d_phi_temp, spacetime_metric_temp, pi_temp, phi_temp,
+        gamma0_temp, gamma1_temp, gamma2_temp, gauge_function_temp,
+        spacetime_deriv_gauge_function_temp,
+        make_not_null(&pi_one_normal_spatial_temp),
+        make_not_null(&phi_one_normal_spatial_temp));
+    benchmark::DoNotOptimize(dt_spacetime_metric_temp);
+    benchmark::DoNotOptimize(dt_pi_temp);
+    benchmark::DoNotOptimize(dt_phi_temp);
+    benchmark::ClobberMemory();
+  }
+}
+
 // Benchmark with each of these number of grid points for DataVector for a
 // single dimension
 const std::array<long int, 4> num_grid_points_1d_values = {2, 5, 8, 10};
@@ -492,7 +1163,17 @@ BENCHMARK(bench_manual_tensor_equation_lhs_tensor_as_arg_without_buffer)
     ->Arg(num_grid_points_1d_values[1])
     ->Arg(num_grid_points_1d_values[2])
     ->Arg(num_grid_points_1d_values[3]);  // NOLINT
+BENCHMARK(bench_manual_tensor_equation_lhs_tensor_as_arg_with_buffer)
+    ->Arg(num_grid_points_1d_values[0])
+    ->Arg(num_grid_points_1d_values[1])
+    ->Arg(num_grid_points_1d_values[2])
+    ->Arg(num_grid_points_1d_values[3]);  // NOLINT
 BENCHMARK(bench_tensorexpression_lhs_tensor_as_arg_without_buffer)
+    ->Arg(num_grid_points_1d_values[0])
+    ->Arg(num_grid_points_1d_values[1])
+    ->Arg(num_grid_points_1d_values[2])
+    ->Arg(num_grid_points_1d_values[3]);  // NOLINT
+BENCHMARK(bench_tensorexpression_lhs_tensor_as_arg_with_buffer)
     ->Arg(num_grid_points_1d_values[0])
     ->Arg(num_grid_points_1d_values[1])
     ->Arg(num_grid_points_1d_values[2])

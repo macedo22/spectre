@@ -65,6 +65,17 @@ void assign_unique_values_to_tensor(
     }
   }
 }
+
+template <typename... Ts>
+void copy_tensor(const Tensor<Ts...>& tensor_source,
+                 gsl::not_null<Tensor<Ts...>*> tensor_destination) noexcept {
+  auto tensor_source_it = tensor_source.begin();
+  auto tensor_destination_it = tensor_destination->begin();
+  for (; tensor_source_it != tensor_source.end();
+       tensor_source_it++, tensor_destination_it++) {
+    *tensor_destination_it = *tensor_source_it;
+  }
+}
 }  // namespace BenchmarkHelpers
 
 // Implementations benchmarked
