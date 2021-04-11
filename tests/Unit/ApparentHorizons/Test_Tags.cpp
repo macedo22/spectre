@@ -79,7 +79,7 @@ void test_radius_and_derivs() {
 
   // Test radius
   const auto& strahlkorper_radius =
-      db::get<StrahlkorperTags::Radius<Frame::Inertial>>(box);
+      get(db::get<StrahlkorperTags::Radius<Frame::Inertial>>(box));
   CHECK_ITERABLE_APPROX(strahlkorper_radius, expected_radius);
 
   // Test derivative of radius
@@ -224,7 +224,8 @@ void test_normals() {
   // Test surface_normal_one_form
   tnsr::i<DataVector, 3> expected_normal_one_form(n_pts);
   {
-    const auto& r = db::get<StrahlkorperTags::Radius<Frame::Inertial>>(box);
+    const auto& r =
+        get(db::get<StrahlkorperTags::Radius<Frame::Inertial>>(box));
     const DataVector one_over_r = 1.0 / r;
     const DataVector temp = 1.0 + one_over_r * amp * sin_phi * sin_theta;
     expected_normal_one_form.get(0) = cos_phi * sin_theta * temp;
@@ -246,7 +247,8 @@ void test_normals() {
   invg.get(2, 2) = 3.0;
 
   const auto expected_normal_mag = [&]() -> DataVector {
-    const auto& r = db::get<StrahlkorperTags::Radius<Frame::Inertial>>(box);
+    const auto& r =
+        get(db::get<StrahlkorperTags::Radius<Frame::Inertial>>(box));
 
     // Nasty expression Mark Scheel computed in Mathematica.
     const DataVector normsquared =
@@ -302,7 +304,7 @@ void test_min_ricci_scalar() {
 void test_dimensionful_spin_vector_compute_tag() noexcept {
   const double dimensionful_spin_magnitude{5.0};
   const Scalar<DataVector> area_element{{{{1., 2., 3.}}}};
-  const DataVector radius{1., 2., 3.};
+  const Scalar<DataVector> radius{{{{1., 2., 3.}}}};
   tnsr::i<DataVector, 3, Frame::Inertial> r_hat{3_st};
   get<0>(r_hat) = DataVector{3., 4., 5.};
   get<1>(r_hat) = DataVector{3., 4., 5.};
