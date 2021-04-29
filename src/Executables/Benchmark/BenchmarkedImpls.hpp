@@ -20,6 +20,20 @@
 #include "Utilities/Gsl.hpp"
 
 namespace BenchmarkHelpers {
+template <typename DataType>
+DataType get_used_for_size(const size_t num_grid_points);
+
+template <>
+double get_used_for_size<double>(const size_t /*num_grid_points*/) {
+  return std::numeric_limits<double>::signaling_NaN();
+}
+
+template <>
+DataVector get_used_for_size<DataVector>(const size_t num_grid_points) {
+  return DataVector(num_grid_points,
+                    std::numeric_limits<double>::signaling_NaN());
+}
+
 template <typename... Ts>
 void zero_initialize_tensor(
     gsl::not_null<Tensor<double, Ts...>*> tensor) noexcept {
