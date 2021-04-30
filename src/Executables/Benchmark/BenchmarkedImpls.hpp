@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <iterator>
 #include <numeric>
+#include <string>
 
 #include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/Expressions/AddSubtract.hpp"
@@ -32,6 +33,29 @@ template <>
 DataVector get_used_for_size<DataVector>(const size_t num_grid_points) {
   return DataVector(num_grid_points,
                     std::numeric_limits<double>::signaling_NaN());
+}
+
+// template <typename DataType>
+// std::string get_benchmark_name_suffix(const size_t dim, const size_t
+// num_grid_points) {
+//   const std::string suffix =
+//       std::is_same_v<DataType, DataVector>
+//           ? "DataVector/" + std::to_string(dim) +
+//                 "D/num_grid_points:" + std::to_string(num_grid_points)
+//           : "double/" + std::to_string(dim) + "D";
+//   return suffix;
+// }
+
+template <typename DataType>
+std::string get_benchmark_name_suffix(const size_t dim) {
+  const std::string datatype =
+      std::is_same_v<DataType, DataVector> ? "DataVector" : "double";
+  return datatype + "/" + std::to_string(dim) + "D/num_grid_points:";
+}
+
+template <typename DataType>
+std::string get_benchmark_name(const std::string prefix, const size_t dim) {
+  return prefix + get_benchmark_name_suffix<DataType>(dim);
 }
 
 template <typename... Ts>

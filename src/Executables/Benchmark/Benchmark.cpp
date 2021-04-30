@@ -110,39 +110,9 @@ namespace {
 constexpr size_t seed = 17;
 std::mt19937 generator(seed);
 
-// template <typename DataType, size_t D>
-// void
-// custom_bench_manual_tensor_equation_lhs_arg_without_buffer(benchmark::State&
-// state, const DataType& used_for_size, std::integral_constant<size_t, D>
-// /*dim*/) {
-//   using BenchmarkImpl = BenchmarkImpl<DataType, D>;
-//   using christoffel_first_kind_type =
-//       typename BenchmarkImpl::christoffel_first_kind_type;
-//   using da_spacetime_metric_type =
-//       typename BenchmarkImpl::da_spacetime_metric_type;
-
-//   std::uniform_real_distribution<> distribution(0.1, 1.0);
-
-//   // RHS: da_spacetime_metric
-//   const da_spacetime_metric_type da_spacetime_metric =
-//       make_with_random_values<da_spacetime_metric_type>(
-//           make_not_null(&generator), make_not_null(&distribution),
-//           used_for_size);
-
-//   // LHS: christoffel_first_kind
-//   christoffel_first_kind_type christoffel_first_kind(used_for_size);
-
-//   for (auto _ : state) {
-//     BenchmarkImpl::manual_impl_lhs_arg(
-//         make_not_null(&christoffel_first_kind), da_spacetime_metric);
-//     benchmark::DoNotOptimize(christoffel_first_kind);
-//     benchmark::ClobberMemory();
-//   }
-// }
-
 // benchmark manual implementation, takes LHS as arg, equation terms not in
 // buffer
-template <typename DataType, size_t Dim, size_t NumGridPoints>
+template <typename DataType, size_t Dim>
 void bench_manual_tensor_equation_lhs_arg_without_buffer(
     benchmark::State& state) {
   using BenchmarkImpl = BenchmarkImpl<DataType, Dim>;
@@ -151,8 +121,9 @@ void bench_manual_tensor_equation_lhs_arg_without_buffer(
   using da_spacetime_metric_type =
       typename BenchmarkImpl::da_spacetime_metric_type;
 
+  const size_t num_grid_points = static_cast<size_t>(state.range(0));
   const DataType used_for_size =
-      BenchmarkHelpers::get_used_for_size<DataType>(NumGridPoints);
+      BenchmarkHelpers::get_used_for_size<DataType>(num_grid_points);
   std::uniform_real_distribution<> distribution(0.1, 1.0);
 
   // RHS: da_spacetime_metric
@@ -172,47 +143,8 @@ void bench_manual_tensor_equation_lhs_arg_without_buffer(
   }
 }
 
-// benchmark manual implementation, takes LHS as arg, equation terms not in
-// buffer
-// void bench_manual_tensor_equation_lhs_arg_without_buffer(
-//     benchmark::State& state) {  // NOLINT
-//   using DataType = DataVector;
-//   using BenchmarkImpl = BenchmarkImpl<DataType, Dim>;
-//   using christoffel_first_kind_type =
-//       typename BenchmarkImpl::christoffel_first_kind_type;
-//   using da_spacetime_metric_type =
-//       typename BenchmarkImpl::da_spacetime_metric_type;
-
-//   const size_t num_grid_points = static_cast<size_t>(state.range(0));
-//   const DataVector used_for_size =
-//       DataVector(num_grid_points,
-//       std::numeric_limits<double>::signaling_NaN());
-
-// //   std::cout << "dimension in non-custom is : " << Dim << std::endl;
-// //   std::cout << "num_grid_points in non-custom is : " <<
-// used_for_size.size() << std::endl;
-
-//   std::uniform_real_distribution<> distribution(0.1, 1.0);
-
-//   // RHS: da_spacetime_metric
-//   const da_spacetime_metric_type da_spacetime_metric =
-//       make_with_random_values<da_spacetime_metric_type>(
-//           make_not_null(&generator), make_not_null(&distribution),
-//           used_for_size);
-
-//   // LHS: christoffel_first_kind
-//   christoffel_first_kind_type christoffel_first_kind(used_for_size);
-
-//   for (auto _ : state) {
-//     BenchmarkImpl::manual_impl_lhs_arg(
-//         make_not_null(&christoffel_first_kind), da_spacetime_metric);
-//     benchmark::DoNotOptimize(christoffel_first_kind);
-//     benchmark::ClobberMemory();
-//   }
-// }
-
 // benchmark manual implementation, takes LHS as arg, equation terms in buffer
-template <typename DataType, size_t Dim, size_t NumGridPoints>
+template <typename DataType, size_t Dim>
 void bench_manual_tensor_equation_lhs_arg_with_buffer(
     benchmark::State& state) {  // NOLINT
   using BenchmarkImpl = BenchmarkImpl<DataType, Dim>;
@@ -221,11 +153,12 @@ void bench_manual_tensor_equation_lhs_arg_with_buffer(
   using da_spacetime_metric_type =
       typename BenchmarkImpl::da_spacetime_metric_type;
 
+  const size_t num_grid_points = static_cast<size_t>(state.range(0));
   std::uniform_real_distribution<> distribution(0.1, 1.0);
 
   TempBuffer<tmpl::list<::Tags::TempTensor<0, christoffel_first_kind_type>,
                         ::Tags::TempTensor<1, da_spacetime_metric_type>>>
-      vars{NumGridPoints};
+      vars{num_grid_points};
 
   // RHS: da_spacetime_metric
   da_spacetime_metric_type& da_spacetime_metric =
@@ -246,45 +179,8 @@ void bench_manual_tensor_equation_lhs_arg_with_buffer(
   }
 }
 
-// benchmark manual implementation, takes LHS as arg, equation terms in buffer
-// void bench_manual_tensor_equation_lhs_arg_with_buffer(
-//     benchmark::State& state) {  // NOLINT
-//   using DataType = DataVector;
-//   using BenchmarkImpl = BenchmarkImpl<DataType, Dim>;
-//   using christoffel_first_kind_type =
-//       typename BenchmarkImpl::christoffel_first_kind_type;
-//   using da_spacetime_metric_type =
-//       typename BenchmarkImpl::da_spacetime_metric_type;
-
-//   const size_t num_grid_points = static_cast<size_t>(state.range(0));
-
-//   std::uniform_real_distribution<> distribution(0.1, 1.0);
-
-//   TempBuffer<tmpl::list<::Tags::TempTensor<0, christoffel_first_kind_type>,
-//                         ::Tags::TempTensor<1, da_spacetime_metric_type>>>
-//       vars{num_grid_points};
-
-//   // RHS: da_spacetime_metric
-//   da_spacetime_metric_type& da_spacetime_metric =
-//       get<::Tags::TempTensor<1, da_spacetime_metric_type>>(vars);
-//   fill_with_random_values(make_not_null(&da_spacetime_metric),
-//                           make_not_null(&generator),
-//                           make_not_null(&distribution));
-
-//   // LHS: christoffel_first_kind
-//   christoffel_first_kind_type& christoffel_first_kind =
-//       get<::Tags::TempTensor<0, christoffel_first_kind_type>>(vars);
-
-//   for (auto _ : state) {
-//     BenchmarkImpl::manual_impl_lhs_arg(
-//         make_not_null(&christoffel_first_kind), da_spacetime_metric);
-//     benchmark::DoNotOptimize(christoffel_first_kind);
-//     benchmark::ClobberMemory();
-//   }
-// }
-
 // benchmark TE implementation, takes LHS as arg, equation terms not in buffer
-template <typename DataType, size_t Dim, size_t NumGridPoints>
+template <typename DataType, size_t Dim>
 void bench_tensorexpression_lhs_arg_without_buffer(
     benchmark::State& state) {  // NOLINT
   using BenchmarkImpl = BenchmarkImpl<DataType, Dim>;
@@ -293,8 +189,9 @@ void bench_tensorexpression_lhs_arg_without_buffer(
   using da_spacetime_metric_type =
       typename BenchmarkImpl::da_spacetime_metric_type;
 
+  const size_t num_grid_points = static_cast<size_t>(state.range(0));
   const DataType used_for_size =
-      BenchmarkHelpers::get_used_for_size<DataType>(NumGridPoints);
+      BenchmarkHelpers::get_used_for_size<DataType>(num_grid_points);
   std::uniform_real_distribution<> distribution(0.1, 1.0);
 
   // RHS: da_spacetime_metric
@@ -313,40 +210,6 @@ void bench_tensorexpression_lhs_arg_without_buffer(
     benchmark::ClobberMemory();
   }
 }
-
-// benchmark TE implementation, takes LHS as arg, equation terms not in buffer
-// void bench_tensorexpression_lhs_arg_without_buffer(
-//     benchmark::State& state) {  // NOLINT
-//   using DataType = DataVector;
-//   using BenchmarkImpl = BenchmarkImpl<DataType, Dim>;
-//   using christoffel_first_kind_type =
-//       typename BenchmarkImpl::christoffel_first_kind_type;
-//   using da_spacetime_metric_type =
-//       typename BenchmarkImpl::da_spacetime_metric_type;
-
-//   const size_t num_grid_points = static_cast<size_t>(state.range(0));
-//   const DataVector used_for_size =
-//       DataVector(num_grid_points,
-//       std::numeric_limits<double>::signaling_NaN());
-
-//   std::uniform_real_distribution<> distribution(0.1, 1.0);
-
-//   // RHS: da_spacetime_metric
-//   const da_spacetime_metric_type da_spacetime_metric =
-//       make_with_random_values<da_spacetime_metric_type>(
-//           make_not_null(&generator), make_not_null(&distribution),
-//           used_for_size);
-
-//   // LHS: christoffel_first_kind
-//   christoffel_first_kind_type christoffel_first_kind(used_for_size);
-
-//   for (auto _ : state) {
-//     BenchmarkImpl::tensorexpression_impl_lhs_arg(
-//         make_not_null(&christoffel_first_kind), da_spacetime_metric);
-//     benchmark::DoNotOptimize(christoffel_first_kind);
-//     benchmark::ClobberMemory();
-//   }
-// }
 
 // benchmark TE implementation, takes LHS as arg, equation terms in buffer
 template <typename DataType, size_t Dim, size_t NumGridPoints>
@@ -358,11 +221,12 @@ void bench_tensorexpression_lhs_arg_with_buffer(
   using da_spacetime_metric_type =
       typename BenchmarkImpl::da_spacetime_metric_type;
 
+  const size_t num_grid_points = static_cast<size_t>(state.range(0));
   std::uniform_real_distribution<> distribution(0.1, 1.0);
 
   TempBuffer<tmpl::list<::Tags::TempTensor<0, christoffel_first_kind_type>,
                         ::Tags::TempTensor<1, da_spacetime_metric_type>>>
-      vars{NumGridPoints};
+      vars{num_grid_points};
 
   // RHS: da_spacetime_metric
   da_spacetime_metric_type& da_spacetime_metric =
@@ -383,186 +247,274 @@ void bench_tensorexpression_lhs_arg_with_buffer(
   }
 }
 
-// // benchmark TE implementation, takes LHS as arg, equation terms in buffer
-// void bench_tensorexpression_lhs_arg_with_buffer(
-//     benchmark::State& state) {  // NOLINT
-//   using DataType = DataVector;
-//   using BenchmarkImpl = BenchmarkImpl<DataType, Dim>;
-//   using christoffel_first_kind_type =
-//       typename BenchmarkImpl::christoffel_first_kind_type;
-//   using da_spacetime_metric_type =
-//       typename BenchmarkImpl::da_spacetime_metric_type;
-
-//   const size_t num_grid_points = static_cast<size_t>(state.range(0));
-
-//   std::uniform_real_distribution<> distribution(0.1, 1.0);
-
-//   TempBuffer<tmpl::list<::Tags::TempTensor<0, christoffel_first_kind_type>,
-//                         ::Tags::TempTensor<1, da_spacetime_metric_type>>>
-//       vars{num_grid_points};
-
-//   // RHS: da_spacetime_metric
-//   da_spacetime_metric_type& da_spacetime_metric =
-//       get<::Tags::TempTensor<1, da_spacetime_metric_type>>(vars);
-//   fill_with_random_values(make_not_null(&da_spacetime_metric),
-//                           make_not_null(&generator),
-//                           make_not_null(&distribution));
-
-//   // LHS: christoffel_first_kind
-//   christoffel_first_kind_type& christoffel_first_kind =
-//       get<::Tags::TempTensor<0, christoffel_first_kind_type>>(vars);
-
-//   for (auto _ : state) {
-//     BenchmarkImpl::tensorexpression_impl_lhs_arg(
-//         make_not_null(&christoffel_first_kind), da_spacetime_metric);
-//     benchmark::DoNotOptimize(christoffel_first_kind);
-//     benchmark::ClobberMemory();
-//   }
-// }
-
-// #define FIRST 8
-// #define SECOND 125
-// #define THIRD 512
-// #define FOURTH 1000
-
 // Benchmark with each of these number of grid points for DataVector for a
 // single dimension
-constexpr std::array<long int, 4> num_grid_points = {8, 125, 512, 1000};
-// const std::array<long int, 4> num_grid_points = {FIRST, SECOND, THIRD,
-// FOURTH};
+constexpr std::array<long int, 4> num_grid_point_values = {8, 125, 512, 1000};
 
-// template <typename DataType>
-// void test_custom_bench_core(const DataType& used_for_size) {
-//     BENCHMARK_CAPTURE(
-//     custom_bench_manual_tensor_equation_lhs_arg_without_buffer,
-//     custom_test, used_for_size, std::integral_constant<size_t, 3>{});
-//     BENCHMARK_CAPTURE(
-//     custom_bench_manual_tensor_equation_lhs_arg_without_buffer,
-//     custom_test, used_for_size, std::integral_constant<size_t, 2>{});
-//     BENCHMARK_CAPTURE(
-//     custom_bench_manual_tensor_equation_lhs_arg_without_buffer,
-//     custom_test, used_for_size, std::integral_constant<size_t, 1>{});
+// template <typename DataType, size_t Dim, size_t NumGridPoints>
+// void setup_benchmarks_3() {
+//   static_assert(std::is_same_v<DataType, DataVector> ^ (NumGridPoints == 0),
+//                 "If the DataType is DataVector, NumGridPoints must be "
+//                 "greater than 0. Otherwise, if the DataType is double, "
+//                 "NumGridPoints must be 0.");
+//   const std::string benchmark_name_stub =
+//       BenchmarkHelpers::get_benchmark_name_stub<DataType>(Dim,
+//       NumGridPoints);
+//   BENCHMARK_TEMPLATE(bench_manual_tensor_equation_lhs_arg_without_buffer,
+//                      DataType, Dim, NumGridPoints)
+//       ->Name("manual/lhs_arg/without_buffer/" + benchmark_name_stub);
+//   BENCHMARK_TEMPLATE(bench_tensorexpression_lhs_arg_without_buffer, DataType,
+//                      Dim, NumGridPoints)
+//       ->Name("TensorExpression/lhs_arg/without_buffer/" +
+//       benchmark_name_stub);
+//   BENCHMARK_TEMPLATE(bench_manual_tensor_equation_lhs_arg_with_buffer,
+//   DataType,
+//                      Dim, NumGridPoints)
+//       ->Name("manual/lhs_arg/with_buffer/" + benchmark_name_stub);
+//   BENCHMARK_TEMPLATE(bench_tensorexpression_lhs_arg_with_buffer, DataType,
+//   Dim,
+//                      NumGridPoints)
+//       ->Name("TensorExpression/lhs_arg/with_buffer/" + benchmark_name_stub);
 // }
 
-// void test_custom_bench_datavector(const size_t num_grid_points) {
-//   test_custom_bench_core(DataVector(num_grid_points,
-//   std::numeric_limits<double>::signaling_NaN()));
+// template <size_t Dim>
+// void setup_benchmarks_2() {
+//   setup_benchmarks_3<double, Dim, 0>();
+//   setup_benchmarks_3<DataVector, Dim, num_grid_points[0]>();
+//   setup_benchmarks_3<DataVector, Dim, num_grid_points[1]>();
+//   setup_benchmarks_3<DataVector, Dim, num_grid_points[2]>();
+//   setup_benchmarks_3<DataVector, Dim, num_grid_points[3]>();
 // }
 
-// void test_custom_bench_double() {
-//   test_custom_bench_core(std::numeric_limits<double>::signaling_NaN());
+// template <typename DataType, size_t Dim, size_t NumGridPoints>
+// void setup_benchmarks_3() {
+//   static_assert(std::is_same_v<DataType, DataVector> ^ (NumGridPoints == 0),
+//                 "If the DataType is DataVector, NumGridPoints must be "
+//                 "greater than 0. Otherwise, if the DataType is double, "
+//                 "NumGridPoints must be 0.");
+//   const std::string benchmark_name_stub =
+//       BenchmarkHelpers::get_benchmark_name_stub<DataType>(Dim,
+//       NumGridPoints);
+//   BENCHMARK_TEMPLATE(bench_manual_tensor_equation_lhs_arg_without_buffer,
+//                      DataType, Dim, NumGridPoints)
+//       ->Name("manual/lhs_arg/without_buffer/" + benchmark_name_stub);
+//   BENCHMARK_TEMPLATE(bench_tensorexpression_lhs_arg_without_buffer, DataType,
+//                      Dim, NumGridPoints)
+//       ->Name("TensorExpression/lhs_arg/without_buffer/" +
+//       benchmark_name_stub);
+//   BENCHMARK_TEMPLATE(bench_manual_tensor_equation_lhs_arg_with_buffer,
+//   DataType,
+//                      Dim, NumGridPoints)
+//       ->Name("manual/lhs_arg/with_buffer/" + benchmark_name_stub);
+//   BENCHMARK_TEMPLATE(bench_tensorexpression_lhs_arg_with_buffer, DataType,
+//   Dim,
+//                      NumGridPoints)
+//       ->Name("TensorExpression/lhs_arg/with_buffer/" + benchmark_name_stub);
 // }
 
-// test_custom_bench_datavector(num_grid_points[0]);
-// test_custom_bench_datavector(num_grid_points[1]);
-// test_custom_bench_datavector(num_grid_points[2]);
-// test_custom_bench_datavector(num_grid_points[3]);
-// test_custom_bench_double();
+// template <size_t Dim>
+// void setup_manual_lhs_arg_without_buffer() {
+//   const std::string benchmark_name_prefix = "manual/lhs_arg/without_buffer/";
+//   BENCHMARK_TEMPLATE(bench_manual_tensor_equation_lhs_arg_without_buffer,
+//                      double, Dim)
+//       ->Name(benchmark_name_prefix +
+//       BenchmarkHelpers::get_benchmark_name_suffix<double>(Dim));
+//   BENCHMARK_TEMPLATE(bench_manual_tensor_equation_lhs_arg_without_buffer,
+//                      DataVector, Dim)
+//       ->Name(benchmark_name_prefix +
+//       BenchmarkHelpers::get_benchmark_name_suffix<DataVector>(Dim))
+//       ->Arg(num_grid_point_values[0])
+//       ->Arg(num_grid_point_values[1])
+//       ->Arg(num_grid_point_values[2])
+//       ->Arg(num_grid_point_values[3]);
+// //   BENCHMARK_TEMPLATE(bench_manual_tensor_equation_lhs_arg_without_buffer,
+// //                      DataVector, Dim, num_grid_points[1])
+// //       ->Name(benchmark_name_prefix +
+// BenchmarkHelpers::get_benchmark_name_stub<DataVector>(Dim,
+// num_grid_points[1]));
+// //   BENCHMARK_TEMPLATE(bench_manual_tensor_equation_lhs_arg_without_buffer,
+// //                      DataVector, Dim, num_grid_points[2])
+// //       ->Name(benchmark_name_prefix +
+// BenchmarkHelpers::get_benchmark_name_stub<DataVector>(Dim,
+// num_grid_points[2]));
+// //   BENCHMARK_TEMPLATE(bench_manual_tensor_equation_lhs_arg_without_buffer,
+// //                      DataVector, Dim, num_grid_points[3])
+// //       ->Name(benchmark_name_prefix +
+// BenchmarkHelpers::get_benchmark_name_stub<DataVector>(Dim,
+// num_grid_points[3]));
+// }
 
-template <typename DataType, size_t Dim, size_t NumGridPoints>
-void setup_benchmarks_3(/*const size_t num_grid_points_index*/) {
-  static_assert(std::is_same_v<DataType, DataVector> ^ (NumGridPoints == 0),
-                "If the DataType is DataVector, NumGridPoints must be "
-                "greater than 0. Otherwise, if the DataType is double, "
-                "NumGridPoints must be 0.");
-  // const std::string datatype = std::is_same_v<DataType, DataVector> ?
-  // "DataVector" : "double"; const std::string benchmark_name =
-  // "manual/lhs_arg/without_buffer/" + datatype + "/" + std::to_string(Dim) +
-  // "D/num_grid_points:"; const std::string benchmark_name_stub = datatype +
-  // "/" + std::to_string(Dim) + "D/num_grid_points:" +
-  // std::to_string(NumGridPoints);
-  const std::string benchmark_name_stub =
-      std::is_same_v<DataType, DataVector>
-          ? "DataVector/" + std::to_string(Dim) +
-                "D/num_grid_points:" + std::to_string(NumGridPoints)
-          : "double/" + std::to_string(Dim) + "D";
-  BENCHMARK_TEMPLATE(bench_manual_tensor_equation_lhs_arg_without_buffer,
-                     DataType, Dim, NumGridPoints)
-      ->Name("manual/lhs_arg/without_buffer/" + benchmark_name_stub);
-  // BENCHMARK_TEMPLATE(
-  // template_bench_manual_tensor_equation_lhs_arg_without_buffer,
-  // DataType, Dim)
-  //     ->Name("manual/lhs_arg/without_buffer/" +
-  //     benchmark_name_stub)->Arg(num_grid_points[0])->Arg(num_grid_points[1])
-  //                         ->Arg(num_grid_points[2])->Arg(num_grid_points[3]);
-  BENCHMARK_TEMPLATE(bench_tensorexpression_lhs_arg_without_buffer, DataType,
-                     Dim, NumGridPoints)
-      ->Name("TensorExpression/lhs_arg/without_buffer/" + benchmark_name_stub);
-  BENCHMARK_TEMPLATE(bench_manual_tensor_equation_lhs_arg_with_buffer, DataType,
-                     Dim, NumGridPoints)
-      ->Name("manual/lhs_arg/with_buffer/" + benchmark_name_stub);
-  BENCHMARK_TEMPLATE(bench_tensorexpression_lhs_arg_with_buffer, DataType, Dim,
-                     NumGridPoints)
-      ->Name("TensorExpression/lhs_arg/with_buffer/" + benchmark_name_stub);
+// template <size_t Dim>
+// void setup_benchmarks_impl() {
+// //   setup_benchmarks_3<double, Dim, 0>();
+// //   setup_benchmarks_3<DataVector, Dim, num_grid_points[0]>();
+// //   setup_benchmarks_3<DataVector, Dim, num_grid_points[1]>();
+// //   setup_benchmarks_3<DataVector, Dim, num_grid_points[2]>();
+// //   setup_benchmarks_3<DataVector, Dim, num_grid_points[3]>();
+
+//   setup_manual_lhs_arg_without_buffer<Dim>();
+// //   setup_manual_lhs_arg_with_buffer<Dim>();
+// //   setup_te_lhs_arg_without_buffer<Dim>();
+// //   setup_te_lhs_arg_with_buffer<Dim>();
+// }
+
+// template <typename Datatype>
+// void setup_benchmarks_impl() {
+//   setup_benchmarks_3<double, Dim, 0>();
+//   setup_benchmarks_3<DataVector, Dim, num_grid_points[0]>();
+//   setup_benchmarks_3<DataVector, Dim, num_grid_points[1]>();
+//   setup_benchmarks_3<DataVector, Dim, num_grid_points[2]>();
+//   setup_benchmarks_3<DataVector, Dim, num_grid_points[3]>();
+// }
+
+template <typename DataType, size_t Dim>
+void setup_manual_lhs_arg_without_buffer() {
+  const std::string benchmark_name =
+      BenchmarkHelpers::get_benchmark_name<DataType>(
+          "manual/lhs_arg/without_buffer/", Dim);
+  if constexpr (std::is_same_v<DataType, double>) {
+    BENCHMARK_TEMPLATE(bench_manual_tensor_equation_lhs_arg_without_buffer,
+                       DataType, Dim)
+        ->Name(benchmark_name)
+        ->Arg(0);
+  } else if constexpr (std::is_same_v<DataType, DataVector>) {
+    BENCHMARK_TEMPLATE(bench_manual_tensor_equation_lhs_arg_without_buffer,
+                       DataType, Dim)
+        ->Name(benchmark_name)
+        ->Arg(num_grid_point_values[0])
+        ->Arg(num_grid_point_values[1])
+        ->Arg(num_grid_point_values[2])
+        ->Arg(num_grid_point_values[3]);
+  }
 }
 
-// template <typename DataType>
-// void setup_benchmarks_2(const size_t num_grid_points_index) {
-//   setup_benchmarks_3<DataType, 1>(num_grid_points_index);
-//   setup_benchmarks_3<DataType, 2>(num_grid_points_index);
-//   setup_benchmarks_3<DataType, 3>(num_grid_points_index);
-// }
+template <typename DataType, size_t Dim>
+void setup_manual_lhs_arg_with_buffer() {
+  const std::string benchmark_name =
+      BenchmarkHelpers::get_benchmark_name<DataType>(
+          "manual/lhs_arg/with_buffer/", Dim);
+  if constexpr (std::is_same_v<DataType, double>) {
+    BENCHMARK_TEMPLATE(bench_manual_tensor_equation_lhs_arg_with_buffer,
+                       DataType, Dim)
+        ->Name(benchmark_name)
+        ->Arg(0);
+  } else if constexpr (std::is_same_v<DataType, DataVector>) {
+    BENCHMARK_TEMPLATE(bench_manual_tensor_equation_lhs_arg_with_buffer,
+                       DataType, Dim)
+        ->Name(benchmark_name)
+        ->Arg(num_grid_point_values[0])
+        ->Arg(num_grid_point_values[1])
+        ->Arg(num_grid_point_values[2])
+        ->Arg(num_grid_point_values[3]);
+  }
+}
 
-// void setup_benchmarks() {
-//   setup_benchmarks_2<double>(0);
-//   setup_benchmarks_2<DataVector>(1);
-//   setup_benchmarks_2<DataVector>(2);
-//   setup_benchmarks_2<DataVector>(3);
-//   setup_benchmarks_2<DataVector>(4);
-// }
+template <typename DataType, size_t Dim>
+void setup_te1_lhs_arg_without_buffer() {
+  const std::string benchmark_name =
+      BenchmarkHelpers::get_benchmark_name<DataType>(
+          "TE - 1/lhs_arg/without_buffer/", Dim);
+  if constexpr (std::is_same_v<DataType, double>) {
+    BENCHMARK_TEMPLATE(bench_tensorexpression_lhs_arg_without_buffer, DataType,
+                       Dim)
+        ->Name(benchmark_name)
+        ->Arg(0);
+  } else if constexpr (std::is_same_v<DataType, DataVector>) {
+    BENCHMARK_TEMPLATE(bench_tensorexpression_lhs_arg_without_buffer, DataType,
+                       Dim)
+        ->Name(benchmark_name)
+        ->Arg(num_grid_point_values[0])
+        ->Arg(num_grid_point_values[1])
+        ->Arg(num_grid_point_values[2])
+        ->Arg(num_grid_point_values[3]);
+  }
+}
 
-template <size_t Dim>
-void setup_benchmarks_2() {
-  setup_benchmarks_3<double, Dim, 0>();
-  setup_benchmarks_3<DataVector, Dim, num_grid_points[0]>();
-  setup_benchmarks_3<DataVector, Dim, num_grid_points[1]>();
-  setup_benchmarks_3<DataVector, Dim, num_grid_points[2]>();
-  setup_benchmarks_3<DataVector, Dim, num_grid_points[3]>();
+template <typename DataType, size_t Dim>
+void setup_te1_lhs_arg_with_buffer() {
+  const std::string benchmark_name =
+      BenchmarkHelpers::get_benchmark_name<DataType>(
+          "TE - 1/lhs_arg/with_buffer/", Dim);
+  if constexpr (std::is_same_v<DataType, double>) {
+    BENCHMARK_TEMPLATE(bench_manual_tensor_equation_lhs_arg_with_buffer,
+                       DataType, Dim)
+        ->Name(benchmark_name)
+        ->Arg(0);
+  } else if constexpr (std::is_same_v<DataType, DataVector>) {
+    BENCHMARK_TEMPLATE(bench_manual_tensor_equation_lhs_arg_with_buffer,
+                       DataType, Dim)
+        ->Name(benchmark_name)
+        ->Arg(num_grid_point_values[0])
+        ->Arg(num_grid_point_values[1])
+        ->Arg(num_grid_point_values[2])
+        ->Arg(num_grid_point_values[3]);
+  }
 }
 
 void setup_benchmarks() {
-  setup_benchmarks_2<1>();
-  setup_benchmarks_2<2>();
-  setup_benchmarks_2<3>();
+  setup_manual_lhs_arg_without_buffer<double, 1>();
+  setup_manual_lhs_arg_without_buffer<double, 2>();
+  setup_manual_lhs_arg_without_buffer<double, 3>();
+  setup_manual_lhs_arg_without_buffer<DataVector, 1>();
+  setup_manual_lhs_arg_without_buffer<DataVector, 2>();
+  setup_manual_lhs_arg_without_buffer<DataVector, 3>();
+
+  setup_manual_lhs_arg_with_buffer<double, 1>();
+  setup_manual_lhs_arg_with_buffer<double, 2>();
+  setup_manual_lhs_arg_with_buffer<double, 3>();
+  setup_manual_lhs_arg_with_buffer<DataVector, 1>();
+  setup_manual_lhs_arg_with_buffer<DataVector, 2>();
+  setup_manual_lhs_arg_with_buffer<DataVector, 3>();
+
+  setup_te1_lhs_arg_without_buffer<double, 1>();
+  setup_te1_lhs_arg_without_buffer<double, 2>();
+  setup_te1_lhs_arg_without_buffer<double, 3>();
+  setup_te1_lhs_arg_without_buffer<DataVector, 1>();
+  setup_te1_lhs_arg_without_buffer<DataVector, 2>();
+  setup_te1_lhs_arg_without_buffer<DataVector, 3>();
+
+  setup_te1_lhs_arg_with_buffer<double, 1>();
+  setup_te1_lhs_arg_with_buffer<double, 2>();
+  setup_te1_lhs_arg_with_buffer<double, 3>();
+  setup_te1_lhs_arg_with_buffer<DataVector, 1>();
+  setup_te1_lhs_arg_with_buffer<DataVector, 2>();
+  setup_te1_lhs_arg_with_buffer<DataVector, 3>();
 }
+
+// template <size_t Case, typename Datatype, size_t Dim>
+// void setup_benchmarks_core() {
+// //   setup_manual_lhs_arg_without_buffer<Datatype, Dim>();
+// //   setup_manual_lhs_arg_with_buffer<Datatype, Dim>();
+//   SetupBenchmark<Case>::apply<Datatype, Dim>();
+// }
+
+// template <size_t Case, typename Datatype>
+// void setup_benchmarks_impl() {
+//   setup_benchmarks_core<Case, Datatype, 1>();
+//   setup_benchmarks_core<Case, Datatype, 2>();
+//   setup_benchmarks_core<Case, Datatype, 3>();
+// }
+
+// void setup_benchmarks() {
+//   setup_benchmarks_impl<1>();
+//   setup_benchmarks_impl<2>();
+//   setup_benchmarks_impl<3>();
+// }
+
+// template <size_t Case>
+// void setup_benchmarks_2() {
+//   setup_benchmarks_impl<Case, double>();
+//   setup_benchmarks_impl<Case, DataVector>();
+// }
+
+// void setup_benchmarks() {
+//   setup_benchmarks_2<0>();
+//   setup_benchmarks_2<1>();
+// }
 
 // Benchmark manual implementations and TensorExpression implementations that:
 // (i) take LHS tensor as an argument and do not use a buffer
 // (ii) take LHS tensor as an argument and do use a buffer
-// BENCHMARK_CAPTURE(custom_bench_manual_tensor_equation_lhs_arg_without_buffer,
-// custom_test, DataVector(FIRST, std::numeric_limits<double>::signaling_NaN()),
-// std::integral_constant<size_t, 3>{})->Name("double-" + std::to_string(FIRST)
-// + "-3D");
-// BENCHMARK_TEMPLATE(
-// template_bench_manual_tensor_equation_lhs_arg_without_buffer, DataVector, 3)
-// ->Name("manual/lhs_arg/without_buffer/DataVector/3D/num_grid_points:")
-// ->Arg(num_grid_points[0]);
-// BENCHMARK(bench_manual_tensor_equation_lhs_arg_without_buffer)
-// ->Name("bench_manual_tensor_equation_lhs_arg_without_buffer-"
-// + std::to_string(num_grid_points[0]))->Arg(num_grid_points[0])
-//     ->Arg(num_grid_points[1])
-//     ->Arg(num_grid_points[2])
-//     ->Arg(num_grid_points[3]);  // NOLINT
-// BENCHMARK(bench_manual_tensor_equation_lhs_arg_with_buffer)
-//     ->Arg(num_grid_points[0])
-//     ->Arg(num_grid_points[1])
-//     ->Arg(num_grid_points[2])
-//     ->Arg(num_grid_points[3]);  // NOLINT
-// BENCHMARK(bench_tensorexpression_lhs_arg_without_buffer)
-//     ->Arg(num_grid_points[0])
-//     ->Arg(num_grid_points[1])
-//     ->Arg(num_grid_points[2])
-//     ->Arg(num_grid_points[3]);  // NOLINT
-// BENCHMARK(bench_tensorexpression_lhs_arg_with_buffer)
-//     ->Arg(num_grid_points[0])
-//     ->Arg(num_grid_points[1])
-//     ->Arg(num_grid_points[2])
-//     ->Arg(num_grid_points[3]);  // NOLINT
-
-// #undef FIRST
-// #undef SECOND
-// #undef THIRD
-// #undef FOURTH
 }  // namespace
 
 // Ignore the warning about an extra ';' because some versions of benchmark
