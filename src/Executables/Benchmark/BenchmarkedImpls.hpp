@@ -35,17 +35,6 @@ DataVector get_used_for_size<DataVector>(const size_t num_grid_points) {
                     std::numeric_limits<double>::signaling_NaN());
 }
 
-// template <typename DataType>
-// std::string get_benchmark_name_suffix(const size_t dim, const size_t
-// num_grid_points) {
-//   const std::string suffix =
-//       std::is_same_v<DataType, DataVector>
-//           ? "DataVector/" + std::to_string(dim) +
-//                 "D/num_grid_points:" + std::to_string(num_grid_points)
-//           : "double/" + std::to_string(dim) + "D";
-//   return suffix;
-// }
-
 template <typename DataType>
 std::string get_benchmark_name_suffix(const size_t dim) {
   const std::string datatype =
@@ -124,7 +113,7 @@ struct BenchmarkImpl {
   //   return gr::christoffel_first_kind(da_spacetime_metric);
   // }
 
-  // manual implementation benchmarked that takes LHS tensor as argument
+  // manual implementation benchmarked that takes LHS tensor as arg
   SPECTRE_ALWAYS_INLINE static void manual_impl_lhs_arg(
       gsl::not_null<christoffel_first_kind_type*> christoffel_first_kind,
       const da_spacetime_metric_type da_spacetime_metric) noexcept {
@@ -132,7 +121,7 @@ struct BenchmarkImpl {
   }
 
   // Note: TE can't determine correct LHS symmetry from adding first two terms
-  // TensorExpression implementation benchmarked returns LHS tensor
+  // TensorExpression implementation benchmarked that returns LHS tensor
   // SPECTRE_ALWAYS_INLINE static christoffel_first_kind_type
   // tensorexpression_impl_lhs_return(
   //     const da_spacetime_metric_type da_spacetime_metric) noexcept {
@@ -142,14 +131,30 @@ struct BenchmarkImpl {
   //              da_spacetime_metric(ti_c, ti_a, ti_b)));
   // }
 
-  // TensorExpression implementation benchmarked that takes LHS tensor as
-  // argument
+  // TensorExpression implementation benchmarked that takes LHS tensor as arg
+  template <size_t CaseNumber>
   SPECTRE_ALWAYS_INLINE static void tensorexpression_impl_lhs_arg(
+      gsl::not_null<christoffel_first_kind_type*> christoffel_first_kind,
+      const da_spacetime_metric_type da_spacetime_metric) noexcept;
+
+  template <>
+  SPECTRE_ALWAYS_INLINE static void tensorexpression_impl_lhs_arg<1>(
       gsl::not_null<christoffel_first_kind_type*> christoffel_first_kind,
       const da_spacetime_metric_type da_spacetime_metric) noexcept {
     TensorExpressions::evaluate<ti_c, ti_a, ti_b>(
         christoffel_first_kind, 0.5 * (da_spacetime_metric(ti_a, ti_b, ti_c) +
                                        da_spacetime_metric(ti_b, ti_a, ti_c) -
                                        da_spacetime_metric(ti_c, ti_a, ti_b)));
+  }
+
+  template <>
+  SPECTRE_ALWAYS_INLINE static void tensorexpression_impl_lhs_arg<2>(
+      gsl::not_null<christoffel_first_kind_type*> christoffel_first_kind,
+      const da_spacetime_metric_type da_spacetime_metric) noexcept {
+    TensorExpressions::evaluate<ti_c, ti_a, ti_b>(
+        christoffel_first_kind, (da_spacetime_metric(ti_a, ti_b, ti_c) +
+                                 da_spacetime_metric(ti_b, ti_a, ti_c) -
+                                 da_spacetime_metric(ti_c, ti_a, ti_b)) *
+                                    0.5);
   }
 };

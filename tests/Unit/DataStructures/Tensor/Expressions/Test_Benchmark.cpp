@@ -35,7 +35,7 @@ void copy_tensor(const Tensor<Ts...>& tensor_source,
 
 // Make sure TE impl matches manual impl
 template <size_t Dim, typename DataType, typename Generator>
-void test_benchmarked_implementations_core(
+void test_benchmarked_impls_core(
     const DataType& used_for_size,
     const gsl::not_null<Generator*> generator) noexcept {
   using BenchmarkImpl = BenchmarkImpl<DataType, Dim>;
@@ -61,7 +61,7 @@ void test_benchmarked_implementations_core(
   // const christoffel_first_kind_type christoffel_first_kind_te_returned =
   //     BenchmarkImpl::tensorexpression_impl_lhs_return(da_spacetime_metric);
 
-  // LHS: christoffel_first_kind to be filled by manual implementation
+  // LHS: christoffel_first_kind to be filled by manual impl
   christoffel_first_kind_type christoffel_first_kind_manual_filled(
       used_for_size);
 
@@ -70,12 +70,19 @@ void test_benchmarked_implementations_core(
       make_not_null(&christoffel_first_kind_manual_filled),
       da_spacetime_metric);
 
-  // LHS: christoffel_first_kind to be filled by TensorExpression implementation
-  christoffel_first_kind_type christoffel_first_kind_te_filled(used_for_size);
+  // LHS: christoffel_first_kind to be filled by TensorExpression impl<1>
+  christoffel_first_kind_type christoffel_first_kind_te1_filled(used_for_size);
 
-  // Compute TensorExpression result with LHS tensor as argument
-  BenchmarkImpl::tensorexpression_impl_lhs_arg(
-      make_not_null(&christoffel_first_kind_te_filled), da_spacetime_metric);
+  // Compute TensorExpression impl<1> result with LHS tensor as argument
+  BenchmarkImpl::template tensorexpression_impl_lhs_arg<1>(
+      make_not_null(&christoffel_first_kind_te1_filled), da_spacetime_metric);
+
+  // LHS: christoffel_first_kind to be filled by TensorExpression impl<2>
+  christoffel_first_kind_type christoffel_first_kind_te2_filled(used_for_size);
+
+  // Compute TensorExpression impl<2> result with LHS tensor as argument
+  BenchmarkImpl::template tensorexpression_impl_lhs_arg<2>(
+      make_not_null(&christoffel_first_kind_te2_filled), da_spacetime_metric);
 
   // CHECK christoffel_first_kind (abb)
   for (size_t a = 0; a < Dim + 1; a++) {
@@ -85,12 +92,14 @@ void test_benchmarked_implementations_core(
         //     christoffel_first_kind_manual_returned.get(a, b, c),
         //     christoffel_first_kind_te_returned.get(a, b, c));
         CHECK_ITERABLE_APPROX(christoffel_first_kind_manual_filled.get(a, b, c),
-                              christoffel_first_kind_te_filled.get(a, b, c));
+                              christoffel_first_kind_te1_filled.get(a, b, c));
+        CHECK_ITERABLE_APPROX(christoffel_first_kind_manual_filled.get(a, b, c),
+                              christoffel_first_kind_te2_filled.get(a, b, c));
       }
     }
   }
 
-  // For DataVectors, check TE implementation with TempTensors
+  // For DataVectors, check TE impl with TempTensors
   if constexpr (not std::is_same_v<DataType, double>) {
     TempBuffer<tmpl::list<::Tags::TempTensor<0, christoffel_first_kind_type>,
                           ::Tags::TempTensor<1, da_spacetime_metric_type>>>
@@ -102,13 +111,22 @@ void test_benchmarked_implementations_core(
     copy_tensor(da_spacetime_metric,
                 make_not_null(&da_spacetime_metric_te_temp));
 
-    // LHS: christoffel_first_kind
-    christoffel_first_kind_type& christoffel_first_kind_te_temp =
+    // LHS: christoffel_first_kind impl<1>
+    christoffel_first_kind_type& christoffel_first_kind_te1_temp =
         get<::Tags::TempTensor<0, christoffel_first_kind_type>>(vars);
 
-    // Compute TensorExpression result
-    BenchmarkImpl::tensorexpression_impl_lhs_arg(
-        make_not_null(&christoffel_first_kind_te_temp),
+    // Compute TensorExpression impl<1> result
+    BenchmarkImpl::template tensorexpression_impl_lhs_arg<1>(
+        make_not_null(&christoffel_first_kind_te1_temp),
+        da_spacetime_metric_te_temp);
+
+    // LHS: christoffel_first_kind impl<2>
+    christoffel_first_kind_type& christoffel_first_kind_te2_temp =
+        get<::Tags::TempTensor<0, christoffel_first_kind_type>>(vars);
+
+    // Compute TensorExpression impl<2> result
+    BenchmarkImpl::template tensorexpression_impl_lhs_arg<2>(
+        make_not_null(&christoffel_first_kind_te2_temp),
         da_spacetime_metric_te_temp);
 
     // CHECK christoffel_first_kind (abb)
@@ -117,7 +135,10 @@ void test_benchmarked_implementations_core(
         for (size_t c = 0; c < Dim + 1; c++) {
           CHECK_ITERABLE_APPROX(
               christoffel_first_kind_manual_filled.get(a, b, c),
-              christoffel_first_kind_te_temp.get(a, b, c));
+              christoffel_first_kind_te1_temp.get(a, b, c));
+          CHECK_ITERABLE_APPROX(
+              christoffel_first_kind_manual_filled.get(a, b, c),
+              christoffel_first_kind_te2_temp.get(a, b, c));
         }
       }
     }
@@ -125,21 +146,21 @@ void test_benchmarked_implementations_core(
 }
 
 template <typename DataType, typename Generator>
-void test_benchmarked_implementations(
+void test_benchmarked_impls(
     const DataType& used_for_size,
     const gsl::not_null<Generator*> generator) noexcept {
-  test_benchmarked_implementations_core<1>(used_for_size, generator);
-  test_benchmarked_implementations_core<2>(used_for_size, generator);
-  test_benchmarked_implementations_core<3>(used_for_size, generator);
+  test_benchmarked_impls_core<1>(used_for_size, generator);
+  test_benchmarked_impls_core<2>(used_for_size, generator);
+  test_benchmarked_impls_core<3>(used_for_size, generator);
 }
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Benchmark",
                   "[DataStructures][Unit]") {
   MAKE_GENERATOR(generator);
 
-  test_benchmarked_implementations(std::numeric_limits<double>::signaling_NaN(),
-                                   make_not_null(&generator));
-  test_benchmarked_implementations(
+  test_benchmarked_impls(std::numeric_limits<double>::signaling_NaN(),
+                         make_not_null(&generator));
+  test_benchmarked_impls(
       DataVector(5, std::numeric_limits<double>::signaling_NaN()),
       make_not_null(&generator));
 }
