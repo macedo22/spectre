@@ -783,9 +783,30 @@ void spin_vector(const gsl::not_null<std::array<double, 3>*> result,
                  const Scalar<DataVector>& ricci_scalar,
                  const Scalar<DataVector>& spin_function,
                  const Strahlkorper<Frame>& strahlkorper) noexcept {
+  const auto ylm = strahlkorper.ylm_spherepack();
+  const size_t ylm_physical_size = ylm.physical_size();
+  ASSERT(get(area_element).size() == ylm_physical_size,
+         "area_element size doesn't match ylm physical size: "
+             << get(area_element).size() << " vs " << ylm_physical_size);
+  ASSERT(get(radius).size() == ylm_physical_size,
+         "radius size doesn't match ylm physical size: "
+             << get(radius).size() << " vs " << ylm_physical_size);
+  ASSERT(r_hat.get(0).size() == ylm_physical_size and
+             r_hat.get(1).size() == ylm_physical_size and
+             r_hat.get(2).size() == ylm_physical_size,
+         "The size of at least one of r_hat's components doesn't match ylm "
+         "physical size: "
+             << "(" << r_hat.get(0).size() << ", " << r_hat.get(1).size()
+             << ", " << r_hat.get(2).size() << ") vs " << ylm_physical_size);
+  ASSERT(get(ricci_scalar).size() == ylm_physical_size,
+         "ricci_scalar size doesn't match ylm physical size: "
+             << get(ricci_scalar).size() << " vs " << ylm_physical_size);
+  ASSERT(get(spin_function).size() == ylm_physical_size,
+         "spin_function size doesn't match ylm physical size: "
+             << get(spin_function).size() << " vs " << ylm_physical_size);
+
   std::array<double, 3> spin_vector = {{0.0, 0.0, 0.0}};
   auto integrand = make_with_value<Scalar<DataVector>>(radius, 0.0);
-  const auto ylm = strahlkorper.ylm_spherepack();
   for (size_t i = 0; i < 3; ++i) {
     // Compute horizon coordinates with a coordinate center such that
     // the mass dipole moment vanishes.
