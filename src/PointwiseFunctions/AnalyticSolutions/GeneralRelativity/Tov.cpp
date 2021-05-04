@@ -11,7 +11,9 @@
 #include <boost/numeric/odeint.hpp>  // IWYU pragma: keep
 #include <cmath>
 #include <cstddef>
+#include <fstream>
 #include <functional>
+#include <iostream>
 #include <ostream>
 #include <pup.h>
 #include <vector>
@@ -76,11 +78,28 @@ class Observer {
                   const double current_log_enthalpy) noexcept {
     radius.push_back(std::sqrt(vars[0]));
     mass_over_radius.push_back(vars[1]);
+    position.push_back(vars[0]);
+    dposition.push_back(vars[1]);
     log_enthalpy.push_back(current_log_enthalpy);
   }
   std::vector<double> radius;
   std::vector<double> mass_over_radius;
   std::vector<double> log_enthalpy;
+  std::vector<double> position;
+  std::vector<double> dposition;
+};
+
+class Observer2 {
+ public:
+  void operator()(const std::array<double, 2>& vars,
+                  const double current_radius) noexcept {
+    radius.push_back(current_radius);
+    position.push_back(vars[0]);
+    dposition.push_back(vars[1]);
+  }
+  std::vector<double> radius;
+  std::vector<double> position;
+  std::vector<double> dposition;
 };
 
 template <typename DataType>
@@ -187,6 +206,48 @@ TovSolution::TovSolution(
   // maximizes precision
   log_enthalpy_interpolant_ =
       intrp::BarycentricRational(observer.radius, observer.log_enthalpy, 3);
+
+  // Loop that writes various radii from center of NS R=0 to R= outer_radius,
+  // also the Mass encosed at those radii to a file.
+  const double dr =
+      outer_radius_ / 500.0;  // divide by number of chuncks or steps.
+  double r = 0.0;
+  std::ofstream file("mass_radii.dat", std::ofstream::out);
+  while (r < outer_radius_) {
+    file << r << " " << mass_over_radius(r) << " " << mass_over_radius(r) * r
+         << "\n";
+    r += dr;
+  }
+  file.close();
+
+  Observer2 observer2{};
+  std::array<double, 2> position{{1.0, 0.0}};
+
+  // std::cout << outer_radius_ << ",";
+  // Integrate while observing
+  boost::numeric::odeint::integrate_const(
+      dopri5,
+      [](const std::array<double, 2>& current_position,
+         std::array<double, 2>& current_time_derivative_position,
+         const double current_radius_r) noexcept {
+        // Note we don't use the time explicitly!
+        (void)current_radius_r;
+
+        // This computes the dx/dt=y and dy/dt=-.4(dy/dt)-4(x)?
+        current_time_derivative_position[0] = current_position[1];
+        // current_time_derivative_position[1] =
+        //  -0.4 * current_position[1] - 4.0 * current_position[0];
+        current_time_derivative_position[1] =
+            -2 * mass_over_radius * current_position[1] -
+            4.0 * current_position[0];
+
+        std::ofstream file2("radius_position_velocity.dat",
+                            std::ofstream::out | std::ofstream::app);
+        file2 << current_radius_r << "  " << current_position[0] << "  "
+              << current_position[1] << "\n";
+        file2.close();
+      }, /*lambda func ends here*/
+      position, 0.0, outer_radius_, dr, std::ref(observer2));
 }
 
 double TovSolution::outer_radius() const noexcept { return outer_radius_; }
