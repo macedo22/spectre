@@ -4,8 +4,10 @@
 #include "Framework/TestingFramework.hpp"
 
 #include <array>
+#include <climits>
 #include <cmath>
 #include <cstddef>
+#include <random>
 #include <string>
 
 #include "ApparentHorizons/SpherepackIterator.hpp"
@@ -17,9 +19,12 @@
 #include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/EagerMath/Magnitude.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
+#include "Framework/TestHelpers.hpp"
 #include "Helpers/ApparentHorizons/YlmTestFunctions.hpp"
 #include "Helpers/DataStructures/DataBox/TestHelpers.hpp"
+#include "Helpers/DataStructures/MakeWithRandomValues.hpp"
 #include "Utilities/ConstantExpressions.hpp"
+#include "Utilities/ErrorHandling/Assert.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/TMPL.hpp"
 
@@ -302,24 +307,46 @@ void test_min_ricci_scalar() {
 }
 
 void test_dimensionful_spin_vector_compute_tag() noexcept {
-  const double dimensionful_spin_magnitude{5.0};
-  const Scalar<DataVector> area_element{{{{1., 2., 3.}}}};
-  const Scalar<DataVector> radius{{{{1., 2., 3.}}}};
-  tnsr::i<DataVector, 3, Frame::Inertial> r_hat{3_st};
-  get<0>(r_hat) = DataVector{3., 4., 5.};
-  get<1>(r_hat) = DataVector{3., 4., 5.};
-  get<2>(r_hat) = DataVector{3., 4., 5.};
-  const Scalar<DataVector> ricci_scalar{{{{1., 2., 3.}}}};
-  const Scalar<DataVector> spin_function{{{{1., 2., 3.}}}};
   const double y11_amplitude = 1.0;
   const double y11_radius = 2.0;
   const std::array<double, 3> center = {{0.1, 0.2, 0.3}};
-  // create a strahlkorper
+  // Create a strahlkorper
   const auto strahlkorper =
       create_strahlkorper_y11(y11_amplitude, y11_radius, center);
+  // Get the physical size of the ylm, since we need to use this value to create
+  // area_element, radius, r_hat, ricci_scalar, and spin_function to be tensors
+  // containing DataVectors that have the same size as this ylm physical size
+  const size_t ylm_physical_size =
+      strahlkorper.ylm_spherepack().physical_size();
+  // Create a DataVector containing # of elements = to the ylm physical size, 45
+  const DataVector used_for_size = DataVector(
+      ylm_physical_size, std::numeric_limits<double>::signaling_NaN());
 
-  // Now construct a Y00 + Im(Y11) surface by hand.
-  //   const auto ylm = strahlkorper.ylm_spherepack();
+  // Creates a variable named generator that can be used to generate random
+  // values
+  MAKE_GENERATOR(generator);
+  // Creates a uniform distribution, which will be used to generate random
+  // numbers
+  std::uniform_real_distribution<> dist(-1., 1.);
+
+  // Pick a test value for the spin magnitude argument to spin_vector function
+  const double dimensionful_spin_magnitude = 5.0;
+  // Create the tensor arguments to spin_vector by having them contain
+  // DataVectors of size 45, where the values are randomly assigned
+  const auto area_element = make_with_random_values<Scalar<DataVector>>(
+      make_not_null(&generator), make_not_null(&dist), used_for_size);
+  const auto radius = make_with_random_values<Scalar<DataVector>>(
+      make_not_null(&generator), make_not_null(&dist), used_for_size);
+  const auto r_hat =
+      make_with_random_values<tnsr::i<DataVector, 3, Frame::Inertial>>(
+          make_not_null(&generator), make_not_null(&dist), used_for_size);
+  const auto ricci_scalar = make_with_random_values<Scalar<DataVector>>(
+      make_not_null(&generator), make_not_null(&dist), used_for_size);
+  const auto spin_function = make_with_random_values<Scalar<DataVector>>(
+      make_not_null(&generator), make_not_null(&dist), used_for_size);
+
+  // Create a DataBox that takes the above input arguments and computes the
+  // dimensionful spin vector using the DimensionfulSpinVectorCompute tag
   const auto box = db::create<
       db::AddSimpleTags<StrahlkorperGr::Tags::DimensionfulSpinMagnitude,
                         StrahlkorperGr::Tags::AreaElement<Frame::Inertial>,
@@ -492,8 +519,7 @@ SPECTRE_TEST_CASE("Unit.ApparentHorizons.StrahlkorperDataBox",
       StrahlkorperTags::UnitNormalVectorCompute<Frame::Inertial>>(
       "UnitNormalVector");
   TestHelpers::db::test_compute_tag<
-      StrahlkorperTags::RicciScalarCompute<Frame::Inertial>>(
-      "RicciScalar");
+      StrahlkorperTags::RicciScalarCompute<Frame::Inertial>>("RicciScalar");
   TestHelpers::db::test_compute_tag<StrahlkorperTags::MaxRicciScalarCompute>(
       "MaxRicciScalar");
   TestHelpers::db::test_compute_tag<StrahlkorperTags::MinRicciScalarCompute>(
