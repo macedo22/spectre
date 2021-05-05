@@ -227,18 +227,18 @@ TovSolution::TovSolution(
   // Integrate while observing
   boost::numeric::odeint::integrate_const(
       dopri5,
-      [](const std::array<double, 2>& current_position,
+      [this](const std::array<double, 2>& current_position,
          std::array<double, 2>& current_time_derivative_position,
          const double current_radius_r) noexcept {
         // Note we don't use the time explicitly!
-        (void)current_radius_r;
+        // (void)current_radius_r;
 
         // This computes the dx/dt=y and dy/dt=-.4(dy/dt)-4(x)?
         current_time_derivative_position[0] = current_position[1];
         // current_time_derivative_position[1] =
         //  -0.4 * current_position[1] - 4.0 * current_position[0];
         current_time_derivative_position[1] =
-            -2 * mass_over_radius * current_position[1] -
+            -2 * mass_over_radius(current_radius_r) * current_position[1] -
             4.0 * current_position[0];
 
         std::ofstream file2("radius_position_velocity.dat",
