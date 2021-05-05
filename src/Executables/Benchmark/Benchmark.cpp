@@ -5,111 +5,491 @@
 #pragma GCC diagnostic ignored "-Wredundant-decls"
 #include <benchmark.h>
 #pragma GCC diagnostic pop
+#include <cstddef>
+#include <iostream>
+#include <random>
 #include <string>
-#include <vector>
+#include <type_traits>
 
-#include "DataStructures/DataBox/Tag.hpp"
 #include "DataStructures/DataVector.hpp"
+#include "DataStructures/Tags/TempTensor.hpp"
+#include "DataStructures/TempBuffer.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
-#include "DataStructures/Variables.hpp"
-#include "Domain/CoordinateMaps/Affine.hpp"
-#include "Domain/CoordinateMaps/CoordinateMap.hpp"
-#include "Domain/CoordinateMaps/CoordinateMap.tpp"
-#include "Domain/CoordinateMaps/ProductMaps.hpp"
-#include "Domain/CoordinateMaps/ProductMaps.tpp"
-#include "Domain/LogicalCoordinates.hpp"
-#include "Domain/Structure/Element.hpp"
-#include "NumericalAlgorithms/LinearOperators/PartialDerivatives.tpp"
-#include "NumericalAlgorithms/Spectral/Mesh.hpp"
-#include "NumericalAlgorithms/Spectral/Spectral.hpp"
-#include "PointwiseFunctions/MathFunctions/PowX.hpp"
+#include "Executables/Benchmark/BenchmarkedImpls.hpp"
+#include "Helpers/DataStructures/MakeWithRandomValues.hpp"
+#include "Helpers/PointwiseFunctions/GeneralRelativity/TestHelpers.hpp"
+#include "Utilities/TMPL.hpp"
 
 // Charm looks for this function but since we build without a main function or
 // main module we just have it be empty
 extern "C" void CkRegisterMainModule(void) {}
 
-// This file is an example of how to do microbenchmark with Google Benchmark
-// https://github.com/google/benchmark
-// For two examples in different anonymous namespaces
-
 namespace {
-// Benchmark of push_back() in std::vector, following Chandler Carruth's talk
-// at CppCon in 2015,
-// https://www.youtube.com/watch?v=nXaxk27zwlk
+// set up shared stuff
+constexpr size_t seed = 17;
+std::mt19937 generator(seed);
 
-// void bench_create(benchmark::State &state) {
-//  while (state.KeepRunning()) {
-//    std::vector<int> v;
-//    benchmark::DoNotOptimize(&v);
-//    static_cast<void>(v);
-//  }
-// }
-// BENCHMARK(bench_create);
+// =============== BENCHMARKS TO INSTANTIATE ==============
 
-// void bench_reserve(benchmark::State &state) {
-//  while (state.KeepRunning()) {
-//    std::vector<int> v;
-//    v.reserve(1);
-//    benchmark::DoNotOptimize(v.data());
-//  }
-// }
-// BENCHMARK(bench_reserve);
+// - manual implementation
+// - LHS tensor is constructed and returned by implementation
+// - equation terms are not stored in buffer
+template <typename DataType, size_t Dim>
+void bench_manual_tensor_equation_lhs_return(benchmark::State& state) {
+  using BenchmarkImpl = BenchmarkImpl<DataType, Dim>;
+  using trace_christoffel_type = typename BenchmarkImpl::trace_christoffel_type;
+  using christoffel_first_kind_type =
+      typename BenchmarkImpl::christoffel_first_kind_type;
+  using inverse_spacetime_metric_type =
+      typename BenchmarkImpl::inverse_spacetime_metric_type;
 
-// void bench_push_back(benchmark::State &state) {
-//  while (state.KeepRunning()) {
-//    std::vector<int> v;
-//    v.reserve(1);
-//    benchmark::DoNotOptimize(v.data());
-//    v.push_back(42);
-//    benchmark::ClobberMemory();
-//  }
-// }
-// BENCHMARK(bench_push_back);
-}  // namespace
+  const size_t num_grid_points = static_cast<size_t>(state.range(0));
+  const DataType used_for_size =
+      BenchmarkHelpers::get_used_for_size<DataType>(num_grid_points);
+  std::uniform_real_distribution<> distribution(0.1, 1.0);
 
-namespace {
-// In this anonymous namespace is an example of microbenchmarking the
-// all_gradient routine for the GH system
+  // RHS: christoffel_first_kind
+  const christoffel_first_kind_type christoffel_first_kind =
+      make_with_random_values<christoffel_first_kind_type>(
+          make_not_null(&generator), make_not_null(&distribution),
+          used_for_size);
 
-template <size_t Dim>
-struct Kappa : db::SimpleTag {
-  using type = tnsr::abb<DataVector, Dim, Frame::Grid>;
-};
-template <size_t Dim>
-struct Psi : db::SimpleTag {
-  using type = tnsr::aa<DataVector, Dim, Frame::Grid>;
-};
+  // RHS: inverse_spacetime_metric
+  const inverse_spacetime_metric_type inverse_spacetime_metric =
+      make_with_random_values<inverse_spacetime_metric_type>(
+          make_not_null(&generator), make_not_null(&distribution),
+          used_for_size);
 
-// clang-tidy: don't pass be non-const reference
-void bench_all_gradient(benchmark::State& state) {  // NOLINT
-  constexpr const size_t pts_1d = 4;
-  constexpr const size_t Dim = 3;
-  const Mesh<Dim> mesh{pts_1d, Spectral::Basis::Legendre,
-                       Spectral::Quadrature::GaussLobatto};
-  domain::CoordinateMaps::Affine map1d(-1.0, 1.0, -1.0, 1.0);
-  using Map3d =
-      domain::CoordinateMaps::ProductOf3Maps<domain::CoordinateMaps::Affine,
-                                             domain::CoordinateMaps::Affine,
-                                             domain::CoordinateMaps::Affine>;
-  domain::CoordinateMap<Frame::Logical, Frame::Grid, Map3d> map(
-      Map3d{map1d, map1d, map1d});
-
-  using VarTags = tmpl::list<Kappa<Dim>, Psi<Dim>>;
-  const InverseJacobian<DataVector, Dim, Frame::Logical, Frame::Grid> inv_jac =
-      map.inv_jacobian(logical_coordinates(mesh));
-  const auto grid_coords = map(logical_coordinates(mesh));
-  Variables<VarTags> vars(mesh.number_of_grid_points(), 0.0);
-
-  while (state.KeepRunning()) {
-    benchmark::DoNotOptimize(partial_derivatives<VarTags>(vars, mesh, inv_jac));
+  for (auto _ : state) {
+    // LHS: trace_christoffel
+    const trace_christoffel_type trace_christoffel =
+        BenchmarkImpl::manual_impl_lhs_return(christoffel_first_kind,
+                                              inverse_spacetime_metric);
+    benchmark::DoNotOptimize(trace_christoffel);
+    benchmark::ClobberMemory();
   }
 }
-BENCHMARK(bench_all_gradient);  // NOLINT
+
+// - manual implementation
+// - LHS tensor is a function argument to implementation
+// - equation terms are not stored in buffer
+template <typename DataType, size_t Dim>
+void bench_manual_tensor_equation_lhs_arg_without_buffer(
+    benchmark::State& state) {
+  using BenchmarkImpl = BenchmarkImpl<DataType, Dim>;
+  using trace_christoffel_type = typename BenchmarkImpl::trace_christoffel_type;
+  using christoffel_first_kind_type =
+      typename BenchmarkImpl::christoffel_first_kind_type;
+  using inverse_spacetime_metric_type =
+      typename BenchmarkImpl::inverse_spacetime_metric_type;
+
+  const size_t num_grid_points = static_cast<size_t>(state.range(0));
+  const DataType used_for_size =
+      BenchmarkHelpers::get_used_for_size<DataType>(num_grid_points);
+  std::uniform_real_distribution<> distribution(0.1, 1.0);
+
+  // RHS: christoffel_first_kind
+  const christoffel_first_kind_type christoffel_first_kind =
+      make_with_random_values<christoffel_first_kind_type>(
+          make_not_null(&generator), make_not_null(&distribution),
+          used_for_size);
+
+  // RHS: inverse_spacetime_metric
+  const inverse_spacetime_metric_type inverse_spacetime_metric =
+      make_with_random_values<inverse_spacetime_metric_type>(
+          make_not_null(&generator), make_not_null(&distribution),
+          used_for_size);
+
+  // LHS: trace_christoffel
+  trace_christoffel_type trace_christoffel(used_for_size);
+
+  for (auto _ : state) {
+    BenchmarkImpl::manual_impl_lhs_arg(make_not_null(&trace_christoffel),
+                                       christoffel_first_kind,
+                                       inverse_spacetime_metric);
+    benchmark::DoNotOptimize(trace_christoffel);
+    benchmark::ClobberMemory();
+  }
+}
+
+// - manual implementation
+// - LHS tensor is a function argument to implementation
+// - equation terms are stored in buffer
+template <typename DataType, size_t Dim>
+void bench_manual_tensor_equation_lhs_arg_with_buffer(
+    benchmark::State& state) {  // NOLINT
+  using BenchmarkImpl = BenchmarkImpl<DataType, Dim>;
+  using trace_christoffel_type = typename BenchmarkImpl::trace_christoffel_type;
+  using christoffel_first_kind_type =
+      typename BenchmarkImpl::christoffel_first_kind_type;
+  using inverse_spacetime_metric_type =
+      typename BenchmarkImpl::inverse_spacetime_metric_type;
+
+  const size_t num_grid_points = static_cast<size_t>(state.range(0));
+  std::uniform_real_distribution<> distribution(0.1, 1.0);
+
+  TempBuffer<tmpl::list<::Tags::TempTensor<0, trace_christoffel_type>,
+                        ::Tags::TempTensor<1, christoffel_first_kind_type>,
+                        ::Tags::TempTensor<2, inverse_spacetime_metric_type>>>
+      vars{num_grid_points};
+
+  // RHS: christoffel_first_kind
+  christoffel_first_kind_type& christoffel_first_kind =
+      get<::Tags::TempTensor<1, christoffel_first_kind_type>>(vars);
+  fill_with_random_values(make_not_null(&christoffel_first_kind),
+                          make_not_null(&generator),
+                          make_not_null(&distribution));
+
+  // RHS: inverse_spacetime_metric
+  inverse_spacetime_metric_type& inverse_spacetime_metric =
+      get<::Tags::TempTensor<2, inverse_spacetime_metric_type>>(vars);
+  fill_with_random_values(make_not_null(&inverse_spacetime_metric),
+                          make_not_null(&generator),
+                          make_not_null(&distribution));
+
+  // LHS: trace_christoffel
+  trace_christoffel_type& trace_christoffel =
+      get<::Tags::TempTensor<0, trace_christoffel_type>>(vars);
+
+  for (auto _ : state) {
+    BenchmarkImpl::manual_impl_lhs_arg(make_not_null(&trace_christoffel),
+                                       christoffel_first_kind,
+                                       inverse_spacetime_metric);
+    benchmark::DoNotOptimize(trace_christoffel);
+    benchmark::ClobberMemory();
+  }
+}
+
+// - TensorExpression implementation
+// - LHS tensor is constructed and returned by implementation
+// - equation terms are not stored in buffer
+template <typename DataType, size_t Dim>
+void bench_tensorexpression_lhs_return(benchmark::State& state) {
+  using BenchmarkImpl = BenchmarkImpl<DataType, Dim>;
+  using trace_christoffel_type = typename BenchmarkImpl::trace_christoffel_type;
+  using christoffel_first_kind_type =
+      typename BenchmarkImpl::christoffel_first_kind_type;
+  using inverse_spacetime_metric_type =
+      typename BenchmarkImpl::inverse_spacetime_metric_type;
+
+  const size_t num_grid_points = static_cast<size_t>(state.range(0));
+  const DataType used_for_size =
+      BenchmarkHelpers::get_used_for_size<DataType>(num_grid_points);
+  std::uniform_real_distribution<> distribution(0.1, 1.0);
+
+  // RHS: christoffel_first_kind
+  const christoffel_first_kind_type christoffel_first_kind =
+      make_with_random_values<christoffel_first_kind_type>(
+          make_not_null(&generator), make_not_null(&distribution),
+          used_for_size);
+
+  // RHS: inverse_spacetime_metric
+  const inverse_spacetime_metric_type inverse_spacetime_metric =
+      make_with_random_values<inverse_spacetime_metric_type>(
+          make_not_null(&generator), make_not_null(&distribution),
+          used_for_size);
+
+  for (auto _ : state) {
+    // LHS: trace_christoffel
+    const trace_christoffel_type trace_christoffel =
+        BenchmarkImpl::tensorexpression_impl_lhs_return(
+            christoffel_first_kind, inverse_spacetime_metric);
+    benchmark::DoNotOptimize(trace_christoffel);
+    benchmark::ClobberMemory();
+  }
+}
+
+// - TensorExpression implementation
+// - LHS tensor is a function argument to implementation
+// - equation terms are not stored in buffer
+// - CaseNumber refers to a specific TE implementation variation
+template <typename DataType, size_t Dim, size_t CaseNumber>
+void bench_tensorexpression_lhs_arg_without_buffer(
+    benchmark::State& state) {  // NOLINT
+  using BenchmarkImpl = BenchmarkImpl<DataType, Dim>;
+  using trace_christoffel_type = typename BenchmarkImpl::trace_christoffel_type;
+  using christoffel_first_kind_type =
+      typename BenchmarkImpl::christoffel_first_kind_type;
+  using inverse_spacetime_metric_type =
+      typename BenchmarkImpl::inverse_spacetime_metric_type;
+
+  const size_t num_grid_points = static_cast<size_t>(state.range(0));
+  const DataType used_for_size =
+      BenchmarkHelpers::get_used_for_size<DataType>(num_grid_points);
+  std::uniform_real_distribution<> distribution(0.1, 1.0);
+
+  // RHS: christoffel_first_kind
+  const christoffel_first_kind_type christoffel_first_kind =
+      make_with_random_values<christoffel_first_kind_type>(
+          make_not_null(&generator), make_not_null(&distribution),
+          used_for_size);
+
+  // RHS: inverse_spacetime_metric
+  const inverse_spacetime_metric_type inverse_spacetime_metric =
+      make_with_random_values<inverse_spacetime_metric_type>(
+          make_not_null(&generator), make_not_null(&distribution),
+          used_for_size);
+
+  // LHS: trace_christoffel
+  trace_christoffel_type trace_christoffel(used_for_size);
+
+  for (auto _ : state) {
+    BenchmarkImpl::template tensorexpression_impl_lhs_arg<CaseNumber>(
+        make_not_null(&trace_christoffel), christoffel_first_kind,
+        inverse_spacetime_metric);
+    benchmark::DoNotOptimize(trace_christoffel);
+    benchmark::ClobberMemory();
+  }
+}
+
+// - TensorExpression implementation
+// - LHS tensor is a function argument to implementation
+// - equation terms are stored in buffer
+// - CaseNumber refers to a specific TE implementation variation
+template <typename DataType, size_t Dim, size_t CaseNumber>
+void bench_tensorexpression_lhs_arg_with_buffer(
+    benchmark::State& state) {  // NOLINT
+  using BenchmarkImpl = BenchmarkImpl<DataType, Dim>;
+  using trace_christoffel_type = typename BenchmarkImpl::trace_christoffel_type;
+  using christoffel_first_kind_type =
+      typename BenchmarkImpl::christoffel_first_kind_type;
+  using inverse_spacetime_metric_type =
+      typename BenchmarkImpl::inverse_spacetime_metric_type;
+
+  const size_t num_grid_points = static_cast<size_t>(state.range(0));
+  std::uniform_real_distribution<> distribution(0.1, 1.0);
+
+  TempBuffer<tmpl::list<::Tags::TempTensor<0, trace_christoffel_type>,
+                        ::Tags::TempTensor<1, christoffel_first_kind_type>,
+                        ::Tags::TempTensor<2, inverse_spacetime_metric_type>>>
+      vars{num_grid_points};
+
+  // RHS: christoffel_first_kind
+  christoffel_first_kind_type& christoffel_first_kind =
+      get<::Tags::TempTensor<1, christoffel_first_kind_type>>(vars);
+  fill_with_random_values(make_not_null(&christoffel_first_kind),
+                          make_not_null(&generator),
+                          make_not_null(&distribution));
+
+  // RHS: inverse_spacetime_metric
+  inverse_spacetime_metric_type& inverse_spacetime_metric =
+      get<::Tags::TempTensor<2, inverse_spacetime_metric_type>>(vars);
+  fill_with_random_values(make_not_null(&inverse_spacetime_metric),
+                          make_not_null(&generator),
+                          make_not_null(&distribution));
+
+  // LHS: trace_christoffel
+  trace_christoffel_type& trace_christoffel =
+      get<::Tags::TempTensor<0, trace_christoffel_type>>(vars);
+
+  for (auto _ : state) {
+    BenchmarkImpl::template tensorexpression_impl_lhs_arg<CaseNumber>(
+        make_not_null(&trace_christoffel), christoffel_first_kind,
+        inverse_spacetime_metric);
+    benchmark::DoNotOptimize(trace_christoffel);
+    benchmark::ClobberMemory();
+  }
+}
+
+// ========================================================
+
+// Each DataVector case is run with each number of grid points
+constexpr std::array<long int, 4> num_grid_point_values = {8, 125, 512, 1000};
+
+// ======= BENCHMARK_TEMPLATE INSTANTIATION HELPERS =======
+
+template <typename DataType, size_t Dim>
+void setup_manual_lhs_return() {
+  const std::string benchmark_name =
+      BenchmarkHelpers::get_benchmark_name<DataType>(
+          "manual/lhs_return/without_buffer/", Dim);
+  if constexpr (std::is_same_v<DataType, double>) {
+    BENCHMARK_TEMPLATE(bench_manual_tensor_equation_lhs_return, DataType, Dim)
+        ->Name(benchmark_name)
+        ->Arg(0);
+  } else if constexpr (std::is_same_v<DataType, DataVector>) {
+    BENCHMARK_TEMPLATE(bench_manual_tensor_equation_lhs_return, DataType, Dim)
+        ->Name(benchmark_name)
+        ->Arg(num_grid_point_values[0])
+        ->Arg(num_grid_point_values[1])
+        ->Arg(num_grid_point_values[2])
+        ->Arg(num_grid_point_values[3]);
+  }
+}
+
+template <typename DataType, size_t Dim>
+void setup_manual_lhs_arg_without_buffer() {
+  const std::string benchmark_name =
+      BenchmarkHelpers::get_benchmark_name<DataType>(
+          "manual/lhs_arg/without_buffer/", Dim);
+  if constexpr (std::is_same_v<DataType, double>) {
+    BENCHMARK_TEMPLATE(bench_manual_tensor_equation_lhs_arg_without_buffer,
+                       DataType, Dim)
+        ->Name(benchmark_name)
+        ->Arg(0);
+  } else if constexpr (std::is_same_v<DataType, DataVector>) {
+    BENCHMARK_TEMPLATE(bench_manual_tensor_equation_lhs_arg_without_buffer,
+                       DataType, Dim)
+        ->Name(benchmark_name)
+        ->Arg(num_grid_point_values[0])
+        ->Arg(num_grid_point_values[1])
+        ->Arg(num_grid_point_values[2])
+        ->Arg(num_grid_point_values[3]);
+  }
+}
+
+template <typename DataType, size_t Dim>
+void setup_manual_lhs_arg_with_buffer() {
+  const std::string benchmark_name =
+      BenchmarkHelpers::get_benchmark_name<DataType>(
+          "manual/lhs_arg/with_buffer/", Dim);
+  if constexpr (std::is_same_v<DataType, double>) {
+    BENCHMARK_TEMPLATE(bench_manual_tensor_equation_lhs_arg_with_buffer,
+                       DataType, Dim)
+        ->Name(benchmark_name)
+        ->Arg(0);
+  } else if constexpr (std::is_same_v<DataType, DataVector>) {
+    BENCHMARK_TEMPLATE(bench_manual_tensor_equation_lhs_arg_with_buffer,
+                       DataType, Dim)
+        ->Name(benchmark_name)
+        ->Arg(num_grid_point_values[0])
+        ->Arg(num_grid_point_values[1])
+        ->Arg(num_grid_point_values[2])
+        ->Arg(num_grid_point_values[3]);
+  }
+}
+
+template <typename DataType, size_t Dim>
+void setup_te_lhs_return() {
+  const std::string benchmark_name =
+      BenchmarkHelpers::get_benchmark_name<DataType>(
+          "TE : 1/lhs_return/without_buffer", Dim);
+  if constexpr (std::is_same_v<DataType, double>) {
+    BENCHMARK_TEMPLATE(bench_tensorexpression_lhs_return, DataType, Dim)
+        ->Name(benchmark_name)
+        ->Arg(0);
+  } else if constexpr (std::is_same_v<DataType, DataVector>) {
+    BENCHMARK_TEMPLATE(bench_tensorexpression_lhs_return, DataType, Dim)
+        ->Name(benchmark_name)
+        ->Arg(num_grid_point_values[0])
+        ->Arg(num_grid_point_values[1])
+        ->Arg(num_grid_point_values[2])
+        ->Arg(num_grid_point_values[3]);
+  }
+}
+
+template <typename DataType, size_t Dim, size_t CaseNumber>
+void setup_te_lhs_arg_without_buffer() {
+  const std::string benchmark_name =
+      BenchmarkHelpers::get_benchmark_name<DataType>(
+          "TE : " + std::to_string(CaseNumber) + "/lhs_arg/without_buffer/",
+          Dim);
+  if constexpr (std::is_same_v<DataType, double>) {
+    BENCHMARK_TEMPLATE(bench_tensorexpression_lhs_arg_without_buffer, DataType,
+                       Dim, CaseNumber)
+        ->Name(benchmark_name)
+        ->Arg(0);
+  } else if constexpr (std::is_same_v<DataType, DataVector>) {
+    BENCHMARK_TEMPLATE(bench_tensorexpression_lhs_arg_without_buffer, DataType,
+                       Dim, CaseNumber)
+        ->Name(benchmark_name)
+        ->Arg(num_grid_point_values[0])
+        ->Arg(num_grid_point_values[1])
+        ->Arg(num_grid_point_values[2])
+        ->Arg(num_grid_point_values[3]);
+  }
+}
+
+template <typename DataType, size_t Dim, size_t CaseNumber>
+void setup_te_lhs_arg_with_buffer() {
+  const std::string benchmark_name =
+      BenchmarkHelpers::get_benchmark_name<DataType>(
+          "TE : " + std::to_string(CaseNumber) + "/lhs_arg/with_buffer/", Dim);
+  if constexpr (std::is_same_v<DataType, double>) {
+    BENCHMARK_TEMPLATE(bench_tensorexpression_lhs_arg_with_buffer, DataType,
+                       Dim, CaseNumber)
+        ->Name(benchmark_name)
+        ->Arg(0);
+  } else if constexpr (std::is_same_v<DataType, DataVector>) {
+    BENCHMARK_TEMPLATE(bench_tensorexpression_lhs_arg_with_buffer, DataType,
+                       Dim, CaseNumber)
+        ->Name(benchmark_name)
+        ->Arg(num_grid_point_values[0])
+        ->Arg(num_grid_point_values[1])
+        ->Arg(num_grid_point_values[2])
+        ->Arg(num_grid_point_values[3]);
+  }
+}
+
+// ========================================================
+
+// Instantiate all benchmark cases
+void setup_benchmarks() {
+  setup_manual_lhs_return<double, 1>();
+  setup_manual_lhs_return<double, 2>();
+  setup_manual_lhs_return<double, 3>();
+  setup_manual_lhs_return<DataVector, 1>();
+  setup_manual_lhs_return<DataVector, 2>();
+  setup_manual_lhs_return<DataVector, 3>();
+
+  setup_manual_lhs_arg_without_buffer<double, 1>();
+  setup_manual_lhs_arg_without_buffer<double, 2>();
+  setup_manual_lhs_arg_without_buffer<double, 3>();
+  setup_manual_lhs_arg_without_buffer<DataVector, 1>();
+  setup_manual_lhs_arg_without_buffer<DataVector, 2>();
+  setup_manual_lhs_arg_without_buffer<DataVector, 3>();
+
+  setup_manual_lhs_arg_with_buffer<double, 1>();
+  setup_manual_lhs_arg_with_buffer<double, 2>();
+  setup_manual_lhs_arg_with_buffer<double, 3>();
+  setup_manual_lhs_arg_with_buffer<DataVector, 1>();
+  setup_manual_lhs_arg_with_buffer<DataVector, 2>();
+  setup_manual_lhs_arg_with_buffer<DataVector, 3>();
+
+  setup_te_lhs_return<double, 1>();
+  setup_te_lhs_return<double, 2>();
+  setup_te_lhs_return<double, 3>();
+  setup_te_lhs_return<DataVector, 1>();
+  setup_te_lhs_return<DataVector, 2>();
+  setup_te_lhs_return<DataVector, 3>();
+
+  setup_te_lhs_arg_without_buffer<double, 1, 1>();
+  setup_te_lhs_arg_without_buffer<double, 2, 1>();
+  setup_te_lhs_arg_without_buffer<double, 3, 1>();
+  setup_te_lhs_arg_without_buffer<DataVector, 1, 1>();
+  setup_te_lhs_arg_without_buffer<DataVector, 2, 1>();
+  setup_te_lhs_arg_without_buffer<DataVector, 3, 1>();
+
+  setup_te_lhs_arg_with_buffer<double, 1, 1>();
+  setup_te_lhs_arg_with_buffer<double, 2, 1>();
+  setup_te_lhs_arg_with_buffer<double, 3, 1>();
+  setup_te_lhs_arg_with_buffer<DataVector, 1, 1>();
+  setup_te_lhs_arg_with_buffer<DataVector, 2, 1>();
+  setup_te_lhs_arg_with_buffer<DataVector, 3, 1>();
+
+  setup_te_lhs_arg_without_buffer<double, 1, 2>();
+  setup_te_lhs_arg_without_buffer<double, 2, 2>();
+  setup_te_lhs_arg_without_buffer<double, 3, 2>();
+  setup_te_lhs_arg_without_buffer<DataVector, 1, 2>();
+  setup_te_lhs_arg_without_buffer<DataVector, 2, 2>();
+  setup_te_lhs_arg_without_buffer<DataVector, 3, 2>();
+
+  setup_te_lhs_arg_with_buffer<double, 1, 2>();
+  setup_te_lhs_arg_with_buffer<double, 2, 2>();
+  setup_te_lhs_arg_with_buffer<double, 3, 2>();
+  setup_te_lhs_arg_with_buffer<DataVector, 1, 2>();
+  setup_te_lhs_arg_with_buffer<DataVector, 2, 2>();
+  setup_te_lhs_arg_with_buffer<DataVector, 3, 2>();
+}
 }  // namespace
 
 // Ignore the warning about an extra ';' because some versions of benchmark
 // require it
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
-BENCHMARK_MAIN();
+int main(int argc, char** argv) {
+  setup_benchmarks();
+  ::benchmark::Initialize(&argc, argv);
+  ::benchmark::RunSpecifiedBenchmarks();
+}
 #pragma GCC diagnostic pop
