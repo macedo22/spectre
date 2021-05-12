@@ -363,7 +363,7 @@ template <typename DataType, size_t Dim>
 void setup_te_lhs_return() {
   const std::string benchmark_name =
       BenchmarkHelpers::get_benchmark_name<DataType>(
-          "TE : 1/lhs_return/without_buffer", Dim);
+          "TE : 1/lhs_return/without_buffer/", Dim);
   if constexpr (std::is_same_v<DataType, double>) {
     BENCHMARK_TEMPLATE(bench_tensorexpression_lhs_return, DataType, Dim)
         ->Name(benchmark_name)
