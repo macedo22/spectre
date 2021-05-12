@@ -75,6 +75,7 @@ spectre_run_cmake() {
           -D CMAKE_C_COMPILER=clang \
           -D CMAKE_CXX_COMPILER=clang++ \
           -D CMAKE_Fortran_COMPILER=${GCC_HOME}/gfortran \
+          -DGOOGLE_BENCHMARK_ROOT=$GOOGLE_BENCHMARK_BUILD \
           "$@" \
           $SPECTRE_HOME
 }

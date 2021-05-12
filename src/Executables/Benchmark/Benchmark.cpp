@@ -3,7 +3,7 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wredundant-decls"
-#include <benchmark/benchmark.h>
+#include <benchmark.h>
 #pragma GCC diagnostic pop
 #include <string>
 #include <vector>
