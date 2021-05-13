@@ -5,6 +5,7 @@ set(LIBRARY "Test_Expressions")
 
 set(LIBRARY_SOURCES
   Test_AddSubtract.cpp
+  Test_Benchmark.cpp
   Test_Contract.cpp
   Test_Evaluate.cpp
   Test_MixedOperations.cpp
@@ -19,5 +20,5 @@ add_test_library(
   ${LIBRARY}
   "DataStructures/Tensor/Expressions"
   "${LIBRARY_SOURCES}"
-  "DataStructures;Utilities"
+  "DataStructures;Domain;GeneralizedHarmonic;GeneralRelativity;GeneralRelativityHelpers;Spectral;Utilities"
   )
