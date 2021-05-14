@@ -15,6 +15,8 @@ set(LIBRARY_SOURCES
   Test_TensorExpressions.cpp
   )
 
+add_subdirectory(Benchmark)
+
 add_test_library(
   ${LIBRARY}
   "DataStructures/Tensor/Expressions"
