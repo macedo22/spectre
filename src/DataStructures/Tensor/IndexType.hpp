@@ -234,5 +234,17 @@ using change_index_up_lo = Tensor_detail::TensorIndexType<
     Index::ul == UpLo::Up ? UpLo::Lo : UpLo::Up, typename Index::Frame,
     Index::index_type>;
 
+/// \ingroup TensorGroup
+/// Change the \ref SpacetimeIndex "TensorIndexType" to be spacetime
+/// if it's spatial and vice-versa
+///
+/// \tparam Index the \ref SpacetimeIndex "TensorIndexType" to change
+template <typename Index>
+using change_indextype = Tensor_detail::TensorIndexType<
+    Index::index_type == IndexType::Spatial ? Index::dim : Index::dim - 1,
+    Index::ul, typename Index::Frame,
+    Index::index_type == IndexType::Spatial ? IndexType::Spacetime
+                                            : IndexType::Spatial>;
+
 template <typename... Ts>
 using index_list = tmpl::list<Ts...>;

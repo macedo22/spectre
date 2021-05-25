@@ -324,7 +324,7 @@ decltype(auto) equal(const Container& lhs, const Container2& rhs,
 
 /// Convenience wrapper around std::max_element
 template <class Container>
-decltype(auto) max_element(const Container& c) {
+constexpr decltype(auto) max_element(const Container& c) {
   using std::begin;
   using std::end;
   return std::max_element(begin(c), end(c));

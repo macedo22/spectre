@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <utility>
 
+#include "DataStructures/Tensor/Expressions/SpatialSpacetimeIndex.hpp"
 #include "DataStructures/Tensor/Structure.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
 #include "Utilities/Algorithm.hpp"
@@ -53,12 +54,39 @@ struct LhsTensorSymmAndIndices<
           rhs_tensorindex_values.begin(),
           alg::find(rhs_tensorindex_values, lhs_tensorindex_values[Ints]))...}};
 
-  // Desired LHS Tensor's Symmetry, typelist of TensorIndexTypes, and Structure
+  static constexpr std::array<std::int32_t, NumIndices> rhs_symmetry = {
+      {tmpl::at_c<RhsSymmetry, Ints>::value...}};
+  using spatial_spacetime_index_positions_ =
+      spatial_spacetime_index_positions<RhsTensorIndexTypeList,
+                                        RhsTensorIndexList>;
+  using make_list_type = std::conditional_t<
+      tmpl::size<spatial_spacetime_index_positions_>::value == 0, size_t,
+      spatial_spacetime_index_positions_>;
+  static constexpr auto rhs_spatial_spacetime_index_positions =
+      make_array_from_list<make_list_type>();
+  //   get_spatial_spacetime_index_positions<
+  //       RhsTensorIndexTypeList,
+  //       RhsTensorIndexList>();
+  //   using spatial_spacetime_index_positions_ =
+  //   spatial_spacetime_index_positions<RhsTensorIndexTypeList,
+  //   RhsTensorIndexList>;
+  static constexpr std::array<std::int32_t, NumIndices>
+      rhs_spatial_spacetime_index_symmetry =
+          get_spatial_spacetime_index_symmetry(
+              rhs_symmetry, rhs_spatial_spacetime_index_positions);
+  //   Symmetry<tmpl::at_c<RhsSymmetry, lhs_to_rhs_map[Ints]>::value...>;
+
+  using rhs_spatial_spacetime_tensorindextype_list =
+      replace_spatial_spacetime_indices<RhsTensorIndexTypeList,
+                                        spatial_spacetime_index_positions_>;
+
+  // Desired LHS Tensor's Symmetry and typelist of TensorIndexTypes
   using symmetry =
-      Symmetry<tmpl::at_c<RhsSymmetry, lhs_to_rhs_map[Ints]>::value...>;
+      Symmetry<rhs_spatial_spacetime_index_symmetry[lhs_to_rhs_map[Ints]]...>;
+  // Symmetry<tmpl::at_c<RhsSymmetry, lhs_to_rhs_map[Ints]>::value...>;
   using tensorindextype_list =
-      tmpl::list<tmpl::at_c<RhsTensorIndexTypeList, lhs_to_rhs_map[Ints]>...>;
-  using structure = Tensor_detail::Structure<
-      symmetry, tmpl::at_c<RhsTensorIndexTypeList, lhs_to_rhs_map[Ints]>...>;
+      tmpl::list<tmpl::at_c<rhs_spatial_spacetime_tensorindextype_list,
+                            lhs_to_rhs_map[Ints]>...>;
+  // tmpl::list<tmpl::at_c<RhsTensorIndexTypeList, lhs_to_rhs_map[Ints]>...>;
 };
 }  // namespace TensorExpressions
