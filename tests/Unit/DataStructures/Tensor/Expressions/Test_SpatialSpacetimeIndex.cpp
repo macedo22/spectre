@@ -223,11 +223,57 @@ void test_both(const DataType& used_for_size) noexcept {
   }
 }
 
+// \brief Test the outer product of a rank 0, rank 1, and rank 2 tensor is
+// correctly evaluated
+//
+// \details
+// The outer product cases tested are permutations of the form:
+// - \f$L^{a}{}_{ib} = R * S^{a} * T_{bi}\f$
+//
+// Each case represents an ordering for the operands and the LHS indices.
+//
+// \tparam DataType the type of data being stored in the product operands
+template <typename DataType>
+void test_rank4(const DataType& used_for_size) noexcept {
+  constexpr size_t dim = 3;
+  Tensor<DataType, Symmetry<3, 2, 1, 2>,
+         index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Grid>,
+                    SpacetimeIndex<dim, UpLo::Lo, Frame::Grid>,
+                    SpatialIndex<dim, UpLo::Lo, Frame::Grid>,
+                    SpacetimeIndex<dim, UpLo::Lo, Frame::Grid>>>
+      R(used_for_size);
+  assign_unique_values_to_tensor(make_not_null(&R));
+
+  // \f$L_{ai} = R_{ai}\f$
+  // Use explicit type (vs auto) for LHS Tensor so the compiler checks the
+  // return type of `evaluate`
+  Tensor<DataType, Symmetry<4, 3, 2, 1>,
+         index_list<SpatialIndex<dim, UpLo::Lo, Frame::Grid>,
+                    SpacetimeIndex<dim, UpLo::Lo, Frame::Grid>,
+                    SpacetimeIndex<dim, UpLo::Lo, Frame::Grid>,
+                    SpatialIndex<dim, UpLo::Lo, Frame::Grid>>>
+      Likaj_from_R_jaik(used_for_size);
+  TensorExpressions::evaluate<ti_i, ti_k, ti_a, ti_j>(
+      make_not_null(&Likaj_from_R_jaik), R(ti_j, ti_a, ti_i, ti_k));
+
+  for (size_t i = 0; i < dim; i++) {
+    for (size_t k = 0; k < dim; k++) {
+      for (size_t a = 0; a < dim + 1; a++) {
+        for (size_t j = 0; j < dim; j++) {
+          CHECK(Likaj_from_R_jaik.get(i, k + 1, a, j) ==
+                R.get(j + 1, a, i, k + 1));
+        }
+      }
+    }
+  }
+}
+
 template <typename DataType>
 void test(const DataType& used_for_size) noexcept {
   test_rhs(used_for_size);
   test_lhs(used_for_size);
   test_both(used_for_size);
+  test_rank4(used_for_size);
 }
 }  // namespace
 
