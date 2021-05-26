@@ -51,7 +51,7 @@ void weyl_magnetic(
  *
  * \details Computes the scalar \f$B_{ij} B^{ij}\f$ from the magnetic part
  * of the Weyl tensor \f$B_{ij}\f$ and the inverse spatial metric
- * \f$g^{ij}\f$, i.e. \f$B_{ij} = \gamma^{ik}\gamma^{jl}E_{ij}E_{kl}\f$.
+ * \f$g^{ij}\f$, i.e. \f$B_{ij} = \gamma^{ik}\gamma^{jl}B_{ij}B_{kl}\f$.
  *
  * \note The magnetic part of the Weyl tensor in vacuum is available via
  * gr::weyl_magnetic(). The magnetic part of the Weyl tensor needs additional
@@ -79,18 +79,17 @@ namespace Tags {
 template <size_t SpatialDim, typename Frame, typename DataType>
 struct WeylMagneticCompute : WeylMagnetic<SpatialDim, Frame, DataType>,
                              db::ComputeTag {
-  using argument_tags =
-      tmpl::list<gr::Tags::SpatialRicci<SpatialDim, Frame, DataType>,
-                 gr::Tags::ExtrinsicCurvature<SpatialDim, Frame, DataType>,
-                 gr::Tags::InverseSpatialMetric<SpatialDim, Frame, DataType>>;
+  using argument_tags = tmpl::list<
+      ::Tags::deriv<gr::Tags::ExtrinsicCurvature<SpatialDim, Frame, DataType>,
+                    tmpl::size_t<SpatialDim>, Frame>,
+      gr::Tags::SpatialMetric<SpatialDim, Frame, DataType>>;
 
   using return_type = tnsr::ii<DataType, SpatialDim, Frame>;
 
   static constexpr auto function = static_cast<void (*)(
       gsl::not_null<tnsr::ii<DataType, SpatialDim, Frame>*>,
-      const tnsr::ii<DataType, SpatialDim, Frame>&,
-      const tnsr::ii<DataType, SpatialDim, Frame>&,
-      const tnsr::II<DataType, SpatialDim, Frame>&)>(
+      const tnsr::ijj<DataType, SpatialDim, Frame>&,
+      const tnsr::ii<DataType, SpatialDim, Frame>&)>(
       &weyl_magnetic<SpatialDim, Frame, DataType>);
 
   using base = WeylMagnetic<SpatialDim, Frame, DataType>;
