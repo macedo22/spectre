@@ -32,13 +32,16 @@ void weyl_magnetic(
         weyl_magnetic_part,
     const tnsr::ijj<DataType, SpatialDim, Frame>& grad_extrinsic_curvature,
     const tnsr::ii<DataType, SpatialDim, Frame>& spatial_metric) noexcept {
+  static_assert(SpatialDim == 3,
+                "weyl_magnetic() currently only supports 3 spatial dimensions");
+
   auto grad_extrinsic_curvature_cross_spatial_metric =
       make_with_value<tnsr::ij<DataType, SpatialDim, Frame>>(
           get<0, 0>(spatial_metric), 0.0);
 
   for (size_t i = 0; i < SpatialDim; ++i) {
     for (size_t j = 0; j < SpatialDim; ++j) {
-      for (LeviCivitaIterator<3> it; it; ++it) {
+      for (LeviCivitaIterator<SpatialDim> it; it; ++it) {
         grad_extrinsic_curvature_cross_spatial_metric.get(i, j) +=
             it.sign() * grad_extrinsic_curvature.get(it[2], it[1], i) *
             spatial_metric.get(j, it[0]);
@@ -51,7 +54,7 @@ void weyl_magnetic(
       weyl_magnetic_part->get(i, j) =
           (grad_extrinsic_curvature_cross_spatial_metric.get(i, j) +
            grad_extrinsic_curvature_cross_spatial_metric.get(j, i)) *
-          (0.5 * sqrt(get(determinant_and_inverse(spatial_metric).first)));
+          (0.5 / sqrt(get(determinant_and_inverse(spatial_metric).first)));
     }
   }
 }
@@ -106,19 +109,21 @@ Scalar<DataType> weyl_magnetic_scalar(
 #define DTYPE(data) BOOST_PP_TUPLE_ELEM(1, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(2, data)
 
+#define INSTANTIATE_ONLY_3D(_, data)                                        \
+  template tnsr::ii<DTYPE(data), DIM(data), FRAME(data)> gr::weyl_magnetic( \
+      const tnsr::ijj<DTYPE(data), DIM(data), FRAME(data)>&                 \
+          grad_extrinsic_curvature,                                         \
+      const tnsr::ii<DTYPE(data), DIM(data), FRAME(data)>&                  \
+          spatial_metric) noexcept;                                         \
+  template void gr::weyl_magnetic(                                          \
+      const gsl::not_null<tnsr::ii<DTYPE(data), DIM(data), FRAME(data)>*>   \
+          weyl_magnetic_part,                                               \
+      const tnsr::ijj<DTYPE(data), DIM(data), FRAME(data)>&                 \
+          grad_extrinsic_curvature,                                         \
+      const tnsr::ii<DTYPE(data), DIM(data), FRAME(data)>&                  \
+          spatial_metric) noexcept;
+
 #define INSTANTIATE(_, data)                                                 \
-  template tnsr::ii<DTYPE(data), DIM(data), FRAME(data)> gr::weyl_magnetic(  \
-      const tnsr::ijj<DTYPE(data), DIM(data), FRAME(data)>&                  \
-          grad_extrinsic_curvature,                                          \
-      const tnsr::ii<DTYPE(data), DIM(data), FRAME(data)>&                   \
-          spatial_metric) noexcept;                                          \
-  template void gr::weyl_magnetic(                                           \
-      const gsl::not_null<tnsr::ii<DTYPE(data), DIM(data), FRAME(data)>*>    \
-          weyl_magnetic_part,                                                \
-      const tnsr::ijj<DTYPE(data), DIM(data), FRAME(data)>&                  \
-          grad_extrinsic_curvature,                                          \
-      const tnsr::ii<DTYPE(data), DIM(data), FRAME(data)>&                   \
-          spatial_metric) noexcept;                                          \
   template Scalar<DTYPE(data)> gr::weyl_magnetic_scalar(                     \
       const tnsr::ii<DTYPE(data), DIM(data), FRAME(data)>& weyl_magnetic,    \
       const tnsr::II<DTYPE(data), DIM(data), FRAME(data)>&                   \
@@ -129,6 +134,8 @@ Scalar<DataType> weyl_magnetic_scalar(
       const tnsr::II<DTYPE(data), DIM(data), FRAME(data)>&                   \
           inverse_spatial_metric) noexcept;
 
+GENERATE_INSTANTIATIONS(INSTANTIATE_ONLY_3D, (3), (double, DataVector),
+                        (Frame::Grid, Frame::Inertial))
 GENERATE_INSTANTIATIONS(INSTANTIATE, (1, 2, 3), (double, DataVector),
                         (Frame::Grid, Frame::Inertial))
 
@@ -136,4 +143,5 @@ GENERATE_INSTANTIATIONS(INSTANTIATE, (1, 2, 3), (double, DataVector),
 #undef DTYPE
 #undef FRAME
 #undef INSTANTIATE
+#undef INSTANTIATE_ONLY_3D
 // endcond
