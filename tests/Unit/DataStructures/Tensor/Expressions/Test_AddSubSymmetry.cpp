@@ -4,10 +4,8 @@
 #include "Framework/TestingFramework.hpp"
 
 #include <cstddef>
-#include <iostream>
 #include <type_traits>
 
-#include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Expressions/Test_AddSubSymmetryImpl.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
@@ -21,22 +19,22 @@ using make_tensorindex_list =
 void test_rank0() {
   using symm = Symmetry<>;
   using tensorindex_list = make_tensorindex_list<>;
-  using result_symmetry =
-      typename detail::AddSubtractSymmetry<symm, symm, tensorindex_list,
-                                           tensorindex_list>::type;
+
   static_assert(
-      std::is_same_v<result_symmetry, tmpl::integral_list<std::int32_t>>,
+      std::is_same_v<typename detail::AddSubtractSymmetry<
+                         symm, symm, tensorindex_list, tensorindex_list>::type,
+                     tmpl::integral_list<std::int32_t>>,
       "Failed AddSubSymmetry rank 0 test case.");
 }
 
 void test_rank1() {
   using symm = Symmetry<1>;
   using tensorindex_list = make_tensorindex_list<ti_a>;
-  using result_symmetry =
-      typename detail::AddSubtractSymmetry<symm, symm, tensorindex_list,
-                                           tensorindex_list>::type;
+
   static_assert(
-      std::is_same_v<result_symmetry, tmpl::integral_list<std::int32_t, 1>>,
+      std::is_same_v<typename detail::AddSubtractSymmetry<
+                         symm, symm, tensorindex_list, tensorindex_list>::type,
+                     tmpl::integral_list<std::int32_t, 1>>,
       "Failed AddSubSymmetry rank 1 test case.");
 }
 
