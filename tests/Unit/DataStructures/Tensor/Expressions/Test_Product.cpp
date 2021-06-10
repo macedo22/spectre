@@ -1128,13 +1128,26 @@ void test_three_term_inner_outer_product(
   }
 }
 
+// \brief Test the products of tensors where generic indices are used for
+// spacetime indices
+//
+// \details
+// The product cases tested are:
+// - \f$L = R^{i} * S_{i}\f$
+// - \f$L = R^{k} * T_{k}\f$
+// - \f$L_{j, a, i}{}^{b} = G_{i, a} * H_{j}{}^{b}\f$
+// - \f$L_{k, i} = H_{i}{}^{j} * G_{k, j}\f$
+//
+// where \f$R\f$'s index is spacetime, \f$S\f$' index is spatial, \f$T\f$'s
+// index is spacetime, \f$G\f$'s indices are spacetime, and \f$H\f$'s first
+// index is spatial and second is spacetime.
+//
+// \tparam DataType the type of data being stored in the tensor operand of the
+// products
 template <typename DataType>
 void test_spatial_spacetime_index(const DataType& used_for_size) noexcept {
   std::uniform_real_distribution<> distribution(0.1, 1.0);
 
-  // Contract (spatial, spacetime) tensor
-  // Use explicit type (vs auto) for LHS Tensor so the compiler checks the
-  // return type of `evaluate`
   Tensor<DataType, Symmetry<1>,
          index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>
       R(used_for_size);
@@ -1148,8 +1161,12 @@ void test_spatial_spacetime_index(const DataType& used_for_size) noexcept {
       T(used_for_size);
   assign_unique_values_to_tensor(make_not_null(&T));
 
+  // \f$L = R^{i} * S_{i}\f$
   // (spatial) * (spacetime) inner product with generic spatial indices
+  // Use explicit type (vs auto) for LHS Tensor so the compiler checks the
+  // return type of `evaluate`
   const Tensor<DataType> RS = TensorExpressions::evaluate(R(ti_I) * S(ti_i));
+  // \f$L = R^{k} * T_{k}\f$
   // (spacetime) * (spacetime) inner product with generic spatial indices
   const Tensor<DataType> RT = TensorExpressions::evaluate(R(ti_K) * T(ti_k));
 
@@ -1173,6 +1190,7 @@ void test_spatial_spacetime_index(const DataType& used_for_size) noexcept {
       H(used_for_size);
   assign_unique_values_to_tensor(make_not_null(&H));
 
+  // \f$L_{j, a, i}{}^{b} = G_{i, a} * H_{j}{}^{b}\f$
   // rank 2 x rank 2 outer product containing a spacetime index with a generic
   // spatial index
   const Tensor<DataType, Symmetry<4, 3, 2, 1>,
@@ -1193,6 +1211,7 @@ void test_spatial_spacetime_index(const DataType& used_for_size) noexcept {
     }
   }
 
+  // \f$L_{k, i} = H_{i}{}^{j} * G_{k, j}\f$
   // inner and outer product in one expression using generic spatial indices
   // for spacetime indices
   const Tensor<DataType, Symmetry<2, 1>,
