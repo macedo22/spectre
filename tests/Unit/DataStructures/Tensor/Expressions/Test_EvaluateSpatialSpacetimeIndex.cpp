@@ -4,9 +4,6 @@
 #include "Framework/TestingFramework.hpp"
 
 #include <cstddef>
-#include <iostream>
-#include <iterator>
-#include <numeric>
 #include <random>
 
 #include "DataStructures/Tensor/Expressions/Evaluate.hpp"
@@ -17,43 +14,21 @@
 #include "Utilities/MakeWithValue.hpp"
 
 namespace {
-template <typename... Ts>
-void assign_unique_values_to_tensor(
-    gsl::not_null<Tensor<double, Ts...>*> tensor) noexcept {
-  std::iota(tensor->begin(), tensor->end(), 0.0);
-}
-
-template <typename... Ts>
-void assign_unique_values_to_tensor(
-    gsl::not_null<Tensor<DataVector, Ts...>*> tensor) noexcept {
-  double value = 0.0;
-  for (auto index_it = tensor->begin(); index_it != tensor->end(); index_it++) {
-    for (auto vector_it = index_it->begin(); vector_it != index_it->end();
-         vector_it++) {
-      *vector_it = value;
-      value += 1.0;
-    }
-  }
-}
-
-// \brief Test the outer product of a rank 0, rank 1, and rank 2 tensor is
-// correctly evaluated
+// \brief Test evaluation of tensors where generic spatial indices are used for
+// RHS spacetime indices
 //
-// \details
-// The outer product cases tested are permutations of the form:
-// - \f$L^{a}{}_{ib} = R * S^{a} * T_{bi}\f$
-//
-// Each case represents an ordering for the operands and the LHS indices.
-//
-// \tparam DataType the type of data being stored in the product operands
-template <typename DataType>
-void test_rhs(const DataType& used_for_size) noexcept {
+// \tparam DataType the type of data being stored in the expression operands
+template <typename DataType, typename Generator>
+void test_rhs(const DataType& used_for_size,
+              const gsl::not_null<Generator*> generator) noexcept {
+  std::uniform_real_distribution<> distribution(0.1, 1.0);
   constexpr size_t dim = 3;
-  Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>,
-                    SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>>>
-      R(used_for_size);
-  assign_unique_values_to_tensor(make_not_null(&R));
+
+  const auto R = make_with_random_values<
+      Tensor<DataType, Symmetry<2, 1>,
+             index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>,
+                        SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>>>>(
+      generator, distribution, used_for_size);
 
   // \f$L_{ai} = R_{ai}\f$
   // Use explicit type (vs auto) for LHS Tensor so the compiler checks the
@@ -83,7 +58,6 @@ void test_rhs(const DataType& used_for_size) noexcept {
 
   for (size_t a = 0; a < dim + 1; a++) {
     for (size_t i = 0; i < dim; i++) {
-      // std::cout << "(a, i) : (" << a << ", " << i << ")" << std::endl;
       CHECK(Lai_from_R_ai.get(a, i) == R.get(a, i + 1));
       CHECK(Lia_from_R_ai.get(i, a) == R.get(a, i + 1));
       CHECK(Lai_from_R_ia.get(a, i) == R.get(i + 1, a));
@@ -92,24 +66,21 @@ void test_rhs(const DataType& used_for_size) noexcept {
   }
 }
 
-// \brief Test the outer product of a rank 0, rank 1, and rank 2 tensor is
-// correctly evaluated
+// \brief Test evaluation of tensors where generic spatial indices are used for
+// LHS spacetime indices
 //
-// \details
-// The outer product cases tested are permutations of the form:
-// - \f$L^{a}{}_{ib} = R * S^{a} * T_{bi}\f$
-//
-// Each case represents an ordering for the operands and the LHS indices.
-//
-// \tparam DataType the type of data being stored in the product operands
-template <typename DataType>
-void test_lhs(const DataType& used_for_size) noexcept {
+// \tparam DataType the type of data being stored in the expression operands
+template <typename DataType, typename Generator>
+void test_lhs(const DataType& used_for_size,
+              const gsl::not_null<Generator*> generator) noexcept {
+  std::uniform_real_distribution<> distribution(0.1, 1.0);
   constexpr size_t dim = 3;
-  Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>,
-                    SpatialIndex<dim, UpLo::Lo, Frame::Inertial>>>
-      R(used_for_size);
-  assign_unique_values_to_tensor(make_not_null(&R));
+
+  const auto R = make_with_random_values<
+      Tensor<DataType, Symmetry<2, 1>,
+             index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>,
+                        SpatialIndex<dim, UpLo::Lo, Frame::Inertial>>>>(
+      generator, distribution, used_for_size);
 
   // \f$L_{ai} = R_{ai}\f$
   // Use explicit type (vs auto) for LHS Tensor so the compiler checks the
@@ -129,11 +100,11 @@ void test_lhs(const DataType& used_for_size) noexcept {
   TensorExpressions::evaluate<ti_i, ti_a>(make_not_null(&Lia_from_R_ai),
                                           R(ti_a, ti_i));
 
-  Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpatialIndex<dim, UpLo::Lo, Frame::Inertial>,
-                    SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>>>
-      S(used_for_size);
-  assign_unique_values_to_tensor(make_not_null(&S));
+  const auto S = make_with_random_values<
+      Tensor<DataType, Symmetry<2, 1>,
+             index_list<SpatialIndex<dim, UpLo::Lo, Frame::Inertial>,
+                        SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>>>>(
+      generator, distribution, used_for_size);
 
   // \f$L_{ia} = S_{ia}\f$
   Tensor<DataType, Symmetry<2, 1>,
@@ -153,7 +124,6 @@ void test_lhs(const DataType& used_for_size) noexcept {
 
   for (size_t a = 0; a < dim + 1; a++) {
     for (size_t i = 0; i < dim; i++) {
-      // std::cout << "(a, i) : (" << a << ", " << i << ")" << std::endl;
       CHECK(Lai_from_R_ai.get(a, i + 1) == R.get(a, i));
       CHECK(Lia_from_R_ai.get(i + 1, a) == R.get(a, i));
       CHECK(Lia_from_S_ia.get(i + 1, a) == S.get(i, a));
@@ -162,24 +132,22 @@ void test_lhs(const DataType& used_for_size) noexcept {
   }
 }
 
-// \brief Test the outer product of a rank 0, rank 1, and rank 2 tensor is
-// correctly evaluated
+// \brief Test evaluation of rank 2 tensors where generic spatial indices are
+// used for RHS and LHS spacetime indices
 //
-// \details
-// The outer product cases tested are permutations of the form:
-// - \f$L^{a}{}_{ib} = R * S^{a} * T_{bi}\f$
-//
-// Each case represents an ordering for the operands and the LHS indices.
-//
-// \tparam DataType the type of data being stored in the product operands
-template <typename DataType>
-void test_both(const DataType& used_for_size) noexcept {
+// \tparam DataType the type of data being stored in the expression operands
+template <typename DataType, typename Generator>
+void test_rhs_and_lhs_rank2(
+    const DataType& used_for_size,
+    const gsl::not_null<Generator*> generator) noexcept {
+  std::uniform_real_distribution<> distribution(0.1, 1.0);
   constexpr size_t dim = 3;
-  Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>,
-                    SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>>>
-      R(used_for_size);
-  assign_unique_values_to_tensor(make_not_null(&R));
+
+  const auto R = make_with_random_values<
+      Tensor<DataType, Symmetry<2, 1>,
+             index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>,
+                        SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>>>>(
+      generator, distribution, used_for_size);
 
   // \f$L_{ai} = R_{ai}\f$
   // Use explicit type (vs auto) for LHS Tensor so the compiler checks the
@@ -217,7 +185,6 @@ void test_both(const DataType& used_for_size) noexcept {
 
   for (size_t a = 0; a < dim + 1; a++) {
     for (size_t i = 0; i < dim; i++) {
-      // std::cout << "(a, i) : (" << a << ", " << i << ")" << std::endl;
       CHECK(Lai_from_R_ai.get(a, i + 1) == R.get(a, i + 1));
       CHECK(Lia_from_R_ai.get(i + 1, a) == R.get(a, i + 1));
       CHECK(Lai_from_R_ia.get(a, i + 1) == R.get(i + 1, a));
@@ -226,26 +193,24 @@ void test_both(const DataType& used_for_size) noexcept {
   }
 }
 
-// \brief Test the outer product of a rank 0, rank 1, and rank 2 tensor is
-// correctly evaluated
+// \brief Test evaluation of rank 4 tensors where generic spatial indices are
+// used for RHS and LHS spacetime indices
 //
-// \details
-// The outer product cases tested are permutations of the form:
-// - \f$L^{a}{}_{ib} = R * S^{a} * T_{bi}\f$
-//
-// Each case represents an ordering for the operands and the LHS indices.
-//
-// \tparam DataType the type of data being stored in the product operands
-template <typename DataType>
-void test_rank4(const DataType& used_for_size) noexcept {
+// \tparam DataType the type of data being stored in the expression operands
+template <typename DataType, typename Generator>
+void test_rhs_and_lhs_rank4(
+    const DataType& used_for_size,
+    const gsl::not_null<Generator*> generator) noexcept {
+  std::uniform_real_distribution<> distribution(0.1, 1.0);
   constexpr size_t dim = 3;
-  Tensor<DataType, Symmetry<3, 2, 1, 2>,
-         index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Grid>,
-                    SpacetimeIndex<dim, UpLo::Lo, Frame::Grid>,
-                    SpatialIndex<dim, UpLo::Lo, Frame::Grid>,
-                    SpacetimeIndex<dim, UpLo::Lo, Frame::Grid>>>
-      R(used_for_size);
-  assign_unique_values_to_tensor(make_not_null(&R));
+
+  const auto R = make_with_random_values<
+      Tensor<DataType, Symmetry<3, 2, 1, 2>,
+             index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Grid>,
+                        SpacetimeIndex<dim, UpLo::Lo, Frame::Grid>,
+                        SpatialIndex<dim, UpLo::Lo, Frame::Grid>,
+                        SpacetimeIndex<dim, UpLo::Lo, Frame::Grid>>>>(
+      generator, distribution, used_for_size);
 
   // \f$L_{ai} = R_{ai}\f$
   // Use explicit type (vs auto) for LHS Tensor so the compiler checks the
@@ -272,16 +237,22 @@ void test_rank4(const DataType& used_for_size) noexcept {
 }
 
 template <typename DataType>
-void test(const DataType& used_for_size) noexcept {
-  test_rhs(used_for_size);
-  test_lhs(used_for_size);
-  test_both(used_for_size);
-  test_rank4(used_for_size);
+void test_evaluate_spatial_spacetime_index(
+    const DataType& used_for_size) noexcept {
+  MAKE_GENERATOR(generator);
+
+  test_rhs(used_for_size, make_not_null(&generator));
+  test_lhs(used_for_size, make_not_null(&generator));
+  test_rhs_and_lhs_rank2(used_for_size, make_not_null(&generator));
+  test_rhs_and_lhs_rank4(used_for_size, make_not_null(&generator));
 }
 }  // namespace
 
-SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.SpatialSpacetimeIndex",
-                  "[DataStructures][Unit]") {
-  test(std::numeric_limits<double>::signaling_NaN());
-  test(DataVector(5, std::numeric_limits<double>::signaling_NaN()));
+SPECTRE_TEST_CASE(
+    "Unit.DataStructures.Tensor.Expression.EvaluateSpatialSpacetimeIndex",
+    "[DataStructures][Unit]") {
+  test_evaluate_spatial_spacetime_index(
+      std::numeric_limits<double>::signaling_NaN());
+  test_evaluate_spatial_spacetime_index(
+      DataVector(5, std::numeric_limits<double>::signaling_NaN()));
 }

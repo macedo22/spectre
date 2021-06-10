@@ -7,6 +7,7 @@ set(LIBRARY_SOURCES
   Test_AddSubtract.cpp
   Test_Contract.cpp
   Test_Evaluate.cpp
+  Test_EvaluateSpatialSpacetimeIndex.cpp
   Test_MixedOperations.cpp
   Test_Product.cpp
   Test_ProductHighRankIntermediate.cpp
