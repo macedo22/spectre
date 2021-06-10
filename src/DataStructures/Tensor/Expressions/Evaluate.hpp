@@ -46,8 +46,6 @@ SPECTRE_ALWAYS_INLINE constexpr std::array<size_t, NumIndices>
 compute_index_transformation(
     const std::array<size_t, NumIndices>& lhs_tensorindices,
     const std::array<size_t, NumIndices>& rhs_tensorindices) noexcept {
-  // constexpr std::array<size_t, NumIndices> rhs_tensorindices = {
-  //     {Args::value...}};
   std::array<size_t, NumIndices> index_transformation{};
   for (size_t i = 0; i < NumIndices; i++) {
     gsl::at(index_transformation, i) = static_cast<size_t>(std::distance(
@@ -70,52 +68,39 @@ compute_rhs_multi_index(
   return rhs_multi_index;
 }
 
-// template <typename LhsTensorIndexTypeList>
-// struct PositionsOfLhsSpatialSpacetimeIndices;
+template <typename LhsIndexList, typename RhsIndexList,
+          typename LhsTensorIndexList, typename RhsTensorIndexList,
+          typename Element>
+struct EvaluateIndexCheckHelper {
+  using lhs_index =
+      tmpl::at<LhsIndexList, tmpl::index_of<LhsTensorIndexList, Element>>;
+  using rhs_index =
+      tmpl::at<RhsIndexList, tmpl::index_of<RhsTensorIndexList, Element>>;
 
-// template <typename... LhsTensorIndexTypes>
-// struct
-// PositionsOfLhsSpatialSpacetimeIndices<index_list<LhsTensorIndexTypes...>>{
-// constexpr auto apply(
-//     const std::array<size_t, sizeof...(LhsTensorIndexTypes)>& tensorindices)
-//     noexcept {
-//   constexpr auto indices =
-//       {{LhsTensorIndexTypes::index_type == IndexType::Spacetime}...};
-//   // constexpr std::array<bool, sizeof...(LhsTensorIndexTypes)>
-//   lhs_tensorindextypes_are_spacetime =
-//   //     {{LhsTensorIndexTypes::index_type == IndexType::Spacetime}...};
-//   // size_t num_spatial_spacetime_indices = 0;
-//   // for (int i = 0; i < sizeof...(LhsTensorIndexTypes); i++) {
-//   //   num_spatial_spacetime_indices +=
-//   // }
-// }
-// };
+  using type = std::integral_constant<
+      bool, lhs_index::ul == rhs_index::ul and
+                std::is_same_v<typename lhs_index::Frame,
+                               typename rhs_index::Frame> and
+                ((lhs_index::index_type == rhs_index::index_type and
+                  lhs_index::dim == rhs_index::dim) or
+                 (lhs_index::index_type == IndexType::Spacetime and
+                  lhs_index::dim == rhs_index::dim + 1) or
+                 (rhs_index::index_type == IndexType::Spacetime and
+                  lhs_index::dim + 1 == rhs_index::dim))>;
+};
 
-// // TODO: try to make this an alias instead of a struct
-// template <typename State, typename Element, typename Iteration,
-//           typename TensorIndexList>
-// struct spatial_spacetime_index_positions_impl {
-//   using type = typename std::conditional<
-//       Element::index_type == IndexType::Spacetime and not
-//       tmpl::at<TensorIndexList, Iteration>::is_spacetime,
-//       tmpl::push_back<State, Iteration>, State>::type;
-// };
-
-// template <typename TensorIndexTypeList, typename TensorIndexList>
-// using spatial_spacetime_index_positions = tmpl::enumerated_fold<
-//     TensorIndexTypeList, tmpl::list<>,
-//     spatial_spacetime_index_positions_impl<tmpl::_state, tmpl::_element,
-//     tmpl::_3, tmpl::pin<TensorIndexList>>>;
-
+// Check to make sure that the tensor indices being added are of the same type,
+// dimensionality and in the same frame
+template <typename LhsIndexList, typename RhsIndexList,
+          typename LhsTensorIndexList, typename RhsTensorIndexList>
+using EvaluateIndexCheck =
+    tmpl::fold<LhsTensorIndexList, tmpl::bool_<true>,
+               tmpl::and_<tmpl::_state,
+                          EvaluateIndexCheckHelper<
+                              tmpl::pin<LhsIndexList>, tmpl::pin<RhsIndexList>,
+                              tmpl::pin<LhsTensorIndexList>,
+                              tmpl::pin<RhsTensorIndexList>, tmpl::_element>>>;
 }  // namespace detail
-
-// template <typename TensorIndexTypeList, typename TensorIndexList>
-// constexpr auto get_spatial_spacetime_index_positions() noexcept{
-//   return
-//   make_array_from_list<
-//       detail::spatial_spacetime_index_positions<TensorIndexTypeList,
-//   TensorIndexList>>();
-// }
 
 /*!
  * \ingroup TensorExpressionsGroup
@@ -154,9 +139,6 @@ compute_rhs_multi_index(
  * @param lhs_tensor pointer to the resultant LHS Tensor to fill
  * @param rhs_tensorexpression the RHS TensorExpression to be evaluated
  */
-// template <auto&... LhsTensorIndices, typename X, typename LhsSymmetry,
-//           typename LhsIndexList, typename RhsTE,
-//           Requires<std::is_base_of_v<Expression, RhsTE>> = nullptr>
 template <auto&... LhsTensorIndices, typename X, typename LhsSymmetry,
           typename LhsIndexList, typename Derived, typename RhsSymmetry,
           typename RhsIndexList, typename... RhsTensorIndices>
@@ -165,11 +147,9 @@ void evaluate(
     const TensorExpression<Derived, X, RhsSymmetry, RhsIndexList,
                            tmpl::list<RhsTensorIndices...>>&
         rhs_tensorexpression) {
-  // std::cout << "\n=== EVALUATE ===" << std::endl;
   using lhs_tensorindex_list =
       tmpl::list<std::decay_t<decltype(LhsTensorIndices)>...>;
-  using rhs_tensorindex_list =
-      tmpl::list<RhsTensorIndices...>;  // typename RhsTE::args_list;
+  using rhs_tensorindex_list = tmpl::list<RhsTensorIndices...>;
   static_assert(
       tmpl::equal_members<lhs_tensorindex_list, rhs_tensorindex_list>::value,
       "The generic indices on the LHS of a tensor equation (that is, the "
@@ -187,45 +167,21 @@ void evaluate(
           {{std::decay_t<decltype(LhsTensorIndices)>::value...}}),
       "Cannot evaluate a tensor expression to a LHS tensor with generic "
       "indices that would be contracted, e.g. evaluate<ti_A, ti_a>.");
-  // using rhs_symmetry = RhsSymmetry;//typename RhsTE::symmetry;
-  // using rhs_tensorindextype_list = RhsIndexList;//typename RhsTE::index_list;
-
-  // Stores (potentially reordered) symmetry and indices expected for the LHS
-  // tensor, with index order specified by LhsTensorIndices
-  // using lhs_tensor_symm_and_indices =
-  //     LhsTensorSymmAndIndices<rhs_tensorindex_list, lhs_tensorindex_list,
-  //                             rhs_symmetry, rhs_tensorindextype_list>;
-  // Instead of simply checking that the LHS Tensor type is correct, individual
-  // checks for the data type and index list are carried out because it provides
-  // more fine-grained feedback and because the provided LHS symmetry may differ
-  // from the symmetry determined by the order of operations in the RHS
-  // expression.
-  // static_assert(
-  //     std::is_same_v<X, typename RhsTE::type>,
-  //     "The data type stored by the LHS tensor does not match the data type "
-  //     "stored by the RHS expression.");
-  // static_assert(
-  //     std::is_same_v<
-  //         LhsIndexList,
-  //         typename lhs_tensor_symm_and_indices::tensorindextype_list>,
-  //     "The index list of the LHS tensor does not match the index list of the
-  //     " "evaluated RHS expression.");
+  static_assert(
+      detail::EvaluateIndexCheck<LhsIndexList, RhsIndexList,
+                                 lhs_tensorindex_list,
+                                 rhs_tensorindex_list>::value,
+      "The index list of the LHS tensor does not match the index list of the "
+      "evaluated RHS expression.");
 
   using lhs_tensor_type = typename std::decay_t<decltype(*lhs_tensor)>;
 
   constexpr auto lhs_spatial_spacetime_index_positions =
       get_spatial_spacetime_index_positions<LhsIndexList,
                                             lhs_tensorindex_list>();
-
-  // std::cout << "lhs_spatial_spacetime_index_positions : " <<
-  // lhs_spatial_spacetime_index_positions << std::endl;
-
   constexpr auto rhs_spatial_spacetime_index_positions =
       get_spatial_spacetime_index_positions<RhsIndexList,
                                             rhs_tensorindex_list>();
-
-  // std::cout << "rhs_spatial_spacetime_index_positions : " <<
-  // rhs_spatial_spacetime_index_positions << std::endl;
 
   for (size_t i = 0; i < lhs_tensor_type::size(); i++) {
     if constexpr (lhs_spatial_spacetime_index_positions.size() == 0 and
