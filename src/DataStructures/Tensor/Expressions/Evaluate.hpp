@@ -167,12 +167,24 @@ void evaluate(
           {{std::decay_t<decltype(LhsTensorIndices)>::value...}}),
       "Cannot evaluate a tensor expression to a LHS tensor with generic "
       "indices that would be contracted, e.g. evaluate<ti_A, ti_a>.");
+  // EvaluateIndexCheck does also check that valence (Up/Lo) of indices that
+  // correspond in the RHS and LHS tensors are equal, but the assertion message
+  // below does not mention this because a mismtach in valence should have been
+  // caught due to the combination of (i) the Tensor::operator() assertion
+  // checking that generic indices' valences match the tensor's indices'
+  // valences and (ii) the above assertion that RHS and LHS generic indices
+  // match
   static_assert(
       detail::EvaluateIndexCheck<LhsIndexList, RhsIndexList,
                                  lhs_tensorindex_list,
                                  rhs_tensorindex_list>::value,
-      "The index list of the LHS tensor does not match the index list of the "
-      "evaluated RHS expression.");
+      "At least one index of the tensor evaluated from the RHS expression "
+      "cannot be evaluated to its corresponding index in the LHS tensor. This "
+      "is due to a difference in number of spatial dimensions or Frame type "
+      "between the index on the RHS and LHS. "
+      "e.g. evaluate<ti_a, ti_b>(L, R(ti_b, ti_a)); where R's first "
+      "index has 2 spatial dimensions but L's second index has 3 spatial "
+      "dimensions. Check RHS and LHS indices that use the same generic index.");
 
   using lhs_tensor_type = typename std::decay_t<decltype(*lhs_tensor)>;
 
