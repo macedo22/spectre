@@ -68,14 +68,37 @@ compute_rhs_multi_index(
   return rhs_multi_index;
 }
 
+/// \brief Helper struct for checking that a RHS tensor's index can be evaluated
+/// to its corresponding index in the LHS tensor
+///
+/// \details
+/// A RHS index's corresponding LHS index uses the same generic index, such as
+/// `ti_a`. For it to be possible to evaluate a RHS index to its corresponding
+/// LHS index, this checks that the following is true for the index on both
+/// sides:
+/// - has the same valence (`UpLo`)
+/// - has the same `Frame` type
+/// - has the same number of spatial dimensions (allowing for expressions that
+///   use generic spatial indices for spacetime indices on either side)
+///
+/// \tparam LhsIndexList the LHS tensor's \ref SpacetimeIndex "TensorIndexType"
+/// list
+/// \tparam RhsIndexList the RHS tensor's \ref SpacetimeIndex "TensorIndexType"
+/// list
+/// \tparam LhsTensorIndexList the LHS tensor's generic index list
+/// \tparam RhsTensorIndexList the RHS tensor's generic index list
+/// \tparam CurrentLhsTensorIndex the current generic index of the LHS tensor
+/// that is being checked, e.g. the type of `ti_a`
 template <typename LhsIndexList, typename RhsIndexList,
           typename LhsTensorIndexList, typename RhsTensorIndexList,
-          typename Element>
+          typename CurrentLhsTensorIndex>
 struct EvaluateIndexCheckHelper {
   using lhs_index =
-      tmpl::at<LhsIndexList, tmpl::index_of<LhsTensorIndexList, Element>>;
+      tmpl::at<LhsIndexList,
+               tmpl::index_of<LhsTensorIndexList, CurrentLhsTensorIndex>>;
   using rhs_index =
-      tmpl::at<RhsIndexList, tmpl::index_of<RhsTensorIndexList, Element>>;
+      tmpl::at<RhsIndexList,
+               tmpl::index_of<RhsTensorIndexList, CurrentLhsTensorIndex>>;
 
   using type = std::integral_constant<
       bool, lhs_index::ul == rhs_index::ul and
@@ -89,8 +112,19 @@ struct EvaluateIndexCheckHelper {
                   lhs_index::dim + 1 == rhs_index::dim))>;
 };
 
-// Check to make sure that the tensor indices being added are of the same type,
-// dimensionality and in the same frame
+/// \brief Check that a RHS tensor's indices can be evaluated to their
+/// corresponding indices in the LHS tensor
+///
+/// \details
+/// For more details, see `EvaluateIndexCheckHelper`, which performs the check
+/// for each index one at a time.
+///
+/// \tparam LhsIndexList the LHS tensor's \ref SpacetimeIndex "TensorIndexType"
+/// list
+/// \tparam RhsIndexList the RHS tensor's \ref SpacetimeIndex "TensorIndexType"
+/// list
+/// \tparam LhsTensorIndexList the LHS tensor's generic index list
+/// \tparam RhsTensorIndexList the RHS tensor's generic index list
 template <typename LhsIndexList, typename RhsIndexList,
           typename LhsTensorIndexList, typename RhsTensorIndexList>
 using EvaluateIndexCheck =
