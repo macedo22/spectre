@@ -256,7 +256,7 @@ void evaluate(
           {{std::decay_t<decltype(LhsTensorIndices)>::value...}}),
       "Cannot evaluate a tensor expression to a LHS tensor with generic "
       "indices that would be contracted, e.g. evaluate<ti_A, ti_a>.");
-  // EvaluateIndexCheck does also check that valence (Up/Lo) of indices that
+  // `EvaluateIndexCheck` does also check that valence (Up/Lo) of indices that
   // correspond in the RHS and LHS tensors are equal, but the assertion message
   // below does not mention this because a mismtach in valence should have been
   // caught due to the combination of (i) the Tensor::operator() assertion
@@ -285,46 +285,10 @@ void evaluate(
                                             rhs_tensorindex_list>();
 
   for (size_t i = 0; i < lhs_tensor_type::size(); i++) {
-    if constexpr (lhs_spatial_spacetime_index_positions.size() == 0 and
-                  rhs_spatial_spacetime_index_positions.size() == 0) {
-      // std::cout << "--NEITHER has spatial spacetime indices --" << std::endl;
-      (*lhs_tensor)[i] =
-          (~rhs_tensorexpression)
-              .template get<std::decay_t<decltype(LhsTensorIndices)>...>(
-                  lhs_tensor_type::structure::get_canonical_tensor_index(i));
-    } else if constexpr (lhs_spatial_spacetime_index_positions.size() != 0 and
-                         rhs_spatial_spacetime_index_positions.size() != 0) {
-      // std::cout << "--BOTH have spatial spacetime indices --" << std::endl;
-      auto lhs_multi_index =
-          lhs_tensor_type::structure::get_canonical_tensor_index(i);
-      if (alg::none_of(lhs_spatial_spacetime_index_positions,
-                       [lhs_multi_index](size_t j) {
-                         return lhs_multi_index[j] == 0;
-                       })) {
-        // std::cout << "lhs_multi_index before replacing: " << lhs_multi_index
-        // << std::endl;
-        for (size_t j = 0; j < lhs_spatial_spacetime_index_positions.size();
-             j++) {
-          lhs_multi_index[lhs_spatial_spacetime_index_positions[j]] -= 1;
-        }
-        // std::cout << "lhs_multi_index after replacing: " << lhs_multi_index
-        // << std::endl;
-        auto rhs_multi_index = detail::compute_rhs_multi_index(
-            lhs_multi_index,
-            detail::compute_index_transformation<sizeof...(RhsTensorIndices)>(
-                {{std::decay_t<decltype(LhsTensorIndices)>::value...}},
-                {{RhsTensorIndices::value...}}));
-        for (size_t j = 0; j < rhs_spatial_spacetime_index_positions.size();
-             j++) {
-          rhs_multi_index[rhs_spatial_spacetime_index_positions[j]] += 1;
-        }
-
-        (*lhs_tensor)[i] =
-            (~rhs_tensorexpression)
-                .template get<RhsTensorIndices...>(rhs_multi_index);
-      }
-    } else if constexpr (rhs_spatial_spacetime_index_positions.size() != 0) {
-      // std::cout << "--RHS has spatial spacetime indices --" << std::endl;
+    if constexpr (lhs_spatial_spacetime_index_positions.size() == 0) {
+      // either:
+      // (i) RHS nor LHS uses a generic spatial index for a spacetime index, or
+      // (ii) only RHS uses a generic spatial index for a spacetime index
       auto rhs_multi_index = detail::compute_rhs_multi_index(
           lhs_tensor_type::structure::get_canonical_tensor_index(i),
           detail::compute_index_transformation<sizeof...(RhsTensorIndices)>(
@@ -339,23 +303,24 @@ void evaluate(
           (~rhs_tensorexpression)
               .template get<RhsTensorIndices...>(rhs_multi_index);
 
-    } else {  // if constexpr (lhs_spatial_spacetime_index_positions.size() !=
-              // 0) {
-      // std::cout << "--LHS has spatial spacetime indices --" << std::endl;
+    } else {
+      // either:
+      // (i) only LHS uses a generic spatial index for a spacetime index
+      // (ii) both RHS and LHS use a generic spatial index for a spacetime index
+      // only LHS uses a generic spatial index for a spacetime index
       auto lhs_multi_index =
           lhs_tensor_type::structure::get_canonical_tensor_index(i);
+      // Only evaluate the component at `lhs_multi_index` if it does not contain
+      // the time index (0) for any spacetime indices for which a generic
+      // spatial index is being used
       if (alg::none_of(lhs_spatial_spacetime_index_positions,
                        [lhs_multi_index](size_t j) {
                          return lhs_multi_index[j] == 0;
                        })) {
-        // std::cout << "lhs_multi_index before replacing: " << lhs_multi_index
-        // << std::endl;
         for (size_t j = 0; j < lhs_spatial_spacetime_index_positions.size();
              j++) {
           lhs_multi_index[lhs_spatial_spacetime_index_positions[j]] -= 1;
         }
-        // std::cout << "lhs_multi_index after replacing: " << lhs_multi_index
-        // << std::endl;
         auto rhs_multi_index = detail::compute_rhs_multi_index(
             lhs_multi_index,
             detail::compute_index_transformation<sizeof...(RhsTensorIndices)>(
@@ -402,6 +367,10 @@ void evaluate(
  * \metareturns Tensor
  *
  * This represents evaluating: \f$L_{ba} = R_{ab} + S_{ab}\f$
+ *
+ * Note: If a RHS tensor index is spacetime but a generic spatial index is
+ * provided for it, its corresponding index in the LHS tensor type will be a
+ * spatial index with the same valence, frame, and number of spatial dimensions.
  *
  * Note: `LhsTensorIndices` must be passed by reference because non-type
  * template parameters cannot be class types until C++20.
