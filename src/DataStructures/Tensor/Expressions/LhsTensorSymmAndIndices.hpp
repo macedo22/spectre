@@ -77,7 +77,7 @@ struct LhsTensorSymmAndIndices<
               rhs_symmetry, rhs_spatial_spacetime_index_positions);
 
   // Compute index list of RHS after spacetime indices using generic spatial
-  // indices are swapped for spatial indices
+  // indices are made nonsymmetric to other indices
   using rhs_spatial_spacetime_tensorindextype_list =
       replace_spatial_spacetime_indices<RhsTensorIndexTypeList,
                                         rhs_spatial_spacetime_index_positions_>;
