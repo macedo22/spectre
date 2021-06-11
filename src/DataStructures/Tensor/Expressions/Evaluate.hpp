@@ -41,6 +41,35 @@ constexpr bool contains_indices_to_contract(
   }
 }
 
+/// \brief Computes a transformation from the LHS tensor's multi-indices to
+/// the equivalent RHS tensor's multi-indices, according to the differences in
+/// the orderings of their generic indices
+///
+/// \details
+/// The elements of the transformation are the positions of the RHS generic
+/// indices in the LHS generic indices. Put another way, for some `i`,
+/// `rhs_tensorindices[i] == lhs_tensorindices[index_transformation[i]]`.
+///
+/// Here is an example of what the algorithm does:
+///
+/// Tensor equation: \f$L_{cab} = R_{abc}\f$
+/// `lhs_tensorindices`:
+/// \code
+/// {2, 0, 1} // i.e. {c, a, b}
+/// \endcode
+/// `rhs_tensorindices`:
+/// \code
+/// {0, 1, 2} // i.e. {a, b, c}
+/// \endcode
+/// returned `index_transformation`:
+/// \code
+/// {1, 2, 0} // positions of RHS indices {c, a, b} in LHS indices {a, b, c}
+/// \endcode
+///
+/// \tparam NumIndices the number of indices in the tensors
+/// \param lhs_tensorindices the TensorIndexs of the LHS tensor
+/// \return a transformation from the LHS tensor's multi-indices to the
+/// equivalent RHS tensor's multi-indices
 template <size_t NumIndices>
 SPECTRE_ALWAYS_INLINE constexpr std::array<size_t, NumIndices>
 compute_index_transformation(
@@ -55,6 +84,32 @@ compute_index_transformation(
   return index_transformation;
 }
 
+/// \brief Computes the RHS tensor multi-index that is equivalent to a given
+/// LHS tensor multi-index, according to the differences in the orderings of
+/// their generic indices
+///
+/// \details
+/// Here is an example of what the algorithm does:
+///
+/// Tensor equation: \f$L_{cab} = R_{abc}\f$
+/// `index_transformation`:
+/// \code
+/// {1, 2, 0} // positions of RHS indices {c, a, b} in LHS indices {a, b, c}
+/// \endcode
+/// `lhs_multi_index`:
+/// \code
+/// {3, 4, 5} // i.e. c = 3, a = 4, b = 5
+/// \endcode
+/// returned equivalent `rhs_multi_index`:
+/// \code
+/// {4, 5, 3} // i.e. a = 4, b = 5, c = 3
+/// \endcode
+///
+/// \tparam NumIndices the number of indices in the tensors
+/// \param lhs_multi_index the multi-index of the LHS tensor
+/// \param index_transformation the list of the positions of the RHS indices in
+/// the LHS indices
+/// \return the RHS tensor multi-index that is equivalent to `lhs_tensor_index`
 template <size_t NumIndices>
 SPECTRE_ALWAYS_INLINE constexpr std::array<size_t, NumIndices>
 compute_rhs_multi_index(
