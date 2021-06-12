@@ -715,8 +715,7 @@ void test_spatial_spacetime_index(const DataType& used_for_size) noexcept {
   }
   CHECK_ITERABLE_APPROX(G_contracted_2.get(), expected_G_sum_2);
 
-  // Contract two (spatial, spacetime) pairs of indices using generic spatial
-  // indices
+  // Contract two (spatial, spacetime) pairs of indices
   const Tensor<DataType> G_contracted_3 =
       TensorExpressions::evaluate(G(ti_I, ti_j, ti_i, ti_J));
 

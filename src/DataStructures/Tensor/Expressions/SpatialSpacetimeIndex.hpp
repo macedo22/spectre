@@ -11,10 +11,11 @@
 
 /// \file
 /// Defines functions and metafunctions used for helping evaluate tensor
-/// expression equations where generic spatial indices are used for spacetime0
+/// expression equations where generic spatial indices are used for spacetime
 /// indices
 
 namespace TensorExpressions {
+namespace detail {
 template <typename State, typename Element, typename Iteration,
           typename TensorIndexList>
 struct spatial_spacetime_index_positions_impl {
@@ -110,4 +111,5 @@ template <typename TensorIndexTypeList, typename SpatialSpacetimeIndexPositions>
 using replace_spatial_spacetime_indices = tmpl::fold<
     SpatialSpacetimeIndexPositions, TensorIndexTypeList,
     replace_spatial_spacetime_indices_helper<tmpl::_state, tmpl::_element>>;
+}  // namespace detail
 }  // namespace TensorExpressions

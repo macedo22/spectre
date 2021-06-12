@@ -29,6 +29,8 @@ using indices_contractible = std::integral_constant<
     I1::ul != I2::ul and
         std::is_same_v<typename I1::Frame, typename I2::Frame> and
         ((I1::index_type == I2::index_type and I1::dim == I2::dim) or
+         // If one index is spacetime and the other is spatial, the indices can
+         // be contracted if they have the same number of spatial dimensions
          (I1::index_type == IndexType::Spacetime and I1::dim == I2::dim + 1) or
          (I2::index_type == IndexType::Spacetime and I1::dim + 1 == I2::dim))>;
 

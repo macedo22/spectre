@@ -236,7 +236,7 @@ using change_index_up_lo = Tensor_detail::TensorIndexType<
 
 /// \ingroup TensorGroup
 /// Change the \ref SpacetimeIndex "TensorIndexType" to be spacetime
-/// if it's spatial and vice-versa
+/// if it's spatial and vice versa
 ///
 /// \tparam Index the \ref SpacetimeIndex "TensorIndexType" to change
 template <typename Index>

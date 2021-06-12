@@ -1128,8 +1128,8 @@ void test_three_term_inner_outer_product(
   }
 }
 
-// \brief Test the products of tensors where generic indices are used for
-// spacetime indices
+// \brief Test the products of tensors where generic spatial indices are used
+// for spacetime indices
 //
 // \details
 // The product cases tested are:
@@ -1247,8 +1247,8 @@ void test_products(const DataType& used_for_size) noexcept {
   test_two_term_inner_outer_product(used_for_size);
   test_three_term_inner_outer_product(used_for_size);
 
-  // Test product expressions containing spacetime indices with generic spatial
-  // indices
+  // Test product expressions where generic spatial indices are used for
+  // spacetime indices
   test_spatial_spacetime_index(used_for_size);
 }
 }  // namespace

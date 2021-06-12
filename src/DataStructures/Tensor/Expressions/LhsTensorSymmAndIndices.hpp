@@ -25,9 +25,9 @@ namespace TensorExpressions {
  * elements of the desired LHS Tensor`s ::Symmetry and typelist of
  * \ref SpacetimeIndex "TensorIndexType"s.
  *
- * Note: If a RHS tensor index is spacetime but a generic spatial index is
- * provided for it, its corresponding index in the LHS tensor type will be a
- * spatial index with the same valence, frame, and number of spatial dimensions.
+ * Note: If a generic spatial index is used for a spacetime index in the RHS
+ * tensor, its corresponding index in the LHS tensor type will be a spatial
+ * index with the same valence, frame, and number of spatial dimensions.
  *
  * @tparam RhsTensorIndexList the typelist of TensorIndex of the RHS
  * TensorExpression
@@ -64,8 +64,8 @@ struct LhsTensorSymmAndIndices<
   static constexpr std::array<std::int32_t, NumIndices> rhs_symmetry = {
       {tmpl::at_c<RhsSymmetry, Ints>::value...}};
   using rhs_spatial_spacetime_index_positions_ =
-      spatial_spacetime_index_positions<RhsTensorIndexTypeList,
-                                        RhsTensorIndexList>;
+      detail::spatial_spacetime_index_positions<RhsTensorIndexTypeList,
+                                                RhsTensorIndexList>;
   using make_list_type = std::conditional_t<
       tmpl::size<rhs_spatial_spacetime_index_positions_>::value == 0, size_t,
       rhs_spatial_spacetime_index_positions_>;
@@ -73,14 +73,14 @@ struct LhsTensorSymmAndIndices<
       make_array_from_list<make_list_type>();
   static constexpr std::array<std::int32_t, NumIndices>
       rhs_spatial_spacetime_index_symmetry =
-          get_spatial_spacetime_index_symmetry(
+          detail::get_spatial_spacetime_index_symmetry(
               rhs_symmetry, rhs_spatial_spacetime_index_positions);
 
   // Compute index list of RHS after spacetime indices using generic spatial
   // indices are made nonsymmetric to other indices
   using rhs_spatial_spacetime_tensorindextype_list =
-      replace_spatial_spacetime_indices<RhsTensorIndexTypeList,
-                                        rhs_spatial_spacetime_index_positions_>;
+      detail::replace_spatial_spacetime_indices<
+          RhsTensorIndexTypeList, rhs_spatial_spacetime_index_positions_>;
 
   // Desired LHS Tensor's Symmetry, typelist of TensorIndexTypes, and Structure
   using symmetry =
