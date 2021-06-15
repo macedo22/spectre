@@ -7,6 +7,7 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include <type_traits>
 
 #include "DataStructures/Tensor/Expressions/LhsTensorSymmAndIndices.hpp"
@@ -14,9 +15,9 @@
 #include "DataStructures/Tensor/IndexType.hpp"
 #include "DataStructures/Tensor/Structure.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
-#include "Utilities/ConstantExpressions.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/Requires.hpp"
+#include "Utilities/TMPL.hpp"
 
 namespace TensorExpressions {
 
@@ -135,6 +136,7 @@ using EvaluateIndexCheck =
 ///
 /// \tparam NumIndices the number of indices in the tensors
 /// \param lhs_tensorindices the TensorIndexs of the LHS tensor
+/// \param rhs_tensorindices the TensorIndexs of the RHS tensor
 /// \return a transformation from the LHS tensor's multi-indices to the
 /// equivalent RHS tensor's multi-indices
 template <size_t NumIndices>
@@ -299,7 +301,8 @@ void evaluate(
               {{RhsTensorIndices::value...}}));
       for (size_t j = 0; j < rhs_spatial_spacetime_index_positions.size();
            j++) {
-        rhs_multi_index[rhs_spatial_spacetime_index_positions[j]] += 1;
+        gsl::at(rhs_multi_index,
+                gsl::at(rhs_spatial_spacetime_index_positions, j)) += 1;
       }
 
       (*lhs_tensor)[i] =
@@ -318,11 +321,12 @@ void evaluate(
       // spatial index is being used
       if (alg::none_of(lhs_spatial_spacetime_index_positions,
                        [lhs_multi_index](size_t j) {
-                         return lhs_multi_index[j] == 0;
+                         return gsl::at(lhs_multi_index, j) == 0;
                        })) {
         for (size_t j = 0; j < lhs_spatial_spacetime_index_positions.size();
              j++) {
-          lhs_multi_index[lhs_spatial_spacetime_index_positions[j]] -= 1;
+          gsl::at(lhs_multi_index,
+                  gsl::at(lhs_spatial_spacetime_index_positions, j)) -= 1;
         }
         auto rhs_multi_index = compute_rhs_multi_index(
             lhs_multi_index,
@@ -331,7 +335,8 @@ void evaluate(
                 {{RhsTensorIndices::value...}}));
         for (size_t j = 0; j < rhs_spatial_spacetime_index_positions.size();
              j++) {
-          rhs_multi_index[rhs_spatial_spacetime_index_positions[j]] += 1;
+          gsl::at(rhs_multi_index,
+                  gsl::at(rhs_spatial_spacetime_index_positions, j)) += 1;
         }
 
         (*lhs_tensor)[i] =

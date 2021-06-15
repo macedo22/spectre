@@ -6,11 +6,12 @@
 #include <cstddef>
 #include <random>
 
-#include "DataStructures/Tensor/Expressions/Evaluate.hpp"
-#include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
+#include "DataStructures/Tensor/IndexType.hpp"
+#include "DataStructures/Tensor/Symmetry.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
+#include "Utilities/Gsl.hpp"
 #include "Utilities/MakeWithValue.hpp"
 
 namespace {

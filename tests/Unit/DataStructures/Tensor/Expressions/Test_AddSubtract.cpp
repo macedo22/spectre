@@ -10,9 +10,6 @@
 #include <type_traits>
 
 #include "DataStructures/DataVector.hpp"
-#include "DataStructures/Tensor/Expressions/AddSubtract.hpp"
-#include "DataStructures/Tensor/Expressions/Evaluate.hpp"
-#include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/IndexType.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"

@@ -7,12 +7,13 @@
 #include "DataStructures/Tensor/Symmetry.hpp"
 #include "Utilities/Algorithm.hpp"
 #include "Utilities/ConstantExpressions.hpp"
+#include "Utilities/Gsl.hpp"
 #include "Utilities/TMPL.hpp"
 
 /// \file
-/// Defines functions and metafunctions used for helping evaluate tensor
-/// expression equations where generic spatial indices are used for spacetime
-/// indices
+/// Defines functions and metafunctions used for helping evaluate
+/// TensorExpression equations where generic spatial indices are used for
+/// spacetime indices
 
 namespace TensorExpressions {
 namespace detail {
@@ -89,11 +90,13 @@ get_spatial_spacetime_index_symmetry(
   const std::int32_t max_symm_value =
       static_cast<std::int32_t>(*alg::max_element(symmetry));
   for (size_t i = 0; i < NumIndices; i++) {
-    spatial_spacetime_index_symmetry[i] = symmetry[i];
+    gsl::at(spatial_spacetime_index_symmetry, i) = gsl::at(symmetry, i);
   }
   for (size_t i = 0; i < NumSpatialSpacetimeIndices; i++) {
     spatial_spacetime_index_symmetry[spatial_spacetime_index_positions[i]] +=
         max_symm_value;
+    gsl::at(spatial_spacetime_index_symmetry,
+            gsl::at(spatial_spacetime_index_positions, i)) += max_symm_value;
   }
 
   return spatial_spacetime_index_symmetry;
