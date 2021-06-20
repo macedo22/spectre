@@ -169,13 +169,7 @@ struct WeylElectric : db::SimpleTag {
 };
 
 /*!
- * \brief The magnetic part of the Weyl tensor in vaccum.
- *  \f$B_{ij}\f$ as: \f$ B_{ij} =
- * \left(1/\sqrt{\det\gamma}\right)D_{k}K_{l(i}\gamma_{j)m}\epsilon^{mlk}
- * \f$ where \f$\epsilon^{ijk}\f$ is the spatial Levi-Civita symbol,
- * \f$K_{ij}\f$
- * is the extrinsic curvature, \f$\gamma_{jm} \f$ is the spatial metric,
- * and \f$D_i\$f is spatial covariant derivative.
+ * \brief The magnetic part of the Weyl tensor in vaccum B_{ij}.
  */
 template <size_t Dim, typename Frame, typename DataType>
 struct WeylMagnetic : db::SimpleTag {
