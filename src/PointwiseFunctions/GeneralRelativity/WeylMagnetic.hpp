@@ -29,7 +29,7 @@ namespace gr {
  * \f$ where \f$\epsilon^{ijk}\f$ is the spatial Levi-Civita symbol,
  * \f$K_{ij}\f$
  * is the extrinsic curvature, \f$\g_{jm} \f$ is the spatial metric,
- * and \f$D_i\$f is spatial covariant derivative.
+ * and \f$D_i\f$ is spatial covariant derivative.
  */
 template <size_t SpatialDim, typename Frame, typename DataType>
 tnsr::ii<DataType, SpatialDim, Frame> weyl_magnetic(
@@ -54,7 +54,7 @@ void weyl_magnetic(
  * \f$g^{ij}\f$, i.e. \f$B_{ij} = \g^{ik}\g^{jl}B_{ij}B_{kl}\f$.
  *
  * \note The magnetic part of the Weyl tensor in vacuum is available via
- * gr::weyl_magnetic(). The magnetic part of the Weyl tensor needs additional
+ * `gr::weyl_magnetic()`. The magnetic part of the Weyl tensor needs additional
  * terms for matter.
  */
 template <size_t SpatialDim, typename Frame, typename DataType>
@@ -73,7 +73,8 @@ void weyl_magnetic_scalar(
 
 namespace Tags {
 /// Compute item for the magnetic part of the weyl tensor in vacuum
-/// Computed from the SpatialRicci, ExtrinsicCurvature, and InverseSpatialMetric
+/// Computed from the `SpatialRicci`, `ExtrinsicCurvature`, and
+/// `InverseSpatialMetric`
 ///
 /// Can be retrieved using gr::Tags::WeylMagnetic
 template <size_t SpatialDim, typename Frame, typename DataType>
@@ -95,7 +96,7 @@ struct WeylMagneticCompute : WeylMagnetic<SpatialDim, Frame, DataType>,
   using base = WeylMagnetic<SpatialDim, Frame, DataType>;
 };
 
-/// Can be retrieved using gr::Tags::WeylMagneticScalar
+/// Can be retrieved using gr::Tags::`WeylMagneticScalar`
 template <size_t SpatialDim, typename Frame, typename DataType>
 struct WeylMagneticScalarCompute : WeylMagneticScalar<DataType>,
                                    db::ComputeTag {
