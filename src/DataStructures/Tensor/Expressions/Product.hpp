@@ -13,7 +13,7 @@
 #include "DataStructures/Tensor/Expressions/NumberAsExpression.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
-#include "Utilities/Algorithm.hpp"
+#include "Utilities/StdArrayHelpers.hpp"
 #include "Utilities/TMPL.hpp"
 
 namespace TensorExpressions {
@@ -138,10 +138,8 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
       for (size_t i = 0; i < operand_num_tensor_indices; i++) {
         gsl::at(operand_tensor_multi_index, i) =
             gsl::at(lhs_tensor_multi_index,
-                    static_cast<size_t>(std::distance(
-                        lhs_tensorindex_vals.begin(),
-                        alg::find(lhs_tensorindex_vals,
-                                  gsl::at(operand_tensorindex_vals, i)))));
+                    index_of(lhs_tensorindex_vals,
+                             gsl::at(operand_tensorindex_vals, i)));
       }
       return operand_tensor_multi_index;
     }
