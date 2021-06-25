@@ -13,6 +13,7 @@
 #include <utility>
 
 #include "Utilities/ErrorHandling/Assert.hpp"
+#include "Utilities/Algorithm.hpp"
 #include "Utilities/Gsl.hpp"
 
 // Arithmetic operators for std::array<T, Dim>
@@ -106,6 +107,13 @@ inline std::array<T, Dim - 1> all_but_specified_element_of(
     gsl::at(result, i - 1) = gsl::at(a, i);
   }
   return result;
+}
+
+/// \ingroup UtilitiesGroup
+/// \brief Returns the index of the first instance of a value in a `std::array`
+template <typename T, size_t Dim>
+constexpr size_t index_of(const std::array<T, Dim>& a, const T& value) {
+  return static_cast<size_t>(std::distance(a.begin(), alg::find(a, value)));
 }
 
 /// \ingroup UtilitiesGroup
