@@ -3,7 +3,7 @@
 
 #include "Framework/TestingFramework.hpp"
 
-#include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
+#include "DataStructures/Tensor/Expressions/TensorIndex.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/TensorIndexTransformationRank0TestHelpers.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/TensorIndexTransformationRank1TestHelpers.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/TensorIndexTransformationRank2TestHelpers.hpp"

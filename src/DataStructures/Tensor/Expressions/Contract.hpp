@@ -14,6 +14,8 @@
 #include <utility>
 
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
+#include "DataStructures/Tensor/Expressions/TensorIndex.hpp"
+#include "DataStructures/Tensor/Expressions/TensorIndexTransformation.hpp"
 #include "DataStructures/Tensor/IndexType.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
 #include "Utilities/ForceInline.hpp"
@@ -77,21 +79,21 @@ struct ContractedType {
  */
 template <size_t FirstContractedIndexPos, size_t SecondContractedIndexPos,
           typename T, typename X, typename Symm, typename IndexList,
-          typename ArgsList>
+          typename... Args>
 struct TensorContract
     : public TensorExpression<
           TensorContract<FirstContractedIndexPos, SecondContractedIndexPos, T,
-                         X, Symm, IndexList, ArgsList>,
+                         X, Symm, IndexList, Args...>,
           X,
-          typename detail::ContractedType<FirstContractedIndexPos,
-                                          SecondContractedIndexPos, T, X, Symm,
-                                          IndexList, ArgsList>::type::symmetry,
           typename detail::ContractedType<
               FirstContractedIndexPos, SecondContractedIndexPos, T, X, Symm,
-              IndexList, ArgsList>::type::index_list,
+              IndexList, tmpl::list<Args...>>::type::symmetry,
           typename detail::ContractedType<
               FirstContractedIndexPos, SecondContractedIndexPos, T, X, Symm,
-              IndexList, ArgsList>::type::args_list> {
+              IndexList, tmpl::list<Args...>>::type::index_list,
+          typename detail::ContractedType<
+              FirstContractedIndexPos, SecondContractedIndexPos, T, X, Symm,
+              IndexList, tmpl::list<Args...>>::type::args_list> {
   // First and second \ref SpacetimeIndex "TensorIndexType"s to contract.
   // "first" and "second" here refer to the position of the indices to contract
   // in the list of indices, with "first" denoting leftmost
@@ -114,7 +116,7 @@ struct TensorContract
   using new_type =
       typename detail::ContractedType<FirstContractedIndexPos,
                                       SecondContractedIndexPos, T, X, Symm,
-                                      IndexList, ArgsList>::type;
+                                      IndexList, tmpl::list<Args...>>::type;
 
   using type = X;
   using symmetry = typename new_type::symmetry;
@@ -125,80 +127,56 @@ struct TensorContract
   using args_list = typename new_type::args_list;
 
   explicit TensorContract(
-      const TensorExpression<T, X, Symm, IndexList, ArgsList>& t)
+      const TensorExpression<T, X, Symm, IndexList, tmpl::list<Args...>>& t)
       : t_(~t) {}
   ~TensorContract() override = default;
 
-  /// \brief Return the multi-index of the first uncontracted LHS component to
-  /// be summed to compute a given contracted LHS component
+  /// \brief Return a partially-filled multi-index of the uncontracted
+  /// expression where only the values of the indices that are not contracted
+  /// have been filled in
   ///
   /// \details
   /// Returns the multi-index that results from taking the
-  /// `contracted_lhs_multi_index` and inserting `0` at the two positions of the
-  /// pair of indices to contract.
+  /// `contracted_multi_index` and inserting the maximum `size_t` value at the
+  /// two positions of the pair of indices to contract.
   ///
-  /// \param contracted_lhs_multi_index the multi-index of a contracted LHS
-  /// component to be computed
-  /// \return the multi-index of the first uncontracted LHS component to
-  /// be summed to compute the contracted LHS component at
-  /// `contracted_lhs_multi_index`
+  /// e.g. `R(ti_A, ti_a, ti_b, ti_c)` represents contracting some
+  /// \f$R^{a}{}_{abc}\f$ to \f$R_{bc}\f$. If `contracted_multi_index` is
+  /// `[5, 4]` (i.e. `b == 5`, `c == 4`), the returned
+  /// `uncontracted_multi_index` is
+  /// `[<max size_t value>, <max size_t value>, 5, 4]`.
+  ///
+  /// \param contracted_multi_index the multi-index of a component of the
+  /// contracted expression
+  /// \return the multi-index of the uncontracted expression where only the
+  /// values of the indices that are not contracted have been filled in
   SPECTRE_ALWAYS_INLINE static constexpr std::array<
       size_t, num_uncontracted_tensor_indices>
-  get_first_uncontracted_lhs_multi_index_to_sum(
+  get_uncontracted_multi_index_with_uncontracted_values(
       const std::array<size_t, num_tensor_indices>&
-          contracted_lhs_multi_index) noexcept {
+          contracted_multi_index) noexcept {
     std::array<size_t, num_uncontracted_tensor_indices>
-        first_uncontracted_lhs_multi_index{};
+        uncontracted_multi_index{};
 
     for (size_t i = 0; i < FirstContractedIndexPos; i++) {
-      gsl::at(first_uncontracted_lhs_multi_index, i) =
-          gsl::at(contracted_lhs_multi_index, i);
+      gsl::at(uncontracted_multi_index, i) = gsl::at(contracted_multi_index, i);
     }
-    first_uncontracted_lhs_multi_index[FirstContractedIndexPos] = 0;
+    uncontracted_multi_index[FirstContractedIndexPos] =
+        std::numeric_limits<size_t>::max();
     for (size_t i = FirstContractedIndexPos + 1; i < SecondContractedIndexPos;
          i++) {
-      gsl::at(first_uncontracted_lhs_multi_index, i) =
-          gsl::at(contracted_lhs_multi_index, i - 1);
+      gsl::at(uncontracted_multi_index, i) =
+          gsl::at(contracted_multi_index, i - 1);
     }
-    first_uncontracted_lhs_multi_index[SecondContractedIndexPos] = 0;
+    uncontracted_multi_index[SecondContractedIndexPos] =
+        std::numeric_limits<size_t>::max();
     for (size_t i = SecondContractedIndexPos + 1;
          i < num_uncontracted_tensor_indices; i++) {
-      gsl::at(first_uncontracted_lhs_multi_index, i) =
-          gsl::at(contracted_lhs_multi_index, i - 2);
+      gsl::at(uncontracted_multi_index, i) =
+          gsl::at(contracted_multi_index, i - 2);
     }
-    return first_uncontracted_lhs_multi_index;
+    return uncontracted_multi_index;
   }
-
-  // Inserts the first contracted TensorIndex into the list of contracted LHS
-  // TensorIndexs
-  template <typename... LhsIndices>
-  using get_uncontracted_lhs_tensorindex_list_helper = tmpl::append<
-      tmpl::front<tmpl::split_at<tmpl::list<LhsIndices...>,
-                                 tmpl::size_t<FirstContractedIndexPos>>>,
-      tmpl::list<tmpl::at_c<ArgsList, FirstContractedIndexPos>>,
-      tmpl::back<tmpl::split_at<tmpl::list<LhsIndices...>,
-                                tmpl::size_t<FirstContractedIndexPos>>>>;
-
-  /// Constructs the uncontracted LHS's list of TensorIndexs by inserting the
-  /// pair of indices being contracted into the list of contracted LHS
-  /// TensorIndexs
-  ///
-  /// Example: Let `ti_a_t` denote the type of `ti_a`, and apply the same
-  /// convention for other generic indices. If we contract RHS tensor
-  /// \f$R^{a}{}_{bac}\f$ to LHS tensor \f$L_{cb}\f$, the RHS list of generic
-  /// indices (`ArgsList`) is `tmpl::list<ti_A_t, ti_b_t, ti_a_t, ti_c_t>` and
-  /// the LHS generic indices (`LhsIndices`) are `ti_c_t, ti_b_t`. `ti_A_t` and
-  /// `ti_a_t` are inserted into `LhsIndices` at their positions from the RHS,
-  /// which yields: `tmpl::list<ti_A_t, ti_c_t, ti_a_t, ti_b_t>`.
-  template <typename... LhsIndices>
-  using get_uncontracted_lhs_tensorindex_list = tmpl::append<
-      tmpl::front<tmpl::split_at<
-          get_uncontracted_lhs_tensorindex_list_helper<LhsIndices...>,
-          tmpl::size_t<SecondContractedIndexPos>>>,
-      tmpl::list<tmpl::at_c<ArgsList, SecondContractedIndexPos>>,
-      tmpl::back<tmpl::split_at<
-          get_uncontracted_lhs_tensorindex_list_helper<LhsIndices...>,
-          tmpl::size_t<SecondContractedIndexPos>>>>;
 
   /// \brief Helper struct for computing the contraction of one pair of
   /// indices
@@ -270,25 +248,6 @@ struct TensorContract
   /// \brief Return the value of the component of the contracted LHS tensor at a
   /// given multi-index
   ///
-  /// \details
-  /// Given a RHS tensor to be contracted, the uncontracted LHS represents the
-  /// uncontracted RHS tensor arranged with the LHS's generic index order. The
-  /// contracted LHS represents the result of contracting this uncontracted
-  /// LHS. For example, if we have RHS tensor \f$R^{a}{}_{abc}\f$ and we want to
-  /// contract it to the LHS tensor \f$L_{cb}\f$, then \f$L_{cb}\f$ represents
-  /// the contracted LHS, while \f$L^{a}{}_{acb}\f$ represents the uncontracted
-  /// LHS. Note that the relative ordering of the LHS generic indices \f$c\f$
-  /// and \f$b\f$ in the contracted LHS is preserved in the uncontracted LHS.
-  ///
-  /// To compute a contraction, we need to get all the uncontracted LHS
-  /// components to sum. In the example above, this means that in order to
-  /// compute \f$L_{cb}\f$ for some \f$c\f$ and \f$b\f$, we need to sum the
-  /// components \f$L^{a}{}_{acb}\f$ for all values of \f$a\f$. This function
-  /// first constructs the list of generic indices (TensorIndexs) of the
-  /// uncontracted LHS, then uses helper functions to compute and return the
-  /// contracted LHS component by summing the necessary uncontracted LHS
-  /// components.
-  ///
   /// \tparam ContractedLhsIndices the TensorIndexs of the contracted LHS tensor
   /// \param contracted_lhs_multi_index the multi-index of the contracted LHS
   /// tensor component to retrieve
@@ -298,24 +257,39 @@ struct TensorContract
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& contracted_lhs_multi_index)
       const {
-    using uncontracted_lhs_tensorindex_list =
-        get_uncontracted_lhs_tensorindex_list<ContractedLhsIndices...>;
     constexpr size_t initial_first_contracted_index_value =
         first_contracted_index::index_type == IndexType::Spacetime and
-                not tmpl::at_c<ArgsList, FirstContractedIndexPos>::is_spacetime
+                not tmpl::at_c<tmpl::list<Args...>,
+                               FirstContractedIndexPos>::is_spacetime
             ? 1
             : 0;
     constexpr size_t initial_second_contracted_index_value =
         second_contracted_index::index_type == IndexType::Spacetime and
-                not tmpl::at_c<ArgsList, SecondContractedIndexPos>::is_spacetime
+                not tmpl::at_c<tmpl::list<Args...>,
+                               SecondContractedIndexPos>::is_spacetime
             ? 1
             : 0;
 
-    return ComputeContraction<uncontracted_lhs_tensorindex_list>::
-        template apply<initial_first_contracted_index_value,
-                       initial_second_contracted_index_value>(
-            t_, get_first_uncontracted_lhs_multi_index_to_sum(
-                    contracted_lhs_multi_index));
+    if constexpr (std::is_same_v<tmpl::list<ContractedLhsIndices...>,
+                                 tmpl::list<Args...>>) {
+      return ComputeContraction<tmpl::list<ContractedLhsIndices...>>::
+          template apply<initial_first_contracted_index_value,
+                         initial_second_contracted_index_value>(
+              t_, get_uncontracted_multi_index_with_uncontracted_values(
+                      contracted_lhs_multi_index));
+    } else {
+      constexpr std::array<size_t, num_tensor_indices> index_transformation =
+          compute_tensorindex_transformation<num_tensor_indices>(
+              {{ContractedLhsIndices::value...}},
+              make_array_from_tensorindex_list<args_list>());
+
+      return ComputeContraction<tmpl::list<Args...>>::template apply<
+          initial_first_contracted_index_value,
+          initial_second_contracted_index_value>(
+          t_, get_uncontracted_multi_index_with_uncontracted_values(
+                  transform_multi_index(contracted_lhs_multi_index,
+                                        index_transformation)));
+    }
   }
 
  private:
@@ -399,10 +373,9 @@ SPECTRE_ALWAYS_INLINE static constexpr auto contract(
     return ~t;
   } else {
     // We have a pair of indices to be contract
-    return contract(
-        TensorContract<first_index_positions_to_contract.first,
-                       first_index_positions_to_contract.second, T, X, Symm,
-                       IndexList, tmpl::list<TensorIndices...>>{t});
+    return contract(TensorContract<first_index_positions_to_contract.first,
+                                   first_index_positions_to_contract.second, T,
+                                   X, Symm, IndexList, TensorIndices...>{t});
   }
 }
 }  // namespace TensorExpressions

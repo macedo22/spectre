@@ -15,5 +15,6 @@ spectre_target_headers(
   SquareRoot.hpp
   TensorAsExpression.hpp
   TensorExpression.hpp
+  TensorIndex.hpp
   TensorIndexTransformation.hpp
   )

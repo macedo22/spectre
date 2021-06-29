@@ -34,6 +34,8 @@ void create_tensor(gsl::not_null<Tensor<DataVector, Ts...>*> tensor) noexcept {
   }
 }
 
+const size_t contracted_value_placeholder = std::numeric_limits<size_t>::max();
+
 template <typename DataType>
 void test_contractions_rank2(const DataType& used_for_size) noexcept {
   // Contract (upper, lower) tensor
@@ -46,8 +48,9 @@ void test_contractions_rank2(const DataType& used_for_size) noexcept {
   create_tensor(make_not_null(&Rul));
 
   const auto RIi_expr = Rul(ti_I, ti_i);
-  const std::array<size_t, 2> expected_multi_index{{0, 0}};
-  CHECK(RIi_expr.get_first_uncontracted_lhs_multi_index_to_sum({{}}) ==
+  const std::array<size_t, 2> expected_multi_index{
+      {contracted_value_placeholder, contracted_value_placeholder}};
+  CHECK(RIi_expr.get_uncontracted_multi_index_with_uncontracted_values({{}}) ==
         expected_multi_index);
 
   const Tensor<DataType> RIi_contracted = TensorExpressions::evaluate(RIi_expr);
@@ -66,7 +69,7 @@ void test_contractions_rank2(const DataType& used_for_size) noexcept {
   create_tensor(make_not_null(&Rlu));
 
   const auto RgG_expr = Rlu(ti_g, ti_G);
-  CHECK(RgG_expr.get_first_uncontracted_lhs_multi_index_to_sum({{}}) ==
+  CHECK(RgG_expr.get_uncontracted_multi_index_with_uncontracted_values({{}}) ==
         expected_multi_index);
 
   const Tensor<DataType> RgG_contracted = TensorExpressions::evaluate(RgG_expr);
@@ -96,9 +99,10 @@ void test_contractions_rank3(const DataType& used_for_size) noexcept {
       RiIj_contracted = TensorExpressions::evaluate<ti_j>(RiIj_expr);
 
   for (size_t j = 0; j < 4; j++) {
-    const std::array<size_t, 3> expected_multi_index{{0, 0, j}};
-    CHECK(RiIj_expr.get_first_uncontracted_lhs_multi_index_to_sum({{j}}) ==
-          expected_multi_index);
+    const std::array<size_t, 3> expected_multi_index{
+        {contracted_value_placeholder, contracted_value_placeholder, j}};
+    CHECK(RiIj_expr.get_uncontracted_multi_index_with_uncontracted_values(
+              {{j}}) == expected_multi_index);
 
     DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
     for (size_t i = 0; i < 3; i++) {
@@ -121,9 +125,10 @@ void test_contractions_rank3(const DataType& used_for_size) noexcept {
       RJLj_contracted = TensorExpressions::evaluate<ti_L>(RJLj_expr);
 
   for (size_t l = 0; l < 3; l++) {
-    const std::array<size_t, 3> expected_multi_index{{0, l, 0}};
-    CHECK(RJLj_expr.get_first_uncontracted_lhs_multi_index_to_sum({{l}}) ==
-          expected_multi_index);
+    const std::array<size_t, 3> expected_multi_index{
+        {contracted_value_placeholder, l, contracted_value_placeholder}};
+    CHECK(RJLj_expr.get_uncontracted_multi_index_with_uncontracted_values(
+              {{l}}) == expected_multi_index);
 
     DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
     for (size_t j = 0; j < 3; j++) {
@@ -146,9 +151,10 @@ void test_contractions_rank3(const DataType& used_for_size) noexcept {
       RBfF_contracted = TensorExpressions::evaluate<ti_B>(RBfF_expr);
 
   for (size_t b = 0; b < 4; b++) {
-    const std::array<size_t, 3> expected_multi_index{{b, 0, 0}};
-    CHECK(RBfF_expr.get_first_uncontracted_lhs_multi_index_to_sum({{b}}) ==
-          expected_multi_index);
+    const std::array<size_t, 3> expected_multi_index{
+        {b, contracted_value_placeholder, contracted_value_placeholder}};
+    CHECK(RBfF_expr.get_uncontracted_multi_index_with_uncontracted_values(
+              {{b}}) == expected_multi_index);
 
     DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
     for (size_t f = 0; f < 4; f++) {
@@ -172,9 +178,10 @@ void test_contractions_rank3(const DataType& used_for_size) noexcept {
       RiaI_contracted = TensorExpressions::evaluate<ti_a>(RiaI_expr);
 
   for (size_t a = 0; a < 4; a++) {
-    const std::array<size_t, 3> expected_multi_index{{0, a, 0}};
-    CHECK(RiaI_expr.get_first_uncontracted_lhs_multi_index_to_sum({{a}}) ==
-          expected_multi_index);
+    const std::array<size_t, 3> expected_multi_index{
+        {contracted_value_placeholder, a, contracted_value_placeholder}};
+    CHECK(RiaI_expr.get_uncontracted_multi_index_with_uncontracted_values(
+              {{a}}) == expected_multi_index);
 
     DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
     for (size_t i = 0; i < 3; i++) {
@@ -207,8 +214,9 @@ void test_contractions_rank4(const DataType& used_for_size) noexcept {
 
   for (size_t k = 0; k < 4; k++) {
     for (size_t j = 0; j < 3; j++) {
-      const std::array<size_t, 4> expected_multi_index{{0, 0, k, j}};
-      CHECK(RiIKj_expr.get_first_uncontracted_lhs_multi_index_to_sum(
+      const std::array<size_t, 4> expected_multi_index{
+          {contracted_value_placeholder, contracted_value_placeholder, k, j}};
+      CHECK(RiIKj_expr.get_uncontracted_multi_index_with_uncontracted_values(
                 {{k, j}}) == expected_multi_index);
 
       DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
@@ -238,8 +246,9 @@ void test_contractions_rank4(const DataType& used_for_size) noexcept {
 
   for (size_t b = 0; b < 4; b++) {
     for (size_t c = 0; c < 5; c++) {
-      const std::array<size_t, 4> expected_multi_index{{0, b, 0, c}};
-      CHECK(RABac_expr.get_first_uncontracted_lhs_multi_index_to_sum(
+      const std::array<size_t, 4> expected_multi_index{
+          {contracted_value_placeholder, b, contracted_value_placeholder, c}};
+      CHECK(RABac_expr.get_uncontracted_multi_index_with_uncontracted_values(
                 {{b, c}}) == expected_multi_index);
 
       DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
@@ -269,8 +278,9 @@ void test_contractions_rank4(const DataType& used_for_size) noexcept {
 
   for (size_t j = 0; j < 4; j++) {
     for (size_t i = 0; i < 3; i++) {
-      const std::array<size_t, 4> expected_multi_index{{0, j, i, 0}};
-      CHECK(RLJIl_expr.get_first_uncontracted_lhs_multi_index_to_sum(
+      const std::array<size_t, 4> expected_multi_index{
+          {contracted_value_placeholder, j, i, contracted_value_placeholder}};
+      CHECK(RLJIl_expr.get_uncontracted_multi_index_with_uncontracted_values(
                 {{j, i}}) == expected_multi_index);
 
       DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
@@ -300,8 +310,9 @@ void test_contractions_rank4(const DataType& used_for_size) noexcept {
 
   for (size_t e = 0; e < 4; e++) {
     for (size_t a = 0; a < 4; a++) {
-      const std::array<size_t, 4> expected_multi_index{{e, 0, 0, a}};
-      CHECK(REDdA_expr.get_first_uncontracted_lhs_multi_index_to_sum(
+      const std::array<size_t, 4> expected_multi_index{
+          {e, contracted_value_placeholder, contracted_value_placeholder, a}};
+      CHECK(REDdA_expr.get_uncontracted_multi_index_with_uncontracted_values(
                 {{e, a}}) == expected_multi_index);
 
       DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
@@ -331,8 +342,9 @@ void test_contractions_rank4(const DataType& used_for_size) noexcept {
 
   for (size_t k = 0; k < 3; k++) {
     for (size_t i = 0; i < 4; i++) {
-      const std::array<size_t, 4> expected_multi_index{{k, 0, i, 0}};
-      CHECK(RkJij_expr.get_first_uncontracted_lhs_multi_index_to_sum(
+      const std::array<size_t, 4> expected_multi_index{
+          {k, contracted_value_placeholder, i, contracted_value_placeholder}};
+      CHECK(RkJij_expr.get_uncontracted_multi_index_with_uncontracted_values(
                 {{k, i}}) == expected_multi_index);
 
       DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
@@ -362,8 +374,9 @@ void test_contractions_rank4(const DataType& used_for_size) noexcept {
 
   for (size_t f = 0; f < 5; f++) {
     for (size_t c = 0; c < 4; c++) {
-      const std::array<size_t, 4> expected_multi_index{{f, c, 0, 0}};
-      CHECK(RFcgG_expr.get_first_uncontracted_lhs_multi_index_to_sum(
+      const std::array<size_t, 4> expected_multi_index{
+          {f, c, contracted_value_placeholder, contracted_value_placeholder}};
+      CHECK(RFcgG_expr.get_uncontracted_multi_index_with_uncontracted_values(
                 {{f, c}}) == expected_multi_index);
 
       DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
@@ -393,8 +406,9 @@ void test_contractions_rank4(const DataType& used_for_size) noexcept {
 
   for (size_t j = 0; j < 2; j++) {
     for (size_t i = 0; i < 3; i++) {
-      const std::array<size_t, 4> expected_multi_index{{0, 0, j, i}};
-      CHECK(RKkIJ_expr.get_first_uncontracted_lhs_multi_index_to_sum(
+      const std::array<size_t, 4> expected_multi_index{
+          {contracted_value_placeholder, contracted_value_placeholder, j, i}};
+      CHECK(RKkIJ_expr.get_uncontracted_multi_index_with_uncontracted_values(
                 {{j, i}}) == expected_multi_index);
 
       DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
@@ -424,8 +438,9 @@ void test_contractions_rank4(const DataType& used_for_size) noexcept {
 
   for (size_t e = 0; e < 3; e++) {
     for (size_t c = 0; c < 3; c++) {
-      const std::array<size_t, 4> expected_multi_index{{0, e, 0, c}};
-      CHECK(RbCBE_expr.get_first_uncontracted_lhs_multi_index_to_sum(
+      const std::array<size_t, 4> expected_multi_index{
+          {contracted_value_placeholder, e, contracted_value_placeholder, c}};
+      CHECK(RbCBE_expr.get_uncontracted_multi_index_with_uncontracted_values(
                 {{e, c}}) == expected_multi_index);
 
       DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
@@ -455,8 +470,9 @@ void test_contractions_rank4(const DataType& used_for_size) noexcept {
 
   for (size_t b = 0; b < 4; b++) {
     for (size_t d = 0; d < 4; d++) {
-      const std::array<size_t, 4> expected_multi_index{{0, b, d, 0}};
-      CHECK(RAdba_expr.get_first_uncontracted_lhs_multi_index_to_sum(
+      const std::array<size_t, 4> expected_multi_index{
+          {contracted_value_placeholder, b, d, contracted_value_placeholder}};
+      CHECK(RAdba_expr.get_uncontracted_multi_index_with_uncontracted_values(
                 {{b, d}}) == expected_multi_index);
 
       DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
@@ -486,8 +502,9 @@ void test_contractions_rank4(const DataType& used_for_size) noexcept {
 
   for (size_t i = 0; i < 4; i++) {
     for (size_t l = 0; l < 3; l++) {
-      const std::array<size_t, 4> expected_multi_index{{i, 0, 0, l}};
-      CHECK(RljJi_expr.get_first_uncontracted_lhs_multi_index_to_sum(
+      const std::array<size_t, 4> expected_multi_index{
+          {i, contracted_value_placeholder, contracted_value_placeholder, l}};
+      CHECK(RljJi_expr.get_uncontracted_multi_index_with_uncontracted_values(
                 {{i, l}}) == expected_multi_index);
 
       DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
@@ -517,8 +534,9 @@ void test_contractions_rank4(const DataType& used_for_size) noexcept {
 
   for (size_t d = 0; d < 4; d++) {
     for (size_t a = 0; a < 4; a++) {
-      const std::array<size_t, 4> expected_multi_index{{d, 0, a, 0}};
-      CHECK(RagDG_expr.get_first_uncontracted_lhs_multi_index_to_sum(
+      const std::array<size_t, 4> expected_multi_index{
+          {d, contracted_value_placeholder, a, contracted_value_placeholder}};
+      CHECK(RagDG_expr.get_uncontracted_multi_index_with_uncontracted_values(
                 {{d, a}}) == expected_multi_index);
 
       DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
@@ -548,8 +566,9 @@ void test_contractions_rank4(const DataType& used_for_size) noexcept {
 
   for (size_t j = 0; j < 3; j++) {
     for (size_t l = 0; l < 3; l++) {
-      const std::array<size_t, 4> expected_multi_index{{j, l, 0, 0}};
-      CHECK(RlJiI_expr.get_first_uncontracted_lhs_multi_index_to_sum(
+      const std::array<size_t, 4> expected_multi_index{
+          {j, l, contracted_value_placeholder, contracted_value_placeholder}};
+      CHECK(RlJiI_expr.get_uncontracted_multi_index_with_uncontracted_values(
                 {{j, l}}) == expected_multi_index);
 
       DataType expected_sum = make_with_value<DataType>(used_for_size, 0.0);
@@ -576,14 +595,16 @@ void test_contractions_rank4(const DataType& used_for_size) noexcept {
   // indices, representing contracting the 3rd and 4th indices of the rank 4
   // tensor `Rulul` to a rank 2 tensor. The "outer" expression will then
   // contract the K/k indices, representing contracting the rank 2 tensor to
-  // the resulting scalar. This `get_first_uncontracted_lhs_multi_index_to_sum`
-  // test checks this outer contraction of the K/k indices. Because the inner
-  // expression is private, a similar check for it is not done.
+  // the resulting scalar. This
+  // `get_uncontracted_multi_index_with_uncontracted_values` test checks this
+  // outer contraction of the K/k indices. Because the inner expression is
+  // private, a similar check for it is not done.
   //
   // This also applies to similar rank 4 -> rank 0 contraction cases below
-  const std::array<size_t, 2> expected_multi_index{{0, 0}};
-  CHECK(RKkLl_expr.get_first_uncontracted_lhs_multi_index_to_sum({{}}) ==
-        expected_multi_index);
+  const std::array<size_t, 2> expected_multi_index{
+      {contracted_value_placeholder, contracted_value_placeholder}};
+  CHECK(RKkLl_expr.get_uncontracted_multi_index_with_uncontracted_values(
+            {{}}) == expected_multi_index);
 
   const Tensor<DataType> RKkLl_contracted =
       TensorExpressions::evaluate(RKkLl_expr);
@@ -599,8 +620,8 @@ void test_contractions_rank4(const DataType& used_for_size) noexcept {
   // Contract first and third indices and second and fourth indices to rank 0
   // tensor
   const auto RcaCA_expr = Rlluu(ti_c, ti_a, ti_C, ti_A);
-  CHECK(RcaCA_expr.get_first_uncontracted_lhs_multi_index_to_sum({{}}) ==
-        expected_multi_index);
+  CHECK(RcaCA_expr.get_uncontracted_multi_index_with_uncontracted_values(
+            {{}}) == expected_multi_index);
 
   const Tensor<DataType> RcaCA_contracted =
       TensorExpressions::evaluate(RcaCA_expr);
@@ -616,8 +637,8 @@ void test_contractions_rank4(const DataType& used_for_size) noexcept {
   // Contract first and fourth indices and second and third indices to rank 0
   // tensor
   const auto RjIiJ_expr = Rlulu(ti_j, ti_I, ti_i, ti_J);
-  CHECK(RjIiJ_expr.get_first_uncontracted_lhs_multi_index_to_sum({{}}) ==
-        expected_multi_index);
+  CHECK(RjIiJ_expr.get_uncontracted_multi_index_with_uncontracted_values(
+            {{}}) == expected_multi_index);
 
   const Tensor<DataType> RjIiJ_contracted =
       TensorExpressions::evaluate(RjIiJ_expr);

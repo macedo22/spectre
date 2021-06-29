@@ -12,7 +12,7 @@ set(LIBRARY_SOURCES
   Test_Product.cpp
   Test_ProductHighRankIntermediate.cpp
   Test_SquareRoot.cpp
-  Test_TensorExpressions.cpp
+  Test_TensorIndex.cpp
   Test_TensorIndexTransformation.cpp
   )
 
