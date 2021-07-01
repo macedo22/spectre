@@ -167,6 +167,12 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.AddSubtract",
                     SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
       Rlll{};
   std::iota(Rlll.begin(), Rlll.end(), 0.0);
+  Tensor<double, Symmetry<1, 2, 1>,
+         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpatialIndex<3, UpLo::Lo, Frame::Grid>,
+                    SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      Slll{};
+  std::iota(Slll.begin(), Slll.end(), 0.0);
 
   const Tensor<double, Symmetry<3, 2, 1>,
                index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
@@ -212,6 +218,23 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.AddSubtract",
         CHECK(Glll3.get(i, j, k) == 2.0 * Alll.get(i, j, k));
         CHECK(Glll4.get(i, j, k) == Alll.get(j, k, i) + Rlll.get(k, i, j));
         CHECK(Glll5.get(i, j, k) == Alll.get(j, k, i) - Rlll.get(i, k, j));
+      }
+    }
+  }
+
+  // testing with operands having spatial indices for spacetime indices
+  const auto /*Tensor<double, Symmetry<3, 1, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>*/
+      Glll6 = TensorExpressions::evaluate<ti_k, ti_a, ti_j>(
+          Rlll(ti_a, ti_j, ti_k) + Slll(ti_k, ti_j, ti_a));
+
+  for (int k = 0; k < 3; ++k) {
+    for (int a = 0; a < 4; ++a) {
+      for (int j = 0; j < 3; ++j) {
+        CHECK(Glll6.get(k, a, j) ==
+              Rlll.get(a, j + 1, k + 1) + Slll.get(k + 1, j, a));
       }
     }
   }

@@ -14,9 +14,13 @@
 
 #include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/Expressions/NumberAsExpression.hpp"
+#include "DataStructures/Tensor/Expressions/SpatialSpacetimeIndex.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
+#include "DataStructures/Tensor/Expressions/TensorIndexTransformation.hpp"
 #include "Utilities/Algorithm.hpp"
 #include "Utilities/ForceInline.hpp"
+#include "Utilities/Literals.hpp"
+#include "Utilities/MakeArray.hpp"
 #include "Utilities/Requires.hpp"
 #include "Utilities/TMPL.hpp"
 
@@ -169,23 +173,70 @@ struct AddSubType {
   using tensorindex_list = typename T1::args_list;
 };
 
-template <typename IndexList1, typename IndexList2, typename Args1,
-          typename Args2, typename Element>
-struct AddSubIndexCheckHelper
-    : std::is_same<tmpl::at<IndexList1, tmpl::index_of<Args1, Element>>,
-                   tmpl::at<IndexList2, tmpl::index_of<Args2, Element>>>::type {
+/// \brief Helper struct for checking that an index in one operand can be added
+/// to and subtracted from its corresponding index in another operand
+///
+/// \details
+/// Corresponding indices between two operands are marked by using the same
+/// generic index, such as `ti_a`. For it to be possible to add or subtract one
+/// operand's index to its corresponding index in another operand, this checks
+/// that the following is true for the index in both operands:
+/// - has the same valence (`UpLo`)
+/// - has the same `Frame` type
+/// - has the same number of spatial dimensions (allowing for expressions that
+///   use generic spatial indices for spacetime indices on either side)
+///
+/// \tparam IndexList1 the first operand's \ref SpacetimeIndex "TensorIndexType"
+/// list
+/// \tparam IndexList2 the second operand's
+/// \ref SpacetimeIndex "TensorIndexType" list
+/// \tparam TensorIndexList1 the first operand's generic index list
+/// \tparam TensorIndexList2 the second operand's generic index list
+/// \tparam CurrentTensorIndex1 the first operand's generic index that is being
+/// checked, e.g. the type of `ti_a`
+template <typename IndexList1, typename IndexList2, typename TensorIndexList1,
+          typename TensorIndexList2, typename CurrentTensorIndex1>
+struct AddSubIndexCheckHelper {
+  using index1 =
+      tmpl::at<IndexList1,
+               tmpl::index_of<TensorIndexList1, CurrentTensorIndex1>>;
+  using index2 =
+      tmpl::at<IndexList2,
+               tmpl::index_of<TensorIndexList2, CurrentTensorIndex1>>;
+
+  using type = std::integral_constant<
+      bool,
+      index1::ul == index2::ul and
+          std::is_same_v<typename index1::Frame, typename index2::Frame> and
+          ((index1::index_type == index2::index_type and
+            index1::dim == index2::dim) or
+           (index1::index_type == IndexType::Spacetime and
+            index1::dim == index2::dim + 1) or
+           (index2::index_type == IndexType::Spacetime and
+            index1::dim + 1 == index2::dim))>;
 };
 
-// Check to make sure that the tensor indices being added are of the same type,
-// dimensionality and in the same frame
-template <typename IndexList1, typename IndexList2, typename Args1,
-          typename Args2>
+/// \brief Check that the indices of the two operands of an `AddSub` expression
+/// can be added and subtracted
+///
+/// \details
+/// For more details, see `AddSubIndexCheckHelper`, which performs the check for
+/// each index one at a time.
+///
+/// \tparam IndexList1 the first operand's \ref SpacetimeIndex "TensorIndexType"
+/// list
+/// \tparam IndexList2 the second operand's
+/// \ref SpacetimeIndex "TensorIndexType" list
+/// \tparam TensorIndexList1 the first operand's generic index list
+/// \tparam TensorIndexList2 the second operand's generic index list
+template <typename IndexList1, typename IndexList2, typename TensorIndexList1,
+          typename TensorIndexList2>
 using AddSubIndexCheck = tmpl::fold<
-    Args1, tmpl::bool_<true>,
-    tmpl::and_<tmpl::_state,
-               AddSubIndexCheckHelper<tmpl::pin<IndexList1>,
-                                      tmpl::pin<IndexList2>, tmpl::pin<Args1>,
-                                      tmpl::pin<Args2>, tmpl::_element>>>;
+    TensorIndexList1, tmpl::bool_<true>,
+    tmpl::and_<tmpl::_state, AddSubIndexCheckHelper<
+                                 tmpl::pin<IndexList1>, tmpl::pin<IndexList2>,
+                                 tmpl::pin<TensorIndexList1>,
+                                 tmpl::pin<TensorIndexList2>, tmpl::_element>>>;
 }  // namespace detail
 
 template <typename T1, typename T2, typename ArgsList1, typename ArgsList2,
@@ -222,6 +273,20 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   using index_list = typename detail::AddSubType<T1, T2>::index_list;
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
   using args_list = typename T1::args_list;
+  static constexpr std::array<size_t, num_tensor_indices>
+      operand_index_transformation =
+          compute_tensorindex_transformation<num_tensor_indices>(
+              {{Args1::value...}}, {{Args2::value...}});
+  // positions of indices in first operand where generic spatial indices are
+  // used for spacetime indices
+  static constexpr auto first_op_spatial_spacetime_index_positions =
+      detail::get_spatial_spacetime_index_positions<typename T1::index_list,
+                                                    ArgsList1<Args1...>>();
+  // positions of indices in second operand where generic spatial indices are
+  // used for spacetime indices
+  static constexpr auto second_op_spatial_spacetime_index_positions =
+      detail::get_spatial_spacetime_index_positions<typename T2::index_list,
+                                                    ArgsList2<Args2...>>();
 
   AddSub(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~AddSub() override = default;
@@ -229,12 +294,111 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   template <typename... LhsIndices>
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& lhs_multi_index) const {
-    if constexpr (Sign == 1) {
-      return t1_.template get<LhsIndices...>(lhs_multi_index) +
-             t2_.template get<LhsIndices...>(lhs_multi_index);
+    if constexpr (std::is_same_v<tmpl::list<Args1...>, tmpl::list<Args2...>>) {
+      if constexpr (first_op_spatial_spacetime_index_positions.size() == 0) {
+        // either:
+        // (i) neither operand uses a generic spatial index for a spacetime
+        // index, or
+        // (ii) only the second operand uses a generic spatial index for a
+        // spacetime index
+        std::array<size_t, num_tensor_indices> second_op_multi_index =
+            lhs_multi_index;
+        for (size_t i = 0;
+             i < second_op_spatial_spacetime_index_positions.size(); i++) {
+          gsl::at(second_op_multi_index, i) =
+              gsl::at(lhs_multi_index,
+                      gsl::at(second_op_spatial_spacetime_index_positions, i)) +
+              1;
+        }
+        if constexpr (Sign == 1) {
+          return t1_.template get<Args1...>(lhs_multi_index) +
+                 t2_.template get<Args2...>(second_op_multi_index);
+        } else {
+          return t1_.template get<Args1...>(lhs_multi_index) -
+                 t2_.template get<Args2...>(second_op_multi_index);
+        }
+      } else {
+        // either:
+        // (i) only the first operand uses a generic spatial index for a
+        // spacetime index
+        // (ii) both operands use a generic spatial index for a spacetime index
+        std::array<size_t, num_tensor_indices> second_op_multi_index{};
+        for (size_t i = 0;
+             i < first_op_spatial_spacetime_index_positions.size(); i++) {
+          gsl::at(second_op_multi_index, i) =
+              gsl::at(lhs_multi_index,
+                      gsl::at(first_op_spatial_spacetime_index_positions, i)) -
+              1;
+        }
+        for (size_t i = 0;
+             i < second_op_spatial_spacetime_index_positions.size(); i++) {
+          gsl::at(second_op_multi_index, i) =
+              gsl::at(lhs_multi_index,
+                      gsl::at(second_op_spatial_spacetime_index_positions, i)) +
+              1;
+        }
+        if constexpr (Sign == 1) {
+          return t1_.template get<Args1...>(lhs_multi_index) +
+                 t2_.template get<Args2...>(second_op_multi_index);
+        } else {
+          return t1_.template get<Args1...>(lhs_multi_index) -
+                 t2_.template get<Args2...>(second_op_multi_index);
+        }
+      }
     } else {
-      return t1_.template get<LhsIndices...>(lhs_multi_index) -
-             t2_.template get<LhsIndices...>(lhs_multi_index);
+      if constexpr (first_op_spatial_spacetime_index_positions.size() == 0) {
+        // either:
+        // (i) neither operand uses a generic spatial index for a spacetime
+        // index, or
+        // (ii) only the second operand uses a generic spatial index for a
+        // spacetime index
+        auto second_op_multi_index = transform_multi_index(
+            lhs_multi_index, operand_index_transformation);
+        for (size_t i = 0;
+             i < second_op_spatial_spacetime_index_positions.size(); i++) {
+          gsl::at(second_op_multi_index,
+                  gsl::at(second_op_spatial_spacetime_index_positions, i)) += 1;
+        }
+        if constexpr (Sign == 1) {
+          return t1_.template get<Args1...>(lhs_multi_index) +
+                 t2_.template get<Args2...>(second_op_multi_index);
+        } else {
+          return t1_.template get<Args1...>(lhs_multi_index) -
+                 t2_.template get<Args2...>(second_op_multi_index);
+        }
+      } else {
+        // either:
+        // (i) only the first operand uses a generic spatial index for a
+        // spacetime index
+        // (ii) both operands use a generic spatial index for a spacetime index
+        std::array<size_t, num_tensor_indices> second_op_multi_index =
+            lhs_multi_index;
+        for (size_t i = 0;
+             i < first_op_spatial_spacetime_index_positions.size(); i++) {
+          gsl::at(second_op_multi_index,
+                  gsl::at(first_op_spatial_spacetime_index_positions, i)) -= 1;
+          // gsl::at(lhs_multi_index,
+          //         gsl::at(lhs_spatial_spacetime_index_positions, j)) -= 1;
+        }
+        for (size_t i = 0;
+             i < second_op_spatial_spacetime_index_positions.size(); i++) {
+          gsl::at(second_op_multi_index,
+                  gsl::at(operand_index_transformation,
+                          gsl::at(second_op_spatial_spacetime_index_positions,
+                                  i))) += 1;
+          // gsl::at(rhs_multi_index,
+          //         gsl::at(rhs_spatial_spacetime_index_positions, j)) += 1;
+        }
+        if constexpr (Sign == 1) {
+          return t1_.template get<Args1...>(lhs_multi_index) +
+                 t2_.template get<Args2...>(transform_multi_index(
+                     second_op_multi_index, operand_index_transformation));
+        } else {
+          return t1_.template get<Args1...>(lhs_multi_index) -
+                 t2_.template get<Args2...>(transform_multi_index(
+                     second_op_multi_index, operand_index_transformation));
+        }
+      }
     }
   }
 
