@@ -90,7 +90,15 @@ constexpr std::array<std::int32_t, NumIndices> get_addsub_symm(
   return addsub_symm;
 }
 
-template <size_t NumIndices, Requires<(NumIndices < 2)> = nullptr>
+template <size_t NumIndices, Requires<(NumIndices == 1)> = nullptr>
+constexpr std::array<std::int32_t, NumIndices> get_addsub_symm(
+    const std::array<std::int32_t, NumIndices>& /*symm1*/,
+    const std::array<std::int32_t, NumIndices>& /*symm2*/) {
+  // return {{1}} instead of symm1 in case symm1 is not in the canonical form
+  return {{1}};
+}
+
+template <size_t NumIndices, Requires<(NumIndices == 0)> = nullptr>
 constexpr std::array<std::int32_t, NumIndices> get_addsub_symm(
     const std::array<std::int32_t, NumIndices>& symm1,
     const std::array<std::int32_t, NumIndices>& /*symm2*/) {
