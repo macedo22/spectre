@@ -112,21 +112,24 @@ constexpr std::array<std::int32_t, NumIndices> get_addsub_symm(
 /// \tparam TensorIndexList1 the generic indices of the first operand
 /// \tparam TensorIndexList2 the generic indices of the second operand
 template <typename SymmList1, typename SymmList2, typename TensorIndexList1,
-          typename TensorIndexList2,
+          typename TensorIndexList2, typename SpatialSpacetimePositionsList1,
+          typename SpatialSpacetimePositionsList2,
           size_t NumIndices = tmpl::size<SymmList1>::value,
           typename IndexSequence = std::make_index_sequence<NumIndices>>
 struct AddSubSymmetry;
 
-template <template <typename...> class SymmList1, typename... Symm1,
-          template <typename...> class SymmList2, typename... Symm2,
-          template <typename...> class TensorIndexList1,
-          typename... TensorIndices1,
-          template <typename...> class TensorIndexList2,
-          typename... TensorIndices2, size_t NumIndices, size_t... Ints>
-struct AddSubSymmetry<SymmList1<Symm1...>, SymmList2<Symm2...>,
-                      TensorIndexList1<TensorIndices1...>,
-                      TensorIndexList2<TensorIndices2...>, NumIndices,
-                      std::index_sequence<Ints...>> {
+template <
+    template <typename...> class SymmList1, typename... Symm1,
+    template <typename...> class SymmList2, typename... Symm2,
+    template <typename...> class TensorIndexList1, typename... TensorIndices1,
+    template <typename...> class TensorIndexList2, typename... TensorIndices2,
+    typename SpatialSpacetimePositionsList1,
+    typename SpatialSpacetimePositionsList2, size_t NumIndices, size_t... Ints>
+struct AddSubSymmetry<
+    SymmList1<Symm1...>, SymmList2<Symm2...>,
+    TensorIndexList1<TensorIndices1...>, TensorIndexList2<TensorIndices2...>,
+    SpatialSpacetimePositionsList1, SpatialSpacetimePositionsList2, NumIndices,
+    std::index_sequence<Ints...>> {
   static constexpr std::array<size_t, NumIndices> lhs_tensorindex_values = {
       {TensorIndices1::value...}};
   static constexpr std::array<size_t, NumIndices> rhs_tensorindex_values = {
@@ -136,10 +139,22 @@ struct AddSubSymmetry<SymmList1<Symm1...>, SymmList2<Symm2...>,
           rhs_tensorindex_values.begin(),
           alg::find(rhs_tensorindex_values, lhs_tensorindex_values[Ints]))...}};
 
-  static constexpr std::array<std::int32_t, NumIndices> symm1 = {
-      {Symm1::value...}};
-  static constexpr std::array<std::int32_t, NumIndices> symm2 = {
-      {Symm2::value...}};
+  using make_array_type1 =
+      std::conditional_t<tmpl::size<SpatialSpacetimePositionsList1>::value == 0,
+                         size_t, SpatialSpacetimePositionsList1>;
+  static constexpr auto first_op_spatial_spacetime_index_positions =
+      make_array_from_list<make_array_type1>();
+  static constexpr std::array<std::int32_t, NumIndices> symm1 =
+      get_spatial_spacetime_index_symmetry<NumIndices>(
+          {{Symm1::value...}}, first_op_spatial_spacetime_index_positions);
+  using make_array_type2 =
+      std::conditional_t<tmpl::size<SpatialSpacetimePositionsList2>::value == 0,
+                         size_t, SpatialSpacetimePositionsList2>;
+  static constexpr auto second_op_spatial_spacetime_index_positions =
+      make_array_from_list<make_array_type2>();
+  static constexpr std::array<std::int32_t, NumIndices> symm2 =
+      get_spatial_spacetime_index_symmetry<NumIndices>(
+          {{Symm2::value...}}, second_op_spatial_spacetime_index_positions);
   // 2nd argument is symm2 rearranged according to `TensorIndexList1` order
   // so that the two symmetry arguments to `get_addsub_symm` are aligned
   // w.r.t. their generic index orders
@@ -161,14 +176,21 @@ struct AddSubType {
   static_assert(std::is_base_of_v<Expression, T1> and
                     std::is_base_of_v<Expression, T2>,
                 "Parameters to AddSubType must be TensorExpressions");
+  using first_op_spatial_spacetime_index_positions =
+      detail::spatial_spacetime_index_positions<typename T1::index_list,
+                                                typename T1::args_list>;
+  using second_op_spatial_spacetime_index_positions =
+      detail::spatial_spacetime_index_positions<typename T2::index_list,
+                                                typename T2::args_list>;
+
   using type =
       std::conditional_t<std::is_same<typename T1::type, DataVector>::value or
                              std::is_same<typename T2::type, DataVector>::value,
                          DataVector, double>;
-  using symmetry =
-      typename AddSubSymmetry<typename T1::symmetry, typename T2::symmetry,
-                              typename T1::args_list,
-                              typename T2::args_list>::type;
+  using symmetry = typename AddSubSymmetry<
+      typename T1::symmetry, typename T2::symmetry, typename T1::args_list,
+      typename T2::args_list, first_op_spatial_spacetime_index_positions,
+      second_op_spatial_spacetime_index_positions>::type;
   using index_list = typename T1::index_list;
   using tensorindex_list = typename T1::args_list;
 };

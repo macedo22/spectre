@@ -223,10 +223,10 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.AddSubtract",
   }
 
   // testing with operands having spatial indices for spacetime indices
-  const auto /*Tensor<double, Symmetry<3, 1, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+  const Tensor<double, Symmetry<3, 2, 1>,
+               index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
                           SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>*/
+                          SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
       Glll6 = TensorExpressions::evaluate<ti_k, ti_a, ti_j>(
           Rlll(ti_a, ti_j, ti_k) + Slll(ti_k, ti_j, ti_a));
 
