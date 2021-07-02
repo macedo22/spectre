@@ -3,6 +3,8 @@
 
 #include "PointwiseFunctions/GeneralRelativity/WeylMagnetic.hpp"
 
+#include <cstddef>
+
 #include "DataStructures/LeviCivitaIterator.hpp"
 #include "DataStructures/Tensor/EagerMath/DeterminantAndInverse.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
@@ -11,13 +13,15 @@
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/MakeWithValue.hpp"
+#include "Utilities/TMPL.hpp"
 
 namespace gr {
 template <size_t SpatialDim, typename Frame, typename DataType>
 tnsr::ii<DataType, SpatialDim, Frame> weyl_magnetic(
     const tnsr::ijj<DataType, SpatialDim, Frame>& grad_extrinsic_curvature,
     const tnsr::ii<DataType, SpatialDim, Frame>& spatial_metric) noexcept {
-  tnsr::ii<DataType, SpatialDim, Frame> weyl_magnetic_part{};
+  tnsr::ii<DataType, SpatialDim, Frame> weyl_magnetic_part{
+      get<0, 0>(spatial_metric)};
   weyl_magnetic<SpatialDim, Frame, DataType>(make_not_null(&weyl_magnetic_part),
                                              grad_extrinsic_curvature,
                                              spatial_metric);
@@ -31,6 +35,8 @@ void weyl_magnetic(
         weyl_magnetic_part,
     const tnsr::ijj<DataType, SpatialDim, Frame>& grad_extrinsic_curvature,
     const tnsr::ii<DataType, SpatialDim, Frame>& spatial_metric) noexcept {
+  destructive_resize_components(weyl_magnetic_part,
+                                get_size(get<0, 0>(spatial_metric)));
   auto grad_extrinsic_curvature_cross_spatial_metric =
       make_with_value<tnsr::ij<DataType, SpatialDim, Frame>>(
           get<0, 0>(spatial_metric), 0.0);
@@ -61,6 +67,8 @@ void weyl_magnetic_scalar(
     const tnsr::ii<DataType, SpatialDim, Frame>& weyl_magnetic,
     const tnsr::II<DataType, SpatialDim, Frame>&
         inverse_spatial_metric) noexcept {
+  destructive_resize_components(weyl_magnetic_scalar_result,
+                                get_size(get<0, 0>(inverse_spatial_metric)));
   *weyl_magnetic_scalar_result =
       make_with_value<Scalar<DataType>>(get<0, 0>(inverse_spatial_metric), 0.0);
 
@@ -93,7 +101,8 @@ Scalar<DataType> weyl_magnetic_scalar(
     const tnsr::ii<DataType, SpatialDim, Frame>& weyl_magnetic,
     const tnsr::II<DataType, SpatialDim, Frame>&
         inverse_spatial_metric) noexcept {
-  Scalar<DataType> weyl_magnetic_scalar_result{};
+  Scalar<DataType> weyl_magnetic_scalar_result{
+      get<0, 0>(inverse_spatial_metric)};
   weyl_magnetic_scalar<SpatialDim, Frame, DataType>(
       make_not_null(&weyl_magnetic_scalar_result), weyl_magnetic,
       inverse_spatial_metric);

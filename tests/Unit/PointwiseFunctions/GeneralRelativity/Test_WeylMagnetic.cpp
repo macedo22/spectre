@@ -10,7 +10,7 @@
 #include "DataStructures/DataVector.hpp"
 #include "DataStructures/LeviCivitaIterator.hpp"
 #include "DataStructures/Tensor/EagerMath/DeterminantAndInverse.hpp"
-#include "DataStructures/Tensor/Tensor.hpp"  // IWYU pragma: keep
+#include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/VectorImpl.hpp"
 #include "Framework/CheckWithRandomValues.hpp"
@@ -24,10 +24,6 @@
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/MakeWithValue.hpp"
-
-// IWYU pragma: no_include <boost/preprocessor/arithmetic/dec.hpp>
-// IWYU pragma: no_include <boost/preprocessor/repetition/enum.hpp>
-// IWYU pragma: no_include <boost/preprocessor/tuple/reverse.hpp>
 
 namespace {
 template <typename DataType>
