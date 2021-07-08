@@ -20,6 +20,41 @@
 #include "Utilities/TypeTraits/IsA.hpp"
 
 namespace TensorExpressions {
+namespace detail {
+
+// template <typename SymmList, size_t NumIndices = tmpl::size<SymmList>::value,
+// typename IndexSequence = std::make_index_sequence<NumIndices>> struct
+// TensorAsExpressionSymmHelper;
+
+// template<template <typename...> class SymmList, typename... Symm, size_t
+// NumIndices, size_t... Ints> struct
+// TensorAsExpressionSymmHelper<SymmList<Symm...>, NumIndices,
+// std::index_sequence<Ints...>>{
+//   static constexpr cpp20::array<int, sizeof...(Is)> symm =
+//       symmetry(std::array<int, sizeof...(Is)>{{Ss...}});
+//   using type = Symmetry<symm[Ints]...>;
+// };
+
+template <typename SymmList, typename TensorIndexTypeList,
+          typename TensorIndexList,
+          size_t NumIndices = tmpl::size<SymmList>::value,
+          typename IndexSequence = std::make_index_sequence<NumIndices>>
+struct TensorAsExpressionSymm;
+
+template <template <typename...> class SymmList, typename... Symm,
+          typename TensorIndexTypeList, typename TensorIndexList,
+          size_t NumIndices, size_t... Ints>
+struct TensorAsExpressionSymm<SymmList<Symm...>, TensorIndexTypeList,
+                              TensorIndexList, NumIndices,
+                              std::index_sequence<Ints...>> {
+  static constexpr auto symm = get_spatial_spacetime_index_symmetry<NumIndices>(
+      {{Symm::value...}},
+      get_spatial_spacetime_index_positions<TensorIndexTypeList,
+                                            TensorIndexList>());
+  using type = Symmetry<symm[Ints]...>;
+};
+}  // namespace detail
+
 /// \ingroup TensorExpressionsGroup
 /// \brief Defines an expression representing a Tensor
 ///
@@ -48,7 +83,9 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
                              ArgsList<Args...>>,
           X, Symm, IndexList<Indices...>, ArgsList<Args...>> {
   using type = X;
-  using symmetry = Symm;
+  using symmetry =
+      typename detail::TensorAsExpressionSymm<Symm, IndexList<Indices...>,
+                                              ArgsList<Args...>>::type;
   using index_list = IndexList<Indices...>;
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
   using args_list = ArgsList<Args...>;

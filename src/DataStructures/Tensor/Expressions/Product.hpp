@@ -212,12 +212,12 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
 /// \param t2 the second operand expression of the product
 /// \return the tensor expression representing the product of two tensor
 /// expressions
-template <typename T1, typename T2, typename ArgsList1, typename ArgsList2>
+template <typename T1, typename T2, typename X1, typename X2, typename Symm1,
+          typename Symm2, typename IndexList1, typename IndexList2,
+          typename ArgsList1, typename ArgsList2>
 SPECTRE_ALWAYS_INLINE auto operator*(
-    const TensorExpression<T1, typename T1::type, typename T1::symmetry,
-                           typename T1::index_list, ArgsList1>& t1,
-    const TensorExpression<T2, typename T2::type, typename T2::symmetry,
-                           typename T2::index_list, ArgsList2>& t2) {
+    const TensorExpression<T1, X1, Symm1, IndexList1, ArgsList1>& t1,
+    const TensorExpression<T2, X2, Symm2, IndexList2, ArgsList2>& t2) {
   return TensorExpressions::contract(
       TensorExpressions::OuterProduct<T1, T2>(~t1, ~t2));
 }

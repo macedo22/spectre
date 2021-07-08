@@ -48,25 +48,21 @@ void test_impl_consistency() {
 void test_rank0() {
   using symm = Symmetry<>;
   using tensorindex_list = make_tensorindex_list<>;
-  using spatial_spacetime_index_positions = tmpl::integral_list<size_t>;
 
-  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
-                           symm, symm, tensorindex_list, tensorindex_list,
-                           spatial_spacetime_index_positions,
-                           spatial_spacetime_index_positions>::type,
-                       tmpl::integral_list<std::int32_t>>);
+  CHECK(
+      std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                         symm, symm, tensorindex_list, tensorindex_list>::type,
+                     tmpl::integral_list<std::int32_t>>);
 }
 
 void test_rank1() {
   using symm = Symmetry<1>;
   using tensorindex_list = make_tensorindex_list<ti_a>;
-  using spatial_spacetime_index_positions = tmpl::integral_list<size_t>;
 
-  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
-                           symm, symm, tensorindex_list, tensorindex_list,
-                           spatial_spacetime_index_positions,
-                           spatial_spacetime_index_positions>::type,
-                       tmpl::integral_list<std::int32_t, 1>>);
+  CHECK(
+      std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                         symm, symm, tensorindex_list, tensorindex_list>::type,
+                     tmpl::integral_list<std::int32_t, 1>>);
 }
 
 void test_rank2() {
@@ -74,49 +70,36 @@ void test_rank2() {
   using asymmetric_symm = Symmetry<2, 1>;
   using tensorindex_list_ij = make_tensorindex_list<ti_i, ti_j>;
   using tensorindex_list_ji = make_tensorindex_list<ti_j, ti_i>;
-  using spatial_spacetime_index_positions = tmpl::integral_list<size_t>;
 
-  CHECK(
-      std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
-                         symmetric_symm, symmetric_symm, tensorindex_list_ij,
-                         tensorindex_list_ij, spatial_spacetime_index_positions,
-                         spatial_spacetime_index_positions>::type,
-                     tmpl::integral_list<std::int32_t, 1, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           symmetric_symm, symmetric_symm, tensorindex_list_ij,
+                           tensorindex_list_ij>::type,
+                       tmpl::integral_list<std::int32_t, 1, 1>>);
 
-  CHECK(
-      std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
-                         symmetric_symm, symmetric_symm, tensorindex_list_ij,
-                         tensorindex_list_ji, spatial_spacetime_index_positions,
-                         spatial_spacetime_index_positions>::type,
-                     tmpl::integral_list<std::int32_t, 1, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           symmetric_symm, symmetric_symm, tensorindex_list_ij,
+                           tensorindex_list_ji>::type,
+                       tmpl::integral_list<std::int32_t, 1, 1>>);
 
-  CHECK(
-      std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
-                         asymmetric_symm, symmetric_symm, tensorindex_list_ij,
-                         tensorindex_list_ij, spatial_spacetime_index_positions,
-                         spatial_spacetime_index_positions>::type,
-                     tmpl::integral_list<std::int32_t, 2, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           asymmetric_symm, symmetric_symm, tensorindex_list_ij,
+                           tensorindex_list_ij>::type,
+                       tmpl::integral_list<std::int32_t, 2, 1>>);
 
-  CHECK(
-      std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
-                         asymmetric_symm, symmetric_symm, tensorindex_list_ij,
-                         tensorindex_list_ji, spatial_spacetime_index_positions,
-                         spatial_spacetime_index_positions>::type,
-                     tmpl::integral_list<std::int32_t, 2, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           asymmetric_symm, symmetric_symm, tensorindex_list_ij,
+                           tensorindex_list_ji>::type,
+                       tmpl::integral_list<std::int32_t, 2, 1>>);
 
-  CHECK(
-      std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
-                         symmetric_symm, asymmetric_symm, tensorindex_list_ij,
-                         tensorindex_list_ij, spatial_spacetime_index_positions,
-                         spatial_spacetime_index_positions>::type,
-                     tmpl::integral_list<std::int32_t, 2, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           symmetric_symm, asymmetric_symm, tensorindex_list_ij,
+                           tensorindex_list_ij>::type,
+                       tmpl::integral_list<std::int32_t, 2, 1>>);
 
-  CHECK(
-      std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
-                         symmetric_symm, asymmetric_symm, tensorindex_list_ij,
-                         tensorindex_list_ji, spatial_spacetime_index_positions,
-                         spatial_spacetime_index_positions>::type,
-                     tmpl::integral_list<std::int32_t, 2, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           symmetric_symm, asymmetric_symm, tensorindex_list_ij,
+                           tensorindex_list_ji>::type,
+                       tmpl::integral_list<std::int32_t, 2, 1>>);
 }
 
 void test_rank3() {
@@ -133,269 +116,109 @@ void test_rank3() {
   using tensorindex_list_cab = make_tensorindex_list<ti_c, ti_a, ti_b>;
   using tensorindex_list_cba = make_tensorindex_list<ti_c, ti_b, ti_a>;
 
-  using spatial_spacetime_index_positions = tmpl::integral_list<size_t>;
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           symm_111, symm_121, tensorindex_list_abc,
+                           tensorindex_list_bca>::type,
+                       tmpl::integral_list<std::int32_t, 2, 2, 1>>);
 
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            symm_111, symm_121, tensorindex_list_abc, tensorindex_list_bca,
-            spatial_spacetime_index_positions,
-            spatial_spacetime_index_positions>::type,
-        tmpl::integral_list<std::int32_t, 2, 2, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           symm_121, symm_111, tensorindex_list_abc,
+                           tensorindex_list_bca>::type,
+                       tmpl::integral_list<std::int32_t, 1, 2, 1>>);
 
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            symm_121, symm_111, tensorindex_list_abc, tensorindex_list_bca,
-            spatial_spacetime_index_positions,
-            spatial_spacetime_index_positions>::type,
-        tmpl::integral_list<std::int32_t, 1, 2, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           symm_111, symm_221, tensorindex_list_abc,
+                           tensorindex_list_acb>::type,
+                       tmpl::integral_list<std::int32_t, 1, 2, 1>>);
 
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            symm_111, symm_221, tensorindex_list_abc, tensorindex_list_acb,
-            spatial_spacetime_index_positions,
-            spatial_spacetime_index_positions>::type,
-        tmpl::integral_list<std::int32_t, 1, 2, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           symm_221, symm_111, tensorindex_list_abc,
+                           tensorindex_list_acb>::type,
+                       tmpl::integral_list<std::int32_t, 2, 2, 1>>);
 
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            symm_221, symm_111, tensorindex_list_abc, tensorindex_list_acb,
-            spatial_spacetime_index_positions,
-            spatial_spacetime_index_positions>::type,
-        tmpl::integral_list<std::int32_t, 2, 2, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           symm_121, symm_221, tensorindex_list_abc,
+                           tensorindex_list_cab>::type,
+                       tmpl::integral_list<std::int32_t, 1, 2, 1>>);
 
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            symm_121, symm_221, tensorindex_list_abc, tensorindex_list_cab,
-            spatial_spacetime_index_positions,
-            spatial_spacetime_index_positions>::type,
-        tmpl::integral_list<std::int32_t, 1, 2, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           symm_221, symm_121, tensorindex_list_abc,
+                           tensorindex_list_cab>::type,
+                       tmpl::integral_list<std::int32_t, 3, 2, 1>>);
 
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            symm_221, symm_121, tensorindex_list_abc, tensorindex_list_cab,
-            spatial_spacetime_index_positions,
-            spatial_spacetime_index_positions>::type,
-        tmpl::integral_list<std::int32_t, 3, 2, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           symm_221, symm_121, tensorindex_list_cab,
+                           tensorindex_list_abc>::type,
+                       tmpl::integral_list<std::int32_t, 2, 2, 1>>);
 
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            symm_221, symm_121, tensorindex_list_cab, tensorindex_list_abc,
-            spatial_spacetime_index_positions,
-            spatial_spacetime_index_positions>::type,
-        tmpl::integral_list<std::int32_t, 2, 2, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           symm_121, symm_221, tensorindex_list_cab,
+                           tensorindex_list_abc>::type,
+                       tmpl::integral_list<std::int32_t, 3, 2, 1>>);
 
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            symm_121, symm_221, tensorindex_list_cab, tensorindex_list_abc,
-            spatial_spacetime_index_positions,
-            spatial_spacetime_index_positions>::type,
-        tmpl::integral_list<std::int32_t, 3, 2, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           symm_121, symm_221, tensorindex_list_abc,
+                           tensorindex_list_acb>::type,
+                       tmpl::integral_list<std::int32_t, 1, 2, 1>>);
 
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            symm_121, symm_221, tensorindex_list_abc, tensorindex_list_acb,
-            spatial_spacetime_index_positions,
-            spatial_spacetime_index_positions>::type,
-        tmpl::integral_list<std::int32_t, 1, 2, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           symm_221, symm_121, tensorindex_list_abc,
+                           tensorindex_list_acb>::type,
+                       tmpl::integral_list<std::int32_t, 2, 2, 1>>);
 
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            symm_221, symm_121, tensorindex_list_abc, tensorindex_list_acb,
-            spatial_spacetime_index_positions,
-            spatial_spacetime_index_positions>::type,
-        tmpl::integral_list<std::int32_t, 2, 2, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           symm_111, symm_321, tensorindex_list_abc,
+                           tensorindex_list_bac>::type,
+                       tmpl::integral_list<std::int32_t, 3, 2, 1>>);
 
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            symm_111, symm_321, tensorindex_list_abc, tensorindex_list_bac,
-            spatial_spacetime_index_positions,
-            spatial_spacetime_index_positions>::type,
-        tmpl::integral_list<std::int32_t, 3, 2, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           symm_321, symm_111, tensorindex_list_abc,
+                           tensorindex_list_bac>::type,
+                       tmpl::integral_list<std::int32_t, 3, 2, 1>>);
 
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            symm_321, symm_111, tensorindex_list_abc, tensorindex_list_bac,
-            spatial_spacetime_index_positions,
-            spatial_spacetime_index_positions>::type,
-        tmpl::integral_list<std::int32_t, 3, 2, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           symm_211, symm_321, tensorindex_list_abc,
+                           tensorindex_list_cba>::type,
+                       tmpl::integral_list<std::int32_t, 3, 2, 1>>);
 
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            symm_211, symm_321, tensorindex_list_abc, tensorindex_list_cba,
-            spatial_spacetime_index_positions,
-            spatial_spacetime_index_positions>::type,
-        tmpl::integral_list<std::int32_t, 3, 2, 1>>);
-
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            symm_321, symm_211, tensorindex_list_abc, tensorindex_list_cba,
-            spatial_spacetime_index_positions,
-            spatial_spacetime_index_positions>::type,
-        tmpl::integral_list<std::int32_t, 3, 2, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           symm_321, symm_211, tensorindex_list_abc,
+                           tensorindex_list_cba>::type,
+                       tmpl::integral_list<std::int32_t, 3, 2, 1>>);
 }
 
 void test_high_rank() {
   using tensorindex_list = make_tensorindex_list<ti_a, ti_b, ti_c, ti_d, ti_e>;
-  using spatial_spacetime_index_positions = tmpl::integral_list<size_t>;
 
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            Symmetry<2, 1, 1, 1, 1>, Symmetry<3, 2, 2, 1, 1>, tensorindex_list,
-            tensorindex_list, spatial_spacetime_index_positions,
-            spatial_spacetime_index_positions>::type,
-        tmpl::integral_list<std::int32_t, 3, 2, 2, 1, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           Symmetry<2, 1, 1, 1, 1>, Symmetry<3, 2, 2, 1, 1>,
+                           tensorindex_list, tensorindex_list>::type,
+                       tmpl::integral_list<std::int32_t, 3, 2, 2, 1, 1>>);
 
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            Symmetry<3, 2, 2, 1, 1>, Symmetry<2, 1, 1, 1, 1>, tensorindex_list,
-            tensorindex_list, spatial_spacetime_index_positions,
-            spatial_spacetime_index_positions>::type,
-        tmpl::integral_list<std::int32_t, 3, 2, 2, 1, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           Symmetry<3, 2, 2, 1, 1>, Symmetry<2, 1, 1, 1, 1>,
+                           tensorindex_list, tensorindex_list>::type,
+                       tmpl::integral_list<std::int32_t, 3, 2, 2, 1, 1>>);
 
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            Symmetry<1, 1, 2, 1, 1>, Symmetry<4, 3, 1, 2, 1>, tensorindex_list,
-            tensorindex_list, spatial_spacetime_index_positions,
-            spatial_spacetime_index_positions>::type,
-        tmpl::integral_list<std::int32_t, 5, 4, 3, 2, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           Symmetry<1, 1, 2, 1, 1>, Symmetry<4, 3, 1, 2, 1>,
+                           tensorindex_list, tensorindex_list>::type,
+                       tmpl::integral_list<std::int32_t, 5, 4, 3, 2, 1>>);
 
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            Symmetry<4, 3, 1, 2, 1>, Symmetry<1, 1, 2, 1, 1>, tensorindex_list,
-            tensorindex_list, spatial_spacetime_index_positions,
-            spatial_spacetime_index_positions>::type,
-        tmpl::integral_list<std::int32_t, 5, 4, 3, 2, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           Symmetry<4, 3, 1, 2, 1>, Symmetry<1, 1, 2, 1, 1>,
+                           tensorindex_list, tensorindex_list>::type,
+                       tmpl::integral_list<std::int32_t, 5, 4, 3, 2, 1>>);
 
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            Symmetry<1, 2, 2, 2, 1>, Symmetry<1, 2, 1, 1, 1>, tensorindex_list,
-            tensorindex_list, spatial_spacetime_index_positions,
-            spatial_spacetime_index_positions>::type,
-        tmpl::integral_list<std::int32_t, 1, 3, 2, 2, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           Symmetry<1, 2, 2, 2, 1>, Symmetry<1, 2, 1, 1, 1>,
+                           tensorindex_list, tensorindex_list>::type,
+                       tmpl::integral_list<std::int32_t, 1, 3, 2, 2, 1>>);
 
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            Symmetry<1, 2, 1, 1, 1>, Symmetry<1, 2, 2, 2, 1>, tensorindex_list,
-            tensorindex_list, spatial_spacetime_index_positions,
-            spatial_spacetime_index_positions>::type,
-        tmpl::integral_list<std::int32_t, 1, 3, 2, 2, 1>>);
-}
-
-void test_spatial_spacetime_index() {
-  // Rank 1
-  // - first operand: (spatial-spacetime)
-  // - second operand: (spatial)
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            Symmetry<1>, Symmetry<1>, make_tensorindex_list<ti_i>,
-            make_tensorindex_list<ti_i>, tmpl::integral_list<size_t, 0>,
-            tmpl::integral_list<size_t>>::type,
-        tmpl::integral_list<std::int32_t, 1>>);
-
-  // Rank 1
-  // - first operand: (spatial)
-  // - second operand: (spatial-spacetime)
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            Symmetry<1>, Symmetry<1>, make_tensorindex_list<ti_i>,
-            make_tensorindex_list<ti_i>, tmpl::integral_list<size_t>,
-            tmpl::integral_list<size_t, 0>>::type,
-        tmpl::integral_list<std::int32_t, 1>>);
-
-  // Rank 1
-  // - first operand: (spatial-spacetime)
-  // - second operand: (spatial-spacetime)
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            Symmetry<1>, Symmetry<1>, make_tensorindex_list<ti_i>,
-            make_tensorindex_list<ti_i>, tmpl::integral_list<size_t, 0>,
-            tmpl::integral_list<size_t, 0>>::type,
-        tmpl::integral_list<std::int32_t, 1>>);
-
-  // Rank 2
-  // - first operand: (spatial, spatial-spacetime)
-  // - second operand: (spatial, spatial)
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            Symmetry<1, 1>, Symmetry<1, 1>, make_tensorindex_list<ti_i, ti_j>,
-            make_tensorindex_list<ti_i, ti_j>, tmpl::integral_list<size_t, 0>,
-            tmpl::integral_list<size_t>>::type,
-        tmpl::integral_list<std::int32_t, 2, 1>>);
-
-  // Rank 2
-  // - first operand: (spatial, spatial)
-  // - second operand: (spatial, spatial-spacetime)
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            Symmetry<1, 1>, Symmetry<1, 1>, make_tensorindex_list<ti_i, ti_j>,
-            make_tensorindex_list<ti_i, ti_j>, tmpl::integral_list<size_t>,
-            tmpl::integral_list<size_t, 1>>::type,
-        tmpl::integral_list<std::int32_t, 2, 1>>);
-
-  // Rank 2
-  // - first operand: (spatial, spatial-spacetime)
-  // - second operand: (spatial, spatial-spacetime)
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            Symmetry<1, 1>, Symmetry<1, 1>, make_tensorindex_list<ti_i, ti_j>,
-            make_tensorindex_list<ti_i, ti_j>, tmpl::integral_list<size_t, 1>,
-            tmpl::integral_list<size_t, 1>>::type,
-        tmpl::integral_list<std::int32_t, 2, 1>>);
-
-  // Rank 2
-  // - first operand: (spatial-spacetime, spatial-spacetime)
-  // - second operand: (spatial, spatial)
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            Symmetry<1, 1>, Symmetry<1, 1>, make_tensorindex_list<ti_i, ti_j>,
-            make_tensorindex_list<ti_i, ti_j>,
-            tmpl::integral_list<size_t, 0, 1>,
-            tmpl::integral_list<size_t>>::type,
-        tmpl::integral_list<std::int32_t, 1, 1>>);
-
-  // Rank 2
-  // - first operand: (spatial, spatial)
-  // - second operand: (spatial-spacetime, spatial-spacetime)
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            Symmetry<1, 1>, Symmetry<1, 1>, make_tensorindex_list<ti_i, ti_j>,
-            make_tensorindex_list<ti_i, ti_j>, tmpl::integral_list<size_t>,
-            tmpl::integral_list<size_t, 0, 1>>::type,
-        tmpl::integral_list<std::int32_t, 1, 1>>);
-
-  // Rank 2
-  // - first operand: (spatial-spacetime, spatial-spacetime)
-  // - second operand: (spatial-spacetime, spatial-spacetime)
-  CHECK(std::is_same_v<
-        typename TensorExpressions::detail::AddSubSymmetry<
-            Symmetry<1, 1>, Symmetry<1, 1>, make_tensorindex_list<ti_i, ti_j>,
-            make_tensorindex_list<ti_i, ti_j>,
-            tmpl::integral_list<size_t, 0, 1>,
-            tmpl::integral_list<size_t, 0, 1>>::type,
-        tmpl::integral_list<std::int32_t, 1, 1>>);
-
-  // High rank
-  // - both operands contain a mixture of spatial and spacetime indices and
-  // symmetries, where for some spacetime indices, generic spatial indices are
-  // used for spacetime indices
-  //   CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
-  //                            Symmetry<1, 2, 3, 2, 3, 2, 1>, Symmetry<2, 1, 3,
-  //                            1, 2, 1, 1>, make_tensorindex_list<ti_a, ti_b,
-  //                            ti_j, ti_c, ti_i, ti_d, ti_e>,
-  //                            make_tensorindex_list<ti_i, ti_d, ti_e, ti_a,
-  //                            ti_j, ti_c, ti_b>, tmpl::integral_list<size_t,
-  //                            3, 5>, tmpl::integral_list<size_t, 6>>::type,
-  //                        tmpl::integral_list<std::int32_t, 6, 5, 3, 4, 2, 3,
-  //                        2, 1>>);
-  //   CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
-  //                            Symmetry<1, 2, 2, 2, 1>, Symmetry<1, 1, 2, 1,
-  //                            1>, make_tensorindex_list<ti_a, ti_b, ti_i,
-  //                            ti_j, ti_e>, make_tensorindex_list<ti_i, ti_d,
-  //                            ti_e, ti_a, ti_j, ti_c, ti_b>,
-  //                            tmpl::integral_list<size_t, 3, 5>,
-  //                            tmpl::integral_list<size_t, 6>>::type,
-  //                        tmpl::integral_list<std::int32_t, 6, 5, 3, 4, 2, 3,
-  //                        2, 1>>);
+  CHECK(std::is_same_v<typename TensorExpressions::detail::AddSubSymmetry<
+                           Symmetry<1, 2, 1, 1, 1>, Symmetry<1, 2, 2, 2, 1>,
+                           tensorindex_list, tensorindex_list>::type,
+                       tmpl::integral_list<std::int32_t, 1, 3, 2, 2, 1>>);
 }
 }  // namespace
 
@@ -407,5 +230,4 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.AddSubSymmetry",
   test_rank2();
   test_rank3();
   test_high_rank();
-  test_spatial_spacetime_index();
 }
