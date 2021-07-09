@@ -11,6 +11,7 @@
 #include "Utilities/Algorithm.hpp"
 #include "Utilities/ConstantExpressions.hpp"
 #include "Utilities/Gsl.hpp"
+#include "Utilities/MakeArray.hpp"
 #include "Utilities/Requires.hpp"
 #include "Utilities/TMPL.hpp"
 
@@ -131,5 +132,21 @@ template <typename TensorIndexTypeList, typename SpatialSpacetimeIndexPositions>
 using replace_spatial_spacetime_indices = tmpl::fold<
     SpatialSpacetimeIndexPositions, TensorIndexTypeList,
     replace_spatial_spacetime_indices_helper<tmpl::_state, tmpl::_element>>;
+
+template <size_t NumIndices, size_t NumPositions1, size_t NumPositions2>
+constexpr std::array<std::int32_t, NumIndices>
+spatial_spacetime_index_transformation_from_positions(
+    const std::array<size_t, NumPositions1>& positions1,
+    const std::array<size_t, NumPositions2>& positions2) noexcept {
+  std::array<std::int32_t, NumIndices> transformation =
+      make_array<NumIndices, std::int32_t>(0);
+  for (size_t i = 0; i < NumPositions1; i++) {
+    gsl::at(transformation, gsl::at(positions1, i))--;
+  }
+  for (size_t i = 0; i < NumPositions2; i++) {
+    gsl::at(transformation, gsl::at(positions2, i))++;
+  }
+  return transformation;
+}
 }  // namespace detail
 }  // namespace TensorExpressions

@@ -299,113 +299,85 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   AddSub(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~AddSub() override = default;
 
+  SPECTRE_ALWAYS_INLINE decltype(auto) add_or_subtract(
+      const std::array<size_t, num_tensor_indices>& op1_multi_index,
+      const std::array<size_t, num_tensor_indices>& op2_multi_index)
+      const noexcept {
+    if constexpr (Sign == 1) {
+      return t1_.template get<Args1...>(op1_multi_index) +
+             t2_.template get<Args2...>(op2_multi_index);
+    } else {
+      return t1_.template get<Args1...>(op1_multi_index) -
+             t2_.template get<Args2...>(op2_multi_index);
+    }
+  }
+
   template <typename... LhsIndices>
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& lhs_multi_index) const {
     if constexpr (std::is_same_v<tmpl::list<Args1...>, tmpl::list<Args2...>>) {
-      if constexpr (first_op_spatial_spacetime_index_positions.size() == 0) {
-        // either:
-        // (i) neither operand uses a generic spatial index for a spacetime
-        // index, or
-        // (ii) only the second operand uses a generic spatial index for a
-        // spacetime index
+      if constexpr (first_op_spatial_spacetime_index_positions.size() != 0 or
+                    second_op_spatial_spacetime_index_positions.size() != 0) {
+        constexpr std::array<size_t, num_tensor_indices>
+            spatial_spacetime_index_transformation =
+                detail::spatial_spacetime_index_transformation_from_positions<
+                    num_tensor_indices>(
+                    first_op_spatial_spacetime_index_positions,
+                    second_op_spatial_spacetime_index_positions);
         std::array<size_t, num_tensor_indices> second_op_multi_index =
             lhs_multi_index;
-        for (size_t i = 0;
-             i < second_op_spatial_spacetime_index_positions.size(); i++) {
-          gsl::at(second_op_multi_index, i) =
-              gsl::at(lhs_multi_index,
-                      gsl::at(second_op_spatial_spacetime_index_positions, i)) +
-              1;
+        for (size_t i = 0; i < num_tensor_indices; i++) {
+          gsl::at(second_op_multi_index, i) = static_cast<size_t>(
+              static_cast<std::int32_t>(gsl::at(second_op_multi_index, i)) +
+              gsl::at(spatial_spacetime_index_transformation, i));
         }
-        if constexpr (Sign == 1) {
-          return t1_.template get<Args1...>(lhs_multi_index) +
-                 t2_.template get<Args2...>(second_op_multi_index);
-        } else {
-          return t1_.template get<Args1...>(lhs_multi_index) -
-                 t2_.template get<Args2...>(second_op_multi_index);
-        }
+        return add_or_subtract(lhs_multi_index, second_op_multi_index);
       } else {
-        // either:
-        // (i) only the first operand uses a generic spatial index for a
-        // spacetime index
-        // (ii) both operands use a generic spatial index for a spacetime index
-        std::array<size_t, num_tensor_indices> second_op_multi_index{};
-        for (size_t i = 0;
-             i < first_op_spatial_spacetime_index_positions.size(); i++) {
-          gsl::at(second_op_multi_index, i) =
-              gsl::at(lhs_multi_index,
-                      gsl::at(first_op_spatial_spacetime_index_positions, i)) -
-              1;
-        }
-        for (size_t i = 0;
-             i < second_op_spatial_spacetime_index_positions.size(); i++) {
-          gsl::at(second_op_multi_index, i) =
-              gsl::at(lhs_multi_index,
-                      gsl::at(second_op_spatial_spacetime_index_positions, i)) +
-              1;
-        }
-        if constexpr (Sign == 1) {
-          return t1_.template get<Args1...>(lhs_multi_index) +
-                 t2_.template get<Args2...>(second_op_multi_index);
-        } else {
-          return t1_.template get<Args1...>(lhs_multi_index) -
-                 t2_.template get<Args2...>(second_op_multi_index);
-        }
+        return add_or_subtract(lhs_multi_index, lhs_multi_index);
       }
     } else {
-      if constexpr (first_op_spatial_spacetime_index_positions.size() == 0) {
-        // either:
-        // (i) neither operand uses a generic spatial index for a spacetime
-        // index, or
-        // (ii) only the second operand uses a generic spatial index for a
-        // spacetime index
-        auto second_op_multi_index = transform_multi_index(
-            lhs_multi_index, operand_index_transformation);
-        for (size_t i = 0;
-             i < second_op_spatial_spacetime_index_positions.size(); i++) {
-          gsl::at(second_op_multi_index,
-                  gsl::at(second_op_spatial_spacetime_index_positions, i)) += 1;
-        }
-        if constexpr (Sign == 1) {
-          return t1_.template get<Args1...>(lhs_multi_index) +
-                 t2_.template get<Args2...>(second_op_multi_index);
-        } else {
-          return t1_.template get<Args1...>(lhs_multi_index) -
-                 t2_.template get<Args2...>(second_op_multi_index);
-        }
-      } else {
-        // either:
-        // (i) only the first operand uses a generic spatial index for a
-        // spacetime index
-        // (ii) both operands use a generic spatial index for a spacetime index
+      if constexpr (first_op_spatial_spacetime_index_positions.size() != 0 or
+                    second_op_spatial_spacetime_index_positions.size() != 0) {
+        constexpr std::array<size_t,
+                             second_op_spatial_spacetime_index_positions.size()>
+            transformed_second_op_spatial_spacetime_index_positions = []() {
+              std::array<size_t,
+                         second_op_spatial_spacetime_index_positions.size()>
+                  transformed_second_op_spatial_spacetime_index_positions{};
+              for (size_t i = 0;
+                   i < second_op_spatial_spacetime_index_positions.size();
+                   i++) {
+                gsl::at(transformed_second_op_spatial_spacetime_index_positions,
+                        i) =
+                    gsl::at(operand_index_transformation,
+                            gsl::at(second_op_spatial_spacetime_index_positions,
+                                    i));
+              }
+              return transformed_second_op_spatial_spacetime_index_positions;
+            }();
+
+        constexpr std::array<std::int32_t, num_tensor_indices>
+            spatial_spacetime_index_transformation =
+                detail::spatial_spacetime_index_transformation_from_positions<
+                    num_tensor_indices>(
+                    first_op_spatial_spacetime_index_positions,
+                    transformed_second_op_spatial_spacetime_index_positions);
         std::array<size_t, num_tensor_indices> second_op_multi_index =
             lhs_multi_index;
-        for (size_t i = 0;
-             i < first_op_spatial_spacetime_index_positions.size(); i++) {
-          gsl::at(second_op_multi_index,
-                  gsl::at(first_op_spatial_spacetime_index_positions, i)) -= 1;
-          // gsl::at(lhs_multi_index,
-          //         gsl::at(lhs_spatial_spacetime_index_positions, j)) -= 1;
+        for (size_t i = 0; i < num_tensor_indices; i++) {
+          gsl::at(second_op_multi_index, i) = static_cast<size_t>(
+              static_cast<std::int32_t>(gsl::at(second_op_multi_index, i)) +
+              gsl::at(spatial_spacetime_index_transformation, i));
         }
-        for (size_t i = 0;
-             i < second_op_spatial_spacetime_index_positions.size(); i++) {
-          gsl::at(second_op_multi_index,
-                  gsl::at(operand_index_transformation,
-                          gsl::at(second_op_spatial_spacetime_index_positions,
-                                  i))) += 1;
-          // gsl::at(rhs_multi_index,
-          //         gsl::at(rhs_spatial_spacetime_index_positions, j)) += 1;
-        }
-        if constexpr (Sign == 1) {
-          return t1_.template get<Args1...>(lhs_multi_index) +
-                 t2_.template get<Args2...>(transform_multi_index(
-                     second_op_multi_index, operand_index_transformation));
-        } else {
-          return t1_.template get<Args1...>(lhs_multi_index) -
-                 t2_.template get<Args2...>(transform_multi_index(
-                     second_op_multi_index, operand_index_transformation));
-        }
+        return add_or_subtract(
+            lhs_multi_index,
+            transform_multi_index(second_op_multi_index,
+                                  operand_index_transformation));
+      } else {
+        return add_or_subtract(
+            lhs_multi_index,
+            transform_multi_index(lhs_multi_index,
+                                  operand_index_transformation));
       }
     }
   }
