@@ -9,6 +9,7 @@ set(LIBRARY_SOURCES
   Test_Contract.cpp
   Test_Evaluate.cpp
   Test_EvaluateSpatialSpacetimeIndex.cpp
+  Test_GHTimeDerivative.cpp
   Test_MixedOperations.cpp
   Test_Product.cpp
   Test_ProductHighRankIntermediate.cpp
@@ -21,5 +22,5 @@ add_test_library(
   ${LIBRARY}
   "DataStructures/Tensor/Expressions"
   "${LIBRARY_SOURCES}"
-  "DataStructures;Utilities"
+  "DataStructures;GeneralizedHarmonic;GeneralRelativity;GeneralRelativityHelpers;Utilities"
   )
