@@ -234,7 +234,7 @@ void evaluate(
 
       (*lhs_tensor)[i] =
           (~rhs_tensorexpression)
-              .template get<RhsTensorIndices...>(rhs_multi_index);
+              .get(rhs_multi_index);
 
     } else {
       // either:
@@ -264,7 +264,7 @@ void evaluate(
 
         (*lhs_tensor)[i] =
             (~rhs_tensorexpression)
-                .template get<RhsTensorIndices...>(rhs_multi_index);
+                .get(rhs_multi_index);
       }
     }
   }

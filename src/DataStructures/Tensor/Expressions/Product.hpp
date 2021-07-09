@@ -82,69 +82,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   OuterProduct(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~OuterProduct() override = default;
 
-  /// \ingroup TensorExpressionsGroup
-  /// \brief Helper struct for computing the multi-index of a component of an
-  /// operand of the outer product from the multi-index of a component of the
-  /// outer product
-  ///
-  /// \details
-  /// While `OperandTensorIndexList` will either be the first operand's generic
-  /// indices, `ArgsList1<Args1...>`, or the second operand's generic indices,
-  /// `ArgsList2<Args2...>`, and both of these are accessible within the class,
-  /// this struct wraps the core functionality and is templated with
-  /// `OperandTensorIndexList` so that the functionality can be reused for each
-  /// operand's generic index list.
-  ///
-  /// \tparam OperandTensorIndexList the operand's list of TensorIndexs
-  template <typename OperandTensorIndexList>
-  struct GetOpTensorMultiIndex;
-
-  template <typename... OperandTensorIndices>
-  struct GetOpTensorMultiIndex<tmpl::list<OperandTensorIndices...>> {
-    /// \ingroup TensorExpressionsGroup
-    /// \brief Computes the multi-index of a component of an operand of the
-    /// outer product from the multi-index of a component of the outer product
-    ///
-    /// \details
-    /// Example: Let's say we are evaluating \f$L_abc = R_{b} * S_{ca}\f$. Let
-    /// `ti_a_t` denote the type of `ti_a`, and apply the same convention for
-    /// other generic indices. Let `LhsTensorIndices == ti_a_t, ti_b_t, ti_c_t`,
-    /// and `OperandTensorIndices` is either `ti_b_t` or `ti_c_t, ti_a_t`. Let
-    /// `lhs_tensor_multi_index == [0, 1, 2]`, representing the multi-index of
-    /// the component \f$L_{012}\f$. If
-    /// `OperandTensorIndices == ti_c_t, ti_a_t`, this function will return the
-    /// tensor multi-index representing the component \f$S_{20}\f$, which is
-    /// `[2, 0]`.
-    ///
-    /// \tparam LhsTensorIndices the TensorIndexs of the outer product tensor
-    /// \param lhs_tensor_multi_index the tensor multi-index of a component in
-    /// the outer product tensor
-    /// \return the tensor multi-index of an operand of the outer product
-    template <typename... LhsTensorIndices>
-    static SPECTRE_ALWAYS_INLINE constexpr std::array<
-        size_t, sizeof...(OperandTensorIndices)>
-    apply(
-        const std::array<size_t, num_tensor_indices>& lhs_tensor_multi_index) {
-      constexpr size_t operand_num_tensor_indices =
-          sizeof...(OperandTensorIndices);
-      constexpr std::array<size_t, sizeof...(LhsTensorIndices)>
-          lhs_tensorindex_vals = {{LhsTensorIndices::value...}};
-      constexpr std::array<size_t, operand_num_tensor_indices>
-          operand_tensorindex_vals = {{OperandTensorIndices::value...}};
-
-      // the operand component's tensor multi-index to compute
-      std::array<size_t, operand_num_tensor_indices>
-          operand_tensor_multi_index{};
-      for (size_t i = 0; i < operand_num_tensor_indices; i++) {
-        gsl::at(operand_tensor_multi_index, i) =
-            gsl::at(lhs_tensor_multi_index,
-                    index_of(lhs_tensorindex_vals,
-                             gsl::at(operand_tensorindex_vals, i)));
-      }
-      return operand_tensor_multi_index;
-    }
-  };
-
+  // TODO : review below documentation
   /// \brief Return the value of the component of the outer product tensor at a
   /// given multi-index
   ///
@@ -160,25 +98,27 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// correspond to \f$R_{1}\f$ and \f$S_{20}\f$, retrieve their values, and
   /// return their product.
   ///
-  /// \tparam LhsIndices the TensorIndexs of the outer product tensor
   /// \param lhs_multi_index the multi-index of the component of the outer
   /// product tensor to retrieve
   /// \return the value of the component at `lhs_multi_index` in the outer
   /// product tensor
-  template <typename... LhsIndices>
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& lhs_multi_index) const {
-    const std::array<size_t, num_tensor_indices_first_operand>
-        first_op_tensor_multi_index =
-            GetOpTensorMultiIndex<ArgsList1<Args1...>>::template apply<
-                LhsIndices...>(lhs_multi_index);
-    const std::array<size_t, num_tensor_indices_second_operand>
-        second_op_tensor_multi_index =
-            GetOpTensorMultiIndex<ArgsList2<Args2...>>::template apply<
-                LhsIndices...>(lhs_multi_index);
+    std::array<size_t, num_tensor_indices_first_operand>
+        first_op_tensor_multi_index{};
+    for (size_t i = 0; i < num_tensor_indices_first_operand; i++) {
+      first_op_tensor_multi_index[i] = lhs_multi_index[i];
+    }
 
-    return t1_.template get<Args1...>(first_op_tensor_multi_index) *
-           t2_.template get<Args2...>(second_op_tensor_multi_index);
+    std::array<size_t, num_tensor_indices_second_operand>
+        second_op_tensor_multi_index{};
+    for (size_t i = 0; i < num_tensor_indices_second_operand; i++) {
+      second_op_tensor_multi_index[i] =
+          lhs_multi_index[num_tensor_indices_first_operand + i];
+    }
+
+    return t1_.get(first_op_tensor_multi_index) *
+           t2_.get(second_op_tensor_multi_index);
   }
 
  private:

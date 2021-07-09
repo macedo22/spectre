@@ -299,20 +299,19 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   AddSub(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~AddSub() override = default;
 
+  // TODO: document
   SPECTRE_ALWAYS_INLINE decltype(auto) add_or_subtract(
       const std::array<size_t, num_tensor_indices>& op1_multi_index,
       const std::array<size_t, num_tensor_indices>& op2_multi_index)
       const noexcept {
     if constexpr (Sign == 1) {
-      return t1_.template get<Args1...>(op1_multi_index) +
-             t2_.template get<Args2...>(op2_multi_index);
+      return t1_.get(op1_multi_index) + t2_.get(op2_multi_index);
     } else {
-      return t1_.template get<Args1...>(op1_multi_index) -
-             t2_.template get<Args2...>(op2_multi_index);
+      return t1_.get(op1_multi_index) - t2_.get(op2_multi_index);
     }
   }
 
-  template <typename... LhsIndices>
+  // TODO: document
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& lhs_multi_index) const {
     if constexpr (std::is_same_v<tmpl::list<Args1...>, tmpl::list<Args2...>>) {

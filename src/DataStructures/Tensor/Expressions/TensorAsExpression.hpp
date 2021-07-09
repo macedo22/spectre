@@ -95,6 +95,7 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
       : t_(&t) {}
   ~TensorAsExpression() override = default;
 
+  // TODO : review below documentation
   /// \brief Returns the value of a left hand side tensor's multi-index
   ///
   /// \details
@@ -105,26 +106,14 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
   /// index sorting by mapping between the generic index orders of the LHS and
   /// RHS tensors.
   ///
-  /// \tparam LhsIndices the TensorIndexs of the Tensor on the LHS of the tensor
-  /// expression
   /// \param lhs_multi_index the multi-index of the LHS tensor component to
   /// retrieve
   /// \return the value of the DataType of the component at `lhs_multi_index` in
   /// the LHS tensor
-  template <typename... LhsIndices>
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& lhs_multi_index)
       const noexcept {
-    if constexpr (std::is_same_v<tmpl::list<LhsIndices...>,
-                                 tmpl::list<Args...>>) {
       return t_->get(lhs_multi_index);
-    } else {
-      constexpr std::array<size_t, num_tensor_indices> index_transformation =
-          compute_tensorindex_transformation<num_tensor_indices>(
-              {{LhsIndices::value...}}, {{Args::value...}});
-      return t_->get(
-          transform_multi_index(lhs_multi_index, index_transformation));
-    }
   }
 
   /// Retrieve the i'th entry of the Tensor being held
