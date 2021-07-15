@@ -6,6 +6,7 @@ spectre_target_headers(
   INCLUDE_DIRECTORY ${CMAKE_SOURCE_DIR}/src
   HEADERS
   AddSubtract.hpp
+  ConcreteTimeIndex.hpp
   Contract.hpp
   Evaluate.hpp
   LhsTensorSymmAndIndices.hpp
@@ -13,6 +14,7 @@ spectre_target_headers(
   NumberAsExpression.hpp
   SpatialSpacetimeIndex.hpp
   SquareRoot.hpp
+  SymmetryTransformation.hpp
   TensorAsExpression.hpp
   TensorExpression.hpp
   TensorIndex.hpp

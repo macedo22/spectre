@@ -9,7 +9,7 @@
 #include <array>
 #include <cstddef>
 
-#include "DataStructures/Tensor/Expressions/LhsTensorSymmAndIndices.hpp"
+#include "DataStructures/Tensor/Expressions/SymmetryTransformation.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Expressions/TensorIndexTransformation.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
@@ -47,10 +47,11 @@ template <template <typename...> class SymmList, typename... Symm,
 struct TensorAsExpressionSymm<SymmList<Symm...>, TensorIndexTypeList,
                               TensorIndexList, NumIndices,
                               std::index_sequence<Ints...>> {
-  static constexpr auto symm = get_spatial_spacetime_index_symmetry<NumIndices>(
+  static constexpr auto symm = get_transformed_spacetime_symmetry<NumIndices>(
       {{Symm::value...}},
       get_spatial_spacetime_index_positions<TensorIndexTypeList,
-                                            TensorIndexList>());
+                                            TensorIndexList>(),
+      get_concrete_time_index_positions<TensorIndexList>());
   using type = Symmetry<symm[Ints]...>;
 };
 }  // namespace detail

@@ -138,6 +138,8 @@ static constexpr TensorIndex<6> ti_g{};
 static constexpr TensorIndex<TensorIndex_detail::upper_sentinel + 6> ti_G{};
 static constexpr TensorIndex<7> ti_h{};
 static constexpr TensorIndex<TensorIndex_detail::upper_sentinel + 7> ti_H{};
+static constexpr TensorIndex<8> ti_t{};
+static constexpr TensorIndex<TensorIndex_detail::upper_sentinel + 8> ti_T{};
 static constexpr TensorIndex<TensorIndex_detail::spatial_sentinel> ti_i{};
 static constexpr TensorIndex<TensorIndex_detail::upper_spatial_sentinel> ti_I{};
 static constexpr TensorIndex<TensorIndex_detail::spatial_sentinel + 1> ti_j{};
@@ -187,6 +189,14 @@ struct make_array_from_tensorindex_list_impl<tmpl::list<TensorIndices...>> {
     return {{TensorIndices::value...}};
   }
 };
+
+template <typename TensorIndexList>
+struct tensorindex_list_is_valid_impl;
+
+template <typename... TensorIndices>
+struct tensorindex_list_is_valid_impl<tmpl::list<TensorIndices...>> {
+  static constexpr bool value = tmpl::is_set<TensorIndices...>::value;
+};
 }  // namespace TensorIndex_detail
 
 /*!
@@ -213,3 +223,29 @@ make_array_from_tensorindex_list() noexcept {
   return TensorIndex_detail::make_array_from_tensorindex_list_impl<
       TensorIndexList>::apply();
 }
+
+namespace TensorExpressions {
+namespace detail {
+template <typename TensorIndexList>
+struct remove_concrete_time_indices;
+}
+}  // namespace TensorExpressions
+
+// TODO: move this and above functions into TensorExpressions namespace?
+// TODO: update below documentation
+/*!
+ * \ingroup TensorExpressionsGroup
+ * \brief Determine whether or not a given list of TensorIndexs is valid
+ *
+ * @tparam TensorIndices list of generic index objects, e.g. `ti_a, ti_b`
+ */
+template <typename... TensorIndices>
+struct tensorindex_list_is_valid {
+  static_assert((... and tt::is_tensor_index<TensorIndices>::value),
+                "Template parameters of tensorindex_list_is_valid "
+                "must be TensorIndex types.");
+  static constexpr bool value =
+      TensorIndex_detail::tensorindex_list_is_valid_impl<
+          typename TensorExpressions::detail::remove_concrete_time_indices<
+              tmpl::list<TensorIndices...>>::type>::value;
+};

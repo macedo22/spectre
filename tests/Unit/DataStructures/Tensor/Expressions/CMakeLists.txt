@@ -6,8 +6,10 @@ set(LIBRARY "Test_Expressions")
 set(LIBRARY_SOURCES
   Test_AddSubSymmetry.cpp
   Test_AddSubtract.cpp
+  Test_ConcreteTimeIndex.cpp
   Test_Contract.cpp
   Test_Evaluate.cpp
+  Test_EvaluateConcreteTimeIndex.cpp
   Test_EvaluateSpatialSpacetimeIndex.cpp
   Test_GHTimeDerivative.cpp
   Test_MixedOperations.cpp

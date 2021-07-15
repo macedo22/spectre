@@ -91,4 +91,6 @@ SPECTRE_TEST_CASE(
       ti_d, ti_c, ti_a, ti_b);
   TestHelpers::TensorExpressions::test_tensor_index_transformation_rank_4(
       ti_d, ti_c, ti_b, ti_a);
+
+  // TODO: test with ti_t and ti_T in a new helper test file
 }
