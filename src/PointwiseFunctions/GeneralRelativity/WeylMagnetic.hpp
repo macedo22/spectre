@@ -8,6 +8,7 @@
 #include "DataStructures/DataBox/Tag.hpp"
 #include "DataStructures/Tensor/TypeAliases.hpp"
 #include "PointwiseFunctions/GeneralRelativity/Tags.hpp"
+#include "Utilities/TMPL.hpp"
 
 /// \cond
 namespace gsl {
@@ -73,8 +74,7 @@ void weyl_magnetic_scalar(
 
 namespace Tags {
 /// Compute item for the magnetic part of the weyl tensor in vacuum
-/// Computed from the `SpatialRicci`, `ExtrinsicCurvature`, and
-/// `InverseSpatialMetric`
+/// Computed from the `ExtrinsicCurvature` and `SpatialMetric`
 ///
 /// Can be retrieved using gr::Tags::WeylMagnetic
 template <size_t SpatialDim, typename Frame, typename DataType>
@@ -97,6 +97,7 @@ struct WeylMagneticCompute : WeylMagnetic<SpatialDim, Frame, DataType>,
 };
 
 /// Can be retrieved using gr::Tags::`WeylMagneticScalar`
+/// Computes magnetic part of the Weyl tensor
 template <size_t SpatialDim, typename Frame, typename DataType>
 struct WeylMagneticScalarCompute : WeylMagneticScalar<DataType>,
                                    db::ComputeTag {
