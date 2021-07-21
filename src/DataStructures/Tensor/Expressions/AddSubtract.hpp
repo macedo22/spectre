@@ -13,9 +13,11 @@
 #include <utility>
 
 #include "DataStructures/DataVector.hpp"
+#include "DataStructures/Tensor/Expressions/ConcreteTimeIndex.hpp"
 #include "DataStructures/Tensor/Expressions/NumberAsExpression.hpp"
 #include "DataStructures/Tensor/Expressions/SpatialSpacetimeIndex.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
+#include "DataStructures/Tensor/Expressions/TensorIndex.hpp"
 #include "DataStructures/Tensor/Expressions/TensorIndexTransformation.hpp"
 #include "Utilities/Algorithm.hpp"
 #include "Utilities/ForceInline.hpp"
@@ -297,6 +299,10 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
       detail::get_spatial_spacetime_index_positions<typename T2::index_list,
                                                     ArgsList2<Args2...>>();
 
+  static constexpr bool ops_have_equivalent_tensorindices =
+      tensorindices_are_equivalent<tmpl::list<Args1...>,
+                                   tmpl::list<Args2...>>::value;
+
   AddSub(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~AddSub() override = default;
 
@@ -315,7 +321,7 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   // TODO: document
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& lhs_multi_index) const {
-    if constexpr (std::is_same_v<tmpl::list<Args1...>, tmpl::list<Args2...>>) {
+    if constexpr (ops_have_equivalent_tensorindices) {
       if constexpr (first_op_spatial_spacetime_index_positions.size() != 0 or
                     second_op_spatial_spacetime_index_positions.size() != 0) {
         constexpr std::array<size_t, num_tensor_indices>

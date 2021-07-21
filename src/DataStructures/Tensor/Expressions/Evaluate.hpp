@@ -242,8 +242,7 @@ void evaluate(
       "the generic indices of the evaluated RHS expression are ti_b and ti_c, "
       "but the generic indices provided for the LHS are ti_a and ti_b.");
   static_assert(
-      tensorindex_list_is_valid<
-          std::decay_t<decltype(LhsTensorIndices)>...>::value,
+      tensorindex_list_is_valid<lhs_tensorindex_list>::value,
       "Cannot evaluate a tensor expression to a LHS tensor with a repeated "
       "generic index, e.g. evaluate<ti_a, ti_a>. (Note that the concrete "
       "time indices (ti_T and ti_t) can be repeated.)");

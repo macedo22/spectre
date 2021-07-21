@@ -3,16 +3,21 @@
 
 #include "Framework/TestingFramework.hpp"
 
+#include "DataStructures/Tensor/Expressions/ConcreteTimeIndex.hpp"
 #include "DataStructures/Tensor/Expressions/TensorIndex.hpp"
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.TensorIndex",
                   "[DataStructures][Unit]") {
   // Test `make_tensorindex_list`
-  CHECK(std::is_same_v<
-        make_tensorindex_list<ti_j, ti_A, ti_b>,
-        tmpl::list<std::decay_t<decltype(ti_j)>, std::decay_t<decltype(ti_A)>,
-                   std::decay_t<decltype(ti_b)>>>);
-  CHECK(std::is_same_v<make_tensorindex_list<>, tmpl::list<>>);
+  // Check at compile time since some other tests below use this metafunction
+  static_assert(
+      std::is_same_v<
+          make_tensorindex_list<ti_j, ti_A, ti_b>,
+          tmpl::list<std::decay_t<decltype(ti_j)>, std::decay_t<decltype(ti_A)>,
+                     std::decay_t<decltype(ti_b)>>>,
+      "make_tensorindex_list failed for non-empty list");
+  static_assert(std::is_same_v<make_tensorindex_list<>, tmpl::list<>>,
+                "make_tensorindex_list failed for empty list");
 
   // Test `make_array_from_tensorindex_list`
   const std::array<size_t, 3> expected_list_1{ti_d.value, ti_c.value,
@@ -71,4 +76,43 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.TensorIndex",
   CHECK(get_tensorindex_value_with_opposite_valence(
             TensorIndex_detail::upper_spatial_sentinel + 3) ==
         TensorIndex_detail::spatial_sentinel + 3);
+
+  // Test tensorindex_list_is_valid
+  CHECK(tensorindex_list_is_valid<make_tensorindex_list<>>::value);
+  CHECK(tensorindex_list_is_valid<make_tensorindex_list<ti_J>>::value);
+  CHECK(tensorindex_list_is_valid<
+        make_tensorindex_list<ti_a, ti_c, ti_I, ti_B>>::value);
+  CHECK(tensorindex_list_is_valid<
+        make_tensorindex_list<ti_t, ti_T, ti_T, ti_T, ti_t>>::value);
+  CHECK(tensorindex_list_is_valid<
+        make_tensorindex_list<ti_d, ti_T, ti_D>>::value);
+  CHECK(not tensorindex_list_is_valid<
+        make_tensorindex_list<ti_I, ti_a, ti_I>>::value);
+
+  // Test tensorindices_are_equivalent
+  CHECK(TensorExpressions::tensorindices_are_equivalent<
+        make_tensorindex_list<>, make_tensorindex_list<>>::value);
+  CHECK(TensorExpressions::tensorindices_are_equivalent<
+        make_tensorindex_list<ti_a, ti_c, ti_I, ti_B>,
+        make_tensorindex_list<ti_a, ti_c, ti_I, ti_B>>::value);
+  CHECK(not TensorExpressions::tensorindices_are_equivalent<
+        make_tensorindex_list<ti_a, ti_c, ti_I, ti_B>,
+        make_tensorindex_list<ti_a, ti_c, ti_i, ti_B>>::value);
+  CHECK(not TensorExpressions::tensorindices_are_equivalent<
+        make_tensorindex_list<ti_a, ti_c, ti_I, ti_B>,
+        make_tensorindex_list<ti_a, ti_c, ti_I>>::value);
+  CHECK(not TensorExpressions::tensorindices_are_equivalent<
+        make_tensorindex_list<ti_a, ti_c, ti_I>,
+        make_tensorindex_list<ti_a, ti_c, ti_I, ti_B>>::value);
+  CHECK(not TensorExpressions::tensorindices_are_equivalent<
+        make_tensorindex_list<ti_j, ti_B>,
+        make_tensorindex_list<ti_B, ti_j>>::value);
+  CHECK(TensorExpressions::tensorindices_are_equivalent<
+        make_tensorindex_list<ti_T>, make_tensorindex_list<ti_t>>::value);
+  CHECK(TensorExpressions::tensorindices_are_equivalent<
+        make_tensorindex_list<ti_t, ti_T, ti_T>,
+        make_tensorindex_list<ti_T, ti_t, ti_T>>::value);
+  CHECK(TensorExpressions::tensorindices_are_equivalent<
+        make_tensorindex_list<ti_i, ti_t, ti_C>,
+        make_tensorindex_list<ti_i, ti_T, ti_C>>::value);
 }

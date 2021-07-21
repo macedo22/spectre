@@ -162,6 +162,9 @@ template <typename T>
 struct is_tensor_index : std::false_type {};
 template <size_t I>
 struct is_tensor_index<TensorIndex<I>> : std::true_type {};
+
+template <typename T>
+struct is_concrete_time_index;
 }  // namespace tt
 
 namespace TensorIndex_detail {
@@ -196,6 +199,34 @@ struct tensorindex_list_is_valid_impl;
 template <typename... TensorIndices>
 struct tensorindex_list_is_valid_impl<tmpl::list<TensorIndices...>> {
   static constexpr bool value = tmpl::is_set<TensorIndices...>::value;
+};
+
+// TODO : document and explain the point
+template <typename TensorIndexList1, typename TensorIndexList2,
+          bool ListsSameSize>
+struct tensorindices_are_equivalent_impl;
+
+template <typename... TensorIndices1, typename... TensorIndices2>
+struct tensorindices_are_equivalent_impl<tmpl::list<TensorIndices1...>,
+                                         tmpl::list<TensorIndices2...>, true> {
+  static_assert((... and (tt::is_tensor_index<TensorIndices1>::value and
+                          tt::is_tensor_index<TensorIndices2>::value)),
+                "Template parameters of tensorindices_are_equivalent_impl "
+                "must be lists containing TensorIndex types.");
+  using type = std::bool_constant<(
+      ... and (std::is_same_v<TensorIndices1, TensorIndices2> or
+               (tt::is_concrete_time_index<TensorIndices1>::value and
+                tt::is_concrete_time_index<TensorIndices2>::value)))>;
+};
+
+template <typename... TensorIndices1, typename... TensorIndices2>
+struct tensorindices_are_equivalent_impl<tmpl::list<TensorIndices1...>,
+                                         tmpl::list<TensorIndices2...>, false> {
+  static_assert((... and (tt::is_tensor_index<TensorIndices1>::value)) and
+                    (... and (tt::is_tensor_index<TensorIndices2>::value)),
+                "Template parameters of tensorindices_are_equivalent_impl "
+                "must be lists containing TensorIndex types.");
+  using type = std::bool_constant<false>;
 };
 }  // namespace TensorIndex_detail
 
@@ -237,15 +268,27 @@ struct remove_concrete_time_indices;
  * \ingroup TensorExpressionsGroup
  * \brief Determine whether or not a given list of TensorIndexs is valid
  *
- * @tparam TensorIndices list of generic index objects, e.g. `ti_a, ti_b`
+ * @tparam TensorIndexList list of generic index types, e.g. list of types of
+ * `ti_a, ti_b`
  */
+template <typename TensorIndexList>
+struct tensorindex_list_is_valid;
+
 template <typename... TensorIndices>
-struct tensorindex_list_is_valid {
+struct tensorindex_list_is_valid<tmpl::list<TensorIndices...>> {
   static_assert((... and tt::is_tensor_index<TensorIndices>::value),
-                "Template parameters of tensorindex_list_is_valid "
-                "must be TensorIndex types.");
+                "Template parameter of tensorindex_list_is_valid "
+                "must be a list of TensorIndex types or an empty list.");
   static constexpr bool value =
       TensorIndex_detail::tensorindex_list_is_valid_impl<
           typename TensorExpressions::detail::remove_concrete_time_indices<
               tmpl::list<TensorIndices...>>::type>::value;
 };
+namespace TensorExpressions {
+template <typename TensorIndexList1, typename TensorIndexList2>
+using tensorindices_are_equivalent =
+    typename TensorIndex_detail::tensorindices_are_equivalent_impl<
+        TensorIndexList1, TensorIndexList2,
+        tmpl::size<TensorIndexList1>::value ==
+            tmpl::size<TensorIndexList2>::value>::type;
+}  // namespace TensorExpressions
