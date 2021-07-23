@@ -14,32 +14,11 @@
 #include "DataStructures/Variables.hpp"
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
-#include "Helpers/PointwiseFunctions/GeneralRelativity/TestHelpers.hpp"
-#include "PointwiseFunctions/GeneralRelativity/SpacetimeMetric.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/MakeWithValue.hpp"
 #include "Utilities/TMPL.hpp"
 
 namespace {
-template <typename... Ts>
-void assign_unique_values_to_tensor(
-    const gsl::not_null<Tensor<double, Ts...>*> tensor) noexcept {
-  std::iota(tensor->begin(), tensor->end(), 0.0);
-}
-
-template <typename... Ts>
-void assign_unique_values_to_tensor(
-    const gsl::not_null<Tensor<DataVector, Ts...>*> tensor) noexcept {
-  double value = 0.0;
-  for (auto index_it = tensor->begin(); index_it != tensor->end(); index_it++) {
-    for (auto vector_it = index_it->begin(); vector_it != index_it->end();
-         vector_it++) {
-      *vector_it = value;
-      value += 1.0;
-    }
-  }
-}
-
 // Computes \f$L_{a} = R_{ab} * S^{b} + G_{a} - H_{ba}{}^{b} * T\f$
 template <typename R_t, typename S_t, typename G_t, typename H_t, typename T_t,
           typename DataType>
@@ -156,18 +135,18 @@ void test_case1(const DataType& used_for_size,
 template <typename DataType, typename Generator>
 void test_case2(const DataType& used_for_size,
                 const gsl::not_null<Generator*> generator) noexcept {
-  std::uniform_real_distribution<> distribution(1.0, 2.0);
+  // Use a higher distribution for g than psi to ensure we do not take the
+  // square root of a negative number
+  std::uniform_real_distribution<> g_distribution(3.0, 4.0);
+  std::uniform_real_distribution<> psi_distribution(1.0, 2.0);
 
   const auto g =
       make_with_random_values<tnsr::II<DataType, 3, Frame::Inertial>>(
-          generator, make_not_null(&distribution), used_for_size);
+          generator, make_not_null(&g_distribution), used_for_size);
 
-  tnsr::aa<DataType, 3, Frame::Inertial> psi(used_for_size);
-  gr::spacetime_metric(
-      make_not_null(&psi),
-      TestHelpers::gr::random_lapse(generator, used_for_size),
-      TestHelpers::gr::random_shift<3>(generator, used_for_size),
-      TestHelpers::gr::random_spatial_metric<3>(generator, used_for_size));
+  const auto psi =
+      make_with_random_values<tnsr::aa<DataType, 3, Frame::Inertial>>(
+          generator, make_not_null(&psi_distribution), used_for_size);
 
   const Scalar<DataType> expected_result_tensor =
       compute_expected_result2(g, psi, used_for_size);
@@ -211,7 +190,7 @@ void test_mixed_operations(const DataType& used_for_size,
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.MixedOperations",
                   "[DataStructures][Unit]") {
-  MAKE_GENERATOR(generator, 3);
+  MAKE_GENERATOR(generator);
 
   test_mixed_operations(std::numeric_limits<double>::signaling_NaN(),
                         make_not_null(&generator));
