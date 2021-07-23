@@ -108,6 +108,24 @@ constexpr std::array<std::int32_t, NumIndices> get_addsub_symm(
 }
 // @}
 
+template <size_t NumIndicesIn, size_t NumIndicesOut>
+SPECTRE_ALWAYS_INLINE constexpr std::array<std::int32_t, NumIndicesOut>
+transform_addsub_symm2(
+    const std::array<std::int32_t, NumIndicesIn>& input_symm2,
+    const std::array<size_t, NumIndicesOut>&
+        tensorindex_transformation) noexcept {
+  std::array<std::int32_t, NumIndicesOut> output_symm2 =
+      make_array<NumIndicesOut, std::int32_t>(0);
+  for (size_t i = 0; i < NumIndicesOut; i++) {
+    gsl::at(output_symm2, i) =
+        (gsl::at(tensorindex_transformation, i) ==
+         TensorIndexTransformation_detail::time_index_position_placeholder)
+            ? 0
+            : gsl::at(input_symm2, gsl::at(tensorindex_transformation, i));
+  }
+  return output_symm2;
+}
+
 /// \ingroup TensorExpressionsGroup
 /// \brief Helper struct for computing the canonical symmetry of the tensor
 /// resulting from adding or subtracting two tensors, according to their
@@ -123,40 +141,42 @@ constexpr std::array<std::int32_t, NumIndices> get_addsub_symm(
 /// \tparam TensorIndexList2 the generic indices of the second operand
 template <typename SymmList1, typename SymmList2, typename TensorIndexList1,
           typename TensorIndexList2,
-          size_t NumIndices = tmpl::size<SymmList1>::value,
-          typename IndexSequence = std::make_index_sequence<NumIndices>>
+          size_t NumIndices1 = tmpl::size<SymmList1>::value,
+          size_t NumIndices2 = tmpl::size<SymmList2>::value,
+          typename IndexSequence1 = std::make_index_sequence<NumIndices1>>
 struct AddSubSymmetry;
 
-template <template <typename...> class SymmList1, typename... Symm1,
-          template <typename...> class SymmList2, typename... Symm2,
-          template <typename...> class TensorIndexList1,
-          typename... TensorIndices1,
-          template <typename...> class TensorIndexList2,
-          typename... TensorIndices2, size_t NumIndices, size_t... Ints>
+template <
+    template <typename...> class SymmList1, typename... Symm1,
+    template <typename...> class SymmList2, typename... Symm2,
+    template <typename...> class TensorIndexList1, typename... TensorIndices1,
+    template <typename...> class TensorIndexList2, typename... TensorIndices2,
+    size_t NumIndices1, size_t NumIndices2, size_t... Ints1>
 struct AddSubSymmetry<SymmList1<Symm1...>, SymmList2<Symm2...>,
                       TensorIndexList1<TensorIndices1...>,
-                      TensorIndexList2<TensorIndices2...>, NumIndices,
-                      std::index_sequence<Ints...>> {
-  static constexpr std::array<size_t, NumIndices> lhs_tensorindex_values = {
+                      TensorIndexList2<TensorIndices2...>, NumIndices1,
+                      NumIndices2, std::index_sequence<Ints1...>> {
+  static constexpr std::array<size_t, NumIndices1> tensorindex_values1 = {
       {TensorIndices1::value...}};
-  static constexpr std::array<size_t, NumIndices> rhs_tensorindex_values = {
+  static constexpr std::array<size_t, NumIndices2> tensorindex_values2 = {
       {TensorIndices2::value...}};
-  static constexpr std::array<size_t, NumIndices> lhs_to_rhs_map = {
-      {std::distance(
-          rhs_tensorindex_values.begin(),
-          alg::find(rhs_tensorindex_values, lhs_tensorindex_values[Ints]))...}};
+  // positions of tensorindex_values1 in tensorindex_values2
+  static constexpr std::array<size_t, NumIndices1> symmetry_transformation =
+      ::TensorExpressions::compute_tensorindex_transformation(
+          tensorindex_values2, tensorindex_values1);
 
-  static constexpr std::array<std::int32_t, NumIndices> symm1 = {
+  static constexpr std::array<std::int32_t, NumIndices1> symm1 = {
       {Symm1::value...}};
-  static constexpr std::array<std::int32_t, NumIndices> symm2 = {
+  static constexpr std::array<std::int32_t, NumIndices2> symm2 = {
       {Symm2::value...}};
   // 2nd argument is symm2 rearranged according to `TensorIndexList1` order
   // so that the two symmetry arguments to `get_addsub_symm` are aligned
   // w.r.t. their generic index orders
-  static constexpr std::array<std::int32_t, NumIndices> addsub_symm =
-      get_addsub_symm(symm1, {{symm2[lhs_to_rhs_map[Ints]]...}});
+  static constexpr std::array<std::int32_t, NumIndices1> addsub_symm =
+      get_addsub_symm(symm1,
+                      transform_addsub_symm2(symm2, symmetry_transformation));
 
-  using type = tmpl::integral_list<std::int32_t, addsub_symm[Ints]...>;
+  using type = tmpl::integral_list<std::int32_t, addsub_symm[Ints1]...>;
 };
 
 /// \ingroup TensorExpressionsGroup
@@ -183,6 +203,8 @@ struct AddSubType {
   using tensorindex_list = typename T1::args_list;
 };
 
+// TODO: factor out this and evaluate replica
+// TODO: update below documentation
 /// \brief Helper struct for checking that an index in one operand can be added
 /// to and subtracted from its corresponding index in another operand
 ///
@@ -205,27 +227,68 @@ struct AddSubType {
 /// \tparam CurrentTensorIndex1 the first operand's generic index that is being
 /// checked, e.g. the type of `ti_a`
 template <typename IndexList1, typename IndexList2, typename TensorIndexList1,
-          typename TensorIndexList2, typename CurrentTensorIndex1>
-struct AddSubIndexCheckHelper {
-  using index1 =
-      tmpl::at<IndexList1,
-               tmpl::index_of<TensorIndexList1, CurrentTensorIndex1>>;
+          typename TensorIndexList2, typename CurrentTensorIndex1,
+          typename Iteration>
+struct AddSubIndexCheckImpl {
+  using index1 = tmpl::at<IndexList1, Iteration>;
   using index2 =
       tmpl::at<IndexList2,
                tmpl::index_of<TensorIndexList2, CurrentTensorIndex1>>;
 
-  using type = std::integral_constant<
-      bool,
+  using type = std::bool_constant<
       index1::ul == index2::ul and
-          std::is_same_v<typename index1::Frame, typename index2::Frame> and
-          ((index1::index_type == index2::index_type and
-            index1::dim == index2::dim) or
-           (index1::index_type == IndexType::Spacetime and
-            index1::dim == index2::dim + 1) or
-           (index2::index_type == IndexType::Spacetime and
-            index1::dim + 1 == index2::dim))>;
+      std::is_same_v<typename index1::Frame, typename index2::Frame> and
+      ((index1::index_type == index2::index_type and
+        index1::dim == index2::dim) or
+       (index1::index_type == IndexType::Spacetime and
+        index1::dim == index2::dim + 1) or
+       (index2::index_type == IndexType::Spacetime and
+        index1::dim + 1 == index2::dim))>;
 };
 
+// TODO group this with above documentation
+template <typename IndexList1, typename IndexList2, typename TensorIndexList1,
+          typename TensorIndexList2, typename Iteration>
+struct AddSubIndexCheckImpl<IndexList1, IndexList2, TensorIndexList1,
+                            TensorIndexList2, std::decay_t<decltype(ti_T)>,
+                            Iteration> {
+  using index1 = tmpl::at<IndexList1, Iteration>;
+  using type = std::bool_constant<index1::index_type == IndexType::Spacetime>;
+};
+
+template <typename IndexList1, typename IndexList2, typename TensorIndexList1,
+          typename TensorIndexList2, typename Iteration>
+struct AddSubIndexCheckImpl<IndexList1, IndexList2, TensorIndexList1,
+                            TensorIndexList2, std::decay_t<decltype(ti_t)>,
+                            Iteration> {
+  using index1 = tmpl::at<IndexList1, Iteration>;
+  using type = std::bool_constant<index1::index_type == IndexType::Spacetime>;
+};
+
+template <typename IndexList1, typename IndexList2, typename TensorIndexList1,
+          typename TensorIndexList2>
+struct AddSubIndexCheckHelper;
+
+template <typename IndexList1, typename... Indices2, typename TensorIndexList1,
+          typename... TensorIndices2>
+struct AddSubIndexCheckHelper<IndexList1, tmpl::list<Indices2...>,
+                              TensorIndexList1, tmpl::list<TensorIndices2...>> {
+  static constexpr bool value =
+      (... and ((not tt::is_concrete_time_index<TensorIndices2>::value) or
+                (tt::is_concrete_time_index<TensorIndices2>::value and
+                 Indices2::index_type == IndexType::Spacetime))) and
+      (tmpl::enumerated_fold<
+          TensorIndexList1, tmpl::bool_<true>,
+          tmpl::and_<tmpl::_state, AddSubIndexCheckImpl<
+                                       tmpl::pin<IndexList1>,
+                                       tmpl::pin<tmpl::list<Indices2...>>,
+                                       tmpl::pin<TensorIndexList1>,
+                                       tmpl::pin<tmpl::list<TensorIndices2...>>,
+                                       tmpl::_element, tmpl::_3>>,
+          tmpl::size_t<0>>::value);
+};
+
+// TODO update documentation below
 /// \brief Check that the indices of the two operands of an `AddSub` expression
 /// can be added and subtracted
 ///
@@ -241,12 +304,9 @@ struct AddSubIndexCheckHelper {
 /// \tparam TensorIndexList2 the second operand's generic index list
 template <typename IndexList1, typename IndexList2, typename TensorIndexList1,
           typename TensorIndexList2>
-using AddSubIndexCheck = tmpl::fold<
-    TensorIndexList1, tmpl::bool_<true>,
-    tmpl::and_<tmpl::_state, AddSubIndexCheckHelper<
-                                 tmpl::pin<IndexList1>, tmpl::pin<IndexList2>,
-                                 tmpl::pin<TensorIndexList1>,
-                                 tmpl::pin<TensorIndexList2>, tmpl::_element>>>;
+using AddSubIndexCheck =
+    AddSubIndexCheckHelper<IndexList1, IndexList2, TensorIndexList1,
+                           TensorIndexList2>;
 }  // namespace detail
 
 template <typename T1, typename T2, typename ArgsList1, typename ArgsList2,
@@ -282,11 +342,12 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   using symmetry = typename detail::AddSubType<T1, T2>::symmetry;
   using index_list = typename detail::AddSubType<T1, T2>::index_list;
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
+  static constexpr auto num_tensor_indices_op2 = sizeof...(Args2);
   using args_list = typename T1::args_list;
-  static constexpr std::array<size_t, num_tensor_indices>
+  static constexpr std::array<size_t, num_tensor_indices_op2>
       operand_index_transformation =
           compute_tensorindex_transformation<num_tensor_indices,
-                                             num_tensor_indices>(
+                                             num_tensor_indices_op2>(
               {{Args1::value...}}, {{Args2::value...}});
   // positions of indices in first operand where generic spatial indices are
   // used for spacetime indices
@@ -309,7 +370,7 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   // TODO: document
   SPECTRE_ALWAYS_INLINE decltype(auto) add_or_subtract(
       const std::array<size_t, num_tensor_indices>& op1_multi_index,
-      const std::array<size_t, num_tensor_indices>& op2_multi_index)
+      const std::array<size_t, num_tensor_indices_op2>& op2_multi_index)
       const noexcept {
     if constexpr (Sign == 1) {
       return t1_.get(op1_multi_index) + t2_.get(op2_multi_index);
@@ -362,6 +423,9 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
               return transformed_second_op_spatial_spacetime_index_positions;
             }();
 
+        // TODO: this doesn't work bc they could have diff # of indices. Maybe
+        // this whole index transformation should be simplified somehow - maybe
+        // this function isn't needed, as well as the above lambda
         constexpr std::array<std::int32_t, num_tensor_indices>
             spatial_spacetime_index_transformation =
                 detail::spatial_spacetime_index_transformation_from_positions<
@@ -411,11 +475,20 @@ template <typename T1, typename T2, typename X1, typename X2, typename Symm1,
 SPECTRE_ALWAYS_INLINE auto operator+(
     const TensorExpression<T1, X1, Symm1, IndexList1, Args1>& t1,
     const TensorExpression<T2, X2, Symm2, IndexList2, Args2>& t2) {
-  static_assert(tmpl::size<Args1>::value == tmpl::size<Args2>::value,
-                "Tensor addition is only possible with the same rank tensors");
-  static_assert(tmpl::equal_members<Args1, Args2>::value,
-                "The indices when adding two tensors must be equal. This error "
-                "occurs from expressions like A(_a, _b) + B(_c, _a)");
+  using op1_generic_indices =
+      typename TensorExpressions::detail::remove_concrete_time_indices<
+          Args1>::type;
+  using op2_generic_indices =
+      typename TensorExpressions::detail::remove_concrete_time_indices<
+          Args2>::type;
+  static_assert(tmpl::size<op1_generic_indices>::value ==
+                    tmpl::size<op2_generic_indices>::value,
+                "Tensor addition is only possible when the same number of "
+                "generic indices are used with both operands");
+  static_assert(
+      tmpl::equal_members<op1_generic_indices, op2_generic_indices>::value,
+      "The generic indices when adding two tensors must be equal. This error "
+      "occurs from expressions like R(ti_a, ti_b) + S(ti_c, ti_a)");
   return TensorExpressions::AddSub<T1, T2, Args1, Args2, 1>(~t1, ~t2);
 }
 
@@ -464,11 +537,20 @@ template <typename T1, typename T2, typename X1, typename X2, typename Symm1,
 SPECTRE_ALWAYS_INLINE auto operator-(
     const TensorExpression<T1, X1, Symm1, IndexList1, Args1>& t1,
     const TensorExpression<T2, X2, Symm2, IndexList2, Args2>& t2) {
-  static_assert(tmpl::size<Args1>::value == tmpl::size<Args2>::value,
-                "Tensor addition is only possible with the same rank tensors");
-  static_assert(tmpl::equal_members<Args1, Args2>::value,
-                "The indices when adding two tensors must be equal. This error "
-                "occurs from expressions like A(_a, _b) - B(_c, _a)");
+  using op1_generic_indices =
+      typename TensorExpressions::detail::remove_concrete_time_indices<
+          Args1>::type;
+  using op2_generic_indices =
+      typename TensorExpressions::detail::remove_concrete_time_indices<
+          Args2>::type;
+  static_assert(tmpl::size<op1_generic_indices>::value ==
+                    tmpl::size<op2_generic_indices>::value,
+                "Tensor subtraction is only possible when the same number of "
+                "generic indices are used with both operands");
+  static_assert(
+      tmpl::equal_members<op1_generic_indices, op2_generic_indices>::value,
+      "The generic indices when subtracting two tensors must be equal. This "
+      "error occurs from expressions like R(ti_a, ti_b) - S(ti_c, ti_a)");
   return TensorExpressions::AddSub<T1, T2, Args1, Args2, -1>(~t1, ~t2);
 }
 

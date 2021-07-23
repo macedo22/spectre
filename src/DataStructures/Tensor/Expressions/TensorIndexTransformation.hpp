@@ -119,7 +119,6 @@ transform_multi_index(const std::array<size_t, NumIndicesIn>& input_multi_index,
             ? 0
             : gsl::at(input_multi_index,
                       gsl::at(tensorindex_transformation, i));
-    gsl::at(input_multi_index, gsl::at(tensorindex_transformation, i));
   }
   return output_multi_index;
 }

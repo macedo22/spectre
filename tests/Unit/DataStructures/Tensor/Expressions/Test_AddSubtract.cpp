@@ -238,4 +238,29 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.AddSubtract",
       }
     }
   }
+
+  // testing with operands having time indices for spacetime indices
+  const Tensor<double, Symmetry<2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      Gll7 = TensorExpressions::evaluate<ti_c, ti_b>(Alll(ti_c, ti_t, ti_b) +
+                                                     Hlll(ti_b, ti_c, ti_t));
+
+  for (int c = 0; c < 4; ++c) {
+    for (int b = 0; b < 4; ++b) {
+      CHECK(Gll7.get(c, b) == Alll.get(c, 0, b) + Hlll.get(b, c, 0));
+    }
+  }
+
+  const Tensor<double, Symmetry<1, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+      Gll8 = TensorExpressions::evaluate<ti_d, ti_c>(Alll(ti_c, ti_d, ti_t) -
+                                                     All(ti_d, ti_c));
+
+  for (int d = 0; d < 4; ++d) {
+    for (int c = 0; c < 4; ++c) {
+      CHECK(Gll8.get(d, c) == Alll.get(c, d, 0) - All.get(d, c));
+    }
+  }
 }

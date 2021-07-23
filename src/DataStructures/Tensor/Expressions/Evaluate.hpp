@@ -136,6 +136,7 @@ struct EvaluateIndexCheckImpl<LhsIndexList, RhsIndexList, LhsTensorIndexList,
 template <typename LhsIndexList, typename RhsIndexList,
           typename LhsTensorIndexList, typename RhsTensorIndexList>
 struct EvaluateIndexCheckHelper;
+
 template <typename LhsIndexList, typename... RhsIndices,
           typename LhsTensorIndexList, typename... RhsTensorIndices>
 struct EvaluateIndexCheckHelper<LhsIndexList, tmpl::list<RhsIndices...>,
