@@ -6,6 +6,7 @@
 #include <array>
 #include <cstddef>
 
+#include "DataStructures/Tensor/Expressions/ConcreteTimeIndex.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "Utilities/ForceInline.hpp"
 #include "Utilities/TMPL.hpp"
@@ -15,23 +16,28 @@ namespace TensorExpressions {
 /// \brief Defines the tensor expression representing the square root of a
 /// tensor expression that evaluates to a rank 0 tensor
 ///
+/// \details The expression have a non-zero number of indices as long as
+/// all indices are concrete time indices, as this represents a rank 0 tensor.
+///
 /// \tparam T the type of the tensor expression of which to take the square
 /// root
-template <typename T>
+/// \tparam Args the TensorIndexs of the expression
+template <typename T, typename... Args>
 struct SquareRoot
-    : public TensorExpression<SquareRoot<T>, typename T::type, tmpl::list<>,
-                              tmpl::list<>, tmpl::list<>> {
+    : public TensorExpression<SquareRoot<T, Args...>, typename T::type,
+                              typename T::symmetry, typename T::index_list,
+                              tmpl::list<Args...>> {
+  // Checks that no generic indices are present in the expression
   static_assert(
-      std::is_base_of<TensorExpression<T, typename T::type, tmpl::list<>,
-                                       tmpl::list<>, tmpl::list<>>,
-                      T>::value,
+      (... and tt::is_concrete_time_index<Args>::value),
       "Can only take the square root of a tensor expression that evaluates to "
       "a rank 0 tensor.");
+
   using type = typename T::type;
-  using symmetry = tmpl::list<>;
-  using index_list = tmpl::list<>;
-  using args_list = tmpl::list<>;
-  static constexpr auto num_tensor_indices = 0;
+  using symmetry = typename T::symmetry;
+  using index_list = typename T::index_list;
+  using args_list = tmpl::list<Args...>;
+  static constexpr auto num_tensor_indices = sizeof...(Args);
 
   SquareRoot(T t) : t_(std::move(t)) {}
   ~SquareRoot() override = default;
@@ -48,7 +54,8 @@ struct SquareRoot
   /// \return the square root of the component of the tensor evaluated from the
   /// RHS tensor expression
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
-      const std::array<size_t, 0>& multi_index) const noexcept {
+      const std::array<size_t, num_tensor_indices>& multi_index)
+      const noexcept {
     return sqrt(t_.get(multi_index));
   }
 
@@ -70,9 +77,9 @@ struct SquareRoot
 /// - `(R(ti_A, ti_B) * S(ti_a, ti_b))`
 ///
 /// \param t the type of the tensor expression of which to take the square root
-template <typename T>
+template <typename T, typename X, typename Symm, typename IndexList,
+          typename... Args>
 SPECTRE_ALWAYS_INLINE auto sqrt(
-    const TensorExpression<T, typename T::type, tmpl::list<>, tmpl::list<>,
-                           tmpl::list<>>& t) {
-  return TensorExpressions::SquareRoot(~t);
+    const TensorExpression<T, X, Symm, IndexList, tmpl::list<Args...>>& t) {
+  return TensorExpressions::SquareRoot<T, Args...>(~t);
 }
