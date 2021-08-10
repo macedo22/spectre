@@ -82,7 +82,10 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
     : public TensorExpression<
           TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
                              ArgsList<Args...>>,
-          X, Symm, IndexList<Indices...>, ArgsList<Args...>> {
+          X,
+          typename detail::TensorAsExpressionSymm<Symm, IndexList<Indices...>,
+                                                  ArgsList<Args...>>::type,
+          IndexList<Indices...>, ArgsList<Args...>> {
   using type = X;
   using symmetry =
       typename detail::TensorAsExpressionSymm<Symm, IndexList<Indices...>,
