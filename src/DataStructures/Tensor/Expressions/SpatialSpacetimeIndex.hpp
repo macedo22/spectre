@@ -141,14 +141,14 @@ using replace_spatial_spacetime_indices = tmpl::fold<
 /// multi-indices to the second's
 ///
 /// \details
-/// Example: If we have \f$R_{ijk} + S{ijk}\f$, where  \f$R\f$'s first and
+/// Example: If we have \f$R_{ijk} + S_{ijk}\f$, where  \f$R\f$'s first and
 /// 2nd indices are spacetime and \f$S\f$' first index and third index are
-/// spacetime, let \f$i = 3\f$, \f$j = 5\f$, and \f$k = 7\f$. The multi-index
-/// that represents  \f$R_{ijk}\f$ is `{3 + 1, 5 + 1, 7} = {4, 6, 7}` and the
-/// multi-index that represents \f$S_{ijk}\f$ is
-/// `{3 + 1, 5, 7 + 1} = {4, 5, 8}`. The function returns the element-wise
+/// spacetime, let \f$i = 0\f$, \f$j = 1\f$, and \f$k = 2\f$. The multi-index
+/// that represents  \f$R_{012}\f$ is `{0 + 1, 1 + 1, 2} = {1, 2, 2}` and the
+/// multi-index that represents \f$S_{012}\f$ is
+/// `{0 + 1, 1, 2 + 1} = {1, 1, 3}`. The function returns the element-wise
 /// shift that is applied to convert the first multi-index to the other, which,
-/// in this case, would be: `{4 - 4, 6 - 5, 7 - 8} = {0, 1, -1}`.
+/// in this case, would be: `{1, 1, 3} - {1, 2, 2} = {0, -1, 1}`.
 ///
 /// \tparam NumIndices number of indices of the two operands
 /// \param positions1 first operand's index positions where a generic spatial

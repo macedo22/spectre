@@ -327,6 +327,43 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   /// \brief Return the value of the component at the given multi-index of the
   /// tensor resulting from addition or subtraction
   ///
+  /// \details One important detail to note about the type of the `AddSub`
+  /// expression is that its two operands may have (i) different generic index
+  /// orders, and/or (ii) different indices in their `index_list`s if where one
+  /// operand uses a generic spatial index for a spacetime index, the other
+  /// tensor may use that generic spatial index for a spatial index of the same
+  /// dimension, valence, and frame. Therefore, there are four possible cases
+  /// for an `AddSub` expression that are considered in the implementation:
+  /// - same generic index order, spatial spacetime indices in expression
+  /// - same generic index order, spatial spacetime indices not in expression
+  /// - different generic index order, spatial spacetime indices in expression
+  /// - different generic index order, spatial spacetime indices not in
+  /// expression
+  ///
+  /// This means that for expressions where the generic index orders differ, a
+  /// multi-index for a component of one operand is a (possible) rearrangement
+  /// of the equivalent multi-index for a component in the other operand. This
+  /// also means that for expressions where (at least once) a generic spatial
+  /// index is used for a spacetime index, then, after accounting
+  /// for potential reordering due to different generic index orders, a
+  /// multi-index's values for a component of one operand are (possibly) shifted
+  /// by one, compared to the multi-index's values for a component in the other
+  /// operand.
+  ///
+  /// For example, given \f$R_{ij} + S_{ji}\f$, let \f$R\f$'s first index be
+  /// a spacetime index, but \f$R\f$'s second index and both of \f$S\f$' indices
+  /// be spatial indices. If \f$i = 2\f$ and \f$j = 0\f$, then when we compute
+  /// \f$R_{20} + S_{02}\f$, the multi-index for \f$R_{20}\f$ is
+  /// `{2 + 1, 0} = {3, 0}` (first value shifted because it is a spacetime
+  /// index) and the multi-index for \f$S_{02}\f$ is `[0, 2]`. Because the first
+  /// operand of an `AddSub` expresion propagates its generic index order and
+  /// index list ( \ref SpacetimeIndex "TensorIndexType"s) as the `AddSub`'s own
+  /// generic index order and index list, the `result_multi_index` is equivalent
+  /// to the multi-index for the first operand. Thus, we need only compute the
+  /// second operand's multi-index as a transformation of the first: reorder and
+  /// shift the values of the first operand to compute the equivalent
+  /// multi-index for the second operand.
+  ///
   /// \param result_multi_index the multi-index of the component of the result
   /// tensor to retrieve
   /// \return the value of the component at `result_multi_index` in the result
