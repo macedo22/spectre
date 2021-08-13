@@ -2,6 +2,7 @@
 # See LICENSE.txt for details.
 
 add_subdirectory(Burgers)
+add_subdirectory(CCZ4)
 add_subdirectory(Cce)
 add_subdirectory(CurvedScalarWave)
 add_subdirectory(GeneralizedHarmonic)

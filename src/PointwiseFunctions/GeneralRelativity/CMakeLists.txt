@@ -61,4 +61,5 @@ target_link_libraries(
   INTERFACE ErrorHandling
   )
 
+add_subdirectory(CCZ4)
 add_subdirectory(GeneralizedHarmonic)

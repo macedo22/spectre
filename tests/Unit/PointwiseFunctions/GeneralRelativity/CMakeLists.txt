@@ -5,6 +5,7 @@ set(LIBRARY "Test_GeneralRelativity")
 
 set(LIBRARY_SOURCES
   Test_Christoffel.cpp
+  Test_ComputeCCZ4Quantities.cpp
   Test_ComputeGhQuantities.cpp
   Test_ComputeSpacetimeQuantities.cpp
   Test_IndexManipulation.cpp
