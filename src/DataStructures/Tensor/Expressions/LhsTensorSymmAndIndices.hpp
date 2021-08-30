@@ -49,12 +49,12 @@ template <typename RhsTensorIndexList, typename LhsTensorIndexList,
 struct LhsTensorSymmAndIndices;
 
 template <typename... RhsTensorIndices, typename... LhsTensorIndices,
-          typename RhsSymmetry, typename RhsTensorIndexTypeList,
+          std::int32_t... RhsSymm, typename RhsTensorIndexTypeList,
           size_t NumLhsIndices, size_t NumRhsIndices, size_t... LhsInts>
-struct LhsTensorSymmAndIndices<tmpl::list<RhsTensorIndices...>,
-                               tmpl::list<LhsTensorIndices...>, RhsSymmetry,
-                               RhsTensorIndexTypeList, NumLhsIndices,
-                               NumRhsIndices, std::index_sequence<LhsInts...>> {
+struct LhsTensorSymmAndIndices<
+    tmpl::list<RhsTensorIndices...>, tmpl::list<LhsTensorIndices...>,
+    tmpl::integral_list<std::int32_t, RhsSymm...>, RhsTensorIndexTypeList,
+    NumLhsIndices, NumRhsIndices, std::index_sequence<LhsInts...>> {
   static_assert((... and
                  (not tt::is_concrete_time_index<LhsTensorIndices>::value)),
                 "LHS generic indices cannot contain the concrete time index.");
@@ -70,7 +70,7 @@ struct LhsTensorSymmAndIndices<tmpl::list<RhsTensorIndices...>,
   // Compute symmetry of RHS after spacetime indices using generic spatial
   // indices are swapped for spatial indices
   static constexpr std::array<std::int32_t, NumRhsIndices> rhs_symmetry = {
-      {tmpl::at_c<RhsSymmetry, LhsInts>::value...}};
+      {RhsSymm...}};
   using rhs_spatial_spacetime_index_positions_ =
       detail::spatial_spacetime_index_positions<
           RhsTensorIndexTypeList, tmpl::list<RhsTensorIndices...>>;
