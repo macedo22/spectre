@@ -1,20 +1,20 @@
 # Distributed under the MIT License.
 # See LICENSE.txt for details.
 
-#set(LIBRARY CCZ4)
+set(LIBRARY CCZ4)
 
-#add_spectre_library(${LIBRARY})
+add_spectre_library(${LIBRARY})
 
-#spectre_target_sources(
-#  ${LIBRARY}
-#  PRIVATE
+spectre_target_sources(
+  ${LIBRARY}
+  PRIVATE
 #  Characteristics.cpp
 #  Constraints.cpp
 #  Equations.cpp
-#  TimeDerivative.cpp
+  TimeDerivative.cpp
 #  UpwindPenaltyCorrection.cpp
 #  VolumeTermsInstantiation.cpp
-#  )
+)
 
 spectre_target_headers(
   ${LIBRARY}
@@ -22,16 +22,17 @@ spectre_target_headers(
   HEADERS
   Tags.hpp
   TagsDeclarations.hpp
+  TimeDerivative.hpp
   )
 
-#target_link_libraries(
-#  ${LIBRARY}
-#  PUBLIC
-#  DataStructures
-#  ErrorHandling
-#  GeneralRelativity
-#  Options
+target_link_libraries(
+  ${LIBRARY}
+  PUBLIC
+  DataStructures
+  ErrorHandling
+  GeneralRelativity
+  Options
 #  Spectral
-#  INTERFACE
+  INTERFACE
 #  Domain
-#  )
+  )
