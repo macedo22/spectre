@@ -32,11 +32,16 @@ namespace {
 template <size_t Dim>
 void compute_expected_time_derivative(
     const gsl::not_null<tnsr::ij<DataVector, Dim>*> dt_conf_spatial_metric,
+    const gsl::not_null<Scalar<DataVector>*> dt_ln_lapse,
     const gsl::not_null<Scalar<DataVector>*> det_conf_spatial_metric,
     const gsl::not_null<Scalar<DataVector>*> trace_A_tilde,
     const tnsr::ii<DataVector, Dim>& conf_spatial_metric,
-    const tnsr::I<DataVector, Dim>& shift, const tnsr::ijk<DataVector, Dim>& D,
-    const tnsr::iJ<DataVector, Dim>& B, const Scalar<DataVector>& lapse,
+    const tnsr::I<DataVector, Dim>& shift,
+    const Scalar<DataVector>& trace_extrinsic_curvature,
+    const Scalar<DataVector>& K_0, const tnsr::i<DataVector, Dim>& A,
+    const tnsr::ijk<DataVector, Dim>& D, const tnsr::iJ<DataVector, Dim>& B,
+    const Scalar<DataVector>& lapse, const Scalar<DataVector>& g,
+    const Scalar<DataVector>& theta, const double c,
     const tnsr::ij<DataVector, Dim>& A_tilde,
     const double relaxation_time) noexcept {
   // time derivative of the conformal spatial metric
@@ -61,6 +66,14 @@ void compute_expected_time_derivative(
             (2.0 / 3) * conf_spatial_metric.get(i, j) * B.get(k, k);
       }
     }
+  }
+
+  // dt_ln_lapse: time derivative of the natural log of the lapse
+  (*dt_ln_lapse).get() =
+      -lapse.get() * g.get() *
+      (trace_extrinsic_curvature.get() - K_0.get() - 2.0 * theta.get() * c);
+  for (size_t k = 0; k < Dim; k++) {
+    (*dt_ln_lapse).get() += shift.get(k) * A.get(k);
   }
 }
 
@@ -132,6 +145,10 @@ void test_time_derivative(const gsl::not_null<Generator*> generator) noexcept {
       Tags::deriv<gr::Tags::Shift<Dim>, tmpl::size_t<Dim>, Frame::Inertial>>(
       partial_derivs);
 
+  const auto& A =
+      get<Tags::deriv<gr::Tags::Lapse<DataVector>, tmpl::size_t<Dim>,
+                      Frame::Inertial>>(partial_derivs);
+
   Scalar<DataVector> det_conf_spatial_metric(used_for_size);
   tnsr::II<DataVector, Dim> inv_conf_spatial_metric(used_for_size);
   determinant_and_inverse(make_not_null(&det_conf_spatial_metric),
@@ -168,25 +185,38 @@ void test_time_derivative(const gsl::not_null<Generator*> generator) noexcept {
     }
   }
 
+  const auto K_0 = make_with_random_values<Scalar<DataVector>>(
+      generator, make_not_null(&distribution), used_for_size);
+  const auto g = make_with_value<Scalar<DataVector>>(used_for_size, 1.);
+  const auto theta = make_with_random_values<Scalar<DataVector>>(
+      generator, make_not_null(&distribution), used_for_size);
+  const double c = 1.0;
   const double relaxation_time = 1.2;
 
   tnsr::ij<DataVector, Dim> dt_conf_spatial_metric(used_for_size);
+  Scalar<DataVector> dt_ln_lapse(used_for_size);
 
   CCZ4::TimeDerivative<Dim, DataVector>::apply(
-      make_not_null(&dt_conf_spatial_metric),
+      make_not_null(&dt_conf_spatial_metric), make_not_null(&dt_ln_lapse),
       make_not_null(&det_conf_spatial_metric), make_not_null(&trace_A_tilde),
-      conf_spatial_metric, shift, D, B, lapse, A_tilde, relaxation_time);
+      conf_spatial_metric, shift, trace_extrinsic_curvature, K_0, A, D, B,
+      lapse, g, theta, c, A_tilde, relaxation_time);
 
   tnsr::ij<DataVector, Dim> expected_dt_conf_spatial_metric(used_for_size);
+  Scalar<DataVector> expected_dt_ln_lapse(used_for_size);
+
   compute_expected_time_derivative(
       make_not_null(&expected_dt_conf_spatial_metric),
+      make_not_null(&expected_dt_ln_lapse),
       make_not_null(&det_conf_spatial_metric), make_not_null(&trace_A_tilde),
-      conf_spatial_metric, shift, D, B, lapse, A_tilde, relaxation_time);
+      conf_spatial_metric, shift, trace_extrinsic_curvature, K_0, A, D, B,
+      lapse, g, theta, c, A_tilde, relaxation_time);
 
   for (size_t i = 0; i < Dim; i++) {
     for (size_t j = 0; j < Dim; j++) {
       CHECK_ITERABLE_APPROX(dt_conf_spatial_metric.get(i, j),
                             expected_dt_conf_spatial_metric.get(i, j));
+      CHECK_ITERABLE_APPROX(dt_ln_lapse.get(), expected_dt_ln_lapse.get());
     }
   }
 }
