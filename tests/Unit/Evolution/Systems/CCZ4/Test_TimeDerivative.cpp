@@ -21,6 +21,7 @@
 #include "NumericalAlgorithms/LinearOperators/PartialDerivatives.tpp"
 #include "NumericalAlgorithms/Spectral/Mesh.hpp"
 #include "NumericalAlgorithms/Spectral/Spectral.hpp"
+#include "PointwiseFunctions/GeneralRelativity/CCZ4/Phi.hpp"
 #include "PointwiseFunctions/GeneralRelativity/Lapse.hpp"
 #include "PointwiseFunctions/GeneralRelativity/Shift.hpp"
 #include "PointwiseFunctions/GeneralRelativity/SpatialMetric.hpp"
@@ -34,6 +35,7 @@ void compute_expected_time_derivative(
     const gsl::not_null<tnsr::ij<DataVector, Dim>*> dt_conf_spatial_metric,
     const gsl::not_null<Scalar<DataVector>*> dt_ln_lapse,
     const gsl::not_null<tnsr::I<DataVector, Dim>*> dt_shift,
+    const gsl::not_null<Scalar<DataVector>*> dt_ln_phi,
     const gsl::not_null<Scalar<DataVector>*> det_conf_spatial_metric,
     const gsl::not_null<Scalar<DataVector>*> trace_A_tilde,
     const tnsr::ii<DataVector, Dim>& conf_spatial_metric,
@@ -41,10 +43,10 @@ void compute_expected_time_derivative(
     const Scalar<DataVector>& trace_extrinsic_curvature,
     const Scalar<DataVector>& K_0, const tnsr::i<DataVector, Dim>& A,
     const tnsr::ijk<DataVector, Dim>& D, const tnsr::iJ<DataVector, Dim>& B,
-    const Scalar<DataVector>& lapse, const Scalar<DataVector>& g,
-    const Scalar<DataVector>& theta, const double c,
-    const tnsr::ij<DataVector, Dim>& A_tilde, const double relaxation_time,
-    const double s, const double f,
+    const tnsr::i<DataVector, Dim>& P, const Scalar<DataVector>& lapse,
+    const Scalar<DataVector>& g, const Scalar<DataVector>& theta,
+    const double c, const tnsr::ij<DataVector, Dim>& A_tilde,
+    const double relaxation_time, const double s, const double f,
     const tnsr::I<DataVector, Dim>& b) noexcept {
   // time derivative of the conformal spatial metric
   for (size_t i = 0; i < Dim; i++) {
@@ -85,6 +87,13 @@ void compute_expected_time_derivative(
       (*dt_shift).get(i) += s * shift.get(k) * B.get(k, i);
     }
   }
+
+  // dt_ln_phi: time derivative of the natural log of the conformal factor
+  (*dt_ln_phi).get() =
+      (1.0 / 3) * lapse.get() * trace_extrinsic_curvature.get();
+  for (size_t k = 0; k < Dim; k++) {
+    (*dt_ln_phi).get() += shift.get(k) * P.get(k) - (1.0 / 3) * B.get(k, k);
+  }
 }
 
 template <size_t Dim, typename Generator>
@@ -92,7 +101,7 @@ void test_time_derivative(const gsl::not_null<Generator*> generator) noexcept {
   std::uniform_real_distribution<> distribution(0.1, 1.0);
   using ccz4_tags_list =
       tmpl::list<gr::Tags::SpatialMetric<Dim>, gr::Tags::Shift<Dim>,
-                 gr::Tags::Lapse<DataVector>>;
+                 gr::Tags::Lapse<DataVector>, CCZ4::Tags::Phi<DataVector>>;
 
   const size_t num_grid_points_1d = 3;
   const Mesh<Dim> mesh(num_grid_points_1d, Spectral::Basis::Legendre,
@@ -101,13 +110,14 @@ void test_time_derivative(const gsl::not_null<Generator*> generator) noexcept {
 
   Variables<ccz4_tags_list> evolved_vars(mesh.number_of_grid_points());
 
-  const auto spatial_metric =
+  auto& spatial_metric = get<gr::Tags::SpatialMetric<Dim>>(evolved_vars);
+  spatial_metric =
       TestHelpers::gr::random_spatial_metric<Dim>(generator, used_for_size);
   Scalar<DataVector> det_spatial_metric(used_for_size);
   tnsr::II<DataVector, Dim> inv_spatial_metric(used_for_size);
   determinant_and_inverse(make_not_null(&det_spatial_metric),
                           make_not_null(&inv_spatial_metric), spatial_metric);
-  Scalar<DataVector> phi(used_for_size);
+  auto& phi = get<CCZ4::Tags::Phi<DataVector>>(evolved_vars);
   get(phi) = 1.0 / pow(get(det_spatial_metric), 1.0 / 6);
   Scalar<DataVector> phi_squared(used_for_size);
   get(phi_squared) = get(phi) * get(phi);
@@ -157,6 +167,10 @@ void test_time_derivative(const gsl::not_null<Generator*> generator) noexcept {
 
   const auto& A =
       get<Tags::deriv<gr::Tags::Lapse<DataVector>, tmpl::size_t<Dim>,
+                      Frame::Inertial>>(partial_derivs);
+
+  const auto& P =
+      get<Tags::deriv<CCZ4::Tags::Phi<DataVector>, tmpl::size_t<Dim>,
                       Frame::Inertial>>(partial_derivs);
 
   Scalar<DataVector> det_conf_spatial_metric(used_for_size);
@@ -210,29 +224,33 @@ void test_time_derivative(const gsl::not_null<Generator*> generator) noexcept {
   tnsr::ij<DataVector, Dim> dt_conf_spatial_metric(used_for_size);
   Scalar<DataVector> dt_ln_lapse(used_for_size);
   tnsr::I<DataVector, Dim> dt_shift(used_for_size);
+  Scalar<DataVector> dt_ln_phi(used_for_size);
 
   CCZ4::TimeDerivative<Dim, DataVector>::apply(
       make_not_null(&dt_conf_spatial_metric), make_not_null(&dt_ln_lapse),
-      make_not_null(&dt_shift), make_not_null(&det_conf_spatial_metric),
-      make_not_null(&trace_A_tilde), conf_spatial_metric, shift,
-      trace_extrinsic_curvature, K_0, A, D, B, lapse, g, theta, c, A_tilde,
-      relaxation_time, s, f, b);
+      make_not_null(&dt_shift), make_not_null(&dt_ln_phi),
+      make_not_null(&det_conf_spatial_metric), make_not_null(&trace_A_tilde),
+      conf_spatial_metric, shift, trace_extrinsic_curvature, K_0, A, D, B, P,
+      lapse, g, theta, c, A_tilde, relaxation_time, s, f, b);
 
   tnsr::ij<DataVector, Dim> expected_dt_conf_spatial_metric(used_for_size);
   Scalar<DataVector> expected_dt_ln_lapse(used_for_size);
   tnsr::I<DataVector, Dim> expected_dt_shift(used_for_size);
+  Scalar<DataVector> expected_dt_ln_phi(used_for_size);
 
   compute_expected_time_derivative(
       make_not_null(&expected_dt_conf_spatial_metric),
       make_not_null(&expected_dt_ln_lapse), make_not_null(&expected_dt_shift),
+      make_not_null(&expected_dt_ln_phi),
       make_not_null(&det_conf_spatial_metric), make_not_null(&trace_A_tilde),
-      conf_spatial_metric, shift, trace_extrinsic_curvature, K_0, A, D, B,
+      conf_spatial_metric, shift, trace_extrinsic_curvature, K_0, A, D, B, P,
       lapse, g, theta, c, A_tilde, relaxation_time, s, f, b);
 
   CHECK_ITERABLE_APPROX(dt_conf_spatial_metric,
                         expected_dt_conf_spatial_metric);
   CHECK_ITERABLE_APPROX(dt_ln_lapse, expected_dt_ln_lapse);
   CHECK_ITERABLE_APPROX(dt_shift, expected_dt_shift);
+  CHECK_ITERABLE_APPROX(dt_ln_phi, expected_dt_ln_phi);
 }
 }  // namespace
 

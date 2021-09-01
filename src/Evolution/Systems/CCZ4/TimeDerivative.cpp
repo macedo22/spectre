@@ -18,6 +18,7 @@ void TimeDerivative<Dim, DataType>::apply(
     const gsl::not_null<tnsr::ij<DataType, Dim>*> dt_conf_spatial_metric,
     const gsl::not_null<Scalar<DataType>*> dt_ln_lapse,
     const gsl::not_null<tnsr::I<DataType, Dim>*> dt_shift,
+    const gsl::not_null<Scalar<DataType>*> dt_ln_phi,
     const gsl::not_null<Scalar<DataType>*> det_conf_spatial_metric,
     const gsl::not_null<Scalar<DataType>*> trace_A_tilde,
     const tnsr::ii<DataType, Dim>& conf_spatial_metric,
@@ -25,8 +26,8 @@ void TimeDerivative<Dim, DataType>::apply(
     const Scalar<DataType>& trace_extrinsic_curvature,
     const Scalar<DataType>& K_0, const tnsr::i<DataType, Dim>& A,
     const tnsr::ijk<DataType, Dim>& D, const tnsr::iJ<DataType, Dim>& B,
-    const Scalar<DataType>& lapse, const Scalar<DataType>& g,
-    const Scalar<DataType>& theta, const double c,
+    const tnsr::i<DataType, Dim>& P, const Scalar<DataType>& lapse,
+    const Scalar<DataType>& g, const Scalar<DataType>& theta, const double c,
     const tnsr::ij<DataType, Dim>& A_tilde, const double relaxation_time,
     const double s, const double f, const tnsr::I<DataType, Dim>& b) noexcept {
   // dt_conf_spatial_metric: time derivative of the conformal spatial metric
@@ -52,6 +53,12 @@ void TimeDerivative<Dim, DataType>::apply(
   // dt_shift: time derivative of the shift
   ::TensorExpressions::evaluate<ti_I>(
       dt_shift, s * shift(ti_K) * B(ti_k, ti_I) + s * f * b(ti_I));
+
+  // dt_ln_phi: time derivative of the natural log of the conformal factor
+  ::TensorExpressions::evaluate(
+      dt_ln_phi,
+      shift(ti_K) * P(ti_k) +
+          (1.0 / 3) * (lapse() * trace_extrinsic_curvature() - B(ti_k, ti_K)));
 }
 }  // namespace CCZ4
 
