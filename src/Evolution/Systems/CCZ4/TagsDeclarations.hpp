@@ -15,9 +15,14 @@ template <typename DataType>
 struct Phi;
 template <typename DataType>
 struct PhiSquared;
-
 template <size_t SpatialDim, typename Frame, typename DataType>
 struct ConfSpatialMetric;
+template <size_t SpatialDim, typename Frame, typename DataType>
+struct ExtrinsicCurvature;
+template <typename DataType>
+struct TraceExtrinsicCurvature;
+template <size_t SpatialDim, typename Frame, typename DataType>
+struct ATilde;
 }  // namespace Tags
 
 /// \brief Input option tags for the generalized harmonic evolution system

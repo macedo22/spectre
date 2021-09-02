@@ -25,7 +25,9 @@
 #include "Helpers/DataStructures/DataBox/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
 #include "Helpers/PointwiseFunctions/GeneralRelativity/TestHelpers.hpp"
+#include "PointwiseFunctions/GeneralRelativity/CCZ4/ATilde.hpp"
 #include "PointwiseFunctions/GeneralRelativity/CCZ4/ConfSpatialMetric.hpp"
+#include "PointwiseFunctions/GeneralRelativity/CCZ4/ExtrinsicCurvature.hpp"
 #include "PointwiseFunctions/GeneralRelativity/CCZ4/Phi.hpp"
 #include "PointwiseFunctions/GeneralRelativity/CCZ4/PhiSquared.hpp"
 #include "PointwiseFunctions/GeneralRelativity/Tags.hpp"
@@ -46,7 +48,6 @@ void test_compute_quantities(const DataType& used_for_size) {
   MAKE_GENERATOR(generator);
   std::uniform_real_distribution<> distribution(-3.0, 3.0);
   const auto nn_generator = make_not_null(&generator);
-  //   const auto nn_distribution = make_not_null(&distribution);
 
   const auto spatial_metric =
       TestHelpers::gr::random_spatial_metric<SpatialDim, DataType, Frame>(
@@ -76,6 +77,30 @@ void test_compute_quantities(const DataType& used_for_size) {
       (::CCZ4::conformal_spatial_metric<SpatialDim, Frame, DataType>(
           expected_phi_squared, spatial_metric)),
       expected_conf_spatial_metric);
+
+  // TODO: actually compute this? nah?
+  const auto extrinsic_curvature =
+      make_with_random_values<tnsr::ii<DataType, SpatialDim, Frame>>(
+          nn_generator, make_not_null(&distribution), used_for_size);
+  const tnsr::II<DataType, SpatialDim, Frame>& inverse_spatial_metric =
+      get<gr::Tags::InverseSpatialMetric<SpatialDim, Frame, DataType>>(
+          inverse_spatial_metric_and_det);
+  const auto expected_trace_extrinsic_curvature = pypp::call<Scalar<DataType>>(
+      "GeneralRelativity.ComputeCCZ4Quantities", "trace_extrinsic_curvature",
+      extrinsic_curvature, inverse_spatial_metric);
+  CHECK_ITERABLE_APPROX(::CCZ4::trace_extrinsic_curvature(
+                            extrinsic_curvature, inverse_spatial_metric),
+                        expected_trace_extrinsic_curvature);
+
+  const auto expected_A_tilde =
+      pypp::call<tnsr::ij<DataType, SpatialDim, Frame>>(
+          "GeneralRelativity.ComputeCCZ4Quantities", "a_tilde",
+          expected_phi_squared, extrinsic_curvature, inverse_spatial_metric,
+          spatial_metric);
+  CHECK_ITERABLE_APPROX(
+      ::CCZ4::a_tilde(expected_phi_squared, extrinsic_curvature,
+                      expected_trace_extrinsic_curvature, spatial_metric),
+      expected_A_tilde);
 }
 }  // namespace
 

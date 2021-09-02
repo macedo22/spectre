@@ -16,7 +16,7 @@ class DataVector;
 namespace CCZ4 {
 namespace Tags {
 /*!
- * \brief Compute item for the conformal factor \f$\phi\f$ used by the CCZ4
+ * \brief The conformal factor \f$\phi\f$ used by the CCZ4
  * formulation of Einstein's equations.
  */
 template <typename DataType>
@@ -25,7 +25,7 @@ struct Phi : db::SimpleTag {
 };
 
 /*!
- * \brief Compute item for the square of the conformal factor, \f$\phi^2\f$,
+ * \brief The square of the conformal factor, \f$\phi^2\f$,
  * used by the CCZ4 formulation of Einstein's equations.
  */
 template <typename DataType>
@@ -34,13 +34,40 @@ struct PhiSquared : db::SimpleTag {
 };
 
 /*!
- * \brief Compute item for the conformal spatial metric
- * \f$\widetilde{\gamma}_{ij}\f$ used by the CCZ4 formulation of Einstein's
- * equations.
+ * \brief The conformal spatial metric \f$\widetilde{\gamma}_{ij}\f$ used by the
+ * CCZ4 formulation of Einstein's equations.
  */
 template <size_t SpatialDim, typename Frame, typename DataType>
 struct ConfSpatialMetric : db::SimpleTag {
   using type = tnsr::ii<DataType, SpatialDim, Frame>;
+};
+
+/*!
+ * \brief The extrinsic curvature \f$\K_{ij}\f$ used by the CCZ4 formulation of
+ * Einstein's equations.
+ */
+template <size_t SpatialDim, typename Frame, typename DataType>
+struct ExtrinsicCurvature : db::SimpleTag {
+  using type = tnsr::ii<DataType, SpatialDim, Frame>;
+};
+
+/*!
+ * \brief The trace of the extrinsic curvature \f$\K\f$ used by the CCZ4
+ * formulation of Einstein's equations.
+ */
+template <typename DataType>
+struct TraceExtrinsicCurvature : db::SimpleTag {
+  using type = Scalar<DataType>;
+};
+
+/*!
+ * \brief The trace-free part of the extrinsic curvature
+ * \f$\widetilde{A}_{ij}\f$ used by the CCZ4 formulation of Einstein's
+ * equations.
+ */
+template <size_t SpatialDim, typename Frame, typename DataType>
+struct ATilde : db::SimpleTag {
+  using type = tnsr::ij<DataType, SpatialDim, Frame>;
 };
 }  // namespace Tags
 
