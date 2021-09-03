@@ -22,6 +22,7 @@
 #include "NumericalAlgorithms/Spectral/Mesh.hpp"
 #include "NumericalAlgorithms/Spectral/Spectral.hpp"
 #include "PointwiseFunctions/GeneralRelativity/CCZ4/Phi.hpp"
+#include "PointwiseFunctions/GeneralRelativity/Christoffel.hpp"
 #include "PointwiseFunctions/GeneralRelativity/Lapse.hpp"
 #include "PointwiseFunctions/GeneralRelativity/Shift.hpp"
 #include "PointwiseFunctions/GeneralRelativity/SpatialMetric.hpp"
@@ -99,9 +100,13 @@ void compute_expected_time_derivative(
 template <size_t Dim, typename Generator>
 void test_time_derivative(const gsl::not_null<Generator*> generator) noexcept {
   std::uniform_real_distribution<> distribution(0.1, 1.0);
-  using ccz4_tags_list =
-      tmpl::list<gr::Tags::SpatialMetric<Dim>, gr::Tags::Shift<Dim>,
-                 gr::Tags::Lapse<DataVector>, CCZ4::Tags::Phi<DataVector>>;
+  using ccz4_tags_list = tmpl::list<
+      gr::Tags::SpatialMetric<Dim>, gr::Tags::Shift<Dim>,
+      gr::Tags::Lapse<DataVector>,
+      Tags::deriv<gr::Tags::Lapse<DataVector>, tmpl::size_t<Dim>,
+                  Frame::Inertial>,
+      CCZ4::Tags::Phi<DataVector>,
+      CCZ4::Tags::ConfSpatialMetric<Dim, Frame::Inertial, DataVector>>;
 
   const size_t num_grid_points_1d = 3;
   const Mesh<Dim> mesh(num_grid_points_1d, Spectral::Basis::Legendre,
@@ -122,7 +127,8 @@ void test_time_derivative(const gsl::not_null<Generator*> generator) noexcept {
   Scalar<DataVector> phi_squared(used_for_size);
   get(phi_squared) = get(phi) * get(phi);
   tnsr::ii<DataVector, Dim>& conf_spatial_metric =
-      get<gr::Tags::SpatialMetric<Dim>>(evolved_vars);
+      get<CCZ4::Tags::ConfSpatialMetric<Dim, Frame::Inertial, DataVector>>(
+          evolved_vars);
   for (size_t i = 0; i < Dim; i++) {
     for (size_t j = 0; j < Dim; j++) {
       conf_spatial_metric.get(i, j) =
@@ -149,9 +155,9 @@ void test_time_derivative(const gsl::not_null<Generator*> generator) noexcept {
   const auto partial_derivs =
       partial_derivatives<ccz4_tags_list>(evolved_vars, mesh, inv_jac);
 
-  const auto& d_conf_spatial_metric =
-      get<Tags::deriv<gr::Tags::SpatialMetric<Dim>, tmpl::size_t<Dim>,
-                      Frame::Inertial>>(partial_derivs);
+  const auto& d_conf_spatial_metric = get<Tags::deriv<
+      CCZ4::Tags::ConfSpatialMetric<Dim, Frame::Inertial, DataVector>,
+      tmpl::size_t<Dim>, Frame::Inertial>>(partial_derivs);
   tnsr::ijk<DataVector, Dim> D(used_for_size);
   for (size_t i = 0; i < Dim; i++) {
     for (size_t k = 0; k < Dim; k++) {
