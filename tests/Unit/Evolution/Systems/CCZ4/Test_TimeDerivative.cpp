@@ -106,7 +106,8 @@ void test_time_derivative(const gsl::not_null<Generator*> generator) noexcept {
       Tags::deriv<gr::Tags::Lapse<DataVector>, tmpl::size_t<Dim>,
                   Frame::Inertial>,
       CCZ4::Tags::Phi<DataVector>,
-      CCZ4::Tags::ConfSpatialMetric<Dim, Frame::Inertial, DataVector>>;
+      CCZ4::Tags::ConfSpatialMetric<Dim, Frame::Inertial, DataVector>,
+      gr::Tags::SpatialChristoffelSecondKind<Dim, Frame::Inertial, DataVector>>;
 
   const size_t num_grid_points_1d = 3;
   const Mesh<Dim> mesh(num_grid_points_1d, Spectral::Basis::Legendre,
@@ -174,6 +175,10 @@ void test_time_derivative(const gsl::not_null<Generator*> generator) noexcept {
   const auto& A =
       get<Tags::deriv<gr::Tags::Lapse<DataVector>, tmpl::size_t<Dim>,
                       Frame::Inertial>>(partial_derivs);
+  const auto& d_A =
+      get<Tags::deriv<Tags::deriv<gr::Tags::Lapse<DataVector>,
+                                  tmpl::size_t<Dim>, Frame::Inertial>,
+                      tmpl::size_t<Dim>, Frame::Inertial>>(partial_derivs);
 
   const auto& P =
       get<Tags::deriv<CCZ4::Tags::Phi<DataVector>, tmpl::size_t<Dim>,
@@ -197,7 +202,7 @@ void test_time_derivative(const gsl::not_null<Generator*> generator) noexcept {
     }
   }
 
-  tnsr::ij<DataVector, Dim> A_tilde(used_for_size);
+  tnsr::ij<DataVector, Dim, Frame::Inertial> A_tilde(used_for_size);
   for (size_t i = 0; i < Dim; i++) {
     for (size_t j = 0; j < Dim; j++) {
       A_tilde.get(i, j) =
@@ -212,6 +217,62 @@ void test_time_derivative(const gsl::not_null<Generator*> generator) noexcept {
     for (size_t j = 0; j < Dim; j++) {
       trace_A_tilde.get() +=
           inv_conf_spatial_metric.get(i, j) * A_tilde.get(i, j);
+    }
+  }
+
+  const auto& d_spatial_metric =
+      get<Tags::deriv<gr::Tags::SpatialMetric<Dim>, tmpl::size_t<Dim>,
+                      Frame::Inertial>>(partial_derivs);
+  auto& christoffel_second_kind = get<
+      gr::Tags::SpatialChristoffelSecondKind<Dim, Frame::Inertial, DataVector>>(
+      evolved_vars);
+  christoffel_second_kind =
+      gr::christoffel_second_kind(d_spatial_metric, inv_spatial_metric);
+  const auto christoffel_first_kind =
+      gr::christoffel_first_kind(d_spatial_metric);
+  const auto& d_christoffel_second_kind = get<Tags::deriv<
+      gr::Tags::SpatialChristoffelSecondKind<Dim, Frame::Inertial, DataVector>,
+      tmpl::size_t<Dim>, Frame::Inertial>>(partial_derivs);
+
+  // - conf_christoffel_second_kind
+  // - contracted_conf_christoffel_second_kind (gamma-tilde ^ i)
+  // - Z somehow?
+  // - contracted_conf_christoffel_second_kind (gamma-hat ^ i)
+  // - inverse_Z
+  // ...
+
+  Tensor<DataVector, Symmetry<4, 3, 2, 1>,
+         index_list<SpatialIndex<Dim, UpLo::Lo, Frame::Inertial>,
+                    SpatialIndex<Dim, UpLo::Up, Frame::Inertial>,
+                    SpatialIndex<Dim, UpLo::Lo, Frame::Inertial>,
+                    SpatialIndex<Dim, UpLo::Lo, Frame::Inertial>>>
+      ricci_tensor(used_for_size);
+  for (size_t i = 0; i < Dim; i++) {
+    for (size_t j = 0; j < Dim; j++) {
+      for (size_t k = 0; k < Dim; k++) {
+        for (size_t m = 0; m < Dim; m++) {
+          ricci_tensor.get(i, m, k, j) =
+              d_christoffel_second_kind.get(k, m, i, j) -
+              d_christoffel_second_kind.get(j, m, i, k);
+          for (size_t l = 0; l < Dim; l++) {
+            ricci_tensor.get(i, m, k, j) +=
+                christoffel_second_kind.get(l, i, j) *
+                    christoffel_second_kind.get(m, l, k) -
+                christoffel_second_kind.get(l, i, k) *
+                    christoffel_second_kind.get(m, l, j);
+          }
+        }
+      }
+    }
+  }
+
+  tnsr::ij<DataVector, Dim, Frame::Inertial> ricci_contracted(used_for_size);
+  for (size_t i = 0; i < Dim; i++) {
+    for (size_t j = 0; j < Dim; j++) {
+      ricci_contracted.get(i, j) = 0.0;
+      for (size_t m = 0; m < Dim; m++) {
+        ricci_contracted.get(i, j) += ricci_tensor.get(i, m, m, j);
+      }
     }
   }
 
