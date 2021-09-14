@@ -118,6 +118,14 @@ template <size_t Dim, typename Frame, typename DataType>
 struct SpatialChristoffelSecondKindContracted : db::SimpleTag {
   using type = tnsr::i<DataType, Dim, Frame>;
 };
+/*!
+ * \brief Spatial derivative of the spatial christoffel symbols of the second
+ * kind.
+ */
+template <size_t Dim, typename Frame, typename DataType>
+struct DerivSpatialChristoffelSecondKind : db::SimpleTag {
+  using type = tnsr::iJkk<DataType, Dim, Frame>;
+};
 
 template <size_t Dim, typename Frame, typename DataType>
 struct ExtrinsicCurvature : db::SimpleTag {

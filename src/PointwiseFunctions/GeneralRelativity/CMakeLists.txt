@@ -9,6 +9,7 @@ spectre_target_sources(
   ${LIBRARY}
   PRIVATE
   Christoffel.cpp
+  DerivativeSpatialChristoffel.cpp
   DerivativeSpatialMetric.cpp
   DerivativesOfSpacetimeMetric.cpp
   ExtrinsicCurvature.cpp
@@ -35,6 +36,7 @@ spectre_target_headers(
   INCLUDE_DIRECTORY ${CMAKE_SOURCE_DIR}/src
   HEADERS
   Christoffel.hpp
+  DerivativeSpatialChristoffel.hpp
   DerivativeSpatialMetric.hpp
   DerivativesOfSpacetimeMetric.hpp
   DetAndInverseSpatialMetric.hpp
