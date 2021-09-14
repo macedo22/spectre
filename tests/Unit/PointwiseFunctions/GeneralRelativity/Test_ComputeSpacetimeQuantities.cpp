@@ -20,6 +20,7 @@
 #include "Helpers/DataStructures/DataBox/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
 #include "NumericalAlgorithms/LinearOperators/PartialDerivatives.hpp"
+#include "PointwiseFunctions/GeneralRelativity/DerivativeSpatialMetric.hpp"
 #include "PointwiseFunctions/GeneralRelativity/DerivativesOfSpacetimeMetric.hpp"
 #include "PointwiseFunctions/GeneralRelativity/DetAndInverseSpatialMetric.hpp"
 #include "PointwiseFunctions/GeneralRelativity/ExtrinsicCurvature.hpp"
@@ -179,6 +180,16 @@ void test_compute_spatial_metric_lapse_shift(const T& used_for_size) {
   CHECK_ITERABLE_APPROX(lapse, lapse_test);
 }
 
+template <size_t Dim, typename DataType>
+void test_compute_deriv_inverse_spatial_metric(const DataType& used_for_size) {
+  pypp::check_with_random_values<1>(
+      static_cast<tnsr::iJJ<DataType, Dim, Frame::Inertial> (*)(
+          const tnsr::II<DataType, Dim, Frame::Inertial>&,
+          const tnsr::ijj<DataType, Dim, Frame::Inertial>&) noexcept>(
+          &gr::deriv_inverse_spatial_metric<Dim, Frame::Inertial, DataType>),
+      "ComputeSpacetimeQuantities", "deriv_inverse_spatial_metric",
+      {{{-10., 10.}}}, used_for_size);
+}
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.PointwiseFunctions.GeneralRelativity.SpacetimeDecomp",
@@ -201,6 +212,8 @@ SPECTRE_TEST_CASE("Unit.PointwiseFunctions.GeneralRelativity.SpacetimeDecomp",
   CHECK_FOR_DOUBLES_AND_DATAVECTORS(test_compute_spatial_metric_lapse_shift,
                                     (1, 2, 3));
   CHECK_FOR_DOUBLES_AND_DATAVECTORS(test_compute_extrinsic_curvature,
+                                    (1, 2, 3));
+  CHECK_FOR_DOUBLES_AND_DATAVECTORS(test_compute_deriv_inverse_spatial_metric,
                                     (1, 2, 3));
 
   // Check that compute items work correctly in the DataBox
@@ -233,6 +246,8 @@ SPECTRE_TEST_CASE("Unit.PointwiseFunctions.GeneralRelativity.SpacetimeDecomp",
   TestHelpers::db::test_compute_tag<
       gr::Tags::DerivativesOfSpacetimeMetricCompute<3, Frame::Inertial>>(
       "DerivativesOfSpacetimeMetric");
+  TestHelpers::db::test_compute_tag<gr::Tags::DerivInverseSpatialMetricCompute<
+      3, Frame::Inertial, DataVector>>("DerivInverseSpatialMetric");
 
   // Second, put the compute items into a data box and check that they
   // put the correct results
@@ -358,6 +373,10 @@ SPECTRE_TEST_CASE("Unit.PointwiseFunctions.GeneralRelativity.SpacetimeDecomp",
           deriv_shift, expected_spatial_metric, dt_spatial_metric,
           deriv_spatial_metric);
 
+  const auto expected_deriv_inverse_spatial_metric =
+      gr::deriv_inverse_spatial_metric(
+          expected_det_and_inverse_spatial_metric.second, deriv_spatial_metric);
+
   const auto third_box = db::create<
       db::AddSimpleTags<
           gr::Tags::SpatialMetric<3, Frame::Inertial, DataVector>,
@@ -371,13 +390,19 @@ SPECTRE_TEST_CASE("Unit.PointwiseFunctions.GeneralRelativity.SpacetimeDecomp",
                         tmpl::size_t<3>, Frame::Inertial>,
           ::Tags::dt<gr::Tags::SpatialMetric<3, Frame::Inertial, DataVector>>,
           ::Tags::dt<gr::Tags::Lapse<DataVector>>,
-          ::Tags::dt<gr::Tags::Shift<3, Frame::Inertial, DataVector>>>,
+          ::Tags::dt<gr::Tags::Shift<3, Frame::Inertial, DataVector>>,
+          gr::Tags::InverseSpatialMetric<3, Frame::Inertial, DataVector>>,
       db::AddComputeTags<
-          gr::Tags::DerivativesOfSpacetimeMetricCompute<3, Frame::Inertial>>>(
+          gr::Tags::DerivativesOfSpacetimeMetricCompute<3, Frame::Inertial>,
+          gr::Tags::DerivInverseSpatialMetricCompute<3, Frame::Inertial,
+                                                     DataVector>>>(
       expected_spatial_metric, expected_lapse, expected_shift,
       deriv_spatial_metric, deriv_lapse, deriv_shift, dt_spatial_metric,
-      dt_lapse, dt_shift);
+      dt_lapse, dt_shift, expected_det_and_inverse_spatial_metric.second);
   CHECK(db::get<gr::Tags::DerivativesOfSpacetimeMetric<3, Frame::Inertial,
                                                        DataVector>>(
             third_box) == expected_derivatives_of_spacetime_metric);
+  CHECK(db::get<gr::Tags::DerivInverseSpatialMetricCompute<3, Frame::Inertial,
+                                                           DataVector>>(
+            third_box) == expected_deriv_inverse_spatial_metric);
 }
