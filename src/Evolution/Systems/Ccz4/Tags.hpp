@@ -129,6 +129,25 @@ template <size_t Dim, typename Frame, typename DataType>
 struct GradGradLapse : db::SimpleTag {
   using type = tnsr::ii<DataType, Dim, Frame>;
 };
+
+/*!
+ * \brief The divergence of the lapse
+ *
+ * \details We define:
+ * \f{align}
+ *     \nabla^i \nabla_i \alpha &= \phi^2 \bar{\gamma^{ij}}
+ *                 (\nabla_i \nabla_j \alpha)
+ * \f}
+ * where \f$\phi\f$, \f$\bar{\gamma^{ij}}\f$, and \f$\nabla_i \nabla_j \alpha\f$
+ * are the conformal factor, inverse conformal spatial metric, and the gradient
+ * of the gradient of the lapse defined by `Ccz4::Tags::ConformalFactor`,
+ * `Ccz4::Tags::InverseConformalMetric`, and `Ccz4::Tags::GradGradLapse`,
+ * respectively.
+ */
+template <typename DataType>
+struct DivergenceLapse : db::SimpleTag {
+  using type = Scalar<DataType>;
+};
 }  // namespace Tags
 
 namespace OptionTags {

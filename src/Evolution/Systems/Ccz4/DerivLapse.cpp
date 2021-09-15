@@ -9,6 +9,8 @@
 #include "DataStructures/Tensor/IndexType.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Tensor/TypeAliases.hpp"
+#include "Utilities/ConstantExpressions.hpp"
+#include "Utilities/ContainerHelpers.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/Gsl.hpp"
 
@@ -45,6 +47,42 @@ tnsr::ii<DataType, Dim, Frame> grad_grad_lapse(
                   christoffel_second_kind, field_a, d_field_a);
   return grad_grad_lapse_;
 }
+
+template <size_t Dim, typename Frame, typename DataType>
+void divergence_lapse(
+    const gsl::not_null<Scalar<DataType>*> div_lapse,
+    const Scalar<DataType>& conformal_factor,
+    const tnsr::II<DataType, Dim, Frame>& inverse_conformal_metric,
+    const tnsr::ii<DataType, Dim, Frame>& grad_grad_lapse) noexcept {
+  destructive_resize_components(div_lapse, get_size(get(conformal_factor)));
+  for (auto& component : *div_lapse) {
+    component = 0.0;
+  }
+
+  for (size_t i = 0; i < Dim; ++i) {
+    for (size_t j = i; j < Dim; ++j) {
+      if (i == j) {
+        div_lapse->get() +=
+            inverse_conformal_metric.get(i, j) * grad_grad_lapse.get(i, j);
+      } else {
+        div_lapse->get() += 2.0 * inverse_conformal_metric.get(i, j) *
+                            grad_grad_lapse.get(i, j);
+      }
+    }
+  }
+  div_lapse->get() *= square(conformal_factor.get());
+}
+
+template <size_t Dim, typename Frame, typename DataType>
+Scalar<DataType> divergence_lapse(
+    const Scalar<DataType>& conformal_factor,
+    const tnsr::II<DataType, Dim, Frame>& inverse_conformal_metric,
+    const tnsr::ii<DataType, Dim, Frame>& grad_grad_lapse) noexcept {
+  Scalar<DataType> div_lapse{};
+  divergence_lapse(make_not_null(&div_lapse), conformal_factor,
+                   inverse_conformal_metric, grad_grad_lapse);
+  return div_lapse;
+}
 }  // namespace Ccz4
 
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
@@ -68,7 +106,20 @@ tnsr::ii<DataType, Dim, Frame> grad_grad_lapse(
           christoffel_second_kind,                                        \
       const tnsr::i<DTYPE(data), DIM(data), FRAME(data)>& field_a,        \
       const tnsr::ij<DTYPE(data), DIM(data), FRAME(data)>&                \
-          d_field_a) noexcept;
+          d_field_a) noexcept;                                            \
+  template void Ccz4::divergence_lapse(                                   \
+      const gsl::not_null<Scalar<DTYPE(data)>*> div_lapse,                \
+      const Scalar<DTYPE(data)>& conformal_factor,                        \
+      const tnsr::II<DTYPE(data), DIM(data), FRAME(data)>&                \
+          inverse_conformal_metric,                                       \
+      const tnsr::ii<DTYPE(data), DIM(data), FRAME(data)>&                \
+          grad_grad_lapse) noexcept;                                      \
+  template Scalar<DTYPE(data)> Ccz4::divergence_lapse(                    \
+      const Scalar<DTYPE(data)>& conformal_factor,                        \
+      const tnsr::II<DTYPE(data), DIM(data), FRAME(data)>&                \
+          inverse_conformal_metric,                                       \
+      const tnsr::ii<DTYPE(data), DIM(data), FRAME(data)>&                \
+          grad_grad_lapse) noexcept;
 
 GENERATE_INSTANTIATIONS(INSTANTIATE, (1, 2, 3), (Frame::Grid, Frame::Inertial),
                         (double, DataVector))

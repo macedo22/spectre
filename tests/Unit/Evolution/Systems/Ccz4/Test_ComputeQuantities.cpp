@@ -36,6 +36,17 @@ void test_compute_grad_grad_lapse(const DataType& used_for_size) {
           &::Ccz4::grad_grad_lapse<Dim, Frame::Inertial, DataType>),
       "ComputeQuantities", "grad_grad_lapse", {{{-1., 1.}}}, used_for_size);
 }
+
+template <size_t Dim, typename DataType>
+void test_compute_divergence_lapse(const DataType& used_for_size) {
+  pypp::check_with_random_values<1>(
+      static_cast<Scalar<DataType> (*)(
+          const Scalar<DataType>&,
+          const tnsr::II<DataType, Dim, Frame::Inertial>&,
+          const tnsr::ii<DataType, Dim, Frame::Inertial>&)>(
+          &::Ccz4::divergence_lapse<Dim, Frame::Inertial, DataType>),
+      "ComputeQuantities", "divergence_lapse", {{{-1., 1.}}}, used_for_size);
+}
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.Evolution.Systems.Ccz4.ComputeQuantities",
@@ -44,6 +55,7 @@ SPECTRE_TEST_CASE("Unit.Evolution.Systems.Ccz4.ComputeQuantities",
 
   GENERATE_UNINITIALIZED_DOUBLE_AND_DATAVECTOR;
   CHECK_FOR_DOUBLES_AND_DATAVECTORS(test_compute_grad_grad_lapse, (1, 2, 3));
+  CHECK_FOR_DOUBLES_AND_DATAVECTORS(test_compute_divergence_lapse, (1, 2, 3));
 
   // Check that compute items work correctly in the DataBox
   // First, check that the names are correct
@@ -72,9 +84,17 @@ SPECTRE_TEST_CASE("Unit.Evolution.Systems.Ccz4.ComputeQuantities",
       make_with_random_values<tnsr::ij<DataVector, 3, Frame::Inertial>>(
           make_not_null(&generator), make_not_null(&distribution),
           used_for_size);
+  const auto conformal_factor = make_with_random_values<Scalar<DataVector>>(
+      make_not_null(&generator), make_not_null(&distribution), used_for_size);
+  const auto inverse_conformal_metric =
+      make_with_random_values<tnsr::II<DataVector, 3, Frame::Inertial>>(
+          make_not_null(&generator), make_not_null(&distribution),
+          used_for_size);
 
   const auto expected_grad_grad_lapse =
       Ccz4::grad_grad_lapse(lapse, christoffel_second_kind, field_a, d_field_a);
+  const auto expected_divergence_lapse = Ccz4::divergence_lapse(
+      conformal_factor, inverse_conformal_metric, expected_grad_grad_lapse);
 
   const auto box = db::create<
       db::AddSimpleTags<
@@ -83,10 +103,17 @@ SPECTRE_TEST_CASE("Unit.Evolution.Systems.Ccz4.ComputeQuantities",
                                                  DataVector>,
           Ccz4::Tags::FieldA<3, Frame::Inertial, DataVector>,
           ::Tags::deriv<Ccz4::Tags::FieldA<3, Frame::Inertial, DataVector>,
-                        tmpl::size_t<3>, Frame::Inertial>>,
+                        tmpl::size_t<3>, Frame::Inertial>,
+          Ccz4::Tags::ConformalFactor<DataVector>,
+          Ccz4::Tags::InverseConformalMetric<3, Frame::Inertial, DataVector>>,
       db::AddComputeTags<
-          Ccz4::Tags::GradGradLapseCompute<3, Frame::Inertial, DataVector>>>(
-      lapse, christoffel_second_kind, field_a, d_field_a);
+          Ccz4::Tags::GradGradLapseCompute<3, Frame::Inertial, DataVector>,
+          Ccz4::Tags::DivergenceLapseCompute<3, Frame::Inertial, DataVector>>>(
+      lapse, christoffel_second_kind, field_a, d_field_a, conformal_factor,
+      inverse_conformal_metric);
+
   CHECK(db::get<Ccz4::Tags::GradGradLapse<3, Frame::Inertial, DataVector>>(
             box) == expected_grad_grad_lapse);
+  CHECK(db::get<Ccz4::Tags::DivergenceLapse<DataVector>>(box) ==
+        expected_divergence_lapse);
 }

@@ -46,6 +46,36 @@ tnsr::ii<DataType, Dim, Frame> grad_grad_lapse(
     const tnsr::ij<DataType, Dim, Frame>& d_field_a) noexcept;
 /// @}
 
+/// @{
+/*!
+ * \ingroup GeneralRelativityGroup
+ * \brief Computes the divergence of the lapse.
+ *
+ * \details Computes the divergence as:
+ * \f{align}
+ *     \nabla^i \nabla_i \alpha &= \phi^2 \bar{\gamma^{ij}}
+ *                 (\nabla_i \nabla_j \alpha)
+ * \f}
+ * where \f$\phi\f$, \f$\bar{\gamma^{ij}}\f$, and \f$\nabla_i \nabla_j \alpha\f$
+ * are the conformal factor, inverse conformal spatial metric, and the gradient
+ * of the gradient of the lapse defined by `Ccz4::Tags::ConformalFactor`,
+ * `Ccz4::Tags::InverseConformalMetric`, and `Ccz4::Tags::GradGradLapse`,
+ * respectively.
+ */
+template <size_t Dim, typename Frame, typename DataType>
+void divergence_lapse(
+    const gsl::not_null<Scalar<DataType>*> div_lapse,
+    const Scalar<DataType>& conformal_factor,
+    const tnsr::II<DataType, Dim, Frame>& inverse_conformal_metric,
+    const tnsr::ii<DataType, Dim, Frame>& grad_grad_lapse) noexcept;
+
+template <size_t Dim, typename Frame, typename DataType>
+Scalar<DataType> divergence_lapse(
+    const Scalar<DataType>& conformal_factor,
+    const tnsr::II<DataType, Dim, Frame>& inverse_conformal_metric,
+    const tnsr::ii<DataType, Dim, Frame>& grad_grad_lapse) noexcept;
+/// @}
+
 namespace Tags {
 /*!
  * \brief Compute item to get the gradient of the gradient of the lapse.
@@ -72,6 +102,30 @@ struct GradGradLapseCompute : Ccz4::Tags::GradGradLapse<Dim, Frame, DataType>,
       &Ccz4::grad_grad_lapse<Dim, Frame, DataType>);
 
   using base = Ccz4::Tags::GradGradLapse<Dim, Frame, DataType>;
+};
+
+/*!
+ * \brief Compute item to get the divergence of the lapse.
+ *
+ * \details See `divergence_lapse()`. Can be retrieved using
+ * `Ccz4::Tags::DivergenceLapse`.
+ */
+template <size_t Dim, typename Frame, typename DataType>
+struct DivergenceLapseCompute : Ccz4::Tags::DivergenceLapse<DataType>,
+                                db::ComputeTag {
+  using argument_tags = tmpl::list<ConformalFactor<DataType>,
+                                   InverseConformalMetric<Dim, Frame, DataType>,
+                                   GradGradLapse<Dim, Frame, DataType>>;
+
+  using return_type = Scalar<DataType>;
+
+  static constexpr auto function = static_cast<void (*)(
+      const gsl::not_null<Scalar<DataType>*>, const Scalar<DataType>&,
+      const tnsr::II<DataType, Dim, Frame>&,
+      const tnsr::ii<DataType, Dim, Frame>&) noexcept>(
+      &Ccz4::divergence_lapse<Dim, Frame, DataType>);
+
+  using base = Ccz4::Tags::DivergenceLapse<DataType>;
 };
 }  // namespace Tags
 }  // namespace Ccz4
