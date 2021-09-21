@@ -36,17 +36,17 @@ namespace gr {
  * is the extrinsic curvature, \f$\gamma_{jm} \f$ is the spatial metric,
  * and \f$D_i\f$ is spatial covariant derivative.
  */
-template <size_t SpatialDim, typename Frame, typename DataType>
-tnsr::ii<DataType, SpatialDim, Frame> weyl_magnetic(
-    const tnsr::ijj<DataType, SpatialDim, Frame>& grad_extrinsic_curvature,
-    const tnsr::ii<DataType, SpatialDim, Frame>& spatial_metric,
+template <typename Frame, typename DataType>
+tnsr::ii<DataType, 3, Frame> weyl_magnetic(
+    const tnsr::ijj<DataType, 3, Frame>& grad_extrinsic_curvature,
+    const tnsr::ii<DataType, 3, Frame>& spatial_metric,
     const Scalar<DataType>& sqrt_det_spatial_metric) noexcept;
 
-template <size_t SpatialDim, typename Frame, typename DataType>
+template <typename Frame, typename DataType>
 void weyl_magnetic(
-    gsl::not_null<tnsr::ii<DataType, SpatialDim, Frame>*> weyl_magnetic_part,
-    const tnsr::ijj<DataType, SpatialDim, Frame>& grad_extrinsic_curvature,
-    const tnsr::ii<DataType, SpatialDim, Frame>& spatial_metric,
+    gsl::not_null<tnsr::ii<DataType, 3, Frame>*> weyl_magnetic_part,
+    const tnsr::ijj<DataType, 3, Frame>& grad_extrinsic_curvature,
+    const tnsr::ii<DataType, 3, Frame>& spatial_metric,
     const Scalar<DataType>& sqrt_det_spatial_metric) noexcept;
 /// @}
 
@@ -64,18 +64,16 @@ void weyl_magnetic(
  * `gr::weyl_magnetic()`. The magnetic part of the Weyl tensor needs additional
  * terms for matter.
  */
-template <size_t SpatialDim, typename Frame, typename DataType>
+template <typename Frame, typename DataType>
 Scalar<DataType> weyl_magnetic_scalar(
-    const tnsr::ii<DataType, SpatialDim, Frame>& weyl_magnetic,
-    const tnsr::II<DataType, SpatialDim, Frame>&
-        inverse_spatial_metric) noexcept;
+    const tnsr::ii<DataType, 3, Frame>& weyl_magnetic,
+    const tnsr::II<DataType, 3, Frame>& inverse_spatial_metric) noexcept;
 
-template <size_t SpatialDim, typename Frame, typename DataType>
+template <typename Frame, typename DataType>
 void weyl_magnetic_scalar(
     gsl::not_null<Scalar<DataType>*> weyl_magnetic_scalar_result,
-    const tnsr::ii<DataType, SpatialDim, Frame>& weyl_magnetic,
-    const tnsr::II<DataType, SpatialDim, Frame>&
-        inverse_spatial_metric) noexcept;
+    const tnsr::ii<DataType, 3, Frame>& weyl_magnetic,
+    const tnsr::II<DataType, 3, Frame>& inverse_spatial_metric) noexcept;
 /// @}
 
 namespace Tags {
@@ -83,41 +81,39 @@ namespace Tags {
 /// Computed from the `ExtrinsicCurvature` and `SpatialMetric`
 ///
 /// Can be retrieved using gr::Tags::WeylMagnetic
-template <size_t SpatialDim, typename Frame, typename DataType>
-struct WeylMagneticCompute : WeylMagnetic<SpatialDim, Frame, DataType>,
-                             db::ComputeTag {
-  using argument_tags = tmpl::list<
-      ::Tags::deriv<gr::Tags::ExtrinsicCurvature<SpatialDim, Frame, DataType>,
-                    tmpl::size_t<SpatialDim>, Frame>,
-      gr::Tags::SpatialMetric<SpatialDim, Frame, DataType>>;
+template <typename Frame, typename DataType>
+struct WeylMagneticCompute : WeylMagnetic<Frame, DataType>, db::ComputeTag {
+  using argument_tags =
+      tmpl::list<::Tags::deriv<gr::Tags::ExtrinsicCurvature<3, Frame, DataType>,
+                               tmpl::size_t<3>, Frame>,
+                 gr::Tags::SpatialMetric<3, Frame, DataType>,
+                 gr::Tags::SqrtDetSpatialMetric<DataType>>;
 
-  using return_type = tnsr::ii<DataType, SpatialDim, Frame>;
+  using return_type = tnsr::ii<DataType, 3, Frame>;
 
   static constexpr auto function = static_cast<void (*)(
-      gsl::not_null<tnsr::ii<DataType, SpatialDim, Frame>*>,
-      const tnsr::ijj<DataType, SpatialDim, Frame>&,
-      const tnsr::ii<DataType, SpatialDim, Frame>&)>(
-      &weyl_magnetic<SpatialDim, Frame, DataType>);
+      gsl::not_null<tnsr::ii<DataType, 3, Frame>*>,
+      const tnsr::ijj<DataType, 3, Frame>&, const tnsr::ii<DataType, 3, Frame>&,
+      const Scalar<DataType>&)>(&weyl_magnetic<Frame, DataType>);
 
-  using base = WeylMagnetic<SpatialDim, Frame, DataType>;
+  using base = WeylMagnetic<Frame, DataType>;
 };
 
 /// Can be retrieved using gr::Tags::`WeylMagneticScalar`
 /// Computes magnetic part of the Weyl tensor
-template <size_t SpatialDim, typename Frame, typename DataType>
+template <typename Frame, typename DataType>
 struct WeylMagneticScalarCompute : WeylMagneticScalar<DataType>,
                                    db::ComputeTag {
   using argument_tags =
-      tmpl::list<gr::Tags::WeylMagneticCompute<SpatialDim, Frame, DataType>,
-                 gr::Tags::InverseSpatialMetric<SpatialDim, Frame, DataType>>;
+      tmpl::list<gr::Tags::WeylMagneticCompute<Frame, DataType>,
+                 gr::Tags::InverseSpatialMetric<3, Frame, DataType>>;
 
   using return_type = Scalar<DataType>;
 
-  static constexpr auto function =
-      static_cast<void (*)(gsl::not_null<Scalar<DataType>*>,
-                           const tnsr::ii<DataType, SpatialDim, Frame>&,
-                           const tnsr::II<DataType, SpatialDim, Frame>&)>(
-          &gr::weyl_magnetic_scalar<SpatialDim, Frame, DataType>);
+  static constexpr auto function = static_cast<void (*)(
+      gsl::not_null<Scalar<DataType>*>, const tnsr::ii<DataType, 3, Frame>&,
+      const tnsr::II<DataType, 3, Frame>&)>(
+      &gr::weyl_magnetic_scalar<Frame, DataType>);
 
   using base = WeylMagneticScalar<DataType>;
 };

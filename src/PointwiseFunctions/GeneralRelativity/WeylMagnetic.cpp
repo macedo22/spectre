@@ -23,9 +23,9 @@ tnsr::ii<DataType, 3, Frame> weyl_magnetic(
     const Scalar<DataType>& sqrt_det_spatial_metric) noexcept {
   auto weyl_magnetic_part = make_with_value<tnsr::ii<DataType, 3, Frame>>(
       get<0, 0>(spatial_metric), 0.0);
-  weyl_magnetic<3, Frame, DataType>(make_not_null(&weyl_magnetic_part),
-                                    grad_extrinsic_curvature, spatial_metric,
-                                    sqrt_det_spatial_metric);
+  weyl_magnetic<Frame, DataType>(make_not_null(&weyl_magnetic_part),
+                                 grad_extrinsic_curvature, spatial_metric,
+                                 sqrt_det_spatial_metric);
 
   return weyl_magnetic_part;
 }
@@ -101,7 +101,7 @@ Scalar<DataType> weyl_magnetic_scalar(
     const tnsr::II<DataType, 3, Frame>& inverse_spatial_metric) noexcept {
   Scalar<DataType> weyl_magnetic_scalar_result{
       get<0, 0>(inverse_spatial_metric)};
-  weyl_magnetic_scalar<3, Frame, DataType>(
+  weyl_magnetic_scalar<Frame, DataType>(
       make_not_null(&weyl_magnetic_scalar_result), weyl_magnetic,
       inverse_spatial_metric);
   return weyl_magnetic_scalar_result;

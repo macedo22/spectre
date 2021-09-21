@@ -171,9 +171,9 @@ struct WeylElectric : db::SimpleTag {
 /*!
  * \brief The magnetic part of the Weyl tensor in vacuum \f$B_{ij}\f$.
  */
-template <size_t Dim, typename Frame, typename DataType>
+template <typename Frame, typename DataType>
 struct WeylMagnetic : db::SimpleTag {
-  using type = tnsr::ii<DataType, Dim, Frame>;
+  using type = tnsr::ii<DataType, 3, Frame>;
 };
 
 /*!
