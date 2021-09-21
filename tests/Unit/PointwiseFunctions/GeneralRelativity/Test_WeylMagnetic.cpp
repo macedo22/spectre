@@ -11,7 +11,6 @@
 #include "DataStructures/LeviCivitaIterator.hpp"
 #include "DataStructures/Tensor/EagerMath/DeterminantAndInverse.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
-#include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/VectorImpl.hpp"
 #include "Framework/CheckWithRandomValues.hpp"
 #include "Framework/SetupLocalPythonEnvironment.hpp"
@@ -30,10 +29,13 @@ template <typename DataType>
 void make_random_tensors(
     const gsl::not_null<tnsr::ijj<DataType, 3>*> grad_extrinsic_curvature,
     const gsl::not_null<tnsr::ii<DataType, 3>*> spatial_metric,
+    const gsl::not_null<Scalar<DataType>*> sqrt_det_spatial_metric,
     const DataType& used_for_size) noexcept {
   MAKE_GENERATOR(generator);
   std::uniform_real_distribution<> distribution(-3.0, 3.0);
   const auto nn_distribution = make_not_null(&distribution);
+  *grad_extrinsic_curvature = make_with_random_values<tnsr::ijj<DataType, 3>>(
+      make_not_null(&generator), nn_distribution, used_for_size);
   *grad_extrinsic_curvature = make_with_random_values<tnsr::ijj<DataType, 3>>(
       make_not_null(&generator), nn_distribution, used_for_size);
 
@@ -44,6 +46,10 @@ void make_random_tensors(
   for (size_t i = 0; i < 3; ++i) {
     spatial_metric->get(i, i) += 1.0;
   }
+
+  *sqrt_det_spatial_metric = make_with_random_values<Scalar<DataType>>(
+      make_not_null(&generator), nn_metric_distribution, used_for_size);
+  { (0.5 / sqrt(get(determinant_and_inverse(spatial_metric).first))); }
 }
 
 template <typename DataType>
@@ -68,8 +74,8 @@ void test_compute_item_in_databox(const DataType& used_for_size) noexcept {
           gr::Tags::WeylMagneticCompute<3, Frame::Inertial, DataType>>>(
       grad_extrinsic_curvature, spatial_metric);
 
-  const auto expected =
-      gr::weyl_magnetic(grad_extrinsic_curvature, spatial_metric);
+  const auto expected = gr::weyl_magnetic(
+      grad_extrinsic_curvature, spatial_metric, sqrt_det_spatial_metric);
   CHECK_ITERABLE_APPROX(
       (db::get<gr::Tags::WeylMagnetic<3, Frame::Inertial, DataType>>(box)),
       expected);
@@ -85,8 +91,8 @@ void test_weyl_magnetic(const DataType& used_for_size) {
   make_random_tensors(make_not_null(&grad_extrinsic_curvature),
                       make_not_null(&spatial_metric), used_for_size);
 
-  const auto cpp_weyl_magnetic =
-      gr::weyl_magnetic(grad_extrinsic_curvature, spatial_metric);
+  const auto cpp_weyl_magnetic = gr::weyl_magnetic(
+      grad_extrinsic_curvature, spatial_metric, sqrt_det_spatial_metric);
   const auto python_weyl_magnetic =
       pypp::call<tnsr::ii<DataType, SpatialDim, Frame::Inertial>>(
           "WeylMagnetic", "weyl_magnetic_tensor", grad_extrinsic_curvature,

@@ -169,7 +169,7 @@ struct WeylElectric : db::SimpleTag {
 };
 
 /*!
- * \brief The magnetic part of the Weyl tensor in vaccum B_{ij}.
+ * \brief The magnetic part of the Weyl tensor in vacuum \f$B_{ij}\f$.
  */
 template <size_t Dim, typename Frame, typename DataType>
 struct WeylMagnetic : db::SimpleTag {
