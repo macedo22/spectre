@@ -195,6 +195,38 @@ struct ChristoffelSecondKind : db::SimpleTag {
 };
 
 /*!
+ * \brief The spatial derivative of the spatial christoffel symbols of the
+ * second kind
+ *
+ * \details We define:
+ * \f{align}
+ *     \partial_k \Gamma^m{}_{ij} &=
+ *       \partial_k \tilde{\Gamma}^m{}_{ij} +
+ *       2 D_k{}^{ml} (\tilde{\gamma}_{jl} P_i + \tilde{\gamma}_{il} P_j
+ *         - \tilde{\gamma}_{ij} P_l) -
+ *       2 \tilde{\gamma}^{ml} (D_{kjl} P_i + D_{kil} P_j - D_{kij} P_l) -
+ *       \tilde{\gamma}^{ml} (
+ *         \tilde{\gamma}_{jl} \partial_{(k} P_{i)} +
+ *         \tilde{\gamma}_{il} \partial_{(k} P_{j)} -
+ *         \tilde{\gamma}_{ij} \partial_{(k} P_{l)})
+ * \f}
+ * where \f$\partial_n \tilde{\Gamma}^k{}_{ij}\f$, \f$\tilde{\gamma}_{ij}\f$,
+ * \f$\tilde{\gamma}^{ij}\f$, \f$D_{ijk}\f$, \f$D_k{}^{ij}\f$, \f$P_i\f$, and
+ * \f$\partial_j P_{i}\f$ are the spatial derivative of the conformal spatial
+ * christoffel symbols of the second kind defined by
+ * `Ccz4::Tags::DerivConformalChristoffelSecondKind`, the conformal spatial
+ * metric defined by `Ccz4::Tags::ConformalMetric`, the inverse conformal
+ * spatial metric defined by `Ccz4::Tags::InverseConformalMetric`, the CCZ4
+ * auxiliary variable defined by `Ccz4::Tags::FieldD`, the CCZ4 identity defined
+ * by `Ccz4::Tags::FieldDUp`, the CCZ4 auxiliary variable defined by
+ * `Ccz4::Tags::FieldP`, and its spatial derivative, respectively.
+ */
+template <size_t Dim, typename Frame, typename DataType>
+struct DerivChristoffelSecondKind : db::SimpleTag {
+  using type = tnsr::iJkk<DataType, Dim, Frame>;
+};
+
+/*!
  * \brief The gradient of the gradient of the lapse
  *
  * \details We define:

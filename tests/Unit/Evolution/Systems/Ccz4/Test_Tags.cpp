@@ -47,6 +47,9 @@ void test_simple_tags() {
       Ccz4::Tags::ChristoffelSecondKind<Dim, Frame, DataType>>(
       "ChristoffelSecondKind");
   TestHelpers::db::test_simple_tag<
+      Ccz4::Tags::DerivChristoffelSecondKind<Dim, Frame, DataType>>(
+      "DerivChristoffelSecondKind");
+  TestHelpers::db::test_simple_tag<
       Ccz4::Tags::GradGradLapse<Dim, Frame, DataType>>("GradGradLapse");
   TestHelpers::db::test_simple_tag<Ccz4::Tags::DivergenceLapse<DataType>>(
       "DivergenceLapse");
