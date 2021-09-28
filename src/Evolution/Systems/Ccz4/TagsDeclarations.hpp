@@ -49,7 +49,7 @@ template <typename DataType = DataVector>
 struct DivergenceLapse;
 }  // namespace Tags
 
-/// \brief Input option tags for the generalized harmonic evolution system
+/// \brief Input option tags for the CCZ4 evolution system
 namespace OptionTags {
 struct Group;
 }  // namespace OptionTags

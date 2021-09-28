@@ -234,7 +234,7 @@ struct DivergenceLapse : db::SimpleTag {
 namespace OptionTags {
 /*!
  * \ingroup OptionGroupsGroup
- * Groups option tags related to the Ccz4 evolution system.
+ * Groups option tags related to the CCZ4 evolution system.
  */
 struct Group {
   static std::string name() noexcept { return "Ccz4"; }
