@@ -42,7 +42,7 @@ void test_christoffel_second_kind(const DataType& used_for_size) {
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.Evolution.Systems.Ccz4.Christoffel",
-                  "[Evolution][Unit]") {
+                  "[Unit][Evolution]") {
   pypp::SetupLocalPythonEnvironment local_python_env("Evolution/Systems/Ccz4/");
 
   GENERATE_UNINITIALIZED_DOUBLE_AND_DATAVECTOR;
