@@ -11,6 +11,7 @@ spectre_target_sources(
   Christoffel.cpp
   DerivChristoffel.cpp
   DerivLapse.cpp
+  Ricci.cpp
   )
 
 spectre_target_headers(
@@ -20,6 +21,7 @@ spectre_target_headers(
   Christoffel.hpp
   DerivChristoffel.hpp
   DerivLapse.hpp
+  Ricci.hpp
   System.hpp
   Tags.hpp
   TagsDeclarations.hpp
