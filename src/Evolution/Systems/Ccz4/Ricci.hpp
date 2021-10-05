@@ -17,15 +17,15 @@ namespace Ccz4 {
  *
  * \f{align}
  *     R_{ij} &=
- *       \partial_m \Gamma^m{}_{ij} - \partial_j \Gamma^m{}_{im} +
- *       \Gamma^l{}_{ij} \Gamma^m{}_{lm} - \Gamma^l{}_{im} \Gamma^m{}_{lj}
+ *       \partial_m \Gamma^m_{ij} - \partial_j \Gamma^m_{im} +
+ *       \Gamma^l_{ij} \Gamma^m_{lm} - \Gamma^l_{im} \Gamma^m_{lj}
  * \f}
  *
  * where
  *
  * \f{align}
- *     \partial_k \Gamma^m{}_{ij} &=
- *       \partial_k \tilde{\Gamma}^m{}_{ij} +
+ *     \partial_k \Gamma^m_{ij} &=
+ *       \partial_k \tilde{\Gamma}^m_{ij} +
  *       2 D_k{}^{ml} (\tilde{\gamma}_{jl} P_i + \tilde{\gamma}_{il} P_j -
  *                     \tilde{\gamma}_{ij} P_l)\nonumber\\
  *       & - 2 \tilde{\gamma}^{ml} (D_{kjl} P_i + D_{kil} P_j - D_{kij} P_l) -
@@ -35,9 +35,9 @@ namespace Ccz4 {
  *         \tilde{\gamma}_{ij} \partial_{(k} P_{l)})
  * \f}
  *
- * \f$\Gamma^k{}_{ij}\f$ is the spatial christoffel symbols of the second kind
+ * \f$\Gamma^k_{ij}\f$ is the spatial christoffel symbols of the second kind
  * defined by `Ccz4::Tags::ChristoffelSecondKind`,
- * \f$\partial_m \tilde{\Gamma}^k{}_{ij}\f$ is the spatial derivative of the
+ * \f$\partial_m \tilde{\Gamma}^k_{ij}\f$ is the spatial derivative of the
  * conformal spatial christoffel symbols of the second kind defined by
  * `Ccz4::Tags::DerivConformalChristoffelSecondKind`, \f$\tilde{\gamma}_{ij}\f$
  * is the conformal spatial metric defined by `Ccz4::Tags::ConformalMetric`,
@@ -48,15 +48,14 @@ namespace Ccz4 {
  * variable defined by `Ccz4::Tags::FieldP`, and \f$\partial_j P_{i}\f$ is its
  * spatial derivative.
  *
- * After substituting in the full expressions for
- * \f$\partial_m \Gamma^m{}_{ij}\f$ and \f$\partial_j \Gamma^m{}_{im}\f$ and
- * commuting terms with common coefficients, the full equation becomes and is
- * implemented as:
+ * After substituting in the full expressions for \f$\partial_m \Gamma^m_{ij}\f$
+ * and \f$\partial_j \Gamma^m_{im}\f$ and commuting terms with common
+ * coefficients, the full equation becomes and is implemented as:
  *
  *  \f{align}{
  *     R_{ij} &=
- *       \partial_m \tilde{\Gamma}^m{}_{ij} -
- *       \partial_j \tilde{\Gamma}^m{}_{im}\nonumber\\
+ *       \partial_m \tilde{\Gamma}^m_{ij} -
+ *       \partial_j \tilde{\Gamma}^m_{im}\nonumber\\
  *       & + 2 D_m{}^{ml} (\tilde{\gamma}_{jl} P_i + \tilde{\gamma}_{il} P_j -
  *                         \tilde{\gamma}_{ij} P_l) -
  *       2 \tilde{\gamma}^{ml} (
@@ -73,7 +72,7 @@ namespace Ccz4 {
  *         \tilde{\gamma}_{ml} \partial_{(j} P_{i)} +
  *         \tilde{\gamma}_{il} \partial_{(j} P_{m)} -
  *         \tilde{\gamma}_{im} \partial_{(j} P_{l)})\nonumber\\
- *       & + \Gamma^l{}_{ij} \Gamma^m{}_{lm} - \Gamma^l{}_{im} \Gamma^m{}_{lj}
+ *       & + \Gamma^l_{ij} \Gamma^m_{lm} - \Gamma^l_{im} \Gamma^m_{lj}
  * \f}
  *
  */
@@ -87,7 +86,7 @@ void spatial_ricci_tensor(
     const tnsr::ijj<DataType, Dim, Frame>& field_d,
     const tnsr::iJJ<DataType, Dim, Frame>& field_d_up,
     const tnsr::i<DataType, Dim, Frame>& field_p,
-    const tnsr::ij<DataType, Dim, Frame>& d_field_p) noexcept;
+    const tnsr::ij<DataType, Dim, Frame>& d_field_p);
 
 template <size_t Dim, typename Frame, typename DataType>
 tnsr::ii<DataType, Dim, Frame> spatial_ricci_tensor(
@@ -98,6 +97,6 @@ tnsr::ii<DataType, Dim, Frame> spatial_ricci_tensor(
     const tnsr::ijj<DataType, Dim, Frame>& field_d,
     const tnsr::iJJ<DataType, Dim, Frame>& field_d_up,
     const tnsr::i<DataType, Dim, Frame>& field_p,
-    const tnsr::ij<DataType, Dim, Frame>& d_field_p) noexcept;
+    const tnsr::ij<DataType, Dim, Frame>& d_field_p);
 /// @}
 }  // namespace Ccz4

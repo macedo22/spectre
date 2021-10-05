@@ -22,7 +22,7 @@ void spatial_ricci_tensor(
     const tnsr::ijj<DataType, Dim, Frame>& field_d,
     const tnsr::iJJ<DataType, Dim, Frame>& field_d_up,
     const tnsr::i<DataType, Dim, Frame>& field_p,
-    const tnsr::ij<DataType, Dim, Frame>& d_field_p) noexcept {
+    const tnsr::ij<DataType, Dim, Frame>& d_field_p) {
   destructive_resize_components(result,
                                 get_size(get<0, 0>(conformal_spatial_metric)));
   for (auto& component : (*result)) {
@@ -32,15 +32,15 @@ void spatial_ricci_tensor(
   for (size_t i = 0; i < Dim; i++) {
     for (size_t j = i; j < Dim; j++) {
       for (size_t m = 0; m < Dim; m++) {
-        // Add first terms of \partial_m \Gamma^m{}_{ij} and
-        // -\partial_j \Gamma^m{}_{im}
+        // Add first terms of \partial_m \Gamma^m_{ij} and
+        // -\partial_j \Gamma^m_{im}
         result->get(i, j) +=
             d_conformal_christoffel_second_kind.get(m, m, i, j) -
             d_conformal_christoffel_second_kind.get(j, m, i, m);
         for (size_t l = 0; l < Dim; l++) {
           result->get(i, j) +=
-              // Add terms of \partial_m \Gamma^m{}_{ij} and
-              // -\partial_j \Gamma^m{}_{im} that have a coefficient of 2
+              // Add terms of \partial_m \Gamma^m_{ij} and
+              // -\partial_j \Gamma^m_{im} that have a coefficient of 2
               2.0 * ((field_d_up.get(m, m, l) *
                       (conformal_spatial_metric.get(j, l) * field_p.get(i) +
                        conformal_spatial_metric.get(i, l) * field_p.get(j) -
@@ -57,22 +57,20 @@ void spatial_ricci_tensor(
                          (field_d.get(j, m, l) * field_p.get(i) +
                           field_d.get(j, i, l) * field_p.get(m) -
                           field_d.get(j, i, m) * field_p.get(l))) -
-              // Add terms of \partial_m \Gamma^m{}_{ij} and
-              // -\partial_j \Gamma^m{}_{im} that have a coefficient of 1/2
-              0.5 *
-                  (inverse_conformal_spatial_metric.get(m, l) *
-                   (conformal_spatial_metric.get(j, l) * d_field_p.get(m, i) +
-                    conformal_spatial_metric.get(j, l) * d_field_p.get(i, m) +
-                    conformal_spatial_metric.get(i, l) * d_field_p.get(m, j) +
-                    conformal_spatial_metric.get(i, l) * d_field_p.get(j, m) -
-                    conformal_spatial_metric.get(i, j) * d_field_p.get(m, l) -
-                    conformal_spatial_metric.get(i, j) * d_field_p.get(l, m) -
-                    conformal_spatial_metric.get(m, l) * d_field_p.get(j, i) -
-                    conformal_spatial_metric.get(m, l) * d_field_p.get(i, j) -
-                    conformal_spatial_metric.get(i, l) * d_field_p.get(j, m) -
-                    conformal_spatial_metric.get(i, l) * d_field_p.get(m, j) +
-                    conformal_spatial_metric.get(i, m) * d_field_p.get(j, l) +
-                    conformal_spatial_metric.get(i, m) * d_field_p.get(l, j))) +
+              // Add \partial_{(i} P_{j)} type terms
+              0.5 * (inverse_conformal_spatial_metric.get(m, l) *
+                     (conformal_spatial_metric.get(j, l) *
+                          (d_field_p.get(m, i) + d_field_p.get(i, m)) +
+                      conformal_spatial_metric.get(i, l) *
+                          (d_field_p.get(m, j) + d_field_p.get(j, m)) -
+                      conformal_spatial_metric.get(i, j) *
+                          (d_field_p.get(m, l) + d_field_p.get(l, m)) -
+                      conformal_spatial_metric.get(m, l) *
+                          (d_field_p.get(j, i) + d_field_p.get(i, j)) -
+                      conformal_spatial_metric.get(i, l) *
+                          (d_field_p.get(j, m) + d_field_p.get(m, j)) +
+                      conformal_spatial_metric.get(i, m) *
+                          (d_field_p.get(j, l) + d_field_p.get(l, j)))) +
               // Add last two terms for R_{ij}
               christoffel_second_kind.get(l, i, j) *
                   christoffel_second_kind.get(m, l, m) -
@@ -93,7 +91,7 @@ tnsr::ii<DataType, Dim, Frame> spatial_ricci_tensor(
     const tnsr::ijj<DataType, Dim, Frame>& field_d,
     const tnsr::iJJ<DataType, Dim, Frame>& field_d_up,
     const tnsr::i<DataType, Dim, Frame>& field_p,
-    const tnsr::ij<DataType, Dim, Frame>& d_field_p) noexcept {
+    const tnsr::ij<DataType, Dim, Frame>& d_field_p) {
   tnsr::ii<DataType, Dim, Frame> result{};
   spatial_ricci_tensor(make_not_null(&result), christoffel_second_kind,
                        d_conformal_christoffel_second_kind,
@@ -123,8 +121,7 @@ tnsr::ii<DataType, Dim, Frame> spatial_ricci_tensor(
       const tnsr::ijj<DTYPE(data), DIM(data), FRAME(data)>& field_d,      \
       const tnsr::iJJ<DTYPE(data), DIM(data), FRAME(data)>& field_d_up,   \
       const tnsr::i<DTYPE(data), DIM(data), FRAME(data)>& field_p,        \
-      const tnsr::ij<DTYPE(data), DIM(data), FRAME(data)>&                \
-          d_field_p) noexcept;                                            \
+      const tnsr::ij<DTYPE(data), DIM(data), FRAME(data)>& d_field_p);    \
   template tnsr::ii<DTYPE(data), DIM(data), FRAME(data)>                  \
   Ccz4::spatial_ricci_tensor(                                             \
       const tnsr::Ijj<DTYPE(data), DIM(data), FRAME(data)>&               \
@@ -138,8 +135,7 @@ tnsr::ii<DataType, Dim, Frame> spatial_ricci_tensor(
       const tnsr::ijj<DTYPE(data), DIM(data), FRAME(data)>& field_d,      \
       const tnsr::iJJ<DTYPE(data), DIM(data), FRAME(data)>& field_d_up,   \
       const tnsr::i<DTYPE(data), DIM(data), FRAME(data)>& field_p,        \
-      const tnsr::ij<DTYPE(data), DIM(data), FRAME(data)>&                \
-          d_field_p) noexcept;
+      const tnsr::ij<DTYPE(data), DIM(data), FRAME(data)>& d_field_p);
 
 GENERATE_INSTANTIATIONS(INSTANTIATE, (1, 2, 3), (Frame::Grid, Frame::Inertial),
                         (double, DataVector))

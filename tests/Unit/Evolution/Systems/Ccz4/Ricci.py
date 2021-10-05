@@ -38,11 +38,8 @@ def spatial_ricci_tensor(christoffel_second_kind,
         inverse_conformal_spatial_metric, field_d, field_d_up, field_p,
         d_field_p)
 
-    return np.einsum(
-        "mimj",
-        np.einsum("kmij->mikj", d_christoffel_second_kind) -
-        np.einsum("jmik->mikj", d_christoffel_second_kind) +
-        np.einsum("lij,mlk->mikj", christoffel_second_kind,
-                  christoffel_second_kind) -
-        np.einsum("lik,mlj->mikj", christoffel_second_kind,
-                  christoffel_second_kind))
+    return (
+        np.einsum("mmij", d_christoffel_second_kind) -
+        np.einsum("jmim", d_christoffel_second_kind) + np.einsum(
+            "lij,mlm", christoffel_second_kind, christoffel_second_kind) -
+        np.einsum("lim,mlj", christoffel_second_kind, christoffel_second_kind))
