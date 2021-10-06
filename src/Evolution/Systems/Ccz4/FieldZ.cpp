@@ -7,6 +7,7 @@
 
 #include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
+#include "Utilities/ConstantExpressions.hpp"
 #include "Utilities/ContainerHelpers.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/Gsl.hpp"
@@ -45,28 +46,72 @@ tnsr::i<DataType, Dim, Frame> field_z(
           contracted_conformal_christoffel_second_kind, gamma_hat);
   return result;
 }
+
+template <size_t Dim, typename Frame, typename DataType>
+void inverse_field_z(const gsl::not_null<tnsr::I<DataType, Dim, Frame>*> result,
+                     const gsl::not_null<Scalar<DataType>*> buffer,
+                     const Scalar<DataType>& conformal_factor,
+                     const tnsr::I<DataType, Dim, Frame>&
+                         contracted_conformal_christoffel_second_kind,
+                     const tnsr::I<DataType, Dim, Frame>& gamma_hat) {
+  destructive_resize_components(result, get_size(get(conformal_factor)));
+  destructive_resize_components(buffer, get_size(get(conformal_factor)));
+
+  ::TensorExpressions::evaluate(buffer, square(conformal_factor()));
+
+  ::TensorExpressions::evaluate<ti_I>(
+      result, 0.5 * ((*buffer)() * gamma_hat(ti_I) -
+                     contracted_conformal_christoffel_second_kind(ti_I)));
+}
+
+template <size_t Dim, typename Frame, typename DataType>
+tnsr::I<DataType, Dim, Frame> inverse_field_z(
+    const Scalar<DataType>& conformal_factor,
+    const tnsr::I<DataType, Dim, Frame>&
+        contracted_conformal_christoffel_second_kind,
+    const tnsr::I<DataType, Dim, Frame>& gamma_hat) {
+  tnsr::I<DataType, Dim, Frame> result{};
+  Scalar<DataType> buffer{};
+  inverse_field_z(make_not_null(&result), make_not_null(&buffer),
+                  conformal_factor,
+                  contracted_conformal_christoffel_second_kind, gamma_hat);
+  return result;
+}
 }  // namespace Ccz4
 
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(1, data)
 #define DTYPE(data) BOOST_PP_TUPLE_ELEM(2, data)
 
-#define INSTANTIATE(_, data)                                             \
-  template void Ccz4::field_z(                                           \
-      const gsl::not_null<tnsr::i<DTYPE(data), DIM(data), FRAME(data)>*> \
-          result,                                                        \
-      const gsl::not_null<tnsr::I<DTYPE(data), DIM(data), FRAME(data)>*> \
-          buffer,                                                        \
-      const tnsr::ii<DTYPE(data), DIM(data), FRAME(data)>&               \
-          conformal_spatial_metric,                                      \
-      const tnsr::I<DTYPE(data), DIM(data), FRAME(data)>&                \
-          contracted_conformal_christoffel_second_kind,                  \
-      const tnsr::I<DTYPE(data), DIM(data), FRAME(data)>& gamma_hat);    \
-  template tnsr::i<DTYPE(data), DIM(data), FRAME(data)> Ccz4::field_z(   \
-      const tnsr::ii<DTYPE(data), DIM(data), FRAME(data)>&               \
-          conformal_spatial_metric,                                      \
-      const tnsr::I<DTYPE(data), DIM(data), FRAME(data)>&                \
-          contracted_conformal_christoffel_second_kind,                  \
+#define INSTANTIATE(_, data)                                                   \
+  template void Ccz4::field_z(                                                 \
+      const gsl::not_null<tnsr::i<DTYPE(data), DIM(data), FRAME(data)>*>       \
+          result,                                                              \
+      const gsl::not_null<tnsr::I<DTYPE(data), DIM(data), FRAME(data)>*>       \
+          buffer,                                                              \
+      const tnsr::ii<DTYPE(data), DIM(data), FRAME(data)>&                     \
+          conformal_spatial_metric,                                            \
+      const tnsr::I<DTYPE(data), DIM(data), FRAME(data)>&                      \
+          contracted_conformal_christoffel_second_kind,                        \
+      const tnsr::I<DTYPE(data), DIM(data), FRAME(data)>& gamma_hat);          \
+  template tnsr::i<DTYPE(data), DIM(data), FRAME(data)> Ccz4::field_z(         \
+      const tnsr::ii<DTYPE(data), DIM(data), FRAME(data)>&                     \
+          conformal_spatial_metric,                                            \
+      const tnsr::I<DTYPE(data), DIM(data), FRAME(data)>&                      \
+          contracted_conformal_christoffel_second_kind,                        \
+      const tnsr::I<DTYPE(data), DIM(data), FRAME(data)>& gamma_hat);          \
+  template void Ccz4::inverse_field_z(                                         \
+      const gsl::not_null<tnsr::I<DTYPE(data), DIM(data), FRAME(data)>*>       \
+          result,                                                              \
+      const gsl::not_null<Scalar<DTYPE(data)>*> buffer,                        \
+      const Scalar<DTYPE(data)>& conformal_factor,                             \
+      const tnsr::I<DTYPE(data), DIM(data), FRAME(data)>&                      \
+          contracted_conformal_christoffel_second_kind,                        \
+      const tnsr::I<DTYPE(data), DIM(data), FRAME(data)>& gamma_hat);          \
+  template tnsr::I<DTYPE(data), DIM(data), FRAME(data)> Ccz4::inverse_field_z( \
+      const Scalar<DTYPE(data)>& conformal_factor,                             \
+      const tnsr::I<DTYPE(data), DIM(data), FRAME(data)>&                      \
+          contracted_conformal_christoffel_second_kind,                        \
       const tnsr::I<DTYPE(data), DIM(data), FRAME(data)>& gamma_hat);
 
 GENERATE_INSTANTIATIONS(INSTANTIATE, (1, 2, 3), (Frame::Grid, Frame::Inertial),

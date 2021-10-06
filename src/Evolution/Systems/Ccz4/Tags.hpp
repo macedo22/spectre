@@ -260,6 +260,16 @@ template <size_t Dim, typename Frame, typename DataType>
 struct FieldZ : db::SimpleTag {
   using type = tnsr::i<DataType, Dim, Frame>;
 };
+
+/*!
+ * \brief The CCZ4 identity for \f$Z^i\f$
+ *
+ * \details See `Ccz4::inverse_field_z` for details.
+ */
+template <size_t Dim, typename Frame, typename DataType>
+struct InverseFieldZ : db::SimpleTag {
+  using type = tnsr::I<DataType, Dim, Frame>;
+};
 }  // namespace Tags
 
 namespace OptionTags {

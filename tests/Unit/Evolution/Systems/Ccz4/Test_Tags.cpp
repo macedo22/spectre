@@ -54,6 +54,8 @@ void test_simple_tags() {
       "GammaHat");
   TestHelpers::db::test_simple_tag<Ccz4::Tags::FieldZ<Dim, Frame, DataType>>(
       "FieldZ");
+  TestHelpers::db::test_simple_tag<
+      Ccz4::Tags::InverseFieldZ<Dim, Frame, DataType>>("InverseFieldZ");
 }
 
 SPECTRE_TEST_CASE("Unit.Evolution.Systems.Ccz4.Tags", "[Unit][Evolution]") {

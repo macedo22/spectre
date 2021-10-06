@@ -24,6 +24,17 @@ void test_compute_field_z(const DataType& used_for_size) {
           &Ccz4::field_z<Dim, Frame::Inertial, DataType>),
       "FieldZ", "field_z", {{{-1., 1.}}}, used_for_size);
 }
+
+template <size_t Dim, typename DataType>
+void test_compute_inverse_field_z(const DataType& used_for_size) {
+  pypp::check_with_random_values<1>(
+      static_cast<tnsr::I<DataType, Dim, Frame::Inertial> (*)(
+          const Scalar<DataType>&,
+          const tnsr::I<DataType, Dim, Frame::Inertial>&,
+          const tnsr::I<DataType, Dim, Frame::Inertial>&)>(
+          &Ccz4::inverse_field_z<Dim, Frame::Inertial, DataType>),
+      "FieldZ", "inverse_field_z", {{{-1., 1.}}}, used_for_size);
+}
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.PointwiseFunctions.GeneralRelativity.FieldZ",
