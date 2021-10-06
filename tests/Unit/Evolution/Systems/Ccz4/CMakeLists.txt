@@ -7,6 +7,7 @@ set(LIBRARY_SOURCES
   Test_Christoffel.cpp
   Test_DerivChristoffel.cpp
   Test_DerivLapse.cpp
+  Test_FieldZ.cpp
   Test_Tags.cpp
   )
 
