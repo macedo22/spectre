@@ -8,6 +8,7 @@ set(LIBRARY_SOURCES
   Test_DerivChristoffel.cpp
   Test_DerivLapse.cpp
   Test_Tags.cpp
+  Test_Z4Constraint.cpp
   )
 
 add_test_library(
