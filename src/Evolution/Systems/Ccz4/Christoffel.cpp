@@ -24,6 +24,24 @@ void conformal_christoffel_second_kind(
       result, inverse_conformal_spatial_metric(ti_K, ti_L) *
                   (field_d(ti_i, ti_j, ti_l) + field_d(ti_j, ti_i, ti_l) -
                    field_d(ti_l, ti_i, ti_j)));
+
+  //   for (auto& component : *result) {
+  //       component = 0.0;
+  //   }
+
+  //   for (size_t k = 0; k < Dim; k++) {
+  //       for (size_t i = 0; i < Dim; i++) {
+  //           for (size_t j = i; j < Dim; j++) {
+  //               for (size_t l = 0; l < Dim; l++) {
+  //                   result->get(k, i, j) +=
+  //                   inverse_conformal_spatial_metric.get(k, l) * (
+  //                     field_d.get(i, j, l) + field_d.get(j, i, l) -
+  //                     field_d.get(l, i, j)
+  //                   );
+  //               }
+  //           }
+  //       }
+  //   }
 }
 
 template <size_t Dim, typename Frame, typename DataType>
