@@ -23,6 +23,7 @@ spectre_target_headers(
   DerivLapse.hpp
   Tags.hpp
   TagsDeclarations.hpp
+  TempTags.hpp
   Z4Constraint.cpp
   )
 
