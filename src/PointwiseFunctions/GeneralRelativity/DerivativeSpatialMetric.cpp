@@ -25,6 +25,7 @@ void deriv_inverse_spatial_metric(
     component = 0.0;
   }
 
+  // TODO: maybe look here?
   for (size_t i = 0; i < Dim; ++i) {
     for (size_t j = i; j < Dim; ++j) {
       for (size_t k = 0; k < Dim; ++k) {
