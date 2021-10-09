@@ -53,6 +53,12 @@ struct ContractedConformalChristoffelSecondKind;
 template <size_t Dim, typename Frame = Frame::Inertial,
           typename DataType = DataVector>
 struct DerivContractedConformalChristoffelSecondKind;
+template <size_t Dim, typename Frame = Frame::Inertial,
+          typename DataType = DataVector>
+struct GammaHat;
+template <size_t Dim, typename Frame = Frame::Inertial,
+          typename DataType = DataVector>
+struct Z4Constraint;
 }  // namespace Tags
 
 /// \brief Input option tags for the generalized harmonic evolution system
