@@ -28,6 +28,17 @@ struct ConformalFactor : db::SimpleTag {
 };
 
 /*!
+ * \brief The square of the conformal factor that rescales the spatial metric
+ *
+ * \details If \f$\gamma_{ij}\f$ is the spatial metric, then we define
+ * \f$\phi^2 = (det(\gamma_{ij}))^{-1/3}\f$.
+ */
+template <typename DataType>
+struct ConformalFactorSquared : db::SimpleTag {
+  using type = Scalar<DataType>;
+};
+
+/*!
  * \brief The conformally scaled spatial metric
  *
  * \details If \f$\phi\f$ is the conformal factor and \f$\gamma_{ij}\f$ is the
@@ -284,6 +295,16 @@ struct GammaHat : db::SimpleTag {
 template <size_t Dim, typename Frame, typename DataType>
 struct Z4Constraint : db::SimpleTag {
   using type = tnsr::i<DataType, Dim, Frame>;
+};
+
+/*!
+ * \brief The spatial part of the upper Z4 constraint
+ *
+ * \details See `Ccz4::upper_spatial_z4_constraint` for details.
+ */
+template <size_t Dim, typename Frame, typename DataType>
+struct Z4ConstraintUp : db::SimpleTag {
+  using type = tnsr::I<DataType, Dim, Frame>;
 };
 }  // namespace Tags
 

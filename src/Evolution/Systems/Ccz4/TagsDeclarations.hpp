@@ -15,6 +15,8 @@ namespace Tags {
 template <typename DataType = DataVector>
 struct ConformalFactor;
 template <typename DataType = DataVector>
+struct ConformalFactorSquared;
+template <typename DataType = DataVector>
 struct LogLapse;
 template <size_t Dim, typename Frame = Frame::Inertial,
           typename DataType = DataVector>
@@ -59,6 +61,9 @@ struct GammaHat;
 template <size_t Dim, typename Frame = Frame::Inertial,
           typename DataType = DataVector>
 struct Z4Constraint;
+template <size_t Dim, typename Frame = Frame::Inertial,
+          typename DataType = DataVector>
+struct Z4ConstraintUp;
 }  // namespace Tags
 
 /// \brief Input option tags for the generalized harmonic evolution system

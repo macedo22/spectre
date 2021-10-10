@@ -19,6 +19,8 @@ void test_simple_tags() {
   TestHelpers::db::test_simple_tag<Ccz4::Tags::ConformalFactor<DataType>>(
       "ConformalFactor");
   TestHelpers::db::test_simple_tag<
+      Ccz4::Tags::ConformalFactorSquared<DataType>>("ConformalFactorSquared");
+  TestHelpers::db::test_simple_tag<
       Ccz4::Tags::ConformalMetric<Dim, Frame, DataType>>(
       "Conformal(SpatialMetric)");
   TestHelpers::db::test_simple_tag<
@@ -60,6 +62,8 @@ void test_simple_tags() {
       "DerivContractedConformalChristoffelSecondKind");
   TestHelpers::db::test_simple_tag<
       Ccz4::Tags::Z4Constraint<Dim, Frame, DataType>>("Z4Constraint");
+  TestHelpers::db::test_simple_tag<
+      Ccz4::Tags::Z4ConstraintUp<Dim, Frame, DataType>>("Z4ConstraintUp");
 }
 
 SPECTRE_TEST_CASE("Unit.Evolution.Systems.Ccz4.Tags", "[Unit][Evolution]") {
