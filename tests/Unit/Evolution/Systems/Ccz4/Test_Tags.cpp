@@ -66,6 +66,9 @@ void test_simple_tags() {
       Ccz4::Tags::Z4ConstraintUp<Dim, Frame, DataType>>("Z4ConstraintUp");
   TestHelpers::db::test_simple_tag<
       Ccz4::Tags::GradZ4Constraint<Dim, Frame, DataType>>("GradZ4Constraint");
+  TestHelpers::db::test_simple_tag<
+      Ccz4::Tags::RicciScalarPlusDivergenceZ4Constraint<DataType>>(
+      "RicciScalarPlusDivergenceZ4Constraint");
 }
 
 SPECTRE_TEST_CASE("Unit.Evolution.Systems.Ccz4.Tags", "[Unit][Evolution]") {

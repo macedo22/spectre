@@ -67,6 +67,8 @@ struct Z4ConstraintUp;
 template <size_t Dim, typename Frame = Frame::Inertial,
           typename DataType = DataVector>
 struct GradZ4Constraint;
+template <typename DataType = DataVector>
+struct RicciScalarPlusDivergenceZ4Constraint;
 }  // namespace Tags
 
 /// \brief Input option tags for the generalized harmonic evolution system
