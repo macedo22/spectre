@@ -24,6 +24,8 @@ set(LIBRARY_SOURCES
   Test_TimeIndex.cpp
   )
 
+add_subdirectory(CompileTime)
+
 add_test_library(
   ${LIBRARY}
   "DataStructures/Tensor/Expressions"
