@@ -4,3 +4,4 @@
 add_subdirectory(AddSubtract)
 add_subdirectory(Contract)
 add_subdirectory(InnerProduct)
+add_subdirectory(OuterProduct)
