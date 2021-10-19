@@ -108,14 +108,14 @@ void test_compute_spatial_ricci_tensor(
   //   det_conformal_spatial_metric << std::endl;
   const auto inverse_conformal_spatial_metric =
       determinant_and_inverse(conformal_spatial_metric).second;
-  tnsr::II<DataVector, SpatialDim, Frame::Inertial>
-      expected_inverse_conformal_spatial_metric{};
-  for (size_t i = 0; i < SpatialDim; i++) {
-    for (size_t j = i; j < SpatialDim; j++) {
-      expected_inverse_conformal_spatial_metric.get(i, j) =
-          inverse_spatial_metric.get(i, j) / pow<2>(conformal_factor);
-    }
-  }
+  //   tnsr::II<DataVector, SpatialDim, Frame::Inertial>
+  //       expected_inverse_conformal_spatial_metric{};
+  //   for (size_t i = 0; i < SpatialDim; i++) {
+  //     for (size_t j = i; j < SpatialDim; j++) {
+  //       expected_inverse_conformal_spatial_metric.get(i, j) =
+  //           inverse_spatial_metric.get(i, j) / pow<2>(conformal_factor);
+  //     }
+  //   }
 
   // passes
   //   CHECK_ITERABLE_APPROX(expected_inverse_conformal_spatial_metric,
@@ -155,46 +155,47 @@ void test_compute_spatial_ricci_tensor(
     }
   }
 
-  using conformal_factor_tag = Ccz4::Tags::ConformalFactor<DataVector>;
-  Variables<tmpl::list<conformal_factor_tag>> conformal_factor_var(
-      num_points_3d);
-  get(get<conformal_factor_tag>(conformal_factor_var)) = conformal_factor;
-  const auto d_conformal_factor_var =
-      partial_derivatives<tmpl::list<conformal_factor_tag>>(
-          conformal_factor_var, mesh, coord_map.inv_jacobian(x_logical));
-  const auto& d_conformal_factor =
-      get<Tags::deriv<conformal_factor_tag, tmpl::size_t<SpatialDim>,
-                      Frame::Inertial>>(d_conformal_factor_var);
+  //   using conformal_factor_tag = Ccz4::Tags::ConformalFactor<DataVector>;
+  //   Variables<tmpl::list<conformal_factor_tag>> conformal_factor_var(
+  //       num_points_3d);
+  //   get(get<conformal_factor_tag>(conformal_factor_var)) = conformal_factor;
+  //   const auto d_conformal_factor_var =
+  //       partial_derivatives<tmpl::list<conformal_factor_tag>>(
+  //           conformal_factor_var, mesh, coord_map.inv_jacobian(x_logical));
+  //   const auto& d_conformal_factor =
+  //       get<Tags::deriv<conformal_factor_tag, tmpl::size_t<SpatialDim>,
+  //                       Frame::Inertial>>(d_conformal_factor_var);
 
   // just use conformal factor tag for phi^2
-  Variables<tmpl::list<conformal_factor_tag>> conformal_factor_squared_var(
-      num_points_3d);
-  get(get<conformal_factor_tag>(conformal_factor_squared_var)) =
-      square(conformal_factor);
-  const auto d_conformal_factor_squared_var =
-      partial_derivatives<tmpl::list<conformal_factor_tag>>(
-          conformal_factor_squared_var, mesh,
-          coord_map.inv_jacobian(x_logical));
-  const auto& d_conformal_factor_squared =
-      get<Tags::deriv<conformal_factor_tag, tmpl::size_t<SpatialDim>,
-                      Frame::Inertial>>(d_conformal_factor_squared_var);
+  //   using conformal_factor_tag = Ccz4::Tags::ConformalFactor<DataVector>;
+  //   Variables<tmpl::list<conformal_factor_tag>> conformal_factor_squared_var(
+  //       num_points_3d);
+  //   get(get<conformal_factor_tag>(conformal_factor_squared_var)) =
+  //       square(conformal_factor);
+  //   const auto d_conformal_factor_squared_var =
+  //       partial_derivatives<tmpl::list<conformal_factor_tag>>(
+  //           conformal_factor_squared_var, mesh,
+  //           coord_map.inv_jacobian(x_logical));
+  //   const auto& d_conformal_factor_squared =
+  //       get<Tags::deriv<conformal_factor_tag, tmpl::size_t<SpatialDim>,
+  //                       Frame::Inertial>>(d_conformal_factor_squared_var);
 
   //   const auto& d_spatial_metric =
   //       get<Tags::deriv<gr::Tags::SpatialMetric<SpatialDim>,
   //                       tmpl::size_t<SpatialDim>, Frame::Inertial>>(vars);
 
-  tnsr::ijj<DataVector, SpatialDim, Frame::Inertial>
-      expected_d_conformal_spatial_metric{};
-  for (size_t k = 0; k < SpatialDim; k++) {
-    for (size_t i = 0; i < SpatialDim; i++) {
-      for (size_t j = i; j < SpatialDim; j++) {
-        expected_d_conformal_spatial_metric.get(k, i, j) =
-            // 2.0 * d_conformal_factor.get(k) *
-            d_conformal_factor_squared.get(k) * spatial_metric.get(i, j) +
-            square(conformal_factor) * d_spatial_metric.get(k, i, j);
-      }
-    }
-  }
+  //   tnsr::ijj<DataVector, SpatialDim, Frame::Inertial>
+  //       expected_d_conformal_spatial_metric{};
+  //   for (size_t k = 0; k < SpatialDim; k++) {
+  //     for (size_t i = 0; i < SpatialDim; i++) {
+  //       for (size_t j = i; j < SpatialDim; j++) {
+  //         expected_d_conformal_spatial_metric.get(k, i, j) =
+  //             // 2.0 * d_conformal_factor.get(k) *
+  //             d_conformal_factor_squared.get(k) * spatial_metric.get(i, j) +
+  //             square(conformal_factor) * d_spatial_metric.get(k, i, j);
+  //       }
+  //     }
+  //   }
 
   // At best passes eith 1e-11 (with 8 grid points)
   // Note that using the expected_ value going forward does not improve
@@ -202,9 +203,9 @@ void test_compute_spatial_ricci_tensor(
   // points to 10 (as well as using expected_) foes not fix the issue
   // CHECK_ITERABLE_APPROX(expected_d_conformal_spatial_metric,
   // d_conformal_spatial_metric);
-  Approx approx0 = Approx::custom().epsilon(1e-11).scale(1.0);
-  CHECK_ITERABLE_CUSTOM_APPROX(expected_d_conformal_spatial_metric,
-                               d_conformal_spatial_metric, approx0);
+  //   Approx approx0 = Approx::custom().epsilon(1e-11).scale(1.0);
+  //   CHECK_ITERABLE_CUSTOM_APPROX(expected_d_conformal_spatial_metric,
+  //                                d_conformal_spatial_metric, approx0);
 
   tnsr::ijj<DataVector, SpatialDim, Frame::Inertial> field_d{};
   for (size_t k = 0; k < SpatialDim; k++) {
@@ -225,26 +226,27 @@ void test_compute_spatial_ricci_tensor(
       }
     }
   }
-  const DataVector used_for_size =
-      DataVector(num_points_3d, std::numeric_limits<double>::signaling_NaN());
-  auto expected_field_d_up =
-      make_with_value<tnsr::iJJ<DataVector, SpatialDim, Frame::Inertial>>(
-          used_for_size, 0.0);
-  for (size_t k = 0; k < SpatialDim; k++) {
-    for (size_t i = 0; i < SpatialDim; i++) {
-      for (size_t j = i; j < SpatialDim; j++) {
-        for (size_t n = 0; n < SpatialDim; n++) {
-          for (size_t m = 0; m < SpatialDim; m++) {
-            expected_field_d_up.get(k, i, j) +=
-                0.5 * inverse_conformal_spatial_metric.get(i, n) *
-                inverse_conformal_spatial_metric.get(m, j) *
-                d_conformal_spatial_metric.get(k, n, m);
-            // expected_d_conformal_spatial_metric.get(k, n, m);
-          }
-        }
-      }
-    }
-  }
+  //   const DataVector used_for_size =
+  //       DataVector(num_points_3d,
+  //       std::numeric_limits<double>::signaling_NaN());
+  //   auto expected_field_d_up =
+  //       make_with_value<tnsr::iJJ<DataVector, SpatialDim, Frame::Inertial>>(
+  //           used_for_size, 0.0);
+  //   for (size_t k = 0; k < SpatialDim; k++) {
+  //     for (size_t i = 0; i < SpatialDim; i++) {
+  //       for (size_t j = i; j < SpatialDim; j++) {
+  //         for (size_t n = 0; n < SpatialDim; n++) {
+  //           for (size_t m = 0; m < SpatialDim; m++) {
+  //             expected_field_d_up.get(k, i, j) +=
+  //                 0.5 * inverse_conformal_spatial_metric.get(i, n) *
+  //                 inverse_conformal_spatial_metric.get(m, j) *
+  //                 d_conformal_spatial_metric.get(k, n, m);
+  //             // expected_d_conformal_spatial_metric.get(k, n, m);
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
 
   // passes
   //   CHECK_ITERABLE_APPROX(expected_field_d_up, field_d_up);
@@ -276,7 +278,9 @@ void test_compute_spatial_ricci_tensor(
 
   tnsr::i<DataVector, SpatialDim, Frame::Inertial> field_p{};
   for (size_t i = 0; i < SpatialDim; i++) {
-    field_p.get(i) = d_conformal_factor.get(i) / conformal_factor;
+    field_p.get(i) =
+        -d_det_spatial_metric.get(i) / (6. * get(det_spatial_metric));
+    // field_p.get(i) = d_conformal_factor.get(i) / conformal_factor;
   }
 
   using field_p_tag =
@@ -329,7 +333,8 @@ void test_compute_spatial_ricci_tensor(
   const auto expected_christoffel_second_kind =
       gr::christoffel_second_kind(d_spatial_metric, inverse_spatial_metric);
   // passes with 1e-12 at best with 8 grid points
-  Approx approx2 = Approx::custom().epsilon(1e-12).scale(1.0);
+  // 1e-12 -> 1e-15 after using d_det_spatial_metric for field_p
+  Approx approx2 = Approx::custom().epsilon(1e-15).scale(1.0);
   CHECK_ITERABLE_CUSTOM_APPROX(expected_christoffel_second_kind,
                                christoffel_second_kind, approx2);
 
@@ -366,8 +371,10 @@ void test_compute_spatial_ricci_tensor(
   CHECK_ITERABLE_APPROX(expected_python_ricci_tensor, actual_ricci_tensor);
 
   // 1e-9 -> 1e-11 after using analytical computation of
-  // d_det_spatial_metric
-  Approx approx = Approx::custom().epsilon(1e-11).scale(1.0);
+  // d_det_spatial_metric for field_d
+  // 1e-11 -> 1e-12 after using analytical computation of
+  // d_det_spatial_metric for field_p
+  Approx approx = Approx::custom().epsilon(1e-12).scale(1.0);
   CHECK_ITERABLE_CUSTOM_APPROX(expected_cpp_gr_ricci_tensor,
                                actual_ricci_tensor, approx);
   // std::cout << grid_size_each_dimension;
