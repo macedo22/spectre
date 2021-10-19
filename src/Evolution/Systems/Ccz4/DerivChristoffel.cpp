@@ -30,36 +30,19 @@ void deriv_conformal_christoffel_second_kind(
               -2.0 * field_d_up.get(k, m, 0) *
                   (field_d.get(i, j, 0) + field_d.get(j, i, 0) -
                    field_d.get(0, i, j)) +
-              inverse_conformal_spatial_metric.get(m, 0) *
-                  (d_field_d.get(k, i, j, 0) + d_field_d.get(k, j, i, 0) -
-                   d_field_d.get(k, 0, i, j));
+              0.5 * inverse_conformal_spatial_metric.get(m, 0) *
+                  (d_field_d.get(k, i, j, 0) + d_field_d.get(i, k, j, 0) +
+                   d_field_d.get(k, j, i, 0) + d_field_d.get(j, k, i, 0) -
+                   d_field_d.get(k, 0, i, j) - d_field_d.get(0, k, i, j));
           for (size_t l = 1; l < Dim; ++l) {
             (*result).get(k, m, i, j) +=
                 -2.0 * field_d_up.get(k, m, l) *
                     (field_d.get(i, j, l) + field_d.get(j, i, l) -
                      field_d.get(l, i, j)) +
-                inverse_conformal_spatial_metric.get(m, l) *
-                    (d_field_d.get(k, i, j, l) + d_field_d.get(k, j, i, l) -
-                     d_field_d.get(k, l, i, j));
-            // (*result).get(k, m, i, j) =
-            //     -2.0 * field_d_up.get(k, m, 0) *
-            //         (field_d.get(i, j, 0) + field_d.get(j, i, 0) -
-            //          field_d.get(0, i, j)) +
-            //     0.5 * inverse_conformal_spatial_metric.get(m, 0) *
-            //         (d_field_d.get(k, i, j, 0) + d_field_d.get(i, k, j, 0) +
-            //          d_field_d.get(k, j, i, 0) + d_field_d.get(j, k, i, 0) -
-            //          d_field_d.get(k, 0, i, j) - d_field_d.get(0, k, i, j));
-            // for (size_t l = 1; l < Dim; ++l) {
-            //   (*result).get(k, m, i, j) +=
-            //       -2.0 * field_d_up.get(k, m, l) *
-            //           (field_d.get(i, j, l) + field_d.get(j, i, l) -
-            //            field_d.get(l, i, j)) +
-            //       0.5 * inverse_conformal_spatial_metric.get(m, l) *
-            //           (d_field_d.get(k, i, j, l) + d_field_d.get(i, k, j, l)
-            //           +
-            //            d_field_d.get(k, j, i, l) + d_field_d.get(j, k, i, l)
-            //            - d_field_d.get(k, l, i, j) - d_field_d.get(l, k, i,
-            //            j));
+                0.5 * inverse_conformal_spatial_metric.get(m, l) *
+                    (d_field_d.get(k, i, j, l) + d_field_d.get(i, k, j, l) +
+                     d_field_d.get(k, j, i, l) + d_field_d.get(j, k, i, l) -
+                     d_field_d.get(k, l, i, j) - d_field_d.get(l, k, i, j));
           }
         }
       }
