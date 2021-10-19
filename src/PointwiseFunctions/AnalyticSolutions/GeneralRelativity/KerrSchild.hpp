@@ -493,6 +493,9 @@ class KerrSchild : public AnalyticSolution<3_st>,
 
     Scalar<DataType> get_var(gr::Tags::SqrtDetSpatialMetric<DataType> /*meta*/);
 
+    tnsr::i<DataType, 3, Frame> get_var(
+        gr::Tags::DerivDetSpatialMetric<3, Frame, DataType> /*meta*/);
+
     tnsr::II<DataType, 3, Frame> get_var(
         gr::Tags::InverseSpatialMetric<3, Frame, DataType> /*meta*/);
 
