@@ -75,6 +75,9 @@ void test_compute_spatial_ricci_tensor(
   const auto& spatial_metric = get<gr::Tags::SpatialMetric<SpatialDim>>(vars);
   const auto det_spatial_metric = determinant_and_inverse(spatial_metric).first;
   //   std::cout << "det_spatial_metric : " << det_spatial_metric << std::endl;
+  const auto& d_spatial_metric =
+      get<Tags::deriv<gr::Tags::SpatialMetric<SpatialDim>,
+                      tmpl::size_t<SpatialDim>, Frame::Inertial>>(vars);
   const auto inverse_spatial_metric =
       determinant_and_inverse(spatial_metric).second;
 
@@ -118,19 +121,39 @@ void test_compute_spatial_ricci_tensor(
   //   CHECK_ITERABLE_APPROX(expected_inverse_conformal_spatial_metric,
   //                         inverse_conformal_spatial_metric);
 
-  using conformal_spatial_metric_tag =
-      Ccz4::Tags::ConformalMetric<SpatialDim, Frame::Inertial, DataVector>;
-  Variables<tmpl::list<conformal_spatial_metric_tag>>
-      conformal_spatial_metric_var(num_points_3d);
-  get<conformal_spatial_metric_tag>(conformal_spatial_metric_var) =
-      conformal_spatial_metric;
-  const auto d_conformal_spatial_metric_var =
-      partial_derivatives<tmpl::list<conformal_spatial_metric_tag>>(
-          conformal_spatial_metric_var, mesh,
-          coord_map.inv_jacobian(x_logical));
-  const auto& d_conformal_spatial_metric =
-      get<Tags::deriv<conformal_spatial_metric_tag, tmpl::size_t<SpatialDim>,
-                      Frame::Inertial>>(d_conformal_spatial_metric_var);
+  //   using conformal_spatial_metric_tag =
+  //       Ccz4::Tags::ConformalMetric<SpatialDim, Frame::Inertial, DataVector>;
+  //   Variables<tmpl::list<conformal_spatial_metric_tag>>
+  //       conformal_spatial_metric_var(num_points_3d);
+  //   get<conformal_spatial_metric_tag>(conformal_spatial_metric_var) =
+  //       conformal_spatial_metric;
+  //   const auto d_conformal_spatial_metric_var =
+  //       partial_derivatives<tmpl::list<conformal_spatial_metric_tag>>(
+  //           conformal_spatial_metric_var, mesh,
+  //           coord_map.inv_jacobian(x_logical));
+  //   const auto& d_conformal_spatial_metric =
+  //       get<Tags::deriv<conformal_spatial_metric_tag,
+  //       tmpl::size_t<SpatialDim>,
+  //                       Frame::Inertial>>(d_conformal_spatial_metric_var);
+
+  gr::Solutions::KerrSchild::IntermediateVars<DataVector, Frame::Inertial>
+      ks_cache(solution, x);
+  const auto d_det_spatial_metric = ks_cache.get_var(
+      gr::Tags::DerivDetSpatialMetric<SpatialDim, Frame::Inertial,
+                                      DataVector>{});
+
+  tnsr::ijj<DataVector, SpatialDim, Frame::Inertial>
+      d_conformal_spatial_metric{};
+  for (size_t k = 0; k < SpatialDim; k++) {
+    for (size_t i = 0; i < SpatialDim; i++) {
+      for (size_t j = i; j < SpatialDim; j++) {
+        d_conformal_spatial_metric.get(k, i, j) =
+            pow<2>(conformal_factor) * d_spatial_metric.get(k, i, j) -
+            pow<8>(conformal_factor) * d_det_spatial_metric.get(k) *
+                spatial_metric.get(i, j) / 3.;
+      }
+    }
+  }
 
   using conformal_factor_tag = Ccz4::Tags::ConformalFactor<DataVector>;
   Variables<tmpl::list<conformal_factor_tag>> conformal_factor_var(
@@ -156,9 +179,9 @@ void test_compute_spatial_ricci_tensor(
       get<Tags::deriv<conformal_factor_tag, tmpl::size_t<SpatialDim>,
                       Frame::Inertial>>(d_conformal_factor_squared_var);
 
-  const auto& d_spatial_metric =
-      get<Tags::deriv<gr::Tags::SpatialMetric<SpatialDim>,
-                      tmpl::size_t<SpatialDim>, Frame::Inertial>>(vars);
+  //   const auto& d_spatial_metric =
+  //       get<Tags::deriv<gr::Tags::SpatialMetric<SpatialDim>,
+  //                       tmpl::size_t<SpatialDim>, Frame::Inertial>>(vars);
 
   tnsr::ijj<DataVector, SpatialDim, Frame::Inertial>
       expected_d_conformal_spatial_metric{};
@@ -188,8 +211,7 @@ void test_compute_spatial_ricci_tensor(
     for (size_t i = 0; i < SpatialDim; i++) {
       for (size_t j = i; j < SpatialDim; j++) {
         // field_d.get(k, i, j) = 0.5 * d_conformal_spatial_metric.get(k, i, j);
-        field_d.get(k, i, j) =
-            0.5 * expected_d_conformal_spatial_metric.get(k, i, j);
+        field_d.get(k, i, j) = 0.5 * d_conformal_spatial_metric.get(k, i, j);
       }
     }
   }
@@ -216,8 +238,8 @@ void test_compute_spatial_ricci_tensor(
             expected_field_d_up.get(k, i, j) +=
                 0.5 * inverse_conformal_spatial_metric.get(i, n) *
                 inverse_conformal_spatial_metric.get(m, j) *
-                // d_conformal_spatial_metric.get(k, n, m);
-                expected_d_conformal_spatial_metric.get(k, n, m);
+                d_conformal_spatial_metric.get(k, n, m);
+            // expected_d_conformal_spatial_metric.get(k, n, m);
           }
         }
       }
@@ -292,9 +314,11 @@ void test_compute_spatial_ricci_tensor(
   //   d_conformal_christoffel_second_kind);
   // passes with 1e-11 at best when deriv_conformal_christoffel is updated to
   // not symmetrize
-  //   Approx approx1 = Approx::custom().epsilon(1e-11).scale(1.0);
-  // CHECK_ITERABLE_CUSTOM_APPROX(expected_d_conformal_christoffel_second_kind,
-  //                              d_conformal_christoffel_second_kind, approx1);
+  // passes with 1e-12 at best after using analytical calculation of
+  // d_det_spatial_metric from KerrSchild
+  Approx approx1 = Approx::custom().epsilon(1e-12).scale(1.0);
+  CHECK_ITERABLE_CUSTOM_APPROX(expected_d_conformal_christoffel_second_kind,
+                               d_conformal_christoffel_second_kind, approx1);
 
   const auto christoffel_second_kind = Ccz4::christoffel_second_kind(
       conformal_spatial_metric, inverse_conformal_spatial_metric, field_p,
@@ -305,9 +329,9 @@ void test_compute_spatial_ricci_tensor(
   const auto expected_christoffel_second_kind =
       gr::christoffel_second_kind(d_spatial_metric, inverse_spatial_metric);
   // passes with 1e-12 at best with 8 grid points
-  // Approx approx2 = Approx::custom().epsilon(1e-12).scale(1.0);
-  // CHECK_ITERABLE_CUSTOM_APPROX(expected_christoffel_second_kind,
-  //                              christoffel_second_kind, approx2);
+  Approx approx2 = Approx::custom().epsilon(1e-12).scale(1.0);
+  CHECK_ITERABLE_CUSTOM_APPROX(expected_christoffel_second_kind,
+                               christoffel_second_kind, approx2);
 
   using christoffel_second_kind_tag =
       gr::Tags::SpatialChristoffelSecondKind<SpatialDim, Frame::Inertial,
@@ -341,7 +365,9 @@ void test_compute_spatial_ricci_tensor(
 
   CHECK_ITERABLE_APPROX(expected_python_ricci_tensor, actual_ricci_tensor);
 
-  Approx approx = Approx::custom().epsilon(1e-9).scale(1.0);
+  // 1e-9 -> 1e-11 after using analytical computation of
+  // d_det_spatial_metric
+  Approx approx = Approx::custom().epsilon(1e-11).scale(1.0);
   CHECK_ITERABLE_CUSTOM_APPROX(expected_cpp_gr_ricci_tensor,
                                actual_ricci_tensor, approx);
   // std::cout << grid_size_each_dimension;
