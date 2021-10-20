@@ -169,7 +169,7 @@ void test_schwarzschild(const DataType& used_for_size) {
 }
 
 template <typename FrameType>
-void test_numerical_deriv_det_spatial_metric() {
+void test_numerical_deriv_det_spatial_metric(const DataVector& used_for_size) {
   // Parameters for KerrSchild solution
   const double mass = 1.01;
   const std::array<double, 3> spin{{0.0, 0.0, 0.0}};
@@ -200,9 +200,6 @@ void test_numerical_deriv_det_spatial_metric() {
       x, t,
       typename gr::Solutions::KerrSchild::template tags<DataVector,
                                                         FrameType>{});
-  const auto& spatial_metric =
-      get<gr::Tags::SpatialMetric<SpatialDim, FrameType>>(vars);
-  const auto& det_spatial_metric = determinant(spatial_metric);
 
   // Compute actual analytical derivative of the determinant
   gr::Solutions::KerrSchild::IntermediateVars<DataVector, FrameType> ks_cache(
@@ -211,18 +208,30 @@ void test_numerical_deriv_det_spatial_metric() {
       gr::Tags::DerivDetSpatialMetric<3, FrameType, DataVector>{});
 
   // Compute expected numerical derivative of the determinant
-  using det_spatial_metric_tag = gr::Tags::DetSpatialMetric<DataVector>;
-  Variables<tmpl::list<det_spatial_metric_tag>> det_spatial_metric_var(
-      num_points_3d);
-  get<det_spatial_metric_tag>(det_spatial_metric_var) = det_spatial_metric;
-  const auto expected_deriv_det_spatial_metric_var =
-      partial_derivatives<tmpl::list<det_spatial_metric_tag>>(
-          det_spatial_metric_var, mesh, coord_map.inv_jacobian(x_logical));
-  const auto& expected_deriv_det_spatial_metric = get<
-      Tags::deriv<det_spatial_metric_tag, tmpl::size_t<SpatialDim>, FrameType>>(
-      expected_deriv_det_spatial_metric_var);
+  const double null_vector_0 = -1.0;
+  gr::Solutions::KerrSchild::IntermediateComputer<DataVector, FrameType>
+      ks_computer(solution, x, null_vector_0);
+  auto H = make_with_value<Scalar<DataVector>>(
+      used_for_size, std::numeric_limits<double>::signaling_NaN());
+  using H_tag = gr::Solutions::KerrSchild::internal_tags::H<DataVector>;
+  ks_computer(make_not_null(&H), make_not_null(&ks_cache), H_tag{});
 
-  Approx approx = Approx::custom().epsilon(1e-11).scale(1.0);
+  Variables<tmpl::list<H_tag>> H_var(num_points_3d);
+  get<H_tag>(H_var) = H;
+  const auto expected_deriv_H_var = partial_derivatives<tmpl::list<H_tag>>(
+      H_var, mesh, coord_map.inv_jacobian(x_logical));
+  const auto& expected_deriv_H =
+      get<Tags::deriv<H_tag, tmpl::size_t<SpatialDim>, FrameType>>(
+          expected_deriv_H_var);
+
+  tnsr::i<DataVector, SpatialDim, FrameType>
+      expected_deriv_det_spatial_metric{};
+  for (size_t i = 0; i < SpatialDim; i++) {
+    expected_deriv_det_spatial_metric.get(i) =
+        2.0 * square(null_vector_0) * expected_deriv_H.get(i);
+  }
+
+  Approx approx = Approx::custom().epsilon(1e-12).scale(1.0);
   CHECK_ITERABLE_CUSTOM_APPROX(deriv_det_spatial_metric,
                                expected_deriv_det_spatial_metric, approx);
 }
@@ -300,14 +309,14 @@ SPECTRE_TEST_CASE("Unit.PointwiseFunctions.AnalyticSolutions.Gr.KerrSchild",
 
   test_schwarzschild<Frame::Inertial>(DataVector(5));
   test_schwarzschild<Frame::Inertial>(0.0);
-  test_numerical_deriv_det_spatial_metric<Frame::Inertial>();
+  test_numerical_deriv_det_spatial_metric<Frame::Inertial>(DataVector(5));
   test_tag_retrieval<Frame::Inertial>(DataVector(5));
   test_tag_retrieval<Frame::Inertial>(0.0);
   test_einstein_solution<Frame::Inertial>();
 
   test_schwarzschild<Frame::Grid>(DataVector(5));
   test_schwarzschild<Frame::Grid>(0.0);
-  test_numerical_deriv_det_spatial_metric<Frame::Grid>();
+  test_numerical_deriv_det_spatial_metric<Frame::Grid>(DataVector(5));
   test_tag_retrieval<Frame::Grid>(DataVector(5));
   test_tag_retrieval<Frame::Grid>(0.0);
   test_einstein_solution<Frame::Grid>();
