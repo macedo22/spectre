@@ -33,16 +33,32 @@ void test_large_datavector_expression(const gsl::not_null<Generator*> generator,
       generator, distribution, used_for_size);
 
   // Rank 4 x Rank 4 inner product
+  // 3D, contract over spatial dimensions
+  //
   // Compiled with clang-10 compile_commands.json command. See
   // compile_command.txt in this directory
   //
   // real    0m16.151s
   // user    0m15.860s
   // sys     0m0.290s
-  const Scalar<DataVector> L = TensorExpressions::evaluate(
-      R(ti_I, ti_J, ti_K, ti_L) * S(ti_l, ti_k, ti_j, ti_i));
+  // const Scalar<DataVector> T = TensorExpressions::evaluate(
+  //     R(ti_I, ti_J, ti_K, ti_L) * S(ti_i, ti_j, ti_k, ti_l));
 
   // Rank 4 x Rank 4 inner product
+  // 3D, contract over all 4 dimensions
+  //
+  // Compiled with clang-10 compile_commands.json command. See
+  // compile_command.txt in this directory
+  //
+  // real    0m16.151s
+  // user    0m15.860s
+  // sys     0m0.290s
+  // const Scalar<DataVector> L = TensorExpressions::evaluate(
+  //     R(ti_A, ti_B, ti_C, ti_D) * S(ti_d, ti_c, ti_b, ti_a));
+
+  // Rank 4 x Rank 4 inner product
+  // 3D, contract over all 4 dimensions
+  //
   // Compiled with clang-10 compile_commands.json command. See
   // compile_command.txt in this directory
   //
@@ -305,6 +321,8 @@ void test_large_datavector_expression(const gsl::not_null<Generator*> generator,
   //                           R.get(3, 3, 3, 1) * S.get(1, 3, 3, 3) +
   //                           R.get(3, 3, 3, 2) * S.get(2, 3, 3, 3) +
   //                           R.get(3, 3, 3, 3) * S.get(3, 3, 3, 3);
+
+  // CHECK_ITERABLE_APPROX(get(L), result);
 }
 }  // namespace
 
