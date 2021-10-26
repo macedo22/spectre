@@ -76,15 +76,16 @@ struct ContractedType {
 /*!
  * \ingroup TensorExpressionsGroup
  */
-template <size_t FirstContractedIndexPos, size_t SecondContractedIndexPos,
+template </*size_t FirstContractedIndexPos, size_t SecondContractedIndexPos,*/
           typename T, typename X, typename Symm, typename IndexList,
           typename ArgsList>
 struct TensorContract
     : public TensorExpression<
-          TensorContract<FirstContractedIndexPos, SecondContractedIndexPos, T,
-                         X, Symm, IndexList, ArgsList>,
+          TensorContract<
+              /*FirstContractedIndexPos, SecondContractedIndexPos,*/ T, X, Symm,
+              IndexList, ArgsList>,
           X,
-          typename detail::ContractedType<FirstContractedIndexPos,
+          /*typename detail::ContractedType<FirstContractedIndexPos,
                                           SecondContractedIndexPos, T, X, Symm,
                                           IndexList, ArgsList>::type::symmetry,
           typename detail::ContractedType<
@@ -92,7 +93,8 @@ struct TensorContract
               IndexList, ArgsList>::type::index_list,
           typename detail::ContractedType<
               FirstContractedIndexPos, SecondContractedIndexPos, T, X, Symm,
-              IndexList, ArgsList>::type::args_list> {
+              IndexList, ArgsList>::type::args_list*/
+          Symmetry<>, index_list<>, tmpl::list<>> {
   // First and second \ref SpacetimeIndex "TensorIndexType"s to contract.
   // "first" and "second" here refer to the position of the indices to contract
   // in the list of indices, with "first" denoting leftmost
@@ -102,28 +104,28 @@ struct TensorContract
   //   \ref SpacetimeIndex "TensorIndexType" refered to by `ti_A`
   // - `second_contracted_index` refers to the
   //   \ref SpacetimeIndex "TensorIndexType" refered to by `ti_a`
-  using first_contracted_index = tmpl::at_c<IndexList, FirstContractedIndexPos>;
-  using second_contracted_index =
+  /*using first_contracted_index = tmpl::at_c<IndexList,
+  FirstContractedIndexPos>; using second_contracted_index =
       tmpl::at_c<IndexList, SecondContractedIndexPos>;
   static_assert(tmpl::size<Symm>::value > 1 and
                     tmpl::size<IndexList>::value > 1,
                 "Cannot contract indices on a Tensor with rank less than 2");
   static_assert(detail::indices_contractible<first_contracted_index,
                                              second_contracted_index>::value,
-                "Cannot contract the requested indices.");
+                "Cannot contract the requested indices.");*/
 
-  using new_type =
+  /*using new_type =
       typename detail::ContractedType<FirstContractedIndexPos,
                                       SecondContractedIndexPos, T, X, Symm,
-                                      IndexList, ArgsList>::type;
+                                      IndexList, ArgsList>::type;*/
 
   using type = X;
-  using symmetry = typename new_type::symmetry;
-  using index_list = typename new_type::index_list;
+  using symmetry = Symmetry<>;
+  using index_list = index_list<>;
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
   static constexpr auto num_uncontracted_tensor_indices =
       tmpl::size<Symm>::value;
-  using args_list = typename new_type::args_list;
+  using args_list = args_list<>;
 
   explicit TensorContract(
       const TensorExpression<T, X, Symm, IndexList, ArgsList>& t)
@@ -152,11 +154,12 @@ struct TensorContract
   SPECTRE_ALWAYS_INLINE static constexpr std::array<
       size_t, num_uncontracted_tensor_indices>
   get_uncontracted_multi_index_with_uncontracted_values(
-      const std::array<size_t, num_tensor_indices>& contracted_multi_index) {
+      const std::array<size_t,
+                       num_tensor_indices>& /*contracted_multi_index*/) {
     std::array<size_t, num_uncontracted_tensor_indices>
-        uncontracted_multi_index{};
+        uncontracted_multi_index{0, 0, 0, 0};
 
-    for (size_t i = 0; i < FirstContractedIndexPos; i++) {
+    /*for (size_t i = 0; i < FirstContractedIndexPos; i++) {
       gsl::at(uncontracted_multi_index, i) = gsl::at(contracted_multi_index, i);
     }
     uncontracted_multi_index[FirstContractedIndexPos] =
@@ -172,7 +175,7 @@ struct TensorContract
          i < num_uncontracted_tensor_indices; i++) {
       gsl::at(uncontracted_multi_index, i) =
           gsl::at(contracted_multi_index, i - 2);
-    }
+    }*/
     return uncontracted_multi_index;
   }
 
@@ -216,6 +219,9 @@ struct TensorContract
         FirstContractedIndexValue;
     uncontracted_multi_index_to_fill[SecondContractedIndexPos] =
         SecondContractedIndexValue;
+
+    // TODO: try to add one more recursive function so that one recurses over
+    // the pairs of indices and the other recurses over a pair's concrete values
 
     if constexpr (FirstContractedIndexValue < first_contracted_index::dim - 1) {
       // We have more than one component left to sum
