@@ -45,6 +45,60 @@ SPECTRE_ALWAYS_INLINE decltype(auto) get(const R_type& R, const S_type& S) {
          get<count + 1>(R, S, multi_index);
 }
 
+template <size_t NumContractedIndices>
+struct InnerProduct {
+  static constexpr size_t dim = 4;
+  static constexpr size_t num_contracted_indices = NumContractedIndices;
+  static constexpr size_t num_uncontracted_indices = NumContractedIndices + 2;
+
+  // Get R or S component from leaves
+  template <typename T>
+  SPECTRE_ALWAYS_INLINE decltype(auto) get(const T& t,
+                                           std::array<size_t, 4> multi_index) {
+    return t.get(multi_index);
+  }
+
+  template <size_t Iteration>
+  SPECTRE_ALWAYS_INLINE decltype(auto) compute_contraction(
+      const R_type& R, const S_type& S,
+      std::array<size_t, num_uncontracted_indices> uncontracted_multi_index) {
+    if constexpr (Iteration == dim - 1) {
+      return InnerProduct<num_uncontracted_indices>{}.get(
+          R, S, uncontracted_multi_index);
+    } else {
+      return InnerProduct<num_uncontracted_indices>{}.get(
+                 R, S, uncontracted_multi_index) +
+             compute_contraction<Iteration + 1>(R, S, uncontracted_multi_index);
+    }
+  }
+
+  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+      const R_type& R, const S_type& S,
+      const std::array<size_t, num_contracted_indices>&
+          contracted_multi_index) {
+    if constexpr (num_contracted_indices == 8) {
+      // return product
+      const std::array<size_t, 4> multi_index{
+          contracted_multi_index[0], contracted_multi_index[1],
+          contracted_multi_index[2], contracted_multi_index[3]};
+      return get(R, multi_index) * get(S, multi_index);
+    } else {
+      // sum over dim for this pair of indices
+      auto uncontracted_multi_index =
+          make_array<num_uncontracted_indices, size_t>(0);
+      for (size_t i = 0; i < num_contracted_indices; i++) {
+        uncontracted_multi_index[i] = contracted_multi_index[i];
+      }
+      return compute_contraction<0>(R, S, uncontracted_multi_index);
+    }
+  }
+};
+
+decltype(auto) evaluate(const R_type& R, const S_type& S) {
+  constexpr std::array<size_t, 0> contracted_multi_index{};
+  return InnerProduct<0>{}.get(R, S, contracted_multi_index);
+}
+
 template <typename Generator>
 void test_large_datavector_expression(const gsl::not_null<Generator*> generator,
                                       const DataVector& used_for_size) {
@@ -89,6 +143,18 @@ void test_large_datavector_expression(const gsl::not_null<Generator*> generator,
   // sys     0m1.004s
   // const DataVector result = get(R, S);
   // (void)result;
+
+  // Rank 4 x Rank 4 inner product
+  // 3D, contract over all 4 dimensions
+  //
+  // Compiled with clang-10 compile_commands.json command. See
+  // compile_command.txt in this directory
+  //
+  // real    0m48.824s
+  // user    0m48.239s
+  // sys     0m0.584s
+  // const DataVector result = evaluate(R, S);
+  // CHECK_ITERABLE_APPROX(result, 256 * R.get(0, 0, 0, 0) * S.get(0, 0, 0, 0));
 
   // Rank 4 x Rank 4 inner product
   // 3D, contract over all 4 dimensions
