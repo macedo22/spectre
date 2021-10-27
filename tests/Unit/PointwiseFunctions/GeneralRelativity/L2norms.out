@@ -1,0 +1,120 @@
+Charm++> No provisioning arguments specified. Running with a single PE.
+         Use +auto-provision to fully subscribe resources or +p1 to silence this message.
+Charm++: standalone mode (not using charmrun)
+Charm++> Running in SMP mode: 1 processes, 1 worker threads (PEs) + 1 comm threads per process, 1 PEs total
+Charm++> The comm. thread only receives messages, while work threads send messages
+Converse/Charm++ Commit ID: v6.10.2-0-g7bf00fad3
+Warning> Randomization of virtual memory (ASLR) is turned on in the kernel, thread migration may not work! Run 'echo 0 > /proc/sys/kernel/randomize_va_space' as root to disable it, or try running with '+isomalloc_sync'.
+Charm++> scheduler running in netpoll mode.
+CharmLB> Load balancer assumes all CPUs are same.
+Charm++> Running on 1 hosts (2 sockets x 10 cores x 1 PUs = 20-way SMP)
+Charm++> cpu topology info is gathered in 0.001 seconds.
+SpECTRE Build Information:
+Version:                      2021.10.04
+Compiled on host:             ocean.fullerton.edu
+Compiled in directory:        /home/alexmacedo/spectre/build_kerr
+Source directory is:          /home/alexmacedo/spectre
+Compiled on git branch:       numerical-derivative-test
+Compiled on git revision:     dc0573a71
+Linked on:                    Tue Oct 26 20:45:37 2021
+==== KerrSchild deriv_H L2 norm ====
+lower bound : (0.8,1.22,1.3)
+upper bound : (0.81,1.23,1.31)
+
+Num points 1D : 4
+L2 norm : 5.67995e-09
+
+Num points 1D : 6
+L2 norm : 1.24178e-12
+
+Num points 1D : 8
+L2 norm : 2.58689e-12
+
+Num points 1D : 10
+L2 norm : 6.23895e-12
+
+Num points 1D : 12
+L2 norm : 1.0341e-11
+
+
+lower bound : (0.8,1.22,1.3)
+upper bound : (0.85,1.27,1.35)
+
+Num points 1D : 4
+L2 norm : 6.84077e-07
+
+Num points 1D : 6
+L2 norm : 1.76386e-10
+
+Num points 1D : 8
+L2 norm : 4.93993e-13
+
+Num points 1D : 10
+L2 norm : 1.31739e-12
+
+Num points 1D : 12
+L2 norm : 2.02224e-12
+
+
+lower bound : (0.8,1.22,1.3)
+upper bound : (0.9,1.32,1.4)
+
+Num points 1D : 4
+L2 norm : 5.26372e-06
+
+Num points 1D : 6
+L2 norm : 4.97595e-09
+
+Num points 1D : 8
+L2 norm : 1.23098e-12
+
+Num points 1D : 10
+L2 norm : 6.0827e-13
+
+Num points 1D : 12
+L2 norm : 9.80808e-13
+
+
+lower bound : (0.8,1.22,1.3)
+upper bound : (1.05,1.47,1.55)
+
+Num points 1D : 4
+L2 norm : 7.53322e-05
+
+Num points 1D : 6
+L2 norm : 3.46667e-07
+
+Num points 1D : 8
+L2 norm : 4.36786e-10
+
+Num points 1D : 10
+L2 norm : 2.59494e-13
+
+Num points 1D : 12
+L2 norm : 3.37206e-13
+
+
+lower bound : (0.8,1.22,1.3)
+upper bound : (1.3,1.72,1.8)
+
+Num points 1D : 4
+L2 norm : 0.00053536
+
+Num points 1D : 6
+L2 norm : 6.7965e-06
+
+Num points 1D : 8
+L2 norm : 2.09307e-08
+
+Num points 1D : 10
+L2 norm : 1.20004e-10
+
+Num points 1D : 12
+L2 norm : 1.01689e-12
+
+
+=====================================================
+===============================================================================
+All tests passed (1552 assertions in 1 test case)
+
+[Partition 0][Node 0] End of program
