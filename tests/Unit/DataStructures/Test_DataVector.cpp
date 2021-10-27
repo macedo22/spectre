@@ -84,10 +84,10 @@ void test_large_datavector_expression(const gsl::not_null<Generator*> generator,
   // Compiled with clang-10 compile_commands.json command. See
   // compile_command.txt in this directory
   //
-  // real    0m38.041s
-  // user    0m37.232s
-  // sys     0m0.809s
-  // auto result = get(R, S);
+  // real    1m6.114s
+  // user    1m5.108s
+  // sys     0m1.004s
+  // const DataVector result = get(R, S);
   // (void)result;
 
   // Rank 4 x Rank 4 inner product
