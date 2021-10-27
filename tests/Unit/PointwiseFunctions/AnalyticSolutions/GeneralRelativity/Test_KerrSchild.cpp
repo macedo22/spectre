@@ -171,7 +171,8 @@ using Affine3D = domain::CoordinateMaps::ProductOf3Maps<Affine, Affine, Affine>;
 // }
 
 template <typename FrameType>
-void test_numerical_deriv_det_spatial_metric(const DataVector& used_for_size) {
+void test_numerical_deriv_det_spatial_metric(
+    const DataVector& /*used_for_size*/) {
   // Parameters for KerrSchild solution
   const double mass = 1.01;
   const std::array<double, 3> spin{{0.0, 0.0, 0.0}};
@@ -191,7 +192,7 @@ void test_numerical_deriv_det_spatial_metric(const DataVector& used_for_size) {
           Affine{-1., 1., lower_bound[1], upper_bound[1]},
           Affine{-1., 1., lower_bound[2], upper_bound[2]},
       });
-  const size_t num_points_3d = num_points_1d * num_points_1d * num_points_1d;
+  // const size_t num_points_3d = num_points_1d * num_points_1d * num_points_1d;
   // Setup coordinates
   const auto x_logical = logical_coordinates(mesh);
   const auto x = coord_map(x_logical);
@@ -211,32 +212,40 @@ void test_numerical_deriv_det_spatial_metric(const DataVector& used_for_size) {
 
   // Compute expected numerical derivative of the determinant
   const double null_vector_0 = -1.0;
-  gr::Solutions::KerrSchild::IntermediateComputer<DataVector, FrameType>
-      ks_computer(solution, x, null_vector_0);
-  auto H = make_with_value<Scalar<DataVector>>(
-      used_for_size, std::numeric_limits<double>::signaling_NaN());
-  using H_tag = gr::Solutions::KerrSchild::internal_tags::H<DataVector>;
+  // gr::Solutions::KerrSchild::IntermediateComputer<DataVector, FrameType>
+  //     ks_computer(solution, x, null_vector_0);
+  // auto H = make_with_value<Scalar<DataVector>>(
+  //     used_for_size, std::numeric_limits<double>::signaling_NaN());
+  // using H_tag = gr::Solutions::KerrSchild::internal_tags::H<DataVector>;
   // ks_computer(make_not_null(&H), make_not_null(&ks_cache), H_tag{});
   const DataVector r = get(magnitude(x));
-  get(H) = mass / r;
+  // get(H) = mass / r;
 
-  Variables<tmpl::list<H_tag>> H_var(num_points_3d);
-  get<H_tag>(H_var) = H;
-  const auto expected_deriv_H_var = partial_derivatives<tmpl::list<H_tag>>(
-      H_var, mesh, coord_map.inv_jacobian(x_logical));
-  const auto& expected_deriv_H =
-      get<Tags::deriv<H_tag, tmpl::size_t<SpatialDim>, FrameType>>(
-          expected_deriv_H_var);
+  // Variables<tmpl::list<H_tag>> H_var(num_points_3d);
+  // get<H_tag>(H_var) = H;
+  // const auto expected_deriv_H_var = partial_derivatives<tmpl::list<H_tag>>(
+  //     H_var, mesh, coord_map.inv_jacobian(x_logical));
+  // const auto& expected_deriv_H =
+  //     get<Tags::deriv<H_tag, tmpl::size_t<SpatialDim>, FrameType>>(
+  //         expected_deriv_H_var);
+
+  // tnsr::i<DataVector, SpatialDim, FrameType>
+  //     expected_deriv_det_spatial_metric{};
+  // for (size_t i = 0; i < SpatialDim; i++) {
+  //   expected_deriv_det_spatial_metric.get(i) =
+  //       2.0 * square(null_vector_0) * expected_deriv_H.get(i);
+  // }
 
   tnsr::i<DataVector, SpatialDim, FrameType>
       expected_deriv_det_spatial_metric{};
   for (size_t i = 0; i < SpatialDim; i++) {
     expected_deriv_det_spatial_metric.get(i) =
-        2.0 * square(null_vector_0) * expected_deriv_H.get(i);
+        -2.0 * mass * null_vector_0 * null_vector_0 * x.get(i) / cube(r);
   }
 
   // Best is 1e-12 even with using expected_H = M / r
-  Approx approx = Approx::custom().epsilon(1e-12).scale(1.0);
+  // Best is 1e-15 when using expected_deriv = -2 M l^0 l^0 x_i / r^3
+  Approx approx = Approx::custom().epsilon(1e-15).scale(1.0);
   CHECK_ITERABLE_CUSTOM_APPROX(deriv_det_spatial_metric,
                                expected_deriv_det_spatial_metric, approx);
 }
