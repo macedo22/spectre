@@ -10,27 +10,49 @@
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
+#include "Utilities/ForceInline.hpp"
 #include "Utilities/Gsl.hpp"
+#include "Utilities/MakeArray.hpp"
 
 namespace {
+using R_type = Tensor<DataVector, Symmetry<4, 3, 2, 1>,
+                      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>;
+
+using S_type = Tensor<DataVector, Symmetry<4, 3, 2, 1>,
+                      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>;
+
+template <size_t Count>
+SPECTRE_ALWAYS_INLINE decltype(auto) get(const R_type& R, const S_type& S,
+                                         std::array<size_t, 4>& multi_index) {
+  if constexpr (Count == 256) {
+    return R.get(multi_index) * S.get(multi_index);
+  } else {
+    return R.get(multi_index) * S.get(multi_index) +
+           get<Count + 1>(R, S, multi_index);
+  }
+}
+
+SPECTRE_ALWAYS_INLINE decltype(auto) get(const R_type& R, const S_type& S) {
+  std::array<size_t, 4> multi_index{0, 0, 0, 0};
+  constexpr size_t count = 1;
+  return R.get(multi_index) * S.get(multi_index) +
+         get<count + 1>(R, S, multi_index);
+}
+
 template <typename Generator>
 void test_large_datavector_expression(const gsl::not_null<Generator*> generator,
                                       const DataVector& used_for_size) {
   std::uniform_real_distribution<> distribution(-1.0, 1.0);
-  const auto R = make_with_random_values<
-      Tensor<DataVector, Symmetry<4, 3, 2, 1>,
-             index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                        SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                        SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                        SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>>(
-      generator, distribution, used_for_size);
-  const auto S = make_with_random_values<
-      Tensor<DataVector, Symmetry<4, 3, 2, 1>,
-             index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                        SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                        SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                        SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>>(
-      generator, distribution, used_for_size);
+  const auto R =
+      make_with_random_values<R_type>(generator, distribution, used_for_size);
+  const auto S =
+      make_with_random_values<S_type>(generator, distribution, used_for_size);
 
   // Rank 4 x Rank 4 inner product
   // 3D, contract over spatial dimensions
@@ -50,11 +72,23 @@ void test_large_datavector_expression(const gsl::not_null<Generator*> generator,
   // Compiled with clang-10 compile_commands.json command. See
   // compile_command.txt in this directory
   //
-  // real    0m16.151s
-  // user    0m15.860s
-  // sys     0m0.290s
+  // real    5m17.453s
+  // user    5m16.403s
+  // sys     0m1.044s
   // const Scalar<DataVector> L = TensorExpressions::evaluate(
   //     R(ti_A, ti_B, ti_C, ti_D) * S(ti_d, ti_c, ti_b, ti_a));
+
+  // Rank 4 x Rank 4 inner product
+  // 3D, contract over all 4 dimensions
+  //
+  // Compiled with clang-10 compile_commands.json command. See
+  // compile_command.txt in this directory
+  //
+  // real    0m38.041s
+  // user    0m37.232s
+  // sys     0m0.809s
+  // auto result = get(R, S);
+  // (void)result;
 
   // Rank 4 x Rank 4 inner product
   // 3D, contract over all 4 dimensions
