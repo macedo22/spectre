@@ -10,6 +10,7 @@ set(LIBRARY_SOURCES
   Test_IndexManipulation.cpp
   Test_InterfaceNullNormal.cpp
   Test_KerrSchildCoords.cpp
+  Test_NumericalDerivative.cpp
   Test_ProjectionOperators.cpp
   Test_Ricci.cpp
   Test_Tags.cpp
