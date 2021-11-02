@@ -64,7 +64,8 @@ tnsr::i<DataType, Dim, FrameType> get_deriv_one_over_radius(
   return deriv_one_over_radius;
 }
 
-template <size_t SpatialDim, typename FrameType>
+template <size_t SpatialDim, typename FrameType, Spectral::Basis Basis,
+          Spectral::Quadrature Quadrature>
 double get_l2norm(const size_t num_points_1d,
                   const std::array<double, 3>& lower_bound,
                   const std::array<double, 3>& upper_bound) {
@@ -99,16 +100,18 @@ double get_l2norm(const size_t num_points_1d,
       get<Tags::deriv<F_tag, tmpl::size_t<SpatialDim>, FrameType>>(
           numerical_deriv_F_var);
 
+  const double max_diff =
+      max(abs(analytical_deriv_F.get(0) - numerical_deriv_F.get(0)));
+  std::cout << "Max difference : " << max_diff << std::endl;
+
   const double l2norm =
       l2Norm(analytical_deriv_F.get(0) - numerical_deriv_F.get(0));
   std::cout << "L2 norm : " << l2norm << std::endl;
   return l2norm;
 }
-}  // namespace
 
-SPECTRE_TEST_CASE(
-    "Unit.PointwiseFunctions.AnalyticSolutions.Gr.NumericalDerivative",
-    "[PointwiseFunctions][Unit]") {
+template <Spectral::Basis Basis, Spectral::Quadrature Quadrature>
+void test() {
   const size_t dim = 3;
   using frame = Frame::Inertial;
 
@@ -132,8 +135,8 @@ SPECTRE_TEST_CASE(
       std::cout << "Length : " << length << std::endl;
       std::cout << "lower bound : " << lower_bound << std::endl;
       std::cout << "upper bound : " << upper_bound << std::endl;
-      const double l2norm =
-          get_l2norm<dim, frame>(num_points_1d[i], lower_bound, upper_bound);
+      const double l2norm = get_l2norm<dim, frame, Basis, Quadrature>(
+          num_points_1d[i], lower_bound, upper_bound);
       l2norms[i][n] = l2norm;
       std::cout << std::endl;
     }
@@ -171,4 +174,14 @@ SPECTRE_TEST_CASE(
   }
   std::cout << "====================================================="
             << std::endl;
+}
+}  // namespace
+
+SPECTRE_TEST_CASE(
+    "Unit.PointwiseFunctions.AnalyticSolutions.Gr.NumericalDerivative",
+    "[PointwiseFunctions][Unit]") {
+  std::cout << "=== LEGENDRE / GAUSSLOBATTO ===\n" << std::endl;
+  test<Spectral::Basis::Legendre, Spectral::Quadrature::GaussLobatto>();
+  std::cout << "\n\n\n=== FINITEDIFFERENCE / CELLCENTERED ===\n" << std::endl;
+  test<Spectral::Basis::FiniteDifference, Spectral::Quadrature::CellCentered>();
 }
