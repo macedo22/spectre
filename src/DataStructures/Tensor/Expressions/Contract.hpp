@@ -219,10 +219,22 @@ struct TensorContract
 
     if constexpr (FirstContractedIndexValue < first_contracted_index::dim - 1) {
       // We have more than one component left to sum
-      return t.get(uncontracted_multi_index_to_fill) +
-             compute_contraction<FirstContractedIndexValue + 1,
-                                 SecondContractedIndexValue + 1>(
-                 t, uncontracted_multi_index_to_fill);
+      //   return t.get(uncontracted_multi_index_to_fill) +
+      //          compute_contraction<FirstContractedIndexValue + 1,
+      //                              SecondContractedIndexValue + 1>(
+      //              t, uncontracted_multi_index_to_fill);
+      const DataVector op1 = t.get(uncontracted_multi_index_to_fill);
+      const DataVector op2 =
+          compute_contraction<FirstContractedIndexValue + 1,
+                              SecondContractedIndexValue + 1>(
+              t, uncontracted_multi_index_to_fill);
+      const size_t size = op1.size();
+      DataVector result =
+          DataVector(size, std::numeric_limits<double>::signaling_NaN());
+      for (size_t i = 0; i < size; i++) {
+        result[i] = op1[i] * op2[i];
+      }
+      return result;
     } else {
       // We only have one final component to sum
       return t.get(uncontracted_multi_index_to_fill);

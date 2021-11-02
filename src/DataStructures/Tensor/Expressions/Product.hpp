@@ -8,6 +8,7 @@
 
 #include <array>
 #include <cstddef>
+#include <limits>
 #include <type_traits>
 #include <utility>
 
@@ -117,7 +118,16 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
           gsl::at(result_multi_index, op1_num_tensor_indices + i);
     }
 
-    return t1_.get(op1_multi_index) * t2_.get(op2_multi_index);
+    // return t1_.get(op1_multi_index) * t2_.get(op2_multi_index);
+    const DataVector op1 = t1_.get(op1_multi_index);
+    const DataVector op2 = t2_.get(op2_multi_index);
+    const size_t size = op1.size();
+    DataVector result =
+        DataVector(size, std::numeric_limits<double>::signaling_NaN());
+    for (size_t i = 0; i < size; i++) {
+      result[i] = op1[i] * op2[i];
+    }
+    return result;
   }
 
  private:

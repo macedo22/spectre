@@ -44,15 +44,15 @@ void test_inner_product(const gsl::not_null<Generator*> generator,
   //
   // DataType : DataVector
   // ----------------------
-  // real    1m57.203s
-  // user    1m56.090s
-  // sys     0m1.108s
+  // real    1m20.216s
+  // user    1m19.425s
+  // sys     0m0.789s
   // ----------------------
   // DataType : double
   // ----------------------
-  // real    0m3.884s
-  // user    0m3.697s
-  // sys     0m0.187s
+  // real
+  // user
+  // sys
   // ----------------------
   const Scalar<DataType> L = TensorExpressions::evaluate(
       R(ti_A, ti_B, ti_C, ti_D) * S(ti_d, ti_c, ti_b, ti_a));
@@ -62,9 +62,9 @@ void test_inner_product(const gsl::not_null<Generator*> generator,
 SPECTRE_TEST_CASE("Unit.DataStructures.InnerProduct",
                   "[DataStructures][Unit]") {
   MAKE_GENERATOR(generator);
-  // test_inner_product(
-  //     make_not_null(&generator),
-  //     DataVector(5, std::numeric_limits<double>::signaling_NaN()));
+  test_inner_product(
+      make_not_null(&generator),
+      DataVector(5, std::numeric_limits<double>::signaling_NaN()));
   //   test_inner_product(make_not_null(&generator),
   //                      std::numeric_limits<double>::signaling_NaN());
 }
