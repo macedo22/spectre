@@ -4,6 +4,7 @@
 #include "Framework/TestingFramework.hpp"
 
 #include <climits>
+#include <iostream>
 #include <random>
 
 #include "DataStructures/DataVector.hpp"
@@ -36,6 +37,9 @@ void test_inner_product(const gsl::not_null<Generator*> generator,
   const auto S =
       make_with_random_values<S_type>(generator, distribution, used_for_size);
 
+  std::cout << R << std::endl;
+  std::cout << S << std::endl;
+
   // Rank 4 x Rank 4 inner product
   // 3D, contract over all 4 dimensions
   //
@@ -44,9 +48,9 @@ void test_inner_product(const gsl::not_null<Generator*> generator,
   //
   // DataType : DataVector
   // ----------------------
-  // real    1m20.216s
-  // user    1m19.425s
-  // sys     0m0.789s
+  // real
+  // user
+  // sys
   // ----------------------
   // DataType : double
   // ----------------------
@@ -56,6 +60,15 @@ void test_inner_product(const gsl::not_null<Generator*> generator,
   // ----------------------
   const Scalar<DataType> L = TensorExpressions::evaluate(
       R(ti_A, ti_B, ti_C, ti_D) * S(ti_d, ti_c, ti_b, ti_a));
+  std::cout << L << std::endl;
+  // const auto exp = R(ti_A, ti_B, ti_C, ti_D) * S(ti_d, ti_c, ti_b, ti_a);
+  // std::cout << exp.get({{}}) << std::endl;
+  // using t = typename decltype(exp)::type;
+  // if (std::is_same_v<t, DataVector>) {
+  //     std::cout << "DataVector" << std::endl;
+  // } else {
+  //     std::cout << "else" << std::endl;
+  // }
 }
 }  // namespace
 

@@ -86,6 +86,8 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   OuterProduct(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~OuterProduct() override = default;
 
+  // When this get and TensorAsExpression::get have no inline, compile
+  // time is: 0m28.405s
   /// \brief Return the value of the component of the outer product tensor at a
   /// given multi-index
   ///
@@ -105,7 +107,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// product tensor to retrieve
   /// \return the value of the component at `result_multi_index` in the outer
   /// product tensor
-  SPECTRE_ALWAYS_INLINE type /*decltype(auto)*/ get(
+  /*SPECTRE_ALWAYS_INLINE*/ type /*decltype(auto)*/ get(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     std::array<size_t, op1_num_tensor_indices> op1_multi_index{};
     for (size_t i = 0; i < op1_num_tensor_indices; i++) {
@@ -119,14 +121,26 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
     }
 
     // return t1_.get(op1_multi_index) * t2_.get(op2_multi_index);
-    const DataVector op1 = t1_.get(op1_multi_index);
-    const DataVector op2 = t2_.get(op2_multi_index);
+    // const DataVector op1 = t1_.get(op1_multi_index);
+    // const DataVector op2 = t2_.get(op2_multi_index);
+    // const size_t size = op1.size();
+    // DataVector result =
+    //     DataVector(size, std::numeric_limits<double>::signaling_NaN());
+    // for (size_t i = 0; i < size; i++) {
+    //   result[i] = op1[i] * op2[i];
+    // }
+    // return result;
+
+    const DataVector op1 = t1_.get(op1_multi_index);  // DataVector(5, -100.0);
+    const DataVector op2 = DataVector(5, 4.3);
     const size_t size = op1.size();
     DataVector result =
         DataVector(size, std::numeric_limits<double>::signaling_NaN());
     for (size_t i = 0; i < size; i++) {
       result[i] = op1[i] * op2[i];
     }
+    // DataVector result =
+    //     DataVector(5, std::numeric_limits<double>::signaling_NaN());
     return result;
   }
 

@@ -8,6 +8,7 @@
 
 #include <array>
 #include <cstddef>
+#include <iostream>
 #include <type_traits>
 #include <utility>
 
@@ -192,17 +193,23 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
       : t_(&t) {}
   ~TensorAsExpression() override = default;
 
+  // When this get has no inline, compile time is: 1m13.894s
   /// \brief Returns the value of the contained tensor's multi-index
   ///
   /// \param multi_index the multi-index of the tensor component to retrieve
   /// \return the value of the component at `multi_index` in the tensor
-  SPECTRE_ALWAYS_INLINE type /*decltype(auto)*/ get(
+  /*SPECTRE_ALWAYS_INLINE*/ type /*decltype(auto)*/ get(
       const std::array<size_t, num_tensor_indices>& multi_index) const {
-    return t_->get(multi_index);
+    // return t_->get(multi_index);
+    std::cout << multi_index << std::endl;
+    // const DataVector result = DataVector(5, 8.1);
+    // return result;
+
+    return (*t_)[0];
   }
 
   /// Retrieve the i'th entry of the Tensor being held
-  SPECTRE_ALWAYS_INLINE type operator[](const size_t i) const {
+  /*SPECTRE_ALWAYS_INLINE*/ type operator[](const size_t i) const {
     return t_->operator[](i);
   }
 
