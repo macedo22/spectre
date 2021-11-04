@@ -3,114 +3,107 @@
 
 #include "Framework/TestingFramework.hpp"
 
-#include <cmath>
-#include <tuple>
+#include <random>
 
-#include "DataStructures/DataVector.hpp"  // IWYU pragma: keep
+#include "DataStructures/DataVector.hpp"
+#include "DataStructures/Tensor/Tensor.hpp"
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
-#include "Helpers/DataStructures/VectorImplTestHelper.hpp"
-#include "Utilities/DereferenceWrapper.hpp"   // IWYU pragma: keep
-#include "Utilities/ErrorHandling/Error.hpp"  // IWYU pragma: keep
-#include "Utilities/Functional.hpp"
 #include "Utilities/Gsl.hpp"
-#include "Utilities/Math.hpp"        // IWYU pragma: keep
-#include "Utilities/TypeTraits.hpp"  // IWYU pragma: keep
-
-// IWYU pragma: no_include <algorithm>
-
-void test_data_vector_unary_math() {
-  // [test_functions_with_vector_arguments_example]
-  const TestHelpers::VectorImpl::Bound generic{{-100.0, 100.0}};
-  const TestHelpers::VectorImpl::Bound mone_one{{-1.0, 1.0}};
-  const TestHelpers::VectorImpl::Bound gt_one{{1.0, 100.0}};
-  const TestHelpers::VectorImpl::Bound positive{{0.01, 100.0}};
-  const auto unary_ops = std::make_tuple(
-      std::make_tuple(funcl::Abs<>{}, std::make_tuple(generic)),
-      std::make_tuple(funcl::Acos<>{}, std::make_tuple(mone_one)),
-      std::make_tuple(funcl::Acosh<>{}, std::make_tuple(gt_one)),
-      std::make_tuple(funcl::Asin<>{}, std::make_tuple(mone_one)),
-      std::make_tuple(funcl::Asinh<>{}, std::make_tuple(generic)),
-      std::make_tuple(funcl::Atan<>{}, std::make_tuple(generic)),
-      std::make_tuple(funcl::Atanh<>{}, std::make_tuple(mone_one)),
-      std::make_tuple(funcl::Cbrt<>{}, std::make_tuple(generic)),
-      std::make_tuple(funcl::Cos<>{}, std::make_tuple(generic)),
-      std::make_tuple(funcl::Cosh<>{}, std::make_tuple(generic)),
-      std::make_tuple(funcl::Erf<>{}, std::make_tuple(generic)),
-      std::make_tuple(funcl::Exp<>{}, std::make_tuple(generic)),
-      std::make_tuple(funcl::Exp2<>{}, std::make_tuple(generic)),
-      std::make_tuple(funcl::Fabs<>{}, std::make_tuple(generic)),
-      std::make_tuple(funcl::InvCbrt<>{}, std::make_tuple(generic)),
-      std::make_tuple(funcl::InvSqrt<>{}, std::make_tuple(positive)),
-      std::make_tuple(funcl::Log<>{}, std::make_tuple(positive)),
-      std::make_tuple(funcl::Log10<>{}, std::make_tuple(positive)),
-      std::make_tuple(funcl::Log2<>{}, std::make_tuple(positive)),
-      std::make_tuple(funcl::Sin<>{}, std::make_tuple(generic)),
-      std::make_tuple(funcl::Sinh<>{}, std::make_tuple(generic)),
-      std::make_tuple(funcl::StepFunction<>{}, std::make_tuple(generic)),
-      std::make_tuple(funcl::Square<>{}, std::make_tuple(generic)),
-      std::make_tuple(funcl::Sqrt<>{}, std::make_tuple(positive)),
-      std::make_tuple(funcl::Tan<>{}, std::make_tuple(generic)),
-      std::make_tuple(funcl::Tanh<>{}, std::make_tuple(generic)),
-      std::make_tuple(funcl::UnaryPow<1>{}, std::make_tuple(generic)),
-      std::make_tuple(funcl::UnaryPow<-2>{}, std::make_tuple(generic)),
-      std::make_tuple(funcl::UnaryPow<3>{}, std::make_tuple(generic)));
-
-  TestHelpers::VectorImpl::test_functions_with_vector_arguments<
-      TestHelpers::VectorImpl::TestKind::Normal, DataVector>(unary_ops);
-  // [test_functions_with_vector_arguments_example]
-
-  // Note that the binary operations have been moved to
-  // `Test_DataVectorBinaryOperations.cpp` in an effort to better parallelize
-  // the build.
-}
 
 namespace {
-void test_norms() {
-  // Test l1Norm and l2Norm:
-  MAKE_GENERATOR(gen);
-  UniformCustomDistribution<double> dist{-5, 10};
-  DataVector vector(30);
-  fill_with_random_values(make_not_null(&vector), make_not_null(&gen),
-                          make_not_null(&dist));
-  double l1norm = 0.0;
-  double l2norm = 0.0;
-  for (const double value : vector) {
-    l1norm += std::abs(value);
-    l2norm += square(value);
-  }
-  l2norm = std::sqrt(l2norm);
-  // Since l1Norm(vector) and l2Norm(vector) use SIMD we shouldn't expect the
-  // results to be bitwise identical.
-  CHECK(l1norm == approx(l1Norm(vector)));
-  CHECK(l2norm == approx(l2Norm(vector)));
+template <typename Generator, typename DataType>
+void test(const gsl::not_null<Generator*> generator,
+          const DataType& used_for_size) {
+  std::uniform_real_distribution<> distribution(-1.0, 1.0);
+
+  const auto christoffel_second_kind =
+      make_with_random_values<tnsr::Ijj<DataType, 3, Frame::Inertial>>(
+          generator, distribution, used_for_size);
+  const auto d_conformal_christoffel_second_kind =
+      make_with_random_values<tnsr::iJkk<DataType, 3, Frame::Inertial>>(
+          generator, distribution, used_for_size);
+  const auto conformal_spatial_metric =
+      make_with_random_values<tnsr::ii<DataType, 3, Frame::Inertial>>(
+          generator, distribution, used_for_size);
+  const auto inverse_conformal_spatial_metric =
+      make_with_random_values<tnsr::II<DataType, 3, Frame::Inertial>>(
+          generator, distribution, used_for_size);
+  const auto field_d =
+      make_with_random_values<tnsr::ijj<DataType, 3, Frame::Inertial>>(
+          generator, distribution, used_for_size);
+  const auto field_d_up =
+      make_with_random_values<tnsr::iJJ<DataType, 3, Frame::Inertial>>(
+          generator, distribution, used_for_size);
+  const auto field_p =
+      make_with_random_values<tnsr::i<DataType, 3, Frame::Inertial>>(
+          generator, distribution, used_for_size);
+  const auto d_field_p =
+      make_with_random_values<tnsr::ij<DataType, 3, Frame::Inertial>>(
+          generator, distribution, used_for_size);
+
+  // Compiled with clang-10 compile_commands.json command. See
+  // compile_command.txt in this directory
+  //
+  // Before removing inlining of TensorContract::get
+  // ------------------------------------------------
+  // real    0m40.299s
+  // user    0m39.847s
+  // sys     0m0.452s
+  // ------------------------------------------------
+  // After removing inlining of TensorContract::get
+  // ------------------------------------------------
+  // real    0m10.259s
+  // user    0m9.895s
+  // sys     0m0.364s
+  // ------------------------------------------------
+  tnsr::ii<DataType, 3, Frame::Inertial> ricci_tensor{};
+  TensorExpressions::evaluate<ti_i, ti_j>(
+      make_not_null(&ricci_tensor),
+      // Add first terms of \partial_m \Gamma^m_{ij} and
+      // -\partial_j \Gamma^m_{im}
+      d_conformal_christoffel_second_kind(ti_m, ti_M, ti_i, ti_j) -
+          d_conformal_christoffel_second_kind(ti_j, ti_M, ti_i, ti_m) +
+          2.0 * ((field_d_up(ti_m, ti_M, ti_L) *
+                  (conformal_spatial_metric(ti_j, ti_l) * field_p(ti_i) +
+                   conformal_spatial_metric(ti_i, ti_l) * field_p(ti_j) -
+                   conformal_spatial_metric(ti_i, ti_j) * field_p(ti_l))) -
+                 inverse_conformal_spatial_metric(ti_M, ti_L) *
+                     (field_d(ti_m, ti_j, ti_l) * field_p(ti_i) +
+                      field_d(ti_m, ti_i, ti_l) * field_p(ti_j) -
+                      field_d(ti_m, ti_i, ti_j) * field_p(ti_l)) -
+                 (field_d_up(ti_j, ti_M, ti_L) *
+                  (conformal_spatial_metric(ti_m, ti_l) * field_p(ti_i) +
+                   conformal_spatial_metric(ti_i, ti_l) * field_p(ti_m) -
+                   conformal_spatial_metric(ti_i, ti_m) * field_p(ti_l))) +
+                 inverse_conformal_spatial_metric(ti_M, ti_L) *
+                     (field_d(ti_j, ti_m, ti_l) * field_p(ti_i) +
+                      field_d(ti_j, ti_i, ti_l) * field_p(ti_m) -
+                      field_d(ti_j, ti_i, ti_m) * field_p(ti_l))) -
+          // Add \partial_{(i} P_{j)} type terms
+          0.5 * (inverse_conformal_spatial_metric(ti_M, ti_L) *
+                 (conformal_spatial_metric(ti_j, ti_l) *
+                      (d_field_p(ti_m, ti_i) + d_field_p(ti_i, ti_m)) +
+                  conformal_spatial_metric(ti_i, ti_l) *
+                      (d_field_p(ti_m, ti_j) + d_field_p(ti_j, ti_m)) -
+                  conformal_spatial_metric(ti_i, ti_j) *
+                      (d_field_p(ti_m, ti_l) + d_field_p(ti_l, ti_m)) -
+                  conformal_spatial_metric(ti_m, ti_l) *
+                      (d_field_p(ti_j, ti_i) + d_field_p(ti_i, ti_j)) -
+                  conformal_spatial_metric(ti_i, ti_l) *
+                      (d_field_p(ti_j, ti_m) + d_field_p(ti_m, ti_j)) +
+                  conformal_spatial_metric(ti_i, ti_m) *
+                      (d_field_p(ti_j, ti_l) + d_field_p(ti_l, ti_j)))) +
+          // Add last two terms for R_{ij}
+          christoffel_second_kind(ti_L, ti_i, ti_j) *
+              christoffel_second_kind(ti_M, ti_l, ti_m) -
+          christoffel_second_kind(ti_L, ti_i, ti_m) *
+              christoffel_second_kind(ti_M, ti_l, ti_j));
 }
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.DataStructures.DataVector", "[DataStructures][Unit]") {
-  {
-    INFO("test construct and assign");
-    TestHelpers::VectorImpl::vector_test_construct_and_assign<DataVector,
-                                                              double>();
-  }
-  {
-    INFO("test serialize and deserialize");
-    TestHelpers::VectorImpl::vector_test_serialize<DataVector, double>();
-  }
-  {
-    INFO("test set_data_ref functionality");
-    TestHelpers::VectorImpl::vector_test_ref<DataVector, double>();
-  }
-  {
-    INFO("test math after move");
-    TestHelpers::VectorImpl::vector_test_math_after_move<DataVector, double>();
-  }
-  {
-    INFO("test DataVector math operations");
-    test_data_vector_unary_math();
-  }
-  {
-    INFO("test norms of DataVectors");
-    test_norms();
-  }
+  MAKE_GENERATOR(generator);
+  test(make_not_null(&generator),
+       DataVector(5, std::numeric_limits<double>::signaling_NaN()));
 }
