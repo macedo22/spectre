@@ -104,7 +104,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// product tensor to retrieve
   /// \return the value of the component at `result_multi_index` in the outer
   /// product tensor
-  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+  decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     std::array<size_t, op1_num_tensor_indices> op1_multi_index{};
     for (size_t i = 0; i < op1_num_tensor_indices; i++) {

@@ -207,7 +207,7 @@ struct TensorContract
   /// uncontracted tensor component to fill and sum for contraction
   /// \return the value of a component of the resulant contracted tensor
   template <size_t FirstContractedIndexValue, size_t SecondContractedIndexValue>
-  static SPECTRE_ALWAYS_INLINE decltype(auto) compute_contraction(
+  static decltype(auto) compute_contraction(
       const T& t, std::array<size_t, num_uncontracted_tensor_indices>
                       uncontracted_multi_index_to_fill) {
     // Fill contracted indices in multi-index with `FirstContractedIndexValue`
@@ -236,7 +236,7 @@ struct TensorContract
   /// tensor component to retrieve
   /// \return the value of the component at `contracted_multi_index` in the
   /// resultant contracted tensor
-  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+  /*decltype(auto)*/type get(
       const std::array<size_t, num_tensor_indices>& contracted_multi_index)
       const {
     constexpr size_t initial_first_contracted_index_value =

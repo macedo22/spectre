@@ -205,12 +205,12 @@ class Tensor<X, Symm, IndexList<Indices...>> {
   /// Then `get({{0, 2, 1}})` returns the \f$T_{0 2 1}\f$ component.
   /// \param tensor_index the index at which to get the data
   template <typename T>
-  SPECTRE_ALWAYS_INLINE constexpr reference get(
+  constexpr reference get(
       const std::array<T, sizeof...(Indices)>& tensor_index) {
     return gsl::at(data_, structure::get_storage_index(tensor_index));
   }
   template <typename T>
-  SPECTRE_ALWAYS_INLINE constexpr const_reference get(
+  constexpr const_reference get(
       const std::array<T, sizeof...(Indices)>& tensor_index) const {
     return gsl::at(data_, structure::get_storage_index(tensor_index));
   }
