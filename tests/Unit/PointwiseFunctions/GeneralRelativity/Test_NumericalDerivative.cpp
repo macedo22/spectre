@@ -70,8 +70,7 @@ double get_l2norm(const size_t num_points_1d,
                   const std::array<double, 3>& lower_bound,
                   const std::array<double, 3>& upper_bound) {
   // Setup grid
-  Mesh<SpatialDim> mesh{num_points_1d, Spectral::Basis::FiniteDifference,
-                        Spectral::Quadrature::CellCentered};
+  Mesh<SpatialDim> mesh{num_points_1d, Basis, Quadrature};
   const auto coord_map =
       domain::make_coordinate_map<Frame::ElementLogical, FrameType>(Affine3D{
           Affine{-1., 1., lower_bound[0], upper_bound[0]},

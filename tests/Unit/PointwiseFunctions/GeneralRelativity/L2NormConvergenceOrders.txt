@@ -15,8 +15,8 @@ Compiled on host:             ocean.fullerton.edu
 Compiled in directory:        /home/alexmacedo/spectre/build_kerr
 Source directory is:          /home/alexmacedo/spectre
 Compiled on git branch:       numerical-derivative-1-over-r-l2-convergence-order
-Compiled on git revision:     d5752cbbd
-Linked on:                    Mon Nov  1 19:48:49 2021
+Compiled on git revision:     bfbb43c81
+Linked on:                    Tue Nov  9 14:55:36 2021
 === LEGENDRE / GAUSSLOBATTO ===
 
 ==== L2 norm ====
@@ -25,32 +25,32 @@ Num points 1D : 4
 Length : 0.03125
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.83125,1.25125,1.33125)
-Max difference : 1.3894e-08
-L2 norm : 7.57353e-08
+Max difference : 3.05379e-08
+L2 norm : 1.68136e-07
 
 Length : 0.0625
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.8625,1.2825,1.3625)
-Max difference : 1.16645e-07
-L2 norm : 5.87485e-07
+Max difference : 2.63202e-07
+L2 norm : 1.30914e-06
 
 Length : 0.125
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.925,1.345,1.425)
-Max difference : 1.00514e-06
-L2 norm : 4.43298e-06
+Max difference : 2.37189e-06
+L2 norm : 1.00068e-05
 
 Length : 0.25
 lower bound : (0.8,1.22,1.3)
 upper bound : (1.05,1.47,1.55)
-Max difference : 8.75401e-06
-L2 norm : 3.1793e-05
+Max difference : 2.21357e-05
+L2 norm : 7.45864e-05
 
 Length : 0.5
 lower bound : (0.8,1.22,1.3)
 upper bound : (1.3,1.72,1.8)
-Max difference : 7.13912e-05
-L2 norm : 0.000206483
+Max difference : 0.000197883
+L2 norm : 0.00053006
 
 
 Num points 1D : 6
@@ -58,32 +58,32 @@ Num points 1D : 6
 Length : 0.03125
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.83125,1.25125,1.33125)
-Max difference : 1.33898e-12
-L2 norm : 1.01908e-11
+Max difference : 2.03354e-12
+L2 norm : 1.75485e-11
 
 Length : 0.0625
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.8625,1.2825,1.3625)
-Max difference : 3.95267e-11
-L2 norm : 3.00112e-10
+Max difference : 6.26309e-11
+L2 norm : 5.15937e-10
 
 Length : 0.125
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.925,1.345,1.425)
-Max difference : 1.21148e-09
-L2 norm : 8.17923e-09
+Max difference : 1.97121e-09
+L2 norm : 1.41593e-08
 
 Length : 0.25
 lower bound : (0.8,1.22,1.3)
 upper bound : (1.05,1.47,1.55)
-Max difference : 3.50027e-08
-L2 norm : 1.9383e-07
+Max difference : 5.96059e-08
+L2 norm : 3.43235e-07
 
 Length : 0.5
 lower bound : (0.8,1.22,1.3)
 upper bound : (1.3,1.72,1.8)
-Max difference : 8.62103e-07
-L2 norm : 3.59507e-06
+Max difference : 1.57519e-06
+L2 norm : 6.72921e-06
 
 
 Num points 1D : 8
@@ -91,32 +91,32 @@ Num points 1D : 8
 Length : 0.03125
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.83125,1.25125,1.33125)
-Max difference : 5.12534e-13
-L2 norm : 2.34488e-12
+Max difference : 1.85837e-13
+L2 norm : 7.89497e-13
 
 Length : 0.0625
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.8625,1.2825,1.3625)
-Max difference : 2.48787e-13
-L2 norm : 1.13276e-12
+Max difference : 9.45216e-14
+L2 norm : 4.68123e-13
 
 Length : 0.125
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.925,1.345,1.425)
-Max difference : 5.82909e-13
-L2 norm : 4.84398e-12
+Max difference : 5.44884e-13
+L2 norm : 5.44456e-12
 
 Length : 0.25
 lower bound : (0.8,1.22,1.3)
 upper bound : (1.05,1.47,1.55)
-Max difference : 4.98024e-11
-L2 norm : 3.82436e-10
+Max difference : 5.08708e-11
+L2 norm : 4.32466e-10
 
 Length : 0.5
 lower bound : (0.8,1.22,1.3)
 upper bound : (1.3,1.72,1.8)
-Max difference : 2.62129e-09
-L2 norm : 1.87634e-08
+Max difference : 2.65639e-09
+L2 norm : 2.07235e-08
 
 
 Num points 1D : 10
@@ -124,32 +124,32 @@ Num points 1D : 10
 Length : 0.03125
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.83125,1.25125,1.33125)
-Max difference : 1.62208e-12
-L2 norm : 9.62029e-12
+Max difference : 3.56604e-13
+L2 norm : 2.01589e-12
 
 Length : 0.0625
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.8625,1.2825,1.3625)
-Max difference : 8.9162e-13
-L2 norm : 4.88459e-12
+Max difference : 1.83159e-13
+L2 norm : 1.02112e-12
 
 Length : 0.125
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.925,1.345,1.425)
-Max difference : 5.48797e-13
-L2 norm : 2.87239e-12
+Max difference : 8.60145e-14
+L2 norm : 4.72021e-13
 
 Length : 0.25
 lower bound : (0.8,1.22,1.3)
 upper bound : (1.05,1.47,1.55)
-Max difference : 2.80428e-13
-L2 norm : 1.25832e-12
+Max difference : 4.83225e-14
+L2 norm : 2.5983e-13
 
 Length : 0.5
 lower bound : (0.8,1.22,1.3)
 upper bound : (1.3,1.72,1.8)
-Max difference : 3.79904e-11
-L2 norm : 1.1788e-10
+Max difference : 2.68365e-11
+L2 norm : 1.18819e-10
 
 
 Num points 1D : 12
@@ -157,32 +157,32 @@ Num points 1D : 12
 Length : 0.03125
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.83125,1.25125,1.33125)
-Max difference : 7.13872e-12
-L2 norm : 4.14944e-11
+Max difference : 4.40606e-13
+L2 norm : 2.97988e-12
 
 Length : 0.0625
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.8625,1.2825,1.3625)
-Max difference : 4.22885e-12
-L2 norm : 2.13901e-11
+Max difference : 2.42334e-13
+L2 norm : 1.60827e-12
 
 Length : 0.125
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.925,1.345,1.425)
-Max difference : 2.04919e-12
-L2 norm : 1.03762e-11
+Max difference : 1.21361e-13
+L2 norm : 7.28885e-13
 
 Length : 0.25
 lower bound : (0.8,1.22,1.3)
 upper bound : (1.05,1.47,1.55)
-Max difference : 7.83776e-13
-L2 norm : 4.74784e-12
+Max difference : 4.92661e-14
+L2 norm : 3.24976e-13
 
 Length : 0.5
 lower bound : (0.8,1.22,1.3)
 upper bound : (1.3,1.72,1.8)
-Max difference : 6.75557e-13
-L2 norm : 3.35732e-12
+Max difference : 1.72473e-13
+L2 norm : 1.02219e-12
 
 
 =====================================================
@@ -194,25 +194,25 @@ Length : 0.0625
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.8625,1.2825,1.3625)
 Half length : 0.03125
-Convergence order : 2.95551
+Convergence order : 2.96092
 
 Length : 0.125
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.925,1.345,1.425)
 Half length : 0.0625
-Convergence order : 2.91565
+Convergence order : 2.93429
 
 Length : 0.25
 lower bound : (0.8,1.22,1.3)
 upper bound : (1.05,1.47,1.55)
 Half length : 0.125
-Convergence order : 2.84236
+Convergence order : 2.89794
 
 Length : 0.5
 lower bound : (0.8,1.22,1.3)
 upper bound : (1.3,1.72,1.8)
 Half length : 0.25
-Convergence order : 2.69924
+Convergence order : 2.82917
 
 
 Num points 1D : 6
@@ -221,25 +221,25 @@ Length : 0.0625
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.8625,1.2825,1.3625)
 Half length : 0.03125
-Convergence order : 4.88016
+Convergence order : 4.87777
 
 Length : 0.125
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.925,1.345,1.425)
 Half length : 0.0625
-Convergence order : 4.76839
+Convergence order : 4.77841
 
 Length : 0.25
 lower bound : (0.8,1.22,1.3)
 upper bound : (1.05,1.47,1.55)
 Half length : 0.125
-Convergence order : 4.56669
+Convergence order : 4.59937
 
 Length : 0.5
 lower bound : (0.8,1.22,1.3)
 upper bound : (1.3,1.72,1.8)
 Half length : 0.25
-Convergence order : 4.21315
+Convergence order : 4.29317
 
 
 Num points 1D : 8
@@ -248,25 +248,25 @@ Length : 0.0625
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.8625,1.2825,1.3625)
 Half length : 0.03125
-Convergence order : -1.04967
+Convergence order : -0.754046
 
 Length : 0.125
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.925,1.345,1.425)
 Half length : 0.0625
-Convergence order : 2.09635
+Convergence order : 3.53986
 
 Length : 0.25
 lower bound : (0.8,1.22,1.3)
 upper bound : (1.05,1.47,1.55)
 Half length : 0.125
-Convergence order : 6.30288
+Convergence order : 6.31163
 
 Length : 0.5
 lower bound : (0.8,1.22,1.3)
 upper bound : (1.3,1.72,1.8)
 Half length : 0.25
-Convergence order : 5.61656
+Convergence order : 5.58254
 
 
 Num points 1D : 10
@@ -275,25 +275,25 @@ Length : 0.0625
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.8625,1.2825,1.3625)
 Half length : 0.03125
-Convergence order : -0.977843
+Convergence order : -0.981268
 
 Length : 0.125
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.925,1.345,1.425)
 Half length : 0.0625
-Convergence order : -0.765986
+Convergence order : -1.11323
 
 Length : 0.25
 lower bound : (0.8,1.22,1.3)
 upper bound : (1.05,1.47,1.55)
 Half length : 0.125
-Convergence order : -1.19076
+Convergence order : -0.861285
 
 Length : 0.5
 lower bound : (0.8,1.22,1.3)
 upper bound : (1.3,1.72,1.8)
 Half length : 0.25
-Convergence order : 6.54968
+Convergence order : 8.83698
 
 
 Num points 1D : 12
@@ -302,25 +302,25 @@ Length : 0.0625
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.8625,1.2825,1.3625)
 Half length : 0.03125
-Convergence order : -0.955972
+Convergence order : -0.889746
 
 Length : 0.125
 lower bound : (0.8,1.22,1.3)
 upper bound : (0.925,1.345,1.425)
 Half length : 0.0625
-Convergence order : -1.04367
+Convergence order : -1.14175
 
 Length : 0.25
 lower bound : (0.8,1.22,1.3)
 upper bound : (1.05,1.47,1.55)
 Half length : 0.125
-Convergence order : -1.12793
+Convergence order : -1.16536
 
 Length : 0.5
 lower bound : (0.8,1.22,1.3)
 upper bound : (1.3,1.72,1.8)
 Half length : 0.25
-Convergence order : -0.49996
+Convergence order : 1.65326
 
 
 =====================================================
