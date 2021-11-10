@@ -301,11 +301,11 @@ struct tensorindices_same_indextype_impl {
   template <size_t NumIndices>
   static constexpr bool apply(
       const std::array<IndexType, NumIndices>& indextypes) {
-    if constexpr (Dim == 0 or Dim == 1) {
+    if constexpr (NumIndices == 0 or NumIndices == 1) {
       return true;
     } else {
       const IndexType first_indextype = indextypes[0];
-      for (size_t i = 1; 1 < NumIndices; i++) {
+      for (size_t i = 1; i < NumIndices; i++) {
         if (indextypes[1] != first_indextype) {
           return false;
         }
@@ -361,7 +361,7 @@ template <typename... TensorIndices>
 struct tensorindices_same_indextype {
   static constexpr size_t num_indices = sizeof...(TensorIndices);
   static constexpr bool value =
-      tensorindices_same_indextype_impl::apply()<num_indices>(
+      detail::tensorindices_same_indextype_impl::apply<num_indices>(
           {{TensorIndices::indextype...}});
 };
 }  // namespace TensorExpressions

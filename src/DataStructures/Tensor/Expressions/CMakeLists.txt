@@ -10,6 +10,7 @@ spectre_target_headers(
   Divide.hpp
   Evaluate.hpp
   IndexPropertyCheck.hpp
+  LeviCivita.hpp
   LhsTensorSymmAndIndices.hpp
   Negate.hpp
   NumberAsExpression.hpp

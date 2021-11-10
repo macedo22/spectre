@@ -24,25 +24,53 @@ struct LeviCivitaSymbol {};
 
 namespace TensorExpressions {
 namespace detail {
-template <size_t Dim, typename IndexSequence = std::make_index_sequence<Dim>>
+template <size_t Dim, typename IndexSequence =
+                          std::make_integer_sequence<std::int32_t, Dim>>
 struct LeviCivitaSymbolSymm;
 
 template <size_t Dim, std::int32_t... Ints>
-struct LeviCivitaSymbolSymm<Dim, std::integer_sequence<Ints...>> {
-  using symm = tmpl::integral_list<std::int32_t, (Dim - Ints)...>;
+struct LeviCivitaSymbolSymm<Dim, std::integer_sequence<std::int32_t, Ints...>> {
+  using symmetry = tmpl::integral_list<std::int32_t, (Dim - Ints)...>;
+};
+
+template <typename T1, typename T2, typename SymmList1 = typename T1::symmetry,
+          typename SymmList2 = typename T2::symmetry>
+struct LeviCivitaOuterProductType;
+
+template <typename T1, typename T2, template <typename...> class SymmList1,
+          typename... Symm1, template <typename...> class SymmList2,
+          typename... Symm2>
+struct LeviCivitaOuterProductType<T1, T2, SymmList1<Symm1...>,
+                                  SymmList2<Symm2...>> {
+  using type = typename T2::type;
+  using symmetry =
+      Symmetry<(Symm1::value + sizeof...(Symm2))..., Symm2::value...>;
+  using index_list =
+      tmpl::append<typename T1::index_list, typename T2::index_list>;
+  using tensorindex_list =
+      tmpl::append<typename T1::args_list, typename T2::args_list>;
 };
 }  // namespace detail
 
 template <size_t Dim, Requires<(Dim > 1)> = nullptr>
 constexpr bool is_even_permutation(const std::array<size_t, Dim>& multi_index) {
-  const size_t first_index_value = gsl::at(multi_index, 0);
-  for (size_t i = 1; i < Dim; i++) {
-    const size_t other_index_value = gsl::at(multi_index, i);
-    if (other_index_value != ((first_index_value + i) % Dim)) {
+  if constexpr (Dim == 2) {
+    constexpr std::array<size_t, Dim> even_permutation{{0, 1}};
+    if (multi_index == even_permutation) {
+      return true;
+    } else {
       return false;
     }
+  } else {
+    const size_t first_index_value = gsl::at(multi_index, 0);
+    for (size_t i = 1; i < Dim; i++) {
+      const size_t other_index_value = gsl::at(multi_index, i);
+      if (other_index_value != ((first_index_value + i) % Dim)) {
+        return false;
+      }
+    }
+    return true;
   }
-  return true;
 }
 
 template <size_t Dim>
@@ -64,14 +92,12 @@ constexpr bool contains_repeated_concrete_index_value(
   }
 }
 
-template <typename... TensorIndices>
+template <typename L, typename... TensorIndices>
 struct LeviCivitaSymbolExpressionOperand;
 
 template <size_t Dim>
 struct LeviCivitaSymbol {
-  static constexpr std::make_integer_sequence<std::int32_t, Dim> {}
-  seq{};
-  using symmetry = LeviCivitaSymbolSymm<Dim, seq>::symmetry;
+  using symmetry = typename detail::LeviCivitaSymbolSymm<Dim>::symmetry;
   static constexpr size_t dim = Dim;
 
   template <typename... TensorIndices>
@@ -87,7 +113,7 @@ struct LeviCivitaSymbol {
         "A Levi-Civita symbol expression cannot be created using time "
         "indices.");
     static_assert(
-        detail::tensorindex_list_is_valid<TensorIndices...>::value,
+        tensorindex_list_is_valid<tmpl::list<TensorIndices...>>::value,
         "Cannot create a Levi-Civita symbol expression with a repeated generic "
         "index.");
     static_assert(
@@ -96,10 +122,11 @@ struct LeviCivitaSymbol {
         "Cannot create a Levi-Civita symbol expression with contractible "
         "indices.");
     static_assert(
-        detail::tensorindices_same_indextype<TensorIndices...>::value),
+        tensorindices_same_indextype<TensorIndices...>::value,
         "The TensorIndexs used to create a Levi-Civita symbol expression must "
         "either be all spatial or all spacetime.");
-    return LeviCivitaSymbolExpressionOperand<TensorIndices...>{*this};
+    return LeviCivitaSymbolExpressionOperand<LeviCivitaSymbol<Dim>,
+                                             TensorIndices...>{*this};
   }
 };
 
@@ -109,9 +136,9 @@ template <typename L, typename... TensorIndices>
 struct LeviCivitaSymbolExpressionOperand
     : public MarkAsLeviCivitaSymbolExpressionOperand {
   using type = double;
-  using symmetry = typename L::Symm;
+  using symmetry = typename L::symmetry;
   using index_list =
-      index_list<Tensor_detail::TensorIndexType<Dim, TensorIndices::valence,
+      index_list<Tensor_detail::TensorIndexType<L::dim, TensorIndices::valence,
                                                 Frame::LeviCivitaSymbol,
                                                 TensorIndices::indextype>...>;
   using args_list = tmpl::list<TensorIndices...>;
@@ -130,14 +157,16 @@ template <typename L, typename T>
 struct LeviCivitaSymbolOuterProduct
     : public TensorExpression<
           LeviCivitaSymbolOuterProduct<L, T>,
-          typename detail::OuterProductType<L, T>::type,
-          typename detail::OuterProductType<L, T>::symmetry,
-          typename detail::OuterProductType<L, T>::index_list,
-          typename detail::OuterProductType<L, T>::tensorindex_list> {
-  using type = typename detail::OuterProductType<T1, T2>::type;
-  using symmetry = typename detail::OuterProductType<T1, T2>::symmetry;
-  using index_list = typename detail::OuterProductType<T1, T2>::index_list;
-  using args_list = typename detail::OuterProductType<T1, T2>::tensorindex_list;
+          typename detail::LeviCivitaOuterProductType<L, T>::type,
+          typename detail::LeviCivitaOuterProductType<L, T>::symmetry,
+          typename detail::LeviCivitaOuterProductType<L, T>::index_list,
+          typename detail::LeviCivitaOuterProductType<L, T>::tensorindex_list> {
+  using type = typename detail::LeviCivitaOuterProductType<L, T>::type;
+  using symmetry = typename detail::LeviCivitaOuterProductType<L, T>::symmetry;
+  using index_list =
+      typename detail::LeviCivitaOuterProductType<L, T>::index_list;
+  using args_list =
+      typename detail::LeviCivitaOuterProductType<L, T>::tensorindex_list;
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
   static constexpr auto l_num_tensor_indices =
       tmpl::size<typename L::index_list>::value;
@@ -152,6 +181,12 @@ struct LeviCivitaSymbolOuterProduct
     std::array<size_t, l_num_tensor_indices> levi_civita_multi_index{};
     for (size_t i = 0; i < l_num_tensor_indices; i++) {
       gsl::at(levi_civita_multi_index, i) = gsl::at(result_multi_index, i);
+    }
+
+    std::array<size_t, t_num_tensor_indices> tensorexpression_multi_index{};
+    for (size_t i = 0; i < t_num_tensor_indices; i++) {
+      gsl::at(tensorexpression_multi_index, i) =
+          gsl::at(result_multi_index, l_num_tensor_indices + i);
     }
 
     if (contains_repeated_concrete_index_value(levi_civita_multi_index)) {
@@ -170,19 +205,11 @@ struct LeviCivitaSymbolOuterProduct
       //    with decltype(auto) in upstream get()s.
       //
       //    All options ^ have a decltype(auto) problem here or upstream
-      return 0.0 * t_.get(tensorexpression_mutli_index);
+      return 0.0 * t_.get(tensorexpression_multi_index);
+    } else if (is_even_permutation(levi_civita_multi_index)) {
+      return t_.get(tensorexpression_multi_index);
     } else {
-      std::array<size_t, t_num_tensor_indices> tensorexpression_multi_index{};
-      for (size_t i = 0; i < t_num_tensor_indices; i++) {
-        gsl::at(tensorexpression_multi_index, i) =
-            gsl::at(result_multi_index, l_num_tensor_indices + i);
-      }
-
-      if (is_even_permutation(levi_civita_multi_index)) {
-        return t_.get(tensorexpression_mutli_index);
-      } else {
-        return -t_.get(tensorexpression_mutli_index);
-      }
+      return -t_.get(tensorexpression_multi_index);
     }
   }
 
@@ -195,3 +222,37 @@ struct LeviCivitaSymbolOuterProduct
 static constexpr TensorExpressions::LeviCivitaSymbol<2> te_levi_civita_2d{};
 static constexpr TensorExpressions::LeviCivitaSymbol<3> te_levi_civita_3d{};
 static constexpr TensorExpressions::LeviCivitaSymbol<4> te_levi_civita_4d{};
+
+template <size_t LeviCivitaDim, typename T, typename... LeviCivitaTensorIndices>
+SPECTRE_ALWAYS_INLINE auto operator*(
+    const TensorExpressions::LeviCivitaSymbolExpressionOperand<
+        TensorExpressions::LeviCivitaSymbol<LeviCivitaDim>,
+        LeviCivitaTensorIndices...>& l,
+    const TensorExpression<T, typename T::type, typename T::symmetry,
+                           typename T::index_list, typename T::args_list>& t) {
+  return TensorExpressions::contract(
+      TensorExpressions::LeviCivitaSymbolOuterProduct<
+          TensorExpressions::LeviCivitaSymbolExpressionOperand<
+              TensorExpressions::LeviCivitaSymbol<LeviCivitaDim>,
+              LeviCivitaTensorIndices...>,
+          T>(l, ~t));
+}
+
+template <size_t LeviCivitaDim, typename T, typename... LeviCivitaTensorIndices>
+SPECTRE_ALWAYS_INLINE auto operator*(
+    const TensorExpression<T, typename T::type, typename T::symmetry,
+                           typename T::index_list, typename T::args_list>& t,
+    const TensorExpressions::LeviCivitaSymbolExpressionOperand<
+        TensorExpressions::LeviCivitaSymbol<LeviCivitaDim>,
+        LeviCivitaTensorIndices...>& l) {
+  return TensorExpressions::contract(
+      TensorExpressions::LeviCivitaSymbolOuterProduct<
+          TensorExpressions::LeviCivitaSymbolExpressionOperand<
+              TensorExpressions::LeviCivitaSymbol<LeviCivitaDim>,
+              LeviCivitaTensorIndices...>,
+          T>(l, ~t));
+}
+
+// TODO: add overloads for doubles
+
+// TODO: add overloads that reorganize tree when multiple outer products
