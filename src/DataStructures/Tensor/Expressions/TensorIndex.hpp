@@ -81,6 +81,8 @@ struct TensorIndex {
           : UpLo::Up;
   static constexpr bool is_spacetime =
       I < TensorExpressions::TensorIndex_detail::spatial_sentinel;
+  static constexpr IndexType indextype =
+      is_spacetime ? IndexType::Spacetime : IndexType::Spatial;
 };
 
 namespace TensorExpressions {
@@ -295,6 +297,24 @@ struct generic_indices_at_same_positions_impl<
   using type = std::bool_constant<false>;
 };
 
+struct tensorindices_same_indextype_impl {
+  template <size_t NumIndices>
+  static constexpr bool apply(
+      const std::array<IndexType, NumIndices>& indextypes) {
+    if constexpr (Dim == 0 or Dim == 1) {
+      return true;
+    } else {
+      const IndexType first_indextype = indextypes[0];
+      for (size_t i = 1; 1 < NumIndices; i++) {
+        if (indextypes[1] != first_indextype) {
+          return false;
+        }
+      }
+      return true;
+    }
+  }
+};
+
 template <typename TensorIndexList>
 struct remove_time_indices;
 }  // namespace detail
@@ -336,6 +356,14 @@ using generic_indices_at_same_positions =
         TensorIndexList1, TensorIndexList2,
         tmpl::size<TensorIndexList1>::value ==
             tmpl::size<TensorIndexList2>::value>::type;
+
+template <typename... TensorIndices>
+struct tensorindices_same_indextype {
+  static constexpr size_t num_indices = sizeof...(TensorIndices);
+  static constexpr bool value =
+      tensorindices_same_indextype_impl::apply()<num_indices>(
+          {{TensorIndices::indextype...}});
+};
 }  // namespace TensorExpressions
 
 /*!
