@@ -31,6 +31,7 @@
 #include "NumericalAlgorithms/Spectral/Mesh.hpp"
 #include "NumericalAlgorithms/Spectral/Spectral.hpp"
 #include "PointwiseFunctions/AnalyticSolutions/GeneralRelativity/KerrSchild.hpp"
+#include "PointwiseFunctions/GeneralRelativity/Christoffel.hpp"
 #include "PointwiseFunctions/GeneralRelativity/DerivativeSpatialMetric.hpp"
 #include "PointwiseFunctions/GeneralRelativity/Ricci.hpp"
 #include "PointwiseFunctions/GeneralRelativity/Tags.hpp"
@@ -72,8 +73,9 @@ void test_compute_spatial_ricci_tensor(
       solution.variables(x, t, typename Solution::template tags<DataVector>{});
   const auto& spatial_metric = get<gr::Tags::SpatialMetric<SpatialDim>>(vars);
   const auto det_spatial_metric = determinant_and_inverse(spatial_metric).first;
-  const auto inverse_spatial_metric =
-      determinant_and_inverse(spatial_metric).second;
+  const auto& d_spatial_metric =
+      get<Tags::deriv<gr::Tags::SpatialMetric<SpatialDim>,
+                      tmpl::size_t<SpatialDim>, Frame::Inertial>>(vars);
 
   // Compute arguments for `spatial_ricci_tensor` function to test
   const auto conformal_factor = pow(get(det_spatial_metric), -1. / 6.);
@@ -89,19 +91,24 @@ void test_compute_spatial_ricci_tensor(
   const auto inverse_conformal_spatial_metric =
       determinant_and_inverse(conformal_spatial_metric).second;
 
-  using conformal_spatial_metric_tag =
-      Ccz4::Tags::ConformalMetric<SpatialDim, Frame::Inertial, DataVector>;
-  Variables<tmpl::list<conformal_spatial_metric_tag>>
-      conformal_spatial_metric_var(num_points_3d);
-  get<conformal_spatial_metric_tag>(conformal_spatial_metric_var) =
-      conformal_spatial_metric;
-  const auto d_conformal_spatial_metric_var =
-      partial_derivatives<tmpl::list<conformal_spatial_metric_tag>>(
-          conformal_spatial_metric_var, mesh,
-          coord_map.inv_jacobian(x_logical));
-  const auto& d_conformal_spatial_metric =
-      get<Tags::deriv<conformal_spatial_metric_tag, tmpl::size_t<SpatialDim>,
-                      Frame::Inertial>>(d_conformal_spatial_metric_var);
+  gr::Solutions::KerrSchild::IntermediateVars<DataVector, Frame::Inertial>
+      ks_cache(solution, x);
+  const auto d_det_spatial_metric = ks_cache.get_var(
+      gr::Tags::DerivDetSpatialMetric<SpatialDim, Frame::Inertial,
+                                      DataVector>{});
+
+  tnsr::ijj<DataVector, SpatialDim, Frame::Inertial>
+      d_conformal_spatial_metric{};
+  for (size_t k = 0; k < SpatialDim; k++) {
+    for (size_t i = 0; i < SpatialDim; i++) {
+      for (size_t j = i; j < SpatialDim; j++) {
+        d_conformal_spatial_metric.get(k, i, j) =
+            pow<2>(conformal_factor) * d_spatial_metric.get(k, i, j) -
+            pow<8>(conformal_factor) * d_det_spatial_metric.get(k) *
+                spatial_metric.get(i, j) / 3.;
+      }
+    }
+  }
 
   tnsr::ijj<DataVector, SpatialDim, Frame::Inertial> field_d{};
   for (size_t k = 0; k < SpatialDim; k++) {
@@ -136,20 +143,10 @@ void test_compute_spatial_ricci_tensor(
       Ccz4::deriv_conformal_christoffel_second_kind(
           inverse_conformal_spatial_metric, field_d, d_field_d, field_d_up);
 
-  using conformal_factor_tag = Ccz4::Tags::ConformalFactor<DataVector>;
-  Variables<tmpl::list<conformal_factor_tag>> conformal_factor_var(
-      num_points_3d);
-  get(get<conformal_factor_tag>(conformal_factor_var)) = conformal_factor;
-  const auto d_conformal_factor_var =
-      partial_derivatives<tmpl::list<conformal_factor_tag>>(
-          conformal_factor_var, mesh, coord_map.inv_jacobian(x_logical));
-  const auto& d_conformal_factor =
-      get<Tags::deriv<conformal_factor_tag, tmpl::size_t<SpatialDim>,
-                      Frame::Inertial>>(d_conformal_factor_var);
-
   tnsr::i<DataVector, SpatialDim, Frame::Inertial> field_p{};
   for (size_t i = 0; i < SpatialDim; i++) {
-    field_p.get(i) = d_conformal_factor.get(i) / conformal_factor;
+    field_p.get(i) =
+        -d_det_spatial_metric.get(i) / (6. * get(det_spatial_metric));
   }
 
   using field_p_tag =
@@ -185,14 +182,7 @@ void test_compute_spatial_ricci_tensor(
                       Frame::Inertial>>(d_christoffel_second_kind_var);
 
   // Compute expected and actual ricci tensors using above computed arguments
-  const auto expected_python_ricci_tensor{
-      pypp::call<tnsr::ii<DataVector, SpatialDim, Frame::Inertial>>(
-          "Ricci", "spatial_ricci_tensor", christoffel_second_kind,
-          d_conformal_christoffel_second_kind, conformal_spatial_metric,
-          inverse_conformal_spatial_metric, field_d, field_d_up, field_p,
-          d_field_p)};
-
-  const auto expected_cpp_gr_ricci_tensor =
+  const auto expected_ricci_tensor =
       gr::ricci_tensor(christoffel_second_kind, d_christoffel_second_kind);
 
   const auto actual_ricci_tensor = Ccz4::spatial_ricci_tensor(
@@ -200,11 +190,12 @@ void test_compute_spatial_ricci_tensor(
       conformal_spatial_metric, inverse_conformal_spatial_metric, field_d,
       field_d_up, field_p, d_field_p);
 
-  CHECK_ITERABLE_APPROX(expected_python_ricci_tensor, actual_ricci_tensor);
-
-  Approx approx = Approx::custom().epsilon(1e-9).scale(1.0);
-  CHECK_ITERABLE_CUSTOM_APPROX(expected_cpp_gr_ricci_tensor,
-                               actual_ricci_tensor, approx);
+  // A custom epsilon is used here because the Legendre polynomials don't fit
+  // the derivative of 1 / r well. This was looked at for various box sizes and
+  // number of 1D grid points.
+  Approx approx = Approx::custom().epsilon(1e-12).scale(1.0);
+  CHECK_ITERABLE_CUSTOM_APPROX(expected_ricci_tensor, actual_ricci_tensor,
+                               approx);
 }
 }  // namespace
 
@@ -217,8 +208,8 @@ SPECTRE_TEST_CASE("Unit.Evolution.Systems.Ccz4.Ricci", "[Unit][Evolution]") {
   const gr::Solutions::KerrSchild solution(mass, spin, center);
 
   const size_t grid_size = 8;
-  const std::array<double, 3> lower_bound{{0.82, 1.24, 1.32}};
-  const std::array<double, 3> upper_bound{{0.8, 1.22, 1.30}};
+  const std::array<double, 3> lower_bound{{0.8, 1.22, 1.30}};
+  const std::array<double, 3> upper_bound{{0.82, 1.24, 1.32}};
 
   test_compute_spatial_ricci_tensor(solution, grid_size, lower_bound,
                                     upper_bound);
