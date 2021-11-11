@@ -8,6 +8,7 @@ set(LIBRARY_SOURCES
   Test_Christoffel.cpp
   Test_DerivChristoffel.cpp
   Test_DerivLapse.cpp
+  Test_Ricci.cpp
   Test_Tags.cpp
   Test_TempTags.cpp
   Test_Z4Constraint.cpp
@@ -17,5 +18,6 @@ add_test_library(
   ${LIBRARY}
   "Evolution/Systems/Ccz4/"
   "${LIBRARY_SOURCES}"
-  "Ccz4;DataBoxTestHelpers;DataStructures;Utilities"
+  "Ccz4;DataBoxTestHelpers;DataStructures;Domain;GeneralRelativity"
+  "GeneralRelativitySolutions;LinearOperators;Spectral;Utilities"
   )
