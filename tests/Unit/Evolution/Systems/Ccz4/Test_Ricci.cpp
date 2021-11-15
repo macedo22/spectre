@@ -179,20 +179,28 @@ void test_compute_spatial_ricci_tensor(
                       Frame::Inertial>>(d_christoffel_second_kind_var);
 
   // Compute expected and actual ricci tensors using above computed arguments
-  const auto expected_ricci_tensor =
+  const auto expected_py_ricci_tensor{
+      pypp::call<tnsr::ii<DataVector, SpatialDim, Frame::Inertial>>(
+          "Ricci", "spatial_ricci_tensor", christoffel_second_kind,
+          d_conformal_christoffel_second_kind, conformal_spatial_metric,
+          inverse_conformal_spatial_metric, field_d, field_d_up, field_p,
+          d_field_p)};
+
+  const auto expected_cpp_ricci_tensor =
       gr::ricci_tensor(christoffel_second_kind, d_christoffel_second_kind);
 
-  const auto actual_ricci_tensor = Ccz4::spatial_ricci_tensor(
+  const auto actual_cpp_ricci_tensor = Ccz4::spatial_ricci_tensor(
       christoffel_second_kind, d_conformal_christoffel_second_kind,
       conformal_spatial_metric, inverse_conformal_spatial_metric, field_d,
       field_d_up, field_p, d_field_p);
 
+  CHECK_ITERABLE_APPROX(expected_py_ricci_tensor, actual_cpp_ricci_tensor);
   // A custom epsilon is used here because the Legendre polynomials don't fit
   // the derivative of 1 / r well. This was looked at for various box sizes and
   // number of 1D grid points.
   Approx approx = Approx::custom().epsilon(1e-12).scale(1.0);
-  CHECK_ITERABLE_CUSTOM_APPROX(expected_ricci_tensor, actual_ricci_tensor,
-                               approx);
+  CHECK_ITERABLE_CUSTOM_APPROX(expected_cpp_ricci_tensor,
+                               actual_cpp_ricci_tensor, approx);
 }
 }  // namespace
 
