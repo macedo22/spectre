@@ -76,6 +76,9 @@ void test_compute_spatial_ricci_tensor(
   const auto& d_spatial_metric =
       get<Tags::deriv<gr::Tags::SpatialMetric<SpatialDim>,
                       tmpl::size_t<SpatialDim>, Frame::Inertial>>(vars);
+  const auto d_det_spatial_metric =
+      get<gr::Tags::DerivDetSpatialMetric<SpatialDim>>(solution.variables(
+          x, t, tmpl::list<gr::Tags::DerivDetSpatialMetric<SpatialDim>>{}));
 
   // Compute arguments for `spatial_ricci_tensor` function to test
   const auto conformal_factor = pow(get(det_spatial_metric), -1. / 6.);
@@ -87,15 +90,6 @@ void test_compute_spatial_ricci_tensor(
           square(conformal_factor) * spatial_metric.get(i, j);
     }
   }
-
-  const auto inverse_conformal_spatial_metric =
-      determinant_and_inverse(conformal_spatial_metric).second;
-
-  gr::Solutions::KerrSchild::IntermediateVars<DataVector, Frame::Inertial>
-      ks_cache(solution, x);
-  const auto d_det_spatial_metric = ks_cache.get_var(
-      gr::Tags::DerivDetSpatialMetric<SpatialDim, Frame::Inertial,
-                                      DataVector>{});
 
   tnsr::ijj<DataVector, SpatialDim, Frame::Inertial>
       d_conformal_spatial_metric{};
@@ -109,6 +103,9 @@ void test_compute_spatial_ricci_tensor(
       }
     }
   }
+
+  const auto inverse_conformal_spatial_metric =
+      determinant_and_inverse(conformal_spatial_metric).second;
 
   tnsr::ijj<DataVector, SpatialDim, Frame::Inertial> field_d{};
   for (size_t k = 0; k < SpatialDim; k++) {
