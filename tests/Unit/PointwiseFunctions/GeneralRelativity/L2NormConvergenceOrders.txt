@@ -15,8 +15,8 @@ Compiled on host:             ocean.fullerton.edu
 Compiled in directory:        /home/alexmacedo/spectre/build_kerr
 Source directory is:          /home/alexmacedo/spectre
 Compiled on git branch:       numerical-derivative-1-over-r-l2-convergence-order
-Compiled on git revision:     d33b518b6
-Linked on:                    Tue Nov  9 15:17:29 2021
+Compiled on git revision:     81af0539a
+Linked on:                    Mon Nov 15 20:29:35 2021
 === LEGENDRE / GAUSSLOBATTO ===
 
 ==== L2 norm ====
@@ -25,30 +25,40 @@ Num points 1D : 4
 Length : 0.03125
 lower bound : 0.8
 upper bound : 0.83125
+1 / r spectral cofficients : (1.2262,-0.0234928,0.000300102,-3.44945e-06)
+d_i (1 / r) spectral cofficients : (-1.50376,0.0576195,-0.00110382,-8.74008e-15)
 Max difference : 1.72472e-05
 L2 norm : 2.62199e-05
 
 Length : 0.0625
 lower bound : 0.8
 upper bound : 0.8625
+1 / r spectral cofficients : (1.20357,-0.0452642,0.00113541,-2.56106e-05)
+d_i (1 / r) spectral cofficients : (-1.44928,0.108999,-0.0040977,-6.23637e-15)
 Max difference : 0.000128053
 L2 norm : 0.000191273
 
 Length : 0.125
 lower bound : 0.8
 upper bound : 0.925
+1 / r spectral cofficients : (1.16146,-0.0842819,0.00408446,-0.000177585)
+d_i (1 / r) spectral cofficients : (-1.35135,0.196054,-0.0142068,-1.50821e-15)
 Max difference : 0.000887925
 L2 norm : 0.00128464
 
 Length : 0.25
 lower bound : 0.8
 upper bound : 1.05
+1 / r spectral cofficients : (1.08774,-0.147719,0.0134554,-0.00109098)
+d_i (1 / r) spectral cofficients : (-1.19048,0.32293,-0.0436392,-4.9467e-16)
 Max difference : 0.00545489
 L2 norm : 0.00748533
 
 Length : 0.5
 lower bound : 0.8
 upper bound : 1.3
+1 / r spectral cofficients : (0.971022,-0.234871,0.0385939,-0.00551341)
+d_i (1 / r) spectral cofficients : (-0.961538,0.463126,-0.110268,-4.50122e-16)
 Max difference : 0.027567
 L2 norm : 0.0350757
 
@@ -58,30 +68,40 @@ Num points 1D : 6
 Length : 0.03125
 lower bound : 0.8
 upper bound : 0.83125
+1 / r spectral cofficients : (1.2262,-0.0234928,0.000300064,-3.44933e-06,3.77672e-08,-4.0195e-10)
+d_i (1 / r) spectral cofficients : (-1.50376,0.0576195,-0.00110392,1.69197e-05,-2.31523e-07,-6.48142e-15)
 Max difference : 3.01454e-09
 L2 norm : 4.76328e-09
 
 Length : 0.0625
 lower bound : 0.8
 upper bound : 0.8625
+1 / r spectral cofficients : (1.20357,-0.0452642,0.00113485,-2.56074e-05,5.50538e-07,-1.14983e-08)
+d_i (1 / r) spectral cofficients : (-1.44928,0.108999,-0.00409903,0.000123321,-3.31151e-06,5.13797e-15)
 Max difference : 8.62373e-08
 L2 norm : 1.33878e-07
 
 Length : 0.125
 lower bound : 0.8
 upper bound : 0.925
+1 / r spectral cofficients : (1.16146,-0.0842817,0.00407709,-0.000177502,7.37149e-06,-2.96759e-07)
+d_i (1 / r) spectral cofficients : (-1.35135,0.196054,-0.0142239,0.000825607,-4.27333e-05,4.73406e-16)
 Max difference : 2.22569e-06
 L2 norm : 3.34661e-06
 
 Length : 0.25
 lower bound : 0.8
 upper bound : 1.05
+1 / r spectral cofficients : (1.08773,-0.147714,0.0133706,-0.00108921,8.49709e-05,-6.3792e-06)
+d_i (1 / r) spectral cofficients : (-1.19048,0.322935,-0.0438236,0.00475837,-0.000459302,-6.94749e-16)
 Max difference : 4.7844e-05
 L2 norm : 6.82202e-05
 
 Length : 0.5
 lower bound : 0.8
 upper bound : 1.3
+1 / r spectral cofficients : (0.971016,-0.234797,0.0378291,-0.00548571,0.000770625,-0.000101935)
+d_i (1 / r) spectral cofficients : (-0.961538,0.463197,-0.111753,0.0215775,-0.00366964,-3.87725e-16)
 Max difference : 0.000764509
 L2 norm : 0.00101025
 
@@ -91,30 +111,40 @@ Num points 1D : 8
 Length : 0.03125
 lower bound : 0.8
 upper bound : 0.83125
+1 / r spectral cofficients : (1.2262,-0.0234928,0.000300064,-3.44933e-06,3.7763e-08,-4.01943e-10,4.20078e-12,-4.31434e-14)
+d_i (1 / r) spectral cofficients : (-1.50376,0.0576195,-0.00110392,1.69197e-05,-2.31544e-07,2.95735e-09,-3.59562e-11,1.11271e-14)
 Max difference : 5.08038e-13
 L2 norm : 7.3125e-13
 
 Length : 0.0625
 lower bound : 0.8
 upper bound : 0.8625
+1 / r spectral cofficients : (1.20357,-0.0452642,0.00113485,-2.56074e-05,5.50302e-07,-1.14975e-08,2.35944e-10,-4.77591e-12)
+d_i (1 / r) spectral cofficients : (-1.44928,0.108999,-0.00409903,0.000123321,-3.31264e-06,8.30523e-08,-1.98682e-09,1.15377e-14)
 Max difference : 4.78613e-11
 L2 norm : 7.59571e-11
 
 Length : 0.125
 lower bound : 0.8
 upper bound : 0.925
+1 / r spectral cofficients : (1.16146,-0.0842817,0.00407709,-0.000177502,7.35974e-06,-2.96679e-07,1.17597e-08,-4.58851e-10)
+d_i (1 / r) spectral cofficients : (-1.35135,0.196054,-0.0142239,0.000825608,-4.27879e-05,2.06971e-06,-9.54411e-08,-6.42993e-15)
 Max difference : 4.58841e-09
 L2 norm : 7.06898e-09
 
 Length : 0.25
 lower bound : 0.8
 upper bound : 1.05
+1 / r spectral cofficients : (1.08773,-0.147714,0.0133706,-0.00108918,8.44981e-05,-6.37329e-06,4.74441e-07,-3.45227e-08)
+d_i (1 / r) spectral cofficients : (-1.19048,0.322935,-0.0438236,0.00475846,-0.000461363,4.17508e-05,-3.59037e-06,-2.68357e-15)
 Max difference : 3.45227e-07
 L2 norm : 5.04361e-07
 
 Length : 0.5
 lower bound : 0.8
 upper bound : 1.3
+1 / r spectral cofficients : (0.971016,-0.234797,0.037829,-0.00548426,0.000757159,-0.00010165,1.36169e-05,-1.74576e-06)
+d_i (1 / r) spectral cofficients : (-0.961538,0.463197,-0.111753,0.0215817,-0.00372224,0.000599144,-9.07794e-05,-1.84065e-15)
 Max difference : 1.74576e-05
 L2 norm : 2.36367e-05
 
@@ -124,30 +154,40 @@ Num points 1D : 10
 Length : 0.03125
 lower bound : 0.8
 upper bound : 0.83125
+1 / r spectral cofficients : (1.2262,-0.0234928,0.000300064,-3.44933e-06,3.7763e-08,-4.01942e-10,4.20036e-12,-4.33935e-14,6.15956e-16,2.07645e-17)
+d_i (1 / r) spectral cofficients : (-1.50376,0.0576195,-0.00110392,1.69197e-05,-2.31544e-07,2.95744e-09,-3.60984e-11,5.93092e-13,-7.3908e-14,2.61539e-14)
 Max difference : 5.61551e-13
 L2 norm : 5.72506e-13
 
 Length : 0.0625
 lower bound : 0.8
 upper bound : 0.8625
+1 / r spectral cofficients : (1.20357,-0.0452642,0.00113485,-2.56074e-05,5.50302e-07,-1.14975e-08,2.35848e-10,-4.77601e-12,9.58777e-14,-2.03364e-15)
+d_i (1 / r) spectral cofficients : (-1.44928,0.108999,-0.00409903,0.000123321,-3.31264e-06,8.30524e-08,-1.98767e-09,4.60352e-11,-1.10892e-12,1.44247e-15)
 Max difference : 2.5957e-13
 L2 norm : 2.968e-13
 
 Length : 0.125
 lower bound : 0.8
 upper bound : 0.925
+1 / r spectral cofficients : (1.16146,-0.0842817,0.00407709,-0.000177502,7.35974e-06,-2.96679e-07,1.17419e-08,-4.58765e-10,1.77796e-11,-6.82104e-13)
+d_i (1 / r) spectral cofficients : (-1.35135,0.196054,-0.0142239,0.000825608,-4.27879e-05,2.06971e-06,-9.55649e-08,4.26711e-09,-1.85542e-10,7.60626e-15)
 Max difference : 8.38418e-12
 L2 norm : 1.32905e-11
 
 Length : 0.25
 lower bound : 0.8
 upper bound : 1.05
+1 / r spectral cofficients : (1.08773,-0.147714,0.0133706,-0.00108918,8.44981e-05,-6.37314e-06,4.7194e-07,-3.45004e-08,2.51079e-09,-1.79627e-10)
+d_i (1 / r) spectral cofficients : (-1.19048,0.322935,-0.0438236,0.00475846,-0.000461363,4.17517e-05,-3.60673e-06,3.01295e-07,-2.44293e-08,-3.73284e-16)
 Max difference : 2.2453e-09
 L2 norm : 3.33866e-09
 
 Length : 0.5
 lower bound : 0.8
 upper bound : 1.3
+1 / r spectral cofficients : (0.971016,-0.234797,0.037829,-0.00548426,0.000757156,-0.000101625,1.33916e-05,-1.74243e-06,2.28107e-07,-2.8753e-08)
+d_i (1 / r) spectral cofficients : (-0.961538,0.463197,-0.111753,0.0215817,-0.00372225,0.000599267,-9.21015e-05,1.36864e-05,-1.9552e-06,1.33788e-15)
 Max difference : 3.59412e-07
 L2 norm : 4.95335e-07
 
@@ -157,30 +197,40 @@ Num points 1D : 12
 Length : 0.03125
 lower bound : 0.8
 upper bound : 0.83125
+1 / r spectral cofficients : (1.2262,-0.0234928,0.000300064,-3.44933e-06,3.7763e-08,-4.01942e-10,4.20043e-12,-4.33518e-14,3.28431e-16,6.57242e-17,-8.32857e-18,4.41028e-17)
+d_i (1 / r) spectral cofficients : (-1.50376,0.0576195,-0.00110392,1.69197e-05,-2.31544e-07,2.95739e-09,-3.59345e-11,3.53036e-13,1.79524e-13,-5.29955e-14,-1.0448e-13,1.65693e-14)
 Max difference : 3.29514e-13
 L2 norm : 4.1637e-13
 
 Length : 0.0625
 lower bound : 0.8
 upper bound : 0.8625
+1 / r spectral cofficients : (1.20357,-0.0452642,0.00113485,-2.56074e-05,5.50302e-07,-1.14975e-08,2.35848e-10,-4.7758e-12,9.58325e-14,-1.83711e-15,1.03599e-16,-3.01021e-17)
+d_i (1 / r) spectral cofficients : (-1.44928,0.108999,-0.00409903,0.000123321,-3.31264e-06,8.30524e-08,-1.98754e-09,4.60582e-11,-1.03458e-12,2.11425e-14,-9.18598e-14,-3.9055e-16)
 Max difference : 9.85878e-14
 L2 norm : 1.79427e-13
 
 Length : 0.125
 lower bound : 0.8
 upper bound : 0.925
+1 / r spectral cofficients : (1.16146,-0.0842817,0.00407709,-0.000177502,7.35974e-06,-2.96679e-07,1.17419e-08,-4.58764e-10,1.77533e-11,-6.82182e-13,2.61455e-14,-8.9643e-16)
+d_i (1 / r) spectral cofficients : (-1.35135,0.196054,-0.0142239,0.000825608,-4.27879e-05,2.06971e-06,-9.55649e-08,4.26708e-09,-1.85774e-10,7.92984e-12,-3.30504e-13,-6.72281e-15)
 Max difference : 5.4623e-14
 L2 norm : 6.58919e-14
 
 Length : 0.25
 lower bound : 0.8
 upper bound : 1.05
+1 / r spectral cofficients : (1.08773,-0.147714,0.0133706,-0.00108918,8.44981e-05,-6.37314e-06,4.7194e-07,-3.44996e-08,2.49795e-09,-1.79539e-10,1.28929e-11,-9.1245e-13)
+d_i (1 / r) spectral cofficients : (-1.19048,0.322935,-0.0438236,0.00475846,-0.000461363,4.17517e-05,-3.60673e-06,3.01301e-07,-2.45413e-08,1.95971e-09,-1.53306e-10,-3.67782e-15)
 Max difference : 1.37017e-11
 L2 norm : 2.06399e-11
 
 Length : 0.5
 lower bound : 0.8
 upper bound : 1.3
+1 / r spectral cofficients : (0.971016,-0.234797,0.037829,-0.00548426,0.000757156,-0.000101625,1.33916e-05,-1.74201e-06,2.24446e-07,-2.8712e-08,3.7081e-09,-4.62461e-10)
+d_i (1 / r) spectral cofficients : (-0.961538,0.463197,-0.111753,0.0215817,-0.00372225,0.000599267,-9.21018e-05,1.36893e-05,-1.98386e-06,2.81816e-07,-3.88468e-08,-7.47005e-16)
 Max difference : 6.93694e-09
 L2 norm : 9.69395e-09
 

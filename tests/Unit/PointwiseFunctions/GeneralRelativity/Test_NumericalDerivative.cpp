@@ -24,6 +24,7 @@
 #include "Domain/LogicalCoordinates.hpp"
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/PointwiseFunctions/AnalyticSolutions/TestHelpers.hpp"
+#include "NumericalAlgorithms/LinearOperators/CoefficientTransforms.hpp"
 #include "NumericalAlgorithms/LinearOperators/PartialDerivatives.hpp"
 #include "NumericalAlgorithms/LinearOperators/PartialDerivatives.tpp"
 #include "NumericalAlgorithms/Spectral/Mesh.hpp"
@@ -66,7 +67,7 @@ template <typename FrameType, Spectral::Basis Basis,
 double get_l2norm(const size_t num_points, const double lower_bound,
                   const double upper_bound) {
   // Setup grid
-  Mesh<1 /*SpatialDim*/> mesh{num_points, Basis, Quadrature};
+  Mesh<1> mesh{num_points, Basis, Quadrature};
   const auto coord_map =
       domain::make_coordinate_map<Frame::ElementLogical, FrameType>(
           Affine{-1., 1., lower_bound, upper_bound});
@@ -90,6 +91,18 @@ double get_l2norm(const size_t num_points, const double lower_bound,
   const auto& numerical_deriv_F =
       get<Tags::deriv<F_tag, tmpl::size_t<1 /*SpatialDim*/>, FrameType>>(
           numerical_deriv_F_var);
+
+  if constexpr (Basis == Spectral::Basis::Legendre and
+                Quadrature == Spectral::Quadrature::GaussLobatto) {
+    const ModalVector F_spectral_coefficients =
+        to_modal_coefficients(get(F), mesh);
+    const ModalVector deriv_F_spectral_coefficients =
+        to_modal_coefficients(numerical_deriv_F.get(0), mesh);
+    std::cout << "1 / r spectral cofficients : " << F_spectral_coefficients
+              << std::endl;
+    std::cout << "d_i (1 / r) spectral cofficients : "
+              << deriv_F_spectral_coefficients << std::endl;
+  }
 
   const double max_diff =
       max(abs(analytical_deriv_F.get(0) - numerical_deriv_F.get(0)));
