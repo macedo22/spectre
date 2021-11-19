@@ -80,6 +80,7 @@ void test_simple_tags() {
   TestHelpers::db::test_simple_tag<
       Ccz4::Tags::RicciScalarPlusDivergenceZ4Constraint<DataType>>(
       "RicciScalarPlusDivergenceZ4Constraint");
+  TestHelpers::db::test_simple_tag<Ccz4::Tags::Theta<DataType>>("Theta");
 }
 
 SPECTRE_TEST_CASE("Unit.Evolution.Systems.Ccz4.Tags", "[Unit][Evolution]") {
