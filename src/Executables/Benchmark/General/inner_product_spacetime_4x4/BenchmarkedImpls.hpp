@@ -57,8 +57,7 @@ struct BenchmarkImpl {
   // TensorExpression implementation benchmarked that takes LHS tensor as arg
   template <size_t CaseNumber>
   SPECTRE_ALWAYS_INLINE static void tensorexpression_impl_lhs_arg(
-      gsl::not_null<result_type*> result, const R_type& R,
-      const S_type& S);
+      gsl::not_null<result_type*> result, const R_type& R, const S_type& S);
 
   template <>
   SPECTRE_ALWAYS_INLINE static void tensorexpression_impl_lhs_arg<1>(
