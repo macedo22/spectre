@@ -16,7 +16,7 @@
 #include "DataStructures/TempBuffer.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Executables/Benchmark/BenchmarkHelpers.hpp"
-#include "Executables/Benchmark/General/inner_product_4x4/BenchmarkedImpls.hpp"
+#include "Executables/Benchmark/General/inner_product_spacetime_4x4/BenchmarkedImpls.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/TMPL.hpp"
