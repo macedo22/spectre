@@ -6,7 +6,7 @@
 # from the Google Benchmark library. The executable is not added to the `all` make
 # target since it is only interesting in specific circumstances.
 if("${GoogleBenchmark_FOUND}" AND NOT "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-  set(executable Benchmark_General_inner_product_4x4)
+  set(executable Benchmark_General_inner_product_spacetime_4x4)
 
   add_spectre_executable(
     ${executable}

@@ -13,7 +13,7 @@
 #include "DataStructures/Tags/TempTensor.hpp"
 #include "DataStructures/TempBuffer.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
-#include "Executables/Benchmark/General/inner_product_4x4/BenchmarkedImpls.hpp"
+#include "Executables/Benchmark/General/inner_product_spacetime_4x4/BenchmarkedImpls.hpp"
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
 #include "Utilities/Gsl.hpp"
@@ -116,7 +116,7 @@ void test_benchmarked_impls(const DataType& used_for_size,
   test_benchmarked_impls_core<3>(used_for_size, generator);
 }
 
-SPECTRE_TEST_CASE("Unit.Benchmark.General.inner_product_4x4",
+SPECTRE_TEST_CASE("Unit.Benchmark.General.inner_product_spacetime_4x4",
                   "[Unit][DataStructures]") {
   MAKE_GENERATOR(generator);
 
