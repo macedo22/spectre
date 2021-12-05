@@ -70,11 +70,14 @@ void TimeDerivative<Dim>::apply(
     const gsl::not_null<tnsr::II<DataVector, Dim>*> inv_spatial_metric,
     const gsl::not_null<Scalar<DataVector>*> lapse,
     const gsl::not_null<tnsr::i<DataVector, Dim>*>
+        lapse_times_conformal_spatial_metric,
+    const gsl::not_null<tnsr::i<DataVector, Dim>*>
         d_slicing_condition,  // g'(alpha)
     const gsl::not_null<tnsr::II<DataVector, Dim>*> inv_a_tilde,
     const gsl::not_null<tnsr::ijK<DataVector, Dim>*> symmetrized_d_field_b,
     const gsl::not_null<tnsr::i<DataVector, Dim>*>
         contracted_symmetrized_d_field_b,
+    const gsl::not_null<tnsr::ijk<DataVector, Dim>*> field_b_times_field_d,
     // expressions and identities needed for time derivative eqs (eqs 13 - 27)
     const gsl::not_null<Scalar<DataVector>*> trace_a_tilde,       // 13
     const gsl::not_null<tnsr::iJJ<DataVector, Dim>*> field_d_up,  // 14
@@ -167,9 +170,16 @@ void TimeDerivative<Dim>::apply(
       contracted_symmetrized_d_field_b,
       (*symmetrized_d_field_b)(ti_k, ti_i, ti_I));
 
+  ::TensorExpressions::evaluate<ti_i, ti_j, ti_k>(
+      field_b_times_field_d, field_b(ti_i, ti_L) + field_d(ti_j, ti_l, ti_k));
+
   for (size_t i = 0; i < num_points; i++) {
     get(*lapse)[i] = pow(eulers_number, get(ln_lapse)[i]);
   }
+
+  ::TensorExpressions::evaluate<ti_i, ti_j>(
+      lapse_times_conformal_spatial_metric,
+      (*lapse)() * conformal_spatial_metric(ti_i, ti_j));
 
   // if g(\alpha) == 1, then g'(\alpha) == 0
   // if g(\alpha) == 2 / \alpha, then g'(\alpha)  == -2 / \alpha^2
@@ -527,7 +537,6 @@ void TimeDerivative<Dim>::apply(
   }
 
   // eq. (12k) : time derivative of auxiliary variable B_k{}^i
-  // TODO
   if (s == 0.0) {
     // TODO (?) : add support for assigning to double?
     for (auto& component : *dt_b) {
@@ -549,7 +558,47 @@ void TimeDerivative<Dim>::apply(
   }
 
   // eq. (12l) : time derivative of auxiliary variable D_{kij}
-  // TODO
+  if (s == 0.0) {
+    ::TensorExpressions::evaluate<ti_k, ti_i, ti_j>(
+        dt_field_d,
+        shift(ti_L) * d_field_d(ti_l, ti_k, ti_i, ti_j) -
+            (*lapse_times_d_a_tilde)(ti_k, ti_i, ti_j) +
+            field_b(ti_k, ti_L) * field_d(ti_l, ti_i, ti_j) +
+            (*field_d_times_field_b)(ti_j, ti_k, ti_i) +
+            (*field_d_times_field_b)(ti_i, ti_k, ti_j) -
+            (*lapse_times_field_a)(ti_k) *
+                (*a_tilde_minus_one_third_conformal_metric_times_trace_a_tilde)(
+                    ti_i, ti_j) +
+            one_third *
+                ((*lapse_times_conformal_spatial_metric)(ti_i, ti_j) *
+                     (*inv_conformal_metric_times_d_a_tilde)(ti_k)-2.0 *
+                     (*contracted_field_b)() * field_b(ti_k, ti_i, ti_j) -
+                 2.0 * (*lapse_times_conformal_spatial_metric)(ti_i, ti_j) *
+                     (*field_d_up_times_a_tilde)(ti_k)));
+  } else {
+    ::TensorExpressions::evaluate<ti_k, ti_i, ti_j>(
+        dt_field_d,
+        shift(ti_L) * d_field_d(ti_l, ti_k, ti_i, ti_j) +
+            0.25 * ((*conformal_metric_times_field_b)(ti_i, ti_k, ti_j) +
+                    (*conformal_metric_times_field_b)(ti_i, ti_j, ti_k) +
+                    (*conformal_metric_times_field_b)(ti_j, ti_k, ti_i) +
+                    (*conformal_metric_times_field_b)(ti_j, ti_i, ti_k)) -
+            (*lapse_times_d_a_tilde)(ti_k, ti_i, ti_j) +
+            field_b(ti_k, ti_L) * field_d(ti_l, ti_i, ti_j) +
+            (*field_d_times_field_b)(ti_j, ti_k, ti_i) +
+            (*field_d_times_field_b)(ti_i, ti_k, ti_j) -
+            (*lapse_times_field_a)(ti_k) *
+                (*a_tilde_minus_one_third_conformal_metric_times_trace_a_tilde)(
+                    ti_i, ti_j) +
+            one_third *
+                ((*lapse_times_conformal_spatial_metric)(ti_i, ti_j) *
+                     (*inv_conformal_metric_times_d_a_tilde)(ti_k)-2.0 *
+                     (*contracted_field_b)() * field_b(ti_k, ti_i, ti_j) -
+                 2.0 * (*lapse_times_conformal_spatial_metric)(ti_i, ti_j) *
+                     (*field_d_up_times_a_tilde)(ti_k)-conformal_spatial_metric(
+                         ti_i, ti_j) *
+                     (*contracted_symmetrized_d_field_b)(ti_k)));
+  }
 
   // eq. (12m) : time derivative of auxiliary variable P_i
   // TODO
