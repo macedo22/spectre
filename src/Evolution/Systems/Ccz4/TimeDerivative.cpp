@@ -106,8 +106,11 @@ void TimeDerivative<Dim>::apply(
     // params (TODO: better name?)
     const double c, const double cleaning_speed /*e*/, const double eta,
     const double f, const Scalar<DataVector>& slicing_condition,
-    const double k_0, const double kappa_1, const double kappa_2,
-    const double kappa_3, const double mu, const double /*TODO : bool ?*/ s,
+    const Scalar<DataVector>& k_0,
+    const tnsr::i<DataVector, Dim>&
+        d_k_0 /*TODO : how to compute? is k_0 not 0?*/,
+    const double kappa_1, const double kappa_2, const double kappa_3,
+    const double mu, const double /*TODO : bool ?*/ s,
     const double one_over_relaxation_time,
     // evolved variables
     const tnsr::ij<DataVector, Dim>& conformal_spatial_metric,
@@ -213,7 +216,6 @@ void TimeDerivative<Dim>::apply(
                   d_field_a);
 
   // eq 22
-  // TODO : rebase on develop where this func. takes phi^2 instead of phi
   divergence_lapse(divergence_lapse, *conformal_factor_squared,
                    *inv_conformal_spatial_metric, *grad_grad_lapse);
 
@@ -263,7 +265,7 @@ void TimeDerivative<Dim>::apply(
       k_minus_2_theta_c, trace_extrinsic_curvature() - 2.0 * c * theta());
 
   ::TensorExpressions::evaluate(k_minus_k0_minus_2_theta_c,
-                                (*k_minus_2_theta_c)() - k_0);
+                                (*k_minus_2_theta_c)() - k_0());
 
   ::TensorExpressions::evaluate(contracted_field_b, field_b(ti_k, ti_K));
 
@@ -497,7 +499,32 @@ void TimeDerivative<Dim>::apply(
   }
 
   // eq. (12j) : time derivative of auxiliary variable A_i
-  // TODO
+  // TODO : extra computatopns with (*lapse)() * (*lapse)()
+  // *(d_slicing_condition)() ?
+  if (s == 0.0) {
+    ::TensorExpressions::evaluate<ti_I>(
+        dt_field_a,
+        shift(ti_L) * d_field_a(ti_l, ti_k) -
+            (*lapse_times_field_a)(ti_k) * (*k_minus_k0_minus_2_theta_c)() *
+                (slicing_condition() + (*lapse)() * (d_slicing_condition)()) +
+            field_b(ti_k, ti_L) * field_a(ti_l) -
+            (*lapse_times_slicing_condition)() *
+                (d_trace_extrinsic_curvature(ti_k) - d_k_0(ti_k) -
+                 2.0 * c * d_theta(ti_k)));
+  } else {
+    ::TensorExpressions::evaluate<ti_I>(
+        dt_field_a,
+        shift(ti_L) * d_field_a(ti_l, ti_k) -
+            (*lapse_times_field_a)(ti_k) * (*k_minus_k0_minus_2_theta_c)() *
+                (slicing_condition() + (*lapse)() * (d_slicing_condition)()) +
+            field_b(ti_k, ti_L) * field_a(ti_l) +
+            // terms with \alpha g(\alpha)
+            (*lapse_times_slicing_condition)() *
+                ((*inv_conformal_metric_times_d_a_tilde)(
+                     ti_k)-d_trace_extrinsic_curvature(ti_k) +
+                 d_k_0(ti_k) + 2.0 * c * d_theta(ti_k) +
+                 2.0 * (*field_d_up_times_a_tilde)(ti_k)));
+  }
 
   // eq. (12k) : time derivative of auxiliary variable B_k{}^i
   // TODO
