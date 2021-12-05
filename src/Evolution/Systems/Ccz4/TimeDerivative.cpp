@@ -528,6 +528,25 @@ void TimeDerivative<Dim>::apply(
 
   // eq. (12k) : time derivative of auxiliary variable B_k{}^i
   // TODO
+  if (s == 0.0) {
+    // TODO (?) : add support for assigning to double?
+    for (auto& component : *dt_b) {
+      component = 0.0;
+    }
+  } else {
+    // TODO : extra computations for shift(ti_L) * d_field_b(ti_l, ti_k, ti_I)
+    // and square((*lapse)())
+    ::TensorExpressions::evaluate<ti_k, ti_I>(
+        dt_field_b, shift(ti_L) * d_field_b(ti_l, ti_k, ti_I) +
+                        f * d_b(ti_k, ti_I) +
+                        mu * square((*lapse)()) *
+                            (*inv_conformal_spatial_metric)(ti_I, ti_J) *
+                            (d_field_p(ti_k, ti_j) - d_field_p(ti_j, ti_k) -
+                             (*inv_conformal_spatial_metric)(ti_N, ti_L) *
+                                 (d_field_d(ti_k, ti_l, ti_j, ti_n) -
+                                  d_field_d(ti_l, ti_k, ti_j, ti_n))) +
+                        field_b(ti_k, ti_L) * field_b(ti_l, ti_I));
+  }
 
   // eq. (12l) : time derivative of auxiliary variable D_{kij}
   // TODO
