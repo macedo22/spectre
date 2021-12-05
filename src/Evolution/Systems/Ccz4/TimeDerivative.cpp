@@ -438,7 +438,7 @@ void TimeDerivative<Dim>::apply(
             2.0 * (*lapse)() *
                 (-2.0 * one_third *
                      (*inv_conformal_spatial_metric)(ti_I, ti_J) *
-                     d_extrinsic_curvature(ti_j) +
+                     d_trace_extrinsic_curvature(ti_j) +
                  (*inv_conformal_spatial_metric)(ti_K, ti_I) * d_theta(ti_k) +
                  (*conformal_christoffel_second_kind)(ti_I, ti_j, ti_k) *
                      (*inv_a_tilde)(ti_J, ti_K) -
@@ -469,7 +469,7 @@ void TimeDerivative<Dim>::apply(
             2.0 * (*lapse)() *
                 (-2.0 * one_third *
                      (*inv_conformal_spatial_metric)(ti_I, ti_J) *
-                     d_extrinsic_curvature(ti_j) +
+                     d_trace_extrinsic_curvature(ti_j) +
                  (*inv_conformal_spatial_metric)(ti_K, ti_I) * d_theta(ti_k) +
                  (*conformal_christoffel_second_kind)(ti_I, ti_j, ti_k) *
                      (*inv_a_tilde)(ti_J, ti_K) -
@@ -503,6 +503,7 @@ void TimeDerivative<Dim>::apply(
       component = 0.0;
     }
   } else {
+    // TODO : is the dt_gamma_hat here from the previous step or recent update?
     ::TensorExpressions::evaluate<ti_I>(
         dt_b, shift(ti_K) * (d_b(ti_k, ti_I) - (*d_gamma_hat)(ti_k, ti_I)) +
                   (*dt_gamma_hat)(ti_I)-eta * b(ti_I));
@@ -601,7 +602,25 @@ void TimeDerivative<Dim>::apply(
   }
 
   // eq. (12m) : time derivative of auxiliary variable P_i
-  // TODO
+  if (s == 0.0) {
+    ::TensorExpressions::evaluate<ti_k>(
+        dt_field_p, shift(ti_L) * d_field_p(ti_l, ti_k) +
+                        field_b(ti_k, ti_L) * field_p(ti_l) +
+                        one_third * (*lapse)() *
+                            (d_extrinsic_curvature(ti_k) +
+                             field_a(ti_k) * trace_extrinsic_curvature()));
+  } else {
+    ::TensorExpressions::evaluate<ti_k>(
+        dt_field_p,
+        shift(ti_L) * d_field_p(ti_l, ti_k) +
+            field_b(ti_k, ti_L) * field_p(ti_l) +
+            one_third *
+                ((*lapse)() * (d_extrinsic_curvature(ti_k) +
+                               (*inv_conformal_metric_times_d_a_tilde)(ti_k) +
+                               field_a(ti_k) * trace_extrinsic_curvature() -
+                               2.0 * (*field_d_up_times_a_tilde)(ti_k)) -
+                 (*contracted_symmetrized_d_field_b)(ti_k)));
+  }
 }
 }  // namespace Ccz4
 
