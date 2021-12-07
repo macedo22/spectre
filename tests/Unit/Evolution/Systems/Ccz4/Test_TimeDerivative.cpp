@@ -14,7 +14,7 @@
 //#include "Framework/SetupLocalPythonEnvironment.hpp"
 #include "Framework/TestHelpers.hpp"
 //#include "Helpers/DataStructures/MakeWithRandomValues.hpp"
-//#include "Helpers/PointwiseFunctions/GeneralRelativity/TestHelpers.hpp"
+#include "Helpers/PointwiseFunctions/GeneralRelativity/TestHelpers.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/MakeWithValue.hpp"
 
@@ -22,125 +22,129 @@ namespace {
 template <size_t Dim, typename Generator>
 void test_impl(const gsl::not_null<Generator*> generator,
                const DataVector& used_for_size) {
-  //   const auto lapse = TestHelpers::gr::random_lapse(generator,
-  //   used_for_size); const auto shift =
-  //   TestHelpers::gr::random_shift<3>(generator, used_for_size); const
-  //   spatial_metric =
-  //       TestHelpers::gr::random_spatial_metric<3>(generator, used_for_size);
+  // const auto lapse = TestHelpers::gr::random_lapse(generator, used_for_size);
+  // const auto shift = TestHelpers::gr::random_shift<Dim>(generator,
+  // used_for_size); const spatial_metric =
+  //     TestHelpers::gr::random_spatial_metric<Dim>(generator, used_for_size);
 
-  (void)generator;  // TODO : remove
-
-  auto dt_conformal_spatial_metric =
+  tnsr::ii<DataVector, Dim> dt_conformal_spatial_metric =
       make_with_value<tnsr::ii<DataVector, Dim>>(used_for_size, 0.0);
-  auto dt_ln_lapse = make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
-  auto dt_shift = make_with_value<tnsr::I<DataVector, Dim>>(used_for_size, 0.0);
-  auto dt_ln_conformal_factor =
+  Scalar<DataVector> dt_ln_lapse =
       make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
-  auto dt_a_tilde =
-      make_with_value<tnsr::ii<DataVector, Dim>>(used_for_size, 0.0);
-  auto dt_trace_extrinsic_curvature =
-      make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
-  auto dt_theta = make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
-  auto dt_gamma_hat =
+  tnsr::I<DataVector, Dim> dt_shift =
       make_with_value<tnsr::I<DataVector, Dim>>(used_for_size, 0.0);
-  auto dt_b = make_with_value<tnsr::I<DataVector, Dim>>(used_for_size, 0.0);
-  auto dt_field_a =
+  Scalar<DataVector> dt_ln_conformal_factor =
+      make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
+  tnsr::ii<DataVector, Dim> dt_a_tilde =
+      make_with_value<tnsr::ii<DataVector, Dim>>(used_for_size, 0.0);
+  Scalar<DataVector> dt_trace_extrinsic_curvature =
+      make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
+  Scalar<DataVector> dt_theta =
+      make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
+  tnsr::I<DataVector, Dim> dt_gamma_hat =
+      make_with_value<tnsr::I<DataVector, Dim>>(used_for_size, 0.0);
+  tnsr::I<DataVector, Dim> dt_b =
+      make_with_value<tnsr::I<DataVector, Dim>>(used_for_size, 0.0);
+  tnsr::i<DataVector, Dim> dt_field_a =
       make_with_value<tnsr::i<DataVector, Dim>>(used_for_size, 0.0);
-  auto dt_field_b =
+  tnsr::iJ<DataVector, Dim> dt_field_b =
       make_with_value<tnsr::iJ<DataVector, Dim>>(used_for_size, 0.0);
-  auto dt_field_d =
+  tnsr::ijj<DataVector, Dim> dt_field_d =
       make_with_value<tnsr::ijj<DataVector, Dim>>(used_for_size, 0.0);
-  auto dt_field_p =
+  tnsr::i<DataVector, Dim> dt_field_p =
       make_with_value<tnsr::i<DataVector, Dim>>(used_for_size, 0.0);
-  auto gamma_hat_minus_contracted_conformal_christoffel =
+  tnsr::I<DataVector, Dim> gamma_hat_minus_contracted_conformal_christoffel =
       make_with_value<tnsr::I<DataVector, Dim>>(used_for_size, 0.0);
-  auto d_gamma_hat_minus_contracted_conformal_christoffel =
+  tnsr::iJ<DataVector, Dim> d_gamma_hat_minus_contracted_conformal_christoffel =
       make_with_value<tnsr::iJ<DataVector, Dim>>(used_for_size, 0.0);
-  auto k_minus_2_theta_c =
+  Scalar<DataVector> k_minus_2_theta_c =
       make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
-  auto k_minus_k0_minus_2_theta_c =
+  Scalar<DataVector> k_minus_k0_minus_2_theta_c =
       make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
-  auto contracted_field_b =
+  Scalar<DataVector> contracted_field_b =
       make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
-  auto conformal_metric_times_field_b =
+  tnsr::ij<DataVector, Dim> conformal_metric_times_field_b =
       make_with_value<tnsr::ij<DataVector, Dim>>(used_for_size, 0.0);
-  auto conformal_metric_times_symmetrized_d_field_b =
+  tnsr::ijk<DataVector, Dim> conformal_metric_times_symmetrized_d_field_b =
       make_with_value<tnsr::ijk<DataVector, Dim>>(used_for_size, 0.0);
-  auto a_tilde_times_field_b =
+  tnsr::ij<DataVector, Dim> a_tilde_times_field_b =
       make_with_value<tnsr::ij<DataVector, Dim>>(used_for_size, 0.0);
-  auto lapse_times_ricci_scalar_plus_divergence_z4_constraint =
+  Scalar<DataVector> lapse_times_ricci_scalar_plus_divergence_z4_constraint =
       make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
-  auto conformal_metric_times_trace_a_tilde =
+  tnsr::ii<DataVector, Dim> conformal_metric_times_trace_a_tilde =
       make_with_value<tnsr::ii<DataVector, Dim>>(used_for_size, 0.0);
-  auto lapse_times_a_tilde =
+  tnsr::ii<DataVector, Dim> lapse_times_a_tilde =
       make_with_value<tnsr::ii<DataVector, Dim>>(used_for_size, 0.0);
-  auto field_d_up_times_a_tilde =
+  tnsr::i<DataVector, Dim> field_d_up_times_a_tilde =
       make_with_value<tnsr::i<DataVector, Dim>>(used_for_size, 0.0);
-  auto lapse_times_d_a_tilde =
+  tnsr::ijj<DataVector, Dim> lapse_times_d_a_tilde =
       make_with_value<tnsr::ijj<DataVector, Dim>>(used_for_size, 0.0);
-  auto inv_conformal_metric_times_d_a_tilde =
+  tnsr::i<DataVector, Dim> inv_conformal_metric_times_d_a_tilde =
       make_with_value<tnsr::i<DataVector, Dim>>(used_for_size, 0.0);
-  auto a_tilde_minus_one_third_conformal_metric_times_trace_a_tilde =
-      make_with_value<tnsr::ii<DataVector, Dim>>(used_for_size, 0.0);
-  auto lapse_times_field_a =
+  tnsr::ii<DataVector, Dim>
+      a_tilde_minus_one_third_conformal_metric_times_trace_a_tilde =
+          make_with_value<tnsr::ii<DataVector, Dim>>(used_for_size, 0.0);
+  tnsr::i<DataVector, Dim> lapse_times_field_a =
       make_with_value<tnsr::i<DataVector, Dim>>(used_for_size, 0.0);
-  auto shift_times_deriv_gamma_hat =
+  tnsr::I<DataVector, Dim> shift_times_deriv_gamma_hat =
       make_with_value<tnsr::I<DataVector, Dim>>(used_for_size, 0.0);
-  auto inv_tau_times_conformal_metric =
+  tnsr::ii<DataVector, Dim> inv_tau_times_conformal_metric =
       make_with_value<tnsr::ii<DataVector, Dim>>(used_for_size, 0.0);
-  auto lapse_times_slicing_condition =
+  Scalar<DataVector> lapse_times_slicing_condition =
       make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
-  auto conformal_factor_squared =
+  Scalar<DataVector> conformal_factor_squared =
       make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
-  auto det_conformal_spatial_metric =
+  Scalar<DataVector> det_conformal_spatial_metric =
       make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
-  auto inv_conformal_spatial_metric =
+  tnsr::II<DataVector, Dim> inv_conformal_spatial_metric =
       make_with_value<tnsr::II<DataVector, Dim>>(used_for_size, 0.0);
-  auto inv_spatial_metric =
+  tnsr::II<DataVector, Dim> inv_spatial_metric =
       make_with_value<tnsr::II<DataVector, Dim>>(used_for_size, 0.0);
-  auto lapse = make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
-  auto lapse_times_conformal_spatial_metric =
+  Scalar<DataVector> lapse =
+      make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
+  tnsr::ii<DataVector, Dim> lapse_times_conformal_spatial_metric =
       make_with_value<tnsr::ii<DataVector, Dim>>(used_for_size, 0.0);
-  auto d_slicing_condition =
+  Scalar<DataVector> d_slicing_condition =
       make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
-  auto inv_a_tilde =
+  tnsr::II<DataVector, Dim> inv_a_tilde =
       make_with_value<tnsr::II<DataVector, Dim>>(used_for_size, 0.0);
-  auto symmetrized_d_field_b =
+  tnsr::ijK<DataVector, Dim> symmetrized_d_field_b =
       make_with_value<tnsr::ijK<DataVector, Dim>>(used_for_size, 0.0);
-  auto contracted_symmetrized_d_field_b =
+  tnsr::i<DataVector, Dim> contracted_symmetrized_d_field_b =
       make_with_value<tnsr::i<DataVector, Dim>>(used_for_size, 0.0);
-  auto field_b_times_field_d =
+  tnsr::ijk<DataVector, Dim> field_b_times_field_d =
       make_with_value<tnsr::ijk<DataVector, Dim>>(used_for_size, 0.0);
-  auto trace_a_tilde = make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
-  auto field_d_up =
+  Scalar<DataVector> trace_a_tilde =
+      make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
+  tnsr::iJJ<DataVector, Dim> field_d_up =
       make_with_value<tnsr::iJJ<DataVector, Dim>>(used_for_size, 0.0);
-  auto conformal_christoffel_second_kind =
+  tnsr::Ijj<DataVector, Dim> conformal_christoffel_second_kind =
       make_with_value<tnsr::Ijj<DataVector, Dim>>(used_for_size, 0.0);
-  auto d_conformal_christoffel_second_kind =
+  tnsr::iJkk<DataVector, Dim> d_conformal_christoffel_second_kind =
       make_with_value<tnsr::iJkk<DataVector, Dim>>(used_for_size, 0.0);
-  auto christoffel_second_kind =
+  tnsr::Ijj<DataVector, Dim> christoffel_second_kind =
       make_with_value<tnsr::Ijj<DataVector, Dim>>(used_for_size, 0.0);
-  auto spatial_ricci_tensor_buffer =
+  tnsr::ij<DataVector, Dim> spatial_ricci_tensor_buffer =
       make_with_value<tnsr::ij<DataVector, Dim>>(used_for_size, 0.0);
-  auto spatial_ricci_tensor =
+  tnsr::ii<DataVector, Dim> spatial_ricci_tensor =
       make_with_value<tnsr::ii<DataVector, Dim>>(used_for_size, 0.0);
-  auto grad_grad_lapse =
+  tnsr::ij<DataVector, Dim> grad_grad_lapse =
       make_with_value<tnsr::ij<DataVector, Dim>>(used_for_size, 0.0);
-  auto divergence_lapse =
+  Scalar<DataVector> divergence_lapse =
       make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
-  auto contracted_conformal_christoffel_second_kind =
+  tnsr::I<DataVector, Dim> contracted_conformal_christoffel_second_kind =
       make_with_value<tnsr::I<DataVector, Dim>>(used_for_size, 0.0);
-  auto d_contracted_conformal_christoffel_second_kind =
+  tnsr::iJ<DataVector, Dim> d_contracted_conformal_christoffel_second_kind =
       make_with_value<tnsr::iJ<DataVector, Dim>>(used_for_size, 0.0);
-  auto spatial_z4_constraint =
+  tnsr::i<DataVector, Dim> spatial_z4_constraint =
       make_with_value<tnsr::i<DataVector, Dim>>(used_for_size, 0.0);
-  auto upper_spatial_z4_constraint_buffer =
+  Scalar<DataVector> upper_spatial_z4_constraint_buffer =
       make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
-  auto upper_spatial_z4_constraint =
+  tnsr::I<DataVector, Dim> upper_spatial_z4_constraint =
       make_with_value<tnsr::I<DataVector, Dim>>(used_for_size, 0.0);
-  auto grad_spatial_z4_constraint =
+  tnsr::ij<DataVector, Dim> grad_spatial_z4_constraint =
       make_with_value<tnsr::ij<DataVector, Dim>>(used_for_size, 0.0);
-  auto ricci_scalar_plus_divergence_z4_constraint =
+  Scalar<DataVector> ricci_scalar_plus_divergence_z4_constraint =
       make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
   const auto c = make_with_value<double>(used_for_size, 0.0);
   const auto cleaning_speed = make_with_value<double>(used_for_size, 0.0);
@@ -159,8 +163,8 @@ void test_impl(const gsl::not_null<Generator*> generator,
   const auto one_over_relaxation_time =
       make_with_value<double>(used_for_size, 0.0);
   const auto conformal_spatial_metric =
-      make_with_value<tnsr::ii<DataVector, Dim>>(used_for_size, 0.0);
-  const auto ln_lapse = make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
+      TestHelpers::gr::random_spatial_metric<Dim>(generator, used_for_size);
+  const auto ln_lapse = TestHelpers::gr::random_lapse(generator, used_for_size);
   const auto shift =
       make_with_value<tnsr::I<DataVector, Dim>>(used_for_size, 0.0);
   const auto ln_conformal_factor =
