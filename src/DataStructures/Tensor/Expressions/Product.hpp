@@ -19,6 +19,8 @@
 #include "Utilities/Gsl.hpp"
 #include "Utilities/TMPL.hpp"
 
+struct TEDouble;
+
 namespace TensorExpressions {
 namespace detail {
 template <typename T1, typename T2, typename SymmList1 = typename T1::symmetry,
@@ -30,9 +32,9 @@ template <typename T1, typename T2, template <typename...> class SymmList1,
           typename... Symm2>
 struct OuterProductType<T1, T2, SymmList1<Symm1...>, SymmList2<Symm2...>> {
   using type =
-      std::conditional_t<std::is_same<typename T1::type, DataVector>::value or
-                             std::is_same<typename T2::type, DataVector>::value,
-                         DataVector, double>;
+      std::conditional_t<std::is_same<typename T1::type, TEDouble>::value or
+                             std::is_same<typename T2::type, TEDouble>::value,
+                         TEDouble, double>;
   using symmetry =
       Symmetry<(Symm1::value + sizeof...(Symm2))..., Symm2::value...>;
   using index_list =

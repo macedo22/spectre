@@ -61,6 +61,55 @@ template <typename X, typename Symm, typename IndexList>
 struct is_tensor<Tensor<X, Symm, IndexList>> : std::true_type {};
 }  // namespace Tensor_detail
 
+struct TEDouble {
+  TEDouble(double value = 5.0) : value_(value) {}
+
+  TEDouble operator+(const TEDouble& other) const {
+    add_ops_++;
+    TEDouble result(this->value_ + other.value_);
+    return result;
+  }
+  TEDouble& operator+=(const TEDouble& other) {
+    add_equals_ops_++;
+    this->value_ += other.value_;
+    return *this;
+  }
+  TEDouble operator*(const TEDouble& other) const {
+    mult_ops_++;
+    TEDouble result(this->value_ * other.value_);
+    return result;
+  }
+
+  using type = TEDouble;
+  double value_;
+  static inline size_t add_ops_{0};
+  static inline size_t add_equals_ops_{0};
+  static inline size_t mult_ops_{0};
+};
+
+struct LoopDouble {
+  LoopDouble(double value = 5.0) : value_(value) {}
+
+  double operator+(const LoopDouble& other) const {
+    add_ops_++;
+    return this->value_ + other.value_;
+  }
+  LoopDouble& operator+=(const LoopDouble& other) {
+    add_equals_ops_++;
+    this->value_ += other.value_;
+    return *this;
+  }
+  double operator*(const LoopDouble& other) const {
+    mult_ops_++;
+    return this->value_ * other.value_;
+  }
+
+  double value_;
+  static inline size_t add_ops_{0};
+  static inline size_t add_equals_ops_{0};
+  static inline size_t mult_ops_{0};
+};
+
 /*!
  * \ingroup TensorGroup
  * \brief Represents an object with multiple components
@@ -106,7 +155,8 @@ class Tensor<X, Symm, IndexList<Indices...>> {
           std::is_same_v<X, ComplexModalVector> or
           std::is_same_v<X, DataVector> or std::is_same_v<X, ModalVector> or
           is_spin_weighted_of_v<ComplexDataVector, X> or
-          is_spin_weighted_of_v<ComplexModalVector, X>,
+          is_spin_weighted_of_v<ComplexModalVector, X> or
+          std::is_same_v<X, TEDouble> or std::is_same_v<X, LoopDouble>,
       "Only a Tensor<std::complex<double>>, Tensor<double>, "
       "Tensor<ComplexDataVector>, Tensor<ComplexModalVector>, "
       "Tensor<DataVector>, Tensor<ModalVector>, "
