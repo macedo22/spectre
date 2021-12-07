@@ -22,5 +22,6 @@ add_test_library(
   "Evolution/Systems/Ccz4/"
   "${LIBRARY_SOURCES}"
   "Ccz4;DataBoxTestHelpers;DataStructures;Domain;GeneralRelativity"
-  "GeneralRelativitySolutions;LinearOperators;Spectral;Utilities"
+  "GeneralRelativityHelpers;GeneralRelativitySolutions;LinearOperators;Spectral"
+  "Utilities"
   )
