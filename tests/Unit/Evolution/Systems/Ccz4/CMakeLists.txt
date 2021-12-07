@@ -13,6 +13,7 @@ set(LIBRARY_SOURCES
   Test_RicciScalarPlusDivergenceZ4Constraint.cpp
   Test_Tags.cpp
   Test_TempTags.cpp
+  Test_TimeDerivative.cpp
   Test_Z4Constraint.cpp
   )
 
