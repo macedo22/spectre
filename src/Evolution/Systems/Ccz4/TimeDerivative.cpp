@@ -387,11 +387,12 @@ void TimeDerivative<Dim>::apply(
   // TODO : have a temporary for terms without s? or implement with s known at
   // compile time so that we can if constexpr and only compile one or the other?
   if (s == 0.0) {
-    ::TensorExpressions::evaluate<ti_I>(dt_shift,
-                                        s * shift(ti_K) * field_b(ti_k, ti_I));
+    for (auto& component : *dt_shift) {
+      component = 0.0;
+    }
   } else {
     ::TensorExpressions::evaluate<ti_I>(
-        dt_shift, s * shift(ti_K) * field_b(ti_k, ti_I) + f * b(ti_I));
+        dt_shift, shift(ti_K) * field_b(ti_k, ti_I) + f * b(ti_I));
   }
 
   // eq. (12d) : time derivative of the natural log of the conformal
