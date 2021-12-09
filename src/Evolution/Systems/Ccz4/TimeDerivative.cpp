@@ -211,7 +211,6 @@ void TimeDerivative<Dim>::apply(
       (*inv_conformal_spatial_metric)(ti_I, ti_J) * a_tilde(ti_i, ti_j));
 
   // eq 14
-  // TODO : rebase on develop to get ti_N/n
   ::TensorExpressions::evaluate<ti_k, ti_I, ti_J>(
       field_d_up, (*inv_conformal_spatial_metric)(ti_I, ti_N) *
                       (*inv_conformal_spatial_metric)(ti_M, ti_J) *
