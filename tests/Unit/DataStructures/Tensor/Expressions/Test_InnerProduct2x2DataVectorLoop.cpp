@@ -33,9 +33,9 @@ namespace TestNamespace {
 void test_function(gsl::not_null<Scalar<DataType>*> L, const R_type& R,
                    const S_type& S) {
   get(*L) = 0.0;
-  for (size_t i = 0; i < Dim + 1; i++) {
-    for (size_t j = 0; j < Dim + 1; j++) {
-      get(*L) += R.get(i, j) * S.get(i, j);
+  for (size_t a = 0; a < Dim + 1; a++) {
+    for (size_t b = 0; b < Dim + 1; b++) {
+      get(*L) += R.get(a, b) * S.get(a, b);
     }
   }
 }
