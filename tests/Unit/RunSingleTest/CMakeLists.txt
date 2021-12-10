@@ -32,7 +32,10 @@ add_spectre_executable(
 
   # The following lines list the source files with tests in them to be
   # compiled into the executable.
-  ../DataStructures/Test_DataVector.cpp
+  #../DataStructures/Tensor/Expressions/Test_InnerProduct2x2DataVectorLoop.cpp
+  #../DataStructures/Tensor/Expressions/Test_InnerProduct2x2DataVectorTE.cpp
+  #../DataStructures/Tensor/Expressions/Test_InnerProduct4x4DataVectorLoop.cpp
+  #../DataStructures/Tensor/Expressions/Test_InnerProduct4x4DataVectorTE.cpp
   )
 
 # Modify which libraries to link for your test case.
