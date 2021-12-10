@@ -39,7 +39,7 @@ void test_function(gsl::not_null<Scalar<DataType>*> L, const R_type& R,
 }  // namespace TestNamespace
 
 SPECTRE_TEST_CASE(
-    "Unit.DataStructures.Tensor.Expression.InnerProductDataVectorTE",
+    "Unit.DataStructures.Tensor.Expression.InnerProduct2x2DataVectorTE",
     "[Unit][DataStructures]") {
   MAKE_GENERATOR(generator);
   std::uniform_real_distribution<> distribution(0.1, 1.0);
