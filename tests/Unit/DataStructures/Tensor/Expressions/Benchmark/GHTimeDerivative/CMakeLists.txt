@@ -4,6 +4,7 @@
 add_subdirectory(all)
 add_subdirectory(christoffel_first_kind)
 add_subdirectory(christoffel_second_kind)
+add_subdirectory(dt_phi)
 add_subdirectory(dt_pi)
 add_subdirectory(dt_spacetime_metric)
 add_subdirectory(gauge_constraint)
