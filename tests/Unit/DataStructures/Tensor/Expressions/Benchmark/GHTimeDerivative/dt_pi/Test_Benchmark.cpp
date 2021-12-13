@@ -22,7 +22,7 @@
 namespace {
 template <typename... Ts>
 void copy_tensor(const Tensor<Ts...>& tensor_source,
-                 gsl::not_null<Tensor<Ts...>*> tensor_destination) noexcept {
+                 gsl::not_null<Tensor<Ts...>*> tensor_destination) {
   auto tensor_source_it = tensor_source.begin();
   auto tensor_destination_it = tensor_destination->begin();
   for (; tensor_source_it != tensor_source.end();
@@ -34,9 +34,8 @@ void copy_tensor(const Tensor<Ts...>& tensor_source,
 
 // Make sure TE impl matches manual impl
 template <size_t Dim, typename DataType, typename Generator>
-void test_benchmarked_impls_core(
-    const DataType& used_for_size,
-    const gsl::not_null<Generator*> generator) noexcept {
+void test_benchmarked_impls_core(const DataType& used_for_size,
+                                 const gsl::not_null<Generator*> generator) {
   using BenchmarkImpl = BenchmarkImpl<DataType, Dim>;
   using dt_pi_type = typename BenchmarkImpl::dt_pi_type;
   using spacetime_deriv_gauge_function_type =
@@ -73,6 +72,15 @@ void test_benchmarked_impls_core(
   using d_pi_type = typename BenchmarkImpl::d_pi_type;
 
   std::uniform_real_distribution<> distribution(0.1, 1.0);
+
+  // Not inputs to the eq, but needed to make some variables
+  // that are computed by raising something in order for symmetric
+  // assumptions to hold
+  const auto inverse_spacetime_metric =
+      make_with_random_values<tnsr::AA<DataType, Dim>>(
+          generator, make_not_null(&distribution), used_for_size);
+  const auto phi = make_with_random_values<tnsr::iab<DataType, Dim>>(
+      generator, make_not_null(&distribution), used_for_size);
 
   // RHS: spacetime_deriv_gauge_function
   const spacetime_deriv_gauge_function_type spacetime_deriv_gauge_function =
@@ -123,16 +131,29 @@ void test_benchmarked_impls_core(
           generator, make_not_null(&distribution), used_for_size);
 
   // RHS: pi_2_up
-  const pi_2_up_type pi_2_up = make_with_random_values<pi_2_up_type>(
-      generator, make_not_null(&distribution), used_for_size);
-
-  // RHS: phi_1_up
-  const phi_1_up_type phi_1_up = make_with_random_values<phi_1_up_type>(
-      generator, make_not_null(&distribution), used_for_size);
+  pi_2_up_type pi_2_up(used_for_size);
+  for (size_t a = 0; a < Dim + 1; a++) {
+    for (size_t b = 0; b < Dim + 1; b++) {
+      pi_2_up.get(a, b) = 0.0;
+      for (size_t c = 0; c < Dim + 1; c++) {
+        pi_2_up.get(a, b) += inverse_spacetime_metric.get(c, b) * pi.get(a, c);
+      }
+    }
+  }
 
   // RHS: phi_3_up
-  const phi_3_up_type phi_3_up = make_with_random_values<phi_3_up_type>(
-      generator, make_not_null(&distribution), used_for_size);
+  phi_3_up_type phi_3_up(used_for_size);
+  for (size_t i = 0; i < Dim; i++) {
+    for (size_t a = 0; a < Dim + 1; a++) {
+      for (size_t b = 0; b < Dim + 1; b++) {
+        phi_3_up.get(i, a, b) = 0.0;
+        for (size_t c = 0; c < Dim + 1; c++) {
+          phi_3_up.get(i, a, b) +=
+              inverse_spacetime_metric.get(c, b) * phi.get(i, a, c);
+        }
+      }
+    }
+  }
 
   // RHS: christoffel_first_kind_3_up
   const christoffel_first_kind_3_up_type christoffel_first_kind_3_up =
@@ -145,9 +166,28 @@ void test_benchmarked_impls_core(
           generator, make_not_null(&distribution), used_for_size);
 
   // RHS: inverse_spatial_metric
-  const inverse_spatial_metric_type inverse_spatial_metric =
-      make_with_random_values<inverse_spatial_metric_type>(
-          generator, make_not_null(&distribution), used_for_size);
+  inverse_spatial_metric_type inverse_spatial_metric(used_for_size);
+  for (size_t i = 0; i < Dim; i++) {
+    for (size_t j = 0; j < Dim; j++) {
+      inverse_spatial_metric.get(i, j) =
+          inverse_spacetime_metric.get(i + 1, j + 1);
+    }
+  }
+
+  // RHS: phi_1_up
+  // Note: arg out of order down here bc needs inverse_spatial_metric
+  phi_1_up_type phi_1_up(used_for_size);
+  for (size_t i = 0; i < Dim; i++) {
+    for (size_t a = 0; a < Dim + 1; a++) {
+      for (size_t b = a; b < Dim + 1; b++) {
+        phi_1_up.get(i, a, b) = 0.0;
+        for (size_t j = 0; j < Dim; j++) {
+          phi_1_up.get(i, a, b) +=
+              inverse_spatial_metric.get(i, j) * phi.get(j, a, b);
+        }
+      }
+    }
+  }
 
   // RHS: d_phi
   const d_phi_type d_phi = make_with_random_values<d_phi_type>(
@@ -333,7 +373,7 @@ void test_benchmarked_impls_core(
   // RHS: gamma1gamma2
   gamma1gamma2_type& gamma1gamma2_te_temp =
       get<::Tags::TempTensor<19, gamma1gamma2_type>>(vars);
-  copy_tensor(gamma1gamma2, make_not_null(&lapse_te_temp));
+  copy_tensor(gamma1gamma2, make_not_null(&gamma1gamma2_te_temp));
 
   // RHS: shift_dot_three_index_constraint
   shift_dot_three_index_constraint_type&
@@ -357,7 +397,7 @@ void test_benchmarked_impls_core(
   // Compute TensorExpression impl<1> result
   BenchmarkImpl::template tensorexpression_impl_lhs_arg<1>(
       make_not_null(&dt_pi_te1_temp), spacetime_deriv_gauge_function_te_temp,
-      pi_two_normals_te_temp, pi_te_temp, gamma0_te_temp,
+      pi_two_normals_te_temp, pi, gamma0_te_temp,
       normal_spacetime_one_form_te_temp, gauge_constraint_te_temp,
       spacetime_metric_te_temp, normal_dot_gauge_constraint_te_temp,
       christoffel_second_kind_te_temp, gauge_function_te_temp, pi_2_up_te_temp,
@@ -376,9 +416,8 @@ void test_benchmarked_impls_core(
 }
 
 template <typename DataType, typename Generator>
-void test_benchmarked_impls(
-    const DataType& used_for_size,
-    const gsl::not_null<Generator*> generator) noexcept {
+void test_benchmarked_impls(const DataType& used_for_size,
+                            const gsl::not_null<Generator*> generator) {
   test_benchmarked_impls_core<1>(used_for_size, generator);
   test_benchmarked_impls_core<2>(used_for_size, generator);
   test_benchmarked_impls_core<3>(used_for_size, generator);
