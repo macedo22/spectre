@@ -66,16 +66,16 @@ struct BenchmarkImpl {
       const gamma1gamma2_type& gamma1gamma2,
       const shift_dot_three_index_constraint_type&
           shift_dot_three_index_constraint,
-      const shift_type& shift, const d_pi_type& d_pi) noexcept {
+      const shift_type& shift, const d_pi_type& d_pi) {
     for (size_t mu = 0; mu < Dim + 1; ++mu) {
       for (size_t nu = mu; nu < Dim + 1; ++nu) {
         dt_pi->get(mu, nu) =
             -spacetime_deriv_gauge_function.get(mu, nu) -
             spacetime_deriv_gauge_function.get(nu, mu) -
             0.5 * get(pi_two_normals) * pi.get(mu, nu) +
-            get(gamma0) * normal_spacetime_one_form.get(mu) *
-                gauge_constraint.get(nu) +
-            normal_spacetime_one_form.get(nu) * gauge_constraint.get(mu) -
+            get(gamma0) *
+                (normal_spacetime_one_form.get(mu) * gauge_constraint.get(nu) +
+                 normal_spacetime_one_form.get(nu) * gauge_constraint.get(mu)) -
             get(gamma0) * spacetime_metric.get(mu, nu) *
                 get(normal_dot_gauge_constraint);
 
@@ -112,6 +112,7 @@ struct BenchmarkImpl {
             get(gamma1gamma2) * shift_dot_three_index_constraint.get(mu, nu);
 
         for (size_t m = 0; m < Dim; ++m) {
+          // DualFrame term
           dt_pi->get(mu, nu) += shift.get(m) * d_pi.get(m, mu, nu);
         }
       }
@@ -139,7 +140,7 @@ struct BenchmarkImpl {
       const gamma1gamma2_type& gamma1gamma2,
       const shift_dot_three_index_constraint_type&
           shift_dot_three_index_constraint,
-      const shift_type& shift, const d_pi_type& d_pi) noexcept;
+      const shift_type& shift, const d_pi_type& d_pi);
 
   template <>
   SPECTRE_ALWAYS_INLINE static void tensorexpression_impl_lhs_arg<1>(
@@ -161,10 +162,10 @@ struct BenchmarkImpl {
       const gamma1gamma2_type& gamma1gamma2,
       const shift_dot_three_index_constraint_type&
           shift_dot_three_index_constraint,
-      const shift_type& shift, const d_pi_type& d_pi) noexcept {
+      const shift_type& shift, const d_pi_type& d_pi) {
     TensorExpressions::evaluate<ti_a, ti_b>(
         dt_pi,
-        ((-1.0 * spacetime_deriv_gauge_function(ti_a, ti_b)) -
+        (-spacetime_deriv_gauge_function(ti_a, ti_b) -
          spacetime_deriv_gauge_function(ti_b, ti_a) -
          0.5 * pi_two_normals() * pi(ti_a, ti_b) +
          gamma0() * (normal_spacetime_one_form(ti_a) * gauge_constraint(ti_b) +
@@ -174,13 +175,15 @@ struct BenchmarkImpl {
          2.0 * christoffel_second_kind(ti_C, ti_a, ti_b) *
              gauge_function(ti_c) -
          2.0 * pi(ti_a, ti_c) * pi_2_up(ti_b, ti_C) +
-         2.0 * phi_1_up(ti_I, ti_a, ti_c) * phi_3_up(ti_i, ti_b, ti_C) -
+         // Note : flipped ti_b and ti_a in next product so test passes
+         // (symmetry asusmption issues)
+         2.0 * phi_3_up(ti_i, ti_a, ti_C) * phi_1_up(ti_I, ti_b, ti_c) -
          2.0 * christoffel_first_kind_3_up(ti_a, ti_d, ti_C) *
              christoffel_first_kind_3_up(ti_b, ti_c, ti_D) -
          pi_one_normal_spatial(ti_j) * phi_1_up(ti_J, ti_a, ti_b) -
          inverse_spatial_metric(ti_J, ti_K) * d_phi(ti_j, ti_k, ti_a, ti_b)) *
                 lapse() +
             gamma1gamma2() * shift_dot_three_index_constraint(ti_a, ti_b) +
-            shift(ti_I) * d_pi(ti_i, ti_a, ti_b));
+            shift(ti_J) * d_pi(ti_j, ti_a, ti_b));
   }
 };
