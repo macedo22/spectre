@@ -57,10 +57,7 @@ void test_benchmarked_impls_core(const DataType& used_for_size,
   using phi_3_up_type = typename BenchmarkImpl::phi_3_up_type;
   using christoffel_first_kind_3_up_type =
       typename BenchmarkImpl::christoffel_first_kind_3_up_type;
-  // type not in SpECTRE implementation, but needed by TE implementation since
-  // TEs can't yet iterate over the spatial components of a spacetime index
-  using pi_one_normal_spatial_type =
-      typename BenchmarkImpl::pi_one_normal_spatial_type;
+  using pi_one_normal_type = typename BenchmarkImpl::pi_one_normal_type;
   using inverse_spatial_metric_type =
       typename BenchmarkImpl::inverse_spatial_metric_type;
   using d_phi_type = typename BenchmarkImpl::d_phi_type;
@@ -160,9 +157,9 @@ void test_benchmarked_impls_core(const DataType& used_for_size,
       make_with_random_values<christoffel_first_kind_3_up_type>(
           generator, make_not_null(&distribution), used_for_size);
 
-  // RHS: pi_one_normal_spatial
-  const pi_one_normal_spatial_type pi_one_normal_spatial =
-      make_with_random_values<pi_one_normal_spatial_type>(
+  // RHS: pi_one_normal
+  const pi_one_normal_type pi_one_normal =
+      make_with_random_values<pi_one_normal_type>(
           generator, make_not_null(&distribution), used_for_size);
 
   // RHS: inverse_spatial_metric
@@ -224,7 +221,7 @@ void test_benchmarked_impls_core(const DataType& used_for_size,
       pi_two_normals, pi, gamma0, normal_spacetime_one_form, gauge_constraint,
       spacetime_metric, normal_dot_gauge_constraint, christoffel_second_kind,
       gauge_function, pi_2_up, phi_1_up, phi_3_up, christoffel_first_kind_3_up,
-      pi_one_normal_spatial, inverse_spatial_metric, d_phi, lapse, gamma1gamma2,
+      pi_one_normal, inverse_spatial_metric, d_phi, lapse, gamma1gamma2,
       shift_dot_three_index_constraint, shift, d_pi);
 
   // LHS: dt_pi to be filled by TensorExpression impl<1>
@@ -236,7 +233,7 @@ void test_benchmarked_impls_core(const DataType& used_for_size,
       pi_two_normals, pi, gamma0, normal_spacetime_one_form, gauge_constraint,
       spacetime_metric, normal_dot_gauge_constraint, christoffel_second_kind,
       gauge_function, pi_2_up, phi_1_up, phi_3_up, christoffel_first_kind_3_up,
-      pi_one_normal_spatial, inverse_spatial_metric, d_phi, lapse, gamma1gamma2,
+      pi_one_normal, inverse_spatial_metric, d_phi, lapse, gamma1gamma2,
       shift_dot_three_index_constraint, shift, d_pi);
 
   // CHECK dt_pi
@@ -269,7 +266,7 @@ void test_benchmarked_impls_core(const DataType& used_for_size,
       ::Tags::TempTensor<12, phi_1_up_type>,
       ::Tags::TempTensor<13, phi_3_up_type>,
       ::Tags::TempTensor<14, christoffel_first_kind_3_up_type>,
-      ::Tags::TempTensor<15, pi_one_normal_spatial_type>,
+      ::Tags::TempTensor<15, pi_one_normal_type>,
       ::Tags::TempTensor<16, inverse_spatial_metric_type>,
       ::Tags::TempTensor<17, d_phi_type>, ::Tags::TempTensor<18, lapse_type>,
       ::Tags::TempTensor<19, gamma1gamma2_type>,
@@ -350,11 +347,10 @@ void test_benchmarked_impls_core(const DataType& used_for_size,
   copy_tensor(christoffel_first_kind_3_up,
               make_not_null(&christoffel_first_kind_3_up_te_temp));
 
-  // RHS: pi_one_normal_spatial
-  pi_one_normal_spatial_type& pi_one_normal_spatial_te_temp =
-      get<::Tags::TempTensor<15, pi_one_normal_spatial_type>>(vars);
-  copy_tensor(pi_one_normal_spatial,
-              make_not_null(&pi_one_normal_spatial_te_temp));
+  // RHS: pi_one_normal
+  pi_one_normal_type& pi_one_normal_te_temp =
+      get<::Tags::TempTensor<15, pi_one_normal_type>>(vars);
+  copy_tensor(pi_one_normal, make_not_null(&pi_one_normal_te_temp));
 
   // RHS: inverse_spatial_metric
   inverse_spatial_metric_type& inverse_spatial_metric_te_temp =
@@ -402,8 +398,8 @@ void test_benchmarked_impls_core(const DataType& used_for_size,
       spacetime_metric_te_temp, normal_dot_gauge_constraint_te_temp,
       christoffel_second_kind_te_temp, gauge_function_te_temp, pi_2_up_te_temp,
       phi_1_up_te_temp, phi_3_up_te_temp, christoffel_first_kind_3_up_te_temp,
-      pi_one_normal_spatial_te_temp, inverse_spatial_metric_te_temp,
-      d_phi_te_temp, lapse_te_temp, gamma1gamma2_te_temp,
+      pi_one_normal_te_temp, inverse_spatial_metric_te_temp, d_phi_te_temp,
+      lapse_te_temp, gamma1gamma2_te_temp,
       shift_dot_three_index_constraint_te_temp, shift_te_temp, d_pi_te_temp);
 
   // CHECK dt_pi
