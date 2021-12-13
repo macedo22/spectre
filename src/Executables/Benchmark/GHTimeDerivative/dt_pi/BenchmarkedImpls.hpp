@@ -35,9 +35,7 @@ struct BenchmarkImpl {
   using phi_1_up_type = tnsr::Iaa<DataType, Dim>;
   using phi_3_up_type = tnsr::iaB<DataType, Dim>;
   using christoffel_first_kind_3_up_type = tnsr::abC<DataType, Dim>;
-  // type not in SpECTRE implementation, but needed by TE implementation since
-  // TEs can't yet iterate over the spatial components of a spacetime index
-  using pi_one_normal_spatial_type = tnsr::i<DataType, Dim>;
+  using pi_one_normal_type = tnsr::a<DataType, Dim>;
   using inverse_spatial_metric_type = tnsr::II<DataType, Dim>;
   using d_phi_type = tnsr::ijaa<DataType, Dim>;
   using lapse_type = Scalar<DataType>;
@@ -60,7 +58,7 @@ struct BenchmarkImpl {
       const gauge_function_type& gauge_function, const pi_2_up_type& pi_2_up,
       const phi_1_up_type& phi_1_up, const phi_3_up_type& phi_3_up,
       const christoffel_first_kind_3_up_type& christoffel_first_kind_3_up,
-      const pi_one_normal_spatial_type& pi_one_normal_spatial,
+      const pi_one_normal_type& pi_one_normal,
       const inverse_spatial_metric_type& inverse_spatial_metric,
       const d_phi_type& d_phi, const lapse_type& lapse,
       const gamma1gamma2_type& gamma1gamma2,
@@ -98,7 +96,7 @@ struct BenchmarkImpl {
 
         for (size_t m = 0; m < Dim; ++m) {
           dt_pi->get(mu, nu) -=
-              pi_one_normal_spatial.get(m) * phi_1_up.get(m, mu, nu);
+              pi_one_normal.get(m + 1) * phi_1_up.get(m, mu, nu);
 
           for (size_t n = 0; n < Dim; ++n) {
             dt_pi->get(mu, nu) -=
@@ -134,7 +132,7 @@ struct BenchmarkImpl {
       const gauge_function_type& gauge_function, const pi_2_up_type& pi_2_up,
       const phi_1_up_type& phi_1_up, const phi_3_up_type& phi_3_up,
       const christoffel_first_kind_3_up_type& christoffel_first_kind_3_up,
-      const pi_one_normal_spatial_type& pi_one_normal_spatial,
+      const pi_one_normal_type& pi_one_normal,
       const inverse_spatial_metric_type& inverse_spatial_metric,
       const d_phi_type& d_phi, const lapse_type& lapse,
       const gamma1gamma2_type& gamma1gamma2,
@@ -156,7 +154,7 @@ struct BenchmarkImpl {
       const gauge_function_type& gauge_function, const pi_2_up_type& pi_2_up,
       const phi_1_up_type& phi_1_up, const phi_3_up_type& phi_3_up,
       const christoffel_first_kind_3_up_type& christoffel_first_kind_3_up,
-      const pi_one_normal_spatial_type& pi_one_normal_spatial,
+      const pi_one_normal_type& pi_one_normal,
       const inverse_spatial_metric_type& inverse_spatial_metric,
       const d_phi_type& d_phi, const lapse_type& lapse,
       const gamma1gamma2_type& gamma1gamma2,
@@ -180,7 +178,7 @@ struct BenchmarkImpl {
          2.0 * phi_3_up(ti_i, ti_a, ti_C) * phi_1_up(ti_I, ti_b, ti_c) -
          2.0 * christoffel_first_kind_3_up(ti_a, ti_d, ti_C) *
              christoffel_first_kind_3_up(ti_b, ti_c, ti_D) -
-         pi_one_normal_spatial(ti_j) * phi_1_up(ti_J, ti_a, ti_b) -
+         pi_one_normal(ti_j) * phi_1_up(ti_J, ti_a, ti_b) -
          inverse_spatial_metric(ti_J, ti_K) * d_phi(ti_j, ti_k, ti_a, ti_b)) *
                 lapse() +
             gamma1gamma2() * shift_dot_three_index_constraint(ti_a, ti_b) +
