@@ -70,10 +70,6 @@ struct BenchmarkImpl {
   using gamma2_type = Scalar<DataType>;
   using gauge_function_type = tnsr::a<DataType, Dim>;
   using spacetime_deriv_gauge_function_type = tnsr::ab<DataType, Dim>;
-  // types not in SpECTRE implementation, but needed by TE implementation since
-  // TEs can't yet iterate over the spatial components of a spacetime index
-  using pi_one_normal_spatial_type = tnsr::i<DataType, Dim>;
-  using phi_one_normal_spatial_type = tnsr::ij<DataType, Dim>;
 
   // manual implementation benchmarked that takes LHS tensor as arg
   SPECTRE_ALWAYS_INLINE static void manual_impl_lhs_arg(
@@ -120,10 +116,8 @@ struct BenchmarkImpl {
       const pi_type& pi, const phi_type& phi, const gamma0_type& gamma0,
       const gamma1_type& gamma1, const gamma2_type& gamma2,
       const gauge_function_type& gauge_function,
-      const spacetime_deriv_gauge_function_type& spacetime_deriv_gauge_function,
-      const gsl::not_null<pi_one_normal_spatial_type*> pi_one_normal_spatial,
-      const gsl::not_null<phi_one_normal_spatial_type*>
-          phi_one_normal_spatial) noexcept {
+      const spacetime_deriv_gauge_function_type&
+          spacetime_deriv_gauge_function) {
     // Need constraint damping on interfaces in DG schemes
     *temp_gamma1 = gamma1;
     *temp_gamma2 = gamma2;
@@ -208,12 +202,6 @@ struct BenchmarkImpl {
             normal_spacetime_vector->get(nu) * pi.get(nu, mu);
       }
     }
-    // can't get spatial components of spacetime indices with TE's yet
-    // (i.e. the m + 1), so copying over spatial components of pi_one_normal
-    // into a new tensor
-    for (size_t m = 0; m < Dim; ++m) {
-      pi_one_normal_spatial->get(m) = pi_one_normal->get(m + 1);
-    }
 
     get(*pi_two_normals) =
         get<0>(*normal_spacetime_vector) * get<0>(*pi_one_normal);
@@ -230,14 +218,6 @@ struct BenchmarkImpl {
           phi_one_normal->get(n, nu) +=
               normal_spacetime_vector->get(mu) * phi.get(n, mu, nu);
         }
-      }
-    }
-    // can't get spatial components of spacetime indices with TE's yet
-    // (i.e. the m + 1), so copying over spatial components of phi_one_normal
-    // into a new tensor
-    for (size_t i = 0; i < Dim; i++) {
-      for (size_t j = 0; j < Dim; j++) {
-        phi_one_normal_spatial->get(i, j) = phi_one_normal->get(i, j + 1);
       }
     }
 
@@ -333,7 +313,7 @@ struct BenchmarkImpl {
 
         for (size_t m = 0; m < Dim; ++m) {
           dt_pi->get(mu, nu) -=
-              pi_one_normal_spatial->get(m) * phi_1_up->get(m, mu, nu);
+              pi_one_normal->get(m + 1) * phi_1_up->get(m, mu, nu);
 
           for (size_t n = 0; n < Dim; ++n) {
             dt_pi->get(mu, nu) -=
@@ -363,7 +343,7 @@ struct BenchmarkImpl {
               get(gamma2) * three_index_constraint->get(i, mu, nu);
           for (size_t n = 0; n < Dim; ++n) {
             dt_phi->get(i, mu, nu) +=
-                phi_one_normal_spatial->get(i, n) * phi_1_up->get(n, mu, nu);
+                phi_one_normal->get(i, n + 1) * phi_1_up->get(n, mu, nu);
           }
 
           dt_phi->get(i, mu, nu) *= get(*lapse);
@@ -421,10 +401,8 @@ struct BenchmarkImpl {
       const pi_type& pi, const phi_type& phi, const gamma0_type& gamma0,
       const gamma1_type& gamma1, const gamma2_type& gamma2,
       const gauge_function_type& gauge_function,
-      const spacetime_deriv_gauge_function_type& spacetime_deriv_gauge_function,
-      const gsl::not_null<pi_one_normal_spatial_type*> pi_one_normal_spatial,
-      const gsl::not_null<phi_one_normal_spatial_type*>
-          phi_one_normal_spatial) noexcept;
+      const spacetime_deriv_gauge_function_type&
+          spacetime_deriv_gauge_function);
 
   template <>
   SPECTRE_ALWAYS_INLINE static void tensorexpression_impl_lhs_arg<1>(
@@ -471,10 +449,8 @@ struct BenchmarkImpl {
       const pi_type& pi, const phi_type& phi, const gamma0_type& gamma0,
       const gamma1_type& gamma1, const gamma2_type& gamma2,
       const gauge_function_type& gauge_function,
-      const spacetime_deriv_gauge_function_type& spacetime_deriv_gauge_function,
-      const gsl::not_null<pi_one_normal_spatial_type*> pi_one_normal_spatial,
-      const gsl::not_null<phi_one_normal_spatial_type*>
-          phi_one_normal_spatial) noexcept {
+      const spacetime_deriv_gauge_function_type&
+          spacetime_deriv_gauge_function) {
     // Need constraint damping on interfaces in DG schemes
     *temp_gamma1 = gamma1;
     *temp_gamma2 = gamma2;
@@ -522,12 +498,6 @@ struct BenchmarkImpl {
 
     TensorExpressions::evaluate<ti_a>(
         pi_one_normal, (*normal_spacetime_vector)(ti_B)*pi(ti_b, ti_a));
-    // can't get spatial components of spacetime indices with TE's yet
-    // (i.e. the m + 1), so copying over spatial components of pi_one_normal
-    // into a new tensor
-    for (size_t m = 0; m < Dim; ++m) {
-      pi_one_normal_spatial->get(m) = pi_one_normal->get(m + 1);
-    }
 
     TensorExpressions::evaluate(
         pi_two_normals,
@@ -535,14 +505,6 @@ struct BenchmarkImpl {
 
     TensorExpressions::evaluate<ti_i, ti_a>(
         phi_one_normal, (*normal_spacetime_vector)(ti_B)*phi(ti_i, ti_b, ti_a));
-    // can't get spatial components of spacetime indices with TE's yet
-    // (i.e. the m + 1), so copying over spatial components of phi_one_normal
-    // into a new tensor
-    for (size_t i = 0; i < Dim; i++) {
-      for (size_t j = 0; j < Dim; j++) {
-        phi_one_normal_spatial->get(i, j) = phi_one_normal->get(i, j + 1);
-      }
-    }
 
     TensorExpressions::evaluate<ti_i>(
         phi_two_normals,
@@ -576,8 +538,6 @@ struct BenchmarkImpl {
             (*shift)(ti_I)*phi(ti_i, ti_a, ti_b));
 
     // Equation for dt_pi
-    // Note: can't completely do with TE's yet - using pi_one_normal_spatial as
-    // a workaround to enable writing the equation almost exactly as the loops
     TensorExpressions::evaluate<ti_a, ti_b>(
         dt_pi,
         ((-1.0 * spacetime_deriv_gauge_function(ti_a, ti_b)) -
@@ -594,7 +554,7 @@ struct BenchmarkImpl {
          2.0 * (*phi_1_up)(ti_I, ti_a, ti_c) * (*phi_3_up)(ti_i, ti_b, ti_C) -
          2.0 * (*christoffel_first_kind_3_up)(ti_a, ti_d, ti_C) *
              (*christoffel_first_kind_3_up)(ti_b, ti_c, ti_D) -
-         (*pi_one_normal_spatial)(ti_j) * (*phi_1_up)(ti_J, ti_a, ti_b) -
+         (*pi_one_normal)(ti_j) * (*phi_1_up)(ti_J, ti_a, ti_b) -
          (*inverse_spatial_metric)(ti_J, ti_K) *
              d_phi(ti_j, ti_k, ti_a, ti_b)) *
                 (*lapse)() +
@@ -603,15 +563,13 @@ struct BenchmarkImpl {
             (*shift)(ti_I)*d_pi(ti_i, ti_a, ti_b));
 
     // Equation for dt_phi
-    // Note: can't completely do with TE's yet - using phi_one_normal_spatial as
-    // a workaround to enable writing the equation almost exactly as the loops
     TensorExpressions::evaluate<ti_i, ti_a, ti_b>(
-        dt_phi, (0.5 * pi(ti_a, ti_b) *
-                     (*phi_two_normals)(ti_i)-d_pi(ti_i, ti_a, ti_b) +
-                 gamma2() * (*three_index_constraint)(ti_i, ti_a, ti_b) +
-                 (*phi_one_normal_spatial)(ti_i, ti_j) *
-                     (*phi_1_up)(ti_J, ti_a, ti_b)) *
-                        (*lapse)() +
-                    (*shift)(ti_K)*d_phi(ti_k, ti_i, ti_a, ti_b));
+        dt_phi,
+        (0.5 * pi(ti_a, ti_b) *
+             (*phi_two_normals)(ti_i)-d_pi(ti_i, ti_a, ti_b) +
+         gamma2() * (*three_index_constraint)(ti_i, ti_a, ti_b) +
+         (*phi_one_normal)(ti_i, ti_j) * (*phi_1_up)(ti_J, ti_a, ti_b)) *
+                (*lapse)() +
+            (*shift)(ti_K)*d_phi(ti_k, ti_i, ti_a, ti_b));
   }
 };

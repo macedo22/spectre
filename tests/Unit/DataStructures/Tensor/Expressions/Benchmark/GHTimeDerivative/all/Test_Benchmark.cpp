@@ -24,7 +24,7 @@
 namespace {
 template <typename... Ts>
 void copy_tensor(const Tensor<Ts...>& tensor_source,
-                 gsl::not_null<Tensor<Ts...>*> tensor_destination) noexcept {
+                 gsl::not_null<Tensor<Ts...>*> tensor_destination) {
   auto tensor_source_it = tensor_source.begin();
   auto tensor_destination_it = tensor_destination->begin();
   for (; tensor_source_it != tensor_source.end();
@@ -36,9 +36,8 @@ void copy_tensor(const Tensor<Ts...>& tensor_source,
 
 // Make sure TE impl matches manual impl
 template <size_t Dim, typename DataType, typename Generator>
-void test_benchmarked_impls_core(
-    const DataType& used_for_size,
-    const gsl::not_null<Generator*> generator) noexcept {
+void test_benchmarked_impls_core(const DataType& used_for_size,
+                                 const gsl::not_null<Generator*> generator) {
   using BenchmarkImpl = BenchmarkImpl<DataType, Dim>;
   using dt_spacetime_metric_type =
       typename BenchmarkImpl::dt_spacetime_metric_type;
@@ -97,12 +96,6 @@ void test_benchmarked_impls_core(
   using gauge_function_type = typename BenchmarkImpl::gauge_function_type;
   using spacetime_deriv_gauge_function_type =
       typename BenchmarkImpl::spacetime_deriv_gauge_function_type;
-  // types not in Spectre implementation, but needed by TE implementation since
-  // TEs can't yet iterate over the spatial components of a spacetime index
-  using pi_one_normal_spatial_type =
-      typename BenchmarkImpl::pi_one_normal_spatial_type;
-  using phi_one_normal_spatial_type =
-      typename BenchmarkImpl::phi_one_normal_spatial_type;
 
   std::uniform_real_distribution<> distribution(0.1, 1.0);
 
@@ -263,18 +256,6 @@ void test_benchmarked_impls_core(
   // LHS: da_spacetime_metric to be filled by manual impl
   da_spacetime_metric_type da_spacetime_metric_manual_filled(used_for_size);
 
-  // TEs can't iterate over only spatial indices of a spacetime index yet, so
-  // where this is needed for the dt_pi and dt_phi calculations, these tensors
-  // will be used, which hold only the spatial components to enable writing the
-  // equations as closely as possible to how they appear in the manual loops
-
-  // LHS: pi_one_normal_spatial to be filled by manual impl
-  pi_one_normal_spatial_type pi_one_normal_spatial_manual_filled(used_for_size);
-
-  // LHS: phi_one_normal_spatial to be filled by manual impl
-  phi_one_normal_spatial_type phi_one_normal_spatial_manual_filled(
-      used_for_size);
-
   // Compute manual result with LHS tensor as argument
   BenchmarkImpl::manual_impl_lhs_arg(
       make_not_null(&dt_spacetime_metric_manual_filled),
@@ -307,9 +288,7 @@ void test_benchmarked_impls_core(
       make_not_null(&normal_spacetime_one_form_manual_filled),
       make_not_null(&da_spacetime_metric_manual_filled), d_spacetime_metric,
       d_pi, d_phi, spacetime_metric, pi, phi, gamma0, gamma1, gamma2,
-      gauge_function, spacetime_deriv_gauge_function,
-      make_not_null(&pi_one_normal_spatial_manual_filled),
-      make_not_null(&phi_one_normal_spatial_manual_filled));
+      gauge_function, spacetime_deriv_gauge_function);
 
   // LHS: dt_spacetime_metric to be filled by TensorExpression impl<1>
   dt_spacetime_metric_type dt_spacetime_metric_te1_filled(used_for_size);
@@ -412,17 +391,6 @@ void test_benchmarked_impls_core(
   // LHS: da_spacetime_metric to be filled by TensorExpression impl<1>
   da_spacetime_metric_type da_spacetime_metric_te1_filled(used_for_size);
 
-  // TEs can't iterate over only spatial indices of a spacetime index yet, so
-  // where this is needed for the dt_pi and dt_phi calculations, these tensors
-  // will be used, which hold only the spatial components to enable writing the
-  // equations as closely as possible to how they appear in the manual loops
-
-  // LHS: pi_one_normal_spatial to be filled by TensorExpression impl<1>
-  pi_one_normal_spatial_type pi_one_normal_spatial_te1_filled(used_for_size);
-
-  // LHS: phi_one_normal_spatial to be filled by TensorExpression impl<1>
-  phi_one_normal_spatial_type phi_one_normal_spatial_te1_filled(used_for_size);
-
   // Compute TensorExpression impl<1> result with LHS tensor as argument
   BenchmarkImpl::template tensorexpression_impl_lhs_arg<1>(
       make_not_null(&dt_spacetime_metric_te1_filled),
@@ -454,9 +422,7 @@ void test_benchmarked_impls_core(
       make_not_null(&normal_spacetime_one_form_te1_filled),
       make_not_null(&da_spacetime_metric_te1_filled), d_spacetime_metric, d_pi,
       d_phi, spacetime_metric, pi, phi, gamma0, gamma1, gamma2, gauge_function,
-      spacetime_deriv_gauge_function,
-      make_not_null(&pi_one_normal_spatial_te1_filled),
-      make_not_null(&phi_one_normal_spatial_te1_filled));
+      spacetime_deriv_gauge_function);
 
   // CHECK christoffel_first_kind (abb)
   for (size_t a = 0; a < Dim + 1; a++) {
@@ -534,12 +500,6 @@ void test_benchmarked_impls_core(
                           pi_one_normal_te1_filled.get(a));
   }
 
-  // CHECK pi_one_normal_spatial (i)
-  for (size_t i = 0; i < Dim; i++) {
-    CHECK_ITERABLE_APPROX(pi_one_normal_spatial_manual_filled.get(i),
-                          pi_one_normal_spatial_te1_filled.get(i));
-  }
-
   // CHECK pi_two_normals (scalar)
   CHECK_ITERABLE_APPROX(pi_two_normals_manual_filled.get(),
                         pi_two_normals_te1_filled.get());
@@ -549,14 +509,6 @@ void test_benchmarked_impls_core(
     for (size_t a = 0; a < Dim + 1; a++) {
       CHECK_ITERABLE_APPROX(phi_one_normal_manual_filled.get(i, a),
                             phi_one_normal_te1_filled.get(i, a));
-    }
-  }
-
-  // CHECK phi_one_normal_spatial (ij)
-  for (size_t i = 0; i < Dim; i++) {
-    for (size_t j = 0; j < Dim; j++) {
-      CHECK_ITERABLE_APPROX(phi_one_normal_spatial_manual_filled.get(i, j),
-                            phi_one_normal_spatial_te1_filled.get(i, j));
     }
   }
 
@@ -669,9 +621,7 @@ void test_benchmarked_impls_core(
       ::Tags::TempTensor<37, gamma0_type>, ::Tags::TempTensor<38, gamma1_type>,
       ::Tags::TempTensor<39, gamma2_type>,
       ::Tags::TempTensor<40, gauge_function_type>,
-      ::Tags::TempTensor<41, spacetime_deriv_gauge_function_type>,
-      ::Tags::TempTensor<42, pi_one_normal_spatial_type>,
-      ::Tags::TempTensor<43, phi_one_normal_spatial_type>>>
+      ::Tags::TempTensor<41, spacetime_deriv_gauge_function_type>>>
       vars{num_grid_points};
 
   // RHS: d_spacetime_metric
@@ -845,14 +795,6 @@ void test_benchmarked_impls_core(
   da_spacetime_metric_type& da_spacetime_metric_te1_temp =
       get<::Tags::TempTensor<30, da_spacetime_metric_type>>(vars);
 
-  // LHS: pi_one_normal_spatial impl<1>
-  pi_one_normal_spatial_type& pi_one_normal_spatial_te1_temp =
-      get<::Tags::TempTensor<42, pi_one_normal_spatial_type>>(vars);
-
-  // LHS: phi_one_normal_spatial impl<1>
-  phi_one_normal_spatial_type& phi_one_normal_spatial_te1_temp =
-      get<::Tags::TempTensor<43, phi_one_normal_spatial_type>>(vars);
-
   // Compute TensorExpression impl<1> result
   BenchmarkImpl::template tensorexpression_impl_lhs_arg<1>(
       make_not_null(&dt_spacetime_metric_te1_temp),
@@ -884,9 +826,7 @@ void test_benchmarked_impls_core(
       make_not_null(&da_spacetime_metric_te1_temp), d_spacetime_metric_te_temp,
       d_pi_te_temp, d_phi_te_temp, spacetime_metric_te_temp, pi_te_temp,
       phi_te_temp, gamma0_te_temp, gamma1_te_temp, gamma2_te_temp,
-      gauge_function_te_temp, spacetime_deriv_gauge_function_te_temp,
-      make_not_null(&pi_one_normal_spatial_te1_temp),
-      make_not_null(&phi_one_normal_spatial_te1_temp));
+      gauge_function_te_temp, spacetime_deriv_gauge_function_te_temp);
 
   // CHECK christoffel_first_kind (abb)
   for (size_t a = 0; a < Dim + 1; a++) {
@@ -964,12 +904,6 @@ void test_benchmarked_impls_core(
                           pi_one_normal_te1_temp.get(a));
   }
 
-  // CHECK pi_one_normal_spatial (i)
-  for (size_t i = 0; i < Dim; i++) {
-    CHECK_ITERABLE_APPROX(pi_one_normal_spatial_manual_filled.get(i),
-                          pi_one_normal_spatial_te1_temp.get(i));
-  }
-
   // CHECK pi_two_normals (scalar)
   CHECK_ITERABLE_APPROX(pi_two_normals_manual_filled.get(),
                         pi_two_normals_te1_temp.get());
@@ -979,14 +913,6 @@ void test_benchmarked_impls_core(
     for (size_t a = 0; a < Dim + 1; a++) {
       CHECK_ITERABLE_APPROX(phi_one_normal_manual_filled.get(i, a),
                             phi_one_normal_te1_temp.get(i, a));
-    }
-  }
-
-  // CHECK phi_one_normal_spatial (ij)
-  for (size_t i = 0; i < Dim; i++) {
-    for (size_t j = 0; j < Dim; j++) {
-      CHECK_ITERABLE_APPROX(phi_one_normal_spatial_manual_filled.get(i, j),
-                            phi_one_normal_spatial_te1_temp.get(i, j));
     }
   }
 
@@ -1057,9 +983,8 @@ void test_benchmarked_impls_core(
 }
 
 template <typename DataType, typename Generator>
-void test_benchmarked_impls(
-    const DataType& used_for_size,
-    const gsl::not_null<Generator*> generator) noexcept {
+void test_benchmarked_impls(const DataType& used_for_size,
+                            const gsl::not_null<Generator*> generator) {
   test_benchmarked_impls_core<1>(used_for_size, generator);
   test_benchmarked_impls_core<2>(used_for_size, generator);
   test_benchmarked_impls_core<3>(used_for_size, generator);
