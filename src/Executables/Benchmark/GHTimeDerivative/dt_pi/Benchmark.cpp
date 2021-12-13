@@ -59,10 +59,7 @@ void bench_manual_tensor_equation_lhs_arg_without_buffer(
   using phi_3_up_type = typename BenchmarkImpl::phi_3_up_type;
   using christoffel_first_kind_3_up_type =
       typename BenchmarkImpl::christoffel_first_kind_3_up_type;
-  // type not in SpECTRE implementation, but needed by TE implementation since
-  // TEs can't yet iterate over the spatial components of a spacetime index
-  using pi_one_normal_spatial_type =
-      typename BenchmarkImpl::pi_one_normal_spatial_type;
+  using pi_one_normal_type = typename BenchmarkImpl::pi_one_normal_type;
   using inverse_spatial_metric_type =
       typename BenchmarkImpl::inverse_spatial_metric_type;
   using d_phi_type = typename BenchmarkImpl::d_phi_type;
@@ -152,11 +149,11 @@ void bench_manual_tensor_equation_lhs_arg_without_buffer(
           make_not_null(&generator), make_not_null(&distribution),
           used_for_size);
 
-  // RHS: pi_one_normal_spatial
-  const pi_one_normal_spatial_type pi_one_normal_spatial =
-      make_with_random_values<pi_one_normal_spatial_type>(
-          make_not_null(&generator), make_not_null(&distribution),
-          used_for_size);
+  // RHS: pi_one_normal
+  const pi_one_normal_type pi_one_normal =
+      make_with_random_values<pi_one_normal_type>(make_not_null(&generator),
+                                                  make_not_null(&distribution),
+                                                  used_for_size);
 
   // RHS: inverse_spatial_metric
   const inverse_spatial_metric_type inverse_spatial_metric =
@@ -201,9 +198,9 @@ void bench_manual_tensor_equation_lhs_arg_without_buffer(
         pi, gamma0, normal_spacetime_one_form, gauge_constraint,
         spacetime_metric, normal_dot_gauge_constraint, christoffel_second_kind,
         gauge_function, pi_2_up, phi_1_up, phi_3_up,
-        christoffel_first_kind_3_up, pi_one_normal_spatial,
-        inverse_spatial_metric, d_phi, lapse, gamma1gamma2,
-        shift_dot_three_index_constraint, shift, d_pi);
+        christoffel_first_kind_3_up, pi_one_normal, inverse_spatial_metric,
+        d_phi, lapse, gamma1gamma2, shift_dot_three_index_constraint, shift,
+        d_pi);
     benchmark::DoNotOptimize(dt_pi);
     benchmark::ClobberMemory();
   }
@@ -236,10 +233,7 @@ void bench_manual_tensor_equation_lhs_arg_with_buffer(
   using phi_3_up_type = typename BenchmarkImpl::phi_3_up_type;
   using christoffel_first_kind_3_up_type =
       typename BenchmarkImpl::christoffel_first_kind_3_up_type;
-  // type not in SpECTRE implementation, but needed by TE implementation since
-  // TEs can't yet iterate over the spatial components of a spacetime index
-  using pi_one_normal_spatial_type =
-      typename BenchmarkImpl::pi_one_normal_spatial_type;
+  using pi_one_normal_type = typename BenchmarkImpl::pi_one_normal_type;
   using inverse_spatial_metric_type =
       typename BenchmarkImpl::inverse_spatial_metric_type;
   using d_phi_type = typename BenchmarkImpl::d_phi_type;
@@ -268,7 +262,7 @@ void bench_manual_tensor_equation_lhs_arg_with_buffer(
       ::Tags::TempTensor<12, phi_1_up_type>,
       ::Tags::TempTensor<13, phi_3_up_type>,
       ::Tags::TempTensor<14, christoffel_first_kind_3_up_type>,
-      ::Tags::TempTensor<15, pi_one_normal_spatial_type>,
+      ::Tags::TempTensor<15, pi_one_normal_type>,
       ::Tags::TempTensor<16, inverse_spatial_metric_type>,
       ::Tags::TempTensor<17, d_phi_type>, ::Tags::TempTensor<18, lapse_type>,
       ::Tags::TempTensor<19, gamma1gamma2_type>,
@@ -364,10 +358,10 @@ void bench_manual_tensor_equation_lhs_arg_with_buffer(
                           make_not_null(&generator),
                           make_not_null(&distribution));
 
-  // RHS: pi_one_normal_spatial
-  pi_one_normal_spatial_type& pi_one_normal_spatial =
-      get<::Tags::TempTensor<15, pi_one_normal_spatial_type>>(vars);
-  fill_with_random_values(make_not_null(&pi_one_normal_spatial),
+  // RHS: pi_one_normal
+  pi_one_normal_type& pi_one_normal =
+      get<::Tags::TempTensor<15, pi_one_normal_type>>(vars);
+  fill_with_random_values(make_not_null(&pi_one_normal),
                           make_not_null(&generator),
                           make_not_null(&distribution));
 
@@ -421,9 +415,9 @@ void bench_manual_tensor_equation_lhs_arg_with_buffer(
         pi, gamma0, normal_spacetime_one_form, gauge_constraint,
         spacetime_metric, normal_dot_gauge_constraint, christoffel_second_kind,
         gauge_function, pi_2_up, phi_1_up, phi_3_up,
-        christoffel_first_kind_3_up, pi_one_normal_spatial,
-        inverse_spatial_metric, d_phi, lapse, gamma1gamma2,
-        shift_dot_three_index_constraint, shift, d_pi);
+        christoffel_first_kind_3_up, pi_one_normal, inverse_spatial_metric,
+        d_phi, lapse, gamma1gamma2, shift_dot_three_index_constraint, shift,
+        d_pi);
     benchmark::DoNotOptimize(dt_pi);
     benchmark::ClobberMemory();
   }
@@ -457,10 +451,7 @@ void bench_tensorexpression_lhs_arg_without_buffer(
   using phi_3_up_type = typename BenchmarkImpl::phi_3_up_type;
   using christoffel_first_kind_3_up_type =
       typename BenchmarkImpl::christoffel_first_kind_3_up_type;
-  // type not in SpECTRE implementation, but needed by TE implementation since
-  // TEs can't yet iterate over the spatial components of a spacetime index
-  using pi_one_normal_spatial_type =
-      typename BenchmarkImpl::pi_one_normal_spatial_type;
+  using pi_one_normal_type = typename BenchmarkImpl::pi_one_normal_type;
   using inverse_spatial_metric_type =
       typename BenchmarkImpl::inverse_spatial_metric_type;
   using d_phi_type = typename BenchmarkImpl::d_phi_type;
@@ -550,11 +541,11 @@ void bench_tensorexpression_lhs_arg_without_buffer(
           make_not_null(&generator), make_not_null(&distribution),
           used_for_size);
 
-  // RHS: pi_one_normal_spatial
-  const pi_one_normal_spatial_type pi_one_normal_spatial =
-      make_with_random_values<pi_one_normal_spatial_type>(
-          make_not_null(&generator), make_not_null(&distribution),
-          used_for_size);
+  // RHS: pi_one_normal
+  const pi_one_normal_type pi_one_normal =
+      make_with_random_values<pi_one_normal_type>(make_not_null(&generator),
+                                                  make_not_null(&distribution),
+                                                  used_for_size);
 
   // RHS: inverse_spatial_metric
   const inverse_spatial_metric_type inverse_spatial_metric =
@@ -599,9 +590,9 @@ void bench_tensorexpression_lhs_arg_without_buffer(
         pi, gamma0, normal_spacetime_one_form, gauge_constraint,
         spacetime_metric, normal_dot_gauge_constraint, christoffel_second_kind,
         gauge_function, pi_2_up, phi_1_up, phi_3_up,
-        christoffel_first_kind_3_up, pi_one_normal_spatial,
-        inverse_spatial_metric, d_phi, lapse, gamma1gamma2,
-        shift_dot_three_index_constraint, shift, d_pi);
+        christoffel_first_kind_3_up, pi_one_normal, inverse_spatial_metric,
+        d_phi, lapse, gamma1gamma2, shift_dot_three_index_constraint, shift,
+        d_pi);
     benchmark::DoNotOptimize(dt_pi);
     benchmark::ClobberMemory();
   }
@@ -635,10 +626,7 @@ void bench_tensorexpression_lhs_arg_with_buffer(
   using phi_3_up_type = typename BenchmarkImpl::phi_3_up_type;
   using christoffel_first_kind_3_up_type =
       typename BenchmarkImpl::christoffel_first_kind_3_up_type;
-  // type not in SpECTRE implementation, but needed by TE implementation since
-  // TEs can't yet iterate over the spatial components of a spacetime index
-  using pi_one_normal_spatial_type =
-      typename BenchmarkImpl::pi_one_normal_spatial_type;
+  using pi_one_normal_type = typename BenchmarkImpl::pi_one_normal_type;
   using inverse_spatial_metric_type =
       typename BenchmarkImpl::inverse_spatial_metric_type;
   using d_phi_type = typename BenchmarkImpl::d_phi_type;
@@ -667,7 +655,7 @@ void bench_tensorexpression_lhs_arg_with_buffer(
       ::Tags::TempTensor<12, phi_1_up_type>,
       ::Tags::TempTensor<13, phi_3_up_type>,
       ::Tags::TempTensor<14, christoffel_first_kind_3_up_type>,
-      ::Tags::TempTensor<15, pi_one_normal_spatial_type>,
+      ::Tags::TempTensor<15, pi_one_normal_type>,
       ::Tags::TempTensor<16, inverse_spatial_metric_type>,
       ::Tags::TempTensor<17, d_phi_type>, ::Tags::TempTensor<18, lapse_type>,
       ::Tags::TempTensor<19, gamma1gamma2_type>,
@@ -763,10 +751,10 @@ void bench_tensorexpression_lhs_arg_with_buffer(
                           make_not_null(&generator),
                           make_not_null(&distribution));
 
-  // RHS: pi_one_normal_spatial
-  pi_one_normal_spatial_type& pi_one_normal_spatial =
-      get<::Tags::TempTensor<15, pi_one_normal_spatial_type>>(vars);
-  fill_with_random_values(make_not_null(&pi_one_normal_spatial),
+  // RHS: pi_one_normal
+  pi_one_normal_type& pi_one_normal =
+      get<::Tags::TempTensor<15, pi_one_normal_type>>(vars);
+  fill_with_random_values(make_not_null(&pi_one_normal),
                           make_not_null(&generator),
                           make_not_null(&distribution));
 
@@ -820,9 +808,9 @@ void bench_tensorexpression_lhs_arg_with_buffer(
         pi, gamma0, normal_spacetime_one_form, gauge_constraint,
         spacetime_metric, normal_dot_gauge_constraint, christoffel_second_kind,
         gauge_function, pi_2_up, phi_1_up, phi_3_up,
-        christoffel_first_kind_3_up, pi_one_normal_spatial,
-        inverse_spatial_metric, d_phi, lapse, gamma1gamma2,
-        shift_dot_three_index_constraint, shift, d_pi);
+        christoffel_first_kind_3_up, pi_one_normal, inverse_spatial_metric,
+        d_phi, lapse, gamma1gamma2, shift_dot_three_index_constraint, shift,
+        d_pi);
     benchmark::DoNotOptimize(dt_pi);
     benchmark::ClobberMemory();
   }
