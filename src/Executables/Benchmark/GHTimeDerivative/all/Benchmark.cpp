@@ -98,12 +98,6 @@ void bench_manual_tensor_equation_lhs_arg_without_buffer(
   using gauge_function_type = typename BenchmarkImpl::gauge_function_type;
   using spacetime_deriv_gauge_function_type =
       typename BenchmarkImpl::spacetime_deriv_gauge_function_type;
-  // types not in SpECTRE implementation, but needed by TE implementation since
-  // TEs can't yet iterate over the spatial components of a spacetime index
-  using pi_one_normal_spatial_type =
-      typename BenchmarkImpl::pi_one_normal_spatial_type;
-  using phi_one_normal_spatial_type =
-      typename BenchmarkImpl::phi_one_normal_spatial_type;
 
   const size_t num_grid_points = static_cast<size_t>(state.range(0));
   const DataType used_for_size =
@@ -263,17 +257,6 @@ void bench_manual_tensor_equation_lhs_arg_without_buffer(
   // LHS: da_spacetime_metric
   da_spacetime_metric_type da_spacetime_metric(used_for_size);
 
-  // TEs can't iterate over only spatial indices of a spacetime index yet, so
-  // where this is needed for the dt_pi and dt_phi calculations, these tensors
-  // will be used, which hold only the spatial components to enable writing the
-  // equations as closely as possible to how they appear in the manual loops
-
-  // LHS: pi_one_normal_spatial
-  pi_one_normal_spatial_type pi_one_normal_spatial(used_for_size);
-
-  // LHS: phi_one_normal_spatial
-  phi_one_normal_spatial_type phi_one_normal_spatial(used_for_size);
-
   for (auto _ : state) {
     BenchmarkImpl::manual_impl_lhs_arg(
         make_not_null(&dt_spacetime_metric), make_not_null(&dt_pi),
@@ -298,8 +281,7 @@ void bench_manual_tensor_equation_lhs_arg_without_buffer(
         make_not_null(&normal_spacetime_one_form),
         make_not_null(&da_spacetime_metric), d_spacetime_metric, d_pi, d_phi,
         spacetime_metric, pi, phi, gamma0, gamma1, gamma2, gauge_function,
-        spacetime_deriv_gauge_function, make_not_null(&pi_one_normal_spatial),
-        make_not_null(&phi_one_normal_spatial));
+        spacetime_deriv_gauge_function);
     benchmark::DoNotOptimize(dt_spacetime_metric);
     benchmark::DoNotOptimize(dt_pi);
     benchmark::DoNotOptimize(dt_phi);
@@ -371,12 +353,6 @@ void bench_manual_tensor_equation_lhs_arg_with_buffer(
   using gauge_function_type = typename BenchmarkImpl::gauge_function_type;
   using spacetime_deriv_gauge_function_type =
       typename BenchmarkImpl::spacetime_deriv_gauge_function_type;
-  // types not in SpECTRE implementation, but needed by TE implementation since
-  // TEs can't yet iterate over the spatial components of a spacetime index
-  using pi_one_normal_spatial_type =
-      typename BenchmarkImpl::pi_one_normal_spatial_type;
-  using phi_one_normal_spatial_type =
-      typename BenchmarkImpl::phi_one_normal_spatial_type;
 
   const size_t num_grid_points = static_cast<size_t>(state.range(0));
   const DataType used_for_size =
@@ -420,9 +396,7 @@ void bench_manual_tensor_equation_lhs_arg_with_buffer(
       ::Tags::TempTensor<37, gamma0_type>, ::Tags::TempTensor<38, gamma1_type>,
       ::Tags::TempTensor<39, gamma2_type>,
       ::Tags::TempTensor<40, gauge_function_type>,
-      ::Tags::TempTensor<41, spacetime_deriv_gauge_function_type>,
-      ::Tags::TempTensor<42, pi_one_normal_spatial_type>,
-      ::Tags::TempTensor<43, phi_one_normal_spatial_type>>>
+      ::Tags::TempTensor<41, spacetime_deriv_gauge_function_type>>>
       vars{num_grid_points};
 
   // RHS: d_spacetime_metric
@@ -608,14 +582,6 @@ void bench_manual_tensor_equation_lhs_arg_with_buffer(
   da_spacetime_metric_type& da_spacetime_metric =
       get<::Tags::TempTensor<30, da_spacetime_metric_type>>(vars);
 
-  // LHS: pi_one_normal_spatial
-  pi_one_normal_spatial_type& pi_one_normal_spatial =
-      get<::Tags::TempTensor<42, pi_one_normal_spatial_type>>(vars);
-
-  // LHS: phi_one_normal_spatial
-  phi_one_normal_spatial_type& phi_one_normal_spatial =
-      get<::Tags::TempTensor<43, phi_one_normal_spatial_type>>(vars);
-
   for (auto _ : state) {
     BenchmarkImpl::manual_impl_lhs_arg(
         make_not_null(&dt_spacetime_metric), make_not_null(&dt_pi),
@@ -640,8 +606,7 @@ void bench_manual_tensor_equation_lhs_arg_with_buffer(
         make_not_null(&normal_spacetime_one_form),
         make_not_null(&da_spacetime_metric), d_spacetime_metric, d_pi, d_phi,
         spacetime_metric, pi, phi, gamma0, gamma1, gamma2, gauge_function,
-        spacetime_deriv_gauge_function, make_not_null(&pi_one_normal_spatial),
-        make_not_null(&phi_one_normal_spatial));
+        spacetime_deriv_gauge_function);
     benchmark::DoNotOptimize(dt_spacetime_metric);
     benchmark::ClobberMemory();
   }
@@ -712,12 +677,6 @@ void bench_tensorexpression_lhs_arg_without_buffer(
   using gauge_function_type = typename BenchmarkImpl::gauge_function_type;
   using spacetime_deriv_gauge_function_type =
       typename BenchmarkImpl::spacetime_deriv_gauge_function_type;
-  // types not in SpECTRE implementation, but needed by TE implementation since
-  // TEs can't yet iterate over the spatial components of a spacetime index
-  using pi_one_normal_spatial_type =
-      typename BenchmarkImpl::pi_one_normal_spatial_type;
-  using phi_one_normal_spatial_type =
-      typename BenchmarkImpl::phi_one_normal_spatial_type;
 
   const size_t num_grid_points = static_cast<size_t>(state.range(0));
   const DataType used_for_size =
@@ -877,17 +836,6 @@ void bench_tensorexpression_lhs_arg_without_buffer(
   // LHS: da_spacetime_metric
   da_spacetime_metric_type da_spacetime_metric(used_for_size);
 
-  // TEs can't iterate over only spatial indices of a spacetime index yet, so
-  // where this is needed for the dt_pi and dt_phi calculations, these tensors
-  // will be used, which hold only the spatial components to enable writing the
-  // equations as closely as possible to how they appear in the manual loops
-
-  // LHS: pi_one_normal_spatial
-  pi_one_normal_spatial_type pi_one_normal_spatial(used_for_size);
-
-  // LHS: phi_one_normal_spatial
-  phi_one_normal_spatial_type phi_one_normal_spatial(used_for_size);
-
   for (auto _ : state) {
     BenchmarkImpl::template tensorexpression_impl_lhs_arg<CaseNumber>(
         make_not_null(&dt_spacetime_metric), make_not_null(&dt_pi),
@@ -912,8 +860,7 @@ void bench_tensorexpression_lhs_arg_without_buffer(
         make_not_null(&normal_spacetime_one_form),
         make_not_null(&da_spacetime_metric), d_spacetime_metric, d_pi, d_phi,
         spacetime_metric, pi, phi, gamma0, gamma1, gamma2, gauge_function,
-        spacetime_deriv_gauge_function, make_not_null(&pi_one_normal_spatial),
-        make_not_null(&phi_one_normal_spatial));
+        spacetime_deriv_gauge_function);
     benchmark::DoNotOptimize(dt_spacetime_metric);
     benchmark::DoNotOptimize(dt_pi);
     benchmark::DoNotOptimize(dt_phi);
@@ -986,12 +933,6 @@ void bench_tensorexpression_lhs_arg_with_buffer(
   using gauge_function_type = typename BenchmarkImpl::gauge_function_type;
   using spacetime_deriv_gauge_function_type =
       typename BenchmarkImpl::spacetime_deriv_gauge_function_type;
-  // types not in SpECTRE implementation, but needed by TE implementation since
-  // TEs can't yet iterate over the spatial components of a spacetime index
-  using pi_one_normal_spatial_type =
-      typename BenchmarkImpl::pi_one_normal_spatial_type;
-  using phi_one_normal_spatial_type =
-      typename BenchmarkImpl::phi_one_normal_spatial_type;
 
   const size_t num_grid_points = static_cast<size_t>(state.range(0));
   const DataType used_for_size =
@@ -1035,9 +976,7 @@ void bench_tensorexpression_lhs_arg_with_buffer(
       ::Tags::TempTensor<37, gamma0_type>, ::Tags::TempTensor<38, gamma1_type>,
       ::Tags::TempTensor<39, gamma2_type>,
       ::Tags::TempTensor<40, gauge_function_type>,
-      ::Tags::TempTensor<41, spacetime_deriv_gauge_function_type>,
-      ::Tags::TempTensor<42, pi_one_normal_spatial_type>,
-      ::Tags::TempTensor<43, phi_one_normal_spatial_type>>>
+      ::Tags::TempTensor<41, spacetime_deriv_gauge_function_type>>>
       vars{num_grid_points};
 
   // RHS: d_spacetime_metric
@@ -1223,14 +1162,6 @@ void bench_tensorexpression_lhs_arg_with_buffer(
   da_spacetime_metric_type& da_spacetime_metric =
       get<::Tags::TempTensor<30, da_spacetime_metric_type>>(vars);
 
-  // LHS: pi_one_normal_spatial
-  pi_one_normal_spatial_type& pi_one_normal_spatial =
-      get<::Tags::TempTensor<42, pi_one_normal_spatial_type>>(vars);
-
-  // LHS: phi_one_normal_spatial
-  phi_one_normal_spatial_type& phi_one_normal_spatial =
-      get<::Tags::TempTensor<43, phi_one_normal_spatial_type>>(vars);
-
   for (auto _ : state) {
     BenchmarkImpl::template tensorexpression_impl_lhs_arg<CaseNumber>(
         make_not_null(&dt_spacetime_metric), make_not_null(&dt_pi),
@@ -1255,8 +1186,7 @@ void bench_tensorexpression_lhs_arg_with_buffer(
         make_not_null(&normal_spacetime_one_form),
         make_not_null(&da_spacetime_metric), d_spacetime_metric, d_pi, d_phi,
         spacetime_metric, pi, phi, gamma0, gamma1, gamma2, gauge_function,
-        spacetime_deriv_gauge_function, make_not_null(&pi_one_normal_spatial),
-        make_not_null(&phi_one_normal_spatial));
+        spacetime_deriv_gauge_function);
     benchmark::DoNotOptimize(dt_spacetime_metric);
     benchmark::DoNotOptimize(dt_pi);
     benchmark::DoNotOptimize(dt_phi);
