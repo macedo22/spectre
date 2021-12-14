@@ -8,6 +8,8 @@
 
 #include <array>
 #include <cstddef>
+#include <iostream>
+#include <string>
 #include <type_traits>
 #include <utility>
 
@@ -198,6 +200,10 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
   /// \return the value of the component at `multi_index` in the tensor
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& multi_index) const {
+    const std::string tensor_name =
+        tmpl::at_c<index_list, 0>::ul == UpLo::Up ? "R" : "S";
+    std::cout << "| LEAF  | " << tensor_name << " : " << multi_index
+              << std::endl;
     return t_->get(multi_index);
   }
 

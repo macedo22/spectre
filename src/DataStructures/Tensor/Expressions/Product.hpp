@@ -8,6 +8,8 @@
 
 #include <array>
 #include <cstddef>
+#include <iostream>
+#include <string>
 #include <type_traits>
 #include <utility>
 
@@ -117,7 +119,15 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
           gsl::at(result_multi_index, op1_num_tensor_indices + i);
     }
 
-    return t1_.get(op1_multi_index) * t2_.get(op2_multi_index);
+    // return t1_.get(op1_multi_index) * t2_.get(op2_multi_index);
+
+    std::cout << "| BEGIN | R * S : " << op1_multi_index << " * "
+              << op2_multi_index << std::endl;
+    const auto result = t1_.get(op1_multi_index) * t2_.get(op2_multi_index);
+    std::cout << "|  END  | R * S : " << op1_multi_index << " * "
+              << op2_multi_index << std::endl;
+
+    return result;
   }
 
  private:

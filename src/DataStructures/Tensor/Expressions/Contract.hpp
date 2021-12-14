@@ -9,7 +9,9 @@
 
 #include <array>
 #include <cstddef>
+#include <iostream>
 #include <limits>
+#include <string>
 #include <type_traits>
 #include <utility>
 
@@ -219,10 +221,21 @@ struct TensorContract
 
     if constexpr (FirstContractedIndexValue < first_contracted_index::dim - 1) {
       // We have more than one component left to sum
-      return t.get(uncontracted_multi_index_to_fill) +
-             compute_contraction<FirstContractedIndexValue + 1,
-                                 SecondContractedIndexValue + 1>(
-                 t, uncontracted_multi_index_to_fill);
+      //   return t.get(uncontracted_multi_index_to_fill) +
+      //          compute_contraction<FirstContractedIndexValue + 1,
+      //                              SecondContractedIndexValue + 1>(
+      //              t, uncontracted_multi_index_to_fill);
+      std::cout << "| BEGIN | [] + [next] : "
+                << uncontracted_multi_index_to_fill << " + [next] "
+                << std::endl;
+      const auto result = t.get(uncontracted_multi_index_to_fill) +
+                          compute_contraction<FirstContractedIndexValue + 1,
+                                              SecondContractedIndexValue + 1>(
+                              t, uncontracted_multi_index_to_fill);
+      std::cout << "|  END  | [] + [next] : "
+                << uncontracted_multi_index_to_fill << " + [next] "
+                << std::endl;
+      return result;
     } else {
       // We only have one final component to sum
       return t.get(uncontracted_multi_index_to_fill);

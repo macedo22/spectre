@@ -32,7 +32,7 @@ add_spectre_executable(
 
   # The following lines list the source files with tests in them to be
   # compiled into the executable.
-  ../DataStructures/Test_DataVector.cpp
+  ../DataStructures/Tensor/Expressions/Benchmark/General/inner_product_spacetime_4x4/Test_Benchmark.cpp
   )
 
 # Modify which libraries to link for your test case.
@@ -40,6 +40,11 @@ target_link_libraries(
   ${EXECUTABLE}
   PRIVATE
   DataStructures
+  DataStructuresHelpers
+  GeneralizedHarmonic
+  GeneralRelativity
+  GeneralRelativityHelpers
+  Utilities
   )
 
 # Core required libraries
