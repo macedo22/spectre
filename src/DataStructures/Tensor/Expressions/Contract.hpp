@@ -111,6 +111,11 @@ struct TensorContract
   static_assert(detail::indices_contractible<first_contracted_index,
                                              second_contracted_index>::value,
                 "Cannot contract the requested indices.");
+  static constexpr size_t num_dim_contracted =
+      first_contracted_index::dim -
+      static_cast<size_t>(
+          first_contracted_index::index_type == IndexType::Spacetime and
+          not tmpl::at_c<ArgsList, FirstContractedIndexPos>::is_spacetime);
 
   using new_type =
       typename detail::ContractedType<FirstContractedIndexPos,
@@ -206,7 +211,8 @@ struct TensorContract
   /// \param uncontracted_multi_index_to_fill the multi-index of the
   /// uncontracted tensor component to fill and sum for contraction
   /// \return the value of a component of the resulant contracted tensor
-  template <size_t FirstContractedIndexValue, size_t SecondContractedIndexValue>
+  template <size_t FirstContractedIndexValue, size_t SecondContractedIndexValue,
+            size_t Iteration>
   static SPECTRE_ALWAYS_INLINE decltype(auto) compute_contraction(
       const T& t, std::array<size_t, num_uncontracted_tensor_indices>
                       uncontracted_multi_index_to_fill) {
@@ -217,11 +223,11 @@ struct TensorContract
     uncontracted_multi_index_to_fill[SecondContractedIndexPos] =
         SecondContractedIndexValue;
 
-    if constexpr (FirstContractedIndexValue < first_contracted_index::dim - 1) {
+    if constexpr (Iteration < num_dim_contracted - 1) {
       // We have more than one component left to sum
       return t.get(uncontracted_multi_index_to_fill) +
-             compute_contraction<FirstContractedIndexValue + 1,
-                                 SecondContractedIndexValue + 1>(
+             compute_contraction<FirstContractedIndexValue - 1,
+                                 SecondContractedIndexValue - 1, Iteration + 1>(
                  t, uncontracted_multi_index_to_fill);
     } else {
       // We only have one final component to sum
@@ -245,18 +251,12 @@ struct TensorContract
   decltype(auto) get(const std::array<size_t, num_tensor_indices>&
                          contracted_multi_index) const {
     constexpr size_t initial_first_contracted_index_value =
-        first_contracted_index::index_type == IndexType::Spacetime and
-                not tmpl::at_c<ArgsList, FirstContractedIndexPos>::is_spacetime
-            ? 1
-            : 0;
+        first_contracted_index::dim - 1;
     constexpr size_t initial_second_contracted_index_value =
-        second_contracted_index::index_type == IndexType::Spacetime and
-                not tmpl::at_c<ArgsList, SecondContractedIndexPos>::is_spacetime
-            ? 1
-            : 0;
+        second_contracted_index::dim - 1;
 
     return compute_contraction<initial_first_contracted_index_value,
-                               initial_second_contracted_index_value>(
+                               initial_second_contracted_index_value, 0>(
         t_, get_uncontracted_multi_index_with_uncontracted_values(
                 contracted_multi_index));
   }
