@@ -288,17 +288,17 @@ template <size_t NumIndices>
 SPECTRE_ALWAYS_INLINE static constexpr std::pair<size_t, size_t>
 get_first_index_positions_to_contract(
     const std::array<size_t, NumIndices>& tensorindex_values) {
-  for (size_t i = 0; i < tensorindex_values.size(); ++i) {
+  for (size_t i = NumIndices - 1; i < NumIndices; i--) {
     const size_t current_value = gsl::at(tensorindex_values, i);
     // Concrete time indices are not contracted
     if (not detail::is_time_index_value(current_value)) {
       const size_t opposite_value_to_find =
           get_tensorindex_value_with_opposite_valence(current_value);
-      for (size_t j = i + 1; j < tensorindex_values.size(); ++j) {
+      for (size_t j = i - 1; j < NumIndices; j--) {
         if (opposite_value_to_find == gsl::at(tensorindex_values, j)) {
           // We found both the lower and upper version of a generic index in the
           // list of generic indices, so we return this pair's positions
-          return std::pair{i, j};
+          return std::pair{j, i};
         }
       }
     }
