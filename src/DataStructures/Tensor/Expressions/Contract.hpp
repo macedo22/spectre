@@ -225,10 +225,10 @@ struct TensorContract
 
     if constexpr (Iteration < num_dim_contracted - 1) {
       // We have more than one component left to sum
-      return t.get(uncontracted_multi_index_to_fill) +
-             compute_contraction<FirstContractedIndexValue - 1,
+      return compute_contraction<FirstContractedIndexValue - 1,
                                  SecondContractedIndexValue - 1, Iteration + 1>(
-                 t, uncontracted_multi_index_to_fill);
+                 t, uncontracted_multi_index_to_fill) +
+             t.get(uncontracted_multi_index_to_fill);
     } else {
       // We only have one final component to sum
       return t.get(uncontracted_multi_index_to_fill);
