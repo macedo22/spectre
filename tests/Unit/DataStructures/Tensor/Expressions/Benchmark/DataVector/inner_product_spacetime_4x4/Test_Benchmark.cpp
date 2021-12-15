@@ -50,9 +50,17 @@ void test_benchmarked_impls(const gsl::not_null<Generator*> generator,
   // Compute result inner product that uses recursion
   BenchmarkImpl::recursive_impl(make_not_null(&result_recursive), R, S);
 
+  // LHS: result inner product that uses recursion with +=
+  result_type result_recursive_plus_equals(used_for_size);
+
+  // Compute result inner product that uses recursion with +=
+  BenchmarkImpl::recursive_plus_equals_impl(
+      make_not_null(&result_recursive_plus_equals), R, S);
+
   // CHECK all inner products match
   CHECK_ITERABLE_APPROX(result_loop, result_oneline);
   CHECK_ITERABLE_APPROX(result_loop, result_recursive);
+  CHECK_ITERABLE_APPROX(result_loop, result_recursive_plus_equals);
 }
 
 SPECTRE_TEST_CASE("Unit.Benchmark.DataVector.inner_product_spacetime_4x4",

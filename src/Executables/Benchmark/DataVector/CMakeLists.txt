@@ -4,3 +4,4 @@
 add_subdirectory(inner_product_spacetime_4x4_loop)
 add_subdirectory(inner_product_spacetime_4x4_oneline)
 add_subdirectory(inner_product_spacetime_4x4_recursive)
+add_subdirectory(inner_product_spacetime_4x4_recursive_plus_equals)
