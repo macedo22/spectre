@@ -1,6 +1,16 @@
 # Distributed under the MIT License.
 # See LICENSE.txt for details.
 
+add_subdirectory(add_2_oneline)
+add_subdirectory(add_4_oneline)
+add_subdirectory(add_8_oneline)
+add_subdirectory(add_32_oneline)
+add_subdirectory(add_128_oneline)
+add_subdirectory(add_2_plus_equals)
+add_subdirectory(add_4_plus_equals)
+add_subdirectory(add_8_plus_equals)
+add_subdirectory(add_32_plus_equals)
+add_subdirectory(add_128_plus_equals)
 add_subdirectory(inner_product_spacetime_4x4_loop)
 add_subdirectory(inner_product_spacetime_4x4_oneline)
 add_subdirectory(inner_product_spacetime_4x4_recursive)
