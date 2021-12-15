@@ -367,7 +367,6 @@ struct BenchmarkImpl {
     if constexpr (Iteration != 0) {
       return recursive_impl_impl<Iteration - 1>(R, S) +
              R.get(multi_indices[Iteration]) * S.get(multi_indices[Iteration]);
-      ;
     } else {
       return R.get(multi_indices[Iteration]) * S.get(multi_indices[Iteration]);
     }
@@ -378,5 +377,24 @@ struct BenchmarkImpl {
     destructive_resize_components(result, get_size(get<0, 0, 0, 0>(R)));
 
     get(*result) = recursive_impl_impl<255>(R, S);
+  }
+
+  template <size_t Iteration>
+  SPECTRE_ALWAYS_INLINE static void recursive_plus_equals_impl_impl(
+      gsl::not_null<result_type*> result, const R_type& R, const S_type& S) {
+    if constexpr (Iteration != 0) {
+      recursive_plus_equals_impl_impl<Iteration - 1>(result, R, S);
+    }
+
+    get(*result) +=
+        R.get(multi_indices[Iteration]) * S.get(multi_indices[Iteration]);
+  }
+
+  SPECTRE_ALWAYS_INLINE static void recursive_plus_equals_impl(
+      gsl::not_null<result_type*> result, const R_type& R, const S_type& S) {
+    destructive_resize_components(result, get_size(get<0, 0, 0, 0>(R)));
+    get(*result) = 0.0;
+
+    recursive_plus_equals_impl_impl<255>(result, R, S);
   }
 };
