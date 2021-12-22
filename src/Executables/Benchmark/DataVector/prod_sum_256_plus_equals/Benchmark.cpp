@@ -808,6 +808,11 @@ BENCHMARK(bench_prod_sum_256_plus_equals)
     ->Arg(num_grid_point_values[1])
     ->Arg(num_grid_point_values[2])
     ->Arg(num_grid_point_values[3]);
+BENCHMARK(bench_prod_sum_256_plus_equals_2_chunk)
+    ->Arg(num_grid_point_values[0])
+    ->Arg(num_grid_point_values[1])
+    ->Arg(num_grid_point_values[2])
+    ->Arg(num_grid_point_values[3]);
 BENCHMARK(bench_prod_sum_256_plus_equals_4_chunk)
     ->Arg(num_grid_point_values[0])
     ->Arg(num_grid_point_values[1])
