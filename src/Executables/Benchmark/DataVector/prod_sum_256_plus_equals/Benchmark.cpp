@@ -297,10 +297,543 @@ void bench_prod_sum_256_plus_equals(benchmark::State& state) {  // NOLINT
   }
 }
 
+void bench_prod_sum_256_plus_equals_2_chunk(
+    benchmark::State& state) {  // NOLINT
+  const size_t num_grid_points = static_cast<size_t>(state.range(0));
+  const DataVector used_for_size =
+      DataVector(num_grid_points, std::numeric_limits<double>::signaling_NaN());
+  std::uniform_real_distribution<> distribution(0.1, 1.0);
+
+  // RHS: R
+  const DataVector R = make_with_random_values<DataVector>(
+      make_not_null(&generator), make_not_null(&distribution), used_for_size);
+  // RHS: S
+  const DataVector S = make_with_random_values<DataVector>(
+      make_not_null(&generator), make_not_null(&distribution), used_for_size);
+
+  for (auto _ : state) {
+    // LHS: result
+    DataVector result = R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    result += R * S + R * S;
+    benchmark::DoNotOptimize(result);
+    benchmark::ClobberMemory();
+  }
+}
+
+void bench_prod_sum_256_plus_equals_4_chunk(
+    benchmark::State& state) {  // NOLINT
+  const size_t num_grid_points = static_cast<size_t>(state.range(0));
+  const DataVector used_for_size =
+      DataVector(num_grid_points, std::numeric_limits<double>::signaling_NaN());
+  std::uniform_real_distribution<> distribution(0.1, 1.0);
+
+  // RHS: R
+  const DataVector R = make_with_random_values<DataVector>(
+      make_not_null(&generator), make_not_null(&distribution), used_for_size);
+  // RHS: S
+  const DataVector S = make_with_random_values<DataVector>(
+      make_not_null(&generator), make_not_null(&distribution), used_for_size);
+
+  for (auto _ : state) {
+    // LHS: result
+    DataVector result = R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S;
+    benchmark::DoNotOptimize(result);
+    benchmark::ClobberMemory();
+  }
+}
+
+void bench_prod_sum_256_plus_equals_8_chunk(
+    benchmark::State& state) {  // NOLINT
+  const size_t num_grid_points = static_cast<size_t>(state.range(0));
+  const DataVector used_for_size =
+      DataVector(num_grid_points, std::numeric_limits<double>::signaling_NaN());
+  std::uniform_real_distribution<> distribution(0.1, 1.0);
+
+  // RHS: R
+  const DataVector R = make_with_random_values<DataVector>(
+      make_not_null(&generator), make_not_null(&distribution), used_for_size);
+  // RHS: S
+  const DataVector S = make_with_random_values<DataVector>(
+      make_not_null(&generator), make_not_null(&distribution), used_for_size);
+
+  for (auto _ : state) {
+    // LHS: result
+    DataVector result =
+        R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    benchmark::DoNotOptimize(result);
+    benchmark::ClobberMemory();
+  }
+}
+
+void bench_prod_sum_256_plus_equals_16_chunk(
+    benchmark::State& state) {  // NOLINT
+  const size_t num_grid_points = static_cast<size_t>(state.range(0));
+  const DataVector used_for_size =
+      DataVector(num_grid_points, std::numeric_limits<double>::signaling_NaN());
+  std::uniform_real_distribution<> distribution(0.1, 1.0);
+
+  // RHS: R
+  const DataVector R = make_with_random_values<DataVector>(
+      make_not_null(&generator), make_not_null(&distribution), used_for_size);
+  // RHS: S
+  const DataVector S = make_with_random_values<DataVector>(
+      make_not_null(&generator), make_not_null(&distribution), used_for_size);
+
+  for (auto _ : state) {
+    // LHS: result
+    DataVector result = R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+                        R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+                        R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    benchmark::DoNotOptimize(result);
+    benchmark::ClobberMemory();
+  }
+}
+
+void bench_prod_sum_256_plus_equals_32_chunk(
+    benchmark::State& state) {  // NOLINT
+  const size_t num_grid_points = static_cast<size_t>(state.range(0));
+  const DataVector used_for_size =
+      DataVector(num_grid_points, std::numeric_limits<double>::signaling_NaN());
+  std::uniform_real_distribution<> distribution(0.1, 1.0);
+
+  // RHS: R
+  const DataVector R = make_with_random_values<DataVector>(
+      make_not_null(&generator), make_not_null(&distribution), used_for_size);
+  // RHS: S
+  const DataVector S = make_with_random_values<DataVector>(
+      make_not_null(&generator), make_not_null(&distribution), used_for_size);
+
+  for (auto _ : state) {
+    // LHS: result
+    DataVector result = R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+                        R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+                        R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+                        R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+                        R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    benchmark::DoNotOptimize(result);
+    benchmark::ClobberMemory();
+  }
+}
+
+void bench_prod_sum_256_plus_equals_64_chunk(
+    benchmark::State& state) {  // NOLINT
+  const size_t num_grid_points = static_cast<size_t>(state.range(0));
+  const DataVector used_for_size =
+      DataVector(num_grid_points, std::numeric_limits<double>::signaling_NaN());
+  std::uniform_real_distribution<> distribution(0.1, 1.0);
+
+  // RHS: R
+  const DataVector R = make_with_random_values<DataVector>(
+      make_not_null(&generator), make_not_null(&distribution), used_for_size);
+  // RHS: S
+  const DataVector S = make_with_random_values<DataVector>(
+      make_not_null(&generator), make_not_null(&distribution), used_for_size);
+
+  for (auto _ : state) {
+    // LHS: result
+    DataVector result =
+        R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+        R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+        R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+        R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+        R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+        R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+        R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+        R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    benchmark::DoNotOptimize(result);
+    benchmark::ClobberMemory();
+  }
+}
+
+void bench_prod_sum_256_plus_equals_128_chunk(
+    benchmark::State& state) {  // NOLINT
+  const size_t num_grid_points = static_cast<size_t>(state.range(0));
+  const DataVector used_for_size =
+      DataVector(num_grid_points, std::numeric_limits<double>::signaling_NaN());
+  std::uniform_real_distribution<> distribution(0.1, 1.0);
+
+  // RHS: R
+  const DataVector R = make_with_random_values<DataVector>(
+      make_not_null(&generator), make_not_null(&distribution), used_for_size);
+  // RHS: S
+  const DataVector S = make_with_random_values<DataVector>(
+      make_not_null(&generator), make_not_null(&distribution), used_for_size);
+
+  for (auto _ : state) {
+    // LHS: result
+    DataVector result =
+        R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+        R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+        R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+        R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+        R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+        R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+        R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+        R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+        R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+        R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+        R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+        R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+        R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+        R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+        R * S + R * S;
+    result += R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S +
+              R * S + R * S + R * S + R * S + R * S + R * S + R * S + R * S;
+    benchmark::DoNotOptimize(result);
+    benchmark::ClobberMemory();
+  }
+}
+
 // Cases are run with each number of grid points
 constexpr std::array<long int, 4> num_grid_point_values = {8, 125, 512, 1000};
 
 BENCHMARK(bench_prod_sum_256_plus_equals)
+    ->Arg(num_grid_point_values[0])
+    ->Arg(num_grid_point_values[1])
+    ->Arg(num_grid_point_values[2])
+    ->Arg(num_grid_point_values[3]);
+BENCHMARK(bench_prod_sum_256_plus_equals_4_chunk)
+    ->Arg(num_grid_point_values[0])
+    ->Arg(num_grid_point_values[1])
+    ->Arg(num_grid_point_values[2])
+    ->Arg(num_grid_point_values[3]);
+BENCHMARK(bench_prod_sum_256_plus_equals_8_chunk)
+    ->Arg(num_grid_point_values[0])
+    ->Arg(num_grid_point_values[1])
+    ->Arg(num_grid_point_values[2])
+    ->Arg(num_grid_point_values[3]);
+BENCHMARK(bench_prod_sum_256_plus_equals_16_chunk)
+    ->Arg(num_grid_point_values[0])
+    ->Arg(num_grid_point_values[1])
+    ->Arg(num_grid_point_values[2])
+    ->Arg(num_grid_point_values[3]);
+BENCHMARK(bench_prod_sum_256_plus_equals_32_chunk)
+    ->Arg(num_grid_point_values[0])
+    ->Arg(num_grid_point_values[1])
+    ->Arg(num_grid_point_values[2])
+    ->Arg(num_grid_point_values[3]);
+BENCHMARK(bench_prod_sum_256_plus_equals_64_chunk)
+    ->Arg(num_grid_point_values[0])
+    ->Arg(num_grid_point_values[1])
+    ->Arg(num_grid_point_values[2])
+    ->Arg(num_grid_point_values[3]);
+BENCHMARK(bench_prod_sum_256_plus_equals_128_chunk)
     ->Arg(num_grid_point_values[0])
     ->Arg(num_grid_point_values[1])
     ->Arg(num_grid_point_values[2])
