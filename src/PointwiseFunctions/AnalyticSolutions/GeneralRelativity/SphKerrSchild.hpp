@@ -114,11 +114,17 @@ class SphKerrSchild : public AnalyticSolution<3_st>,
     template <typename DataType, typename Frame = ::Frame::Inertial>
     using jacobian = ::Tags::TempIj<6, 3, Frame, DataType>;
     template <typename DataType, typename Frame = ::Frame::Inertial>
+    using matrix_D = ::Tags::TempIj<7, 3, Frame, DataType>;
+    template <typename DataType, typename Frame = ::Frame::Inertial>
+    using matrix_C = ::Tags::TempIj<8, 3, Frame, DataType>;
+    template <typename DataType, typename Frame = ::Frame::Inertial>
+    using deriv_jacobian = ::Tags::TempijK<9, 3, Frame, DataType>;
+    template <typename DataType, typename Frame = ::Frame::Inertial>
     using matrix_Q = ::Tags::TempIj<10, 3, Frame, DataType>;
     template <typename DataType, typename Frame = ::Frame::Inertial>
-    using matrix_G1 = ::Tags::TempIj<12, 3, Frame, DataType>;
+    using matrix_G1 = ::Tags::TempIj<11, 3, Frame, DataType>;
     template <typename DataType>
-    using a_dot_x = ::Tags::TempScalar<11, DataType>;
+    using a_dot_x = ::Tags::TempScalar<12, DataType>;
     template <typename DataType>
     using s_number = ::Tags::TempScalar<13, DataType>;
     template <typename DataType, typename Frame = ::Frame::Inertial>
@@ -130,39 +136,11 @@ class SphKerrSchild : public AnalyticSolution<3_st>,
     template <typename DataType, typename Frame = ::Frame::Inertial>
     using inv_jacobian = ::Tags::TempIj<17, 3, Frame, DataType>;
     template <typename DataType, typename Frame = ::Frame::Inertial>
-    using matrix_D = ::Tags::TempIj<7, 3, Frame, DataType>;
-    template <typename DataType, typename Frame = ::Frame::Inertial>
-    using matrix_C = ::Tags::TempIj<8, 3, Frame, DataType>;
-    template <typename DataType, typename Frame = ::Frame::Inertial>
-    using deriv_jacobian = ::Tags::TempijK<9, 3, Frame, DataType>;
-    template <typename DataType, typename Frame = ::Frame::Inertial>
     using matrix_E1 = ::Tags::TempIj<18, 3, Frame, DataType>;
     template <typename DataType, typename Frame = ::Frame::Inertial>
     using matrix_E2 = ::Tags::TempIj<19, 3, Frame, DataType>;
     template <typename DataType, typename Frame = ::Frame::Inertial>
     using deriv_inv_jacobian = ::Tags::TempijK<20, 3, Frame, DataType>;
-    template <typename DataType, typename Frame = ::Frame::Inertial>
-    using x_kerr_schild = ::Tags::TempI<21, 3, Frame, DataType>;
-    template <typename DataType, typename Frame = ::Frame::Inertial>
-    using a_cross_x = ::Tags::TempI<22, 3, Frame, DataType>;
-    template <typename DataType, typename Frame = ::Frame::Inertial>
-    using kerr_schild_l = ::Tags::TempI<23, 3, Frame, DataType>;
-    template <typename DataType, typename Frame = ::Frame::Inertial>
-    using sph_kerr_schild_l_upper = ::Tags::TempI<24, 4, Frame, DataType>;
-    template <typename DataType, typename Frame = ::Frame::Inertial>
-    using sph_kerr_schild_l_lower = ::Tags::TempI<25, 4, Frame, DataType>;
-    template <typename DataType>
-    using H = ::Tags::TempScalar<26, DataType>;
-    template <typename DataType, typename Frame = ::Frame::Inertial>
-    using deriv_H = ::Tags::TempI<27, 4, Frame, DataType>;
-    template <typename DataType, typename Frame = ::Frame::Inertial>
-    using deriv_l = ::Tags::TempIj<28, 4, Frame, DataType>;
-    template <typename DataType>
-    using lapse_squared = ::Tags::TempScalar<29, DataType>;
-    template <typename DataType>
-    using deriv_lapse_multiplier = ::Tags::TempScalar<30, DataType>;
-    template <typename DataType>
-    using shift_multiplier = ::Tags::TempScalar<31, DataType>;
   };
 
   template <typename DataType, typename Frame = ::Frame::Inertial>
@@ -172,6 +150,9 @@ class SphKerrSchild : public AnalyticSolution<3_st>,
       internal_tags::rho<DataType>, internal_tags::matrix_F<DataType, Frame>,
       internal_tags::matrix_P<DataType, Frame>,
       internal_tags::jacobian<DataType, Frame>,
+      internal_tags::matrix_D<DataType, Frame>,
+      internal_tags::matrix_C<DataType, Frame>,
+      internal_tags::deriv_jacobian<DataType, Frame>,
       internal_tags::matrix_Q<DataType, Frame>,
       internal_tags::matrix_G1<DataType, Frame>,
       internal_tags::a_dot_x<DataType>, internal_tags::s_number<DataType>,
@@ -179,26 +160,9 @@ class SphKerrSchild : public AnalyticSolution<3_st>,
       internal_tags::G1_dot_x<DataType, Frame>,
       internal_tags::G2_dot_x<DataType, Frame>,
       internal_tags::inv_jacobian<DataType, Frame>,
-      internal_tags::matrix_D<DataType, Frame>,
-      internal_tags::matrix_C<DataType, Frame>,
-      internal_tags::deriv_jacobian<DataType, Frame>,
       internal_tags::matrix_E1<DataType, Frame>,
       internal_tags::matrix_E2<DataType, Frame>,
-      internal_tags::deriv_inv_jacobian<DataType, Frame>,
-      internal_tags::x_kerr_schild<DataType, Frame>,
-      internal_tags::a_cross_x<DataType, Frame>,
-      internal_tags::kerr_schild_l<DataType, Frame>,
-      internal_tags::sph_kerr_schild_l_upper<DataType, Frame>,
-      internal_tags::sph_kerr_schild_l_lower<DataType, Frame>,
-      internal_tags::H<DataType>, internal_tags::deriv_H<DataType, Frame>,
-      internal_tags::deriv_l<DataType, Frame>,
-      internal_tags::lapse_squared<DataType>, gr::Tags::Lapse<DataType>,
-      internal_tags::deriv_lapse_multiplier<DataType>,
-      internal_tags::shift_multiplier<DataType>,
-      gr::Tags::Shift<3, Frame, DataType>, DerivShift<DataType, Frame>,
-      gr::Tags::SpatialMetric<3, Frame, DataType>,
-      DerivSpatialMetric<DataType, Frame>,
-      ::Tags::dt<gr::Tags::SpatialMetric<3, Frame, DataType>>>;
+      internal_tags::deriv_inv_jacobian<DataType, Frame>>;
 
   template <typename DataType, typename Frame = ::Frame::Inertial>
   class IntermediateComputer {
@@ -237,6 +201,19 @@ class SphKerrSchild : public AnalyticSolution<3_st>,
                     gsl::not_null<CachedBuffer*> cache,
                     internal_tags::jacobian<DataType, Frame> /*meta*/) const;
 
+    void operator()(gsl::not_null<tnsr::Ij<DataType, 3, Frame>*> matrix_D,
+                    gsl::not_null<CachedBuffer*> cache,
+                    internal_tags::matrix_D<DataType, Frame> /*meta*/) const;
+
+    void operator()(gsl::not_null<tnsr::Ij<DataType, 3, Frame>*> matrix_C,
+                    gsl::not_null<CachedBuffer*> cache,
+                    internal_tags::matrix_C<DataType, Frame> /*meta*/) const;
+
+    void operator()(
+        gsl::not_null<tnsr::ijK<DataType, 3, Frame>*> deriv_jacobian,
+        gsl::not_null<CachedBuffer*> cache,
+        internal_tags::deriv_jacobian<DataType, Frame> /*meta*/) const;
+
     void operator()(gsl::not_null<tnsr::Ij<DataType, 3, Frame>*> matrix_Q,
                     gsl::not_null<CachedBuffer*> cache,
                     internal_tags::matrix_Q<DataType, Frame> /*meta*/) const;
@@ -270,19 +247,6 @@ class SphKerrSchild : public AnalyticSolution<3_st>,
         gsl::not_null<CachedBuffer*> cache,
         internal_tags::inv_jacobian<DataType, Frame> /*meta*/) const;
 
-    void operator()(gsl::not_null<tnsr::Ij<DataType, 3, Frame>*> matrix_D,
-                    gsl::not_null<CachedBuffer*> cache,
-                    internal_tags::matrix_D<DataType, Frame> /*meta*/) const;
-
-    void operator()(gsl::not_null<tnsr::Ij<DataType, 3, Frame>*> matrix_C,
-                    gsl::not_null<CachedBuffer*> cache,
-                    internal_tags::matrix_C<DataType, Frame> /*meta*/) const;
-
-    void operator()(
-        gsl::not_null<tnsr::ijK<DataType, 3, Frame>*> deriv_jacobian,
-        gsl::not_null<CachedBuffer*> cache,
-        internal_tags::deriv_jacobian<DataType, Frame> /*meta*/) const;
-
     void operator()(gsl::not_null<tnsr::Ij<DataType, 3, Frame>*> matrix_E1,
                     gsl::not_null<CachedBuffer*> cache,
                     internal_tags::matrix_E1<DataType, Frame> /*meta*/) const;
@@ -295,81 +259,6 @@ class SphKerrSchild : public AnalyticSolution<3_st>,
         gsl::not_null<tnsr::ijK<DataType, 3, Frame>*> deriv_inv_jacobian,
         gsl::not_null<CachedBuffer*> cache,
         internal_tags::deriv_inv_jacobian<DataType, Frame> /*meta*/) const;
-
-    void operator()(
-        gsl::not_null<tnsr::I<DataType, 3, Frame>*> x_kerr_schild,
-        gsl::not_null<CachedBuffer*> /*cache*/,
-        internal_tags::x_kerr_schild<DataType, Frame> /*meta*/) const;
-
-    void operator()(gsl::not_null<tnsr::I<DataType, 3, Frame>*> a_cross_x,
-                    gsl::not_null<CachedBuffer*> cache,
-                    internal_tags::a_cross_x<DataType, Frame> /*meta*/) const;
-
-    void operator()(
-        gsl::not_null<tnsr::I<DataType, 3, Frame>*> kerr_schild_l,
-        gsl::not_null<CachedBuffer*> cache,
-        internal_tags::kerr_schild_l<DataType, Frame> /*meta*/) const;
-
-    void operator()(
-        gsl::not_null<tnsr::I<DataType, 4, Frame>*> sph_kerr_schild_l_upper,
-        gsl::not_null<CachedBuffer*> cache,
-        internal_tags::sph_kerr_schild_l_upper<DataType, Frame> /*meta*/) const;
-
-    void operator()(
-        gsl::not_null<tnsr::i<DataType, 4, Frame>*> sph_kerr_schild_l_lower,
-        gsl::not_null<CachedBuffer*> cache,
-        internal_tags::sph_kerr_schild_l_lower<DataType, Frame> /*meta*/) const;
-
-    void operator()(gsl::not_null<Scalar<DataType>*> H,
-                    gsl::not_null<CachedBuffer*> cache,
-                    internal_tags::H<DataType> /*meta*/) const;
-
-    void operator()(gsl::not_null<tnsr::I<DataType, 4, Frame>*> deriv_H,
-                    gsl::not_null<CachedBuffer*> cache,
-                    internal_tags::deriv_H<DataType, Frame> /*meta*/) const;
-
-    void operator()(gsl::not_null<tnsr::Ij<DataType, 4, Frame>*> deriv_l,
-                    gsl::not_null<CachedBuffer*> cache,
-                    internal_tags::deriv_l<DataType, Frame> /*meta*/) const;
-
-    void operator()(gsl::not_null<Scalar<DataType>*> lapse_squared,
-                    gsl::not_null<CachedBuffer*> cache,
-                    internal_tags::lapse_squared<DataType> /*meta*/) const;
-
-    void operator()(gsl::not_null<Scalar<DataType>*> lapse,
-                    gsl::not_null<CachedBuffer*> cache,
-                    gr::Tags::Lapse<DataType> /*meta*/) const;
-
-    void operator()(
-        gsl::not_null<Scalar<DataType>*> deriv_lapse_multiplier,
-        gsl::not_null<CachedBuffer*> cache,
-        internal_tags::deriv_lapse_multiplier<DataType> /*meta*/) const;
-
-    void operator()(gsl::not_null<Scalar<DataType>*> shift_multiplier,
-                    gsl::not_null<CachedBuffer*> cache,
-                    internal_tags::shift_multiplier<DataType> /*meta*/) const;
-
-    void operator()(gsl::not_null<tnsr::I<DataType, 3, Frame>*> shift,
-                    gsl::not_null<CachedBuffer*> cache,
-                    gr::Tags::Shift<3, Frame, DataType> /*meta*/) const;
-
-    void operator()(gsl::not_null<tnsr::iJ<DataType, 3, Frame>*> deriv_shift,
-                    gsl::not_null<CachedBuffer*> cache,
-                    DerivShift<DataType, Frame> /*meta*/) const;
-
-    void operator()(gsl::not_null<tnsr::ii<DataType, 3, Frame>*> spatial_metric,
-                    gsl::not_null<CachedBuffer*> cache,
-                    gr::Tags::SpatialMetric<3, Frame, DataType> /*meta*/) const;
-
-    void operator()(
-        gsl::not_null<tnsr::ijj<DataType, 3, Frame>*> deriv_spatial_metric,
-        gsl::not_null<CachedBuffer*> cache,
-        DerivSpatialMetric<DataType, Frame> /*meta*/) const;
-
-    void operator()(
-        gsl::not_null<tnsr::ii<DataType, 3, Frame>*> dt_spatial_metric,
-        gsl::not_null<CachedBuffer*> cache,
-        ::Tags::dt<gr::Tags::SpatialMetric<3, Frame, DataType>> /*meta*/) const;
 
    private:
     const SphKerrSchild& solution_;

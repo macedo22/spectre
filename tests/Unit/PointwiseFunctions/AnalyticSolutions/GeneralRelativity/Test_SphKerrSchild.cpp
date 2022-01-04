@@ -136,57 +136,6 @@ SPECTRE_TEST_CASE("Unit.PointwiseFunctions.AnalyticSolutions.Gr.SphKerrSchild",
       gr::Solutions::SphKerrSchild::internal_tags::jacobian<DataVector,
                                                             Frame::Inertial>{});
 
-  // matrix_Q test
-  tnsr::Ij<DataVector, 3, Frame::Inertial> matrix_Q{1_st, 0.};
-  sks_computer(
-      make_not_null(&matrix_Q), make_not_null(&cache),
-      gr::Solutions::SphKerrSchild::internal_tags::matrix_Q<DataVector,
-                                                            Frame::Inertial>{});
-  // matrix_G1 test
-  tnsr::Ij<DataVector, 3, Frame::Inertial> matrix_G1{1_st, 0.};
-  sks_computer(make_not_null(&matrix_G1), make_not_null(&cache),
-               gr::Solutions::SphKerrSchild::internal_tags::matrix_G1<
-                   DataVector, Frame::Inertial>{});
-
-  // a_dot_x test
-  Scalar<DataVector> a_dot_x(3_st, 0.);
-  sks_computer(
-      make_not_null(&a_dot_x), make_not_null(&cache),
-      gr::Solutions::SphKerrSchild::internal_tags::a_dot_x<DataVector>{});
-
-  // s_number test
-  Scalar<DataVector> s_number{1_st, 0.};
-  sks_computer(
-      make_not_null(&s_number), make_not_null(&cache),
-      gr::Solutions::SphKerrSchild::internal_tags::internal_tags::s_number<
-          DataVector>{});
-
-  // matrix_G2 test
-  tnsr::Ij<DataVector, 3, Frame::Inertial> matrix_G2{1_st, 0.};
-  sks_computer(make_not_null(&matrix_G2), make_not_null(&cache),
-               gr::Solutions::SphKerrSchild::internal_tags::matrix_G2<
-                   DataVector, Frame::Inertial>{});
-
-  // G1_dot_x test
-  tnsr::I<DataVector, 3, Frame::Inertial> G1_dot_x{3_st, 0.};
-  sks_computer(
-      make_not_null(&G1_dot_x), make_not_null(&cache),
-      gr::Solutions::SphKerrSchild::internal_tags::G1_dot_x<DataVector,
-                                                            Frame::Inertial>{});
-
-  // G2_dot_x test
-  tnsr::i<DataVector, 3, Frame::Inertial> G2_dot_x{3_st, 0.};
-  sks_computer(
-      make_not_null(&G2_dot_x), make_not_null(&cache),
-      gr::Solutions::SphKerrSchild::internal_tags::G2_dot_x<DataVector,
-                                                            Frame::Inertial>{});
-
-  // inv_jacobian test
-  tnsr::Ij<DataVector, 3, Frame::Inertial> inv_jacobian{1_st, 0.};
-  sks_computer(make_not_null(&inv_jacobian), make_not_null(&cache),
-               gr::Solutions::SphKerrSchild::internal_tags::inv_jacobian<
-                   DataVector, Frame::Inertial>{});
-
   // matrix_D test
   tnsr::Ij<DataVector, 3, Frame::Inertial> matrix_D{1_st, 0.};
   sks_computer(
@@ -194,15 +143,16 @@ SPECTRE_TEST_CASE("Unit.PointwiseFunctions.AnalyticSolutions.Gr.SphKerrSchild",
       gr::Solutions::SphKerrSchild::internal_tags::matrix_D<DataVector,
                                                             Frame::Inertial>{});
 
-  // matrix_E1 test
-  tnsr::Ij<DataVector, 3, Frame::Inertial> matrix_E1{1_st, 0.};
-  sks_computer(make_not_null(&matrix_E1), make_not_null(&cache),
-               gr::Solutions::SphKerrSchild::internal_tags::matrix_E1<
-                   DataVector, Frame::Inertial>{});
+  // matrix_C test
+  tnsr::Ij<DataVector, 3, Frame::Inertial> matrix_C{1_st, 0.};
+  sks_computer(
+      make_not_null(&matrix_C), make_not_null(&cache),
+      gr::Solutions::SphKerrSchild::internal_tags::matrix_C<DataVector,
+                                                            Frame::Inertial>{});
 
-  // matrix_E2 test
-  tnsr::Ij<DataVector, 3, Frame::Inertial> matrix_E2{1_st, 0.};
-  sks_computer(make_not_null(&matrix_E2), make_not_null(&cache),
-               gr::Solutions::SphKerrSchild::internal_tags::matrix_E2<
+  // deriv_jacobian test
+  tnsr::ijK<DataVector, 3, Frame::Inertial> deriv_jacobian{1_st, 0.};
+  sks_computer(make_not_null(&deriv_jacobian), make_not_null(&cache),
+               gr::Solutions::SphKerrSchild::internal_tags::deriv_jacobian<
                    DataVector, Frame::Inertial>{});
 }
