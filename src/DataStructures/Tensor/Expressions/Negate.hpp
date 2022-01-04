@@ -30,6 +30,7 @@ struct Negate
   using index_list = typename T::index_list;
   using args_list = typename T::args_list;
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
+  static constexpr size_t num_ops_subtree = T::num_ops_subtree + 1;
 
   Negate(T t) : t_(std::move(t)) {}
   ~Negate() override = default;

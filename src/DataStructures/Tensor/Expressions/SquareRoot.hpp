@@ -40,6 +40,7 @@ struct SquareRoot
   using index_list = typename T::index_list;
   using args_list = tmpl::list<Args...>;
   static constexpr auto num_tensor_indices = sizeof...(Args);
+  static constexpr size_t num_ops_subtree = T::num_ops_subtree + 1;
 
   SquareRoot(T t) : t_(std::move(t)) {}
   ~SquareRoot() override = default;
