@@ -81,6 +81,8 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
       tmpl::size<typename T1::index_list>::value;
   static constexpr auto op2_num_tensor_indices =
       num_tensor_indices - op1_num_tensor_indices;
+  static constexpr size_t num_ops_subtree =
+      T1::num_ops_subtree + T2::num_ops_subtree + 1;
 
   OuterProduct(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~OuterProduct() override = default;

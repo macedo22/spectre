@@ -353,6 +353,8 @@ struct TensorContract
   static constexpr inline std::array<size_t, num_uncontracted_tensor_indices>
       uncontracted_index_dims = contracted_type::uncontracted_index_dims;
   static constexpr size_t num_terms_summed = contracted_type::num_terms_summed;
+  static constexpr size_t num_ops_subtree =
+      T::num_ops_subtree * num_terms_summed;
 
   explicit TensorContract(
       const TensorExpression<T, X, Symm, IndexList, ArgsList>& t)
