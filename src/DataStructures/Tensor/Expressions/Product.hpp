@@ -158,8 +158,13 @@ SPECTRE_ALWAYS_INLINE auto operator*(
                            typename T1::index_list, ArgsList1>& t1,
     const TensorExpression<T2, typename T2::type, typename T2::symmetry,
                            typename T2::index_list, ArgsList2>& t2) {
-  return TensorExpressions::contract(
-      TensorExpressions::OuterProduct<T1, T2>(~t1, ~t2));
+  if constexpr (T1::num_ops_subtree >= T2::num_ops_subtree) {
+    return TensorExpressions::contract(
+        TensorExpressions::OuterProduct<T1, T2>(~t1, ~t2));
+  } else {
+    return TensorExpressions::contract(
+        TensorExpressions::OuterProduct<T2, T1>(~t2, ~t1));
+  }
 }
 
 /// @{
@@ -182,13 +187,21 @@ SPECTRE_ALWAYS_INLINE auto operator*(
     const TensorExpression<T, X, typename T::symmetry, typename T::index_list,
                            ArgsList>& t,
     const double number) {
-  return t * TensorExpressions::NumberAsExpression(number);
+  if constexpr (T::num_ops_subtree > 0) {
+    return t * TensorExpressions::NumberAsExpression(number);
+  } else {
+    return TensorExpressions::NumberAsExpression(number) * t;
+  }
 }
 template <typename T, typename X, typename ArgsList>
 SPECTRE_ALWAYS_INLINE auto operator*(
     const double number,
     const TensorExpression<T, X, typename T::symmetry, typename T::index_list,
                            ArgsList>& t) {
-  return TensorExpressions::NumberAsExpression(number) * t;
+  if constexpr (T::num_ops_subtree > 0) {
+    return t * TensorExpressions::NumberAsExpression(number);
+  } else {
+    return TensorExpressions::NumberAsExpression(number) * t;
+  }
 }
 /// @}
