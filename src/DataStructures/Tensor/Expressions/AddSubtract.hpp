@@ -305,6 +305,8 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   using args_list = typename T1::args_list;
   static constexpr size_t num_ops_subtree =
       T1::num_ops_subtree + T2::num_ops_subtree + 1;
+  static constexpr size_t num_addsub_ops_subtree =
+      T1::num_addsub_ops_subtree + T2::num_addsub_ops_subtree + 1;
   static constexpr std::array<size_t, num_tensor_indices_op2>
       operand_index_transformation =
           compute_tensorindex_transformation<num_tensor_indices,

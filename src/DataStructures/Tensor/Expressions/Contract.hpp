@@ -354,7 +354,9 @@ struct TensorContract
       uncontracted_index_dims = contracted_type::uncontracted_index_dims;
   static constexpr size_t num_terms_summed = contracted_type::num_terms_summed;
   static constexpr size_t num_ops_subtree =
-      T::num_ops_subtree * num_terms_summed;
+      T::num_ops_subtree * num_terms_summed + num_terms_summed - 1;
+  static constexpr size_t num_addsub_ops_subtree =
+      T::num_addsub_ops_subtree * num_terms_summed + num_terms_summed - 1;
 
   explicit TensorContract(
       const TensorExpression<T, X, Symm, IndexList, ArgsList>& t)
