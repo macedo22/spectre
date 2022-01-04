@@ -508,7 +508,11 @@ SPECTRE_ALWAYS_INLINE auto operator+(
       tmpl::equal_members<op1_generic_indices, op2_generic_indices>::value,
       "The generic indices when adding two tensors must be equal. This error "
       "occurs from expressions like R(ti_a, ti_b) + S(ti_c, ti_a)");
-  return TensorExpressions::AddSub<T1, T2, Args1, Args2, 1>(~t1, ~t2);
+  if constexpr (T1::num_ops_subtree >= T2::num_ops_subtree) {
+    return TensorExpressions::AddSub<T1, T2, Args1, Args2, 1>(~t1, ~t2);
+  } else {
+    return TensorExpressions::AddSub<T2, T1, Args2, Args1, 1>(~t2, ~t1);
+  }
 }
 
 /// @{
@@ -549,7 +553,11 @@ SPECTRE_ALWAYS_INLINE auto operator+(
       (... and tt::is_time_index<Args>::value),
       "Can only add a number to a tensor expression that evaluates to a rank 0"
       "tensor.");
-  return t + TensorExpressions::NumberAsExpression(number);
+  if constexpr (T::num_ops_subtree > 0) {
+    return t + TensorExpressions::NumberAsExpression(number);
+  } else {
+    return TensorExpressions::NumberAsExpression(number) + t;
+  }
 }
 template <typename T, typename X, typename Symm, typename IndexList,
           typename... Args>
@@ -560,7 +568,11 @@ SPECTRE_ALWAYS_INLINE auto operator+(
       (... and tt::is_time_index<Args>::value),
       "Can only add a number to a tensor expression that evaluates to a rank 0"
       "tensor.");
-  return TensorExpressions::NumberAsExpression(number) + t;
+  if constexpr (T::num_ops_subtree > 0) {
+    return t + TensorExpressions::NumberAsExpression(number);
+  } else {
+    return TensorExpressions::NumberAsExpression(number) + t;
+  }
 }
 /// @}
 
@@ -586,7 +598,11 @@ SPECTRE_ALWAYS_INLINE auto operator-(
       "The generic indices when subtracting two tensors must be equal. This "
       "error "
       "occurs from expressions like R(ti_a, ti_b) - S(ti_c, ti_a)");
-  return TensorExpressions::AddSub<T1, T2, Args1, Args2, -1>(~t1, ~t2);
+  if constexpr (T1::num_ops_subtree >= T2::num_ops_subtree) {
+    return TensorExpressions::AddSub<T1, T2, Args1, Args2, -1>(~t1, ~t2);
+  } else {
+    return -t2 + t1;
+  }
 }
 
 /// @{
@@ -627,7 +643,11 @@ SPECTRE_ALWAYS_INLINE auto operator-(
       (... and tt::is_time_index<Args>::value),
       "Can only subtract a number from a tensor expression that evaluates to a "
       "rank 0 tensor.");
-  return t - TensorExpressions::NumberAsExpression(number);
+  if constexpr (T::num_ops_subtree > 0) {
+    return t + TensorExpressions::NumberAsExpression(-number);
+  } else {
+    return TensorExpressions::NumberAsExpression(-number) + t;
+  }
 }
 template <typename T, typename X, typename Symm, typename IndexList,
           typename... Args>
@@ -638,6 +658,10 @@ SPECTRE_ALWAYS_INLINE auto operator-(
       (... and tt::is_time_index<Args>::value),
       "Can only subtract a number from a tensor expression that evaluates to a "
       "rank 0 tensor.");
-  return TensorExpressions::NumberAsExpression(number) - t;
+  if constexpr (T::num_ops_subtree > 0) {
+    return -t + TensorExpressions::NumberAsExpression(number);
+  } else {
+    return TensorExpressions::NumberAsExpression(number) - t;
+  }
 }
 /// @}
