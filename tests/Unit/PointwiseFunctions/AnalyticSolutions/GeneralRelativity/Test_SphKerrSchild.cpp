@@ -129,12 +129,12 @@ SPECTRE_TEST_CASE("Unit.PointwiseFunctions.AnalyticSolutions.Gr.SphKerrSchild",
       gr::Solutions::SphKerrSchild::internal_tags::matrix_P<DataVector,
                                                             Frame::Inertial>{});
 
-  // jacobian test
-  tnsr::Ij<DataVector, 3, Frame::Inertial> jacobian{1_st, 0.};
-  sks_computer(
-      make_not_null(&jacobian), make_not_null(&cache),
-      gr::Solutions::SphKerrSchild::internal_tags::jacobian<DataVector,
-                                                            Frame::Inertial>{});
+  //   // jacobian test
+  //   tnsr::Ij<DataVector, 3, Frame::Inertial> jacobian{1_st, 0.};
+  //   sks_computer(
+  //       make_not_null(&jacobian), make_not_null(&cache),
+  //       gr::Solutions::SphKerrSchild::internal_tags::jacobian<DataVector,
+  //                                                   Frame::Inertial>{});
 
   // matrix_D test
   tnsr::Ij<DataVector, 3, Frame::Inertial> matrix_D{1_st, 0.};
@@ -150,74 +150,126 @@ SPECTRE_TEST_CASE("Unit.PointwiseFunctions.AnalyticSolutions.Gr.SphKerrSchild",
       gr::Solutions::SphKerrSchild::internal_tags::matrix_C<DataVector,
                                                             Frame::Inertial>{});
 
-  // deriv_jacobian test
+  //   // deriv_jacobian test
+  //   tnsr::ijK<DataVector, 3, Frame::Inertial> deriv_jacobian{1_st, 0.};
+  //   sks_computer(make_not_null(&deriv_jacobian), make_not_null(&cache),
+  //                gr::Solutions::SphKerrSchild::internal_tags::deriv_jacobian<
+  //                    DataVector, Frame::Inertial>{});
+
+  // Setup grid
+  const size_t num_points_1d = 8;
+  const std::array<double, 3> lower_bound{{0.8, 1.22, 1.30}};
+  const std::array<double, 3> upper_bound{{0.82, 1.24, 1.32}};
+  const size_t SpatialDim = 3;
+  Mesh<SpatialDim> mesh{num_points_1d, Spectral::Basis::Legendre,
+                        Spectral::Quadrature::GaussLobatto};
+  const auto coord_map =
+      domain::make_coordinate_map<Frame::ElementLogical, Frame::Inertial>(
+          Affine3D{
+              Affine{-1., 1., lower_bound[0], upper_bound[0]},
+              Affine{-1., 1., lower_bound[1], upper_bound[1]},
+
+              Affine{-1., 1., lower_bound[2], upper_bound[2]},
+          });
+  const size_t num_points_3d = num_points_1d * num_points_1d * num_points_1d;
+  // Setup coordinates
+  const auto x_logical = logical_coordinates(mesh);
+  const auto x_prime = coord_map(x_logical);
+  // Arbitrary time for time-independent solution.
+  const double t = std::numeric_limits<double>::signaling_NaN();
+
+  // Evaluate analytic solution
+  tnsr::Ij<DataVector, 3, Frame::Inertial> jacobian{1_st, 0.};
+  sks_computer(
+      make_not_null(&jacobian), make_not_null(&cache),
+      gr::Solutions::SphKerrSchild::internal_tags::jacobian<DataVector,
+                                                            Frame::Inertial>{});
+
+  // Compute actual analytical derivative of the determinant
   tnsr::ijK<DataVector, 3, Frame::Inertial> deriv_jacobian{1_st, 0.};
   sks_computer(make_not_null(&deriv_jacobian), make_not_null(&cache),
                gr::Solutions::SphKerrSchild::internal_tags::deriv_jacobian<
                    DataVector, Frame::Inertial>{});
 
-  // matrix_Q test
-  tnsr::Ij<DataVector, 3, Frame::Inertial> matrix_Q{1_st, 0.};
-  sks_computer(
-      make_not_null(&matrix_Q), make_not_null(&cache),
-      gr::Solutions::SphKerrSchild::internal_tags::matrix_Q<DataVector,
-                                                            Frame::Inertial>{});
+  // Compute expected numerical derivative of the jaccobian
+  using jacobian_tag =
+      gr::Solutions::SphKerrSchild::internal_tags::jacobian<DataVector,
+                                                            Frame::Inertial>;
+  Variables<tmpl::list<jacobian_tag>> jacobian_var(num_points_3d);
+  get<jacobian_tag>(jacobian_var) = jacobian;
+  const auto expected_deriv_jacobian_var =
+      partial_derivatives<tmpl::list<jacobian_tag>>(
+          jacobian_var, mesh, coord_map.inv_jacobian(x_logical));
+  const auto& expected_deriv_jacobian =
+      get<Tags::deriv<jacobian_tag, tmpl::size_t<SpatialDim>, Frame::Inertial>>(
+          expected_deriv_jacobian_var);
 
-  // matrix_G1 test
-  tnsr::Ij<DataVector, 3, Frame::Inertial> matrix_G1{1_st, 0.};
-  sks_computer(make_not_null(&matrix_G1), make_not_null(&cache),
-               gr::Solutions::SphKerrSchild::internal_tags::matrix_G1<
-                   DataVector, Frame::Inertial>{});
+  Approx custom_approx = Approx::custom().epsilon(1e-11).scale(1.0);
+  CHECK_ITERABLE_CUSTOM_APPROX(deriv_jacobian, expected_deriv_jacobian,
+                               custom_approx);
 
-  // a_dot_x test
-  Scalar<DataVector> a_dot_x(3_st, 0.);
-  sks_computer(
-      make_not_null(&a_dot_x), make_not_null(&cache),
-      gr::Solutions::SphKerrSchild::internal_tags::a_dot_x<DataVector>{});
+  //   // matrix_Q test
+  //   tnsr::Ij<DataVector, 3, Frame::Inertial> matrix_Q{1_st, 0.};
+  //   sks_computer(
+  //       make_not_null(&matrix_Q), make_not_null(&cache),
+  //       gr::Solutions::SphKerrSchild::internal_tags::matrix_Q<DataVector,
+  //                                                    Frame::Inertial>{});
 
-  // matrix_G2 test
-  tnsr::Ij<DataVector, 3, Frame::Inertial> matrix_G2{1_st, 0.};
-  sks_computer(make_not_null(&matrix_G2), make_not_null(&cache),
-               gr::Solutions::SphKerrSchild::internal_tags::matrix_G2<
-                   DataVector, Frame::Inertial>{});
+  //   // matrix_G1 test
+  //   tnsr::Ij<DataVector, 3, Frame::Inertial> matrix_G1{1_st, 0.};
+  //   sks_computer(make_not_null(&matrix_G1), make_not_null(&cache),
+  //                gr::Solutions::SphKerrSchild::internal_tags::matrix_G1<
+  //                    DataVector, Frame::Inertial>{});
 
-  // G1_dot_x test
-  tnsr::I<DataVector, 3, Frame::Inertial> G1_dot_x{3_st, 0.};
-  sks_computer(
-      make_not_null(&G1_dot_x), make_not_null(&cache),
-      gr::Solutions::SphKerrSchild::internal_tags::G1_dot_x<DataVector,
-                                                            Frame::Inertial>{});
+  //   // a_dot_x test
+  //   Scalar<DataVector> a_dot_x(3_st, 0.);
+  //   sks_computer(
+  //       make_not_null(&a_dot_x), make_not_null(&cache),
+  //       gr::Solutions::SphKerrSchild::internal_tags::a_dot_x<DataVector>{});
 
-  // G2_dot_x test
-  tnsr::i<DataVector, 3, Frame::Inertial> G2_dot_x{3_st, 0.};
-  sks_computer(
-      make_not_null(&G2_dot_x), make_not_null(&cache),
-      gr::Solutions::SphKerrSchild::internal_tags::G2_dot_x<DataVector,
-                                                            Frame::Inertial>{});
+  //   // matrix_G2 test
+  //   tnsr::Ij<DataVector, 3, Frame::Inertial> matrix_G2{1_st, 0.};
+  //   sks_computer(make_not_null(&matrix_G2), make_not_null(&cache),
+  //                gr::Solutions::SphKerrSchild::internal_tags::matrix_G2<
+  //                    DataVector, Frame::Inertial>{});
 
-  // inv_jacobian test
-  tnsr::Ij<DataVector, 3, Frame::Inertial> inv_jacobian{1_st, 0.};
-  sks_computer(make_not_null(&inv_jacobian), make_not_null(&cache),
-               gr::Solutions::SphKerrSchild::internal_tags::inv_jacobian<
-                   DataVector, Frame::Inertial>{});
+  //   // G1_dot_x test
+  //   tnsr::I<DataVector, 3, Frame::Inertial> G1_dot_x{3_st, 0.};
+  //   sks_computer(
+  //       make_not_null(&G1_dot_x), make_not_null(&cache),
+  //       gr::Solutions::SphKerrSchild::internal_tags::G1_dot_x<DataVector,
+  //                                                      Frame::Inertial>{});
 
-  // matrix_E1 test
-  tnsr::Ij<DataVector, 3, Frame::Inertial> matrix_E1{1_st, 0.};
-  sks_computer(make_not_null(&matrix_E1), make_not_null(&cache),
-               gr::Solutions::SphKerrSchild::internal_tags::matrix_E1<
-                   DataVector, Frame::Inertial>{});
+  //   // G2_dot_x test
+  //   tnsr::i<DataVector, 3, Frame::Inertial> G2_dot_x{3_st, 0.};
+  //   sks_computer(
+  //       make_not_null(&G2_dot_x), make_not_null(&cache),
+  //       gr::Solutions::SphKerrSchild::internal_tags::G2_dot_x<DataVector,
+  //                                                      Frame::Inertial>{});
 
-  // matrix_E2 test
-  tnsr::Ij<DataVector, 3, Frame::Inertial> matrix_E2{1_st, 0.};
-  sks_computer(make_not_null(&matrix_E2), make_not_null(&cache),
-               gr::Solutions::SphKerrSchild::internal_tags::matrix_E2<
-                   DataVector, Frame::Inertial>{});
+  //   // inv_jacobian test
+  //   tnsr::Ij<DataVector, 3, Frame::Inertial> inv_jacobian{1_st, 0.};
+  //   sks_computer(make_not_null(&inv_jacobian), make_not_null(&cache),
+  //                gr::Solutions::SphKerrSchild::internal_tags::inv_jacobian<
+  //                    DataVector, Frame::Inertial>{});
 
-  // deriv_inv_jacobian test
-  tnsr::ijK<DataVector, 3, Frame::Inertial> deriv_inv_jacobian{1_st, 0.};
-  sks_computer(make_not_null(&deriv_inv_jacobian), make_not_null(&cache),
-               gr::Solutions::SphKerrSchild::internal_tags::deriv_inv_jacobian<
-                   DataVector, Frame::Inertial>{});
+  //   // matrix_E1 test
+  //   tnsr::Ij<DataVector, 3, Frame::Inertial> matrix_E1{1_st, 0.};
+  //   sks_computer(make_not_null(&matrix_E1), make_not_null(&cache),
+  //                gr::Solutions::SphKerrSchild::internal_tags::matrix_E1<
+  //                    DataVector, Frame::Inertial>{});
+
+  //   // matrix_E2 test
+  //   tnsr::Ij<DataVector, 3, Frame::Inertial> matrix_E2{1_st, 0.};
+  //   sks_computer(make_not_null(&matrix_E2), make_not_null(&cache),
+  //                gr::Solutions::SphKerrSchild::internal_tags::matrix_E2<
+  //                    DataVector, Frame::Inertial>{});
+
+  //   // deriv_inv_jacobian test
+  //   tnsr::ijK<DataVector, 3, Frame::Inertial> deriv_inv_jacobian{1_st, 0.};
+  //   sks_computer(make_not_null(&deriv_inv_jacobian), make_not_null(&cache),
+  //           gr::Solutions::SphKerrSchild::internal_tags::deriv_inv_jacobian<
+  //                    DataVector, Frame::Inertial>{});
 
   // David's code to test the General_Finite_Difference.py file to return the
   // jacobian
