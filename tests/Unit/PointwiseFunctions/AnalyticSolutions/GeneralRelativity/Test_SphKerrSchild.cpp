@@ -76,7 +76,9 @@ SPECTRE_TEST_CASE("Unit.PointwiseFunctions.AnalyticSolutions.Gr.SphKerrSchild",
       "PointwiseFunctions/AnalyticSolutions/GeneralRelativity/");
 
   // Parameters for SphKerrSchild solution
-  const DataVector used_for_size(3);
+  const size_t num_points_1d = 2;
+  const size_t num_points_3d = num_points_1d * num_points_1d * num_points_1d;
+  const DataVector used_for_size(num_points_3d);
   const size_t used_for_sizet = used_for_size.size();
   const double mass = 1.01;
   const std::array<double, 3> spin{{0.2, 0.3, 0.4}};
@@ -157,7 +159,7 @@ SPECTRE_TEST_CASE("Unit.PointwiseFunctions.AnalyticSolutions.Gr.SphKerrSchild",
   //                    DataVector, Frame::Inertial>{});
 
   // Setup grid
-  const size_t num_points_1d = 8;
+//   const size_t num_points_1d = 8;
   const std::array<double, 3> lower_bound{{0.8, 1.22, 1.30}};
   const std::array<double, 3> upper_bound{{0.82, 1.24, 1.32}};
   const size_t SpatialDim = 3;
@@ -171,7 +173,7 @@ SPECTRE_TEST_CASE("Unit.PointwiseFunctions.AnalyticSolutions.Gr.SphKerrSchild",
 
               Affine{-1., 1., lower_bound[2], upper_bound[2]},
           });
-  const size_t num_points_3d = num_points_1d * num_points_1d * num_points_1d;
+//   const size_t num_points_3d = num_points_1d * num_points_1d * num_points_1d;
   // Setup coordinates
   const auto x_logical = logical_coordinates(mesh);
   const auto x_prime = coord_map(x_logical);
