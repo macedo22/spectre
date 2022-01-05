@@ -281,7 +281,7 @@ void SphKerrSchild::IntermediateComputer<DataType, Frame>::operator()(
 
 template <typename DataType, typename Frame>
 void SphKerrSchild::IntermediateComputer<DataType, Frame>::operator()(
-    const gsl::not_null<tnsr::ijK<DataType, 3, Frame>*> deriv_jacobian,
+    const gsl::not_null<tnsr::iJk<DataType, 3, Frame>*> deriv_jacobian,
     const gsl::not_null<CachedBuffer*> cache,
     internal_tags::deriv_jacobian<DataType, Frame> /*meta*/) const {
   // Instantiations
@@ -298,17 +298,17 @@ void SphKerrSchild::IntermediateComputer<DataType, Frame>::operator()(
   for (size_t k = 0; k < 3; ++k) {
     for (size_t i = 0; i < 3; ++i) {
       for (size_t j = 0; j < 3; ++j) {
-        deriv_jacobian->get(i, j, k) =
+        deriv_jacobian->get(k, i, j) =
             matrix_F.get(i, j) * x_sph_minus_center.get(k) +
             matrix_F.get(i, k) * x_sph_minus_center.get(j);
 
         for (size_t m = 0; m < 3; ++m) {
           // Kronecker delta
           if (j == k) {
-            deriv_jacobian->get(i, j, k) +=
+            deriv_jacobian->get(k, i, j) +=
                 matrix_F.get(i, m) * x_sph_minus_center.get(m);
           }
-          deriv_jacobian->get(i, j, k) +=
+          deriv_jacobian->get(k, i, j) +=
               matrix_C.get(i, m) * x_sph_minus_center.get(k) *
               x_sph_minus_center.get(m) * x_sph_minus_center.get(j) / r_squared;
         }

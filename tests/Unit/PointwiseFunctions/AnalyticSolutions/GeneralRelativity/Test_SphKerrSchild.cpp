@@ -176,7 +176,7 @@ SPECTRE_TEST_CASE("Unit.PointwiseFunctions.AnalyticSolutions.Gr.SphKerrSchild",
   const auto x_logical = logical_coordinates(mesh);
   const auto x_prime = coord_map(x_logical);
   // Arbitrary time for time-independent solution.
-  const double t = std::numeric_limits<double>::signaling_NaN();
+  //   const double t = std::numeric_limits<double>::signaling_NaN();
 
   // Evaluate analytic solution
   tnsr::Ij<DataVector, 3, Frame::Inertial> jacobian{1_st, 0.};
@@ -186,7 +186,7 @@ SPECTRE_TEST_CASE("Unit.PointwiseFunctions.AnalyticSolutions.Gr.SphKerrSchild",
                                                             Frame::Inertial>{});
 
   // Compute actual analytical derivative of the determinant
-  tnsr::ijK<DataVector, 3, Frame::Inertial> deriv_jacobian{1_st, 0.};
+  tnsr::iJk<DataVector, 3, Frame::Inertial> deriv_jacobian{1_st, 0.};
   sks_computer(make_not_null(&deriv_jacobian), make_not_null(&cache),
                gr::Solutions::SphKerrSchild::internal_tags::deriv_jacobian<
                    DataVector, Frame::Inertial>{});
@@ -200,7 +200,7 @@ SPECTRE_TEST_CASE("Unit.PointwiseFunctions.AnalyticSolutions.Gr.SphKerrSchild",
   const auto expected_deriv_jacobian_var =
       partial_derivatives<tmpl::list<jacobian_tag>>(
           jacobian_var, mesh, coord_map.inv_jacobian(x_logical));
-  const auto& expected_deriv_jacobian =
+  const auto expected_deriv_jacobian =
       get<Tags::deriv<jacobian_tag, tmpl::size_t<SpatialDim>, Frame::Inertial>>(
           expected_deriv_jacobian_var);
 

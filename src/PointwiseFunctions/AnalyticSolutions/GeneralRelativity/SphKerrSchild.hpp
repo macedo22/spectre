@@ -118,7 +118,7 @@ class SphKerrSchild : public AnalyticSolution<3_st>,
     template <typename DataType, typename Frame = ::Frame::Inertial>
     using matrix_C = ::Tags::TempIj<8, 3, Frame, DataType>;
     template <typename DataType, typename Frame = ::Frame::Inertial>
-    using deriv_jacobian = ::Tags::TempijK<9, 3, Frame, DataType>;
+    using deriv_jacobian = ::Tags::TempiJk<9, 3, Frame, DataType>;
     template <typename DataType, typename Frame = ::Frame::Inertial>
     using matrix_Q = ::Tags::TempIj<10, 3, Frame, DataType>;
     template <typename DataType, typename Frame = ::Frame::Inertial>
@@ -210,7 +210,7 @@ class SphKerrSchild : public AnalyticSolution<3_st>,
                     internal_tags::matrix_C<DataType, Frame> /*meta*/) const;
 
     void operator()(
-        gsl::not_null<tnsr::ijK<DataType, 3, Frame>*> deriv_jacobian,
+        gsl::not_null<tnsr::iJk<DataType, 3, Frame>*> deriv_jacobian,
         gsl::not_null<CachedBuffer*> cache,
         internal_tags::deriv_jacobian<DataType, Frame> /*meta*/) const;
 
