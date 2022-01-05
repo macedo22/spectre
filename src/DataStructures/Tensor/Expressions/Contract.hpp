@@ -300,6 +300,14 @@ struct ContractedType<UncontractedTensorExpression, DataType,
 };
 }  // namespace detail
 
+/// \ingroup TensorExpressionsGroup
+/// \brief Marks a class as being a `TensorExpressions::TensorContract`
+///
+/// \details
+/// The empty base class provides a simple means for checking if a type is a
+/// `TensorExpressions::TensorContract`.
+struct MarkAsTensorContract {};
+
 /*!
  * \ingroup TensorExpressionsGroup
  */
@@ -320,7 +328,8 @@ struct TensorContract
           typename detail::ContractedType<
               T, X, Symm, IndexList, ArgsList, NumContractedIndices,
               (tmpl::size<Symm>::value - NumContractedIndices) /
-                  2>::type::args_list> {
+                  2>::type::args_list>,
+      MarkAsTensorContract {
   using contracted_type = typename detail::ContractedType<
       T, X, Symm, IndexList, ArgsList, NumContractedIndices,
       (tmpl::size<Symm>::value - NumContractedIndices) / 2>;

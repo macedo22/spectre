@@ -265,9 +265,13 @@ struct AddSubType {
 };
 }  // namespace detail
 
-template <typename T1, typename T2, typename ArgsList1, typename ArgsList2,
-          int Sign>
-struct AddSub;
+/// \ingroup TensorExpressionsGroup
+/// \brief Marks a class as being a `TensorExpressions::AddSub`
+///
+/// \details
+/// The empty base class provides a simple means for checking if a type is a
+/// `TensorExpressions::AddSub`.
+struct MarkAsAddSub {};
 
 template <typename T1, typename T2, template <typename...> class ArgsList1,
           template <typename...> class ArgsList2, typename... Args1,
@@ -278,7 +282,8 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
           typename detail::AddSubType<T1, T2>::type,
           typename detail::AddSubType<T1, T2>::symmetry,
           typename detail::AddSubType<T1, T2>::index_list,
-          typename detail::AddSubType<T1, T2>::tensorindex_list> {
+          typename detail::AddSubType<T1, T2>::tensorindex_list>,
+      MarkAsAddSub {
   static_assert(std::is_same<typename T1::type, typename T2::type>::value or
                     std::is_same<T1, NumberAsExpression>::value or
                     std::is_same<T2, NumberAsExpression>::value,

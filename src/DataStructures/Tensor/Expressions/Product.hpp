@@ -43,6 +43,14 @@ struct OuterProductType<T1, T2, SymmList1<Symm1...>, SymmList2<Symm2...>> {
 }  // namespace detail
 
 /// \ingroup TensorExpressionsGroup
+/// \brief Marks a class as being a `TensorExpressions::OuterProduct`
+///
+/// \details
+/// The empty base class provides a simple means for checking if a type is a
+/// `TensorExpressions::OuterProduct`.
+struct MarkAsOuterProduct {};
+
+/// \ingroup TensorExpressionsGroup
 /// \brief Defines the tensor expression representing the outer product of two
 /// tensor expressions
 ///
@@ -66,7 +74,8 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
           OuterProduct<T1, T2>, typename detail::OuterProductType<T1, T2>::type,
           typename detail::OuterProductType<T1, T2>::symmetry,
           typename detail::OuterProductType<T1, T2>::index_list,
-          typename detail::OuterProductType<T1, T2>::tensorindex_list> {
+          typename detail::OuterProductType<T1, T2>::tensorindex_list>,
+      MarkAsOuterProduct {
   static_assert(std::is_same<typename T1::type, typename T2::type>::value or
                     std::is_same<T1, NumberAsExpression>::value or
                     std::is_same<T2, NumberAsExpression>::value,

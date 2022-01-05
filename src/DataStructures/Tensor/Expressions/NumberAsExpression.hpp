@@ -12,10 +12,19 @@
 
 namespace TensorExpressions {
 /// \ingroup TensorExpressionsGroup
+/// \brief Marks a class as being a `TensorExpressions::NumberAsExpression`
+///
+/// \details
+/// The empty base class provides a simple means for checking if a type is a
+/// `TensorExpressions::NumberAsExpression`.
+struct MarkAsNumberAsExpression {};
+
+/// \ingroup TensorExpressionsGroup
 /// \brief Defines an expression representing a `double`
 struct NumberAsExpression
     : public TensorExpression<NumberAsExpression, double, tmpl::list<>,
-                              tmpl::list<>, tmpl::list<>> {
+                              tmpl::list<>, tmpl::list<>>,
+      MarkAsNumberAsExpression {
   using type = double;
   using symmetry = tmpl::list<>;
   using index_list = tmpl::list<>;
