@@ -21,6 +21,14 @@
 
 namespace TensorExpressions {
 /// \ingroup TensorExpressionsGroup
+/// \brief Marks a class as being a `TensorExpressions::Divide`
+///
+/// \details
+/// The empty base class provides a simple means for checking if a type is a
+/// `TensorExpressions::Divide`.
+struct MarkAsDivide {};
+
+/// \ingroup TensorExpressionsGroup
 /// \brief Defines the tensor expression representing the quotient of one tensor
 /// expression divided by another tensor expression that evaluates to a rank 0
 /// tensor
@@ -36,7 +44,8 @@ struct Divide : public TensorExpression<
                             std::is_same<typename T2::type, DataVector>::value,
                         DataVector, double>,
                     typename T1::symmetry, typename T1::index_list,
-                    typename T1::args_list> {
+                    typename T1::args_list>,
+                MarkAsDivide {
   static_assert(std::is_same<typename T1::type, typename T2::type>::value or
                     std::is_same<T1, NumberAsExpression>::value,
                 "Cannot divide TensorExpressions holding different data types");

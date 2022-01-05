@@ -17,6 +17,14 @@
 
 namespace TensorExpressions {
 /// \ingroup TensorExpressionsGroup
+/// \brief Marks a class as being a `TensorExpressions::Negate`
+///
+/// \details
+/// The empty base class provides a simple means for checking if a type is a
+/// `TensorExpressions::Negate`.
+struct MarkAsNegate {};
+
+/// \ingroup TensorExpressionsGroup
 /// \brief Defines the tensor expression representing the negation of a tensor
 /// expression
 ///
@@ -24,7 +32,8 @@ namespace TensorExpressions {
 template <typename T>
 struct Negate
     : public TensorExpression<Negate<T>, typename T::type, typename T::symmetry,
-                              typename T::index_list, typename T::args_list> {
+                              typename T::index_list, typename T::args_list>,
+      MarkAsNegate {
   using type = typename T::type;
   using symmetry = typename T::symmetry;
   using index_list = typename T::index_list;

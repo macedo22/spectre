@@ -16,6 +16,14 @@
 
 namespace TensorExpressions {
 /// \ingroup TensorExpressionsGroup
+/// \brief Marks a class as being a `TensorExpressions::SquareRoot`
+///
+/// \details
+/// The empty base class provides a simple means for checking if a type is a
+/// `TensorExpressions::SquareRoot`.
+struct MarkAsSquareRoot {};
+
+/// \ingroup TensorExpressionsGroup
 /// \brief Defines the tensor expression representing the square root of a
 /// tensor expression that evaluates to a rank 0 tensor
 ///
@@ -29,7 +37,8 @@ template <typename T, typename... Args>
 struct SquareRoot
     : public TensorExpression<SquareRoot<T, Args...>, typename T::type,
                               typename T::symmetry, typename T::index_list,
-                              tmpl::list<Args...>> {
+                              tmpl::list<Args...>>,
+      MarkAsSquareRoot {
   static_assert(
       (... and tt::is_time_index<Args>::value),
       "Can only take the square root of a tensor expression that evaluates to "

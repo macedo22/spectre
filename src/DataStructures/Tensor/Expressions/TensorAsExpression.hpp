@@ -150,6 +150,14 @@ struct TensorAsExpressionSymm<SymmList<Symm...>, TensorIndexTypeList,
 }  // namespace detail
 
 /// \ingroup TensorExpressionsGroup
+/// \brief Marks a class as being a `TensorExpressions::TensorAsExpression`
+///
+/// \details
+/// The empty base class provides a simple means for checking if a type is a
+/// `TensorExpressions::TensorAsExpression`.
+struct MarkAsTensorAsExpression {};
+
+/// \ingroup TensorExpressionsGroup
 /// \brief Defines an expression representing a Tensor
 ///
 /// \details
@@ -178,7 +186,8 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
           X,
           typename detail::TensorAsExpressionSymm<Symm, IndexList<Indices...>,
                                                   ArgsList<Args...>>::type,
-          IndexList<Indices...>, ArgsList<Args...>> {
+          IndexList<Indices...>, ArgsList<Args...>>,
+      MarkAsTensorAsExpression {
   using type = X;
   using symmetry =
       typename detail::TensorAsExpressionSymm<Symm, IndexList<Indices...>,
