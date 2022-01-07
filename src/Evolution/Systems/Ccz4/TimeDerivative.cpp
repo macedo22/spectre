@@ -134,12 +134,12 @@ void TimeDerivative<Dim>::apply(
     const tnsr::ijj<DataVector, Dim>& field_d,
     const tnsr::i<DataVector, Dim>& field_p,
     // spatial derivatives of evolved variables
-    const tnsr::ijj<DataVector,
-                    Dim>& /*d_conformal_spatial_metric*/,  // TODO : remove?
-    const tnsr::i<DataVector, Dim>& /*d_ln_lapse*/,        // TODO : remove?
-    const tnsr::iJ<DataVector, Dim>& /*d_shift*/,          // TODO : remove?
-    const tnsr::i<DataVector,
-                  Dim>& /*d_ln_conformal_factor*/,  // TODO : remove?
+    // const tnsr::ijj<DataVector,
+    //                 Dim>& /*d_conformal_spatial_metric*/,  // TODO : remove?
+    // const tnsr::i<DataVector, Dim>& /*d_ln_lapse*/,        // TODO : remove?
+    // const tnsr::iJ<DataVector, Dim>& /*d_shift*/,          // TODO : remove?
+    // const tnsr::i<DataVector,
+    //               Dim>& /*d_ln_conformal_factor*/,  // TODO : remove?
     const tnsr::ijj<DataVector, Dim>& d_a_tilde,
     const tnsr::i<DataVector, Dim>& d_trace_extrinsic_curvature,
     const tnsr::i<DataVector, Dim>& d_theta,
