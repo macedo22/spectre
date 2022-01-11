@@ -88,11 +88,19 @@ struct Divide : public TensorExpression<
   }
 
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE void visit(
+  SPECTRE_ALWAYS_INLINE void visit_main(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
-    t1_.visit(result_component, result_multi_index);
-    t2_.visit(result_component, op2_multi_index);
+    t1_.visit_main(result_component, result_multi_index);
+    t2_.visit_branch(result_component, op2_multi_index);
+  }
+
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE void visit_branch(
+      ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    t1_.visit_branch(result_component, result_multi_index);
+    t2_.visit_branch(result_component, op2_multi_index);
   }
 
  private:

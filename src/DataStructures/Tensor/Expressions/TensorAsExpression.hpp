@@ -216,7 +216,13 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
 
   // TODO : remove? don't need at leaves?
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE void visit(
+  SPECTRE_ALWAYS_INLINE void visit_main(
+      const ResultType& /*result_component*/,
+      const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {}
+
+  // TODO : remove? don't need at leaves?
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE void visit_branch(
       const ResultType& /*result_component*/,
       const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {}
 

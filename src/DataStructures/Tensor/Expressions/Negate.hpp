@@ -60,10 +60,17 @@ struct Negate
   }
 
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE void visit(
+  SPECTRE_ALWAYS_INLINE void visit_main(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
-    t_.visit(result_component, multi_index);
+    t_.visit_main(result_component, multi_index);
+  }
+
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE void visit_branch(
+      ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& multi_index) const {
+    t_.visit_branch(result_component, multi_index);
   }
 
  private:
