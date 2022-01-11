@@ -214,6 +214,12 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
     return t_->get(multi_index);
   }
 
+  // TODO : remove? don't need at leaves?
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE void visit(
+      const ResultType& /*result_component*/,
+      const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {}
+
   /// Retrieve the i'th entry of the Tensor being held
   SPECTRE_ALWAYS_INLINE type operator[](const size_t i) const {
     return t_->operator[](i);

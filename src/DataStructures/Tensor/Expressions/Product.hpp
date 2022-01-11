@@ -134,6 +134,25 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
     return t1_.get(op1_multi_index) * t2_.get(op2_multi_index);
   }
 
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE void visit(
+      ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    std::array<size_t, op1_num_tensor_indices> op1_multi_index{};
+    for (size_t i = 0; i < op1_num_tensor_indices; i++) {
+      gsl::at(op1_multi_index, i) = gsl::at(result_multi_index, i);
+    }
+
+    std::array<size_t, op2_num_tensor_indices> op2_multi_index{};
+    for (size_t i = 0; i < op2_num_tensor_indices; i++) {
+      gsl::at(op2_multi_index, i) =
+          gsl::at(result_multi_index, op1_num_tensor_indices + i);
+    }
+
+    t1_.visit(result_component, op1_multi_index);
+    t2_.visit(result_component, op2_multi_index);
+  }
+
  private:
   T1 t1_;
   T2 t2_;

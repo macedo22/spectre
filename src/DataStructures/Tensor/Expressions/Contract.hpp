@@ -525,6 +525,16 @@ struct TensorContract
     return compute_contraction<0>(t_, first_operand_multi_index_to_sum);
   }
 
+  template <typename ResultType>
+  void visit(ResultType& result_component,
+             const std::array<size_t, num_tensor_indices>&
+                 contracted_multi_index) const {
+    std::array<size_t, num_uncontracted_tensor_indices>
+        first_operand_multi_index_to_sum =
+            get_first_index_to_sum(contracted_multi_index);
+    t_.visit(result_component, first_operand_multi_index_to_sum);
+  }
+
  private:
   T t_;
 };

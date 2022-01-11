@@ -87,6 +87,14 @@ struct Divide : public TensorExpression<
     return t1_.get(result_multi_index) / t2_.get(op2_multi_index);
   }
 
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE void visit(
+      ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    t1_.visit(result_component, result_multi_index);
+    t2_.visit(result_component, op2_multi_index);
+  }
+
  private:
   T1 t1_;
   T2 t2_;
