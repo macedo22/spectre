@@ -368,6 +368,14 @@ struct TensorContract
   static constexpr size_t num_ops_subtree = num_ops_left;
   static constexpr size_t num_addsub_ops_subtree =
       T::num_addsub_ops_subtree * num_terms_summed + num_terms_summed - 1;
+  static constexpr bool is_main_end = T::is_main_beg;
+  static constexpr size_t num_ops_to_evaluate_main_left =
+      T::num_ops_to_evaluate_main_subtree * num_terms_summed +
+      num_terms_summed - 1;
+  static constexpr size_t num_ops_to_evaluate_main_subtree =
+      num_ops_to_evaluate_main_left + 1;
+  static constexpr bool is_main_beg =
+      num_ops_to_evaluate_main_subtree >= detail::max_num_ops_in_sub_expression;
 
   explicit TensorContract(
       const TensorExpression<T, X, Symm, IndexList, ArgsList>& t)

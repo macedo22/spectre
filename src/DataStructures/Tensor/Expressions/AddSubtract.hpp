@@ -313,6 +313,18 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   static constexpr size_t num_ops_subtree = num_ops_left + num_ops_right + 1;
   static constexpr size_t num_addsub_ops_subtree =
       T1::num_addsub_ops_subtree + T2::num_addsub_ops_subtree + 1;
+  // static constexpr size_t num_consecutive_addsub_ops_left =
+  // T1::num_consecutive_addsub_ops_subtree; static constexpr size_t
+  // num_consecutive_addsub_ops_right = T2::num_consecutive_addsub_ops_subtree;
+  // static constexpr size_t num_consecutive_addsub_ops_subtree =
+  // T1::num_consecutive_addsub_ops_left;
+  static constexpr bool is_main_end = T1::is_main_beg;
+  static constexpr size_t num_ops_to_evaluate_main_left =
+      is_main_end ? 0 : T1::num_ops_to_evaluate_main_subtree;
+  static constexpr size_t num_ops_to_evaluate_main_subtree =
+      num_ops_to_evaluate_main_left + T2::num_ops_subtree + 1;
+  static constexpr bool is_main_beg =
+      num_ops_to_evaluate_main_subtree >= detail::max_num_ops_in_sub_expression;
 
   static constexpr std::array<size_t, num_tensor_indices_op2>
       operand_index_transformation =

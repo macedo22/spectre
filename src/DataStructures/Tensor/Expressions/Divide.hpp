@@ -71,6 +71,13 @@ struct Divide : public TensorExpression<
   // the denominator has no indices or all time indices
   static constexpr auto op2_multi_index =
       make_array<op2_num_tensor_indices, size_t>(0);
+  static constexpr bool is_main_end = T1::is_main_beg;
+  static constexpr size_t num_ops_to_evaluate_main_left =
+      is_main_end ? 0 : T1::num_ops_to_evaluate_main_subtree;
+  static constexpr size_t num_ops_to_evaluate_main_subtree =
+      num_ops_to_evaluate_main_left + T2::num_ops_subtree + 1;
+  static constexpr bool is_main_beg =
+      num_ops_to_evaluate_main_subtree >= detail::max_num_ops_in_sub_expression;
 
   Divide(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~Divide() override = default;
