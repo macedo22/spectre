@@ -51,6 +51,12 @@ struct NumberAsExpression
     return number_;
   }
 
+  // TODO : remove? don't need at leaves?
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE void visit(
+      const ResultType& /*result_component*/,
+      const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {}
+
  private:
   double number_;
 };

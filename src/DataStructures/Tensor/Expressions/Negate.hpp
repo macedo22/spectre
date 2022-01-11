@@ -59,6 +59,13 @@ struct Negate
     return -t_.get(multi_index);
   }
 
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE void visit(
+      ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& multi_index) const {
+    t_.visit(result_component, multi_index);
+  }
+
  private:
   T t_;
 };
