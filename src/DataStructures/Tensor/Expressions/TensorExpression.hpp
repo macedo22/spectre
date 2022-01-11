@@ -70,3 +70,9 @@ template <typename Derived, typename DataType, typename Symm,
 TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
                  ArgsList<Args...>>::~TensorExpression() = default;
 /// @}
+
+namespace TensorExpressions {
+namespace detail {
+static constexpr size_t max_num_ops_in_sub_expression = 4;
+}  // namespace detail
+}  // namespace TensorExpressions

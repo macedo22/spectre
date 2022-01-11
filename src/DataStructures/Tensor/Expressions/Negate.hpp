@@ -43,6 +43,13 @@ struct Negate
   static constexpr size_t num_ops_right = 0;
   static constexpr size_t num_ops_subtree = T::num_ops_subtree + 1;
   static constexpr size_t num_addsub_ops_subtree = T::num_addsub_ops_subtree;
+  static constexpr bool is_main_end = T::is_main_beg;
+  static constexpr size_t num_ops_to_evaluate_main_left =
+      is_main_end ? 0 : T::num_ops_to_evaluate_main_subtree;
+  static constexpr size_t num_ops_to_evaluate_main_subtree =
+      num_ops_to_evaluate_main_left + 1;
+  static constexpr bool is_main_beg =
+      num_ops_to_evaluate_main_subtree >= detail::max_num_ops_in_sub_expression;
 
   Negate(T t) : t_(std::move(t)) {}
   ~Negate() override = default;
