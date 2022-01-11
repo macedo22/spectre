@@ -526,13 +526,23 @@ struct TensorContract
   }
 
   template <typename ResultType>
-  void visit(ResultType& result_component,
-             const std::array<size_t, num_tensor_indices>&
-                 contracted_multi_index) const {
+  void visit_main(ResultType& result_component,
+                  const std::array<size_t, num_tensor_indices>&
+                      contracted_multi_index) const {
     std::array<size_t, num_uncontracted_tensor_indices>
         first_operand_multi_index_to_sum =
             get_first_index_to_sum(contracted_multi_index);
-    t_.visit(result_component, first_operand_multi_index_to_sum);
+    t_.visit_main(result_component, first_operand_multi_index_to_sum);
+  }
+
+  template <typename ResultType>
+  void visit_branch(ResultType& result_component,
+                    const std::array<size_t, num_tensor_indices>&
+                        contracted_multi_index) const {
+    std::array<size_t, num_uncontracted_tensor_indices>
+        first_operand_multi_index_to_sum =
+            get_first_index_to_sum(contracted_multi_index);
+    t_.visit_branch(result_component, first_operand_multi_index_to_sum);
   }
 
  private:

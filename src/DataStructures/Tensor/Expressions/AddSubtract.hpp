@@ -491,7 +491,7 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   }
 
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE void visit(
+  SPECTRE_ALWAYS_INLINE void visit_main(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     if constexpr (ops_have_generic_indices_at_same_positions) {
@@ -513,14 +513,14 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
               static_cast<std::int32_t>(gsl::at(op2_multi_index, i)) +
               gsl::at(spatial_spacetime_index_transformation, i));
         }
-        t1_.visit(result_component, result_multi_index);
-        t2_.visit(result_component, op2_multi_index);
+        t1_.visit_main(result_component, result_multi_index);
+        t2_.visit_branch(result_component, op2_multi_index);
       } else {
         // Operands have the same generic index order and neither of them has
         // a spacetime index where a spatial index has been used, so
         // both operands have the same multi-index
-        t1_.visit(result_component, result_multi_index);
-        t2_.visit(result_component, result_multi_index);
+        t1_.visit_main(result_component, result_multi_index);
+        t2_.visit_branch(result_component, result_multi_index);
       }
     } else {
       if constexpr (op1_spatial_spacetime_index_positions.size() != 0 or
@@ -565,19 +565,111 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
               static_cast<std::int32_t>(gsl::at(op2_multi_index, i)) +
               gsl::at(spatial_spacetime_index_transformation, i));
         }
-        t1_.visit(result_component, result_multi_index);
-        t2_.visit(result_component,
-                  transform_multi_index(op2_multi_index,
-                                        operand_index_transformation));
+        t1_.visit_main(result_component, result_multi_index);
+        t2_.visit_branch(result_component,
+                         transform_multi_index(op2_multi_index,
+                                               operand_index_transformation));
       } else {
         // Operands don't have the same generic index order, but neither of them
         // has a spacetime index where a spatial index has been used, so we just
         // need to reorder the 2nd operand's multi_index according to its
         // generic index order
-        t1_.visit(result_component, result_multi_index);
-        t2_.visit(result_component,
-                  transform_multi_index(result_multi_index,
-                                        operand_index_transformation));
+        t1_.visit_main(result_component, result_multi_index);
+        t2_.visit_branch(result_component,
+                         transform_multi_index(result_multi_index,
+                                               operand_index_transformation));
+      }
+    }
+  }
+
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE void visit_branch(
+      ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    if constexpr (ops_have_generic_indices_at_same_positions) {
+      if constexpr (op1_spatial_spacetime_index_positions.size() != 0 or
+                    op2_spatial_spacetime_index_positions.size() != 0) {
+        // Operands have the same generic index order, but at least one of them
+        // has at least one spacetime index where a spatial index has been used,
+        // so we need to compute the 2nd operand's (possibly) shifted
+        // multi-index values
+        constexpr std::array<std::int32_t, num_tensor_indices>
+            spatial_spacetime_index_transformation =
+                detail::spatial_spacetime_index_transformation_from_positions<
+                    num_tensor_indices>(op1_spatial_spacetime_index_positions,
+                                        op2_spatial_spacetime_index_positions);
+        std::array<size_t, num_tensor_indices> op2_multi_index =
+            result_multi_index;
+        for (size_t i = 0; i < num_tensor_indices; i++) {
+          gsl::at(op2_multi_index, i) = static_cast<size_t>(
+              static_cast<std::int32_t>(gsl::at(op2_multi_index, i)) +
+              gsl::at(spatial_spacetime_index_transformation, i));
+        }
+        t1_.visit_branch(result_component, result_multi_index);
+        t2_.visit_branch(result_component, op2_multi_index);
+      } else {
+        // Operands have the same generic index order and neither of them has
+        // a spacetime index where a spatial index has been used, so
+        // both operands have the same multi-index
+        t1_.visit_branch(result_component, result_multi_index);
+        t2_.visit_branch(result_component, result_multi_index);
+      }
+    } else {
+      if constexpr (op1_spatial_spacetime_index_positions.size() != 0 or
+                    op2_spatial_spacetime_index_positions.size() != 0) {
+        // Operands don't have the same generic index order and at least one of
+        // them has at least one spacetime index where a spatial index has been
+        // used, so we need to compute the 2nd operand's (possibly) shifted
+        // multi-index values and reorder them with respect to the 2nd operand's
+        // generic index order
+
+        // The list of positions where generic spatial indices were used for
+        // spacetime indices in the second operand, but rearranged in terms of
+        // the first operand's generic index order.
+        constexpr std::array<size_t,
+                             op2_spatial_spacetime_index_positions.size()>
+            transformed_op2_spatial_spacetime_index_positions = []() {
+              std::array<size_t, op2_spatial_spacetime_index_positions.size()>
+                  transformed_positions{};
+              for (size_t i = 0;
+                   i < op2_spatial_spacetime_index_positions.size(); i++) {
+                gsl::at(transformed_positions, i) =
+                    gsl::at(operand_index_transformation,
+                            gsl::at(op2_spatial_spacetime_index_positions, i));
+              }
+              return transformed_positions;
+            }();
+
+        // According to the transformed positions above, compute the value shift
+        // needed to convert from multi-indices of the first operand to
+        // multi-indices of the 2nd operand (with the generic index order of the
+        // first)
+        constexpr std::array<std::int32_t, num_tensor_indices>
+            spatial_spacetime_index_transformation =
+                detail::spatial_spacetime_index_transformation_from_positions<
+                    num_tensor_indices>(
+                    op1_spatial_spacetime_index_positions,
+                    transformed_op2_spatial_spacetime_index_positions);
+        std::array<size_t, num_tensor_indices> op2_multi_index =
+            result_multi_index;
+        for (size_t i = 0; i < num_tensor_indices; i++) {
+          gsl::at(op2_multi_index, i) = static_cast<size_t>(
+              static_cast<std::int32_t>(gsl::at(op2_multi_index, i)) +
+              gsl::at(spatial_spacetime_index_transformation, i));
+        }
+        t1_.visit_branch(result_component, result_multi_index);
+        t2_.visit_branch(result_component,
+                         transform_multi_index(op2_multi_index,
+                                               operand_index_transformation));
+      } else {
+        // Operands don't have the same generic index order, but neither of them
+        // has a spacetime index where a spatial index has been used, so we just
+        // need to reorder the 2nd operand's multi_index according to its
+        // generic index order
+        t1_.visit_branch(result_component, result_multi_index);
+        t2_.visit_branch(result_component,
+                         transform_multi_index(result_multi_index,
+                                               operand_index_transformation));
       }
     }
   }
