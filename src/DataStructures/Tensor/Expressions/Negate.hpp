@@ -39,6 +39,8 @@ struct Negate
   using index_list = typename T::index_list;
   using args_list = typename T::args_list;
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
+  static constexpr size_t num_ops_left = T::num_ops_subtree;
+  static constexpr size_t num_ops_right = 0;
   static constexpr size_t num_ops_subtree = T::num_ops_subtree + 1;
   static constexpr size_t num_addsub_ops_subtree = T::num_addsub_ops_subtree;
 

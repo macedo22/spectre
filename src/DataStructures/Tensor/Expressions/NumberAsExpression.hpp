@@ -30,6 +30,8 @@ struct NumberAsExpression
   using index_list = tmpl::list<>;
   using args_list = tmpl::list<>;
   static constexpr auto num_tensor_indices = 0;
+  static constexpr size_t num_ops_left = 0;
+  static constexpr size_t num_ops_right = 0;
   static constexpr size_t num_ops_subtree = 0;
   static constexpr size_t num_addsub_ops_subtree = 0;
 

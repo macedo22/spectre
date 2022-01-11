@@ -49,6 +49,8 @@ struct SquareRoot
   using index_list = typename T::index_list;
   using args_list = tmpl::list<Args...>;
   static constexpr auto num_tensor_indices = sizeof...(Args);
+  static constexpr size_t num_ops_left = T::num_ops_subtree;
+  static constexpr size_t num_ops_right = 0;
   static constexpr size_t num_ops_subtree = T::num_ops_subtree + 1;
   static constexpr size_t num_addsub_ops_subtree = T::num_addsub_ops_subtree;
 

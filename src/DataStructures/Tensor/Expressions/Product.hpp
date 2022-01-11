@@ -90,8 +90,9 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
       tmpl::size<typename T1::index_list>::value;
   static constexpr auto op2_num_tensor_indices =
       num_tensor_indices - op1_num_tensor_indices;
-  static constexpr size_t num_ops_subtree =
-      T1::num_ops_subtree + T2::num_ops_subtree + 1;
+  static constexpr size_t num_ops_left = T1::num_ops_subtree;
+  static constexpr size_t num_ops_right = T2::num_ops_subtree;
+  static constexpr size_t num_ops_subtree = num_ops_left + num_ops_right + 1;
   static constexpr size_t num_addsub_ops_subtree =
       T1::num_addsub_ops_subtree + T2::num_addsub_ops_subtree;
 

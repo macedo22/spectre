@@ -61,8 +61,9 @@ struct Divide : public TensorExpression<
   using symmetry = typename T1::symmetry;
   using index_list = typename T1::index_list;
   using args_list = typename T1::args_list;
-  static constexpr size_t num_ops_subtree =
-      T1::num_ops_subtree + T2::num_ops_subtree + 1;
+  static constexpr size_t num_ops_left = T1::num_ops_subtree;
+  static constexpr size_t num_ops_right = T2::num_ops_subtree;
+  static constexpr size_t num_ops_subtree = num_ops_left + num_ops_right + 1;
   static constexpr auto num_tensor_indices =
       tmpl::size<typename T1::index_list>::value;
   static constexpr auto op2_num_tensor_indices =
