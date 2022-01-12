@@ -42,6 +42,18 @@ struct NumberAsExpression
   NumberAsExpression(const double number) : number_(number) {}
   ~NumberAsExpression() override = default;
 
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE double get_main(
+      const ResultType& /*result_component*/,
+      const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
+    return number_;
+  }
+
+  SPECTRE_ALWAYS_INLINE double get_main(
+      const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
+    return number_;
+  }
+
   /// \brief Returns the number represented by the expression
   ///
   /// \details
@@ -50,7 +62,7 @@ struct NumberAsExpression
   /// size 0.
   ///
   /// \return the number represented by this expression
-  SPECTRE_ALWAYS_INLINE double get(
+  SPECTRE_ALWAYS_INLINE double get_branch(
       const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
     return number_;
   }

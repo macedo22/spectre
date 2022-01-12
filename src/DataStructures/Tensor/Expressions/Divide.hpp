@@ -82,6 +82,26 @@ struct Divide : public TensorExpression<
   Divide(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~Divide() override = default;
 
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+      const ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    if constexpr (is_main_end) {
+      // TODO : better error message
+      static_assert(not is_main_beg, "Shouldn't happen.");
+      (void)result_multi_index;
+      return result_component / t2_.get_branch(op2_multi_index);
+    } else {
+      return t1_.get_main(result_component, result_multi_index) /
+             t2_.get_branch(result_component, op2_multi_index);
+    }
+  }
+
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    return t1_.get(result_multi_index) / t2_.get(op2_multi_index);
+  }
+
   /// \brief Return the value of the component of the quotient tensor at a given
   /// multi-index
   ///
@@ -89,7 +109,7 @@ struct Divide : public TensorExpression<
   //// tensor to retrieve
   /// \return the value of the component in the quotient tensor at
   /// `result_multi_index`
-  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_branch(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     return t1_.get(result_multi_index) / t2_.get(op2_multi_index);
   }
@@ -99,7 +119,14 @@ struct Divide : public TensorExpression<
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     t1_.visit_main(result_component, result_multi_index);
-    t2_.visit_branch(result_component, op2_multi_index);
+    // t2_.visit_branch(result_component, op2_multi_index);
+
+    if constexpr (is_main_beg) {
+      // don't send result_component down right branch because we are at a * and
+      // shouldn't edit result_component in right child
+      result_component = t1_.get_main(result_component, result_multi_index) /
+                         t2_.get_branch(op2_multi_index);
+    }
   }
 
   template <typename ResultType>

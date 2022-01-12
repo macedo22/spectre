@@ -222,9 +222,8 @@ void evaluate(
         gsl::at(rhs_multi_index,
                 gsl::at(rhs_spatial_spacetime_index_positions, j)) += 1;
       }
-
+      (*lhs_tensor)[i] = 0.0;
       (~rhs_tensorexpression).visit_main((*lhs_tensor)[i], rhs_multi_index);
-      (*lhs_tensor)[i] = (~rhs_tensorexpression).get(rhs_multi_index);
     }
   }
 }

@@ -214,11 +214,23 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
       : t_(&t) {}
   ~TensorAsExpression() override = default;
 
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+      const ResultType& /*result_component*/,
+      const std::array<size_t, num_tensor_indices>& multi_index) const {
+    return t_->get(multi_index);
+  }
+
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+      const std::array<size_t, num_tensor_indices>& multi_index) const {
+    return t_->get(multi_index);
+  }
+
   /// \brief Returns the value of the contained tensor's multi-index
   ///
   /// \param multi_index the multi-index of the tensor component to retrieve
   /// \return the value of the component at `multi_index` in the tensor
-  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_branch(
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     return t_->get(multi_index);
   }

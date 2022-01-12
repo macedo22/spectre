@@ -30,6 +30,7 @@
 namespace TensorExpressions {
 
 namespace detail {
+static constexpr size_t sub_expression_max_size = 8;
 
 template <typename I1, typename I2>
 using indices_contractible = std::bool_constant<
@@ -368,14 +369,25 @@ struct TensorContract
   static constexpr size_t num_ops_subtree = num_ops_left;
   static constexpr size_t num_addsub_ops_subtree =
       T::num_addsub_ops_subtree * num_terms_summed + num_terms_summed - 1;
-  static constexpr bool is_main_end = T::is_main_beg;
+  static constexpr bool is_main_end = false;  // T::is_main_beg;
   static constexpr size_t num_ops_to_evaluate_main_left =
       T::num_ops_to_evaluate_main_subtree * num_terms_summed +
       num_terms_summed - 1;
   static constexpr size_t num_ops_to_evaluate_main_subtree =
       num_ops_to_evaluate_main_left + 1;
   static constexpr bool is_main_beg =
-      num_ops_to_evaluate_main_subtree >= detail::max_num_ops_in_sub_expression;
+      num_ops_to_evaluate_main_subtree >=
+      detail::sub_expression_max_size /*max_num_ops_in_sub_expression*/;
+  // TODO : replace lazy static_assert with better logic below (that doesn't
+  // just assume this)
+  static_assert(detail::sub_expression_max_size >=
+                    detail::max_num_ops_in_sub_expression,
+                "For now, to make things easier");
+  //   static constexpr sub_expression_size =
+  //   detail::max_num_ops_in_sub_expression;
+  // TODO : compute this with a function later, just 1 += for now to keep it
+  // simple
+  static constexpr size_t num_consecutive_terms_to_sum = 1;
 
   explicit TensorContract(
       const TensorExpression<T, X, Symm, IndexList, ArgsList>& t)
@@ -484,53 +496,82 @@ struct TensorContract
     return next_uncontracted_multi_index;
   }
 
+  // num_consecutive_terms_to_sum
+  template <size_t Iteration, typename ResultType>
+  static SPECTRE_ALWAYS_INLINE void compute_contraction_main(
+      ResultType& result_component, const T& t,
+      const std::array<size_t, num_uncontracted_tensor_indices>&
+          current_multi_index) {
+    if constexpr (Iteration < num_terms_summed - 1) {
+      std::array<size_t, num_uncontracted_tensor_indices> next_multi_index =
+          get_next_multi_index_to_sum(current_multi_index);
+      // We have more than one component left to sum
+      compute_contraction_main<Iteration + 1>(result_component, t,
+                                              next_multi_index) +
+          result_component += t.get_branch(current_multi_index);
+    } else {
+      // We only have one final component to sum
+      result_component = t.get_branch(current_multi_index);
+    }
+  }
+
   template <size_t Iteration>
-  static SPECTRE_ALWAYS_INLINE decltype(auto) compute_contraction(
+  static SPECTRE_ALWAYS_INLINE decltype(auto) compute_contraction_main(
       const T& t, const std::array<size_t, num_uncontracted_tensor_indices>&
                       current_multi_index) {
     if constexpr (Iteration < num_terms_summed - 1) {
       std::array<size_t, num_uncontracted_tensor_indices> next_multi_index =
           get_next_multi_index_to_sum(current_multi_index);
-
-      // std::cout << "current_multi_index : [ ";
-      // for (const size_t elem : current_multi_index) {
-      //   std::cout << elem << " ";
-      // }
-      // std::cout << "]" << std::endl;
-
-      // std::cout << "next_multi_index : [ ";
-      // for (const size_t elem : next_multi_index) {
-      //   std::cout << elem << " ";
-      // }
-      // std::cout << "]" << std::endl;
-
       // We have more than one component left to sum
-      return compute_contraction<Iteration + 1>(t, next_multi_index) +
-             t.get(current_multi_index);
+      return compute_contraction_main<Iteration + 1>(t, next_multi_index) +
+             t.get_branch(current_multi_index);
     } else {
-      // std::cout << "BASE current_multi_index: [ ";
-      // for (const size_t elem : current_multi_index) {
-      //   std::cout << elem << " ";
-      // }
-      // std::cout << "]" << std::endl;
-
       // We only have one final component to sum
-      return t.get(current_multi_index);
+      return t.get_branch(current_multi_index);
     }
   }
 
-  decltype(auto) get(const std::array<size_t, num_tensor_indices>&
-                         contracted_multi_index) const {
+  template <size_t Iteration>
+  static SPECTRE_ALWAYS_INLINE decltype(auto) compute_contraction_branch(
+      const T& t, const std::array<size_t, num_uncontracted_tensor_indices>&
+                      current_multi_index) {
+    if constexpr (Iteration < num_terms_summed - 1) {
+      std::array<size_t, num_uncontracted_tensor_indices> next_multi_index =
+          get_next_multi_index_to_sum(current_multi_index);
+      // We have more than one component left to sum
+      return compute_contraction_branch<Iteration + 1>(t, next_multi_index) +
+             t.get_branch(current_multi_index);
+    } else {
+      // We only have one final component to sum
+      return t.get_branch(current_multi_index);
+    }
+  }
+
+  //   template <typename ResultType>
+  //   decltype(auto) get_main(ResultType& result_component,
+  //                           const std::array<size_t, num_tensor_indices>&
+  //                               contracted_multi_index) const {
+  //     std::array<size_t, num_uncontracted_tensor_indices>
+  //         first_operand_multi_index_to_sum =
+  //             get_first_index_to_sum(contracted_multi_index);
+  //     return compute_contraction_main<0>(result_component, t_,
+  //                                          first_operand_multi_index_to_sum);
+  //   }
+
+  decltype(auto) get_main(const std::array<size_t, num_tensor_indices>&
+                              contracted_multi_index) const {
     std::array<size_t, num_uncontracted_tensor_indices>
         first_operand_multi_index_to_sum =
             get_first_index_to_sum(contracted_multi_index);
-    // std::cout << "first_operand_multi_index_to_sum : \n[";
-    // for (auto i : contracted_multi_index) {
-    //   std::cout << contracted_multi_index[i] << " ";
-    // }
-    // std::cout << "]" << std::endl;
+    return compute_contraction_main<0>(t_, first_operand_multi_index_to_sum);
+  }
 
-    return compute_contraction<0>(t_, first_operand_multi_index_to_sum);
+  decltype(auto) get_branch(const std::array<size_t, num_tensor_indices>&
+                                contracted_multi_index) const {
+    std::array<size_t, num_uncontracted_tensor_indices>
+        first_operand_multi_index_to_sum =
+            get_first_index_to_sum(contracted_multi_index);
+    return compute_contraction_branch<0>(t_, first_operand_multi_index_to_sum);
   }
 
   template <typename ResultType>
@@ -541,6 +582,11 @@ struct TensorContract
         first_operand_multi_index_to_sum =
             get_first_index_to_sum(contracted_multi_index);
     t_.visit_main(result_component, first_operand_multi_index_to_sum);
+
+    if constexpr (is_main_beg) {
+      /*result_component = */ compute_contraction_main<0>(
+          result_component, t_, first_operand_multi_index_to_sum);
+    }
   }
 
   template <typename ResultType>

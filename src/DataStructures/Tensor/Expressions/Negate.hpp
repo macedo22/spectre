@@ -54,6 +54,25 @@ struct Negate
   Negate(T t) : t_(std::move(t)) {}
   ~Negate() override = default;
 
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+      const ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& multi_index) const {
+    if constexpr (is_main_end) {
+      // TODO : better error message
+      static_assert(not is_main_beg, "Shouldn't happen.");
+      (void)multi_index;
+      return -result_component;
+    } else {
+      return -t_.get_main(result_component, multi_index);
+    }
+  }
+
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+      const std::array<size_t, num_tensor_indices>& multi_index) const {
+    return -t_.get_main(multi_index);
+  }
+
   /// \brief Return the value of the component of the negated tensor expression
   /// at a given multi-index
   ///
@@ -61,9 +80,9 @@ struct Negate
   /// negated tensor expression
   /// \return the value of the component at `multi_index` in the negated tensor
   /// expression
-  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_branch(
       const std::array<size_t, num_tensor_indices>& multi_index) const {
-    return -t_.get(multi_index);
+    return -t_.get_branch(multi_index);
   }
 
   template <typename ResultType>
@@ -71,6 +90,11 @@ struct Negate
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     t_.visit_main(result_component, multi_index);
+
+    static_assert(not(is_main_beg and is_main_end), "Shouldn't happen.");
+    if constexpr (is_main_beg) {
+      result_component = -t_.get_main(result_component, multi_index);
+    }
   }
 
   template <typename ResultType>
