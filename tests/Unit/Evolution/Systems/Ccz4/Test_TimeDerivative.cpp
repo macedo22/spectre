@@ -762,8 +762,8 @@ void test_kerrschild() {
   // Arbitrary time for time-independent solution.
   const double t = std::numeric_limits<double>::signaling_NaN();
   // Evaliuate analytic solution
-  const auto kerrschild_vars =
-      solution.variables(x, t, typename Solution::template tags<DataVector>{});
+  const auto kerrschild_vars = solution.variables(
+      x, t, typename gr::Solutions::KerrSchild::tags<DataVector>{});
 
   // Get ingredients for computing arguments to Ccz4::TimeDerivative
   const auto& spatial_metric =
@@ -774,7 +774,11 @@ void test_kerrschild() {
                       tmpl::size_t<SpatialDim>, FrameType>>(kerrschild_vars);
   const auto det_spatial_metric = determinant_and_inverse(spatial_metric).first;
   const auto d_det_spatial_metric =
-      get<gr::Tags::DerivDetSpatialMetric<SpatialDim>>(kerrschild_vars);
+      get<gr::Tags::DerivDetSpatialMetric<SpatialDim, FrameType>>(
+          solution.variables(
+              x, t,
+              tmpl::list<
+                  gr::Tags::DerivDetSpatialMetric<SpatialDim, FrameType>>{}));
   const auto& dt_spatial_metric =
       get<Tags::dt<gr::Tags::SpatialMetric<SpatialDim>>>(kerrschild_vars);
   const auto& inverse_spatial_metric =
@@ -1165,4 +1169,5 @@ SPECTRE_TEST_CASE("Unit.Evolution.Systems.Ccz4.TimeDerivative",
   test(make_not_null(&generator),
        DataVector(5, std::numeric_limits<double>::signaling_NaN()));
   test_minkowski();
+  test_kerrschild();
 }
