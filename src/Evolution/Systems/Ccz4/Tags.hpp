@@ -365,6 +365,11 @@ template <typename DataType>
 struct RicciScalarPlusDivergenceZ4Constraint : db::SimpleTag {
   using type = Scalar<DataType>;
 };
+
+template <typename DataType>
+struct Theta : db::SimpleTag {
+  using type = Scalar<DataType>;
+};
 }  // namespace Tags
 
 namespace OptionTags {
