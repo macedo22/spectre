@@ -5,7 +5,7 @@
 
 #include <array>
 #include <cstddef>
-// #include <iostream> // TODO: remove
+#include <iostream>  // TODO: remove
 #include <limits>
 #include <string>
 
@@ -793,20 +793,59 @@ void test_kerrschild() {
   const auto& d_shift =
       get<Tags::deriv<gr::Tags::Shift<SpatialDim, FrameType, DataVector>,
                       tmpl::size_t<SpatialDim>, FrameType>>(kerrschild_vars);
+  //   std::cout << "d_lapse : " << d_lapse << std::endl;
+  //   std::cout << "d_shift : " << d_shift << std::endl;
   const auto& field_b = d_shift;
-  // TODO : update this
-  const auto d_field_b =
-      make_with_value<tnsr::ijK<DataVector, SpatialDim, FrameType>>(
-          used_for_size, 0.0);
-  // TODO : update this
+  using field_b_tag = Ccz4::Tags::FieldB<SpatialDim, FrameType, DataVector>;
+  Variables<tmpl::list<field_b_tag>> field_b_var(num_points_3d);
+  get<field_b_tag>(field_b_var) = field_b;
+  const auto d_field_b_var = partial_derivatives<tmpl::list<field_b_tag>>(
+      field_b_var, mesh, coord_map.inv_jacobian(x_logical));
+  const auto& d_field_b =
+      get<Tags::deriv<field_b_tag, tmpl::size_t<SpatialDim>, FrameType>>(
+          d_field_b_var);
+
   // eq:
   //   dt_shift = f * b + shift * d_shift ---> need dt_shift? set dt_shift to 0?
-  //   b = (dt_shift - shift * d_shift) / f
-  const auto b = make_with_value<tnsr::I<DataVector, SpatialDim, FrameType>>(
-      used_for_size, 0.0);
-  // TODO : update this
-  const auto d_b = make_with_value<tnsr::iJ<DataVector, SpatialDim, FrameType>>(
-      used_for_size, 0.0);
+  //   b = (dt_shift - shift * d_shift) / f = (-shift * d_shift) / f
+  //   const auto b = make_with_value<tnsr::I<DataVector, SpatialDim,
+  //   FrameType>>(
+  //       used_for_size, 0.0);
+  const double f = 0.6;
+  tnsr::I<DataVector, SpatialDim, FrameType> b{};
+  for (size_t i = 0; i < SpatialDim; i++) {
+    b.get(i) = -shift.get(0) * d_shift.get(0, i) / f;
+    for (size_t k = 1; k < SpatialDim; k++) {
+      // assuming initial dt_shift == 0.0
+      b.get(i) -= shift.get(k) * d_shift.get(k, i) / f;
+    }
+  }
+  // eq:
+  //   dt_shift = f * b + shift * d_shift ---> need dt_shift? set dt_shift to 0?
+  //   b^i = (dt_shift - shift * d_shift) / f = (-shift^k * d_shift_k^i) / f
+  //   d_b_j^i = (-shift^k * d_d_shift_jk^i - d_shift_j^k * d_shift_k^i) / f
+  //
+  //   using b_tag = Ccz4::Tags::FieldB<SpatialDim, FrameType, DataVector>;
+  //   Variables<tmpl::list<b_tag>> b_var(num_points_3d);
+  //   get<b_tag>(b_var) = b;
+  //   const auto d_b_var = partial_derivatives<tmpl::list<b_tag>>(
+  //       b_var, mesh, coord_map.inv_jacobian(x_logical));
+  //   const auto& d_b =
+  //       get<Tags::deriv<b_tag, tmpl::size_t<SpatialDim>,
+  //       FrameType>>(d_b_var);
+  tnsr::iJ<DataVector, SpatialDim, FrameType> d_b{};
+  for (size_t j = 0; j < SpatialDim; j++) {
+    for (size_t i = 0; i < SpatialDim; i++) {
+      d_b.get(j, i) = -shift.get(0) * d_field_b.get(j, 0, i) -
+                      field_b.get(j, 0) * field_b.get(0, i);
+      for (size_t k = 1; k < SpatialDim; k++) {
+        // assuming initial dt_shift == 0.0
+        d_b.get(j, i) -= shift.get(0) * d_field_b.get(j, 0, i) +
+                         field_b.get(j, 0) * field_b.get(0, i);
+      }
+      d_b.get(j, i) /= f;
+    }
+  }
 
   // Compute arguments for Ccz4::TimeDerivative
   Scalar<DataVector> ln_lapse{};
@@ -816,10 +855,26 @@ void test_kerrschild() {
   for (size_t i = 0; i < SpatialDim; i++) {
     field_a.get(i) = d_lapse.get(i) / get(lapse);
   }
-  // TODO : update this
-  const auto d_field_a =
-      make_with_value<tnsr::ij<DataVector, SpatialDim, FrameType>>(
-          used_for_size, 0.0);
+  using d_lapse_tag = Tags::deriv<gr::Tags::Lapse<DataVector>,
+                                  tmpl::size_t<SpatialDim>, FrameType>;
+  Variables<tmpl::list<d_lapse_tag>> d_lapse_var(num_points_3d);
+  get<d_lapse_tag>(d_lapse_var) = d_lapse;
+  const auto d_d_lapse_var = partial_derivatives<tmpl::list<d_lapse_tag>>(
+      d_lapse_var, mesh, coord_map.inv_jacobian(x_logical));
+  const auto& d_d_lapse =
+      get<Tags::deriv<d_lapse_tag, tmpl::size_t<SpatialDim>, FrameType>>(
+          d_d_lapse_var);
+  // eq:
+  //   field_a_i = d_lapse_i / lapse
+  //   d_field_a_ji = (d_d_lapse_ji * lapse - d_lapse_i * d_lapse_j) / lapse^2
+  tnsr::ij<DataVector, SpatialDim, FrameType> d_field_a{};
+  for (size_t j = 0; j < SpatialDim; j++) {
+    for (size_t i = 0; i < SpatialDim; i++) {
+      d_field_a.get(j, i) =
+          (d_d_lapse.get(j, i) * get(lapse) - d_lapse.get(i) * d_lapse.get(j)) /
+          square(get(lapse));
+    }
+  }
 
   // TODO : remove this conformal_factor if we don't need it
   const auto conformal_factor = pow(get(det_spatial_metric), -1. / 6.);
@@ -860,11 +915,14 @@ void test_kerrschild() {
       }
     }
   }
-
-  // TODO : update this
-  const auto d_field_d =
-      make_with_value<tnsr::ijkk<DataVector, SpatialDim, FrameType>>(
-          used_for_size, 0.0);
+  using field_d_tag = Ccz4::Tags::FieldD<SpatialDim, FrameType, DataVector>;
+  Variables<tmpl::list<field_d_tag>> field_d_var(num_points_3d);
+  get<field_d_tag>(field_d_var) = field_d;
+  const auto d_field_d_var = partial_derivatives<tmpl::list<field_d_tag>>(
+      field_d_var, mesh, coord_map.inv_jacobian(x_logical));
+  const auto& d_field_d =
+      get<Tags::deriv<field_d_tag, tmpl::size_t<SpatialDim>, FrameType>>(
+          d_field_d_var);
 
   auto field_d_up = gr::deriv_inverse_spatial_metric(
       inverse_conformal_spatial_metric, field_d);
@@ -876,15 +934,6 @@ void test_kerrschild() {
     }
   }
 
-  //   using field_d_tag = Ccz4::Tags::FieldD<SpatialDim, FrameType,
-  //   DataVector>; Variables<tmpl::list<field_d_tag>>
-  //   field_d_var(num_points_3d); get<field_d_tag>(field_d_var) = field_d;
-  //   const auto d_field_d_var = partial_derivatives<tmpl::list<field_d_tag>>(
-  //       field_d_var, mesh, coord_map.inv_jacobian(x_logical));
-  //   const auto& d_field_d =
-  //       get<Tags::deriv<field_d_tag, tmpl::size_t<SpatialDim>, FrameType>>(
-  //           d_field_d_var);
-
   const auto d_conformal_christoffel_second_kind =
       Ccz4::deriv_conformal_christoffel_second_kind(
           inverse_conformal_spatial_metric, field_d, d_field_d, field_d_up);
@@ -894,20 +943,14 @@ void test_kerrschild() {
     field_p.get(i) =
         -d_det_spatial_metric.get(i) / (6. * get(det_spatial_metric));
   }
-
-  // TODO : update this
-  const auto d_field_p =
-      make_with_value<tnsr::ij<DataVector, SpatialDim, FrameType>>(
-          used_for_size, 0.0);
-
-  //   using field_p_tag = Ccz4::Tags::FieldP<SpatialDim, FrameType,
-  //   DataVector>; Variables<tmpl::list<field_p_tag>>
-  //   field_p_var(num_points_3d); get<field_p_tag>(field_p_var) = field_p;
-  //   const auto d_field_p_var = partial_derivatives<tmpl::list<field_p_tag>>(
-  //       field_p_var, mesh, coord_map.inv_jacobian(x_logical));
-  //   const auto& d_field_p =
-  //       get<Tags::deriv<field_p_tag, tmpl::size_t<SpatialDim>, FrameType>>(
-  //           d_field_p_var);
+  using field_p_tag = Ccz4::Tags::FieldP<SpatialDim, FrameType, DataVector>;
+  Variables<tmpl::list<field_p_tag>> field_p_var(num_points_3d);
+  get<field_p_tag>(field_p_var) = field_p;
+  const auto d_field_p_var = partial_derivatives<tmpl::list<field_p_tag>>(
+      field_p_var, mesh, coord_map.inv_jacobian(x_logical));
+  const auto& d_field_p =
+      get<Tags::deriv<field_p_tag, tmpl::size_t<SpatialDim>, FrameType>>(
+          d_field_p_var);
 
   const auto conformal_christoffel_second_kind =
       Ccz4::conformal_christoffel_second_kind(inverse_conformal_spatial_metric,
@@ -936,11 +979,19 @@ void test_kerrschild() {
           extrinsic_curvature.get(i, j) * inverse_spatial_metric.get(i, j);
     }
   }
-
-  // TODO : update this
-  const auto d_trace_extrinsic_curvature =
-      make_with_value<tnsr::i<DataVector, SpatialDim, FrameType>>(used_for_size,
-                                                                  0.0);
+  using trace_extrinsic_curvature_tag =
+      gr::Tags::TraceExtrinsicCurvature<DataVector>;
+  Variables<tmpl::list<trace_extrinsic_curvature_tag>>
+      trace_extrinsic_curvature_var(num_points_3d);
+  get<trace_extrinsic_curvature_tag>(trace_extrinsic_curvature_var) =
+      trace_extrinsic_curvature;
+  const auto d_trace_extrinsic_curvature_var =
+      partial_derivatives<tmpl::list<trace_extrinsic_curvature_tag>>(
+          trace_extrinsic_curvature_var, mesh,
+          coord_map.inv_jacobian(x_logical));
+  const auto& d_trace_extrinsic_curvature =
+      get<Tags::deriv<trace_extrinsic_curvature_tag, tmpl::size_t<SpatialDim>,
+                      FrameType>>(d_trace_extrinsic_curvature_var);
 
   const auto a_tilde =
       Ccz4::a_tilde(conformal_factor_squared, spatial_metric,
@@ -959,7 +1010,7 @@ void test_kerrschild() {
   const double c = 1.0;
   const double cleaning_speed = 1.6;
   const double eta = 0.5;
-  const double f = 0.6;
+  //   const double f = 0.6;
   const auto slicing_condition =
       make_with_value<Scalar<DataVector>>(used_for_size, 1.0);
   const auto k_0 = make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
@@ -1119,55 +1170,56 @@ void test_kerrschild() {
       d_a_tilde, d_trace_extrinsic_curvature, d_theta, d_gamma_hat, d_b,
       d_field_a, d_field_b, d_field_d, d_field_p);
 
+  const auto zero = DataVector(used_for_size.size(), 0.0);
   // Check that all time derivatives are 0
   for (auto& component : dt_conformal_spatial_metric) {
-    CHECK(component == 0.0);
+    CHECK_ITERABLE_APPROX(component, zero);
   }
-  for (auto& component : dt_ln_lapse) {
-    CHECK(component == 0.0);
+  for (auto& component : dt_ln_lapse) {  // TODO : very off
+    CHECK_ITERABLE_APPROX(component, zero);
   }
   for (auto& component : dt_shift) {
-    CHECK(component == 0.0);
+    CHECK_ITERABLE_APPROX(component, zero);
   }
   for (auto& component : dt_ln_conformal_factor) {
-    CHECK(component == 0.0);
+    CHECK_ITERABLE_APPROX(component, zero);
   }
   for (auto& component : dt_a_tilde) {
-    CHECK(component == 0.0);
+    CHECK_ITERABLE_APPROX(component, zero);  // TODO : pretty off
   }
-  for (auto& component : dt_trace_extrinsic_curvature) {
-    CHECK(component == 0.0);
+  for (auto& component : dt_trace_extrinsic_curvature) {  // TODO : off
+    CHECK_ITERABLE_APPROX(component, zero);
   }
-  for (auto& component : dt_theta) {
-    CHECK(component == 0.0);
+  for (auto& component : dt_theta) {  // TODO : pretty off
+    CHECK_ITERABLE_APPROX(component, zero);
   }
-  for (auto& component : dt_gamma_hat) {
-    CHECK(component == 0.0);
+  for (auto& component : dt_gamma_hat) {  // TODO : very off
+    CHECK_ITERABLE_APPROX(component, zero);
   }
-  for (auto& component : dt_b) {
-    CHECK(component == 0.0);
+  for (auto& component : dt_b) {  // TODO : very off
+    CHECK_ITERABLE_APPROX(component, zero);
   }
-  for (auto& component : dt_field_a) {
-    CHECK(component == 0.0);
+  for (auto& component : dt_field_a) {  // TODO : very off
+    CHECK_ITERABLE_APPROX(component, zero);
   }
-  for (auto& component : dt_field_b) {
-    CHECK(component == 0.0);
+  for (auto& component : dt_field_b) {  // TODO : very off
+    CHECK_ITERABLE_APPROX(component, zero);
   }
-  for (auto& component : dt_field_d) {
-    CHECK(component == 0.0);
+  for (auto& component : dt_field_d) {  // TODO : very off
+    CHECK_ITERABLE_APPROX(component, zero);
   }
-  for (auto& component : dt_field_p) {
-    CHECK(component == 0.0);
+  for (auto& component : dt_field_p) {  // TODO : pretty off
+    CHECK_ITERABLE_APPROX(component, zero);
   }
 }
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.Evolution.Systems.Ccz4.TimeDerivative",
                   "[Unit][Evolution]") {
-  MAKE_GENERATOR(generator);
+  //   MAKE_GENERATOR(generator);
 
-  test(make_not_null(&generator),
-       DataVector(5, std::numeric_limits<double>::signaling_NaN()));
-  test_minkowski();
+  //   test(make_not_null(&generator),
+  //        DataVector(5, std::numeric_limits<double>::signaling_NaN()));
+  //   test_minkowski();
   test_kerrschild();
 }
