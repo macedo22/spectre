@@ -379,7 +379,7 @@ void TimeDerivative<Dim>::apply(
   ::TensorExpressions::evaluate(
       dt_ln_lapse,
       shift(ti_K) * field_a(ti_k) -
-          (*lapse)() * slicing_condition() * (*k_minus_k0_minus_2_theta_c)());
+          (*lapse_times_slicing_condition)() * (*k_minus_k0_minus_2_theta_c)());
 
   // eq. (12c) : time derivative of the shift
   // s == 0 or s == 1
