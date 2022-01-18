@@ -963,26 +963,22 @@ void test_kerrschild() {
   const auto contracted_conformal_christoffel_second_kind =
       Ccz4::contracted_conformal_christoffel_second_kind(
           inverse_conformal_spatial_metric, conformal_christoffel_second_kind);
-  //   const auto christoffel_second_kind =
-  //       gr::christoffel_second_kind(d_spatial_metric,
-  //       inverse_spatial_metric);
-  //   using christoffel_second_kind_tag =
-  //       gr::Tags::SpatialChristoffelSecondKind<SpatialDim, FrameType,
-  //       DataVector>;
-  //   Variables<tmpl::list<christoffel_second_kind_tag>>
-  //       christoffel_second_kind_var(num_points_3d);
-  //   get<christoffel_second_kind_tag>(christoffel_second_kind_var) =
-  //       christoffel_second_kind;
-  //   const auto d_christoffel_second_kind_var =
-  //       partial_derivatives<tmpl::list<christoffel_second_kind_tag>>(
-  //           christoffel_second_kind_var, mesh,
-  //           coord_map.inv_jacobian(x_logical));
-  //   const auto& d_christoffel_second_kind =
-  //       get<Tags::deriv<christoffel_second_kind_tag,
-  //       tmpl::size_t<SpatialDim>,
-  //                       FrameType>>(d_christoffel_second_kind_var);
-  //   const auto spatial_ricci_tensor_kerr =
-  //       gr::ricci_tensor(christoffel_second_kind, d_christoffel_second_kind);
+  const auto christoffel_second_kind =
+      gr::christoffel_second_kind(d_spatial_metric, inverse_spatial_metric);
+  using christoffel_second_kind_tag =
+      gr::Tags::SpatialChristoffelSecondKind<SpatialDim, FrameType, DataVector>;
+  Variables<tmpl::list<christoffel_second_kind_tag>>
+      christoffel_second_kind_var(num_points_3d);
+  get<christoffel_second_kind_tag>(christoffel_second_kind_var) =
+      christoffel_second_kind;
+  const auto d_christoffel_second_kind_var =
+      partial_derivatives<tmpl::list<christoffel_second_kind_tag>>(
+          christoffel_second_kind_var, mesh, coord_map.inv_jacobian(x_logical));
+  const auto& d_christoffel_second_kind =
+      get<Tags::deriv<christoffel_second_kind_tag, tmpl::size_t<SpatialDim>,
+                      FrameType>>(d_christoffel_second_kind_var);
+  const auto spatial_ricci_tensor =
+      gr::ricci_tensor(christoffel_second_kind, d_christoffel_second_kind);
   //   const auto spacetime_normal_one_form =
   //       gr::spacetime_normal_one_form(lapse);
   // TODO : need to actually compute this...
@@ -1152,9 +1148,10 @@ void test_kerrschild() {
   tnsr::iJkk<DataVector, SpatialDim>
       d_conformal_christoffel_second_kind_to_fill(
           used_for_size);  // TODO : already computed
-  tnsr::Ijj<DataVector, SpatialDim> christoffel_second_kind(used_for_size);
+  tnsr::Ijj<DataVector, SpatialDim> christoffel_second_kind_to_fill(
+      used_for_size);  // TODO : already computed
   tnsr::ij<DataVector, SpatialDim> spatial_ricci_tensor_buffer(used_for_size);
-  tnsr::ii<DataVector, SpatialDim> spatial_ricci_tensor(used_for_size);
+  tnsr::ii<DataVector, SpatialDim> spatial_ricci_tensor_to_fill(used_for_size);
   tnsr::ij<DataVector, SpatialDim> grad_grad_lapse(used_for_size);
   Scalar<DataVector> divergence_lapse(used_for_size);
   tnsr::I<DataVector, SpatialDim>
@@ -1209,10 +1206,10 @@ void test_kerrschild() {
       make_not_null(&trace_a_tilde_to_fill), make_not_null(&field_d_up_to_fill),
       make_not_null(&conformal_christoffel_second_kind_to_fill),
       make_not_null(&d_conformal_christoffel_second_kind_to_fill),
-      make_not_null(&christoffel_second_kind),
+      make_not_null(&christoffel_second_kind_to_fill),
       make_not_null(&spatial_ricci_tensor_buffer),
-      make_not_null(&spatial_ricci_tensor), make_not_null(&grad_grad_lapse),
-      make_not_null(&divergence_lapse),
+      make_not_null(&spatial_ricci_tensor_to_fill),
+      make_not_null(&grad_grad_lapse), make_not_null(&divergence_lapse),
       make_not_null(&contracted_conformal_christoffel_second_kind_to_fill),
       make_not_null(&d_contracted_conformal_christoffel_second_kind_to_fill),
       make_not_null(&spatial_z4_constraint),
@@ -1245,6 +1242,13 @@ void test_kerrschild() {
     }
   }
   CHECK_ITERABLE_APPROX(inv_a_tilde, expected_inv_a_tilde);
+
+  CHECK_ITERABLE_APPROX(christoffel_second_kind_to_fill,
+                        christoffel_second_kind);
+
+  Approx approx_ricci = Approx::custom().epsilon(1e-6).scale(1.0);
+  CHECK_ITERABLE_CUSTOM_APPROX(spatial_ricci_tensor_to_fill,
+                               spatial_ricci_tensor, approx_ricci);
 
   const auto zero = DataVector(used_for_size.size(), 0.0);
   // Check that all time derivatives are 0
