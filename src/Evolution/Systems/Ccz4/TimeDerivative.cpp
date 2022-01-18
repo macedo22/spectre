@@ -559,12 +559,12 @@ void TimeDerivative<Dim>::apply(
         shift(ti_L) * d_field_a(ti_l, ti_k) -
             (*lapse_times_field_a)(ti_k) * (*k_minus_k0_minus_2_theta_c)() *
                 (slicing_condition() + (*lapse)() * (*d_slicing_condition)()) +
-            field_b(ti_k, ti_L) * field_a(ti_l) +
+            field_b(ti_k, ti_L) * field_a(ti_l) -
             // terms with \alpha g(\alpha)
             (*lapse_times_slicing_condition)() *
-                ((*inv_conformal_metric_times_d_a_tilde)(
-                     ti_k)-d_trace_extrinsic_curvature(ti_k) +
-                 d_k_0(ti_k) + 2.0 * c * d_theta(ti_k) +
+                ((*inv_conformal_metric_times_d_a_tilde)(ti_k) +
+                 d_trace_extrinsic_curvature(ti_k) - d_k_0(ti_k) -
+                 2.0 * c * d_theta(ti_k) -
                  2.0 * (*field_d_up_times_a_tilde)(ti_k)));
   }
 
