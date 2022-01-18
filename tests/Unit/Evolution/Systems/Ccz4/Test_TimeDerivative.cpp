@@ -35,8 +35,11 @@
 #include "NumericalAlgorithms/Spectral/Spectral.hpp"
 #include "PointwiseFunctions/AnalyticSolutions/GeneralRelativity/KerrSchild.hpp"
 #include "PointwiseFunctions/AnalyticSolutions/GeneralRelativity/Minkowski.hpp"
+#include "PointwiseFunctions/GeneralRelativity/Christoffel.hpp"
 #include "PointwiseFunctions/GeneralRelativity/DerivativeSpatialMetric.hpp"
 #include "PointwiseFunctions/GeneralRelativity/ExtrinsicCurvature.hpp"
+#include "PointwiseFunctions/GeneralRelativity/Ricci.hpp"
+#include "PointwiseFunctions/GeneralRelativity/SpacetimeNormalOneForm.hpp"
 #include "PointwiseFunctions/GeneralRelativity/Tags.hpp"
 #include "Utilities/ConstantExpressions.hpp"
 #include "Utilities/Gsl.hpp"
@@ -960,6 +963,29 @@ void test_kerrschild() {
   const auto contracted_conformal_christoffel_second_kind =
       Ccz4::contracted_conformal_christoffel_second_kind(
           inverse_conformal_spatial_metric, conformal_christoffel_second_kind);
+  //   const auto christoffel_second_kind =
+  //       gr::christoffel_second_kind(d_spatial_metric,
+  //       inverse_spatial_metric);
+  //   using christoffel_second_kind_tag =
+  //       gr::Tags::SpatialChristoffelSecondKind<SpatialDim, FrameType,
+  //       DataVector>;
+  //   Variables<tmpl::list<christoffel_second_kind_tag>>
+  //       christoffel_second_kind_var(num_points_3d);
+  //   get<christoffel_second_kind_tag>(christoffel_second_kind_var) =
+  //       christoffel_second_kind;
+  //   const auto d_christoffel_second_kind_var =
+  //       partial_derivatives<tmpl::list<christoffel_second_kind_tag>>(
+  //           christoffel_second_kind_var, mesh,
+  //           coord_map.inv_jacobian(x_logical));
+  //   const auto& d_christoffel_second_kind =
+  //       get<Tags::deriv<christoffel_second_kind_tag,
+  //       tmpl::size_t<SpatialDim>,
+  //                       FrameType>>(d_christoffel_second_kind_var);
+  //   const auto spatial_ricci_tensor_kerr =
+  //       gr::ricci_tensor(christoffel_second_kind, d_christoffel_second_kind);
+  //   const auto spacetime_normal_one_form =
+  //       gr::spacetime_normal_one_form(lapse);
+  // TODO : need to actually compute this...
   const auto& gamma_hat = contracted_conformal_christoffel_second_kind;
   const auto d_contracted_conformal_christoffel_second_kind =
       Ccz4::deriv_contracted_conformal_christoffel_second_kind(
@@ -1018,13 +1044,14 @@ void test_kerrschild() {
   const double cleaning_speed = 1.6;
   const double eta = 0.5;
   //   const double f = 0.6;
-  auto slicing_condition =
-      make_with_value<Scalar<DataVector>>(used_for_size, 2.0);
-  get(slicing_condition) /= get(lapse);
+  //   auto slicing_condition =
+  //       make_with_value<Scalar<DataVector>>(used_for_size, 2.0);
+  //   get(slicing_condition) /= get(lapse);
+  const auto slicing_condition =
+      make_with_value<Scalar<DataVector>>(used_for_size, 1.0);
   get(ln_lapse) = log(get(lapse));
   const auto& k_0 = trace_extrinsic_curvature;
-  const auto d_k_0 =
-      make_with_value<tnsr::i<DataVector, SpatialDim>>(used_for_size, 0.0);
+  const auto& d_k_0 = d_trace_extrinsic_curvature;
   const double kappa_1 = 0.1;
   const double kappa_2 = 0.3;
   const double kappa_3 = 0.4;
@@ -1231,9 +1258,12 @@ void test_kerrschild() {
   //   for (auto& component : dt_b) {
   //     CHECK_ITERABLE_APPROX(component, zero);
   //   }
-  //   for (auto& component : dt_field_a) {
-  //     CHECK_ITERABLE_APPROX(component, zero);
-  //   }
+  // TODO : this is a large tolerance, maybe try computing some of the initial
+  // derivatives analytically to see if this tolerance can be improved
+  Approx approx_12j = Approx::custom().epsilon(1e-7).scale(1.0);
+  for (auto& component : dt_field_a) {
+    CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_12j);
+  }
   //   for (auto& component : dt_field_b) {
   //     CHECK_ITERABLE_APPROX(component, zero);
   //   }
