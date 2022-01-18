@@ -1229,6 +1229,23 @@ void test_kerrschild() {
       d_a_tilde, d_trace_extrinsic_curvature, d_theta, d_gamma_hat, d_b,
       d_field_a, d_field_b, d_field_d, d_field_p);
 
+  CHECK_ITERABLE_APPROX(inv_spatial_metric, inverse_spatial_metric);
+
+  auto expected_inv_a_tilde =
+      make_with_value<tnsr::II<DataVector, SpatialDim>>(used_for_size, 0.0);
+  for (size_t i = 0; i < SpatialDim; i++) {
+    for (size_t j = i; j < SpatialDim; j++) {
+      for (size_t k = 0; k < SpatialDim; k++) {
+        for (size_t l = 0; l < SpatialDim; l++) {
+          expected_inv_a_tilde.get(i, j) += a_tilde.get(k, l) *
+                                            inv_spatial_metric.get(i, k) *
+                                            inv_spatial_metric.get(j, l);
+        }
+      }
+    }
+  }
+  CHECK_ITERABLE_APPROX(inv_a_tilde, expected_inv_a_tilde);
+
   const auto zero = DataVector(used_for_size.size(), 0.0);
   // Check that all time derivatives are 0
   for (auto& component : dt_conformal_spatial_metric) {
