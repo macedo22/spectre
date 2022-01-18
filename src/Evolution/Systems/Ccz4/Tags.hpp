@@ -370,6 +370,11 @@ template <typename DataType>
 struct Theta : db::SimpleTag {
   using type = Scalar<DataType>;
 };
+
+template <typename DataType>
+struct K_0 : db::SimpleTag {
+  using type = Scalar<DataType>;
+};
 }  // namespace Tags
 
 namespace OptionTags {

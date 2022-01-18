@@ -79,6 +79,8 @@ template <typename DataType = DataVector>
 struct RicciScalarPlusDivergenceZ4Constraint;
 template <typename DataType = DataVector>
 struct Theta;
+template <typename DataType = DataVector>
+struct K_0;
 }  // namespace Tags
 
 /// \brief Input option tags for the CCZ4 evolution system
