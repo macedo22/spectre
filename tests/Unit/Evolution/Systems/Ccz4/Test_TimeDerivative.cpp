@@ -194,6 +194,7 @@ void test_impl(const gsl::not_null<Generator*> generator,
   const auto s = make_with_value<double>(used_for_size, 0.0);
   const auto one_over_relaxation_time =
       make_with_value<double>(used_for_size, 0.0);
+  const bool use_shift_constraint_advective_terms = true;
   const auto conformal_spatial_metric =
       TestHelpers::gr::random_spatial_metric<Dim>(generator, used_for_size);
   const auto ln_lapse = TestHelpers::gr::random_lapse(generator, used_for_size);
@@ -296,9 +297,10 @@ void test_impl(const gsl::not_null<Generator*> generator,
       make_not_null(&grad_spatial_z4_constraint),
       make_not_null(&ricci_scalar_plus_divergence_z4_constraint), c,
       cleaning_speed, eta, f, slicing_condition, k_0, d_k_0, kappa_1, kappa_2,
-      kappa_3, mu, s, one_over_relaxation_time, conformal_spatial_metric,
-      ln_lapse, shift, ln_conformal_factor, a_tilde, trace_extrinsic_curvature,
-      theta, gamma_hat, b, field_a, field_b, field_d, field_p,
+      kappa_3, mu, s, one_over_relaxation_time,
+      use_shift_constraint_advective_terms, conformal_spatial_metric, ln_lapse,
+      shift, ln_conformal_factor, a_tilde, trace_extrinsic_curvature, theta,
+      gamma_hat, b, field_a, field_b, field_d, field_p,
       //   d_conformal_spatial_metric, d_ln_lapse, d_shift,
       //   d_ln_conformal_factor,
       d_a_tilde, d_trace_extrinsic_curvature, d_theta, d_gamma_hat, d_b,
@@ -546,6 +548,7 @@ void test_minkowski() {
   const double mu = 0.7;
   const double s = 1.0;
   const double one_over_relaxation_time = 10.0;
+  const bool use_shift_constraint_advective_terms = true;
 
   // Evolution variables to be filled by Ccz4::TimeDerivative
   tnsr::ii<DataVector, SpatialDim> dt_conformal_spatial_metric(used_for_size);
@@ -686,9 +689,10 @@ void test_minkowski() {
       make_not_null(&grad_spatial_z4_constraint),
       make_not_null(&ricci_scalar_plus_divergence_z4_constraint), c,
       cleaning_speed, eta, f, slicing_condition, k_0, d_k_0, kappa_1, kappa_2,
-      kappa_3, mu, s, one_over_relaxation_time, conformal_spatial_metric,
-      ln_lapse, shift, ln_conformal_factor, a_tilde, trace_extrinsic_curvature,
-      theta, gamma_hat, b, field_a, field_b, field_d, field_p,
+      kappa_3, mu, s, one_over_relaxation_time,
+      use_shift_constraint_advective_terms, conformal_spatial_metric, ln_lapse,
+      shift, ln_conformal_factor, a_tilde, trace_extrinsic_curvature, theta,
+      gamma_hat, b, field_a, field_b, field_d, field_p,
       //   d_conformal_spatial_metric, d_ln_lapse, d_shift,
       //   d_ln_conformal_factor,
       d_a_tilde, d_trace_extrinsic_curvature, d_theta, d_gamma_hat, d_b,
@@ -823,16 +827,33 @@ void test_kerrschild() {
   //   const auto b = make_with_value<tnsr::I<DataVector, SpatialDim,
   //   FrameType>>(
   //       used_for_size, 0.0);
-  const double f = 0.6;
+  const double f = 0.75;
+  const double kappa_1 = 0.1;
+  const double kappa_2 = 0.3;
+  const double kappa_3 = 0.4;
+  const double mu = 0.7;
+  const double s = 1.0;
+  const double one_over_relaxation_time = 10.0;
+  const bool use_shift_constraint_advective_terms = true;
   tnsr::I<DataVector, SpatialDim, FrameType> b{};
-  for (size_t i = 0; i < SpatialDim; i++) {
-    b.get(i) = -shift.get(0) * d_shift.get(0, i);
-    for (size_t k = 1; k < SpatialDim; k++) {
-      // assuming initial dt_shift == 0.0
-      b.get(i) -= shift.get(k) * d_shift.get(k, i);
+  if (use_shift_constraint_advective_terms) {
+    for (size_t i = 0; i < SpatialDim; i++) {
+      b.get(i) = -shift.get(0) * d_shift.get(0, i);
+      for (size_t k = 1; k < SpatialDim; k++) {
+        // assuming initial dt_shift == 0.0
+        b.get(i) -= shift.get(k) * d_shift.get(k, i);
+      }
+      b.get(i) /= f;
     }
-    b.get(i) /= f;
+  } else {
+    for (size_t i = 0; i < SpatialDim; i++) {
+      // assuming initial dt_shift == 0.0
+      b.get(i) = 0.0;
+    }
   }
+  //   const auto b = make_with_value<tnsr::I<DataVector, SpatialDim,
+  //   FrameType>>(
+  //       used_for_size, 0.0);
   // eq:
   //   dt_shift = f * b + shift * d_shift ---> need dt_shift? set dt_shift to 0?
   //   b^j = (dt_shift - shift * d_shift) / f = (-shift^k * d_shift_k^j) / f
@@ -1000,12 +1021,12 @@ void test_kerrschild() {
   const auto& d_gamma_hat = d_contracted_conformal_christoffel_second_kind;
 
   Scalar<DataVector> eta(used_for_size);
-  get(eta) = get<0>(shift) * (get<0, 0>(d_b) - get<0, 0>(d_gamma_hat));
-  for (size_t k = 1; k < SpatialDim; k++) {
-    get(eta) += shift.get(k) * (d_b.get(k, 0) - d_gamma_hat.get(k, 0));
-  }
-  get(eta) /= get<0>(b);
-  //   get(eta) = 0.0;
+  //   get(eta) = get<0>(shift) * (get<0, 0>(d_b) - get<0, 0>(d_gamma_hat));
+  //   for (size_t k = 1; k < SpatialDim; k++) {
+  //     get(eta) += shift.get(k) * (d_b.get(k, 0) - d_gamma_hat.get(k, 0));
+  //   }
+  //   get(eta) /= get<0>(b);
+  get(eta) = 0.0;
 
   const auto extrinsic_curvature =
       gr::extrinsic_curvature(lapse, shift, d_shift, spatial_metric,
@@ -1076,12 +1097,13 @@ void test_kerrschild() {
   //                 get(trace_extrinsic_curvature) + get(k_0)) /
   //                (-2.0);
   //   const auto& d_k_0 = d_trace_extrinsic_curvature;
-  const double kappa_1 = 0.1;
-  const double kappa_2 = 0.3;
-  const double kappa_3 = 0.4;
-  const double mu = 0.7;
-  const double s = 1.0;
-  const double one_over_relaxation_time = 10.0;
+  //   const double kappa_1 = 0.1;
+  //   const double kappa_2 = 0.3;
+  //   const double kappa_3 = 0.4;
+  //   const double mu = 0.7;
+  //   const double s = 1.0;
+  //   const double one_over_relaxation_time = 10.0;
+  //   const bool use_shift_constraint_advective_terms = true;
 
   const auto theta = make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
   // eq 12b (let dt_ln_lapse = 0.0):
@@ -1277,9 +1299,10 @@ void test_kerrschild() {
       make_not_null(&grad_spatial_z4_constraint),
       make_not_null(&ricci_scalar_plus_divergence_z4_constraint), c,
       cleaning_speed, eta, f, slicing_condition, k_0, d_k_0, kappa_1, kappa_2,
-      kappa_3, mu, s, one_over_relaxation_time, conformal_spatial_metric,
-      ln_lapse, shift, ln_conformal_factor, a_tilde, trace_extrinsic_curvature,
-      theta, gamma_hat, b, field_a, field_b, field_d, field_p,
+      kappa_3, mu, s, one_over_relaxation_time,
+      use_shift_constraint_advective_terms, conformal_spatial_metric, ln_lapse,
+      shift, ln_conformal_factor, a_tilde, trace_extrinsic_curvature, theta,
+      gamma_hat, b, field_a, field_b, field_d, field_p,
       //   d_conformal_spatial_metric, d_ln_lapse, d_shift,
       //   d_ln_conformal_factor,
       d_a_tilde, d_trace_extrinsic_curvature, d_theta, d_gamma_hat, d_b,
@@ -1388,22 +1411,31 @@ void test_kerrschild() {
   //                                           eta() * b(ti_I));
   //   CHECK_ITERABLE_APPROX(d_gamma_hat, d_b);
   tnsr::i<DataVector, SpatialDim, FrameType> test_dt_b(used_for_size);
-  for (size_t i = 0; i < SpatialDim; i++) {
-    test_dt_b.get(i) = shift.get(0) * d_b.get(0, i) -
-                       shift.get(0) * d_gamma_hat.get(0, i) -
-                       get(eta) * b.get(i);
-    for (size_t k = 1; k < SpatialDim; k++) {
-      test_dt_b.get(i) +=
-          shift.get(k) * d_b.get(k, i) - shift.get(k) * d_gamma_hat.get(k, i);
+  if (use_shift_constraint_advective_terms) {
+    for (size_t i = 0; i < SpatialDim; i++) {
+      test_dt_b.get(i) =
+          s * (dt_gamma_hat.get(i) + shift.get(0) * d_b.get(0, i) -
+               shift.get(0) * d_gamma_hat.get(0, i) - get(eta) * b.get(i));
+      for (size_t k = 1; k < SpatialDim; k++) {
+        test_dt_b.get(i) += s * (shift.get(k) * d_b.get(k, i) -
+                                 shift.get(k) * d_gamma_hat.get(k, i));
+      }
+    }
+  } else {
+    for (size_t i = 0; i < SpatialDim; i++) {
+      test_dt_b.get(i) = s * (dt_gamma_hat.get(i) - get(eta) * b.get(i));
     }
   }
-  Approx approx_test_dt_b = Approx::custom().epsilon(1e-11).scale(1.0);
-  for (auto& component : test_dt_b) {
-    CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_test_dt_b);
-  }
+  //   Approx approx_test_dt_b = Approx::custom().epsilon(1e-11).scale(1.0);
   //   for (auto& component : test_dt_b) {
+  //     CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_test_dt_b);
+  //   }
+  //   for (auto& component : dt_b) {
   //     CHECK_ITERABLE_APPROX(component, zero);
   //   }
+  for (size_t i = 0; i < SpatialDim; i++) {
+    CHECK_ITERABLE_APPROX(dt_b.get(i), test_dt_b.get(i));
+  }
   //   Approx approx_12i = Approx::custom().epsilon(1e-11).scale(1.0);
   //   for (auto& component : dt_b) {
   //     CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_12i);

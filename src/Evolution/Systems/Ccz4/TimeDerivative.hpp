@@ -111,6 +111,7 @@ struct TimeDerivative {
       const Scalar<DataVector>& k_0, const tnsr::i<DataVector, Dim>& d_k_0,
       const double kappa_1, const double kappa_2, const double kappa_3,
       const double mu, const double s, const double one_over_relaxation_time,
+      const bool use_shift_constraint_advective_terms,
       const tnsr::ii<DataVector, Dim>& conformal_spatial_metric,
       const Scalar<DataVector>& ln_lapse, const tnsr::I<DataVector, Dim>& shift,
       const Scalar<DataVector>& ln_conformal_factor,
