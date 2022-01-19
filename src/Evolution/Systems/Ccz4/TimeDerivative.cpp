@@ -197,12 +197,18 @@ void TimeDerivative<Dim>::apply(
       lapse_times_conformal_spatial_metric,
       (*lapse)() * conformal_spatial_metric(ti_i, ti_j));
 
-  // if g(\alpha) == 1, then g'(\alpha) == 0
-  // if g(\alpha) == 2 / \alpha, then g'(\alpha)  == -2 / \alpha^2
+  // if g(\alpha) == 1, then:
+  //   -  g'(\alpha) == 0
+  //   -  \alpha g(\alpha) == \alpha
+  // else (if g(\alpha) == 2 / \alpha), then:
+  //   -  g'(\alpha)  == -2 / \alpha^2
+  //   -  \alpha g(\alpha)  == 2
   if (get(slicing_condition)[0] == 1.0) {
     get(*d_slicing_condition) = 0.0;
+    get(*lapse_times_slicing_condition) = get(*lapse);
   } else {
     get(*d_slicing_condition) = -2.0 / square(get(*lapse));
+    get(*lapse_times_slicing_condition) = 2.0;
   }
 
   // eq 13 - 27
@@ -349,15 +355,6 @@ void TimeDerivative<Dim>::apply(
       inv_tau_times_conformal_metric,
       one_over_relaxation_time * conformal_spatial_metric(ti_i, ti_j));
 
-  // if g(\alpha) == 1, then \alpha g(\alpha) == \alpha
-  // if g(\alpha) == 2 / \alpha, then \alpha g(\alpha)  == 2
-  // TODO : move this up with other if/else check with slicing condition?
-  if (get(slicing_condition)[0] == 1.0) {
-    get(*lapse_times_slicing_condition) = get(*lapse);
-  } else {
-    get(*lapse_times_slicing_condition) = 2.0;
-  }
-
   // Time derivative computation, eq. (12a) - (12m)
 
   // eq. (12a) : time derivative of the conformal spatial metric
@@ -385,18 +382,17 @@ void TimeDerivative<Dim>::apply(
 
   // eq. (12c) : time derivative of the shift
   // s == 0 or s == 1
-  // TODO : have a temporary for terms without s? or implement with s known at
-  // compile time so that we can if constexpr and only compile one or the other?
   if (s == 0.0) {
     for (auto& component : *dt_shift) {
       component = 0.0;
     }
   } else {
+    // first, compute expression without advective terms
+    ::TensorExpressions::evaluate<ti_I>(dt_shift, f * b(ti_I));
+    // now, if we want advective terms, also add those
     if (use_shift_constraint_advective_terms) {
       ::TensorExpressions::evaluate<ti_I>(
-          dt_shift, shift(ti_K) * field_b(ti_k, ti_I) + f * b(ti_I));
-    } else {
-      ::TensorExpressions::evaluate<ti_I>(dt_shift, f * b(ti_I));
+          dt_shift, (*dt_shift)(ti_I) + shift(ti_K) * field_b(ti_k, ti_I));
     }
   }
 
@@ -454,76 +450,49 @@ void TimeDerivative<Dim>::apply(
                kappa_1 * (2.0 + kappa_2) * theta()));
 
   // eq. (12h) : time derivative \hat{\Gamma}^i
-  // TODO : have a temporary for terms without s? or implement with s known at
-  // compile time so that we can if constexpr and only compile one or the other?
-  if (s == 0.0) {
+  // first, compute terms without s
+  ::TensorExpressions::evaluate<ti_I>(
+      dt_gamma_hat,
+      // terms without lapse nor s
+      (*shift_times_deriv_gamma_hat)(ti_I) +
+          2.0 * one_third *
+              (*contracted_conformal_christoffel_second_kind)(ti_I) *
+              (*contracted_field_b)() -
+          (*contracted_conformal_christoffel_second_kind)(ti_K)*field_b(ti_k,
+                                                                        ti_I) +
+          2.0 * kappa_3 * (*spatial_z4_constraint)(ti_j) *
+              (2.0 * one_third * (*inv_conformal_spatial_metric)(ti_I, ti_J) *
+                   (*contracted_field_b)() -
+               (*inv_conformal_spatial_metric)(ti_J, ti_K) *
+                   field_b(ti_k, ti_I)) +
+          // terms with lapse but not s
+          2.0 * (*lapse)() *
+              (-2.0 * one_third * (*inv_conformal_spatial_metric)(ti_I, ti_J) *
+                   d_trace_extrinsic_curvature(ti_j) +
+               (*inv_conformal_spatial_metric)(ti_K, ti_I) * d_theta(ti_k) +
+               (*conformal_christoffel_second_kind)(ti_I, ti_j, ti_k) *
+                   (*inv_a_tilde)(ti_J, ti_K) -
+               3.0 * (*inv_a_tilde)(ti_I, ti_J) * field_p(ti_j) -
+               (*inv_conformal_spatial_metric)(ti_K, ti_I) *
+                   (theta() * field_a(ti_k) +
+                    2.0 * one_third * trace_extrinsic_curvature() *
+                        (*spatial_z4_constraint)(ti_k)) -
+               (*inv_a_tilde)(ti_I, ti_J) * field_a(ti_j) -
+               kappa_1 * (*inv_conformal_spatial_metric)(ti_I, ti_J) *
+                   (*spatial_z4_constraint)(ti_j)));
+  // now, if s == 1, also add terms with s
+  if (s == 1.0) {
     ::TensorExpressions::evaluate<ti_I>(
         dt_gamma_hat,
-        // terms without lapse nor s
-        (*shift_times_deriv_gamma_hat)(ti_I) +
-            2.0 * one_third *
-                (*contracted_conformal_christoffel_second_kind)(ti_I) *
-                (*contracted_field_b)() -
-            (*contracted_conformal_christoffel_second_kind)(ti_K)*field_b(
-                ti_k, ti_I) +
-            2.0 * kappa_3 * (*spatial_z4_constraint)(ti_j) *
-                (2.0 * one_third * (*inv_conformal_spatial_metric)(ti_I, ti_J) *
-                     (*contracted_field_b)() -
-                 (*inv_conformal_spatial_metric)(ti_J, ti_K) *
-                     field_b(ti_k, ti_I)) +
+        (*dt_gamma_hat)(ti_I) +
             // terms with lapse
             2.0 * (*lapse)() *
-                (-2.0 * one_third *
-                     (*inv_conformal_spatial_metric)(ti_I, ti_J) *
-                     d_trace_extrinsic_curvature(ti_j) +
-                 (*inv_conformal_spatial_metric)(ti_K, ti_I) * d_theta(ti_k) +
-                 (*conformal_christoffel_second_kind)(ti_I, ti_j, ti_k) *
-                     (*inv_a_tilde)(ti_J, ti_K) -
-                 3.0 * (*inv_a_tilde)(ti_I, ti_J) * field_p(ti_j) -
-                 (*inv_conformal_spatial_metric)(ti_K, ti_I) *
-                     (theta() * field_a(ti_k) +
-                      2.0 * one_third * trace_extrinsic_curvature() *
-                          (*spatial_z4_constraint)(ti_k)) -
-                 (*inv_a_tilde)(ti_I, ti_J) * field_a(ti_j) -
-                 kappa_1 * (*inv_conformal_spatial_metric)(ti_I, ti_J) *
-                     (*spatial_z4_constraint)(ti_j)));
-  } else {
-    ::TensorExpressions::evaluate<ti_I>(
-        dt_gamma_hat,
-        // terms without lapse nor s
-        (*shift_times_deriv_gamma_hat)(ti_I) +
-            2.0 * one_third *
-                (*contracted_conformal_christoffel_second_kind)(ti_I) *
-                (*contracted_field_b)() -
-            (*contracted_conformal_christoffel_second_kind)(ti_K)*field_b(
-                ti_k, ti_I) +
-            2.0 * kappa_3 * (*spatial_z4_constraint)(ti_j) *
-                (2.0 * one_third * (*inv_conformal_spatial_metric)(ti_I, ti_J) *
-                     (*contracted_field_b)() -
-                 (*inv_conformal_spatial_metric)(ti_J, ti_K) *
-                     field_b(ti_k, ti_I)) +
-            // terms with lapse
-            2.0 * (*lapse)() *
-                (-2.0 * one_third *
-                     (*inv_conformal_spatial_metric)(ti_I, ti_J) *
-                     d_trace_extrinsic_curvature(ti_j) +
-                 (*inv_conformal_spatial_metric)(ti_K, ti_I) * d_theta(ti_k) +
-                 (*conformal_christoffel_second_kind)(ti_I, ti_j, ti_k) *
-                     (*inv_a_tilde)(ti_J, ti_K) -
-                 3.0 * (*inv_a_tilde)(ti_I, ti_J) * field_p(ti_j) -
-                 (*inv_conformal_spatial_metric)(ti_K, ti_I) *
-                     (theta() * field_a(ti_k) +
-                      2.0 * one_third * trace_extrinsic_curvature() *
-                          (*spatial_z4_constraint)(ti_k)) -
-                 (*inv_a_tilde)(ti_I, ti_J) * field_a(ti_j) -
-                 kappa_1 * (*inv_conformal_spatial_metric)(ti_I, ti_J) *
-                     (*spatial_z4_constraint)(ti_j) +
-                 // terms with lapse and s
-                 (*inv_conformal_spatial_metric)(ti_I, ti_K) *
-                     (*inv_conformal_spatial_metric)(ti_N, ti_M) *
-                     d_a_tilde(ti_k, ti_n, ti_m) -
-                 2.0 * (*inv_conformal_spatial_metric)(ti_I, ti_K) *
-                     (*field_d_up)(ti_k, ti_N, ti_M) * a_tilde(ti_n, ti_m)) +
+                (  // terms with lapse and s
+                    (*inv_conformal_spatial_metric)(ti_I, ti_K) *
+                        (*inv_conformal_spatial_metric)(ti_N, ti_M) *
+                        d_a_tilde(ti_k, ti_n, ti_m) -
+                    2.0 * (*inv_conformal_spatial_metric)(ti_I, ti_K) *
+                        (*field_d_up)(ti_k, ti_N, ti_M) * a_tilde(ti_n, ti_m)) +
             // terms with s but not not lapse
             (*inv_conformal_spatial_metric)(ti_K, ti_L) *
                 (*symmetrized_d_field_b)(ti_k, ti_l, ti_I) +
@@ -532,55 +501,45 @@ void TimeDerivative<Dim>::apply(
   }
 
   // eq. (12i) : time derivative b^i
-  // TODO : have a temporary for terms without s? or implement with s known at
-  // compile time so that we can if constexpr and only compile one or the other?
+  // s == 0 or s == 1
   if (s == 0.0) {
-    // TODO (?) : add support for assigning to double?
     for (auto& component : *dt_b) {
       component = 0.0;
     }
   } else {
+    // first, compute expression without advective terms
+    ::TensorExpressions::evaluate<ti_I>(dt_b,
+                                        (*dt_gamma_hat)(ti_I)-eta() * b(ti_I));
+    // now, if we want advective terms, also add those
     if (use_shift_constraint_advective_terms) {
       ::TensorExpressions::evaluate<ti_I>(
-          dt_b, shift(ti_K) * (d_b(ti_k, ti_I) - d_gamma_hat(ti_k, ti_I)) +
-                    (*dt_gamma_hat)(ti_I)-eta() * b(ti_I));
-    } else {
-      ::TensorExpressions::evaluate<ti_I>(
-          dt_b, (*dt_gamma_hat)(ti_I)-eta() * b(ti_I));
+          dt_b, (*dt_b)(ti_I) +
+                    shift(ti_K) * (d_b(ti_k, ti_I) - d_gamma_hat(ti_k, ti_I)));
     }
   }
 
   // eq. (12j) : time derivative of auxiliary variable A_i
-  // TODO : extra computatopns with (*lapse)() * (*lapse)()
-  // *(d_slicing_condition)() ?
-  if (s == 0.0) {
+  // first, compute terms without s
+  ::TensorExpressions::evaluate<ti_k>(
+      dt_field_a,
+      shift(ti_L) * d_field_a(ti_l, ti_k) -
+          (*lapse_times_field_a)(ti_k) * (*k_minus_k0_minus_2_theta_c)() *
+              (slicing_condition() + (*lapse)() * (*d_slicing_condition)()) +
+          field_b(ti_k, ti_L) * field_a(ti_l) -
+          (*lapse_times_slicing_condition)() *
+              (d_trace_extrinsic_curvature(ti_k) - d_k_0(ti_k) -
+               2.0 * c * d_theta(ti_k)));
+  // now, if s == 1, also add terms with s
+  if (s == 1.0) {
     ::TensorExpressions::evaluate<ti_k>(
-        dt_field_a,
-        shift(ti_L) * d_field_a(ti_l, ti_k) -
-            (*lapse_times_field_a)(ti_k) * (*k_minus_k0_minus_2_theta_c)() *
-                (slicing_condition() + (*lapse)() * (*d_slicing_condition)()) +
-            field_b(ti_k, ti_L) * field_a(ti_l) -
-            (*lapse_times_slicing_condition)() *
-                (d_trace_extrinsic_curvature(ti_k) - d_k_0(ti_k) -
-                 2.0 * c * d_theta(ti_k)));
-  } else {
-    ::TensorExpressions::evaluate<ti_k>(
-        dt_field_a,
-        shift(ti_L) * d_field_a(ti_l, ti_k) -
-            (*lapse_times_field_a)(ti_k) * (*k_minus_k0_minus_2_theta_c)() *
-                (slicing_condition() + (*lapse)() * (*d_slicing_condition)()) +
-            field_b(ti_k, ti_L) * field_a(ti_l) -
-            // terms with \alpha g(\alpha)
-            (*lapse_times_slicing_condition)() *
-                ((*inv_conformal_metric_times_d_a_tilde)(ti_k) +
-                 d_trace_extrinsic_curvature(ti_k) - d_k_0(ti_k) -
-                 2.0 * c * d_theta(ti_k) -
-                 2.0 * (*field_d_up_times_a_tilde)(ti_k)));
+        dt_field_a, (*dt_field_a)(ti_k) -
+                        (*lapse_times_slicing_condition)() *
+                            ((*inv_conformal_metric_times_d_a_tilde)(ti_k)-2.0 *
+                             (*field_d_up_times_a_tilde)(ti_k)));
   }
 
   // eq. (12k) : time derivative of auxiliary variable B_k{}^i
   if (s == 0.0) {
-    // TODO (?) : add support for assigning to double?
     for (auto& component : *dt_b) {
       component = 0.0;
     }
@@ -600,67 +559,52 @@ void TimeDerivative<Dim>::apply(
   }
 
   // eq. (12l) : time derivative of auxiliary variable D_{kij}
-  if (s == 0.0) {
+  // first, compute terms without s
+  ::TensorExpressions::evaluate<ti_k, ti_i, ti_j>(
+      dt_field_d,
+      shift(ti_L) * d_field_d(ti_l, ti_k, ti_i, ti_j) -
+          (*lapse_times_d_a_tilde)(ti_k, ti_i, ti_j) +
+          field_b(ti_k, ti_L) * field_d(ti_l, ti_i, ti_j) +
+          (*field_b_times_field_d)(ti_j, ti_k, ti_i) +
+          (*field_b_times_field_d)(ti_i, ti_k, ti_j) -
+          (*lapse_times_field_a)(ti_k) *
+              (*a_tilde_minus_one_third_conformal_metric_times_trace_a_tilde)(
+                  ti_i, ti_j) +
+          one_third *
+              ((*lapse_times_conformal_spatial_metric)(ti_i, ti_j) *
+                   (*inv_conformal_metric_times_d_a_tilde)(ti_k)-2.0 *
+                   (*contracted_field_b)() * field_d(ti_k, ti_i, ti_j) -
+               2.0 * (*lapse_times_conformal_spatial_metric)(ti_i, ti_j) *
+                   (*field_d_up_times_a_tilde)(ti_k)));
+  // now, if s == 1, also add terms with s
+  if (s == 1.0) {
     ::TensorExpressions::evaluate<ti_k, ti_i, ti_j>(
-        dt_field_d,
-        shift(ti_L) * d_field_d(ti_l, ti_k, ti_i, ti_j) -
-            (*lapse_times_d_a_tilde)(ti_k, ti_i, ti_j) +
-            field_b(ti_k, ti_L) * field_d(ti_l, ti_i, ti_j) +
-            (*field_b_times_field_d)(ti_j, ti_k, ti_i) +
-            (*field_b_times_field_d)(ti_i, ti_k, ti_j) -
-            (*lapse_times_field_a)(ti_k) *
-                (*a_tilde_minus_one_third_conformal_metric_times_trace_a_tilde)(
-                    ti_i, ti_j) +
-            one_third *
-                ((*lapse_times_conformal_spatial_metric)(ti_i, ti_j) *
-                     (*inv_conformal_metric_times_d_a_tilde)(ti_k)-2.0 *
-                     (*contracted_field_b)() * field_d(ti_k, ti_i, ti_j) -
-                 2.0 * (*lapse_times_conformal_spatial_metric)(ti_i, ti_j) *
-                     (*field_d_up_times_a_tilde)(ti_k)));
-  } else {
-    ::TensorExpressions::evaluate<ti_k, ti_i, ti_j>(
-        dt_field_d,
-        shift(ti_L) * d_field_d(ti_l, ti_k, ti_i, ti_j) +
-            0.5 * ((*conformal_metric_times_symmetrized_d_field_b)(ti_i, ti_k,
-                                                                   ti_j) +
-                   (*conformal_metric_times_symmetrized_d_field_b)(ti_j, ti_k,
-                                                                   ti_i)) -
-            (*lapse_times_d_a_tilde)(ti_k, ti_i, ti_j) +
-            field_b(ti_k, ti_L) * field_d(ti_l, ti_i, ti_j) +
-            (*field_b_times_field_d)(ti_j, ti_k, ti_i) +
-            (*field_b_times_field_d)(ti_i, ti_k, ti_j) -
-            (*lapse_times_field_a)(ti_k) *
-                (*a_tilde_minus_one_third_conformal_metric_times_trace_a_tilde)(
-                    ti_i, ti_j) +
-            one_third *
-                ((*lapse_times_conformal_spatial_metric)(ti_i, ti_j) *
-                     (*inv_conformal_metric_times_d_a_tilde)(ti_k)-2.0 *
-                     (*contracted_field_b)() * field_d(ti_k, ti_i, ti_j) -
-                 2.0 * (*lapse_times_conformal_spatial_metric)(ti_i, ti_j) *
-                     (*field_d_up_times_a_tilde)(ti_k)-conformal_spatial_metric(
-                         ti_i, ti_j) *
-                     (*contracted_symmetrized_d_field_b)(ti_k)));
+        dt_field_d, (*dt_field_d)(ti_k, ti_i, ti_j) +
+                        0.5 * ((*conformal_metric_times_symmetrized_d_field_b)(
+                                   ti_i, ti_k, ti_j) +
+                               (*conformal_metric_times_symmetrized_d_field_b)(
+                                   ti_j, ti_k, ti_i)) -
+                        one_third * conformal_spatial_metric(ti_i, ti_j) *
+                            (*contracted_symmetrized_d_field_b)(ti_k));
   }
 
   // eq. (12m) : time derivative of auxiliary variable P_i
-  if (s == 0.0) {
-    ::TensorExpressions::evaluate<ti_k>(
-        dt_field_p, shift(ti_L) * d_field_p(ti_l, ti_k) +
-                        field_b(ti_k, ti_L) * field_p(ti_l) +
-                        one_third * (*lapse)() *
-                            (d_trace_extrinsic_curvature(ti_k) +
-                             field_a(ti_k) * trace_extrinsic_curvature()));
-  } else {
+  // first, compute terms without s
+  ::TensorExpressions::evaluate<ti_k>(
+      dt_field_p, shift(ti_L) * d_field_p(ti_l, ti_k) +
+                      field_b(ti_k, ti_L) * field_p(ti_l) +
+                      one_third * (*lapse)() *
+                          (d_trace_extrinsic_curvature(ti_k) +
+                           field_a(ti_k) * trace_extrinsic_curvature()));
+  // now, if s == 1, also add terms with s
+  if (s == 1.0) {
     ::TensorExpressions::evaluate<ti_k>(
         dt_field_p,
-        shift(ti_L) * d_field_p(ti_l, ti_k) +
-            field_b(ti_k, ti_L) * field_p(ti_l) +
-            one_third *
-                ((*lapse)() * (d_trace_extrinsic_curvature(ti_k) +
-                               (*inv_conformal_metric_times_d_a_tilde)(ti_k) +
-                               field_a(ti_k) * trace_extrinsic_curvature() -
-                               2.0 * (*field_d_up_times_a_tilde)(ti_k)) -
-                 (*contracted_symmetrized_d_field_b)(ti_k)));
+        (*dt_field_p)(ti_k) +
+            one_third * ((*lapse)() * ((*inv_conformal_metric_times_d_a_tilde)(
+                                           ti_k)-2.0 *
+                                       (*field_d_up_times_a_tilde)(ti_k)) -
+                         (*contracted_symmetrized_d_field_b)(ti_k)));
   }
 }
 }  // namespace Ccz4
