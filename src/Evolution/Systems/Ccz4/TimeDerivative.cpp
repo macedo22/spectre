@@ -120,7 +120,7 @@ void TimeDerivative<Dim>::apply(
     const tnsr::i<DataVector, Dim>&
         d_k_0 /*TODO : how to compute? is k_0 not 0?*/,
     const double kappa_1, const double kappa_2, const double kappa_3,
-    const double mu, const double /*TODO : bool ?*/ s,
+    const double mu, const bool use_sparsity_symmetrization_terms,
     const double one_over_relaxation_time,
     const bool use_shift_constraint_advective_terms,
     // evolved variables
@@ -381,8 +381,8 @@ void TimeDerivative<Dim>::apply(
           (*lapse_times_slicing_condition)() * (*k_minus_k0_minus_2_theta_c)());
 
   // eq. (12c) : time derivative of the shift
-  // s == 0 or s == 1
-  if (s == 0.0) {
+  // if s == 0
+  if (not use_sparsity_symmetrization_terms) {
     for (auto& component : *dt_shift) {
       component = 0.0;
     }
@@ -481,7 +481,7 @@ void TimeDerivative<Dim>::apply(
                kappa_1 * (*inv_conformal_spatial_metric)(ti_I, ti_J) *
                    (*spatial_z4_constraint)(ti_j)));
   // now, if s == 1, also add terms with s
-  if (s == 1.0) {
+  if (use_sparsity_symmetrization_terms) {
     ::TensorExpressions::evaluate<ti_I>(
         dt_gamma_hat,
         (*dt_gamma_hat)(ti_I) +
@@ -501,8 +501,8 @@ void TimeDerivative<Dim>::apply(
   }
 
   // eq. (12i) : time derivative b^i
-  // s == 0 or s == 1
-  if (s == 0.0) {
+  // if s == 0
+  if (not use_sparsity_symmetrization_terms) {
     for (auto& component : *dt_b) {
       component = 0.0;
     }
@@ -530,7 +530,7 @@ void TimeDerivative<Dim>::apply(
               (d_trace_extrinsic_curvature(ti_k) - d_k_0(ti_k) -
                2.0 * c * d_theta(ti_k)));
   // now, if s == 1, also add terms with s
-  if (s == 1.0) {
+  if (use_sparsity_symmetrization_terms) {
     ::TensorExpressions::evaluate<ti_k>(
         dt_field_a, (*dt_field_a)(ti_k) -
                         (*lapse_times_slicing_condition)() *
@@ -539,7 +539,8 @@ void TimeDerivative<Dim>::apply(
   }
 
   // eq. (12k) : time derivative of auxiliary variable B_k{}^i
-  if (s == 0.0) {
+  // if s == 0
+  if (not use_sparsity_symmetrization_terms) {
     for (auto& component : *dt_b) {
       component = 0.0;
     }
@@ -577,7 +578,7 @@ void TimeDerivative<Dim>::apply(
                2.0 * (*lapse_times_conformal_spatial_metric)(ti_i, ti_j) *
                    (*field_d_up_times_a_tilde)(ti_k)));
   // now, if s == 1, also add terms with s
-  if (s == 1.0) {
+  if (use_sparsity_symmetrization_terms) {
     ::TensorExpressions::evaluate<ti_k, ti_i, ti_j>(
         dt_field_d, (*dt_field_d)(ti_k, ti_i, ti_j) +
                         0.5 * ((*conformal_metric_times_symmetrized_d_field_b)(
@@ -597,7 +598,7 @@ void TimeDerivative<Dim>::apply(
                           (d_trace_extrinsic_curvature(ti_k) +
                            field_a(ti_k) * trace_extrinsic_curvature()));
   // now, if s == 1, also add terms with s
-  if (s == 1.0) {
+  if (use_sparsity_symmetrization_terms) {
     ::TensorExpressions::evaluate<ti_k>(
         dt_field_p,
         (*dt_field_p)(ti_k) +

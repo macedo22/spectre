@@ -191,7 +191,7 @@ void test_impl(const gsl::not_null<Generator*> generator,
   const auto kappa_2 = make_with_value<double>(used_for_size, 0.0);
   const auto kappa_3 = make_with_value<double>(used_for_size, 0.0);
   const auto mu = make_with_value<double>(used_for_size, 0.0);
-  const auto s = make_with_value<double>(used_for_size, 0.0);
+  const bool use_sparsity_symmetrization_terms = true;
   const auto one_over_relaxation_time =
       make_with_value<double>(used_for_size, 0.0);
   const bool use_shift_constraint_advective_terms = true;
@@ -297,7 +297,7 @@ void test_impl(const gsl::not_null<Generator*> generator,
       make_not_null(&grad_spatial_z4_constraint),
       make_not_null(&ricci_scalar_plus_divergence_z4_constraint), c,
       cleaning_speed, eta, f, slicing_condition, k_0, d_k_0, kappa_1, kappa_2,
-      kappa_3, mu, s, one_over_relaxation_time,
+      kappa_3, mu, use_sparsity_symmetrization_terms, one_over_relaxation_time,
       use_shift_constraint_advective_terms, conformal_spatial_metric, ln_lapse,
       shift, ln_conformal_factor, a_tilde, trace_extrinsic_curvature, theta,
       gamma_hat, b, field_a, field_b, field_d, field_p,
@@ -546,7 +546,7 @@ void test_minkowski() {
   const double kappa_2 = 0.3;
   const double kappa_3 = 0.4;
   const double mu = 0.7;
-  const double s = 1.0;
+  const bool use_sparsity_symmetrization_terms = true;
   const double one_over_relaxation_time = 10.0;
   const bool use_shift_constraint_advective_terms = true;
 
@@ -689,7 +689,7 @@ void test_minkowski() {
       make_not_null(&grad_spatial_z4_constraint),
       make_not_null(&ricci_scalar_plus_divergence_z4_constraint), c,
       cleaning_speed, eta, f, slicing_condition, k_0, d_k_0, kappa_1, kappa_2,
-      kappa_3, mu, s, one_over_relaxation_time,
+      kappa_3, mu, use_sparsity_symmetrization_terms, one_over_relaxation_time,
       use_shift_constraint_advective_terms, conformal_spatial_metric, ln_lapse,
       shift, ln_conformal_factor, a_tilde, trace_extrinsic_curvature, theta,
       gamma_hat, b, field_a, field_b, field_d, field_p,
@@ -832,7 +832,7 @@ void test_kerrschild() {
   const double kappa_2 = 0.3;
   const double kappa_3 = 0.4;
   const double mu = 0.7;
-  const double s = 1.0;
+  const bool use_sparsity_symmetrization_terms = true;
   const double one_over_relaxation_time = 10.0;
   const bool use_shift_constraint_advective_terms = true;
   tnsr::I<DataVector, SpatialDim, FrameType> b{};
@@ -1299,7 +1299,7 @@ void test_kerrschild() {
       make_not_null(&grad_spatial_z4_constraint),
       make_not_null(&ricci_scalar_plus_divergence_z4_constraint), c,
       cleaning_speed, eta, f, slicing_condition, k_0, d_k_0, kappa_1, kappa_2,
-      kappa_3, mu, s, one_over_relaxation_time,
+      kappa_3, mu, use_sparsity_symmetrization_terms, one_over_relaxation_time,
       use_shift_constraint_advective_terms, conformal_spatial_metric, ln_lapse,
       shift, ln_conformal_factor, a_tilde, trace_extrinsic_curvature, theta,
       gamma_hat, b, field_a, field_b, field_d, field_p,
@@ -1411,19 +1411,25 @@ void test_kerrschild() {
   //                                           eta() * b(ti_I));
   //   CHECK_ITERABLE_APPROX(d_gamma_hat, d_b);
   tnsr::i<DataVector, SpatialDim, FrameType> test_dt_b(used_for_size);
-  if (use_shift_constraint_advective_terms) {
+  if (not use_sparsity_symmetrization_terms) {
     for (size_t i = 0; i < SpatialDim; i++) {
-      test_dt_b.get(i) =
-          s * (dt_gamma_hat.get(i) + shift.get(0) * d_b.get(0, i) -
-               shift.get(0) * d_gamma_hat.get(0, i) - get(eta) * b.get(i));
-      for (size_t k = 1; k < SpatialDim; k++) {
-        test_dt_b.get(i) += s * (shift.get(k) * d_b.get(k, i) -
-                                 shift.get(k) * d_gamma_hat.get(k, i));
-      }
+      test_dt_b.get(i) = 0.0;
     }
   } else {
-    for (size_t i = 0; i < SpatialDim; i++) {
-      test_dt_b.get(i) = s * (dt_gamma_hat.get(i) - get(eta) * b.get(i));
+    if (use_shift_constraint_advective_terms) {
+      for (size_t i = 0; i < SpatialDim; i++) {
+        test_dt_b.get(i) = dt_gamma_hat.get(i) + shift.get(0) * d_b.get(0, i) -
+                           shift.get(0) * d_gamma_hat.get(0, i) -
+                           get(eta) * b.get(i);
+        for (size_t k = 1; k < SpatialDim; k++) {
+          test_dt_b.get(i) += shift.get(k) * d_b.get(k, i) -
+                              shift.get(k) * d_gamma_hat.get(k, i);
+        }
+      }
+    } else {
+      for (size_t i = 0; i < SpatialDim; i++) {
+        test_dt_b.get(i) = dt_gamma_hat.get(i) - get(eta) * b.get(i);
+      }
     }
   }
   //   Approx approx_test_dt_b = Approx::custom().epsilon(1e-11).scale(1.0);
