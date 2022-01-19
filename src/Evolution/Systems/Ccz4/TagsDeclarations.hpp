@@ -81,6 +81,9 @@ template <typename DataType = DataVector>
 struct Theta;
 template <typename DataType = DataVector>
 struct K_0;
+template <size_t Dim, typename Frame = Frame::Inertial,
+          typename DataType = DataVector>
+struct B;
 }  // namespace Tags
 
 /// \brief Input option tags for the CCZ4 evolution system

@@ -22,6 +22,7 @@
 #include "Evolution/Systems/Ccz4/ATilde.hpp"
 #include "Evolution/Systems/Ccz4/Christoffel.hpp"
 #include "Evolution/Systems/Ccz4/DerivChristoffel.hpp"
+#include "Evolution/Systems/Ccz4/RicciScalarPlusDivergenceZ4Constraint.hpp"
 #include "Evolution/Systems/Ccz4/Tags.hpp"
 #include "Evolution/Systems/Ccz4/TimeDerivative.hpp"
 //#include "Framework/CheckWithRandomValues.hpp"
@@ -531,7 +532,7 @@ void test_minkowski() {
   // params
   const double c = 1.0;
   const double cleaning_speed = 1.6;
-  const double eta = 0.5;
+  const auto eta = make_with_value<Scalar<DataVector>>(used_for_size, 0.5);
   const double f = 0.6;
   const auto slicing_condition =
       make_with_value<Scalar<DataVector>>(used_for_size, 1.0);
@@ -746,7 +747,7 @@ void test_kerrschild() {
   const gr::Solutions::KerrSchild solution(mass, spin, center);
 
   // Setup grid
-  const size_t num_points_1d = 4;
+  const size_t num_points_1d = 6;
   const std::array<double, 3> lower_bound{{0.8, 1.22, 1.30}};
   const std::array<double, 3> upper_bound{{0.82, 1.24, 1.32}};
   Mesh<SpatialDim> mesh{num_points_1d, Spectral::Basis::Legendre,
@@ -825,38 +826,39 @@ void test_kerrschild() {
   const double f = 0.6;
   tnsr::I<DataVector, SpatialDim, FrameType> b{};
   for (size_t i = 0; i < SpatialDim; i++) {
-    b.get(i) = -shift.get(0) * d_shift.get(0, i) / f;
+    b.get(i) = -shift.get(0) * d_shift.get(0, i);
     for (size_t k = 1; k < SpatialDim; k++) {
       // assuming initial dt_shift == 0.0
-      b.get(i) -= shift.get(k) * d_shift.get(k, i) / f;
+      b.get(i) -= shift.get(k) * d_shift.get(k, i);
     }
+    b.get(i) /= f;
   }
   // eq:
   //   dt_shift = f * b + shift * d_shift ---> need dt_shift? set dt_shift to 0?
-  //   b^i = (dt_shift - shift * d_shift) / f = (-shift^k * d_shift_k^i) / f
-  //   d_b_j^i = (-shift^k * d_d_shift_jk^i - d_shift_j^k * d_shift_k^i) / f
-  //
-  //   using b_tag = Ccz4::Tags::FieldB<SpatialDim, FrameType, DataVector>;
-  //   Variables<tmpl::list<b_tag>> b_var(num_points_3d);
-  //   get<b_tag>(b_var) = b;
-  //   const auto d_b_var = partial_derivatives<tmpl::list<b_tag>>(
-  //       b_var, mesh, coord_map.inv_jacobian(x_logical));
-  //   const auto& d_b =
-  //       get<Tags::deriv<b_tag, tmpl::size_t<SpatialDim>,
-  //       FrameType>>(d_b_var);
-  tnsr::iJ<DataVector, SpatialDim, FrameType> d_b{};
-  for (size_t j = 0; j < SpatialDim; j++) {
-    for (size_t i = 0; i < SpatialDim; i++) {
-      d_b.get(j, i) = -shift.get(0) * d_field_b.get(j, 0, i) -
-                      field_b.get(j, 0) * field_b.get(0, i);
-      for (size_t k = 1; k < SpatialDim; k++) {
-        // assuming initial dt_shift == 0.0
-        d_b.get(j, i) -= shift.get(0) * d_field_b.get(j, 0, i) +
-                         field_b.get(j, 0) * field_b.get(0, i);
-      }
-      d_b.get(j, i) /= f;
-    }
-  }
+  //   b^j = (dt_shift - shift * d_shift) / f = (-shift^k * d_shift_k^j) / f
+  //   d_b_i^j = ((-shift^k * d_d_shift_ik^j + d_shift_k^j * d_shift_k^j) /
+  //   (d_shift_k^j) ^2) / f ???
+  using b_tag = Ccz4::Tags::B<SpatialDim, FrameType, DataVector>;
+  Variables<tmpl::list<b_tag>> b_var(num_points_3d);
+  get<b_tag>(b_var) = b;
+  const auto d_b_var = partial_derivatives<tmpl::list<b_tag>>(
+      b_var, mesh, coord_map.inv_jacobian(x_logical));
+  const auto& d_b =
+      get<Tags::deriv<b_tag, tmpl::size_t<SpatialDim>, FrameType>>(d_b_var);
+  //   tnsr::iJ<DataVector, SpatialDim, FrameType> d_b{};
+  //   for (size_t j = 0; j < SpatialDim; j++) {
+  //     for (size_t i = 0; i < SpatialDim; i++) {
+  //       d_b.get(j, i) = -shift.get(0) * d_field_b.get(j, 0, i) -
+  //                       field_b.get(j, 0) * field_b.get(0, i);
+  //       for (size_t k = 1; k < SpatialDim; k++) {
+  //         // assuming initial dt_shift == 0.0
+  //         d_b.get(j, i) -= shift.get(0) * d_field_b.get(j, 0, i) +
+  //                          field_b.get(j, 0) * field_b.get(0, i);
+  //       }
+  //       d_b.get(j, i) /= f;
+  //     }
+  //   }
+  //   std::cout << d_b << std::endl;
 
   // Compute arguments for Ccz4::TimeDerivative
   Scalar<DataVector> ln_lapse{};
@@ -997,6 +999,14 @@ void test_kerrschild() {
           d_conformal_christoffel_second_kind);
   const auto& d_gamma_hat = d_contracted_conformal_christoffel_second_kind;
 
+  Scalar<DataVector> eta(used_for_size);
+  get(eta) = get<0>(shift) * (get<0, 0>(d_b) - get<0, 0>(d_gamma_hat));
+  for (size_t k = 1; k < SpatialDim; k++) {
+    get(eta) += shift.get(k) * (d_b.get(k, 0) - d_gamma_hat.get(k, 0));
+  }
+  get(eta) /= get<0>(b);
+  //   get(eta) = 0.0;
+
   const auto extrinsic_curvature =
       gr::extrinsic_curvature(lapse, shift, d_shift, spatial_metric,
                               dt_spatial_metric, d_spatial_metric);
@@ -1045,13 +1055,13 @@ void test_kerrschild() {
   // params
   const double c = 1.0;
   const double cleaning_speed = 1.6;
-  const double eta = 0.5;
+  //   const double eta = 0.5;
   //   const double f = 0.6;
-  //   auto slicing_condition =
-  //       make_with_value<Scalar<DataVector>>(used_for_size, 2.0);
-  //   get(slicing_condition) /= get(lapse);
-  const auto slicing_condition =
-      make_with_value<Scalar<DataVector>>(used_for_size, 1.0);
+  auto slicing_condition =
+      make_with_value<Scalar<DataVector>>(used_for_size, 2.0);
+  get(slicing_condition) /= get(lapse);
+  //   const auto slicing_condition =
+  //       make_with_value<Scalar<DataVector>>(used_for_size, 1.0);
   get(ln_lapse) = log(get(lapse));
   //   const auto& k_0 = trace_extrinsic_curvature;
   // eq 4g (let dt_lapse = 0.0, theta = 0):
@@ -1283,9 +1293,9 @@ void test_kerrschild() {
     for (size_t j = i; j < SpatialDim; j++) {
       for (size_t k = 0; k < SpatialDim; k++) {
         for (size_t l = 0; l < SpatialDim; l++) {
-          expected_inv_a_tilde.get(i, j) += a_tilde.get(k, l) *
-                                            inv_spatial_metric.get(i, k) *
-                                            inv_spatial_metric.get(j, l);
+          expected_inv_a_tilde.get(i, j) +=
+              a_tilde.get(k, l) * inverse_conformal_spatial_metric.get(i, k) *
+              inverse_conformal_spatial_metric.get(j, l);
         }
       }
     }
@@ -1295,7 +1305,7 @@ void test_kerrschild() {
   CHECK_ITERABLE_APPROX(christoffel_second_kind_to_fill,
                         christoffel_second_kind);
 
-  Approx approx_ricci = Approx::custom().epsilon(1e-6).scale(1.0);
+  Approx approx_ricci = Approx::custom().epsilon(1e-11).scale(1.0);
   CHECK_ITERABLE_CUSTOM_APPROX(spatial_ricci_tensor_to_fill,
                                spatial_ricci_tensor, approx_ricci);
 
@@ -1321,39 +1331,99 @@ void test_kerrschild() {
   for (auto& component : dt_ln_conformal_factor) {
     CHECK_ITERABLE_APPROX(component, zero);
   }
-  // TODO: make this tolerance better
-  Approx approx_12e = Approx::custom().epsilon(1e-6).scale(1.0);
+  Approx approx_12e = Approx::custom().epsilon(1e-11).scale(1.0);
   for (auto& component : dt_a_tilde) {
     CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_12e);
   }
-  // TODO: make this tolerance better
-  Approx approx_12f = Approx::custom().epsilon(1e-6).scale(1.0);
+  Approx approx_12f = Approx::custom().epsilon(1e-11).scale(1.0);
   for (auto& component : dt_trace_extrinsic_curvature) {
     CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_12f);
   }
-  //   for (auto& component : dt_theta) {
+  for (auto& component : upper_spatial_z4_constraint) {
+    CHECK_ITERABLE_APPROX(component, zero);
+  }
+  for (auto& component : grad_spatial_z4_constraint) {
+    CHECK_ITERABLE_APPROX(component, zero);
+  }
+  Scalar<DataVector> expected_ricci_scalar(used_for_size);
+  get(expected_ricci_scalar) = 0.0;
+  for (size_t i = 0; i < SpatialDim; i++) {
+    for (size_t j = 0; j < SpatialDim; j++) {
+      get(expected_ricci_scalar) += inverse_conformal_spatial_metric.get(i, j) *
+                                    spatial_ricci_tensor_to_fill.get(i, j);
+    }
+  }
+  get(expected_ricci_scalar) *= get(conformal_factor_squared);
+  CHECK_ITERABLE_APPROX(ricci_scalar_plus_divergence_z4_constraint,
+                        expected_ricci_scalar);
+  Scalar<DataVector> expected_ricci_scalar_plus_divergence_z4_constraint(
+      used_for_size);
+  get(expected_ricci_scalar_plus_divergence_z4_constraint) =
+      (-2.0 / 3.0) * square(get(trace_extrinsic_curvature));
+  for (size_t i = 0; i < SpatialDim; i++) {
+    for (size_t j = 0; j < SpatialDim; j++) {
+      get(expected_ricci_scalar_plus_divergence_z4_constraint) +=
+          a_tilde.get(i, j) * inv_a_tilde.get(i, j);
+    }
+  }
+  Approx approx_ricci_plus = Approx::custom().epsilon(1e-11).scale(1.0);
+  CHECK_ITERABLE_CUSTOM_APPROX(
+      ricci_scalar_plus_divergence_z4_constraint,
+      expected_ricci_scalar_plus_divergence_z4_constraint, approx_ricci_plus);
+  Approx approx_12g = Approx::custom().epsilon(1e-11).scale(1.0);
+  for (auto& component : dt_theta) {
+    CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_12g);
+  }
+  Approx approx_12h = Approx::custom().epsilon(1e-11).scale(1.0);
+  for (auto& component : dt_gamma_hat) {
+    CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_12h);
+  }
+  //   const auto test_dt_b =
+  //       ::TensorExpressions::evaluate<ti_I>(shift(ti_K) * d_b(ti_k, ti_I) -
+  //                                           shift(ti_K) *
+  //                                               d_gamma_hat(
+  //                                                   ti_k,
+  //                                                   ti_I) /*+
+  //                   (*dt_gamma_hat)(ti_I)*/ -
+  //                                           eta() * b(ti_I));
+  //   CHECK_ITERABLE_APPROX(d_gamma_hat, d_b);
+  tnsr::i<DataVector, SpatialDim, FrameType> test_dt_b(used_for_size);
+  for (size_t i = 0; i < SpatialDim; i++) {
+    test_dt_b.get(i) = shift.get(0) * d_b.get(0, i) -
+                       shift.get(0) * d_gamma_hat.get(0, i) -
+                       get(eta) * b.get(i);
+    for (size_t k = 1; k < SpatialDim; k++) {
+      test_dt_b.get(i) +=
+          shift.get(k) * d_b.get(k, i) - shift.get(k) * d_gamma_hat.get(k, i);
+    }
+  }
+  Approx approx_test_dt_b = Approx::custom().epsilon(1e-11).scale(1.0);
+  for (auto& component : test_dt_b) {
+    CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_test_dt_b);
+  }
+  //   for (auto& component : test_dt_b) {
   //     CHECK_ITERABLE_APPROX(component, zero);
   //   }
-  //   for (auto& component : dt_gamma_hat) {
-  //     CHECK_ITERABLE_APPROX(component, zero);
-  //   }
+  //   Approx approx_12i = Approx::custom().epsilon(1e-11).scale(1.0);
   //   for (auto& component : dt_b) {
-  //     CHECK_ITERABLE_APPROX(component, zero);
+  //     CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_12i);
   //   }
-  // TODO: make this tolerance better
-  Approx approx_12j = Approx::custom().epsilon(1e-7).scale(1.0);
+  Approx approx_12j = Approx::custom().epsilon(1e-11).scale(1.0);
   for (auto& component : dt_field_a) {
     CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_12j);
   }
-  //   for (auto& component : dt_field_b) {
-  //     CHECK_ITERABLE_APPROX(component, zero);
-  //   }
-  //   for (auto& component : dt_field_d) {
-  //     CHECK_ITERABLE_APPROX(component, zero);
-  //   }
-  //   for (auto& component : dt_field_p) {
-  //     CHECK_ITERABLE_APPROX(component, zero);
-  //   }
+  Approx approx_12k = Approx::custom().epsilon(1e-11).scale(1.0);
+  for (auto& component : dt_field_b) {
+    CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_12k);
+  }
+  Approx approx_12l = Approx::custom().epsilon(1e-11).scale(1.0);
+  for (auto& component : dt_field_d) {
+    CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_12l);
+  }
+  Approx approx_12m = Approx::custom().epsilon(1e-12).scale(1.0);
+  for (auto& component : dt_field_p) {
+    CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_12m);
+  }
 }
 }  // namespace
 

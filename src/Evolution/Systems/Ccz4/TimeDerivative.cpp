@@ -114,9 +114,9 @@ void TimeDerivative<Dim>::apply(
     const gsl::not_null<Scalar<DataVector>*>
         ricci_scalar_plus_divergence_z4_constraint,  // 27
     // params (TODO: better name?)
-    const double c, const double cleaning_speed /*e*/, const double eta,
-    const double f, const Scalar<DataVector>& slicing_condition,
-    const Scalar<DataVector>& k_0,
+    const double c, const double cleaning_speed /*e*/,
+    const Scalar<DataVector>& eta, const double f,
+    const Scalar<DataVector>& slicing_condition, const Scalar<DataVector>& k_0,
     const tnsr::i<DataVector, Dim>&
         d_k_0 /*TODO : how to compute? is k_0 not 0?*/,
     const double kappa_1, const double kappa_2, const double kappa_3,
@@ -168,12 +168,13 @@ void TimeDerivative<Dim>::apply(
                               (*inv_conformal_spatial_metric)(ti_I, ti_J));
 
   ::TensorExpressions::evaluate<ti_I, ti_J>(
-      inv_a_tilde, a_tilde(ti_k, ti_l) * (*inv_spatial_metric)(ti_I, ti_K) *
-                       (*inv_spatial_metric)(ti_J, ti_L));
+      inv_a_tilde, a_tilde(ti_k, ti_l) *
+                       (*inv_conformal_spatial_metric)(ti_I, ti_K) *
+                       (*inv_conformal_spatial_metric)(ti_J, ti_L));
 
   ::TensorExpressions::evaluate<ti_k, ti_j, ti_I>(
       symmetrized_d_field_b,
-      0.5 * d_field_b(ti_k, ti_j, ti_I) + d_field_b(ti_j, ti_k, ti_I));
+      0.5 * (d_field_b(ti_k, ti_j, ti_I) + d_field_b(ti_j, ti_k, ti_I)));
 
   ::TensorExpressions::evaluate<ti_k>(
       contracted_symmetrized_d_field_b,
@@ -537,7 +538,7 @@ void TimeDerivative<Dim>::apply(
     // TODO : is the dt_gamma_hat here from the previous step or recent update?
     ::TensorExpressions::evaluate<ti_I>(
         dt_b, shift(ti_K) * (d_b(ti_k, ti_I) - d_gamma_hat(ti_k, ti_I)) +
-                  (*dt_gamma_hat)(ti_I)-eta * b(ti_I));
+                  (*dt_gamma_hat)(ti_I)-eta() * b(ti_I));
   }
 
   // eq. (12j) : time derivative of auxiliary variable A_i
