@@ -1053,10 +1053,19 @@ void test_kerrschild() {
   const auto slicing_condition =
       make_with_value<Scalar<DataVector>>(used_for_size, 1.0);
   get(ln_lapse) = log(get(lapse));
-  const auto& k_0 = trace_extrinsic_curvature;
-  //   auto k_0 =
-  //       make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
-  const auto& d_k_0 = d_trace_extrinsic_curvature;
+  //   const auto& k_0 = trace_extrinsic_curvature;
+  // eq 4g (let dt_lapse = 0.0, theta = 0):
+  // theta = ((shift^k * A_k) / (lapse^2 * g(lapse)) - K + K_0) / -2c));
+  //   Scalar<DataVector> theta(used_for_size);
+  //   get(theta) = get<0>(shift) * get<0>(d_lapse);
+  //   for (size_t k = 1; k < SpatialDim; k++) {
+  //     get(theta) += shift.get(k) * d_lapse.get(k);
+  //   }
+  //   get(theta) = ((get(theta) / (square(get(lapse)) *
+  //   get(slicing_condition))) -
+  //                 get(trace_extrinsic_curvature) + get(k_0)) /
+  //                (-2.0);
+  //   const auto& d_k_0 = d_trace_extrinsic_curvature;
   const double kappa_1 = 0.1;
   const double kappa_2 = 0.3;
   const double kappa_3 = 0.4;
@@ -1064,8 +1073,7 @@ void test_kerrschild() {
   const double s = 1.0;
   const double one_over_relaxation_time = 10.0;
 
-  //   const auto theta = make_with_value<Scalar<DataVector>>(used_for_size,
-  //   0.0);
+  const auto theta = make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
   // eq 12b (let dt_ln_lapse = 0.0):
   //   theta = ((shift^k * A_k) / (lapse * g(lapse)) + K - K_0) / (2c)
   //   auto theta = make_with_value<Scalar<DataVector>>(
@@ -1079,23 +1087,45 @@ void test_kerrschild() {
   //                 get(trace_extrinsic_curvature) + get(k_0)) /
   //                (-2.0 * c);
   // eq 4g (let dt_lapse = 0.0):
-  // theta = ((shift^k * A_k) / (lapse^2 * g(lapse)) + K - K_0) / 2_a));
-  Scalar<DataVector> theta(used_for_size);
-  get(theta) = get<0>(shift) * get<0>(d_lapse);
+  // theta = ((shift^k * d_k_lapse) / (lapse^2 * g(lapse)) - K + K_0) / -2));
+  //   Scalar<DataVector> theta(used_for_size);
+  //   get(theta) = get<0>(shift) * get<0>(d_lapse);
+  //   for (size_t k = 1; k < SpatialDim; k++) {
+  //     get(theta) += shift.get(k) * d_lapse.get(k);
+  //   }
+  //   get(theta) = ((get(theta) / (square(get(lapse)) *
+  //   get(slicing_condition))) -
+  //                 get(trace_extrinsic_curvature) + get(k_0)) /
+  //                (-2.0);
+  const auto d_theta =
+      make_with_value<tnsr::i<DataVector, SpatialDim, FrameType>>(used_for_size,
+                                                                  0.0);
+  //   using theta_tag = Ccz4::Tags::Theta<DataVector>;
+  //   Variables<tmpl::list<theta_tag>> theta_var(num_points_3d);
+  //   get<theta_tag>(theta_var) = theta;
+  //   const auto d_theta_var = partial_derivatives<tmpl::list<theta_tag>>(
+  //       theta_var, mesh, coord_map.inv_jacobian(x_logical));
+  //   const auto& d_theta =
+  //       get<Tags::deriv<theta_tag, tmpl::size_t<SpatialDim>, FrameType>>(
+  //           d_theta_var);
+
+  //   eq 4g (let dt_lapse = 0.0, theta = 0):
+  // k_0 = -((shift^k * d_k_lapse) / (lapse^2 * g(lapse)) - K + 2Theta);
+  Scalar<DataVector> k_0(used_for_size);
+  get(k_0) = get<0>(shift) * get<0>(d_lapse);
   for (size_t k = 1; k < SpatialDim; k++) {
-    get(theta) += shift.get(k) * d_lapse.get(k);
+    get(k_0) += shift.get(k) * d_lapse.get(k);
   }
-  get(theta) = ((get(theta) / (square(get(lapse)) * get(slicing_condition))) -
-                get(trace_extrinsic_curvature) + get(k_0)) /
-               (-2.0);
-  using theta_tag = Ccz4::Tags::Theta<DataVector>;
-  Variables<tmpl::list<theta_tag>> theta_var(num_points_3d);
-  get<theta_tag>(theta_var) = theta;
-  const auto d_theta_var = partial_derivatives<tmpl::list<theta_tag>>(
-      theta_var, mesh, coord_map.inv_jacobian(x_logical));
-  const auto& d_theta =
-      get<Tags::deriv<theta_tag, tmpl::size_t<SpatialDim>, FrameType>>(
-          d_theta_var);
+  get(k_0) = -((get(k_0) / (square(get(lapse)) * get(slicing_condition))) -
+               get(trace_extrinsic_curvature) + 2.0 * get(theta));
+  //   const auto& d_k_0 = d_trace_extrinsic_curvature;
+  using k_0_tag = Ccz4::Tags::K_0<DataVector>;
+  Variables<tmpl::list<k_0_tag>> k_0_var(num_points_3d);
+  get<k_0_tag>(k_0_var) = k_0;
+  const auto d_k_0_var = partial_derivatives<tmpl::list<k_0_tag>>(
+      k_0_var, mesh, coord_map.inv_jacobian(x_logical));
+  const auto& d_k_0 =
+      get<Tags::deriv<k_0_tag, tmpl::size_t<SpatialDim>, FrameType>>(d_k_0_var);
 
   // Evolution variables to be filled by Ccz4::TimeDerivative
   tnsr::ii<DataVector, SpatialDim> dt_conformal_spatial_metric(used_for_size);
@@ -1274,6 +1304,14 @@ void test_kerrschild() {
   for (auto& component : dt_conformal_spatial_metric) {
     CHECK_ITERABLE_APPROX(component, zero);
   }
+  Scalar<DataVector> expected_dt_lapse(used_for_size);
+  get(expected_dt_lapse) =
+      -(square(get(lapse))) * get(slicing_condition) *
+      (get(trace_extrinsic_curvature) - get(k_0) - 2.0 * get(theta));
+  for (size_t k = 0; k < SpatialDim; k++) {
+    get(expected_dt_lapse) += shift.get(k) * d_lapse.get(k);
+  }
+  CHECK_ITERABLE_APPROX(get(expected_dt_lapse), zero);
   for (auto& component : dt_ln_lapse) {
     CHECK_ITERABLE_APPROX(component, zero);
   }
@@ -1283,12 +1321,16 @@ void test_kerrschild() {
   for (auto& component : dt_ln_conformal_factor) {
     CHECK_ITERABLE_APPROX(component, zero);
   }
-  //   for (auto& component : dt_a_tilde) {
-  //     CHECK_ITERABLE_APPROX(component, zero);
-  //   }
-  //   for (auto& component : dt_trace_extrinsic_curvature) {
-  //     CHECK_ITERABLE_APPROX(component, zero);
-  //   }
+  // TODO: make this tolerance better
+  Approx approx_12e = Approx::custom().epsilon(1e-6).scale(1.0);
+  for (auto& component : dt_a_tilde) {
+    CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_12e);
+  }
+  // TODO: make this tolerance better
+  Approx approx_12f = Approx::custom().epsilon(1e-6).scale(1.0);
+  for (auto& component : dt_trace_extrinsic_curvature) {
+    CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_12f);
+  }
   //   for (auto& component : dt_theta) {
   //     CHECK_ITERABLE_APPROX(component, zero);
   //   }
