@@ -122,6 +122,7 @@ void TimeDerivative<Dim>::apply(
     const double kappa_1, const double kappa_2, const double kappa_3,
     const double mu, const double /*TODO : bool ?*/ s,
     const double one_over_relaxation_time,
+    const bool use_shift_constraint_advective_terms,
     // evolved variables
     const tnsr::ii<DataVector, Dim>& conformal_spatial_metric,
     const Scalar<DataVector>& ln_lapse, const tnsr::I<DataVector, Dim>& shift,
@@ -391,8 +392,12 @@ void TimeDerivative<Dim>::apply(
       component = 0.0;
     }
   } else {
-    ::TensorExpressions::evaluate<ti_I>(
-        dt_shift, shift(ti_K) * field_b(ti_k, ti_I) + f * b(ti_I));
+    if (use_shift_constraint_advective_terms) {
+      ::TensorExpressions::evaluate<ti_I>(
+          dt_shift, shift(ti_K) * field_b(ti_k, ti_I) + f * b(ti_I));
+    } else {
+      ::TensorExpressions::evaluate<ti_I>(dt_shift, f * b(ti_I));
+    }
   }
 
   // eq. (12d) : time derivative of the natural log of the conformal
@@ -535,10 +540,14 @@ void TimeDerivative<Dim>::apply(
       component = 0.0;
     }
   } else {
-    // TODO : is the dt_gamma_hat here from the previous step or recent update?
-    ::TensorExpressions::evaluate<ti_I>(
-        dt_b, shift(ti_K) * (d_b(ti_k, ti_I) - d_gamma_hat(ti_k, ti_I)) +
-                  (*dt_gamma_hat)(ti_I)-eta() * b(ti_I));
+    if (use_shift_constraint_advective_terms) {
+      ::TensorExpressions::evaluate<ti_I>(
+          dt_b, shift(ti_K) * (d_b(ti_k, ti_I) - d_gamma_hat(ti_k, ti_I)) +
+                    (*dt_gamma_hat)(ti_I)-eta() * b(ti_I));
+    } else {
+      ::TensorExpressions::evaluate<ti_I>(
+          dt_b, (*dt_gamma_hat)(ti_I)-eta() * b(ti_I));
+    }
   }
 
   // eq. (12j) : time derivative of auxiliary variable A_i
