@@ -792,13 +792,20 @@ void test_kerrschild() {
   const auto& d_lapse =
       get<Tags::deriv<gr::Tags::Lapse<DataVector>, tmpl::size_t<SpatialDim>,
                       FrameType>>(kerrschild_vars);
-  const auto shift =
+  //   std::cout << "d_lapse : " << d_lapse << std::endl;
+  //   const auto& dt_lapse_kerr =
+  //       get<Tags::dt<gr::Tags::Lapse<DataVector>>>(kerrschild_vars);
+  //   std::cout << "dt_lapse_kerr : " << dt_lapse_kerr << std::endl;
+  const auto& shift =
       get<gr::Tags::Shift<SpatialDim, FrameType, DataVector>>(kerrschild_vars);
   const auto& d_shift =
       get<Tags::deriv<gr::Tags::Shift<SpatialDim, FrameType, DataVector>,
                       tmpl::size_t<SpatialDim>, FrameType>>(kerrschild_vars);
-  //   std::cout << "d_lapse : " << d_lapse << std::endl;
   //   std::cout << "d_shift : " << d_shift << std::endl;
+  //   const auto& dt_shift_kerr =
+  //       get<Tags::dt<gr::Tags::Shift<SpatialDim, FrameType, DataVector>>>(
+  //           kerrschild_vars);
+  //   std::cout << "dt_shift_kerr : " << dt_shift_kerr << std::endl;
   const auto& field_b = d_shift;
   using field_b_tag = Ccz4::Tags::FieldB<SpatialDim, FrameType, DataVector>;
   Variables<tmpl::list<field_b_tag>> field_b_var(num_points_3d);
@@ -1047,6 +1054,8 @@ void test_kerrschild() {
       make_with_value<Scalar<DataVector>>(used_for_size, 1.0);
   get(ln_lapse) = log(get(lapse));
   const auto& k_0 = trace_extrinsic_curvature;
+  //   auto k_0 =
+  //       make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
   const auto& d_k_0 = d_trace_extrinsic_curvature;
   const double kappa_1 = 0.1;
   const double kappa_2 = 0.3;
@@ -1057,18 +1066,28 @@ void test_kerrschild() {
 
   //   const auto theta = make_with_value<Scalar<DataVector>>(used_for_size,
   //   0.0);
-  // eq (let dt_ln_lapse = 0.0):
+  // eq 12b (let dt_ln_lapse = 0.0):
   //   theta = ((shift^k * A_k) / (lapse * g(lapse)) + K - K_0) / (2c)
   //   auto theta = make_with_value<Scalar<DataVector>>(
   //       used_for_size, get<0>(shift) * get<0>(field_a));
+  //   Scalar<DataVector> theta(used_for_size);
+  //   get(theta) = get<0>(shift) * get<0>(field_a);
+  //   for (size_t k = 1; k < SpatialDim; k++) {
+  //     get(theta) += shift.get(k) * field_a.get(k);
+  //   }
+  //   get(theta) = ((get(theta) / (get(lapse) * get(slicing_condition))) -
+  //                 get(trace_extrinsic_curvature) + get(k_0)) /
+  //                (-2.0 * c);
+  // eq 4g (let dt_lapse = 0.0):
+  // theta = ((shift^k * A_k) / (lapse^2 * g(lapse)) + K - K_0) / 2_a));
   Scalar<DataVector> theta(used_for_size);
-  get(theta) = get<0>(shift) * get<0>(field_a);
+  get(theta) = get<0>(shift) * get<0>(d_lapse);
   for (size_t k = 1; k < SpatialDim; k++) {
-    get(theta) += shift.get(k) * field_a.get(k);
+    get(theta) += shift.get(k) * d_lapse.get(k);
   }
-  get(theta) = ((get(theta) / (get(lapse) * get(slicing_condition))) -
+  get(theta) = ((get(theta) / (square(get(lapse)) * get(slicing_condition))) -
                 get(trace_extrinsic_curvature) + get(k_0)) /
-               (-2.0 * c);
+               (-2.0);
   using theta_tag = Ccz4::Tags::Theta<DataVector>;
   Variables<tmpl::list<theta_tag>> theta_var(num_points_3d);
   get<theta_tag>(theta_var) = theta;
@@ -1279,8 +1298,7 @@ void test_kerrschild() {
   //   for (auto& component : dt_b) {
   //     CHECK_ITERABLE_APPROX(component, zero);
   //   }
-  // TODO : this is a large tolerance, maybe try computing some of the initial
-  // derivatives analytically to see if this tolerance can be improved
+  // TODO: make this tolerance better
   Approx approx_12j = Approx::custom().epsilon(1e-7).scale(1.0);
   for (auto& component : dt_field_a) {
     CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_12j);
