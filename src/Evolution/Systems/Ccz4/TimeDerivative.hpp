@@ -105,8 +105,9 @@ struct TimeDerivative {
           grad_spatial_z4_constraint,
       const gsl::not_null<Scalar<DataVector>*>
           ricci_scalar_plus_divergence_z4_constraint,
-      const double c, const double cleaning_speed, const double eta,
-      const double f, const Scalar<DataVector>& slicing_condition,
+      const double c, const double cleaning_speed,
+      const Scalar<DataVector>& eta, const double f,
+      const Scalar<DataVector>& slicing_condition,
       const Scalar<DataVector>& k_0, const tnsr::i<DataVector, Dim>& d_k_0,
       const double kappa_1, const double kappa_2, const double kappa_3,
       const double mu, const double s, const double one_over_relaxation_time,

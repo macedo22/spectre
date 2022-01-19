@@ -375,6 +375,11 @@ template <typename DataType>
 struct K_0 : db::SimpleTag {
   using type = Scalar<DataType>;
 };
+
+template <size_t Dim, typename Frame, typename DataType>
+struct B : db::SimpleTag {
+  using type = tnsr::I<DataType, Dim, Frame>;
+};
 }  // namespace Tags
 
 namespace OptionTags {
