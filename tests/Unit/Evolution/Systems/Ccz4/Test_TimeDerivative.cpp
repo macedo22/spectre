@@ -1465,6 +1465,6 @@ SPECTRE_TEST_CASE("Unit.Evolution.Systems.Ccz4.TimeDerivative",
 
   //   test(make_not_null(&generator),
   //        DataVector(5, std::numeric_limits<double>::signaling_NaN()));
-  //   test_minkowski();
+  test_minkowski();
   test_kerrschild();
 }
