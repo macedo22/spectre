@@ -79,7 +79,8 @@ void TimeDerivative<Dim>::apply(
     const gsl::not_null<Scalar<DataVector>*> lapse,
     const gsl::not_null<tnsr::ii<DataVector, Dim>*>
         lapse_times_conformal_spatial_metric,
-    const gsl::not_null<Scalar<DataVector>*> d_slicing_condition,  // g'(alpha)
+    const gsl::not_null<Scalar<DataVector>*> slicing_condition,    // g(\alpha)
+    const gsl::not_null<Scalar<DataVector>*> d_slicing_condition,  // g'(\alpha)
     const gsl::not_null<tnsr::II<DataVector, Dim>*> inv_a_tilde,
     const gsl::not_null<tnsr::ijK<DataVector, Dim>*> symmetrized_d_field_b,
     const gsl::not_null<tnsr::i<DataVector, Dim>*>
@@ -116,7 +117,7 @@ void TimeDerivative<Dim>::apply(
     // params (TODO: better name?)
     const double c, const double cleaning_speed /*e*/,
     const Scalar<DataVector>& eta, const double f,
-    const Scalar<DataVector>& slicing_condition, const Scalar<DataVector>& k_0,
+    const bool use_harmonic_slicing_condition, const Scalar<DataVector>& k_0,
     const tnsr::i<DataVector, Dim>&
         d_k_0 /*TODO : how to compute? is k_0 not 0?*/,
     const double kappa_1, const double kappa_2, const double kappa_3,
@@ -203,10 +204,12 @@ void TimeDerivative<Dim>::apply(
   // else (if g(\alpha) == 2 / \alpha), then:
   //   -  g'(\alpha)  == -2 / \alpha^2
   //   -  \alpha g(\alpha)  == 2
-  if (get(slicing_condition)[0] == 1.0) {
+  if (use_harmonic_slicing_condition) {
+    get(*slicing_condition) = 1.0;
     get(*d_slicing_condition) = 0.0;
     get(*lapse_times_slicing_condition) = get(*lapse);
   } else {
+    get(*slicing_condition) = 2.0 / get(*lapse);
     get(*d_slicing_condition) = -2.0 / square(get(*lapse));
     get(*lapse_times_slicing_condition) = 2.0;
   }
@@ -524,7 +527,7 @@ void TimeDerivative<Dim>::apply(
       dt_field_a,
       shift(ti_L) * d_field_a(ti_l, ti_k) -
           (*lapse_times_field_a)(ti_k) * (*k_minus_k0_minus_2_theta_c)() *
-              (slicing_condition() + (*lapse)() * (*d_slicing_condition)()) +
+              ((*slicing_condition)() + (*lapse)() * (*d_slicing_condition)()) +
           field_b(ti_k, ti_L) * field_a(ti_l) -
           (*lapse_times_slicing_condition)() *
               (d_trace_extrinsic_curvature(ti_k) - d_k_0(ti_k) -
