@@ -20,7 +20,6 @@
 #include "Evolution/Systems/Ccz4/ATilde.hpp"
 #include "Evolution/Systems/Ccz4/Christoffel.hpp"
 #include "Evolution/Systems/Ccz4/DerivChristoffel.hpp"
-#include "Evolution/Systems/Ccz4/Tags.hpp"
 #include "Evolution/Systems/Ccz4/TimeDerivative.hpp"
 #include "Framework/TestHelpers.hpp"
 #include "NumericalAlgorithms/LinearOperators/PartialDerivatives.hpp"
@@ -512,19 +511,8 @@ void test_kerrschild() {
           extrinsic_curvature.get(i, j) * inverse_spatial_metric.get(i, j);
     }
   }
-  using trace_extrinsic_curvature_tag =
-      gr::Tags::TraceExtrinsicCurvature<DataVector>;
-  Variables<tmpl::list<trace_extrinsic_curvature_tag>>
-      trace_extrinsic_curvature_var(num_points_3d);
-  get<trace_extrinsic_curvature_tag>(trace_extrinsic_curvature_var) =
-      trace_extrinsic_curvature;
-  const auto d_trace_extrinsic_curvature_var =
-      partial_derivatives<tmpl::list<trace_extrinsic_curvature_tag>>(
-          trace_extrinsic_curvature_var, mesh,
-          coord_map.inv_jacobian(x_logical));
-  const auto& d_trace_extrinsic_curvature =
-      get<Tags::deriv<trace_extrinsic_curvature_tag, tmpl::size_t<SpatialDim>,
-                      FrameType>>(d_trace_extrinsic_curvature_var);
+  const auto d_trace_extrinsic_curvature = partial_derivative(
+      trace_extrinsic_curvature, mesh, coord_map.inv_jacobian(x_logical));
 
   // Solve eq (4g) for K_0, where \partial_t \alpha = 0:
   //   \partial_t \alpha =
@@ -540,13 +528,8 @@ void test_kerrschild() {
   }
   get(k_0) = -((get(k_0) / (square(get(lapse)) * get(slicing_condition))) -
                get(trace_extrinsic_curvature) + 2.0 * get(theta));
-  using k_0_tag = Ccz4::Tags::K_0<DataVector>;
-  Variables<tmpl::list<k_0_tag>> k_0_var(num_points_3d);
-  get<k_0_tag>(k_0_var) = k_0;
-  const auto d_k_0_var = partial_derivatives<tmpl::list<k_0_tag>>(
-      k_0_var, mesh, coord_map.inv_jacobian(x_logical));
-  const auto& d_k_0 =
-      get<Tags::deriv<k_0_tag, tmpl::size_t<SpatialDim>, FrameType>>(d_k_0_var);
+  const auto d_k_0 =
+      partial_derivative(k_0, mesh, coord_map.inv_jacobian(x_logical));
 
   // Solve eq (4h) for b^i, where \partial_t \Beta^i = 0:
   //   \partial_t \Beta^i = f b + \Beta^k \partial_k \Beta^i
@@ -568,13 +551,8 @@ void test_kerrschild() {
       b.get(i) = 0.0;
     }
   }
-  using b_tag = Ccz4::Tags::B<SpatialDim, FrameType, DataVector>;
-  Variables<tmpl::list<b_tag>> b_var(num_points_3d);
-  get<b_tag>(b_var) = b;
-  const auto d_b_var = partial_derivatives<tmpl::list<b_tag>>(
-      b_var, mesh, coord_map.inv_jacobian(x_logical));
-  const auto& d_b =
-      get<Tags::deriv<b_tag, tmpl::size_t<SpatialDim>, FrameType>>(d_b_var);
+  const auto d_b =
+      partial_derivative(b, mesh, coord_map.inv_jacobian(x_logical));
 
   const auto eta = make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
 
@@ -586,15 +564,9 @@ void test_kerrschild() {
   for (size_t i = 0; i < SpatialDim; i++) {
     field_a.get(i) = d_lapse.get(i) / get(lapse);
   }
-  using d_lapse_tag = Tags::deriv<gr::Tags::Lapse<DataVector>,
-                                  tmpl::size_t<SpatialDim>, FrameType>;
-  Variables<tmpl::list<d_lapse_tag>> d_lapse_var(num_points_3d);
-  get<d_lapse_tag>(d_lapse_var) = d_lapse;
-  const auto d_d_lapse_var = partial_derivatives<tmpl::list<d_lapse_tag>>(
-      d_lapse_var, mesh, coord_map.inv_jacobian(x_logical));
-  const auto& d_d_lapse =
-      get<Tags::deriv<d_lapse_tag, tmpl::size_t<SpatialDim>, FrameType>>(
-          d_d_lapse_var);
+
+  const auto d_d_lapse =
+      partial_derivative(d_lapse, mesh, coord_map.inv_jacobian(x_logical));
   // eq:
   //   A_i = \partial_i \alpha / \alpha
   //   \partial_i A_j =
@@ -610,14 +582,8 @@ void test_kerrschild() {
   }
 
   const auto& field_b = d_shift;
-  using field_b_tag = Ccz4::Tags::FieldB<SpatialDim, FrameType, DataVector>;
-  Variables<tmpl::list<field_b_tag>> field_b_var(num_points_3d);
-  get<field_b_tag>(field_b_var) = field_b;
-  const auto d_field_b_var = partial_derivatives<tmpl::list<field_b_tag>>(
-      field_b_var, mesh, coord_map.inv_jacobian(x_logical));
-  const auto& d_field_b =
-      get<Tags::deriv<field_b_tag, tmpl::size_t<SpatialDim>, FrameType>>(
-          d_field_b_var);
+  const auto d_field_b =
+      partial_derivative(field_b, mesh, coord_map.inv_jacobian(x_logical));
 
   const auto conformal_factor = pow(get(det_spatial_metric), -1. / 6.);
   Scalar<DataVector> conformal_factor_squared{};
@@ -628,14 +594,8 @@ void test_kerrschild() {
   const auto a_tilde =
       Ccz4::a_tilde(conformal_factor_squared, spatial_metric,
                     extrinsic_curvature, trace_extrinsic_curvature);
-  using a_tilde_tag = Ccz4::Tags::ATilde<SpatialDim, FrameType, DataVector>;
-  Variables<tmpl::list<a_tilde_tag>> a_tilde_var(num_points_3d);
-  get<a_tilde_tag>(a_tilde_var) = a_tilde;
-  const auto d_a_tilde_var = partial_derivatives<tmpl::list<a_tilde_tag>>(
-      a_tilde_var, mesh, coord_map.inv_jacobian(x_logical));
-  const auto& d_a_tilde =
-      get<Tags::deriv<a_tilde_tag, tmpl::size_t<SpatialDim>, FrameType>>(
-          d_a_tilde_var);
+  const auto d_a_tilde =
+      partial_derivative(a_tilde, mesh, coord_map.inv_jacobian(x_logical));
 
   tnsr::ii<DataVector, SpatialDim, FrameType> conformal_spatial_metric{};
   for (size_t i = 0; i < SpatialDim; i++) {
@@ -668,14 +628,8 @@ void test_kerrschild() {
       }
     }
   }
-  using field_d_tag = Ccz4::Tags::FieldD<SpatialDim, FrameType, DataVector>;
-  Variables<tmpl::list<field_d_tag>> field_d_var(num_points_3d);
-  get<field_d_tag>(field_d_var) = field_d;
-  const auto d_field_d_var = partial_derivatives<tmpl::list<field_d_tag>>(
-      field_d_var, mesh, coord_map.inv_jacobian(x_logical));
-  const auto& d_field_d =
-      get<Tags::deriv<field_d_tag, tmpl::size_t<SpatialDim>, FrameType>>(
-          d_field_d_var);
+  const auto d_field_d =
+      partial_derivative(field_d, mesh, coord_map.inv_jacobian(x_logical));
 
   auto field_d_up = gr::deriv_inverse_spatial_metric(
       inverse_conformal_spatial_metric, field_d);
@@ -692,14 +646,8 @@ void test_kerrschild() {
     field_p.get(i) =
         -d_det_spatial_metric.get(i) / (6. * get(det_spatial_metric));
   }
-  using field_p_tag = Ccz4::Tags::FieldP<SpatialDim, FrameType, DataVector>;
-  Variables<tmpl::list<field_p_tag>> field_p_var(num_points_3d);
-  get<field_p_tag>(field_p_var) = field_p;
-  const auto d_field_p_var = partial_derivatives<tmpl::list<field_p_tag>>(
-      field_p_var, mesh, coord_map.inv_jacobian(x_logical));
-  const auto& d_field_p =
-      get<Tags::deriv<field_p_tag, tmpl::size_t<SpatialDim>, FrameType>>(
-          d_field_p_var);
+  const auto d_field_p =
+      partial_derivative(field_p, mesh, coord_map.inv_jacobian(x_logical));
 
   const auto d_conformal_christoffel_second_kind =
       Ccz4::deriv_conformal_christoffel_second_kind(
