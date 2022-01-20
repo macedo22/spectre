@@ -24,106 +24,105 @@
 namespace Ccz4 {
 template <size_t Dim>
 void TimeDerivative<Dim>::apply(
-    // time derivatives of evolved variables (eqs 12a - 12m)
-    const gsl::not_null<tnsr::ii<DataVector, Dim>*> dt_conformal_spatial_metric,
-    const gsl::not_null<Scalar<DataVector>*> dt_ln_lapse,
-    const gsl::not_null<tnsr::I<DataVector, Dim>*> dt_shift,
-    const gsl::not_null<Scalar<DataVector>*> dt_ln_conformal_factor,
-    const gsl::not_null<tnsr::ii<DataVector, Dim>*> dt_a_tilde,
-    const gsl::not_null<Scalar<DataVector>*> dt_trace_extrinsic_curvature,
-    const gsl::not_null<Scalar<DataVector>*> dt_theta,
-    const gsl::not_null<tnsr::I<DataVector, Dim>*> dt_gamma_hat,
-    const gsl::not_null<tnsr::I<DataVector, Dim>*> dt_b,
-    const gsl::not_null<tnsr::i<DataVector, Dim>*> dt_field_a,
-    const gsl::not_null<tnsr::iJ<DataVector, Dim>*> dt_field_b,
-    const gsl::not_null<tnsr::ijj<DataVector, Dim>*> dt_field_d,
-    const gsl::not_null<tnsr::i<DataVector, Dim>*> dt_field_p,
-    // temporary expressions defined by TempTags.hpp
-    // TODO (maybe) : reorder the temp quantities here and in TempTags.hpp
+    // LHS time derivatives of evolved variables: eq 12a - 12m
+    const gsl::not_null<tnsr::ii<DataVector, Dim>*>
+        dt_conformal_spatial_metric,                                  // eq 12a
+    const gsl::not_null<Scalar<DataVector>*> dt_ln_lapse,             // eq 12b
+    const gsl::not_null<tnsr::I<DataVector, Dim>*> dt_shift,          // eq 12c
+    const gsl::not_null<Scalar<DataVector>*> dt_ln_conformal_factor,  // eq 12d
+    const gsl::not_null<tnsr::ii<DataVector, Dim>*> dt_a_tilde,       // eq 12e
+    const gsl::not_null<Scalar<DataVector>*>
+        dt_trace_extrinsic_curvature,                             // eq 12f
+    const gsl::not_null<Scalar<DataVector>*> dt_theta,            // eq 12g
+    const gsl::not_null<tnsr::I<DataVector, Dim>*> dt_gamma_hat,  // eq 12h
+    const gsl::not_null<tnsr::I<DataVector, Dim>*> dt_b,          // eq 12i
+    const gsl::not_null<tnsr::i<DataVector, Dim>*> dt_field_a,    // eq 12j
+    const gsl::not_null<tnsr::iJ<DataVector, Dim>*> dt_field_b,   // eq 12k
+    const gsl::not_null<tnsr::ijj<DataVector, Dim>*> dt_field_d,  // eq 12l
+    const gsl::not_null<tnsr::i<DataVector, Dim>*> dt_field_p,    // eq 12m
+    // quantities we need for computing eq 12 - 27
+    const gsl::not_null<Scalar<DataVector>*> conformal_factor_squared,
+    const gsl::not_null<Scalar<DataVector>*> det_conformal_spatial_metric,
+    const gsl::not_null<tnsr::II<DataVector, Dim>*>
+        inv_conformal_spatial_metric,
+    const gsl::not_null<tnsr::II<DataVector, Dim>*> inv_spatial_metric,
+    const gsl::not_null<Scalar<DataVector>*> lapse,
+    const gsl::not_null<Scalar<DataVector>*> slicing_condition,    // g(\alpha)
+    const gsl::not_null<Scalar<DataVector>*> d_slicing_condition,  // g'(\alpha)
+    const gsl::not_null<tnsr::II<DataVector, Dim>*> inv_a_tilde,
+    // temporary expressions
+    const gsl::not_null<tnsr::ij<DataVector, Dim>*> a_tilde_times_field_b,
+    const gsl::not_null<tnsr::ii<DataVector, Dim>*>
+        a_tilde_minus_one_third_conformal_metric_times_trace_a_tilde,
+    const gsl::not_null<Scalar<DataVector>*> contracted_field_b,
+    const gsl::not_null<tnsr::ijK<DataVector, Dim>*> symmetrized_d_field_b,
+    const gsl::not_null<tnsr::i<DataVector, Dim>*>
+        contracted_symmetrized_d_field_b,
+    const gsl::not_null<tnsr::ijk<DataVector, Dim>*> field_b_times_field_d,
+    const gsl::not_null<tnsr::i<DataVector, Dim>*> field_d_up_times_a_tilde,
+    const gsl::not_null<tnsr::ij<DataVector, Dim>*>
+        conformal_metric_times_field_b,
+    const gsl::not_null<tnsr::ijk<DataVector, Dim>*>
+        conformal_metric_times_symmetrized_d_field_b,
+    const gsl::not_null<tnsr::ii<DataVector, Dim>*>
+        conformal_metric_times_trace_a_tilde,
+    const gsl::not_null<tnsr::i<DataVector, Dim>*>
+        inv_conformal_metric_times_d_a_tilde,
     const gsl::not_null<tnsr::I<DataVector, Dim>*>
         gamma_hat_minus_contracted_conformal_christoffel,
     const gsl::not_null<tnsr::iJ<DataVector, Dim>*>
         d_gamma_hat_minus_contracted_conformal_christoffel,
     const gsl::not_null<Scalar<DataVector>*> k_minus_2_theta_c,
     const gsl::not_null<Scalar<DataVector>*> k_minus_k0_minus_2_theta_c,
-    const gsl::not_null<Scalar<DataVector>*> contracted_field_b,
-    const gsl::not_null<tnsr::ij<DataVector, Dim>*>
-        conformal_metric_times_field_b,
-    const gsl::not_null<tnsr::ijk<DataVector, Dim>*>
-        conformal_metric_times_symmetrized_d_field_b,
-    const gsl::not_null<tnsr::ij<DataVector, Dim>*>
-        a_tilde_times_field_b,  // TODO : need to add to TempTags.hpp
+    const gsl::not_null<tnsr::ii<DataVector, Dim>*> lapse_times_a_tilde,
+    const gsl::not_null<tnsr::ijj<DataVector, Dim>*> lapse_times_d_a_tilde,
+    const gsl::not_null<tnsr::i<DataVector, Dim>*> lapse_times_field_a,
+    const gsl::not_null<tnsr::ii<DataVector, Dim>*>
+        lapse_times_conformal_spatial_metric,
+    const gsl::not_null<Scalar<DataVector>*> lapse_times_slicing_condition,
     const gsl::not_null<Scalar<DataVector>*>
         lapse_times_ricci_scalar_plus_divergence_z4_constraint,
-    const gsl::not_null<tnsr::ii<DataVector, Dim>*>
-        conformal_metric_times_trace_a_tilde,
-    const gsl::not_null<tnsr::ii<DataVector, Dim>*> lapse_times_a_tilde,
-    const gsl::not_null<tnsr::i<DataVector, Dim>*> field_d_up_times_a_tilde,
-    const gsl::not_null<tnsr::ijj<DataVector, Dim>*> lapse_times_d_a_tilde,
-    const gsl::not_null<tnsr::i<DataVector, Dim>*>
-        inv_conformal_metric_times_d_a_tilde,
-    const gsl::not_null<tnsr::ii<DataVector, Dim>*>
-        a_tilde_minus_one_third_conformal_metric_times_trace_a_tilde,
-    const gsl::not_null<tnsr::i<DataVector, Dim>*> lapse_times_field_a,
     const gsl::not_null<tnsr::I<DataVector, Dim>*> shift_times_deriv_gamma_hat,
     const gsl::not_null<tnsr::ii<DataVector, Dim>*>
         inv_tau_times_conformal_metric,
-    const gsl::not_null<Scalar<DataVector>*> lapse_times_slicing_condition,
-    // other things we need for eqs 12 - 27 (TODO : better name)
-    const gsl::not_null<Scalar<DataVector>*> conformal_factor_squared,
-    const gsl::not_null<Scalar<DataVector>*>
-        det_conformal_spatial_metric,  // 13, TODO : need to add simple tag?
-    const gsl::not_null<tnsr::II<DataVector, Dim>*>
-        inv_conformal_spatial_metric,
-    const gsl::not_null<tnsr::II<DataVector, Dim>*> inv_spatial_metric,
-    const gsl::not_null<Scalar<DataVector>*> lapse,
-    const gsl::not_null<tnsr::ii<DataVector, Dim>*>
-        lapse_times_conformal_spatial_metric,
-    const gsl::not_null<Scalar<DataVector>*> slicing_condition,    // g(\alpha)
-    const gsl::not_null<Scalar<DataVector>*> d_slicing_condition,  // g'(\alpha)
-    const gsl::not_null<tnsr::II<DataVector, Dim>*> inv_a_tilde,
-    const gsl::not_null<tnsr::ijK<DataVector, Dim>*> symmetrized_d_field_b,
-    const gsl::not_null<tnsr::i<DataVector, Dim>*>
-        contracted_symmetrized_d_field_b,
-    const gsl::not_null<tnsr::ijk<DataVector, Dim>*> field_b_times_field_d,
-    // expressions and identities needed for time derivative eqs (eqs 13 - 27)
-    const gsl::not_null<Scalar<DataVector>*> trace_a_tilde,       // 13
-    const gsl::not_null<tnsr::iJJ<DataVector, Dim>*> field_d_up,  // 14
+    // expressions and identities needed for evolution equations: eq 13 - 27
+    const gsl::not_null<Scalar<DataVector>*> trace_a_tilde,       // eq 13
+    const gsl::not_null<tnsr::iJJ<DataVector, Dim>*> field_d_up,  // eq 14
     const gsl::not_null<tnsr::Ijj<DataVector, Dim>*>
-        conformal_christoffel_second_kind,  // 15
+        conformal_christoffel_second_kind,  // eq 15
     const gsl::not_null<tnsr::iJkk<DataVector, Dim>*>
-        d_conformal_christoffel_second_kind,  // 16
+        d_conformal_christoffel_second_kind,  // eq 16
     const gsl::not_null<tnsr::Ijj<DataVector, Dim>*>
-        christoffel_second_kind,  // 17
+        christoffel_second_kind,  // eq 17
     const gsl::not_null<tnsr::ij<DataVector, Dim>*>
-        spatial_ricci_tensor_buffer,  // buffer needed for 18 -20
+        spatial_ricci_tensor_buffer,  // buffer for eq 18 -20
     const gsl::not_null<tnsr::ii<DataVector, Dim>*>
-        spatial_ricci_tensor,                                         // 18 - 20
-    const gsl::not_null<tnsr::ij<DataVector, Dim>*> grad_grad_lapse,  // 21
-    const gsl::not_null<Scalar<DataVector>*> divergence_lapse,        // 22
+        spatial_ricci_tensor,  // eq 18 - 20
+    const gsl::not_null<tnsr::ij<DataVector, Dim>*> grad_grad_lapse,  // eq 21
+    const gsl::not_null<Scalar<DataVector>*> divergence_lapse,        // eq 22
     const gsl::not_null<tnsr::I<DataVector, Dim>*>
-        contracted_conformal_christoffel_second_kind,  // 23
+        contracted_conformal_christoffel_second_kind,  // eq 23
     const gsl::not_null<tnsr::iJ<DataVector, Dim>*>
-        d_contracted_conformal_christoffel_second_kind,                    // 24
-    const gsl::not_null<tnsr::i<DataVector, Dim>*> spatial_z4_constraint,  // 25
+        d_contracted_conformal_christoffel_second_kind,  // eq 24
+    const gsl::not_null<tnsr::i<DataVector, Dim>*>
+        spatial_z4_constraint,  // eq 25
     const gsl::not_null<Scalar<DataVector>*>
-        upper_spatial_z4_constraint_buffer,  // buffer needed for eq 25
+        upper_spatial_z4_constraint_buffer,  // buffer for eq 25
     const gsl::not_null<tnsr::I<DataVector, Dim>*>
-        upper_spatial_z4_constraint,  // 25
+        upper_spatial_z4_constraint,  // eq 25
     const gsl::not_null<tnsr::ij<DataVector, Dim>*>
-        grad_spatial_z4_constraint,  // 26
+        grad_spatial_z4_constraint,  // eq 26
     const gsl::not_null<Scalar<DataVector>*>
-        ricci_scalar_plus_divergence_z4_constraint,  // 27
-    // params (TODO: better name?)
-    const double c, const double cleaning_speed /*e*/,
+        ricci_scalar_plus_divergence_z4_constraint,  // eq 27
+    // free params
+    const double c, const double cleaning_speed,  // e
     const Scalar<DataVector>& eta, const double f,
-    const bool use_harmonic_slicing_condition, const Scalar<DataVector>& k_0,
-    const tnsr::i<DataVector, Dim>&
-        d_k_0 /*TODO : how to compute? is k_0 not 0?*/,
+    const Scalar<DataVector>& k_0, const tnsr::i<DataVector, Dim>& d_k_0,
     const double kappa_1, const double kappa_2, const double kappa_3,
-    const double mu, const bool use_sparsity_symmetrization_terms,
-    const double one_over_relaxation_time,
+    const double mu, const double one_over_relaxation_time,  // \tau^{-1}
+    const bool use_harmonic_slicing_condition,               // g(\alpha)
     const bool use_shift_constraint_advective_terms,
+    const bool use_sparsity_symmetrization_terms,  // s
     // evolved variables
     const tnsr::ii<DataVector, Dim>& conformal_spatial_metric,
     const Scalar<DataVector>& ln_lapse, const tnsr::I<DataVector, Dim>& shift,
@@ -136,12 +135,6 @@ void TimeDerivative<Dim>::apply(
     const tnsr::ijj<DataVector, Dim>& field_d,
     const tnsr::i<DataVector, Dim>& field_p,
     // spatial derivatives of evolved variables
-    // const tnsr::ijj<DataVector,
-    //                 Dim>& /*d_conformal_spatial_metric*/,  // TODO : remove?
-    // const tnsr::i<DataVector, Dim>& /*d_ln_lapse*/,        // TODO : remove?
-    // const tnsr::iJ<DataVector, Dim>& /*d_shift*/,          // TODO : remove?
-    // const tnsr::i<DataVector,
-    //               Dim>& /*d_ln_conformal_factor*/,  // TODO : remove?
     const tnsr::ijj<DataVector, Dim>& d_a_tilde,
     const tnsr::i<DataVector, Dim>& d_trace_extrinsic_curvature,
     const tnsr::i<DataVector, Dim>& d_theta,
@@ -154,7 +147,8 @@ void TimeDerivative<Dim>::apply(
   constexpr double one_third = 1.0 / 3.0;
   constexpr double eulers_number = 2.71828182845904523536;
 
-  // Beginning stuff (better name?)
+  // quantities we need for computing eq 12 - 27
+
   determinant_and_inverse(det_conformal_spatial_metric,
                           inv_conformal_spatial_metric,
                           conformal_spatial_metric);
@@ -174,29 +168,9 @@ void TimeDerivative<Dim>::apply(
                        (*inv_conformal_spatial_metric)(ti_I, ti_K) *
                        (*inv_conformal_spatial_metric)(ti_J, ti_L));
 
-  ::TensorExpressions::evaluate<ti_k, ti_j, ti_I>(
-      symmetrized_d_field_b,
-      0.5 * (d_field_b(ti_k, ti_j, ti_I) + d_field_b(ti_j, ti_k, ti_I)));
-
-  ::TensorExpressions::evaluate<ti_k>(
-      contracted_symmetrized_d_field_b,
-      (*symmetrized_d_field_b)(ti_k, ti_i, ti_I));
-
-  ::TensorExpressions::evaluate<ti_i, ti_k, ti_j>(
-      conformal_metric_times_symmetrized_d_field_b,
-      conformal_spatial_metric(ti_m, ti_i) *
-          (*symmetrized_d_field_b)(ti_k, ti_j, ti_M));
-
-  ::TensorExpressions::evaluate<ti_i, ti_j, ti_k>(
-      field_b_times_field_d, field_b(ti_i, ti_L) * field_d(ti_j, ti_l, ti_k));
-
   for (size_t i = 0; i < num_points; i++) {
     get(*lapse)[i] = pow(eulers_number, get(ln_lapse)[i]);
   }
-
-  ::TensorExpressions::evaluate<ti_i, ti_j>(
-      lapse_times_conformal_spatial_metric,
-      (*lapse)() * conformal_spatial_metric(ti_i, ti_j));
 
   // if g(\alpha) == 1, then:
   //   -  g'(\alpha) == 0
@@ -214,7 +188,7 @@ void TimeDerivative<Dim>::apply(
     get(*lapse_times_slicing_condition) = 2.0;
   }
 
-  // eq 13 - 27
+  // expressions and identities needed for evolution equations: eq 13 - 27
 
   // eq 13
   ::TensorExpressions::evaluate(
@@ -269,7 +243,7 @@ void TimeDerivative<Dim>::apply(
       *inv_conformal_spatial_metric, *field_d_up,
       *conformal_christoffel_second_kind, *d_conformal_christoffel_second_kind);
 
-  // temp needed for eq 25
+  // temp for eq 25
   ::TensorExpressions::evaluate<ti_I>(
       gamma_hat_minus_contracted_conformal_christoffel,
       gamma_hat(ti_I) - (*contracted_conformal_christoffel_second_kind)(ti_I));
@@ -285,7 +259,7 @@ void TimeDerivative<Dim>::apply(
       *conformal_factor_squared,
       *gamma_hat_minus_contracted_conformal_christoffel);
 
-  // temp needed for eq 26
+  // temp for eq 26
   ::TensorExpressions::evaluate<ti_i, ti_L>(
       d_gamma_hat_minus_contracted_conformal_christoffel,
       d_gamma_hat(ti_i, ti_L) -
@@ -304,39 +278,37 @@ void TimeDerivative<Dim>::apply(
       *inv_conformal_spatial_metric, *spatial_ricci_tensor,
       *grad_spatial_z4_constraint);
 
-  // Repeated temporaries in evolution equations
-  ::TensorExpressions::evaluate<ti_i, ti_j>(
-      a_tilde_times_field_b, a_tilde(ti_k, ti_i) * field_b(ti_j, ti_K));
-
-  ::TensorExpressions::evaluate(
-      k_minus_2_theta_c, trace_extrinsic_curvature() - 2.0 * c * theta());
-
-  ::TensorExpressions::evaluate(k_minus_k0_minus_2_theta_c,
-                                (*k_minus_2_theta_c)() - k_0());
+  // temporary expressions not already computed above
 
   ::TensorExpressions::evaluate(contracted_field_b, field_b(ti_k, ti_K));
 
-  ::TensorExpressions::evaluate<ti_i, ti_j>(
-      conformal_metric_times_field_b,
-      conformal_spatial_metric(ti_k, ti_i) * field_b(ti_j, ti_K));
+  ::TensorExpressions::evaluate<ti_k, ti_j, ti_I>(
+      symmetrized_d_field_b,
+      0.5 * (d_field_b(ti_k, ti_j, ti_I) + d_field_b(ti_j, ti_k, ti_I)));
 
-  ::TensorExpressions::evaluate(
-      lapse_times_ricci_scalar_plus_divergence_z4_constraint,
-      (*lapse)() * (*ricci_scalar_plus_divergence_z4_constraint)());
+  ::TensorExpressions::evaluate<ti_k>(
+      contracted_symmetrized_d_field_b,
+      (*symmetrized_d_field_b)(ti_k, ti_i, ti_I));
 
-  ::TensorExpressions::evaluate<ti_i, ti_j>(
-      conformal_metric_times_trace_a_tilde,
-      conformal_spatial_metric(ti_i, ti_j) * (*trace_a_tilde)());
-
-  ::TensorExpressions::evaluate<ti_i, ti_j>(lapse_times_a_tilde,
-                                            (*lapse)() * a_tilde(ti_i, ti_j));
+  ::TensorExpressions::evaluate<ti_i, ti_j, ti_k>(
+      field_b_times_field_d, field_b(ti_i, ti_L) * field_d(ti_j, ti_l, ti_k));
 
   ::TensorExpressions::evaluate<ti_k>(
       field_d_up_times_a_tilde,
       (*field_d_up)(ti_k, ti_I, ti_J) * a_tilde(ti_i, ti_j));
 
-  TensorExpressions::evaluate<ti_k, ti_i, ti_j>(
-      lapse_times_d_a_tilde, (*lapse)() * d_a_tilde(ti_k, ti_i, ti_j));
+  ::TensorExpressions::evaluate<ti_i, ti_j>(
+      conformal_metric_times_field_b,
+      conformal_spatial_metric(ti_k, ti_i) * field_b(ti_j, ti_K));
+
+  ::TensorExpressions::evaluate<ti_i, ti_k, ti_j>(
+      conformal_metric_times_symmetrized_d_field_b,
+      conformal_spatial_metric(ti_m, ti_i) *
+          (*symmetrized_d_field_b)(ti_k, ti_j, ti_M));
+
+  ::TensorExpressions::evaluate<ti_i, ti_j>(
+      conformal_metric_times_trace_a_tilde,
+      conformal_spatial_metric(ti_i, ti_j) * (*trace_a_tilde)());
 
   ::TensorExpressions::evaluate<ti_k>(
       inv_conformal_metric_times_d_a_tilde,
@@ -344,12 +316,35 @@ void TimeDerivative<Dim>::apply(
           d_a_tilde(ti_k, ti_i, ti_j));
 
   ::TensorExpressions::evaluate<ti_i, ti_j>(
+      a_tilde_times_field_b, a_tilde(ti_k, ti_i) * field_b(ti_j, ti_K));
+
+  ::TensorExpressions::evaluate<ti_i, ti_j>(
       a_tilde_minus_one_third_conformal_metric_times_trace_a_tilde,
       a_tilde(ti_i, ti_j) -
           one_third * (*conformal_metric_times_trace_a_tilde)(ti_i, ti_j));
 
+  ::TensorExpressions::evaluate(
+      k_minus_2_theta_c, trace_extrinsic_curvature() - 2.0 * c * theta());
+
+  ::TensorExpressions::evaluate(k_minus_k0_minus_2_theta_c,
+                                (*k_minus_2_theta_c)() - k_0());
+
+  ::TensorExpressions::evaluate<ti_i, ti_j>(lapse_times_a_tilde,
+                                            (*lapse)() * a_tilde(ti_i, ti_j));
+
+  TensorExpressions::evaluate<ti_k, ti_i, ti_j>(
+      lapse_times_d_a_tilde, (*lapse)() * d_a_tilde(ti_k, ti_i, ti_j));
+
   ::TensorExpressions::evaluate<ti_k>(lapse_times_field_a,
                                       (*lapse)() * field_a(ti_k));
+
+  ::TensorExpressions::evaluate<ti_i, ti_j>(
+      lapse_times_conformal_spatial_metric,
+      (*lapse)() * conformal_spatial_metric(ti_i, ti_j));
+
+  ::TensorExpressions::evaluate(
+      lapse_times_ricci_scalar_plus_divergence_z4_constraint,
+      (*lapse)() * (*ricci_scalar_plus_divergence_z4_constraint)());
 
   ::TensorExpressions::evaluate<ti_I>(shift_times_deriv_gamma_hat,
                                       shift(ti_K) * d_gamma_hat(ti_k, ti_I));
@@ -358,12 +353,9 @@ void TimeDerivative<Dim>::apply(
       inv_tau_times_conformal_metric,
       one_over_relaxation_time * conformal_spatial_metric(ti_i, ti_j));
 
-  // Time derivative computation, eq. (12a) - (12m)
+  // time derivative computation: eq 12a - 12m
 
-  // eq. (12a) : time derivative of the conformal spatial metric
-  // TODO (?): I expect this has repeated calculations for:
-  //   -  2.0 * (*lapse)()
-  //   -  (*det_conformal_spatial_metric)() - 1.0)
+  // eq 12a : time derivative of the conformal spatial metric
   ::TensorExpressions::evaluate<ti_i, ti_j>(
       dt_conformal_spatial_metric,
       2.0 * shift(ti_K) * field_d(ti_k, ti_i, ti_j) +
@@ -377,13 +369,13 @@ void TimeDerivative<Dim>::apply(
           (*inv_tau_times_conformal_metric)(ti_i, ti_j) *
               ((*det_conformal_spatial_metric)() - 1.0));
 
-  // eq. (12b) : time derivative of the natural log of the lapse
+  // eq 12b : time derivative of the natural log of the lapse
   ::TensorExpressions::evaluate(
       dt_ln_lapse,
       shift(ti_K) * field_a(ti_k) -
           (*lapse_times_slicing_condition)() * (*k_minus_k0_minus_2_theta_c)());
 
-  // eq. (12c) : time derivative of the shift
+  // eq 12c : time derivative of the shift
   // if s == 0
   if (not use_sparsity_symmetrization_terms) {
     for (auto& component : *dt_shift) {
@@ -399,17 +391,14 @@ void TimeDerivative<Dim>::apply(
     }
   }
 
-  // eq. (12d) : time derivative of the natural log of the conformal
-  // factor
+  // eq 12d : time derivative of the natural log of the conformal factor
   ::TensorExpressions::evaluate(
       dt_ln_conformal_factor,
       shift(ti_K) * field_p(ti_k) +
           one_third * ((*lapse)() * trace_extrinsic_curvature() -
                        (*contracted_field_b)()));
 
-  // TODO : add ATildeTimesFieldB to TempTags.hpp
-  // eq. (12e) : time derivative of the trace-free part of the extrinsic
-  // curvature
+  // eq 12e : time derivative of the trace-free part of the extrinsic curvature
   ::TensorExpressions::evaluate<ti_i, ti_j>(
       dt_a_tilde,
       shift(ti_K) * d_a_tilde(ti_k, ti_i, ti_j) +
@@ -548,8 +537,6 @@ void TimeDerivative<Dim>::apply(
       component = 0.0;
     }
   } else {
-    // TODO : extra computations for shift(ti_L) * d_field_b(ti_l, ti_k, ti_I)
-    // and square((*lapse)())
     ::TensorExpressions::evaluate<ti_k, ti_I>(
         dt_field_b, shift(ti_L) * d_field_b(ti_l, ti_k, ti_I) +
                         f * d_b(ti_k, ti_I) +

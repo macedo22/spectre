@@ -208,7 +208,7 @@ void test_minkowski() {
   const auto& gamma_hat = contracted_conformal_christoffel_second_kind;
   const auto& d_gamma_hat = d_contracted_conformal_christoffel_second_kind;
 
-  // Evolution variables to be filled by Ccz4::TimeDerivative
+  // LHS time derivatives of evolved variables: eq 12a - 12m
   tnsr::ii<DataVector, SpatialDim> dt_conformal_spatial_metric_actual(
       used_for_size);
   Scalar<DataVector> dt_ln_lapse_actual(used_for_size);
@@ -223,65 +223,62 @@ void test_minkowski() {
   tnsr::iJ<DataVector, SpatialDim> dt_field_b_actual(used_for_size);
   tnsr::ijj<DataVector, SpatialDim> dt_field_d_actual(used_for_size);
   tnsr::i<DataVector, SpatialDim> dt_field_p_actual(used_for_size);
-  // Intermediates to be filled by Ccz4::TimeDerivative
+  // quantities we need for computing eq 12 - 27
+  Scalar<DataVector> conformal_factor_squared_actual(used_for_size);
+  Scalar<DataVector> det_conformal_spatial_metric_actual(used_for_size);
+  tnsr::II<DataVector, SpatialDim> inv_conformal_spatial_metric_actual(
+      used_for_size);
+  tnsr::II<DataVector, SpatialDim> inv_spatial_metric_actual(used_for_size);
+  Scalar<DataVector> lapse_actual(used_for_size);
+  Scalar<DataVector> slicing_condition_actual(used_for_size);
+  Scalar<DataVector> d_slicing_condition_actual(used_for_size);
+  tnsr::II<DataVector, SpatialDim> inv_a_tilde_actual(used_for_size);
+  // quantities we need for computing eq 12 - 27
+  tnsr::ij<DataVector, SpatialDim> a_tilde_times_field_b_actual(used_for_size);
+  tnsr::ii<DataVector, SpatialDim>
+      a_tilde_minus_one_third_conformal_metric_times_trace_a_tilde_actual(
+          used_for_size);
+  Scalar<DataVector> contracted_field_b_actual(used_for_size);
+  tnsr::ijK<DataVector, SpatialDim> symmetrized_d_field_b_actual(used_for_size);
+  tnsr::i<DataVector, SpatialDim> contracted_symmetrized_d_field_b_actual(
+      used_for_size);
+  tnsr::ijk<DataVector, SpatialDim> field_b_times_field_d_actual(used_for_size);
+  tnsr::i<DataVector, SpatialDim> field_d_up_times_a_tilde_actual(
+      used_for_size);
+  tnsr::ij<DataVector, SpatialDim> conformal_metric_times_field_b_actual(
+      used_for_size);
+  tnsr::ijk<DataVector, SpatialDim>
+      conformal_metric_times_symmetrized_d_field_b_actual(used_for_size);
+  tnsr::ii<DataVector, SpatialDim> conformal_metric_times_trace_a_tilde_actual(
+      used_for_size);
+  tnsr::i<DataVector, SpatialDim> inv_conformal_metric_times_d_a_tilde_actual(
+      used_for_size);
   tnsr::I<DataVector, SpatialDim>
       gamma_hat_minus_contracted_conformal_christoffel_actual(used_for_size);
   tnsr::iJ<DataVector, SpatialDim>
       d_gamma_hat_minus_contracted_conformal_christoffel_actual(used_for_size);
   Scalar<DataVector> k_minus_2_theta_c_actual(used_for_size);
   Scalar<DataVector> k_minus_k0_minus_2_theta_c_actual(used_for_size);
-  Scalar<DataVector> contracted_field_b_actual(used_for_size);
-  tnsr::ij<DataVector, SpatialDim> conformal_metric_times_field_b_actual(
+  tnsr::ii<DataVector, SpatialDim> lapse_times_a_tilde_actual(used_for_size);
+  tnsr::ijj<DataVector, SpatialDim> lapse_times_d_a_tilde_actual(used_for_size);
+  tnsr::i<DataVector, SpatialDim> lapse_times_field_a_actual(used_for_size);
+  tnsr::ii<DataVector, SpatialDim> lapse_times_conformal_spatial_metric_actual(
       used_for_size);
-  tnsr::ijk<DataVector, SpatialDim>
-      conformal_metric_times_symmetrized_d_field_b_actual(used_for_size);
-  tnsr::ij<DataVector, SpatialDim> a_tilde_times_field_b_actual(used_for_size);
+  Scalar<DataVector> lapse_times_slicing_condition_actual(used_for_size);
   Scalar<DataVector>
       lapse_times_ricci_scalar_plus_divergence_z4_constraint_actual(
           used_for_size);
-  tnsr::ii<DataVector, SpatialDim> conformal_metric_times_trace_a_tilde_actual(
-      used_for_size);
-  tnsr::ii<DataVector, SpatialDim> lapse_times_a_tilde_actual(used_for_size);
-  tnsr::i<DataVector, SpatialDim> field_d_up_times_a_tilde_actual(
-      used_for_size);
-  tnsr::ijj<DataVector, SpatialDim> lapse_times_d_a_tilde_actual(used_for_size);
-  tnsr::i<DataVector, SpatialDim> inv_conformal_metric_times_d_a_tilde_actual(
-      used_for_size);
-  tnsr::ii<DataVector, SpatialDim>
-      a_tilde_minus_one_third_conformal_metric_times_trace_a_tilde_actual(
-          used_for_size);
-  tnsr::i<DataVector, SpatialDim> lapse_times_field_a_actual(used_for_size);
   tnsr::I<DataVector, SpatialDim> shift_times_deriv_gamma_hat_actual(
       used_for_size);
   tnsr::ii<DataVector, SpatialDim> inv_tau_times_conformal_metric_actual(
       used_for_size);
-  Scalar<DataVector> lapse_times_slicing_condition_actual(used_for_size);
-  // other things we need for eqs 12 - 27 (TODO : better name)
-  Scalar<DataVector> conformal_factor_squared_actual(used_for_size);
-  Scalar<DataVector> det_conformal_spatial_metric_actual(used_for_size);
-  tnsr::II<DataVector, SpatialDim> inv_conformal_spatial_metric_actual(
-      used_for_size);  // TODO : already computed
-  tnsr::II<DataVector, SpatialDim> inv_spatial_metric_actual(
-      used_for_size);                              // TODO : already computed
-  Scalar<DataVector> lapse_actual(used_for_size);  // TODO : already computed
-  tnsr::ii<DataVector, SpatialDim> lapse_times_conformal_spatial_metric_actual(
-      used_for_size);
-  Scalar<DataVector> slicing_condition_actual(used_for_size);
-  Scalar<DataVector> d_slicing_condition_actual(used_for_size);
-  tnsr::II<DataVector, SpatialDim> inv_a_tilde_actual(used_for_size);
-  tnsr::ijK<DataVector, SpatialDim> symmetrized_d_field_b_actual(used_for_size);
-  tnsr::i<DataVector, SpatialDim> contracted_symmetrized_d_field_b_actual(
-      used_for_size);
-  tnsr::ijk<DataVector, SpatialDim> field_b_times_field_d_actual(used_for_size);
-  // expressions and identities needed for time derivative eqs (eqs 13 - 27)
-  Scalar<DataVector> trace_a_tilde_actual(
-      used_for_size);  // TODO : already computed
-  tnsr::iJJ<DataVector, SpatialDim> field_d_up_actual(
-      used_for_size);  // TODO : already computed
+  // expressions and identities needed for evolution equations: eq 13 - 27
+  Scalar<DataVector> trace_a_tilde_actual(used_for_size);
+  tnsr::iJJ<DataVector, SpatialDim> field_d_up_actual(used_for_size);
   tnsr::Ijj<DataVector, SpatialDim> conformal_christoffel_second_kind_actual(
-      used_for_size);  // TODO : already computed
+      used_for_size);
   tnsr::iJkk<DataVector, SpatialDim> d_conformal_christoffel_second_kind_actual(
-      used_for_size);  // TODO : already computed
+      used_for_size);
   tnsr::Ijj<DataVector, SpatialDim> christoffel_second_kind_actual(
       used_for_size);
   tnsr::ij<DataVector, SpatialDim> spatial_ricci_tensor_buffer_actual(
@@ -290,11 +287,9 @@ void test_minkowski() {
   tnsr::ij<DataVector, SpatialDim> grad_grad_lapse_actual(used_for_size);
   Scalar<DataVector> divergence_lapse_actual(used_for_size);
   tnsr::I<DataVector, SpatialDim>
-      contracted_conformal_christoffel_second_kind_actual(
-          used_for_size);  // TODO : already computed
+      contracted_conformal_christoffel_second_kind_actual(used_for_size);
   tnsr::iJ<DataVector, SpatialDim>
-      d_contracted_conformal_christoffel_second_kind_actual(
-          used_for_size);  // TODO : already computed
+      d_contracted_conformal_christoffel_second_kind_actual(used_for_size);
   tnsr::i<DataVector, SpatialDim> spatial_z4_constraint_actual(used_for_size);
   Scalar<DataVector> upper_spatial_z4_constraint_buffer_actual(used_for_size);
   tnsr::I<DataVector, SpatialDim> upper_spatial_z4_constraint_actual(
@@ -314,38 +309,38 @@ void test_minkowski() {
       make_not_null(&dt_b_actual), make_not_null(&dt_field_a_actual),
       make_not_null(&dt_field_b_actual), make_not_null(&dt_field_d_actual),
       make_not_null(&dt_field_p_actual),
-      make_not_null(&gamma_hat_minus_contracted_conformal_christoffel_actual),
-      make_not_null(&d_gamma_hat_minus_contracted_conformal_christoffel_actual),
-      make_not_null(&k_minus_2_theta_c_actual),
-      make_not_null(&k_minus_k0_minus_2_theta_c_actual),
-      make_not_null(&contracted_field_b_actual),
-      make_not_null(&conformal_metric_times_field_b_actual),
-      make_not_null(&conformal_metric_times_symmetrized_d_field_b_actual),
-      make_not_null(&a_tilde_times_field_b_actual),
-      make_not_null(
-          &lapse_times_ricci_scalar_plus_divergence_z4_constraint_actual),
-      make_not_null(&conformal_metric_times_trace_a_tilde_actual),
-      make_not_null(&lapse_times_a_tilde_actual),
-      make_not_null(&field_d_up_times_a_tilde_actual),
-      make_not_null(&lapse_times_d_a_tilde_actual),
-      make_not_null(&inv_conformal_metric_times_d_a_tilde_actual),
-      make_not_null(
-          &a_tilde_minus_one_third_conformal_metric_times_trace_a_tilde_actual),
-      make_not_null(&lapse_times_field_a_actual),
-      make_not_null(&shift_times_deriv_gamma_hat_actual),
-      make_not_null(&inv_tau_times_conformal_metric_actual),
-      make_not_null(&lapse_times_slicing_condition_actual),
       make_not_null(&conformal_factor_squared_actual),
       make_not_null(&det_conformal_spatial_metric_actual),
       make_not_null(&inv_conformal_spatial_metric_actual),
       make_not_null(&inv_spatial_metric_actual), make_not_null(&lapse_actual),
-      make_not_null(&lapse_times_conformal_spatial_metric_actual),
       make_not_null(&slicing_condition_actual),
       make_not_null(&d_slicing_condition_actual),
       make_not_null(&inv_a_tilde_actual),
+      make_not_null(&a_tilde_times_field_b_actual),
+      make_not_null(
+          &a_tilde_minus_one_third_conformal_metric_times_trace_a_tilde_actual),
+      make_not_null(&contracted_field_b_actual),
       make_not_null(&symmetrized_d_field_b_actual),
       make_not_null(&contracted_symmetrized_d_field_b_actual),
       make_not_null(&field_b_times_field_d_actual),
+      make_not_null(&field_d_up_times_a_tilde_actual),
+      make_not_null(&conformal_metric_times_field_b_actual),
+      make_not_null(&conformal_metric_times_symmetrized_d_field_b_actual),
+      make_not_null(&conformal_metric_times_trace_a_tilde_actual),
+      make_not_null(&inv_conformal_metric_times_d_a_tilde_actual),
+      make_not_null(&gamma_hat_minus_contracted_conformal_christoffel_actual),
+      make_not_null(&d_gamma_hat_minus_contracted_conformal_christoffel_actual),
+      make_not_null(&k_minus_2_theta_c_actual),
+      make_not_null(&k_minus_k0_minus_2_theta_c_actual),
+      make_not_null(&lapse_times_a_tilde_actual),
+      make_not_null(&lapse_times_d_a_tilde_actual),
+      make_not_null(&lapse_times_field_a_actual),
+      make_not_null(&lapse_times_conformal_spatial_metric_actual),
+      make_not_null(&lapse_times_slicing_condition_actual),
+      make_not_null(
+          &lapse_times_ricci_scalar_plus_divergence_z4_constraint_actual),
+      make_not_null(&shift_times_deriv_gamma_hat_actual),
+      make_not_null(&inv_tau_times_conformal_metric_actual),
       make_not_null(&trace_a_tilde_actual), make_not_null(&field_d_up_actual),
       make_not_null(&conformal_christoffel_second_kind_actual),
       make_not_null(&d_conformal_christoffel_second_kind_actual),
@@ -361,9 +356,9 @@ void test_minkowski() {
       make_not_null(&upper_spatial_z4_constraint_actual),
       make_not_null(&grad_spatial_z4_constraint_actual),
       make_not_null(&ricci_scalar_plus_divergence_z4_constraint_actual), c,
-      cleaning_speed, eta, f, use_harmonic_slicing_condition, k_0, d_k_0,
-      kappa_1, kappa_2, kappa_3, mu, use_sparsity_symmetrization_terms,
-      one_over_relaxation_time, use_shift_constraint_advective_terms,
+      cleaning_speed, eta, f, k_0, d_k_0, kappa_1, kappa_2, kappa_3, mu,
+      one_over_relaxation_time, use_harmonic_slicing_condition,
+      use_shift_constraint_advective_terms, use_sparsity_symmetrization_terms,
       conformal_spatial_metric, ln_lapse, shift, ln_conformal_factor, a_tilde,
       trace_extrinsic_curvature, theta, gamma_hat, b, field_a, field_b, field_d,
       field_p, d_a_tilde, d_trace_extrinsic_curvature, d_theta, d_gamma_hat,
@@ -668,7 +663,7 @@ void test_kerrschild() {
   const auto& gamma_hat = contracted_conformal_christoffel_second_kind;
   const auto& d_gamma_hat = d_contracted_conformal_christoffel_second_kind;
 
-  // Evolution variables to be filled by Ccz4::TimeDerivative
+  // LHS time derivatives of evolved variables: eq 12a - 12m
   tnsr::ii<DataVector, SpatialDim> dt_conformal_spatial_metric_actual(
       used_for_size);
   Scalar<DataVector> dt_ln_lapse_actual(used_for_size);
@@ -683,56 +678,56 @@ void test_kerrschild() {
   tnsr::iJ<DataVector, SpatialDim> dt_field_b_actual(used_for_size);
   tnsr::ijj<DataVector, SpatialDim> dt_field_d_actual(used_for_size);
   tnsr::i<DataVector, SpatialDim> dt_field_p_actual(used_for_size);
-  // Intermediates to be filled by Ccz4::TimeDerivative
-  tnsr::I<DataVector, SpatialDim>
-      gamma_hat_minus_contracted_conformal_christoffel_actual(used_for_size);
-  tnsr::iJ<DataVector, SpatialDim>
-      d_gamma_hat_minus_contracted_conformal_christoffel_actual(used_for_size);
-  Scalar<DataVector> k_minus_2_theta_c_actual(used_for_size);
-  Scalar<DataVector> k_minus_k0_minus_2_theta_c_actual(used_for_size);
-  Scalar<DataVector> contracted_field_b_actual(used_for_size);
-  tnsr::ij<DataVector, SpatialDim> conformal_metric_times_field_b_actual(
-      used_for_size);
-  tnsr::ijk<DataVector, SpatialDim>
-      conformal_metric_times_symmetrized_d_field_b_actual(used_for_size);
-  tnsr::ij<DataVector, SpatialDim> a_tilde_times_field_b_actual(used_for_size);
-  Scalar<DataVector>
-      lapse_times_ricci_scalar_plus_divergence_z4_constraint_actual(
-          used_for_size);
-  tnsr::ii<DataVector, SpatialDim> conformal_metric_times_trace_a_tilde_actual(
-      used_for_size);
-  tnsr::ii<DataVector, SpatialDim> lapse_times_a_tilde_actual(used_for_size);
-  tnsr::i<DataVector, SpatialDim> field_d_up_times_a_tilde_actual(
-      used_for_size);
-  tnsr::ijj<DataVector, SpatialDim> lapse_times_d_a_tilde_actual(used_for_size);
-  tnsr::i<DataVector, SpatialDim> inv_conformal_metric_times_d_a_tilde_actual(
-      used_for_size);
-  tnsr::ii<DataVector, SpatialDim>
-      a_tilde_minus_one_third_conformal_metric_times_trace_a_tilde_actual(
-          used_for_size);
-  tnsr::i<DataVector, SpatialDim> lapse_times_field_a_actual(used_for_size);
-  tnsr::I<DataVector, SpatialDim> shift_times_deriv_gamma_hat_actual(
-      used_for_size);
-  tnsr::ii<DataVector, SpatialDim> inv_tau_times_conformal_metric_actual(
-      used_for_size);
-  Scalar<DataVector> lapse_times_slicing_condition_actual(used_for_size);
-  // other things we need for eqs 12 - 27 (TODO : better name)
+  // quantities we need for computing eq 12 - 27
   Scalar<DataVector> conformal_factor_squared_actual(used_for_size);
   Scalar<DataVector> det_conformal_spatial_metric_actual(used_for_size);
   tnsr::II<DataVector, SpatialDim> inv_conformal_spatial_metric_actual(
       used_for_size);
   tnsr::II<DataVector, SpatialDim> inv_spatial_metric_actual(used_for_size);
   Scalar<DataVector> lapse_actual(used_for_size);
-  tnsr::ii<DataVector, SpatialDim> lapse_times_conformal_spatial_metric_actual(
-      used_for_size);
   Scalar<DataVector> slicing_condition_actual(used_for_size);
   Scalar<DataVector> d_slicing_condition_actual(used_for_size);
   tnsr::II<DataVector, SpatialDim> inv_a_tilde_actual(used_for_size);
+  // quantities we need for computing eq 12 - 27
+  tnsr::ij<DataVector, SpatialDim> a_tilde_times_field_b_actual(used_for_size);
+  tnsr::ii<DataVector, SpatialDim>
+      a_tilde_minus_one_third_conformal_metric_times_trace_a_tilde_actual(
+          used_for_size);
+  Scalar<DataVector> contracted_field_b_actual(used_for_size);
   tnsr::ijK<DataVector, SpatialDim> symmetrized_d_field_b_actual(used_for_size);
   tnsr::i<DataVector, SpatialDim> contracted_symmetrized_d_field_b_actual(
       used_for_size);
   tnsr::ijk<DataVector, SpatialDim> field_b_times_field_d_actual(used_for_size);
-  // expressions and identities needed for time derivative eqs (eqs 13 - 27)
+  tnsr::i<DataVector, SpatialDim> field_d_up_times_a_tilde_actual(
+      used_for_size);
+  tnsr::ij<DataVector, SpatialDim> conformal_metric_times_field_b_actual(
+      used_for_size);
+  tnsr::ijk<DataVector, SpatialDim>
+      conformal_metric_times_symmetrized_d_field_b_actual(used_for_size);
+  tnsr::ii<DataVector, SpatialDim> conformal_metric_times_trace_a_tilde_actual(
+      used_for_size);
+  tnsr::i<DataVector, SpatialDim> inv_conformal_metric_times_d_a_tilde_actual(
+      used_for_size);
+  tnsr::I<DataVector, SpatialDim>
+      gamma_hat_minus_contracted_conformal_christoffel_actual(used_for_size);
+  tnsr::iJ<DataVector, SpatialDim>
+      d_gamma_hat_minus_contracted_conformal_christoffel_actual(used_for_size);
+  Scalar<DataVector> k_minus_2_theta_c_actual(used_for_size);
+  Scalar<DataVector> k_minus_k0_minus_2_theta_c_actual(used_for_size);
+  tnsr::ii<DataVector, SpatialDim> lapse_times_a_tilde_actual(used_for_size);
+  tnsr::ijj<DataVector, SpatialDim> lapse_times_d_a_tilde_actual(used_for_size);
+  tnsr::i<DataVector, SpatialDim> lapse_times_field_a_actual(used_for_size);
+  tnsr::ii<DataVector, SpatialDim> lapse_times_conformal_spatial_metric_actual(
+      used_for_size);
+  Scalar<DataVector> lapse_times_slicing_condition_actual(used_for_size);
+  Scalar<DataVector>
+      lapse_times_ricci_scalar_plus_divergence_z4_constraint_actual(
+          used_for_size);
+  tnsr::I<DataVector, SpatialDim> shift_times_deriv_gamma_hat_actual(
+      used_for_size);
+  tnsr::ii<DataVector, SpatialDim> inv_tau_times_conformal_metric_actual(
+      used_for_size);
+  // expressions and identities needed for evolution equations: eq 13 - 27
   Scalar<DataVector> trace_a_tilde_actual(used_for_size);
   tnsr::iJJ<DataVector, SpatialDim> field_d_up_actual(used_for_size);
   tnsr::Ijj<DataVector, SpatialDim> conformal_christoffel_second_kind_actual(
@@ -769,38 +764,38 @@ void test_kerrschild() {
       make_not_null(&dt_b_actual), make_not_null(&dt_field_a_actual),
       make_not_null(&dt_field_b_actual), make_not_null(&dt_field_d_actual),
       make_not_null(&dt_field_p_actual),
-      make_not_null(&gamma_hat_minus_contracted_conformal_christoffel_actual),
-      make_not_null(&d_gamma_hat_minus_contracted_conformal_christoffel_actual),
-      make_not_null(&k_minus_2_theta_c_actual),
-      make_not_null(&k_minus_k0_minus_2_theta_c_actual),
-      make_not_null(&contracted_field_b_actual),
-      make_not_null(&conformal_metric_times_field_b_actual),
-      make_not_null(&conformal_metric_times_symmetrized_d_field_b_actual),
-      make_not_null(&a_tilde_times_field_b_actual),
-      make_not_null(
-          &lapse_times_ricci_scalar_plus_divergence_z4_constraint_actual),
-      make_not_null(&conformal_metric_times_trace_a_tilde_actual),
-      make_not_null(&lapse_times_a_tilde_actual),
-      make_not_null(&field_d_up_times_a_tilde_actual),
-      make_not_null(&lapse_times_d_a_tilde_actual),
-      make_not_null(&inv_conformal_metric_times_d_a_tilde_actual),
-      make_not_null(
-          &a_tilde_minus_one_third_conformal_metric_times_trace_a_tilde_actual),
-      make_not_null(&lapse_times_field_a_actual),
-      make_not_null(&shift_times_deriv_gamma_hat_actual),
-      make_not_null(&inv_tau_times_conformal_metric_actual),
-      make_not_null(&lapse_times_slicing_condition_actual),
       make_not_null(&conformal_factor_squared_actual),
       make_not_null(&det_conformal_spatial_metric_actual),
       make_not_null(&inv_conformal_spatial_metric_actual),
       make_not_null(&inv_spatial_metric_actual), make_not_null(&lapse_actual),
-      make_not_null(&lapse_times_conformal_spatial_metric_actual),
       make_not_null(&slicing_condition_actual),
       make_not_null(&d_slicing_condition_actual),
       make_not_null(&inv_a_tilde_actual),
+      make_not_null(&a_tilde_times_field_b_actual),
+      make_not_null(
+          &a_tilde_minus_one_third_conformal_metric_times_trace_a_tilde_actual),
+      make_not_null(&contracted_field_b_actual),
       make_not_null(&symmetrized_d_field_b_actual),
       make_not_null(&contracted_symmetrized_d_field_b_actual),
       make_not_null(&field_b_times_field_d_actual),
+      make_not_null(&field_d_up_times_a_tilde_actual),
+      make_not_null(&conformal_metric_times_field_b_actual),
+      make_not_null(&conformal_metric_times_symmetrized_d_field_b_actual),
+      make_not_null(&conformal_metric_times_trace_a_tilde_actual),
+      make_not_null(&inv_conformal_metric_times_d_a_tilde_actual),
+      make_not_null(&gamma_hat_minus_contracted_conformal_christoffel_actual),
+      make_not_null(&d_gamma_hat_minus_contracted_conformal_christoffel_actual),
+      make_not_null(&k_minus_2_theta_c_actual),
+      make_not_null(&k_minus_k0_minus_2_theta_c_actual),
+      make_not_null(&lapse_times_a_tilde_actual),
+      make_not_null(&lapse_times_d_a_tilde_actual),
+      make_not_null(&lapse_times_field_a_actual),
+      make_not_null(&lapse_times_conformal_spatial_metric_actual),
+      make_not_null(&lapse_times_slicing_condition_actual),
+      make_not_null(
+          &lapse_times_ricci_scalar_plus_divergence_z4_constraint_actual),
+      make_not_null(&shift_times_deriv_gamma_hat_actual),
+      make_not_null(&inv_tau_times_conformal_metric_actual),
       make_not_null(&trace_a_tilde_actual), make_not_null(&field_d_up_actual),
       make_not_null(&conformal_christoffel_second_kind_actual),
       make_not_null(&d_conformal_christoffel_second_kind_actual),
@@ -816,9 +811,9 @@ void test_kerrschild() {
       make_not_null(&upper_spatial_z4_constraint_actual),
       make_not_null(&grad_spatial_z4_constraint_actual),
       make_not_null(&ricci_scalar_plus_divergence_z4_constraint_actual), c,
-      cleaning_speed, eta, f, use_harmonic_slicing_condition, k_0, d_k_0,
-      kappa_1, kappa_2, kappa_3, mu, use_sparsity_symmetrization_terms,
-      one_over_relaxation_time, use_shift_constraint_advective_terms,
+      cleaning_speed, eta, f, k_0, d_k_0, kappa_1, kappa_2, kappa_3, mu,
+      one_over_relaxation_time, use_harmonic_slicing_condition,
+      use_shift_constraint_advective_terms, use_sparsity_symmetrization_terms,
       conformal_spatial_metric, ln_lapse, shift, ln_conformal_factor, a_tilde,
       trace_extrinsic_curvature, theta, gamma_hat, b, field_a, field_b, field_d,
       field_p, d_a_tilde, d_trace_extrinsic_curvature, d_theta, d_gamma_hat,
