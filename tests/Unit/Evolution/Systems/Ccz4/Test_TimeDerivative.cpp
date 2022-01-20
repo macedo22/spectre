@@ -326,11 +326,12 @@ void test(const gsl::not_null<Generator*> generator,
 //   return x;
 // }
 
+// Test first order CCZ4 with flat space
 void test_minkowski() {
   const size_t SpatialDim = 3;
   using FrameType = Frame::Inertial;
 
-  // Evaluate solution
+  // Create solution
   gr::Solutions::Minkowski<SpatialDim> solution{};
 
   // Setup grid
@@ -354,6 +355,7 @@ void test_minkowski() {
   // Arbitrary time for time-independent solution.
   const double t = std::numeric_limits<double>::signaling_NaN();
 
+  // Evaluate solution
   const auto minkowski_vars = solution.variables(
       x, t, typename gr::Solutions::Minkowski<SpatialDim>::tags<DataVector>{});
 
@@ -361,31 +363,25 @@ void test_minkowski() {
   const auto& spatial_metric =
       get<gr::Tags::SpatialMetric<SpatialDim, FrameType, DataVector>>(
           minkowski_vars);
-  const auto& d_spatial_metric =
-      get<Tags::deriv<gr::Tags::SpatialMetric<SpatialDim>,
-                      tmpl::size_t<SpatialDim>, FrameType>>(minkowski_vars);
   const auto det_spatial_metric = determinant_and_inverse(spatial_metric).first;
   const auto d_det_spatial_metric =
       make_with_value<tnsr::i<DataVector, SpatialDim, FrameType>>(used_for_size,
                                                                   0.0);
-  const auto& dt_spatial_metric =
-      get<Tags::dt<gr::Tags::SpatialMetric<SpatialDim>>>(minkowski_vars);
   const auto& inverse_spatial_metric =
       get<gr::Tags::InverseSpatialMetric<SpatialDim, FrameType, DataVector>>(
           minkowski_vars);
   const auto lapse = get<gr::Tags::Lapse<DataVector>>(minkowski_vars);
-  const auto& d_lapse =
-      get<Tags::deriv<gr::Tags::Lapse<DataVector>, tmpl::size_t<SpatialDim>,
-                      FrameType>>(minkowski_vars);
   const auto shift =
       get<gr::Tags::Shift<SpatialDim, FrameType, DataVector>>(minkowski_vars);
   const auto& d_shift =
       get<Tags::deriv<gr::Tags::Shift<SpatialDim, FrameType, DataVector>,
                       tmpl::size_t<SpatialDim>, FrameType>>(minkowski_vars);
+
   const auto& field_b = d_shift;
   const auto d_field_b =
       make_with_value<tnsr::ijK<DataVector, SpatialDim, FrameType>>(
           used_for_size, 0.0);
+
   const auto b = make_with_value<tnsr::I<DataVector, SpatialDim, FrameType>>(
       used_for_size, 0.0);
   const auto d_b = make_with_value<tnsr::iJ<DataVector, SpatialDim, FrameType>>(
@@ -395,128 +391,67 @@ void test_minkowski() {
   Scalar<DataVector> ln_lapse{};
   get(ln_lapse) = log(get(lapse));
 
-  tnsr::i<DataVector, SpatialDim, FrameType> field_a{};
-  for (size_t i = 0; i < SpatialDim; i++) {
-    field_a.get(i) = d_lapse.get(i) / get(lapse);
-  }
+  const auto field_a =
+      make_with_value<tnsr::i<DataVector, SpatialDim, FrameType>>(used_for_size,
+                                                                  0.0);
   const auto d_field_a =
       make_with_value<tnsr::ij<DataVector, SpatialDim, FrameType>>(
           used_for_size, 0.0);
 
-  // TODO : remove this conformal_factor if we don't need it
-  const auto conformal_factor = pow(get(det_spatial_metric), -1. / 6.);
-  Scalar<DataVector> conformal_factor_squared{};
-  get(conformal_factor_squared) = square(conformal_factor);
+  // since spatial_metric = conformal_spatial_metric,
+  // conformal factor == 1
+  const auto conformal_factor_squared =
+      make_with_value<Scalar<DataVector>>(used_for_size, 1.0);
+  const auto ln_conformal_factor =
+      make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
+  const auto& conformal_spatial_metric = spatial_metric;
+  const auto d_conformal_spatial_metric =
+      make_with_value<tnsr::ijj<DataVector, SpatialDim, FrameType>>(
+          used_for_size, 0.0);
 
-  Scalar<DataVector> ln_conformal_factor{};
-  get(ln_conformal_factor) = log(conformal_factor);
+  const auto inverse_conformal_spatial_metric = inverse_spatial_metric;
 
-  tnsr::ii<DataVector, SpatialDim, FrameType> conformal_spatial_metric{};
-  for (size_t i = 0; i < SpatialDim; i++) {
-    for (size_t j = i; j < SpatialDim; j++) {
-      conformal_spatial_metric.get(i, j) =
-          get(conformal_factor_squared) * spatial_metric.get(i, j);
-    }
-  }
-
-  tnsr::ijj<DataVector, SpatialDim, FrameType> d_conformal_spatial_metric{};
-  for (size_t k = 0; k < SpatialDim; k++) {
-    for (size_t i = 0; i < SpatialDim; i++) {
-      for (size_t j = i; j < SpatialDim; j++) {
-        d_conformal_spatial_metric.get(k, i, j) =
-            get(conformal_factor_squared) * d_spatial_metric.get(k, i, j) -
-            pow<4>(get(conformal_factor_squared)) *
-                d_det_spatial_metric.get(k) * spatial_metric.get(i, j) / 3.;
-      }
-    }
-  }
-
-  const auto inverse_conformal_spatial_metric =
-      determinant_and_inverse(conformal_spatial_metric).second;
-
-  tnsr::ijj<DataVector, SpatialDim, FrameType> field_d{};
-  for (size_t k = 0; k < SpatialDim; k++) {
-    for (size_t i = 0; i < SpatialDim; i++) {
-      for (size_t j = i; j < SpatialDim; j++) {
-        field_d.get(k, i, j) = 0.5 * d_conformal_spatial_metric.get(k, i, j);
-      }
-    }
-  }
-
+  const auto field_d =
+      make_with_value<tnsr::ijj<DataVector, SpatialDim, FrameType>>(
+          used_for_size, 0.0);
   const auto d_field_d =
       make_with_value<tnsr::ijkk<DataVector, SpatialDim, FrameType>>(
           used_for_size, 0.0);
 
-  auto field_d_up = gr::deriv_inverse_spatial_metric(
-      inverse_conformal_spatial_metric, field_d);
-  for (size_t k = 0; k < SpatialDim; k++) {
-    for (size_t i = 0; i < SpatialDim; i++) {
-      for (size_t j = i; j < SpatialDim; j++) {
-        field_d_up.get(k, i, j) *= -1.0;
-      }
-    }
-  }
+  const auto field_d_up =
+      make_with_value<tnsr::iJJ<DataVector, SpatialDim, FrameType>>(
+          used_for_size, 0.0);
 
-  //   using field_d_tag = Ccz4::Tags::FieldD<SpatialDim, FrameType,
-  //   DataVector>; Variables<tmpl::list<field_d_tag>>
-  //   field_d_var(num_points_3d); get<field_d_tag>(field_d_var) = field_d;
-  //   const auto d_field_d_var = partial_derivatives<tmpl::list<field_d_tag>>(
-  //       field_d_var, mesh, coord_map.inv_jacobian(x_logical));
-  //   const auto& d_field_d =
-  //       get<Tags::deriv<field_d_tag, tmpl::size_t<SpatialDim>, FrameType>>(
-  //           d_field_d_var);
-
-  const auto d_conformal_christoffel_second_kind =
-      Ccz4::deriv_conformal_christoffel_second_kind(
-          inverse_conformal_spatial_metric, field_d, d_field_d, field_d_up);
-
-  tnsr::i<DataVector, SpatialDim, FrameType> field_p{};
-  for (size_t i = 0; i < SpatialDim; i++) {
-    field_p.get(i) =
-        -d_det_spatial_metric.get(i) / (6. * get(det_spatial_metric));
-  }
-
+  const auto field_p =
+      make_with_value<tnsr::i<DataVector, SpatialDim, FrameType>>(used_for_size,
+                                                                  0.0);
   const auto d_field_p =
       make_with_value<tnsr::ij<DataVector, SpatialDim, FrameType>>(
           used_for_size, 0.0);
 
-  //   using field_p_tag = Ccz4::Tags::FieldP<SpatialDim, FrameType,
-  //   DataVector>; Variables<tmpl::list<field_p_tag>>
-  //   field_p_var(num_points_3d); get<field_p_tag>(field_p_var) = field_p;
-  //   const auto d_field_p_var = partial_derivatives<tmpl::list<field_p_tag>>(
-  //       field_p_var, mesh, coord_map.inv_jacobian(x_logical));
-  //   const auto& d_field_p =
-  //       get<Tags::deriv<field_p_tag, tmpl::size_t<SpatialDim>, FrameType>>(
-  //           d_field_p_var);
-
   const auto conformal_christoffel_second_kind =
       Ccz4::conformal_christoffel_second_kind(inverse_conformal_spatial_metric,
                                               field_d);
+  const auto d_conformal_christoffel_second_kind =
+      make_with_value<tnsr::iJkk<DataVector, SpatialDim, FrameType>>(
+          used_for_size, 0.0);
 
   const auto contracted_conformal_christoffel_second_kind =
       Ccz4::contracted_conformal_christoffel_second_kind(
           inverse_conformal_spatial_metric, conformal_christoffel_second_kind);
-  const auto& gamma_hat = contracted_conformal_christoffel_second_kind;
   const auto d_contracted_conformal_christoffel_second_kind =
-      Ccz4::deriv_contracted_conformal_christoffel_second_kind(
-          inverse_conformal_spatial_metric, field_d_up,
-          conformal_christoffel_second_kind,
-          d_conformal_christoffel_second_kind);
+      make_with_value<tnsr::iJ<DataVector, SpatialDim, FrameType>>(
+          used_for_size, 0.0);
+
+  const auto& gamma_hat = contracted_conformal_christoffel_second_kind;
   const auto& d_gamma_hat = d_contracted_conformal_christoffel_second_kind;
 
   const auto extrinsic_curvature =
-      gr::extrinsic_curvature(lapse, shift, d_shift, spatial_metric,
-                              dt_spatial_metric, d_spatial_metric);
+      make_with_value<tnsr::ii<DataVector, SpatialDim, FrameType>>(
+          used_for_size, 0.0);
 
-  Scalar<DataVector> trace_extrinsic_curvature(used_for_size);
-  get(trace_extrinsic_curvature) = 0.0;
-  for (size_t i = 0; i < SpatialDim; i++) {
-    for (size_t j = 0; j < SpatialDim; j++) {
-      get(trace_extrinsic_curvature) +=
-          extrinsic_curvature.get(i, j) * inverse_spatial_metric.get(i, j);
-    }
-  }
-
+  const auto trace_extrinsic_curvature =
+      make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
   const auto d_trace_extrinsic_curvature =
       make_with_value<tnsr::i<DataVector, SpatialDim, FrameType>>(used_for_size,
                                                                   0.0);
@@ -536,11 +471,10 @@ void test_minkowski() {
   // params
   const double c = 1.0;
   const double cleaning_speed = 1.6;
-  const auto eta = make_with_value<Scalar<DataVector>>(used_for_size, 0.5);
-  const double f = 0.6;
+  const auto eta = make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
+  const double f = 0.75;
   const bool use_harmonic_slicing_condition = false;
-  const auto k_0 = make_with_value<Scalar<DataVector>>(
-      used_for_size, get(trace_extrinsic_curvature)[0]);
+  const auto& k_0 = trace_extrinsic_curvature;
   const auto d_k_0 =
       make_with_value<tnsr::i<DataVector, SpatialDim>>(used_for_size, 0.0);
   const double kappa_1 = 0.1;
@@ -596,7 +530,7 @@ void test_minkowski() {
       used_for_size);
   Scalar<DataVector> lapse_times_slicing_condition(used_for_size);
   // other things we need for eqs 12 - 27 (TODO : better name)
-  //   Scalar<DataVector> conformal_factor_squared(used_for_size);
+  Scalar<DataVector> conformal_factor_squared_to_fill(used_for_size);
   Scalar<DataVector> det_conformal_spatial_metric(used_for_size);
   tnsr::II<DataVector, SpatialDim> inv_conformal_spatial_metric(
       used_for_size);  // TODO : already computed
@@ -667,7 +601,7 @@ void test_minkowski() {
       make_not_null(&shift_times_deriv_gamma_hat),
       make_not_null(&inv_tau_times_conformal_metric),
       make_not_null(&lapse_times_slicing_condition),
-      make_not_null(&conformal_factor_squared),
+      make_not_null(&conformal_factor_squared_to_fill),
       make_not_null(&det_conformal_spatial_metric),
       make_not_null(&inv_conformal_spatial_metric),
       make_not_null(&inv_spatial_metric), make_not_null(&lapse_to_fill),
@@ -695,11 +629,8 @@ void test_minkowski() {
       one_over_relaxation_time, use_shift_constraint_advective_terms,
       conformal_spatial_metric, ln_lapse, shift, ln_conformal_factor, a_tilde,
       trace_extrinsic_curvature, theta, gamma_hat, b, field_a, field_b, field_d,
-      field_p,
-      //   d_conformal_spatial_metric, d_ln_lapse, d_shift,
-      //   d_ln_conformal_factor,
-      d_a_tilde, d_trace_extrinsic_curvature, d_theta, d_gamma_hat, d_b,
-      d_field_a, d_field_b, d_field_d, d_field_p);
+      field_p, d_a_tilde, d_trace_extrinsic_curvature, d_theta, d_gamma_hat,
+      d_b, d_field_a, d_field_b, d_field_d, d_field_p);
 
   // Check that all time derivatives are 0
   for (auto& component : dt_conformal_spatial_metric) {
