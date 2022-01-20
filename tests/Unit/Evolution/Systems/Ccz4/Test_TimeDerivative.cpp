@@ -136,6 +136,8 @@ void test_impl(const gsl::not_null<Generator*> generator,
       make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
   tnsr::ii<DataVector, Dim> lapse_times_conformal_spatial_metric =
       make_with_value<tnsr::ii<DataVector, Dim>>(used_for_size, 0.0);
+  Scalar<DataVector> slicing_condition =
+      make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
   Scalar<DataVector> d_slicing_condition =
       make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
   tnsr::II<DataVector, Dim> inv_a_tilde =
@@ -182,8 +184,7 @@ void test_impl(const gsl::not_null<Generator*> generator,
   const auto cleaning_speed = make_with_value<double>(used_for_size, 0.0);
   const auto eta = make_with_value<double>(used_for_size, 0.0);
   const auto f = make_with_value<double>(used_for_size, 0.0);
-  const auto slicing_condition =
-      make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
+  const bool use_harmonic_slicing_condition = false;
   const auto k_0 = make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
   const auto d_k_0 =
       make_with_value<tnsr::i<DataVector, Dim>>(used_for_size, 0.0);
@@ -278,8 +279,8 @@ void test_impl(const gsl::not_null<Generator*> generator,
       make_not_null(&inv_conformal_spatial_metric),
       make_not_null(&inv_spatial_metric), make_not_null(&lapse),
       make_not_null(&lapse_times_conformal_spatial_metric),
-      make_not_null(&d_slicing_condition), make_not_null(&inv_a_tilde),
-      make_not_null(&symmetrized_d_field_b),
+      make_not_null(&slicing_condition), make_not_null(&d_slicing_condition),
+      make_not_null(&inv_a_tilde), make_not_null(&symmetrized_d_field_b),
       make_not_null(&contracted_symmetrized_d_field_b),
       make_not_null(&field_b_times_field_d), make_not_null(&trace_a_tilde),
       make_not_null(&field_d_up),
@@ -296,11 +297,12 @@ void test_impl(const gsl::not_null<Generator*> generator,
       make_not_null(&upper_spatial_z4_constraint),
       make_not_null(&grad_spatial_z4_constraint),
       make_not_null(&ricci_scalar_plus_divergence_z4_constraint), c,
-      cleaning_speed, eta, f, slicing_condition, k_0, d_k_0, kappa_1, kappa_2,
-      kappa_3, mu, use_sparsity_symmetrization_terms, one_over_relaxation_time,
-      use_shift_constraint_advective_terms, conformal_spatial_metric, ln_lapse,
-      shift, ln_conformal_factor, a_tilde, trace_extrinsic_curvature, theta,
-      gamma_hat, b, field_a, field_b, field_d, field_p,
+      cleaning_speed, eta, f, use_harmonic_slicing_condition, k_0, d_k_0,
+      kappa_1, kappa_2, kappa_3, mu, use_sparsity_symmetrization_terms,
+      one_over_relaxation_time, use_shift_constraint_advective_terms,
+      conformal_spatial_metric, ln_lapse, shift, ln_conformal_factor, a_tilde,
+      trace_extrinsic_curvature, theta, gamma_hat, b, field_a, field_b, field_d,
+      field_p,
       //   d_conformal_spatial_metric, d_ln_lapse, d_shift,
       //   d_ln_conformal_factor,
       d_a_tilde, d_trace_extrinsic_curvature, d_theta, d_gamma_hat, d_b,
@@ -536,8 +538,7 @@ void test_minkowski() {
   const double cleaning_speed = 1.6;
   const auto eta = make_with_value<Scalar<DataVector>>(used_for_size, 0.5);
   const double f = 0.6;
-  const auto slicing_condition =
-      make_with_value<Scalar<DataVector>>(used_for_size, 1.0);
+  const bool use_harmonic_slicing_condition = false;
   const auto k_0 = make_with_value<Scalar<DataVector>>(
       used_for_size, get(trace_extrinsic_curvature)[0]);
   const auto d_k_0 =
@@ -604,6 +605,7 @@ void test_minkowski() {
   Scalar<DataVector> lapse_to_fill(used_for_size);  // TODO : already computed
   tnsr::ii<DataVector, SpatialDim> lapse_times_conformal_spatial_metric(
       used_for_size);
+  Scalar<DataVector> slicing_condition(used_for_size);
   Scalar<DataVector> d_slicing_condition(used_for_size);
   tnsr::II<DataVector, SpatialDim> inv_a_tilde(used_for_size);
   tnsr::ijK<DataVector, SpatialDim> symmetrized_d_field_b(used_for_size);
@@ -670,8 +672,8 @@ void test_minkowski() {
       make_not_null(&inv_conformal_spatial_metric),
       make_not_null(&inv_spatial_metric), make_not_null(&lapse_to_fill),
       make_not_null(&lapse_times_conformal_spatial_metric),
-      make_not_null(&d_slicing_condition), make_not_null(&inv_a_tilde),
-      make_not_null(&symmetrized_d_field_b),
+      make_not_null(&slicing_condition), make_not_null(&d_slicing_condition),
+      make_not_null(&inv_a_tilde), make_not_null(&symmetrized_d_field_b),
       make_not_null(&contracted_symmetrized_d_field_b),
       make_not_null(&field_b_times_field_d),
       make_not_null(&trace_a_tilde_to_fill), make_not_null(&field_d_up_to_fill),
@@ -688,11 +690,12 @@ void test_minkowski() {
       make_not_null(&upper_spatial_z4_constraint),
       make_not_null(&grad_spatial_z4_constraint),
       make_not_null(&ricci_scalar_plus_divergence_z4_constraint), c,
-      cleaning_speed, eta, f, slicing_condition, k_0, d_k_0, kappa_1, kappa_2,
-      kappa_3, mu, use_sparsity_symmetrization_terms, one_over_relaxation_time,
-      use_shift_constraint_advective_terms, conformal_spatial_metric, ln_lapse,
-      shift, ln_conformal_factor, a_tilde, trace_extrinsic_curvature, theta,
-      gamma_hat, b, field_a, field_b, field_d, field_p,
+      cleaning_speed, eta, f, use_harmonic_slicing_condition, k_0, d_k_0,
+      kappa_1, kappa_2, kappa_3, mu, use_sparsity_symmetrization_terms,
+      one_over_relaxation_time, use_shift_constraint_advective_terms,
+      conformal_spatial_metric, ln_lapse, shift, ln_conformal_factor, a_tilde,
+      trace_extrinsic_curvature, theta, gamma_hat, b, field_a, field_b, field_d,
+      field_p,
       //   d_conformal_spatial_metric, d_ln_lapse, d_shift,
       //   d_ln_conformal_factor,
       d_a_tilde, d_trace_extrinsic_curvature, d_theta, d_gamma_hat, d_b,
@@ -1078,11 +1081,18 @@ void test_kerrschild() {
   const double cleaning_speed = 1.6;
   //   const double eta = 0.5;
   //   const double f = 0.6;
-  auto slicing_condition =
-      make_with_value<Scalar<DataVector>>(used_for_size, 2.0);
-  get(slicing_condition) /= get(lapse);
+  //     auto slicing_condition =
+  //       make_with_value<Scalar<DataVector>>(used_for_size, 2.0);
+  //   get(slicing_condition) /= get(lapse);
   //   const auto slicing_condition =
   //       make_with_value<Scalar<DataVector>>(used_for_size, 1.0);
+  const bool use_harmonic_slicing_condition = false;
+  Scalar<DataVector> slicing_condition(used_for_size);
+  if (use_harmonic_slicing_condition) {
+    get(slicing_condition) = 1.0;
+  } else {
+    get(slicing_condition) = 2.0 / get(lapse);
+  }
   get(ln_lapse) = log(get(lapse));
   //   const auto& k_0 = trace_extrinsic_curvature;
   // eq 4g (let dt_lapse = 0.0, theta = 0):
@@ -1213,6 +1223,7 @@ void test_kerrschild() {
   Scalar<DataVector> lapse_to_fill(used_for_size);  // TODO : already computed
   tnsr::ii<DataVector, SpatialDim> lapse_times_conformal_spatial_metric(
       used_for_size);
+  Scalar<DataVector> slicing_condition_to_fill(used_for_size);
   Scalar<DataVector> d_slicing_condition(used_for_size);
   tnsr::II<DataVector, SpatialDim> inv_a_tilde(used_for_size);
   tnsr::ijK<DataVector, SpatialDim> symmetrized_d_field_b(used_for_size);
@@ -1280,6 +1291,7 @@ void test_kerrschild() {
       make_not_null(&inv_conformal_spatial_metric),
       make_not_null(&inv_spatial_metric), make_not_null(&lapse_to_fill),
       make_not_null(&lapse_times_conformal_spatial_metric),
+      make_not_null(&slicing_condition_to_fill),
       make_not_null(&d_slicing_condition), make_not_null(&inv_a_tilde),
       make_not_null(&symmetrized_d_field_b),
       make_not_null(&contracted_symmetrized_d_field_b),
@@ -1298,11 +1310,12 @@ void test_kerrschild() {
       make_not_null(&upper_spatial_z4_constraint),
       make_not_null(&grad_spatial_z4_constraint),
       make_not_null(&ricci_scalar_plus_divergence_z4_constraint), c,
-      cleaning_speed, eta, f, slicing_condition, k_0, d_k_0, kappa_1, kappa_2,
-      kappa_3, mu, use_sparsity_symmetrization_terms, one_over_relaxation_time,
-      use_shift_constraint_advective_terms, conformal_spatial_metric, ln_lapse,
-      shift, ln_conformal_factor, a_tilde, trace_extrinsic_curvature, theta,
-      gamma_hat, b, field_a, field_b, field_d, field_p,
+      cleaning_speed, eta, f, use_harmonic_slicing_condition, k_0, d_k_0,
+      kappa_1, kappa_2, kappa_3, mu, use_sparsity_symmetrization_terms,
+      one_over_relaxation_time, use_shift_constraint_advective_terms,
+      conformal_spatial_metric, ln_lapse, shift, ln_conformal_factor, a_tilde,
+      trace_extrinsic_curvature, theta, gamma_hat, b, field_a, field_b, field_d,
+      field_p,
       //   d_conformal_spatial_metric, d_ln_lapse, d_shift,
       //   d_ln_conformal_factor,
       d_a_tilde, d_trace_extrinsic_curvature, d_theta, d_gamma_hat, d_b,
