@@ -40,8 +40,17 @@ namespace {
 using Affine = domain::CoordinateMaps::Affine;
 using Affine3D = domain::CoordinateMaps::ProductOf3Maps<Affine, Affine, Affine>;
 
-// Test first order CCZ4 with flat space
-void test_minkowski() {
+// Test first order CCZ4 with different binary settings against Minkowski
+//
+// \param evolve_shift whether or not to evolve the shift
+// \param use_shift_advective_terms whether or not to include the advective
+// terms in the evolution of the shift (if evolve_shift == false, this is
+// overridden)
+// use_harmonic_slicing_condition whether to use the harmonic slicing condition
+// (else 1 + log slicing condition)
+void test_minkowski(const bool evolve_shift,
+                    const bool use_shift_advective_terms,
+                    const bool use_harmonic_slicing_condition) {
   const size_t SpatialDim = 3;
   using FrameType = Frame::Inertial;
 
@@ -100,9 +109,6 @@ void test_minkowski() {
   const double kappa_3 = 0.4;
   const double mu = 0.7;
   const double one_over_relaxation_time = 10.0;         // \tau^{-1}
-  const bool evolve_shift = true;                       // s
-  const bool use_shift_advective_terms = true;
-  const bool use_harmonic_slicing_condition = false;
   Scalar<DataVector> slicing_condition(used_for_size);  // g(\alpha)
   if (use_harmonic_slicing_condition) {
     get(slicing_condition) = 1.0;
@@ -406,7 +412,17 @@ void test_minkowski() {
   }
 }
 
-void test_kerrschild() {
+// Test first order CCZ4 with different binary settings against KerrSchild
+//
+// \param evolve_shift whether or not to evolve the shift
+// \param use_shift_advective_terms whether or not to include the advective
+// terms in the evolution of the shift (if evolve_shift == false, this is
+// overridden)
+// use_harmonic_slicing_condition whether to use the harmonic slicing condition
+// (else 1 + log slicing condition)
+void test_kerrschild(const bool evolve_shift,
+                     const bool use_shift_advective_terms,
+                     const bool use_harmonic_slicing_condition) {
   const size_t SpatialDim = 3;
   using FrameType = Frame::Inertial;
 
@@ -478,9 +494,6 @@ void test_kerrschild() {
   const double kappa_3 = 0.4;
   const double mu = 0.7;
   const double one_over_relaxation_time = 10.0;         // \tau^{-1}
-  const bool evolve_shift = true;                       // s
-  const bool use_shift_advective_terms = true;
-  const bool use_harmonic_slicing_condition = false;
   Scalar<DataVector> slicing_condition(used_for_size);  // g(\alpha)
   if (use_harmonic_slicing_condition) {
     get(slicing_condition) = 1.0;
@@ -528,7 +541,7 @@ void test_kerrschild() {
 
   // Solve eq (4h) for b^i, where \partial_t \Beta^i = 0:
   //   \partial_t \Beta^i = f b + \Beta^k \partial_k \Beta^i
-  tnsr::I<DataVector, SpatialDim, FrameType> b{};
+  tnsr::I<DataVector, SpatialDim, FrameType> b(used_for_size);
   if (use_shift_advective_terms) {
     //   0 = f b + \Beta^k \partial_k \Beta^i
     //   b = -(\Beta^k \partial_k \Beta^i) / f
@@ -931,8 +944,24 @@ void test_kerrschild() {
 }
 }  // namespace
 
+// Test first order CCZ4 against Minkowski and KerrSchild
+void test(const bool evolve_shift, const bool use_shift_advective_terms,
+          const bool use_harmonic_slicing_condition) {
+  test_minkowski(evolve_shift, use_shift_advective_terms,
+                 use_harmonic_slicing_condition);
+  test_kerrschild(evolve_shift, use_shift_advective_terms,
+                  use_harmonic_slicing_condition);
+}
+
 SPECTRE_TEST_CASE("Unit.Evolution.Systems.Ccz4.TimeDerivative",
                   "[Unit][Evolution]") {
-  test_minkowski();
-  test_kerrschild();
+  // Test first order CCZ4 with different settings
+  test(true, true, true);
+  test(true, true, false);
+  test(true, false, true);
+  test(true, false, false);
+  test(false, true, true);
+  test(false, true, false);
+  test(false, false, true);
+  test(false, false, false);
 }

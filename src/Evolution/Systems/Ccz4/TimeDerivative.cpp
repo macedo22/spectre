@@ -3,6 +3,7 @@
 
 #include "Evolution/Systems/Ccz4/TimeDerivative.hpp"
 
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 
@@ -183,6 +184,9 @@ void TimeDerivative<Dim>::apply(
     get(*d_slicing_condition) = 0.0;
     get(*lapse_times_slicing_condition) = get(*lapse);
   } else {
+    for (const auto& component : get(*lapse)) {
+      assert(component != 0.0);
+    }
     get(*slicing_condition) = 2.0 / get(*lapse);
     get(*d_slicing_condition) = -2.0 / square(get(*lapse));
     get(*lapse_times_slicing_condition) = 2.0;
