@@ -642,6 +642,148 @@ tnsr::I<DataVector, SpatialDim, FrameType> get_b_kerr(
   return b;
 }
 
+// Compute expected value for LHS of eq 12h
+//
+// \partial_t \hat{\gamma}^i will not be 0 for KerrSchild if
+// evolve_shift == false
+template <size_t SpatialDim, typename FrameType>
+tnsr::I<DataVector, SpatialDim, FrameType> get_dt_gamma_hat_kerr_expected(
+    const bool evolve_shift,
+    const tnsr::II<DataVector, SpatialDim, FrameType>&
+        inverse_conformal_spatial_metric,
+    const tnsr::ijK<DataVector, SpatialDim, FrameType>& d_field_b) {
+  tnsr::I<DataVector, SpatialDim, FrameType> dt_gamma_hat_kerr_expected(
+      get<0, 0>(inverse_conformal_spatial_metric));
+  if (evolve_shift) {
+    // s == 1
+    for (auto& component : dt_gamma_hat_kerr_expected) {
+      component = 0.0;
+    }
+  } else {
+    // s == 0
+    //
+    // When s == 1, \partial_t \hat{\gamma}^i == 0, so when s == 0,
+    // dt_gamma_hat = terms in eq 12h with s as a factor
+    // (red terms that cancel out are ignored)
+    for (size_t i = 0; i < SpatialDim; i++) {
+      dt_gamma_hat_kerr_expected.get(i) = 0.0;
+      for (size_t k = 0; k < SpatialDim; k++) {
+        for (size_t l = 0; l < SpatialDim; l++) {
+          dt_gamma_hat_kerr_expected.get(i) -=
+              (0.5 * inverse_conformal_spatial_metric.get(k, l) *
+                   (d_field_b.get(k, l, i) + d_field_b.get(l, k, i)) +
+               0.5 * inverse_conformal_spatial_metric.get(i, k) *
+                   (d_field_b.get(k, l, l) + d_field_b.get(l, k, l)) / 3.0);
+        }
+      }
+    }
+  }
+  return dt_gamma_hat_kerr_expected;
+}
+
+// Compute expected value for LHS of eq 12i
+//
+// \partial_t b will not be 0 for KerrSchild if evolve_shift == true
+template <size_t SpatialDim, typename FrameType>
+tnsr::I<DataVector, SpatialDim, FrameType> get_dt_b_kerr_expected(
+    const bool evolve_shift, const Scalar<DataVector>& eta,
+    const tnsr::I<DataVector, SpatialDim, FrameType>& shift,
+    const tnsr::iJ<DataVector, SpatialDim, FrameType>& d_gamma_hat,
+    const tnsr::I<DataVector, SpatialDim, FrameType>& b,
+    const tnsr::iJ<DataVector, SpatialDim, FrameType>& d_b) {
+  tnsr::I<DataVector, SpatialDim, FrameType> dt_b_kerr_expected(get(eta));
+  if (evolve_shift) {
+    // s == 1
+    for (size_t i = 0; i < SpatialDim; i++) {
+      dt_b_kerr_expected.get(i) = -get(eta) * b.get(i) +
+                                  shift.get(0) * d_b.get(0, i) -
+                                  shift.get(0) * d_gamma_hat.get(0, i);
+      for (size_t k = 1; k < SpatialDim; k++) {
+        dt_b_kerr_expected.get(i) +=
+            shift.get(k) * d_b.get(k, i) - shift.get(k) * d_gamma_hat.get(k, i);
+      }
+    }
+  } else {
+    // s == 0
+    for (auto& component : dt_b_kerr_expected) {
+      component = 0.0;
+    }
+  }
+  return dt_b_kerr_expected;
+}
+
+// Compute expected value for LHS of eq 12l
+//
+// \partial_t D_{kij} will not be 0 for KerrSchild if evolve_shift == false
+template <size_t SpatialDim, typename FrameType>
+tnsr::ijj<DataVector, SpatialDim, FrameType> get_dt_field_d_kerr_expected(
+    const bool evolve_shift,
+    const tnsr::ii<DataVector, SpatialDim, FrameType>& conformal_spatial_metric,
+    const tnsr::ijK<DataVector, SpatialDim, FrameType>& d_field_b) {
+  tnsr::ijj<DataVector, SpatialDim, FrameType> dt_field_d_kerr_expected(
+      get<0, 0>(conformal_spatial_metric));
+  if (evolve_shift) {
+    // s == 1
+    for (auto& component : dt_field_d_kerr_expected) {
+      component = 0.0;
+    }
+  } else {
+    // s == 0
+    //
+    // When s == 1, \partial_t D_{kij} == 0, so when s == 0,
+    // \partial_t D_{kij} = terms in eq 12l with s as a factor
+    for (size_t k = 0; k < SpatialDim; k++) {
+      for (size_t j = 0; j < SpatialDim; j++) {
+        for (size_t i = 0; i < SpatialDim; i++) {
+          dt_field_d_kerr_expected.get(k, i, j) = 0.0;
+          for (size_t m = 0; m < SpatialDim; m++) {
+            dt_field_d_kerr_expected.get(k, i, j) +=
+                0.5 * conformal_spatial_metric.get(i, j) *
+                    (d_field_b.get(k, m, m) + d_field_b.get(m, k, m)) / 3.0 -
+                0.25 * conformal_spatial_metric.get(m, i) *
+                    (d_field_b.get(k, j, m) + d_field_b.get(j, k, m)) -
+                0.25 * conformal_spatial_metric.get(m, j) *
+                    (d_field_b.get(k, i, m) + d_field_b.get(i, k, m));
+          }
+        }
+      }
+    }
+  }
+  return dt_field_d_kerr_expected;
+}
+
+// Compute expected value for LHS of eq 12m
+//
+// \partial_t P_i will not be 0 for KerrSchild if evolve_shift == false
+template <size_t SpatialDim, typename FrameType>
+tnsr::i<DataVector, SpatialDim, FrameType> get_dt_field_p_kerr_expected(
+    const bool evolve_shift,
+    const tnsr::ijK<DataVector, SpatialDim, FrameType>& d_field_b) {
+  tnsr::i<DataVector, SpatialDim, FrameType> dt_field_p_kerr_expected(
+      get<0, 0, 0>(d_field_b));
+  if (evolve_shift) {
+    // s == 1
+    for (auto& component : dt_field_p_kerr_expected) {
+      component = 0.0;
+    }
+  } else {
+    // s == 0
+    //
+    // When s == 1, \partial_t P_i == 0, so when s == 0,
+    // \partial_t P_i = terms in eq 12m with s as a factor
+    // (red terms that cancel out are ignored)
+    for (size_t k = 0; k < SpatialDim; k++) {
+      dt_field_p_kerr_expected.get(k) = 0.0;
+      for (size_t i = 0; i < SpatialDim; i++) {
+        dt_field_p_kerr_expected.get(k) +=
+            d_field_b.get(k, i, i) + d_field_b.get(i, k, i);
+      }
+      dt_field_p_kerr_expected.get(k) /= 6.0;  // *= 0.5 / 3
+    }
+  }
+  return dt_field_p_kerr_expected;
+}
+
 // \brief Test first order CCZ4 with different binary settings against
 // KerrSchild
 //
@@ -650,7 +792,7 @@ tnsr::I<DataVector, SpatialDim, FrameType> get_b_kerr(
 // derivatives. The evolution equations are eq 12a - 12m in
 // \cite Dumbser2017okk. More concretely, depending on whether s == 1 or s == 0,
 // the time derivatives in eq 12c, 12h, 12i, 12k, 12l, and 12m may or may not be
-// be expected to be 0. For cases when the time derivative of an evolution
+// expected to be 0. For cases when the time derivative of an evolution
 // variable is expected to be non-zero, the test checks for the expected
 // non-zero value by computing excess/missing terms due to the value of s.
 //
@@ -1040,152 +1182,45 @@ void test_kerrschild(const bool evolve_shift,
     CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_12g);
   }
   // eq 12h
-  // dt_gamma_hat will not be 0 for KerrSchild if evolve_shift == false
-  tnsr::i<DataVector, SpatialDim, FrameType> dt_gamma_hat_expected(
-      used_for_size);
-  if (evolve_shift) {
-    for (auto& component : dt_gamma_hat_expected) {
-      component = 0.0;
-    }
-  } else {
-    // dt_gamma_hat = terms in eq 12h with s as a factor,
-    // red terms that cancel out are ignored
-    for (size_t i = 0; i < SpatialDim; i++) {
-      dt_gamma_hat_expected.get(i) = 0.0;
-      for (size_t k = 0; k < SpatialDim; k++) {
-        for (size_t l = 0; l < SpatialDim; l++) {
-          dt_gamma_hat_expected.get(i) -=
-              (0.5 * inverse_conformal_spatial_metric.get(k, l) *
-                   (d_field_b.get(k, l, i) + d_field_b.get(l, k, i)) +
-               0.5 * inverse_conformal_spatial_metric.get(i, k) *
-                   (d_field_b.get(k, l, l) + d_field_b.get(l, k, l)) / 3.0);
-        }
-      }
-    }
-  }
+  // \partial_t \hat{\gamma}^i will not be 0 for KerrSchild if
+  // evolve_shift == false
+  const tnsr::I<DataVector, SpatialDim, FrameType> dt_gamma_hat_expected =
+      get_dt_gamma_hat_kerr_expected(
+          evolve_shift, inverse_conformal_spatial_metric, d_field_b);
   Approx approx_12h = Approx::custom().epsilon(1e-11).scale(1.0);
-  for (size_t i = 0; i < SpatialDim; i++) {
-    CHECK_ITERABLE_CUSTOM_APPROX(dt_gamma_hat_actual.get(i),
-                                 dt_gamma_hat_expected.get(i), approx_12h);
-  }
+  CHECK_ITERABLE_CUSTOM_APPROX(dt_gamma_hat_actual, dt_gamma_hat_expected,
+                               approx_12h);
   // eq 12i
-  // dt_b will not be 0 for KerrSchild if evolve_shift == true
-  tnsr::i<DataVector, SpatialDim, FrameType> dt_b_expected(used_for_size);
-  if (evolve_shift) {
-    for (size_t i = 0; i < SpatialDim; i++) {
-      dt_b_expected.get(i) = -get(eta) * b.get(i) +
-                             shift.get(0) * d_b.get(0, i) -
-                             shift.get(0) * d_gamma_hat.get(0, i);
-      for (size_t k = 1; k < SpatialDim; k++) {
-        dt_b_expected.get(i) +=
-            shift.get(k) * d_b.get(k, i) - shift.get(k) * d_gamma_hat.get(k, i);
-      }
-    }
-  } else {
-    for (auto& component : dt_b_expected) {
-      component = 0.0;
-    }
-  }
+  // \partial_t b will not be 0 for KerrSchild if evolve_shift == true
+  const tnsr::I<DataVector, SpatialDim, FrameType> dt_b_expected =
+      get_dt_b_kerr_expected(evolve_shift, eta, shift, d_gamma_hat, b, d_b);
   Approx approx_12i = Approx::custom().epsilon(1e-11).scale(1.0);
-  for (size_t i = 0; i < SpatialDim; i++) {
-    CHECK_ITERABLE_CUSTOM_APPROX(dt_b_actual.get(i), dt_b_expected.get(i),
-                                 approx_12i);
-  }
+  CHECK_ITERABLE_CUSTOM_APPROX(dt_b_actual, dt_b_expected, approx_12i);
   // eq 12j
   Approx approx_12j = Approx::custom().epsilon(1e-11).scale(1.0);
   for (auto& component : dt_field_a_actual) {
     CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_12j);
   }
   // eq 12k
-  // dt_field_b will not be 0 for KerrSchild if evolve_shift == true
-  tnsr::iJ<DataVector, SpatialDim, FrameType> dt_field_b_expected(
-      used_for_size);
-  if (evolve_shift) {
-    for (size_t k = 0; k < SpatialDim; k++) {
-      for (size_t i = 0; i < SpatialDim; i++) {
-        dt_field_b_expected.get(k, i) = shift.get(0) * d_field_b.get(0, k, i) +
-                                        f * d_b.get(k, i) +
-                                        field_b.get(k, 0) * field_b.get(0, i);
-        for (size_t l = 1; l < SpatialDim; l++) {
-          dt_field_b_expected.get(k, i) +=
-              shift.get(l) * d_field_b.get(l, k, i) +
-              field_b.get(k, l) * field_b.get(l, i);
-        }
-      }
-    }
-  } else {
-    for (auto& component : dt_field_b_expected) {
-      component = 0.0;
-    }
-  }
   Approx approx_12k = Approx::custom().epsilon(1e-11).scale(1.0);
-  for (size_t k = 0; k < SpatialDim; k++) {
-    for (size_t i = 0; i < SpatialDim; i++) {
-      CHECK_ITERABLE_CUSTOM_APPROX(dt_field_b_actual.get(k, i),
-                                   dt_field_b_expected.get(k, i), approx_12k);
-    }
+  for (auto& component : dt_field_b_actual) {
+    CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_12k);
   }
   // eq 12l
-  // dt_field_d will not be 0 for KerrSchild if evolve_shift == false
-  tnsr::ijj<DataVector, SpatialDim, FrameType> dt_field_d_expected(
-      used_for_size);
-  if (evolve_shift) {
-    for (auto& component : dt_field_d_expected) {
-      component = 0.0;
-    }
-  } else {
-    // dt_field_d = terms in eq 12l with s as a factor
-    for (size_t k = 0; k < SpatialDim; k++) {
-      for (size_t j = 0; j < SpatialDim; j++) {
-        for (size_t i = 0; i < SpatialDim; i++) {
-          dt_field_d_expected.get(k, i, j) = 0.0;
-          for (size_t m = 0; m < SpatialDim; m++) {
-            dt_field_d_expected.get(k, i, j) +=
-                0.5 * conformal_spatial_metric.get(i, j) *
-                    (d_field_b.get(k, m, m) + d_field_b.get(m, k, m)) / 3.0 -
-                0.25 * conformal_spatial_metric.get(m, i) *
-                    (d_field_b.get(k, j, m) + d_field_b.get(j, k, m)) -
-                0.25 * conformal_spatial_metric.get(m, j) *
-                    (d_field_b.get(k, i, m) + d_field_b.get(i, k, m));
-          }
-        }
-      }
-    }
-  }
+  // \partial_t D_{kij} will not be 0 for KerrSchild if evolve_shift == false
+  const tnsr::ijj<DataVector, SpatialDim, FrameType> dt_field_d_expected =
+      get_dt_field_d_kerr_expected(evolve_shift, conformal_spatial_metric,
+                                   d_field_b);
   Approx approx_12l = Approx::custom().epsilon(1e-11).scale(1.0);
-  for (size_t k = 0; k < SpatialDim; k++) {
-    for (size_t i = 0; i < SpatialDim; i++) {
-      for (size_t j = 0; j < SpatialDim; j++) {
-        CHECK_ITERABLE_CUSTOM_APPROX(dt_field_d_actual.get(k, i, j),
-                                     dt_field_d_expected.get(k, i, j),
-                                     approx_12l);
-      }
-    }
-  }
+  CHECK_ITERABLE_CUSTOM_APPROX(dt_field_d_actual, dt_field_d_expected,
+                               approx_12l);
   // eq 12m
-  // dt_field_p will not be 0 for KerrSchild if evolve_shift == false
-  tnsr::i<DataVector, SpatialDim, FrameType> dt_field_p_expected(used_for_size);
-  if (evolve_shift) {
-    for (auto& component : dt_field_p_expected) {
-      component = 0.0;
-    }
-  } else {
-    // dt_field_p = terms in eq 12m with s as a factor,
-    // red terms that cancel out are ignored
-    for (size_t k = 0; k < SpatialDim; k++) {
-      dt_field_p_expected.get(k) = 0.0;
-      for (size_t i = 0; i < SpatialDim; i++) {
-        dt_field_p_expected.get(k) +=
-            d_field_b.get(k, i, i) + d_field_b.get(i, k, i);
-      }
-      dt_field_p_expected.get(k) /= 6.0;  // *= 0.5 / 3
-    }
-  }
+  // \partial_t P_i will not be 0 for KerrSchild if evolve_shift == false
+  const tnsr::i<DataVector, SpatialDim, FrameType> dt_field_p_expected =
+      get_dt_field_p_kerr_expected(evolve_shift, d_field_b);
   Approx approx_12m = Approx::custom().epsilon(1e-12).scale(1.0);
-  for (size_t k = 0; k < SpatialDim; k++) {
-    CHECK_ITERABLE_CUSTOM_APPROX(dt_field_p_actual.get(k),
-                                 dt_field_p_expected.get(k), approx_12m);
-  }
+  CHECK_ITERABLE_CUSTOM_APPROX(dt_field_p_actual, dt_field_p_expected,
+                               approx_12m);
 }
 }  // namespace
 
