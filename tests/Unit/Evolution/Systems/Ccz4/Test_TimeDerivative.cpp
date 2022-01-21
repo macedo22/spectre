@@ -40,7 +40,10 @@ namespace {
 using Affine = domain::CoordinateMaps::Affine;
 using Affine3D = domain::CoordinateMaps::ProductOf3Maps<Affine, Affine, Affine>;
 
-// Test first order CCZ4 with different binary settings against Minkowski
+// \brief Test first order CCZ4 with different binary settings against Minkowski
+//
+// \details Tests that all time derivatives are 0. The evolution equations are
+// eq 12a - 12m in \cite Dumbser2017okk.
 //
 // \param evolve_shift whether or not to evolve the shift
 // \param use_harmonic_slicing_condition whether to use the harmonic slicing
@@ -128,6 +131,7 @@ void test_minkowski(const bool evolve_shift,
       make_with_value<tnsr::i<DataVector, SpatialDim, FrameType>>(used_for_size,
                                                                   0.0);
 
+  // K_0 == K
   const auto k_0 = trace_extrinsic_curvature;
   const auto d_k_0 = d_trace_extrinsic_curvature;
 
@@ -142,6 +146,7 @@ void test_minkowski(const bool evolve_shift,
   Scalar<DataVector> ln_lapse{};
   get(ln_lapse) = log(get(lapse));
 
+  // eq 6
   const auto field_a =
       make_with_value<tnsr::i<DataVector, SpatialDim, FrameType>>(used_for_size,
                                                                   0.0);
@@ -161,6 +166,7 @@ void test_minkowski(const bool evolve_shift,
   const auto ln_conformal_factor =
       make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
 
+  // eq 3
   const auto a_tilde =
       Ccz4::a_tilde(conformal_factor_squared, spatial_metric,
                     extrinsic_curvature, trace_extrinsic_curvature);
@@ -175,6 +181,7 @@ void test_minkowski(const bool evolve_shift,
 
   const auto inverse_conformal_spatial_metric = inverse_spatial_metric;
 
+  // eq 6
   const auto field_d =
       make_with_value<tnsr::ijj<DataVector, SpatialDim, FrameType>>(
           used_for_size, 0.0);
@@ -182,10 +189,12 @@ void test_minkowski(const bool evolve_shift,
       make_with_value<tnsr::ijkk<DataVector, SpatialDim, FrameType>>(
           used_for_size, 0.0);
 
+  // eq 14
   const auto field_d_up =
       make_with_value<tnsr::iJJ<DataVector, SpatialDim, FrameType>>(
           used_for_size, 0.0);
 
+  // eq 6
   const auto field_p =
       make_with_value<tnsr::i<DataVector, SpatialDim, FrameType>>(used_for_size,
                                                                   0.0);
@@ -193,20 +202,25 @@ void test_minkowski(const bool evolve_shift,
       make_with_value<tnsr::ij<DataVector, SpatialDim, FrameType>>(
           used_for_size, 0.0);
 
+  // eq 15
   const auto conformal_christoffel_second_kind =
       Ccz4::conformal_christoffel_second_kind(inverse_conformal_spatial_metric,
                                               field_d);
+  // eq 16
   const auto d_conformal_christoffel_second_kind =
       make_with_value<tnsr::iJkk<DataVector, SpatialDim, FrameType>>(
           used_for_size, 0.0);
 
+  // eq 23
   const auto contracted_conformal_christoffel_second_kind =
       Ccz4::contracted_conformal_christoffel_second_kind(
           inverse_conformal_spatial_metric, conformal_christoffel_second_kind);
+  // eq 24
   const auto d_contracted_conformal_christoffel_second_kind =
       make_with_value<tnsr::iJ<DataVector, SpatialDim, FrameType>>(
           used_for_size, 0.0);
 
+  // If Z4 constraint is 0, then \hat{\gamma} == \tilde{\gamma}
   const auto& gamma_hat = contracted_conformal_christoffel_second_kind;
   const auto& d_gamma_hat = d_contracted_conformal_christoffel_second_kind;
 
@@ -407,7 +421,17 @@ void test_minkowski(const bool evolve_shift,
   }
 }
 
-// Test first order CCZ4 with different binary settings against KerrSchild
+// \brief Test first order CCZ4 with different binary settings against
+// KerrSchild
+//
+// \details Tests that most time derivatives are 0. Depending on whether or not
+// the shift is evolved, some evolution variables will have non-zero time
+// derivatives. The evolution equations are eq 12a - 12m in
+// \cite Dumbser2017okk. More concretely, depending on whether s == 1 or s == 0,
+// the time derivatives in eq 12c, 12h, 12i, 12k, 12l, and 12m may or may not be
+// be expected to be 0. For cases when the time derivative of an evolution
+// variable is expected to be non-zero, the test checks for the expected
+// non-zero value by computing excess/missing terms due to the value of s.
 //
 // \param evolve_shift whether or not to evolve the shift
 // \param use_harmonic_slicing_condition whether to use the harmonic slicing
@@ -502,6 +526,7 @@ void test_kerrschild(const bool evolve_shift,
       gr::extrinsic_curvature(lapse, shift, d_shift, spatial_metric,
                               dt_spatial_metric, d_spatial_metric);
 
+  // K = K_{ij} * \gamma^ij
   Scalar<DataVector> trace_extrinsic_curvature(used_for_size);
   get(trace_extrinsic_curvature) = 0.0;
   for (size_t i = 0; i < SpatialDim; i++) {
@@ -513,13 +538,12 @@ void test_kerrschild(const bool evolve_shift,
   const auto d_trace_extrinsic_curvature = partial_derivative(
       trace_extrinsic_curvature, mesh, coord_map.inv_jacobian(x_logical));
 
-  // Solve eq (4g) for K_0, where \partial_t \alpha = 0:
+  // Solve eq 4g for K_0, where \partial_t \alpha = 0:
   //   \partial_t \alpha =
   //       -\alpha^2 g(\alpha) (K - K_0 - 2 \Theta) +
-  //       \Beta^k \partial_k \alpha
-  //   K_0 = -(
-  //       (\Beta^k \partial_k \alpha) / (\alpha^2 * g(\alpha)) -
-  //       K + 2 \Theta);
+  //       \beta^k \partial_k \alpha
+  //   K_0 = -((\beta^k \partial_k \alpha) / (\alpha^2 * g(\alpha)) -
+  //           K + 2 \Theta);
   Scalar<DataVector> k_0(used_for_size);
   get(k_0) = get<0>(shift) * get<0>(d_lapse);
   for (size_t k = 1; k < SpatialDim; k++) {
@@ -530,15 +554,15 @@ void test_kerrschild(const bool evolve_shift,
   const auto d_k_0 =
       partial_derivative(k_0, mesh, coord_map.inv_jacobian(x_logical));
 
-  // Solve eq (4h) for b^i, where \partial_t \Beta^i = 0:
-  //   \partial_t \Beta^i = f b + \Beta^k \partial_k \Beta^i
+  // Solve eq 4h for b^i, where \partial_t \beta^i = 0:
+  //   \partial_t \beta^i = f b + \beta^k \partial_k \beta^i
   tnsr::I<DataVector, SpatialDim, FrameType> b(used_for_size);
   if (not evolve_shift) {
     for (auto& component : b) {
       component = 0.0;
     }
   } else {
-    //   b = -(\Beta^k \partial_k \Beta^i) / f
+    //   b = -(\beta^k \partial_k \beta^i) / f
     for (size_t i = 0; i < SpatialDim; i++) {
       b.get(i) = -shift.get(0) * d_shift.get(0, i);
       for (size_t k = 1; k < SpatialDim; k++) {
@@ -556,6 +580,7 @@ void test_kerrschild(const bool evolve_shift,
   Scalar<DataVector> ln_lapse{};
   get(ln_lapse) = log(get(lapse));
 
+  // eq 6
   tnsr::i<DataVector, SpatialDim, FrameType> field_a{};
   for (size_t i = 0; i < SpatialDim; i++) {
     field_a.get(i) = d_lapse.get(i) / get(lapse);
@@ -563,8 +588,9 @@ void test_kerrschild(const bool evolve_shift,
 
   const auto d_d_lapse =
       partial_derivative(d_lapse, mesh, coord_map.inv_jacobian(x_logical));
-  // eq:
+  // from eq 6:
   //   A_i = \partial_i \alpha / \alpha
+  // the derivative is:
   //   \partial_i A_j =
   //       ((\partial_i (\partial_j \alpha)) \alpha -
   //         \partial_j \alpha \partial_i \alpha) / \alpha^2
@@ -577,6 +603,7 @@ void test_kerrschild(const bool evolve_shift,
     }
   }
 
+  // eq 6
   const auto& field_b = d_shift;
   const auto d_field_b =
       partial_derivative(field_b, mesh, coord_map.inv_jacobian(x_logical));
@@ -587,6 +614,7 @@ void test_kerrschild(const bool evolve_shift,
   Scalar<DataVector> ln_conformal_factor{};
   get(ln_conformal_factor) = log(conformal_factor);
 
+  // eq 3
   const auto a_tilde =
       Ccz4::a_tilde(conformal_factor_squared, spatial_metric,
                     extrinsic_curvature, trace_extrinsic_curvature);
@@ -600,7 +628,24 @@ void test_kerrschild(const bool evolve_shift,
           get(conformal_factor_squared) * spatial_metric.get(i, j);
     }
   }
-
+  // If \tilde{\gamma}_{ij} is the conformal metric and \phi is the
+  // conformal factor, \tilde{\gamma}_{ij} = \phi^2 \gamma_{ij}.
+  // Therefore, the derivative of the conformal metric is:
+  //   \partial_k \tilde{\gamma}_{ij} =
+  //       \phi^2 \partial_k \gamma_{ij} +
+  //       \partial_k \phi^2 \gamma_{ij}
+  //
+  // Since \phi = (det(\gamma_{ij}))^{-1/6}:
+  //   \partial_k \phi^2
+  //        = \partial_k ((det(\gamma_{ij}))^{-1/6})^2
+  //        = \partial_k (det(\gamma_{ij}))^{-1/3})
+  //        = - (det(\gamma_{ij}))^{-4/3}) / 3
+  //        = - (\phi^4) / 3
+  //
+  // Therefore:
+  //   \partial_k \tilde{\gamma}_{ij} =
+  //       \phi^2 \partial_k \gamma_{ij} +
+  //       \phi^4 \gamma_{ij} / 3
   tnsr::ijj<DataVector, SpatialDim, FrameType> d_conformal_spatial_metric{};
   for (size_t k = 0; k < SpatialDim; k++) {
     for (size_t i = 0; i < SpatialDim; i++) {
@@ -616,6 +661,7 @@ void test_kerrschild(const bool evolve_shift,
   const auto inverse_conformal_spatial_metric =
       determinant_and_inverse(conformal_spatial_metric).second;
 
+  // eq 6
   tnsr::ijj<DataVector, SpatialDim, FrameType> field_d{};
   for (size_t k = 0; k < SpatialDim; k++) {
     for (size_t i = 0; i < SpatialDim; i++) {
@@ -627,6 +673,7 @@ void test_kerrschild(const bool evolve_shift,
   const auto d_field_d =
       partial_derivative(field_d, mesh, coord_map.inv_jacobian(x_logical));
 
+  // eq 14
   auto field_d_up = gr::deriv_inverse_spatial_metric(
       inverse_conformal_spatial_metric, field_d);
   for (size_t k = 0; k < SpatialDim; k++) {
@@ -637,6 +684,7 @@ void test_kerrschild(const bool evolve_shift,
     }
   }
 
+  // eq 6
   tnsr::i<DataVector, SpatialDim, FrameType> field_p{};
   for (size_t i = 0; i < SpatialDim; i++) {
     field_p.get(i) =
@@ -645,22 +693,27 @@ void test_kerrschild(const bool evolve_shift,
   const auto d_field_p =
       partial_derivative(field_p, mesh, coord_map.inv_jacobian(x_logical));
 
-  const auto d_conformal_christoffel_second_kind =
-      Ccz4::deriv_conformal_christoffel_second_kind(
-          inverse_conformal_spatial_metric, field_d, d_field_d, field_d_up);
+  // eq 15
   const auto conformal_christoffel_second_kind =
       Ccz4::conformal_christoffel_second_kind(inverse_conformal_spatial_metric,
                                               field_d);
+  // eq 16
+  const auto d_conformal_christoffel_second_kind =
+      Ccz4::deriv_conformal_christoffel_second_kind(
+          inverse_conformal_spatial_metric, field_d, d_field_d, field_d_up);
 
+  // eq 23
   const auto contracted_conformal_christoffel_second_kind =
       Ccz4::contracted_conformal_christoffel_second_kind(
           inverse_conformal_spatial_metric, conformal_christoffel_second_kind);
+  // eq 24
   const auto d_contracted_conformal_christoffel_second_kind =
       Ccz4::deriv_contracted_conformal_christoffel_second_kind(
           inverse_conformal_spatial_metric, field_d_up,
           conformal_christoffel_second_kind,
           d_conformal_christoffel_second_kind);
 
+  // If Z4 constraint is 0, then \hat{\gamma} == \tilde{\gamma}
   const auto& gamma_hat = contracted_conformal_christoffel_second_kind;
   const auto& d_gamma_hat = d_contracted_conformal_christoffel_second_kind;
 
@@ -822,94 +875,116 @@ void test_kerrschild(const bool evolve_shift,
   const auto zero = DataVector(used_for_size.size(), 0.0);
 
   // Check time derivatives eq (12a) - (12m)
+
+  // eq 12a
   for (auto& component : dt_conformal_spatial_metric_actual) {
     CHECK_ITERABLE_APPROX(component, zero);
   }
+  // eq 12b
   for (auto& component : dt_ln_lapse_actual) {
     CHECK_ITERABLE_APPROX(component, zero);
   }
+  // eq 12c
   for (auto& component : dt_shift_actual) {
     CHECK_ITERABLE_APPROX(component, zero);
   }
+  // eq 12d
   for (auto& component : dt_ln_conformal_factor_actual) {
     CHECK_ITERABLE_APPROX(component, zero);
   }
+  // eq 12e
   Approx approx_12e = Approx::custom().epsilon(1e-11).scale(1.0);
   for (auto& component : dt_a_tilde_actual) {
     CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_12e);
   }
+  // eq 12f
   Approx approx_12f = Approx::custom().epsilon(1e-11).scale(1.0);
   for (auto& component : dt_trace_extrinsic_curvature_actual) {
     CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_12f);
   }
+  // eq 12g
   Approx approx_12g = Approx::custom().epsilon(1e-11).scale(1.0);
   for (auto& component : dt_theta_actual) {
     CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_12g);
   }
-  Approx approx_12h = Approx::custom().epsilon(1e-11).scale(1.0);
-  for (auto& component : dt_gamma_hat_actual) {
-    CHECK_ITERABLE_CUSTOM_APPROX(component, zero,
-                                 approx_12h);  // TODO : fails when s = 0
-  }
-  // dt_b will not be 0 for KerrSchild if evolve_shift == true
-  tnsr::i<DataVector, SpatialDim, FrameType> dt_b_expected(used_for_size);
-  if (not evolve_shift) {
-    for (auto& component : dt_b_expected) {
+  // eq 12h
+  // dt_gamma_hat will not be 0 for KerrSchild if evolve_shift == false
+  tnsr::i<DataVector, SpatialDim, FrameType> dt_gamma_hat_expected(
+      used_for_size);
+  if (evolve_shift) {
+    for (auto& component : dt_gamma_hat_expected) {
       component = 0.0;
     }
   } else {
+    // dt_gamma_hat = terms in eq 12h with s as a factor,
+    // red terms that cancel out are ignored
     for (size_t i = 0; i < SpatialDim; i++) {
-      dt_b_expected.get(i) = -get(eta) * b.get(i);
+      dt_gamma_hat_expected.get(i) = 0.0;
+      for (size_t k = 0; k < SpatialDim; k++) {
+        for (size_t l = 0; l < SpatialDim; l++) {
+          dt_gamma_hat_expected.get(i) -=
+              (0.5 * inverse_conformal_spatial_metric.get(k, l) *
+                   (d_field_b.get(k, l, i) + d_field_b.get(l, k, i)) +
+               0.5 * inverse_conformal_spatial_metric.get(i, k) *
+                   (d_field_b.get(k, l, l) + d_field_b.get(l, k, l)) / 3.0);
+        }
+      }
     }
-    // if (use_shift_advective_terms) {
+  }
+  Approx approx_12h = Approx::custom().epsilon(1e-11).scale(1.0);
+  for (size_t i = 0; i < SpatialDim; i++) {
+    CHECK_ITERABLE_CUSTOM_APPROX(dt_gamma_hat_actual.get(i),
+                                 dt_gamma_hat_expected.get(i), approx_12h);
+  }
+  // eq 12i
+  // dt_b will not be 0 for KerrSchild if evolve_shift == true
+  tnsr::i<DataVector, SpatialDim, FrameType> dt_b_expected(used_for_size);
+  if (evolve_shift) {
     for (size_t i = 0; i < SpatialDim; i++) {
-      dt_b_expected.get(i) +=
-          shift.get(0) * d_b.get(0, i) - shift.get(0) * d_gamma_hat.get(0, i);
+      dt_b_expected.get(i) = -get(eta) * b.get(i) +
+                             shift.get(0) * d_b.get(0, i) -
+                             shift.get(0) * d_gamma_hat.get(0, i);
       for (size_t k = 1; k < SpatialDim; k++) {
         dt_b_expected.get(i) +=
             shift.get(k) * d_b.get(k, i) - shift.get(k) * d_gamma_hat.get(k, i);
       }
     }
-    // } // TODO : simplify this loop now that the if is removed
+  } else {
+    for (auto& component : dt_b_expected) {
+      component = 0.0;
+    }
   }
   Approx approx_12i = Approx::custom().epsilon(1e-11).scale(1.0);
   for (size_t i = 0; i < SpatialDim; i++) {
     CHECK_ITERABLE_CUSTOM_APPROX(dt_b_actual.get(i), dt_b_expected.get(i),
                                  approx_12i);
   }
+  // eq 12j
   Approx approx_12j = Approx::custom().epsilon(1e-11).scale(1.0);
   for (auto& component : dt_field_a_actual) {
     CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_12j);
   }
+  // eq 12k
   // dt_field_b will not be 0 for KerrSchild if evolve_shift == true
   tnsr::iJ<DataVector, SpatialDim, FrameType> dt_field_b_expected(
       used_for_size);
-  if (not evolve_shift) {
-    for (auto& component : dt_field_b_expected) {
-      component = 0.0;
-    }
-  } else {
+  if (evolve_shift) {
     for (size_t k = 0; k < SpatialDim; k++) {
       for (size_t i = 0; i < SpatialDim; i++) {
-        dt_field_b_expected.get(k, i) =
-            f * d_b.get(k, i) + field_b.get(k, 0) * field_b.get(0, i);
+        dt_field_b_expected.get(k, i) = shift.get(0) * d_field_b.get(0, k, i) +
+                                        f * d_b.get(k, i) +
+                                        field_b.get(k, 0) * field_b.get(0, i);
         for (size_t l = 1; l < SpatialDim; l++) {
           dt_field_b_expected.get(k, i) +=
+              shift.get(l) * d_field_b.get(l, k, i) +
               field_b.get(k, l) * field_b.get(l, i);
         }
       }
     }
-    // if (use_shift_advective_terms) {
-    for (size_t k = 0; k < SpatialDim; k++) {
-      for (size_t i = 0; i < SpatialDim; i++) {
-        dt_field_b_expected.get(k, i) += shift.get(0) * d_field_b.get(0, k, i);
-        for (size_t l = 1; l < SpatialDim; l++) {
-          dt_field_b_expected.get(k, i) +=
-              shift.get(l) * d_field_b.get(l, k, i);
-        }
-      }
+  } else {
+    for (auto& component : dt_field_b_expected) {
+      component = 0.0;
     }
-    // } // TODO : simplify this loop now that the if is removed
   }
   Approx approx_12k = Approx::custom().epsilon(1e-11).scale(1.0);
   for (size_t k = 0; k < SpatialDim; k++) {
@@ -918,15 +993,66 @@ void test_kerrschild(const bool evolve_shift,
                                    dt_field_b_expected.get(k, i), approx_12k);
     }
   }
+  // eq 12l
+  // dt_field_d will not be 0 for KerrSchild if evolve_shift == false
+  tnsr::ijj<DataVector, SpatialDim, FrameType> dt_field_d_expected(
+      used_for_size);
+  if (evolve_shift) {
+    for (auto& component : dt_field_d_expected) {
+      component = 0.0;
+    }
+  } else {
+    // dt_field_d = terms in eq 12l with s as a factor
+    for (size_t k = 0; k < SpatialDim; k++) {
+      for (size_t j = 0; j < SpatialDim; j++) {
+        for (size_t i = 0; i < SpatialDim; i++) {
+          dt_field_d_expected.get(k, i, j) = 0.0;
+          for (size_t m = 0; m < SpatialDim; m++) {
+            dt_field_d_expected.get(k, i, j) +=
+                0.5 * conformal_spatial_metric.get(i, j) *
+                    (d_field_b.get(k, m, m) + d_field_b.get(m, k, m)) / 3.0 -
+                0.25 * conformal_spatial_metric.get(m, i) *
+                    (d_field_b.get(k, j, m) + d_field_b.get(j, k, m)) -
+                0.25 * conformal_spatial_metric.get(m, j) *
+                    (d_field_b.get(k, i, m) + d_field_b.get(i, k, m));
+          }
+        }
+      }
+    }
+  }
   Approx approx_12l = Approx::custom().epsilon(1e-11).scale(1.0);
-  for (auto& component : dt_field_d_actual) {
-    CHECK_ITERABLE_CUSTOM_APPROX(component, zero,
-                                 approx_12l);  // TODO : fails when s = 0
+  for (size_t k = 0; k < SpatialDim; k++) {
+    for (size_t i = 0; i < SpatialDim; i++) {
+      for (size_t j = 0; j < SpatialDim; j++) {
+        CHECK_ITERABLE_CUSTOM_APPROX(dt_field_d_actual.get(k, i, j),
+                                     dt_field_d_expected.get(k, i, j),
+                                     approx_12l);
+      }
+    }
+  }
+  // eq 12m
+  // dt_field_p will not be 0 for KerrSchild if evolve_shift == false
+  tnsr::i<DataVector, SpatialDim, FrameType> dt_field_p_expected(used_for_size);
+  if (evolve_shift) {
+    for (auto& component : dt_field_p_expected) {
+      component = 0.0;
+    }
+  } else {
+    // dt_field_p = terms in eq 12m with s as a factor,
+    // red terms that cancel out are ignored
+    for (size_t k = 0; k < SpatialDim; k++) {
+      dt_field_p_expected.get(k) = 0.0;
+      for (size_t i = 0; i < SpatialDim; i++) {
+        dt_field_p_expected.get(k) +=
+            d_field_b.get(k, i, i) + d_field_b.get(i, k, i);
+      }
+      dt_field_p_expected.get(k) /= 6.0;  // *= 0.5 / 3
+    }
   }
   Approx approx_12m = Approx::custom().epsilon(1e-12).scale(1.0);
-  for (auto& component : dt_field_p_actual) {
-    CHECK_ITERABLE_CUSTOM_APPROX(component, zero,
-                                 approx_12m);  // TODO : fails when s = 0
+  for (size_t k = 0; k < SpatialDim; k++) {
+    CHECK_ITERABLE_CUSTOM_APPROX(dt_field_p_actual.get(k),
+                                 dt_field_p_expected.get(k), approx_12m);
   }
 }
 }  // namespace
@@ -942,6 +1068,6 @@ SPECTRE_TEST_CASE("Unit.Evolution.Systems.Ccz4.TimeDerivative",
   // Test first order CCZ4 with different settings
   test(true, true);
   test(true, false);
-  // test(false, true);
-  // test(false, false);
+  test(false, true);
+  test(false, false);
 }

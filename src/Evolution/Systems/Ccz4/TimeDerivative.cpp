@@ -292,7 +292,7 @@ void TimeDerivative<Dim>::apply(
 
   ::TensorExpressions::evaluate<ti_k>(
       contracted_symmetrized_d_field_b,
-      (*symmetrized_d_field_b)(ti_k, ti_i, ti_I));
+      0.5 * (d_field_b(ti_k, ti_l, ti_L) + d_field_b(ti_l, ti_k, ti_L)));
 
   ::TensorExpressions::evaluate<ti_i, ti_j, ti_k>(
       field_b_times_field_d, field_b(ti_i, ti_L) * field_d(ti_j, ti_l, ti_k));
@@ -386,13 +386,8 @@ void TimeDerivative<Dim>::apply(
       component = 0.0;
     }
   } else {
-    // first, compute expression without advective terms
-    ::TensorExpressions::evaluate<ti_I>(dt_shift, f * b(ti_I));
-    // now, if we want advective terms, also add those
-    // if (use_shift_advective_terms) {
     ::TensorExpressions::evaluate<ti_I>(
-        dt_shift, (*dt_shift)(ti_I) + shift(ti_K) * field_b(ti_k, ti_I));
-    // } // TODO : simplify now that if is removed
+        dt_shift, f * b(ti_I) + shift(ti_K) * field_b(ti_k, ti_I));
   }
 
   // eq 12d : time derivative of the natural log of the conformal factor
@@ -481,14 +476,13 @@ void TimeDerivative<Dim>::apply(
     ::TensorExpressions::evaluate<ti_I>(
         dt_gamma_hat,
         (*dt_gamma_hat)(ti_I) +
-            // terms with lapse
+            // terms with lapse and s
             2.0 * (*lapse)() *
-                (  // terms with lapse and s
-                    (*inv_conformal_spatial_metric)(ti_I, ti_K) *
-                        (*inv_conformal_spatial_metric)(ti_N, ti_M) *
-                        d_a_tilde(ti_k, ti_n, ti_m) -
-                    2.0 * (*inv_conformal_spatial_metric)(ti_I, ti_K) *
-                        (*field_d_up)(ti_k, ti_N, ti_M) * a_tilde(ti_n, ti_m)) +
+                ((*inv_conformal_spatial_metric)(ti_I, ti_K) *
+                     (*inv_conformal_spatial_metric)(ti_N, ti_M) *
+                     d_a_tilde(ti_k, ti_n, ti_m) -
+                 2.0 * (*inv_conformal_spatial_metric)(ti_I, ti_K) *
+                     (*field_d_up)(ti_k, ti_N, ti_M) * a_tilde(ti_n, ti_m)) +
             // terms with s but not not lapse
             (*inv_conformal_spatial_metric)(ti_K, ti_L) *
                 (*symmetrized_d_field_b)(ti_k, ti_l, ti_I) +
@@ -503,15 +497,9 @@ void TimeDerivative<Dim>::apply(
       component = 0.0;
     }
   } else {
-    // first, compute expression without advective terms
-    ::TensorExpressions::evaluate<ti_I>(dt_b,
-                                        (*dt_gamma_hat)(ti_I)-eta() * b(ti_I));
-    // now, if we want advective terms, also add those
-    // if (use_shift_advective_terms) {
     ::TensorExpressions::evaluate<ti_I>(
-        dt_b, (*dt_b)(ti_I) +
+        dt_b, (*dt_gamma_hat)(ti_I)-eta() * b(ti_I) +
                   shift(ti_K) * (d_b(ti_k, ti_I) - d_gamma_hat(ti_k, ti_I)));
-    // } // TODO : simplify now that if is removed
   }
 
   // eq. (12j) : time derivative of auxiliary variable A_i
@@ -543,7 +531,8 @@ void TimeDerivative<Dim>::apply(
   } else {
     // first, compute expression without advective terms
     ::TensorExpressions::evaluate<ti_k, ti_I>(
-        dt_field_b, f * d_b(ti_k, ti_I) +
+        dt_field_b, shift(ti_L) * d_field_b(ti_l, ti_k, ti_I) +
+                        f * d_b(ti_k, ti_I) +
                         mu * square((*lapse)()) *
                             (*inv_conformal_spatial_metric)(ti_I, ti_J) *
                             (d_field_p(ti_k, ti_j) - d_field_p(ti_j, ti_k) -
@@ -551,12 +540,6 @@ void TimeDerivative<Dim>::apply(
                                  (d_field_d(ti_k, ti_l, ti_j, ti_n) -
                                   d_field_d(ti_l, ti_k, ti_j, ti_n))) +
                         field_b(ti_k, ti_L) * field_b(ti_l, ti_I));
-    // now, if we want advective terms, also add those
-    // if (use_shift_advective_terms) {
-    ::TensorExpressions::evaluate<ti_k, ti_I>(
-        dt_field_b,
-        (*dt_field_b)(ti_k, ti_I) + shift(ti_L) * d_field_b(ti_l, ti_k, ti_I));
-    // } // TODO : simplify now that if is removed
   }
 
   // eq. (12l) : time derivative of auxiliary variable D_{kij}
