@@ -120,9 +120,9 @@ void TimeDerivative<Dim>::apply(
     const Scalar<DataVector>& k_0, const tnsr::i<DataVector, Dim>& d_k_0,
     const double kappa_1, const double kappa_2, const double kappa_3,
     const double mu, const double one_over_relaxation_time,  // \tau^{-1}
-    const bool use_harmonic_slicing_condition,               // g(\alpha)
-    const bool use_shift_constraint_advective_terms,
-    const bool use_sparsity_symmetrization_terms,  // s
+    const bool evolve_shift,                                 // s
+    const bool use_shift_advective_terms,
+    const bool use_harmonic_slicing_condition,  // g(\alpha)
     // evolved variables
     const tnsr::ii<DataVector, Dim>& conformal_spatial_metric,
     const Scalar<DataVector>& ln_lapse, const tnsr::I<DataVector, Dim>& shift,
@@ -377,7 +377,7 @@ void TimeDerivative<Dim>::apply(
 
   // eq 12c : time derivative of the shift
   // if s == 0
-  if (not use_sparsity_symmetrization_terms) {
+  if (not evolve_shift) {
     for (auto& component : *dt_shift) {
       component = 0.0;
     }
@@ -385,7 +385,7 @@ void TimeDerivative<Dim>::apply(
     // first, compute expression without advective terms
     ::TensorExpressions::evaluate<ti_I>(dt_shift, f * b(ti_I));
     // now, if we want advective terms, also add those
-    if (use_shift_constraint_advective_terms) {
+    if (use_shift_advective_terms) {
       ::TensorExpressions::evaluate<ti_I>(
           dt_shift, (*dt_shift)(ti_I) + shift(ti_K) * field_b(ti_k, ti_I));
     }
@@ -473,7 +473,7 @@ void TimeDerivative<Dim>::apply(
                kappa_1 * (*inv_conformal_spatial_metric)(ti_I, ti_J) *
                    (*spatial_z4_constraint)(ti_j)));
   // now, if s == 1, also add terms with s
-  if (use_sparsity_symmetrization_terms) {
+  if (evolve_shift) {
     ::TensorExpressions::evaluate<ti_I>(
         dt_gamma_hat,
         (*dt_gamma_hat)(ti_I) +
@@ -494,7 +494,7 @@ void TimeDerivative<Dim>::apply(
 
   // eq. (12i) : time derivative b^i
   // if s == 0
-  if (not use_sparsity_symmetrization_terms) {
+  if (not evolve_shift) {
     for (auto& component : *dt_b) {
       component = 0.0;
     }
@@ -503,7 +503,7 @@ void TimeDerivative<Dim>::apply(
     ::TensorExpressions::evaluate<ti_I>(dt_b,
                                         (*dt_gamma_hat)(ti_I)-eta() * b(ti_I));
     // now, if we want advective terms, also add those
-    if (use_shift_constraint_advective_terms) {
+    if (use_shift_advective_terms) {
       ::TensorExpressions::evaluate<ti_I>(
           dt_b, (*dt_b)(ti_I) +
                     shift(ti_K) * (d_b(ti_k, ti_I) - d_gamma_hat(ti_k, ti_I)));
@@ -522,7 +522,7 @@ void TimeDerivative<Dim>::apply(
               (d_trace_extrinsic_curvature(ti_k) - d_k_0(ti_k) -
                2.0 * c * d_theta(ti_k)));
   // now, if s == 1, also add terms with s
-  if (use_sparsity_symmetrization_terms) {
+  if (evolve_shift) {
     ::TensorExpressions::evaluate<ti_k>(
         dt_field_a, (*dt_field_a)(ti_k) -
                         (*lapse_times_slicing_condition)() *
@@ -532,14 +532,14 @@ void TimeDerivative<Dim>::apply(
 
   // eq. (12k) : time derivative of auxiliary variable B_k{}^i
   // if s == 0
-  if (not use_sparsity_symmetrization_terms) {
-    for (auto& component : *dt_b) {
+  if (not evolve_shift) {
+    for (auto& component : *dt_field_b) {
       component = 0.0;
     }
   } else {
+    // first, compute expression without advective terms
     ::TensorExpressions::evaluate<ti_k, ti_I>(
-        dt_field_b, shift(ti_L) * d_field_b(ti_l, ti_k, ti_I) +
-                        f * d_b(ti_k, ti_I) +
+        dt_field_b, f * d_b(ti_k, ti_I) +
                         mu * square((*lapse)()) *
                             (*inv_conformal_spatial_metric)(ti_I, ti_J) *
                             (d_field_p(ti_k, ti_j) - d_field_p(ti_j, ti_k) -
@@ -547,6 +547,12 @@ void TimeDerivative<Dim>::apply(
                                  (d_field_d(ti_k, ti_l, ti_j, ti_n) -
                                   d_field_d(ti_l, ti_k, ti_j, ti_n))) +
                         field_b(ti_k, ti_L) * field_b(ti_l, ti_I));
+    // now, if we want advective terms, also add those
+    if (use_shift_advective_terms) {
+      ::TensorExpressions::evaluate<ti_k, ti_I>(
+          dt_field_b, (*dt_field_b)(ti_k, ti_I) +
+                          shift(ti_L) * d_field_b(ti_l, ti_k, ti_I));
+    }
   }
 
   // eq. (12l) : time derivative of auxiliary variable D_{kij}
@@ -568,7 +574,7 @@ void TimeDerivative<Dim>::apply(
                2.0 * (*lapse_times_conformal_spatial_metric)(ti_i, ti_j) *
                    (*field_d_up_times_a_tilde)(ti_k)));
   // now, if s == 1, also add terms with s
-  if (use_sparsity_symmetrization_terms) {
+  if (evolve_shift) {
     ::TensorExpressions::evaluate<ti_k, ti_i, ti_j>(
         dt_field_d, (*dt_field_d)(ti_k, ti_i, ti_j) +
                         0.5 * ((*conformal_metric_times_symmetrized_d_field_b)(
@@ -588,7 +594,7 @@ void TimeDerivative<Dim>::apply(
                           (d_trace_extrinsic_curvature(ti_k) +
                            field_a(ti_k) * trace_extrinsic_curvature()));
   // now, if s == 1, also add terms with s
-  if (use_sparsity_symmetrization_terms) {
+  if (evolve_shift) {
     ::TensorExpressions::evaluate<ti_k>(
         dt_field_p,
         (*dt_field_p)(ti_k) +

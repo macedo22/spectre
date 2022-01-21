@@ -18,6 +18,54 @@ class not_null;
 /// \endcond
 
 namespace Ccz4 {
+/*!
+ * \brief Compute the RHS of the first order CCZ4 formulation of Einstein's
+ * equations.
+ *
+ * \details The evolved variables are the conformal spatial metric
+ * \f$\tilde{\gamma}_{ij}\f$ defined by `Ccz4::Tags::ConformalMetric`, the
+ * natural log of the lapse \f$\alpha\f$, the shift \f$\Beta^i\f$, the natural
+ * log of the conformal factor \f$\phi\f$ defined by
+ * `Ccz4::Tags::ConformalFactor`, the trace-free part of the extrinsic curvature
+ * \f$\tilde A_{ij}\f$ defined by `Ccz4::Tags::ATilde`, the trace of the
+ * extrinsic curvature \f$K = K_{ij} \gamma^{ij}\f$
+ *
+ * We define f$\phi = (det(\gamma_{ij}))^{-1/6}\f$ as the conformal factor,
+ * f$\alpha\f$ as the lapse, f$\Beta^i\f$ as the shift,
+ * f$\K_{ij}\f$ as the extrinsic curvature, and f$\Z_{a}\f$ as the Z4
+ * constraint.
+ *
+ * The evolved variables are the conformal spatial metric
+ * \f$\tilde{\gamma}_{ij} = \phi^2 \gamma_{ij}\f$, the natural log of the lapse
+ * \f$ln \alpha\f$, the shift \f$\Beta^i\f$, the natural log of the conformal
+ * factor \f$ln \phi\f$, the trace-free part of the extrinsic curvature
+ * \f$\tilde A_{ij} = \phi^2 \left(K_{ij} - \frac{1}{3} K \gamma_{ij}\right)\f$,
+ * the trace of the extrinsic curvature \f$K = K_{ij} \gamma^{ij}\f$, the
+ * projection of the Z4 four-vector along the normal direction
+ * \f$\Theta = Z^0 \alpha\f$, \f$\hat{\Gamma}^{i}\f$ defined by
+ * `Ccz4::Tags::GammaHat`, the free variable \f$b^i\f$ that controls the
+ * evolution of the shift and its time derivative, the auxiliary variable
+ * \f$A_i = \partial_i ln(\alpha) = \frac{\partial_i \alpha}{\alpha}\f$, the
+ * auxiliary variable \f$B_k{}^{i} = \partial_k \Beta^i\f$, the auxiliary
+ * variable \f$D_{kij} = \frac{1}{2} \partial_k \bar{\gamma}_{ij}\f$, and the
+ * auxiliary variable
+ * \f$P_i = \partial_i ln(\phi) = \frac{\partial_i \phi}{\phi}\f$.
+ *
+ * The evolution equations are equations 12a - 12m of \cite Dumbser2017okk .
+ * Equations 13 - 27 define identities used in the evolution equations.
+ *
+ * This evolution uses three binary settings that can be toggled. (1) If
+ * `evolve_shift == true`, the shift is evolved (\f$s = 1\f$) and the usual
+ * Gamma-driver gauge is obtained, else the shift is not evolved (\f$s = 0\f$),
+ * i.e. \f$\partial_t \Beta^i = 0\f$. (2) If
+ * `use_shift_advective_terms == true`, the advective terms in the evolution
+ * equations of the shift (eq 12c), \f$b^i\f$ (eq 12i), and \f$B_k{}^{i}\f$
+ * (eq 12k) are kept, else they are removed. Note that if
+ * `evolve_shift == false`, `use_shift_advective_terms` is overridden and has
+ * no effect. (3) If `use_harmonic_slicing_condition == true`, the harmonic
+ * slicing condition will be used (\f$g(\alpha) = 1\f$), else the 1 + log
+ * slicing condition will be used (\f$g(\alpha) = 2 / \alpha\f$).
+ */
 template <size_t Dim>
 struct TimeDerivative {
   static void apply(
@@ -109,9 +157,8 @@ struct TimeDerivative {
       const Scalar<DataVector>& k_0, const tnsr::i<DataVector, Dim>& d_k_0,
       const double kappa_1, const double kappa_2, const double kappa_3,
       const double mu, const double one_over_relaxation_time,
+      const bool evolve_shift, const bool use_shift_advective_terms,
       const bool use_harmonic_slicing_condition,
-      const bool use_shift_constraint_advective_terms,
-      const bool use_sparsity_symmetrization_terms,
       const tnsr::ii<DataVector, Dim>& conformal_spatial_metric,
       const Scalar<DataVector>& ln_lapse, const tnsr::I<DataVector, Dim>& shift,
       const Scalar<DataVector>& ln_conformal_factor,

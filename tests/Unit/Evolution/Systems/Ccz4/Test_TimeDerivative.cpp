@@ -100,8 +100,8 @@ void test_minkowski() {
   const double kappa_3 = 0.4;
   const double mu = 0.7;
   const double one_over_relaxation_time = 10.0;         // \tau^{-1}
-  const bool use_sparsity_symmetrization_terms = true;  // s
-  const bool use_shift_constraint_advective_terms = true;
+  const bool evolve_shift = true;                       // s
+  const bool use_shift_advective_terms = true;
   const bool use_harmonic_slicing_condition = false;
   Scalar<DataVector> slicing_condition(used_for_size);  // g(\alpha)
   if (use_harmonic_slicing_condition) {
@@ -357,12 +357,12 @@ void test_minkowski() {
       make_not_null(&grad_spatial_z4_constraint_actual),
       make_not_null(&ricci_scalar_plus_divergence_z4_constraint_actual), c,
       cleaning_speed, eta, f, k_0, d_k_0, kappa_1, kappa_2, kappa_3, mu,
-      one_over_relaxation_time, use_harmonic_slicing_condition,
-      use_shift_constraint_advective_terms, use_sparsity_symmetrization_terms,
-      conformal_spatial_metric, ln_lapse, shift, ln_conformal_factor, a_tilde,
-      trace_extrinsic_curvature, theta, gamma_hat, b, field_a, field_b, field_d,
-      field_p, d_a_tilde, d_trace_extrinsic_curvature, d_theta, d_gamma_hat,
-      d_b, d_field_a, d_field_b, d_field_d, d_field_p);
+      one_over_relaxation_time, evolve_shift, use_shift_advective_terms,
+      use_harmonic_slicing_condition, conformal_spatial_metric, ln_lapse, shift,
+      ln_conformal_factor, a_tilde, trace_extrinsic_curvature, theta, gamma_hat,
+      b, field_a, field_b, field_d, field_p, d_a_tilde,
+      d_trace_extrinsic_curvature, d_theta, d_gamma_hat, d_b, d_field_a,
+      d_field_b, d_field_d, d_field_p);
 
   // Check that all time derivatives are 0
   for (auto& component : dt_conformal_spatial_metric_actual) {
@@ -478,8 +478,8 @@ void test_kerrschild() {
   const double kappa_3 = 0.4;
   const double mu = 0.7;
   const double one_over_relaxation_time = 10.0;         // \tau^{-1}
-  const bool use_sparsity_symmetrization_terms = true;  // s
-  const bool use_shift_constraint_advective_terms = true;
+  const bool evolve_shift = true;                       // s
+  const bool use_shift_advective_terms = true;
   const bool use_harmonic_slicing_condition = false;
   Scalar<DataVector> slicing_condition(used_for_size);  // g(\alpha)
   if (use_harmonic_slicing_condition) {
@@ -529,7 +529,7 @@ void test_kerrschild() {
   // Solve eq (4h) for b^i, where \partial_t \Beta^i = 0:
   //   \partial_t \Beta^i = f b + \Beta^k \partial_k \Beta^i
   tnsr::I<DataVector, SpatialDim, FrameType> b{};
-  if (use_shift_constraint_advective_terms) {
+  if (use_shift_advective_terms) {
     //   0 = f b + \Beta^k \partial_k \Beta^i
     //   b = -(\Beta^k \partial_k \Beta^i) / f
     for (size_t i = 0; i < SpatialDim; i++) {
@@ -812,12 +812,12 @@ void test_kerrschild() {
       make_not_null(&grad_spatial_z4_constraint_actual),
       make_not_null(&ricci_scalar_plus_divergence_z4_constraint_actual), c,
       cleaning_speed, eta, f, k_0, d_k_0, kappa_1, kappa_2, kappa_3, mu,
-      one_over_relaxation_time, use_harmonic_slicing_condition,
-      use_shift_constraint_advective_terms, use_sparsity_symmetrization_terms,
-      conformal_spatial_metric, ln_lapse, shift, ln_conformal_factor, a_tilde,
-      trace_extrinsic_curvature, theta, gamma_hat, b, field_a, field_b, field_d,
-      field_p, d_a_tilde, d_trace_extrinsic_curvature, d_theta, d_gamma_hat,
-      d_b, d_field_a, d_field_b, d_field_d, d_field_p);
+      one_over_relaxation_time, evolve_shift, use_shift_advective_terms,
+      use_harmonic_slicing_condition, conformal_spatial_metric, ln_lapse, shift,
+      ln_conformal_factor, a_tilde, trace_extrinsic_curvature, theta, gamma_hat,
+      b, field_a, field_b, field_d, field_p, d_a_tilde,
+      d_trace_extrinsic_curvature, d_theta, d_gamma_hat, d_b, d_field_a,
+      d_field_b, d_field_d, d_field_p);
 
   const auto zero = DataVector(used_for_size.size(), 0.0);
 
@@ -850,40 +850,75 @@ void test_kerrschild() {
   for (auto& component : dt_gamma_hat_actual) {
     CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_12h);
   }
-  tnsr::i<DataVector, SpatialDim, FrameType> expected_dt_b(used_for_size);
-  if (not use_sparsity_symmetrization_terms) {
-    for (size_t i = 0; i < SpatialDim; i++) {
-      expected_dt_b.get(i) = 0.0;
+  // dt_b will not be 0 for KerrSchild if evolve_shift == true and
+  // use_shift_advective_terms == true
+  tnsr::i<DataVector, SpatialDim, FrameType> dt_b_expected(used_for_size);
+  if (not evolve_shift) {
+    for (auto& component : dt_b_expected) {
+      component = 0.0;
     }
   } else {
-    if (use_shift_constraint_advective_terms) {
+    for (size_t i = 0; i < SpatialDim; i++) {
+      dt_b_expected.get(i) = -get(eta) * b.get(i);
+    }
+    if (use_shift_advective_terms) {
       for (size_t i = 0; i < SpatialDim; i++) {
-        expected_dt_b.get(i) = shift.get(0) * d_b.get(0, i) -
-                               shift.get(0) * d_gamma_hat.get(0, i) -
-                               get(eta) * b.get(i);
+        dt_b_expected.get(i) +=
+            shift.get(0) * d_b.get(0, i) - shift.get(0) * d_gamma_hat.get(0, i);
         for (size_t k = 1; k < SpatialDim; k++) {
-          expected_dt_b.get(i) += shift.get(k) * d_b.get(k, i) -
+          dt_b_expected.get(i) += shift.get(k) * d_b.get(k, i) -
                                   shift.get(k) * d_gamma_hat.get(k, i);
         }
-      }
-    } else {
-      for (size_t i = 0; i < SpatialDim; i++) {
-        expected_dt_b.get(i) = -get(eta) * b.get(i);
       }
     }
   }
   Approx approx_12i = Approx::custom().epsilon(1e-11).scale(1.0);
   for (size_t i = 0; i < SpatialDim; i++) {
-    CHECK_ITERABLE_CUSTOM_APPROX(dt_b_actual.get(i), expected_dt_b.get(i),
+    CHECK_ITERABLE_CUSTOM_APPROX(dt_b_actual.get(i), dt_b_expected.get(i),
                                  approx_12i);
   }
   Approx approx_12j = Approx::custom().epsilon(1e-11).scale(1.0);
   for (auto& component : dt_field_a_actual) {
     CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_12j);
   }
+  // dt_field_b will not be 0 for KerrSchild if evolve_shift == true and
+  // use_shift_advective_terms == true
+  tnsr::iJ<DataVector, SpatialDim, FrameType> dt_field_b_expected(
+      used_for_size);
+  if (not evolve_shift) {
+    for (auto& component : dt_field_b_expected) {
+      component = 0.0;
+    }
+  } else {
+    for (size_t k = 0; k < SpatialDim; k++) {
+      for (size_t i = 0; i < SpatialDim; i++) {
+        dt_field_b_expected.get(k, i) =
+            f * d_b.get(k, i) + field_b.get(k, 0) * field_b.get(0, i);
+        for (size_t l = 1; l < SpatialDim; l++) {
+          dt_field_b_expected.get(k, i) +=
+              field_b.get(k, l) * field_b.get(l, i);
+        }
+      }
+    }
+    if (use_shift_advective_terms) {
+      for (size_t k = 0; k < SpatialDim; k++) {
+        for (size_t i = 0; i < SpatialDim; i++) {
+          dt_field_b_expected.get(k, i) +=
+              shift.get(0) * d_field_b.get(0, k, i);
+          for (size_t l = 1; l < SpatialDim; l++) {
+            dt_field_b_expected.get(k, i) +=
+                shift.get(l) * d_field_b.get(l, k, i);
+          }
+        }
+      }
+    }
+  }
   Approx approx_12k = Approx::custom().epsilon(1e-11).scale(1.0);
-  for (auto& component : dt_field_b_actual) {
-    CHECK_ITERABLE_CUSTOM_APPROX(component, zero, approx_12k);
+  for (size_t k = 0; k < SpatialDim; k++) {
+    for (size_t i = 0; i < SpatialDim; i++) {
+      CHECK_ITERABLE_CUSTOM_APPROX(dt_field_b_actual.get(k, i),
+                                   dt_field_b_expected.get(k, i), approx_12k);
+    }
   }
   Approx approx_12l = Approx::custom().epsilon(1e-11).scale(1.0);
   for (auto& component : dt_field_d_actual) {
