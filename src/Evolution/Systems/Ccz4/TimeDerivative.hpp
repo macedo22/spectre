@@ -50,7 +50,7 @@ namespace Ccz4 {
  * Gamma-driver gauge is obtained, else the shift is not evolved (\f$s = 0\f$),
  * i.e. \f$\partial_t \beta^i = 0\f$. (2) If
  * `use_harmonic_slicing_condition == true`, the harmonic slicing condition will
- * be used (\f$g(\alpha) = 1\f$), else the \f$1 + log slicing\f$ condition will
+ * be used (\f$g(\alpha) = 1\f$), else the \f$1 + log\f$ slicing condition will
  * be used (\f$g(\alpha) = 2 / \alpha\f$).
  */
 template <size_t Dim>
