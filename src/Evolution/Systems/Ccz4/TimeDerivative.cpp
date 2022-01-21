@@ -122,7 +122,6 @@ void TimeDerivative<Dim>::apply(
     const double kappa_1, const double kappa_2, const double kappa_3,
     const double mu, const double one_over_relaxation_time,  // \tau^{-1}
     const bool evolve_shift,                                 // s
-    const bool use_shift_advective_terms,
     const bool use_harmonic_slicing_condition,  // g(\alpha)
     // evolved variables
     const tnsr::ii<DataVector, Dim>& conformal_spatial_metric,
@@ -185,6 +184,7 @@ void TimeDerivative<Dim>::apply(
     get(*lapse_times_slicing_condition) = get(*lapse);
   } else {
     for (const auto& component : get(*lapse)) {
+      (void)component;
       assert(component != 0.0);
     }
     get(*slicing_condition) = 2.0 / get(*lapse);
@@ -389,10 +389,10 @@ void TimeDerivative<Dim>::apply(
     // first, compute expression without advective terms
     ::TensorExpressions::evaluate<ti_I>(dt_shift, f * b(ti_I));
     // now, if we want advective terms, also add those
-    if (use_shift_advective_terms) {
-      ::TensorExpressions::evaluate<ti_I>(
-          dt_shift, (*dt_shift)(ti_I) + shift(ti_K) * field_b(ti_k, ti_I));
-    }
+    // if (use_shift_advective_terms) {
+    ::TensorExpressions::evaluate<ti_I>(
+        dt_shift, (*dt_shift)(ti_I) + shift(ti_K) * field_b(ti_k, ti_I));
+    // } // TODO : simplify now that if is removed
   }
 
   // eq 12d : time derivative of the natural log of the conformal factor
@@ -507,11 +507,11 @@ void TimeDerivative<Dim>::apply(
     ::TensorExpressions::evaluate<ti_I>(dt_b,
                                         (*dt_gamma_hat)(ti_I)-eta() * b(ti_I));
     // now, if we want advective terms, also add those
-    if (use_shift_advective_terms) {
-      ::TensorExpressions::evaluate<ti_I>(
-          dt_b, (*dt_b)(ti_I) +
-                    shift(ti_K) * (d_b(ti_k, ti_I) - d_gamma_hat(ti_k, ti_I)));
-    }
+    // if (use_shift_advective_terms) {
+    ::TensorExpressions::evaluate<ti_I>(
+        dt_b, (*dt_b)(ti_I) +
+                  shift(ti_K) * (d_b(ti_k, ti_I) - d_gamma_hat(ti_k, ti_I)));
+    // } // TODO : simplify now that if is removed
   }
 
   // eq. (12j) : time derivative of auxiliary variable A_i
@@ -552,11 +552,11 @@ void TimeDerivative<Dim>::apply(
                                   d_field_d(ti_l, ti_k, ti_j, ti_n))) +
                         field_b(ti_k, ti_L) * field_b(ti_l, ti_I));
     // now, if we want advective terms, also add those
-    if (use_shift_advective_terms) {
-      ::TensorExpressions::evaluate<ti_k, ti_I>(
-          dt_field_b, (*dt_field_b)(ti_k, ti_I) +
-                          shift(ti_L) * d_field_b(ti_l, ti_k, ti_I));
-    }
+    // if (use_shift_advective_terms) {
+    ::TensorExpressions::evaluate<ti_k, ti_I>(
+        dt_field_b,
+        (*dt_field_b)(ti_k, ti_I) + shift(ti_L) * d_field_b(ti_l, ti_k, ti_I));
+    // } // TODO : simplify now that if is removed
   }
 
   // eq. (12l) : time derivative of auxiliary variable D_{kij}
