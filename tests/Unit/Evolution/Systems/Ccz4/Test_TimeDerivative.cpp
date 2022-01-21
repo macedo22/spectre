@@ -40,6 +40,174 @@ namespace {
 using Affine = domain::CoordinateMaps::Affine;
 using Affine3D = domain::CoordinateMaps::ProductOf3Maps<Affine, Affine, Affine>;
 
+// Equations referenced below can be found in \cite Dumbser2017okk
+
+// Compute g(\alpha)
+Scalar<DataVector> get_slicing_condition(bool use_harmonic_slicing_condition,
+                                         const Scalar<DataVector>& lapse) {
+  Scalar<DataVector> slicing_condition(get(lapse));
+  if (use_harmonic_slicing_condition) {
+    // harmonic slicing condition: g(\alpha) = 1.0
+    get(slicing_condition) = 1.0;
+  } else {
+    // 1 + log slicing condition: g(\alpha) = 2 / \alpha
+    get(slicing_condition) = 2.0 / get(lapse);
+  }
+  return slicing_condition;
+}
+
+// Compute the trace of the extrinsic curvature K = K_{ij} * \gamma^ij
+template <size_t SpatialDim, typename FrameType>
+Scalar<DataVector> get_trace_extrinsic_curvature(
+    const tnsr::ii<DataVector, SpatialDim, FrameType>& extrinsic_curvature,
+    const tnsr::II<DataVector, SpatialDim, FrameType>& inverse_spatial_metric) {
+  Scalar<DataVector> trace_extrinsic_curvature(get<0, 0>(extrinsic_curvature));
+  get(trace_extrinsic_curvature) = 0.0;
+  for (size_t i = 0; i < SpatialDim; i++) {
+    for (size_t j = 0; j < SpatialDim; j++) {
+      get(trace_extrinsic_curvature) +=
+          extrinsic_curvature.get(i, j) * inverse_spatial_metric.get(i, j);
+    }
+  }
+  return trace_extrinsic_curvature;
+}
+
+// Compute A_i from eq 6
+template <size_t SpatialDim, typename FrameType>
+tnsr::i<DataVector, SpatialDim, FrameType> get_field_a(
+    const Scalar<DataVector>& lapse,
+    const tnsr::i<DataVector, SpatialDim, FrameType>& d_lapse) {
+  tnsr::i<DataVector, SpatialDim, FrameType> field_a(get(lapse));
+  for (size_t i = 0; i < SpatialDim; i++) {
+    field_a.get(i) = d_lapse.get(i) / get(lapse);
+  }
+  return field_a;
+}
+
+// Compute \partial A_i from eq 6
+//
+// eq 6:
+//   A_i = \partial_i \alpha / \alpha
+// then, the derivative is:
+//   \partial_i A_j =
+//       ((\partial_i (\partial_j \alpha)) \alpha -
+//         \partial_j \alpha \partial_i \alpha) / \alpha^2
+template <size_t SpatialDim, typename FrameType>
+tnsr::ij<DataVector, SpatialDim, FrameType> get_d_field_a(
+    const Scalar<DataVector>& lapse,
+    const tnsr::i<DataVector, SpatialDim, FrameType>& d_lapse,
+    const tnsr::ij<DataVector, SpatialDim, FrameType>& d_d_lapse) {
+  tnsr::ij<DataVector, SpatialDim, FrameType> d_field_a(get(lapse));
+  for (size_t i = 0; i < SpatialDim; i++) {
+    for (size_t j = 0; j < SpatialDim; j++) {
+      d_field_a.get(i, j) =
+          (d_d_lapse.get(i, j) * get(lapse) - d_lapse.get(j) * d_lapse.get(i)) /
+          square(get(lapse));
+    }
+  }
+  return d_field_a;
+}
+
+// Compute the conformal spatial metric
+//
+// \tilde{\gamma}_{ij} = \phi^2 \gamma_{ij}
+template <size_t SpatialDim, typename FrameType>
+tnsr::ii<DataVector, SpatialDim, FrameType> get_conformal_spatial_metric(
+    const Scalar<DataVector>& conformal_factor_squared,
+    const tnsr::ii<DataVector, SpatialDim, FrameType>& spatial_metric) {
+  tnsr::ii<DataVector, SpatialDim, FrameType> conformal_spatial_metric(
+      get(conformal_factor_squared));
+  for (size_t i = 0; i < SpatialDim; i++) {
+    for (size_t j = i; j < SpatialDim; j++) {
+      conformal_spatial_metric.get(i, j) =
+          get(conformal_factor_squared) * spatial_metric.get(i, j);
+    }
+  }
+  return conformal_spatial_metric;
+}
+
+// Compute the spatial derivative of the conformal spatial metric
+//
+// If \tilde{\gamma}_{ij} is the conformal metric and \phi is the
+// conformal factor, \tilde{\gamma}_{ij} = \phi^2 \gamma_{ij}.
+// Therefore, the derivative of the conformal metric is:
+//   \partial_k \tilde{\gamma}_{ij} =
+//       \phi^2 \partial_k \gamma_{ij} +
+//       \partial_k \phi^2 \gamma_{ij}
+//
+// Since \phi = (det(\gamma_{ij}))^{-1/6}:
+//   \partial_k \phi^2
+//        = \partial_k ((det(\gamma_{ij}))^{-1/6})^2
+//        = \partial_k (det(\gamma_{ij}))^{-1/3}
+//        = -(det(\gamma_{ij}))^{-4/3}  \partial_k (det(\gamma_{ij}))/ 3
+//        = -\phi^4 \partial_k (det(\gamma_{ij})) / 3
+//
+// Therefore:
+//   \partial_k \tilde{\gamma}_{ij} =
+//       \phi^2 \partial_k \gamma_{ij} -
+//       \phi^4 \partial_k (det(\gamma_{ij})) \gamma_{ij} / 3
+template <size_t SpatialDim, typename FrameType>
+tnsr::ijj<DataVector, SpatialDim, FrameType> get_d_conformal_spatial_metric(
+    const Scalar<DataVector>& conformal_factor_squared,
+    const tnsr::ii<DataVector, SpatialDim, FrameType>& spatial_metric,
+    const tnsr::ijj<DataVector, SpatialDim, FrameType>& d_spatial_metric,
+    const tnsr::i<DataVector, SpatialDim, FrameType>& d_det_spatial_metric) {
+  tnsr::ijj<DataVector, SpatialDim, FrameType> d_conformal_spatial_metric(
+      get(conformal_factor_squared));
+  for (size_t k = 0; k < SpatialDim; k++) {
+    for (size_t i = 0; i < SpatialDim; i++) {
+      for (size_t j = i; j < SpatialDim; j++) {
+        d_conformal_spatial_metric.get(k, i, j) =
+            get(conformal_factor_squared) * d_spatial_metric.get(k, i, j) -
+            pow<4>(get(conformal_factor_squared)) *
+                d_det_spatial_metric.get(k) * spatial_metric.get(i, j) / 3.;
+      }
+    }
+  }
+  return d_conformal_spatial_metric;
+}
+
+// Compute D_{kij} from eq 6
+template <size_t SpatialDim, typename FrameType>
+tnsr::ijj<DataVector, SpatialDim, FrameType> get_field_d(
+    const tnsr::ijj<DataVector, SpatialDim, FrameType>&
+        d_conformal_spatial_metric) {
+  tnsr::ijj<DataVector, SpatialDim, FrameType> field_d(
+      get<0, 0, 0>(d_conformal_spatial_metric));
+  for (size_t i = 0; i < field_d.size(); i++) {
+    field_d[i] = 0.5 * d_conformal_spatial_metric[i];
+  }
+  return field_d;
+}
+
+// Compute D_{k}^{ij} from eq 14
+template <size_t SpatialDim, typename FrameType>
+tnsr::iJJ<DataVector, SpatialDim, FrameType> get_field_d_up(
+    const tnsr::II<DataVector, SpatialDim, FrameType>&
+        inverse_conformal_spatial_metric,
+    const tnsr::ijj<DataVector, SpatialDim, FrameType>& field_d) {
+  tnsr::iJJ<DataVector, SpatialDim, FrameType> field_d_up =
+      gr::deriv_inverse_spatial_metric(inverse_conformal_spatial_metric,
+                                       field_d);
+  for (size_t i = 0; i < field_d.size(); i++) {
+    field_d_up[i] *= -1.0;
+  }
+  return field_d_up;
+}
+
+// Compute P_i from eq 6
+template <size_t SpatialDim, typename FrameType>
+tnsr::i<DataVector, SpatialDim, FrameType> get_field_p(
+    const Scalar<DataVector>& det_spatial_metric,
+    const tnsr::i<DataVector, SpatialDim, FrameType>& d_det_spatial_metric) {
+  tnsr::i<DataVector, SpatialDim, FrameType> field_p(get(det_spatial_metric));
+  for (size_t i = 0; i < SpatialDim; i++) {
+    field_p.get(i) =
+        -d_det_spatial_metric.get(i) / (6. * get(det_spatial_metric));
+  }
+  return field_p;
+}
+
 // \brief Test first order CCZ4 with different binary settings against Minkowski
 //
 // \details Tests that all time derivatives are 0. The evolution equations are
@@ -108,12 +276,8 @@ void test_minkowski(const bool evolve_shift,
   const double kappa_3 = 0.4;
   const double mu = 0.7;
   const double one_over_relaxation_time = 10.0;         // \tau^{-1}
-  Scalar<DataVector> slicing_condition(used_for_size);  // g(\alpha)
-  if (use_harmonic_slicing_condition) {
-    get(slicing_condition) = 1.0;
-  } else {
-    get(slicing_condition) = 2.0 / get(lapse);
-  }
+  const Scalar<DataVector> slicing_condition =          // g(\alpha)
+      get_slicing_condition(use_harmonic_slicing_condition, lapse);
 
   // Choose free variables \Theta, K_0, b^i, and \eta
   const auto theta = make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
@@ -421,6 +585,63 @@ void test_minkowski(const bool evolve_shift,
   }
 }
 
+// Compute K_0 for KerrSchild
+//
+// Solve eq 4g for K_0, where \partial_t \alpha = 0:
+//   \partial_t \alpha =
+//       -\alpha^2 g(\alpha) (K - K_0 - 2 \Theta) +
+//       \beta^k \partial_k \alpha
+//   K_0 = -((\beta^k \partial_k \alpha) / (\alpha^2 * g(\alpha)) -
+//           K + 2 \Theta);
+template <size_t SpatialDim, typename FrameType>
+Scalar<DataVector> get_k_0_kerr(
+    const tnsr::I<DataVector, SpatialDim, FrameType>& shift,
+    const Scalar<DataVector>& lapse,
+    const tnsr::i<DataVector, SpatialDim, FrameType>& d_lapse,
+    const Scalar<DataVector>& slicing_condition,
+    const Scalar<DataVector>& theta,
+    const Scalar<DataVector>& trace_extrinsic_curvature) {
+  Scalar<DataVector> k_0(get(lapse));
+  get(k_0) = get<0>(shift) * get<0>(d_lapse);
+  for (size_t k = 1; k < SpatialDim; k++) {
+    get(k_0) += shift.get(k) * d_lapse.get(k);
+  }
+  get(k_0) = -((get(k_0) / (square(get(lapse)) * get(slicing_condition))) -
+               get(trace_extrinsic_curvature) + 2.0 * get(theta));
+  return k_0;
+}
+
+// Compute b^i for KerrSchild
+//
+// Solve eq 12c for b^i, where \partial_t \beta^i = 0:
+//   \partial_t \beta^i = s f b + s \beta^k \partial_k \beta^i
+template <size_t SpatialDim, typename FrameType>
+tnsr::I<DataVector, SpatialDim, FrameType> get_b_kerr(
+    const bool evolve_shift,
+    const tnsr::I<DataVector, SpatialDim, FrameType>& shift,
+    const tnsr::iJ<DataVector, SpatialDim, FrameType>& d_shift,
+    const double f) {
+  tnsr::I<DataVector, SpatialDim, FrameType> b(get<0>(shift));
+  if (not evolve_shift) {
+    // s == 0
+    // pick b = 0
+    for (auto& component : b) {
+      component = 0.0;
+    }
+  } else {
+    // s == 1
+    // b = -(\beta^k \partial_k \beta^i) / f
+    for (size_t i = 0; i < SpatialDim; i++) {
+      b.get(i) = -shift.get(0) * d_shift.get(0, i);
+      for (size_t k = 1; k < SpatialDim; k++) {
+        b.get(i) -= shift.get(k) * d_shift.get(k, i);
+      }
+      b.get(i) /= f;
+    }
+  }
+  return b;
+}
+
 // \brief Test first order CCZ4 with different binary settings against
 // KerrSchild
 //
@@ -509,12 +730,8 @@ void test_kerrschild(const bool evolve_shift,
   const double kappa_3 = 0.4;
   const double mu = 0.7;
   const double one_over_relaxation_time = 10.0;         // \tau^{-1}
-  Scalar<DataVector> slicing_condition(used_for_size);  // g(\alpha)
-  if (use_harmonic_slicing_condition) {
-    get(slicing_condition) = 1.0;
-  } else {
-    get(slicing_condition) = 2.0 / get(lapse);
-  }
+  const Scalar<DataVector> slicing_condition =          // g(\alpha)
+      get_slicing_condition(use_harmonic_slicing_condition, lapse);
 
   // Choose free variables \Theta, K_0, b^i, and \eta
   const auto theta = make_with_value<Scalar<DataVector>>(used_for_size, 0.0);
@@ -527,50 +744,22 @@ void test_kerrschild(const bool evolve_shift,
                               dt_spatial_metric, d_spatial_metric);
 
   // K = K_{ij} * \gamma^ij
-  Scalar<DataVector> trace_extrinsic_curvature(used_for_size);
-  get(trace_extrinsic_curvature) = 0.0;
-  for (size_t i = 0; i < SpatialDim; i++) {
-    for (size_t j = 0; j < SpatialDim; j++) {
-      get(trace_extrinsic_curvature) +=
-          extrinsic_curvature.get(i, j) * inverse_spatial_metric.get(i, j);
-    }
-  }
+  const Scalar<DataVector> trace_extrinsic_curvature =
+      get_trace_extrinsic_curvature(extrinsic_curvature,
+                                    inverse_spatial_metric);
   const auto d_trace_extrinsic_curvature = partial_derivative(
       trace_extrinsic_curvature, mesh, coord_map.inv_jacobian(x_logical));
 
-  // Solve eq 4g for K_0, where \partial_t \alpha = 0:
-  //   \partial_t \alpha =
-  //       -\alpha^2 g(\alpha) (K - K_0 - 2 \Theta) +
-  //       \beta^k \partial_k \alpha
-  //   K_0 = -((\beta^k \partial_k \alpha) / (\alpha^2 * g(\alpha)) -
-  //           K + 2 \Theta);
-  Scalar<DataVector> k_0(used_for_size);
-  get(k_0) = get<0>(shift) * get<0>(d_lapse);
-  for (size_t k = 1; k < SpatialDim; k++) {
-    get(k_0) += shift.get(k) * d_lapse.get(k);
-  }
-  get(k_0) = -((get(k_0) / (square(get(lapse)) * get(slicing_condition))) -
-               get(trace_extrinsic_curvature) + 2.0 * get(theta));
+  // Solve eq 4g for K_0, where \partial_t \alpha = 0
+  const Scalar<DataVector> k_0 =
+      get_k_0_kerr(shift, lapse, d_lapse, slicing_condition, theta,
+                   trace_extrinsic_curvature);
   const auto d_k_0 =
       partial_derivative(k_0, mesh, coord_map.inv_jacobian(x_logical));
 
-  // Solve eq 4h for b^i, where \partial_t \beta^i = 0:
-  //   \partial_t \beta^i = f b + \beta^k \partial_k \beta^i
-  tnsr::I<DataVector, SpatialDim, FrameType> b(used_for_size);
-  if (not evolve_shift) {
-    for (auto& component : b) {
-      component = 0.0;
-    }
-  } else {
-    //   b = -(\beta^k \partial_k \beta^i) / f
-    for (size_t i = 0; i < SpatialDim; i++) {
-      b.get(i) = -shift.get(0) * d_shift.get(0, i);
-      for (size_t k = 1; k < SpatialDim; k++) {
-        b.get(i) -= shift.get(k) * d_shift.get(k, i);
-      }
-      b.get(i) /= f;
-    }
-  }
+  // Solve eq 12c for b^i, where \partial_t \beta^i = 0
+  const tnsr::I<DataVector, SpatialDim, FrameType> b =
+      get_b_kerr(evolve_shift, shift, d_shift, f);
   const auto d_b =
       partial_derivative(b, mesh, coord_map.inv_jacobian(x_logical));
 
@@ -581,27 +770,14 @@ void test_kerrschild(const bool evolve_shift,
   get(ln_lapse) = log(get(lapse));
 
   // eq 6
-  tnsr::i<DataVector, SpatialDim, FrameType> field_a{};
-  for (size_t i = 0; i < SpatialDim; i++) {
-    field_a.get(i) = d_lapse.get(i) / get(lapse);
-  }
+  const tnsr::i<DataVector, SpatialDim, FrameType> field_a =
+      get_field_a(lapse, d_lapse);
 
   const auto d_d_lapse =
       partial_derivative(d_lapse, mesh, coord_map.inv_jacobian(x_logical));
-  // from eq 6:
-  //   A_i = \partial_i \alpha / \alpha
-  // the derivative is:
-  //   \partial_i A_j =
-  //       ((\partial_i (\partial_j \alpha)) \alpha -
-  //         \partial_j \alpha \partial_i \alpha) / \alpha^2
-  tnsr::ij<DataVector, SpatialDim, FrameType> d_field_a{};
-  for (size_t i = 0; i < SpatialDim; i++) {
-    for (size_t j = 0; j < SpatialDim; j++) {
-      d_field_a.get(i, j) =
-          (d_d_lapse.get(i, j) * get(lapse) - d_lapse.get(j) * d_lapse.get(i)) /
-          square(get(lapse));
-    }
-  }
+  // \partial_i A_j , where A_i is defined in eq 6
+  const tnsr::ij<DataVector, SpatialDim, FrameType> d_field_a =
+      get_d_field_a(lapse, d_lapse, d_d_lapse);
 
   // eq 6
   const auto& field_b = d_shift;
@@ -621,75 +797,31 @@ void test_kerrschild(const bool evolve_shift,
   const auto d_a_tilde =
       partial_derivative(a_tilde, mesh, coord_map.inv_jacobian(x_logical));
 
-  tnsr::ii<DataVector, SpatialDim, FrameType> conformal_spatial_metric{};
-  for (size_t i = 0; i < SpatialDim; i++) {
-    for (size_t j = i; j < SpatialDim; j++) {
-      conformal_spatial_metric.get(i, j) =
-          get(conformal_factor_squared) * spatial_metric.get(i, j);
-    }
-  }
-  // If \tilde{\gamma}_{ij} is the conformal metric and \phi is the
-  // conformal factor, \tilde{\gamma}_{ij} = \phi^2 \gamma_{ij}.
-  // Therefore, the derivative of the conformal metric is:
-  //   \partial_k \tilde{\gamma}_{ij} =
-  //       \phi^2 \partial_k \gamma_{ij} +
-  //       \partial_k \phi^2 \gamma_{ij}
-  //
-  // Since \phi = (det(\gamma_{ij}))^{-1/6}:
-  //   \partial_k \phi^2
-  //        = \partial_k ((det(\gamma_{ij}))^{-1/6})^2
-  //        = \partial_k (det(\gamma_{ij}))^{-1/3})
-  //        = - (det(\gamma_{ij}))^{-4/3}) / 3
-  //        = - (\phi^4) / 3
-  //
-  // Therefore:
-  //   \partial_k \tilde{\gamma}_{ij} =
-  //       \phi^2 \partial_k \gamma_{ij} +
-  //       \phi^4 \gamma_{ij} / 3
-  tnsr::ijj<DataVector, SpatialDim, FrameType> d_conformal_spatial_metric{};
-  for (size_t k = 0; k < SpatialDim; k++) {
-    for (size_t i = 0; i < SpatialDim; i++) {
-      for (size_t j = i; j < SpatialDim; j++) {
-        d_conformal_spatial_metric.get(k, i, j) =
-            get(conformal_factor_squared) * d_spatial_metric.get(k, i, j) -
-            pow<4>(get(conformal_factor_squared)) *
-                d_det_spatial_metric.get(k) * spatial_metric.get(i, j) / 3.;
-      }
-    }
-  }
+  // \tilde{\gamma}_{ij} = \phi^2 \gamma_{ij}
+  const tnsr::ii<DataVector, SpatialDim, FrameType> conformal_spatial_metric =
+      get_conformal_spatial_metric(conformal_factor_squared, spatial_metric);
+  // \partial_k \tilde{\gamma}_{ij}
+  const tnsr::ijj<DataVector, SpatialDim, FrameType>
+      d_conformal_spatial_metric = get_d_conformal_spatial_metric(
+          conformal_factor_squared, spatial_metric, d_spatial_metric,
+          d_det_spatial_metric);
 
   const auto inverse_conformal_spatial_metric =
       determinant_and_inverse(conformal_spatial_metric).second;
 
   // eq 6
-  tnsr::ijj<DataVector, SpatialDim, FrameType> field_d{};
-  for (size_t k = 0; k < SpatialDim; k++) {
-    for (size_t i = 0; i < SpatialDim; i++) {
-      for (size_t j = i; j < SpatialDim; j++) {
-        field_d.get(k, i, j) = 0.5 * d_conformal_spatial_metric.get(k, i, j);
-      }
-    }
-  }
+  const tnsr::ijj<DataVector, SpatialDim, FrameType> field_d =
+      get_field_d(d_conformal_spatial_metric);
   const auto d_field_d =
       partial_derivative(field_d, mesh, coord_map.inv_jacobian(x_logical));
 
   // eq 14
-  auto field_d_up = gr::deriv_inverse_spatial_metric(
-      inverse_conformal_spatial_metric, field_d);
-  for (size_t k = 0; k < SpatialDim; k++) {
-    for (size_t i = 0; i < SpatialDim; i++) {
-      for (size_t j = i; j < SpatialDim; j++) {
-        field_d_up.get(k, i, j) *= -1.0;
-      }
-    }
-  }
+  const tnsr::iJJ<DataVector, SpatialDim, FrameType> field_d_up =
+      get_field_d_up(inverse_conformal_spatial_metric, field_d);
 
   // eq 6
-  tnsr::i<DataVector, SpatialDim, FrameType> field_p{};
-  for (size_t i = 0; i < SpatialDim; i++) {
-    field_p.get(i) =
-        -d_det_spatial_metric.get(i) / (6. * get(det_spatial_metric));
-  }
+  const tnsr::i<DataVector, SpatialDim, FrameType> field_p =
+      get_field_p(det_spatial_metric, d_det_spatial_metric);
   const auto d_field_p =
       partial_derivative(field_p, mesh, coord_map.inv_jacobian(x_logical));
 
