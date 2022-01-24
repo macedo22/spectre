@@ -82,7 +82,7 @@ struct SquareRoot
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     if constexpr (is_main_end) {
       // TODO : better error message
-      static_assert(not is_main_beg, "Shouldn't happen.");
+      // static_assert(not is_main_beg, "Shouldn't happen.");
       (void)multi_index;
       return sqrt(result_component);
     } else {
@@ -109,7 +109,7 @@ struct SquareRoot
     t_.visit_main(result_component, multi_index);
     // TODO : better error message; move up with member variables instead
     // instead function?
-    static_assert(not(is_main_beg and is_main_end), "Shouldn't happen.");
+    // static_assert(not(is_main_beg and is_main_end), "Shouldn't happen.");
     if constexpr (is_main_beg) {
       result_component = sqrt(t_.get_main(result_component, multi_index));
     }
