@@ -29,6 +29,8 @@
 
 /// \cond
 namespace TensorExpressions {
+struct MarkAsTensorAsExpression;
+
 template <typename T1, typename T2, typename ArgsList1, typename ArgsList2,
           int Sign>
 struct AddSub;
@@ -308,6 +310,7 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   // number of indices in the second operand in the addition or subtraction
   static constexpr auto num_tensor_indices_op2 = sizeof...(Args2);
   using args_list = typename T1::args_list;
+  static constexpr bool is_binary_op = true;
   static constexpr size_t num_ops_left = T1::num_ops_subtree;
   static constexpr size_t num_ops_right = T2::num_ops_subtree;
   static constexpr size_t num_ops_subtree = num_ops_left + num_ops_right + 1;
@@ -349,6 +352,41 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   AddSub(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~AddSub() override = default;
 
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE decltype(auto) add_or_subtract_main(
+      ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& op1_multi_index,
+      const std::array<size_t, num_tensor_indices_op2>& op2_multi_index) const {
+    // std::cout << "AddSub::add_or_subtract_main" << std::endl;
+    if constexpr (Sign == 1) {
+      // std::cout << "AddSub::add_or_subtract_main::if" << std::endl;
+      if constexpr (is_main_end) {
+        // std::cout << "AddSub::add_or_subtract_main::ifif" << std::endl;
+        // TODO : better error message
+        // static_assert(not is_main_beg, "Shouldn't happen.");
+        (void)op1_multi_index;
+        return result_component + t2_.get_branch(op2_multi_index);
+      } else {
+        // std::cout << "AddSub::add_or_subtract_main::ifelse" << std::endl;
+        return t1_.get_main(result_component, op1_multi_index) +
+               t2_.get_branch(op2_multi_index);
+      }
+    } else {
+      // std::cout << "AddSub::add_or_subtract_main::else" << std::endl;
+      if constexpr (is_main_end) {
+        // std::cout << "AddSub::add_or_subtract_main::elseif" << std::endl;
+        // TODO : better error message
+        // static_assert(not is_main_beg, "Shouldn't happen.");
+        (void)op1_multi_index;
+        return result_component - t2_.get_branch(op2_multi_index);
+      } else {
+        // std::cout << "AddSub::add_or_subtract_main::elseelse" << std::endl;
+        return t1_.get_main(result_component, op1_multi_index) -
+               t2_.get_branch(op2_multi_index);
+      }
+    }
+  }
+
   /// \brief Helper function for computing the sum of or difference between
   /// components at given multi-indices from both operands of the expression
   ///
@@ -360,13 +398,207 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   /// \param op2_multi_index the multi-index of the component of the second
   /// operand
   /// \return the sum of or difference between the two components' values
-  SPECTRE_ALWAYS_INLINE decltype(auto) add_or_subtract(
+  SPECTRE_ALWAYS_INLINE decltype(auto) add_or_subtract_main(
       const std::array<size_t, num_tensor_indices>& op1_multi_index,
       const std::array<size_t, num_tensor_indices_op2>& op2_multi_index) const {
+    // std::cout << "AddSub::add_or_subtract_main" << std::endl;
     if constexpr (Sign == 1) {
-      return t1_.get(op1_multi_index) + t2_.get(op2_multi_index);
+      return t1_.get_main(op1_multi_index) + t2_.get_branch(op2_multi_index);
     } else {
-      return t1_.get(op1_multi_index) - t2_.get(op2_multi_index);
+      return t1_.get_main(op1_multi_index) - t2_.get_branch(op2_multi_index);
+    }
+  }
+
+  SPECTRE_ALWAYS_INLINE decltype(auto) add_or_subtract_branch(
+      const std::array<size_t, num_tensor_indices>& op1_multi_index,
+      const std::array<size_t, num_tensor_indices_op2>& op2_multi_index) const {
+    // std::cout << "AddSub::add_or_subtract_branch" << std::endl;
+    if constexpr (Sign == 1) {
+      return t1_.get_branch(op1_multi_index) + t2_.get_branch(op2_multi_index);
+    } else {
+      return t1_.get_branch(op1_multi_index) - t2_.get_branch(op2_multi_index);
+    }
+  }
+
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+      ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    // std::cout << "AddSub::get_main" << std::endl;
+    if constexpr (ops_have_generic_indices_at_same_positions) {
+      if constexpr (op1_spatial_spacetime_index_positions.size() != 0 or
+                    op2_spatial_spacetime_index_positions.size() != 0) {
+        // Operands have the same generic index order, but at least one of them
+        // has at least one spacetime index where a spatial index has been used,
+        // so we need to compute the 2nd operand's (possibly) shifted
+        // multi-index values
+        constexpr std::array<std::int32_t, num_tensor_indices>
+            spatial_spacetime_index_transformation =
+                detail::spatial_spacetime_index_transformation_from_positions<
+                    num_tensor_indices>(op1_spatial_spacetime_index_positions,
+                                        op2_spatial_spacetime_index_positions);
+        std::array<size_t, num_tensor_indices> op2_multi_index =
+            result_multi_index;
+        for (size_t i = 0; i < num_tensor_indices; i++) {
+          gsl::at(op2_multi_index, i) = static_cast<size_t>(
+              static_cast<std::int32_t>(gsl::at(op2_multi_index, i)) +
+              gsl::at(spatial_spacetime_index_transformation, i));
+        }
+        return add_or_subtract_main(result_component, result_multi_index,
+                                    op2_multi_index);
+      } else {
+        // Operands have the same generic index order and neither of them has
+        // a spacetime index where a spatial index has been used, so
+        // both operands have the same multi-index
+        return add_or_subtract_main(result_component, result_multi_index,
+                                    result_multi_index);
+      }
+    } else {
+      if constexpr (op1_spatial_spacetime_index_positions.size() != 0 or
+                    op2_spatial_spacetime_index_positions.size() != 0) {
+        // Operands don't have the same generic index order and at least one of
+        // them has at least one spacetime index where a spatial index has been
+        // used, so we need to compute the 2nd operand's (possibly) shifted
+        // multi-index values and reorder them with respect to the 2nd operand's
+        // generic index order
+
+        // The list of positions where generic spatial indices were used for
+        // spacetime indices in the second operand, but rearranged in terms of
+        // the first operand's generic index order.
+        constexpr std::array<size_t,
+                             op2_spatial_spacetime_index_positions.size()>
+            transformed_op2_spatial_spacetime_index_positions = []() {
+              std::array<size_t, op2_spatial_spacetime_index_positions.size()>
+                  transformed_positions{};
+              for (size_t i = 0;
+                   i < op2_spatial_spacetime_index_positions.size(); i++) {
+                gsl::at(transformed_positions, i) =
+                    gsl::at(operand_index_transformation,
+                            gsl::at(op2_spatial_spacetime_index_positions, i));
+              }
+              return transformed_positions;
+            }();
+
+        // According to the transformed positions above, compute the value shift
+        // needed to convert from multi-indices of the first operand to
+        // multi-indices of the 2nd operand (with the generic index order of the
+        // first)
+        constexpr std::array<std::int32_t, num_tensor_indices>
+            spatial_spacetime_index_transformation =
+                detail::spatial_spacetime_index_transformation_from_positions<
+                    num_tensor_indices>(
+                    op1_spatial_spacetime_index_positions,
+                    transformed_op2_spatial_spacetime_index_positions);
+        std::array<size_t, num_tensor_indices> op2_multi_index =
+            result_multi_index;
+        for (size_t i = 0; i < num_tensor_indices; i++) {
+          gsl::at(op2_multi_index, i) = static_cast<size_t>(
+              static_cast<std::int32_t>(gsl::at(op2_multi_index, i)) +
+              gsl::at(spatial_spacetime_index_transformation, i));
+        }
+        return add_or_subtract_main(
+            result_component, result_multi_index,
+            transform_multi_index(op2_multi_index,
+                                  operand_index_transformation));
+      } else {
+        // Operands don't have the same generic index order, but neither of them
+        // has a spacetime index where a spatial index has been used, so we just
+        // need to reorder the 2nd operand's multi_index according to its
+        // generic index order
+        return add_or_subtract_main(
+            result_component, result_multi_index,
+            transform_multi_index(result_multi_index,
+                                  operand_index_transformation));
+      }
+    }
+  }
+
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    // std::cout << "AddSub::get_main" << std::endl;
+    if constexpr (ops_have_generic_indices_at_same_positions) {
+      if constexpr (op1_spatial_spacetime_index_positions.size() != 0 or
+                    op2_spatial_spacetime_index_positions.size() != 0) {
+        // Operands have the same generic index order, but at least one of them
+        // has at least one spacetime index where a spatial index has been used,
+        // so we need to compute the 2nd operand's (possibly) shifted
+        // multi-index values
+        constexpr std::array<std::int32_t, num_tensor_indices>
+            spatial_spacetime_index_transformation =
+                detail::spatial_spacetime_index_transformation_from_positions<
+                    num_tensor_indices>(op1_spatial_spacetime_index_positions,
+                                        op2_spatial_spacetime_index_positions);
+        std::array<size_t, num_tensor_indices> op2_multi_index =
+            result_multi_index;
+        for (size_t i = 0; i < num_tensor_indices; i++) {
+          gsl::at(op2_multi_index, i) = static_cast<size_t>(
+              static_cast<std::int32_t>(gsl::at(op2_multi_index, i)) +
+              gsl::at(spatial_spacetime_index_transformation, i));
+        }
+        return add_or_subtract_main(result_multi_index, op2_multi_index);
+      } else {
+        // Operands have the same generic index order and neither of them has
+        // a spacetime index where a spatial index has been used, so
+        // both operands have the same multi-index
+        return add_or_subtract_main(result_multi_index, result_multi_index);
+      }
+    } else {
+      if constexpr (op1_spatial_spacetime_index_positions.size() != 0 or
+                    op2_spatial_spacetime_index_positions.size() != 0) {
+        // Operands don't have the same generic index order and at least one of
+        // them has at least one spacetime index where a spatial index has been
+        // used, so we need to compute the 2nd operand's (possibly) shifted
+        // multi-index values and reorder them with respect to the 2nd operand's
+        // generic index order
+
+        // The list of positions where generic spatial indices were used for
+        // spacetime indices in the second operand, but rearranged in terms of
+        // the first operand's generic index order.
+        constexpr std::array<size_t,
+                             op2_spatial_spacetime_index_positions.size()>
+            transformed_op2_spatial_spacetime_index_positions = []() {
+              std::array<size_t, op2_spatial_spacetime_index_positions.size()>
+                  transformed_positions{};
+              for (size_t i = 0;
+                   i < op2_spatial_spacetime_index_positions.size(); i++) {
+                gsl::at(transformed_positions, i) =
+                    gsl::at(operand_index_transformation,
+                            gsl::at(op2_spatial_spacetime_index_positions, i));
+              }
+              return transformed_positions;
+            }();
+
+        // According to the transformed positions above, compute the value shift
+        // needed to convert from multi-indices of the first operand to
+        // multi-indices of the 2nd operand (with the generic index order of the
+        // first)
+        constexpr std::array<std::int32_t, num_tensor_indices>
+            spatial_spacetime_index_transformation =
+                detail::spatial_spacetime_index_transformation_from_positions<
+                    num_tensor_indices>(
+                    op1_spatial_spacetime_index_positions,
+                    transformed_op2_spatial_spacetime_index_positions);
+        std::array<size_t, num_tensor_indices> op2_multi_index =
+            result_multi_index;
+        for (size_t i = 0; i < num_tensor_indices; i++) {
+          gsl::at(op2_multi_index, i) = static_cast<size_t>(
+              static_cast<std::int32_t>(gsl::at(op2_multi_index, i)) +
+              gsl::at(spatial_spacetime_index_transformation, i));
+        }
+        return add_or_subtract_main(
+            result_multi_index,
+            transform_multi_index(op2_multi_index,
+                                  operand_index_transformation));
+      } else {
+        // Operands don't have the same generic index order, but neither of them
+        // has a spacetime index where a spatial index has been used, so we just
+        // need to reorder the 2nd operand's multi_index according to its
+        // generic index order
+        return add_or_subtract_main(
+            result_multi_index,
+            transform_multi_index(result_multi_index,
+                                  operand_index_transformation));
+      }
     }
   }
 
@@ -414,9 +646,10 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   /// tensor to retrieve
   /// \return the value of the component at `result_multi_index` in the result
   /// tensor
-  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_branch(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     if constexpr (ops_have_generic_indices_at_same_positions) {
+      // std::cout << "AddSub::get_branch" << std::endl;
       if constexpr (op1_spatial_spacetime_index_positions.size() != 0 or
                     op2_spatial_spacetime_index_positions.size() != 0) {
         // Operands have the same generic index order, but at least one of them
@@ -435,12 +668,12 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
               static_cast<std::int32_t>(gsl::at(op2_multi_index, i)) +
               gsl::at(spatial_spacetime_index_transformation, i));
         }
-        return add_or_subtract(result_multi_index, op2_multi_index);
+        return add_or_subtract_branch(result_multi_index, op2_multi_index);
       } else {
         // Operands have the same generic index order and neither of them has
         // a spacetime index where a spatial index has been used, so
         // both operands have the same multi-index
-        return add_or_subtract(result_multi_index, result_multi_index);
+        return add_or_subtract_branch(result_multi_index, result_multi_index);
       }
     } else {
       if constexpr (op1_spatial_spacetime_index_positions.size() != 0 or
@@ -485,7 +718,7 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
               static_cast<std::int32_t>(gsl::at(op2_multi_index, i)) +
               gsl::at(spatial_spacetime_index_transformation, i));
         }
-        return add_or_subtract(
+        return add_or_subtract_branch(
             result_multi_index,
             transform_multi_index(op2_multi_index,
                                   operand_index_transformation));
@@ -494,7 +727,7 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
         // has a spacetime index where a spatial index has been used, so we just
         // need to reorder the 2nd operand's multi_index according to its
         // generic index order
-        return add_or_subtract(
+        return add_or_subtract_branch(
             result_multi_index,
             transform_multi_index(result_multi_index,
                                   operand_index_transformation));
@@ -506,6 +739,7 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   SPECTRE_ALWAYS_INLINE void visit_main(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    // std::cout << "AddSub::visit_main" << std::endl;
     if constexpr (ops_have_generic_indices_at_same_positions) {
       if constexpr (op1_spatial_spacetime_index_positions.size() != 0 or
                     op2_spatial_spacetime_index_positions.size() != 0) {
@@ -526,13 +760,27 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
               gsl::at(spatial_spacetime_index_transformation, i));
         }
         t1_.visit_main(result_component, result_multi_index);
-        t2_.visit_branch(result_component, op2_multi_index);
+        // t2_.visit_branch(result_component, op2_multi_index);
+
+        if constexpr (is_main_beg) {
+          // don't send result_component down right branch because we are at a *
+          // and shouldn't edit result_component in right child
+          result_component = add_or_subtract_main(
+              result_component, result_multi_index, op2_multi_index);
+        }
       } else {
         // Operands have the same generic index order and neither of them has
         // a spacetime index where a spatial index has been used, so
         // both operands have the same multi-index
         t1_.visit_main(result_component, result_multi_index);
-        t2_.visit_branch(result_component, result_multi_index);
+        // t2_.visit_branch(result_component, result_multi_index);
+
+        if constexpr (is_main_beg) {
+          // don't send result_component down right branch because we are at a *
+          // and shouldn't edit result_component in right child
+          result_component = add_or_subtract_main(
+              result_component, result_multi_index, result_multi_index);
+        }
       }
     } else {
       if constexpr (op1_spatial_spacetime_index_positions.size() != 0 or
@@ -578,18 +826,36 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
               gsl::at(spatial_spacetime_index_transformation, i));
         }
         t1_.visit_main(result_component, result_multi_index);
-        t2_.visit_branch(result_component,
-                         transform_multi_index(op2_multi_index,
-                                               operand_index_transformation));
+        // t2_.visit_branch(result_component,
+        //                  transform_multi_index(op2_multi_index,
+        //                                operand_index_transformation));
+
+        if constexpr (is_main_beg) {
+          // don't send result_component down right branch because we are at a *
+          // and shouldn't edit result_component in right child
+          result_component = add_or_subtract_main(
+              result_component, result_multi_index,
+              transform_multi_index(op2_multi_index,
+                                    operand_index_transformation));
+        }
       } else {
         // Operands don't have the same generic index order, but neither of them
         // has a spacetime index where a spatial index has been used, so we just
         // need to reorder the 2nd operand's multi_index according to its
         // generic index order
         t1_.visit_main(result_component, result_multi_index);
-        t2_.visit_branch(result_component,
-                         transform_multi_index(result_multi_index,
-                                               operand_index_transformation));
+        // t2_.visit_branch(result_component,
+        //                  transform_multi_index(result_multi_index,
+        //                                operand_index_transformation));
+
+        if constexpr (is_main_beg) {
+          // don't send result_component down right branch because we are at a *
+          // and shouldn't edit result_component in right child
+          result_component = add_or_subtract_main(
+              result_component, result_multi_index,
+              transform_multi_index(result_multi_index,
+                                    operand_index_transformation));
+        }
       }
     }
   }
@@ -598,6 +864,7 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   SPECTRE_ALWAYS_INLINE void visit_branch(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    // std::cout << "AddSub::visit_branch" << std::endl;
     if constexpr (ops_have_generic_indices_at_same_positions) {
       if constexpr (op1_spatial_spacetime_index_positions.size() != 0 or
                     op2_spatial_spacetime_index_positions.size() != 0) {
@@ -683,6 +950,14 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
                          transform_multi_index(result_multi_index,
                                                operand_index_transformation));
       }
+    }
+  }
+
+  type get_used_for_size() const {
+    if constexpr (not std::is_base_of_v<MarkAsNumberAsExpression, T2>) {
+      return t2_.get_used_for_size();
+    } else {
+      return t1_.get_used_for_size();
     }
   }
 

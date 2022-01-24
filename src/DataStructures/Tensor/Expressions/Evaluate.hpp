@@ -88,6 +88,13 @@ constexpr bool is_evaluated_lhs_multi_index(
   }
   return true;
 }
+
+// TODO: probably better to implement operator[] for each TE type
+// than generate so many instantiations of this function (nesting)
+template <typename RhsTE>
+typename RhsTE::type get_used_for_size(const RhsTE& rhs_tensorexpression) {
+  return rhs_tensorexpression.get_used_for_size();
+}
 }  // namespace detail
 
 /*!
@@ -222,9 +229,13 @@ void evaluate(
         gsl::at(rhs_multi_index,
                 gsl::at(rhs_spatial_spacetime_index_positions, j)) += 1;
       }
-
+      (*lhs_tensor)[i] = 0.0;
       (~rhs_tensorexpression).visit_main((*lhs_tensor)[i], rhs_multi_index);
-      (*lhs_tensor)[i] = (~rhs_tensorexpression).get(rhs_multi_index);
+      if constexpr (not std::decay_t<decltype(
+                        ~rhs_tensorexpression)>::is_main_beg) {
+        (*lhs_tensor)[i] =
+            (~rhs_tensorexpression).get_main((*lhs_tensor)[i], rhs_multi_index);
+      }
     }
   }
 }
@@ -292,7 +303,7 @@ auto evaluate(const RhsTE& rhs_tensorexpression) {
 
   Tensor<typename RhsTE::type, typename lhs_tensor_symm_and_indices::symmetry,
          typename lhs_tensor_symm_and_indices::tensorindextype_list>
-      lhs_tensor{};
+      lhs_tensor(detail::get_used_for_size(rhs_tensorexpression));
   evaluate<LhsTensorIndices...>(make_not_null(&lhs_tensor),
                                 rhs_tensorexpression);
   return lhs_tensor;

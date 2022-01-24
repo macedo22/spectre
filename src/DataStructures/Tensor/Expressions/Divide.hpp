@@ -20,6 +20,8 @@
 #include "Utilities/TMPL.hpp"
 
 namespace TensorExpressions {
+struct MarkAsTensorAsExpression;
+
 /// \ingroup TensorExpressionsGroup
 /// \brief Marks a class as being a `TensorExpressions::Divide`
 ///
@@ -61,6 +63,7 @@ struct Divide : public TensorExpression<
   using symmetry = typename T1::symmetry;
   using index_list = typename T1::index_list;
   using args_list = typename T1::args_list;
+  static constexpr bool is_binary_op = true;
   static constexpr size_t num_ops_left = T1::num_ops_subtree;
   static constexpr size_t num_ops_right = T2::num_ops_subtree;
   static constexpr size_t num_ops_subtree = num_ops_left + num_ops_right + 1;
@@ -82,6 +85,26 @@ struct Divide : public TensorExpression<
   Divide(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~Divide() override = default;
 
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+      const ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    if constexpr (is_main_end) {
+      // TODO : better error message
+      static_assert(not is_main_beg, "Shouldn't happen.");
+      (void)result_multi_index;
+      return result_component / t2_.get_branch(op2_multi_index);
+    } else {
+      return t1_.get_main(result_component, result_multi_index) /
+             t2_.get_branch(result_component, op2_multi_index);
+    }
+  }
+
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    return t1_.get(result_multi_index) / t2_.get(op2_multi_index);
+  }
+
   /// \brief Return the value of the component of the quotient tensor at a given
   /// multi-index
   ///
@@ -89,7 +112,7 @@ struct Divide : public TensorExpression<
   //// tensor to retrieve
   /// \return the value of the component in the quotient tensor at
   /// `result_multi_index`
-  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_branch(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     return t1_.get(result_multi_index) / t2_.get(op2_multi_index);
   }
@@ -99,7 +122,14 @@ struct Divide : public TensorExpression<
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     t1_.visit_main(result_component, result_multi_index);
-    t2_.visit_branch(result_component, op2_multi_index);
+    // t2_.visit_branch(result_component, op2_multi_index);
+
+    if constexpr (is_main_beg) {
+      // don't send result_component down right branch because we are at a * and
+      // shouldn't edit result_component in right child
+      result_component = t1_.get_main(result_component, result_multi_index) /
+                         t2_.get_branch(op2_multi_index);
+    }
   }
 
   template <typename ResultType>
@@ -108,6 +138,14 @@ struct Divide : public TensorExpression<
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     t1_.visit_branch(result_component, result_multi_index);
     t2_.visit_branch(result_component, op2_multi_index);
+  }
+
+  type get_used_for_size() const {
+    if constexpr (not std::is_base_of_v<MarkAsTensorAsExpression, T2>) {
+      return t2_.get_used_for_size();
+    } else {
+      return t1_.get_used_for_size();
+    }
   }
 
  private:
