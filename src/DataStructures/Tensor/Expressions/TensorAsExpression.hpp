@@ -195,6 +195,7 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
   using index_list = IndexList<Indices...>;
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
   using args_list = ArgsList<Args...>;
+  static constexpr bool is_binary_op = false;
   static constexpr size_t num_ops_left = 0;
   static constexpr size_t num_ops_right = 0;
   static constexpr size_t num_ops_subtree = 0;
@@ -214,12 +215,26 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
       : t_(&t) {}
   ~TensorAsExpression() override = default;
 
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+      const ResultType& /*result_component*/,
+      const std::array<size_t, num_tensor_indices>& multi_index) const {
+    return t_->get(multi_index);
+  }
+
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+      const std::array<size_t, num_tensor_indices>& multi_index) const {
+    // std::cout << "TensorAsExpression::get_main" << std::endl;
+    return t_->get(multi_index);
+  }
+
   /// \brief Returns the value of the contained tensor's multi-index
   ///
   /// \param multi_index the multi-index of the tensor component to retrieve
   /// \return the value of the component at `multi_index` in the tensor
-  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_branch(
       const std::array<size_t, num_tensor_indices>& multi_index) const {
+    // std::cout << "TensorAsExpression::get_branch" << std::endl;
     return t_->get(multi_index);
   }
 
@@ -227,18 +242,24 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
   template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void visit_main(
       const ResultType& /*result_component*/,
-      const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {}
+      const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
+    // std::cout << "TensorAsExpression::visit_main" << std::endl;
+  }
 
   // TODO : remove? don't need at leaves?
   template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void visit_branch(
       const ResultType& /*result_component*/,
-      const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {}
+      const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
+    // std::cout << "TensorAsExpression::visit_branch" << std::endl;
+  }
 
   /// Retrieve the i'th entry of the Tensor being held
   SPECTRE_ALWAYS_INLINE type operator[](const size_t i) const {
     return t_->operator[](i);
   }
+
+  type get_used_for_size() const { return t_->operator[](0); }
 
  private:
   const Tensor<X, Symm, IndexList<Indices...>>* t_ = nullptr;

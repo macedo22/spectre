@@ -20,6 +20,8 @@
 #include "Utilities/TMPL.hpp"
 
 namespace TensorExpressions {
+struct MarkAsTensorAsExpression;
+
 namespace detail {
 template <typename T1, typename T2, typename SymmList1 = typename T1::symmetry,
           typename SymmList2 = typename T2::symmetry>
@@ -85,6 +87,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   using symmetry = typename detail::OuterProductType<T1, T2>::symmetry;
   using index_list = typename detail::OuterProductType<T1, T2>::index_list;
   using args_list = typename detail::OuterProductType<T1, T2>::tensorindex_list;
+  static constexpr bool is_binary_op = true;
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
   static constexpr auto op1_num_tensor_indices =
       tmpl::size<typename T1::index_list>::value;
@@ -114,6 +117,37 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   OuterProduct(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~OuterProduct() override = default;
 
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+      const ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    if constexpr (is_main_end) {
+      // TODO : better error message
+      static_assert(not is_main_beg, "Shouldn't happen.");
+
+      std::array<size_t, op2_num_tensor_indices> op2_multi_index{};
+      for (size_t i = 0; i < op2_num_tensor_indices; i++) {
+        gsl::at(op2_multi_index, i) =
+            gsl::at(result_multi_index, op1_num_tensor_indices + i);
+      }
+
+      return result_component * t2_.get_branch(op2_multi_index);
+    } else {
+      std::array<size_t, op1_num_tensor_indices> op1_multi_index{};
+      for (size_t i = 0; i < op1_num_tensor_indices; i++) {
+        gsl::at(op1_multi_index, i) = gsl::at(result_multi_index, i);
+      }
+
+      std::array<size_t, op2_num_tensor_indices> op2_multi_index{};
+      for (size_t i = 0; i < op2_num_tensor_indices; i++) {
+        gsl::at(op2_multi_index, i) =
+            gsl::at(result_multi_index, op1_num_tensor_indices + i);
+      }
+      return t1_.get_main(result_component, op1_multi_index) *
+             t2_.get_branch(result_component, op2_multi_index);
+    }
+  }
+
   /// \brief Return the value of the component of the outer product tensor at a
   /// given multi-index
   ///
@@ -133,7 +167,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// product tensor to retrieve
   /// \return the value of the component at `result_multi_index` in the outer
   /// product tensor
-  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     std::array<size_t, op1_num_tensor_indices> op1_multi_index{};
     for (size_t i = 0; i < op1_num_tensor_indices; i++) {
@@ -146,7 +180,23 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
           gsl::at(result_multi_index, op1_num_tensor_indices + i);
     }
 
-    return t1_.get(op1_multi_index) * t2_.get(op2_multi_index);
+    return t1_.get_main(op1_multi_index) * t2_.get_branch(op2_multi_index);
+  }
+
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_branch(
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    std::array<size_t, op1_num_tensor_indices> op1_multi_index{};
+    for (size_t i = 0; i < op1_num_tensor_indices; i++) {
+      gsl::at(op1_multi_index, i) = gsl::at(result_multi_index, i);
+    }
+
+    std::array<size_t, op2_num_tensor_indices> op2_multi_index{};
+    for (size_t i = 0; i < op2_num_tensor_indices; i++) {
+      gsl::at(op2_multi_index, i) =
+          gsl::at(result_multi_index, op1_num_tensor_indices + i);
+    }
+
+    return t1_.get_branch(op1_multi_index) * t2_.get_branch(op2_multi_index);
   }
 
   template <typename ResultType>
@@ -165,7 +215,14 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
     }
 
     t1_.visit_main(result_component, op1_multi_index);
-    t2_.visit_branch(result_component, op2_multi_index);
+    // t2_.visit_branch(result_component, op2_multi_index);
+
+    if constexpr (is_main_beg) {
+      // don't send result_component down right branch because we are at a * and
+      // shouldn't edit result_component in right child
+      result_component = t1_.get_main(result_component, op1_multi_index) *
+                         t2_.get_branch(op2_multi_index);
+    }
   }
 
   template <typename ResultType>
@@ -185,6 +242,14 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
 
     t1_.visit_branch(result_component, op1_multi_index);
     t2_.visit_branch(result_component, op2_multi_index);
+  }
+
+  type get_used_for_size() const {
+    if constexpr (not std::is_base_of_v<MarkAsTensorAsExpression, T2>) {
+      return t2_.get_used_for_size();
+    } else {
+      return t1_.get_used_for_size();
+    }
   }
 
  private:
