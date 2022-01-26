@@ -69,11 +69,6 @@ struct Negate
     }
   }
 
-  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
-      const std::array<size_t, num_tensor_indices>& multi_index) const {
-    return -t_.get_main(multi_index);
-  }
-
   /// \brief Return the value of the component of the negated tensor expression
   /// at a given multi-index
   ///

@@ -90,12 +90,6 @@ struct SquareRoot
     }
   }
 
-  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
-      const std::array<size_t, num_tensor_indices>& multi_index) const {
-    // TODO : implement to do branch things
-    return sqrt(t_.get_main(multi_index));
-  }
-
   SPECTRE_ALWAYS_INLINE decltype(auto) get_branch(
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     // TODO : implement to do branch things

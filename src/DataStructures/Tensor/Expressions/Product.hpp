@@ -148,41 +148,6 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
     }
   }
 
-  /// \brief Return the value of the component of the outer product tensor at a
-  /// given multi-index
-  ///
-  /// \details
-  /// This function takes the multi-index of some component of the resultant
-  /// outer product to compute. The function first computes the multi-indices of
-  /// the pair of components in the two operand expressions, then multiplies the
-  /// values at these multi-indices to obtain the value of the resultant outer
-  /// product component. For example, say we are evaluating
-  /// \f$L_abc = R_{b} * S_{ca}\f$. Let `result_multi_index == {0, 1, 2}`, which
-  /// refers to the component \f$L_{012}\f$, the component we wish to compute.
-  /// This function will compute the multi-indices of the operands that
-  /// correspond to \f$R_{1}\f$ and \f$S_{20}\f$, retrieve their values, and
-  /// return their product.
-  ///
-  /// \param result_multi_index the multi-index of the component of the outer
-  /// product tensor to retrieve
-  /// \return the value of the component at `result_multi_index` in the outer
-  /// product tensor
-  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
-      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
-    std::array<size_t, op1_num_tensor_indices> op1_multi_index{};
-    for (size_t i = 0; i < op1_num_tensor_indices; i++) {
-      gsl::at(op1_multi_index, i) = gsl::at(result_multi_index, i);
-    }
-
-    std::array<size_t, op2_num_tensor_indices> op2_multi_index{};
-    for (size_t i = 0; i < op2_num_tensor_indices; i++) {
-      gsl::at(op2_multi_index, i) =
-          gsl::at(result_multi_index, op1_num_tensor_indices + i);
-    }
-
-    return t1_.get_main(op1_multi_index) * t2_.get_branch(op2_multi_index);
-  }
-
   SPECTRE_ALWAYS_INLINE decltype(auto) get_branch(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     std::array<size_t, op1_num_tensor_indices> op1_multi_index{};

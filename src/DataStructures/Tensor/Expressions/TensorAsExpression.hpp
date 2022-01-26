@@ -222,12 +222,6 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
     return t_->get(multi_index);
   }
 
-  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
-      const std::array<size_t, num_tensor_indices>& multi_index) const {
-    // std::cout << "TensorAsExpression::get_main" << std::endl;
-    return t_->get(multi_index);
-  }
-
   /// \brief Returns the value of the contained tensor's multi-index
   ///
   /// \param multi_index the multi-index of the tensor component to retrieve
