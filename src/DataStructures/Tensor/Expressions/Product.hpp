@@ -212,7 +212,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   }
 
   type get_used_for_size() const {
-    if constexpr (not std::is_base_of_v<MarkAsTensorAsExpression, T2>) {
+    if constexpr (not std::is_base_of_v<MarkAsNumberAsExpression, T2>) {
       return t2_.get_used_for_size();
     } else {
       return t1_.get_used_for_size();
