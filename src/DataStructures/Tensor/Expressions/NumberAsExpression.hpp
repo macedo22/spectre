@@ -50,11 +50,6 @@ struct NumberAsExpression
     return number_;
   }
 
-  SPECTRE_ALWAYS_INLINE double get_main(
-      const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
-    return number_;
-  }
-
   /// \brief Returns the number represented by the expression
   ///
   /// \details

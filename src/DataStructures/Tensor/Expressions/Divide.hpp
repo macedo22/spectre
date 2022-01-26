@@ -100,11 +100,6 @@ struct Divide : public TensorExpression<
     }
   }
 
-  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
-      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
-    return t1_.get(result_multi_index) / t2_.get(op2_multi_index);
-  }
-
   /// \brief Return the value of the component of the quotient tensor at a given
   /// multi-index
   ///
