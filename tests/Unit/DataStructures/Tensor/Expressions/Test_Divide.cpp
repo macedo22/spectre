@@ -134,26 +134,26 @@ void test_divide_rank0_denominator(const gsl::not_null<Generator*> generator,
     }
   }
 
-  // \f$L^{k}{}_{i} = (R T_{i}{}^{k}) / (T_{j}{}^{l} S^{j}{}_{l})\f$
-  const tnsr::Ij<DataType, dim> result2 =
-      TensorExpressions::evaluate<ti_K, ti_i>(
-          (R() * T(ti_i, ti_K)) / ((T(ti_j, ti_L) * S(ti_J, ti_l))));
+  // // \f$L^{k}{}_{i} = (R T_{i}{}^{k}) / (T_{j}{}^{l} S^{j}{}_{l})\f$
+  // const tnsr::Ij<DataType, dim> result2 =
+  //     TensorExpressions::evaluate<ti_K, ti_i>(
+  //         (R() * T(ti_i, ti_K)) / ((T(ti_j, ti_L) * S(ti_J, ti_l))));
 
-  DataType result2_expected_denominator =
-      make_with_value<DataType>(used_for_size, 0.0);
-  for (size_t j = 0; j < dim; j++) {
-    for (size_t l = 0; l < dim; l++) {
-      result2_expected_denominator += T.get(j, l) * S.get(j, l);
-    }
-  }
+  // DataType result2_expected_denominator =
+  //     make_with_value<DataType>(used_for_size, 0.0);
+  // for (size_t j = 0; j < dim; j++) {
+  //   for (size_t l = 0; l < dim; l++) {
+  //     result2_expected_denominator += T.get(j, l) * S.get(j, l);
+  //   }
+  // }
 
-  for (size_t i = 0; i < dim; i++) {
-    for (size_t k = 0; k < dim; k++) {
-      CHECK_ITERABLE_APPROX(
-          result2.get(k, i),
-          get(R) * T.get(i, k) / result2_expected_denominator);
-    }
-  }
+  // for (size_t i = 0; i < dim; i++) {
+  //   for (size_t k = 0; k < dim; k++) {
+  //     CHECK_ITERABLE_APPROX(
+  //         result2.get(k, i),
+  //         get(R) * T.get(i, k) / result2_expected_denominator);
+  //   }
+  // }
 
   // \f$L_{i}{}^{k} = T_{i}{}^{k} / R^2 / R\f$
   const tnsr::iJ<DataType, dim> result3 =
@@ -211,20 +211,21 @@ void test_divide_spatial_spacetime_index(
     }
   }
 
-  // \f$L = (R / (T_{j}{}^{l} S^{j}{}_{l}) / 2\f$
-  const Scalar<DataType> result2 =
-      TensorExpressions::evaluate(R() / (T(ti_j, ti_L) * S(ti_J, ti_l)) / 2.0);
+  // // \f$L = (R / (T_{j}{}^{l} S^{j}{}_{l}) / 2\f$
+  // const Scalar<DataType> result2 =
+  //     TensorExpressions::evaluate(R() / (T(ti_j, ti_L) * S(ti_J, ti_l))
+  //     / 2.0);
 
-  DataType result2_expected_denominator =
-      make_with_value<DataType>(used_for_size, 0.0);
-  for (size_t j = 0; j < dim; j++) {
-    for (size_t l = 0; l < dim; l++) {
-      result2_expected_denominator += T.get(j + 1, l) * S.get(j + 1, l + 1);
-    }
-  }
+  // DataType result2_expected_denominator =
+  //     make_with_value<DataType>(used_for_size, 0.0);
+  // for (size_t j = 0; j < dim; j++) {
+  //   for (size_t l = 0; l < dim; l++) {
+  //     result2_expected_denominator += T.get(j + 1, l) * S.get(j + 1, l + 1);
+  //   }
+  // }
 
-  CHECK_ITERABLE_APPROX(get(result2),
-                        0.5 * get(R) / result2_expected_denominator);
+  // CHECK_ITERABLE_APPROX(get(result2),
+  //                       0.5 * get(R) / result2_expected_denominator);
 }
 
 // \brief Test the division of a tensor expression over a rank 0 tensor
