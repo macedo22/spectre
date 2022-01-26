@@ -117,76 +117,78 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   OuterProduct(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~OuterProduct() override = default;
 
-  template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
-      const ResultType& result_component,
-      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
-    if constexpr (is_main_end) {
-      // TODO : better error message
-      static_assert(not is_main_beg, "Shouldn't happen.");
-
-      std::array<size_t, op2_num_tensor_indices> op2_multi_index{};
-      for (size_t i = 0; i < op2_num_tensor_indices; i++) {
-        gsl::at(op2_multi_index, i) =
-            gsl::at(result_multi_index, op1_num_tensor_indices + i);
-      }
-
-      return result_component * t2_.get_branch(op2_multi_index);
-    } else {
-      std::array<size_t, op1_num_tensor_indices> op1_multi_index{};
-      for (size_t i = 0; i < op1_num_tensor_indices; i++) {
-        gsl::at(op1_multi_index, i) = gsl::at(result_multi_index, i);
-      }
-
-      std::array<size_t, op2_num_tensor_indices> op2_multi_index{};
-      for (size_t i = 0; i < op2_num_tensor_indices; i++) {
-        gsl::at(op2_multi_index, i) =
-            gsl::at(result_multi_index, op1_num_tensor_indices + i);
-      }
-      return t1_.get_main(result_component, op1_multi_index) *
-             t2_.get_branch(result_component, op2_multi_index);
-    }
-  }
-
-  SPECTRE_ALWAYS_INLINE decltype(auto) get_branch(
+  constexpr SPECTRE_ALWAYS_INLINE std::array<size_t, op1_num_tensor_indices>
+  get_op1_multi_index(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     std::array<size_t, op1_num_tensor_indices> op1_multi_index{};
     for (size_t i = 0; i < op1_num_tensor_indices; i++) {
       gsl::at(op1_multi_index, i) = gsl::at(result_multi_index, i);
     }
+    return op1_multi_index;
+  }
 
+  constexpr SPECTRE_ALWAYS_INLINE std::array<size_t, op2_num_tensor_indices>
+  get_op2_multi_index(
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     std::array<size_t, op2_num_tensor_indices> op2_multi_index{};
     for (size_t i = 0; i < op2_num_tensor_indices; i++) {
       gsl::at(op2_multi_index, i) =
           gsl::at(result_multi_index, op1_num_tensor_indices + i);
     }
+    return op2_multi_index;
+  }
 
-    return t1_.get_branch(op1_multi_index) * t2_.get_branch(op2_multi_index);
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+      const ResultType& result_component,
+      const std::array<size_t, op1_num_tensor_indices>& op1_multi_index,
+      const std::array<size_t, op2_num_tensor_indices>& op2_multi_index) const {
+    // don't send result_component down right branch because we are at a * and
+    // shouldn't edit result_component in right child
+    if constexpr (is_main_end) {
+      (void)op1_multi_index;
+      return result_component * t2_.get_branch(op2_multi_index);
+    } else {
+      return t1_.get_main(result_component, op1_multi_index) *
+             t2_.get_branch(op2_multi_index);
+    }
+  }
+
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+      const ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    // don't send result_component down right branch because we are at a * and
+    // shouldn't edit result_component in right child
+    if constexpr (is_main_end) {
+      return result_component *
+             t2_.get_branch(get_op2_multi_index(result_multi_index));
+    } else {
+      return t1_.get_main(result_component,
+                          get_op1_multi_index(result_multi_index)) *
+             t2_.get_branch(get_op2_multi_index(result_multi_index));
+    }
+  }
+
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_branch(
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    return t1_.get_branch(get_op1_multi_index(result_multi_index)) *
+           t2_.get_branch(get_op2_multi_index(result_multi_index));
   }
 
   template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void visit_main(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
-    std::array<size_t, op1_num_tensor_indices> op1_multi_index{};
-    for (size_t i = 0; i < op1_num_tensor_indices; i++) {
-      gsl::at(op1_multi_index, i) = gsl::at(result_multi_index, i);
-    }
-
-    std::array<size_t, op2_num_tensor_indices> op2_multi_index{};
-    for (size_t i = 0; i < op2_num_tensor_indices; i++) {
-      gsl::at(op2_multi_index, i) =
-          gsl::at(result_multi_index, op1_num_tensor_indices + i);
-    }
+    const std::array<size_t, op1_num_tensor_indices> op1_multi_index =
+        get_op1_multi_index(result_multi_index);
+    const std::array<size_t, op2_num_tensor_indices> op2_multi_index =
+        get_op2_multi_index(result_multi_index);
 
     t1_.visit_main(result_component, op1_multi_index);
-    // t2_.visit_branch(result_component, op2_multi_index);
-
     if constexpr (is_main_beg) {
-      // don't send result_component down right branch because we are at a * and
-      // shouldn't edit result_component in right child
-      result_component = t1_.get_main(result_component, op1_multi_index) *
-                         t2_.get_branch(op2_multi_index);
+      result_component =
+          get_main(result_component, op1_multi_index, op2_multi_index);
     }
   }
 
