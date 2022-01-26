@@ -60,8 +60,6 @@ struct Negate
       const ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     if constexpr (is_main_end) {
-      // TODO : better error message
-      static_assert(not is_main_beg, "Shouldn't happen.");
       (void)multi_index;
       return -result_component;
     } else {
@@ -86,18 +84,9 @@ struct Negate
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     t_.visit_main(result_component, multi_index);
-
-    static_assert(not(is_main_beg and is_main_end), "Shouldn't happen.");
     if constexpr (is_main_beg) {
-      result_component = -t_.get_main(result_component, multi_index);
+      result_component = get_main(result_component, multi_index);
     }
-  }
-
-  template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE void visit_branch(
-      ResultType& result_component,
-      const std::array<size_t, num_tensor_indices>& multi_index) const {
-    t_.visit_branch(result_component, multi_index);
   }
 
   type get_used_for_size() const { return t_.get_used_for_size(); }

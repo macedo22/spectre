@@ -240,14 +240,6 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
     // std::cout << "TensorAsExpression::visit_main" << std::endl;
   }
 
-  // TODO : remove? don't need at leaves?
-  template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE void visit_branch(
-      const ResultType& /*result_component*/,
-      const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
-    // std::cout << "TensorAsExpression::visit_branch" << std::endl;
-  }
-
   /// Retrieve the i'th entry of the Tensor being held
   SPECTRE_ALWAYS_INLINE type operator[](const size_t i) const {
     return t_->operator[](i);
