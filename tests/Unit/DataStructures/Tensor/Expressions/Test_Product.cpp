@@ -217,57 +217,57 @@ void test_outer_product_rank_1_operand(const DataType& used_for_size) {
     }
   }
 
-  Tensor<DataType, Symmetry<1>,
-         index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>>>
-      Tu(used_for_size);
-  assign_unique_values_to_tensor(make_not_null(&Tu));
+  // Tensor<DataType, Symmetry<1>,
+  //        index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>>>
+  //     Tu(used_for_size);
+  // assign_unique_values_to_tensor(make_not_null(&Tu));
 
-  // \f$L^{ja}{}_{i} = R_{i} * S^{a} * T^{j}\f$
-  const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
-                          SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
-      LJAi_from_Ri_SA_TJ = TensorExpressions::evaluate<ti_J, ti_A, ti_i>(
-          Rl(ti_i) * Su(ti_A) * Tu(ti_J));
+  // // \f$L^{ja}{}_{i} = R_{i} * S^{a} * T^{j}\f$
+  // const Tensor<DataType, Symmetry<3, 2, 1>,
+  //              index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
+  //                         SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+  //                         SpatialIndex<3, UpLo::Lo, Frame::Grid>>>
+  //     LJAi_from_Ri_SA_TJ = TensorExpressions::evaluate<ti_J, ti_A, ti_i>(
+  //         Rl(ti_i) * Su(ti_A) * Tu(ti_J));
 
-  for (size_t j = 0; j < 3; j++) {
-    for (size_t a = 0; a < 4; a++) {
-      for (size_t i = 0; i < 3; i++) {
-        CHECK(LJAi_from_Ri_SA_TJ.get(j, a, i) ==
-              Rl.get(i) * Su.get(a) * Tu.get(j));
-      }
-    }
-  }
+  // for (size_t j = 0; j < 3; j++) {
+  //   for (size_t a = 0; a < 4; a++) {
+  //     for (size_t i = 0; i < 3; i++) {
+  //       CHECK(LJAi_from_Ri_SA_TJ.get(j, a, i) ==
+  //             Rl.get(i) * Su.get(a) * Tu.get(j));
+  //     }
+  //   }
+  // }
 
-  Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
-                    SpatialIndex<4, UpLo::Lo, Frame::Grid>>>
-      Gll(used_for_size);
-  assign_unique_values_to_tensor(make_not_null(&Gll));
+  // Tensor<DataType, Symmetry<2, 1>,
+  //        index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+  //                   SpatialIndex<4, UpLo::Lo, Frame::Grid>>>
+  //     Gll(used_for_size);
+  // assign_unique_values_to_tensor(make_not_null(&Gll));
 
-  // \f$L_{k}{}^{c}{}_{d} = S^{c} * G_{dk}\f$
-  const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpatialIndex<4, UpLo::Lo, Frame::Grid>,
-                          SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
-      LkCd_from_SC_Gdk = TensorExpressions::evaluate<ti_k, ti_C, ti_d>(
-          Su(ti_C) * Gll(ti_d, ti_k));
-  // \f$L^{c}{}_{dk} = G_{dk} * S^{c}\f$
-  const Tensor<DataType, Symmetry<3, 2, 1>,
-               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
-                          SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
-                          SpatialIndex<4, UpLo::Lo, Frame::Grid>>>
-      LCdk_from_Gdk_SC = TensorExpressions::evaluate<ti_C, ti_d, ti_k>(
-          Gll(ti_d, ti_k) * Su(ti_C));
+  // // \f$L_{k}{}^{c}{}_{d} = S^{c} * G_{dk}\f$
+  // const Tensor<DataType, Symmetry<3, 2, 1>,
+  //              index_list<SpatialIndex<4, UpLo::Lo, Frame::Grid>,
+  //                         SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+  //                         SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>
+  //     LkCd_from_SC_Gdk = TensorExpressions::evaluate<ti_k, ti_C, ti_d>(
+  //         Su(ti_C) * Gll(ti_d, ti_k));
+  // // \f$L^{c}{}_{dk} = G_{dk} * S^{c}\f$
+  // const Tensor<DataType, Symmetry<3, 2, 1>,
+  //              index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+  //                         SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+  //                         SpatialIndex<4, UpLo::Lo, Frame::Grid>>>
+  //     LCdk_from_Gdk_SC = TensorExpressions::evaluate<ti_C, ti_d, ti_k>(
+  //         Gll(ti_d, ti_k) * Su(ti_C));
 
-  for (size_t k = 0; k < 4; k++) {
-    for (size_t c = 0; c < 4; c++) {
-      for (size_t d = 0; d < 4; d++) {
-        CHECK(LkCd_from_SC_Gdk.get(k, c, d) == Su.get(c) * Gll.get(d, k));
-        CHECK(LCdk_from_Gdk_SC.get(c, d, k) == Gll.get(d, k) * Su.get(c));
-      }
-    }
-  }
+  // for (size_t k = 0; k < 4; k++) {
+  //   for (size_t c = 0; c < 4; c++) {
+  //     for (size_t d = 0; d < 4; d++) {
+  //       CHECK(LkCd_from_SC_Gdk.get(k, c, d) == Su.get(c) * Gll.get(d, k));
+  //       CHECK(LCdk_from_Gdk_SC.get(c, d, k) == Gll.get(d, k) * Su.get(c));
+  //     }
+  //   }
+  // }
 }
 
 // \brief Test the outer product of two rank 2 tensors is correctly evaluated
@@ -1325,31 +1325,31 @@ void test_time_index(const DataType& used_for_size) {
 template <typename DataType>
 void test_products(const DataType& used_for_size) {
   // Test evaluation of outer products
-  test_outer_product_double(used_for_size);
-  test_outer_product_rank_0_operand(used_for_size);
+  // test_outer_product_double(used_for_size);
+  // test_outer_product_rank_0_operand(used_for_size);
   test_outer_product_rank_1_operand(used_for_size);
-  test_outer_product_rank_2x2_operands(used_for_size);
-  test_outer_product_rank_0x1x2_operands(used_for_size);
+  // test_outer_product_rank_2x2_operands(used_for_size);
+  // test_outer_product_rank_0x1x2_operands(used_for_size);
 
   // Test evaluation of inner products
-  test_inner_product_rank_1x1_operands(used_for_size);
-  test_inner_product_rank_2x2_operands(used_for_size);
+  // test_inner_product_rank_1x1_operands(used_for_size);
+  // test_inner_product_rank_2x2_operands(used_for_size);
 
   // Test evaluation of expressions involving both inner and outer products
-  test_two_term_inner_outer_product(used_for_size);
-  test_three_term_inner_outer_product(used_for_size);
+  // test_two_term_inner_outer_product(used_for_size);
+  // test_three_term_inner_outer_product(used_for_size);
 
   // Test product expressions where generic spatial indices are used for
   // spacetime indices
-  test_spatial_spacetime_index(used_for_size);
+  // test_spatial_spacetime_index(used_for_size);
 
   // Test product expressions where time indices are used for spacetime indices
-  test_time_index(used_for_size);
+  // test_time_index(used_for_size);
 }
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Product",
                   "[DataStructures][Unit]") {
-  test_products(std::numeric_limits<double>::signaling_NaN());
+  // test_products(std::numeric_limits<double>::signaling_NaN());
   test_products(DataVector(5, std::numeric_limits<double>::signaling_NaN()));
 }

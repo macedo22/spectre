@@ -217,9 +217,8 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
 
   template <typename ResultType>
   SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
-      const ResultType& /*result_component*/,
-      const std::array<size_t, num_tensor_indices>& multi_index) const {
-    return t_->get(multi_index);
+      const ResultType& /*result_component*/) const {
+    return (*t_)[current_storage_index];
   }
 
   SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
@@ -242,8 +241,11 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
   template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void visit_main(
       const ResultType& /*result_component*/,
-      const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
+      const std::array<size_t, num_tensor_indices>& multi_index) {
     // std::cout << "TensorAsExpression::visit_main" << std::endl;
+    current_storage_index =
+        Tensor<X, Symm, IndexList<Indices...>>::structure::get_storage_index(
+            multi_index);
   }
 
   // TODO : remove? don't need at leaves?
@@ -263,5 +265,6 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
 
  private:
   const Tensor<X, Symm, IndexList<Indices...>>* t_ = nullptr;
+  size_t current_storage_index = 0;
 };
 }  // namespace TensorExpressions

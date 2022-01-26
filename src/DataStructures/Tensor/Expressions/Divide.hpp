@@ -87,16 +87,12 @@ struct Divide : public TensorExpression<
 
   template <typename ResultType>
   SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
-      const ResultType& result_component,
-      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+      const ResultType& result_component) const {
     if constexpr (is_main_end) {
-      // TODO : better error message
-      static_assert(not is_main_beg, "Shouldn't happen.");
-      (void)result_multi_index;
-      return result_component / t2_.get_branch(op2_multi_index);
+      return result_component / t2_.get_branch(current_op2_multi_index);
     } else {
-      return t1_.get_main(result_component, result_multi_index) /
-             t2_.get_branch(result_component, op2_multi_index);
+      return t1_.get_main(result_component) /
+             t2_.get_branch(result_component, current_op2_multi_index);
     }
   }
 
@@ -120,15 +116,15 @@ struct Divide : public TensorExpression<
   template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void visit_main(
       ResultType& result_component,
-      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+      const std::array<size_t, num_tensor_indices>& result_multi_index) {
+    current_op2_multi_index = result_multi_index;
     t1_.visit_main(result_component, result_multi_index);
     // t2_.visit_branch(result_component, op2_multi_index);
 
     if constexpr (is_main_beg) {
       // don't send result_component down right branch because we are at a * and
       // shouldn't edit result_component in right child
-      result_component = t1_.get_main(result_component, result_multi_index) /
-                         t2_.get_branch(op2_multi_index);
+      result_component = get_main(result_component);
     }
   }
 
@@ -151,6 +147,7 @@ struct Divide : public TensorExpression<
  private:
   T1 t1_;
   T2 t2_;
+  std::array<size_t, num_tensor_indices> current_op2_multi_index{};
 };
 }  // namespace TensorExpressions
 

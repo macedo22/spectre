@@ -139,9 +139,8 @@ template <auto&... LhsTensorIndices, typename X, typename LhsSymmetry,
           typename RhsIndexList, typename... RhsTensorIndices>
 void evaluate(
     const gsl::not_null<Tensor<X, LhsSymmetry, LhsIndexList>*> lhs_tensor,
-    const TensorExpression<Derived, X, RhsSymmetry, RhsIndexList,
-                           tmpl::list<RhsTensorIndices...>>&
-        rhs_tensorexpression) {
+    TensorExpression<Derived, X, RhsSymmetry, RhsIndexList,
+                     tmpl::list<RhsTensorIndices...>>& rhs_tensorexpression) {
   constexpr size_t num_lhs_indices = sizeof...(LhsTensorIndices);
   constexpr size_t num_rhs_indices = sizeof...(RhsTensorIndices);
 
@@ -233,8 +232,7 @@ void evaluate(
       (~rhs_tensorexpression).visit_main((*lhs_tensor)[i], rhs_multi_index);
       if constexpr (not std::decay_t<decltype(
                         ~rhs_tensorexpression)>::is_main_beg) {
-        (*lhs_tensor)[i] =
-            (~rhs_tensorexpression).get_main((*lhs_tensor)[i], rhs_multi_index);
+        (*lhs_tensor)[i] = (~rhs_tensorexpression).get_main((*lhs_tensor)[i]);
       }
     }
   }
@@ -288,7 +286,7 @@ void evaluate(
  */
 template <auto&... LhsTensorIndices, typename RhsTE,
           Requires<std::is_base_of_v<Expression, RhsTE>> = nullptr>
-auto evaluate(const RhsTE& rhs_tensorexpression) {
+auto evaluate(RhsTE& rhs_tensorexpression) {
   using lhs_tensorindex_list =
       tmpl::list<std::decay_t<decltype(LhsTensorIndices)>...>;
   using rhs_tensorindex_list = typename RhsTE::args_list;

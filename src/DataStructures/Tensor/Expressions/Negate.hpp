@@ -57,15 +57,11 @@ struct Negate
 
   template <typename ResultType>
   SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
-      const ResultType& result_component,
-      const std::array<size_t, num_tensor_indices>& multi_index) const {
+      const ResultType& result_component) const {
     if constexpr (is_main_end) {
-      // TODO : better error message
-      static_assert(not is_main_beg, "Shouldn't happen.");
-      (void)multi_index;
       return -result_component;
     } else {
-      return -t_.get_main(result_component, multi_index);
+      return -t_.get_main(result_component);
     }
   }
 
@@ -89,12 +85,13 @@ struct Negate
   template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void visit_main(
       ResultType& result_component,
-      const std::array<size_t, num_tensor_indices>& multi_index) const {
+      const std::array<size_t, num_tensor_indices>& multi_index) {
+    current_multi_index = multi_index;
     t_.visit_main(result_component, multi_index);
 
     static_assert(not(is_main_beg and is_main_end), "Shouldn't happen.");
     if constexpr (is_main_beg) {
-      result_component = -t_.get_main(result_component, multi_index);
+      result_component = get_main(result_component);
     }
   }
 
@@ -109,6 +106,7 @@ struct Negate
 
  private:
   T t_;
+  std::array<size_t, num_tensor_indices> current_multi_index{};
 };
 }  // namespace TensorExpressions
 

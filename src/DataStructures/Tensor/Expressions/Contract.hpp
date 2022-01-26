@@ -576,9 +576,9 @@ struct TensorContract
   }
 
   template <typename ResultType>
-  void visit_main(ResultType& result_component,
-                  const std::array<size_t, num_tensor_indices>&
-                      contracted_multi_index) const {
+  void visit_main(
+      ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& contracted_multi_index) {
     std::array<size_t, num_uncontracted_tensor_indices>
         first_operand_multi_index_to_sum =
             get_first_index_to_sum(contracted_multi_index);

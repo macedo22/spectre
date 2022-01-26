@@ -65,6 +65,16 @@ struct SquareRoot
   SquareRoot(T t) : t_(std::move(t)) {}
   ~SquareRoot() override = default;
 
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+      const ResultType& result_component) const {
+    if constexpr (is_main_end) {
+      return sqrt(result_component);
+    } else {
+      return sqrt(t_.get_main(result_component));
+    }
+  }
+
   /// \brief Returns the square root of the component of the tensor evaluated
   /// from the contained tensor expression
   ///
@@ -105,13 +115,14 @@ struct SquareRoot
   template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void visit_main(
       ResultType& result_component,
-      const std::array<size_t, num_tensor_indices>& multi_index) const {
+      const std::array<size_t, num_tensor_indices>& multi_index) {
+    current_multi_index = multi_index;
     t_.visit_main(result_component, multi_index);
     // TODO : better error message; move up with member variables instead
     // instead function?
     // static_assert(not(is_main_beg and is_main_end), "Shouldn't happen.");
     if constexpr (is_main_beg) {
-      result_component = sqrt(t_.get_main(result_component, multi_index));
+      result_component = get_main(result_component);
     }
   }
 
@@ -127,6 +138,7 @@ struct SquareRoot
 
  private:
   T t_;
+  std::array<size_t, num_tensor_indices> current_multi_index{};
 };
 }  // namespace TensorExpressions
 

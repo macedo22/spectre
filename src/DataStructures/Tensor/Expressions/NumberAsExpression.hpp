@@ -45,8 +45,7 @@ struct NumberAsExpression
 
   template <typename ResultType>
   SPECTRE_ALWAYS_INLINE double get_main(
-      const ResultType& /*result_component*/,
-      const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
+      const ResultType& /*result_component*/) const {
     return number_;
   }
 
