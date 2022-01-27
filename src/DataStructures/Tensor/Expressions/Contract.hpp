@@ -30,7 +30,7 @@
 namespace TensorExpressions {
 
 namespace detail {
-static constexpr size_t sub_expression_max_size = 8;
+static constexpr size_t sub_expression_max_size = 32;
 
 template <typename I1, typename I2>
 using indices_contractible = std::bool_constant<
@@ -376,7 +376,8 @@ struct TensorContract
       num_terms_summed - 1;
   static constexpr size_t num_ops_to_evaluate_main_subtree =
       num_ops_to_evaluate_main_left + 1;
-  static constexpr bool is_main_beg = true;
+  static constexpr bool is_main_beg =
+      num_ops_left >= detail::sub_expression_max_size;
   //   num_ops_to_evaluate_main_subtree >=
   //   detail::sub_expression_max_size /*max_num_ops_in_sub_expression*/;
   // TODO : replace lazy static_assert with better logic below (that doesn't
