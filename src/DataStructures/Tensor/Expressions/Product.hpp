@@ -143,12 +143,21 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
       const ResultType& result_component,
       const std::array<size_t, op1_num_tensor_indices>& op1_multi_index,
       const std::array<size_t, op2_num_tensor_indices>& op2_multi_index) const {
+    // std::cout << "=== START Product::get_main (2 arg) ===" << std::endl;
     // don't send result_component down right branch because we are at a * and
     // shouldn't edit result_component in right child
     if constexpr (is_main_end) {
       (void)op1_multi_index;
+      // std::cout << "===Product if before computing===" << std::endl;
+      // std::cout << "op1_multi_index : " << op1_multi_index << std::endl;
+      // std::cout << "op2_multi_index : " << op2_multi_index << std::endl;
+      // std::cout << "result_component : " << result_component << std::endl;
       return result_component * t2_.get_branch(op2_multi_index);
     } else {
+      // std::cout << "===Product else before computing===" << std::endl;
+      // std::cout << "op1_multi_index : " << op1_multi_index << std::endl;
+      // std::cout << "op2_multi_index : " << op2_multi_index << std::endl;
+      // std::cout << "result_component : " << result_component << std::endl;
       return t1_.get_main(result_component, op1_multi_index) *
              t2_.get_branch(op2_multi_index);
     }
@@ -158,6 +167,9 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
       const ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    // std::cout << "=== START Product::get_main (1 arg) ===" << std::endl;
+    // std::cout << "result_multi_index : " << result_multi_index << std::endl;
+    // std::cout << "result_component : " << result_component << std::endl;
     // don't send result_component down right branch because we are at a * and
     // shouldn't edit result_component in right child
     if constexpr (is_main_end) {
@@ -172,6 +184,8 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
 
   SPECTRE_ALWAYS_INLINE decltype(auto) get_branch(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    // std::cout << "=== START Product::get_branch ===" << std::endl;
+    // std::cout << "result_multi_index : " << result_multi_index << std::endl;
     return t1_.get_branch(get_op1_multi_index(result_multi_index)) *
            t2_.get_branch(get_op2_multi_index(result_multi_index));
   }
@@ -180,16 +194,27 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   SPECTRE_ALWAYS_INLINE void visit_main(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    // std::cout << "=== START Product::visit_main ===" << std::endl;
+    // std::cout << "result_multi_index : " << result_multi_index << std::endl;
     const std::array<size_t, op1_num_tensor_indices> op1_multi_index =
         get_op1_multi_index(result_multi_index);
     const std::array<size_t, op2_num_tensor_indices> op2_multi_index =
         get_op2_multi_index(result_multi_index);
+    // std::cout << "op1_multi_index : " << op1_multi_index << std::endl;
+    // std::cout << "op2_multi_index : " << op2_multi_index << std::endl;
+    // std::cout << "result_component : " << result_component << std::endl;
 
+    // std::cout << "Now visiting op1_multi_index..." << std::endl;
     t1_.visit_main(result_component, op1_multi_index);
+    // std::cout << "... Done visiting op1_multi_index : " << op1_multi_index <<
+    // std::endl; std::cout << "result_component : " << result_component <<
+    // std::endl;
     if constexpr (is_main_beg) {
       result_component =
           get_main(result_component, op1_multi_index, op2_multi_index);
     }
+    // std::cout << "result_component : " << result_component << std::endl;
+    // std::cout << "=== END Product::visit_main ===" << std::endl;
   }
 
   template <typename ResultType>

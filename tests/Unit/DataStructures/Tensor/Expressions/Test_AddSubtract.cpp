@@ -74,31 +74,30 @@ void test_addsub_double(const DataType& used_for_size) {
     G_trace += G.get(i, i);
   }
 
-  // TODO : put back these expressions once contraction subtrees work
 
   // \f$L = R + S\f$
   const Tensor<DataType> R_plus_S = TensorExpressions::evaluate(5.6 + S());
   // \f$L = R - S\f$
   const Tensor<DataType> R_minus_S = TensorExpressions::evaluate(1.1 - S());
   // \f$L = G^{i}{}_{i} + R\f$
-  // const Tensor<DataType> G_plus_R =
-  //     TensorExpressions::evaluate(G(ti_I, ti_i) + 8.2);
+  const Tensor<DataType> G_plus_R =
+      TensorExpressions::evaluate(G(ti_I, ti_i) + 8.2);
   // \f$L = G^{i}{}_{i} - R\f$
-  // const Tensor<DataType> G_minus_R =
-  //     TensorExpressions::evaluate(G(ti_I, ti_i) - 3.5);
+  const Tensor<DataType> G_minus_R =
+      TensorExpressions::evaluate(G(ti_I, ti_i) - 3.5);
   // \f$L = R + S + T\f$
   const Tensor<DataType> R_plus_S_plus_T =
       TensorExpressions::evaluate(0.7 + S() + 9.8);
   // \f$L = R - G^{i}{}_{i} + T\f$
-  // const Tensor<DataType> R_minus_G_plus_T =
-  //     TensorExpressions::evaluate(5.9 - G(ti_I, ti_i) + 4.7);
+  const Tensor<DataType> R_minus_G_plus_T =
+      TensorExpressions::evaluate(5.9 - G(ti_I, ti_i) + 4.7);
 
   CHECK(R_plus_S.get() == 5.6 + S.get());
   CHECK(R_minus_S.get() == 1.1 - S.get());
-  // CHECK(G_plus_R.get() == G_trace + 8.2);
-  // CHECK(G_minus_R.get() == G_trace - 3.5);
+  CHECK(G_plus_R.get() == G_trace + 8.2);
+  CHECK(G_minus_R.get() == G_trace - 3.5);
   CHECK(R_plus_S_plus_T.get() == 0.7 + S.get() + 9.8);
-  // CHECK(R_minus_G_plus_T.get() == 5.9 - G_trace + 4.7);
+  CHECK(R_minus_G_plus_T.get() == 5.9 - G_trace + 4.7);
 }
 }  // namespace
 
