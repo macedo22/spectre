@@ -236,47 +236,8 @@ void test_benchmarked_impls_core(const DataType& used_for_size,
       pi_one_normal, inverse_spatial_metric, d_phi, lapse, gamma1gamma2,
       shift_dot_three_index_constraint, shift, d_pi);
 
-  // LHS: dt_pi to be filled by TensorExpression impl<2>
-  dt_pi_type dt_pi_te2_filled(used_for_size);
-
-  // Compute TensorExpression impl<2> result with LHS tensor as argument
-  BenchmarkImpl::template tensorexpression_impl_lhs_arg<2>(
-      make_not_null(&dt_pi_te2_filled), spacetime_deriv_gauge_function,
-      pi_two_normals, pi, gamma0, normal_spacetime_one_form, gauge_constraint,
-      spacetime_metric, normal_dot_gauge_constraint, christoffel_second_kind,
-      gauge_function, pi_2_up, phi_1_up, phi_3_up, christoffel_first_kind_3_up,
-      pi_one_normal, inverse_spatial_metric, d_phi, lapse, gamma1gamma2,
-      shift_dot_three_index_constraint, shift, d_pi);
-
-  // LHS: dt_pi to be filled by TensorExpression impl<3>
-  dt_pi_type dt_pi_te3_filled(used_for_size);
-
-  // Compute TensorExpression impl<3> result with LHS tensor as argument
-  BenchmarkImpl::template tensorexpression_impl_lhs_arg<3>(
-      make_not_null(&dt_pi_te3_filled), spacetime_deriv_gauge_function,
-      pi_two_normals, pi, gamma0, normal_spacetime_one_form, gauge_constraint,
-      spacetime_metric, normal_dot_gauge_constraint, christoffel_second_kind,
-      gauge_function, pi_2_up, phi_1_up, phi_3_up, christoffel_first_kind_3_up,
-      pi_one_normal, inverse_spatial_metric, d_phi, lapse, gamma1gamma2,
-      shift_dot_three_index_constraint, shift, d_pi);
-
-  // LHS: dt_pi to be filled by TensorExpression impl<4>
-  dt_pi_type dt_pi_te4_filled(used_for_size);
-
-  // Compute TensorExpression impl<4> result with LHS tensor as argument
-  BenchmarkImpl::template tensorexpression_impl_lhs_arg<4>(
-      make_not_null(&dt_pi_te4_filled), spacetime_deriv_gauge_function,
-      pi_two_normals, pi, gamma0, normal_spacetime_one_form, gauge_constraint,
-      spacetime_metric, normal_dot_gauge_constraint, christoffel_second_kind,
-      gauge_function, pi_2_up, phi_1_up, phi_3_up, christoffel_first_kind_3_up,
-      pi_one_normal, inverse_spatial_metric, d_phi, lapse, gamma1gamma2,
-      shift_dot_three_index_constraint, shift, d_pi);
-
   // CHECK dt_pi
   CHECK_ITERABLE_APPROX(dt_pi_manual_filled, dt_pi_te1_filled);
-  CHECK_ITERABLE_APPROX(dt_pi_manual_filled, dt_pi_te2_filled);
-  CHECK_ITERABLE_APPROX(dt_pi_manual_filled, dt_pi_te3_filled);
-  CHECK_ITERABLE_APPROX(dt_pi_manual_filled, dt_pi_te4_filled);
 
   // === Check TE impl with TempTensors ===
 
@@ -286,140 +247,139 @@ void test_benchmarked_impls_core(const DataType& used_for_size,
   }
 
   TempBuffer<tmpl::list<
-      ::Tags::TempTensor<0, dt_pi_type>, ::Tags::TempTensor<1, dt_pi_type>,
-      ::Tags::TempTensor<2, dt_pi_type>, ::Tags::TempTensor<3, dt_pi_type>,
-      ::Tags::TempTensor<4, spacetime_deriv_gauge_function_type>,
-      ::Tags::TempTensor<5, pi_two_normals_type>,
-      ::Tags::TempTensor<6, pi_type>, ::Tags::TempTensor<7, gamma0_type>,
-      ::Tags::TempTensor<8, normal_spacetime_one_form_type>,
-      ::Tags::TempTensor<9, gauge_constraint_type>,
-      ::Tags::TempTensor<10, spacetime_metric_type>,
-      ::Tags::TempTensor<11, normal_dot_gauge_constraint_type>,
-      ::Tags::TempTensor<12, christoffel_second_kind_type>,
-      ::Tags::TempTensor<13, gauge_function_type>,
-      ::Tags::TempTensor<14, pi_2_up_type>,
-      ::Tags::TempTensor<15, phi_1_up_type>,
-      ::Tags::TempTensor<16, phi_3_up_type>,
-      ::Tags::TempTensor<17, christoffel_first_kind_3_up_type>,
-      ::Tags::TempTensor<18, pi_one_normal_type>,
-      ::Tags::TempTensor<19, inverse_spatial_metric_type>,
-      ::Tags::TempTensor<20, d_phi_type>, ::Tags::TempTensor<21, lapse_type>,
-      ::Tags::TempTensor<22, gamma1gamma2_type>,
-      ::Tags::TempTensor<23, shift_dot_three_index_constraint_type>,
-      ::Tags::TempTensor<24, shift_type>, ::Tags::TempTensor<25, d_pi_type>>>
+      ::Tags::TempTensor<0, dt_pi_type>,
+      ::Tags::TempTensor<1, spacetime_deriv_gauge_function_type>,
+      ::Tags::TempTensor<2, pi_two_normals_type>,
+      ::Tags::TempTensor<3, pi_type>, ::Tags::TempTensor<4, gamma0_type>,
+      ::Tags::TempTensor<5, normal_spacetime_one_form_type>,
+      ::Tags::TempTensor<6, gauge_constraint_type>,
+      ::Tags::TempTensor<7, spacetime_metric_type>,
+      ::Tags::TempTensor<8, normal_dot_gauge_constraint_type>,
+      ::Tags::TempTensor<9, christoffel_second_kind_type>,
+      ::Tags::TempTensor<10, gauge_function_type>,
+      ::Tags::TempTensor<11, pi_2_up_type>,
+      ::Tags::TempTensor<12, phi_1_up_type>,
+      ::Tags::TempTensor<13, phi_3_up_type>,
+      ::Tags::TempTensor<14, christoffel_first_kind_3_up_type>,
+      ::Tags::TempTensor<15, pi_one_normal_type>,
+      ::Tags::TempTensor<16, inverse_spatial_metric_type>,
+      ::Tags::TempTensor<17, d_phi_type>, ::Tags::TempTensor<18, lapse_type>,
+      ::Tags::TempTensor<19, gamma1gamma2_type>,
+      ::Tags::TempTensor<20, shift_dot_three_index_constraint_type>,
+      ::Tags::TempTensor<21, shift_type>, ::Tags::TempTensor<22, d_pi_type>>>
       vars{num_grid_points};
 
   // RHS: spacetime_deriv_gauge_function
   spacetime_deriv_gauge_function_type& spacetime_deriv_gauge_function_te_temp =
-      get<::Tags::TempTensor<4, spacetime_deriv_gauge_function_type>>(vars);
+      get<::Tags::TempTensor<1, spacetime_deriv_gauge_function_type>>(vars);
   copy_tensor(spacetime_deriv_gauge_function,
               make_not_null(&spacetime_deriv_gauge_function_te_temp));
 
   // RHS: pi_two_normals
   pi_two_normals_type& pi_two_normals_te_temp =
-      get<::Tags::TempTensor<5, pi_two_normals_type>>(vars);
+      get<::Tags::TempTensor<2, pi_two_normals_type>>(vars);
   copy_tensor(pi_two_normals, make_not_null(&pi_two_normals_te_temp));
 
   // RHS: pi
-  pi_type& pi_te_temp = get<::Tags::TempTensor<6, pi_type>>(vars);
+  pi_type& pi_te_temp = get<::Tags::TempTensor<3, pi_type>>(vars);
   copy_tensor(pi, make_not_null(&pi_te_temp));
 
   // RHS: gamma0
-  gamma0_type& gamma0_te_temp = get<::Tags::TempTensor<7, gamma0_type>>(vars);
+  gamma0_type& gamma0_te_temp = get<::Tags::TempTensor<4, gamma0_type>>(vars);
   copy_tensor(gamma0, make_not_null(&gamma0_te_temp));
 
   // RHS: normal_spacetime_one_form
   normal_spacetime_one_form_type& normal_spacetime_one_form_te_temp =
-      get<::Tags::TempTensor<8, normal_spacetime_one_form_type>>(vars);
+      get<::Tags::TempTensor<5, normal_spacetime_one_form_type>>(vars);
   copy_tensor(normal_spacetime_one_form,
               make_not_null(&normal_spacetime_one_form_te_temp));
 
   // RHS: gauge_constraint
   gauge_constraint_type& gauge_constraint_te_temp =
-      get<::Tags::TempTensor<9, gauge_constraint_type>>(vars);
+      get<::Tags::TempTensor<6, gauge_constraint_type>>(vars);
   copy_tensor(gauge_constraint, make_not_null(&gauge_constraint_te_temp));
 
   // RHS: spacetime_metric
   spacetime_metric_type& spacetime_metric_te_temp =
-      get<::Tags::TempTensor<10, spacetime_metric_type>>(vars);
+      get<::Tags::TempTensor<7, spacetime_metric_type>>(vars);
   copy_tensor(spacetime_metric, make_not_null(&spacetime_metric_te_temp));
 
   // RHS: normal_dot_gauge_constraint
   normal_dot_gauge_constraint_type& normal_dot_gauge_constraint_te_temp =
-      get<::Tags::TempTensor<11, normal_dot_gauge_constraint_type>>(vars);
+      get<::Tags::TempTensor<8, normal_dot_gauge_constraint_type>>(vars);
   copy_tensor(normal_dot_gauge_constraint,
               make_not_null(&normal_dot_gauge_constraint_te_temp));
 
   // RHS: christoffel_second_kind
   christoffel_second_kind_type& christoffel_second_kind_te_temp =
-      get<::Tags::TempTensor<12, christoffel_second_kind_type>>(vars);
+      get<::Tags::TempTensor<9, christoffel_second_kind_type>>(vars);
   copy_tensor(christoffel_second_kind,
               make_not_null(&christoffel_second_kind_te_temp));
 
   // RHS: gauge_function
   gauge_function_type& gauge_function_te_temp =
-      get<::Tags::TempTensor<13, gauge_function_type>>(vars);
+      get<::Tags::TempTensor<10, gauge_function_type>>(vars);
   copy_tensor(gauge_function, make_not_null(&gauge_function_te_temp));
 
   // RHS: pi_2_up
   pi_2_up_type& pi_2_up_te_temp =
-      get<::Tags::TempTensor<14, pi_2_up_type>>(vars);
+      get<::Tags::TempTensor<11, pi_2_up_type>>(vars);
   copy_tensor(pi_2_up, make_not_null(&pi_2_up_te_temp));
 
   // RHS: phi_1_up
   phi_1_up_type& phi_1_up_te_temp =
-      get<::Tags::TempTensor<15, phi_1_up_type>>(vars);
+      get<::Tags::TempTensor<12, phi_1_up_type>>(vars);
   copy_tensor(phi_1_up, make_not_null(&phi_1_up_te_temp));
 
   // RHS: phi_3_up
   phi_3_up_type& phi_3_up_te_temp =
-      get<::Tags::TempTensor<16, phi_3_up_type>>(vars);
+      get<::Tags::TempTensor<13, phi_3_up_type>>(vars);
   copy_tensor(phi_3_up, make_not_null(&phi_3_up_te_temp));
 
   // RHS: christoffel_first_kind_3_up
   christoffel_first_kind_3_up_type& christoffel_first_kind_3_up_te_temp =
-      get<::Tags::TempTensor<17, christoffel_first_kind_3_up_type>>(vars);
+      get<::Tags::TempTensor<14, christoffel_first_kind_3_up_type>>(vars);
   copy_tensor(christoffel_first_kind_3_up,
               make_not_null(&christoffel_first_kind_3_up_te_temp));
 
   // RHS: pi_one_normal
   pi_one_normal_type& pi_one_normal_te_temp =
-      get<::Tags::TempTensor<18, pi_one_normal_type>>(vars);
+      get<::Tags::TempTensor<15, pi_one_normal_type>>(vars);
   copy_tensor(pi_one_normal, make_not_null(&pi_one_normal_te_temp));
 
   // RHS: inverse_spatial_metric
   inverse_spatial_metric_type& inverse_spatial_metric_te_temp =
-      get<::Tags::TempTensor<19, inverse_spatial_metric_type>>(vars);
+      get<::Tags::TempTensor<16, inverse_spatial_metric_type>>(vars);
   copy_tensor(inverse_spatial_metric,
               make_not_null(&inverse_spatial_metric_te_temp));
 
   // RHS: d_phi
-  d_phi_type& d_phi_te_temp = get<::Tags::TempTensor<20, d_phi_type>>(vars);
+  d_phi_type& d_phi_te_temp = get<::Tags::TempTensor<17, d_phi_type>>(vars);
   copy_tensor(d_phi, make_not_null(&d_phi_te_temp));
 
   // RHS: lapse
-  lapse_type& lapse_te_temp = get<::Tags::TempTensor<21, lapse_type>>(vars);
+  lapse_type& lapse_te_temp = get<::Tags::TempTensor<18, lapse_type>>(vars);
   copy_tensor(lapse, make_not_null(&lapse_te_temp));
 
   // RHS: gamma1gamma2
   gamma1gamma2_type& gamma1gamma2_te_temp =
-      get<::Tags::TempTensor<22, gamma1gamma2_type>>(vars);
+      get<::Tags::TempTensor<19, gamma1gamma2_type>>(vars);
   copy_tensor(gamma1gamma2, make_not_null(&gamma1gamma2_te_temp));
 
   // RHS: shift_dot_three_index_constraint
   shift_dot_three_index_constraint_type&
       shift_dot_three_index_constraint_te_temp =
-          get<::Tags::TempTensor<23, shift_dot_three_index_constraint_type>>(
+          get<::Tags::TempTensor<20, shift_dot_three_index_constraint_type>>(
               vars);
   copy_tensor(shift_dot_three_index_constraint,
               make_not_null(&shift_dot_three_index_constraint_te_temp));
 
   // RHS: shift
-  shift_type& shift_te_temp = get<::Tags::TempTensor<24, shift_type>>(vars);
+  shift_type& shift_te_temp = get<::Tags::TempTensor<21, shift_type>>(vars);
   copy_tensor(shift, make_not_null(&shift_te_temp));
 
   // RHS: d_pi
-  d_pi_type& d_pi_te_temp = get<::Tags::TempTensor<25, d_pi_type>>(vars);
+  d_pi_type& d_pi_te_temp = get<::Tags::TempTensor<22, d_pi_type>>(vars);
   copy_tensor(d_pi, make_not_null(&d_pi_te_temp));
 
   // LHS: dt_pi impl<1>
@@ -437,56 +397,8 @@ void test_benchmarked_impls_core(const DataType& used_for_size,
       lapse_te_temp, gamma1gamma2_te_temp,
       shift_dot_three_index_constraint_te_temp, shift_te_temp, d_pi_te_temp);
 
-  // LHS: dt_pi impl<2>
-  dt_pi_type& dt_pi_te2_temp = get<::Tags::TempTensor<1, dt_pi_type>>(vars);
-
-  // Compute TensorExpression impl<1> result
-  BenchmarkImpl::template tensorexpression_impl_lhs_arg<1>(
-      make_not_null(&dt_pi_te2_temp), spacetime_deriv_gauge_function_te_temp,
-      pi_two_normals_te_temp, pi, gamma0_te_temp,
-      normal_spacetime_one_form_te_temp, gauge_constraint_te_temp,
-      spacetime_metric_te_temp, normal_dot_gauge_constraint_te_temp,
-      christoffel_second_kind_te_temp, gauge_function_te_temp, pi_2_up_te_temp,
-      phi_1_up_te_temp, phi_3_up_te_temp, christoffel_first_kind_3_up_te_temp,
-      pi_one_normal_te_temp, inverse_spatial_metric_te_temp, d_phi_te_temp,
-      lapse_te_temp, gamma1gamma2_te_temp,
-      shift_dot_three_index_constraint_te_temp, shift_te_temp, d_pi_te_temp);
-
-  // LHS: dt_pi impl<3>
-  dt_pi_type& dt_pi_te3_temp = get<::Tags::TempTensor<2, dt_pi_type>>(vars);
-
-  // Compute TensorExpression impl<3> result
-  BenchmarkImpl::template tensorexpression_impl_lhs_arg<3>(
-      make_not_null(&dt_pi_te3_temp), spacetime_deriv_gauge_function_te_temp,
-      pi_two_normals_te_temp, pi, gamma0_te_temp,
-      normal_spacetime_one_form_te_temp, gauge_constraint_te_temp,
-      spacetime_metric_te_temp, normal_dot_gauge_constraint_te_temp,
-      christoffel_second_kind_te_temp, gauge_function_te_temp, pi_2_up_te_temp,
-      phi_1_up_te_temp, phi_3_up_te_temp, christoffel_first_kind_3_up_te_temp,
-      pi_one_normal_te_temp, inverse_spatial_metric_te_temp, d_phi_te_temp,
-      lapse_te_temp, gamma1gamma2_te_temp,
-      shift_dot_three_index_constraint_te_temp, shift_te_temp, d_pi_te_temp);
-
-  // LHS: dt_pi impl<4>
-  dt_pi_type& dt_pi_te4_temp = get<::Tags::TempTensor<3, dt_pi_type>>(vars);
-
-  // Compute TensorExpression impl<4> result
-  BenchmarkImpl::template tensorexpression_impl_lhs_arg<4>(
-      make_not_null(&dt_pi_te4_temp), spacetime_deriv_gauge_function_te_temp,
-      pi_two_normals_te_temp, pi, gamma0_te_temp,
-      normal_spacetime_one_form_te_temp, gauge_constraint_te_temp,
-      spacetime_metric_te_temp, normal_dot_gauge_constraint_te_temp,
-      christoffel_second_kind_te_temp, gauge_function_te_temp, pi_2_up_te_temp,
-      phi_1_up_te_temp, phi_3_up_te_temp, christoffel_first_kind_3_up_te_temp,
-      pi_one_normal_te_temp, inverse_spatial_metric_te_temp, d_phi_te_temp,
-      lapse_te_temp, gamma1gamma2_te_temp,
-      shift_dot_three_index_constraint_te_temp, shift_te_temp, d_pi_te_temp);
-
   // CHECK dt_pi
   CHECK_ITERABLE_APPROX(dt_pi_manual_filled, dt_pi_te1_temp);
-  CHECK_ITERABLE_APPROX(dt_pi_manual_filled, dt_pi_te2_temp);
-  CHECK_ITERABLE_APPROX(dt_pi_manual_filled, dt_pi_te3_temp);
-  CHECK_ITERABLE_APPROX(dt_pi_manual_filled, dt_pi_te4_temp);
 }
 
 template <typename DataType, typename Generator>

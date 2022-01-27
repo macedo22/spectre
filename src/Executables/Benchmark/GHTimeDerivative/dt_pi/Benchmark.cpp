@@ -939,48 +939,6 @@ void setup_benchmarks() {
   setup_te_lhs_arg_with_buffer<DataVector, 1, 1>();
   setup_te_lhs_arg_with_buffer<DataVector, 2, 1>();
   setup_te_lhs_arg_with_buffer<DataVector, 3, 1>();
-
-  setup_te_lhs_arg_without_buffer<double, 1, 2>();
-  setup_te_lhs_arg_without_buffer<double, 2, 2>();
-  setup_te_lhs_arg_without_buffer<double, 3, 2>();
-  setup_te_lhs_arg_without_buffer<DataVector, 1, 2>();
-  setup_te_lhs_arg_without_buffer<DataVector, 2, 2>();
-  setup_te_lhs_arg_without_buffer<DataVector, 3, 2>();
-
-  setup_te_lhs_arg_with_buffer<double, 1, 2>();
-  setup_te_lhs_arg_with_buffer<double, 2, 2>();
-  setup_te_lhs_arg_with_buffer<double, 3, 2>();
-  setup_te_lhs_arg_with_buffer<DataVector, 1, 2>();
-  setup_te_lhs_arg_with_buffer<DataVector, 2, 2>();
-  setup_te_lhs_arg_with_buffer<DataVector, 3, 2>();
-
-  setup_te_lhs_arg_without_buffer<double, 1, 3>();
-  setup_te_lhs_arg_without_buffer<double, 2, 3>();
-  setup_te_lhs_arg_without_buffer<double, 3, 3>();
-  setup_te_lhs_arg_without_buffer<DataVector, 1, 3>();
-  setup_te_lhs_arg_without_buffer<DataVector, 2, 3>();
-  setup_te_lhs_arg_without_buffer<DataVector, 3, 3>();
-
-  setup_te_lhs_arg_with_buffer<double, 1, 3>();
-  setup_te_lhs_arg_with_buffer<double, 2, 3>();
-  setup_te_lhs_arg_with_buffer<double, 3, 3>();
-  setup_te_lhs_arg_with_buffer<DataVector, 1, 3>();
-  setup_te_lhs_arg_with_buffer<DataVector, 2, 3>();
-  setup_te_lhs_arg_with_buffer<DataVector, 3, 3>();
-
-  setup_te_lhs_arg_without_buffer<double, 1, 4>();
-  setup_te_lhs_arg_without_buffer<double, 2, 4>();
-  setup_te_lhs_arg_without_buffer<double, 3, 4>();
-  setup_te_lhs_arg_without_buffer<DataVector, 1, 4>();
-  setup_te_lhs_arg_without_buffer<DataVector, 2, 4>();
-  setup_te_lhs_arg_without_buffer<DataVector, 3, 4>();
-
-  setup_te_lhs_arg_with_buffer<double, 1, 4>();
-  setup_te_lhs_arg_with_buffer<double, 2, 4>();
-  setup_te_lhs_arg_with_buffer<double, 3, 4>();
-  setup_te_lhs_arg_with_buffer<DataVector, 1, 4>();
-  setup_te_lhs_arg_with_buffer<DataVector, 2, 4>();
-  setup_te_lhs_arg_with_buffer<DataVector, 3, 4>();
 }
 }  // namespace
 
