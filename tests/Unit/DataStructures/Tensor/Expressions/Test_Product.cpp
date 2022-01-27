@@ -1040,6 +1040,9 @@ void test_three_term_inner_outer_product(const DataType& used_for_size) {
   Tensor<DataType, Symmetry<2, 1>, index_list<G_index, G_index>> Guu(
       used_for_size);
   assign_unique_values_to_tensor(make_not_null(&Guu));
+  // std::cout << "Sl : " << Sl << std::endl;
+  // std::cout << "Tl : " << Tl << std::endl;
+  // std::cout << "Guu : " << Guu << std::endl;
 
   // \f$L_{i}{}^{k} = S_{j} * T_{i} * G^{jk}\f$
   const Tensor<DataType, Symmetry<2, 1>, index_list<T_index, G_index>>
@@ -1097,6 +1100,7 @@ void test_three_term_inner_outer_product(const DataType& used_for_size) {
       for (size_t j = 0; j < G_index::dim; j++) {
         expected_product += (Sl.get(j) * Tl.get(i) * Guu.get(j, k));
       }
+      // std::cout << "(i, k) : (" << i << ", " << k << ")" << std::endl;
       CHECK(LiK_from_Sj_Ti_GJK.get(i, k) == expected_product);
       CHECK(LKi_from_Sj_Ti_GJK.get(k, i) == expected_product);
       CHECK(LiK_from_Sj_GJK_Ti.get(i, k) == expected_product);
@@ -1333,19 +1337,19 @@ void test_products(const DataType& used_for_size) {
   test_outer_product_rank_0x1x2_operands(used_for_size);
 
   // Test evaluation of inner products
-  // test_inner_product_rank_1x1_operands(used_for_size);
-  // test_inner_product_rank_2x2_operands(used_for_size);
+  test_inner_product_rank_1x1_operands(used_for_size);
+  test_inner_product_rank_2x2_operands(used_for_size);
 
   // Test evaluation of expressions involving both inner and outer products
-  // test_two_term_inner_outer_product(used_for_size);
-  // test_three_term_inner_outer_product(used_for_size);
+  test_two_term_inner_outer_product(used_for_size);
+  test_three_term_inner_outer_product(used_for_size);
 
   // Test product expressions where generic spatial indices are used for
   // spacetime indices
-  // test_spatial_spacetime_index(used_for_size);
+  test_spatial_spacetime_index(used_for_size);
 
   // Test product expressions where time indices are used for spacetime indices
-  // test_time_index(used_for_size);
+  test_time_index(used_for_size);
 }
 }  // namespace
 
