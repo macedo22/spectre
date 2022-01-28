@@ -44,6 +44,9 @@ struct NumberAsExpression
   static constexpr size_t consecutive_branch_ops_right = 0;
   static constexpr size_t consecutive_branch_ops = 0;
 
+  static constexpr bool is_branch_end = false;
+  static constexpr bool is_branch_beg = false;
+
   NumberAsExpression(const double number) : number_(number) {}
   ~NumberAsExpression() override = default;
 
@@ -70,6 +73,12 @@ struct NumberAsExpression
   // TODO : remove? don't need at leaves?
   template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void visit_main(
+      const ResultType& /*result_component*/,
+      const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {}
+
+  // TODO : remove? don't need at leaves?
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE void visit_branch(
       const ResultType& /*result_component*/,
       const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {}
 

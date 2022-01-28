@@ -119,6 +119,9 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   static constexpr size_t consecutive_branch_ops =
       consecutive_branch_ops_left + consecutive_branch_ops_right + 1;
 
+  static constexpr bool is_branch_end = false;
+  static constexpr bool is_branch_beg = false;
+
   OuterProduct(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~OuterProduct() override = default;
 
@@ -224,22 +227,9 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
 
   template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void visit_branch(
-      ResultType& result_component,
-      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
-    std::array<size_t, op1_num_tensor_indices> op1_multi_index{};
-    for (size_t i = 0; i < op1_num_tensor_indices; i++) {
-      gsl::at(op1_multi_index, i) = gsl::at(result_multi_index, i);
-    }
-
-    std::array<size_t, op2_num_tensor_indices> op2_multi_index{};
-    for (size_t i = 0; i < op2_num_tensor_indices; i++) {
-      gsl::at(op2_multi_index, i) =
-          gsl::at(result_multi_index, op1_num_tensor_indices + i);
-    }
-
-    t1_.visit_branch(result_component, op1_multi_index);
-    t2_.visit_branch(result_component, op2_multi_index);
-  }
+      ResultType& /*result_component*/,
+      const std::array<size_t, num_tensor_indices>& /*result_multi_index*/)
+      const {}
 
   type get_used_for_size() const {
     if constexpr (not std::is_base_of_v<MarkAsNumberAsExpression, T2>) {

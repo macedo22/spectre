@@ -396,6 +396,9 @@ struct TensorContract
   static constexpr size_t consecutive_branch_ops_right = 0;
   static constexpr size_t consecutive_branch_ops = consecutive_branch_ops_left;
 
+  static constexpr bool is_branch_end = T::is_branch_beg;
+  static constexpr bool is_branch_beg = is_main_beg;
+
   explicit TensorContract(
       const TensorExpression<T, X, Symm, IndexList, ArgsList>& t)
       : t_(~t) {}
@@ -617,6 +620,64 @@ struct TensorContract
     // TensorContract::compute_contraction_main_beg ===" << std::endl;
   }
 
+  // TODO : need to modify this so that we also visit
+  // the branches for terms being summed
+  template <size_t Iteration, typename ResultType>
+  static void compute_contraction_branch_beg(
+      ResultType& result_component, const T& t,
+      const std::array<size_t, num_uncontracted_tensor_indices>&
+          current_multi_index) {
+    // std::cout << "=== START TensorContract::compute_contraction_main_beg ==="
+    // << std::endl; std::cout << "current_multi_index : " <<
+    // current_multi_index << std::endl; std::cout << "result_component : " <<
+    // result_component << std::endl;
+    if constexpr (is_branch_end) {
+      if constexpr (Iteration < num_terms_summed - 1) {
+        std::array<size_t, num_uncontracted_tensor_indices> next_multi_index =
+            get_next_multi_index_to_sum(current_multi_index);
+        // We have more than one component left to sum
+        compute_contraction_branch_beg<Iteration + 1>(result_component, t,
+                                                      next_multi_index);
+        result_component += t.get_branch(current_multi_index);
+        // std::cout << "if if" << std::endl;
+        // std::cout << "current_multi_index : " << current_multi_index <<
+        // std::endl; std::cout << "result_component : " << result_component <<
+        // std::endl;
+      } else {
+        // We only have one final component to sum
+        // result_component = t.get_main(result_component, current_multi_index);
+        // std::cout << "if else" << std::endl;
+        // std::cout << "current_multi_index : " << current_multi_index <<
+        // std::endl; std::cout << "result_component : " << result_component <<
+        // std::endl;
+      }
+    } else {
+      if constexpr (Iteration < num_terms_summed - 1) {
+        std::array<size_t, num_uncontracted_tensor_indices> next_multi_index =
+            get_next_multi_index_to_sum(current_multi_index);
+        // We have more than one component left to sum
+        compute_contraction_branch_beg<Iteration + 1>(result_component, t,
+                                                      next_multi_index);
+        result_component += t.get_branch(current_multi_index);
+        // std::cout << "else if" << std::endl;
+        // std::cout << "current_multi_index : " << current_multi_index <<
+        // std::endl; std::cout << "result_component : " << result_component <<
+        // std::endl;
+      } else {
+        // We only have one final component to sum
+        result_component += t.get_branch(current_multi_index);
+        // std::cout << "else else" << std::endl;
+        // std::cout << "current_multi_index : " << current_multi_index <<
+        // std::endl; std::cout << "result_component : " << result_component <<
+        // std::endl;
+      }
+    }
+    // std::cout << "current_multi_index : " << current_multi_index <<
+    // std::endl; std::cout << "result_component : " << result_component <<
+    // std::endl; std::cout << "=== END
+    // TensorContract::compute_contraction_main_beg ===" << std::endl;
+  }
+
   template <size_t Iteration, typename ResultType>
   static decltype(auto) compute_contraction_main(
       ResultType& result_component, const T& t,
@@ -657,6 +718,17 @@ struct TensorContract
         return t.get_main(result_component, current_multi_index);
       }
     }
+  }
+
+  template <typename ResultType>
+  void get_branch_beg(ResultType& result_component,
+                      const std::array<size_t, num_tensor_indices>&
+                          contracted_multi_index) const {
+    std::array<size_t, num_uncontracted_tensor_indices>
+        first_operand_multi_index_to_sum =
+            get_first_index_to_sum(contracted_multi_index);
+    compute_contraction_branch_beg<0>(result_component, t_,
+                                      first_operand_multi_index_to_sum);
   }
 
   template <typename ResultType>
@@ -720,6 +792,28 @@ struct TensorContract
     // last_operand_multi_index_to_sum << std::endl;
     if constexpr (is_main_beg) {
       get_main_beg(result_component, contracted_multi_index);
+    }
+    // std::cout << "result_component : " << result_component << std::endl;
+    // std::cout << "=== END TensorContract::visit_main ===" << std::endl;
+  }
+
+  template <typename ResultType>
+  void visit_branch(ResultType& result_component,
+                    const std::array<size_t, num_tensor_indices>&
+                        contracted_multi_index) const {
+    std::array<size_t, num_uncontracted_tensor_indices>
+        last_operand_multi_index_to_sum =
+            get_last_index_to_sum(contracted_multi_index);
+    // std::cout << "=== START TensorContract::visit_main ===" << std::endl;
+    // std::cout << "contracted_multi_index : " << contracted_multi_index <<
+    // std::endl; std::cout << "last_operand_multi_index_to_sum : " <<
+    // last_operand_multi_index_to_sum << std::endl; std::cout << "Now visit
+    // last_operand_multi_index_to_sum... " << std::endl;
+    t_.visit_branch(result_component, last_operand_multi_index_to_sum);
+    // std::cout << "... Done visiting last_operand_multi_index_to_sum : " <<
+    // last_operand_multi_index_to_sum << std::endl;
+    if constexpr (is_branch_beg) {
+      get_branch_beg(result_component, contracted_multi_index);
     }
     // std::cout << "result_component : " << result_component << std::endl;
     // std::cout << "=== END TensorContract::visit_main ===" << std::endl;
