@@ -52,6 +52,11 @@ struct Negate
   static constexpr bool is_main_beg =
       num_ops_to_evaluate_main_subtree >= detail::max_num_ops_in_sub_expression;
 
+  static constexpr size_t consecutive_branch_ops_left = num_ops_left;
+  static constexpr size_t consecutive_branch_ops_right = 0;
+  static constexpr size_t consecutive_branch_ops =
+      consecutive_branch_ops_left + 1;
+
   Negate(T t) : t_(std::move(t)) {}
   ~Negate() override = default;
 

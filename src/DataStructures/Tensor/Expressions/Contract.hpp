@@ -391,6 +391,11 @@ struct TensorContract
   // simple
   static constexpr size_t num_consecutive_terms_to_sum = 1;
 
+  static constexpr size_t consecutive_branch_ops_left =
+      T::consecutive_branch_ops;
+  static constexpr size_t consecutive_branch_ops_right = 0;
+  static constexpr size_t consecutive_branch_ops = consecutive_branch_ops_left;
+
   explicit TensorContract(
       const TensorExpression<T, X, Symm, IndexList, ArgsList>& t)
       : t_(~t) {}

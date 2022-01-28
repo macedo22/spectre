@@ -329,6 +329,15 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   static constexpr bool is_main_beg =
       num_ops_to_evaluate_main_subtree >= detail::max_num_ops_in_sub_expression;
 
+  static constexpr size_t consecutive_branch_ops_left =
+      Sign == 1 ? T1::consecutive_branch_ops : num_ops_left;
+  static constexpr size_t consecutive_branch_ops_right =
+      Sign == 1 ? T2::consecutive_branch_ops : num_ops_right;
+  static constexpr size_t consecutive_branch_ops =
+      Sign == 1
+          ? consecutive_branch_ops_left + consecutive_branch_ops_right
+          : consecutive_branch_ops_left + consecutive_branch_ops_right + 1;
+
   static constexpr std::array<size_t, num_tensor_indices_op2>
       operand_index_transformation =
           compute_tensorindex_transformation<num_tensor_indices,
