@@ -326,7 +326,11 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
       is_main_end ? 0 : T1::num_ops_to_evaluate_main_subtree;
   static constexpr size_t num_ops_to_evaluate_main_subtree =
       num_ops_to_evaluate_main_left + T2::num_ops_subtree + 1;
+  static constexpr bool is_fork =
+      num_ops_to_evaluate_main_subtree + num_ops_right + 1 >=
+      detail::max_num_ops_in_sub_expression;
   static constexpr bool is_main_beg =
+      is_fork or
       num_ops_to_evaluate_main_subtree >= detail::max_num_ops_in_sub_expression;
 
   static constexpr size_t consecutive_branch_ops_left =
@@ -337,6 +341,9 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
       Sign == 1
           ? consecutive_branch_ops_left + consecutive_branch_ops_right
           : consecutive_branch_ops_left + consecutive_branch_ops_right + 1;
+
+  static constexpr bool is_branch_end = T1::is_branch_beg;
+  static constexpr bool is_branch_beg = is_main_beg;
 
   static constexpr std::array<size_t, num_tensor_indices_op2>
       operand_index_transformation =
@@ -542,9 +549,63 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   SPECTRE_ALWAYS_INLINE void visit_main(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    // descend left and evaluate anything there except top stub
     t1_.visit_main(result_component, result_multi_index);
-    if constexpr (is_main_beg) {
+    if constexpr (is_fork) {
+      // We are at a main fork, so evaluate LHS and RHS operands separately
+
+      // first, evaluate remainder of left operand if this AddSub not an end.
+      // if it was an end, result_component == left subtree already
+      if constexpr (not is_main_end) {
+        result_component = t1_.get_main(result_component, result_multi_index);
+      }
+      const auto op2_multi_index = get_op2_multi_index(result_multi_index);
+      if constexpr (Sign == 1) {
+        // if it's addition, descend down right branch, where result component
+        // will be added at the end of consecutive + operations?
+        // TODO : make sure this logic makes sense with contractions...
+        t2_.visit_branch(result_component, op2_multi_index);
+        // Now, one last descent to get the last piece at the top of the
+        // right branch
+        result_component += t2_.get_branch(op2_multi_index);
+      } else {
+        // it's subtraction, so just subtract result of right branch
+        result_component -= t2_.get_branch(op2_multi_index);
+      }
+    } else if constexpr (is_main_beg) {
+      // we aren't at a main fork, but we're at a main chunk starting point,
+      // so evaluate at this point
       result_component = get_main(result_component, result_multi_index);
+    }
+  }
+
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE void visit_branch(
+      ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    if constexpr (Sign == 1) {
+      // if this is addition on a branch, descend down left
+      t1_.visit_branch(result_component, result_multi_index);
+
+      if constexpr (is_fork) {
+        // We are at a main fork, so evaluate LHS and RHS operands separately
+
+        // first, evaluate remainder of left operand
+        result_component = t1_.get_main(result_component, result_multi_index);
+
+        // it's addition, so descend down right branch, where result component
+        // will be added at the end of consecutive + operations?
+        // TODO : make sure this logic makes sense with contractions...
+        const auto op2_multi_index = get_op2_multi_index(result_multi_index);
+        t2_.visit_branch(result_component, op2_multi_index);
+        // Now, one last descent to get the last piece at the top of the
+        // right branch
+        result_component += t2_.get_branch(op2_multi_index);
+      } else if constexpr (is_branch_beg) {
+        // we aren't at a main fork, but we're at a main chunk starting point,
+        // so evaluate at this point
+        result_component += get_branch(result_multi_index);
+      }
     }
   }
 

@@ -75,6 +75,6 @@ TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
 
 namespace TensorExpressions {
 namespace detail {
-static constexpr size_t max_num_ops_in_sub_expression = 4;
+static constexpr size_t max_num_ops_in_sub_expression = 8;
 }  // namespace detail
 }  // namespace TensorExpressions

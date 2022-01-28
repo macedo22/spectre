@@ -57,6 +57,9 @@ struct Negate
   static constexpr size_t consecutive_branch_ops =
       consecutive_branch_ops_left + 1;
 
+  static constexpr bool is_branch_end = false;
+  static constexpr bool is_branch_beg = false;
+
   Negate(T t) : t_(std::move(t)) {}
   ~Negate() override = default;
 
@@ -93,6 +96,11 @@ struct Negate
       result_component = get_main(result_component, multi_index);
     }
   }
+
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE void visit_branch(
+      ResultType& /*result_component*/,
+      const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {}
 
   type get_used_for_size() const { return t_.get_used_for_size(); }
 

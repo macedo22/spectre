@@ -87,6 +87,9 @@ struct Divide : public TensorExpression<
   static constexpr size_t consecutive_branch_ops =
       consecutive_branch_ops_left + consecutive_branch_ops_right + 1;
 
+  static constexpr bool is_branch_end = false;
+  static constexpr bool is_branch_beg = false;
+
   Divide(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~Divide() override = default;
 
@@ -126,6 +129,12 @@ struct Divide : public TensorExpression<
       result_component = get_main(result_component, result_multi_index);
     }
   }
+
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE void visit_branch(
+      ResultType& /*result_component*/,
+      const std::array<size_t, num_tensor_indices>& /*result_multi_index*/)
+      const {}
 
   type get_used_for_size() const {
     if constexpr (not std::is_base_of_v<MarkAsNumberAsExpression, T2>) {

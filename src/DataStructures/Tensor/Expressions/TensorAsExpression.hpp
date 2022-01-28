@@ -196,6 +196,7 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
   using args_list = ArgsList<Args...>;
   static constexpr bool is_binary_op = false;
+  // TODO : make a metadata struct that these all have? keep in one place?
   static constexpr size_t num_ops_left = 0;
   static constexpr size_t num_ops_right = 0;
   static constexpr size_t num_ops_subtree = 0;
@@ -213,6 +214,9 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
   static constexpr size_t consecutive_branch_ops_left = 0;
   static constexpr size_t consecutive_branch_ops_right = 0;
   static constexpr size_t consecutive_branch_ops = 0;
+
+  static constexpr bool is_branch_end = false;
+  static constexpr bool is_branch_beg = false;
 
   /// Construct an expression from a Tensor
   explicit TensorAsExpression(const Tensor<X, Symm, IndexList<Indices...>>& t)
@@ -239,6 +243,14 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
   // TODO : remove? don't need at leaves?
   template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void visit_main(
+      const ResultType& /*result_component*/,
+      const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
+    // std::cout << "TensorAsExpression::visit_main" << std::endl;
+  }
+
+  // TODO : remove? don't need at leaves?
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE void visit_branch(
       const ResultType& /*result_component*/,
       const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
     // std::cout << "TensorAsExpression::visit_main" << std::endl;
