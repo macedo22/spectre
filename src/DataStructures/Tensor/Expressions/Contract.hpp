@@ -539,7 +539,7 @@ struct TensorContract
   }
 
   template <size_t Iteration>
-  static SPECTRE_ALWAYS_INLINE decltype(auto) compute_contraction_branch(
+  static decltype(auto) compute_contraction_branch(
       const T& t, const std::array<size_t, num_uncontracted_tensor_indices>&
                       current_multi_index) {
     // std::cout << "=== START TensorContract::compute_contraction_branch ==="
@@ -562,7 +562,7 @@ struct TensorContract
 
   // num_consecutive_terms_to_sum
   template <size_t Iteration, typename ResultType>
-  static SPECTRE_ALWAYS_INLINE void compute_contraction_main_beg(
+  static void compute_contraction_main_beg(
       ResultType& result_component, const T& t,
       const std::array<size_t, num_uncontracted_tensor_indices>&
           current_multi_index) {
@@ -618,7 +618,7 @@ struct TensorContract
   }
 
   template <size_t Iteration, typename ResultType>
-  static SPECTRE_ALWAYS_INLINE decltype(auto) compute_contraction_main(
+  static decltype(auto) compute_contraction_main(
       ResultType& result_component, const T& t,
       const std::array<size_t, num_uncontracted_tensor_indices>&
           current_multi_index) {
