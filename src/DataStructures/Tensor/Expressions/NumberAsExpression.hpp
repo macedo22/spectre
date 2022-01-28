@@ -40,6 +40,10 @@ struct NumberAsExpression
   static constexpr size_t num_ops_to_evaluate_main_subtree = 0;
   static constexpr bool is_main_beg = false;
 
+  static constexpr size_t consecutive_branch_ops_left = 0;
+  static constexpr size_t consecutive_branch_ops_right = 0;
+  static constexpr size_t consecutive_branch_ops = 0;
+
   NumberAsExpression(const double number) : number_(number) {}
   ~NumberAsExpression() override = default;
 

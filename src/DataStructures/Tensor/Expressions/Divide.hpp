@@ -82,6 +82,11 @@ struct Divide : public TensorExpression<
   static constexpr bool is_main_beg =
       num_ops_to_evaluate_main_subtree >= detail::max_num_ops_in_sub_expression;
 
+  static constexpr size_t consecutive_branch_ops_left = num_ops_left;
+  static constexpr size_t consecutive_branch_ops_right = num_ops_right;
+  static constexpr size_t consecutive_branch_ops =
+      consecutive_branch_ops_left + consecutive_branch_ops_right + 1;
+
   Divide(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~Divide() override = default;
 
