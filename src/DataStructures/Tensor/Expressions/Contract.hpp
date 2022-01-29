@@ -376,8 +376,42 @@ struct TensorContract
       num_terms_summed - 1;
   static constexpr size_t num_ops_to_evaluate_main_subtree =
       num_ops_to_evaluate_main_left + 1;
+  static constexpr size_t num_ops_subexpression = T::num_ops_subtree;
+
+  // first, determine if we need to stop here at all
   static constexpr bool is_main_beg =
       num_ops_left >= detail::sub_expression_max_size;
+
+  // compute how often to stop
+  static constexpr size_t leg_length = []() {
+    // if we're not even stopping
+    if constexpr (not is_main_beg) {
+      return num_terms_summed;
+    }
+    // if the subexpression itself has more than the max # of ops,
+    // then stop at each term to add
+    else if constexpr (num_ops_subexpression >=
+                       detail::sub_expression_max_size) {
+      return 1;
+    }
+    // otherwise, find how many terms to sum at each stop
+    else {
+      size_t length = 2;
+      while (length * 2 * num_ops_subexpression <=
+             detail::sub_expression_max_size) {
+        length *= 2;
+      }
+      return length;
+    }
+  }();
+  // should be evaluating at least 1 term at a time
+  static_assert(leg_length > 0);
+
+  // make stops in contraction forks if we're stopping at every term
+  static constexpr bool stops_are_forks = leg_length == 1;
+  // make stops branches if not forks and vice versa
+  static constexpr bool stops_are_branches = not stops_are_forks;
+
   //   num_ops_to_evaluate_main_subtree >=
   //   detail::sub_expression_max_size /*max_num_ops_in_sub_expression*/;
   // TODO : replace lazy static_assert with better logic below (that doesn't
@@ -389,7 +423,7 @@ struct TensorContract
   //   detail::max_num_ops_in_sub_expression;
   // TODO : compute this with a function later, just 1 += for now to keep it
   // simple
-  static constexpr size_t num_consecutive_terms_to_sum = 1;
+  //   static constexpr size_t num_consecutive_terms_to_sum = 1;
 
   static constexpr size_t consecutive_branch_ops_left =
       T::consecutive_branch_ops;
