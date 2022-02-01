@@ -406,6 +406,8 @@ struct TensorContract
   }();
   // should be evaluating at least 1 term at a time
   static_assert(leg_length > 0);
+  // TODO : instead of preventing 0, maybe if it's 0, then that's
+  // what decides if we do forks, and still do branches with 1?
 
   // make stops in contraction forks if we're stopping at every term
   static constexpr bool stops_are_forks = leg_length == 1;
@@ -573,6 +575,40 @@ struct TensorContract
     }
 
     return next_uncontracted_multi_index;
+  }
+
+  static std::array<size_t, num_uncontracted_tensor_indices>
+  get_previous_multi_index_to_sum(
+      const std::array<size_t, num_uncontracted_tensor_indices>&
+          uncontracted_multi_index) {
+    std::array<size_t, num_uncontracted_tensor_indices>
+        previous_uncontracted_multi_index = uncontracted_multi_index;
+
+    size_t i = num_contracted_index_pairs - 1;
+    while (i < num_contracted_index_pairs) {
+      const size_t current_index_first_position = index_maps.second[i].first;
+      const size_t current_index_second_position = index_maps.second[i].second;
+      const size_t current_index_first_shift = contracted_index_shifts[i].first;
+
+      next_uncontracted_multi_index[current_index_first_position]++;
+      next_uncontracted_multi_index[current_index_second_position]++;
+
+      // if the previous index value is > dim, then we've wrapped around
+      // and we need to go again
+      if (not(previous_uncontracted_multi_index[current_index_first_position] >
+              uncontracted_index_dims[current_index_first_position])) {
+        break;
+      }
+
+      previous_uncontracted_multi_index[current_index_first_position] =
+          contracted_index_shifts[i].first;
+      previous_uncontracted_multi_index[current_index_second_position] =
+          contracted_index_shifts[i].second;
+
+      i--;
+    }
+
+    return previous_uncontracted_multi_index;
   }
 
   template <size_t Iteration>
@@ -809,6 +845,49 @@ struct TensorContract
     return compute_contraction_branch<0>(t_, first_operand_multi_index_to_sum);
   }
 
+  // TODO : if we fork (split every term), then go up and get previous index
+  // else, if we branch (split every leg_length terms), go up to each
+  // branch point and use get_branch / compute_contraction_branch
+  template <typename ResultType>
+  void visit_contract_main(
+      ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& contracted_multi_index,
+      std::array<size_t, num_uncontracted_tensor_indices> current_multi_index)
+      const {
+    if constexpr (stops_are_forks) {
+      (void)contracted_multi_index;
+      if constexpr (not is_main_end) {
+        // we still need to compute what's below the contraction
+        result_component = t_.get_main(result_component, current_multi_index);
+      }
+      // now, the contraction is the lowest thing, so we can
+      // climb up and compute each term, visiting right branches
+      // along the way
+      // start at i == 1 because the above if takes care of the first term
+      // hoping that iterating will reduce pressure on cache?
+      for (size_t i = 1; i < num_terms_summed; i++) {
+        const std::array<size_t, num_uncontracted_tensor_indices>
+            previous_operand_multi_index_to_sum =
+                get_previous_index_to_sum(current_multi_index);
+        // visit the "next" term
+        t_.visit_branch(result_component, previous_operand_multi_index_to_sum);
+        // now, compute the left over
+        result_component += t2_.get_branch(previous_operand_multi_index_to_sum);
+        current_multi_index = previous_operand_multi_index_to_sum;
+      }
+    } else if constexpr (stops_are_branches) {
+      // recurse down kind of like normal with compute_contraction_main_beg
+      // but with multiple additions at once. maybe if return type is
+      // decltype auto, then stops can be void and the others can
+      // be automatically deduced?
+      std::array<size_t, num_uncontracted_tensor_indices>
+          first_operand_multi_index_to_sum =
+              get_first_index_to_sum(contracted_multi_index);
+      compute_contraction_main_beg<0>(result_component, t_,
+                                      first_operand_multi_index_to_sum);
+    }
+  }
+
   template <typename ResultType>
   void visit_main(ResultType& result_component,
                   const std::array<size_t, num_tensor_indices>&
@@ -825,7 +904,12 @@ struct TensorContract
     // std::cout << "... Done visiting last_operand_multi_index_to_sum : " <<
     // last_operand_multi_index_to_sum << std::endl;
     if constexpr (is_main_beg) {
-      get_main_beg(result_component, contracted_multi_index);
+      // std::array<size_t, num_uncontracted_tensor_indices>
+      // first_operand_multi_index_to_sum =
+      //     get_first_index_to_sum(contracted_multi_index);
+      visit_contract_main(result_component, contracted_multi_index,
+                          last_operand_multi_index_to_sum);
+      //   get_main_beg(result_component, contracted_multi_index);
     }
     // std::cout << "result_component : " << result_component << std::endl;
     // std::cout << "=== END TensorContract::visit_main ===" << std::endl;
