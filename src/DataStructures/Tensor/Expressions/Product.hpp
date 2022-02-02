@@ -82,6 +82,10 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   static constexpr auto op2_num_tensor_indices =
       num_tensor_indices - op1_num_tensor_indices;
 
+  static constexpr size_t num_ops_left = T1::num_ops_subtree;
+  static constexpr size_t num_ops_right = T2::num_ops_subtree;
+  static constexpr size_t num_ops_subtree = num_ops_left + num_ops_right + 1;
+
   static constexpr bool is_main_end = T1::is_main_beg;
   static constexpr bool is_main_beg = true;
 

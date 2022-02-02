@@ -22,6 +22,10 @@ struct NumberAsExpression
   using args_list = tmpl::list<>;
   static constexpr auto num_tensor_indices = 0;
 
+  static constexpr size_t num_ops_left = 0;
+  static constexpr size_t num_ops_right = 0;
+  static constexpr size_t num_ops_subtree = 0;
+
   static constexpr bool is_main_end = true;
   static constexpr bool is_main_beg = true;
 
