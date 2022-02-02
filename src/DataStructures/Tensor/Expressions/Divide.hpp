@@ -60,6 +60,10 @@ struct Divide : public TensorExpression<
   static constexpr auto op2_multi_index =
       make_array<op2_num_tensor_indices, size_t>(0);
 
+  static constexpr size_t num_ops_left = T1::num_ops_subtree;
+  static constexpr size_t num_ops_right = T2::num_ops_subtree;
+  static constexpr size_t num_ops_subtree = num_ops_left + num_ops_right + 1;
+
   static constexpr bool is_main_end = T1::is_main_beg;
   static constexpr bool is_main_beg = true;
 
