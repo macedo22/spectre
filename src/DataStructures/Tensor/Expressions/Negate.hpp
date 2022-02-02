@@ -31,8 +31,13 @@ struct Negate
   using args_list = typename T::args_list;
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
 
+  static constexpr bool is_main_end = T::is_main_beg;
+  static constexpr bool is_main_beg = true;
+
   Negate(T t) : t_(std::move(t)) {}
   ~Negate() override = default;
+
+  type get_used_for_size() const { return t_.get_used_for_size(); }
 
   /// \brief Return the value of the component of the negated tensor expression
   /// at a given multi-index
@@ -44,6 +49,28 @@ struct Negate
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     return -t_.get(multi_index);
+  }
+
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+      const ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& multi_index) const {
+    if constexpr (is_main_end) {
+      (void)multi_index;
+      return -result_component;
+    } else {
+      return -t_.get_main(result_component, multi_index);
+    }
+  }
+
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE void visit_main(
+      ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& multi_index) const {
+    t_.visit_main(result_component, multi_index);
+    if constexpr (is_main_beg) {
+      result_component = get_main(result_component, multi_index);
+    }
   }
 
  private:

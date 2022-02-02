@@ -82,8 +82,19 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   static constexpr auto op2_num_tensor_indices =
       num_tensor_indices - op1_num_tensor_indices;
 
+  static constexpr bool is_main_end = T1::is_main_beg;
+  static constexpr bool is_main_beg = true;
+
   OuterProduct(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~OuterProduct() override = default;
+
+  type get_used_for_size() const {
+    if constexpr (not std::is_base_of_v<NumberAsExpression, T2>) {
+      return t2_.get_used_for_size();
+    } else {
+      return t1_.get_used_for_size();
+    }
+  }
 
   constexpr SPECTRE_ALWAYS_INLINE std::array<size_t, op1_num_tensor_indices>
   get_op1_multi_index(
@@ -129,6 +140,49 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     return t1_.get(get_op1_multi_index(result_multi_index)) *
            t2_.get(get_op2_multi_index(result_multi_index));
+  }
+
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+      const ResultType& result_component,
+      const std::array<size_t, op1_num_tensor_indices>& op1_multi_index,
+      const std::array<size_t, op2_num_tensor_indices>& op2_multi_index) const {
+    // don't send result_component down right branch because we are at a * and
+    // shouldn't edit result_component in right child
+    if constexpr (is_main_end) {
+      (void)op1_multi_index;
+      return result_component * t2_.get(op2_multi_index);
+    } else {
+      return t1_.get_main(result_component, op1_multi_index) *
+             t2_.get(op2_multi_index);
+    }
+  }
+
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+      const ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    // don't send result_component down right branch because we are at a * and
+    // shouldn't edit result_component in right child
+    return get_main(result_component, get_op1_multi_index(result_multi_index),
+                    get_op2_multi_index(result_multi_index));
+  }
+
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE void visit_main(
+      ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    const std::array<size_t, op1_num_tensor_indices> op1_multi_index =
+        get_op1_multi_index(result_multi_index);
+    const std::array<size_t, op2_num_tensor_indices> op2_multi_index =
+        get_op2_multi_index(result_multi_index);
+
+    t1_.visit_main(result_component, op1_multi_index);
+
+    if constexpr (is_main_beg) {
+      result_component =
+          get_main(result_component, op1_multi_index, op2_multi_index);
+    }
   }
 
  private:
