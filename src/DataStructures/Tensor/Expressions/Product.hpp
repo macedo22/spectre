@@ -85,6 +85,27 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   OuterProduct(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~OuterProduct() override = default;
 
+  constexpr SPECTRE_ALWAYS_INLINE std::array<size_t, op1_num_tensor_indices>
+  get_op1_multi_index(
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    std::array<size_t, op1_num_tensor_indices> op1_multi_index{};
+    for (size_t i = 0; i < op1_num_tensor_indices; i++) {
+      gsl::at(op1_multi_index, i) = gsl::at(result_multi_index, i);
+    }
+    return op1_multi_index;
+  }
+
+  constexpr SPECTRE_ALWAYS_INLINE std::array<size_t, op2_num_tensor_indices>
+  get_op2_multi_index(
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    std::array<size_t, op2_num_tensor_indices> op2_multi_index{};
+    for (size_t i = 0; i < op2_num_tensor_indices; i++) {
+      gsl::at(op2_multi_index, i) =
+          gsl::at(result_multi_index, op1_num_tensor_indices + i);
+    }
+    return op2_multi_index;
+  }
+
   /// \brief Return the value of the component of the outer product tensor at a
   /// given multi-index
   ///
@@ -106,18 +127,8 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// product tensor
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
-    std::array<size_t, op1_num_tensor_indices> op1_multi_index{};
-    for (size_t i = 0; i < op1_num_tensor_indices; i++) {
-      gsl::at(op1_multi_index, i) = gsl::at(result_multi_index, i);
-    }
-
-    std::array<size_t, op2_num_tensor_indices> op2_multi_index{};
-    for (size_t i = 0; i < op2_num_tensor_indices; i++) {
-      gsl::at(op2_multi_index, i) =
-          gsl::at(result_multi_index, op1_num_tensor_indices + i);
-    }
-
-    return t1_.get(op1_multi_index) * t2_.get(op2_multi_index);
+    return t1_.get(get_op1_multi_index(result_multi_index)) *
+           t2_.get(get_op2_multi_index(result_multi_index));
   }
 
  private:
