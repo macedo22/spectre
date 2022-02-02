@@ -335,6 +335,10 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
       num_ops_to_evaluate_main_left + num_ops_to_evaluate_main_right + 1;
   static constexpr bool is_main_beg =
       num_ops_to_evaluate_main_subtree >= detail::max_num_ops_in_sub_expression;
+  static constexpr bool is_main_fork =
+      is_main_beg and
+      (num_ops_to_evaluate_main_left >= detail::max_num_ops_in_sub_expression or
+       num_ops_to_evaluate_main_right >= detail::max_num_ops_in_sub_expression);
 
   AddSub(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~AddSub() override = default;
@@ -504,6 +508,38 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   }
 
   template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE void add_or_subtract_main_fork(
+      ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& op1_multi_index,
+      const std::array<size_t, num_tensor_indices_op2>& op2_multi_index) const {
+    if constexpr (Sign == 1) {
+      if constexpr (is_main_end) {
+        (void)op1_multi_index;
+        result_component += t2_.get(op2_multi_index);
+      } else {
+        result_component = t1_.get_main(result_component, op1_multi_index);
+        result_component += t2_.get(op2_multi_index);
+      }
+    } else {
+      if constexpr (is_main_end) {
+        (void)op1_multi_index;
+        result_component -= t2_.get(op2_multi_index);
+      } else {
+        result_component = t1_.get_main(result_component, op1_multi_index);
+        result_component -= t2_.get(op2_multi_index);
+      }
+    }
+  }
+
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE void get_main_fork(
+      ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    add_or_subtract_main_fork(result_component, result_multi_index,
+                              get_op2_multi_index(result_multi_index));
+  }
+
+  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE decltype(auto) add_or_subtract_main(
       const ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& op1_multi_index,
@@ -542,7 +578,11 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
     t1_.visit_main(result_component, result_multi_index);
 
     if constexpr (is_main_beg) {
-      result_component = get_main(result_component, result_multi_index);
+      if constexpr (is_main_fork) {
+        get_main_fork(result_component, result_multi_index);
+      } else {
+        result_component = get_main(result_component, result_multi_index);
+      }
     }
   }
 
