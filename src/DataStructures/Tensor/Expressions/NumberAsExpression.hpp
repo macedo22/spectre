@@ -22,6 +22,9 @@ struct NumberAsExpression
   using args_list = tmpl::list<>;
   static constexpr auto num_tensor_indices = 0;
 
+  static constexpr bool is_main_end = true;
+  static constexpr bool is_main_beg = true;
+
   NumberAsExpression(const double number) : number_(number) {}
   ~NumberAsExpression() override = default;
 
@@ -36,6 +39,23 @@ struct NumberAsExpression
   SPECTRE_ALWAYS_INLINE double get(
       const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
     return number_;
+  }
+
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE double get_main(
+      const ResultType& /*result_component*/,
+      const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
+    return number_;
+  }
+
+  // TODO : remove? don't need at leaves?
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE void visit_main(
+      ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& multi_index) const {
+    if constexpr (is_main_beg) {
+      result_component = get_main(result_component, multi_index);
+    }
   }
 
  private:
