@@ -297,8 +297,8 @@ struct TensorContract
   static constexpr size_t num_ops_to_evaluate_main_right = num_ops_right;
   static constexpr size_t num_ops_to_evaluate_main_subtree =
       num_ops_to_evaluate_main_left + num_ops_to_evaluate_main_right;
-  static constexpr bool is_main_beg =
-      num_ops_to_evaluate_main_subtree >= detail::max_num_ops_in_sub_expression;
+  static constexpr bool is_main_beg = num_ops_to_evaluate_main_subtree >=
+                                      2 * detail::max_num_ops_in_sub_expression;
 
   explicit TensorContract(
       const TensorExpression<T, X, Symm, IndexList, ArgsList>& t)
