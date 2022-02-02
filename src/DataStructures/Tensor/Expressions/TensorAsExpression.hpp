@@ -187,6 +187,10 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
   using args_list = ArgsList<Args...>;
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
 
+  static constexpr size_t num_ops_left = 0;
+  static constexpr size_t num_ops_right = 0;
+  static constexpr size_t num_ops_subtree = 0;
+
   static constexpr bool is_main_end = true;
   static constexpr bool is_main_beg = true;
 

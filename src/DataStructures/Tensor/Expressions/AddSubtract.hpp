@@ -323,6 +323,10 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
       generic_indices_at_same_positions<tmpl::list<Args1...>,
                                         tmpl::list<Args2...>>::value;
 
+  static constexpr size_t num_ops_left = T1::num_ops_subtree;
+  static constexpr size_t num_ops_right = T2::num_ops_subtree;
+  static constexpr size_t num_ops_subtree = num_ops_left + num_ops_right + 1;
+
   static constexpr bool is_main_end = T1::is_main_beg;
   static constexpr bool is_main_beg = true;
 
