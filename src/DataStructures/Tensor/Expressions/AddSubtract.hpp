@@ -323,8 +323,19 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
       generic_indices_at_same_positions<tmpl::list<Args1...>,
                                         tmpl::list<Args2...>>::value;
 
+  static constexpr bool is_main_end = T1::is_main_beg;
+  static constexpr bool is_main_beg = true;
+
   AddSub(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~AddSub() override = default;
+
+  type get_used_for_size() const {
+    if constexpr (not std::is_base_of_v<NumberAsExpression, T2>) {
+      return t2_.get_used_for_size();
+    } else {
+      return t1_.get_used_for_size();
+    }
+  }
 
   SPECTRE_ALWAYS_INLINE std::array<size_t, num_tensor_indices_op2>
   get_op2_multi_index(
@@ -480,6 +491,49 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     return add_or_subtract(result_multi_index,
                            get_op2_multi_index(result_multi_index));
+  }
+
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE decltype(auto) add_or_subtract_main(
+      const ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& op1_multi_index,
+      const std::array<size_t, num_tensor_indices_op2>& op2_multi_index) const {
+    if constexpr (Sign == 1) {
+      if constexpr (is_main_end) {
+        (void)op1_multi_index;
+        return result_component + t2_.get(op2_multi_index);
+      } else {
+        return t1_.get_main(result_component, op1_multi_index) +
+               t2_.get(op2_multi_index);
+      }
+    } else {
+      if constexpr (is_main_end) {
+        (void)op1_multi_index;
+        return result_component - t2_.get(op2_multi_index);
+      } else {
+        return t1_.get_main(result_component, op1_multi_index) -
+               t2_.get(op2_multi_index);
+      }
+    }
+  }
+
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+      const ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    return add_or_subtract_main(result_component, result_multi_index,
+                                get_op2_multi_index(result_multi_index));
+  }
+
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE void visit_main(
+      ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    t1_.visit_main(result_component, result_multi_index);
+
+    if constexpr (is_main_beg) {
+      result_component = get_main(result_component, result_multi_index);
+    }
   }
 
  private:
