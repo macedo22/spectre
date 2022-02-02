@@ -328,7 +328,13 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   static constexpr size_t num_ops_subtree = num_ops_left + num_ops_right + 1;
 
   static constexpr bool is_main_end = T1::is_main_beg;
-  static constexpr bool is_main_beg = true;
+  static constexpr size_t num_ops_to_evaluate_main_left =
+      is_main_end ? 0 : T1::num_ops_to_evaluate_main_subtree;
+  static constexpr size_t num_ops_to_evaluate_main_right = num_ops_right;
+  static constexpr size_t num_ops_to_evaluate_main_subtree =
+      num_ops_to_evaluate_main_left + num_ops_to_evaluate_main_right + 1;
+  static constexpr bool is_main_beg =
+      num_ops_to_evaluate_main_subtree >= detail::max_num_ops_in_sub_expression;
 
   AddSub(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~AddSub() override = default;
