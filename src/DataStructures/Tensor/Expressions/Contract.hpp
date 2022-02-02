@@ -283,10 +283,15 @@ struct TensorContract
       uncontracted_index_dims = contracted_type::uncontracted_index_dims;
   static constexpr size_t num_terms_summed = contracted_type::num_terms_summed;
 
+  static constexpr bool is_main_end = T::is_main_beg;
+  static constexpr bool is_main_beg = true;
+
   explicit TensorContract(
       const TensorExpression<T, X, Symm, IndexList, ArgsList>& t)
       : t_(~t) {}
   ~TensorContract() override = default;
+
+  type get_used_for_size() const { return t_.get_used_for_size(); }
 
   // TODO : document this and other new stuff
   static constexpr std::array<size_t, num_uncontracted_tensor_indices>
@@ -411,6 +416,55 @@ struct TensorContract
         first_operand_multi_index_to_sum =
             get_first_index_to_sum(contracted_multi_index);
     return compute_contraction<0>(t_, first_operand_multi_index_to_sum);
+  }
+
+  template <size_t Iteration, typename ResultType>
+  static decltype(auto) compute_contraction_main(
+      const T& t, const ResultType& result_component,
+      const std::array<size_t, num_uncontracted_tensor_indices>&
+          current_multi_index) {
+    if constexpr (is_main_end) {
+      if constexpr (Iteration < num_terms_summed - 1) {
+        // We have more than one component left to sum
+        return compute_contraction_main<Iteration + 1>(
+                   t, result_component,
+                   get_next_multi_index_to_sum(current_multi_index)) +
+               t.get(current_multi_index);
+      } else {
+        // We only have one final component to sum
+        return result_component;
+      }
+    } else {
+      if constexpr (Iteration < num_terms_summed - 1) {
+        // We have more than one component left to sum
+        return compute_contraction_main<Iteration + 1>(
+                   t, result_component,
+                   get_next_multi_index_to_sum(current_multi_index)) +
+               t.get(current_multi_index);
+      } else {
+        // We only have one final component to sum
+        return t.get_main(result_component, current_multi_index);
+      }
+    }
+  }
+
+  template <typename ResultType>
+  decltype(auto) get_main(const ResultType& result_component,
+                          const std::array<size_t, num_tensor_indices>&
+                              contracted_multi_index) const {
+    return compute_contraction_main<0>(
+        t_, result_component, get_first_index_to_sum(contracted_multi_index));
+  }
+
+  template <typename ResultType>
+  void visit_main(ResultType& result_component,
+                  const std::array<size_t, num_tensor_indices>&
+                      contracted_multi_index) const {
+    t_.visit_main(result_component,
+                  get_last_index_to_sum(contracted_multi_index));
+    if constexpr (is_main_beg) {
+      result_component = get_main(result_component, contracted_multi_index);
+    }
   }
 
  private:

@@ -60,8 +60,19 @@ struct Divide : public TensorExpression<
   static constexpr auto op2_multi_index =
       make_array<op2_num_tensor_indices, size_t>(0);
 
+  static constexpr bool is_main_end = T1::is_main_beg;
+  static constexpr bool is_main_beg = true;
+
   Divide(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~Divide() override = default;
+
+  type get_used_for_size() const {
+    if constexpr (not std::is_base_of_v<NumberAsExpression, T2>) {
+      return t2_.get_used_for_size();
+    } else {
+      return t1_.get_used_for_size();
+    }
+  }
 
   /// \brief Return the value of the component of the quotient tensor at a given
   /// multi-index
@@ -73,6 +84,31 @@ struct Divide : public TensorExpression<
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     return t1_.get(result_multi_index) / t2_.get(op2_multi_index);
+  }
+
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+      const ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    if constexpr (is_main_end) {
+      (void)result_multi_index;
+      return result_component / t2_.get(op2_multi_index);
+    } else {
+      return t1_.get_main(result_component, result_multi_index) /
+             t2_.get(op2_multi_index);
+    }
+  }
+
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE void visit_main(
+      ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    t1_.visit_main(result_component, result_multi_index);
+    if constexpr (is_main_beg) {
+      // don't send result_component down right branch because we are at a * and
+      // shouldn't edit result_component in right child
+      result_component = get_main(result_component, result_multi_index);
+    }
   }
 
  private:
