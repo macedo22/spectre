@@ -283,6 +283,11 @@ struct TensorContract
       uncontracted_index_dims = contracted_type::uncontracted_index_dims;
   static constexpr size_t num_terms_summed = contracted_type::num_terms_summed;
 
+  static constexpr size_t num_ops_left =
+      T::num_ops_subtree * num_terms_summed + num_terms_summed - 1;
+  static constexpr size_t num_ops_right = 0;
+  static constexpr size_t num_ops_subtree = num_ops_left;
+
   static constexpr bool is_main_end = T::is_main_beg;
   static constexpr bool is_main_beg = true;
 
