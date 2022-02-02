@@ -184,13 +184,18 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
       typename detail::TensorAsExpressionSymm<Symm, IndexList<Indices...>,
                                               ArgsList<Args...>>::type;
   using index_list = IndexList<Indices...>;
-  static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
   using args_list = ArgsList<Args...>;
+  static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
+
+  static constexpr bool is_main_end = true;
+  static constexpr bool is_main_beg = true;
 
   /// Construct an expression from a Tensor
   explicit TensorAsExpression(const Tensor<X, Symm, IndexList<Indices...>>& t)
       : t_(&t) {}
   ~TensorAsExpression() override = default;
+
+  type get_used_for_size() const { return t_->operator[](0); }
 
   /// \brief Returns the value of the contained tensor's multi-index
   ///
@@ -199,6 +204,23 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     return t_->get(multi_index);
+  }
+
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+      const ResultType& /*result_component*/,
+      const std::array<size_t, num_tensor_indices>& multi_index) const {
+    return t_->get(multi_index);
+  }
+
+  // TODO : remove? don't need at leaves?
+  template <typename ResultType>
+  SPECTRE_ALWAYS_INLINE void visit_main(
+      ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& multi_index) const {
+    if constexpr (is_main_beg) {
+      result_component = get_main(result_component, multi_index);
+    }
   }
 
   /// Retrieve the i'th entry of the Tensor being held
