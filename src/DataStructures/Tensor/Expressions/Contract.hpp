@@ -601,7 +601,7 @@ struct TensorContract
       // We have more than one component left to sum
       (void)starting_multi_index;
       return compute_contraction_main_stop_at_branches<Iteration - 1>(
-                 t, get_previous_multi_index_to_sum(current_multi_index),
+                 t, get_next_multi_index_to_sum(current_multi_index),
                  starting_multi_index) +
              t.get(current_multi_index);
     } else {
@@ -623,13 +623,8 @@ struct TensorContract
   }
 
   // if we fork (split every term), then go up and get previous index
-  // else, if we branch (split every leg_length terms), go up to each
+  // else, if we branch (split every leg_length terms), go down to each
   // branch point and compute each leg separately
-  // TODO : may be good to iterate down (instead) to access elements
-  // in a nice order, which is even more important with branching
-  // than with forking. This wil probably require separate
-  // definitions for "previous" and "next" etc. depending on whether we
-  // have forks or branches
   template <typename ResultType>
   void visit_contract_main(
       ResultType& result_component,
@@ -657,29 +652,30 @@ struct TensorContract
       }
     } else if constexpr (stops_are_branches) {
       // evaluate each leg
-
+      current_multi_index = get_first_index_to_sum(contracted_multi_index);
       // if we have less than a full-length leg leftover
       if constexpr (last_leg_length > 0) {
         // std::cout << "hi" << std::endl;
-        // first get the final leg
+        // first get the remainder if there is one
         if constexpr (not is_main_end) {
           // get remainder
           result_component = t_.get_main(result_component, current_multi_index);
         }
-        // start at 1 because we already did iteration 0 of the leg
+
+        // next add up all the full-length legs
+        for (size_t i = 0; i < num_full_legs; i++) {
+          result_component +=
+              compute_contraction_main_stop_at_branches<leg_length - 1>(
+                  t_, get_next_multi_index_to_sum(current_multi_index),
+                  current_multi_index);
+        }
+        // lastly, get rest of the last leg if it's not just the one term we
+        // already took care of
         if constexpr (last_leg_length > 1) {
           result_component +=
               compute_contraction_main_stop_at_branches<leg_length -
                                                         last_leg_length - 1>(
-                  t_, get_previous_multi_index_to_sum(current_multi_index),
-                  current_multi_index);
-        }
-
-        // now add up all the full-length legs
-        for (size_t i = 0; i < num_full_legs; i++) {
-          result_component +=
-              compute_contraction_main_stop_at_branches<leg_length - 1>(
-                  t_, get_previous_multi_index_to_sum(current_multi_index),
+                  t_, get_next_multi_index_to_sum(current_multi_index),
                   current_multi_index);
         }
       }  // we only have full-length legs, no leftovers
@@ -687,22 +683,11 @@ struct TensorContract
         // std::cout << "hiiiiii" << std::endl;
         // std::cout << "current_multi_index : " << current_multi_index
         //   << std::endl;
-        // first get the final leg
+        // first get the remainder if there is one
         if constexpr (not is_main_end) {
           // get remainder
           result_component = t_.get_main(result_component, current_multi_index);
           //   std::cout << "end of not is_main_end : " << result_component
-          //             << std::endl;
-          //   std::cout << "current_multi_index : " << current_multi_index
-          //             << std::endl;
-        }
-        // start at 1 because we already did iteration 0 of the leg
-        if constexpr (leg_length > 1) {
-          result_component +=
-              compute_contraction_main_stop_at_branches<leg_length - 2>(
-                  t_, get_previous_multi_index_to_sum(current_multi_index),
-                  current_multi_index);
-          //   std::cout << "end of last_leg_length > 1 : " << result_component
           //             << std::endl;
           //   std::cout << "current_multi_index : " << current_multi_index
           //             << std::endl;
@@ -712,15 +697,28 @@ struct TensorContract
         // std::cout << "num_terms_summed : " << num_terms_summed << std::endl;
         // std::cout << "leg_length : " << leg_length << std::endl;
         // std::cout << "last_leg_length : " << last_leg_length << std::endl;
-        // now add up all but the first of the full-length legs
+        // next add up all the full-length legs
         for (size_t i = 1; i < num_full_legs; i++) {
           result_component +=
               compute_contraction_main_stop_at_branches<leg_length - 1>(
-                  t_, get_previous_multi_index_to_sum(current_multi_index),
+                  t_, get_next_multi_index_to_sum(current_multi_index),
                   current_multi_index);
           //   std::cout << "for loop iteration : " << result_component <<
           //   std::endl; std::cout << "current_multi_index : " <<
           //   current_multi_index
+          //             << std::endl;
+        }
+
+        // lastly, get rest of the last leg if it's not just the one term we
+        // already took care of
+        if constexpr (leg_length > 1) {
+          result_component +=
+              compute_contraction_main_stop_at_branches<leg_length - 2>(
+                  t_, get_next_multi_index_to_sum(current_multi_index),
+                  current_multi_index);
+          //   std::cout << "end of last_leg_length > 1 : " << result_component
+          //             << std::endl;
+          //   std::cout << "current_multi_index : " << current_multi_index
           //             << std::endl;
         }
       }
