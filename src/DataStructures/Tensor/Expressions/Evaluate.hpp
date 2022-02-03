@@ -228,12 +228,18 @@ void evaluate(
                 gsl::at(rhs_spatial_spacetime_index_positions, j)) += 1;
       }
 
-      (*lhs_tensor)[i] = 0.0;
-      (~rhs_tensorexpression).visit_main((*lhs_tensor)[i], rhs_multi_index);
-      if constexpr (not std::decay_t<decltype(
-                        ~rhs_tensorexpression)>::is_main_beg) {
-        (*lhs_tensor)[i] =
-            (~rhs_tensorexpression).get_main((*lhs_tensor)[i], rhs_multi_index);
+      if constexpr (std::decay_t<decltype(
+                        ~rhs_tensorexpression)>::num_ops_subtree <=
+                    2 * detail::max_num_ops_in_sub_expression) {
+        (*lhs_tensor)[i] = (~rhs_tensorexpression).get(rhs_multi_index);
+      } else {
+        (*lhs_tensor)[i] = 0.0;
+        (~rhs_tensorexpression).visit_main((*lhs_tensor)[i], rhs_multi_index);
+        if constexpr (not std::decay_t<decltype(
+                          ~rhs_tensorexpression)>::is_main_beg) {
+          (*lhs_tensor)[i] = (~rhs_tensorexpression)
+                                 .get_main((*lhs_tensor)[i], rhs_multi_index);
+        }
       }
     }
   }
