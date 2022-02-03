@@ -300,6 +300,38 @@ struct TensorContract
   static constexpr bool is_main_beg = num_ops_to_evaluate_main_subtree >=
                                       2 * detail::max_num_ops_in_sub_expression;
 
+  static constexpr size_t num_ops_subexpression = T::num_ops_subtree;
+  // compute how often to stop
+  static constexpr size_t leg_length = []() {
+    // if we're not even stopping, leg_length is all the terms
+    if constexpr (not is_main_beg) {
+      return num_terms_summed;
+    }
+    // if the subexpression itself has more than the max # of ops
+    else if constexpr (num_ops_subexpression >=
+                       detail::max_num_ops_in_sub_expression) {
+      return 0;
+    }
+    // otherwise, find how many terms to sum at each stop
+    else {
+      size_t length = 1;
+      while (2 * (length * (num_ops_subexpression + 1) - 1) <=
+             detail::max_num_ops_in_sub_expression) {
+        length *= 2;
+      }
+      return length;
+    }
+  }();
+
+  static constexpr size_t num_full_legs = num_terms_summed / leg_length;
+  static constexpr size_t last_leg_length = num_terms_summed % leg_length;
+
+  // make stops be forks if even the subexpression itself has more than the max
+  // # of ops
+  static constexpr bool stops_are_forks = leg_length == 0;
+  // make stops branches if not forks and vice versa
+  static constexpr bool stops_are_branches = not stops_are_forks;
+
   explicit TensorContract(
       const TensorExpression<T, X, Symm, IndexList, ArgsList>& t)
       : t_(~t) {}
@@ -408,6 +440,94 @@ struct TensorContract
     return next_uncontracted_multi_index;
   }
 
+  // update a multi-index to the previous one
+  static void update_to_previous_multi_index_to_sum(
+      std::array<size_t, num_uncontracted_tensor_indices>&
+          uncontracted_multi_index) {
+    size_t i = 0;
+    while (i < num_contracted_index_pairs) {
+      const size_t current_index_first_position = index_maps.second[i].first;
+      const size_t current_index_second_position = index_maps.second[i].second;
+
+      uncontracted_multi_index[current_index_first_position]++;
+      uncontracted_multi_index[current_index_second_position]++;
+
+      // if the previous index value is > dim, then we've wrapped around
+      // and we need to go again
+      if (not(uncontracted_multi_index[current_index_first_position] >
+              uncontracted_index_dims[current_index_first_position] - 1)) {
+        break;
+      }
+
+      uncontracted_multi_index[current_index_first_position] =
+          contracted_index_shifts[i].first;
+      uncontracted_multi_index[current_index_second_position] =
+          contracted_index_shifts[i].second;
+
+      i++;
+    }
+  }
+
+  // get a new multi-index that is the one before the one given
+  static std::array<size_t, num_uncontracted_tensor_indices>
+  get_previous_multi_index_to_sum(
+      const std::array<size_t, num_uncontracted_tensor_indices>&
+          uncontracted_multi_index) {
+    std::array<size_t, num_uncontracted_tensor_indices>
+        previous_uncontracted_multi_index = uncontracted_multi_index;
+    update_to_previous_multi_index_to_sum(previous_uncontracted_multi_index);
+    return previous_uncontracted_multi_index;
+  }
+
+  static std::array<size_t, num_uncontracted_tensor_indices>
+  get_nth_multi_index_to_sum(
+      const std::array<size_t, num_tensor_indices>& contracted_multi_index,
+      size_t n) {
+    std::array<size_t, num_uncontracted_tensor_indices>
+        uncontracted_multi_index{};
+
+    // set placeholders for debugging
+    for (size_t i = 0; i < num_uncontracted_tensor_indices; i++) {
+      uncontracted_multi_index[i] = std::numeric_limits<size_t>::max();
+    }
+
+    // fill uncontracted indices
+    for (size_t i = 0; i < num_tensor_indices; i++) {
+      uncontracted_multi_index[index_maps.first[i]] = contracted_multi_index[i];
+    }
+
+    // fill contracted indices
+    size_t divisor = num_terms_summed;
+    for (size_t i = num_contracted_index_pairs - 1;
+         i < num_contracted_index_pairs; i++) {
+      const size_t current_index_first_position = index_maps.second[i].first;
+      const size_t current_index_second_position = index_maps.second[i].second;
+      const size_t current_index_first_shift = contracted_index_shifts[i].first;
+      const size_t current_index_second_shift =
+          contracted_index_shifts[i].second;
+      const size_t current_index_first_dim =
+          uncontracted_index_dims[current_index_first_position];
+      // TODO : make this be a TensorContract member variable instead so this is
+      // not recomputed unnecessarily and repeatedly
+      const size_t current_index_num_dims_to_sum =
+          current_index_first_dim - current_index_first_shift;
+
+      divisor /= current_index_num_dims_to_sum;
+      // last contracted index unshifted value
+      const size_t current_index_unshifted_index_value = n / divisor;
+      // shift and fill first value in contracted pair
+      uncontracted_multi_index[current_index_first_position] =
+          current_index_unshifted_index_value + current_index_first_shift;
+      // shift and fill second value in contracted pair
+      uncontracted_multi_index[current_index_second_position] =
+          current_index_unshifted_index_value + current_index_second_shift;
+
+      n = n % divisor;
+    }
+
+    return uncontracted_multi_index;
+  }
+
   template <size_t Iteration>
   static decltype(auto) compute_contraction(
       const T& t, const std::array<size_t, num_uncontracted_tensor_indices>&
@@ -432,6 +552,8 @@ struct TensorContract
     return compute_contraction<0>(t_, first_operand_multi_index_to_sum);
   }
 
+  // for when contraction expression is not a main beg
+  // TODO : static assert this ^ or something?
   template <size_t Iteration, typename ResultType>
   static decltype(auto) compute_contraction_main(
       const T& t, const ResultType& result_component,
@@ -462,6 +584,36 @@ struct TensorContract
     }
   }
 
+  // for when contraction expression is a main beg and stops are branches
+  // TODO : static assert this ^ or something?
+  // travels "up" the main branch, so starts at
+  // Iteration = num_terms_summed - 1 and goes to Iteration = 0
+  template <size_t Iteration>
+  static decltype(auto) compute_contraction_main_stop_at_branches(
+      const T& t,
+      const std::array<size_t, num_uncontracted_tensor_indices>&
+          current_multi_index,
+      std::array<size_t, num_uncontracted_tensor_indices>&
+          starting_multi_index) {
+    if constexpr (Iteration != 0) {
+      //   std::cout << "if : current_multi_index : " << current_multi_index
+      // << std::endl;
+      // We have more than one component left to sum
+      (void)starting_multi_index;
+      return compute_contraction_main_stop_at_branches<Iteration - 1>(
+                 t, get_previous_multi_index_to_sum(current_multi_index),
+                 starting_multi_index) +
+             t.get(current_multi_index);
+    } else {
+      //   std::cout << "else : current_multi_index : " << current_multi_index
+      // << std::endl;
+      // TODO : don't need to overwrite starting if leg_length == 1
+      // We only have one final component to sum
+      starting_multi_index = current_multi_index;
+      return t.get(current_multi_index);
+    }
+  }
+
   template <typename ResultType>
   decltype(auto) get_main(const ResultType& result_component,
                           const std::array<size_t, num_tensor_indices>&
@@ -470,14 +622,121 @@ struct TensorContract
         t_, result_component, get_first_index_to_sum(contracted_multi_index));
   }
 
+  // if we fork (split every term), then go up and get previous index
+  // else, if we branch (split every leg_length terms), go up to each
+  // branch point and compute each leg separately
+  // TODO : may be good to iterate down (instead) to access elements
+  // in a nice order, which is even more important with branching
+  // than with forking. This wil probably require separate
+  // definitions for "previous" and "next" etc. depending on whether we
+  // have forks or branches
+  template <typename ResultType>
+  void visit_contract_main(
+      ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& contracted_multi_index,
+      std::array<size_t, num_uncontracted_tensor_indices> current_multi_index)
+      const {
+    if constexpr (stops_are_forks) {
+      // std::cout << "hey" << std::endl;
+      (void)contracted_multi_index;
+      if constexpr (not is_main_end) {
+        // we still need to compute what's below the contraction
+        result_component = t_.get_main(result_component, current_multi_index);
+      }
+      // now, the contraction is the lowest thing, so we can
+      // climb up and compute each term, visiting right branches
+      // along the way
+      // start at i == 1 because the above if takes care of the first term
+      // hoping that iterating will reduce pressure on cache?
+      for (size_t i = 1; i < num_terms_summed; i++) {
+        const std::array<size_t, num_uncontracted_tensor_indices>
+            previous_operand_multi_index_to_sum =
+                get_previous_multi_index_to_sum(current_multi_index);
+        result_component += t_.get(previous_operand_multi_index_to_sum);
+        current_multi_index = previous_operand_multi_index_to_sum;
+      }
+    } else if constexpr (stops_are_branches) {
+      // evaluate each leg
+
+      // if we have less than a full-length leg leftover
+      if constexpr (last_leg_length > 0) {
+        // std::cout << "hi" << std::endl;
+        // first get the final leg
+        if constexpr (not is_main_end) {
+          // get remainder
+          result_component = t_.get_main(result_component, current_multi_index);
+        }
+        // start at 1 because we already did iteration 0 of the leg
+        if constexpr (last_leg_length > 1) {
+          result_component +=
+              compute_contraction_main_stop_at_branches<leg_length -
+                                                        last_leg_length - 1>(
+                  t_, get_previous_multi_index_to_sum(current_multi_index),
+                  current_multi_index);
+        }
+
+        // now add up all the full-length legs
+        for (size_t i = 0; i < num_full_legs; i++) {
+          result_component +=
+              compute_contraction_main_stop_at_branches<leg_length - 1>(
+                  t_, get_previous_multi_index_to_sum(current_multi_index),
+                  current_multi_index);
+        }
+      }  // we only have full-length legs, no leftovers
+      else {
+        // std::cout << "hiiiiii" << std::endl;
+        // std::cout << "current_multi_index : " << current_multi_index
+        //   << std::endl;
+        // first get the final leg
+        if constexpr (not is_main_end) {
+          // get remainder
+          result_component = t_.get_main(result_component, current_multi_index);
+          //   std::cout << "end of not is_main_end : " << result_component
+          //             << std::endl;
+          //   std::cout << "current_multi_index : " << current_multi_index
+          //             << std::endl;
+        }
+        // start at 1 because we already did iteration 0 of the leg
+        if constexpr (leg_length > 1) {
+          result_component +=
+              compute_contraction_main_stop_at_branches<leg_length - 2>(
+                  t_, get_previous_multi_index_to_sum(current_multi_index),
+                  current_multi_index);
+          //   std::cout << "end of last_leg_length > 1 : " << result_component
+          //             << std::endl;
+          //   std::cout << "current_multi_index : " << current_multi_index
+          //             << std::endl;
+        }
+
+        // std::cout << "num_full_legs : " << num_full_legs << std::endl;
+        // std::cout << "num_terms_summed : " << num_terms_summed << std::endl;
+        // std::cout << "leg_length : " << leg_length << std::endl;
+        // std::cout << "last_leg_length : " << last_leg_length << std::endl;
+        // now add up all but the first of the full-length legs
+        for (size_t i = 1; i < num_full_legs; i++) {
+          result_component +=
+              compute_contraction_main_stop_at_branches<leg_length - 1>(
+                  t_, get_previous_multi_index_to_sum(current_multi_index),
+                  current_multi_index);
+          //   std::cout << "for loop iteration : " << result_component <<
+          //   std::endl; std::cout << "current_multi_index : " <<
+          //   current_multi_index
+          //             << std::endl;
+        }
+      }
+    }
+  }
+
   template <typename ResultType>
   void visit_main(ResultType& result_component,
                   const std::array<size_t, num_tensor_indices>&
                       contracted_multi_index) const {
-    t_.visit_main(result_component,
-                  get_last_index_to_sum(contracted_multi_index));
+    const auto last_operand_multi_index_to_sum =
+        get_last_index_to_sum(contracted_multi_index);
+    t_.visit_main(result_component, last_operand_multi_index_to_sum);
     if constexpr (is_main_beg) {
-      result_component = get_main(result_component, contracted_multi_index);
+      visit_contract_main(result_component, contracted_multi_index,
+                          last_operand_multi_index_to_sum);
     }
   }
 
