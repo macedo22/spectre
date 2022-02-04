@@ -32,6 +32,8 @@ struct NumberAsExpression
   static constexpr size_t num_ops_to_evaluate_main_subtree = 0;
   static constexpr bool is_main_beg = false;
 
+  static constexpr bool subtree_contains_main_beg = is_main_beg;
+
   NumberAsExpression(const double number) : number_(number) {}
   ~NumberAsExpression() override = default;
 
