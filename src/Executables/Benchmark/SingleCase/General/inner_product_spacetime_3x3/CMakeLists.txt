@@ -2,5 +2,4 @@
 # See LICENSE.txt for details.
 
 add_subdirectory(DataVector)
-add_subdirectory(General)
-add_subdirectory(GHTimeDerivative)
+add_subdirectory(double)
