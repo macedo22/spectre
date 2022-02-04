@@ -27,10 +27,10 @@ static constexpr size_t Dim = 1;
 constexpr size_t num_grid_points = 1000;
 
 using R_type =
-    Tensor<DataType, Symmetry<2, 1>,
+    Tensor<DataType, Symmetry<1>,
            index_list<SpacetimeIndex<Dim, UpLo::Up, Frame::Inertial>>>;
 using S_type =
-    Tensor<DataType, Symmetry<2, 1>,
+    Tensor<DataType, Symmetry<1>,
            index_list<SpacetimeIndex<Dim, UpLo::Lo, Frame::Inertial>>>;
 using result_type = Scalar<DataType>;
 
