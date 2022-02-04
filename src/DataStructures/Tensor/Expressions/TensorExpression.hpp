@@ -75,6 +75,22 @@ TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
 
 namespace TensorExpressions {
 namespace detail {
-static constexpr size_t max_num_ops_in_sub_expression = 8;
+static constexpr size_t max_num_ops_in_datavector_sub_expression = 8;
+static constexpr size_t max_num_ops_in_double_sub_expression = 32;
+
+template <typename DataType>
+struct max_num_ops_in_sub_expression_helper {
+  static_assert(std::is_same_v<DataType, DataVector> or
+                    std::is_same_v<DataType, double>,
+                "The number of maximum operations in a TensorExpression is "
+                "only defined for DataVector and double.");
+  static constexpr size_t value = std::is_same_v<DataType, DataVector>
+                                      ? max_num_ops_in_datavector_sub_expression
+                                      : max_num_ops_in_double_sub_expression;
+};
+
+template <typename DataType>
+inline constexpr size_t max_num_ops_in_sub_expression =
+    max_num_ops_in_sub_expression_helper<DataType>::value;
 }  // namespace detail
 }  // namespace TensorExpressions

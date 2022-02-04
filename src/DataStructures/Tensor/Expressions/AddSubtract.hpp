@@ -334,11 +334,13 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   static constexpr size_t num_ops_to_evaluate_main_subtree =
       num_ops_to_evaluate_main_left + num_ops_to_evaluate_main_right + 1;
   static constexpr bool is_main_beg =
-      num_ops_to_evaluate_main_subtree >= detail::max_num_ops_in_sub_expression;
+      num_ops_to_evaluate_main_subtree >=
+      detail::max_num_ops_in_sub_expression<type>;
   static constexpr bool is_main_fork =
-      is_main_beg and
-      (num_ops_to_evaluate_main_left >= detail::max_num_ops_in_sub_expression or
-       num_ops_to_evaluate_main_right >= detail::max_num_ops_in_sub_expression);
+      is_main_beg and (num_ops_to_evaluate_main_left >=
+                           detail::max_num_ops_in_sub_expression<type> or
+                       num_ops_to_evaluate_main_right >=
+                           detail::max_num_ops_in_sub_expression<type>);
 
   static constexpr bool subtree_contains_main_beg =
       is_main_beg or T1::subtree_contains_main_beg;

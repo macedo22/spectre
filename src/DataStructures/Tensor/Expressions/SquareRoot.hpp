@@ -52,7 +52,8 @@ struct SquareRoot
   static constexpr size_t num_ops_to_evaluate_main_subtree =
       num_ops_to_evaluate_main_left + num_ops_to_evaluate_main_right + 1;
   static constexpr bool is_main_beg =
-      num_ops_to_evaluate_main_subtree >= detail::max_num_ops_in_sub_expression;
+      num_ops_to_evaluate_main_subtree >=
+      detail::max_num_ops_in_sub_expression<type>;
 
   static constexpr bool subtree_contains_main_beg =
       is_main_beg or T::subtree_contains_main_beg;
