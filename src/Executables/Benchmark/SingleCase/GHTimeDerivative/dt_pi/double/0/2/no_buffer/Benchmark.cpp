@@ -5,12 +5,11 @@
 #pragma GCC diagnostic ignored "-Wredundant-decls"
 #include <benchmark.h>
 #pragma GCC diagnostic pop
-#include <limits>
 #include <random>
 
-#include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Executables/Benchmark/BenchmarkHelpers.hpp"
+#include "Executables/Benchmark/SingleCase/GHTimeDerivative/dt_pi/BenchmarkImpl.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
 #include "Utilities/Gsl.hpp"
 
@@ -20,37 +19,48 @@ extern "C" void CkRegisterMainModule(void) {}
 
 namespace {
 constexpr size_t seed = 17;
-constexpr size_t Dim = 3;
 std::mt19937 generator(seed);
-constexpr size_t num_grid_points = 1000;
 
-void bench_dt_pi(benchmark::State& state) {  // NOLINT
-  using dt_pi_type = tnsr::aa<DataVector, Dim>;
-  using spacetime_deriv_gauge_function_type = tnsr::ab<DataVector, Dim>;
-  using pi_two_normals_type = Scalar<DataVector>;
-  using pi_type = tnsr::aa<DataVector, Dim>;
-  using gamma0_type = Scalar<DataVector>;
-  using normal_spacetime_one_form_type = tnsr::a<DataVector, Dim>;
-  using gauge_constraint_type = tnsr::a<DataVector, Dim>;
-  using spacetime_metric_type = tnsr::aa<DataVector, Dim>;
-  using normal_dot_gauge_constraint_type = Scalar<DataVector>;
-  using christoffel_second_kind_type = tnsr::Abb<DataVector, Dim>;
-  using gauge_function_type = tnsr::a<DataVector, Dim>;
-  using pi_2_up_type = tnsr::aB<DataVector, Dim>;
-  using phi_1_up_type = tnsr::Iaa<DataVector, Dim>;
-  using phi_3_up_type = tnsr::iaB<DataVector, Dim>;
-  using christoffel_first_kind_3_up_type = tnsr::abC<DataVector, Dim>;
-  using pi_one_normal_type = tnsr::a<DataVector, Dim>;
-  using inverse_spatial_metric_type = tnsr::II<DataVector, Dim>;
-  using d_phi_type = tnsr::ijaa<DataVector, Dim>;
-  using lapse_type = Scalar<DataVector>;
-  using gamma1gamma2_type = Scalar<DataVector>;
-  using shift_dot_three_index_constraint_type = tnsr::aa<DataVector, Dim>;
-  using shift_type = tnsr::I<DataVector, Dim>;
-  using d_pi_type = tnsr::iaa<DataVector, Dim>;
+// tensor types in tensor equation being benchmarked
+using DataType = double;
+static constexpr size_t Dim = 2;
+constexpr size_t num_grid_points = 0;
 
-  const DataVector used_for_size =
-      DataVector(num_grid_points, std::numeric_limits<double>::signaling_NaN());
+using BenchmarkImpl = BenchmarkImpl<DataType, Dim>;
+using dt_pi_type = typename BenchmarkImpl::dt_pi_type;
+using spacetime_deriv_gauge_function_type =
+    typename BenchmarkImpl::spacetime_deriv_gauge_function_type;
+using pi_two_normals_type = typename BenchmarkImpl::pi_two_normals_type;
+using pi_type = typename BenchmarkImpl::pi_type;
+using gamma0_type = typename BenchmarkImpl::gamma0_type;
+using normal_spacetime_one_form_type =
+    typename BenchmarkImpl::normal_spacetime_one_form_type;
+using gauge_constraint_type = typename BenchmarkImpl::gauge_constraint_type;
+using spacetime_metric_type = typename BenchmarkImpl::spacetime_metric_type;
+using normal_dot_gauge_constraint_type =
+    typename BenchmarkImpl::normal_dot_gauge_constraint_type;
+using christoffel_second_kind_type =
+    typename BenchmarkImpl::christoffel_second_kind_type;
+using gauge_function_type = typename BenchmarkImpl::gauge_function_type;
+using pi_2_up_type = typename BenchmarkImpl::pi_2_up_type;
+using phi_1_up_type = typename BenchmarkImpl::phi_1_up_type;
+using phi_3_up_type = typename BenchmarkImpl::phi_3_up_type;
+using christoffel_first_kind_3_up_type =
+    typename BenchmarkImpl::christoffel_first_kind_3_up_type;
+using pi_one_normal_type = typename BenchmarkImpl::pi_one_normal_type;
+using inverse_spatial_metric_type =
+    typename BenchmarkImpl::inverse_spatial_metric_type;
+using d_phi_type = typename BenchmarkImpl::d_phi_type;
+using lapse_type = typename BenchmarkImpl::lapse_type;
+using gamma1gamma2_type = typename BenchmarkImpl::gamma1gamma2_type;
+using shift_dot_three_index_constraint_type =
+    typename BenchmarkImpl::shift_dot_three_index_constraint_type;
+using shift_type = typename BenchmarkImpl::shift_type;
+using d_pi_type = typename BenchmarkImpl::d_pi_type;
+
+void bench(benchmark::State& state) {  // NOLINT
+  const DataType used_for_size =
+      BenchmarkHelpers::get_used_for_size<DataType>(num_grid_points);
   std::uniform_real_distribution<> distribution(0.1, 1.0);
 
   // RHS: spacetime_deriv_gauge_function
@@ -171,34 +181,20 @@ void bench_dt_pi(benchmark::State& state) {  // NOLINT
   dt_pi_type dt_pi(used_for_size);
 
   for (auto _ : state) {
-    TensorExpressions::evaluate<ti_a, ti_b>(
-        make_not_null(&dt_pi),
-        (-spacetime_deriv_gauge_function(ti_a, ti_b) -
-         spacetime_deriv_gauge_function(ti_b, ti_a) -
-         0.5 * pi_two_normals() * pi(ti_a, ti_b) +
-         gamma0() * (normal_spacetime_one_form(ti_a) * gauge_constraint(ti_b) +
-                     normal_spacetime_one_form(ti_b) * gauge_constraint(ti_a)) -
-         gamma0() * spacetime_metric(ti_a, ti_b) *
-             normal_dot_gauge_constraint() +
-         2.0 * christoffel_second_kind(ti_C, ti_a, ti_b) *
-             gauge_function(ti_c) -
-         2.0 * pi(ti_a, ti_c) * pi_2_up(ti_b, ti_C) +
-         // Note : flipped ti_b and ti_a in next product so test passes
-         // (symmetry asusmption issues)
-         2.0 * phi_3_up(ti_i, ti_a, ti_C) * phi_1_up(ti_I, ti_b, ti_c) -
-         2.0 * christoffel_first_kind_3_up(ti_a, ti_d, ti_C) *
-             christoffel_first_kind_3_up(ti_b, ti_c, ti_D) -
-         pi_one_normal(ti_j) * phi_1_up(ti_J, ti_a, ti_b) -
-         inverse_spatial_metric(ti_J, ti_K) * d_phi(ti_j, ti_k, ti_a, ti_b)) *
-                lapse() +
-            gamma1gamma2() * shift_dot_three_index_constraint(ti_a, ti_b) +
-            shift(ti_J) * d_pi(ti_j, ti_a, ti_b));
+    BenchmarkImpl::apply(make_not_null(&dt_pi), spacetime_deriv_gauge_function,
+                         pi_two_normals, pi, gamma0, normal_spacetime_one_form,
+                         gauge_constraint, spacetime_metric,
+                         normal_dot_gauge_constraint, christoffel_second_kind,
+                         gauge_function, pi_2_up, phi_1_up, phi_3_up,
+                         christoffel_first_kind_3_up, pi_one_normal,
+                         inverse_spatial_metric, d_phi, lapse, gamma1gamma2,
+                         shift_dot_three_index_constraint, shift, d_pi);
     benchmark::DoNotOptimize(dt_pi);
     benchmark::ClobberMemory();
   }
 }
 
-BENCHMARK(bench_dt_pi);
+BENCHMARK(bench);
 }  // namespace
 
 // Ignore the warning about an extra ';' because some versions of benchmark
