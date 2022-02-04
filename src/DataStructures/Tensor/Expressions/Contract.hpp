@@ -611,7 +611,6 @@ struct TensorContract
     } else {
       //   std::cout << "else : current_multi_index : " << current_multi_index
       // << std::endl;
-      // TODO : don't need to overwrite starting if leg_length == 1
       // We only have one final component to sum
       starting_multi_index = current_multi_index;
       return t.get(current_multi_index);
