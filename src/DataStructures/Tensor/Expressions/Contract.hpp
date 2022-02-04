@@ -297,8 +297,9 @@ struct TensorContract
   static constexpr size_t num_ops_to_evaluate_main_right = num_ops_right;
   static constexpr size_t num_ops_to_evaluate_main_subtree =
       num_ops_to_evaluate_main_left + num_ops_to_evaluate_main_right;
-  static constexpr bool is_main_beg = num_ops_to_evaluate_main_subtree >
-                                      2 * detail::max_num_ops_in_sub_expression;
+  static constexpr bool is_main_beg =
+      num_ops_to_evaluate_main_subtree >
+      2 * detail::max_num_ops_in_sub_expression<type>;
 
   static constexpr bool subtree_contains_main_beg =
       is_main_beg or T::subtree_contains_main_beg;
@@ -312,14 +313,14 @@ struct TensorContract
     }
     // if the subexpression itself has more than the max # of ops
     else if constexpr (num_ops_subexpression >=
-                       detail::max_num_ops_in_sub_expression) {
+                       detail::max_num_ops_in_sub_expression<type>) {
       return 0;
     }
     // otherwise, find how many terms to sum at each stop
     else {
       size_t length = 1;
       while (2 * (length * (num_ops_subexpression + 1) - 1) <=
-             detail::max_num_ops_in_sub_expression) {
+             detail::max_num_ops_in_sub_expression<type>) {
         length *= 2;
       }
       return length;
