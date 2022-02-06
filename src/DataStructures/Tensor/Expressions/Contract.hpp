@@ -341,10 +341,13 @@ struct TensorContract
       : t_(~t) {}
   ~TensorContract() override = default;
 
-  type get_used_for_size() const { return t_.get_used_for_size(); }
+  SPECTRE_ALWAYS_INLINE type get_used_for_size() const {
+    return t_.get_used_for_size();
+  }
 
   // TODO : document this and other new stuff
-  static constexpr std::array<size_t, num_uncontracted_tensor_indices>
+  SPECTRE_ALWAYS_INLINE static constexpr std::array<
+      size_t, num_uncontracted_tensor_indices>
   get_first_index_to_sum(
       const std::array<size_t, num_tensor_indices>& contracted_multi_index) {
     // TODO : make with std::numeric_limits<size_t>::max() with make_with_value
@@ -375,7 +378,8 @@ struct TensorContract
   }
 
   // TODO : terrible lazy hack, do something better to get last index
-  static constexpr std::array<size_t, num_uncontracted_tensor_indices>
+  SPECTRE_ALWAYS_INLINE static constexpr std::array<
+      size_t, num_uncontracted_tensor_indices>
   get_last_index_to_sum(
       const std::array<size_t, num_tensor_indices>& contracted_multi_index) {
     // TODO : make with std::numeric_limits<size_t>::max() with make_with_value
@@ -406,7 +410,8 @@ struct TensorContract
   }
 
   // TODO : use gsl::at instead of brackets everywhere in this file
-  static std::array<size_t, num_uncontracted_tensor_indices>
+  SPECTRE_ALWAYS_INLINE static std::array<size_t,
+                                          num_uncontracted_tensor_indices>
   get_next_multi_index_to_sum(
       const std::array<size_t, num_uncontracted_tensor_indices>&
           uncontracted_multi_index) {
@@ -445,7 +450,7 @@ struct TensorContract
   }
 
   // update a multi-index to the previous one
-  static void update_to_previous_multi_index_to_sum(
+  SPECTRE_ALWAYS_INLINE static void update_to_previous_multi_index_to_sum(
       std::array<size_t, num_uncontracted_tensor_indices>&
           uncontracted_multi_index) {
     size_t i = 0;
@@ -473,7 +478,8 @@ struct TensorContract
   }
 
   // get a new multi-index that is the one before the one given
-  static std::array<size_t, num_uncontracted_tensor_indices>
+  SPECTRE_ALWAYS_INLINE static std::array<size_t,
+                                          num_uncontracted_tensor_indices>
   get_previous_multi_index_to_sum(
       const std::array<size_t, num_uncontracted_tensor_indices>&
           uncontracted_multi_index) {
@@ -483,7 +489,8 @@ struct TensorContract
     return previous_uncontracted_multi_index;
   }
 
-  static std::array<size_t, num_uncontracted_tensor_indices>
+  SPECTRE_ALWAYS_INLINE static std::array<size_t,
+                                          num_uncontracted_tensor_indices>
   get_nth_multi_index_to_sum(
       const std::array<size_t, num_tensor_indices>& contracted_multi_index,
       size_t n) {
@@ -533,7 +540,7 @@ struct TensorContract
   }
 
   template <size_t Iteration>
-  static decltype(auto) compute_contraction(
+  SPECTRE_ALWAYS_INLINE static decltype(auto) compute_contraction(
       const T& t, const std::array<size_t, num_uncontracted_tensor_indices>&
                       current_multi_index) {
     if constexpr (Iteration < num_terms_summed - 1) {
@@ -548,8 +555,9 @@ struct TensorContract
     }
   }
 
-  decltype(auto) get(const std::array<size_t, num_tensor_indices>&
-                         contracted_multi_index) const {
+  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+      const std::array<size_t, num_tensor_indices>& contracted_multi_index)
+      const {
     std::array<size_t, num_uncontracted_tensor_indices>
         first_operand_multi_index_to_sum =
             get_first_index_to_sum(contracted_multi_index);
@@ -559,7 +567,7 @@ struct TensorContract
   // for when contraction expression is not a main beg
   // TODO : static assert this ^ or something?
   template <size_t Iteration, typename ResultType>
-  static decltype(auto) compute_contraction_main(
+  SPECTRE_ALWAYS_INLINE static decltype(auto) compute_contraction_main(
       const T& t, const ResultType& result_component,
       const std::array<size_t, num_uncontracted_tensor_indices>&
           current_multi_index) {
@@ -593,7 +601,8 @@ struct TensorContract
   // travels "up" the main branch, so starts at
   // Iteration = num_terms_summed - 1 and goes to Iteration = 0
   template <size_t Iteration>
-  static decltype(auto) compute_contraction_main_stop_at_branches(
+  SPECTRE_ALWAYS_INLINE static decltype(auto)
+  compute_contraction_main_stop_at_branches(
       const T& t,
       const std::array<size_t, num_uncontracted_tensor_indices>&
           current_multi_index,
@@ -618,9 +627,10 @@ struct TensorContract
   }
 
   template <typename ResultType>
-  decltype(auto) get_main(const ResultType& result_component,
-                          const std::array<size_t, num_tensor_indices>&
-                              contracted_multi_index) const {
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+      const ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& contracted_multi_index)
+      const {
     return compute_contraction_main<0>(
         t_, result_component, get_first_index_to_sum(contracted_multi_index));
   }
@@ -629,7 +639,7 @@ struct TensorContract
   // else, if we branch (split every leg_length terms), go down to each
   // branch point and compute each leg separately
   template <typename ResultType>
-  void visit_contract_main(
+  SPECTRE_ALWAYS_INLINE void visit_contract_main(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& contracted_multi_index,
       std::array<size_t, num_uncontracted_tensor_indices> current_multi_index)
@@ -729,9 +739,10 @@ struct TensorContract
   }
 
   template <typename ResultType>
-  void visit_main(ResultType& result_component,
-                  const std::array<size_t, num_tensor_indices>&
-                      contracted_multi_index) const {
+  SPECTRE_ALWAYS_INLINE void visit_main(
+      ResultType& result_component,
+      const std::array<size_t, num_tensor_indices>& contracted_multi_index)
+      const {
     const auto last_operand_multi_index_to_sum =
         get_last_index_to_sum(contracted_multi_index);
     t_.visit_main(result_component, last_operand_multi_index_to_sum);

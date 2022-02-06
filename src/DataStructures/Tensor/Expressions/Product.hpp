@@ -107,7 +107,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   OuterProduct(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~OuterProduct() override = default;
 
-  type get_used_for_size() const {
+  SPECTRE_ALWAYS_INLINE type get_used_for_size() const {
     if constexpr (not std::is_base_of_v<NumberAsExpression, T2>) {
       return t2_.get_used_for_size();
     } else {

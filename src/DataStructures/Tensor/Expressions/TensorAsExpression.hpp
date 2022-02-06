@@ -58,7 +58,7 @@ template <
     size_t NumConcreteTimeIndices,
     Requires<(NumIndices >= 2 and (NumSpatialSpacetimeIndices != 0 or
                                    NumConcreteTimeIndices != 0))> = nullptr>
-constexpr std::array<std::int32_t, NumIndices>
+SPECTRE_ALWAYS_INLINE constexpr std::array<std::int32_t, NumIndices>
 get_transformed_spacetime_symmetry(
     const std::array<std::int32_t, NumIndices>& symmetry,
     const std::array<size_t, NumSpatialSpacetimeIndices>&
@@ -86,7 +86,7 @@ template <size_t NumIndices, size_t NumSpatialSpacetimeIndices,
           size_t NumConcreteTimeIndices,
           Requires<(NumIndices < 2 or (NumSpatialSpacetimeIndices == 0 and
                                        NumConcreteTimeIndices == 0))> = nullptr>
-constexpr std::array<std::int32_t, NumIndices>
+SPECTRE_ALWAYS_INLINE constexpr std::array<std::int32_t, NumIndices>
 get_transformed_spacetime_symmetry(
     const std::array<std::int32_t, NumIndices>& symmetry,
     const std::array<size_t, NumSpatialSpacetimeIndices>&
@@ -204,7 +204,9 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
       : t_(&t) {}
   ~TensorAsExpression() override = default;
 
-  type get_used_for_size() const { return t_->operator[](0); }
+  SPECTRE_ALWAYS_INLINE type get_used_for_size() const {
+    return t_->operator[](0);
+  }
 
   /// \brief Returns the value of the contained tensor's multi-index
   ///
