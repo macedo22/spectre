@@ -51,7 +51,9 @@ struct Negate
   Negate(T t) : t_(std::move(t)) {}
   ~Negate() override = default;
 
-  type get_used_for_size() const { return t_.get_used_for_size(); }
+  SPECTRE_ALWAYS_INLINE type get_used_for_size() const {
+    return t_.get_used_for_size();
+  }
 
   /// \brief Return the value of the component of the negated tensor expression
   /// at a given multi-index

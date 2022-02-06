@@ -61,7 +61,9 @@ struct SquareRoot
   SquareRoot(T t) : t_(std::move(t)) {}
   ~SquareRoot() override = default;
 
-  type get_used_for_size() const { return t_.get_used_for_size(); }
+  SPECTRE_ALWAYS_INLINE type get_used_for_size() const {
+    return t_.get_used_for_size();
+  }
 
   /// \brief Returns the square root of the component of the tensor evaluated
   /// from the contained tensor expression
