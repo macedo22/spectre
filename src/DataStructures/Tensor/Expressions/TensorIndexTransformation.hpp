@@ -151,11 +151,10 @@ transform_multi_index(
       make_array<NumIndicesOut, size_t>(0);
   for (size_t i = 0; i < NumIndicesOut; i++) {
     gsl::at(output_multi_index, i) =
-        (gsl::at(tensorindex_transformation, i) ==
+        (gsl::at(tensorindex_transformation, i) !=
          TensorIndexTransformation_detail::time_index_position_placeholder)
-            ? 0
-            : gsl::at(input_multi_index,
-                      gsl::at(tensorindex_transformation, i));
+            ? gsl::at(input_multi_index, gsl::at(tensorindex_transformation, i))
+            : 0;
   }
   return output_multi_index;
 }
