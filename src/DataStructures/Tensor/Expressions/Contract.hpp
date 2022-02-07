@@ -341,7 +341,7 @@ struct TensorContract
       : t_(~t) {}
   ~TensorContract() override = default;
 
-  SPECTRE_ALWAYS_INLINE type get_used_for_size() const {
+  SPECTRE_ALWAYS_INLINE auto get_used_for_size() const {
     return t_.get_used_for_size();
   }
 
