@@ -85,7 +85,7 @@ struct Divide : public TensorExpression<
   Divide(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~Divide() override = default;
 
-  SPECTRE_ALWAYS_INLINE type get_used_for_size() const {
+  SPECTRE_ALWAYS_INLINE auto get_used_for_size() const {
     if constexpr (not std::is_base_of_v<NumberAsExpression, T2>) {
       return t2_.get_used_for_size();
     } else {

@@ -204,7 +204,7 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
       : t_(&t) {}
   ~TensorAsExpression() override = default;
 
-  SPECTRE_ALWAYS_INLINE type get_used_for_size() const {
+  SPECTRE_ALWAYS_INLINE auto get_used_for_size() const {
     return t_->operator[](0);
   }
 
