@@ -544,10 +544,9 @@ struct TensorContract
       const T& t, const std::array<size_t, num_uncontracted_tensor_indices>&
                       current_multi_index) {
     if constexpr (Iteration < num_terms_summed - 1) {
-      std::array<size_t, num_uncontracted_tensor_indices> next_multi_index =
-          get_next_multi_index_to_sum(current_multi_index);
       // We have more than one component left to sum
-      return compute_contraction<Iteration + 1>(t, next_multi_index) +
+      return compute_contraction<Iteration + 1>(
+                 t, get_next_multi_index_to_sum(current_multi_index)) +
              t.get(current_multi_index);
     } else {
       // We only have one final component to sum
@@ -558,10 +557,8 @@ struct TensorContract
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& contracted_multi_index)
       const {
-    std::array<size_t, num_uncontracted_tensor_indices>
-        first_operand_multi_index_to_sum =
-            get_first_index_to_sum(contracted_multi_index);
-    return compute_contraction<0>(t_, first_operand_multi_index_to_sum);
+    return compute_contraction<0>(
+        t_, get_first_index_to_sum(contracted_multi_index));
   }
 
   // for when contraction expression is not a main beg
