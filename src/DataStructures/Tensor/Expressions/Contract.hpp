@@ -301,8 +301,10 @@ struct TensorContract
       num_ops_to_evaluate_main_subtree >
       2 * detail::max_num_ops_in_sub_expression<type>;
 
+  static constexpr bool child_subtree_contains_main_beg =
+      T::subtree_contains_main_beg;
   static constexpr bool subtree_contains_main_beg =
-      is_main_beg or T::subtree_contains_main_beg;
+      is_main_beg or child_subtree_contains_main_beg;
 
   static constexpr size_t num_ops_subexpression = T::num_ops_subtree;
   // compute how often to stop
@@ -646,7 +648,11 @@ struct TensorContract
       (void)contracted_multi_index;
       if constexpr (not is_main_end) {
         // we still need to compute what's below the contraction
-        result_component = t_.get_main(result_component, current_multi_index);
+        if constexpr (child_subtree_contains_main_beg) {
+          result_component = t_.get_main(result_component, current_multi_index);
+        } else {
+          result_component = t_.get(current_multi_index);
+        }
       }
       // now, the contraction is the lowest thing, so we can
       // climb up and compute each term, visiting right branches
@@ -669,7 +675,12 @@ struct TensorContract
         // first get the remainder if there is one
         if constexpr (not is_main_end) {
           // get remainder
-          result_component = t_.get_main(result_component, current_multi_index);
+          if constexpr (child_subtree_contains_main_beg) {
+            result_component =
+                t_.get_main(result_component, current_multi_index);
+          } else {
+            result_component = t_.get(current_multi_index);
+          }
         }
 
         // next add up all the full-length legs
