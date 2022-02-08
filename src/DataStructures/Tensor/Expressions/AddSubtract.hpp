@@ -342,8 +342,10 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
                        num_ops_to_evaluate_main_right >=
                            detail::max_num_ops_in_sub_expression<type>);
 
+  static constexpr bool child_subtree_contains_main_beg =
+      T1::subtree_contains_main_beg;
   static constexpr bool subtree_contains_main_beg =
-      is_main_beg or T1::subtree_contains_main_beg;
+      is_main_beg or child_subtree_contains_main_beg;
 
   AddSub(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~AddSub() override = default;
@@ -522,7 +524,11 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
         (void)op1_multi_index;
         result_component += t2_.get(op2_multi_index);
       } else {
-        result_component = t1_.get_main(result_component, op1_multi_index);
+        if constexpr (child_subtree_contains_main_beg) {
+          result_component = t1_.get_main(result_component, op1_multi_index);
+        } else {
+          result_component = t1_.get(op1_multi_index);
+        }
         result_component += t2_.get(op2_multi_index);
       }
     } else {
@@ -530,7 +536,11 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
         (void)op1_multi_index;
         result_component -= t2_.get(op2_multi_index);
       } else {
-        result_component = t1_.get_main(result_component, op1_multi_index);
+        if constexpr (child_subtree_contains_main_beg) {
+          result_component = t1_.get_main(result_component, op1_multi_index);
+        } else {
+          result_component = t1_.get(op1_multi_index);
+        }
         result_component -= t2_.get(op2_multi_index);
       }
     }
@@ -586,7 +596,11 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
       if constexpr (is_main_fork) {
         get_main_fork(result_component, result_multi_index);
       } else {
-        result_component = get_main(result_component, result_multi_index);
+        if constexpr (child_subtree_contains_main_beg) {
+          result_component = get_main(result_component, result_multi_index);
+        } else {
+          result_component = get(result_multi_index);
+        }
       }
     }
   }

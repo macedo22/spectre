@@ -232,14 +232,17 @@ void evaluate(
 
       if constexpr (rhs_expression_type::subtree_contains_main_beg) {
         // the expression is split up, so evaluate subtrees at splits
-        (*lhs_tensor)[i] = 0.0;
         (~rhs_tensorexpression).visit_main((*lhs_tensor)[i], rhs_multi_index);
         if constexpr (not rhs_expression_type::is_main_beg) {
           // the root expression type is not a split point, so it was not
           // evaluated when visiting above, so evaluate the remainder of the
           // expression at the root of the tree
-          (*lhs_tensor)[i] = (~rhs_tensorexpression)
-                                 .get_main((*lhs_tensor)[i], rhs_multi_index);
+          if constexpr (rhs_expression_type::subtree_contains_main_beg) {
+            (*lhs_tensor)[i] = (~rhs_tensorexpression)
+                                   .get_main((*lhs_tensor)[i], rhs_multi_index);
+          } else {
+            (*lhs_tensor)[i] = (~rhs_tensorexpression).get(rhs_multi_index);
+          }
         }
       } else {
         // the expression is not split up, so evaluate full expression

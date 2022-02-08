@@ -197,6 +197,7 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
   static constexpr size_t num_ops_to_evaluate_main_subtree = 0;
   static constexpr bool is_main_beg = false;
 
+  static constexpr bool child_subtree_contains_main_beg = false;
   static constexpr bool subtree_contains_main_beg = is_main_beg;
 
   /// Construct an expression from a Tensor
@@ -230,7 +231,7 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     if constexpr (is_main_beg) {
-      result_component = get_main(result_component, multi_index);
+      result_component = get(multi_index);
     }
   }
 
