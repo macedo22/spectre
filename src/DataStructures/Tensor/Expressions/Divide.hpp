@@ -143,7 +143,9 @@ struct Divide : public TensorExpression<
   SPECTRE_ALWAYS_INLINE void visit_main(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
-    t1_.visit_main(result_component, result_multi_index);
+    if constexpr (child_subtree_contains_main_beg) {
+      t1_.visit_main(result_component, result_multi_index);
+    }
     if constexpr (is_main_beg) {
       if constexpr (is_main_fork) {
         get_main_fork(result_component, result_multi_index);

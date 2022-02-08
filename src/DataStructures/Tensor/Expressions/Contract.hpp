@@ -753,7 +753,9 @@ struct TensorContract
       const {
     const auto last_operand_multi_index_to_sum =
         get_last_index_to_sum(contracted_multi_index);
-    t_.visit_main(result_component, last_operand_multi_index_to_sum);
+    if constexpr (child_subtree_contains_main_beg) {
+      t_.visit_main(result_component, last_operand_multi_index_to_sum);
+    }
     if constexpr (is_main_beg) {
       visit_contract_main(result_component, contracted_multi_index,
                           last_operand_multi_index_to_sum);
