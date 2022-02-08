@@ -215,8 +215,9 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     const std::array<size_t, op1_num_tensor_indices> op1_multi_index =
         get_op1_multi_index(result_multi_index);
-
-    t1_.visit_main(result_component, op1_multi_index);
+    if constexpr (child_subtree_contains_main_beg) {
+      t1_.visit_main(result_component, op1_multi_index);
+    }
 
     if constexpr (is_main_beg) {
       if constexpr (is_main_fork) {

@@ -99,7 +99,10 @@ struct SquareRoot
   SPECTRE_ALWAYS_INLINE void visit_main(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
-    t_.visit_main(result_component, multi_index);
+    if constexpr (child_subtree_contains_main_beg) {
+      t_.visit_main(result_component, multi_index);
+    }
+
     if constexpr (is_main_beg) {
       if constexpr (child_subtree_contains_main_beg) {
         result_component = get_main(result_component, multi_index);
