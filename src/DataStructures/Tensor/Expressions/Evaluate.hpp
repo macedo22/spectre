@@ -116,7 +116,6 @@ SPECTRE_ALWAYS_INLINE constexpr bool is_evaluated_lhs_multi_index(
     return true;
   }
 }
-
 }  // namespace detail
 
 template <typename DerivedRhsTensorExpression,
@@ -234,11 +233,6 @@ void evaluate(
       "index has 2 spatial dimensions but L's second index has 3 spatial "
       "dimensions. Check RHS and LHS indices that use the same generic index.");
 
-  constexpr std::array<size_t, num_rhs_indices> index_transformation =
-      compute_tensorindex_transformation<num_lhs_indices, num_rhs_indices>(
-          {{std::decay_t<decltype(LhsTensorIndices)>::value...}},
-          {{RhsTensorIndices::value...}});
-
   // positions of indices in LHS tensor where generic spatial indices are used
   // for spacetime indices
   constexpr auto lhs_spatial_spacetime_index_positions =
@@ -256,27 +250,98 @@ void evaluate(
 
   using lhs_tensor_type = typename std::decay_t<decltype(*lhs_tensor)>;
 
-  for (size_t i = 0; i < lhs_tensor_type::size(); i++) {
-    auto lhs_multi_index =
-        lhs_tensor_type::structure::get_canonical_tensor_index(i);
-    if (detail::is_evaluated_lhs_multi_index(
-            lhs_multi_index, lhs_spatial_spacetime_index_positions,
-            lhs_time_index_positions)) {
-      for (size_t j = 0; j < lhs_spatial_spacetime_index_positions.size();
-           j++) {
-        gsl::at(lhs_multi_index,
-                gsl::at(lhs_spatial_spacetime_index_positions, j)) -= 1;
+  if constexpr (generic_indices_at_same_positions<
+                    lhs_tensorindex_list, rhs_tensorindex_list>::value) {
+    if constexpr (lhs_spatial_spacetime_index_positions.size() == 0 and
+                  rhs_spatial_spacetime_index_positions.size() == 0 and
+                  lhs_time_index_positions.size() == 0) {
+      // if the LHS and RHS have the same generic index order and the neither
+      // has any spatial spacetime indices nor concrete time indices, then we
+      // can use the LHS multi-index as the RHS multi-index
+      for (size_t i = 0; i < lhs_tensor_type::size(); i++) {
+        evaluate_component(
+            make_not_null(&(*lhs_tensor)[i]), ~rhs_tensorexpression,
+            lhs_tensor_type::structure::get_canonical_tensor_index(i));
       }
-      auto rhs_multi_index =
-          transform_multi_index(lhs_multi_index, index_transformation);
-      for (size_t j = 0; j < rhs_spatial_spacetime_index_positions.size();
-           j++) {
-        gsl::at(rhs_multi_index,
-                gsl::at(rhs_spatial_spacetime_index_positions, j)) += 1;
-      }
+    } else {
+      // if the LHS and RHS have the same generic index order but at least one
+      // has spatial spacetime indices or the LHS has concrete time indices,
+      // then we need to check if each LHS multi-index is one we actually want
+      // to evaluate, then shift the LHS multi-index to the RHS multi-index as
+      // necessary to account for any spatial spacetime indices on either side
+      for (size_t i = 0; i < lhs_tensor_type::size(); i++) {
+        auto multi_index =
+            lhs_tensor_type::structure::get_canonical_tensor_index(i);
+        if (detail::is_evaluated_lhs_multi_index(
+                multi_index, lhs_spatial_spacetime_index_positions,
+                lhs_time_index_positions)) {
+          if constexpr (not std::is_same_v<LhsIndexList, RhsIndexList>) {
+            // if their index lists are not the same, then there is a spatial
+            // spacetime shift that needs to be done
+            for (size_t j = 0; j < lhs_spatial_spacetime_index_positions.size();
+                 j++) {
+              gsl::at(multi_index,
+                      gsl::at(lhs_spatial_spacetime_index_positions, j)) -= 1;
+            }
+            for (size_t j = 0; j < rhs_spatial_spacetime_index_positions.size();
+                 j++) {
+              gsl::at(multi_index,
+                      gsl::at(rhs_spatial_spacetime_index_positions, j)) += 1;
+            }
+          }
 
-      evaluate_component(make_not_null(&(*lhs_tensor)[i]),
-                         ~rhs_tensorexpression, rhs_multi_index);
+          evaluate_component(make_not_null(&(*lhs_tensor)[i]),
+                             ~rhs_tensorexpression, multi_index);
+        }
+      }
+    }
+  } else {
+    constexpr std::array<size_t, num_rhs_indices> index_transformation =
+        compute_tensorindex_transformation<num_lhs_indices, num_rhs_indices>(
+            {{std::decay_t<decltype(LhsTensorIndices)>::value...}},
+            {{RhsTensorIndices::value...}});
+    if constexpr (lhs_spatial_spacetime_index_positions.size() == 0 and
+                  rhs_spatial_spacetime_index_positions.size() == 0 and
+                  lhs_time_index_positions.size() == 0) {
+      // if the LHS and RHS don't have the same generic index order but neither
+      // has any spatial spacetime indices and the LHS has no time indices, then
+      // we just reorder the LHS multi-index to get the RHS multi-index
+      for (size_t i = 0; i < lhs_tensor_type::size(); i++) {
+        evaluate_component(
+            make_not_null(&(*lhs_tensor)[i]), ~rhs_tensorexpression,
+            transform_multi_index(
+                lhs_tensor_type::structure::get_canonical_tensor_index(i),
+                index_transformation));
+      }
+    } else {
+      // if the LHS and RHS don't have the same generic index order and at least
+      // one of them has spatial spacetime indices or the LHS has time indices,
+      // then we need to check if each LHS multi-index is one we actually want
+      // to evaluate, then reorder the LHS multi-index and shift it as necessary
+      // to account for any spatial spacetime indices on either side
+      for (size_t i = 0; i < lhs_tensor_type::size(); i++) {
+        auto lhs_multi_index =
+            lhs_tensor_type::structure::get_canonical_tensor_index(i);
+        if (detail::is_evaluated_lhs_multi_index(
+                lhs_multi_index, lhs_spatial_spacetime_index_positions,
+                lhs_time_index_positions)) {
+          for (size_t j = 0; j < lhs_spatial_spacetime_index_positions.size();
+               j++) {
+            gsl::at(lhs_multi_index,
+                    gsl::at(lhs_spatial_spacetime_index_positions, j)) -= 1;
+          }
+          auto rhs_multi_index =
+              transform_multi_index(lhs_multi_index, index_transformation);
+          for (size_t j = 0; j < rhs_spatial_spacetime_index_positions.size();
+               j++) {
+            gsl::at(rhs_multi_index,
+                    gsl::at(rhs_spatial_spacetime_index_positions, j)) += 1;
+          }
+
+          evaluate_component(make_not_null(&(*lhs_tensor)[i]),
+                             ~rhs_tensorexpression, rhs_multi_index);
+        }
+      }
     }
   }
 }
