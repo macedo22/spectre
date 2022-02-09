@@ -46,6 +46,8 @@ constexpr bool contains_indices_to_contract(
   }
 }
 
+//  TODO : make the control flow a little cleaner later
+//
 /// \brief Given the list of the positions of the LHS tensor's spacetime indices
 /// where a generic spatial index is used and the list of positions where a
 /// concrete time index is used, determine whether or not the component at the
@@ -81,6 +83,23 @@ SPECTRE_ALWAYS_INLINE constexpr bool is_evaluated_lhs_multi_index(
     (void)lhs_multi_index;
     (void)lhs_spatial_spacetime_index_positions;
     (void)lhs_time_index_positions;
+    return true;
+  } else if constexpr (NumLhsConcreteTimeIndices == 0) {
+    (void)lhs_time_index_positions;
+    for (size_t i = 0; i < lhs_spatial_spacetime_index_positions.size(); i++) {
+      if (gsl::at(lhs_multi_index,
+                  gsl::at(lhs_spatial_spacetime_index_positions, i)) == 0) {
+        return false;
+      }
+    }
+    return true;
+  } else if constexpr (NumLhsSpatialSpacetimeIndices == 0) {
+    (void)lhs_spatial_spacetime_index_positions;
+    for (size_t i = 0; i < lhs_time_index_positions.size(); i++) {
+      if (gsl::at(lhs_multi_index, gsl::at(lhs_time_index_positions, i)) != 0) {
+        return false;
+      }
+    }
     return true;
   } else {
     for (size_t i = 0; i < lhs_spatial_spacetime_index_positions.size(); i++) {
