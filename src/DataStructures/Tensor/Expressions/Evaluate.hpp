@@ -18,6 +18,7 @@
 #include "DataStructures/Tensor/Expressions/TimeIndex.hpp"
 #include "DataStructures/Tensor/Structure.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
+#include "Utilities/ForceInline.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/Requires.hpp"
 #include "Utilities/TMPL.hpp"
@@ -69,24 +70,32 @@ constexpr bool contains_indices_to_contract(
 /// the LHS tensor that should be computed
 template <size_t NumLhsIndices, size_t NumLhsSpatialSpacetimeIndices,
           size_t NumLhsConcreteTimeIndices>
-constexpr bool is_evaluated_lhs_multi_index(
+SPECTRE_ALWAYS_INLINE constexpr bool is_evaluated_lhs_multi_index(
     const std::array<size_t, NumLhsIndices>& lhs_multi_index,
     const std::array<size_t, NumLhsSpatialSpacetimeIndices>&
         lhs_spatial_spacetime_index_positions,
     const std::array<size_t, NumLhsConcreteTimeIndices>&
         lhs_time_index_positions) {
-  for (size_t i = 0; i < lhs_spatial_spacetime_index_positions.size(); i++) {
-    if (gsl::at(lhs_multi_index,
-                gsl::at(lhs_spatial_spacetime_index_positions, i)) == 0) {
-      return false;
+  if constexpr (NumLhsSpatialSpacetimeIndices == 0 and
+                NumLhsConcreteTimeIndices == 0) {
+    (void)lhs_multi_index;
+    (void)lhs_spatial_spacetime_index_positions;
+    (void)lhs_time_index_positions;
+    return true;
+  } else {
+    for (size_t i = 0; i < lhs_spatial_spacetime_index_positions.size(); i++) {
+      if (gsl::at(lhs_multi_index,
+                  gsl::at(lhs_spatial_spacetime_index_positions, i)) == 0) {
+        return false;
+      }
     }
-  }
-  for (size_t i = 0; i < lhs_time_index_positions.size(); i++) {
-    if (gsl::at(lhs_multi_index, gsl::at(lhs_time_index_positions, i)) != 0) {
-      return false;
+    for (size_t i = 0; i < lhs_time_index_positions.size(); i++) {
+      if (gsl::at(lhs_multi_index, gsl::at(lhs_time_index_positions, i)) != 0) {
+        return false;
+      }
     }
+    return true;
   }
-  return true;
 }
 
 template <typename RhsTE>
