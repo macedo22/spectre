@@ -75,7 +75,7 @@ static constexpr size_t time_index_position_placeholder =
 /// order
 /// \return a transformation from the first generic index order to the second
 template <size_t NumIndices1, size_t NumIndices2>
-SPECTRE_ALWAYS_INLINE constexpr std::array<size_t, NumIndices2>
+/*SPECTRE_ALWAYS_INLINE*/ constexpr std::array<size_t, NumIndices2>
 compute_tensorindex_transformation(
     const std::array<size_t, NumIndices1>& tensorindices1,
     const std::array<size_t, NumIndices2>& tensorindices2) {
@@ -143,7 +143,7 @@ compute_tensorindex_transformation(
 /// `input_multi_index`, according to generic index order differences
 // (`tensorindex_transformation`)
 template <size_t NumIndicesIn, size_t NumIndicesOut>
-SPECTRE_ALWAYS_INLINE constexpr std::array<size_t, NumIndicesOut>
+/*SPECTRE_ALWAYS_INLINE*/ constexpr std::array<size_t, NumIndicesOut>
 transform_multi_index(
     const std::array<size_t, NumIndicesIn>& input_multi_index,
     const std::array<size_t, NumIndicesOut>& tensorindex_transformation) {

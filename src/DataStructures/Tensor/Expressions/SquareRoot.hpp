@@ -63,7 +63,7 @@ struct SquareRoot
   SquareRoot(T t) : t_(std::move(t)) {}
   ~SquareRoot() override = default;
 
-  SPECTRE_ALWAYS_INLINE auto get_used_for_size() const {
+  /*SPECTRE_ALWAYS_INLINE*/ auto get_used_for_size() const {
     return t_.get_used_for_size();
   }
 
@@ -78,13 +78,13 @@ struct SquareRoot
   /// square root
   /// \return the square root of the component of the tensor evaluated from the
   /// contained tensor expression
-  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     return sqrt(t_.get(multi_index));
   }
 
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) get_main(
       const ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     if constexpr (is_main_end) {
@@ -96,7 +96,7 @@ struct SquareRoot
   }
 
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE void visit_main(
+  /*SPECTRE_ALWAYS_INLINE*/ void visit_main(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     if constexpr (child_subtree_contains_main_beg) {
@@ -133,7 +133,7 @@ struct SquareRoot
 /// \param t the tensor expression of which to take the square root
 template <typename T, typename X, typename Symm, typename IndexList,
           typename... Args>
-SPECTRE_ALWAYS_INLINE auto sqrt(
+/*SPECTRE_ALWAYS_INLINE*/ auto sqrt(
     const TensorExpression<T, X, Symm, IndexList, tmpl::list<Args...>>& t) {
   return TensorExpressions::SquareRoot<T, Args...>(~t);
 }

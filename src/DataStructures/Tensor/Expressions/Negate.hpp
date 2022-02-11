@@ -53,7 +53,7 @@ struct Negate
   Negate(T t) : t_(std::move(t)) {}
   ~Negate() override = default;
 
-  SPECTRE_ALWAYS_INLINE auto get_used_for_size() const {
+  /*SPECTRE_ALWAYS_INLINE*/ auto get_used_for_size() const {
     return t_.get_used_for_size();
   }
 
@@ -64,13 +64,13 @@ struct Negate
   /// negated tensor expression
   /// \return the value of the component at `multi_index` in the negated tensor
   /// expression
-  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     return -t_.get(multi_index);
   }
 
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) get_main(
       const ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     if constexpr (is_main_end) {
@@ -82,7 +82,7 @@ struct Negate
   }
 
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE void visit_main(
+  /*SPECTRE_ALWAYS_INLINE*/ void visit_main(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     if constexpr (child_subtree_contains_main_beg) {
@@ -109,7 +109,7 @@ struct Negate
 /// \param t the tensor expression
 /// \return the tensor expression representing the negation of `t`
 template <typename T>
-SPECTRE_ALWAYS_INLINE auto operator-(
+/*SPECTRE_ALWAYS_INLINE*/ auto operator-(
     const TensorExpression<T, typename T::type, typename T::symmetry,
                            typename T::index_list, typename T::args_list>& t) {
   return TensorExpressions::Negate<T>(~t);

@@ -109,7 +109,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   OuterProduct(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~OuterProduct() override = default;
 
-  SPECTRE_ALWAYS_INLINE auto get_used_for_size() const {
+  /*SPECTRE_ALWAYS_INLINE*/ auto get_used_for_size() const {
     if constexpr (not std::is_base_of_v<NumberAsExpression, T2>) {
       return t2_.get_used_for_size();
     } else {
@@ -117,7 +117,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
     }
   }
 
-  constexpr SPECTRE_ALWAYS_INLINE std::array<size_t, op1_num_tensor_indices>
+  constexpr /*SPECTRE_ALWAYS_INLINE*/ std::array<size_t, op1_num_tensor_indices>
   get_op1_multi_index(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     std::array<size_t, op1_num_tensor_indices> op1_multi_index{};
@@ -127,7 +127,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
     return op1_multi_index;
   }
 
-  constexpr SPECTRE_ALWAYS_INLINE std::array<size_t, op2_num_tensor_indices>
+  constexpr /*SPECTRE_ALWAYS_INLINE*/ std::array<size_t, op2_num_tensor_indices>
   get_op2_multi_index(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     std::array<size_t, op2_num_tensor_indices> op2_multi_index{};
@@ -157,14 +157,14 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// product tensor to retrieve
   /// \return the value of the component at `result_multi_index` in the outer
   /// product tensor
-  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     return t1_.get(get_op1_multi_index(result_multi_index)) *
            t2_.get(get_op2_multi_index(result_multi_index));
   }
 
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) get_main(
       const ResultType& result_component,
       const std::array<size_t, op1_num_tensor_indices>& op1_multi_index,
       const std::array<size_t, op2_num_tensor_indices>& op2_multi_index) const {
@@ -180,7 +180,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   }
 
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE void get_main_fork(
+  /*SPECTRE_ALWAYS_INLINE*/ void get_main_fork(
       ResultType& result_component,
       const std::array<size_t, op1_num_tensor_indices>& op1_multi_index,
       const std::array<size_t, op2_num_tensor_indices>& op2_multi_index) const {
@@ -200,7 +200,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   }
 
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) get_main(
       const ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     // don't send result_component down right branch because we are at a * and
@@ -210,7 +210,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   }
 
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE void visit_main(
+  /*SPECTRE_ALWAYS_INLINE*/ void visit_main(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     const std::array<size_t, op1_num_tensor_indices> op1_multi_index =
@@ -266,7 +266,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
 /// \return the tensor expression representing the product of two tensor
 /// expressions
 template <typename T1, typename T2, typename ArgsList1, typename ArgsList2>
-SPECTRE_ALWAYS_INLINE auto operator*(
+/*SPECTRE_ALWAYS_INLINE*/ auto operator*(
     const TensorExpression<T1, typename T1::type, typename T1::symmetry,
                            typename T1::index_list, ArgsList1>& t1,
     const TensorExpression<T2, typename T2::type, typename T2::symmetry,
@@ -296,14 +296,14 @@ SPECTRE_ALWAYS_INLINE auto operator*(
 /// \return the tensor expression representing the product of a tensor
 /// expression and a `double`
 template <typename T, typename X, typename ArgsList>
-SPECTRE_ALWAYS_INLINE auto operator*(
+/*SPECTRE_ALWAYS_INLINE*/ auto operator*(
     const TensorExpression<T, X, typename T::symmetry, typename T::index_list,
                            ArgsList>& t,
     const double number) {
   return t * TensorExpressions::NumberAsExpression(number);
 }
 template <typename T, typename X, typename ArgsList>
-SPECTRE_ALWAYS_INLINE auto operator*(
+/*SPECTRE_ALWAYS_INLINE*/ auto operator*(
     const double number,
     const TensorExpression<T, X, typename T::symmetry, typename T::index_list,
                            ArgsList>& t) {

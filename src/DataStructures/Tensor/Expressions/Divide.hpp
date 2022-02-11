@@ -87,7 +87,7 @@ struct Divide : public TensorExpression<
   Divide(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~Divide() override = default;
 
-  SPECTRE_ALWAYS_INLINE auto get_used_for_size() const {
+  /*SPECTRE_ALWAYS_INLINE*/ auto get_used_for_size() const {
     if constexpr (not std::is_base_of_v<NumberAsExpression, T2>) {
       return t2_.get_used_for_size();
     } else {
@@ -102,13 +102,13 @@ struct Divide : public TensorExpression<
   //// tensor to retrieve
   /// \return the value of the component in the quotient tensor at
   /// `result_multi_index`
-  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     return t1_.get(result_multi_index) / t2_.get(op2_multi_index);
   }
 
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE void get_main_fork(
+  /*SPECTRE_ALWAYS_INLINE*/ void get_main_fork(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     // don't send result_component down right branch because we are at a * and
@@ -127,7 +127,7 @@ struct Divide : public TensorExpression<
   }
 
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) get_main(
       const ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     if constexpr (is_main_end) {
@@ -140,7 +140,7 @@ struct Divide : public TensorExpression<
   }
 
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE void visit_main(
+  /*SPECTRE_ALWAYS_INLINE*/ void visit_main(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     if constexpr (child_subtree_contains_main_beg) {
@@ -181,7 +181,7 @@ struct Divide : public TensorExpression<
 /// \param t1 the tensor expression numerator
 /// \param t2 the rank 0 tensor expression denominator
 template <typename T1, typename T2, typename... Args2>
-SPECTRE_ALWAYS_INLINE auto operator/(
+/*SPECTRE_ALWAYS_INLINE*/ auto operator/(
     const TensorExpression<T1, typename T1::type, typename T1::symmetry,
                            typename T1::index_list, typename T1::args_list>& t1,
     const TensorExpression<T2, typename T2::type, typename T2::symmetry,
@@ -200,7 +200,7 @@ SPECTRE_ALWAYS_INLINE auto operator/(
 /// \return the tensor expression representing the quotient of a tensor
 /// expression and a `double`
 template <typename T>
-SPECTRE_ALWAYS_INLINE auto operator/(
+/*SPECTRE_ALWAYS_INLINE*/ auto operator/(
     const TensorExpression<T, typename T::type, typename T::symmetry,
                            typename T::index_list, typename T::args_list>& t,
     const double number) {
@@ -216,7 +216,7 @@ SPECTRE_ALWAYS_INLINE auto operator/(
 /// \return the tensor expression representing the quotient of a `double` over a
 /// tensor expression that evaluates to a rank 0 tensor
 template <typename T>
-SPECTRE_ALWAYS_INLINE auto operator/(
+/*SPECTRE_ALWAYS_INLINE*/ auto operator/(
     const double number,
     const TensorExpression<T, typename T::type, typename T::symmetry,
                            typename T::index_list, typename T::args_list>& t) {
