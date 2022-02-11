@@ -76,7 +76,7 @@ TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
 namespace TensorExpressions {
 namespace detail {
 static constexpr size_t max_num_ops_in_datavector_sub_expression = 8;
-static constexpr size_t max_num_ops_in_double_sub_expression = 32;
+static constexpr size_t max_num_ops_in_double_sub_expression = 10000000000;
 
 template <typename DataType>
 struct max_num_ops_in_sub_expression_helper {
