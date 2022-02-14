@@ -716,7 +716,8 @@ SPECTRE_ALWAYS_INLINE auto operator-(
       "The generic indices when subtracting two tensors must be equal. This "
       "error "
       "occurs from expressions like R(ti_a, ti_b) - S(ti_c, ti_a)");
-  if constexpr (T1::num_ops_subtree >= T2::num_ops_subtree) {
+  if constexpr (T2::num_ops_subtree <=
+                TensorExpressions::detail::max_num_ops_in_sub_expression<X2>) {
     return TensorExpressions::AddSub<T1, T2, Args1, Args2, -1>(~t1, ~t2);
   } else {
     return -t2 + t1;
@@ -772,6 +773,6 @@ SPECTRE_ALWAYS_INLINE auto operator-(
       (... and tt::is_time_index<Args>::value),
       "Can only subtract a number from a tensor expression that evaluates to a "
       "rank 0 tensor.");
-  return -t + TensorExpressions::NumberAsExpression(number);
+  return TensorExpressions::NumberAsExpression(number) - t;
 }
 /// @}
