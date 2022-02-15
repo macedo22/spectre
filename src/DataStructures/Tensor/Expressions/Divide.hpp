@@ -111,7 +111,7 @@ struct Divide : public TensorExpression<
   }
 
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE void get_primary_fork(
+  SPECTRE_ALWAYS_INLINE void evaluate_primary_children(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     // don't send result_component down right branch because we are at a * and
@@ -152,7 +152,7 @@ struct Divide : public TensorExpression<
     }
     if constexpr (is_primary_start) {
       if constexpr (is_primary_fork) {
-        get_primary_fork(result_component, result_multi_index);
+        evaluate_primary_children(result_component, result_multi_index);
       } else {
         if constexpr (child_subtree_contains_primary_start) {
           result_component = get_primary(result_component, result_multi_index);

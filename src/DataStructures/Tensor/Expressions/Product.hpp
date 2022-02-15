@@ -183,7 +183,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   }
 
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE void get_primary_fork(
+  SPECTRE_ALWAYS_INLINE void evaluate_primary_children(
       ResultType& result_component,
       const std::array<size_t, op1_num_tensor_indices>& op1_multi_index,
       const std::array<size_t, op2_num_tensor_indices>& op2_multi_index) const {
@@ -225,8 +225,8 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
 
     if constexpr (is_primary_start) {
       if constexpr (is_primary_fork) {
-        get_primary_fork(result_component, op1_multi_index,
-                         get_op2_multi_index(result_multi_index));
+        evaluate_primary_children(result_component, op1_multi_index,
+                                  get_op2_multi_index(result_multi_index));
       } else {
         if constexpr (subtree_contains_primary_start) {
           result_component =

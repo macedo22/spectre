@@ -640,7 +640,7 @@ struct TensorContract
   // else, if we branch (split every leg_length terms), go down to each
   // branch point and compute each leg separately
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE void visit_contract_primary(
+  SPECTRE_ALWAYS_INLINE void evaluate_primary_contraction(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& contracted_multi_index,
       std::array<size_t, num_uncontracted_tensor_indices> current_multi_index)
@@ -762,8 +762,8 @@ struct TensorContract
                                   last_operand_multi_index_to_sum);
     }
     if constexpr (is_primary_start) {
-      visit_contract_primary(result_component, contracted_multi_index,
-                             last_operand_multi_index_to_sum);
+      evaluate_primary_contraction(result_component, contracted_multi_index,
+                                   last_operand_multi_index_to_sum);
     }
   }
 
