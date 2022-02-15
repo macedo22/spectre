@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <limits>
+
 #include "DataStructures/Tensor/IndexType.hpp"
 #include "Utilities/ForceInline.hpp"
 #include "Utilities/TMPL.hpp"
@@ -73,20 +75,31 @@ TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
 
 namespace TensorExpressions {
 namespace detail {
+/// @{
+/// The maximum number of operations allowed for a TensorExpression, according
+/// to the DataType held by the Tensors in the expression
 static constexpr size_t max_num_ops_in_datavector_sub_expression = 8;
-static constexpr size_t max_num_ops_in_double_sub_expression = 32;
+// effectively, don't split TE trees when the Tensor components are doubles
+static constexpr size_t max_num_ops_in_double_sub_expression =
+    std::numeric_limits<size_t>::max();
+/// @}
 
+/// Helper struct for getting the maximum number of operations allowed for a
+/// TensorExpression, according to the DataType held by the Tensors in the
+/// expression
 template <typename DataType>
 struct max_num_ops_in_sub_expression_helper {
   static_assert(std::is_same_v<DataType, DataVector> or
                     std::is_same_v<DataType, double>,
                 "The number of maximum operations in a TensorExpression is "
-                "only defined for DataVector and double.");
+                "currently only defined for DataVector and double.");
   static constexpr size_t value = std::is_same_v<DataType, DataVector>
                                       ? max_num_ops_in_datavector_sub_expression
                                       : max_num_ops_in_double_sub_expression;
 };
 
+/// Get the maximum number of operations allowed for a TensorExpression,
+/// according to the DataType held by the Tensors in the expression
 template <typename DataType>
 inline constexpr size_t max_num_ops_in_sub_expression =
     max_num_ops_in_sub_expression_helper<DataType>::value;
