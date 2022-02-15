@@ -58,7 +58,6 @@ struct NumberAsExpression
     return number_;
   }
 
-  // TODO : remove? don't need at leaves?
   template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void visit_main(
       ResultType& result_component,

@@ -225,7 +225,6 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
     return t_->get(multi_index);
   }
 
-  // TODO : remove? don't need at leaves?
   template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void visit_main(
       ResultType& result_component,

@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <iostream>  // TODO : eventually remove
-
 #include "DataStructures/Tensor/IndexType.hpp"
 #include "Utilities/ForceInline.hpp"
 #include "Utilities/TMPL.hpp"
