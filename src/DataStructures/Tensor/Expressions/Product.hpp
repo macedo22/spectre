@@ -246,18 +246,9 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
       result_component *= t2_.get(op2_multi_index);
     } else {
       // We've haven't yet evaluated the whole child subtree on the primary
-      // path
-      if constexpr (primary_child_subtree_contains_primary_start) {
-        // We have already evaluated the result at a lower stop in the primary
-        // operand's subtree, so now we evaluate the current expression's
-        // subtree given what we've already computed at that lower stop
-        result_component = t1_.get_primary(result_component, op1_multi_index);
-      } else {
-        // This subtree is the first stop being made, so we assign the LHS
-        // result component to be the result of evaluating the primary child's
-        // subtree
-        result_component = t1_.get(op1_multi_index);
-      }
+      // path, so assign the result component to be the result of computing the
+      // primary child's subtree
+      result_component = t1_.get_primary(result_component, op1_multi_index);
       // Now that the primary child's subtree has been computed, multiply the
       // current result by the result of evaluating the other child's subtree
       result_component *= t2_.get(op2_multi_index);
@@ -295,6 +286,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
         evaluate_primary_children(result_component, op1_multi_index,
                                   get_op2_multi_index(result_multi_index));
       } else {
+        // Evaluate whole subtree as one expression
         result_component = get_primary(result_component, op1_multi_index,
                                        get_op2_multi_index(result_multi_index));
       }
