@@ -283,34 +283,36 @@ struct TensorContract
       uncontracted_index_dims = contracted_type::uncontracted_index_dims;
   static constexpr size_t num_terms_summed = contracted_type::num_terms_summed;
 
-  static constexpr size_t num_ops_left =
+  static constexpr size_t num_ops_left_child =
       T::num_ops_subtree * num_terms_summed + num_terms_summed - 1;
-  static constexpr size_t num_ops_right = 0;
-  static constexpr size_t num_ops_subtree = num_ops_left;
+  static constexpr size_t num_ops_right_child = 0;
+  static constexpr size_t num_ops_subtree = num_ops_left_child;
 
-  static constexpr bool is_main_end = T::is_main_beg;
-  static constexpr size_t num_ops_to_evaluate_main_left =
-      is_main_end
+  static constexpr bool is_primary_end = T::is_primary_start;
+  static constexpr size_t num_ops_to_evaluate_primary_left_child =
+      is_primary_end
           ? num_ops_subtree - T::num_ops_subtree
           : T::num_ops_subtree * (num_terms_summed - 1) +
-                T::num_ops_to_evaluate_main_subtree + num_terms_summed - 1;
-  static constexpr size_t num_ops_to_evaluate_main_right = num_ops_right;
-  static constexpr size_t num_ops_to_evaluate_main_subtree =
-      num_ops_to_evaluate_main_left + num_ops_to_evaluate_main_right;
-  static constexpr bool is_main_beg =
-      num_ops_to_evaluate_main_subtree >
+                T::num_ops_to_evaluate_primary_subtree + num_terms_summed - 1;
+  static constexpr size_t num_ops_to_evaluate_primary_right_child =
+      num_ops_right_child;
+  static constexpr size_t num_ops_to_evaluate_primary_subtree =
+      num_ops_to_evaluate_primary_left_child +
+      num_ops_to_evaluate_primary_right_child;
+  static constexpr bool is_primary_start =
+      num_ops_to_evaluate_primary_subtree >
       2 * detail::max_num_ops_in_sub_expression<type>;
 
-  static constexpr bool child_subtree_contains_main_beg =
-      T::subtree_contains_main_beg;
-  static constexpr bool subtree_contains_main_beg =
-      is_main_beg or child_subtree_contains_main_beg;
+  static constexpr bool child_subtree_contains_primary_start =
+      T::subtree_contains_primary_start;
+  static constexpr bool subtree_contains_primary_start =
+      is_primary_start or child_subtree_contains_primary_start;
 
   static constexpr size_t num_ops_subexpression = T::num_ops_subtree;
   // compute how often to stop
   static constexpr size_t leg_length = []() {
     // if we're not even stopping, leg_length is all the terms
-    if constexpr (not is_main_beg) {
+    if constexpr (not is_primary_start) {
       return num_terms_summed;
     }
     // if the subexpression itself has more than the max # of ops
@@ -563,17 +565,17 @@ struct TensorContract
         t_, get_first_index_to_sum(contracted_multi_index));
   }
 
-  // for when contraction expression is not a main beg
+  // for when contraction expression is not a primary beg
   // TODO : static assert this ^ or something?
   template <size_t Iteration, typename ResultType>
-  SPECTRE_ALWAYS_INLINE static decltype(auto) compute_contraction_main(
+  SPECTRE_ALWAYS_INLINE static decltype(auto) compute_contraction_primary(
       const T& t, const ResultType& result_component,
       const std::array<size_t, num_uncontracted_tensor_indices>&
           current_multi_index) {
-    if constexpr (is_main_end) {
+    if constexpr (is_primary_end) {
       if constexpr (Iteration < num_terms_summed - 1) {
         // We have more than one component left to sum
-        return compute_contraction_main<Iteration + 1>(
+        return compute_contraction_primary<Iteration + 1>(
                    t, result_component,
                    get_next_multi_index_to_sum(current_multi_index)) +
                t.get(current_multi_index);
@@ -584,24 +586,24 @@ struct TensorContract
     } else {
       if constexpr (Iteration < num_terms_summed - 1) {
         // We have more than one component left to sum
-        return compute_contraction_main<Iteration + 1>(
+        return compute_contraction_primary<Iteration + 1>(
                    t, result_component,
                    get_next_multi_index_to_sum(current_multi_index)) +
                t.get(current_multi_index);
       } else {
         // We only have one final component to sum
-        return t.get_main(result_component, current_multi_index);
+        return t.get_primary(result_component, current_multi_index);
       }
     }
   }
 
-  // for when contraction expression is a main beg and stops are branches
+  // for when contraction expression is a primary beg and stops are branches
   // TODO : static assert this ^ or something?
-  // travels "up" the main branch, so starts at
+  // travels "up" the primary branch, so starts at
   // Iteration = num_terms_summed - 1 and goes to Iteration = 0
   template <size_t Iteration>
   SPECTRE_ALWAYS_INLINE static decltype(auto)
-  compute_contraction_main_stop_at_branches(
+  compute_contraction_primary_stop_at_branches(
       const T& t,
       const std::array<size_t, num_uncontracted_tensor_indices>&
           current_multi_index,
@@ -612,7 +614,7 @@ struct TensorContract
       // << std::endl;
       // We have more than one component left to sum
       (void)starting_multi_index;
-      return compute_contraction_main_stop_at_branches<Iteration - 1>(
+      return compute_contraction_primary_stop_at_branches<Iteration - 1>(
                  t, get_next_multi_index_to_sum(current_multi_index),
                  starting_multi_index) +
              t.get(current_multi_index);
@@ -626,11 +628,11 @@ struct TensorContract
   }
 
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
       const ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& contracted_multi_index)
       const {
-    return compute_contraction_main<0>(
+    return compute_contraction_primary<0>(
         t_, result_component, get_first_index_to_sum(contracted_multi_index));
   }
 
@@ -638,7 +640,7 @@ struct TensorContract
   // else, if we branch (split every leg_length terms), go down to each
   // branch point and compute each leg separately
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE void visit_contract_main(
+  SPECTRE_ALWAYS_INLINE void visit_contract_primary(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& contracted_multi_index,
       std::array<size_t, num_uncontracted_tensor_indices> current_multi_index)
@@ -646,10 +648,11 @@ struct TensorContract
     if constexpr (stops_are_forks) {
       // std::cout << "hey" << std::endl;
       (void)contracted_multi_index;
-      if constexpr (not is_main_end) {
+      if constexpr (not is_primary_end) {
         // we still need to compute what's below the contraction
-        if constexpr (child_subtree_contains_main_beg) {
-          result_component = t_.get_main(result_component, current_multi_index);
+        if constexpr (child_subtree_contains_primary_start) {
+          result_component =
+              t_.get_primary(result_component, current_multi_index);
         } else {
           result_component = t_.get(current_multi_index);
         }
@@ -672,12 +675,12 @@ struct TensorContract
       // if we have less than a full-length leg leftover
       if constexpr (last_leg_length > 0) {
         // std::cout << "hi" << std::endl;
-        // first get the remainder if there is one
-        if constexpr (not is_main_end) {
-          // get remainder
-          if constexpr (child_subtree_contains_main_beg) {
+        // first get the reprimaryder if there is one
+        if constexpr (not is_primary_end) {
+          // get reprimaryder
+          if constexpr (child_subtree_contains_primary_start) {
             result_component =
-                t_.get_main(result_component, current_multi_index);
+                t_.get_primary(result_component, current_multi_index);
           } else {
             result_component = t_.get(current_multi_index);
           }
@@ -686,7 +689,7 @@ struct TensorContract
         // next add up all the full-length legs
         for (size_t i = 0; i < num_full_legs; i++) {
           result_component +=
-              compute_contraction_main_stop_at_branches<leg_length - 1>(
+              compute_contraction_primary_stop_at_branches<leg_length - 1>(
                   t_, get_next_multi_index_to_sum(current_multi_index),
                   current_multi_index);
         }
@@ -694,8 +697,8 @@ struct TensorContract
         // already took care of
         if constexpr (last_leg_length > 1) {
           result_component +=
-              compute_contraction_main_stop_at_branches<leg_length -
-                                                        last_leg_length - 1>(
+              compute_contraction_primary_stop_at_branches<leg_length -
+                                                           last_leg_length - 1>(
                   t_, get_next_multi_index_to_sum(current_multi_index),
                   current_multi_index);
         }
@@ -704,11 +707,12 @@ struct TensorContract
         // std::cout << "hiiiiii" << std::endl;
         // std::cout << "current_multi_index : " << current_multi_index
         //   << std::endl;
-        // first get the remainder if there is one
-        if constexpr (not is_main_end) {
-          // get remainder
-          result_component = t_.get_main(result_component, current_multi_index);
-          //   std::cout << "end of not is_main_end : " << result_component
+        // first get the reprimaryder if there is one
+        if constexpr (not is_primary_end) {
+          // get reprimaryder
+          result_component =
+              t_.get_primary(result_component, current_multi_index);
+          //   std::cout << "end of not is_primary_end : " << result_component
           //             << std::endl;
           //   std::cout << "current_multi_index : " << current_multi_index
           //             << std::endl;
@@ -721,7 +725,7 @@ struct TensorContract
         // next add up all the full-length legs
         for (size_t i = 1; i < num_full_legs; i++) {
           result_component +=
-              compute_contraction_main_stop_at_branches<leg_length - 1>(
+              compute_contraction_primary_stop_at_branches<leg_length - 1>(
                   t_, get_next_multi_index_to_sum(current_multi_index),
                   current_multi_index);
           //   std::cout << "for loop iteration : " << result_component <<
@@ -734,7 +738,7 @@ struct TensorContract
         // already took care of
         if constexpr (leg_length > 1) {
           result_component +=
-              compute_contraction_main_stop_at_branches<leg_length - 2>(
+              compute_contraction_primary_stop_at_branches<leg_length - 2>(
                   t_, get_next_multi_index_to_sum(current_multi_index),
                   current_multi_index);
           //   std::cout << "end of last_leg_length > 1 : " << result_component
@@ -747,18 +751,19 @@ struct TensorContract
   }
 
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE void visit_main(
+  SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& contracted_multi_index)
       const {
     const auto last_operand_multi_index_to_sum =
         get_last_index_to_sum(contracted_multi_index);
-    if constexpr (child_subtree_contains_main_beg) {
-      t_.visit_main(result_component, last_operand_multi_index_to_sum);
+    if constexpr (child_subtree_contains_primary_start) {
+      t_.evaluate_primary_subtree(result_component,
+                                  last_operand_multi_index_to_sum);
     }
-    if constexpr (is_main_beg) {
-      visit_contract_main(result_component, contracted_multi_index,
-                          last_operand_multi_index_to_sum);
+    if constexpr (is_primary_start) {
+      visit_contract_primary(result_component, contracted_multi_index,
+                             last_operand_multi_index_to_sum);
     }
   }
 

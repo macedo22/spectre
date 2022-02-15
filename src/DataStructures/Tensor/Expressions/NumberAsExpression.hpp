@@ -22,18 +22,18 @@ struct NumberAsExpression
   using args_list = tmpl::list<>;
   static constexpr auto num_tensor_indices = 0;
 
-  static constexpr size_t num_ops_left = 0;
-  static constexpr size_t num_ops_right = 0;
+  static constexpr size_t num_ops_left_child = 0;
+  static constexpr size_t num_ops_right_child = 0;
   static constexpr size_t num_ops_subtree = 0;
 
-  static constexpr bool is_main_end = true;
-  static constexpr size_t num_ops_to_evaluate_main_left = 0;
-  static constexpr size_t num_ops_to_evaluate_main_right = 0;
-  static constexpr size_t num_ops_to_evaluate_main_subtree = 0;
-  static constexpr bool is_main_beg = false;
+  static constexpr bool is_primary_end = true;
+  static constexpr size_t num_ops_to_evaluate_primary_left_child = 0;
+  static constexpr size_t num_ops_to_evaluate_primary_right_child = 0;
+  static constexpr size_t num_ops_to_evaluate_primary_subtree = 0;
+  static constexpr bool is_primary_start = false;
 
-  static constexpr bool child_subtree_contains_main_beg = false;
-  static constexpr bool subtree_contains_main_beg = is_main_beg;
+  static constexpr bool child_subtree_contains_primary_start = false;
+  static constexpr bool subtree_contains_primary_start = is_primary_start;
 
   NumberAsExpression(const double number) : number_(number) {}
   ~NumberAsExpression() override = default;
@@ -52,17 +52,17 @@ struct NumberAsExpression
   }
 
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE double get_main(
+  SPECTRE_ALWAYS_INLINE double get_primary(
       const ResultType& /*result_component*/,
       const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
     return number_;
   }
 
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE void visit_main(
+  SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
-    if constexpr (is_main_beg) {
+    if constexpr (is_primary_start) {
       result_component = get(multi_index);
     }
   }

@@ -230,15 +230,17 @@ void evaluate(
                 gsl::at(rhs_spatial_spacetime_index_positions, j)) += 1;
       }
 
-      if constexpr (rhs_expression_type::subtree_contains_main_beg) {
+      if constexpr (rhs_expression_type::subtree_contains_primary_start) {
         // the expression is split up, so evaluate subtrees at splits
-        (~rhs_tensorexpression).visit_main((*lhs_tensor)[i], rhs_multi_index);
-        if constexpr (not rhs_expression_type::is_main_beg) {
+        (~rhs_tensorexpression)
+            .evaluate_primary_subtree((*lhs_tensor)[i], rhs_multi_index);
+        if constexpr (not rhs_expression_type::is_primary_start) {
           // the root expression type is not a split point, so it was not
-          // evaluated when visiting above, so evaluate the remainder of the
+          // evaluated when visiting above, so evaluate the reprimaryder of the
           // expression at the root of the tree
-          (*lhs_tensor)[i] = (~rhs_tensorexpression)
-                                 .get_main((*lhs_tensor)[i], rhs_multi_index);
+          (*lhs_tensor)[i] =
+              (~rhs_tensorexpression)
+                  .get_primary((*lhs_tensor)[i], rhs_multi_index);
         }
       } else {
         // the expression is not split up, so evaluate full expression

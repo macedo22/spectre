@@ -41,24 +41,26 @@ struct SquareRoot
   using args_list = tmpl::list<Args...>;
   static constexpr auto num_tensor_indices = sizeof...(Args);
 
-  static constexpr size_t num_ops_left = T::num_ops_subtree;
-  static constexpr size_t num_ops_right = 0;
-  static constexpr size_t num_ops_subtree = num_ops_left + 1;
+  static constexpr size_t num_ops_left_child = T::num_ops_subtree;
+  static constexpr size_t num_ops_right_child = 0;
+  static constexpr size_t num_ops_subtree = num_ops_left_child + 1;
 
-  static constexpr bool is_main_end = T::is_main_beg;
-  static constexpr size_t num_ops_to_evaluate_main_left =
-      is_main_end ? 0 : T::num_ops_to_evaluate_main_subtree;
-  static constexpr size_t num_ops_to_evaluate_main_right = num_ops_right;
-  static constexpr size_t num_ops_to_evaluate_main_subtree =
-      num_ops_to_evaluate_main_left + num_ops_to_evaluate_main_right + 1;
-  static constexpr bool is_main_beg =
-      num_ops_to_evaluate_main_subtree >=
+  static constexpr bool is_primary_end = T::is_primary_start;
+  static constexpr size_t num_ops_to_evaluate_primary_left_child =
+      is_primary_end ? 0 : T::num_ops_to_evaluate_primary_subtree;
+  static constexpr size_t num_ops_to_evaluate_primary_right_child =
+      num_ops_right_child;
+  static constexpr size_t num_ops_to_evaluate_primary_subtree =
+      num_ops_to_evaluate_primary_left_child +
+      num_ops_to_evaluate_primary_right_child + 1;
+  static constexpr bool is_primary_start =
+      num_ops_to_evaluate_primary_subtree >=
       detail::max_num_ops_in_sub_expression<type>;
 
-  static constexpr bool child_subtree_contains_main_beg =
-      T::subtree_contains_main_beg;
-  static constexpr bool subtree_contains_main_beg =
-      is_main_beg or child_subtree_contains_main_beg;
+  static constexpr bool child_subtree_contains_primary_start =
+      T::subtree_contains_primary_start;
+  static constexpr bool subtree_contains_primary_start =
+      is_primary_start or child_subtree_contains_primary_start;
 
   SquareRoot(T t) : t_(std::move(t)) {}
   ~SquareRoot() override = default;
@@ -84,28 +86,28 @@ struct SquareRoot
   }
 
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE decltype(auto) get_main(
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
       const ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
-    if constexpr (is_main_end) {
+    if constexpr (is_primary_end) {
       (void)multi_index;
       return sqrt(result_component);
     } else {
-      return sqrt(t_.get_main(result_component, multi_index));
+      return sqrt(t_.get_primary(result_component, multi_index));
     }
   }
 
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE void visit_main(
+  SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
-    if constexpr (child_subtree_contains_main_beg) {
-      t_.visit_main(result_component, multi_index);
+    if constexpr (child_subtree_contains_primary_start) {
+      t_.evaluate_primary_subtree(result_component, multi_index);
     }
 
-    if constexpr (is_main_beg) {
-      if constexpr (child_subtree_contains_main_beg) {
-        result_component = get_main(result_component, multi_index);
+    if constexpr (is_primary_start) {
+      if constexpr (child_subtree_contains_primary_start) {
+        result_component = get_primary(result_component, multi_index);
       } else {
         result_component = get(multi_index);
       }
