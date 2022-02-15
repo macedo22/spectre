@@ -52,6 +52,9 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   /// Typelist of the tensor indices, e.g. `_a_t` and `_b_t` in `F(_a, _b)`
   using args_list = ArgsList<Args...>;
 
+  // TODO : add aliases and functions that all derived TE types should have
+  // in order to enforce what is required by them?
+
   virtual ~TensorExpression() = 0;
 
   /// @{
