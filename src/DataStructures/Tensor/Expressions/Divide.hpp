@@ -154,11 +154,7 @@ struct Divide : public TensorExpression<
       if constexpr (evaluate_children_separately) {
         evaluate_primary_children(result_component, result_multi_index);
       } else {
-        if constexpr (primary_child_subtree_contains_primary_start) {
-          result_component = get_primary(result_component, result_multi_index);
-        } else {
-          result_component = get(result_multi_index);
-        }
+        result_component = get_primary(result_component, result_multi_index);
       }
     }
   }
