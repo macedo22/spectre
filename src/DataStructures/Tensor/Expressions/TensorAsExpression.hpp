@@ -197,8 +197,9 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
   static constexpr size_t num_ops_to_evaluate_primary_subtree = 0;
   static constexpr bool is_primary_start = false;
 
-  static constexpr bool child_subtree_contains_primary_start = false;
-  static constexpr bool subtree_contains_primary_start = is_primary_start;
+  static constexpr bool primary_child_subtree_contains_primary_start = false;
+  static constexpr bool primary_subtree_contains_primary_start =
+      is_primary_start;
 
   /// Construct an expression from a Tensor
   explicit TensorAsExpression(const Tensor<X, Symm, IndexList<Indices...>>& t)

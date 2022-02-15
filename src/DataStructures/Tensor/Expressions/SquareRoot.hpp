@@ -57,10 +57,10 @@ struct SquareRoot
       num_ops_to_evaluate_primary_subtree >=
       detail::max_num_ops_in_sub_expression<type>;
 
-  static constexpr bool child_subtree_contains_primary_start =
-      T::subtree_contains_primary_start;
-  static constexpr bool subtree_contains_primary_start =
-      is_primary_start or child_subtree_contains_primary_start;
+  static constexpr bool primary_child_subtree_contains_primary_start =
+      T::primary_subtree_contains_primary_start;
+  static constexpr bool primary_subtree_contains_primary_start =
+      is_primary_start or primary_child_subtree_contains_primary_start;
 
   SquareRoot(T t) : t_(std::move(t)) {}
   ~SquareRoot() override = default;
@@ -101,12 +101,12 @@ struct SquareRoot
   SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
-    if constexpr (child_subtree_contains_primary_start) {
+    if constexpr (primary_child_subtree_contains_primary_start) {
       t_.evaluate_primary_subtree(result_component, multi_index);
     }
 
     if constexpr (is_primary_start) {
-      if constexpr (child_subtree_contains_primary_start) {
+      if constexpr (primary_child_subtree_contains_primary_start) {
         result_component = get_primary(result_component, multi_index);
       } else {
         result_component = get(multi_index);

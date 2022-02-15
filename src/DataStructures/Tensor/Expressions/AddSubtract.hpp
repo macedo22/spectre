@@ -339,16 +339,16 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   static constexpr bool is_primary_start =
       num_ops_to_evaluate_primary_subtree >=
       detail::max_num_ops_in_sub_expression<type>;
-  static constexpr bool is_primary_fork =
+  static constexpr bool evaluate_children_separately =
       is_primary_start and (num_ops_to_evaluate_primary_left_child >=
                                 detail::max_num_ops_in_sub_expression<type> or
                             num_ops_to_evaluate_primary_right_child >=
                                 detail::max_num_ops_in_sub_expression<type>);
 
-  static constexpr bool child_subtree_contains_primary_start =
-      T1::subtree_contains_primary_start;
-  static constexpr bool subtree_contains_primary_start =
-      is_primary_start or child_subtree_contains_primary_start;
+  static constexpr bool primary_child_subtree_contains_primary_start =
+      T1::primary_subtree_contains_primary_start;
+  static constexpr bool primary_subtree_contains_primary_start =
+      is_primary_start or primary_child_subtree_contains_primary_start;
 
   AddSub(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~AddSub() override = default;
@@ -527,7 +527,7 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
         (void)op1_multi_index;
         result_component += t2_.get(op2_multi_index);
       } else {
-        if constexpr (child_subtree_contains_primary_start) {
+        if constexpr (primary_child_subtree_contains_primary_start) {
           result_component = t1_.get_primary(result_component, op1_multi_index);
         } else {
           result_component = t1_.get(op1_multi_index);
@@ -539,7 +539,7 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
         (void)op1_multi_index;
         result_component -= t2_.get(op2_multi_index);
       } else {
-        if constexpr (child_subtree_contains_primary_start) {
+        if constexpr (primary_child_subtree_contains_primary_start) {
           result_component = t1_.get_primary(result_component, op1_multi_index);
         } else {
           result_component = t1_.get(op1_multi_index);
@@ -593,15 +593,15 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
-    if constexpr (child_subtree_contains_primary_start) {
+    if constexpr (primary_child_subtree_contains_primary_start) {
       t1_.evaluate_primary_subtree(result_component, result_multi_index);
     }
 
     if constexpr (is_primary_start) {
-      if constexpr (is_primary_fork) {
+      if constexpr (evaluate_children_separately) {
         evaluate_primary_children(result_component, result_multi_index);
       } else {
-        if constexpr (child_subtree_contains_primary_start) {
+        if constexpr (primary_child_subtree_contains_primary_start) {
           result_component = get_primary(result_component, result_multi_index);
         } else {
           result_component = get(result_multi_index);

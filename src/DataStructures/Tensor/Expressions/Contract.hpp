@@ -303,10 +303,10 @@ struct TensorContract
       num_ops_to_evaluate_primary_subtree >
       2 * detail::max_num_ops_in_sub_expression<type>;
 
-  static constexpr bool child_subtree_contains_primary_start =
-      T::subtree_contains_primary_start;
-  static constexpr bool subtree_contains_primary_start =
-      is_primary_start or child_subtree_contains_primary_start;
+  static constexpr bool primary_child_subtree_contains_primary_start =
+      T::primary_subtree_contains_primary_start;
+  static constexpr bool primary_subtree_contains_primary_start =
+      is_primary_start or primary_child_subtree_contains_primary_start;
 
   static constexpr size_t num_ops_subexpression = T::num_ops_subtree;
   // compute how often to stop
@@ -650,7 +650,7 @@ struct TensorContract
       (void)contracted_multi_index;
       if constexpr (not is_primary_end) {
         // we still need to compute what's below the contraction
-        if constexpr (child_subtree_contains_primary_start) {
+        if constexpr (primary_child_subtree_contains_primary_start) {
           result_component =
               t_.get_primary(result_component, current_multi_index);
         } else {
@@ -678,7 +678,7 @@ struct TensorContract
         // first get the reprimaryder if there is one
         if constexpr (not is_primary_end) {
           // get reprimaryder
-          if constexpr (child_subtree_contains_primary_start) {
+          if constexpr (primary_child_subtree_contains_primary_start) {
             result_component =
                 t_.get_primary(result_component, current_multi_index);
           } else {
@@ -757,7 +757,7 @@ struct TensorContract
       const {
     const auto last_operand_multi_index_to_sum =
         get_last_index_to_sum(contracted_multi_index);
-    if constexpr (child_subtree_contains_primary_start) {
+    if constexpr (primary_child_subtree_contains_primary_start) {
       t_.evaluate_primary_subtree(result_component,
                                   last_operand_multi_index_to_sum);
     }

@@ -230,7 +230,8 @@ void evaluate(
                 gsl::at(rhs_spatial_spacetime_index_positions, j)) += 1;
       }
 
-      if constexpr (rhs_expression_type::subtree_contains_primary_start) {
+      if constexpr (rhs_expression_type::
+                        primary_subtree_contains_primary_start) {
         // the expression is split up, so evaluate subtrees at splits
         (~rhs_tensorexpression)
             .evaluate_primary_subtree((*lhs_tensor)[i], rhs_multi_index);
