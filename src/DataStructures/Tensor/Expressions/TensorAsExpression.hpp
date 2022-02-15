@@ -219,16 +219,14 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
     return t_->get(multi_index);
   }
 
-  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
-      const ResultType& /*result_component*/,
+      const type& /*result_component*/,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     return t_->get(multi_index);
   }
 
-  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void evaluate_primary(
-      ResultType& result_component,
+      type& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     if constexpr (is_primary_start) {
       result_component = get(multi_index);

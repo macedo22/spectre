@@ -166,7 +166,6 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
            t2_.get(get_op2_multi_index(result_multi_index));
   }
 
-  // TODO : remove `ResultType` tparam to be a class alias?
   /// \brief Return the product of the components at the given multi-indices of
   /// the left and right operands
   ///
@@ -179,9 +178,8 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// operand of the product to retrieve
   /// \param op2_multi_index the multi-index of the component of the second
   /// operand of the product to retrieve
-  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
-      const ResultType& result_component,
+      const type& result_component,
       const std::array<size_t, op1_num_tensor_indices>& op1_multi_index,
       const std::array<size_t, op2_num_tensor_indices>& op2_multi_index) const {
     if constexpr (is_primary_end) {
@@ -207,9 +205,8 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// product tensor to retrieve
   /// \return the value of the component at `result_multi_index` in the outer
   /// product tensor
-  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
-      const ResultType& result_component,
+      const type& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     return get_primary(result_component,
                        get_op1_multi_index(result_multi_index),
@@ -233,9 +230,8 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// operand of the product to retrieve
   /// \param op2_multi_index the multi-index of the component of the second
   /// operand of the product to retrieve
-  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void evaluate_primary_children(
-      ResultType& result_component,
+      type& result_component,
       const std::array<size_t, op1_num_tensor_indices>& op1_multi_index,
       const std::array<size_t, op2_num_tensor_indices>& op2_multi_index) const {
     if constexpr (is_primary_end) {
@@ -267,9 +263,8 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// \param result_component the LHS tensor component to evaluate
   /// \param result_multi_index the multi-index of the component of the outer
   /// product tensor to retrieve
-  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
-      ResultType& result_component,
+      type& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     const std::array<size_t, op1_num_tensor_indices> op1_multi_index =
         get_op1_multi_index(result_multi_index);

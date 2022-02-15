@@ -567,9 +567,9 @@ struct TensorContract
 
   // for when contraction expression is not a primary beg
   // TODO : static assert this ^ or something?
-  template <size_t Iteration, typename ResultType>
+  template <size_t Iteration>
   SPECTRE_ALWAYS_INLINE static decltype(auto) compute_contraction_primary(
-      const T& t, const ResultType& result_component,
+      const T& t, const type& result_component,
       const std::array<size_t, num_uncontracted_tensor_indices>&
           current_multi_index) {
     if constexpr (is_primary_end) {
@@ -627,9 +627,8 @@ struct TensorContract
     }
   }
 
-  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
-      const ResultType& result_component,
+      const type& result_component,
       const std::array<size_t, num_tensor_indices>& contracted_multi_index)
       const {
     return compute_contraction_primary<0>(
@@ -639,9 +638,8 @@ struct TensorContract
   // if we fork (split every term), then go up and get previous index
   // else, if we branch (split every leg_length terms), go down to each
   // branch point and compute each leg separately
-  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void evaluate_primary_contraction(
-      ResultType& result_component,
+      type& result_component,
       const std::array<size_t, num_tensor_indices>& contracted_multi_index,
       std::array<size_t, num_uncontracted_tensor_indices> current_multi_index)
       const {
@@ -750,9 +748,8 @@ struct TensorContract
     }
   }
 
-  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
-      ResultType& result_component,
+      type& result_component,
       const std::array<size_t, num_tensor_indices>& contracted_multi_index)
       const {
     const auto last_operand_multi_index_to_sum =

@@ -71,9 +71,8 @@ struct Negate
     return -t_.get(multi_index);
   }
 
-  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
-      const ResultType& result_component,
+      const type& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     if constexpr (is_primary_end) {
       (void)multi_index;
@@ -83,9 +82,8 @@ struct Negate
     }
   }
 
-  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
-      ResultType& result_component,
+      type& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     if constexpr (primary_child_subtree_contains_primary_start) {
       t_.evaluate_primary_subtree(result_component, multi_index);

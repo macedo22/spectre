@@ -517,9 +517,8 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
                            get_op2_multi_index(result_multi_index));
   }
 
-  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void add_or_subtract_primary_fork(
-      ResultType& result_component,
+      type& result_component,
       const std::array<size_t, num_tensor_indices>& op1_multi_index,
       const std::array<size_t, num_tensor_indices_op2>& op2_multi_index) const {
     if constexpr (Sign == 1) {
@@ -549,17 +548,15 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
     }
   }
 
-  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void evaluate_primary_children(
-      ResultType& result_component,
+      type& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     add_or_subtract_primary_fork(result_component, result_multi_index,
                                  get_op2_multi_index(result_multi_index));
   }
 
-  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE decltype(auto) add_or_subtract_primary(
-      const ResultType& result_component,
+      const type& result_component,
       const std::array<size_t, num_tensor_indices>& op1_multi_index,
       const std::array<size_t, num_tensor_indices_op2>& op2_multi_index) const {
     if constexpr (Sign == 1) {
@@ -581,17 +578,15 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
     }
   }
 
-  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
-      const ResultType& result_component,
+      const type& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     return add_or_subtract_primary(result_component, result_multi_index,
                                    get_op2_multi_index(result_multi_index));
   }
 
-  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
-      ResultType& result_component,
+      type& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     if constexpr (primary_child_subtree_contains_primary_start) {
       t1_.evaluate_primary_subtree(result_component, result_multi_index);
