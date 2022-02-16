@@ -39,12 +39,23 @@ struct NumberAsExpression
   NumberAsExpression(const double number) : number_(number) {}
   ~NumberAsExpression() override = default;
 
+  // This expression does not represent a tensor, nor does it have any children,
+  // so we should never be asking this expression to return a component of a
+  // `Tensor` that appears in the overall RHS expression
+  type get_used_for_size() const = delete;
+  // This expression does not represent a tensor, nor does it have any children,
+  // so we should never need to assert that the LHS `Tensor` is not equal to the
+  // `double` stored by this expression
+  template <typename LhsTensor>
+  void assert_lhs_tensor_not_in_rhs_expression(
+      const gsl::not_null<LhsTensor*>) const = delete;
+
   /// \brief Returns the number represented by the expression
   ///
   /// \details
   /// While a NumberAsExpression does not store a rank 0 Tensor, it does
-  /// represent one. This is why the multi-index argument is always an array of
-  /// size 0.
+  /// represent one. This is why the multi-index argument is always an array
+  /// of size 0.
   ///
   /// \return the number represented by this expression
   SPECTRE_ALWAYS_INLINE double get(
