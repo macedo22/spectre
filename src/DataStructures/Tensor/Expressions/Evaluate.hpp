@@ -189,6 +189,9 @@ void evaluate(
       "index has 2 spatial dimensions but L's second index has 3 spatial "
       "dimensions. Check RHS and LHS indices that use the same generic index.");
 
+  // Make sure the LHS tensor doesn't also appear in the RHS tensor expression
+  (~rhs_tensorexpression).assert_lhs_tensor_not_in_rhs_expression(lhs_tensor);
+
   constexpr std::array<size_t, num_rhs_indices> index_transformation =
       compute_tensorindex_transformation<num_lhs_indices, num_rhs_indices>(
           {{std::decay_t<decltype(LhsTensorIndices)>::value...}},
@@ -323,7 +326,7 @@ auto evaluate(const RhsTE& rhs_tensorexpression) {
          typename lhs_tensor_symm_and_indices::tensorindextype_list>
       lhs_tensor((~rhs_tensorexpression).get_used_for_size());
   evaluate<LhsTensorIndices...>(make_not_null(&lhs_tensor),
-                                rhs_tensorexpression);
+                                ~rhs_tensorexpression);
   return lhs_tensor;
 }
 }  // namespace TensorExpressions

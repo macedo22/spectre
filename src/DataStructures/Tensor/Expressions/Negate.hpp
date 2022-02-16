@@ -55,6 +55,16 @@ struct Negate
   Negate(T t) : t_(std::move(t)) {}
   ~Negate() override = default;
 
+  /// \brief Assert that the LHS tensor of the equation does not also appear in
+  /// this expression's subtree
+  template <typename LhsTensor>
+  SPECTRE_ALWAYS_INLINE void assert_lhs_tensor_not_in_rhs_expression(
+      const gsl::not_null<LhsTensor*> lhs_tensor) const {
+    if constexpr (not std::is_base_of_v<NumberAsExpression, T>) {
+      t_.assert_lhs_tensor_not_in_rhs_expression(lhs_tensor);
+    }
+  }
+
   SPECTRE_ALWAYS_INLINE auto get_used_for_size() const {
     return t_.get_used_for_size();
   }

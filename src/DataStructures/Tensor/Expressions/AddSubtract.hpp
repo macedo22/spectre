@@ -353,6 +353,19 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   AddSub(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~AddSub() override = default;
 
+  /// \brief Assert that the LHS tensor of the equation does not also appear in
+  /// this expression's subtree
+  template <typename LhsTensor>
+  SPECTRE_ALWAYS_INLINE void assert_lhs_tensor_not_in_rhs_expression(
+      const gsl::not_null<LhsTensor*> lhs_tensor) const {
+    if constexpr (not std::is_base_of_v<NumberAsExpression, T1>) {
+      t1_.assert_lhs_tensor_not_in_rhs_expression(lhs_tensor);
+    }
+    if constexpr (not std::is_base_of_v<NumberAsExpression, T2>) {
+      t2_.assert_lhs_tensor_not_in_rhs_expression(lhs_tensor);
+    }
+  }
+
   SPECTRE_ALWAYS_INLINE auto get_used_for_size() const {
     if constexpr (not std::is_base_of_v<NumberAsExpression, T2>) {
       return t2_.get_used_for_size();

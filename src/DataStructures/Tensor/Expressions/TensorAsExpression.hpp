@@ -207,6 +207,15 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
       : t_(&t) {}
   ~TensorAsExpression() override = default;
 
+  /// \brief Assert that the LHS tensor of the equation is not equal to the
+  /// `Tensor` represented by this expression
+  template <typename LhsTensor>
+  SPECTRE_ALWAYS_INLINE void assert_lhs_tensor_not_in_rhs_expression(
+      const gsl::not_null<LhsTensor*> lhs_tensor) const {
+    (void)lhs_tensor;
+    assert(t_ != lhs_tensor);
+  }
+
   SPECTRE_ALWAYS_INLINE auto get_used_for_size() const {
     return t_->operator[](0);
   }

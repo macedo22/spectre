@@ -90,6 +90,9 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   // === Arithmetic tensor operations properties ===
   static constexpr size_t num_ops_left_child = T1::num_ops_subtree;
   static constexpr size_t num_ops_right_child = T2::num_ops_subtree;
+  static_assert(num_ops_left_child >= num_ops_right_child,
+                "The left operand expression should be a subtree with equal or "
+                "more tensor operations than the right operand's subtree.");
   static constexpr size_t num_ops_subtree =
       num_ops_left_child + num_ops_right_child + 1;
 
@@ -125,6 +128,25 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   OuterProduct(T1 t1, T2 t2) : t1_(std::move(t1)), t2_(std::move(t2)) {}
   ~OuterProduct() override = default;
 
+  /// \brief Assert that the LHS tensor of the equation does not also appear in
+  /// this expression's subtree
+  template <typename LhsTensor>
+  SPECTRE_ALWAYS_INLINE void assert_lhs_tensor_not_in_rhs_expression(
+      const gsl::not_null<LhsTensor*> lhs_tensor) const {
+    if constexpr (not std::is_base_of_v<NumberAsExpression, T1>) {
+      t1_.assert_lhs_tensor_not_in_rhs_expression(lhs_tensor);
+    }
+    if constexpr (not std::is_base_of_v<NumberAsExpression, T2>) {
+      t2_.assert_lhs_tensor_not_in_rhs_expression(lhs_tensor);
+    }
+  }
+
+  /// \brief Retrieve a component of a `TensorAsExpression` leaf node in this
+  /// expression's subtree
+  ///
+  /// \details Unless the right child is a `NumberAsExpression` leaf, recurse
+  /// down right child since `OuterProduct`s are constructed with the larger
+  /// subtree as the left operand
   SPECTRE_ALWAYS_INLINE auto get_used_for_size() const {
     if constexpr (not std::is_base_of_v<NumberAsExpression, T2>) {
       return t2_.get_used_for_size();
