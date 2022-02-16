@@ -46,6 +46,11 @@ struct OuterProductType<T1, T2, SymmList1<Symm1...>, SymmList2<Symm2...>> {
 /// \brief Defines the tensor expression representing the outer product of two
 /// tensor expressions
 ///
+/// \details
+/// For details on aliases and members defined in this class, as well as general
+/// `TensorExpression` terminology used in its members' documentation, see
+/// documentation for `TensorExpression`.
+///
 /// \tparam T1 the first operand expression of the outer product expression
 /// \tparam T2 the second operand expression of the outer product expression
 template <typename T1, typename T2,
@@ -71,7 +76,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
                     std::is_same<T1, NumberAsExpression>::value or
                     std::is_same<T2, NumberAsExpression>::value,
                 "Cannot product Tensors holding different data types.");
-
+  // === Index properties ===
   using type = typename detail::OuterProductType<T1, T2>::type;
   using symmetry = typename detail::OuterProductType<T1, T2>::symmetry;
   using index_list = typename detail::OuterProductType<T1, T2>::index_list;
@@ -82,11 +87,15 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   static constexpr auto op2_num_tensor_indices =
       num_tensor_indices - op1_num_tensor_indices;
 
+  // === Arithmetic tensor operations properties ===
   static constexpr size_t num_ops_left_child = T1::num_ops_subtree;
   static constexpr size_t num_ops_right_child = T2::num_ops_subtree;
   static constexpr size_t num_ops_subtree =
       num_ops_left_child + num_ops_right_child + 1;
 
+  // === Properties for splitting up subexpressions along the primary path ===
+  // These defintiions only have meaning if this expression actually ends up
+  // being along the primary path that is taken when evaluating the whole tree.
   static constexpr bool is_primary_end = T1::is_primary_start;
   static constexpr size_t num_ops_to_evaluate_primary_left_child =
       is_primary_end ? 0 : T1::num_ops_to_evaluate_primary_subtree;
@@ -98,12 +107,16 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   static constexpr bool is_primary_start =
       num_ops_to_evaluate_primary_subtree >=
       detail::max_num_ops_in_sub_expression<type>;
+  // When evaluating along a primary path, whether each operand's subtrees
+  // should be evaluated separately. Since `DataVector` expression runtime
+  // scales poorly with increased number of operations, evaluating the two
+  // expression subtrees separately like this is beneficial when at least one of
+  // the subtrees contains a large number of operations.
   static constexpr bool evaluate_children_separately =
       is_primary_start and (num_ops_to_evaluate_primary_left_child >=
                                 detail::max_num_ops_in_sub_expression<type> or
                             num_ops_to_evaluate_primary_right_child >=
                                 detail::max_num_ops_in_sub_expression<type>);
-
   static constexpr bool primary_child_subtree_contains_primary_start =
       T1::primary_subtree_contains_primary_start;
   static constexpr bool primary_subtree_contains_primary_start =
@@ -120,6 +133,12 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
     }
   }
 
+  /// \brief Return the first operand's multi-index given the outer product's
+  /// multi-index
+  ///
+  /// \param result_multi_index the multi-index of the component of the outer
+  /// product tensor
+  /// \return the first operand's multi-index
   constexpr SPECTRE_ALWAYS_INLINE std::array<size_t, op1_num_tensor_indices>
   get_op1_multi_index(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
@@ -130,6 +149,12 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
     return op1_multi_index;
   }
 
+  /// \brief Return the second operand's multi-index given the outer product's
+  /// multi-index
+  ///
+  /// \param result_multi_index the multi-index of the component of the outer
+  /// product tensor
+  /// \return the second operand's multi-index
   constexpr SPECTRE_ALWAYS_INLINE std::array<size_t, op2_num_tensor_indices>
   get_op2_multi_index(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
@@ -171,7 +196,10 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   ///
   /// \details
   /// This function differs from `get` in that it takes into account whether we
-  /// have already computed part of the result component at a lower subtree
+  /// have already computed part of the result component at a lower subtree.
+  /// In recursively computing this product, the current result component will
+  /// be substituted in for the most recent (highest) subtree below it that has
+  /// already been evaluated.
   ///
   /// \param result_component the LHS tensor component to evaluate
   /// \param op1_multi_index the multi-index of the component of the first
@@ -185,10 +213,12 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
     if constexpr (is_primary_end) {
       (void)op1_multi_index;
       // We've already computed the whole child subtree on the primary path, so
-      // just multiply the current result by the result of the other child's
-      // subtree
+      // just return the product of the current result component and the result
+      // of the other child's subtree
       return result_component * t2_.get(op2_multi_index);
     } else {
+      // We haven't yet evaluated the whole subtree for this expression, so
+      // return the product of the results of the two operands' subtrees
       return t1_.get_primary(result_component, op1_multi_index) *
              t2_.get(op2_multi_index);
     }
@@ -199,7 +229,10 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   ///
   /// \details
   /// This function differs from `get` in that it takes into account whether we
-  /// have already computed part of the result component at a lower subtree
+  /// have already computed part of the result component at a lower subtree.
+  /// In recursively computing this product, the current result component will
+  /// be substituted in for the most recent (highest) subtree below it that has
+  /// already been evaluated.
   ///
   /// \param result_multi_index the multi-index of the component of the outer
   /// product tensor to retrieve
@@ -214,7 +247,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   }
 
   /// \brief Evaluate the LHS Tensor's result component at this subtree by
-  /// evaluating the two operand's subtrees and multiplying their results
+  /// evaluating the two operand's subtrees separately and multiplying
   ///
   /// \details
   /// The left and right operands' subtrees are evaluated successively with
@@ -227,9 +260,9 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   ///
   /// \param result_component the LHS tensor component to evaluate
   /// \param op1_multi_index the multi-index of the component of the first
-  /// operand of the product to retrieve
+  /// operand of the product to evaluate
   /// \param op2_multi_index the multi-index of the component of the second
-  /// operand of the product to retrieve
+  /// operand of the product to evaluate
   SPECTRE_ALWAYS_INLINE void evaluate_primary_children(
       type& result_component,
       const std::array<size_t, op1_num_tensor_indices>& op1_multi_index,
@@ -241,8 +274,8 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
       // subtree
       result_component *= t2_.get(op2_multi_index);
     } else {
-      // We've haven't yet evaluated the whole child subtree on the primary
-      // path, so assign the result component to be the result of computing the
+      // We haven't yet evaluated the whole subtree of the primary child, so
+      // first assign the result component to be the result of computing the
       // primary child's subtree
       result_component = t1_.get_primary(result_component, op1_multi_index);
       // Now that the primary child's subtree has been computed, multiply the
@@ -254,15 +287,9 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// \brief Successively evaluate the LHS Tensor's result component at each
   /// stop in this expression's subtree
   ///
-  /// \details
-  /// First, if the `OuterProduct`'s primary operand's subtree contains a stop,
-  /// this function first recurses down it and successively evaluates the LHS
-  /// result component at each stop. Then, if this expression itself is a stop,
-  /// the function evaluates the LHS component at this expression.
-  ///
   /// \param result_component the LHS tensor component to evaluate
   /// \param result_multi_index the multi-index of the component of the outer
-  /// product tensor to retrieve
+  /// product tensor to evaluate
   SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
       type& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
