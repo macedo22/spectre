@@ -144,6 +144,10 @@ struct Expression {};
 /// LHS tensor components to the correct size. This function should call one of
 /// its operand's `get_used_for_size` functions to recursively retrieve a
 /// component of a `Tensor` pointed to by a `TensorAsExpression` leaf node.
+/// Because expressions representing binary operations are currently
+/// instantiated to have the operand with the larger number of tensor operations
+/// be the left child, it is prefereable to recurse to the right child so that
+/// a `TensorAsExpression` leaf will tend to be reached faster.
 ///
 /// Each derived `TensorExpression` class must also define the following
 /// members, which have real meaning for the expression *only* if it ends up
