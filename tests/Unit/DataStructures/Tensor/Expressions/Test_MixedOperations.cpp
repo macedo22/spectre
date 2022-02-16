@@ -19,6 +19,11 @@
 #include "Utilities/MakeWithValue.hpp"
 #include "Utilities/TMPL.hpp"
 
+// TODO: add one new test case that is a big eq
+// TODO: once update is implemented, add another test case
+// that calls it a couple times. Maybe, this can be the same
+// as the big eq above and then make sure it matches it?
+
 namespace {
 // Computes \f$L_{a} = R_{ab} S^{b} + G_{a} - H_{ba}{}^{b} T\f$
 template <typename R_t, typename S_t, typename G_t, typename H_t, typename T_t,
