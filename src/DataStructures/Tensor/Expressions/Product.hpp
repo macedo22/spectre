@@ -145,8 +145,8 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// expression's subtree
   ///
   /// \details Unless the right child is a `NumberAsExpression` leaf, recurse
-  /// down right child since `OuterProduct`s are constructed with the larger
-  /// subtree as the left operand
+  /// down the right child's subtree since `OuterProduct`s are constructed with
+  /// the larger subtree as the left operand
   SPECTRE_ALWAYS_INLINE auto get_used_for_size() const {
     if constexpr (not std::is_base_of_v<NumberAsExpression, T2>) {
       return t2_.get_used_for_size();
@@ -256,6 +256,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// be substituted in for the most recent (highest) subtree below it that has
   /// already been evaluated.
   ///
+  /// \param result_component the LHS tensor component to evaluate
   /// \param result_multi_index the multi-index of the component of the outer
   /// product tensor to retrieve
   /// \return the value of the component at `result_multi_index` in the outer
