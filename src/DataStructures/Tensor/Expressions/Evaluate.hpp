@@ -124,6 +124,13 @@ typename RhsTE::type get_used_for_size(const RhsTE& rhs_tensorexpression) {
  *
  * This represents evaluating: \f$L_{ba} = R_{ab} + S_{ab}\f$
  *
+ * Note: The LHS `Tensor` cannot be part of the RHS expression, e.g.
+ * `evaluate(make_not_null(&L), L() + R());`, because the LHS `Tensor` will
+ * generally not be computed correctly when the RHS `TensorExpression` is split
+ * up and the LHS tensor components are computed by accumulating the result of
+ * subtrees (see the section on splitting in the documentation for the
+ * `TensorExpression` class).
+ *
  * Note: `LhsTensorIndices` must be passed by reference because non-type
  * template parameters cannot be class types until C++20.
  *
@@ -230,14 +237,19 @@ void evaluate(
                 gsl::at(rhs_spatial_spacetime_index_positions, j)) += 1;
       }
 
+      // The expression will either be evaluated as one whole expression
+      // or it will be split up into subtrees that are evaluated one at a time.
+      // See the section on splitting in the documentation for the
+      // `TensorExpression` class to understand the logic and terminology used
+      // in this control flow below.
       if constexpr (rhs_expression_type::
                         primary_subtree_contains_primary_start) {
         // the expression is split up, so evaluate subtrees at splits
         (~rhs_tensorexpression)
             .evaluate_primary_subtree((*lhs_tensor)[i], rhs_multi_index);
         if constexpr (not rhs_expression_type::is_primary_start) {
-          // the root expression type is not a split point, so it was not
-          // evaluated when visiting above, so evaluate the reprimaryder of the
+          // the root expression type is not the starting point of a leg, so it
+          // has not yet been evaluated, so now we evaluate this last leg of the
           // expression at the root of the tree
           (*lhs_tensor)[i] =
               (~rhs_tensorexpression)
