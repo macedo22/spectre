@@ -88,11 +88,6 @@ constexpr bool is_evaluated_lhs_multi_index(
   }
   return true;
 }
-
-template <typename RhsTE>
-typename RhsTE::type get_used_for_size(const RhsTE& rhs_tensorexpression) {
-  return rhs_tensorexpression.get_used_for_size();
-}
 }  // namespace detail
 
 /*!
@@ -326,7 +321,7 @@ auto evaluate(const RhsTE& rhs_tensorexpression) {
 
   Tensor<typename RhsTE::type, typename lhs_tensor_symm_and_indices::symmetry,
          typename lhs_tensor_symm_and_indices::tensorindextype_list>
-      lhs_tensor(detail::get_used_for_size(rhs_tensorexpression));
+      lhs_tensor((~rhs_tensorexpression).get_used_for_size());
   evaluate<LhsTensorIndices...>(make_not_null(&lhs_tensor),
                                 rhs_tensorexpression);
   return lhs_tensor;
