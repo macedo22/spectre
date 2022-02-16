@@ -269,6 +269,9 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   // TODO : add aliases and functions that all derived TE types should have
   // in order to enforce what is required by them?
 
+  // TODO : fix linking of `Structure` in documentation - not showing up because
+  // within `Tensor_detail::` namespace?
+
   virtual ~TensorExpression() = 0;
 
   /// @{
