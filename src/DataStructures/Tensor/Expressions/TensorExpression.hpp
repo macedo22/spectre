@@ -241,7 +241,8 @@ struct Expression {};
 /// \tparam DataType the type of the data being stored in the `Tensor`s
 /// \tparam Symm the ::Symmetry of the Derived class
 /// \tparam IndexList the list of \ref SpacetimeIndex "TensorIndexType"s
-/// \tparam Args the tensor indices, e.g. `ti_a` and `ti_b` in `F(ti_a, ti_b)`
+/// \tparam Args typelist of the tensor indices, e.g. types of `ti_a` and `ti_b`
+/// in `F(ti_a, ti_b)`
 /// \cond HIDDEN_SYMBOLS
 template <typename Derived, typename DataType, typename Symm,
           typename IndexList, typename Args = tmpl::list<>,
@@ -257,12 +258,16 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   static_assert(sizeof...(Args) == 0 or sizeof...(Args) == sizeof...(Indices),
                 "the number of Tensor indices must match the number of "
                 "components specified in an expression.");
+  /// the type of the data being stored in the `Tensor`s
   using type = DataType;
+  /// Symm the ::Symmetry of the `Derived` class
   using symmetry = Symm;
+  /// IndexList the list of \ref SpacetimeIndex "TensorIndexType"s
   using index_list = tmpl::list<Indices...>;
-  static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
-  /// Typelist of the tensor indices, e.g. `_a_t` and `_b_t` in `F(_a, _b)`
+  /// typelist of the tensor indices, e.g. types of `ti_a` and `ti_b`
+  /// in `F(ti_a, ti_b)`
   using args_list = ArgsList<Args...>;
+  static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
 
   virtual ~TensorExpression() = 0;
 
