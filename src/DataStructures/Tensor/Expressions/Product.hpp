@@ -51,8 +51,8 @@ struct OuterProductType<T1, T2, SymmList1<Symm1...>, SymmList2<Symm2...>> {
 /// `TensorExpression` terminology used in its members' documentation, see
 /// documentation for `TensorExpression`.
 ///
-/// \tparam T1 the first operand expression of the outer product expression
-/// \tparam T2 the second operand expression of the outer product expression
+/// \tparam T1 the left operand expression of the outer product expression
+/// \tparam T2 the right operand expression of the outer product expression
 template <typename T1, typename T2,
           typename IndexList1 = typename T1::index_list,
           typename IndexList2 = typename T2::index_list,
@@ -103,10 +103,13 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// The number of arithmetic tensor operations done in the subtree for the
   /// right operand
   static constexpr size_t num_ops_right_child = T2::num_ops_subtree;
-  // This helps ensure the path from root to leftmost leaf is the longest
+  // TODO : update this here and in AddSub and TensorExpression because the
+  // leftmost path might not actually be the longest if a subtraction AddSub
+  // has a large right child
+  // This helps ensure the path from the root to leftmost leaf is the longest
   static_assert(num_ops_left_child >= num_ops_right_child,
-                "The left operand expression should be a subtree with equal or "
-                "more tensor operations than the right operand's subtree.");
+                "The left operand should be a subtree with equal or more "
+                "tensor operations than the right operand's subtree.");
   /// The total number of arithmetic tensor operations done in this expression's
   /// whole subtree
   static constexpr size_t num_ops_subtree =
@@ -142,11 +145,11 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   static constexpr bool is_primary_start =
       num_ops_to_evaluate_primary_subtree >=
       detail::max_num_ops_in_sub_expression<type>;
-  // When evaluating along a primary path, whether each operand's subtrees
-  // should be evaluated separately. Since `DataVector` expression runtime
-  // scales poorly with increased number of operations, evaluating the two
-  // expression subtrees separately like this is beneficial when at least one of
-  // the subtrees contains a large number of operations.
+  /// When evaluating along a primary path, whether each operand's subtrees
+  /// should be evaluated separately. Since `DataVector` expression runtime
+  /// scales poorly with increased number of operations, evaluating the two
+  /// expression subtrees separately like this is beneficial when at least one
+  /// of the subtrees contains a large number of operations.
   static constexpr bool evaluate_children_separately =
       is_primary_start and (num_ops_to_evaluate_primary_left_child >=
                                 detail::max_num_ops_in_sub_expression<type> or

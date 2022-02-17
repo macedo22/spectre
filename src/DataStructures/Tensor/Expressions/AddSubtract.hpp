@@ -265,6 +265,21 @@ struct AddSubType {
 };
 }  // namespace detail
 
+/// \ingroup TensorExpressionsGroup
+/// \brief Defines the tensor expression representing the addition or
+/// subtraction of two tensor expressions
+///
+/// \details
+/// For details on aliases and members defined in this class, as well as general
+/// `TensorExpression` terminology used in its members' documentation, see
+/// documentation for `TensorExpression`.
+///
+/// \tparam T1 the left operand expression
+/// \tparam T2 the right operand expression
+/// \tparam ArgsList1 generic `TensorIndex`s of the left operand
+/// \tparam ArgsList2 generic `TensorIndex`s of the right operand
+/// \tparam Sign the sign of the operation selected, 1 for addition or -1 for
+/// subtraction
 template <typename T1, typename T2, typename ArgsList1, typename ArgsList2,
           int Sign>
 struct AddSub;
@@ -295,58 +310,113 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
                 "Invalid Sign provided for addition or subtraction of Tensor "
                 "elements. Sign must be 1 (addition) or -1 (subtraction).");
 
+  // === Index properties ===
+  /// The type of the data being stored in the result of the expression
   using type = typename detail::AddSubType<T1, T2>::type;
+  /// The ::Symmetry of the result of the expression
   using symmetry = typename detail::AddSubType<T1, T2>::symmetry;
+  /// The list of \ref SpacetimeIndex "TensorIndexType"s of the result of the
+  /// expression
   using index_list = typename detail::AddSubType<T1, T2>::index_list;
-  // number of indices in the tensor resulting from addition or subtraction
-  static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
-  // number of indices in the second operand in the addition or subtraction
-  static constexpr auto num_tensor_indices_op2 = sizeof...(Args2);
+  /// The list of generic `TensorIndex`s of the result of the
+  /// expression
   using args_list = typename T1::args_list;
+  /// The number of tensor indices in the result of the expression. This also
+  /// doubles as the left operand's number of indices.
+  static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
+  /// The number of tensor indices in the right operand expression
+  static constexpr auto num_tensor_indices_op2 = sizeof...(Args2);
+  /// Mapping from the left operand's index order to the right operand's index
+  /// order
   static constexpr std::array<size_t, num_tensor_indices_op2>
       operand_index_transformation =
           compute_tensorindex_transformation<num_tensor_indices,
                                              num_tensor_indices_op2>(
               {{Args1::value...}}, {{Args2::value...}});
-  // positions of indices in first operand where generic spatial indices are
-  // used for spacetime indices
+  /// Positions of indices in first operand where generic spatial indices are
+  /// used for spacetime indices
   static constexpr auto op1_spatial_spacetime_index_positions =
       detail::get_spatial_spacetime_index_positions<typename T1::index_list,
                                                     ArgsList1<Args1...>>();
-  // positions of indices in second operand where generic spatial indices are
-  // used for spacetime indices
+  /// Positions of indices in second operand where generic spatial indices are
+  /// used for spacetime indices
   static constexpr auto op2_spatial_spacetime_index_positions =
       detail::get_spatial_spacetime_index_positions<typename T2::index_list,
                                                     ArgsList2<Args2...>>();
 
+  /// Whether or not the two operands have the same `TensorIndex`s in the same
+  /// order (including concrete time indices)
   static constexpr bool ops_have_generic_indices_at_same_positions =
       generic_indices_at_same_positions<tmpl::list<Args1...>,
                                         tmpl::list<Args2...>>::value;
 
+  // === Arithmetic tensor operations properties ===
+  /// The number of arithmetic tensor operations done in the subtree for the
+  /// left operand
   static constexpr size_t num_ops_left_child = T1::num_ops_subtree;
+  /// The number of arithmetic tensor operations done in the subtree for the
+  /// right operand
   static constexpr size_t num_ops_right_child = T2::num_ops_subtree;
+  // TODO: update this because the leftmost path might not actually be the
+  // longest if a subtraction Addsub has a large right child
+  // This helps ensure the path from root to leftmost leaf is the longest
+  // when addition is being done
+  static_assert(Sign == -1 or num_ops_left_child >= num_ops_right_child,
+                "The left operand of an AddSub expression performing addition "
+                "should be a subtree with equal or more tensor operations than "
+                "the right operand's subtree.");
+  /// The total number of arithmetic tensor operations done in this expression's
+  /// whole subtree
   static constexpr size_t num_ops_subtree =
       num_ops_left_child + num_ops_right_child + 1;
 
+  // === Properties for splitting up subexpressions along the primary path ===
+  // These defintiions only have meaning if this expression actually ends up
+  // being along the primary path that is taken when evaluating the whole tree.
+  // See documentation for `TensorExpression` for more details.
+  /// If on the primary path, whether or not the expression is an ending point
+  /// of a leg
   static constexpr bool is_primary_end = T1::is_primary_start;
+  /// If on the primary path, this is the remaining number of arithmetic tensor
+  /// operations that need to be done in the subtree of the child along the
+  /// primary path, given that we will have already computed the whole subtree
+  /// at the next lowest leg's starting point.
   static constexpr size_t num_ops_to_evaluate_primary_left_child =
       is_primary_end ? 0 : T1::num_ops_to_evaluate_primary_subtree;
+  /// If on the primary path, this is the remaining number of arithmetic tensor
+  /// operations that need to be done in the right operand's subtree. No
+  /// splitting is currently done, so this is just `num_ops_right_child`.
   static constexpr size_t num_ops_to_evaluate_primary_right_child =
       num_ops_right_child;
+  /// If on the primary path, this is the remaining number of arithmetic tensor
+  /// operations that need to be done for this expression's subtree, given that
+  /// we will have already computed the subtree at the next lowest leg's
+  /// starting point
   static constexpr size_t num_ops_to_evaluate_primary_subtree =
       num_ops_to_evaluate_primary_left_child +
       num_ops_to_evaluate_primary_right_child + 1;
+  /// If on the primary path, whether or not the expression is a starting point
+  /// of a leg
   static constexpr bool is_primary_start =
       num_ops_to_evaluate_primary_subtree >=
       detail::max_num_ops_in_sub_expression<type>;
+  /// When evaluating along a primary path, whether each operand's subtrees
+  /// should be evaluated separately. Since `DataVector` expression runtime
+  /// scales poorly with increased number of operations, evaluating the two
+  /// expression subtrees separately like this is beneficial when at least one
+  /// of the subtrees contains a large number of operations.
   static constexpr bool evaluate_children_separately =
       is_primary_start and (num_ops_to_evaluate_primary_left_child >=
                                 detail::max_num_ops_in_sub_expression<type> or
                             num_ops_to_evaluate_primary_right_child >=
                                 detail::max_num_ops_in_sub_expression<type>);
-
+  /// If on the primary path, whether or not the expression's child along the
+  /// primary path is a subtree that contains a starting point of a leg along
+  /// the primary path
   static constexpr bool primary_child_subtree_contains_primary_start =
       T1::primary_subtree_contains_primary_start;
+  /// If on the primary path, whether or not this subtree contains a starting
+  /// point of a leg along the primary path
   static constexpr bool primary_subtree_contains_primary_start =
       is_primary_start or primary_child_subtree_contains_primary_start;
 
@@ -366,6 +436,12 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
     }
   }
 
+  /// \brief Retrieve a component of a `TensorAsExpression` leaf node in this
+  /// expression's subtree
+  ///
+  /// \details Unless the right child is a `NumberAsExpression` leaf, recurse
+  /// down the right child's subtree since `AddSub`s are constructed with the
+  /// larger subtree as the left operand
   SPECTRE_ALWAYS_INLINE auto get_used_for_size() const {
     if constexpr (not std::is_base_of_v<NumberAsExpression, T2>) {
       return t2_.get_used_for_size();
@@ -374,6 +450,13 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
     }
   }
 
+  // TODO: standardize op1 + op2 vs left + right here and other binops
+
+  /// \brief Return the second operand's multi-index given the first operand's
+  /// multi-index
+  ///
+  /// \param op1_multi_index the multi-index of the left operand
+  /// \return the second operand's multi-index
   SPECTRE_ALWAYS_INLINE std::array<size_t, num_tensor_indices_op2>
   get_op2_multi_index(
       const std::array<size_t, num_tensor_indices>& op1_multi_index) const {
