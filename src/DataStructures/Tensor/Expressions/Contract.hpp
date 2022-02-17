@@ -20,6 +20,7 @@
 #include "DataStructures/Tensor/Symmetry.hpp"
 #include "Utilities/ForceInline.hpp"
 #include "Utilities/Gsl.hpp"
+#include "Utilities/MakeWithValue.hpp"
 #include "Utilities/TMPL.hpp"
 
 /*!
@@ -198,7 +199,6 @@ struct ContractedType<UncontractedTensorExpression, DataType,
   static constexpr inline std::array<size_t, num_uncontracted_tensor_indices>
       uncontracted_index_dims = {{UncontractedIndices::dim...}};
 
-  // TODO : add a static_assert that makes sure this is positive?
   static constexpr size_t num_terms_summed = []() {
     size_t num_terms =
         gsl::at(uncontracted_index_dims, gsl::at(index_maps.second, 0).first) -
@@ -359,19 +359,13 @@ struct TensorContract
     return t_.get_used_for_size();
   }
 
-  // TODO : document this and other new stuff
   SPECTRE_ALWAYS_INLINE static constexpr std::array<
       size_t, num_uncontracted_tensor_indices>
   get_first_index_to_sum(
       const std::array<size_t, num_tensor_indices>& contracted_multi_index) {
-    // TODO : make with std::numeric_limits<size_t>::max() with make_with_value
-    std::array<size_t, num_uncontracted_tensor_indices>
-        uncontracted_multi_index{};
-
-    // set placeholders for debugging
-    for (size_t i = 0; i < num_uncontracted_tensor_indices; i++) {
-      uncontracted_multi_index[i] = std::numeric_limits<size_t>::max();
-    }
+    // Initialize with placeholders for debugging
+    auto uncontracted_multi_index = make_array<num_uncontracted_tensor_indices>(
+        std::numeric_limits<size_t>::max());
 
     // fill uncontracted indices
     for (size_t i = 0; i < num_tensor_indices; i++) {
@@ -396,9 +390,9 @@ struct TensorContract
       size_t, num_uncontracted_tensor_indices>
   get_last_index_to_sum(
       const std::array<size_t, num_tensor_indices>& contracted_multi_index) {
-    // TODO : make with std::numeric_limits<size_t>::max() with make_with_value
-    std::array<size_t, num_uncontracted_tensor_indices>
-        uncontracted_multi_index{};
+    // Initialize with placeholders for debugging
+    auto uncontracted_multi_index = make_array<num_uncontracted_tensor_indices>(
+        std::numeric_limits<size_t>::max());
 
     // set placeholders for debugging
     for (size_t i = 0; i < num_uncontracted_tensor_indices; i++) {
@@ -463,34 +457,6 @@ struct TensorContract
     return next_uncontracted_multi_index;
   }
 
-  // update a multi-index to the previous one
-  SPECTRE_ALWAYS_INLINE static void update_to_previous_multi_index_to_sum(
-      std::array<size_t, num_uncontracted_tensor_indices>&
-          uncontracted_multi_index) {
-    size_t i = 0;
-    while (i < num_contracted_index_pairs) {
-      const size_t current_index_first_position = index_maps.second[i].first;
-      const size_t current_index_second_position = index_maps.second[i].second;
-
-      uncontracted_multi_index[current_index_first_position]++;
-      uncontracted_multi_index[current_index_second_position]++;
-
-      // if the previous index value is > dim, then we've wrapped around
-      // and we need to go again
-      if (not(uncontracted_multi_index[current_index_first_position] >
-              uncontracted_index_dims[current_index_first_position] - 1)) {
-        break;
-      }
-
-      uncontracted_multi_index[current_index_first_position] =
-          contracted_index_shifts[i].first;
-      uncontracted_multi_index[current_index_second_position] =
-          contracted_index_shifts[i].second;
-
-      i++;
-    }
-  }
-
   // get a new multi-index that is the one before the one given
   SPECTRE_ALWAYS_INLINE static std::array<size_t,
                                           num_uncontracted_tensor_indices>
@@ -499,58 +465,31 @@ struct TensorContract
           uncontracted_multi_index) {
     std::array<size_t, num_uncontracted_tensor_indices>
         previous_uncontracted_multi_index = uncontracted_multi_index;
-    update_to_previous_multi_index_to_sum(previous_uncontracted_multi_index);
-    return previous_uncontracted_multi_index;
-  }
 
-  SPECTRE_ALWAYS_INLINE static std::array<size_t,
-                                          num_uncontracted_tensor_indices>
-  get_nth_multi_index_to_sum(
-      const std::array<size_t, num_tensor_indices>& contracted_multi_index,
-      size_t n) {
-    std::array<size_t, num_uncontracted_tensor_indices>
-        uncontracted_multi_index{};
-
-    // set placeholders for debugging
-    for (size_t i = 0; i < num_uncontracted_tensor_indices; i++) {
-      uncontracted_multi_index[i] = std::numeric_limits<size_t>::max();
-    }
-
-    // fill uncontracted indices
-    for (size_t i = 0; i < num_tensor_indices; i++) {
-      uncontracted_multi_index[index_maps.first[i]] = contracted_multi_index[i];
-    }
-
-    // fill contracted indices
-    size_t divisor = num_terms_summed;
-    for (size_t i = num_contracted_index_pairs - 1;
-         i < num_contracted_index_pairs; i++) {
+    size_t i = 0;
+    while (i < num_contracted_index_pairs) {
       const size_t current_index_first_position = index_maps.second[i].first;
       const size_t current_index_second_position = index_maps.second[i].second;
-      const size_t current_index_first_shift = contracted_index_shifts[i].first;
-      const size_t current_index_second_shift =
+
+      previous_uncontracted_multi_index[current_index_first_position]++;
+      previous_uncontracted_multi_index[current_index_second_position]++;
+
+      // if the previous index value is > dim, then we've wrapped around
+      // and we need to go again
+      if (not(previous_uncontracted_multi_index[current_index_first_position] >
+              uncontracted_index_dims[current_index_first_position] - 1)) {
+        break;
+      }
+
+      previous_uncontracted_multi_index[current_index_first_position] =
+          contracted_index_shifts[i].first;
+      previous_uncontracted_multi_index[current_index_second_position] =
           contracted_index_shifts[i].second;
-      const size_t current_index_first_dim =
-          uncontracted_index_dims[current_index_first_position];
-      // TODO : make this be a TensorContract member variable instead so this is
-      // not recomputed unnecessarily and repeatedly
-      const size_t current_index_num_dims_to_sum =
-          current_index_first_dim - current_index_first_shift;
 
-      divisor /= current_index_num_dims_to_sum;
-      // last contracted index unshifted value
-      const size_t current_index_unshifted_index_value = n / divisor;
-      // shift and fill first value in contracted pair
-      uncontracted_multi_index[current_index_first_position] =
-          current_index_unshifted_index_value + current_index_first_shift;
-      // shift and fill second value in contracted pair
-      uncontracted_multi_index[current_index_second_position] =
-          current_index_unshifted_index_value + current_index_second_shift;
-
-      n = n % divisor;
+      i++;
     }
 
-    return uncontracted_multi_index;
+    return previous_uncontracted_multi_index;
   }
 
   template <size_t Iteration>
@@ -620,8 +559,6 @@ struct TensorContract
       std::array<size_t, num_uncontracted_tensor_indices>&
           starting_multi_index) {
     if constexpr (Iteration != 0) {
-      //   std::cout << "if : current_multi_index : " << current_multi_index
-      // << std::endl;
       // We have more than one component left to sum
       (void)starting_multi_index;
       return compute_contraction_primary_stop_at_branches<Iteration - 1>(
@@ -629,8 +566,6 @@ struct TensorContract
                  starting_multi_index) +
              t.get(current_multi_index);
     } else {
-      //   std::cout << "else : current_multi_index : " << current_multi_index
-      // << std::endl;
       // We only have one final component to sum
       starting_multi_index = current_multi_index;
       return t.get(current_multi_index);
@@ -654,7 +589,6 @@ struct TensorContract
       std::array<size_t, num_uncontracted_tensor_indices> current_multi_index)
       const {
     if constexpr (stops_are_forks) {
-      // std::cout << "hey" << std::endl;
       (void)contracted_multi_index;
       if constexpr (not is_primary_end) {
         // we still need to compute what's below the contraction
@@ -682,10 +616,9 @@ struct TensorContract
       current_multi_index = get_first_index_to_sum(contracted_multi_index);
       // if we have less than a full-length leg leftover
       if constexpr (last_leg_length > 0) {
-        // std::cout << "hi" << std::endl;
-        // first get the reprimaryder if there is one
+        // first get the remainder if there is one
         if constexpr (not is_primary_end) {
-          // get reprimaryder
+          // get remainder
           if constexpr (primary_child_subtree_contains_primary_start) {
             result_component =
                 t_.get_primary(result_component, current_multi_index);
@@ -712,34 +645,19 @@ struct TensorContract
         }
       }  // we only have full-length legs, no leftovers
       else {
-        // std::cout << "hiiiiii" << std::endl;
-        // std::cout << "current_multi_index : " << current_multi_index
-        //   << std::endl;
-        // first get the reprimaryder if there is one
+        // first get the remainder if there is one
         if constexpr (not is_primary_end) {
-          // get reprimaryder
+          // get remainder
           result_component =
               t_.get_primary(result_component, current_multi_index);
-          //   std::cout << "end of not is_primary_end : " << result_component
-          //             << std::endl;
-          //   std::cout << "current_multi_index : " << current_multi_index
-          //             << std::endl;
         }
 
-        // std::cout << "num_full_legs : " << num_full_legs << std::endl;
-        // std::cout << "num_terms_summed : " << num_terms_summed << std::endl;
-        // std::cout << "leg_length : " << leg_length << std::endl;
-        // std::cout << "last_leg_length : " << last_leg_length << std::endl;
         // next add up all the full-length legs
         for (size_t i = 1; i < num_full_legs; i++) {
           result_component +=
               compute_contraction_primary_stop_at_branches<leg_length - 1>(
                   t_, get_next_multi_index_to_sum(current_multi_index),
                   current_multi_index);
-          //   std::cout << "for loop iteration : " << result_component <<
-          //   std::endl; std::cout << "current_multi_index : " <<
-          //   current_multi_index
-          //             << std::endl;
         }
 
         // lastly, get rest of the last leg if it's not just the one term we
@@ -749,10 +667,6 @@ struct TensorContract
               compute_contraction_primary_stop_at_branches<leg_length - 2>(
                   t_, get_next_multi_index_to_sum(current_multi_index),
                   current_multi_index);
-          //   std::cout << "end of last_leg_length > 1 : " << result_component
-          //             << std::endl;
-          //   std::cout << "current_multi_index : " << current_multi_index
-          //             << std::endl;
         }
       }
     }
