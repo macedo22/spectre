@@ -142,6 +142,12 @@ struct Expression {};
 /// LHS tensor components to the correct size. This function should call one of
 /// its operand's `get_used_for_size` functions to recursively retrieve a
 /// component of a `Tensor` pointed to by a `TensorAsExpression` leaf node.
+/// - function `void assert_lhs_tensor_not_in_rhs_expression(
+/// const gsl::not_null<LhsTensor*> lhs_tensor) const`: Asserts that the LHS
+/// `Tensor` we're computing does not also appear in the RHS `TensorExpression`.
+/// We do this because if a tree is split up, then the LHS `Tensor` will
+/// generally not be computed correctly due to the fact that the LHS components
+/// will updated as we traverse the split tree.
 ///
 /// Each derived `TensorExpression` class must also define the following
 /// members, which have real meaning for the expression *only* if it ends up
