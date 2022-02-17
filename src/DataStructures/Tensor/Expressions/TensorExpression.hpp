@@ -177,15 +177,15 @@ struct Expression {};
 /// - variable
 /// `static constexpr bool primary_child_subtree_contains_primary_start`:
 /// If on the primary path, whether or not the expression's child along the
-/// primary path is a subtree that contains a starting point along the primary
-/// path. In other words, whether or not there is a split on the primary path
-/// lower than this expression. When evaluating a split tree, this is useful
-/// because it tells us we need to keep recursing down to a lower split point
-/// and evaluate that lower subtree first before evaluating the current subtree.
+/// primary path is a subtree that contains a starting point of a leg along the
+/// primary path. In other words, whether or not there is a split on the primary
+/// path lower than this expression. When evaluating a split tree, this is
+/// useful because it tells us we need to keep recursing down to a lower leg and
+/// evaluate that lower subtree first before evaluating the current subtree.
 /// - variable `static constexpr bool primary_subtree_contains_primary_start`:
 /// If on the primary path, whether or not this subtree contains a starting
-/// point along the primary path. In other words, whether or not there is a
-/// split on the primary path at this expression or beneath it.
+/// point of a leg along the primary path. In other words, whether or not there
+/// is a split on the primary path at this expression or beneath it.
 /// - function `decltype(auto) get_primary(const type& result_component,
 /// const std::array<size_t, num_tensor_indices>& result_multi_index) const`:
 /// This is similar to the required `get` function described above, but this
@@ -258,15 +258,16 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   static_assert(sizeof...(Args) == 0 or sizeof...(Args) == sizeof...(Indices),
                 "the number of Tensor indices must match the number of "
                 "components specified in an expression.");
-  /// the type of the data being stored in the `Tensor`s
+  /// The type of the data being stored in the `Tensor`s
   using type = DataType;
-  /// Symm the ::Symmetry of the `Derived` class
+  /// The ::Symmetry of the `Derived` class
   using symmetry = Symm;
-  /// IndexList the list of \ref SpacetimeIndex "TensorIndexType"s
+  /// The list of \ref SpacetimeIndex "TensorIndexType"s
   using index_list = tmpl::list<Indices...>;
-  /// typelist of the tensor indices, e.g. types of `ti_a` and `ti_b`
+  /// Typelist of the tensor indices, e.g. types of `ti_a` and `ti_b`
   /// in `F(ti_a, ti_b)`
   using args_list = ArgsList<Args...>;
+  /// The number of tensor indices of the `Derived` class
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
 
   virtual ~TensorExpression() = 0;

@@ -77,36 +77,69 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
                     std::is_same<T2, NumberAsExpression>::value,
                 "Cannot product Tensors holding different data types.");
   // === Index properties ===
+  /// The type of the data being stored in the result of the expression
   using type = typename detail::OuterProductType<T1, T2>::type;
+  /// The ::Symmetry of the result of the expression
   using symmetry = typename detail::OuterProductType<T1, T2>::symmetry;
+  /// The list of \ref SpacetimeIndex "TensorIndexType"s of the result of the
+  /// expression
   using index_list = typename detail::OuterProductType<T1, T2>::index_list;
+  /// The list of generic `TensorIndex`s of the result of the
+  /// expression
   using args_list = typename detail::OuterProductType<T1, T2>::tensorindex_list;
+  /// The number of tensor indices in the result of the expression
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
+  /// The number of tensor indices in the left operand expression
   static constexpr auto op1_num_tensor_indices =
       tmpl::size<typename T1::index_list>::value;
+  /// The number of tensor indices in the right operand expression
   static constexpr auto op2_num_tensor_indices =
       num_tensor_indices - op1_num_tensor_indices;
 
   // === Arithmetic tensor operations properties ===
+  /// The number of arithmetic tensor operations done in the subtree for the
+  /// left operand
   static constexpr size_t num_ops_left_child = T1::num_ops_subtree;
+  /// The number of arithmetic tensor operations done in the subtree for the
+  /// right operand
   static constexpr size_t num_ops_right_child = T2::num_ops_subtree;
+  /// The total number of arithmetic tensor operations done in this expression's
+  /// whole subtree
   static_assert(num_ops_left_child >= num_ops_right_child,
                 "The left operand expression should be a subtree with equal or "
                 "more tensor operations than the right operand's subtree.");
+  /// The total number of arithmetic tensor operations done in this expression's
+  /// whole subtree
   static constexpr size_t num_ops_subtree =
       num_ops_left_child + num_ops_right_child + 1;
 
   // === Properties for splitting up subexpressions along the primary path ===
   // These defintiions only have meaning if this expression actually ends up
   // being along the primary path that is taken when evaluating the whole tree.
+  // See documentation for `TensorExpression` for more details.
+  /// If on the primary path, whether or not the expression is an ending point
+  /// of a leg
   static constexpr bool is_primary_end = T1::is_primary_start;
+  /// If on the primary path, this is the remaining number of arithmetic tensor
+  /// operations that need to be done in the subtree of the child along the
+  /// primary path, given that we will have already computed the whole subtree
+  /// at the next lowest leg's starting point.
   static constexpr size_t num_ops_to_evaluate_primary_left_child =
       is_primary_end ? 0 : T1::num_ops_to_evaluate_primary_subtree;
+  /// If on the primary path, this is the remaining number of arithmetic tensor
+  /// operations that need to be done in the right operand's subtree. No
+  /// splitting is currently done, so this is just `num_ops_right_child`.
   static constexpr size_t num_ops_to_evaluate_primary_right_child =
       num_ops_right_child;
+  /// If on the primary path, this is the remaining number of arithmetic tensor
+  /// operations that need to be done for this expression's subtree, given that
+  /// we will have already computed the subtree at the next lowest leg's
+  /// starting point
   static constexpr size_t num_ops_to_evaluate_primary_subtree =
       num_ops_to_evaluate_primary_left_child +
       num_ops_to_evaluate_primary_right_child + 1;
+  /// If on the primary path, whether or not the expression is a starting point
+  /// of a leg
   static constexpr bool is_primary_start =
       num_ops_to_evaluate_primary_subtree >=
       detail::max_num_ops_in_sub_expression<type>;
@@ -120,8 +153,13 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
                                 detail::max_num_ops_in_sub_expression<type> or
                             num_ops_to_evaluate_primary_right_child >=
                                 detail::max_num_ops_in_sub_expression<type>);
+  /// If on the primary path, whether or not the expression's child along the
+  /// primary path is a subtree that contains a starting point of a leg along
+  /// the primary path
   static constexpr bool primary_child_subtree_contains_primary_start =
       T1::primary_subtree_contains_primary_start;
+  /// If on the primary path, whether or not this subtree contains a starting
+  /// point of a leg along the primary path
   static constexpr bool primary_subtree_contains_primary_start =
       is_primary_start or primary_child_subtree_contains_primary_start;
 
