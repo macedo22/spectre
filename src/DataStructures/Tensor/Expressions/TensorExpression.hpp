@@ -25,7 +25,7 @@ struct Expression {};
 /// \brief The base class all tensor expression implementations derive from
 ///
 /// \details
-/// **Tensor equation construction**
+/// ## Tensor equation construction
 /// Each derived `TensorExpression` class should be thought of as an expression
 /// tree that represents some operation done on or between tensor expressions.
 /// Arithmetic operators and other mathematical functions of interest
@@ -35,16 +35,16 @@ struct Expression {};
 /// generate an expression tree where the internal and leaf nodes are instances
 /// of the derived `TensorExpression` classes. For example,
 /// `TensorExpressions::AddSub` defines an internal node for handling the
-/// addition and subtraction operations between tensors and/or tensor
-/// expressions, while `TensorExpressions::TensorAsExpression` defines a leaf
-/// node that represents a single `Tensor` that appears in the equation.
+/// addition and subtraction operations between tensors expressions, while
+/// `TensorExpressions::TensorAsExpression` defines a leaf node that represents
+/// a single `Tensor` that appears in the equation.
 ///
-/// **Tensor equation evaluation**
+/// ## Tensor equation evaluation
 /// The overall tree for an equation and the order in which we traverse the tree
 /// define the order of operations done to compute the resulting LHS `Tensor`.
-/// The evaluation is done by `TensorExpressions::evaluate`, which computes each
-/// unique LHS component, so the whole tree is traversed once for each unique
-/// LHS component. There are two different traversals currently implemented that
+/// The evaluation is done by `TensorExpressions::evaluate`, which traverses the
+/// whole tree once for each unique LHS component in order to evaluate the full
+/// LHs `Tensor`. There are two different traversals currently implemented that
 /// are chosen from, depending on the tensor equation being evaluated:
 /// 1. **Evaluate the whole tree as one expression** using in-order traversal.
 /// This is like generating and solving a one-liner of the whole equation.
@@ -53,58 +53,62 @@ struct Expression {};
 /// the equation. This is like splitting the equation up and solving pieces of
 /// it at a time with multiple lines of assignments/updates (see details below).
 ///
-///**Equation splitting details**
+/// ## Equation splitting details
 /// Splitting up the tree and evaluating subexpressions is beneficial when we
 /// believe it to lead to a better runtime than if we were to compute the whole
 /// expression as a one-liner. One important use case is when the `Tensor`s in
 /// the equation hold components whose data type is `DataVector`. From
 /// benchmarking, it was found that the runtime of `DataVector` expressions
 /// scales poorly as we increase the number of operations. For example, for an
-/// inner product with many operations, instead of adding 256 `DataVector`
+/// inner product with 256 sums of products, instead of adding 256 `DataVector`
 /// products in one line (e.g. `result = A*B + C*D + E*F + ...;`), it's much
 /// faster to, say, set the result to be the sum of the first 8 products, then
 /// `+=` the next 8, and so forth. This is what is meant by "accumulating" the
 /// LHS result tensor, and what the `TensorExpression` splitting emulates.
 ///
+/// ### How the tree is split up
 /// Let's define the **primary path** to be the path in the tree going from the
 /// root node to the leftmost leaf. The overall tree contains subtrees
 /// represented by different `TensorExpression`s in the equation. Certain
 /// subtrees are marked as the starting and/or ending points of these "pieces"
-/// of the equation. Let's define a **leg** to be each "segment" along the
-/// primary path delineated by a starting and ending expression subtree. These
+/// of the equation. Let's define a **leg** to be a "segment" along the primary
+/// path delineated by a starting and ending expression subtree. These
 /// delineations are made where we decide there are enough operations in a
-/// subtree that it would be wise to split at that point (see
+/// subtree that it would be wise to split at that point. What is considered to
+/// be "enough" operations is specialized based on the data type held by the
+/// `Tensor`s in the expression (see
 /// `TensorExpressions::max_num_ops_in_sub_expression`).
 ///
+/// ### How a split tree is traversed and evaluated
 /// We recurse down the primary path, visiting each expression subtree until we
-/// reach the start of the "lowest" leg, then initialize the result component
-/// we're wanting to compute to be the result of this "lowest" expression. Then,
-/// we recurse back up to the starting point of the leg "above" it and compute
-/// that subtree. This time, however, when recursively evaluating this higher
-/// subtree, we substitute in the current LHS result for that lower subtree that
-/// we have already computed. This is repeated as we "climb up" the primary path
-/// and successively accumulate the result component.
+/// reach the start of the lowest leg, then initialize the LHS result component
+/// we're wanting to compute to be the result of this lowest expression. Then,
+/// we recurse back up to the expression subtree that is starting point of the
+/// leg "above" it and compute that subtree. This time, however, when
+/// recursively evaluating this higher subtree, we substitute in the current LHS
+/// result for that lower subtree that we have already computed. This is
+/// repeated as we "climb up" the primary path to successively accumulate the
+/// result component.
 ///
 /// **Note:** The primary path is currently implemented as the path specified
 /// above, but there's no reason it couldn't be reimplemented to be a different
 /// path. The idea with the current implementation is to select it to be the
 /// longest path from root to leaf so we have the most flexibility in splitting,
-/// should we want to. When evaluating, we *could* implement the expressions to
+/// should we want to. When evaluating, we *could* implement the traversal to
 /// take a different path, but currently, derived `TensorExpression`s that
 /// represent binary operations (i.e. have two child subtrees) are instantiated
 /// with the larger subtree being the left child and the smaller subtree being
 /// the right child. By constructing it this way, the leftmost path will be the
 /// longest path, which will allow for the most splitting possible.
 ///
-/// **Requirements for derived `TensorExpression` classes**
+/// ## Requirements for derived `TensorExpression` classes
 /// Each derived `TensorExpression` class must define the following aliases and
 /// members:
-/// - `private` variables that store its operands' derived `TensorExpression`s
-/// (operands' subtrees). We make these non-`const` to allow for move
-/// construction.
+/// - `private` variables that store its operands' derived `TensorExpression`s.
+/// We make these non-`const` to allow for move construction.
 /// - Constructor that initializes the above `private` operand members
 /// - alias `type`: The data type of the data being stored in the result of the
-/// expression, e.g. `double` or `DataVector`
+/// expression, e.g. `double`, `DataVector`
 /// - alias `symmetry`: The ::Symmetry of the result of the expression
 /// - alias `index_list`: The list of \ref SpacetimeIndex "TensorIndexType"s of
 /// the result of the expression
@@ -119,12 +123,6 @@ struct Expression {};
 /// should be set to 0 since retrieving a value at the leaf involves 0
 /// arithmetic tensor operations.
 /// - variable `static constexpr size_t num_ops_right_child`: The number of
-/// arithmetic operations done in the subtree for the expression's right
-/// operand. If the expression represents a unary operation or is a leaf node,
-/// their only child is considered the left child. If the expression is a leaf
-/// node, then this value should be set to 0 since retrieving a value at the
-/// leaf involves 0 arithmetic tensor operations.
-/// - variable `static constexpr size_t num_ops_right_child`: The number of
 /// arithmetic tensor operations done in the expression's right operand. If the
 /// expression represents a unary operation or is leaf node, this should be set
 /// to 0 because there is no right child.
@@ -138,16 +136,12 @@ struct Expression {};
 /// result_multi_index) const`: Accepts a multi-index for the result tensor
 /// represented by the expression and returns the computed result of the
 /// expression at that multi-index. This should call the operands' `get`
-/// functions in order to recursively compute the result.
+/// functions in order to recursively compute the result of the expression.
 /// - function `auto get_used_for_size() const`: Returns a tensor component at a
 /// leaf in the expression's subtree. This is used to initialize an equation's
 /// LHS tensor components to the correct size. This function should call one of
 /// its operand's `get_used_for_size` functions to recursively retrieve a
 /// component of a `Tensor` pointed to by a `TensorAsExpression` leaf node.
-/// Because expressions representing binary operations are currently
-/// instantiated to have the operand with the larger number of tensor operations
-/// be the left child, it is prefereable to recurse to the right child so that
-/// a `TensorAsExpression` leaf will tend to be reached faster.
 ///
 /// Each derived `TensorExpression` class must also define the following
 /// members, which have real meaning for the expression *only* if it ends up
@@ -168,16 +162,18 @@ struct Expression {};
 /// `static constexpr size_t num_ops_to_evaluate_primary_right_child`:
 /// If on the primary path, this is the remaining number of arithmetic tensor
 /// operations that need to be done in the right operand's subtree. Because
-/// the right branches off of the primary path currently are not split up in any
-/// way, this currently should simply be equal to `num_ops_right_child`.
+/// the branches off of the primary path currently are not split up in any way,
+/// this currently should simply be equal to `num_ops_right_child`. If logic is
+/// added to split up these branches, logic will need to be added to compute
+/// this remaining number of operations in the right subtree.
 /// - variable `static constexpr size_t num_ops_to_evaluate_primary_subtree`:
 /// If on the primary path, this is the remaining number of arithmetic tensor
 /// operations that need to be done for this expression's subtree, given that we
 /// will have already computed the subtree at the next lowest leg's starting
 /// point. For example, for `TensorExpressions::AddSub`, this is just
 /// `num_ops_to_evaluate_primary_left_child +
-/// num_ops_to_evaluate_primary_right_child + 1` (the extra 1 for the operation
-/// itself).
+/// num_ops_to_evaluate_primary_right_child + 1` (the extra 1 for the `+` or `-`
+/// operation itself).
 /// - variable
 /// `static constexpr bool primary_child_subtree_contains_primary_start`:
 /// If on the primary path, whether or not the expression's child along the
@@ -185,12 +181,11 @@ struct Expression {};
 /// path. In other words, whether or not there is a split on the primary path
 /// lower than this expression. When evaluating a split tree, this is useful
 /// because it tells us we need to keep recursing down to a lower split point
-/// and evaluate that lower subtree first.
+/// and evaluate that lower subtree first before evaluating the current subtree.
 /// - variable `static constexpr bool primary_subtree_contains_primary_start`:
-/// If on the primary path, whether or not the this subtree contains a starting
+/// If on the primary path, whether or not this subtree contains a starting
 /// point along the primary path. In other words, whether or not there is a
-/// split on the primary path at this expression or beneath it. This is useful
-/// in telling us whether there exists a split in a subtree.
+/// split on the primary path at this expression or beneath it.
 /// - function `decltype(auto) get_primary(const type& result_component,
 /// const std::array<size_t, num_tensor_indices>& result_multi_index) const`:
 /// This is similar to the required `get` function described above, but this
@@ -199,7 +194,8 @@ struct Expression {};
 /// computing) as an argument, and when we hit the starting point of the next
 /// lowest leg on the primary path when recursively evaluating the current leg,
 /// we substitute in the current LHS result for the subtree that we have already
-/// computed
+/// computed. This function should call `get_primary` on the child on the
+/// primary path and `get` on the other child, if one exists.
 /// - function `void evaluate_primary_subtree(type& result_component,
 /// const std::array<size_t, num_tensor_indices>& result_multi_index) const`:
 /// This should first recursively evaluate the legs beneath it on the primary
@@ -209,34 +205,36 @@ struct Expression {};
 /// `TensorExpressions::evaluate` should call this function on the root node
 /// for the whole tree if there is determined to be any splits in the tree.
 ///
-/// **Current advice for improving and extending `TensorExpression`s:**
+/// ## Current advice for improving and extending `TensorExpression`s
 /// - Derived `TensorExpression` classes (or the overloads that produce them)
 /// should include `static_assert`s for ensuring mathematical correctness
 /// wherever reasonable
 /// - Minimize breadth in the tree where possible, as benchmarking inner
-/// products has shown that increased tree breadth can cause slower runtimes
+/// products has shown that increased tree breadth can cause slower runtimes.
+/// In addition, more breadth means a descreased ability to split up the tree
+/// along the primary path.
 /// - Minimize the number of multi-index transformations that need to be done
 /// when evaluating the tree. For some operations like addition, the associated
 /// multi-indices of the two operands needs to be computed from the multi-index
 /// of the result, which may involve reordering and/or shifting the values of
 /// the result index. It's good to minimize the number of these kinds of
 /// transformations from result to operand multi-index where we can.
-/// - Unless the implementation of `Structure` changes, it's not advised for the
-/// derived `TensorExpression` classes to have anything that would instantiate
-/// the `Structure` of the tensor that would result from the expression. This is
-/// really only a problem when the result of the expression would be a tensor
-/// with many components because the compile time of the mapping between storage
-/// indices and multi-indices within `Structure` scales very poorly with the
-/// number of components. It's important to keep in mind that while SpECTRE
-/// currently only supports creating `Tensor`s up to rank 4, there is nothing
-/// preventing the represented result tensor of a expression being higher rank,
-/// e.g.
+/// - Unless the implementation of Tensor_detail::Structure changes, it's not
+/// advised for the derived `TensorExpression` classes to have anything that
+/// would instantiate the Tensor_detail::Structure of the tensor that would
+/// result from the expression. This is really only a problem when the result of
+/// the expression would be a tensor with many components, because the compile
+/// time of the mapping between storage indices and multi-indices within
+/// Tensor_detail::Structure scales very poorly with the number of components.
+/// It's important to keep in mind that while SpECTRE currently only supports
+/// creating `Tensor`s up to rank 4, there is nothing preventing the represented
+/// result tensor of a expression being higher rank, e.g.
 /// `R(ti_j, ti_b, ti_A) * (S(ti_d, ti_a, ti_B, ti_C) * T(ti_J, ti_k, ti_l))`
 /// contains an intermediate outer product expression
 /// `S(ti_d, ti_a, ti_B, ti_C) * T(ti_J, ti_k, ti_l)` that represents a rank 7
-/// tensor, even though that rank 7 `Tensor` is never instantiated. Having the
-/// outer product expression instantiate the `Structure` of this intermediate
-/// result currently leads to an unreasonable compile time.
+/// tensor, even though a rank 7 `Tensor` is never instantiated. Having the
+/// outer product expression instantiate the Tensor_detail::Structure of this
+/// intermediate result currently leads to an unreasonable compile time.
 ///
 /// \tparam Derived the derived class needed for
 /// [CRTP](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern)
@@ -266,12 +264,6 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   /// Typelist of the tensor indices, e.g. `_a_t` and `_b_t` in `F(_a, _b)`
   using args_list = ArgsList<Args...>;
 
-  // TODO : add aliases and functions that all derived TE types should have
-  // in order to enforce what is required by them?
-
-  // TODO : fix linking of `Structure` in documentation - not showing up because
-  // within `Tensor_detail::` namespace?
-
   virtual ~TensorExpression() = 0;
 
   /// @{
@@ -296,30 +288,46 @@ TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
 namespace TensorExpressions {
 namespace detail {
 /// @{
-/// The maximum number of operations allowed for a TensorExpression, according
-/// to the DataType held by the Tensors in the expression
+/// \brief The maximum number of arithmetic tensor operations allowed in a
+/// `TensorExpression` subtree before having it be a splitting point in the
+/// overall RHS expression, according to the data type held by the `Tensor`s in
+/// the expression
+///
+/// \details
+/// To enable splitting for `TensorExpression`s with a different data type,
+/// define a new variable below like `max_num_ops_in_datavector_sub_expression`
+/// for your data type, then update the control flow in
+/// `max_num_ops_in_sub_expression_helper`.
+///
+/// Before defining a max operations cap for some data type, the change should
+/// be first justified by benchmarking before and after introducing the new cap.
 static constexpr size_t max_num_ops_in_datavector_sub_expression = 8;
-// effectively, don't split TE trees when the Tensor components are doubles
-static constexpr size_t max_num_ops_in_double_sub_expression =
-    std::numeric_limits<size_t>::max();
 /// @}
 
-/// Helper struct for getting the maximum number of operations allowed for a
-/// TensorExpression, according to the DataType held by the Tensors in the
-/// expression
+/// \brief Helper struct for getting the maximum number of arithmetic tensor
+/// operations allowed in a `TensorExpression` subtree before having it be a
+/// splitting point in the overall RHS expression, according to the `DataType`
+/// held by the `Tensor`s in the expression
+///
+/// \tparam DataType the type of the data being stored in the `Tensor`s in the
+/// `TensorExpression`
 template <typename DataType>
 struct max_num_ops_in_sub_expression_helper {
-  static_assert(std::is_same_v<DataType, DataVector> or
-                    std::is_same_v<DataType, double>,
-                "The number of maximum operations in a TensorExpression is "
-                "currently only defined for DataVector and double.");
+  // Splitting is only enabled for expressions when DataType == DataVector
+  // because benchmarking has shown it to be beneficial. To enable splitting
+  // for other data types, define a new static variable like
+  // `max_num_ops_in_datavector_sub_expression` for the data type of interest,
+  // then update the control flow below
   static constexpr size_t value = std::is_same_v<DataType, DataVector>
                                       ? max_num_ops_in_datavector_sub_expression
-                                      : max_num_ops_in_double_sub_expression;
+                                      // effectively, no splitting
+                                      : std::numeric_limits<size_t>::max();
 };
 
-/// Get the maximum number of operations allowed for a TensorExpression,
-/// according to the DataType held by the Tensors in the expression
+/// \brief Get maximum number of arithmetic tensor operations allowed in a
+/// `TensorExpression` subtree before having it be a splitting point in the
+/// overall RHS expression, according to the `DataType` held by the `Tensor`s in
+/// the expression
 template <typename DataType>
 inline constexpr size_t max_num_ops_in_sub_expression =
     max_num_ops_in_sub_expression_helper<DataType>::value;
