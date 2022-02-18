@@ -100,43 +100,43 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
     template <typename DataType>
     using m_over_r = ::Tags::TempScalar<4, DataType>;
     template <typename DataType>
-    using one_plus_m_over_r = ::Tags::TempScalar<5, DataType>;
+    using sqrt_f_0 = ::Tags::TempScalar<5, DataType>;
     template <typename DataType>
     using f_0 = ::Tags::TempScalar<6, DataType>;
+    // template <typename DataType>
+    // using two_m = ::Tags::TempScalar<7, double>;
     template <typename DataType>
-    using two_m = ::Tags::TempScalar<7, double>;
+    using two_m_over_m_plus_r = ::Tags::TempScalar<7, DataType>;
     template <typename DataType>
-    using two_m_over_m_plus_r = ::Tags::TempScalar<8, DataType>;
+    using two_m_over_m_plus_r_squared = ::Tags::TempScalar<8, DataType>;
     template <typename DataType>
-    using two_m_over_m_plus_r_squared = ::Tags::TempScalar<9, DataType>;
+    using two_m_over_m_plus_r_cubed = ::Tags::TempScalar<9, DataType>;
+    // template <typename DataType>
+    // using one_over_m = ::Tags::TempScalar<11, double>;
     template <typename DataType>
-    using two_m_over_m_plus_r_cubed = ::Tags::TempScalar<10, DataType>;
+    using g_rr = ::Tags::TempScalar<10, DataType>;
     template <typename DataType>
-    using one_over_m = ::Tags::TempScalar<11, double>;
+    using one_over_g_rr = ::Tags::TempScalar<11, DataType>;
     template <typename DataType>
-    using g_rr = ::Tags::TempScalar<12, DataType>;
+    using g_rr_minus_f_0 = ::Tags::TempScalar<12, DataType>;
     template <typename DataType>
-    using one_over_grr = ::Tags::TempScalar<13, DataType>;
+    using d_g_rr = ::Tags::TempScalar<13, DataType>;
     template <typename DataType>
-    using g_rr_minus_f_0 = ::Tags::TempScalar<14, DataType>;
-    template <typename DataType>
-    using d_g_rr = ::Tags::TempScalar<15, DataType>;
-    template <typename DataType>
-    using d_f_0 = Tags::TempScalar<16, DataType>;
+    using d_f_0 = ::Tags::TempScalar<14, DataType>;
     template <typename DataType, typename Frame = ::Frame::Inertial>
-    using d_f_0_times_x_over_r = ::Tags::TempI<3, 3, Frame, DataType>;
+    using d_f_0_times_x_over_r = ::Tags::TempI<15, 3, Frame, DataType>;
     template <typename DataType>
-    using f_1 = ::Tags::TempScalar<17, DataType>;
+    using f_1 = ::Tags::TempScalar<16, DataType>;
     template <typename DataType, typename Frame = ::Frame::Inertial>
-    using f_1_times_x_over_r = ::Tags::TempI<3, 3, Frame, DataType>;
+    using f_1_times_x_over_r = ::Tags::TempI<17, 3, Frame, DataType>;
     template <typename DataType>
     using f_2 = ::Tags::TempScalar<18, DataType>;
     template <typename DataType, typename Frame = ::Frame::Inertial>
-    using f_2_times_xxx_over_r_cubed = ::Tags::TempIII<3, 3, Frame, DataType>;
+    using f_2_times_xxx_over_r_cubed = ::Tags::TempIII<19, 3, Frame, DataType>;
     template <typename DataType>
-    using f_3 = ::Tags::TempScalar<19, DataType>;
+    using f_3 = ::Tags::TempScalar<20, DataType>;
     template <typename DataType>
-    using f_4 = ::Tags::TempScalar<20, DataType>;
+    using f_4 = ::Tags::TempScalar<21, DataType>;
   };
 
   template <typename DataType, typename Frame = ::Frame::Inertial>
@@ -144,15 +144,13 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
       internal_tags::x_minus_center<DataType, Frame>,
       internal_tags::r<DataType>, internal_tags::one_over_r<DataType>,
       internal_tags::x_over_r<DataType, Frame>,
-      internal_tags::x_over_r<DataType, Frame>,
-      internal_tags::m_over_r<DataType>,
-      internal_tags::one_plus_m_over_r<DataType>, internal_tags::f_0<DataType>,
-      internal_tags::two_m<double>,
+      internal_tags::m_over_r<DataType>, internal_tags::sqrt_f_0<DataType>,
+      internal_tags::f_0<DataType>, /*internal_tags::two_m<double>,*/
       internal_tags::two_m_over_m_plus_r<DataType>,
       internal_tags::two_m_over_m_plus_r_squared<DataType>,
       internal_tags::two_m_over_m_plus_r_cubed<DataType>,
-      internal_tags::one_over_m<double>, internal_tags::grr<DataType>,
-      internal_tags::one_over_grr<DataType>,
+      /*internal_tags::one_over_m<double>,*/ internal_tags::g_rr<DataType>,
+      internal_tags::one_over_g_rr<DataType>,
       internal_tags::g_rr_minus_f_0<DataType>, internal_tags::d_g_rr<DataType>,
       internal_tags::d_f_0<DataType>,
       internal_tags::d_f_0_times_x_over_r<DataType, Frame>,
@@ -164,7 +162,12 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
       gr::Tags::Shift<3, Frame, DataType>, DerivShift<DataType, Frame>,
       gr::Tags::SpatialMetric<3, Frame, DataType>,
       DerivSpatialMetric<DataType, Frame>,
-      ::Tags::dt<gr::Tags::SpatialMetric<3, Frame, DataType>>>;
+      ::Tags::dt<gr::Tags::SpatialMetric<3, Frame, DataType>>,
+      gr::Tags::DetSpatialMetric<DataType>,
+      gr::Tags::InverseSpatialMetric<3, Frame, DataType>
+      /*::Tags::Variables<
+          tmpl::list<gr::Tags::DetSpatialMetric<DataType>,
+                     gr::Tags::InverseSpatialMetric<3, Frame, DataType>>>*/>;
 
   template <typename DataType, typename Frame = ::Frame::Inertial>
   class IntermediateComputer {
@@ -188,24 +191,24 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
                     internal_tags::one_over_r<DataType> /*meta*/) const;
 
     void operator()(gsl::not_null<tnsr::I<DataType, 3, Frame>*> x_over_r,
-                    gsl::not_null<CachedBuffer*> /*cache*/,
+                    gsl::not_null<CachedBuffer*> cache,
                     internal_tags::x_over_r<DataType, Frame> /*meta*/) const;
 
     void operator()(gsl::not_null<Scalar<DataType>*> m_over_r,
                     gsl::not_null<CachedBuffer*> cache,
                     internal_tags::m_over_r<DataType> /*meta*/) const;
 
-    void operator()(gsl::not_null<Scalar<DataType>*> one_plus_m_over_r,
+    void operator()(gsl::not_null<Scalar<DataType>*> sqrt_f_0,
                     gsl::not_null<CachedBuffer*> cache,
-                    internal_tags::one_plus_m_over_r<DataType> /*meta*/) const;
+                    internal_tags::sqrt_f_0<DataType> /*meta*/) const;
 
     void operator()(gsl::not_null<Scalar<DataType>*> f_0,
                     gsl::not_null<CachedBuffer*> cache,
                     internal_tags::f_0<DataType> /*meta*/) const;
 
-    void operator()(gsl::not_null<Scalar<double>*> two_m,
-                    gsl::not_null<CachedBuffer*> cache,
-                    internal_tags::two_m<DataType> /*meta*/) const;
+    // void operator()(gsl::not_null<Scalar<double>*> two_m,
+    //                 gsl::not_null<CachedBuffer*> /*cache*/,
+    //                 internal_tags::two_m<DataType> /*meta*/) const;
 
     void operator()(
         gsl::not_null<Scalar<DataType>*> two_m_over_m_plus_r,
@@ -222,28 +225,28 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
         gsl::not_null<CachedBuffer*> cache,
         internal_tags::two_m_over_m_plus_r_cubed<DataType> /*meta*/) const;
 
-    void operator()(gsl::not_null<Scalar<double>*> one_over_m,
-                    gsl::not_null<CachedBuffer*> cache,
-                    internal_tags::one_over_m<DataType> /*meta*/) const;
+    // void operator()(gsl::not_null<Scalar<double>*> one_over_m,
+    //                 gsl::not_null<CachedBuffer*> /*cache*/,
+    //                 internal_tags::one_over_m<DataType> /*meta*/) const;
 
     void operator()(gsl::not_null<Scalar<DataType>*> g_rr,
                     gsl::not_null<CachedBuffer*> cache,
                     internal_tags::g_rr<DataType> /*meta*/) const;
 
-    void operator()(gsl::not_null<Scalar<DataType>*> one_over_grr,
+    void operator()(gsl::not_null<Scalar<DataType>*> one_over_g_rr,
                     gsl::not_null<CachedBuffer*> cache,
-                    internal_tags::one_over_grr<DataType> /*meta*/) const;
+                    internal_tags::one_over_g_rr<DataType> /*meta*/) const;
 
     void operator()(gsl::not_null<Scalar<DataType>*> g_rr_minus_f_0,
                     gsl::not_null<CachedBuffer*> cache,
                     internal_tags::g_rr_minus_f_0<DataType> /*meta*/) const;
 
     void operator()(gsl::not_null<Scalar<DataType>*> d_g_rr,
-                    gsl::not_null<CachedBuffer*> /*cache*/,
+                    gsl::not_null<CachedBuffer*> cache,
                     internal_tags::d_g_rr<DataType> /*meta*/) const;
 
     void operator()(gsl::not_null<Scalar<DataType>*> d_f_0,
-                    gsl::not_null<CachedBuffer*> /*cache*/,
+                    gsl::not_null<CachedBuffer*> cache,
                     internal_tags::d_f_0<DataType> /*meta*/) const;
 
     void operator()(
@@ -305,6 +308,17 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
         gsl::not_null<CachedBuffer*> cache,
         ::Tags::dt<gr::Tags::SpatialMetric<3, Frame, DataType>> /*meta*/) const;
 
+    void operator()(
+        gsl::not_null<Variables<
+            tmpl::list<gr::Tags::DetSpatialMetric<DataType>,
+                       gr::Tags::InverseSpatialMetric<3, Frame, DataType>>>*>
+            det_and_inverse_spatial_metric,
+        gsl::not_null<CachedBuffer*> cache,
+        ::Tags::Variables<tmpl::list<
+            gr::Tags::DetSpatialMetric<DataType>,
+            gr::Tags::InverseSpatialMetric<3, Frame, DataType>>> /*meta*/
+    ) const;
+
    private:
     const HarmonicSchwarzschild& solution_;
     const tnsr::I<DataType, 3, Frame>& x_;
@@ -337,9 +351,9 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
         const IntermediateComputer<DataType, Frame>& computer,
         gr::Tags::DerivDetSpatialMetric<3, Frame, DataType> /*meta*/);
 
-    tnsr::II<DataType, 3, Frame> get_var(
-        const IntermediateComputer<DataType, Frame>& computer,
-        gr::Tags::InverseSpatialMetric<3, Frame, DataType> /*meta*/);
+    // tnsr::II<DataType, 3, Frame> get_var(
+    //     const IntermediateComputer<DataType, Frame>& computer,
+    //     gr::Tags::InverseSpatialMetric<3, Frame, DataType> /*meta*/);
 
     tnsr::ii<DataType, 3, Frame> get_var(
         const IntermediateComputer<DataType, Frame>& computer,
