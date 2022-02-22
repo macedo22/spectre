@@ -245,21 +245,24 @@ using Affine3D = domain::CoordinateMaps::ProductOf3Maps<Affine, Affine, Affine>;
 //                                expected_deriv_det_spatial_metric, approx);
 // }
 
-// template <typename Frame, typename DataType>
-// void test_tag_retrieval(const DataType& used_for_size) {
-//   // Parameters for KerrSchild solution
-//   const double mass = 1.234;
-//   const std::array<double, 3> spin{{0.1, -0.2, 0.3}};
-//   const std::array<double, 3> center{{1.0, 2.0, 3.0}};
-//   const auto x = spatial_coords<Frame>(used_for_size);
-//   const double t = 1.3;
+template <typename Frame, typename DataType>
+void test_tag_retrieval(const DataType& used_for_size) {
+  // Parameters for HarmonicSchwarzschild solution
+  const double mass = 1.234;
+  const std::array<double, 3> center{{1.0, 2.0, 3.0}};
+  tnsr::I<DataType, 3, Frame> x(used_for_size);
+  get<0>(x) = 0.8;
+  get<1>(x) = 0.0;
+  get<2>(x) = -0.3;
+  const double t = 1.3;
 
-//   // Evaluate solution
-//   const gr::Solutions::KerrSchild solution(mass, spin, center);
-//   TestHelpers::AnalyticSolutions::test_tag_retrieval(
-//       solution, x, t,
-//       typename gr::Solutions::KerrSchild::template tags<DataType, Frame>{});
-// }
+  // Evaluate solution
+  const gr::Solutions::HarmonicSchwarzschild solution(mass, center);
+  TestHelpers::AnalyticSolutions::test_tag_retrieval(
+      solution, x, t,
+      typename gr::Solutions::HarmonicSchwarzschild::template tags<DataType,
+                                                                   Frame>{});
+}
 
 // template <typename Frame>
 // void test_einstein_solution() {
@@ -286,31 +289,30 @@ using Affine3D = domain::CoordinateMaps::ProductOf3Maps<Affine, Affine, Affine>;
 //   }
 // }
 
-// void test_serialize() {
-//   gr::Solutions::KerrSchild solution(3.0, {{0.2, 0.3, 0.2}},
-//   {{0.0, 3.0, 4.0}}); test_serialization(solution);
-// }
+void test_serialize() {
+  gr::Solutions::HarmonicSchwarzschild solution(3.0, {{0.0, 3.0, 4.0}});
+  test_serialization(solution);
+}
 
-// void test_copy_and_move() {
-//   gr::Solutions::KerrSchild solution(3.0, {{0.2, 0.3, 0.2}},
-//   {{0.0, 3.0, 4.0}}); test_copy_semantics(solution); auto solution_copy =
-//   solution;
-//   // clang-tidy: std::move of trivially copyable type
-//   test_move_semantics(std::move(solution), solution_copy);  // NOLINT
-// }
+void test_copy_and_move() {
+  gr::Solutions::HarmonicSchwarzschild solution(3.0, {{0.0, 3.0, 4.0}});
+  test_copy_semantics(solution);
+  auto solution_copy = solution;
+  // clang-tidy: std::move of trivially copyable type
+  test_move_semantics(std::move(solution), solution_copy);  // NOLINT
+}
 
-// void test_construct_from_options() {
-//   const auto created = TestHelpers::test_creation<gr::Solutions::KerrSchild>(
-//       "Mass: 0.5\n"
-//       "Spin: [0.1,0.2,0.3]\n"
-//       "Center: [1.0,3.0,2.0]");
-//   CHECK(created ==
-//         gr::Solutions::KerrSchild(0.5, {{0.1, 0.2, 0.3}},
-//         {{1.0, 3.0, 2.0}}));
-// }
+void test_construct_from_options() {
+  const auto created =
+      TestHelpers::test_creation<gr::Solutions::HarmonicSchwarzschild>(
+          "Mass: 0.5\n"
+          "Center: [1.0,3.0,2.0]");
+  CHECK(created ==
+        gr::Solutions::HarmonicSchwarzschild(0.5, {{1.0, 3.0, 2.0}}));
+}
 
-template <typename FrameType>
-void test_computed_quantities() {
+template <typename FrameType, typename DataType>
+void test_computed_quantities(const DataType /*used_for_size*/) {
   // Parameters for HarmonicSchwarzschild solution
   const double mass = 1.01;
   const std::array<double, 3> center{{0.2, -0.1, 0.4}};
@@ -345,22 +347,28 @@ void test_computed_quantities() {
 SPECTRE_TEST_CASE(
     "Unit.PointwiseFunctions.AnalyticSolutions.Gr.HarmonicSchwarzschild",
     "[PointwiseFunctions][Unit]") {
-  //   test_copy_and_move();
-  //   test_serialize();
-  //   test_construct_from_options();
+  test_copy_and_move();
+  test_serialize();
+  test_construct_from_options();
+
+  test_computed_quantities<Frame::Inertial>(DataVector(5));
+  test_computed_quantities<Frame::Inertial>(0.0);
+
+  test_computed_quantities<Frame::Grid>(DataVector(5));
+  test_computed_quantities<Frame::Grid>(0.0);
 
   //   test_schwarzschild<Frame::Inertial>(DataVector(5));
   //   test_schwarzschild<Frame::Inertial>(0.0);
   //   test_numerical_deriv_det_spatial_metric<Frame::Inertial>(DataVector(5));
-  //   test_tag_retrieval<Frame::Inertial>(DataVector(5));
-  //   test_tag_retrieval<Frame::Inertial>(0.0);
+  test_tag_retrieval<Frame::Inertial>(DataVector(5));
+  test_tag_retrieval<Frame::Inertial>(0.0);
   //   test_einstein_solution<Frame::Inertial>();
 
   //   test_schwarzschild<Frame::Grid>(DataVector(5));
   //   test_schwarzschild<Frame::Grid>(0.0);
   //   test_numerical_deriv_det_spatial_metric<Frame::Grid>(DataVector(5));
-  //   test_tag_retrieval<Frame::Grid>(DataVector(5));
-  //   test_tag_retrieval<Frame::Grid>(0.0);
+    test_tag_retrieval<Frame::Grid>(DataVector(5));
+    test_tag_retrieval<Frame::Grid>(0.0);
   //   test_einstein_solution<Frame::Grid>();
 }
 

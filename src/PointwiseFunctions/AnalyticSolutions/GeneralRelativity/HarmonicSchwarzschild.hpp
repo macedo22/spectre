@@ -132,6 +132,8 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
     using f_4 = ::Tags::TempScalar<21, DataType>;
     template <typename DataType>
     using one_over_det_spatial_metric = ::Tags::TempScalar<22, DataType>;
+    template <typename DataType>
+    using neg_half_lapse_cubed_times_d_g_rr = ::Tags::TempScalar<23, DataType>;
   };
 
   template <typename DataType, typename Frame = ::Frame::Inertial>
@@ -153,8 +155,10 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
       internal_tags::f_2<DataType>,
       internal_tags::f_2_times_xxx_over_r_cubed<DataType, Frame>,
       internal_tags::f_3<DataType>, internal_tags::f_4<DataType>,
-      gr::Tags::Lapse<DataType>, gr::Tags::Shift<3, Frame, DataType>,
-      DerivShift<DataType, Frame>, gr::Tags::SpatialMetric<3, Frame, DataType>,
+      gr::Tags::Lapse<DataType>,
+      internal_tags::neg_half_lapse_cubed_times_d_g_rr<DataType>,
+      gr::Tags::Shift<3, Frame, DataType>, DerivShift<DataType, Frame>,
+      gr::Tags::SpatialMetric<3, Frame, DataType>,
       DerivSpatialMetric<DataType, Frame>,
       ::Tags::dt<gr::Tags::SpatialMetric<3, Frame, DataType>>,
       gr::Tags::DetSpatialMetric<DataType>,
@@ -269,6 +273,12 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
     void operator()(gsl::not_null<Scalar<DataType>*> lapse,
                     gsl::not_null<CachedBuffer*> cache,
                     gr::Tags::Lapse<DataType> /*meta*/) const;
+
+    void operator()(
+        gsl::not_null<Scalar<DataType>*> lapse,
+        gsl::not_null<CachedBuffer*> cache,
+        internal_tags::neg_half_lapse_cubed_times_d_g_rr<DataType> /*meta*/)
+        const;
 
     void operator()(gsl::not_null<tnsr::I<DataType, 3, Frame>*> shift,
                     gsl::not_null<CachedBuffer*> cache,
