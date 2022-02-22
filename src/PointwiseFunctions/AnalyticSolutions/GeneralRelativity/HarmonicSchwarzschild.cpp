@@ -162,9 +162,9 @@ void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
 
 template <typename DataType, typename Frame>
 void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
-    const gsl::not_null<Scalar<DataType>*> g_rr,
+    const gsl::not_null<Scalar<DataType>*> gamma_rr,
     const gsl::not_null<CachedBuffer*> cache,
-    internal_tags::g_rr<DataType> /*meta*/) const {
+    internal_tags::gamma_rr<DataType> /*meta*/) const {
   const auto& two_m_over_m_plus_r =
       cache->get_var(*this, internal_tags::two_m_over_m_plus_r<DataType>{});
   const auto& two_m_over_m_plus_r_squared = cache->get_var(
@@ -172,43 +172,45 @@ void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
   const auto& two_m_over_m_plus_r_cubed = cache->get_var(
       *this, internal_tags::two_m_over_m_plus_r_cubed<DataType>{});
 
-  get(*g_rr) = 1.0 + get(two_m_over_m_plus_r) +
-               get(two_m_over_m_plus_r_squared) +
-               get(two_m_over_m_plus_r_cubed);
+  get(*gamma_rr) = 1.0 + get(two_m_over_m_plus_r) +
+                   get(two_m_over_m_plus_r_squared) +
+                   get(two_m_over_m_plus_r_cubed);
 }
 
 template <typename DataType, typename Frame>
 void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
-    const gsl::not_null<Scalar<DataType>*> one_over_g_rr,
+    const gsl::not_null<Scalar<DataType>*> one_over_gamma_rr,
     const gsl::not_null<CachedBuffer*> cache,
-    internal_tags::one_over_g_rr<DataType> /*meta*/) const {
-  const auto& g_rr = cache->get_var(*this, internal_tags::g_rr<DataType>{});
+    internal_tags::one_over_gamma_rr<DataType> /*meta*/) const {
+  const auto& gamma_rr =
+      cache->get_var(*this, internal_tags::gamma_rr<DataType>{});
 
-  get(*one_over_g_rr) = 1.0 / get(g_rr);
+  get(*one_over_gamma_rr) = 1.0 / get(gamma_rr);
 }
 
 template <typename DataType, typename Frame>
 void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
-    const gsl::not_null<Scalar<DataType>*> g_rr_minus_f_0,
+    const gsl::not_null<Scalar<DataType>*> gamma_rr_minus_f_0,
     const gsl::not_null<CachedBuffer*> cache,
-    internal_tags::g_rr_minus_f_0<DataType> /*meta*/) const {
-  const auto& g_rr = cache->get_var(*this, internal_tags::g_rr<DataType>{});
+    internal_tags::gamma_rr_minus_f_0<DataType> /*meta*/) const {
+  const auto& gamma_rr =
+      cache->get_var(*this, internal_tags::gamma_rr<DataType>{});
   const auto& f_0 = cache->get_var(*this, internal_tags::f_0<DataType>{});
 
-  get(*g_rr_minus_f_0) = get(g_rr) - get(f_0);
+  get(*gamma_rr_minus_f_0) = get(gamma_rr) - get(f_0);
 }
 
 template <typename DataType, typename Frame>
 void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
-    const gsl::not_null<Scalar<DataType>*> d_g_rr,
+    const gsl::not_null<Scalar<DataType>*> d_gamma_rr,
     const gsl::not_null<CachedBuffer*> cache,
-    internal_tags::d_g_rr<DataType> /*meta*/) const {
+    internal_tags::d_gamma_rr<DataType> /*meta*/) const {
   const auto& two_m_over_m_plus_r_squared = cache->get_var(
       *this, internal_tags::two_m_over_m_plus_r_squared<DataType>{});
   const auto& two_m_over_m_plus_r_cubed = cache->get_var(
       *this, internal_tags::two_m_over_m_plus_r_cubed<DataType>{});
 
-  get(*d_g_rr) =
+  get(*d_gamma_rr) =
       (0.5 * get(two_m_over_m_plus_r_squared) + get(two_m_over_m_plus_r_cubed) +
        1.5 * square(get(two_m_over_m_plus_r_squared))) /
       (-solution_.mass());
@@ -249,10 +251,11 @@ void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
     internal_tags::f_1<DataType> /*meta*/) const {
   const auto& one_over_r =
       cache->get_var(*this, internal_tags::one_over_r<DataType>{});
-  const auto& g_rr = cache->get_var(*this, internal_tags::g_rr<DataType>{});
+  const auto& gamma_rr =
+      cache->get_var(*this, internal_tags::gamma_rr<DataType>{});
   const auto& f_0 = cache->get_var(*this, internal_tags::f_0<DataType>{});
 
-  get(*f_1) = get(one_over_r) * (get(g_rr) - get(f_0));
+  get(*f_1) = get(one_over_r) * (get(gamma_rr) - get(f_0));
 }
 
 template <typename DataType, typename Frame>
@@ -273,11 +276,12 @@ void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
     const gsl::not_null<Scalar<DataType>*> f_2,
     const gsl::not_null<CachedBuffer*> cache,
     internal_tags::f_2<DataType> /*meta*/) const {
-  const auto& d_g_rr = cache->get_var(*this, internal_tags::d_g_rr<DataType>{});
+  const auto& d_gamma_rr =
+      cache->get_var(*this, internal_tags::d_gamma_rr<DataType>{});
   const auto& d_f_0 = cache->get_var(*this, internal_tags::d_f_0<DataType>{});
   const auto& f_1 = cache->get_var(*this, internal_tags::f_1<DataType>{});
 
-  get(*f_2) = get(d_g_rr) - get(d_f_0) - 2.0 * get(f_1);
+  get(*f_2) = get(d_gamma_rr) - get(d_f_0) - 2.0 * get(f_1);
 }
 
 template <typename DataType, typename Frame>
@@ -304,11 +308,11 @@ void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
       cache->get_var(*this, internal_tags::one_over_r<DataType>{});
   const auto& two_m_over_m_plus_r_squared = cache->get_var(
       *this, internal_tags::two_m_over_m_plus_r_squared<DataType>{});
-  const auto& one_over_g_rr =
-      cache->get_var(*this, internal_tags::one_over_g_rr<DataType>{});
+  const auto& one_over_gamma_rr =
+      cache->get_var(*this, internal_tags::one_over_gamma_rr<DataType>{});
 
   get(*f_3) = get(one_over_r) * get(two_m_over_m_plus_r_squared) *
-              get(one_over_g_rr) / solution_.mass();
+              get(one_over_gamma_rr);
 }
 
 template <typename DataType, typename Frame>
@@ -321,15 +325,16 @@ void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
       *this, internal_tags::two_m_over_m_plus_r_squared<DataType>{});
   const auto& two_m_over_m_plus_r_cubed = cache->get_var(
       *this, internal_tags::two_m_over_m_plus_r_cubed<DataType>{});
-  const auto& d_g_rr = cache->get_var(*this, internal_tags::d_g_rr<DataType>{});
-  const auto& one_over_g_rr =
-      cache->get_var(*this, internal_tags::one_over_g_rr<DataType>{});
+  const auto& d_gamma_rr =
+      cache->get_var(*this, internal_tags::d_gamma_rr<DataType>{});
+  const auto& one_over_gamma_rr =
+      cache->get_var(*this, internal_tags::one_over_gamma_rr<DataType>{});
 
-  get(*f_4) =
-      -get(f_3) -
-      get(two_m_over_m_plus_r_cubed) * get(one_over_g_rr) / solution_.mass() -
-      get(d_g_rr) * get(two_m_over_m_plus_r_squared) *
-          square(get(one_over_g_rr));
+  get(*f_4) = -get(f_3) -
+              get(two_m_over_m_plus_r_cubed) * get(one_over_gamma_rr) /
+                  solution_.mass() -
+              get(d_gamma_rr) * get(two_m_over_m_plus_r_squared) *
+                  square(get(one_over_gamma_rr));
 }
 
 template <typename DataType, typename Frame>
@@ -337,21 +342,25 @@ void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
     const gsl::not_null<Scalar<DataType>*> lapse,
     const gsl::not_null<CachedBuffer*> cache,
     gr::Tags::Lapse<DataType> /*meta*/) const {
-  const auto& one_over_g_rr =
-      cache->get_var(*this, internal_tags::one_over_g_rr<DataType>{});
-  get(*lapse) = sqrt(get(one_over_g_rr));
+  const auto& one_over_gamma_rr =
+      cache->get_var(*this, internal_tags::one_over_gamma_rr<DataType>{});
+
+  get(*lapse) = sqrt(get(one_over_gamma_rr));
 }
 
 template <typename DataType, typename Frame>
 void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
-    const gsl::not_null<Scalar<DataType>*> neg_half_lapse_cubed_times_d_g_rr,
+    const gsl::not_null<Scalar<DataType>*>
+        neg_half_lapse_cubed_times_d_gamma_rr,
     const gsl::not_null<CachedBuffer*> cache,
-    internal_tags::neg_half_lapse_cubed_times_d_g_rr<DataType> /*meta*/) const {
+    internal_tags::neg_half_lapse_cubed_times_d_gamma_rr<DataType> /*meta*/)
+    const {
   const auto& lapse = cache->get_var(*this, gr::Tags::Lapse<DataType>{});
-  const auto& d_g_rr = cache->get_var(*this, internal_tags::d_g_rr<DataType>{});
+  const auto& d_gamma_rr =
+      cache->get_var(*this, internal_tags::d_gamma_rr<DataType>{});
 
-  get(*neg_half_lapse_cubed_times_d_g_rr) =
-      -0.5 * cube(get(lapse)) * get(d_g_rr);
+  get(*neg_half_lapse_cubed_times_d_gamma_rr) =
+      -0.5 * cube(get(lapse)) * get(d_gamma_rr);
 }
 
 template <typename DataType, typename Frame>
@@ -363,11 +372,11 @@ void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
       cache->get_var(*this, internal_tags::two_m_over_m_plus_r<DataType>{});
   const auto& x_over_r =
       cache->get_var(*this, internal_tags::x_over_r<DataType, Frame>{});
-  const auto& one_over_g_rr =
-      cache->get_var(*this, internal_tags::one_over_g_rr<DataType>{});
+  const auto& one_over_gamma_rr =
+      cache->get_var(*this, internal_tags::one_over_gamma_rr<DataType>{});
 
   ::TensorExpressions::evaluate<ti_I>(
-      shift, two_m_over_m_plus_r() * x_over_r(ti_I) * one_over_g_rr());
+      shift, two_m_over_m_plus_r() * x_over_r(ti_I) * one_over_gamma_rr());
 }
 
 template <typename DataType, typename Frame>
@@ -398,15 +407,15 @@ void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
     const gsl::not_null<CachedBuffer*> cache,
     gr::Tags::SpatialMetric<3, Frame, DataType> /*meta*/) const {
   const auto& f_0 = cache->get_var(*this, internal_tags::f_0<DataType>{});
-  const auto& g_rr_minus_f_0 =
-      cache->get_var(*this, internal_tags::g_rr_minus_f_0<DataType>{});
+  const auto& gamma_rr_minus_f_0 =
+      cache->get_var(*this, internal_tags::gamma_rr_minus_f_0<DataType>{});
   const auto& x_over_r =
       cache->get_var(*this, internal_tags::x_over_r<DataType, Frame>{});
 
   for (size_t i = 0; i < 3; ++i) {
     for (size_t j = i; j < 3; ++j) {
       spatial_metric->get(i, j) =
-          get(g_rr_minus_f_0) * x_over_r.get(i) * x_over_r.get(j);
+          get(gamma_rr_minus_f_0) * x_over_r.get(i) * x_over_r.get(j);
       if (i == j) {
         spatial_metric->get(i, j) += get(f_0);
       }
@@ -525,15 +534,16 @@ tnsr::i<DataType, 3, Frame>
 HarmonicSchwarzschild::IntermediateVars<DataType, Frame>::get_var(
     const IntermediateComputer<DataType, Frame>& computer,
     DerivLapse<DataType, Frame> /*meta*/) {
-  const auto& neg_half_lapse_cubed_times_d_g_rr = get_var(
-      computer, internal_tags::neg_half_lapse_cubed_times_d_g_rr<DataType>{});
+  const auto& neg_half_lapse_cubed_times_d_gamma_rr =
+      get_var(computer,
+              internal_tags::neg_half_lapse_cubed_times_d_gamma_rr<DataType>{});
   const auto& x_over_r =
       get_var(computer, internal_tags::x_over_r<DataType, Frame>{});
 
   tnsr::i<DataType, 3, Frame> deriv_lapse{};
   for (size_t i = 0; i < 3; i++) {
     deriv_lapse.get(i) =
-        get(neg_half_lapse_cubed_times_d_g_rr) * x_over_r.get(i);
+        get(neg_half_lapse_cubed_times_d_gamma_rr) * x_over_r.get(i);
   }
 
   return deriv_lapse;
