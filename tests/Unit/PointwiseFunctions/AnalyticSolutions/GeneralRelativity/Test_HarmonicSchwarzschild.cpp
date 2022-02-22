@@ -124,35 +124,37 @@ void test_computed_quantities(const DataType used_for_size) {
   const DataType expected_one_over_r_cubed = 1.0 / cube(expected_r);
   const DataType expected_two_m_over_m_plus_r =
       2.0 * mass / (mass + expected_r);
-  const DataType expected_gamma_rr = 1.0 + expected_two_m_over_m_plus_r +
-                                     square(expected_two_m_over_m_plus_r) +
-                                     cube(expected_two_m_over_m_plus_r);
-  const DataType expected_d_gamma_rr =
+  const DataType expected_spatial_metric_rr =
+      1.0 + expected_two_m_over_m_plus_r +
+      square(expected_two_m_over_m_plus_r) + cube(expected_two_m_over_m_plus_r);
+  const DataType expected_d_spatial_metric_rr =
       -1.0 / (2.0 * mass) * square(expected_two_m_over_m_plus_r) -
       (1.0 / mass) * cube(expected_two_m_over_m_plus_r) -
       (3.0 / (2.0 * mass)) * pow<4>(expected_two_m_over_m_plus_r);
   const DataType expected_f_0 = square(1 + mass / expected_r);
   const DataType expected_d_f_0 =
       2.0 * (1 + mass / expected_r) * (-mass * expected_one_over_r_squared);
-  const DataType expected_f_1 = (expected_gamma_rr - expected_f_0) / expected_r;
+  const DataType expected_f_1 =
+      (expected_spatial_metric_rr - expected_f_0) / expected_r;
   const DataType expected_f_2 =
-      expected_d_gamma_rr - expected_d_f_0 - 2.0 * expected_f_1;
-  const DataType expected_f_3 =
-      square(expected_two_m_over_m_plus_r) / (expected_r * expected_gamma_rr);
+      expected_d_spatial_metric_rr - expected_d_f_0 - 2.0 * expected_f_1;
+  const DataType expected_f_3 = square(expected_two_m_over_m_plus_r) /
+                                (expected_r * expected_spatial_metric_rr);
   const DataType expected_f_4 =
       -expected_f_3 -
-      (1.0 / mass) * cube(expected_two_m_over_m_plus_r) / expected_gamma_rr -
-      expected_d_gamma_rr *
-          square((expected_two_m_over_m_plus_r) / expected_gamma_rr);
+      (1.0 / mass) * cube(expected_two_m_over_m_plus_r) /
+          expected_spatial_metric_rr -
+      expected_d_spatial_metric_rr *
+          square((expected_two_m_over_m_plus_r) / expected_spatial_metric_rr);
 
   auto expected_lapse = make_with_value<Scalar<DataType>>(x, 0.0);
-  get(expected_lapse) = 1.0 / sqrt(expected_gamma_rr);
+  get(expected_lapse) = 1.0 / sqrt(expected_spatial_metric_rr);
   CHECK_ITERABLE_APPROX(lapse, expected_lapse);
 
   tnsr::i<DataType, 3, Frame> expected_d_lapse{};
   for (size_t i = 0; i < 3; ++i) {
     expected_d_lapse.get(i) = -0.5 * cube(get(expected_lapse)) *
-                              expected_d_gamma_rr *
+                              expected_d_spatial_metric_rr *
                               expected_x_minus_center.get(i) / expected_r;
   }
   CHECK_ITERABLE_APPROX(d_lapse, expected_d_lapse);
@@ -161,7 +163,7 @@ void test_computed_quantities(const DataType used_for_size) {
   for (size_t i = 0; i < 3; ++i) {
     expected_shift.get(i) = expected_two_m_over_m_plus_r *
                             expected_x_minus_center.get(i) /
-                            (expected_r * expected_gamma_rr);
+                            (expected_r * expected_spatial_metric_rr);
   }
   CHECK_ITERABLE_APPROX(shift, expected_shift);
 
@@ -181,9 +183,10 @@ void test_computed_quantities(const DataType used_for_size) {
   tnsr::ii<DataType, 3, Frame> expected_gamma{};
   for (size_t i = 0; i < 3; ++i) {
     for (size_t j = i; j < 3; ++j) {
-      expected_gamma.get(i, j) =
-          (expected_gamma_rr - expected_f_0) * expected_x_minus_center.get(i) *
-          expected_x_minus_center.get(j) * expected_one_over_r_squared;
+      expected_gamma.get(i, j) = (expected_spatial_metric_rr - expected_f_0) *
+                                 expected_x_minus_center.get(i) *
+                                 expected_x_minus_center.get(j) *
+                                 expected_one_over_r_squared;
       if (i == j) {
         expected_gamma.get(i, j) += expected_f_0;
       }

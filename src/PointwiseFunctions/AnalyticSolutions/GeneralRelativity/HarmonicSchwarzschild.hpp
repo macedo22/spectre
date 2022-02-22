@@ -107,13 +107,13 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
     template <typename DataType>
     using two_m_over_m_plus_r_cubed = ::Tags::TempScalar<9, DataType>;
     template <typename DataType>
-    using gamma_rr = ::Tags::TempScalar<10, DataType>;
+    using spatial_metric_rr = ::Tags::TempScalar<10, DataType>;
     template <typename DataType>
-    using one_over_gamma_rr = ::Tags::TempScalar<11, DataType>;
+    using one_over_spatial_metric_rr = ::Tags::TempScalar<11, DataType>;
     template <typename DataType>
-    using gamma_rr_minus_f_0 = ::Tags::TempScalar<12, DataType>;
+    using spatial_metric_rr_minus_f_0 = ::Tags::TempScalar<12, DataType>;
     template <typename DataType>
-    using d_gamma_rr = ::Tags::TempScalar<13, DataType>;
+    using d_spatial_metric_rr = ::Tags::TempScalar<13, DataType>;
     template <typename DataType>
     using d_f_0 = ::Tags::TempScalar<14, DataType>;
     template <typename DataType, typename Frame = ::Frame::Inertial>
@@ -133,7 +133,7 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
     template <typename DataType>
     using one_over_det_spatial_metric = ::Tags::TempScalar<22, DataType>;
     template <typename DataType>
-    using neg_half_lapse_cubed_times_d_gamma_rr =
+    using neg_half_lapse_cubed_times_d_spatial_metric_rr =
         ::Tags::TempScalar<23, DataType>;
   };
 
@@ -147,10 +147,11 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
       internal_tags::two_m_over_m_plus_r<DataType>,
       internal_tags::two_m_over_m_plus_r_squared<DataType>,
       internal_tags::two_m_over_m_plus_r_cubed<DataType>,
-      internal_tags::gamma_rr<DataType>,
-      internal_tags::one_over_gamma_rr<DataType>,
-      internal_tags::gamma_rr_minus_f_0<DataType>,
-      internal_tags::d_gamma_rr<DataType>, internal_tags::d_f_0<DataType>,
+      internal_tags::spatial_metric_rr<DataType>,
+      internal_tags::one_over_spatial_metric_rr<DataType>,
+      internal_tags::spatial_metric_rr_minus_f_0<DataType>,
+      internal_tags::d_spatial_metric_rr<DataType>,
+      internal_tags::d_f_0<DataType>,
       internal_tags::d_f_0_times_x_over_r<DataType, Frame>,
       internal_tags::f_1<DataType>,
       internal_tags::f_1_times_x_over_r<DataType, Frame>,
@@ -158,7 +159,7 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
       internal_tags::f_2_times_xxx_over_r_cubed<DataType, Frame>,
       internal_tags::f_3<DataType>, internal_tags::f_4<DataType>,
       gr::Tags::Lapse<DataType>,
-      internal_tags::neg_half_lapse_cubed_times_d_gamma_rr<DataType>,
+      internal_tags::neg_half_lapse_cubed_times_d_spatial_metric_rr<DataType>,
       gr::Tags::Shift<3, Frame, DataType>, DerivShift<DataType, Frame>,
       gr::Tags::SpatialMetric<3, Frame, DataType>,
       DerivSpatialMetric<DataType, Frame>,
@@ -218,21 +219,24 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
         gsl::not_null<CachedBuffer*> cache,
         internal_tags::two_m_over_m_plus_r_cubed<DataType> /*meta*/) const;
 
-    void operator()(gsl::not_null<Scalar<DataType>*> gamma_rr,
+    void operator()(gsl::not_null<Scalar<DataType>*> spatial_metric_rr,
                     gsl::not_null<CachedBuffer*> cache,
-                    internal_tags::gamma_rr<DataType> /*meta*/) const;
+                    internal_tags::spatial_metric_rr<DataType> /*meta*/) const;
 
-    void operator()(gsl::not_null<Scalar<DataType>*> one_over_gamma_rr,
-                    gsl::not_null<CachedBuffer*> cache,
-                    internal_tags::one_over_gamma_rr<DataType> /*meta*/) const;
+    void operator()(
+        gsl::not_null<Scalar<DataType>*> one_over_spatial_metric_rr,
+        gsl::not_null<CachedBuffer*> cache,
+        internal_tags::one_over_spatial_metric_rr<DataType> /*meta*/) const;
 
-    void operator()(gsl::not_null<Scalar<DataType>*> gamma_rr_minus_f_0,
-                    gsl::not_null<CachedBuffer*> cache,
-                    internal_tags::gamma_rr_minus_f_0<DataType> /*meta*/) const;
+    void operator()(
+        gsl::not_null<Scalar<DataType>*> spatial_metric_rr_minus_f_0,
+        gsl::not_null<CachedBuffer*> cache,
+        internal_tags::spatial_metric_rr_minus_f_0<DataType> /*meta*/) const;
 
-    void operator()(gsl::not_null<Scalar<DataType>*> d_gamma_rr,
-                    gsl::not_null<CachedBuffer*> cache,
-                    internal_tags::d_gamma_rr<DataType> /*meta*/) const;
+    void operator()(
+        gsl::not_null<Scalar<DataType>*> d_spatial_metric_rr,
+        gsl::not_null<CachedBuffer*> cache,
+        internal_tags::d_spatial_metric_rr<DataType> /*meta*/) const;
 
     void operator()(gsl::not_null<Scalar<DataType>*> d_f_0,
                     gsl::not_null<CachedBuffer*> cache,
@@ -278,8 +282,8 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
     void operator()(
         gsl::not_null<Scalar<DataType>*> lapse,
         gsl::not_null<CachedBuffer*> cache,
-        internal_tags::neg_half_lapse_cubed_times_d_gamma_rr<DataType> /*meta*/)
-        const;
+        internal_tags::neg_half_lapse_cubed_times_d_spatial_metric_rr<
+            DataType> /*meta*/) const;
 
     void operator()(gsl::not_null<tnsr::I<DataType, 3, Frame>*> shift,
                     gsl::not_null<CachedBuffer*> cache,
