@@ -344,6 +344,18 @@ void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
 
 template <typename DataType, typename Frame>
 void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
+    const gsl::not_null<Scalar<DataType>*> neg_half_lapse_cubed_times_d_g_rr,
+    const gsl::not_null<CachedBuffer*> cache,
+    internal_tags::neg_half_lapse_cubed_times_d_g_rr<DataType> /*meta*/) const {
+  const auto& lapse = cache->get_var(*this, gr::Tags::Lapse<DataType>{});
+  const auto& d_g_rr = cache->get_var(*this, internal_tags::d_g_rr<DataType>{});
+
+  get(*neg_half_lapse_cubed_times_d_g_rr) =
+      -0.5 * cube(get(lapse)) * get(d_g_rr);
+}
+
+template <typename DataType, typename Frame>
+void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
     const gsl::not_null<tnsr::I<DataType, 3, Frame>*> shift,
     const gsl::not_null<CachedBuffer*> cache,
     gr::Tags::Shift<3, Frame, DataType> /*meta*/) const {
@@ -506,6 +518,25 @@ void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
   get<2, 2>(*inverse_spatial_metric) = (spatial_metric_00 * spatial_metric_11 -
                                         spatial_metric_01 * spatial_metric_01) *
                                        get(one_over_det_spatial_metric);
+}
+
+template <typename DataType, typename Frame>
+tnsr::i<DataType, 3, Frame>
+HarmonicSchwarzschild::IntermediateVars<DataType, Frame>::get_var(
+    const IntermediateComputer<DataType, Frame>& computer,
+    DerivLapse<DataType, Frame> /*meta*/) {
+  const auto& neg_half_lapse_cubed_times_d_g_rr = get_var(
+      computer, internal_tags::neg_half_lapse_cubed_times_d_g_rr<DataType>{});
+  const auto& x_over_r =
+      get_var(computer, internal_tags::x_over_r<DataType, Frame>{});
+
+  tnsr::i<DataType, 3, Frame> deriv_lapse{};
+  for (size_t i = 0; i < 3; i++) {
+    deriv_lapse.get(i) =
+        get(neg_half_lapse_cubed_times_d_g_rr) * x_over_r.get(i);
+  }
+
+  return deriv_lapse;
 }
 
 template <typename DataType, typename Frame>
