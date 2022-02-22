@@ -131,6 +131,14 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
     using f_3 = ::Tags::TempScalar<20, DataType>;
     template <typename DataType>
     using f_4 = ::Tags::TempScalar<21, DataType>;
+    // template <typename DataType>
+    // using spatial_metric_cofactor_a = ::Tags::TempScalar<22, DataType>;
+    // template <typename DataType>
+    // using spatial_metric_cofactor_b = ::Tags::TempScalar<23, DataType>;
+    // template <typename DataType>
+    // using spatial_metric_cofactor_c = ::Tags::TempScalar<24, DataType>;
+    template <typename DataType>
+    using one_over_det_spatial_metric = ::Tags::TempScalar<22, DataType>;
   };
 
   template <typename DataType, typename Frame = ::Frame::Inertial>
@@ -156,7 +164,11 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
       DerivShift<DataType, Frame>, gr::Tags::SpatialMetric<3, Frame, DataType>,
       DerivSpatialMetric<DataType, Frame>,
       ::Tags::dt<gr::Tags::SpatialMetric<3, Frame, DataType>>,
+      //   internal_tags::spatial_metric_cofactor_a<DataType>,
+      //   internal_tags::spatial_metric_cofactor_b<DataType>,
+      //   internal_tags::spatial_metric_cofactor_c<DataType>,
       gr::Tags::DetSpatialMetric<DataType>,
+      internal_tags::one_over_det_spatial_metric<DataType>,
       gr::Tags::InverseSpatialMetric<3, Frame, DataType>>;
 
   template <typename DataType, typename Frame = ::Frame::Inertial>
@@ -290,9 +302,29 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
         gsl::not_null<CachedBuffer*> cache,
         ::Tags::dt<gr::Tags::SpatialMetric<3, Frame, DataType>> /*meta*/) const;
 
+    // void operator()(
+    //     gsl::not_null<Scalar<DataType>*> spatial_metric_cofactor_a,
+    //     gsl::not_null<CachedBuffer*> cache,
+    //     internal_tags::spatial_metric_cofactor_a<DataType> /*meta*/) const;
+
+    // void operator()(
+    //     gsl::not_null<Scalar<DataType>*> spatial_metric_cofactor_b,
+    //     gsl::not_null<CachedBuffer*> cache,
+    //     internal_tags::spatial_metric_cofactor_b<DataType> /*meta*/) const;
+
+    // void operator()(
+    //     gsl::not_null<Scalar<DataType>*> spatial_metric_cofactor_c,
+    //     gsl::not_null<CachedBuffer*> cache,
+    //     internal_tags::spatial_metric_cofactor_c<DataType> /*meta*/) const;
+
     void operator()(gsl::not_null<Scalar<DataType>*> det_spatial_metric,
                     gsl::not_null<CachedBuffer*> cache,
                     gr::Tags::DetSpatialMetric<DataType> /*meta*/) const;
+
+    void operator()(
+        gsl::not_null<Scalar<DataType>*> one_over_det_spatial_metric,
+        gsl::not_null<CachedBuffer*> cache,
+        internal_tags::one_over_det_spatial_metric<DataType> /*meta*/) const;
 
     void operator()(
         gsl::not_null<tnsr::II<DataType, 3, Frame>*> inverse_spatial_metric,
