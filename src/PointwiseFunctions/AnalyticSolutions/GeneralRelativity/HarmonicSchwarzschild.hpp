@@ -280,7 +280,8 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
                     gr::Tags::Lapse<DataType> /*meta*/) const;
 
     void operator()(
-        gsl::not_null<Scalar<DataType>*> lapse,
+        gsl::not_null<Scalar<DataType>*>
+            neg_half_lapse_cubed_times_d_spatial_metric_rr,
         gsl::not_null<CachedBuffer*> cache,
         internal_tags::neg_half_lapse_cubed_times_d_spatial_metric_rr<
             DataType> /*meta*/) const;
