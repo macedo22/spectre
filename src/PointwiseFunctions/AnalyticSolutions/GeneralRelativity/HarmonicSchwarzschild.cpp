@@ -11,7 +11,7 @@
 
 #include "DataStructures/DataBox/Prefixes.hpp"
 #include "DataStructures/DataVector.hpp"  // IWYU pragma: keep
-#include "DataStructures/Tensor/EagerMath/DeterminantAndInverse.hpp"
+#include "DataStructures/Tensor/EagerMath/Determinant.hpp"
 #include "PointwiseFunctions/GeneralRelativity/ExtrinsicCurvature.hpp"
 #include "PointwiseFunctions/GeneralRelativity/Tags.hpp"
 #include "Utilities/ConstantExpressions.hpp"
@@ -470,16 +470,7 @@ void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
   const auto& spatial_metric =
       cache->get_var(*this, gr::Tags::SpatialMetric<3, Frame, DataType>{});
 
-  get(*det_spatial_metric) =
-      get<0, 0>(spatial_metric) *
-          (get<1, 1>(spatial_metric) * get<2, 2>(spatial_metric) -
-           square(get<1, 2>(spatial_metric))) +
-      get<0, 1>(spatial_metric) *
-          (get<1, 2>(spatial_metric) * get<0, 2>(spatial_metric) -
-           get<0, 1>(spatial_metric) * get<2, 2>(spatial_metric)) +
-      get<0, 2>(spatial_metric) *
-          (get<0, 1>(spatial_metric) * get<1, 2>(spatial_metric) -
-           get<1, 1>(spatial_metric) * get<0, 2>(spatial_metric));
+  *det_spatial_metric = determinant(spatial_metric);
 }
 
 template <typename DataType, typename Frame>
@@ -491,42 +482,6 @@ void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
       cache->get_var(*this, gr::Tags::DetSpatialMetric<DataType>{});
 
   get(*one_over_det_spatial_metric) = 1.0 / get(det_spatial_metric);
-}
-
-template <typename DataType, typename Frame>
-void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
-    const gsl::not_null<tnsr::II<DataType, 3, Frame>*> inverse_spatial_metric,
-    const gsl::not_null<CachedBuffer*> cache,
-    gr::Tags::InverseSpatialMetric<3, Frame, DataType> /*meta*/) const {
-  const auto& spatial_metric =
-      cache->get_var(*this, gr::Tags::SpatialMetric<3, Frame, DataType>{});
-  const DataType& spatial_metric_00 = get<0, 0>(spatial_metric);
-  const DataType& spatial_metric_01 = get<0, 1>(spatial_metric);
-  const DataType& spatial_metric_02 = get<0, 2>(spatial_metric);
-  const DataType& spatial_metric_11 = get<1, 1>(spatial_metric);
-  const DataType& spatial_metric_12 = get<1, 2>(spatial_metric);
-  const DataType& spatial_metric_22 = get<2, 2>(spatial_metric);
-  const auto& one_over_det_spatial_metric = cache->get_var(
-      *this, internal_tags::one_over_det_spatial_metric<DataType>{});
-
-  get<0, 0>(*inverse_spatial_metric) =
-      (spatial_metric_11 * spatial_metric_22 - square(spatial_metric_12)) *
-      get(one_over_det_spatial_metric);
-  get<0, 1>(*inverse_spatial_metric) = (spatial_metric_12 * spatial_metric_02 -
-                                        spatial_metric_22 * spatial_metric_01) *
-                                       get(one_over_det_spatial_metric);
-  get<0, 2>(*inverse_spatial_metric) = (spatial_metric_01 * spatial_metric_12 -
-                                        spatial_metric_02 * spatial_metric_11) *
-                                       get(one_over_det_spatial_metric);
-  get<1, 1>(*inverse_spatial_metric) = (spatial_metric_22 * spatial_metric_00 -
-                                        spatial_metric_02 * spatial_metric_02) *
-                                       get(one_over_det_spatial_metric);
-  get<1, 2>(*inverse_spatial_metric) = (spatial_metric_02 * spatial_metric_01 -
-                                        spatial_metric_00 * spatial_metric_12) *
-                                       get(one_over_det_spatial_metric);
-  get<2, 2>(*inverse_spatial_metric) = (spatial_metric_00 * spatial_metric_11 -
-                                        spatial_metric_01 * spatial_metric_01) *
-                                       get(one_over_det_spatial_metric);
 }
 
 template <typename DataType, typename Frame>
@@ -575,6 +530,45 @@ HarmonicSchwarzschild::IntermediateVars<DataType, Frame>::get_var(
   const auto& det_spatial_metric =
       get_var(computer, gr::Tags::DetSpatialMetric<DataType>{});
   return Scalar<DataType>(sqrt(get(det_spatial_metric)));
+}
+
+template <typename DataType, typename Frame>
+tnsr::II<DataType, 3, Frame>
+HarmonicSchwarzschild::IntermediateVars<DataType, Frame>::get_var(
+    const IntermediateComputer<DataType, Frame>& computer,
+    gr::Tags::InverseSpatialMetric<3, Frame, DataType> /*meta*/) {
+  const auto& spatial_metric =
+      get_var(computer, gr::Tags::SpatialMetric<3, Frame, DataType>{});
+  const DataType& spatial_metric_00 = get<0, 0>(spatial_metric);
+  const DataType& spatial_metric_01 = get<0, 1>(spatial_metric);
+  const DataType& spatial_metric_02 = get<0, 2>(spatial_metric);
+  const DataType& spatial_metric_11 = get<1, 1>(spatial_metric);
+  const DataType& spatial_metric_12 = get<1, 2>(spatial_metric);
+  const DataType& spatial_metric_22 = get<2, 2>(spatial_metric);
+  const auto& one_over_det_spatial_metric =
+      get_var(computer, internal_tags::one_over_det_spatial_metric<DataType>{});
+
+  tnsr::II<DataType, 3, Frame> inverse_spatial_metric{};
+  get<0, 0>(inverse_spatial_metric) =
+      (spatial_metric_11 * spatial_metric_22 - square(spatial_metric_12)) *
+      get(one_over_det_spatial_metric);
+  get<0, 1>(inverse_spatial_metric) = (spatial_metric_12 * spatial_metric_02 -
+                                       spatial_metric_22 * spatial_metric_01) *
+                                      get(one_over_det_spatial_metric);
+  get<0, 2>(inverse_spatial_metric) = (spatial_metric_01 * spatial_metric_12 -
+                                       spatial_metric_02 * spatial_metric_11) *
+                                      get(one_over_det_spatial_metric);
+  get<1, 1>(inverse_spatial_metric) = (spatial_metric_22 * spatial_metric_00 -
+                                       spatial_metric_02 * spatial_metric_02) *
+                                      get(one_over_det_spatial_metric);
+  get<1, 2>(inverse_spatial_metric) = (spatial_metric_02 * spatial_metric_01 -
+                                       spatial_metric_00 * spatial_metric_12) *
+                                      get(one_over_det_spatial_metric);
+  get<2, 2>(inverse_spatial_metric) = (spatial_metric_00 * spatial_metric_11 -
+                                       spatial_metric_01 * spatial_metric_01) *
+                                      get(one_over_det_spatial_metric);
+
+  return inverse_spatial_metric;
 }
 
 template <typename DataType, typename Frame>
