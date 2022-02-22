@@ -74,7 +74,7 @@ void test_construct_from_options() {
 
 template <typename Frame, typename DataType>
 void test_computed_quantities(const DataType used_for_size) {
-  // Parameters for KerrSchild solution
+  // Parameters for HarmonicSchwarzschild solution
   const double mass = 1.03;
   const std::array<double, 3> center{{0.2, -0.1, 0.4}};
   const auto x = spatial_coords<Frame>(used_for_size);
@@ -263,4 +263,23 @@ SPECTRE_TEST_CASE(
   test_computed_quantities<Frame::Inertial>(0.0);
   test_computed_quantities<Frame::Grid>(DataVector(5));
   test_computed_quantities<Frame::Grid>(0.0);
+}
+
+// [[OutputRegex, Mass must be non-negative]]
+SPECTRE_TEST_CASE(
+    "Unit.PointwiseFunctions.AnalyticSolutions.Gr.HarmonicSchwarzschildMass",
+    "[PointwiseFunctions][Unit]") {
+  ERROR_TEST();
+  gr::Solutions::HarmonicSchwarzschild solution(-1.0, {{0.0, 0.0, 0.0}});
+}
+
+// [[OutputRegex, In string:.*At line 2 column 9:.Value -0.5 is below the lower
+// bound of 0]]
+SPECTRE_TEST_CASE(
+    "Unit.PointwiseFunctions.AnalyticSolutions.Gr.HarmonicSchwarzschildOptM",
+    "[PointwiseFunctions][Unit]") {
+  ERROR_TEST();
+  TestHelpers::test_creation<gr::Solutions::HarmonicSchwarzschild>(
+      "Mass: -0.5\n"
+      "Center: [1.0,3.0,2.0]");
 }
