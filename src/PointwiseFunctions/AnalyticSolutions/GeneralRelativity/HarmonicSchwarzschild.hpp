@@ -164,8 +164,7 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
       DerivSpatialMetric<DataType, Frame>,
       ::Tags::dt<gr::Tags::SpatialMetric<3, Frame, DataType>>,
       gr::Tags::DetSpatialMetric<DataType>,
-      internal_tags::one_over_det_spatial_metric<DataType>,
-      gr::Tags::InverseSpatialMetric<3, Frame, DataType>>;
+      internal_tags::one_over_det_spatial_metric<DataType>>;
 
   template <typename DataType, typename Frame = ::Frame::Inertial>
   class IntermediateComputer {
@@ -313,12 +312,6 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
         gsl::not_null<CachedBuffer*> cache,
         internal_tags::one_over_det_spatial_metric<DataType> /*meta*/) const;
 
-    void operator()(
-        gsl::not_null<tnsr::II<DataType, 3, Frame>*> inverse_spatial_metric,
-        gsl::not_null<CachedBuffer*> cache,
-        gr::Tags::InverseSpatialMetric<3, Frame, DataType>
-        /*meta*/) const;
-
    private:
     const HarmonicSchwarzschild& solution_;
     const tnsr::I<DataType, 3, Frame>& x_;
@@ -346,6 +339,10 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
     Scalar<DataType> get_var(
         const IntermediateComputer<DataType, Frame>& computer,
         gr::Tags::SqrtDetSpatialMetric<DataType> /*meta*/);
+
+    tnsr::II<DataType, 3, Frame> get_var(
+        const IntermediateComputer<DataType, Frame>& computer,
+        gr::Tags::InverseSpatialMetric<3, Frame, DataType> /*meta*/);
 
     tnsr::ii<DataType, 3, Frame> get_var(
         const IntermediateComputer<DataType, Frame>& computer,
