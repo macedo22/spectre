@@ -464,68 +464,51 @@ void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
 
 template <typename DataType, typename Frame>
 void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
-    const gsl::not_null<Scalar<DataType>*> det_spatial_metric,
-    const gsl::not_null<CachedBuffer*> cache,
+    const gsl::not_null<Scalar<DataType>*> /*det_spatial_metric*/,
+    const gsl::not_null<CachedBuffer*> /*cache*/,
     gr::Tags::DetSpatialMetric<DataType> /*meta*/) const {
-  // const auto det_and_inverse_spatial_metric =
-  //     determinant_and_inverse(spatial_metric);
-  // *det_spatial_metric = det_and_inverse_spatial_metric.first;
+  // // const auto det_and_inverse_spatial_metric =
+  // //     determinant_and_inverse(spatial_metric);
+  // // *det_spatial_metric = det_and_inverse_spatial_metric.first;
 
-  const auto& spatial_metric =
-      cache->get_var(*this, gr::Tags::SpatialMetric<3, Frame, DataType>{});
-  // auto& inverse_spatial_metric = cache->get_var(
-  //     *this, gr::Tags::InverseSpatialMetric<3, Frame, DataType>{});
-  auto& inverse_spatial_metric =
-      get<gr::Tags::InverseSpatialMetric<3, Frame, DataType>>(this->data_);
+  // const auto& spatial_metric =
+  //     cache->get_var(*this, gr::Tags::SpatialMetric<3, Frame, DataType>{});
+  // // auto& inverse_spatial_metric = cache->get_var(
+  // //     *this, gr::Tags::InverseSpatialMetric<3, Frame, DataType>{});
+  // auto& inverse_spatial_metric =
+  //     get<gr::Tags::InverseSpatialMetric<3, Frame, DataType>>(this->data_);
 
-  determinant_and_inverse(det_spatial_metric,
-                          make_not_null(&inverse_spatial_metric),
-                          spatial_metric);
-  // inverse_spatial_metric = det_and_inverse_spatial_metric.second;
-  get<HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::Computed<
-      gr::Tags::InverseSpatialMetric<3, Frame, DataType>>>(
-      this->computed_flags_) = true;
+  // determinant_and_inverse(det_spatial_metric,
+  //                         make_not_null(&inverse_spatial_metric),
+  //                         spatial_metric);
+  // // inverse_spatial_metric = det_and_inverse_spatial_metric.second;
+  // get<HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::Computed<
+  //     gr::Tags::InverseSpatialMetric<3, Frame, DataType>>>(
+  //     this->computed_flags_) = true;
 }
 
 template <typename DataType, typename Frame>
 void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
-    const gsl::not_null<tnsr::II<DataType, 3, Frame>*> inverse_spatial_metric,
-    const gsl::not_null<CachedBuffer*> cache,
+    const gsl::not_null<
+        tnsr::II<DataType, 3, Frame>*> /*inverse_spatial_metric*/,
+    const gsl::not_null<CachedBuffer*> /*cache*/,
     gr::Tags::InverseSpatialMetric<3, Frame, DataType> /*meta*/) const {
-  // const auto det_and_inverse_spatial_metric =
-  //     determinant_and_inverse(spatial_metric);
-  // *det_spatial_metric = det_and_inverse_spatial_metric.first;
+  // // const auto det_and_inverse_spatial_metric =
+  // //     determinant_and_inverse(spatial_metric);
+  // // *det_spatial_metric = det_and_inverse_spatial_metric.first;
 
-  const auto& spatial_metric =
-      cache->get_var(*this, gr::Tags::SpatialMetric<3, Frame, DataType>{});
+  // const auto& spatial_metric =
+  //     cache->get_var(*this, gr::Tags::SpatialMetric<3, Frame, DataType>{});
+  // // auto& det_spatial_metric =
+  // //     cache->get_var(*this, gr::Tags::DetSpatialMetric<DataType>{});
   // auto& det_spatial_metric =
-  //     cache->get_var(*this, gr::Tags::DetSpatialMetric<DataType>{});
-  auto& det_spatial_metric =
-      get<gr::Tags::DetSpatialMetric<DataType>>(this->data_);
-  determinant_and_inverse(make_not_null(&det_spatial_metric),
-                          inverse_spatial_metric, spatial_metric);
-  // inverse_spatial_metric = det_and_inverse_spatial_metric.second;
-  get<HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::Computed<
-      gr::Tags::DetSpatialMetric<DataType>>>(this->computed_flags_) = true;
+  //     get<gr::Tags::DetSpatialMetric<DataType>>(this->data_);
+  // determinant_and_inverse(make_not_null(&det_spatial_metric),
+  //                         inverse_spatial_metric, spatial_metric);
+  // // inverse_spatial_metric = det_and_inverse_spatial_metric.second;
+  // get<HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::Computed<
+  //     gr::Tags::DetSpatialMetric<DataType>>>(this->computed_flags_) = true;
 }
-
-// template <typename DataType, typename Frame>
-// void HarmonicSchwarzschild::IntermediateComputer<DataType,
-// Frame>::operator()(
-//     const gsl::not_null<Variables<
-//         tmpl::list<gr::Tags::DetSpatialMetric<DataType>,
-//                    gr::Tags::InverseSpatialMetric<3, Frame, DataType>>>*>
-//         det_and_inverse_spatial_metric,
-//     const gsl::not_null<CachedBuffer*> cache,
-//     ::Tags::Variables<tmpl::list<
-//         gr::Tags::DetSpatialMetric<DataType>,
-//         gr::Tags::InverseSpatialMetric<3, Frame, DataType>>> /*meta*/) const
-//         {
-//   const auto& spatial_metric =
-//       cache->get_var(*this, gr::Tags::SpatialMetric<3, Frame, DataType>{});
-
-//   determinant_and_inverse(det_and_inverse_spatial_metric, spatial_metric);
-// }
 
 template <typename DataType, typename Frame>
 Scalar<DataType>
@@ -544,24 +527,6 @@ HarmonicSchwarzschild::IntermediateVars<DataType, Frame>::get_var(
   const auto& r = get(get_var(computer, internal_tags::r<DataType>{}));
   return make_with_value<tnsr::I<DataType, 3, Frame>>(r, 0.);
 }
-
-// template <typename DataType, typename Frame>
-// Scalar<DataType>&
-// HarmonicSchwarzschild::IntermediateVars<DataType, Frame>::get_var(
-//     const IntermediateComputer<DataType, Frame>& computer,
-//     gr::Tags::DetSpatialMetric<DataType> /*meta*/) {
-//   // const auto& spatial_metric =
-//   //     get_var(computer, gr::Tags::SpatialMetric<3, Frame, DataType>{});
-//   // const auto& det_spatial_metric =
-//   get<gr::Tags::DetSpatialMetric<DataType>>(
-//   //     get_var(computer,
-//   //             ::Tags::Variables<tmpl::list<
-//   //                 gr::Tags::DetSpatialMetric<DataType>,
-//   //                 gr::Tags::InverseSpatialMetric<3, Frame,
-//   DataType>>>{})); const auto& det_spatial_metric =
-//       get_var(computer, gr::Tags::DetSpatialMetric<DataType>{});
-//   return det_spatial_metric;
-// }
 
 template <typename DataType, typename Frame>
 Scalar<DataType>
