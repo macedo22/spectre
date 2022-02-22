@@ -3,24 +3,21 @@
 
 #include "PointwiseFunctions/AnalyticSolutions/GeneralRelativity/HarmonicSchwarzschild.hpp"
 
+#include <algorithm>
 #include <cmath>  // IWYU pragma: keep
-#include <numeric>
+#include <cstddef>
 #include <ostream>
 #include <utility>
 
 #include "DataStructures/DataBox/Prefixes.hpp"
 #include "DataStructures/DataVector.hpp"  // IWYU pragma: keep
 #include "DataStructures/Tensor/EagerMath/DeterminantAndInverse.hpp"
-#include "DataStructures/Variables.hpp"
 #include "PointwiseFunctions/GeneralRelativity/ExtrinsicCurvature.hpp"
 #include "PointwiseFunctions/GeneralRelativity/Tags.hpp"
 #include "Utilities/ConstantExpressions.hpp"
-#include "Utilities/ContainerHelpers.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/MakeWithValue.hpp"
-#include "Utilities/StdArrayHelpers.hpp"
-#include "Utilities/StdHelpers.hpp"
 
 namespace gr::Solutions {
 
@@ -126,15 +123,6 @@ void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
 
   get(*f_0) = square(get(sqrt_f_0));
 }
-
-// template <typename DataType, typename Frame>
-// void HarmonicSchwarzschild::IntermediateComputer<DataType,
-// Frame>::operator()(
-//     const gsl::not_null<Scalar<double>*> two_m,
-//     const gsl::not_null<CachedBuffer*> /*cache*/,
-//     internal_tags::two_m<DataType> /*meta*/) const {
-//   get(*two_m) = 2.0 * solution_.mass();
-// }
 
 template <typename DataType, typename Frame>
 void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
@@ -453,61 +441,11 @@ void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
   std::fill(dt_spatial_metric->begin(), dt_spatial_metric->end(), 0.);
 }
 
-// template <typename DataType, typename Frame>
-// void HarmonicSchwarzschild::IntermediateComputer<DataType,
-// Frame>::operator()(
-//     const gsl::not_null<Scalar<DataType>*> spatial_metric_cofactor_a,
-//     const gsl::not_null<CachedBuffer*> cache,
-//     internal_tags::spatial_metric_cofactor_a<DataType> /*meta*/) const {
-//   const auto& spatial_metric =
-//       cache->get_var(*this, gr::Tags::SpatialMetric<3, Frame, DataType>{});
-
-//   get(*spatial_metric_cofactor_a) =
-//       get<1, 1>(tensor) * get<2, 2>(tensor) - square(get<1, 2>(tensor));
-// }
-
-// template <typename DataType, typename Frame>
-// void HarmonicSchwarzschild::IntermediateComputer<DataType,
-// Frame>::operator()(
-//     const gsl::not_null<Scalar<DataType>*> spatial_metric_cofactor_b,
-//     const gsl::not_null<CachedBuffer*> cache,
-//     internal_tags::spatial_metric_cofactor_b<DataType> /*meta*/) const {
-//   const auto& spatial_metric =
-//       cache->get_var(*this, gr::Tags::SpatialMetric<3, Frame, DataType>{});
-
-//   get(*spatial_metric_cofactor_b) = get<1, 2>(tensor) * get<2, 0>(tensor) -
-//                                     get<1, 0>(tensor) * get<2, 2>(tensor);
-// }
-
-// template <typename DataType, typename Frame>
-// void HarmonicSchwarzschild::IntermediateComputer<DataType,
-// Frame>::operator()(
-//     const gsl::not_null<Scalar<DataType>*> spatial_metric_cofactor_c,
-//     const gsl::not_null<CachedBuffer*> cache,
-//     internal_tags::spatial_metric_cofactor_c<DataType> /*meta*/) const {
-//   const auto& spatial_metric =
-//       cache->get_var(*this, gr::Tags::SpatialMetric<3, Frame, DataType>{});
-
-//   get(*spatial_metric_cofactor_c) = get<1, 0>(tensor) * get<2, 1>(tensor) -
-//                                     get<1, 1>(tensor) * get<2, 0>(tensor);
-// }
-
 template <typename DataType, typename Frame>
 void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
     const gsl::not_null<Scalar<DataType>*> det_spatial_metric,
     const gsl::not_null<CachedBuffer*> cache,
     gr::Tags::DetSpatialMetric<DataType> /*meta*/) const {
-  // const auto& spatial_metric_cofactor_a = cache->get_var(
-  //     *this, internal_tags::spatial_metric_cofactor_a<DataType>{});
-  // const auto& spatial_metric_cofactor_b = cache->get_var(
-  //     *this, internal_tags::spatial_metric_cofactor_b<DataType>{});
-  // const auto& spatial_metric_cofactor_c = cache->get_var(
-  //     *this, internal_tags::spatial_metric_cofactor_c<DataType>{});
-
-  // get(*det_spatial_metric) = get<0, 0>(tensor) * spatial_metric_cofactor_a +
-  //                            get<0, 1>(tensor) * spatial_metric_cofactor_b +
-  //                            get<0, 2>(tensor) * spatial_metric_cofactor_c;
-
   const auto& spatial_metric =
       cache->get_var(*this, gr::Tags::SpatialMetric<3, Frame, DataType>{});
 
@@ -547,14 +485,6 @@ void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
   const DataType& spatial_metric_11 = get<1, 1>(spatial_metric);
   const DataType& spatial_metric_12 = get<1, 2>(spatial_metric);
   const DataType& spatial_metric_22 = get<2, 2>(spatial_metric);
-  // const auto& spatial_metric_cofactor_a = cache->get_var(
-  //     *this, internal_tags::spatial_metric_cofactor_a<DataType>{});
-  // const auto& spatial_metric_cofactor_b = cache->get_var(
-  //     *this, internal_tags::spatial_metric_cofactor_b<DataType>{});
-  // const auto& spatial_metric_cofactor_c = cache->get_var(
-  //     *this, internal_tags::spatial_metric_cofactor_c<DataType>{});
-  // const auto& det_spatial_metric =
-  //     cache->get_var(*this, gr::Tags::DetSpatialMetric<DataType>{});
   const auto& one_over_det_spatial_metric = cache->get_var(
       *this, internal_tags::one_over_det_spatial_metric<DataType>{});
 
@@ -605,39 +535,6 @@ HarmonicSchwarzschild::IntermediateVars<DataType, Frame>::get_var(
       get_var(computer, gr::Tags::DetSpatialMetric<DataType>{});
   return Scalar<DataType>(sqrt(get(det_spatial_metric)));
 }
-
-// template <typename DataType, typename Frame>
-// tnsr::II<DataType, 3, Frame>&
-// HarmonicSchwarzschild::IntermediateVars<DataType, Frame>::get_var(
-//     const IntermediateComputer<DataType, Frame>& computer,
-//     gr::Tags::InverseSpatialMetric<3, Frame, DataType> /*meta*/) {
-//   // const auto& spatial_metric =
-//   //     get_var(computer, gr::Tags::SpatialMetric<3, Frame, DataType>{});
-
-//   // tnsr::II<DataType, 3, Frame> inverse_spatial_metric{};
-//   // for (size_t i = 0; i < 3; i++) {
-//   //   for (size_t j = i; j < 3; j++) {
-//   //     inverse_spatial_metric.get(i, j) =
-//   //   }
-//   // }
-//   // const auto& spatial_metric =
-//   //     get_var(computer, gr::Tags::SpatialMetric<3, Frame, DataType>{});
-
-//   // get<0, 0>(spatial_metric).size()
-//   // const auto& inverse_spatial_metric =
-//   //     get<gr::Tags::InverseSpatialMetric<3, Frame, DataType>>(
-//   //         get_var(computer,
-//   //                 ::Tags::Variables<tmpl::list<
-//   //                     gr::Tags::DetSpatialMetric<DataType>,
-//   //                     gr::Tags::InverseSpatialMetric<3, Frame,
-//   DataType>>>{}));
-
-//   // return inverse_spatial_metric;
-//   const auto& inverse_spatial_metric =
-//       get_var(computer, gr::Tags::InverseSpatialMetric<3, Frame,
-//       DataType>{});
-//   return inverse_spatial_metric;
-// }
 
 template <typename DataType, typename Frame>
 tnsr::ii<DataType, 3, Frame>
