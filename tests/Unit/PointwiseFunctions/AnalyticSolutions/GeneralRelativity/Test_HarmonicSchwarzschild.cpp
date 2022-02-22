@@ -3,45 +3,26 @@
 
 #include "Framework/TestingFramework.hpp"
 
-#include <algorithm>
 #include <array>
 #include <cstddef>
-#include <limits>
 #include <string>
-#include <type_traits>
+#include <utility>
 
 #include "DataStructures/DataBox/Prefixes.hpp"
 #include "DataStructures/DataVector.hpp"
-#include "DataStructures/Tensor/EagerMath/Determinant.hpp"
 #include "DataStructures/Tensor/EagerMath/Magnitude.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
-#include "DataStructures/Variables.hpp"
-#include "Domain/CoordinateMaps/Affine.hpp"
-#include "Domain/CoordinateMaps/CoordinateMap.hpp"
-#include "Domain/CoordinateMaps/CoordinateMap.tpp"
-#include "Domain/CoordinateMaps/ProductMaps.hpp"
-#include "Domain/CoordinateMaps/ProductMaps.tpp"
-#include "Domain/LogicalCoordinates.hpp"
 #include "Framework/TestCreation.hpp"
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/PointwiseFunctions/AnalyticSolutions/TestHelpers.hpp"
-#include "NumericalAlgorithms/LinearOperators/PartialDerivatives.hpp"
-#include "NumericalAlgorithms/LinearOperators/PartialDerivatives.tpp"
-#include "NumericalAlgorithms/Spectral/Mesh.hpp"
-#include "NumericalAlgorithms/Spectral/Spectral.hpp"
 #include "PointwiseFunctions/AnalyticSolutions/GeneralRelativity/HarmonicSchwarzschild.hpp"
 #include "PointwiseFunctions/GeneralRelativity/Tags.hpp"
 #include "Utilities/ConstantExpressions.hpp"
 #include "Utilities/MakeWithValue.hpp"
-#include "Utilities/TMPL.hpp"
-#include "Utilities/TaggedTuple.hpp"
 
 // IWYU pragma: no_forward_declare Tags::deriv
 
 namespace {
-using Affine = domain::CoordinateMaps::Affine;
-using Affine3D = domain::CoordinateMaps::ProductOf3Maps<Affine, Affine, Affine>;
-
 template <typename Frame, typename DataType>
 tnsr::I<DataType, 3, Frame> spatial_coords(const DataType& used_for_size) {
   auto x = make_with_value<tnsr::I<DataType, 3, Frame>>(used_for_size, 0.0);
@@ -89,36 +70,151 @@ void test_construct_from_options() {
         gr::Solutions::HarmonicSchwarzschild(0.5, {{1.0, 3.0, 2.0}}));
 }
 
-template <typename FrameType, typename DataType>
-void test_computed_quantities(const DataType /*used_for_size*/) {
-  // Parameters for HarmonicSchwarzschild solution
-  const double mass = 1.01;
+template <typename Frame, typename DataType>
+void test_computed_quantities(const DataType used_for_size) {
+  // Parameters for KerrSchild solution
+  const double mass = 1.03;
   const std::array<double, 3> center{{0.2, -0.1, 0.4}};
+  const auto x = spatial_coords<Frame>(used_for_size);
+  const double t = 1.3;
+
+  // Evaluate solution
   gr::Solutions::HarmonicSchwarzschild solution(mass, center);
 
-  // Setup grid
-  const size_t num_points_1d = 8;
-  const std::array<double, 3> lower_bound{{0.8, 1.22, 1.30}};
-  const std::array<double, 3> upper_bound{{0.82, 1.24, 1.32}};
-  const size_t SpatialDim = 3;
-  Mesh<SpatialDim> mesh{num_points_1d, Spectral::Basis::Legendre,
-                        Spectral::Quadrature::GaussLobatto};
-  const auto coord_map =
-      domain::make_coordinate_map<Frame::ElementLogical, FrameType>(Affine3D{
-          Affine{-1., 1., lower_bound[0], upper_bound[0]},
-          Affine{-1., 1., lower_bound[1], upper_bound[1]},
-          Affine{-1., 1., lower_bound[2], upper_bound[2]},
-      });
-  const size_t num_points_3d = num_points_1d * num_points_1d * num_points_1d;
-  // Setup coordinates
-  const auto x_logical = logical_coordinates(mesh);
-  const auto x = coord_map(x_logical);
-  // Arbitrary time for time-independent solution.
-  const double t = std::numeric_limits<double>::signaling_NaN();
   const auto vars = solution.variables(
       x, t,
-      typename gr::Solutions::HarmonicSchwarzschild::tags<DataVector,
-                                                          FrameType>{});
+      typename gr::Solutions::HarmonicSchwarzschild::tags<DataType, Frame>{});
+  const auto& lapse = get<gr::Tags::Lapse<DataType>>(vars);
+  const auto& dt_lapse = get<Tags::dt<gr::Tags::Lapse<DataType>>>(vars);
+  const auto& d_lapse =
+      get<typename gr::Solutions::HarmonicSchwarzschild::DerivLapse<DataType,
+                                                                    Frame>>(
+          vars);
+  const auto& shift = get<gr::Tags::Shift<3, Frame, DataType>>(vars);
+  const auto& d_shift =
+      get<typename gr::Solutions::HarmonicSchwarzschild::DerivShift<DataType,
+                                                                    Frame>>(
+          vars);
+  const auto& dt_shift =
+      get<Tags::dt<gr::Tags::Shift<3, Frame, DataType>>>(vars);
+  const auto& gamma = get<gr::Tags::SpatialMetric<3, Frame, DataType>>(vars);
+  const auto& dt_gamma =
+      get<Tags::dt<gr::Tags::SpatialMetric<3, Frame, DataType>>>(vars);
+  const auto& d_gamma =
+      get<typename gr::Solutions::HarmonicSchwarzschild::DerivSpatialMetric<
+          DataType, Frame>>(vars);
+
+  // Check those quantities that should be zero.
+  const auto zero = make_with_value<DataType>(x, 0.);
+  CHECK(dt_lapse.get() == zero);
+  for (size_t i = 0; i < 3; ++i) {
+    CHECK(dt_shift.get(i) == zero);
+    for (size_t j = 0; j < 3; ++j) {
+      CHECK(dt_gamma.get(i, j) == zero);
+    }
+  }
+
+  tnsr::I<DataType, 3, Frame> expected_x_minus_center{};
+  for (size_t i = 0; i < 3; ++i) {
+    expected_x_minus_center.get(i) = x.get(i) - gsl::at(center, i);
+  }
+
+  const DataType expected_r = get(magnitude(expected_x_minus_center));
+  const DataType expected_one_over_r_squared = 1.0 / square(expected_r);
+  const DataType expected_one_over_r_cubed = 1.0 / cube(expected_r);
+  const DataType expected_two_m_over_m_plus_r =
+      2.0 * mass / (mass + expected_r);
+  const DataType expected_gamma_rr = 1.0 + expected_two_m_over_m_plus_r +
+                                     square(expected_two_m_over_m_plus_r) +
+                                     cube(expected_two_m_over_m_plus_r);
+  const DataType expected_d_gamma_rr =
+      -1.0 / (2.0 * mass) * square(expected_two_m_over_m_plus_r) -
+      (1.0 / mass) * cube(expected_two_m_over_m_plus_r) -
+      (3.0 / (2.0 * mass)) * pow<4>(expected_two_m_over_m_plus_r);
+  const DataType expected_f_0 = square(1 + mass / expected_r);
+  const DataType expected_d_f_0 =
+      2.0 * (1 + mass / expected_r) * (-mass * expected_one_over_r_squared);
+  const DataType expected_f_1 = (expected_gamma_rr - expected_f_0) / expected_r;
+  const DataType expected_f_2 =
+      expected_d_gamma_rr - expected_d_f_0 - 2.0 * expected_f_1;
+  const DataType expected_f_3 =
+      square(expected_two_m_over_m_plus_r) / (expected_r * expected_gamma_rr);
+  const DataType expected_f_4 =
+      -expected_f_3 -
+      (1.0 / mass) * cube(expected_two_m_over_m_plus_r) / expected_gamma_rr -
+      expected_d_gamma_rr *
+          square((expected_two_m_over_m_plus_r) / expected_gamma_rr);
+
+  auto expected_lapse = make_with_value<Scalar<DataType>>(x, 0.0);
+  get(expected_lapse) = 1.0 / sqrt(expected_gamma_rr);
+  CHECK_ITERABLE_APPROX(lapse, expected_lapse);
+
+  tnsr::i<DataType, 3, Frame> expected_d_lapse{};
+  for (size_t i = 0; i < 3; ++i) {
+    expected_d_lapse.get(i) = -0.5 * cube(get(expected_lapse)) *
+                              expected_d_gamma_rr *
+                              expected_x_minus_center.get(i) / expected_r;
+  }
+  CHECK_ITERABLE_APPROX(d_lapse, expected_d_lapse);
+
+  tnsr::I<DataType, 3, Frame> expected_shift{};
+  for (size_t i = 0; i < 3; ++i) {
+    expected_shift.get(i) = expected_two_m_over_m_plus_r *
+                            expected_x_minus_center.get(i) /
+                            (expected_r * expected_gamma_rr);
+  }
+  CHECK_ITERABLE_APPROX(shift, expected_shift);
+
+  tnsr::iJ<DataType, 3, Frame> expected_d_shift{};
+  for (size_t k = 0; k < 3; ++k) {
+    for (size_t i = 0; i < 3; ++i) {
+      expected_d_shift.get(k, i) =
+          expected_f_4 * expected_x_minus_center.get(i) *
+          expected_x_minus_center.get(k) * expected_one_over_r_squared;
+      if (i == k) {
+        expected_d_shift.get(k, i) += expected_f_3;
+      }
+    }
+  }
+  CHECK_ITERABLE_APPROX(d_shift, expected_d_shift);
+
+  tnsr::ii<DataType, 3, Frame> expected_gamma{};
+  for (size_t i = 0; i < 3; ++i) {
+    for (size_t j = i; j < 3; ++j) {
+      expected_gamma.get(i, j) =
+          (expected_gamma_rr - expected_f_0) * expected_x_minus_center.get(i) *
+          expected_x_minus_center.get(j) * expected_one_over_r_squared;
+      if (i == j) {
+        expected_gamma.get(i, j) += expected_f_0;
+      }
+    }
+  }
+  CHECK_ITERABLE_APPROX(gamma, expected_gamma);
+
+  tnsr::ijj<DataType, 3, Frame> expected_d_gamma{};
+  for (size_t k = 0; k < 3; ++k) {
+    for (size_t i = 0; i < 3; ++i) {
+      for (size_t j = i; j < 3; ++j) {
+        expected_d_gamma.get(k, i, j) =
+            expected_f_2 * expected_x_minus_center.get(i) *
+            expected_x_minus_center.get(j) * expected_x_minus_center.get(k) *
+            expected_one_over_r_cubed;
+        if (i == k) {
+          expected_d_gamma.get(k, i, j) +=
+              expected_f_1 * expected_x_minus_center.get(j) / expected_r;
+        }
+        if (j == k) {
+          expected_d_gamma.get(k, i, j) +=
+              expected_f_1 * expected_x_minus_center.get(i) / expected_r;
+        }
+        if (i == j) {
+          expected_d_gamma.get(k, i, j) +=
+              expected_d_f_0 * expected_x_minus_center.get(k) / expected_r;
+        }
+      }
+    }
+  }
+  CHECK_ITERABLE_APPROX(d_gamma, expected_d_gamma);
 }
 }  // namespace
 
@@ -131,13 +227,11 @@ SPECTRE_TEST_CASE(
 
   test_tag_retrieval<Frame::Inertial>(DataVector(5));
   test_tag_retrieval<Frame::Inertial>(0.0);
-
   test_tag_retrieval<Frame::Grid>(DataVector(5));
   test_tag_retrieval<Frame::Grid>(0.0);
 
   test_computed_quantities<Frame::Inertial>(DataVector(5));
   test_computed_quantities<Frame::Inertial>(0.0);
-
   test_computed_quantities<Frame::Grid>(DataVector(5));
   test_computed_quantities<Frame::Grid>(0.0);
 }
