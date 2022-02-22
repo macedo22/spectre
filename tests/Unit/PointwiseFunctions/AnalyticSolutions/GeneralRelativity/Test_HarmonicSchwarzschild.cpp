@@ -10,12 +10,14 @@
 
 #include "DataStructures/DataBox/Prefixes.hpp"
 #include "DataStructures/DataVector.hpp"
+#include "DataStructures/Tensor/EagerMath/DeterminantAndInverse.hpp"
 #include "DataStructures/Tensor/EagerMath/Magnitude.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Framework/TestCreation.hpp"
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/PointwiseFunctions/AnalyticSolutions/TestHelpers.hpp"
 #include "PointwiseFunctions/AnalyticSolutions/GeneralRelativity/HarmonicSchwarzschild.hpp"
+#include "PointwiseFunctions/GeneralRelativity/ExtrinsicCurvature.hpp"
 #include "PointwiseFunctions/GeneralRelativity/Tags.hpp"
 #include "Utilities/ConstantExpressions.hpp"
 #include "Utilities/MakeWithValue.hpp"
@@ -97,12 +99,19 @@ void test_computed_quantities(const DataType used_for_size) {
           vars);
   const auto& dt_shift =
       get<Tags::dt<gr::Tags::Shift<3, Frame, DataType>>>(vars);
-  const auto& gamma = get<gr::Tags::SpatialMetric<3, Frame, DataType>>(vars);
-  const auto& dt_gamma =
+  const auto& spatial_metric =
+      get<gr::Tags::SpatialMetric<3, Frame, DataType>>(vars);
+  const auto& dt_spatial_metric =
       get<Tags::dt<gr::Tags::SpatialMetric<3, Frame, DataType>>>(vars);
-  const auto& d_gamma =
+  const auto& d_spatial_metric =
       get<typename gr::Solutions::HarmonicSchwarzschild::DerivSpatialMetric<
           DataType, Frame>>(vars);
+  const auto& sqrt_det_spatial_metric =
+      get<typename gr::Tags::SqrtDetSpatialMetric<DataType>>(vars);
+  const auto& inverse_spatial_metric =
+      get<gr::Tags::InverseSpatialMetric<3, Frame, DataType>>(vars);
+  const auto& extrinsic_curvature =
+      get<gr::Tags::ExtrinsicCurvature<3, Frame, DataType>>(vars);
 
   // Check those quantities that should be zero.
   const auto zero = make_with_value<DataType>(x, 0.);
@@ -110,7 +119,7 @@ void test_computed_quantities(const DataType used_for_size) {
   for (size_t i = 0; i < 3; ++i) {
     CHECK(dt_shift.get(i) == zero);
     for (size_t j = 0; j < 3; ++j) {
-      CHECK(dt_gamma.get(i, j) == zero);
+      CHECK(dt_spatial_metric.get(i, j) == zero);
     }
   }
 
@@ -180,44 +189,61 @@ void test_computed_quantities(const DataType used_for_size) {
   }
   CHECK_ITERABLE_APPROX(d_shift, expected_d_shift);
 
-  tnsr::ii<DataType, 3, Frame> expected_gamma{};
+  tnsr::ii<DataType, 3, Frame> expected_spatial_metric{};
   for (size_t i = 0; i < 3; ++i) {
     for (size_t j = i; j < 3; ++j) {
-      expected_gamma.get(i, j) = (expected_spatial_metric_rr - expected_f_0) *
-                                 expected_x_minus_center.get(i) *
-                                 expected_x_minus_center.get(j) *
-                                 expected_one_over_r_squared;
+      expected_spatial_metric.get(i, j) =
+          (expected_spatial_metric_rr - expected_f_0) *
+          expected_x_minus_center.get(i) * expected_x_minus_center.get(j) *
+          expected_one_over_r_squared;
       if (i == j) {
-        expected_gamma.get(i, j) += expected_f_0;
+        expected_spatial_metric.get(i, j) += expected_f_0;
       }
     }
   }
-  CHECK_ITERABLE_APPROX(gamma, expected_gamma);
+  CHECK_ITERABLE_APPROX(spatial_metric, expected_spatial_metric);
 
-  tnsr::ijj<DataType, 3, Frame> expected_d_gamma{};
+  tnsr::ijj<DataType, 3, Frame> expected_d_spatial_metric{};
   for (size_t k = 0; k < 3; ++k) {
     for (size_t i = 0; i < 3; ++i) {
       for (size_t j = i; j < 3; ++j) {
-        expected_d_gamma.get(k, i, j) =
+        expected_d_spatial_metric.get(k, i, j) =
             expected_f_2 * expected_x_minus_center.get(i) *
             expected_x_minus_center.get(j) * expected_x_minus_center.get(k) *
             expected_one_over_r_cubed;
         if (i == k) {
-          expected_d_gamma.get(k, i, j) +=
+          expected_d_spatial_metric.get(k, i, j) +=
               expected_f_1 * expected_x_minus_center.get(j) / expected_r;
         }
         if (j == k) {
-          expected_d_gamma.get(k, i, j) +=
+          expected_d_spatial_metric.get(k, i, j) +=
               expected_f_1 * expected_x_minus_center.get(i) / expected_r;
         }
         if (i == j) {
-          expected_d_gamma.get(k, i, j) +=
+          expected_d_spatial_metric.get(k, i, j) +=
               expected_d_f_0 * expected_x_minus_center.get(k) / expected_r;
         }
       }
     }
   }
-  CHECK_ITERABLE_APPROX(d_gamma, expected_d_gamma);
+  CHECK_ITERABLE_APPROX(d_spatial_metric, expected_d_spatial_metric);
+
+  const auto expected_det_and_inverse_spatial_metric =
+      determinant_and_inverse(expected_spatial_metric);
+  const auto expected_sqrt_det_spatial_metric =
+      sqrt(get(expected_det_and_inverse_spatial_metric.first));
+  CHECK_ITERABLE_APPROX(get(sqrt_det_spatial_metric),
+                        expected_sqrt_det_spatial_metric);
+
+  const auto& expected_inverse_spatial_metric =
+      expected_det_and_inverse_spatial_metric.second;
+  CHECK_ITERABLE_APPROX(inverse_spatial_metric,
+                        expected_inverse_spatial_metric);
+
+  const auto expected_extrinsic_curvature = gr::extrinsic_curvature(
+      expected_lapse, expected_shift, expected_d_shift, expected_spatial_metric,
+      tnsr::ii<DataType, 3, Frame>(zero), expected_d_spatial_metric);
+  CHECK_ITERABLE_APPROX(extrinsic_curvature, expected_extrinsic_curvature);
 }
 }  // namespace
 
@@ -238,5 +264,3 @@ SPECTRE_TEST_CASE(
   test_computed_quantities<Frame::Grid>(DataVector(5));
   test_computed_quantities<Frame::Grid>(0.0);
 }
-
-// TODO put back OutputRegex error tests
