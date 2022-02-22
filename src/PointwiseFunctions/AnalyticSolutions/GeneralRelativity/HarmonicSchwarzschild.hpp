@@ -69,9 +69,7 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
       tmpl::list<Tags...> /*meta*/) const {
     static_assert(
         tmpl2::flat_all_v<tmpl::list_contains_v<
-            tmpl::push_back<
                 tags<DataType, Frame>,
-                gr::Tags::DerivDetSpatialMetric<3, Frame, DataType>>,
             Tags>...>,
         "At least one of the requested tags is not supported. The requested "
         "tags are listed as template parameters of the `variables` function.");
@@ -149,8 +147,8 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
       internal_tags::two_m_over_m_plus_r<DataType>,
       internal_tags::two_m_over_m_plus_r_squared<DataType>,
       internal_tags::two_m_over_m_plus_r_cubed<DataType>,
-      /*internal_tags::one_over_m<double>,*/ internal_tags::g_rr<DataType>,
-      internal_tags::one_over_g_rr<DataType>,
+      /*internal_tags::one_over_m<double>,*/
+      internal_tags::g_rr<DataType>, internal_tags::one_over_g_rr<DataType>,
       internal_tags::g_rr_minus_f_0<DataType>, internal_tags::d_g_rr<DataType>,
       internal_tags::d_f_0<DataType>,
       internal_tags::d_f_0_times_x_over_r<DataType, Frame>,
@@ -162,10 +160,12 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
       gr::Tags::Shift<3, Frame, DataType>, DerivShift<DataType, Frame>,
       gr::Tags::SpatialMetric<3, Frame, DataType>,
       DerivSpatialMetric<DataType, Frame>,
-      ::Tags::dt<gr::Tags::SpatialMetric<3, Frame, DataType>>,
-      gr::Tags::DetSpatialMetric<DataType>,
-      gr::Tags::InverseSpatialMetric<3, Frame, DataType>
-      /*::Tags::Variables<
+      ::Tags::dt<gr::Tags::SpatialMetric<3, Frame, DataType>> ,
+       gr::Tags::DetSpatialMetric<DataType>,
+       gr::Tags::InverseSpatialMetric<
+           3, Frame, DataType> /*
+      ,
+      ::Tags::Variables<
           tmpl::list<gr::Tags::DetSpatialMetric<DataType>,
                      gr::Tags::InverseSpatialMetric<3, Frame, DataType>>>*/>;
 
@@ -308,16 +308,26 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
         gsl::not_null<CachedBuffer*> cache,
         ::Tags::dt<gr::Tags::SpatialMetric<3, Frame, DataType>> /*meta*/) const;
 
+    void operator()(gsl::not_null<Scalar<DataType>*> det_spatial_metric,
+                    gsl::not_null<CachedBuffer*> cache,
+                    gr::Tags::DetSpatialMetric<DataType> /*meta*/) const;
+
     void operator()(
-        gsl::not_null<Variables<
-            tmpl::list<gr::Tags::DetSpatialMetric<DataType>,
-                       gr::Tags::InverseSpatialMetric<3, Frame, DataType>>>*>
-            det_and_inverse_spatial_metric,
+        gsl::not_null<tnsr::II<DataType, 3, Frame>*> inverse_spatial_metric,
         gsl::not_null<CachedBuffer*> cache,
-        ::Tags::Variables<tmpl::list<
-            gr::Tags::DetSpatialMetric<DataType>,
-            gr::Tags::InverseSpatialMetric<3, Frame, DataType>>> /*meta*/
-    ) const;
+        gr::Tags::InverseSpatialMetric<3, Frame, DataType>
+        /*meta*/) const;
+
+    // void operator()(
+    //     gsl::not_null<Variables<
+    //         tmpl::list<gr::Tags::DetSpatialMetric<DataType>,
+    //                    gr::Tags::InverseSpatialMetric<3, Frame, DataType>>>*>
+    //         det_and_inverse_spatial_metric,
+    //     gsl::not_null<CachedBuffer*> cache,
+    //     ::Tags::Variables<tmpl::list<
+    //         gr::Tags::DetSpatialMetric<DataType>,
+    //         gr::Tags::InverseSpatialMetric<3, Frame, DataType>>> /*meta*/
+    // ) const;
 
    private:
     const HarmonicSchwarzschild& solution_;
@@ -343,13 +353,13 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
         const IntermediateComputer<DataType, Frame>& computer,
         ::Tags::dt<gr::Tags::Shift<3, Frame, DataType>> /*meta*/);
 
+    // Scalar<DataType> get_var(
+    //     const IntermediateComputer<DataType, Frame>& computer,
+    //     gr::Tags::DetSpatialMetric<DataType> /*meta*/);
+
     Scalar<DataType> get_var(
         const IntermediateComputer<DataType, Frame>& computer,
         gr::Tags::SqrtDetSpatialMetric<DataType> /*meta*/);
-
-    tnsr::i<DataType, 3, Frame> get_var(
-        const IntermediateComputer<DataType, Frame>& computer,
-        gr::Tags::DerivDetSpatialMetric<3, Frame, DataType> /*meta*/);
 
     // tnsr::II<DataType, 3, Frame> get_var(
     //     const IntermediateComputer<DataType, Frame>& computer,
