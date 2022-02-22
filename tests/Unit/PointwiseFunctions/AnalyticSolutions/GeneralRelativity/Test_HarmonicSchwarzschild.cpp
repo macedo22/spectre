@@ -310,11 +310,11 @@ using Affine3D = domain::CoordinateMaps::ProductOf3Maps<Affine, Affine, Affine>;
 // }
 
 template <typename FrameType>
-void test_computed_quantities(const DataVector& used_for_size) {
+void test_computed_quantities() {
   // Parameters for HarmonicSchwarzschild solution
   const double mass = 1.01;
   const std::array<double, 3> center{{0.2, -0.1, 0.4}};
-  gr::Solutions::HarmonicSchwarzschild solution(mass, spin, center);
+  gr::Solutions::HarmonicSchwarzschild solution(mass, center);
 
   // Setup grid
   const size_t num_points_1d = 8;
@@ -335,6 +335,10 @@ void test_computed_quantities(const DataVector& used_for_size) {
   const auto x = coord_map(x_logical);
   // Arbitrary time for time-independent solution.
   const double t = std::numeric_limits<double>::signaling_NaN();
+  const auto vars = solution.variables(
+      x, t,
+      typename gr::Solutions::HarmonicSchwarzschild::tags<DataVector,
+                                                          FrameType>{});
 }
 }  // namespace
 
