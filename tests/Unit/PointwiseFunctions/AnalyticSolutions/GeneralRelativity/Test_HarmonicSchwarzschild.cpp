@@ -25,6 +25,7 @@
 // IWYU pragma: no_forward_declare Tags::deriv
 
 namespace {
+// Get test coordinates
 template <typename Frame, typename DataType>
 tnsr::I<DataType, 3, Frame> spatial_coords(const DataType& used_for_size) {
   auto x = make_with_value<tnsr::I<DataType, 3, Frame>>(used_for_size, 0.0);
@@ -72,6 +73,9 @@ void test_construct_from_options() {
         gr::Solutions::HarmonicSchwarzschild(0.5, {{1.0, 3.0, 2.0}}));
 }
 
+// Test that computed spacetime quantities are computed as expected. See
+// documentation for `gr::Solutions::HarmonicSchwarzschild` to see equations for
+// expected quantities.
 template <typename Frame, typename DataType>
 void test_computed_quantities(const DataType used_for_size) {
   // Parameters for HarmonicSchwarzschild solution
@@ -83,6 +87,7 @@ void test_computed_quantities(const DataType used_for_size) {
   // Evaluate solution
   gr::Solutions::HarmonicSchwarzschild solution(mass, center);
 
+  // Get solution's spacetime quantities
   const auto vars = solution.variables(
       x, t,
       typename gr::Solutions::HarmonicSchwarzschild::tags<DataType, Frame>{});
@@ -113,7 +118,7 @@ void test_computed_quantities(const DataType used_for_size) {
   const auto& extrinsic_curvature =
       get<gr::Tags::ExtrinsicCurvature<3, Frame, DataType>>(vars);
 
-  // Check those quantities that should be zero.
+  // Check those quantities that should be zero
   const auto zero = make_with_value<DataType>(x, 0.);
   CHECK(dt_lapse.get() == zero);
   for (size_t i = 0; i < 3; ++i) {
@@ -122,6 +127,8 @@ void test_computed_quantities(const DataType used_for_size) {
       CHECK(dt_spatial_metric.get(i, j) == zero);
     }
   }
+
+  // Check remaining quantities
 
   tnsr::I<DataType, 3, Frame> expected_x_minus_center{};
   for (size_t i = 0; i < 3; ++i) {

@@ -401,7 +401,7 @@ void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
     for (size_t i = k; i < 3; ++i) {
       if (i != k) {
         deriv_shift->get(k, i) = get(f_4) * x_over_r.get(i) * x_over_r.get(k);
-        deriv_shift->get(i, k) = deriv_shift->get(k, i);
+        deriv_shift->get(i, k) = deriv_shift->get(k, i);  // symmetry
       } else {
         deriv_shift->get(k, i) = get(f_4) * square(x_over_r.get(i)) + get(f_3);
       }
