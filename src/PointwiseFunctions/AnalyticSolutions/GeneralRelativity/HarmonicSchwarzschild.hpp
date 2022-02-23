@@ -227,7 +227,7 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
      * \brief Tag for the radius corresponding to the position of a point
      * relative to the center of the black hole
      *
-     * \details \f$r\f$ is the radius defined by
+     * \details The quantity \f$r\f$ is the radius defined by
      * `gr::Solutions::HarmonicSchwarzschild::internal_tags::r`.
      */
     template <typename DataType>
@@ -235,7 +235,7 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
     /*!
      * \brief Tag for the intermediate \f$\frac{X^i}{r}\f$
      *
-     * \details \f$X^i\f$ is defined by
+     * \details The quantity \f$X^i\f$ is defined by
      * `gr::Solutions::HarmonicSchwarzschild::internal_tags::x_minus_center` and
      * \f$r\f$ is the radius defined by
      * `gr::Solutions::HarmonicSchwarzschild::internal_tags::r`.
@@ -245,18 +245,19 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
     /*!
      * \brief Tag for the intermediate \f$\frac{M}{r}\f$
      *
-     * \details \f$M\f$ is the mass of the black hole and \f$r\f$ is the radius
-     * defined by `gr::Solutions::HarmonicSchwarzschild::internal_tags::r`.
+     * \details The quantity \f$M\f$ is the mass of the black hole and \f$r\f$
+     * is the radius defined by
+     * `gr::Solutions::HarmonicSchwarzschild::internal_tags::r`.
      */
     template <typename DataType>
     using m_over_r = ::Tags::TempScalar<4, DataType>;
     /*!
      * \brief Tag for the intermediate \f$\sqrt{f_0} = 1 + \frac{M}{r}\f$
      *
-     * \details \f$M\f$ is the mass of the black hole, \f$r\f$ is the radius
-     * defined by `gr::Solutions::HarmonicSchwarzschild::internal_tags::r`, and
-     * \f$f_0\f$ is defined by
-     * `gr::Solutions::HarmonicSchwarzschild::internal_tags::f_0`.
+     * \details The quantity \f$M\f$ is the mass of the black hole, \f$r\f$ is
+     * the radius defined by
+     * `gr::Solutions::HarmonicSchwarzschild::internal_tags::r`, and \f$f_0\f$
+     * is defined by `gr::Solutions::HarmonicSchwarzschild::internal_tags::f_0`.
      */
     template <typename DataType>
     using sqrt_f_0 = ::Tags::TempScalar<5, DataType>;
@@ -264,32 +265,36 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
      * \brief Tag for the intermediate
      * \f$f_0 = \left(1 + \frac{M}{r}\right)^2\f$
      *
-     * \details \f$M\f$ is the mass of the black hole and \f$r\f$ is the radius
-     * defined by `gr::Solutions::HarmonicSchwarzschild::internal_tags::r`.
+     * \details The quantity \f$M\f$ is the mass of the black hole and \f$r\f$
+     * is the radius defined by
+     * `gr::Solutions::HarmonicSchwarzschild::internal_tags::r`.
      */
     template <typename DataType>
     using f_0 = ::Tags::TempScalar<6, DataType>;
     /*!
      * \brief Tag for the intermediate \f$\frac{2M}{M+r}\f$
      *
-     * \details \f$M\f$ is the mass of the black hole and \f$r\f$ is the radius
-     * defined by `gr::Solutions::HarmonicSchwarzschild::internal_tags::r`.
+     * \details The quantity \f$M\f$ is the mass of the black hole and \f$r\f$
+     * is the radius defined by
+     * `gr::Solutions::HarmonicSchwarzschild::internal_tags::r`.
      */
     template <typename DataType>
     using two_m_over_m_plus_r = ::Tags::TempScalar<7, DataType>;
     /*!
      * \brief Tag for the intermediate \f$\left(\frac{2M}{M+r}\right)^2\f$
      *
-     * \details \f$M\f$ is the mass of the black hole and \f$r\f$ is the radius
-     * defined by `gr::Solutions::HarmonicSchwarzschild::internal_tags::r`.
+     * \details The quantity \f$M\f$ is the mass of the black hole and \f$r\f$
+     * is the radius defined by
+     * `gr::Solutions::HarmonicSchwarzschild::internal_tags::r`.
      */
     template <typename DataType>
     using two_m_over_m_plus_r_squared = ::Tags::TempScalar<8, DataType>;
     /*!
      * \brief Tag for the intermediate \f$\left(\frac{2M}{M+r}\right)^3\f$
      *
-     * \details \f$M\f$ is the mass of the black hole and \f$r\f$ is the radius
-     * defined by `gr::Solutions::HarmonicSchwarzschild::internal_tags::r`.
+     * \details The quantity \f$M\f$ is the mass of the black hole and \f$r\f$
+     * is the radius defined by
+     * `gr::Solutions::HarmonicSchwarzschild::internal_tags::r`.
      */
     template <typename DataType>
     using two_m_over_m_plus_r_cubed = ::Tags::TempScalar<9, DataType>;
@@ -311,7 +316,7 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
     /*!
      * \brief Tag for the intermediate \f$\frac{1}{\gamma_{rr}}\f$
      *
-     * \details \f$\gamma_{rr}\f$ is defined by
+     * \details The quantity \f$\gamma_{rr}\f$ is defined by
      * `gr::Solutions::HarmonicSchwarzschild::internal_tags::spatial_metric_rr`.
      */
     template <typename DataType>
@@ -319,7 +324,7 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
     /*!
      * \brief Tag for the intermediate \f$\gamma_{rr} - f_0\f$
      *
-     * \details \f$\gamma_{rr}\f$ is defined by
+     * \details The quantity \f$\gamma_{rr}\f$ is defined by
      * `gr::Solutions::HarmonicSchwarzschild::internal_tags::spatial_metric_rr`
      * and \f$f_0\f$ is defined by
      * `gr::Solutions::HarmonicSchwarzschild::internal_tags::f_0`.
@@ -359,7 +364,7 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
     /*!
      * \brief Tag for the intermediate \f$\partial_r f_0 \frac{X_i}{r}\f$
      *
-     * \details \f$r\f$ is the radius defined by
+     * \details The quantity \f$r\f$ is the radius defined by
      * `gr::Solutions::HarmonicSchwarzschild::internal_tags::r`,
      * \f$\partial_r f_0\f$ is defined by
      * `gr::Solutions::HarmonicSchwarzschild::internal_tags::d_f_0`, and
@@ -372,7 +377,7 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
      * \brief Tag for the intermediate
      * \f$f_1 = \frac{1}{r} left(\gamma_{rr} - f_0\right)\f$
      *
-     * \details \f$r\f$ is the radius defined by
+     * \details The quantity \f$r\f$ is the radius defined by
      * `gr::Solutions::HarmonicSchwarzschild::internal_tags::r`,
      * \f$\gamma_{rr}\f$ is defined by
      * `gr::Solutions::HarmonicSchwarzschild::internal_tags::spatial_metric_rr`,
@@ -384,7 +389,7 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
     /*!
      * \brief Tag for the intermediate \f$f_1 \frac{X_i}{r}\f$
      *
-     * \details \f$r\f$ is the radius defined by
+     * \details The quantity \f$r\f$ is the radius defined by
      * `gr::Solutions::HarmonicSchwarzschild::internal_tags::r`, \f$f_1\f$ is
      * defined by `gr::Solutions::HarmonicSchwarzschild::internal_tags::f_1`,
      * and \f$X_j = X^i \delta_{ij}\f$ where \f$X^i\f$ is defined by
@@ -396,7 +401,7 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
      * \brief Tag for the intermediate
      * \f$f_2 = \partial_r \gamma_{rr} - \partial_r f_0 - 2 f_1f$
      *
-     * \details \f$\partial_r \gamma_{rr}\f$ is defined by
+     * \details The quantity \f$\partial_r \gamma_{rr}\f$ is defined by
      * `gr::Solutions::HarmonicSchwarzschild::
      * internal_tags::d_spatial_metric_rr`, and \f$\partial_r f_0\f$ is defined
      * by `gr::Solutions::HarmonicSchwarzschild::internal_tags::d_f_0`, and
@@ -409,7 +414,7 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
      * \brief Tag for the intermediate
      * \f$f_2 \frac{X_i}{r} \frac{X_j}{r} \frac{X_k}{r}\f$
      *
-     * \details \f$r\f$ is the radius defined by
+     * \details The quantity \f$r\f$ is the radius defined by
      * `gr::Solutions::HarmonicSchwarzschild::internal_tags::r`, \f$f_2\f$ is
      * defined by `gr::Solutions::HarmonicSchwarzschild::internal_tags::f_2`,
      * and \f$X_j = X^i \delta_{ij}\f$ where \f$X^i\f$ is defined by
@@ -421,8 +426,9 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
      * \brief Tag for the intermediate
      * \f$f_3 = \frac{1}{r}\frac{1}{\gamma_{rr}}\left(\frac{2M}{M+r}\right)^2\f$
      *
-     * \details \f$M\f$ is the mass of the black hole, \f$r\f$ is the radius
-     * defined by `gr::Solutions::HarmonicSchwarzschild::internal_tags::r`, and
+     * \details The quantity \f$M\f$ is the mass of the black hole, \f$r\f$ is
+     * the radius defined by
+     * `gr::Solutions::HarmonicSchwarzschild::internal_tags::r`, and
      * \f$\gamma_{rr}\f$ is defined by
      * `gr::Solutions::HarmonicSchwarzschild::internal_tags::spatial_metric_rr`.
      */
@@ -440,10 +446,10 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
      *             \frac{1}{\gamma_{rr}}\right)^2
      * \f}
      *
-     * \details \f$M\f$ is the mass of the black hole, \f$r\f$ is the radius
-     * defined by `gr::Solutions::HarmonicSchwarzschild::internal_tags::r`,
-     * \f$f_3\f$ is defined by
-     * `gr::Solutions::HarmonicSchwarzschild::internal_tags::f_3`,
+     * \details The quantity \f$M\f$ is the mass of the black hole, \f$r\f$ is
+     * the radius defined by
+     * `gr::Solutions::HarmonicSchwarzschild::internal_tags::r`, \f$f_3\f$ is
+     * defined by `gr::Solutions::HarmonicSchwarzschild::internal_tags::f_3`,
      * \f$\gamma_{rr}\f$ is defined by
      * `gr::Solutions::HarmonicSchwarzschild::internal_tags::spatial_metric_rr`,
      * and its derivative \f$\partial_r \gamma_{rr}\f$ is defined by
@@ -461,7 +467,7 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
      * \brief Tag for the intermediate
      * \f$-\frac{1}{2} \gamma_{rr}^{-3/2} \partial_r \gamma_{rr}\f$
      *
-     * \details \f$\gamma_{rr}\f$ is defined by
+     * \details The quantity \f$\gamma_{rr}\f$ is defined by
      * `gr::Solutions::HarmonicSchwarzschild::internal_tags::spatial_metric_rr`
      * and its derivative \f$\partial_r \gamma_{rr}\f$ is defined by
      * `gr::Solutions::HarmonicSchwarzschild::
