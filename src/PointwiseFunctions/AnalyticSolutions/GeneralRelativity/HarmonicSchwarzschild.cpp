@@ -233,15 +233,16 @@ void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
 
 template <typename DataType, typename Frame>
 void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
-    const gsl::not_null<tnsr::I<DataType, 3, Frame>*> d_f_0_times_x_over_r,
+    const gsl::not_null<tnsr::i<DataType, 3, Frame>*> d_f_0_times_x_over_r,
     const gsl::not_null<CachedBuffer*> cache,
     internal_tags::d_f_0_times_x_over_r<DataType, Frame> /*meta*/) const {
   const auto& d_f_0 = cache->get_var(*this, internal_tags::d_f_0<DataType>{});
   const auto& x_over_r =
       cache->get_var(*this, internal_tags::x_over_r<DataType, Frame>{});
 
-  ::TensorExpressions::evaluate<ti_I>(d_f_0_times_x_over_r,
-                                      d_f_0() * x_over_r(ti_I));
+  get<0>(*d_f_0_times_x_over_r) = get(d_f_0) * get<0>(x_over_r);
+  get<1>(*d_f_0_times_x_over_r) = get(d_f_0) * get<1>(x_over_r);
+  get<2>(*d_f_0_times_x_over_r) = get(d_f_0) * get<2>(x_over_r);
 }
 
 template <typename DataType, typename Frame>
@@ -260,15 +261,16 @@ void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
 
 template <typename DataType, typename Frame>
 void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
-    const gsl::not_null<tnsr::I<DataType, 3, Frame>*> f_1_times_x_over_r,
+    const gsl::not_null<tnsr::i<DataType, 3, Frame>*> f_1_times_x_over_r,
     const gsl::not_null<CachedBuffer*> cache,
     internal_tags::f_1_times_x_over_r<DataType, Frame> /*meta*/) const {
   const auto& f_1 = cache->get_var(*this, internal_tags::f_1<DataType>{});
   const auto& x_over_r =
       cache->get_var(*this, internal_tags::x_over_r<DataType, Frame>{});
 
-  ::TensorExpressions::evaluate<ti_I>(f_1_times_x_over_r,
-                                      f_1() * x_over_r(ti_I));
+  get<0>(*f_1_times_x_over_r) = get(f_1) * get<0>(x_over_r);
+  get<1>(*f_1_times_x_over_r) = get(f_1) * get<1>(x_over_r);
+  get<2>(*f_1_times_x_over_r) = get(f_1) * get<2>(x_over_r);
 }
 
 template <typename DataType, typename Frame>
@@ -286,7 +288,7 @@ void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
 
 template <typename DataType, typename Frame>
 void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
-    const gsl::not_null<tnsr::III<DataType, 3, Frame>*>
+    const gsl::not_null<tnsr::iii<DataType, 3, Frame>*>
         f_2_times_xxx_over_r_cubed,
     const gsl::not_null<CachedBuffer*> cache,
     internal_tags::f_2_times_xxx_over_r_cubed<DataType, Frame> /*meta*/) const {
@@ -294,9 +296,14 @@ void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
   const auto& x_over_r =
       cache->get_var(*this, internal_tags::x_over_r<DataType, Frame>{});
 
-  ::TensorExpressions::evaluate<ti_I, ti_J, ti_K>(
-      f_2_times_xxx_over_r_cubed,
-      f_2() * x_over_r(ti_I) * x_over_r(ti_J) * x_over_r(ti_K));
+  for (size_t i = 0; i < 3; i++) {
+    for (size_t j = i; j < 3; j++) {
+      for (size_t k = j; k < 3; k++) {
+        f_2_times_xxx_over_r_cubed->get(i, j, k) =
+            get(f_2) * x_over_r.get(i) * x_over_r.get(j) * x_over_r.get(k);
+      }
+    }
+  }
 }
 
 template <typename DataType, typename Frame>

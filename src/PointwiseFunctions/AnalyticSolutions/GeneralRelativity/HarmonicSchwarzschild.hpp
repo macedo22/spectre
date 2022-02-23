@@ -372,7 +372,7 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
      * `gr::Solutions::HarmonicSchwarzschild::internal_tags::x_minus_center`.
      */
     template <typename DataType, typename Frame = ::Frame::Inertial>
-    using d_f_0_times_x_over_r = ::Tags::TempI<15, 3, Frame, DataType>;
+    using d_f_0_times_x_over_r = ::Tags::Tempi<15, 3, Frame, DataType>;
     /*!
      * \brief Tag for the intermediate
      * \f$f_1 = \frac{1}{r} left(\gamma_{rr} - f_0\right)\f$
@@ -396,7 +396,7 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
      * `gr::Solutions::HarmonicSchwarzschild::internal_tags::x_minus_center`.
      */
     template <typename DataType, typename Frame = ::Frame::Inertial>
-    using f_1_times_x_over_r = ::Tags::TempI<17, 3, Frame, DataType>;
+    using f_1_times_x_over_r = ::Tags::Tempi<17, 3, Frame, DataType>;
     /*!
      * \brief Tag for the intermediate
      * \f$f_2 = \partial_r \gamma_{rr} - \partial_r f_0 - 2 f_1f$
@@ -421,7 +421,7 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
      * `gr::Solutions::HarmonicSchwarzschild::internal_tags::x_minus_center`.
      */
     template <typename DataType, typename Frame = ::Frame::Inertial>
-    using f_2_times_xxx_over_r_cubed = ::Tags::TempIII<19, 3, Frame, DataType>;
+    using f_2_times_xxx_over_r_cubed = ::Tags::Tempiii<19, 3, Frame, DataType>;
     /*!
      * \brief Tag for the intermediate
      * \f$f_3 = \frac{1}{r}\frac{1}{\gamma_{rr}}\left(\frac{2M}{M+r}\right)^2\f$
@@ -680,7 +680,7 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
      * internal_tags::d_f_0_times_x_over_r`
      */
     void operator()(
-        gsl::not_null<tnsr::I<DataType, 3, Frame>*> d_f_0_times_x_over_r,
+        gsl::not_null<tnsr::i<DataType, 3, Frame>*> d_f_0_times_x_over_r,
         gsl::not_null<CachedBuffer*> cache,
         internal_tags::d_f_0_times_x_over_r<DataType, Frame> /*meta*/) const;
 
@@ -697,7 +697,7 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
      * `gr::Solutions::HarmonicSchwarzschild::internal_tags::f_1_times_x_over_r`
      */
     void operator()(
-        gsl::not_null<tnsr::I<DataType, 3, Frame>*> f_1_times_x_over_r,
+        gsl::not_null<tnsr::i<DataType, 3, Frame>*> f_1_times_x_over_r,
         gsl::not_null<CachedBuffer*> cache,
         internal_tags::f_1_times_x_over_r<DataType, Frame> /*meta*/) const;
 
@@ -715,7 +715,7 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
      * internal_tags::f_2_times_xxx_over_r_cubed`
      */
     void operator()(
-        gsl::not_null<tnsr::III<DataType, 3, Frame>*>
+        gsl::not_null<tnsr::iii<DataType, 3, Frame>*>
             f_2_times_xxx_over_r_cubed,
         gsl::not_null<CachedBuffer*> cache,
         internal_tags::f_2_times_xxx_over_r_cubed<DataType, Frame> /*meta*/)
