@@ -721,7 +721,8 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
      * \details Computed as
      *
      * \f{align}
-     *     \beta^i &= \frac{2 M}{M+r} \frac{X^i}{r} \frac{1}{\gamma_{rr}}
+     *     \beta^i &= \left(\frac{2M}{M+r}\right)^2 \frac{X^i}{r}
+     *         \frac{1}{\gamma_{rr}}
      * \f}
      *
      * where \f$M\f$ is the mass of the black hole, \f$r\f$ is the radius
