@@ -36,12 +36,13 @@ class not_null;
 namespace gr {
 namespace Solutions {
 /*!
- * \brief Schwarzschild black hole in Cartesian coordinates with harmonic gauge
+ * \brief Schwarzschild black hole of a t=const slice of time-harmonic
+ * coordinates
  *
  * \details
  * Consider a Schwarzschild black hole of mass \f$M\f$ and center \f$C^i\f$. The
- * spacetime will be specified using harmonic, Cartesian coordinates \f$x^i\f$.
- * A radius centered on the black hole is
+ * spacetime will be specified using time-harmonic, Cartesian coordinates
+ * \f$x^i\f$. A radius centered on the black hole is
  *
  * \f{align}
  *     r &= \sqrt{\delta_{ij} \left(x^i - C^i\right)\left(x^j - C^j\right)}
@@ -140,7 +141,8 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
   };
   using options = tmpl::list<Mass, Center>;
   static constexpr Options::String help{
-      "Schwarzschild black hole in Cartesian coordinates with harmonic gauge"};
+      "Schwarzschild black hole with time-harmonic coordinates of a t=const "
+      "slice of time-harmonic coordinates"};
 
   HarmonicSchwarzschild(double mass, std::array<double, volume_dim> center,
                         const Options::Context& context = {});
@@ -157,7 +159,7 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
 
   /*!
    * \brief Computes and returns spacetime quantities for a Schwarzschild black
-   * hole in Cartesian coordinates with harmonic gauge at a specific position
+   * hole with time-harmonic coordinates at a specific Cartesian position
    *
    * \param x Cartesian coordinates of the position at which to compute
    * spacetime quantities
@@ -191,8 +193,8 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
   }
 
   /*!
-   * \brief Tags defined for intermediates specific to a harmonic Schwarzschild
-   * solution
+   * \brief Tags defined for intermediates specific to the time-harmonic
+   * Schwarzschild solution
    */
   struct internal_tags {
     /*!
@@ -822,7 +824,7 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
 
    private:
     /*!
-     * \brief The harmonic Schwarzschild solution
+     * \brief The time-harmonic Schwarzschild solution
      */
     const HarmonicSchwarzschild& solution_;
     /*!
