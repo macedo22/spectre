@@ -4,10 +4,12 @@
 #pragma once
 
 #include <array>
+#include <limits>
 #include <pup.h>
 
 #include "DataStructures/CachedTempBuffer.hpp"
 #include "DataStructures/Tags/TempTensor.hpp"
+#include "DataStructures/Tensor/IndexType.hpp"
 #include "DataStructures/Tensor/TypeAliases.hpp"
 #include "Options/Options.hpp"
 #include "PointwiseFunctions/AnalyticSolutions/AnalyticSolution.hpp"
@@ -99,7 +101,8 @@ namespace Solutions {
  * The shift and its time derivative are
  *
  * \f{align}
- *     \beta^i &= \frac{2 M}{M+r} \frac{X^i}{r} \frac{1}{\gamma_{rr}},\\
+ *     \beta^i &= \left(\frac{2M}{M+r}\right)^2 \frac{X^i}{r}
+ *         \frac{1}{\gamma_{rr}},\\
  *     \partial_t \beta^i &= 0
  * \f}
  *
@@ -139,7 +142,7 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
   static constexpr Options::String help{
       "Schwarzschild black hole in Cartesian coordinates with harmonic gauge"};
 
-  HarmonicSchwarzschild(double mass, Center::type center,
+  HarmonicSchwarzschild(double mass, std::array<double, volume_dim> center,
                         const Options::Context& context = {});
 
   explicit HarmonicSchwarzschild(CkMigrateMessage* /*unused*/) {}
@@ -155,16 +158,9 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
   /*!
    * \brief Computes and returns spacetime quantities for a Schwarzschild black
    * hole in Cartesian coordinates with harmonic gauge at a specific position
-   * relative to the center of the black hole
    *
-   * \details Quantities returned are specified by `gr::AnalyticSolution::tags`.
-   * The position relative to the center of the black hole is defined
-   * as \f$X^i = \left(x^i - C^i\right)\f$, where \f$C^i\f$ is the Cartesian
-   * coordinates of the center of the black hole and \f$x^i\f$ is the
-   * Cartesian coordinates of the point where we're wanting to compute the
+   * \param x Cartesian coordinates of the position at which to compute
    * spacetime quantities
-   *
-   * \param x the position relative to the center of the black hole
    */
   template <typename DataType, typename Frame, typename... Tags>
   tuples::TaggedTuple<Tags...> variables(

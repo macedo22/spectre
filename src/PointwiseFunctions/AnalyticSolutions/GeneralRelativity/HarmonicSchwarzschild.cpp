@@ -4,14 +4,20 @@
 #include "PointwiseFunctions/AnalyticSolutions/GeneralRelativity/HarmonicSchwarzschild.hpp"
 
 #include <algorithm>
-#include <cmath>  // IWYU pragma: keep
+#include <array>
+#include <cmath>
 #include <cstddef>
 #include <ostream>
+#include <pup.h>
 #include <utility>
 
+#include "DataStructures/CachedTempBuffer.hpp"
 #include "DataStructures/DataBox/Prefixes.hpp"
-#include "DataStructures/DataVector.hpp"  // IWYU pragma: keep
+#include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/EagerMath/Determinant.hpp"
+#include "DataStructures/Tensor/Tensor.hpp"
+#include "Options/Options.hpp"
+#include "PointwiseFunctions/AnalyticSolutions/AnalyticSolution.hpp"
 #include "PointwiseFunctions/GeneralRelativity/ExtrinsicCurvature.hpp"
 #include "PointwiseFunctions/GeneralRelativity/Tags.hpp"
 #include "Utilities/ConstantExpressions.hpp"
@@ -22,7 +28,7 @@
 namespace gr::Solutions {
 
 HarmonicSchwarzschild::HarmonicSchwarzschild(
-    const double mass, HarmonicSchwarzschild::Center::type center,
+    const double mass, std::array<double, volume_dim> center,
     const Options::Context& context)
     : mass_(mass),
       // clang-tidy: do not std::move trivial types.
@@ -375,16 +381,16 @@ void HarmonicSchwarzschild::IntermediateComputer<DataType, Frame>::operator()(
     const gsl::not_null<tnsr::I<DataType, 3, Frame>*> shift,
     const gsl::not_null<CachedBuffer*> cache,
     gr::Tags::Shift<3, Frame, DataType> /*meta*/) const {
-  const auto& two_m_over_m_plus_r =
-      cache->get_var(*this, internal_tags::two_m_over_m_plus_r<DataType>{});
+  const auto& two_m_over_m_plus_r_squared = cache->get_var(
+      *this, internal_tags::two_m_over_m_plus_r_squared<DataType>{});
   const auto& x_over_r =
       cache->get_var(*this, internal_tags::x_over_r<DataType, Frame>{});
   const auto& one_over_spatial_metric_rr = cache->get_var(
       *this, internal_tags::one_over_spatial_metric_rr<DataType>{});
 
-  ::TensorExpressions::evaluate<ti_I>(
-      shift,
-      two_m_over_m_plus_r() * x_over_r(ti_I) * one_over_spatial_metric_rr());
+  ::TensorExpressions::evaluate<ti_I>(shift, two_m_over_m_plus_r_squared() *
+                                                 x_over_r(ti_I) *
+                                                 one_over_spatial_metric_rr());
 }
 
 template <typename DataType, typename Frame>
