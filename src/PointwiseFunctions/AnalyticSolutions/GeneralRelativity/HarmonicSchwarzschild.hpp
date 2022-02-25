@@ -826,9 +826,8 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
      */
     const HarmonicSchwarzschild& solution_;
     /*!
-     * \brief The position relative to the center of the black hole
-     *
-     * \details Defined as \f$X^i = \left(x^i - C^i\right)\f$, where \f$C^i\f$
+     * \brief Cartesian coordinates of the position at which to compute
+     * spacetime quantities
      */
     const tnsr::I<DataType, 3, Frame>& x_;
   };
