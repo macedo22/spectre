@@ -19,7 +19,6 @@
 #include "Helpers/PointwiseFunctions/AnalyticSolutions/GeneralRelativity/VerifyGrSolution.hpp"
 #include "Helpers/PointwiseFunctions/AnalyticSolutions/TestHelpers.hpp"
 #include "PointwiseFunctions/AnalyticSolutions/GeneralRelativity/HarmonicSchwarzschild.hpp"
-#include "PointwiseFunctions/GeneralRelativity/Christoffel.hpp"
 #include "PointwiseFunctions/GeneralRelativity/ExtrinsicCurvature.hpp"
 #include "PointwiseFunctions/GeneralRelativity/Tags.hpp"
 #include "Utilities/ConstantExpressions.hpp"
@@ -29,9 +28,6 @@
 // IWYU pragma: no_forward_declare Tags::deriv
 
 namespace {
-using Affine = domain::CoordinateMaps::Affine;
-using Affine3D = domain::CoordinateMaps::ProductOf3Maps<Affine, Affine, Affine>;
-
 // SpEC implementation of HarmonicSchwarzschild
 namespace spec {
 // Schwarzschild black hole of a t=const slice of time-harmonic
@@ -514,8 +510,10 @@ void test_einstein_solution() {
   }
 }
 
+// Check that the solution satisfies the time-harmonic condition:
+// eq 4.44 of \cite BaumgarteShapiro
 template <typename Frame, typename DataType>
-void test_harmonic_conditions_satisfied(const DataType used_for_size) {
+void test_time_harmonic_condition_satisfied(const DataType used_for_size) {
   // Parameters for HarmonicSchwarzschild solution
   const double mass = 1.21;
   const std::array<double, 3> center{{0.3, 0.1, -0.4}};
@@ -537,42 +535,10 @@ void test_harmonic_conditions_satisfied(const DataType used_for_size) {
                                                                     Frame>>(
           vars);
   const auto& shift = get<gr::Tags::Shift<3, Frame, DataType>>(vars);
-  const auto& d_shift =
-      get<typename gr::Solutions::HarmonicSchwarzschild::DerivShift<DataType,
-                                                                    Frame>>(
-          vars);
-  const auto& dt_shift =
-      get<Tags::dt<gr::Tags::Shift<3, Frame, DataType>>>(vars);
-  const auto& d_spatial_metric =
-      get<typename gr::Solutions::HarmonicSchwarzschild::DerivSpatialMetric<
-          DataType, Frame>>(vars);
   const auto& inverse_spatial_metric =
       get<gr::Tags::InverseSpatialMetric<3, Frame, DataType>>(vars);
   const auto& extrinsic_curvature =
       get<gr::Tags::ExtrinsicCurvature<3, Frame, DataType>>(vars);
-
-  tnsr::I<DataType, 3, Frame> x_minus_center{};
-  for (size_t i = 0; i < 3; ++i) {
-    x_minus_center.get(i) = x.get(i) - gsl::at(center, i);
-  }
-
-  const Scalar<DataType> r = magnitude(x_minus_center);
-  const Scalar<DataType> two_m_over_m_plus_r(2.0 * mass / (mass + get(r)));
-
-  const auto christoffel_second_kind =
-      gr::christoffel_second_kind(d_spatial_metric, inverse_spatial_metric);
-
-  // Check that eq 4.42 of \cite BaumgarteShapiro is satisfied:
-  //   \Gamma^i = 0
-  const auto expected_contracted_christoffel_second_kind =
-      make_with_value<tnsr::I<DataType, 3, Frame>>(used_for_size, 0.0);
-  (void)christoffel_second_kind;
-  (void)expected_contracted_christoffel_second_kind;
-  // TODO : fails
-  // CHECK_ITERABLE_APPROX(
-  //   TensorExpressions::evaluate<ti_I>(inverse_spatial_metric(ti_J, ti_K) *
-  //   christoffel_second_kind(ti_I, ti_j, ti_k)),
-  //   expected_contracted_christoffel_second_kind);
 
   // Check that eq 4.44 of \cite BaumgarteShapiro is satisfied:
   //   (\partial_t - \beta^j \partial_j)\alpha = -\alpha^2 K
@@ -581,48 +547,6 @@ void test_harmonic_conditions_satisfied(const DataType used_for_size) {
       TensorExpressions::evaluate(-square(lapse()) *
                                   extrinsic_curvature(ti_i, ti_j) *
                                   inverse_spatial_metric(ti_I, ti_J)));
-
-  // Check that eq 4.45 of \cite BaumgarteShapiro is satisfied:
-  //   (\partial_t - \beta^j \partial_j)\beta^i =
-  //     -\alpha^2(\gamma^{ij} \partial_j ln \alpha +
-  //     \gamma^{jk} \Gamma^i_{jk})
-  tnsr::i<DataType, 3, Frame> x_times_kronecker_delta{};
-  get<0>(x_times_kronecker_delta) = get<0>(x);
-  get<1>(x_times_kronecker_delta) = get<1>(x);
-  get<2>(x_times_kronecker_delta) = get<2>(x);
-
-  // \gamma_{rr}
-  const auto spatial_metric_rr = TensorExpressions::evaluate(
-      1.0 + two_m_over_m_plus_r() + square(two_m_over_m_plus_r()) +
-      cube(two_m_over_m_plus_r()));
-
-  // \partial_r \gamma_{rr}
-  const auto dr_spatial_metric_rr = TensorExpressions::evaluate(
-      (-0.5 * square(two_m_over_m_plus_r()) - cube(two_m_over_m_plus_r()) -
-       1.5 * pow<4>(two_m_over_m_plus_r())) /
-      mass);
-
-  // \partial_i \gamma_{rr} = \partial_r \gamma_{rr} * x_i / r
-  const auto di_spatial_metric_rr = TensorExpressions::evaluate<ti_i>(
-      dr_spatial_metric_rr() * x_times_kronecker_delta(ti_i) / r());
-
-  // \partial_i \alpha =
-  //     -0.5 * (1 / \gamma_{rr}) * \partial_i \gamma_{rr}
-  const auto d_ln_lapse = TensorExpressions::evaluate<ti_i>(
-      -0.5 * 1.0 / spatial_metric_rr() * di_spatial_metric_rr(ti_i));
-
-  (void)dt_shift;
-  (void)d_shift;
-  (void)d_ln_lapse;
-  // TODO : fails
-  // CHECK_ITERABLE_APPROX(
-  //     TensorExpressions::evaluate<ti_I>(dt_shift(ti_I) -
-  //                                       shift(ti_J) * d_shift(ti_j, ti_I)),
-  //     TensorExpressions::evaluate<ti_I>(
-  //         -square(lapse()) *
-  //         (inverse_spatial_metric(ti_I, ti_J) * d_ln_lapse(ti_j) +
-  //          inverse_spatial_metric(ti_J, ti_K) *
-  //              christoffel_second_kind(ti_I, ti_j, ti_k))));
 }
 }  // namespace
 
@@ -651,10 +575,10 @@ SPECTRE_TEST_CASE(
   test_einstein_solution<Frame::Grid>();
   test_einstein_solution<Frame::Inertial>();
 
-  test_harmonic_conditions_satisfied<Frame::Inertial>(DataVector(5));
-  test_harmonic_conditions_satisfied<Frame::Inertial>(0.0);
-  test_harmonic_conditions_satisfied<Frame::Grid>(DataVector(5));
-  test_harmonic_conditions_satisfied<Frame::Grid>(0.0);
+  test_time_harmonic_condition_satisfied<Frame::Inertial>(DataVector(5));
+  test_time_harmonic_condition_satisfied<Frame::Inertial>(0.0);
+  test_time_harmonic_condition_satisfied<Frame::Grid>(DataVector(5));
+  test_time_harmonic_condition_satisfied<Frame::Grid>(0.0);
 }
 
 // [[OutputRegex, Mass must be non-negative]]
