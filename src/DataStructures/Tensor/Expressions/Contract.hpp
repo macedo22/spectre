@@ -69,12 +69,12 @@ template <size_t NumContractedIndexPairs, size_t NumUncontractedIndices>
 constexpr std::pair<
     std::array<size_t, NumUncontractedIndices - NumContractedIndexPairs * 2>,
     std::array<std::pair<size_t, size_t>, NumContractedIndexPairs>>
-get_index_maps(
+get_index_transformation_and_contracted_pair_positions(
     const std::array<size_t, NumUncontractedIndices>& tensor_index_values) {
-  std::array<std::pair<size_t, size_t>, NumContractedIndexPairs>
-      contracted_index_map{};
   std::array<size_t, NumUncontractedIndices - NumContractedIndexPairs * 2>
-      not_contracted_index_map{};
+      index_transformation{};
+  std::array<std::pair<size_t, size_t>, NumContractedIndexPairs>
+      contracted_index_pair_positions{};
 
   std::array<bool, NumUncontractedIndices> index_mapping_set{};
   for (size_t i = 0; i < NumUncontractedIndices; i++) {
@@ -95,9 +95,11 @@ get_index_maps(
           if (opposite_value_to_find == gsl::at(tensor_index_values, j)) {
             // We found both the lower and upper version of a generic index in
             // the list of generic indices, so we return this pair's positions
-            gsl::at(contracted_index_map, contracted_map_index_to_assign)
+            gsl::at(contracted_index_pair_positions,
+                    contracted_map_index_to_assign)
                 .first = j;
-            gsl::at(contracted_index_map, contracted_map_index_to_assign)
+            gsl::at(contracted_index_pair_positions,
+                    contracted_map_index_to_assign)
                 .second = i;
             contracted_map_index_to_assign++;
             gsl::at(index_mapping_set, j) = true;
@@ -107,14 +109,13 @@ get_index_maps(
         }
       }
       if (not gsl::at(index_mapping_set, i)) {
-        gsl::at(not_contracted_index_map, not_contracted_map_index_to_assign) =
-            i;
+        gsl::at(index_transformation, not_contracted_map_index_to_assign) = i;
         not_contracted_map_index_to_assign--;
       }
     }
   }
 
-  return std::pair{not_contracted_index_map, contracted_index_map};
+  return std::pair{index_transformation, contracted_index_pair_positions};
 }
 
 template <typename UncontractedTensorExpression, typename DataType,
@@ -154,20 +155,24 @@ struct ContractedType<UncontractedTensorExpression, DataType,
   static constexpr inline std::pair<
       std::array<size_t, NumContractedIndices>,
       std::array<std::pair<size_t, size_t>, num_contracted_index_pairs>>
-      index_maps = get_index_maps<num_contracted_index_pairs,
-                                  num_uncontracted_tensor_indices>(
-          uncontracted_tensorindex_values);
+      index_transformation_and_contracted_pair_positions =
+          get_index_transformation_and_contracted_pair_positions<
+              num_contracted_index_pairs, num_uncontracted_tensor_indices>(
+              uncontracted_tensorindex_values);
 
-  static_assert(
-      ((... and
-        (indices_contractible<
-            typename tmpl::at_c<
-                tmpl::list<UncontractedIndices...>,
-                index_maps.second[IndexPairsToContractInts].first>,
-            typename tmpl::at_c<
-                tmpl::list<UncontractedIndices...>,
-                index_maps.second[IndexPairsToContractInts].second>>::value))),
-      "Cannot contract the requested indices.");
+  static_assert(((... and
+                  (indices_contractible<
+                      typename tmpl::at_c<
+                          tmpl::list<UncontractedIndices...>,
+                          index_transformation_and_contracted_pair_positions
+                              .second[IndexPairsToContractInts]
+                              .first>,
+                      typename tmpl::at_c<
+                          tmpl::list<UncontractedIndices...>,
+                          index_transformation_and_contracted_pair_positions
+                              .second[IndexPairsToContractInts]
+                              .second>>::value))),
+                "Cannot contract the requested indices.");
 
   static constexpr inline std::array<IndexType, num_uncontracted_tensor_indices>
       uncontracted_index_types = {{UncontractedIndices::index_type...}};
@@ -179,19 +184,31 @@ struct ContractedType<UncontractedTensorExpression, DataType,
             shifts{};
         for (size_t i = 0; i < num_contracted_index_pairs; i++) {
           gsl::at(shifts, i).first = static_cast<size_t>(
-              gsl::at(uncontracted_index_types,
-                      gsl::at(index_maps.second, i).first) ==
-                  IndexType::Spacetime and
-              gsl::at(uncontracted_tensorindex_values,
-                      gsl::at(index_maps.second, i).first) >=
-                  TensorIndex_detail::spatial_sentinel);
+              gsl::at(
+                  uncontracted_index_types,
+                  gsl::at(
+                      index_transformation_and_contracted_pair_positions.second,
+                      i)
+                      .first) == IndexType::Spacetime and
+              gsl::at(
+                  uncontracted_tensorindex_values,
+                  gsl::at(
+                      index_transformation_and_contracted_pair_positions.second,
+                      i)
+                      .first) >= TensorIndex_detail::spatial_sentinel);
           gsl::at(shifts, i).second = static_cast<size_t>(
-              gsl::at(uncontracted_index_types,
-                      gsl::at(index_maps.second, i).second) ==
-                  IndexType::Spacetime and
-              gsl::at(uncontracted_tensorindex_values,
-                      gsl::at(index_maps.second, i).second) >=
-                  TensorIndex_detail::spatial_sentinel);
+              gsl::at(
+                  uncontracted_index_types,
+                  gsl::at(
+                      index_transformation_and_contracted_pair_positions.second,
+                      i)
+                      .second) == IndexType::Spacetime and
+              gsl::at(
+                  uncontracted_tensorindex_values,
+                  gsl::at(
+                      index_transformation_and_contracted_pair_positions.second,
+                      i)
+                      .second) >= TensorIndex_detail::spatial_sentinel);
         }
         return shifts;
       }();
@@ -201,12 +218,20 @@ struct ContractedType<UncontractedTensorExpression, DataType,
 
   static constexpr size_t num_terms_summed = []() {
     size_t num_terms =
-        gsl::at(uncontracted_index_dims, gsl::at(index_maps.second, 0).first) -
+        gsl::at(
+            uncontracted_index_dims,
+            gsl::at(index_transformation_and_contracted_pair_positions.second,
+                    0)
+                .first) -
         gsl::at(contracted_index_shifts, 0).first;
     for (size_t i = 1; i < num_contracted_index_pairs; i++) {
-      num_terms *= gsl::at(uncontracted_index_dims,
-                           gsl::at(index_maps.second, i).first) -
-                   gsl::at(contracted_index_shifts, i).first;
+      num_terms *=
+          gsl::at(
+              uncontracted_index_dims,
+              gsl::at(index_transformation_and_contracted_pair_positions.second,
+                      i)
+                  .first) -
+          gsl::at(contracted_index_shifts, i).first;
     }
     return num_terms;
   }();
@@ -216,14 +241,17 @@ struct ContractedType<UncontractedTensorExpression, DataType,
 
   using symmetry =
       Symmetry<tmpl::at_c<UncontractedSymmList<UncontractedSymm...>,
-                          index_maps.first[ContractedInts]>::value...>;
+                          index_transformation_and_contracted_pair_positions
+                              .first[ContractedInts]>::value...>;
   using index_list =
       tmpl::list<tmpl::at_c<UncontractedIndexList<UncontractedIndices...>,
-                            index_maps.first[ContractedInts]>...>;
+                            index_transformation_and_contracted_pair_positions
+                                .first[ContractedInts]>...>;
 
   using tensorindex_list = tmpl::list<
       tmpl::at_c<UncontractedTensorIndexList<UncontractedTensorIndices...>,
-                 index_maps.first[ContractedInts]>...>;
+                 index_transformation_and_contracted_pair_positions
+                     .first[ContractedInts]>...>;
   using type = TensorExpression<UncontractedTensorExpression, DataType,
                                 symmetry, index_list, tensorindex_list>;
 };
@@ -288,10 +316,15 @@ struct TensorContract
   ///   (1) positions of indices in the resultant contracted tensor and their
   ///       positions in the operand uncontracted tensor
   ///   (2) positions of indices in the resultant contracted tensor... TODO
-  static constexpr inline std::pair<
-      std::array<size_t, NumContractedIndices>,
-      std::array<std::pair<size_t, size_t>, num_contracted_index_pairs>>
-      index_maps = contracted_type::index_maps;
+  static constexpr inline std::array<size_t, NumContractedIndices>
+      index_transformation =
+          contracted_type::index_transformation_and_contracted_pair_positions
+              .first;
+  static constexpr inline std::array<std::pair<size_t, size_t>,
+                                     num_contracted_index_pairs>
+      contracted_index_pair_positions =
+          contracted_type::index_transformation_and_contracted_pair_positions
+              .second;
   static constexpr inline std::array<std::pair<size_t, size_t>,
                                      num_contracted_index_pairs>
       contracted_index_shifts = contracted_type::contracted_index_shifts;
@@ -385,13 +418,16 @@ struct TensorContract
 
     // fill uncontracted indices
     for (size_t i = 0; i < num_tensor_indices; i++) {
-      uncontracted_multi_index[index_maps.first[i]] = contracted_multi_index[i];
+      uncontracted_multi_index[index_transformation[i]] =
+          contracted_multi_index[i];
     }
 
     // fill contracted indices
     for (size_t i = 0; i < num_contracted_index_pairs; i++) {
-      const size_t first_index_position_in_pair = index_maps.second[i].first;
-      const size_t second_index_position_in_pair = index_maps.second[i].second;
+      const size_t first_index_position_in_pair =
+          contracted_index_pair_positions[i].first;
+      const size_t second_index_position_in_pair =
+          contracted_index_pair_positions[i].second;
       uncontracted_multi_index[first_index_position_in_pair] =
           uncontracted_index_dims[first_index_position_in_pair] - 1;
       uncontracted_multi_index[second_index_position_in_pair] =
@@ -417,13 +453,16 @@ struct TensorContract
 
     // fill uncontracted indices
     for (size_t i = 0; i < num_tensor_indices; i++) {
-      uncontracted_multi_index[index_maps.first[i]] = contracted_multi_index[i];
+      uncontracted_multi_index[index_transformation[i]] =
+          contracted_multi_index[i];
     }
 
     // fill contracted indices
     for (size_t i = 0; i < num_contracted_index_pairs; i++) {
-      const size_t first_index_position_in_pair = index_maps.second[i].first;
-      const size_t second_index_position_in_pair = index_maps.second[i].second;
+      const size_t first_index_position_in_pair =
+          contracted_index_pair_positions[i].first;
+      const size_t second_index_position_in_pair =
+          contracted_index_pair_positions[i].second;
       uncontracted_multi_index[first_index_position_in_pair] =
           contracted_index_shifts[i].first;
       uncontracted_multi_index[second_index_position_in_pair] =
@@ -444,8 +483,10 @@ struct TensorContract
 
     size_t i = 0;
     while (i < num_contracted_index_pairs) {
-      const size_t current_index_first_position = index_maps.second[i].first;
-      const size_t current_index_second_position = index_maps.second[i].second;
+      const size_t current_index_first_position =
+          contracted_index_pair_positions[i].first;
+      const size_t current_index_second_position =
+          contracted_index_pair_positions[i].second;
       const size_t current_index_first_shift = contracted_index_shifts[i].first;
 
       // TODO : make the rest of this loop more elegant?
@@ -484,8 +525,10 @@ struct TensorContract
 
     size_t i = 0;
     while (i < num_contracted_index_pairs) {
-      const size_t current_index_first_position = index_maps.second[i].first;
-      const size_t current_index_second_position = index_maps.second[i].second;
+      const size_t current_index_first_position =
+          contracted_index_pair_positions[i].first;
+      const size_t current_index_second_position =
+          contracted_index_pair_positions[i].second;
 
       previous_uncontracted_multi_index[current_index_first_position]++;
       previous_uncontracted_multi_index[current_index_second_position]++;
