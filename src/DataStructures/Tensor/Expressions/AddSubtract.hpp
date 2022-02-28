@@ -357,10 +357,8 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   /// The number of arithmetic tensor operations done in the subtree for the
   /// right operand
   static constexpr size_t num_ops_right_child = T2::num_ops_subtree;
-  // TODO: update this because the leftmost path might not actually be the
-  // longest if a subtraction Addsub has a large right child
-  // This helps ensure the path from root to leftmost leaf is the longest
-  // when addition is being done
+  // This helps ensure we are minimizing breadth in the overall tree when we
+  // have addition (subtraction is not commutative)
   static_assert(Sign == -1 or num_ops_left_child >= num_ops_right_child,
                 "The left operand of an AddSub expression performing addition "
                 "should be a subtree with equal or more tensor operations than "
@@ -440,8 +438,8 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   /// expression's subtree
   ///
   /// \details Unless the right child is a `NumberAsExpression` leaf, recurse
-  /// down the right child's subtree since `AddSub`s are constructed with the
-  /// larger subtree as the left operand
+  /// down the right child's subtree since `AddSub`s that perform addition are
+  /// constructed with the larger subtree as the left operand
   SPECTRE_ALWAYS_INLINE auto get_used_for_size() const {
     if constexpr (not std::is_base_of_v<NumberAsExpression, T2>) {
       return t2_.get_used_for_size();
@@ -613,67 +611,153 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
                            get_op2_multi_index(result_multi_index));
   }
 
-  SPECTRE_ALWAYS_INLINE void add_or_subtract_primary_fork(
+  /// \brief Helper for evaluating the LHS Tensor's result component at this
+  /// subtree by evaluating the two operand's subtrees separately and adding or
+  /// subtracting them
+  ///
+  /// \details
+  /// The left and right operands' subtrees are evaluated successively with
+  /// two separate assignments to the LHS result component. Since `DataVector`
+  /// expression runtime scales poorly with increased number of operations,
+  /// evaluating the two expression subtrees separately like this is beneficial
+  /// when at least one of the subtrees contains a large number of operations.
+  /// Instead of evaluating a larger expression with their combined total number
+  /// of operations, we evaluate two smaller ones.
+  ///
+  /// This function also differs from `add_or_subtract` in that it takes into
+  /// account whether we have already computed part of the result component at a
+  /// lower subtree. In recursively computing this sum/difference, the current
+  /// result component will be substituted in for the most recent (highest)
+  /// subtree below it that has already been evaluated.
+  ///
+  /// \param result_component the LHS tensor component to evaluate
+  /// \param op1_multi_index the multi-index of the component of the first
+  /// operand of the sum or difference to evaluate
+  /// \param op2_multi_index the multi-index of the component of the second
+  /// operand of the sum or difference to evaluate
+  SPECTRE_ALWAYS_INLINE void add_or_subtract_primary_children(
       type& result_component,
       const std::array<size_t, num_tensor_indices>& op1_multi_index,
       const std::array<size_t, num_tensor_indices_op2>& op2_multi_index) const {
     if constexpr (Sign == 1) {
+      // We're performing addition
       if constexpr (is_primary_end) {
         (void)op1_multi_index;
+        // We've already computed the whole child subtree on the primary path,
+        // so just add the result of the other child's subtree to the current
+        // result
         result_component += t2_.get(op2_multi_index);
       } else {
-        if constexpr (primary_child_subtree_contains_primary_start) {
-          result_component = t1_.get_primary(result_component, op1_multi_index);
-        } else {
-          result_component = t1_.get(op1_multi_index);
-        }
+        // We haven't yet evaluated the whole subtree of the primary child, so
+        // first assign the result component to be the result of computing the
+        // primary child's subtree
+        result_component = t1_.get_primary(result_component, op1_multi_index);
+        // Now that the primary child's subtree has been computed, add the
+        // result of evaluating the other child's subtree to the current result
         result_component += t2_.get(op2_multi_index);
       }
     } else {
+      // We're performing subtraction
       if constexpr (is_primary_end) {
         (void)op1_multi_index;
+        // We've already computed the whole child subtree on the primary path,
+        // so just subtract the result of the other child's subtree from the
+        // current result
         result_component -= t2_.get(op2_multi_index);
       } else {
-        if constexpr (primary_child_subtree_contains_primary_start) {
-          result_component = t1_.get_primary(result_component, op1_multi_index);
-        } else {
-          result_component = t1_.get(op1_multi_index);
-        }
+        // We haven't yet evaluated the whole subtree of the primary child, so
+        // first assign the result component to be the result of computing the
+        // primary child's subtree
+        result_component = t1_.get_primary(result_component, op1_multi_index);
+        // Now that the primary child's subtree has been computed, subtract the
+        // result of evaluating the other child's subtree from the current
+        // result
         result_component -= t2_.get(op2_multi_index);
       }
     }
   }
 
+  /// \brief Evaluate the LHS Tensor's result component at this subtree by
+  /// evaluating the two operand's subtrees separately and adding or subtracting
+  /// them
+  ///
+  /// \details
+  /// See `add_or_subtract_primary_children` for more details
+  ///
+  /// \param result_component the LHS tensor component to evaluate
+  /// \param result_multi_index the multi-index of the component of the result
+  /// tensor to evaluate
   SPECTRE_ALWAYS_INLINE void evaluate_primary_children(
       type& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
-    add_or_subtract_primary_fork(result_component, result_multi_index,
-                                 get_op2_multi_index(result_multi_index));
+    add_or_subtract_primary_children(result_component, result_multi_index,
+                                     get_op2_multi_index(result_multi_index));
   }
 
+  /// \brief Helper function for returning the sum of or difference between
+  /// components at given multi-indices from both operands of the expression
+  ///
+  /// \details
+  /// This function differs from `add_or_subtract` in that it takes into account
+  /// whether we have already computed part of the result component at a lower
+  /// subtree. In recursively computing this sum/difference, the current result
+  /// component will be substituted in for the most recent (highest) subtree
+  /// below it that has already been evaluated.
+  ///
+  /// \param op1_multi_index the multi-index of the component of the first
+  /// operand
+  /// \param op2_multi_index the multi-index of the component of the second
+  /// operand
+  /// \return the sum of or difference between the two components' values
   SPECTRE_ALWAYS_INLINE decltype(auto) add_or_subtract_primary(
       const type& result_component,
       const std::array<size_t, num_tensor_indices>& op1_multi_index,
       const std::array<size_t, num_tensor_indices_op2>& op2_multi_index) const {
     if constexpr (Sign == 1) {
+      // We're performing addition
       if constexpr (is_primary_end) {
         (void)op1_multi_index;
+        // We've already computed the whole child subtree on the primary path,
+        // so just add the result of the other child's subtree to the current
+        // result
         return result_component + t2_.get(op2_multi_index);
       } else {
+        // We haven't yet evaluated the whole subtree of the primary child,
+        // so return the sum of that subtree and the other
         return t1_.get_primary(result_component, op1_multi_index) +
                t2_.get(op2_multi_index);
       }
     } else {
+      // We're performing subtraction
       if constexpr (is_primary_end) {
         (void)op1_multi_index;
+        // We've already computed the whole child subtree on the primary path,
+        // so just subtract the result of the other child's subtree from the
+        // current result
         return result_component - t2_.get(op2_multi_index);
       } else {
+        // We haven't yet evaluated the whole subtree of the primary child,
+        // so return the difference between that subtree and the other
         return t1_.get_primary(result_component, op1_multi_index) -
                t2_.get(op2_multi_index);
       }
     }
   }
 
+  /// \brief Return the value of the component at the given multi-index of the
+  /// tensor resulting from addition or subtraction
+  ///
+  /// \details
+  /// This function differs from `get` in that it takes into account whether we
+  /// have already computed part of the result component at a lower subtree.
+  /// In recursively computing this sum/difference, the current result component
+  /// will be substituted in for the most recent (highest) subtree below it that
+  /// has already been evaluated.
+  ///
+  /// \param result_multi_index the multi-index of the component of the result
+  /// tensor to retrieve
+  /// \return the value of the component at `result_multi_index` in the result
+  /// tensor
   SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
       const type& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
@@ -681,24 +765,37 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
                                    get_op2_multi_index(result_multi_index));
   }
 
+  /// \brief Successively evaluate the LHS Tensor's result component at each
+  /// leg in this expression's subtree
+  ///
+  /// \param result_component the LHS tensor component to evaluate
+  /// \param result_multi_index the multi-index of the component of the result
+  /// tensor to evaluate
   SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
       type& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     if constexpr (primary_child_subtree_contains_primary_start) {
+      // The primary child's subtree contains at least one leg, so recurse down
+      // and evaluate that first
       t1_.evaluate_primary_subtree(result_component, result_multi_index);
     }
 
     if constexpr (is_primary_start) {
+      // We want to evaluate the subtree for this expression
       if constexpr (evaluate_children_separately) {
+        // Evaluate operand's subtrees separately
         evaluate_primary_children(result_component, result_multi_index);
       } else {
+        // Evaluate whole subtree as one expression
         result_component = get_primary(result_component, result_multi_index);
       }
     }
   }
 
  private:
+  /// Left operand
   T1 t1_;
+  /// Right operand
   T2 t2_;
 };
 }  // namespace TensorExpressions

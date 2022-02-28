@@ -103,10 +103,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// The number of arithmetic tensor operations done in the subtree for the
   /// right operand
   static constexpr size_t num_ops_right_child = T2::num_ops_subtree;
-  // TODO : update this here and in AddSub and TensorExpression because the
-  // leftmost path might not actually be the longest if a subtraction AddSub
-  // has a large right child
-  // This helps ensure the path from the root to leftmost leaf is the longest
+  // This helps ensure we are minimizing breadth in the overall tree
   static_assert(num_ops_left_child >= num_ops_right_child,
                 "The left operand should be a subtree with equal or more "
                 "tensor operations than the right operand's subtree.");
@@ -379,7 +376,9 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   }
 
  private:
+  /// Left operand
   T1 t1_;
+  /// Right operand
   T2 t2_;
 };
 }  // namespace TensorExpressions
