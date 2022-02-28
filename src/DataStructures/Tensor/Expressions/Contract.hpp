@@ -942,7 +942,7 @@ struct TensorContract
           const std::array<size_t, num_uncontracted_tensor_indices>
               current_multi_index = next_leg_starting_multi_index;
           result_component +=
-              compute_contraction_primary_stop_at_branches<leg_length - 2>(
+              compute_contraction_primary_stop_at_branches<last_leg_length - 2>(
                   t_, current_multi_index, next_leg_starting_multi_index);
         }
       }  // we only have full-length legs, no leftovers
