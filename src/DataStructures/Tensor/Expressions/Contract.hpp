@@ -425,10 +425,12 @@ struct TensorContract
   }();
   /// After dividing up the contraction subtree into legs, the number of legs
   /// whose length is equal to `leg_length`
-  static constexpr size_t num_full_legs = num_terms_summed / leg_length;
+  static constexpr size_t num_full_legs =
+      leg_length == 0 ? num_terms_summed : num_terms_summed / leg_length;
   /// After dividing up the contraction subtree into legs of even length, the
   /// number of terms we still have left to sum
-  static constexpr size_t last_leg_length = num_terms_summed % leg_length;
+  static constexpr size_t last_leg_length =
+      leg_length == 0 ? 0 : num_terms_summed % leg_length;
   /// When evaluating along a primary path, whether each term's subtrees should
   /// be evaluated separately. Since `DataVector` expression runtime scales
   /// poorly with increased number of operations, evaluating individual terms'
@@ -926,8 +928,8 @@ struct TensorContract
         // first get the remainder if there is one
         if constexpr (not is_primary_end) {
           // get remainder
-            result_component =
-                t_.get_primary(result_component, current_multi_index);
+          result_component =
+              t_.get_primary(result_component, lowest_multi_index);
         }
 
         // next add up all the full-length legs
@@ -941,8 +943,7 @@ struct TensorContract
         // already took care of
         if constexpr (last_leg_length > 1) {
           result_component +=
-              compute_contraction_primary_stop_at_branches<leg_length -
-                                                           last_leg_length - 1>(
+              compute_contraction_primary_stop_at_branches<leg_length - 2>(
                   t_, get_next_highest_multi_index_to_sum(current_multi_index),
                   current_multi_index);
         }
