@@ -846,7 +846,8 @@ struct TensorContract
              t.get(current_multi_index);
     } else {
       // We only have one final component to sum
-      starting_multi_index = current_multi_index;
+      starting_multi_index =
+          get_next_highest_multi_index_to_sum(current_multi_index);
       return t.get(current_multi_index);
     }
   }
@@ -934,18 +935,20 @@ struct TensorContract
 
         // next add up all the full-length legs
         for (size_t i = 0; i < num_full_legs; i++) {
+          const std::array<size_t, num_uncontracted_tensor_indices> copy =
+              current_multi_index;
           result_component +=
               compute_contraction_primary_stop_at_branches<leg_length - 1>(
-                  t_, get_next_highest_multi_index_to_sum(current_multi_index),
-                  current_multi_index);
+                  t_, copy, current_multi_index);
         }
         // lastly, get rest of the last leg if it's not just the one term we
         // already took care of
         if constexpr (last_leg_length > 1) {
+          const std::array<size_t, num_uncontracted_tensor_indices> copy2 =
+              current_multi_index;
           result_component +=
               compute_contraction_primary_stop_at_branches<leg_length - 2>(
-                  t_, get_next_highest_multi_index_to_sum(current_multi_index),
-                  current_multi_index);
+                  t_, copy2, current_multi_index);
         }
       }  // we only have full-length legs, no leftovers
       else {
@@ -953,24 +956,27 @@ struct TensorContract
         if constexpr (not is_primary_end) {
           // get remainder
           result_component =
-              t_.get_primary(result_component, current_multi_index);
+              t_.get_primary(result_component, lowest_multi_index);
         }
 
         // next add up all the full-length legs
         for (size_t i = 1; i < num_full_legs; i++) {
+          const std::array<size_t, num_uncontracted_tensor_indices> copy =
+              current_multi_index;
+
           result_component +=
               compute_contraction_primary_stop_at_branches<leg_length - 1>(
-                  t_, get_next_highest_multi_index_to_sum(current_multi_index),
-                  current_multi_index);
+                  t_, copy, current_multi_index);
         }
 
         // lastly, get rest of the last leg if it's not just the one term we
         // already took care of
         if constexpr (leg_length > 1) {
+          const std::array<size_t, num_uncontracted_tensor_indices> copy2 =
+              current_multi_index;
           result_component +=
               compute_contraction_primary_stop_at_branches<leg_length - 2>(
-                  t_, get_next_highest_multi_index_to_sum(current_multi_index),
-                  current_multi_index);
+                  t_, copy2, current_multi_index);
         }
       }
     }
