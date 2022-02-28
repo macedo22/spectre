@@ -255,23 +255,39 @@ struct TensorContract
       (tmpl::size<Symm>::value - NumContractedIndices) / 2>;
   using new_type = typename contracted_type::type;
 
+  // === Index properties ===
+  /// The type of the data being stored in the result of the expression
   using type = X;
+  /// The ::Symmetry of the result of the expression
   using symmetry = typename new_type::symmetry;
+  /// The list of \ref SpacetimeIndex "TensorIndexType"s of the result of the
+  /// expression
   using index_list = typename new_type::index_list;
+  /// The list of generic `TensorIndex`s of the result of the expression
   using args_list = typename new_type::args_list;
+  /// The number of tensor indices in the result of the expression
   static constexpr size_t num_tensor_indices = NumContractedIndices;
+  /// The number of tensor indices in the operand expression being contracted
   static constexpr size_t num_uncontracted_tensor_indices =
       tmpl::size<Symm>::value;
   // TODO : maybe put in static_asserts in ContractedType to check
   // for consistency of these num_X_indices variables
+  /// The number of tensor indices in the operand expression that will be
+  /// contracted
   static constexpr size_t num_indices_to_contract =
       contracted_type::num_indices_to_contract;
   static_assert(num_indices_to_contract > 0,
                 "There are no indices to contract that were found.");
   static_assert(num_indices_to_contract % 2 == 0,
                 "Cannot contract an odd number of indices.");
+  // The number of tensor index pairs in the operand expression that will be
+  /// contracted
   static constexpr size_t num_contracted_index_pairs =
       contracted_type::num_contracted_index_pairs;
+  /// Tensor index mappings between:
+  ///   (1) positions of indices in the resultant contracted tensor and their
+  ///       positions in the operand uncontracted tensor
+  ///   (2) positions of indices in the resultant contracted tensor... TODO
   static constexpr inline std::pair<
       std::array<size_t, NumContractedIndices>,
       std::array<std::pair<size_t, size_t>, num_contracted_index_pairs>>
