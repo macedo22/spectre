@@ -387,9 +387,9 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   }
 
  private:
-  /// Left operand
+  /// Left operand expression
   T1 t1_;
-  /// Right operand
+  /// Right operand expression
   T2 t2_;
 };
 }  // namespace TensorExpressions

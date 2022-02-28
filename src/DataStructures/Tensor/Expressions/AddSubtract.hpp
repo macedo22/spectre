@@ -704,6 +704,7 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   /// component will be substituted in for the most recent (highest) subtree
   /// below it that has already been evaluated.
   ///
+  /// \param result_component the LHS tensor component to evaluate
   /// \param op1_multi_index the multi-index of the component of the first
   /// operand
   /// \param op2_multi_index the multi-index of the component of the second
@@ -755,6 +756,7 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   /// will be substituted in for the most recent (highest) subtree below it that
   /// has already been evaluated.
   ///
+  /// \param result_component the LHS tensor component to evaluate
   /// \param result_multi_index the multi-index of the component of the result
   /// tensor to retrieve
   /// \return the value of the component at `result_multi_index` in the result
@@ -801,9 +803,9 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   }
 
  private:
-  /// Left operand
+  /// Left operand expression
   T1 t1_;
-  /// Right operand
+  /// Right operand expression
   T2 t2_;
 };
 }  // namespace TensorExpressions

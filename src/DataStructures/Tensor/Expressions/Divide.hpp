@@ -188,6 +188,7 @@ struct Divide : public TensorExpression<
   /// be substituted in for the most recent (highest) subtree below it that has
   /// already been evaluated.
   ///
+  /// \param result_component the LHS tensor component to evaluate
   /// \param result_multi_index the multi-index of the component of the quotient
   //// tensor to retrieve
   /// \return the value of the component in the quotient tensor at
