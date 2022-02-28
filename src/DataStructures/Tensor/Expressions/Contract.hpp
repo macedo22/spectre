@@ -179,11 +179,11 @@ struct ContractedType<UncontractedTensorExpression, DataType,
 
   static constexpr inline std::array<std::pair<size_t, size_t>,
                                      num_contracted_index_pairs>
-      contracted_index_shifts = []() {
+      contracted_index_first_values = []() {
         std::array<std::pair<size_t, size_t>, num_contracted_index_pairs>
-            shifts{};
+            first_values{};
         for (size_t i = 0; i < num_contracted_index_pairs; i++) {
-          gsl::at(shifts, i).first = static_cast<size_t>(
+          gsl::at(first_values, i).first = static_cast<size_t>(
               gsl::at(
                   uncontracted_index_types,
                   gsl::at(
@@ -196,7 +196,7 @@ struct ContractedType<UncontractedTensorExpression, DataType,
                       index_transformation_and_contracted_pair_positions.second,
                       i)
                       .first) >= TensorIndex_detail::spatial_sentinel);
-          gsl::at(shifts, i).second = static_cast<size_t>(
+          gsl::at(first_values, i).second = static_cast<size_t>(
               gsl::at(
                   uncontracted_index_types,
                   gsl::at(
@@ -210,7 +210,7 @@ struct ContractedType<UncontractedTensorExpression, DataType,
                       i)
                       .second) >= TensorIndex_detail::spatial_sentinel);
         }
-        return shifts;
+        return first_values;
       }();
 
   static constexpr inline std::array<size_t, num_uncontracted_tensor_indices>
@@ -223,7 +223,7 @@ struct ContractedType<UncontractedTensorExpression, DataType,
             gsl::at(index_transformation_and_contracted_pair_positions.second,
                     0)
                 .first) -
-        gsl::at(contracted_index_shifts, 0).first;
+        gsl::at(contracted_index_first_values, 0).first;
     for (size_t i = 1; i < num_contracted_index_pairs; i++) {
       num_terms *=
           gsl::at(
@@ -231,7 +231,7 @@ struct ContractedType<UncontractedTensorExpression, DataType,
               gsl::at(index_transformation_and_contracted_pair_positions.second,
                       i)
                   .first) -
-          gsl::at(contracted_index_shifts, i).first;
+          gsl::at(contracted_index_first_values, i).first;
     }
     return num_terms;
   }();
@@ -298,8 +298,6 @@ struct TensorContract
   /// The number of tensor indices in the operand expression being contracted
   static constexpr size_t num_uncontracted_tensor_indices =
       tmpl::size<Symm>::value;
-  // TODO : maybe put in static_asserts in ContractedType to check
-  // for consistency of these num_X_indices variables
   /// The number of tensor indices in the operand expression that will be
   /// contracted
   static constexpr size_t num_indices_to_contract =
@@ -312,65 +310,111 @@ struct TensorContract
   /// contracted
   static constexpr size_t num_contracted_index_pairs =
       contracted_type::num_contracted_index_pairs;
-  /// Tensor index mappings between:
-  ///   (1) positions of indices in the resultant contracted tensor and their
-  ///       positions in the operand uncontracted tensor
-  ///   (2) positions of indices in the resultant contracted tensor... TODO
+  /// Mapping from the positions of indices in the resultant contracted tensor
+  /// to their positions in the operand uncontracted tensor
   static constexpr inline std::array<size_t, NumContractedIndices>
       index_transformation =
           contracted_type::index_transformation_and_contracted_pair_positions
               .first;
+  /// Positions of the index pairs in the operand uncontracted tensor that we
+  /// wish to contract
   static constexpr inline std::array<std::pair<size_t, size_t>,
                                      num_contracted_index_pairs>
       contracted_index_pair_positions =
           contracted_type::index_transformation_and_contracted_pair_positions
               .second;
+  /// First concrete values of contracted indices to sum. This is to handle
+  /// cases when we have generic spatial `TensorIndex`s used for spacetime
+  /// indices, as the first concrete index value to contract will be 1 (first
+  /// spatial index) instead of 0 (the time index). Contracted index pairs will
+  /// have different "starting" concrete indices when one index in the pair is a
+  /// spatial spacetime index and the other is not.
   static constexpr inline std::array<std::pair<size_t, size_t>,
                                      num_contracted_index_pairs>
-      contracted_index_shifts = contracted_type::contracted_index_shifts;
+      contracted_index_first_values =
+          contracted_type::contracted_index_first_values;
+  /// The dimensions of the indices in the uncontracted operand expression
   static constexpr inline std::array<size_t, num_uncontracted_tensor_indices>
       uncontracted_index_dims = contracted_type::uncontracted_index_dims;
+  /// The number of terms to sum for this expression's contraction
   static constexpr size_t num_terms_summed = contracted_type::num_terms_summed;
 
+  // === Arithmetic tensor operations properties ===
+  /// The number of arithmetic tensor operations done in the subtree for the
+  /// left operand
   static constexpr size_t num_ops_left_child =
       T::num_ops_subtree * num_terms_summed + num_terms_summed - 1;
+  /// The number of arithmetic tensor operations done in the subtree for the
+  /// right operand. This is 0 because this expression represents a unary
+  /// operation.
   static constexpr size_t num_ops_right_child = 0;
+  /// The total number of arithmetic tensor operations done in this expression's
+  /// whole subtree
   static constexpr size_t num_ops_subtree = num_ops_left_child;
 
+  // === Properties for splitting up subexpressions along the primary path ===
+  // These defintiions only have meaning if this expression actually ends up
+  // being along the primary path that is taken when evaluating the whole tree.
+  // See documentation for `TensorExpression` for more details.
+  /// If on the primary path, whether or not the expression is an ending point
+  /// of a leg
   static constexpr bool is_primary_end = T::is_primary_start;
+  /// If on the primary path, this is the remaining number of arithmetic tensor
+  /// operations that need to be done in the subtree of the child along the
+  /// primary path, given that we will have already computed the whole subtree
+  /// at the next lowest leg's starting point.
   static constexpr size_t num_ops_to_evaluate_primary_left_child =
       is_primary_end
           ? num_ops_subtree - T::num_ops_subtree
           : T::num_ops_subtree * (num_terms_summed - 1) +
                 T::num_ops_to_evaluate_primary_subtree + num_terms_summed - 1;
+  /// If on the primary path, this is the remaining number of arithmetic tensor
+  /// operations that need to be done in the right operand's subtree. No
+  /// splitting is currently done, so this is just `num_ops_right_child`.
   static constexpr size_t num_ops_to_evaluate_primary_right_child =
       num_ops_right_child;
+  /// If on the primary path, this is the remaining number of arithmetic tensor
+  /// operations that need to be done for this expression's subtree, given that
+  /// we will have already computed the subtree at the next lowest leg's
+  /// starting point
   static constexpr size_t num_ops_to_evaluate_primary_subtree =
       num_ops_to_evaluate_primary_left_child +
       num_ops_to_evaluate_primary_right_child;
+  /// If on the primary path, whether or not the expression is a starting point
+  /// of a leg
   static constexpr bool is_primary_start =
       num_ops_to_evaluate_primary_subtree >
+      // Multiply by 2 because each term has a + and * operation, while other
+      // arithmetic expression types do one operation
       2 * detail::max_num_ops_in_sub_expression<type>;
-
+  /// If on the primary path, whether or not the expression's child along the
+  /// primary path is a subtree that contains a starting point of a leg along
+  /// the primary path
   static constexpr bool primary_child_subtree_contains_primary_start =
       T::primary_subtree_contains_primary_start;
+  /// If on the primary path, whether or not this subtree contains a starting
+  /// point of a leg along the primary path
   static constexpr bool primary_subtree_contains_primary_start =
       is_primary_start or primary_child_subtree_contains_primary_start;
-
+  /// Number of arithmetic tensor operations done in the subtree of the operand
+  /// expression being contracted
   static constexpr size_t num_ops_subexpression = T::num_ops_subtree;
-  // compute how often to stop
+  /// In the subtree for this contraction, how many terms we sum together for
+  /// each leg of the contraction
   static constexpr size_t leg_length = []() {
-    // if we're not even stopping, leg_length is all the terms
     if constexpr (not is_primary_start) {
+      // If we're not even stopping at the beginning of the contraction, it's
+      // because there weren't enough terms to justify any splitting, so the
+      // leg_length is just the total number of terms to sum
       return num_terms_summed;
     }
-    // if the subexpression itself has more than the max # of ops
     else if constexpr (num_ops_subexpression >=
                        detail::max_num_ops_in_sub_expression<type>) {
+      // If the subexpression itself has more than the max # of ops
       return 0;
     }
-    // otherwise, find how many terms to sum at each stop
     else {
+      // Otherwise, find how many terms to sum in each leg
       size_t length = 1;
       while (2 * (length * (num_ops_subexpression + 1) - 1) <=
              detail::max_num_ops_in_sub_expression<type>) {
@@ -379,15 +423,18 @@ struct TensorContract
       return length;
     }
   }();
-
+  /// After dividing up the contraction subtree into legs, the number of legs
+  /// whose length is equal to `leg_length`
   static constexpr size_t num_full_legs = num_terms_summed / leg_length;
+  /// After dividing up the contraction subtree into legs of even length, the
+  /// number of terms we still have left to sum
   static constexpr size_t last_leg_length = num_terms_summed % leg_length;
-
-  // make stops be forks if even the subexpression itself has more than the max
-  // # of ops
-  static constexpr bool stops_are_forks = leg_length == 0;
-  // make stops branches if not forks and vice versa
-  static constexpr bool stops_are_branches = not stops_are_forks;
+  /// When evaluating along a primary path, whether each term's subtrees should
+  /// be evaluated separately. Since `DataVector` expression runtime scales
+  /// poorly with increased number of operations, evaluating individual terms'
+  /// subtrees separately like this is beneficial when each term, itself,
+  /// involves many tensor operations.
+  static constexpr bool evaluate_terms_separately = leg_length == 0;
 
   explicit TensorContract(
       const TensorExpression<T, X, Symm, IndexList, ArgsList>& t)
@@ -404,153 +451,293 @@ struct TensorContract
     }
   }
 
+  /// \brief Retrieve a component of a `TensorAsExpression` leaf node in this
+  /// expression's subtree
   SPECTRE_ALWAYS_INLINE auto get_used_for_size() const {
     return t_.get_used_for_size();
   }
 
+  /// \brief Return the highest multi-index between the components being summed
+  /// in the contraction
+  ///
+  /// \details
+  /// Example:
+  /// We have expression `R(ti_A, ti_b, ti_a)` to represent the contraction
+  /// \f$L_b = R^{a}{}_{ba}\f$. If the `contracted_multi_index` is `{1}`, which
+  /// represents \f$L_1 = R^{a}{}_{1a}\f$, and the dimension of \f$a\f$ is 3,
+  /// then we will need to sum the following terms: \f$R^{0}{}_{10}\f$,
+  /// \f$R^{1}{}_{11}\f$, and \f$R^{2}{}_{12}\f$. Between the terms being
+  /// summed, the multi-index whose values are the largest is
+  /// \f$R^{2}{}_{12}\f$, so this function would return `{2, 1, 2}`.
+  ///
+  /// \param contracted_multi_index the multi-index of a component of the
+  /// contracted expression
+  /// \return the highest multi-index between the components being summed in
+  /// the contraction
   SPECTRE_ALWAYS_INLINE static constexpr std::array<
       size_t, num_uncontracted_tensor_indices>
-  get_first_index_to_sum(
+  get_highest_multi_index_to_sum(
       const std::array<size_t, num_tensor_indices>& contracted_multi_index) {
     // Initialize with placeholders for debugging
-    auto uncontracted_multi_index = make_array<num_uncontracted_tensor_indices>(
+    auto highest_multi_index = make_array<num_uncontracted_tensor_indices>(
         std::numeric_limits<size_t>::max());
 
-    // fill uncontracted indices
+    // Fill uncontracted indices
     for (size_t i = 0; i < num_tensor_indices; i++) {
-      uncontracted_multi_index[index_transformation[i]] =
-          contracted_multi_index[i];
+      gsl::at(highest_multi_index, gsl::at(index_transformation, i)) =
+          gsl::at(contracted_multi_index, i);
     }
 
-    // fill contracted indices
+    // Fill contracted indices
     for (size_t i = 0; i < num_contracted_index_pairs; i++) {
       const size_t first_index_position_in_pair =
-          contracted_index_pair_positions[i].first;
+          gsl::at(contracted_index_pair_positions, i).first;
       const size_t second_index_position_in_pair =
-          contracted_index_pair_positions[i].second;
-      uncontracted_multi_index[first_index_position_in_pair] =
-          uncontracted_index_dims[first_index_position_in_pair] - 1;
-      uncontracted_multi_index[second_index_position_in_pair] =
-          uncontracted_index_dims[second_index_position_in_pair] - 1;
+          gsl::at(contracted_index_pair_positions, i).second;
+      gsl::at(highest_multi_index, first_index_position_in_pair) =
+          gsl::at(uncontracted_index_dims, first_index_position_in_pair) - 1;
+      gsl::at(highest_multi_index, second_index_position_in_pair) =
+          gsl::at(uncontracted_index_dims, second_index_position_in_pair) - 1;
     }
 
-    return uncontracted_multi_index;
+    return highest_multi_index;
   }
 
-  // TODO : terrible lazy hack, do something better to get last index
+  /// \brief Return the lowest multi-index between the components being summed
+  /// in the contraction
+  ///
+  /// \details
+  /// Example:
+  /// We have expression `R(ti_A, ti_b, ti_a)` to represent the contraction
+  /// \f$L_b = R^{a}{}_{ba}\f$. If the `contracted_multi_index` is `{1}`, which
+  /// represents \f$L_1 = R^{a}{}_{1a}\f$, and the dimension of \f$a\f$ is 3,
+  /// then we will need to sum the following terms: \f$R^{0}{}_{10}\f$,
+  /// \f$R^{1}{}_{11}\f$, and \f$R^{2}{}_{12}\f$. Between the terms being
+  /// summed, the multi-index whose values are the smallest is
+  /// \f$R^{0}{}_{10}\f$, so this function would return `{0, 1, 0}`.
+  ///
+  /// \param contracted_multi_index the multi-index of a component of the
+  /// contracted expression
+  /// \return the lowest multi-index between the components being summed in
+  /// the contraction
   SPECTRE_ALWAYS_INLINE static constexpr std::array<
       size_t, num_uncontracted_tensor_indices>
-  get_last_index_to_sum(
+  get_lowest_multi_index_to_sum(
       const std::array<size_t, num_tensor_indices>& contracted_multi_index) {
     // Initialize with placeholders for debugging
-    auto uncontracted_multi_index = make_array<num_uncontracted_tensor_indices>(
+    auto lowest_multi_index = make_array<num_uncontracted_tensor_indices>(
         std::numeric_limits<size_t>::max());
 
-    // set placeholders for debugging
-    for (size_t i = 0; i < num_uncontracted_tensor_indices; i++) {
-      uncontracted_multi_index[i] = std::numeric_limits<size_t>::max();
-    }
-
-    // fill uncontracted indices
+    // Fill uncontracted indices
     for (size_t i = 0; i < num_tensor_indices; i++) {
-      uncontracted_multi_index[index_transformation[i]] =
-          contracted_multi_index[i];
+      gsl::at(lowest_multi_index, gsl::at(index_transformation, i)) =
+          gsl::at(contracted_multi_index, i);
     }
 
-    // fill contracted indices
+    // Fill contracted indices
     for (size_t i = 0; i < num_contracted_index_pairs; i++) {
       const size_t first_index_position_in_pair =
-          contracted_index_pair_positions[i].first;
+          gsl::at(contracted_index_pair_positions, i).first;
       const size_t second_index_position_in_pair =
-          contracted_index_pair_positions[i].second;
-      uncontracted_multi_index[first_index_position_in_pair] =
-          contracted_index_shifts[i].first;
-      uncontracted_multi_index[second_index_position_in_pair] =
-          contracted_index_shifts[i].second;
+          gsl::at(contracted_index_pair_positions, i).second;
+      gsl::at(lowest_multi_index, first_index_position_in_pair) =
+          gsl::at(contracted_index_first_values, i).first;
+      gsl::at(lowest_multi_index, second_index_position_in_pair) =
+          gsl::at(contracted_index_first_values, i).second;
     }
 
-    return uncontracted_multi_index;
+    return lowest_multi_index;
   }
 
-  // TODO : use gsl::at instead of brackets everywhere in this file
+  /// \brief Given the multi-index of one term being summed in the contraction,
+  /// return the next highest multi-index of a component being summed
+  ///
+  /// \details
+  /// What is meant by "next highest" is implementation defined, but generally
+  /// means, of the components being summed, return the multi-index that results
+  /// from lowering one of the contracted index pairs' values by one.
+  ///
+  /// Example:
+  /// We have expression `R(ti_A, ti_b, ti_a)` to represent the contraction
+  /// \f$L_b = R^{a}{}_{ba}\f$. If we are evaluating \f$L_1 = R^{a}{}_{1a}\f$
+  ///  and the dimension of \f$a\f$ is 3, then we will need to sum the following
+  /// terms: \f$R^{0}{}_{10}\f$, \f$R^{1}{}_{11}\f$, and \f$R^{2}{}_{12}\f$.
+  /// If `uncontracted_multi_index` is `{1, 1, 1}`, then the "next highest"
+  /// multi-index is the result of lowering the values of the \f$a\f$ indices by
+  /// 1. The component with that resulting multi-index is \f$R^{0}{}_{10}\f$, so
+  /// this function would return `{0, 1, 0}`.
+  ///
+  /// Note: this function should perform the inverse functionality of
+  /// `get_next_highest_multi_index_to_sum`. If the implementation of this
+  /// function or the other changes what is meant by "next highest" or "next
+  /// lowest," the other function should be updated in accordance.
+  ///
+  /// \param uncontracted_multi_index the multi-index of one of the components
+  /// of the uncontracted operand expression to sum
+  /// \return the next highest multi-index between the components being summed
+  /// in the contraction
   SPECTRE_ALWAYS_INLINE static std::array<size_t,
                                           num_uncontracted_tensor_indices>
-  get_next_multi_index_to_sum(
+  get_next_highest_multi_index_to_sum(
       const std::array<size_t, num_uncontracted_tensor_indices>&
           uncontracted_multi_index) {
     std::array<size_t, num_uncontracted_tensor_indices>
-        next_uncontracted_multi_index = uncontracted_multi_index;
+        next_highest_uncontracted_multi_index = uncontracted_multi_index;
 
     size_t i = 0;
     while (i < num_contracted_index_pairs) {
+      // the position of the first index in a pair being contracted
       const size_t current_index_first_position =
-          contracted_index_pair_positions[i].first;
+          gsl::at(contracted_index_pair_positions, i).first;
+      // the position of the second index in a pair being contracted
       const size_t current_index_second_position =
-          contracted_index_pair_positions[i].second;
-      const size_t current_index_first_shift = contracted_index_shifts[i].first;
+          gsl::at(contracted_index_pair_positions, i).second;
+      // of the values being summed over, the lowest concrete value of the first
+      // index in the contracted pair
+      const size_t current_index_first_first_value =
+          gsl::at(contracted_index_first_values, i).first;
 
-      // TODO : make the rest of this loop more elegant?
-      next_uncontracted_multi_index[current_index_first_position]--;
-      next_uncontracted_multi_index[current_index_second_position]--;
+      // decrement the current index pair's values
+      gsl::at(next_highest_uncontracted_multi_index,
+              current_index_first_position)--;
+      gsl::at(next_highest_uncontracted_multi_index,
+              current_index_second_position)--;
 
-      // if the next index value is 0 when we have spatial spacetime indices
-      // or if the next index value is the max size_t, then we've wrapped around
-      // and we need to go again
-      if (not(next_uncontracted_multi_index[current_index_first_position] <
-                  current_index_first_shift or
-              next_uncontracted_multi_index[current_index_first_position] >
-                  uncontracted_index_dims[current_index_first_position])) {
+      // If the index values of the index pair being contracted aren't lower
+      // than the minimum values included in the summation, then we're done
+      // computing this next multi-index
+      if (not(gsl::at(next_highest_uncontracted_multi_index,
+                      current_index_first_position) <
+                  current_index_first_first_value or
+              gsl::at(next_highest_uncontracted_multi_index,
+                      current_index_first_position) >
+                  gsl::at(uncontracted_index_dims,
+                          current_index_first_position))) {
         break;
       }
-
-      next_uncontracted_multi_index[current_index_first_position] =
-          uncontracted_index_dims[current_index_first_position] - 1;
-      next_uncontracted_multi_index[current_index_second_position] =
-          uncontracted_index_dims[current_index_second_position] - 1;
+      // Otherwise, we've wrapped around the lowest value being summed over for
+      // this index, so we need to set it back to the maximum values being
+      // summed and "carry" the decrementing over to the next contracted pair's
+      // values
+      gsl::at(next_highest_uncontracted_multi_index,
+              current_index_first_position) =
+          gsl::at(uncontracted_index_dims, current_index_first_position) - 1;
+      gsl::at(next_highest_uncontracted_multi_index,
+              current_index_second_position) =
+          gsl::at(uncontracted_index_dims, current_index_second_position) - 1;
 
       i++;
     }
 
-    return next_uncontracted_multi_index;
+    return next_highest_uncontracted_multi_index;
   }
 
-  // get a new multi-index that is the one before the one given
+  /// \brief Given the multi-index of one term being summed in the contraction,
+  /// return the next lowest multi-index of a component being summed
+  ///
+  /// \details
+  /// What is meant by "next lowest" is implementation defined, but generally
+  /// means, of the components being summed, return the multi-index that results
+  /// from raising one of the contracted index pairs' values by one.
+  ///
+  /// Example:
+  /// We have expression `R(ti_A, ti_b, ti_a)` to represent the contraction
+  /// \f$L_b = R^{a}{}_{ba}\f$. If we are evaluating \f$L_1 = R^{a}{}_{1a}\f$
+  ///  and the dimension of \f$a\f$ is 3, then we will need to sum the following
+  /// terms: \f$R^{0}{}_{10}\f$, \f$R^{1}{}_{11}\f$, and \f$R^{2}{}_{12}\f$.
+  /// If `uncontracted_multi_index` is `{1, 1, 1}`, then the "next lowest"
+  /// multi-index is the result of raising the values of the \f$a\f$ indices by
+  /// 1. The component with that resulting multi-index is \f$R^{2}{}_{12}\f$, so
+  /// this function would return `{2, 1, 2}`.
+  ///
+  /// Note: this function should perform the inverse functionality of
+  /// `get_next_lowest_multi_index_to_sum`. If the implementation of this
+  /// function or the other changes what is meant by "next highest" or "next
+  /// lowest," the other function should be updated in accordance.
+  ///
+  /// \param uncontracted_multi_index the multi-index of one of the components
+  /// of the uncontracted operand expression to sum
+  /// \return the next lowest multi-index between the components being summed in
+  /// the contraction
   SPECTRE_ALWAYS_INLINE static std::array<size_t,
                                           num_uncontracted_tensor_indices>
-  get_previous_multi_index_to_sum(
+  get_next_lowest_multi_index_to_sum(
       const std::array<size_t, num_uncontracted_tensor_indices>&
           uncontracted_multi_index) {
     std::array<size_t, num_uncontracted_tensor_indices>
-        previous_uncontracted_multi_index = uncontracted_multi_index;
+        next_lowest_uncontracted_multi_index = uncontracted_multi_index;
 
     size_t i = 0;
     while (i < num_contracted_index_pairs) {
+      // the position of the first index in a pair being contracted
       const size_t current_index_first_position =
-          contracted_index_pair_positions[i].first;
+          gsl::at(contracted_index_pair_positions, i).first;
+      // the position of the second index in a pair being contracted
       const size_t current_index_second_position =
-          contracted_index_pair_positions[i].second;
+          gsl::at(contracted_index_pair_positions, i).second;
 
-      previous_uncontracted_multi_index[current_index_first_position]++;
-      previous_uncontracted_multi_index[current_index_second_position]++;
+      // increment the current index pair's values
+      gsl::at(next_lowest_uncontracted_multi_index,
+              current_index_first_position)++;
+      gsl::at(next_lowest_uncontracted_multi_index,
+              current_index_second_position)++;
 
       // if the previous index value is > dim, then we've wrapped around
       // and we need to go again
-      if (not(previous_uncontracted_multi_index[current_index_first_position] >
-              uncontracted_index_dims[current_index_first_position] - 1)) {
+      // If the index values of the index pair being contracted aren't higher
+      // than the maximum values included in the summation, then we're done
+      // computing this next multi-index
+      if (not(gsl::at(next_lowest_uncontracted_multi_index,
+                      current_index_first_position) >
+              gsl::at(uncontracted_index_dims, current_index_first_position) -
+                  1)) {
         break;
       }
-
-      previous_uncontracted_multi_index[current_index_first_position] =
-          contracted_index_shifts[i].first;
-      previous_uncontracted_multi_index[current_index_second_position] =
-          contracted_index_shifts[i].second;
+      // Otherwise, we've wrapped around the highest value being summed over for
+      // this index, so we need to set it back to the minimum values being
+      // summed and "carry" the incrementing over to the next contracted pair's
+      // values
+      gsl::at(next_lowest_uncontracted_multi_index,
+              current_index_first_position) =
+          gsl::at(contracted_index_first_values, i).first;
+      gsl::at(next_lowest_uncontracted_multi_index,
+              current_index_second_position) =
+          gsl::at(contracted_index_first_values, i).second;
 
       i++;
     }
 
-    return previous_uncontracted_multi_index;
+    return next_lowest_uncontracted_multi_index;
   }
 
+  /// \brief Computes the value of a component in the resultant contracted
+  /// tensor
+  ///
+  /// \details
+  /// The contraction is computed by recursively adding up each component in the
+  /// summation, across all index pairs being contracted in the operand
+  /// expression. This function is called `Iteration = num_terms_summed` times,
+  /// once for each uncontracted tensor component being summed. It should
+  /// externally be called for the first time with `Iteration == 0` and
+  /// `current_multi_index == <highest multi index to sum>` (see
+  /// `get_next_highest_multi_index_to_sum` for details).
+  ///
+  /// In performing the recursive summation, the recursion is
+  /// specifically done "to the left," in that this function returns
+  /// `compute_contraction(next index) + get(this_index)` as opposed to
+  /// `get(this_index) + compute_contraction`. Benchmarking has shown that
+  /// increased breadth in an equation's expression tree can slow down runtime.
+  /// By "recursing left" here, we  minimize breadth in the overall tree for an
+  /// equation, as both `AddSub` addition and `OuterProduct` (other expressions
+  /// with two children) make efforts to make their operands with larger
+  /// subtrees be their left operand.
+  ///
+  /// \tparam Iteration the nth term to sum, where n is between
+  /// [0, num_terms_summed)
+  /// \param t the expression contained within this contraction expression
+  /// \param current_multi_index the multi-index of the uncontracted tensor
+  /// component to retrieve
+  /// \return the value of a component of the resulant contracted tensor
   template <size_t Iteration>
   SPECTRE_ALWAYS_INLINE static decltype(auto) compute_contraction(
       const T& t, const std::array<size_t, num_uncontracted_tensor_indices>&
@@ -558,7 +745,7 @@ struct TensorContract
     if constexpr (Iteration < num_terms_summed - 1) {
       // We have more than one component left to sum
       return compute_contraction<Iteration + 1>(
-                 t, get_next_multi_index_to_sum(current_multi_index)) +
+                 t, get_next_highest_multi_index_to_sum(current_multi_index)) +
              t.get(current_multi_index);
     } else {
       // We only have one final component to sum
@@ -566,37 +753,68 @@ struct TensorContract
     }
   }
 
+  /// \brief Return the value of the component of the resultant contracted
+  /// tensor at a given multi-index
+  ///
+  /// \param contracted_multi_index the multi-index of the resultant contracted
+  /// tensor component to retrieve
+  /// \return the value of the component at `contracted_multi_index` in the
+  /// resultant contracted tensor
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& contracted_multi_index)
       const {
     return compute_contraction<0>(
-        t_, get_first_index_to_sum(contracted_multi_index));
+        t_, get_highest_multi_index_to_sum(contracted_multi_index));
   }
 
   // for when contraction expression is not a primary beg
   // TODO : static assert this ^ or something?
+  /// \brief Computes the value of a component in the resultant contracted
+  /// tensor
+  ///
+  /// \details
+  /// First see `compute_contraction` for details on basic functionality.
+  ///
+  /// This function differs from `compute_contraction` in that it takes into
+  /// account whether we have already computed part of the result component at a
+  /// lower subtree. In recursively computing this contraction, the current
+  /// result component will be substituted in for the most recent (highest)
+  /// subtree below it that has already been evaluated.
+  ///
+  /// \tparam Iteration the nth term to sum, where n is between
+  /// [0, num_terms_summed)
+  /// \param t the expression contained within this contraction expression
+  /// \param result_component the LHS tensor component to evaluate
+  /// \param current_multi_index the multi-index of the uncontracted tensor
+  /// component to retrieve
+  /// \return the value of a component of the resulant contracted tensor
   template <size_t Iteration>
   SPECTRE_ALWAYS_INLINE static decltype(auto) compute_contraction_primary(
       const T& t, const type& result_component,
       const std::array<size_t, num_uncontracted_tensor_indices>&
           current_multi_index) {
     if constexpr (is_primary_end) {
+      // We've already computed the whole subtree of the term being summed that
+      // is at the lowest depth in the tree
       if constexpr (Iteration < num_terms_summed - 1) {
         // We have more than one component left to sum
         return compute_contraction_primary<Iteration + 1>(
                    t, result_component,
-                   get_next_multi_index_to_sum(current_multi_index)) +
+                   get_next_highest_multi_index_to_sum(current_multi_index)) +
                t.get(current_multi_index);
       } else {
-        // We only have one final component to sum
+        // The deepest term in the contraction subtree that is being summed is
+        // just our current result, so return it
         return result_component;
       }
     } else {
+      // We've haven't yet computed the whole subtree of the term being summed
+      // that is at the lowest depth in the tree
       if constexpr (Iteration < num_terms_summed - 1) {
         // We have more than one component left to sum
         return compute_contraction_primary<Iteration + 1>(
                    t, result_component,
-                   get_next_multi_index_to_sum(current_multi_index)) +
+                   get_next_highest_multi_index_to_sum(current_multi_index)) +
                t.get(current_multi_index);
       } else {
         // We only have one final component to sum
@@ -621,7 +839,7 @@ struct TensorContract
       // We have more than one component left to sum
       (void)starting_multi_index;
       return compute_contraction_primary_stop_at_branches<Iteration - 1>(
-                 t, get_next_multi_index_to_sum(current_multi_index),
+                 t, get_next_highest_multi_index_to_sum(current_multi_index),
                  starting_multi_index) +
              t.get(current_multi_index);
     } else {
@@ -631,32 +849,61 @@ struct TensorContract
     }
   }
 
+  /// \brief Return the value of the component of the resultant contracted
+  /// tensor at a given multi-index
+  ///
+  /// \details
+  /// This function differs from `get` in that it takes into account whether we
+  /// have already computed part of the result component at a lower subtree.
+  /// In recursively computing this contraction, the current result component
+  /// will be substituted in for the most recent (highest) subtree below it that
+  /// has already been evaluated.
+  ///
+  /// \param result_component the LHS tensor component to evaluate
+  /// \param contracted_multi_index the multi-index of the resultant contracted
+  /// tensor component to retrieve
+  /// \return the value of the component at `contracted_multi_index` in the
+  /// resultant contracted tensor
   SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
       const type& result_component,
       const std::array<size_t, num_tensor_indices>& contracted_multi_index)
       const {
     return compute_contraction_primary<0>(
-        t_, result_component, get_first_index_to_sum(contracted_multi_index));
+        t_, result_component,
+        get_highest_multi_index_to_sum(contracted_multi_index));
   }
 
-  // if we fork (split every term), then go up and get previous index
-  // else, if we branch (split every leg_length terms), go down to each
-  // branch point and compute each leg separately
+  /// \brief Successively evaluate the LHS Tensor's result component at each
+  /// leg of summations within the contraction expression
+  ///
+  /// \details
+  /// This function takes into account whether we have already computed part of
+  /// the result component at a lower subtree. In recursively computing this
+  /// contraction, the current result component will be substituted in for the
+  /// most recent (highest) subtree below it that has already been evaluated.
+  ///
+  /// If this contraction expression is the beginning of a leg,
+  /// `evaluate_primary_contraction` is called to evaluate each individual
+  /// leg of summations within the contraction.
+  ///
+  /// \param result_component the LHS tensor component to evaluate
+  /// \param contracted_multi_index the multi-index of the component of the
+  /// contracted result tensor to evaluate
+  /// \param lowest_multi_index the lowest multi-index between the components
+  /// being summed in the contraction (see `get_lowest_multi_index_to_sum`)
   SPECTRE_ALWAYS_INLINE void evaluate_primary_contraction(
       type& result_component,
       const std::array<size_t, num_tensor_indices>& contracted_multi_index,
-      std::array<size_t, num_uncontracted_tensor_indices> current_multi_index)
-      const {
-    if constexpr (stops_are_forks) {
+      const std::array<size_t, num_uncontracted_tensor_indices>&
+          lowest_multi_index) const {
+    if constexpr (evaluate_terms_separately) {
       (void)contracted_multi_index;
+      std::array<size_t, num_uncontracted_tensor_indices> current_multi_index =
+          lowest_multi_index;
       if constexpr (not is_primary_end) {
         // we still need to compute what's below the contraction
-        if constexpr (primary_child_subtree_contains_primary_start) {
           result_component =
               t_.get_primary(result_component, current_multi_index);
-        } else {
-          result_component = t_.get(current_multi_index);
-        }
       }
       // now, the contraction is the lowest thing, so we can
       // climb up and compute each term, visiting right branches
@@ -665,32 +912,29 @@ struct TensorContract
       // hoping that iterating will reduce pressure on cache?
       for (size_t i = 1; i < num_terms_summed; i++) {
         const std::array<size_t, num_uncontracted_tensor_indices>
-            previous_operand_multi_index_to_sum =
-                get_previous_multi_index_to_sum(current_multi_index);
-        result_component += t_.get(previous_operand_multi_index_to_sum);
-        current_multi_index = previous_operand_multi_index_to_sum;
+            next_lowest_multi_index_to_sum =
+                get_next_lowest_multi_index_to_sum(current_multi_index);
+        result_component += t_.get(next_lowest_multi_index_to_sum);
+        current_multi_index = next_lowest_multi_index_to_sum;
       }
-    } else if constexpr (stops_are_branches) {
+    } else {
       // evaluate each leg
-      current_multi_index = get_first_index_to_sum(contracted_multi_index);
+      std::array<size_t, num_uncontracted_tensor_indices> current_multi_index =
+          get_highest_multi_index_to_sum(contracted_multi_index);
       // if we have less than a full-length leg leftover
       if constexpr (last_leg_length > 0) {
         // first get the remainder if there is one
         if constexpr (not is_primary_end) {
           // get remainder
-          if constexpr (primary_child_subtree_contains_primary_start) {
             result_component =
                 t_.get_primary(result_component, current_multi_index);
-          } else {
-            result_component = t_.get(current_multi_index);
-          }
         }
 
         // next add up all the full-length legs
         for (size_t i = 0; i < num_full_legs; i++) {
           result_component +=
               compute_contraction_primary_stop_at_branches<leg_length - 1>(
-                  t_, get_next_multi_index_to_sum(current_multi_index),
+                  t_, get_next_highest_multi_index_to_sum(current_multi_index),
                   current_multi_index);
         }
         // lastly, get rest of the last leg if it's not just the one term we
@@ -699,7 +943,7 @@ struct TensorContract
           result_component +=
               compute_contraction_primary_stop_at_branches<leg_length -
                                                            last_leg_length - 1>(
-                  t_, get_next_multi_index_to_sum(current_multi_index),
+                  t_, get_next_highest_multi_index_to_sum(current_multi_index),
                   current_multi_index);
         }
       }  // we only have full-length legs, no leftovers
@@ -715,7 +959,7 @@ struct TensorContract
         for (size_t i = 1; i < num_full_legs; i++) {
           result_component +=
               compute_contraction_primary_stop_at_branches<leg_length - 1>(
-                  t_, get_next_multi_index_to_sum(current_multi_index),
+                  t_, get_next_highest_multi_index_to_sum(current_multi_index),
                   current_multi_index);
         }
 
@@ -724,30 +968,53 @@ struct TensorContract
         if constexpr (leg_length > 1) {
           result_component +=
               compute_contraction_primary_stop_at_branches<leg_length - 2>(
-                  t_, get_next_multi_index_to_sum(current_multi_index),
+                  t_, get_next_highest_multi_index_to_sum(current_multi_index),
                   current_multi_index);
         }
       }
     }
   }
 
+  /// \brief Successively evaluate the LHS Tensor's result component at each
+  /// leg in this expression's subtree
+  ///
+  /// \details
+  /// This function takes into account whether we have already computed part of
+  /// the result component at a lower subtree. In recursively computing this
+  /// contraction, the current result component will be substituted in for the
+  /// most recent (highest) subtree below it that has already been evaluated.
+  ///
+  /// If this contraction expression is the beginning of a leg,
+  /// `evaluate_primary_contraction` is called to evaluate each individual
+  /// leg of summations within the contraction.
+  ///
+  /// \param result_component the LHS tensor component to evaluate
+  /// \param contracted_multi_index the multi-index of the component of the
+  /// contracted result tensor to evaluate
   SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
       type& result_component,
       const std::array<size_t, num_tensor_indices>& contracted_multi_index)
       const {
-    const auto last_operand_multi_index_to_sum =
-        get_last_index_to_sum(contracted_multi_index);
+    const auto lowest_multi_index_to_sum =
+        get_lowest_multi_index_to_sum(contracted_multi_index);
     if constexpr (primary_child_subtree_contains_primary_start) {
-      t_.evaluate_primary_subtree(result_component,
-                                  last_operand_multi_index_to_sum);
+      // The primary child's subtree contains at least one leg, so recurse down
+      // and evaluate that first. Here, we evaluate the lowest multi-index
+      // because, according to `compute_contraction`, the lowest multi-index is
+      // the one in the last/leaf/final call to `compute_contraction` (i.e. the
+      // multi-index of the final term to sum)
+      t_.evaluate_primary_subtree(result_component, lowest_multi_index_to_sum);
     }
     if constexpr (is_primary_start) {
+      // We want to evaluate the subtree for this expression, one leg of
+      // summations at a time
       evaluate_primary_contraction(result_component, contracted_multi_index,
-                                   last_operand_multi_index_to_sum);
+                                   lowest_multi_index_to_sum);
     }
   }
 
  private:
+  /// Operand expression being contracted
   T t_;
 };
 
@@ -756,8 +1023,9 @@ template <typename T, typename X, typename Symm, typename IndexList,
 SPECTRE_ALWAYS_INLINE static constexpr auto contract(
     const TensorExpression<T, X, Symm, IndexList, tmpl::list<TensorIndices...>>&
         t) {
-  // TODO : update naming everywhere to make "uncontracted_..." make sense
+  // Number of indices in the tensor expression we're wanting to contract
   constexpr size_t num_uncontracted_indices = sizeof...(TensorIndices);
+  // The number of index pairs to contract
   constexpr size_t num_contracted_index_pairs =
       detail::get_num_contracted_index_pairs<num_uncontracted_indices>(
           {{TensorIndices::value...}});
