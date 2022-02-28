@@ -498,17 +498,12 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
 
     /*!
      * \brief Constructs a computer for spacetime quantities of a given
-     * `gr::Solutions::HarmonicSchwarzschild` solution at a position relative to
-     * the center of the black hole
-     *
-     * \details The position relative to the center of the black hole is defined
-     * as \f$X^i = \left(x^i - C^i\right)\f$, where \f$C^i\f$ is the Cartesian
-     * coordinates of the center of the black hole and \f$x^i\f$ is the
-     * Cartesian coordinates of the point where we're wanting to compute the
-     * spacetime quantities
+     * `gr::Solutions::HarmonicSchwarzschild` solution at at a specific
+     * Cartesian position
      *
      * \param solution the given `gr::Solutions::HarmonicSchwarzschild` solution
-     * \param x the position relative to the center of the black hole
+     * \param x Cartesian coordinates of the position at which to compute
+     * spacetime quantities
      */
     IntermediateComputer(const HarmonicSchwarzschild& solution,
                          const tnsr::I<DataType, 3, Frame>& x);
