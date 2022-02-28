@@ -49,7 +49,7 @@ struct Negate
   static constexpr size_t num_ops_left_child = T::num_ops_subtree;
   /// The number of arithmetic tensor operations done in the subtree for the
   /// right operand. This is 0 because this expression represents a unary
-  /// operation
+  /// operation.
   static constexpr size_t num_ops_right_child = 0;
   /// The total number of arithmetic tensor operations done in this expression's
   /// whole subtree
