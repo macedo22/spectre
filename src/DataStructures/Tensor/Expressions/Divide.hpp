@@ -61,8 +61,7 @@ struct Divide : public TensorExpression<
   /// The list of \ref SpacetimeIndex "TensorIndexType"s of the result of the
   /// expression
   using index_list = typename T1::index_list;
-  /// The list of generic `TensorIndex`s of the result of the
-  /// expression
+  /// The list of generic `TensorIndex`s of the result of the expression
   using args_list = typename T1::args_list;
   /// The number of tensor indices in the result of the expression
   static constexpr auto num_tensor_indices =
