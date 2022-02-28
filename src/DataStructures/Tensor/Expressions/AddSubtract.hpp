@@ -722,8 +722,8 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
         // result
         return result_component + t2_.get(op2_multi_index);
       } else {
-        // We haven't yet evaluated the whole subtree of the primary child,
-        // so return the sum of that subtree and the other
+        // We haven't yet evaluated the whole subtree for this expression, so
+        // return the sum of the results of the two operands' subtrees
         return t1_.get_primary(result_component, op1_multi_index) +
                t2_.get(op2_multi_index);
       }
@@ -736,8 +736,9 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
         // current result
         return result_component - t2_.get(op2_multi_index);
       } else {
-        // We haven't yet evaluated the whole subtree of the primary child,
-        // so return the difference between that subtree and the other
+        // We haven't yet evaluated the whole subtree for this expression, so
+        // return the difference between the results of the two operands'
+        // subtrees
         return t1_.get_primary(result_component, op1_multi_index) -
                t2_.get(op2_multi_index);
       }
@@ -767,6 +768,13 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
 
   /// \brief Successively evaluate the LHS Tensor's result component at each
   /// leg in this expression's subtree
+  ///
+  /// \details
+  /// This function takes into account whether we have already computed part of
+  /// the result component at a lower subtree. In recursively computing this
+  /// sum/difference, the current result component will be substituted in for
+  /// the most recent (highest) subtree below it that has already been
+  /// evaluated.
   ///
   /// \param result_component the LHS tensor component to evaluate
   /// \param result_multi_index the multi-index of the component of the result

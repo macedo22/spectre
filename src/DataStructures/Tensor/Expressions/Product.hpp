@@ -310,6 +310,11 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// evaluating the two operand's subtrees separately and multiplying
   ///
   /// \details
+  /// This function takes into account whether we have already computed part of
+  /// the result component at a lower subtree. In recursively computing this
+  /// product, the current result component will be substituted in for the most
+  /// recent (highest) subtree below it that has already been evaluated.
+  ///
   /// The left and right operands' subtrees are evaluated successively with
   /// two separate assignments to the LHS result component. Since `DataVector`
   /// expression runtime scales poorly with increased number of operations,
@@ -346,6 +351,12 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
 
   /// \brief Successively evaluate the LHS Tensor's result component at each
   /// leg in this expression's subtree
+  ///
+  /// \details
+  /// This function takes into account whether we have already computed part of
+  /// the result component at a lower subtree. In recursively computing this
+  /// product, the current result component will be substituted in for the most
+  /// recent (highest) subtree below it that has already been evaluated.
   ///
   /// \param result_component the LHS tensor component to evaluate
   /// \param result_multi_index the multi-index of the component of the outer
