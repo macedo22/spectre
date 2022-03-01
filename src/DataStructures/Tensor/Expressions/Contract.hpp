@@ -849,8 +849,47 @@ struct TensorContract
         t_, get_highest_multi_index_to_sum(contracted_multi_index));
   }
 
-  // for when contraction expression is not a primary beg
-  // TODO : static assert this ^ or something?
+  /// \brief Computes the result of an internal leg of the contraction
+  ///
+  /// \details
+  /// This function differs from `compute_contraction` and
+  /// `compute_contraction_primary` in that it only computes one leg of the
+  /// whole contraction, as opposed to the whole contraction.
+  ///
+  /// The leg being summed is defined by the `current_multi_index` and
+  /// `Iteration` passed in from the inital external call: consecutive terms
+  /// will be summed until the base case `Iteration == 0` is reached.
+  ///
+  /// \tparam Iteration the nth term in the leg to sum, where n is between
+  /// [0, leg_length)
+  /// \param t the expression contained within this contraction expression
+  /// \param current_multi_index the multi-index of the uncontracted tensor
+  /// component to retrieve as part of this leg's summation
+  /// \param next_leg_starting_multi_index in the final iteration, the
+  /// multi-index to update to be the next leg's starting multi-index
+  /// \return the result of summing up the terms in the given leg
+  template <size_t Iteration>
+  SPECTRE_ALWAYS_INLINE static decltype(auto) compute_contraction_leg(
+      const T& t,
+      const std::array<size_t, num_uncontracted_tensor_indices>&
+          current_multi_index,
+      std::array<size_t, num_uncontracted_tensor_indices>&
+          next_leg_starting_multi_index) {
+    if constexpr (Iteration != 0) {
+      // We have more than one component left to sum
+      (void)next_leg_starting_multi_index;
+      return compute_contraction_leg<Iteration - 1>(
+                 t, get_next_highest_multi_index_to_sum(current_multi_index),
+                 next_leg_starting_multi_index) +
+             t.get(current_multi_index);
+    } else {
+      // We only have one final component to sum
+      next_leg_starting_multi_index =
+          get_next_highest_multi_index_to_sum(current_multi_index);
+      return t.get(current_multi_index);
+    }
+  }
+
   /// \brief Computes the value of a component in the resultant contracted
   /// tensor
   ///
@@ -902,51 +941,6 @@ struct TensorContract
         // We only have one final component to sum
         return t.get_primary(result_component, current_multi_index);
       }
-    }
-  }
-
-  // for when contraction expression is a primary beg and stops are branches
-  // TODO : static assert this ^ or something?
-  // travels "up" the primary branch, so starts at
-  // Iteration = num_terms_summed - 1 and goes to Iteration = 0
-  /// \brief Computes the result of an internal leg of the contraction
-  ///
-  /// \details
-  /// This function differs from `compute_contraction` and
-  /// `compute_contraction_primary` in that it only computes one leg of the
-  /// whole contraction, as opposed to the whole contraction.
-  ///
-  /// The leg being summed is defined by the `current_multi_index` and
-  /// `Iteration` passed in from the inital external call: consecutive terms
-  /// will be summed until the base case `Iteration == 0` is reached.
-  ///
-  /// \tparam Iteration the nth term in the leg to sum, where n is between
-  /// [0, leg_length)
-  /// \param t the expression contained within this contraction expression
-  /// \param current_multi_index the multi-index of the uncontracted tensor
-  /// component to retrieve as part of this leg's summation
-  /// \param next_leg_starting_multi_index in the final iteration, the
-  /// multi-index to update to be the next leg's starting multi-index
-  /// \return the result of summing up the terms in the given leg
-  template <size_t Iteration>
-  SPECTRE_ALWAYS_INLINE static decltype(auto) compute_contraction_leg(
-      const T& t,
-      const std::array<size_t, num_uncontracted_tensor_indices>&
-          current_multi_index,
-      std::array<size_t, num_uncontracted_tensor_indices>&
-          next_leg_starting_multi_index) {
-    if constexpr (Iteration != 0) {
-      // We have more than one component left to sum
-      (void)next_leg_starting_multi_index;
-      return compute_contraction_leg<Iteration - 1>(
-                 t, get_next_highest_multi_index_to_sum(current_multi_index),
-                 next_leg_starting_multi_index) +
-             t.get(current_multi_index);
-    } else {
-      // We only have one final component to sum
-      next_leg_starting_multi_index =
-          get_next_highest_multi_index_to_sum(current_multi_index);
-      return t.get(current_multi_index);
     }
   }
 

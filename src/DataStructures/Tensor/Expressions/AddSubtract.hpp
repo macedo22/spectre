@@ -448,8 +448,6 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
     }
   }
 
-  // TODO: standardize op1 + op2 vs left + right here and other binops
-
   /// \brief Return the second operand's multi-index given the first operand's
   /// multi-index
   ///

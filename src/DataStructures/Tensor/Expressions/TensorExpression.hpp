@@ -92,14 +92,14 @@ struct Expression {};
 ///
 /// **Note:** The primary path is currently implemented as the path specified
 /// above, but there's no reason it couldn't be reimplemented to be a different
-/// path. The idea with the current implementation is to select it to be the
-/// longest path from root to leaf so we have the most flexibility in splitting,
-/// should we want to. When evaluating, we *could* implement the traversal to
-/// take a different path, but currently, derived `TensorExpression`s that
-/// represent binary operations (i.e. have two child subtrees) are instantiated
-/// with the larger subtree being the left child and the smaller subtree being
-/// the right child. By constructing it this way, the leftmost path will be the
-/// longest path, which will allow for the most splitting possible.
+/// path. The idea with the current implementation is to select a path from root
+/// to leaf that is long so we have more flexibility in splitting, should we
+/// want to. When evaluating, we *could* implement the traversal to take a
+/// different path, but currently, derived `TensorExpression`s that represent
+/// commutative binary operations are instantiated with the larger subtree being
+/// the left child and the smaller subtree being the right child. By
+/// constructing it this way, we elongate the leftmost path, which will allow
+/// for increased splitting.
 ///
 /// ## Requirements for derived `TensorExpression` classes
 /// Each derived `TensorExpression` class must define the following aliases and
