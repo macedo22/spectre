@@ -64,37 +64,67 @@ constexpr size_t get_num_contracted_index_pairs(
   return count;
 }
 
-// TODO : add a Requires<(NumUncontractedIndices >= 2)>
+/// \brief Computes the mapping from the positions of indices in the resultant
+/// contracted tensor to their positions in the operand uncontracted tensor, as
+/// well as the positions of the index pairs in the operand uncontracted tensor
+/// that we wish to contract
+///
+/// \details
+/// Both quantities returned are computed in and returned from the same
+/// function so as to not repeat overlapping necessary work that would be in two
+/// separate functions
+///
+/// \tparam NumContractedIndexPairs the number of pairs of indices that will be
+/// contracted
+/// \tparam NumUncontractedIndices the number of indices in the operand
+/// expression that we wish to contract
+/// \param uncontracted_tensor_index_values the values of the `TensorIndex`s
+/// used to generically represent the uncontracted operand expression
+/// \return the mapping from the positions of indices in the resultant
+/// contracted tensor to their positions in the operand uncontracted tensor, as
+/// well as the positions of the index pairs in the operand uncontracted tensor
+/// that we wish to contract
 template <size_t NumContractedIndexPairs, size_t NumUncontractedIndices>
 constexpr std::pair<
     std::array<size_t, NumUncontractedIndices - NumContractedIndexPairs * 2>,
     std::array<std::pair<size_t, size_t>, NumContractedIndexPairs>>
 get_index_transformation_and_contracted_pair_positions(
-    const std::array<size_t, NumUncontractedIndices>& tensor_index_values) {
+    const std::array<size_t, NumUncontractedIndices>&
+        uncontracted_tensor_index_values) {
+  static_assert(NumUncontractedIndices >= 2,
+                "There should be at least 2 indices");
+  // Positions of indices in the result tensor (ones that are not contracted)
+  // mapped to their locations in the uncontracted operand expression
   std::array<size_t, NumUncontractedIndices - NumContractedIndexPairs * 2>
       index_transformation{};
+  // Positions of contracted index pairs in the uncontracted operand expression
   std::array<std::pair<size_t, size_t>, NumContractedIndexPairs>
       contracted_index_pair_positions{};
 
+  // Marks whether or not we have already paired an index in the uncontracted
+  // operand expression with an index to contract it with
   std::array<bool, NumUncontractedIndices> index_mapping_set{};
   for (size_t i = 0; i < NumUncontractedIndices; i++) {
     gsl::at(index_mapping_set, i) = false;
   }
 
+  // Index of `contracted_index_pair_positions` that we're current'y assigning
   size_t contracted_map_index_to_assign = 0;
+  // Index of `index_transformation` that we're currently assigning
   size_t not_contracted_map_index_to_assign =
       NumUncontractedIndices - NumContractedIndexPairs * 2 - 1;
   for (size_t i = NumUncontractedIndices - 1; i < NumUncontractedIndices; i--) {
     if (not gsl::at(index_mapping_set, i)) {
-      const size_t current_value = gsl::at(tensor_index_values, i);
+      const size_t current_value = gsl::at(uncontracted_tensor_index_values, i);
       // Concrete time indices are not contracted
       if (not detail::is_time_index_value(current_value)) {
         const size_t opposite_value_to_find =
             get_tensorindex_value_with_opposite_valence(current_value);
         for (size_t j = i - 1; j < NumUncontractedIndices; j--) {
-          if (opposite_value_to_find == gsl::at(tensor_index_values, j)) {
+          if (opposite_value_to_find ==
+              gsl::at(uncontracted_tensor_index_values, j)) {
             // We found both the lower and upper version of a generic index in
-            // the list of generic indices, so we return this pair's positions
+            // the list of generic indices, pair them up
             gsl::at(contracted_index_pair_positions,
                     contracted_map_index_to_assign)
                 .first = j;
@@ -102,6 +132,7 @@ get_index_transformation_and_contracted_pair_positions(
                     contracted_map_index_to_assign)
                 .second = i;
             contracted_map_index_to_assign++;
+            // Mark that we've found contraction partners for these two indices
             gsl::at(index_mapping_set, j) = true;
             gsl::at(index_mapping_set, i) = true;
             break;
@@ -109,6 +140,9 @@ get_index_transformation_and_contracted_pair_positions(
         }
       }
       if (not gsl::at(index_mapping_set, i)) {
+        // If we haven't assigned this index to a partner, it is not an index
+        // that is contracted, so record its position mapping from contracted to
+        // uncontracted tensor indices
         gsl::at(index_transformation, not_contracted_map_index_to_assign) = i;
         not_contracted_map_index_to_assign--;
       }
@@ -118,6 +152,24 @@ get_index_transformation_and_contracted_pair_positions(
   return std::pair{index_transformation, contracted_index_pair_positions};
 }
 
+/// \brief Computes type information for the tensor expression that results from
+/// a contraction, as well as information internally useful for carrying out the
+/// contractin
+///
+/// \tparam UncontractedTensorExpression the operand uncontracted
+/// `TensorExpression` being contracted
+/// \tparam DataType the data type of the `Tensor` components
+/// \tparam UncontractedSymm the ::Symmetry of the operand uncontracted
+/// `TensorExpression`
+/// \tparam UncontractedIndexList the list of
+/// \ref SpacetimeIndex "TensorIndexType"s of the operand uncontracted
+/// `TensorExpression`
+/// \tparam UncontractedTensorIndexList the list of generic `TensorIndex`s used
+/// for the the operand uncontracted `TensorExpression`
+/// \tparam NumContractedIndices the number of indices in the resultant tensor
+/// after contracting
+/// \tparam NumIndexPairsToContract the number of pairs of indices that will be
+/// contracted
 template <typename UncontractedTensorExpression, typename DataType,
           typename UncontractedSymm, typename UncontractedIndexList,
           typename UncontractedTensorIndexList, size_t NumContractedIndices,
@@ -152,6 +204,13 @@ struct ContractedType<UncontractedTensorExpression, DataType,
       num_uncontracted_tensor_indices - NumContractedIndices;
   static constexpr size_t num_contracted_index_pairs =
       num_indices_to_contract / 2;
+  // First item in pair:
+  // - index transformation: mapping from the positions of indices in the
+  // resultant contracted tensor to their positions in the operand
+  // uncontracted tensor
+  // Second item in pair:
+  // contracted index pair positions: positions of the index pairs in the
+  // operand uncontracted tensor that we wish to contract
   static constexpr inline std::pair<
       std::array<size_t, NumContractedIndices>,
       std::array<std::pair<size_t, size_t>, num_contracted_index_pairs>>
@@ -160,6 +219,7 @@ struct ContractedType<UncontractedTensorExpression, DataType,
               num_contracted_index_pairs, num_uncontracted_tensor_indices>(
               uncontracted_tensorindex_values);
 
+  // Make sure it's mathematically legal to perform the requested contraction
   static_assert(((... and
                   (indices_contractible<
                       typename tmpl::at_c<
@@ -177,12 +237,22 @@ struct ContractedType<UncontractedTensorExpression, DataType,
   static constexpr inline std::array<IndexType, num_uncontracted_tensor_indices>
       uncontracted_index_types = {{UncontractedIndices::index_type...}};
 
+  // First concrete values of contracted indices to sum. This is to handle
+  // cases when we have generic spatial `TensorIndex`s used for spacetime
+  // indices, as the first concrete index value to contract will be 1 (first
+  // spatial index) instead of 0 (the time index). Contracted index pairs will
+  // have different "starting" concrete indices when one index in the pair is a
+  // spatial spacetime index and the other is not.
   static constexpr inline std::array<std::pair<size_t, size_t>,
                                      num_contracted_index_pairs>
       contracted_index_first_values = []() {
         std::array<std::pair<size_t, size_t>, num_contracted_index_pairs>
             first_values{};
         for (size_t i = 0; i < num_contracted_index_pairs; i++) {
+          // Assign the value for first index in a pair to be the smallest value
+          // used in the terms being summed: assign to 1 if we have a spacetime
+          // index where a generic spatial index has been used, otherwise assign
+          // to 0.
           gsl::at(first_values, i).first = static_cast<size_t>(
               gsl::at(
                   uncontracted_index_types,
@@ -196,6 +266,9 @@ struct ContractedType<UncontractedTensorExpression, DataType,
                       index_transformation_and_contracted_pair_positions.second,
                       i)
                       .first) >= TensorIndex_detail::spatial_sentinel);
+          // Assign the value for second index in a pair to be the smallest
+          // value used in the terms being summed (assigned with same logic
+          // described above for the first index in the pair)
           gsl::at(first_values, i).second = static_cast<size_t>(
               gsl::at(
                   uncontracted_index_types,
@@ -216,6 +289,7 @@ struct ContractedType<UncontractedTensorExpression, DataType,
   static constexpr inline std::array<size_t, num_uncontracted_tensor_indices>
       uncontracted_index_dims = {{UncontractedIndices::dim...}};
 
+  // The number of terms to sum for this expression's contraction
   static constexpr size_t num_terms_summed = []() {
     size_t num_terms =
         gsl::at(
@@ -238,20 +312,23 @@ struct ContractedType<UncontractedTensorExpression, DataType,
   static_assert(num_terms_summed > 0,
                 "There should be a non-zero number of components to sum in the "
                 "contraction.");
-
+  // The ::Symmetry of the result of the contraction
   using symmetry =
       Symmetry<tmpl::at_c<UncontractedSymmList<UncontractedSymm...>,
                           index_transformation_and_contracted_pair_positions
                               .first[ContractedInts]>::value...>;
+  // The list of \ref SpacetimeIndex "TensorIndexType"s of the result of the
+  // contraction
   using index_list =
       tmpl::list<tmpl::at_c<UncontractedIndexList<UncontractedIndices...>,
                             index_transformation_and_contracted_pair_positions
                                 .first[ContractedInts]>...>;
-
+  // The list of generic `TensorIndex`s of the result of the contraction
   using tensorindex_list = tmpl::list<
       tmpl::at_c<UncontractedTensorIndexList<UncontractedTensorIndices...>,
                  index_transformation_and_contracted_pair_positions
                      .first[ContractedInts]>...>;
+  // The `TensorExpression` type that results from performing the contraction
   using type = TensorExpression<UncontractedTensorExpression, DataType,
                                 symmetry, index_list, tensorindex_list>;
 };
@@ -278,9 +355,12 @@ struct TensorContract
               T, X, Symm, IndexList, ArgsList, NumContractedIndices,
               (tmpl::size<Symm>::value - NumContractedIndices) /
                   2>::type::args_list> {
+  /// Stores internally useful information regarding the contraction. See
+  /// `detail::ContractedType` for more details
   using contracted_type = typename detail::ContractedType<
       T, X, Symm, IndexList, ArgsList, NumContractedIndices,
       (tmpl::size<Symm>::value - NumContractedIndices) / 2>;
+  /// The `TensorExpression` type that results from performing the contraction
   using new_type = typename contracted_type::type;
 
   // === Index properties ===
@@ -306,7 +386,7 @@ struct TensorContract
                 "There are no indices to contract that were found.");
   static_assert(num_indices_to_contract % 2 == 0,
                 "Cannot contract an odd number of indices.");
-  // The number of tensor index pairs in the operand expression that will be
+  /// The number of tensor index pairs in the operand expression that will be
   /// contracted
   static constexpr size_t num_contracted_index_pairs =
       contracted_type::num_contracted_index_pairs;
