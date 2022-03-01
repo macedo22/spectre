@@ -34,6 +34,29 @@ void create_tensor(gsl::not_null<Tensor<DataVector, Ts...>*> tensor) {
   }
 }
 
+// Checks that the number of ops in the expressions match what is expected
+void test_tensor_ops_properties() {
+  const tnsr::Ij<double, 3> R{};
+  const Tensor<double, Symmetry<4, 3, 2, 1>,
+               index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>
+      S{};
+
+  // Expected: (TotalDim - 1) adds (3 - 1) adds = 2 total ops
+  const auto R_contracted = R(ti_I, ti_i);
+  // Expected: (TotalDim - 1) adds = (4 - 1) adds = 3 total ops
+  const auto S_contract_one_pair = S(ti_A, ti_B, ti_c, ti_a);
+  // Expected:
+  //   (SpatialDim * TotalDim - 1) adds = (3 * 4 - 1) adds = 11 total ops
+  const auto S_contract_both_pairs = S(ti_K, ti_A, ti_a, ti_k);
+
+  CHECK(R_contracted.num_ops_subtree == 2);
+  CHECK(S_contract_one_pair.num_ops_subtree == 3);
+  CHECK(S_contract_both_pairs.num_ops_subtree == 11);
+}
+
 // Contractions are performed by summing over multi-indices in an order that is
 // implementation defined. What is considered the "next lowest" and
 // "next highest" multi-indices should be opposites of each other. This test
@@ -828,6 +851,7 @@ void test_contractions(const DataType& used_for_size) {
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
                   "[DataStructures][Unit]") {
+  test_tensor_ops_properties();
   test_contraction_summation_consistency();
   test_contractions(std::numeric_limits<double>::signaling_NaN());
   test_contractions(
