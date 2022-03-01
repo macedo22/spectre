@@ -37,6 +37,44 @@ void assign_unique_values_to_tensor(
   }
 }
 
+// Checks that the number of ops in the expressions match what is expected
+void test_tensor_ops_properties() {
+  const Scalar<double> G{5.0};
+  const double H = 5.0;
+  const tnsr::II<double, 3> R{};
+  const tnsr::ia<double, 3> S{};
+
+  const auto HG_outer_product = H * G();
+  const auto HGG_outer_product = H * G() * G();
+  const auto RG_outer_product = R(ti_I, ti_J) * G();
+  const auto HSGR_outer_product = H * S(ti_i, ti_j) * G() * R(ti_K, ti_L);
+  // Expected: 3 multiplies + 2 adds = 5 total ops
+  const auto RS_inner_product = R(ti_I, ti_J) * S(ti_j, ti_k);
+  // Expected: 9 multiplies + 8 adds = 17 total ops
+  const auto RS_fully_contract = R(ti_I, ti_J) * S(ti_j, ti_i);
+  // Expected:
+  // If tempIk = R(ti_I, ti_J) * S(ti_j, ti_k) is 5 ops (see above), then
+  // (tempIk) * R(ti_K, ti_L) should be:
+  //      (3 multiplies * (tmpIk ops)) + 3 multiplies + 2 adds = 20 total ops
+  const auto RSR_inner_product = R(ti_I, ti_J) * S(ti_j, ti_k) * R(ti_K, ti_L);
+  // Expected:
+  // If tempij = ((G() * H) * (S(ti_i, ti_j) - S(ti_j, ti_i))), then tempij
+  // should be 2 multiplies + 1 subtract = 3 total ops. Then,
+  // (tempij) * R(ti_I, ti_K) should be:
+  //    (3 multiplies * (tempij ops)) + 3 multiplies + 2 adds = 14 total ops
+  const auto mixed_op_expression =
+      ((G() * H) * (S(ti_i, ti_j) - S(ti_j, ti_i))) * R(ti_I, ti_K);
+
+  CHECK(HG_outer_product.num_ops_subtree == 1);
+  CHECK(HGG_outer_product.num_ops_subtree == 2);
+  CHECK(RG_outer_product.num_ops_subtree == 1);
+  CHECK(HSGR_outer_product.num_ops_subtree == 3);
+  CHECK(RS_inner_product.num_ops_subtree == 5);
+  CHECK(RS_fully_contract.num_ops_subtree == 17);
+  CHECK(RSR_inner_product.num_ops_subtree == 20);
+  CHECK(mixed_op_expression.num_ops_subtree == 14);
+}
+
 // \brief Test the outer product and of a tensor expression and `double` is
 // correctly evaluated
 //
@@ -1350,6 +1388,7 @@ void test_products(const DataType& used_for_size) {
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Product",
                   "[DataStructures][Unit]") {
+  test_tensor_ops_properties();
   test_products(std::numeric_limits<double>::signaling_NaN());
   test_products(DataVector(5, std::numeric_limits<double>::signaling_NaN()));
 }
