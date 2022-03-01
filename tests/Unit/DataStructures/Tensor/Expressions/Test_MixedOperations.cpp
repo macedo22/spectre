@@ -129,7 +129,7 @@ void test_case1(const DataType& used_for_size,
   result_tensor_type actual_result_tensor_returned =
       TensorExpressions::evaluate<ti_a>(R(ti_a, ti_b) * S(ti_B) + G(ti_a) -
                                         H(ti_b, ti_a, ti_B) * T());
-  result_tensor_type actual_result_tensor_filled{};
+  result_tensor_type actual_result_tensor_filled(used_for_size);
   TensorExpressions::evaluate<ti_a>(
       make_not_null(&actual_result_tensor_filled),
       R(ti_a, ti_b) * S(ti_B) + G(ti_a) - H(ti_b, ti_a, ti_B) * T());
@@ -192,7 +192,7 @@ void test_case2(const DataType& used_for_size,
           sqrt(spatial_metric(ti_I, ti_J) * spacetime_metric(ti_j, ti_t) *
                    spacetime_metric(ti_i, ti_t) -
                spacetime_metric(ti_t, ti_t)));
-  Scalar<DataType> actual_result_tensor_filled{};
+  Scalar<DataType> actual_result_tensor_filled(used_for_size);
   TensorExpressions::evaluate(
       make_not_null(&actual_result_tensor_filled),
       sqrt(spatial_metric(ti_I, ti_J) * spacetime_metric(ti_j, ti_t) *
@@ -200,6 +200,8 @@ void test_case2(const DataType& used_for_size,
            spacetime_metric(ti_t, ti_t)));
 
   CHECK_ITERABLE_APPROX(actual_result_tensor_returned.get(),
+                        expected_result_tensor.get());
+  CHECK_ITERABLE_APPROX(actual_result_tensor_filled.get(),
                         expected_result_tensor.get());
 
   // Test with TempTensor for LHS tensor
@@ -249,7 +251,7 @@ void test_case3(const DataType& used_for_size,
   using result_tensor_type = tnsr::abb<DataType, 3, Frame::Inertial>;
   result_tensor_type expected_result_tensor =
       compute_expected_result3(alpha, beta, pi, phi, used_for_size);
-  result_tensor_type actual_result_tensor_filled{};
+  result_tensor_type actual_result_tensor_filled(used_for_size);
   // \f$\partial_t g_{ab} = -\alpha \Pi_{ab} + \beta^i \Phi_{iab}\f$
   TensorExpressions::evaluate<ti_t, ti_a, ti_b>(
       make_not_null(&actual_result_tensor_filled),

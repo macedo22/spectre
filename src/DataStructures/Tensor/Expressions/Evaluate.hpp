@@ -119,6 +119,13 @@ constexpr bool is_evaluated_lhs_multi_index(
  *
  * This represents evaluating: \f$L_{ba} = R_{ab} + S_{ab}\f$
  *
+ * Note: The LHS `Tensor` cannot be part of the RHS expression, e.g.
+ * `evaluate(make_not_null(&L), L() + R());`, because the LHS `Tensor` will
+ * generally not be computed correctly when the RHS `TensorExpression` is split
+ * up and the LHS tensor components are computed by accumulating the result of
+ * subtrees (see the section on splitting in the documentation for the
+ * `TensorExpression` class).
+ *
  * Note: `LhsTensorIndices` must be passed by reference because non-type
  * template parameters cannot be class types until C++20.
  *
@@ -182,6 +189,9 @@ void evaluate(
       "index has 2 spatial dimensions but L's second index has 3 spatial "
       "dimensions. Check RHS and LHS indices that use the same generic index.");
 
+  // Make sure the LHS tensor doesn't also appear in the RHS tensor expression
+  (~rhs_tensorexpression).assert_lhs_tensor_not_in_rhs_expression(lhs_tensor);
+
   constexpr std::array<size_t, num_rhs_indices> index_transformation =
       compute_tensorindex_transformation<num_lhs_indices, num_rhs_indices>(
           {{std::decay_t<decltype(LhsTensorIndices)>::value...}},
@@ -203,6 +213,8 @@ void evaluate(
       detail::get_time_index_positions<lhs_tensorindex_list>();
 
   using lhs_tensor_type = typename std::decay_t<decltype(*lhs_tensor)>;
+  using rhs_expression_type =
+      typename std::decay_t<decltype(~rhs_tensorexpression)>;
 
   for (size_t i = 0; i < lhs_tensor_type::size(); i++) {
     auto lhs_multi_index =
@@ -223,7 +235,28 @@ void evaluate(
                 gsl::at(rhs_spatial_spacetime_index_positions, j)) += 1;
       }
 
-      (*lhs_tensor)[i] = (~rhs_tensorexpression).get(rhs_multi_index);
+      // The expression will either be evaluated as one whole expression
+      // or it will be split up into subtrees that are evaluated one at a time.
+      // See the section on splitting in the documentation for the
+      // `TensorExpression` class to understand the logic and terminology used
+      // in this control flow below.
+      if constexpr (rhs_expression_type::
+                        primary_subtree_contains_primary_start) {
+        // the expression is split up, so evaluate subtrees at splits
+        (~rhs_tensorexpression)
+            .evaluate_primary_subtree((*lhs_tensor)[i], rhs_multi_index);
+        if constexpr (not rhs_expression_type::is_primary_start) {
+          // the root expression type is not the starting point of a leg, so it
+          // has not yet been evaluated, so now we evaluate this last leg of the
+          // expression at the root of the tree
+          (*lhs_tensor)[i] =
+              (~rhs_tensorexpression)
+                  .get_primary((*lhs_tensor)[i], rhs_multi_index);
+        }
+      } else {
+        // the expression is not split up, so evaluate full expression
+        (*lhs_tensor)[i] = (~rhs_tensorexpression).get(rhs_multi_index);
+      }
     }
   }
 }
@@ -291,9 +324,9 @@ auto evaluate(const RhsTE& rhs_tensorexpression) {
 
   Tensor<typename RhsTE::type, typename lhs_tensor_symm_and_indices::symmetry,
          typename lhs_tensor_symm_and_indices::tensorindextype_list>
-      lhs_tensor{};
+      lhs_tensor((~rhs_tensorexpression).get_used_for_size());
   evaluate<LhsTensorIndices...>(make_not_null(&lhs_tensor),
-                                rhs_tensorexpression);
+                                ~rhs_tensorexpression);
   return lhs_tensor;
 }
 }  // namespace TensorExpressions
