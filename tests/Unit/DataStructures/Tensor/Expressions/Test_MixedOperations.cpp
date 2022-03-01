@@ -201,6 +201,8 @@ void test_case2(const DataType& used_for_size,
 
   CHECK_ITERABLE_APPROX(actual_result_tensor_returned.get(),
                         expected_result_tensor.get());
+  CHECK_ITERABLE_APPROX(actual_result_tensor_filled.get(),
+                        expected_result_tensor.get());
 
   // Test with TempTensor for LHS tensor
   if constexpr (not std::is_same_v<DataType, double>) {
