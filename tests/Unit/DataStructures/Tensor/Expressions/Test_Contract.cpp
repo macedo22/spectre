@@ -34,8 +34,39 @@ void create_tensor(gsl::not_null<Tensor<DataVector, Ts...>*> tensor) {
   }
 }
 
-// TODO : need to add a test that checks for consistency between
-// get_first_index_to_sum and get_next_multi_index_to_sum
+// Contractions are performed by summing over multi-indices in an order that is
+// implementation defined. What is considered the "next lowest" and
+// "next highest" multi-indices should be opposites of each other. This test
+// checks this, as well as checking that the "lowest" and "highest"
+// multi-indices being summed are correctly determined.
+void test_contraction_summation_consistency() {
+  const tnsr::II<double, 3, Frame::Inertial> R{};
+  const tnsr::iab<double, 3, Frame::Inertial> S{};
+
+  // L is a `TensorContract`, not a `Tensor`
+  const auto L = R(ti_J, ti_I) * S(ti_i, ti_a, ti_j);
+  // multi-index for L_2
+  const std::array<size_t, 1> L_multi_index = {2};
+
+  const std::array<size_t, 5> lowest_multi_index =
+      L.get_lowest_multi_index_to_sum(L_multi_index);
+  const std::array<size_t, 5> expected_lowest_multi_index = {0, 0, 0, 2, 1};
+  CHECK(lowest_multi_index == expected_lowest_multi_index);
+
+  const std::array<size_t, 5> highest_multi_index =
+      L.get_highest_multi_index_to_sum(L_multi_index);
+  const std::array<size_t, 5> expected_highest_multi_index = {2, 2, 2, 2, 3};
+  CHECK(highest_multi_index == expected_highest_multi_index);
+
+  std::array<size_t, 5> current_multi_index = expected_lowest_multi_index;
+  while (current_multi_index != expected_highest_multi_index) {
+    const auto next_lowest_multi_index =
+        L.get_next_lowest_multi_index_to_sum(current_multi_index);
+    CHECK(L.get_next_highest_multi_index_to_sum(next_lowest_multi_index) ==
+          current_multi_index);
+    current_multi_index = next_lowest_multi_index;
+  }
+}
 
 template <typename DataType>
 void test_contractions_rank2(const DataType& used_for_size) {
@@ -797,6 +828,7 @@ void test_contractions(const DataType& used_for_size) {
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
                   "[DataStructures][Unit]") {
+  test_contraction_summation_consistency();
   test_contractions(std::numeric_limits<double>::signaling_NaN());
   test_contractions(
       DataVector(5, std::numeric_limits<double>::signaling_NaN()));
