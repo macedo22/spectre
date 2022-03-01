@@ -829,9 +829,27 @@ struct TensorContract
   // TODO : static assert this ^ or something?
   // travels "up" the primary branch, so starts at
   // Iteration = num_terms_summed - 1 and goes to Iteration = 0
+  /// \brief Computes the result of an internal leg of the contraction
+  ///
+  /// \details
+  /// This function differs from `compute_contraction` and
+  /// `compute_contraction_primary` in that it only computes one leg of the
+  /// whole contraction, as opposed to the whole contraction.
+  ///
+  /// The leg being summed is defined by the `current_multi_index` and
+  /// `Iteration` passed in from the inital external call: consecutive terms
+  /// will be summed until the base case `Iteration == 0` is reached.
+  ///
+  /// \tparam Iteration the nth term in the leg to sum, where n is between
+  /// [0, leg_length)
+  /// \param t the expression contained within this contraction expression
+  /// \param current_multi_index the multi-index of the uncontracted tensor
+  /// component to retrieve as part of this leg's summation
+  /// \param next_leg_starting_multi_index in the final iteration, the
+  /// multi-index to update to be the next leg's starting multi-index
+  /// \return the result of summing up the terms in the given leg
   template <size_t Iteration>
-  SPECTRE_ALWAYS_INLINE static decltype(auto)
-  compute_contraction_primary_stop_at_branches(
+  SPECTRE_ALWAYS_INLINE static decltype(auto) compute_contraction_leg(
       const T& t,
       const std::array<size_t, num_uncontracted_tensor_indices>&
           current_multi_index,
@@ -840,7 +858,7 @@ struct TensorContract
     if constexpr (Iteration != 0) {
       // We have more than one component left to sum
       (void)next_leg_starting_multi_index;
-      return compute_contraction_primary_stop_at_branches<Iteration - 1>(
+      return compute_contraction_leg<Iteration - 1>(
                  t, get_next_highest_multi_index_to_sum(current_multi_index),
                  next_leg_starting_multi_index) +
              t.get(current_multi_index);
@@ -885,10 +903,6 @@ struct TensorContract
   /// contraction, the current result component will be substituted in for the
   /// most recent (highest) subtree below it that has already been evaluated.
   ///
-  /// If this contraction expression is the beginning of a leg,
-  /// `evaluate_primary_contraction` is called to evaluate each individual
-  /// leg of summations within the contraction.
-  ///
   /// \param result_component the LHS tensor component to evaluate
   /// \param contracted_multi_index the multi-index of the component of the
   /// contracted result tensor to evaluate
@@ -900,17 +914,14 @@ struct TensorContract
       const std::array<size_t, num_uncontracted_tensor_indices>&
           lowest_multi_index) const {
     if constexpr (not is_primary_end) {
-      // we still need to compute what's below the contraction
+      // We need to first evaluate the subtree of the term being summed that
+      // is deepest in the tree
       result_component = t_.get_primary(result_component, lowest_multi_index);
     }
 
     if constexpr (evaluate_terms_separately) {
+      // Case 1: Evaluate all of the remaining terms, one TERM at a time
       (void)contracted_multi_index;
-      // now, the contraction is the lowest thing, so we can
-      // climb up and compute each term, visiting right branches
-      // along the way
-      // start at i == 1 because the above if takes care of the first term
-      // hoping that iterating will reduce pressure on cache?
       std::array<size_t, num_uncontracted_tensor_indices> current_multi_index =
           lowest_multi_index;
       for (size_t i = 1; i < num_terms_summed; i++) {
@@ -921,49 +932,55 @@ struct TensorContract
         current_multi_index = next_lowest_multi_index_to_sum;
       }
     } else {
+      // Case 2: Evaluate all of the remaining terms, one LEG at a time
       (void)lowest_multi_index;
-      // evaluate each leg
       std::array<size_t, num_uncontracted_tensor_indices>
           next_leg_starting_multi_index =
               get_highest_multi_index_to_sum(contracted_multi_index);
-      // if we have less than a full-length leg leftover
       if constexpr (last_leg_length > 0) {
-        // next add up all the full-length legs
+        // Case 2a: We have a remainder of terms that don't make up a full leg
+        // length
+
+        // Evaluate all the full-length legs
         for (size_t i = 0; i < num_full_legs; i++) {
           const std::array<size_t, num_uncontracted_tensor_indices>
               current_multi_index = next_leg_starting_multi_index;
-          result_component +=
-              compute_contraction_primary_stop_at_branches<leg_length - 1>(
-                  t_, current_multi_index, next_leg_starting_multi_index);
+          result_component += compute_contraction_leg<leg_length - 1>(
+              t_, current_multi_index, next_leg_starting_multi_index);
         }
-        // lastly, get rest of the last leg if it's not just the one term we
-        // already took care of
         if constexpr (last_leg_length > 1) {
+          // Get rest of the deepest (partial-length) leg if there are more
+          // terms in it than just the one deepest term we already computed
           const std::array<size_t, num_uncontracted_tensor_indices>
               current_multi_index = next_leg_starting_multi_index;
           result_component +=
-              compute_contraction_primary_stop_at_branches<last_leg_length - 2>(
+              // start at last_leg_length - 2 because we already computed one of
+              // the terms in this deepest leg (the deepest term)
+              compute_contraction_leg<last_leg_length - 2>(
                   t_, current_multi_index, next_leg_starting_multi_index);
         }
-      }  // we only have full-length legs, no leftovers
-      else {
-        // next add up all the full-length legs
+      } else {
+        // Case 2b: We don't have remaining terms that only make up a
+        // partial leg length (i.e. we only have full-length legs)
+
+        // Evaluate all but the deepest leg
         for (size_t i = 1; i < num_full_legs; i++) {
           const std::array<size_t, num_uncontracted_tensor_indices>
               current_multi_index = next_leg_starting_multi_index;
 
-          result_component +=
-              compute_contraction_primary_stop_at_branches<leg_length - 1>(
-                  t_, current_multi_index, next_leg_starting_multi_index);
+          result_component += compute_contraction_leg<leg_length - 1>(
+              t_, current_multi_index, next_leg_starting_multi_index);
         }
 
-        // lastly, get rest of the last leg if it's not just the one term we
-        // already took care of
         if constexpr (leg_length > 1) {
+          // Get rest of the deepest leg if there are more terms in it than
+          // just the one deepest term we already computed
           const std::array<size_t, num_uncontracted_tensor_indices>
               current_multi_index = next_leg_starting_multi_index;
           result_component +=
-              compute_contraction_primary_stop_at_branches<leg_length - 2>(
+              // start at leg_length - 2 because we already computed one of the
+              // terms in this deepest leg (the deepest term)
+              compute_contraction_leg<leg_length - 2>(
                   t_, current_multi_index, next_leg_starting_multi_index);
         }
       }
