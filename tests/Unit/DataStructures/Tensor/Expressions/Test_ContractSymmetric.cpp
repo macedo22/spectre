@@ -33,6 +33,24 @@ Scalar<DataType> compute_expected_3x3(const R_type& R, const S_type& S) {
   return result;
 }
 
+template <typename A_type, typename B_type,
+          typename DataType = typename A_type::type>
+Scalar<DataType> compute_expected_4x4(const A_type& A, const B_type& B) {
+  auto result = make_with_value<Scalar<DataType>>(get<0, 0, 0, 0>(A), 0.0);
+
+  for (size_t i = 0; i < Dim; i++) {
+    for (size_t j = 0; j < Dim; j++) {
+      for (size_t k = 0; k < Dim; k++) {
+        for (size_t l = 0; l < Dim; l++) {
+          get(result) += A.get(i, j, k, l) * B.get(i, j, k, l);
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
 template <typename Generator, typename DataType>
 void test(const gsl::not_null<Generator*> generator,
           const DataType& used_for_size) {
@@ -68,8 +86,16 @@ void test(const gsl::not_null<Generator*> generator,
                         SpatialIndex<Dim, UpLo::Up, Frame::Inertial>,
                         SpatialIndex<Dim, UpLo::Up, Frame::Inertial>>>>(
       generator, distribution, used_for_size);
-  // lower <2, 2, 1, 1>
+  // lower <1, 1, 1, 1>
   const auto B = make_with_random_values<
+      Tensor<DataType, Symmetry<1, 1, 1, 1>,
+             index_list<SpatialIndex<Dim, UpLo::Lo, Frame::Inertial>,
+                        SpatialIndex<Dim, UpLo::Lo, Frame::Inertial>,
+                        SpatialIndex<Dim, UpLo::Lo, Frame::Inertial>,
+                        SpatialIndex<Dim, UpLo::Lo, Frame::Inertial>>>>(
+      generator, distribution, used_for_size);
+  // lower <2, 2, 1, 1>
+  const auto C = make_with_random_values<
       Tensor<DataType, Symmetry<2, 2, 1, 1>,
              index_list<SpatialIndex<Dim, UpLo::Lo, Frame::Inertial>,
                         SpatialIndex<Dim, UpLo::Lo, Frame::Inertial>,
@@ -77,6 +103,7 @@ void test(const gsl::not_null<Generator*> generator,
                         SpatialIndex<Dim, UpLo::Lo, Frame::Inertial>>>>(
       generator, distribution, used_for_size);
 
+  // symmetric 3x3
   const auto expected_3x3_result = compute_expected_3x3(R, S);
 
   const size_t num_ind_comp_3x3 = decltype(R)::structure::size();
@@ -97,6 +124,31 @@ void test(const gsl::not_null<Generator*> generator,
   }
 
   CHECK_ITERABLE_APPROX(actual_3x3_result, expected_3x3_result);
+
+  // symmetric 4x4
+  const auto expected_4x4_result = compute_expected_4x4(A, B);
+
+  const size_t num_ind_comp_4x4 = decltype(A)::structure::size();
+  const std::array<size_t, num_ind_comp_4x4> multipliers_4x4 = {
+      1, 4, 4, 6, 12, 6, 4, 12, 12, 4, 1, 4, 6, 4, 1};
+  size_t current_index_4x4 = 0;
+
+  auto actual_4x4_result =
+      make_with_value<Scalar<DataType>>(used_for_size, 0.0);
+  for (size_t i = 0; i < Dim; i++) {
+    for (size_t j = i; j < Dim; j++) {
+      for (size_t k = j; k < Dim; k++) {
+        for (size_t l = k; l < Dim; l++) {
+          get(actual_4x4_result) +=
+              gsl::at(multipliers_4x4, current_index_4x4) * A.get(i, j, k, l) *
+              B.get(i, j, k, l);
+          current_index_4x4++;
+        }
+      }
+    }
+  }
+
+  CHECK_ITERABLE_APPROX(actual_4x4_result, expected_4x4_result);
 }
 }  // namespace
 
