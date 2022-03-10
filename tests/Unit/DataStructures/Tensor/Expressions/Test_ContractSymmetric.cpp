@@ -17,6 +17,38 @@
 namespace {
 constexpr size_t Dim = 3;
 
+// Note: assumes both operands have same rank with generic indices in same
+// order
+// \tparam Rank the rank of one of the operands
+template <size_t Rank>
+std::array<size_t, Rank> get_next_lowest_multi_index_to_sum(
+    const std::array<size_t, Rank>& uncontracted_multi_index) {
+  std::array<size_t, Rank> next_lowest_uncontracted_multi_index =
+      uncontracted_multi_index;
+
+  size_t i = Rank - 1;
+  while (true) {
+    // increment the current index pair's values
+    gsl::at(next_lowest_uncontracted_multi_index, i)++;
+
+    // If the index values of the index pair being contracted aren't higher
+    // than the maximum values included in the summation, ...
+    if (not(gsl::at(next_lowest_uncontracted_multi_index, i) > Dim - 1)) {
+      for (size_t j = i + 1; j < Rank; j++) {
+        gsl::at(next_lowest_uncontracted_multi_index, j) =
+            gsl::at(next_lowest_uncontracted_multi_index, i);
+      }
+
+      break;
+    }
+    // Otherwise, we've wrapped around the highest value being summed over for
+    // this index, so we...
+    i--;
+  }
+
+  return next_lowest_uncontracted_multi_index;
+}
+
 template <typename R_type, typename S_type,
           typename DataType = typename R_type::type>
 Scalar<DataType> compute_expected_3x3(const R_type& R, const S_type& S) {
@@ -111,16 +143,34 @@ void test(const gsl::not_null<Generator*> generator,
                                                                 3, 1, 3, 3, 1};
   size_t current_index_3x3 = 0;
 
+  //   auto actual_3x3_result =
+  //       make_with_value<Scalar<DataType>>(used_for_size, 0.0);
+  //   for (size_t i = 0; i < Dim; i++) {
+  //     for (size_t j = i; j < Dim; j++) {
+  //       for (size_t k = j; k < Dim; k++) {
+  //         get(actual_3x3_result) += gsl::at(multipliers_3x3,
+  //         current_index_3x3) *
+  //                                   R.get(i, j, k) * S.get(i, j, k);
+  //         current_index_3x3++;
+  //       }
+  //     }
+  //   }
+
   auto actual_3x3_result =
       make_with_value<Scalar<DataType>>(used_for_size, 0.0);
-  for (size_t i = 0; i < Dim; i++) {
-    for (size_t j = i; j < Dim; j++) {
-      for (size_t k = j; k < Dim; k++) {
-        get(actual_3x3_result) += gsl::at(multipliers_3x3, current_index_3x3) *
-                                  R.get(i, j, k) * S.get(i, j, k);
-        current_index_3x3++;
-      }
-    }
+  const std::array<size_t, 3> starting_multi_index_3x3 = {0, 0, 0};
+  get(actual_3x3_result) += gsl::at(multipliers_3x3, 0) *
+                            R.get(starting_multi_index_3x3) *
+                            S.get(starting_multi_index_3x3);
+  std::array<size_t, 3> previous_multi_index_3x3 = starting_multi_index_3x3;
+
+  for (size_t i = 1; i < num_ind_comp_3x3; i++) {
+    auto current_multi_index =
+        get_next_lowest_multi_index_to_sum(previous_multi_index_3x3);
+    get(actual_3x3_result) += gsl::at(multipliers_3x3, i) *
+                              R.get(current_multi_index) *
+                              S.get(current_multi_index);
+    previous_multi_index_3x3 = current_multi_index;
   }
 
   CHECK_ITERABLE_APPROX(actual_3x3_result, expected_3x3_result);
