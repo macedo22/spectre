@@ -11,43 +11,14 @@
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
+#include "Utilities/Algorithm.hpp"
+#include "Utilities/ConstantExpressions.hpp"
 #include "Utilities/Gsl.hpp"
+#include "Utilities/MakeArray.hpp"
 #include "Utilities/MakeWithValue.hpp"
 
 namespace {
 constexpr size_t Dim = 3;
-
-// Note: assumes both operands have same rank with generic indices in same
-// order
-// \tparam Rank the rank of one of the operands
-template <size_t Rank>
-std::array<size_t, Rank> get_next_lowest_multi_index_to_sum(
-    const std::array<size_t, Rank>& uncontracted_multi_index) {
-  std::array<size_t, Rank> next_lowest_uncontracted_multi_index =
-      uncontracted_multi_index;
-
-  size_t i = Rank - 1;
-  while (true) {
-    // increment the current index pair's values
-    gsl::at(next_lowest_uncontracted_multi_index, i)++;
-
-    // If the index values of the index pair being contracted aren't higher
-    // than the maximum values included in the summation, ...
-    if (not(gsl::at(next_lowest_uncontracted_multi_index, i) > Dim - 1)) {
-      for (size_t j = i + 1; j < Rank; j++) {
-        gsl::at(next_lowest_uncontracted_multi_index, j) =
-            gsl::at(next_lowest_uncontracted_multi_index, i);
-      }
-
-      break;
-    }
-    // Otherwise, we've wrapped around the highest value being summed over for
-    // this index, so we...
-    i--;
-  }
-
-  return next_lowest_uncontracted_multi_index;
-}
 
 template <typename R_type, typename S_type,
           typename DataType = typename R_type::type>
@@ -81,6 +52,136 @@ Scalar<DataType> compute_expected_4x4(const A_type& A, const B_type& B) {
   }
 
   return result;
+}
+
+// \tparam Rank the rank of the operands
+template <size_t Rank>
+constexpr std::array<size_t, Rank> get_lowest_multi_index_to_sum() {
+  return make_array<Rank, size_t>(0);
+}
+
+// \tparam Rank the rank of the operands
+template <size_t Rank>
+constexpr std::array<size_t, Rank> get_highest_multi_index_to_sum() {
+  return make_array<Rank, size_t>(Dim - 1);
+}
+
+// Note: assumes both operands have same rank with generic indices in same
+// order
+// \tparam Rank the rank of the operands
+template <size_t Rank>
+constexpr std::array<size_t, Rank> get_next_lowest_multi_index_to_sum(
+    const std::array<size_t, Rank>& uncontracted_multi_index) {
+  std::array<size_t, Rank> next_lowest_uncontracted_multi_index =
+      uncontracted_multi_index;
+
+  size_t i = Rank - 1;
+  while (true) {
+    // increment the current index pair's values
+    gsl::at(next_lowest_uncontracted_multi_index, i)++;
+
+    // If the index values of the index pair being contracted aren't higher
+    // than the maximum values included in the summation, ...
+    if (not(gsl::at(next_lowest_uncontracted_multi_index, i) > Dim - 1)) {
+      for (size_t j = i + 1; j < Rank; j++) {
+        gsl::at(next_lowest_uncontracted_multi_index, j) =
+            gsl::at(next_lowest_uncontracted_multi_index, i);
+      }
+
+      break;
+    }
+    // Otherwise, we've wrapped around the highest value being summed over for
+    // this index, so we...
+    i--;
+  }
+
+  return next_lowest_uncontracted_multi_index;
+}
+
+// Note: assumes both operands have same rank with generic indices in same
+// order
+// \tparam Rank the rank of the operands
+template <size_t Rank>
+constexpr std::array<size_t, Rank> get_next_highest_multi_index_to_sum(
+    const std::array<size_t, Rank>& uncontracted_multi_index) {
+  std::array<size_t, Rank> next_highest_uncontracted_multi_index =
+      uncontracted_multi_index;
+  // TODO: assert that this next value is not 0? worth it?
+  const size_t max_index_value = gsl::at(uncontracted_multi_index, Rank - 1);
+
+  size_t i = Rank - 1;
+  while (i - 1 < Rank and gsl::at(next_highest_uncontracted_multi_index,
+                                  i - 1) == max_index_value) {
+    if (max_index_value == 1) {
+      gsl::at(next_highest_uncontracted_multi_index, i) = max_index_value;
+    }
+    i--;
+  }
+
+  gsl::at(next_highest_uncontracted_multi_index, i)--;
+
+  return next_highest_uncontracted_multi_index;
+}
+
+template <size_t Rank>
+constexpr size_t get_num_permutations(
+    const std::array<size_t, Rank>& multi_index) {
+  size_t num_permutations = static_cast<size_t>(factorial(Rank));
+
+  // TODO : maybe at a tparam for if there are spatial-spacetime indices, and if
+  // so, start at Dim, instead
+  for (size_t i = Dim - 1; i < Dim; i--) {
+    const size_t current_index_value_count =
+        static_cast<size_t>(alg::count(multi_index, i));
+    if (current_index_value_count > 1) {
+      num_permutations /=
+          static_cast<size_t>(factorial(current_index_value_count));
+    }
+  }
+
+  return num_permutations;
+}
+
+template <size_t Rank, size_t NumIndComponents>
+constexpr std::array<size_t, NumIndComponents> get_multipliers() {
+  std::array<size_t, NumIndComponents> multipliers{};
+  gsl::at(multipliers, 0) = 1;  // lowest multi-index is all 0s, so only 1 combo
+
+  std::array<size_t, Rank> current_multi_index =
+      get_lowest_multi_index_to_sum<Rank>();
+  for (size_t i = 1; i < NumIndComponents; i++) {
+    current_multi_index =
+        get_next_lowest_multi_index_to_sum(current_multi_index);
+    gsl::at(multipliers, i) = get_num_permutations(current_multi_index);
+  }
+
+  return multipliers;
+}
+
+template <size_t Rank, typename T1, typename T2,
+          typename DataType = typename T1::type>
+Scalar<DataType> compute_contraction(const T1& t1, const T2& t2) {
+  constexpr size_t num_ind_comp = T1::structure::size();
+  constexpr std::array<size_t, num_ind_comp> multipliers =
+      get_multipliers<Rank, num_ind_comp>();
+
+  Scalar<DataType> actual_result{};
+  const std::array<size_t, Rank> starting_multi_index =
+      get_lowest_multi_index_to_sum<Rank>();
+  get(actual_result) = gsl::at(multipliers, 0) * t1.get(starting_multi_index) *
+                       t2.get(starting_multi_index);
+
+  std::array<size_t, Rank> previous_multi_index = starting_multi_index;
+  for (size_t i = 1; i < num_ind_comp; i++) {
+    auto current_multi_index =
+        get_next_lowest_multi_index_to_sum(previous_multi_index);
+    get(actual_result) += gsl::at(multipliers, i) *
+                          t1.get(current_multi_index) *
+                          t2.get(current_multi_index);
+    previous_multi_index = current_multi_index;
+  }
+
+  return actual_result;
 }
 
 template <typename Generator, typename DataType>
@@ -137,67 +238,12 @@ void test(const gsl::not_null<Generator*> generator,
 
   // symmetric 3x3
   const auto expected_3x3_result = compute_expected_3x3(R, S);
-
-  const size_t num_ind_comp_3x3 = decltype(R)::structure::size();
-  const std::array<size_t, num_ind_comp_3x3> multipliers_3x3 = {1, 3, 3, 3, 6,
-                                                                3, 1, 3, 3, 1};
-  size_t current_index_3x3 = 0;
-
-  //   auto actual_3x3_result =
-  //       make_with_value<Scalar<DataType>>(used_for_size, 0.0);
-  //   for (size_t i = 0; i < Dim; i++) {
-  //     for (size_t j = i; j < Dim; j++) {
-  //       for (size_t k = j; k < Dim; k++) {
-  //         get(actual_3x3_result) += gsl::at(multipliers_3x3,
-  //         current_index_3x3) *
-  //                                   R.get(i, j, k) * S.get(i, j, k);
-  //         current_index_3x3++;
-  //       }
-  //     }
-  //   }
-
-  auto actual_3x3_result =
-      make_with_value<Scalar<DataType>>(used_for_size, 0.0);
-  const std::array<size_t, 3> starting_multi_index_3x3 = {0, 0, 0};
-  get(actual_3x3_result) += gsl::at(multipliers_3x3, 0) *
-                            R.get(starting_multi_index_3x3) *
-                            S.get(starting_multi_index_3x3);
-  std::array<size_t, 3> previous_multi_index_3x3 = starting_multi_index_3x3;
-
-  for (size_t i = 1; i < num_ind_comp_3x3; i++) {
-    auto current_multi_index =
-        get_next_lowest_multi_index_to_sum(previous_multi_index_3x3);
-    get(actual_3x3_result) += gsl::at(multipliers_3x3, i) *
-                              R.get(current_multi_index) *
-                              S.get(current_multi_index);
-    previous_multi_index_3x3 = current_multi_index;
-  }
-
+  const Scalar<DataType> actual_3x3_result = compute_contraction<3>(R, S);
   CHECK_ITERABLE_APPROX(actual_3x3_result, expected_3x3_result);
 
   // symmetric 4x4
   const auto expected_4x4_result = compute_expected_4x4(A, B);
-
-  const size_t num_ind_comp_4x4 = decltype(A)::structure::size();
-  const std::array<size_t, num_ind_comp_4x4> multipliers_4x4 = {
-      1, 4, 4, 6, 12, 6, 4, 12, 12, 4, 1, 4, 6, 4, 1};
-  size_t current_index_4x4 = 0;
-
-  auto actual_4x4_result =
-      make_with_value<Scalar<DataType>>(used_for_size, 0.0);
-  for (size_t i = 0; i < Dim; i++) {
-    for (size_t j = i; j < Dim; j++) {
-      for (size_t k = j; k < Dim; k++) {
-        for (size_t l = k; l < Dim; l++) {
-          get(actual_4x4_result) +=
-              gsl::at(multipliers_4x4, current_index_4x4) * A.get(i, j, k, l) *
-              B.get(i, j, k, l);
-          current_index_4x4++;
-        }
-      }
-    }
-  }
-
+  const Scalar<DataType> actual_4x4_result = compute_contraction<4>(A, B);
   CHECK_ITERABLE_APPROX(actual_4x4_result, expected_4x4_result);
 }
 }  // namespace

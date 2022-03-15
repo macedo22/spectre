@@ -130,6 +130,38 @@ constexpr bool next_permutation(BidirectionalIterator first,
 
 /*!
  * \ingroup UtilitiesGroup
+ * Reimplementation of std::count that is constexpr
+ */
+template <class InputIt, class T>
+constexpr typename std::iterator_traits<InputIt>::difference_type count(
+    InputIt first, InputIt last, const T& value) {
+  typename std::iterator_traits<InputIt>::difference_type ret = 0;
+  for (; first != last; ++first) {
+    if (*first == value) {
+      ret++;
+    }
+  }
+  return ret;
+}
+
+/*!
+ * \ingroup UtilitiesGroup
+ * Reimplementation of std::count_if that is constexpr
+ */
+template <class InputIt, class UnaryPredicate>
+constexpr typename std::iterator_traits<InputIt>::difference_type count_if(
+    InputIt first, InputIt last, UnaryPredicate p) {
+  typename std::iterator_traits<InputIt>::difference_type ret = 0;
+  for (; first != last; ++first) {
+    if (p(*first)) {
+      ret++;
+    }
+  }
+  return ret;
+}
+
+/*!
+ * \ingroup UtilitiesGroup
  * Reimplementation of std::find that is constexpr
  */
 template <class InputIt, class T>
@@ -205,19 +237,20 @@ decltype(auto) none_of(const Container& c, UnaryPredicate&& unary_predicate) {
 
 /// Convenience wrapper around std::count
 template <class Container, class T>
-decltype(auto) count(const Container& c, const T& value) {
+constexpr decltype(auto) count(const Container& c, const T& value) {
   using std::begin;
   using std::end;
-  return std::count(begin(c), end(c), value);
+  return cpp20::count(begin(c), end(c), value);
 }
 
 /// Convenience wrapper around std::count_if
 template <class Container, class UnaryPredicate>
-decltype(auto) count_if(const Container& c, UnaryPredicate&& unary_predicate) {
+constexpr decltype(auto) count_if(const Container& c,
+                                  UnaryPredicate&& unary_predicate) {
   using std::begin;
   using std::end;
-  return std::count_if(begin(c), end(c),
-                       std::forward<UnaryPredicate>(unary_predicate));
+  return cpp20::count_if(begin(c), end(c),
+                         std::forward<UnaryPredicate>(unary_predicate));
 }
 
 /// Convenience wrapper around constexpr reimplementation of std::find
