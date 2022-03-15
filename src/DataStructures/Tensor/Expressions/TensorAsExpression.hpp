@@ -256,7 +256,10 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
   SPECTRE_ALWAYS_INLINE void assert_lhs_tensor_not_in_rhs_expression(
       const gsl::not_null<LhsTensor*> lhs_tensor) const {
     (void)lhs_tensor;
-    assert(static_cast<const void*>(&(*t_)) != &(*lhs_tensor));
+    ASSERT(static_cast<const void*>(&(*t_)) != &(*lhs_tensor),
+           "The LHS Tensor cannot also be in the RHS expression in the call to "
+           "TensorExpressions::evaluate(). Use TensorExpressions::update() "
+           "instead.");
   }
 
   /// \brief Retrieve a component of the represented `Tensor`

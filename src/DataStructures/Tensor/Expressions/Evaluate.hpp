@@ -88,6 +88,155 @@ constexpr bool is_evaluated_lhs_multi_index(
   }
   return true;
 }
+
+/*!
+ * \ingroup TensorExpressionsGroup
+ * \brief Evaluate subtrees of the RHS expression or the RHS expression as a
+ * whole
+ *
+ * \details This is for internal use only and should never be directly called.
+ * See `TensorExpressions::evaluate` and use it, instead.
+ *
+ * `EvaluateSubtrees` controls whether we wish to evaluate RHS subtrees or the
+ * entire RHS expression as one expression. See`TensorExpression` documentation
+ * on equation splitting for more details on what this means.
+ *
+ * Note: `LhsTensorIndices` must be passed by reference because non-type
+ * template parameters cannot be class types until C++20.
+ *
+ * @tparam EvaluateSubtrees whether or not to evaluate subtrees of RHS
+ * expression
+ * @tparam LhsTensorIndices the TensorIndexs of the Tensor on the LHS of the
+ * tensor expression, e.g. `ti_a`, `ti_b`, `ti_c`
+ * @param lhs_tensor pointer to the resultant LHS Tensor to fill
+ * @param rhs_tensorexpression the RHS TensorExpression to be evaluated
+ */
+template <bool EvaluateSubtrees, auto&... LhsTensorIndices, typename X,
+          typename LhsSymmetry, typename LhsIndexList, typename Derived,
+          typename RhsSymmetry, typename RhsIndexList,
+          typename... RhsTensorIndices>
+void evaluate_impl(
+    const gsl::not_null<Tensor<X, LhsSymmetry, LhsIndexList>*> lhs_tensor,
+    const TensorExpression<Derived, X, RhsSymmetry, RhsIndexList,
+                           tmpl::list<RhsTensorIndices...>>&
+        rhs_tensorexpression) {
+  constexpr size_t num_lhs_indices = sizeof...(LhsTensorIndices);
+  constexpr size_t num_rhs_indices = sizeof...(RhsTensorIndices);
+
+  using lhs_tensorindex_list =
+      tmpl::list<std::decay_t<decltype(LhsTensorIndices)>...>;
+  using rhs_tensorindex_list = tmpl::list<RhsTensorIndices...>;
+
+  static_assert(
+      tmpl::equal_members<
+          typename remove_time_indices<lhs_tensorindex_list>::type,
+          typename remove_time_indices<rhs_tensorindex_list>::type>::value,
+      "The generic indices on the LHS of a tensor equation (that is, the "
+      "template parameters specified in evaluate<...>) must match the generic "
+      "indices of the RHS TensorExpression. This error occurs as a result of a "
+      "call like evaluate<ti_a, ti_b>(R(ti_A, ti_b) * S(ti_a, ti_c)), where "
+      "the generic indices of the evaluated RHS expression are ti_b and ti_c, "
+      "but the generic indices provided for the LHS are ti_a and ti_b.");
+  static_assert(
+      tensorindex_list_is_valid<lhs_tensorindex_list>::value,
+      "Cannot evaluate a tensor expression to a LHS tensor with a repeated "
+      "generic index, e.g. evaluate<ti_a, ti_a>. (Note that the concrete "
+      "time indices (ti_T and ti_t) can be repeated.)");
+  static_assert(
+      not contains_indices_to_contract<num_lhs_indices>(
+          {{std::decay_t<decltype(LhsTensorIndices)>::value...}}),
+      "Cannot evaluate a tensor expression to a LHS tensor with generic "
+      "indices that would be contracted, e.g. evaluate<ti_A, ti_a>.");
+  // `IndexPropertyCheck` does also check that valence (Up/Lo) of indices that
+  // correspond in the RHS and LHS tensors are equal, but the assertion message
+  // below does not mention this because a mismatch in valence should have been
+  // caught due to the combination of (i) the Tensor::operator() assertion
+  // checking that generic indices' valences match the tensor's indices'
+  // valences and (ii) the above assertion that RHS and LHS generic indices
+  // match
+  static_assert(
+      IndexPropertyCheck<LhsIndexList, RhsIndexList, lhs_tensorindex_list,
+                         rhs_tensorindex_list>::value,
+      "At least one index of the tensor evaluated from the RHS expression "
+      "cannot be evaluated to its corresponding index in the LHS tensor. This "
+      "is due to a difference in number of spatial dimensions or Frame type "
+      "between the index on the RHS and LHS. "
+      "e.g. evaluate<ti_a, ti_b>(L, R(ti_b, ti_a));, where R's first "
+      "index has 2 spatial dimensions but L's second index has 3 spatial "
+      "dimensions. Check RHS and LHS indices that use the same generic index.");
+
+  if constexpr (EvaluateSubtrees) {
+    // Make sure the LHS tensor doesn't also appear in the RHS tensor expression
+    (~rhs_tensorexpression).assert_lhs_tensor_not_in_rhs_expression(lhs_tensor);
+  }
+
+  constexpr std::array<size_t, num_rhs_indices> index_transformation =
+      compute_tensorindex_transformation<num_lhs_indices, num_rhs_indices>(
+          {{std::decay_t<decltype(LhsTensorIndices)>::value...}},
+          {{RhsTensorIndices::value...}});
+
+  // positions of indices in LHS tensor where generic spatial indices are used
+  // for spacetime indices
+  constexpr auto lhs_spatial_spacetime_index_positions =
+      get_spatial_spacetime_index_positions<LhsIndexList,
+                                            lhs_tensorindex_list>();
+  // positions of indices in RHS tensor where generic spatial indices are used
+  // for spacetime indices
+  constexpr auto rhs_spatial_spacetime_index_positions =
+      get_spatial_spacetime_index_positions<RhsIndexList,
+                                            rhs_tensorindex_list>();
+
+  // positions of indices in LHS tensor where concrete time indices are used
+  constexpr auto lhs_time_index_positions =
+      get_time_index_positions<lhs_tensorindex_list>();
+
+  using lhs_tensor_type = typename std::decay_t<decltype(*lhs_tensor)>;
+  using rhs_expression_type =
+      typename std::decay_t<decltype(~rhs_tensorexpression)>;
+
+  for (size_t i = 0; i < lhs_tensor_type::size(); i++) {
+    auto lhs_multi_index =
+        lhs_tensor_type::structure::get_canonical_tensor_index(i);
+    if (is_evaluated_lhs_multi_index(lhs_multi_index,
+                                     lhs_spatial_spacetime_index_positions,
+                                     lhs_time_index_positions)) {
+      for (size_t j = 0; j < lhs_spatial_spacetime_index_positions.size();
+           j++) {
+        gsl::at(lhs_multi_index,
+                gsl::at(lhs_spatial_spacetime_index_positions, j)) -= 1;
+      }
+      auto rhs_multi_index =
+          transform_multi_index(lhs_multi_index, index_transformation);
+      for (size_t j = 0; j < rhs_spatial_spacetime_index_positions.size();
+           j++) {
+        gsl::at(rhs_multi_index,
+                gsl::at(rhs_spatial_spacetime_index_positions, j)) += 1;
+      }
+
+      // The expression will either be evaluated as one whole expression
+      // or it will be split up into subtrees that are evaluated one at a time.
+      // See the section on splitting in the documentation for the
+      // `TensorExpression` class to understand the logic and terminology used
+      // in this control flow below.
+      if constexpr (EvaluateSubtrees) {
+        // the expression is split up, so evaluate subtrees at splits
+        (~rhs_tensorexpression)
+            .evaluate_primary_subtree((*lhs_tensor)[i], rhs_multi_index);
+        if constexpr (not rhs_expression_type::is_primary_start) {
+          // the root expression type is not the starting point of a leg, so it
+          // has not yet been evaluated, so now we evaluate this last leg of the
+          // expression at the root of the tree
+          (*lhs_tensor)[i] =
+              (~rhs_tensorexpression)
+                  .get_primary((*lhs_tensor)[i], rhs_multi_index);
+        }
+      } else {
+        // the expression is not split up, so evaluate full expression
+        (*lhs_tensor)[i] = (~rhs_tensorexpression).get(rhs_multi_index);
+      }
+    }
+  }
+}
 }  // namespace detail
 
 /*!
@@ -126,6 +275,7 @@ constexpr bool is_evaluated_lhs_multi_index(
  * subtrees (see the section on splitting in the documentation for the
  * `TensorExpression` class).
  *
+ *
  * Note: `LhsTensorIndices` must be passed by reference because non-type
  * template parameters cannot be class types until C++20.
  *
@@ -142,123 +292,12 @@ void evaluate(
     const TensorExpression<Derived, X, RhsSymmetry, RhsIndexList,
                            tmpl::list<RhsTensorIndices...>>&
         rhs_tensorexpression) {
-  constexpr size_t num_lhs_indices = sizeof...(LhsTensorIndices);
-  constexpr size_t num_rhs_indices = sizeof...(RhsTensorIndices);
-
-  using lhs_tensorindex_list =
-      tmpl::list<std::decay_t<decltype(LhsTensorIndices)>...>;
-  using rhs_tensorindex_list = tmpl::list<RhsTensorIndices...>;
-
-  static_assert(
-      tmpl::equal_members<
-          typename detail::remove_time_indices<lhs_tensorindex_list>::type,
-          typename detail::remove_time_indices<rhs_tensorindex_list>::type>::
-          value,
-      "The generic indices on the LHS of a tensor equation (that is, the "
-      "template parameters specified in evaluate<...>) must match the generic "
-      "indices of the RHS TensorExpression. This error occurs as a result of a "
-      "call like evaluate<ti_a, ti_b>(R(ti_A, ti_b) * S(ti_a, ti_c)), where "
-      "the generic indices of the evaluated RHS expression are ti_b and ti_c, "
-      "but the generic indices provided for the LHS are ti_a and ti_b.");
-  static_assert(
-      tensorindex_list_is_valid<lhs_tensorindex_list>::value,
-      "Cannot evaluate a tensor expression to a LHS tensor with a repeated "
-      "generic index, e.g. evaluate<ti_a, ti_a>. (Note that the concrete "
-      "time indices (ti_T and ti_t) can be repeated.)");
-  static_assert(
-      not detail::contains_indices_to_contract<num_lhs_indices>(
-          {{std::decay_t<decltype(LhsTensorIndices)>::value...}}),
-      "Cannot evaluate a tensor expression to a LHS tensor with generic "
-      "indices that would be contracted, e.g. evaluate<ti_A, ti_a>.");
-  // `IndexPropertyCheck` does also check that valence (Up/Lo) of indices that
-  // correspond in the RHS and LHS tensors are equal, but the assertion message
-  // below does not mention this because a mismatch in valence should have been
-  // caught due to the combination of (i) the Tensor::operator() assertion
-  // checking that generic indices' valences match the tensor's indices'
-  // valences and (ii) the above assertion that RHS and LHS generic indices
-  // match
-  static_assert(
-      detail::IndexPropertyCheck<LhsIndexList, RhsIndexList,
-                                 lhs_tensorindex_list,
-                                 rhs_tensorindex_list>::value,
-      "At least one index of the tensor evaluated from the RHS expression "
-      "cannot be evaluated to its corresponding index in the LHS tensor. This "
-      "is due to a difference in number of spatial dimensions or Frame type "
-      "between the index on the RHS and LHS. "
-      "e.g. evaluate<ti_a, ti_b>(L, R(ti_b, ti_a));, where R's first "
-      "index has 2 spatial dimensions but L's second index has 3 spatial "
-      "dimensions. Check RHS and LHS indices that use the same generic index.");
-
-  // Make sure the LHS tensor doesn't also appear in the RHS tensor expression
-  (~rhs_tensorexpression).assert_lhs_tensor_not_in_rhs_expression(lhs_tensor);
-
-  constexpr std::array<size_t, num_rhs_indices> index_transformation =
-      compute_tensorindex_transformation<num_lhs_indices, num_rhs_indices>(
-          {{std::decay_t<decltype(LhsTensorIndices)>::value...}},
-          {{RhsTensorIndices::value...}});
-
-  // positions of indices in LHS tensor where generic spatial indices are used
-  // for spacetime indices
-  constexpr auto lhs_spatial_spacetime_index_positions =
-      detail::get_spatial_spacetime_index_positions<LhsIndexList,
-                                                    lhs_tensorindex_list>();
-  // positions of indices in RHS tensor where generic spatial indices are used
-  // for spacetime indices
-  constexpr auto rhs_spatial_spacetime_index_positions =
-      detail::get_spatial_spacetime_index_positions<RhsIndexList,
-                                                    rhs_tensorindex_list>();
-
-  // positions of indices in LHS tensor where concrete time indices are used
-  constexpr auto lhs_time_index_positions =
-      detail::get_time_index_positions<lhs_tensorindex_list>();
-
-  using lhs_tensor_type = typename std::decay_t<decltype(*lhs_tensor)>;
   using rhs_expression_type =
       typename std::decay_t<decltype(~rhs_tensorexpression)>;
-
-  for (size_t i = 0; i < lhs_tensor_type::size(); i++) {
-    auto lhs_multi_index =
-        lhs_tensor_type::structure::get_canonical_tensor_index(i);
-    if (detail::is_evaluated_lhs_multi_index(
-            lhs_multi_index, lhs_spatial_spacetime_index_positions,
-            lhs_time_index_positions)) {
-      for (size_t j = 0; j < lhs_spatial_spacetime_index_positions.size();
-           j++) {
-        gsl::at(lhs_multi_index,
-                gsl::at(lhs_spatial_spacetime_index_positions, j)) -= 1;
-      }
-      auto rhs_multi_index =
-          transform_multi_index(lhs_multi_index, index_transformation);
-      for (size_t j = 0; j < rhs_spatial_spacetime_index_positions.size();
-           j++) {
-        gsl::at(rhs_multi_index,
-                gsl::at(rhs_spatial_spacetime_index_positions, j)) += 1;
-      }
-
-      // The expression will either be evaluated as one whole expression
-      // or it will be split up into subtrees that are evaluated one at a time.
-      // See the section on splitting in the documentation for the
-      // `TensorExpression` class to understand the logic and terminology used
-      // in this control flow below.
-      if constexpr (rhs_expression_type::
-                        primary_subtree_contains_primary_start) {
-        // the expression is split up, so evaluate subtrees at splits
-        (~rhs_tensorexpression)
-            .evaluate_primary_subtree((*lhs_tensor)[i], rhs_multi_index);
-        if constexpr (not rhs_expression_type::is_primary_start) {
-          // the root expression type is not the starting point of a leg, so it
-          // has not yet been evaluated, so now we evaluate this last leg of the
-          // expression at the root of the tree
-          (*lhs_tensor)[i] =
-              (~rhs_tensorexpression)
-                  .get_primary((*lhs_tensor)[i], rhs_multi_index);
-        }
-      } else {
-        // the expression is not split up, so evaluate full expression
-        (*lhs_tensor)[i] = (~rhs_tensorexpression).get(rhs_multi_index);
-      }
-    }
-  }
+  constexpr bool evaluate_subtrees =
+      rhs_expression_type::primary_subtree_contains_primary_start;
+  detail::evaluate_impl<evaluate_subtrees, LhsTensorIndices...>(
+      lhs_tensor, rhs_tensorexpression);
 }
 
 /*!
@@ -328,5 +367,59 @@ auto evaluate(const RhsTE& rhs_tensorexpression) {
   evaluate<LhsTensorIndices...>(make_not_null(&lhs_tensor),
                                 ~rhs_tensorexpression);
   return lhs_tensor;
+}
+
+/*!
+ * \ingroup TensorExpressionsGroup
+ * \brief Update a LHS tensor to the result of a RHS tensor expression that
+ * contains it
+ *
+ * \details See documentation for `evaluate` for basic functionality.
+ *
+ * `update` differs from `evaluate` in that `update` should be used when some
+ * LHS `Tensor` has been partially computed, and now we would like to update it
+ * with a RHS expression that contains it. In other words, this should be used
+ * when we would like to emulate assignment operations like `LHS +=`, `LHS -=`,
+ * `LHS *=`, etc.
+ *
+ * ### Example usage
+ * The equation \f$L_j = G R^{i}{}_{jl} S^{l}{}_{i} + H_j\f$ can be broken
+ * up into an initial call to `evaluate` to compute
+ * \f$R^{i}{}_{jl} S^{l}{}_{i}\f$, followed by a call to `update` to compute the
+ * rest of the expression:
+ * \code{.cpp}
+ * auto L = TensorExpressions::evaluate<ti_j>(
+ *     R(ti_I, ti_j, ti_l) * S(ti_L, ti_i));
+ *
+ * TensorExpressions::update<ti_j>(
+ *     make_not_null(&L), G() * L(ti_j) + H(ti_j));
+ * \endcode
+ *
+ * One important difference to note with `update` is that it cannot split up the
+ * RHS expression and evaluate subtrees, while `evaluate` can (see
+ * `TensorExpression`). From benchmarking, it was found that the runtime of
+ * `DataVector` expressions scales poorly as we increase the number of
+ * operations. For this reason, when the data type held by the tensors in the
+ * expression is `DataVector`, it's best to avoid passing RHS expressions with a
+ * large number of operations (e.g. inner product that sums over many terms).
+ *
+ * Note: `LhsTensorIndices` must be passed by reference because non-type
+ * template parameters cannot be class types until C++20.
+ *
+ * @tparam LhsTensorIndices the TensorIndexs of the Tensor on the LHS of the
+ * tensor expression, e.g. `ti_a`, `ti_b`, `ti_c`
+ * @param lhs_tensor pointer to the resultant LHS Tensor to fill
+ * @param rhs_tensorexpression the RHS TensorExpression to be evaluated
+ */
+template <auto&... LhsTensorIndices, typename X, typename LhsSymmetry,
+          typename LhsIndexList, typename Derived, typename RhsSymmetry,
+          typename RhsIndexList, typename... RhsTensorIndices>
+void update(
+    const gsl::not_null<Tensor<X, LhsSymmetry, LhsIndexList>*> lhs_tensor,
+    const TensorExpression<Derived, X, RhsSymmetry, RhsIndexList,
+                           tmpl::list<RhsTensorIndices...>>&
+        rhs_tensorexpression) {
+  detail::evaluate_impl<false, LhsTensorIndices...>(lhs_tensor,
+                                                    rhs_tensorexpression);
 }
 }  // namespace TensorExpressions
