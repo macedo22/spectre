@@ -32,14 +32,22 @@ add_spectre_executable(
 
   # The following lines list the source files with tests in them to be
   # compiled into the executable.
-  ../DataStructures/Test_DataVector.cpp
+  ../PointwiseFunctions/AnalyticSolutions/GeneralRelativity/Test_HarmonicSchwarzschild.cpp
   )
 
 # Modify which libraries to link for your test case.
 target_link_libraries(
   ${EXECUTABLE}
   PRIVATE
+  DataBoxTestHelpers
   DataStructures
+  Domain
+  GeneralizedHarmonic
+  GeneralRelativity
+  GeneralRelativitySolutions
+  LinearOperators
+  Spectral
+  Utilities
   )
 
 # Core required libraries
@@ -49,7 +57,6 @@ target_link_libraries(
   # Link against Boost::program_options for now until we have proper
   # dependency handling for header-only libs
   Boost::program_options
-  Charmxx::main
   ErrorHandling
   Framework
   Informer

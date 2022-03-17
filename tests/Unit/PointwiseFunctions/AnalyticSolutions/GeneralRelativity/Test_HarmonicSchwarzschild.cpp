@@ -19,7 +19,10 @@
 #include "Helpers/PointwiseFunctions/AnalyticSolutions/GeneralRelativity/VerifyGrSolution.hpp"
 #include "Helpers/PointwiseFunctions/AnalyticSolutions/TestHelpers.hpp"
 #include "PointwiseFunctions/AnalyticSolutions/GeneralRelativity/HarmonicSchwarzschild.hpp"
+#include "PointwiseFunctions/GeneralRelativity/Christoffel.hpp"
+#include "PointwiseFunctions/GeneralRelativity/DerivativesOfSpacetimeMetric.hpp"
 #include "PointwiseFunctions/GeneralRelativity/ExtrinsicCurvature.hpp"
+#include "PointwiseFunctions/GeneralRelativity/SpacetimeMetric.hpp"
 #include "PointwiseFunctions/GeneralRelativity/Tags.hpp"
 #include "Utilities/ConstantExpressions.hpp"
 #include "Utilities/Gsl.hpp"
@@ -516,7 +519,9 @@ template <typename Frame, typename DataType>
 void test_time_harmonic_condition_satisfied(const DataType used_for_size) {
   // Parameters for HarmonicSchwarzschild solution
   const double mass = 1.21;
+  // const double mass = 1.0;
   const std::array<double, 3> center{{0.3, 0.1, -0.4}};
+  // const std::array<double, 3> center{{0.0, 0.0, 0.0}};
   const auto x = spatial_coords<Frame>(used_for_size);
   // Arbitrary time for time-independent solution.
   const double t = std::numeric_limits<double>::signaling_NaN();
@@ -535,10 +540,50 @@ void test_time_harmonic_condition_satisfied(const DataType used_for_size) {
                                                                     Frame>>(
           vars);
   const auto& shift = get<gr::Tags::Shift<3, Frame, DataType>>(vars);
+  const auto& d_shift =
+      get<typename gr::Solutions::HarmonicSchwarzschild::DerivShift<DataType,
+                                                                    Frame>>(
+          vars);
+  const auto& dt_shift =
+      get<Tags::dt<gr::Tags::Shift<3, Frame, DataType>>>(vars);
+  const auto& spatial_metric =
+      get<gr::Tags::SpatialMetric<3, Frame, DataType>>(vars);
+  const auto& d_spatial_metric =
+      get<typename gr::Solutions::HarmonicSchwarzschild::DerivSpatialMetric<
+          DataType, Frame>>(vars);
+  const auto& dt_spatial_metric =
+      get<Tags::dt<gr::Tags::SpatialMetric<3, Frame, DataType>>>(vars);
   const auto& inverse_spatial_metric =
       get<gr::Tags::InverseSpatialMetric<3, Frame, DataType>>(vars);
   const auto& extrinsic_curvature =
       get<gr::Tags::ExtrinsicCurvature<3, Frame, DataType>>(vars);
+
+  tnsr::I<DataType, 3, Frame> x_minus_center{};
+  for (size_t i = 0; i < 3; ++i) {
+    x_minus_center.get(i) = x.get(i) - gsl::at(center, i);
+  }
+
+  const Scalar<DataType> r = magnitude(x_minus_center);
+  const Scalar<DataType> two_m_over_m_plus_r(2.0 * mass / (mass + get(r)));
+
+  // Check that eq 4.42 of \cite BaumgarteShapiro is satisfied:
+  //   \Gamma^i = 0
+  const auto spacetime_metric = gr::spacetime_metric<3, Frame, DataType>(
+                                             lapse, shift, spatial_metric);
+  const auto da_spacetime_metric = gr::derivatives_of_spacetime_metric(
+      lapse, dt_lapse,
+      d_lapse, shift, dt_shift, d_shift, spatial_metric,
+      dt_spatial_metric, d_spatial_metric);
+  const auto inverse_spacetime_metric =
+      determinant_and_inverse(spacetime_metric).second;
+  const auto spacetime_christoffel_second_kind =
+      gr::christoffel_second_kind(da_spacetime_metric, inverse_spacetime_metric);
+  const auto expected_contracted_spacetime_christoffel_second_kind =
+      make_with_value<tnsr::A<DataType, 3, Frame>>(used_for_size, 0.0);
+  CHECK_ITERABLE_APPROX(TensorExpressions::evaluate<ti_A>(
+                            inverse_spacetime_metric(ti_B, ti_C) *
+                            spacetime_christoffel_second_kind(ti_A, ti_b, ti_c)),
+                        expected_contracted_spacetime_christoffel_second_kind);
 
   // Check that eq 4.44 of \cite BaumgarteShapiro is satisfied:
   //   (\partial_t - \beta^j \partial_j)\alpha = -\alpha^2 K
@@ -547,55 +592,85 @@ void test_time_harmonic_condition_satisfied(const DataType used_for_size) {
       TensorExpressions::evaluate(-square(lapse()) *
                                   extrinsic_curvature(ti_i, ti_j) *
                                   inverse_spatial_metric(ti_I, ti_J)));
+
+  // Check that eq 4.45 of \cite BaumgarteShapiro is satisfied:
+  //   (\partial_t - \beta^j \partial_j)\beta^i =
+  //     -\alpha^2(\gamma^{ij} \partial_j ln \alpha +
+  //     \gamma^{jk} \Gamma^i_{jk})
+  tnsr::i<DataType, 3, Frame> x_times_kronecker_delta{};
+  get<0>(x_times_kronecker_delta) = get<0>(x_minus_center);
+  get<1>(x_times_kronecker_delta) = get<1>(x_minus_center);
+  get<2>(x_times_kronecker_delta) = get<2>(x_minus_center);
+
+  // \gamma_{rr}
+  const auto spatial_metric_rr = TensorExpressions::evaluate(
+      1.0 + two_m_over_m_plus_r() + square(two_m_over_m_plus_r()) +
+      cube(two_m_over_m_plus_r()));
+
+  // \partial_r \gamma_{rr}
+  const auto dr_spatial_metric_rr = TensorExpressions::evaluate(
+      (-0.5 * square(two_m_over_m_plus_r()) - cube(two_m_over_m_plus_r()) -
+       1.5 * pow<4>(two_m_over_m_plus_r())) /
+      mass);
+
+  // \partial_i \gamma_{rr} = \partial_r \gamma_{rr} * X_i / r
+  const auto di_spatial_metric_rr = TensorExpressions::evaluate<ti_i>(
+      dr_spatial_metric_rr() * x_times_kronecker_delta(ti_i) / r());
+
+  // \partial_i \ln \alpha =
+  //     -0.5 * (1 / \gamma_{rr}) * \partial_i \gamma_{rr}
+  const auto d_ln_lapse = TensorExpressions::evaluate<ti_i>(
+      -0.5 * 1.0 / spatial_metric_rr() * di_spatial_metric_rr(ti_i));
+
+  const auto spatial_christoffel_second_kind =
+      gr::christoffel_second_kind(d_spatial_metric, inverse_spatial_metric);
+
+  // TODO : fails
+  CHECK_ITERABLE_APPROX(
+      TensorExpressions::evaluate<ti_I>(dt_shift(ti_I) -
+                                        shift(ti_J) * d_shift(ti_j, ti_I)),
+      TensorExpressions::evaluate<ti_I>(
+          -square(lapse()) *
+          (inverse_spatial_metric(ti_I, ti_J) * d_ln_lapse(ti_j) +
+           inverse_spatial_metric(ti_J, ti_K) *
+               spatial_christoffel_second_kind(ti_I, ti_j, ti_k)))
+      /*TensorExpressions::evaluate<ti_I>(
+          -square(lapse()) *
+          (inverse_spacetime_metric(ti_I, ti_J) * d_ln_lapse(ti_j) +
+           inverse_spacetime_metric(ti_J, ti_K) *
+               spacetime_christoffel_second_kind(ti_I, ti_j, ti_k)))*/);
 }
 }  // namespace
 
 SPECTRE_TEST_CASE(
     "Unit.PointwiseFunctions.AnalyticSolutions.Gr.HarmonicSchwarzschild",
     "[PointwiseFunctions][Unit]") {
-  test_copy_and_move();
-  test_serialize();
-  test_construct_from_options();
+  // test_copy_and_move();
+  // test_serialize();
+  // test_construct_from_options();
 
-  test_tag_retrieval<Frame::Inertial>(DataVector(5));
-  test_tag_retrieval<Frame::Inertial>(0.0);
-  test_tag_retrieval<Frame::Grid>(DataVector(5));
-  test_tag_retrieval<Frame::Grid>(0.0);
+  // test_tag_retrieval<Frame::Inertial>(DataVector(5));
+  // test_tag_retrieval<Frame::Inertial>(0.0);
+  // test_tag_retrieval<Frame::Grid>(DataVector(5));
+  // test_tag_retrieval<Frame::Grid>(0.0);
 
-  test_computed_quantities<Frame::Inertial>(DataVector(5));
-  test_computed_quantities<Frame::Inertial>(0.0);
-  test_computed_quantities<Frame::Grid>(DataVector(5));
-  test_computed_quantities<Frame::Grid>(0.0);
+  // test_computed_quantities<Frame::Inertial>(DataVector(5));
+  // test_computed_quantities<Frame::Inertial>(0.0);
+  // test_computed_quantities<Frame::Grid>(DataVector(5));
+  // test_computed_quantities<Frame::Grid>(0.0);
 
-  test_against_spec_impl<Frame::Inertial>(DataVector(5));
-  test_against_spec_impl<Frame::Inertial>(0.0);
-  test_against_spec_impl<Frame::Grid>(DataVector(5));
-  test_against_spec_impl<Frame::Grid>(0.0);
+  // test_against_spec_impl<Frame::Inertial>(DataVector(5));
+  // test_against_spec_impl<Frame::Inertial>(0.0);
+  // test_against_spec_impl<Frame::Grid>(DataVector(5));
+  // test_against_spec_impl<Frame::Grid>(0.0);
 
-  test_einstein_solution<Frame::Grid>();
-  test_einstein_solution<Frame::Inertial>();
+  // test_einstein_solution<Frame::Grid>();
+  // test_einstein_solution<Frame::Inertial>();
 
-  test_time_harmonic_condition_satisfied<Frame::Inertial>(DataVector(5));
+  // test_time_harmonic_condition_satisfied<Frame::Inertial>(DataVector(5));
   test_time_harmonic_condition_satisfied<Frame::Inertial>(0.0);
-  test_time_harmonic_condition_satisfied<Frame::Grid>(DataVector(5));
-  test_time_harmonic_condition_satisfied<Frame::Grid>(0.0);
+  // test_time_harmonic_condition_satisfied<Frame::Grid>(DataVector(5));
+  // test_time_harmonic_condition_satisfied<Frame::Grid>(0.0);
 }
 
-// [[OutputRegex, Mass must be non-negative]]
-SPECTRE_TEST_CASE(
-    "Unit.PointwiseFunctions.AnalyticSolutions.Gr.HarmonicSchwarzschildMass",
-    "[PointwiseFunctions][Unit]") {
-  ERROR_TEST();
-  gr::Solutions::HarmonicSchwarzschild solution(-1.0, {{0.0, 0.0, 0.0}});
-}
-
-// [[OutputRegex, In string:.*At line 2 column 9:.Value -0.5 is below the lower
-// bound of 0]]
-SPECTRE_TEST_CASE(
-    "Unit.PointwiseFunctions.AnalyticSolutions.Gr.HarmonicSchwarzschildOptM",
-    "[PointwiseFunctions][Unit]") {
-  ERROR_TEST();
-  TestHelpers::test_creation<gr::Solutions::HarmonicSchwarzschild>(
-      "Mass: -0.5\n"
-      "Center: [1.0,3.0,2.0]");
-}
+// TODO : put back regex tests
