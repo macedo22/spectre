@@ -246,6 +246,50 @@ void test(const gsl::not_null<Generator*> generator,
   const Scalar<DataType> actual_4x4_result = compute_contraction<4>(A, B);
   CHECK_ITERABLE_APPROX(actual_4x4_result, expected_4x4_result);
 }
+
+template <typename PositionsOfSymmValue, typename CurrentSymmValue,
+          typename Iteration, typename SymmValueToFind>
+struct get_symm_positions {
+  using type = typename std::conditional_t<
+      CurrentSymmValue::value == SymmValueToFind::value,
+      tmpl::push_back<PositionsOfSymmValue,
+                      tmpl::integral_constant<size_t, Iteration::value>>,
+      PositionsOfSymmValue>;
+};
+
+template <typename SymmetricIndices, typename CurrentSymmValue,
+          typename Symmetry>
+struct get_symmetric_indices {
+  using positions_this_symm_value = tmpl::enumerated_fold<
+      Symmetry, tmpl::list<>,
+      get_symm_positions<tmpl::_state, tmpl::_element, tmpl::_3,
+                         tmpl::pin<CurrentSymmValue>>,
+      tmpl::size_t<0>>;
+
+  using type = typename std::conditional_t<
+      (tmpl::size<positions_this_symm_value>::value > 1),
+      tmpl::push_back<SymmetricIndices, positions_this_symm_value>,
+      SymmetricIndices>;
+};
+
+template <typename... T>
+struct td;
+
+template <typename ExpectedResult, std::int32_t... Symm>
+void test_tmpl_symmetry_stuff() {
+  using symmetry = tmpl::integral_list<std::int32_t, Symm...>;
+  constexpr size_t num_indices = sizeof...(Symm);
+  constexpr std::array<std::int32_t, num_indices> symm = {{Symm...}};
+  constexpr std::int32_t max_symm_value = *alg::max_element(symm);
+  using symm_set =
+      tmpl::as_integral_list<tmpl::range<std::int32_t, 1, max_symm_value + 1>>;
+
+  using symmetry_positions = tmpl::fold<
+      symm_set, tmpl::list<>,
+      get_symmetric_indices<tmpl::_state, tmpl::_element, tmpl::pin<symmetry>>>;
+
+  static_assert(std::is_same<ExpectedResult, symmetry_positions>::value);
+}
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
@@ -253,7 +297,10 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
   MAKE_GENERATOR(generator);
 
   test(make_not_null(&generator), std::numeric_limits<double>::signaling_NaN());
-  //   test_contractions(
-  //       make_not_null(&generator),
-  //       DataVector(5, std::numeric_limits<double>::signaling_NaN()));
+  test(make_not_null(&generator),
+       DataVector(5, std::numeric_limits<double>::signaling_NaN()));
+
+  test_tmpl_symmetry_stuff<tmpl::list<tmpl::integral_list<size_t, 1, 3, 4>,
+                                      tmpl::integral_list<size_t, 0, 2>>,
+                           2, 1, 2, 1, 1>();
 }
