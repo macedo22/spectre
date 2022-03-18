@@ -183,6 +183,75 @@ get_index_transformation_and_contracted_pair_positions(
   return std::pair{index_transformation, contracted_index_pair_positions};
 }
 
+/// \brief See get_symm_value_positions
+template <typename CurrentSymmValuePositions, typename CurrentSymmValue,
+          typename Iteration, typename SymmValueToFind>
+struct get_symm_value_positions_impl {
+  using type = typename std::conditional_t<
+      CurrentSymmValue::value == SymmValueToFind::value,
+      tmpl::push_back<CurrentSymmValuePositions,
+                      tmpl::integral_constant<size_t, Iteration::value>>,
+      CurrentSymmValuePositions>;
+};
+
+/// \brief Given the symmetry of some set of indices and a symmetry value to
+/// find, computes the type list of its index positions and if the value is
+/// repeated, adds it to the list of symmetric index positions
+///
+/// \tparam SymmetricIndexPositions the type list of the lists of positions of
+/// symmetric indices
+/// \tparam CurrentSymmValueToFind the current ::Symmetry value to find
+/// \tparam Symmetry the input ::Symmetry
+template <typename SymmetricIndexPositions, typename CurrentSymmValueToFind,
+          typename Symmetry>
+struct get_symm_value_positions {
+  // Positions of the current symmetry value to find
+  using symm_value_positions = tmpl::enumerated_fold<
+      Symmetry, tmpl::list<>,
+      get_symm_value_positions_impl<tmpl::_state, tmpl::_element, tmpl::_3,
+                                    tmpl::pin<CurrentSymmValueToFind>>,
+      tmpl::size_t<0>>;
+
+  // If the current symmetry value appears more than once, append its list of
+  // positions to the list of lists. Otherwise, don't append it, because it
+  // isn't symmetric with any other index.
+  using type = typename std::conditional_t<
+      (tmpl::size<symm_value_positions>::value > 1),
+      tmpl::push_back<SymmetricIndexPositions, symm_value_positions>,
+      SymmetricIndexPositions>;
+};
+
+/// \brief Computes a list of the lists of index positions corresponding to
+/// symmetric indices
+///
+/// \details
+/// Example:
+/// Given `Symmetry<2, 1, 3, 2, 1, 1>`, the `type` of this struct will be a
+/// 2D list of the positions of repeated positive symmetry values starting with
+/// the smallest. Since `1` appears at positions `1`, `4`, and `5`; `2` appears
+/// at positions `0` and `3`; and `3` does not repeat, the resultant `type` will
+/// be the list of positions for `1` followed by those for `2`:
+/// `tmpl::list<tmpl::integral_list<size_t, 1, 4, 5>,
+/// tmpl::integral_list<size_t, 0, 3>>`.
+///
+/// \tparam Symm comma separated ::Symmetry values of the indices
+template <std::int32_t... Symm>
+struct get_symmetric_index_positions {
+  using symmetry = tmpl::integral_list<std::int32_t, Symm...>;
+  static constexpr size_t num_indices = sizeof...(Symm);
+  static constexpr std::array<std::int32_t, num_indices> symm = {{Symm...}};
+  static constexpr std::int32_t max_symm_value = *alg::max_element(symm);
+
+  // Set of unique positive symmetry values
+  using symm_set =
+      tmpl::as_integral_list<tmpl::range<std::int32_t, 1, max_symm_value + 1>>;
+
+  // Positions of symmetric indices
+  using type = tmpl::fold<symm_set, tmpl::list<>,
+                          get_symm_value_positions<tmpl::_state, tmpl::_element,
+                                                   tmpl::pin<symmetry>>>;
+};
+
 /// \brief Computes type information for the tensor expression that results from
 /// a contraction, as well as information internally useful for carrying out the
 /// contraction
@@ -227,6 +296,10 @@ struct ContractedType<UncontractedTensorExpression, DataType,
                       NumContractedIndices, NumIndexPairsToContract,
                       std::index_sequence<ContractedInts...>,
                       std::index_sequence<IndexPairsToContractInts...>> {
+  // TODO: not sure if this is where this should go. Temporarily here
+  using symmetric_index_positions =
+      typename get_symmetric_index_positions<UncontractedSymm::value...>::type;
+
   static constexpr size_t num_uncontracted_tensor_indices =
       sizeof...(UncontractedTensorIndices);
   static constexpr std::array<size_t, num_uncontracted_tensor_indices>
