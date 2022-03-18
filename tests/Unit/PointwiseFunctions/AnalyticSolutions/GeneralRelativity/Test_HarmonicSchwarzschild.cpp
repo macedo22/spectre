@@ -20,6 +20,8 @@
 #include "Domain/CoordinateMaps/ProductMaps.hpp"
 #include "Domain/CoordinateMaps/ProductMaps.tpp"
 #include "Domain/LogicalCoordinates.hpp"
+#include "Framework/Pypp.hpp"
+#include "Framework/SetupLocalPythonEnvironment.hpp"
 #include "Framework/TestCreation.hpp"
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/PointwiseFunctions/AnalyticSolutions/GeneralRelativity/VerifyGrSolution.hpp"
@@ -630,20 +632,36 @@ void test_harmonic_conditions_satisfied() {
       partial_derivative(ln_lapse, mesh, coord_map.inv_jacobian(x_logical));
 
   // TODO : fails
-  CHECK_ITERABLE_APPROX(
-      TensorExpressions::evaluate<ti_I>(dt_shift(ti_I) -
-                                        shift(ti_J) * d_shift(ti_j, ti_I)),
-      TensorExpressions::evaluate<ti_I>(
-          -square(lapse()) *
-          (inverse_spatial_metric(ti_I, ti_J) * expected_d_ln_lapse(ti_j) +
-           inverse_spatial_metric(ti_J, ti_K) *
-               spatial_christoffel_second_kind(ti_I, ti_j, ti_k))));
+  // CHECK_ITERABLE_APPROX(
+  //     TensorExpressions::evaluate<ti_I>(dt_shift(ti_I) -
+  //                                       shift(ti_J) * d_shift(ti_j, ti_I)),
+  //     TensorExpressions::evaluate<ti_I>(
+  //         -square(lapse()) *
+  //         (inverse_spatial_metric(ti_I, ti_J) * expected_d_ln_lapse(ti_j) +
+  //          inverse_spatial_metric(ti_J, ti_K) *
+  //              spatial_christoffel_second_kind(ti_I, ti_j, ti_k))));
+
+  const auto python_lhs =
+      pypp::call<tnsr::I<DataVector, SpatialDim, FrameType>>(
+          "HarmonicSchwarzschild", "harmonic_condition_445_lhs", shift, d_shift,
+          dt_shift);
+
+  const auto python_rhs =
+      pypp::call<tnsr::I<DataVector, SpatialDim, FrameType>>(
+          "HarmonicSchwarzschild", "harmonic_condition_445_rhs", lapse,
+          expected_d_ln_lapse, inverse_spatial_metric,
+          spatial_christoffel_second_kind);
+
+  CHECK_ITERABLE_APPROX(python_lhs, python_rhs);
 }
 }  // namespace
 
 SPECTRE_TEST_CASE(
     "Unit.PointwiseFunctions.AnalyticSolutions.Gr.HarmonicSchwarzschild",
     "[PointwiseFunctions][Unit]") {
+  pypp::SetupLocalPythonEnvironment local_python_env(
+      "PointwiseFunctions/AnalyticSolutions/GeneralRelativity/");
+
   // test_copy_and_move();
   // test_serialize();
   // test_construct_from_options();
