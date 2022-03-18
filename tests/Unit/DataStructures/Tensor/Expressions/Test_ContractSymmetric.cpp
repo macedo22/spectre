@@ -300,7 +300,7 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
   test(make_not_null(&generator),
        DataVector(5, std::numeric_limits<double>::signaling_NaN()));
 
-  test_tmpl_symmetry_stuff<tmpl::list<tmpl::integral_list<size_t, 1, 3, 4>,
-                                      tmpl::integral_list<size_t, 0, 2>>,
-                           2, 1, 2, 1, 1>();
+  test_tmpl_symmetry_stuff<tmpl::list<tmpl::integral_list<size_t, 1, 4, 5>,
+                                      tmpl::integral_list<size_t, 0, 3>>,
+                           2, 1, 3, 2, 1, 1>();
 }
