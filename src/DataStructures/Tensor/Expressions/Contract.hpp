@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <limits>
@@ -240,7 +241,10 @@ struct get_symmetric_contracted_index_positions {
   using symmetry = tmpl::integral_list<std::int32_t, Symm...>;
   static constexpr size_t num_indices = sizeof...(Symm);
   static constexpr std::array<std::int32_t, num_indices> symm = {{Symm...}};
-  static constexpr std::int32_t max_symm_value = *alg::max_element(symm);
+  // Temporary: cap symmetry at 2
+  // TODO : comment more about this ^ or generalize it
+  static constexpr std::int32_t max_symm_value =
+      std::min(*alg::max_element(symm), 2);
 
   // Set of unique positive symmetry values
   using symm_set =
@@ -397,6 +401,10 @@ struct ContractedType<UncontractedTensorExpression, DataType,
           index_transformation_and_contracted_pair_positions
               .second[IndexPairsToContractInts]
               .second)...>::type;
+
+  // TODO : leave a comment about this temporary measure or generalize
+  static_assert(tmpl::size<symmetric_contracted_index_positions>::value < 2,
+                "Not supported.");
 
   // The number of terms to sum for this expression's contraction
   static constexpr size_t num_terms_summed = []() {
