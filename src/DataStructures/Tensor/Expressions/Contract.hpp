@@ -236,7 +236,7 @@ struct get_symm_value_positions {
 ///
 /// \tparam Symm comma separated ::Symmetry values of the indices
 template <std::int32_t... Symm>
-struct get_symmetric_index_positions {
+struct get_symmetric_contracted_index_positions {
   using symmetry = tmpl::integral_list<std::int32_t, Symm...>;
   static constexpr size_t num_indices = sizeof...(Symm);
   static constexpr std::array<std::int32_t, num_indices> symm = {{Symm...}};
@@ -296,10 +296,6 @@ struct ContractedType<UncontractedTensorExpression, DataType,
                       NumContractedIndices, NumIndexPairsToContract,
                       std::index_sequence<ContractedInts...>,
                       std::index_sequence<IndexPairsToContractInts...>> {
-  // TODO: not sure if this is where this should go. Temporarily here
-  using symmetric_index_positions =
-      typename get_symmetric_index_positions<UncontractedSymm::value...>::type;
-
   static constexpr size_t num_uncontracted_tensor_indices =
       sizeof...(UncontractedTensorIndices);
   static constexpr std::array<size_t, num_uncontracted_tensor_indices>
@@ -392,6 +388,15 @@ struct ContractedType<UncontractedTensorExpression, DataType,
 
   static constexpr inline std::array<size_t, num_uncontracted_tensor_indices>
       uncontracted_index_dims = {{UncontractedIndices::dim...}};
+
+  using symmetric_contracted_index_positions =
+      typename get_symmetric_contracted_index_positions<(
+          index_transformation_and_contracted_pair_positions
+              .second[IndexPairsToContractInts]
+              .first,
+          index_transformation_and_contracted_pair_positions
+              .second[IndexPairsToContractInts]
+              .second)...>::type;
 
   // The number of terms to sum for this expression's contraction
   static constexpr size_t num_terms_summed = []() {
