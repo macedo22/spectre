@@ -46,6 +46,28 @@ tnsr::aa<DataType, SpatialDim, Frame, Index> ricci_tensor(
         d_christoffel_2nd_kind);
 /// @}
 
+/// @{
+/*!
+ * \ingroup GeneralRelativityGroup
+ * \brief Computes Ricci Scalar \f$\gamma^{ij}R_{ij} from the spatial Ricci
+ * tensor.
+ *
+ * \details Computes Ricci scalar \f
+ *
+ *
+ */
+template <size_t SpatialDim, typename Frame, IndexType Index, typename DataType>
+void ricci_scalar(
+    const gsl::not_null<Scalar<DataType>*> ricci_scalar_result,
+    const tnsr::aa<DataType, SpatialDim, Frame, Index>& spatial_ricci,
+    const tnsr::AA<DataType, SpatialDim, Frame, Index>& inverse_metric);
+
+template <size_t SpatialDim, typename Frame, IndexType Index, typename DataType>
+Scalar<DataType> ricci_scalar(
+    const tnsr::aa<DataType, SpatialDim, Frame, Index>& spatial_ricci,
+    const tnsr::AA<DataType, SpatialDim, Frame, Index>& inverse_metric);
+/// @}
+
 namespace Tags {
 /// Compute item for spatial Ricci tensor \f$R_{ij}\f$
 /// computed from SpatialChristoffelSecondKind and its spatial derivatives.
@@ -69,6 +91,24 @@ struct SpatialRicciCompute : SpatialRicci<SpatialDim, Frame, DataType>,
       &ricci_tensor<SpatialDim, Frame, IndexType::Spatial, DataType>);
 
   using base = SpatialRicci<SpatialDim, Frame, DataType>;
+};
+
+template <size_t SpatialDim, typename Frame, typename DataType>
+struct SpatialRicciScalarCompute : SpatialRicciScalar<DataType>,
+                                   db::ComputeTag {
+  using argument_tags =
+      tmpl::list<gr::Tags::SpatialRicci<SpatialDim, Frame, DataType>,
+                 gr::Tags::InverseSpatialMetric<SpatialDim, Frame, DataType>>;
+
+  using return_type = Scalar<DataType>;
+
+  static constexpr auto function =
+      static_cast<void (*)(gsl::not_null<Scalar<DataType>*>,
+                           const tnsr::ii<DataType, SpatialDim, Frame>&,
+                           const tnsr::II<DataType, SpatialDim, Frame>&)>(
+          &ricci_scalar<SpatialDim, Frame, IndexType::Spatial, DataType>);
+
+  using base = SpatialRicciScalar<DataType>;
 };
 }  // namespace Tags
 } // namespace gr
