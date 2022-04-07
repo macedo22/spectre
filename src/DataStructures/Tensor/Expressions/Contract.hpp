@@ -696,8 +696,9 @@ struct TensorContract
   /// of the uncontracted operand expression to sum
   /// \return the next highest multi-index between the components being summed
   /// in the contraction
-  SPECTRE_ALWAYS_INLINE static std::array<size_t,
-                                          num_uncontracted_tensor_indices>
+  // TODO: this adds a little bit of RAM overhead like ~.3 GB
+  /*SPECTRE_ALWAYS_INLINE*/ static std::array<size_t,
+                                              num_uncontracted_tensor_indices>
   get_next_highest_multi_index_to_sum(
       const std::array<size_t, num_uncontracted_tensor_indices>&
           uncontracted_multi_index) {
@@ -1114,7 +1115,7 @@ struct TensorContract
   /// \param result_component the LHS tensor component to evaluate
   /// \param contracted_multi_index the multi-index of the component of the
   /// contracted result tensor to evaluate
-  SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
+  /*SPECTRE_ALWAYS_INLINE*/ void evaluate_primary_subtree(
       type& result_component,
       const std::array<size_t, num_tensor_indices>& contracted_multi_index)
       const {

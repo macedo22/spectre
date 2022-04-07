@@ -177,7 +177,7 @@ struct Negate
   /// \param result_component the LHS tensor component to evaluate
   /// \param multi_index the multi-index of the component of the result tensor
   /// to evaluate
-  SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
+  /*SPECTRE_ALWAYS_INLINE*/ void evaluate_primary_subtree(
       type& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     if constexpr (primary_child_subtree_contains_primary_start) {
