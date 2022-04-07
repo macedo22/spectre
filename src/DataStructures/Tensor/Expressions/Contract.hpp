@@ -594,7 +594,7 @@ struct TensorContract
   /// contracted expression
   /// \return the highest multi-index between the components being summed in
   /// the contraction
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<
+  /*SPECTRE_ALWAYS_INLINE*/ static constexpr std::array<
       size_t, num_uncontracted_tensor_indices>
   get_highest_multi_index_to_sum(
       const std::array<size_t, num_tensor_indices>& contracted_multi_index) {
@@ -640,7 +640,7 @@ struct TensorContract
   /// contracted expression
   /// \return the lowest multi-index between the components being summed in
   /// the contraction
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<
+  /*SPECTRE_ALWAYS_INLINE*/ static constexpr std::array<
       size_t, num_uncontracted_tensor_indices>
   get_lowest_multi_index_to_sum(
       const std::array<size_t, num_tensor_indices>& contracted_multi_index) {
@@ -780,8 +780,8 @@ struct TensorContract
   /// of the uncontracted operand expression to sum
   /// \return the next lowest multi-index between the components being summed in
   /// the contraction
-  SPECTRE_ALWAYS_INLINE static std::array<size_t,
-                                          num_uncontracted_tensor_indices>
+  /*SPECTRE_ALWAYS_INLINE*/ static std::array<size_t,
+                                              num_uncontracted_tensor_indices>
   get_next_lowest_multi_index_to_sum(
       const std::array<size_t, num_uncontracted_tensor_indices>&
           uncontracted_multi_index) {
@@ -1020,7 +1020,7 @@ struct TensorContract
   /// contracted result tensor to evaluate
   /// \param lowest_multi_index the lowest multi-index between the components
   /// being summed in the contraction (see `get_lowest_multi_index_to_sum`)
-  SPECTRE_ALWAYS_INLINE void evaluate_primary_contraction(
+  /*SPECTRE_ALWAYS_INLINE*/ void evaluate_primary_contraction(
       type& result_component,
       const std::array<size_t, num_tensor_indices>& contracted_multi_index,
       const std::array<size_t, num_uncontracted_tensor_indices>&
