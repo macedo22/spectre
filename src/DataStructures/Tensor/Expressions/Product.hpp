@@ -203,7 +203,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// \param result_multi_index the multi-index of the component of the outer
   /// product tensor
   /// \return the first operand's multi-index
-  constexpr SPECTRE_ALWAYS_INLINE std::array<size_t, op1_num_tensor_indices>
+  constexpr /*SPECTRE_ALWAYS_INLINE*/ std::array<size_t, op1_num_tensor_indices>
   get_op1_multi_index(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     std::array<size_t, op1_num_tensor_indices> op1_multi_index{};
@@ -219,7 +219,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// \param result_multi_index the multi-index of the component of the outer
   /// product tensor
   /// \return the second operand's multi-index
-  constexpr SPECTRE_ALWAYS_INLINE std::array<size_t, op2_num_tensor_indices>
+  constexpr /*SPECTRE_ALWAYS_INLINE*/ std::array<size_t, op2_num_tensor_indices>
   get_op2_multi_index(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     std::array<size_t, op2_num_tensor_indices> op2_multi_index{};

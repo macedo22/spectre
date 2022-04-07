@@ -863,7 +863,9 @@ struct TensorContract
   SPECTRE_ALWAYS_INLINE static decltype(auto) compute_contraction(
       const T& t, const std::array<size_t, num_uncontracted_tensor_indices>&
                       current_multi_index) {
-    if constexpr (Iteration < num_terms_summed - 1) {
+    if constexpr (Iteration <
+                  num_terms_summed -
+                      1) {  // note: bad if num_terms_summed is high here
       // We have more than one component left to sum
       return compute_contraction<Iteration + 1>(
                  t, get_next_highest_multi_index_to_sum(current_multi_index)) +
@@ -881,8 +883,9 @@ struct TensorContract
   /// tensor component to retrieve
   /// \return the value of the component at `contracted_multi_index` in the
   /// resultant contracted tensor
-  decltype(auto) get(const std::array<size_t, num_tensor_indices>&
-                         contracted_multi_index) const {
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) get(
+      const std::array<size_t, num_tensor_indices>& contracted_multi_index)
+      const {
     return compute_contraction<0>(
         t_, get_highest_multi_index_to_sum(contracted_multi_index));
   }
@@ -969,7 +972,9 @@ struct TensorContract
     } else {
       // We've haven't yet computed the whole subtree of the term being summed
       // that is at the lowest depth in the tree
-      if constexpr (Iteration < num_terms_summed - 1) {
+      if constexpr (Iteration <
+                    num_terms_summed -
+                        1) {  // note: bad if num_terms_summed is high here
         // We have more than one component left to sum
         return compute_contraction_primary<Iteration + 1>(
                    t, result_component,
