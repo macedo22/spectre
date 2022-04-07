@@ -250,7 +250,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// \return the value of the component at `result_multi_index` in the outer
   /// product tensor
   // TODO: inlining this one adds more RAM and time
-  /*SPECTRE_ALWAYS_INLINE decltype(auto)*/ get(
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     return t1_.get(get_op1_multi_index(result_multi_index)) *
            t2_.get(get_op2_multi_index(result_multi_index));
