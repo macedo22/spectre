@@ -100,7 +100,7 @@ namespace detail {
 /// \return the input operand symmetry rearranged according to the generic index
 /// order of the other operand
 template <size_t NumIndicesIn, size_t NumIndicesOut>
-SPECTRE_ALWAYS_INLINE constexpr std::array<std::int32_t, NumIndicesOut>
+/*SPECTRE_ALWAYS_INLINE*/ constexpr std::array<std::int32_t, NumIndicesOut>
 transform_addsub_symm(
     const std::array<std::int32_t, NumIndicesIn>& input_symm,
     const std::array<size_t, NumIndicesOut>& tensorindex_transformation) {
@@ -458,7 +458,7 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   ///
   /// \param op1_multi_index the multi-index of the left operand
   /// \return the second operand's multi-index
-  SPECTRE_ALWAYS_INLINE std::array<size_t, num_tensor_indices_op2>
+  /*SPECTRE_ALWAYS_INLINE*/ std::array<size_t, num_tensor_indices_op2>
   get_op2_multi_index(
       const std::array<size_t, num_tensor_indices>& op1_multi_index) const {
     if constexpr (ops_have_generic_indices_at_same_positions) {

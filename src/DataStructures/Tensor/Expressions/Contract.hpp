@@ -594,7 +594,7 @@ struct TensorContract
   /// contracted expression
   /// \return the highest multi-index between the components being summed in
   /// the contraction
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<
+  /*SPECTRE_ALWAYS_INLINE*/ static constexpr std::array<
       size_t, num_uncontracted_tensor_indices>
   get_highest_multi_index_to_sum(
       const std::array<size_t, num_tensor_indices>& contracted_multi_index) {
@@ -640,7 +640,7 @@ struct TensorContract
   /// contracted expression
   /// \return the lowest multi-index between the components being summed in
   /// the contraction
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<
+  /*SPECTRE_ALWAYS_INLINE*/ static constexpr std::array<
       size_t, num_uncontracted_tensor_indices>
   get_lowest_multi_index_to_sum(
       const std::array<size_t, num_tensor_indices>& contracted_multi_index) {
@@ -696,8 +696,8 @@ struct TensorContract
   /// of the uncontracted operand expression to sum
   /// \return the next highest multi-index between the components being summed
   /// in the contraction
-  SPECTRE_ALWAYS_INLINE static std::array<size_t,
-                                          num_uncontracted_tensor_indices>
+  /*SPECTRE_ALWAYS_INLINE*/ static std::array<size_t,
+                                              num_uncontracted_tensor_indices>
   get_next_highest_multi_index_to_sum(
       const std::array<size_t, num_uncontracted_tensor_indices>&
           uncontracted_multi_index) {
@@ -779,8 +779,8 @@ struct TensorContract
   /// of the uncontracted operand expression to sum
   /// \return the next lowest multi-index between the components being summed in
   /// the contraction
-  SPECTRE_ALWAYS_INLINE static std::array<size_t,
-                                          num_uncontracted_tensor_indices>
+  /*SPECTRE_ALWAYS_INLINE*/ static std::array<size_t,
+                                              num_uncontracted_tensor_indices>
   get_next_lowest_multi_index_to_sum(
       const std::array<size_t, num_uncontracted_tensor_indices>&
           uncontracted_multi_index) {
