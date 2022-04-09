@@ -130,7 +130,7 @@ struct Negate
   /// negated tensor expression
   /// \return the value of the component at `multi_index` in the negated tensor
   /// expression
-  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     return -t_.get(multi_index);
   }
@@ -150,7 +150,7 @@ struct Negate
   /// negated tensor expression
   /// \return the value of the component at `multi_index` in the negated tensor
   /// expression
-  SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) get_primary(
       const type& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     if constexpr (is_primary_end) {

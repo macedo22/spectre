@@ -249,7 +249,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// product tensor to retrieve
   /// \return the value of the component at `result_multi_index` in the outer
   /// product tensor
-  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     return t1_.get(get_op1_multi_index(result_multi_index)) *
            t2_.get(get_op2_multi_index(result_multi_index));
@@ -270,7 +270,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// operand of the product to retrieve
   /// \param op2_multi_index the multi-index of the component of the second
   /// operand of the product to retrieve
-  SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) get_primary(
       const type& result_component,
       const std::array<size_t, op1_num_tensor_indices>& op1_multi_index,
       const std::array<size_t, op2_num_tensor_indices>& op2_multi_index) const {
@@ -303,7 +303,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// product tensor to retrieve
   /// \return the value of the component at `result_multi_index` in the outer
   /// product tensor
-  SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) get_primary(
       const type& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     return get_primary(result_component,
@@ -333,7 +333,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// operand of the product to evaluate
   /// \param op2_multi_index the multi-index of the component of the second
   /// operand of the product to evaluate
-  SPECTRE_ALWAYS_INLINE void evaluate_primary_children(
+  /*SPECTRE_ALWAYS_INLINE*/ void evaluate_primary_children(
       type& result_component,
       const std::array<size_t, op1_num_tensor_indices>& op1_multi_index,
       const std::array<size_t, op2_num_tensor_indices>& op2_multi_index) const {

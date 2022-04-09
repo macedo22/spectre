@@ -175,7 +175,7 @@ struct Divide : public TensorExpression<
   //// tensor to retrieve
   /// \return the value of the component in the quotient tensor at
   /// `result_multi_index`
-  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     return t1_.get(result_multi_index) / t2_.get(op2_multi_index);
   }
@@ -195,7 +195,7 @@ struct Divide : public TensorExpression<
   //// tensor to retrieve
   /// \return the value of the component in the quotient tensor at
   /// `result_multi_index`
-  SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) get_primary(
       const type& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     if constexpr (is_primary_end) {
@@ -232,7 +232,7 @@ struct Divide : public TensorExpression<
   /// \param result_component the LHS tensor component to evaluate
   /// \param result_multi_index the multi-index of the component of the result
   /// tensor to evaluate
-  SPECTRE_ALWAYS_INLINE void evaluate_primary_children(
+  /*SPECTRE_ALWAYS_INLINE*/ void evaluate_primary_children(
       type& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     if constexpr (is_primary_end) {

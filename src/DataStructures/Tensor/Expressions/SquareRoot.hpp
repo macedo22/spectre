@@ -143,7 +143,7 @@ struct SquareRoot
   /// square root
   /// \return the square root of the component of the tensor evaluated from the
   /// contained tensor expression
-  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     return sqrt(t_.get(multi_index));
   }
@@ -166,7 +166,7 @@ struct SquareRoot
   /// square root
   /// \return the square root of the component of the tensor evaluated from the
   /// contained tensor expression
-  SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) get_primary(
       const type& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     if constexpr (is_primary_end) {

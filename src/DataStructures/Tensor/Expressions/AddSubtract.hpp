@@ -554,7 +554,7 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   /// \param op2_multi_index the multi-index of the component of the second
   /// operand
   /// \return the sum of or difference between the two components' values
-  SPECTRE_ALWAYS_INLINE decltype(auto) add_or_subtract(
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) add_or_subtract(
       const std::array<size_t, num_tensor_indices>& op1_multi_index,
       const std::array<size_t, num_tensor_indices_op2>& op2_multi_index) const {
     if constexpr (Sign == 1) {
@@ -638,7 +638,7 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   /// operand of the sum or difference to evaluate
   /// \param op2_multi_index the multi-index of the component of the second
   /// operand of the sum or difference to evaluate
-  SPECTRE_ALWAYS_INLINE void add_or_subtract_primary_children(
+  /*SPECTRE_ALWAYS_INLINE*/ void add_or_subtract_primary_children(
       type& result_component,
       const std::array<size_t, num_tensor_indices>& op1_multi_index,
       const std::array<size_t, num_tensor_indices_op2>& op2_multi_index) const {
@@ -713,7 +713,7 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   /// \param op2_multi_index the multi-index of the component of the second
   /// operand
   /// \return the sum of or difference between the two components' values
-  SPECTRE_ALWAYS_INLINE decltype(auto) add_or_subtract_primary(
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) add_or_subtract_primary(
       const type& result_component,
       const std::array<size_t, num_tensor_indices>& op1_multi_index,
       const std::array<size_t, num_tensor_indices_op2>& op2_multi_index) const {
