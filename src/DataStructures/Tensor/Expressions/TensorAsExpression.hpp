@@ -60,7 +60,7 @@ template <
     size_t NumConcreteTimeIndices,
     Requires<(NumIndices >= 2 and (NumSpatialSpacetimeIndices != 0 or
                                    NumConcreteTimeIndices != 0))> = nullptr>
-SPECTRE_ALWAYS_INLINE constexpr std::array<std::int32_t, NumIndices>
+/*SPECTRE_ALWAYS_INLINE*/ constexpr std::array<std::int32_t, NumIndices>
 get_transformed_spacetime_symmetry(
     const std::array<std::int32_t, NumIndices>& symmetry,
     const std::array<size_t, NumSpatialSpacetimeIndices>&
@@ -88,7 +88,7 @@ template <size_t NumIndices, size_t NumSpatialSpacetimeIndices,
           size_t NumConcreteTimeIndices,
           Requires<(NumIndices < 2 or (NumSpatialSpacetimeIndices == 0 and
                                        NumConcreteTimeIndices == 0))> = nullptr>
-SPECTRE_ALWAYS_INLINE constexpr std::array<std::int32_t, NumIndices>
+/*SPECTRE_ALWAYS_INLINE*/ constexpr std::array<std::int32_t, NumIndices>
 get_transformed_spacetime_symmetry(
     const std::array<std::int32_t, NumIndices>& symmetry,
     const std::array<size_t, NumSpatialSpacetimeIndices>&
@@ -285,7 +285,7 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
   ///
   /// \param multi_index the multi-index of the tensor component to retrieve
   /// \return the value of the component at `multi_index` in the tensor
-  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     return t_->get(multi_index);
   }
@@ -294,7 +294,7 @@ struct TensorAsExpression<Tensor<X, Symm, IndexList<Indices...>>,
   ///
   /// \param multi_index the multi-index of the tensor component to retrieve
   /// \return the value of the component at `multi_index` in the tensor
-  SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) get_primary(
       const type& /*result_component*/,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     return t_->get(multi_index);

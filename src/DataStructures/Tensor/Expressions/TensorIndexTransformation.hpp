@@ -75,7 +75,7 @@ static constexpr size_t time_index_position_placeholder =
 /// order
 /// \return a transformation from the first generic index order to the second
 template <size_t NumIndices1, size_t NumIndices2>
-SPECTRE_ALWAYS_INLINE constexpr std::array<size_t, NumIndices2>
+/*SPECTRE_ALWAYS_INLINE*/ constexpr std::array<size_t, NumIndices2>
 compute_tensorindex_transformation(
     const std::array<size_t, NumIndices1>& tensorindices1,
     const std::array<size_t, NumIndices2>& tensorindices2) {

@@ -458,7 +458,7 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   ///
   /// \param op1_multi_index the multi-index of the left operand
   /// \return the second operand's multi-index
-  SPECTRE_ALWAYS_INLINE std::array<size_t, num_tensor_indices_op2>
+  /*SPECTRE_ALWAYS_INLINE*/ std::array<size_t, num_tensor_indices_op2>
   get_op2_multi_index(
       const std::array<size_t, num_tensor_indices>& op1_multi_index) const {
     if constexpr (ops_have_generic_indices_at_same_positions) {
