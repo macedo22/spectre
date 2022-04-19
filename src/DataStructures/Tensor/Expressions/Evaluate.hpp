@@ -134,7 +134,7 @@ template <bool EvaluateSubtrees, auto&... LhsTensorIndices, typename X,
           typename LhsSymmetry, typename LhsIndexList, typename Derived,
           typename RhsSymmetry, typename RhsIndexList,
           typename... RhsTensorIndices>
-void evaluate_impl(
+void __attribute__((visibility("hidden"))) evaluate_impl(
     const gsl::not_null<Tensor<X, LhsSymmetry, LhsIndexList>*> lhs_tensor,
     const TensorExpression<Derived, X, RhsSymmetry, RhsIndexList,
                            tmpl::list<RhsTensorIndices...>>&
