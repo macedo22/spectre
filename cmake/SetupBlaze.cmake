@@ -57,27 +57,33 @@ if(SLEEF_FOUND)
   set(_BLAZE_USE_SLEEF 1)
 endif()
 
-# If BLAZE_USE_STRONG_INLINE=ON, Blaze will use this keyword to increase the
-# likelihood of inlining. If BLAZE_USE_STRONG_INLINE=OFF, uses inline keyword
-# as a fallback.
-option(BLAZE_USE_STRONG_INLINE "Increase likelihood of Blaze inlining." ON)
-
-set(_BLAZE_USE_STRONG_INLINE 0)
-
-if(BLAZE_USE_STRONG_INLINE)
-  set(_BLAZE_USE_STRONG_INLINE 1)
+if (NOT DEFINED(BLAZE_USE_STRONG_INLINE))
+  if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    set(
+        _BLAZE_USE_STRONG_INLINE 0
+    )
+  else()
+    set(
+        _BLAZE_USE_STRONG_INLINE 1
+    )
+  endif()
 endif()
 
-# If BLAZE_USE_ALWAYS_INLINE=ON, Blaze will use this keyword to force inlining.
-# If BLAZE_USE_ALWAYS_INLINE=OFF or if the platform being used cannot 100%
-# guarantee inlining, uses BLAZE_STRONG_INLINE as a fallback.
-option(BLAZE_USE_ALWAYS_INLINE "Force Blaze inlining." ON)
+message(STATUS "_BLAZE_USE_STRONG_INLINE : ${_BLAZE_USE_STRONG_INLINE}")
 
-set(_BLAZE_USE_ALWAYS_INLINE 0)
-
-if(BLAZE_USE_ALWAYS_INLINE)
-  set(_BLAZE_USE_ALWAYS_INLINE 1)
+if (NOT DEFINED(BLAZE_USE_ALWAYS_INLINE))
+  if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    set(
+        _BLAZE_USE_ALWAYS_INLINE 0
+    )
+  else()
+    set(
+        _BLAZE_USE_ALWAYS_INLINE 1
+    )
+  endif()
 endif()
+
+message(STATUS "_BLAZE_USE_ALWAYS_INLINE : ${_BLAZE_USE_ALWAYS_INLINE}")
 
 # Configure Blaze. Some of the Blaze configuration options could be optimized
 # for the machine we are running on. See documentation:

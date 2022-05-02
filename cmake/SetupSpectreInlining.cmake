@@ -1,13 +1,19 @@
 # Distributed under the MIT License.
 # See LICENSE.txt for details.
 
-option(SPECTRE_USE_ALWAYS_INLINE "Force SpECTRE inlining." ON)
-
-set(_SPECTRE_USE_ALWAYS_INLINE 0)
-
-if(SPECTRE_USE_ALWAYS_INLINE)
-  set(_SPECTRE_USE_ALWAYS_INLINE 1)
+if (NOT DEFINED(SPECTRE_USE_ALWAYS_INLINE))
+  if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    set(
+        _SPECTRE_USE_ALWAYS_INLINE 0
+    )
+  else()
+    set(
+        _SPECTRE_USE_ALWAYS_INLINE 1
+    )
+  endif()
 endif()
+
+message(STATUS "_SPECTRE_USE_ALWAYS_INLINE : ${_SPECTRE_USE_ALWAYS_INLINE}")
 
 set_property(
   TARGET SpectreFlags
