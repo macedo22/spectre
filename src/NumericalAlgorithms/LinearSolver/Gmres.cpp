@@ -3,12 +3,14 @@
 
 #include "NumericalAlgorithms/LinearSolver/Gmres.hpp"
 
+#pragma GCC visibility push(hidden)
 #include <blaze/math/Column.h>
 #include <blaze/math/DynamicMatrix.h>
 #include <blaze/math/DynamicVector.h>
 #include <blaze/math/Submatrix.h>
 #include <blaze/math/Subvector.h>
 #include <blaze/math/lapack/trsv.h>
+#pragma GCC visibility pop
 
 #include "Utilities/ConstantExpressions.hpp"
 #include "Utilities/Gsl.hpp"

@@ -8,7 +8,9 @@
 
 #pragma once
 
+#pragma GCC visibility push(hidden)
 #include <blaze/math/DynamicVector.h>
+#pragma GCC visibility pop
 #include <pup.h>
 #include <type_traits>
 #include <vector>

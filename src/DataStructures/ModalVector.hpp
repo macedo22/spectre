@@ -6,6 +6,7 @@
 #include "DataStructures/VectorImpl.hpp"
 #include "Utilities/TMPL.hpp"
 
+#pragma GCC visibility push(hidden)
 /// \cond
 class ModalVector;
 /// \endcond
@@ -104,3 +105,4 @@ DEFINE_STD_ARRAY_INPLACE_BINOP(ModalVector, ModalVector, operator-=,
                                std::minus<>())
 /// \endcond
 MAKE_WITH_VALUE_IMPL_DEFINITION_FOR(ModalVector)
+#pragma GCC visibility pop

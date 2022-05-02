@@ -8,7 +8,9 @@
 
 #pragma once
 
+#pragma GCC visibility push(hidden)
 #include <blaze/math/CompressedMatrix.h>
+#pragma GCC visibility pop
 #include <cstddef>
 #include <pup.h>
 #include <vector>

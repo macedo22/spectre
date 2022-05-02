@@ -4,10 +4,12 @@
 #pragma once
 
 #include <algorithm>
+#pragma GCC visibility push(hidden)
 #include <blaze/math/Column.h>
 #include <blaze/math/Matrix.h>
 #include <blaze/math/typetraits/IsDenseMatrix.h>
 #include <blaze/math/typetraits/IsSparseMatrix.h>
+#pragma GCC visibility pop
 #include <cstddef>
 #include <tuple>
 

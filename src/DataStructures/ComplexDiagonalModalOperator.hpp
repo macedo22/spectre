@@ -9,6 +9,7 @@
 #include "DataStructures/VectorImpl.hpp"
 #include "Utilities/TMPL.hpp"
 
+#pragma GCC visibility push(hidden)
 /// \cond
 class DiagonalModalOperator;
 class ModalVector;
@@ -122,6 +123,7 @@ BLAZE_TRAIT_SPECIALIZE_COMPATIBLE_BINARY_TRAIT(ComplexModalVector,
 BLAZE_TRAIT_SPECIALIZE_COMPATIBLE_BINARY_TRAIT(ComplexModalVector,
                                                ComplexDiagonalModalOperator,
                                                MultTrait, ComplexModalVector);
+
 template <>
 struct MultTrait<ModalVector, ComplexDiagonalModalOperator> {
   using Type = ComplexModalVector;
@@ -186,3 +188,4 @@ struct MapTrait<ComplexDiagonalModalOperator, ComplexDiagonalModalOperator,
 MAKE_STD_ARRAY_VECTOR_BINOPS(ComplexDiagonalModalOperator)
 
 MAKE_WITH_VALUE_IMPL_DEFINITION_FOR(ComplexDiagonalModalOperator)
+#pragma GCC visibility pop

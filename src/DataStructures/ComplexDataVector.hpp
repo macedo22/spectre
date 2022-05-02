@@ -3,7 +3,9 @@
 
 #pragma once
 
+#pragma GCC visibility push(hidden)
 #include <blaze/math/GroupTag.h>
+#pragma GCC visibility pop
 #include <complex>
 #include <cstddef>
 #include <functional>  // for std::reference_wrapper

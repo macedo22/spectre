@@ -15,6 +15,7 @@
 #include <vector>
 
 #include <Utilities/ErrorHandling/Assert.hpp>
+#pragma GCC visibility push(hidden)
 #include <blaze/math/CustomVector.h>
 #include <blaze/math/DenseVector.h>
 #include <blaze/math/GroupTag.h>
@@ -22,6 +23,7 @@
 #include <blaze/system/Optimizations.h>
 #include <blaze/system/Version.h>
 #include <blaze/util/typetraits/RemoveConst.h>
+#pragma GCC visibility pop
 
 // Include Brigand related headers
 #include <Utilities/TMPL.hpp>

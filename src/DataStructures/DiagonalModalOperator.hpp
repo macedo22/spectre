@@ -7,6 +7,7 @@
 #include "DataStructures/VectorImpl.hpp"
 #include "Utilities/TMPL.hpp"
 
+#pragma GCC visibility push(hidden)
 /// \cond
 class ModalVector;
 class DiagonalModalOperator;
@@ -93,3 +94,4 @@ struct MapTrait<DiagonalModalOperator, DiagonalModalOperator, Operator> {
 MAKE_STD_ARRAY_VECTOR_BINOPS(DiagonalModalOperator)
 
 MAKE_WITH_VALUE_IMPL_DEFINITION_FOR(DiagonalModalOperator)
+#pragma GCC visibility pop

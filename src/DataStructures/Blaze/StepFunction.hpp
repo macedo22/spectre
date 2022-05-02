@@ -3,11 +3,13 @@
 
 #pragma once
 
+#pragma GCC visibility push(hidden)
 #include <blaze/math/DenseVector.h>
 #include <blaze/math/constraints/SIMDPack.h>
 #include <blaze/math/simd/BasicTypes.h>
 #include <blaze/system/Inline.h>
 #include <blaze/system/Vectorization.h>
+#pragma GCC visibility pop
 
 namespace blaze {
 // This vectorized implementation of the step function is necessary because

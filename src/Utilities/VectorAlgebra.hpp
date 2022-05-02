@@ -3,7 +3,9 @@
 
 #pragma once
 
+#pragma GCC visibility push(hidden)
 #include <blaze/math/traits/MultTrait.h>
+#pragma GCC visibility pop
 
 #include "Utilities/Gsl.hpp"
 

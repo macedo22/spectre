@@ -9,7 +9,9 @@
 #pragma once
 
 #include <array>
+#pragma GCC visibility push(hidden)
 #include <blaze/math/StaticVector.h>
+#pragma GCC visibility pop
 #include <pup.h>
 #include <type_traits>
 

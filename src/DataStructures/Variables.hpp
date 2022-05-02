@@ -7,6 +7,7 @@
 #pragma once
 
 #include <algorithm>
+#pragma GCC visibility push(hidden)
 #include <blaze/math/AlignmentFlag.h>
 #include <blaze/math/CustomVector.h>
 #include <blaze/math/DenseVector.h>
@@ -14,6 +15,7 @@
 #include <blaze/math/PaddingFlag.h>
 #include <blaze/math/TransposeFlag.h>
 #include <blaze/math/Vector.h>
+#pragma GCC visibility pop
 #include <limits>
 #include <memory>
 #include <ostream>

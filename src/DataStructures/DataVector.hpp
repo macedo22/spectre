@@ -8,10 +8,13 @@
 #include "DataStructures/VectorImpl.hpp"
 #include "Utilities/ForceInline.hpp"
 
+#pragma GCC visibility push(hidden)
 /// \cond
 class DataVector;
 /// \endcond
+#pragma GCC visibility pop
 
+#pragma GCC visibility push(hidden)
 namespace blaze {
 DECLARE_GENERAL_VECTOR_BLAZE_TRAITS(DataVector);
 }  // namespace blaze
@@ -45,7 +48,9 @@ DECLARE_GENERAL_VECTOR_BLAZE_TRAITS(DataVector);
  * In addition, the Heaviside step function `step_function` is supported for
  * DataVectors.
  */
+#pragma GCC visibility push(hidden)
 class DataVector : public VectorImpl<double, DataVector> {
+ #pragma GCC visibility push(hidden)
  public:
   DataVector() = default;
   DataVector(const DataVector&) = default;
@@ -56,7 +61,9 @@ class DataVector : public VectorImpl<double, DataVector> {
 
   using VectorImpl<double, DataVector>::operator=;
   using VectorImpl<double, DataVector>::VectorImpl;
+ #pragma GCC visibility pop
 };
+#pragma GCC visibility pop
 
 // Specialize the Blaze type traits to correctly handle DataVector
 namespace blaze {
@@ -73,3 +80,4 @@ SPECTRE_ALWAYS_INLINE auto fabs(const DataVector& t) { return abs(*t); }
 MAKE_STD_ARRAY_VECTOR_BINOPS(DataVector)
 
 MAKE_WITH_VALUE_IMPL_DEFINITION_FOR(DataVector)
+#pragma GCC visibility pop

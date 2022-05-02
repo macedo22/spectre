@@ -3,11 +3,14 @@
 
 #pragma once
 
+#pragma GCC visibility push(hidden)
 #include <blaze/math/GroupTag.h>
+#pragma GCC visibility pop
 
 #include "DataStructures/VectorImpl.hpp"
 #include "Utilities/TMPL.hpp"
 
+#pragma GCC visibility push(hidden)
 /// \cond
 class ModalVector;
 class ComplexModalVector;
@@ -77,6 +80,7 @@ BLAZE_TRAIT_SPECIALIZE_COMPATIBLE_BINARY_TRAIT(ModalVector,
                                                ComplexModalVector);
 BLAZE_TRAIT_SPECIALIZE_COMPATIBLE_BINARY_TRAIT(ComplexModalVector, double,
                                                MultTrait, ComplexModalVector);
+
 template <>
 struct DivTrait<ComplexModalVector, std::complex<double>> {
   using Type = ComplexModalVector;
@@ -159,3 +163,4 @@ struct DVecNormHelper<
 }  // namespace blaze
 /// \endcond
 MAKE_WITH_VALUE_IMPL_DEFINITION_FOR(ComplexModalVector)
+#pragma GCC visibility pop

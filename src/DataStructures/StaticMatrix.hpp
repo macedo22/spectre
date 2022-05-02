@@ -9,7 +9,9 @@
 #pragma once
 
 #include <array>
+#pragma GCC visibility push(hidden)
 #include <blaze/math/StaticMatrix.h>
+#pragma GCC visibility pop
 #include <cstddef>
 #include <pup.h>
 #include <type_traits>

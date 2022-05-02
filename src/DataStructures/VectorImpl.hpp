@@ -5,12 +5,14 @@
 
 #include <algorithm>  // IWYU pragma: keep  // for std::fill
 #include <array>
+#pragma GCC visibility push(hidden)
 #include <blaze/math/AlignmentFlag.h>
 #include <blaze/math/CustomVector.h>
 #include <blaze/math/DenseVector.h>
 #include <blaze/math/GroupTag.h>
 #include <blaze/math/PaddingFlag.h>
 #include <blaze/math/TransposeFlag.h>
+#pragma GCC visibility pop
 #include <cstddef>
 #include <cstring>
 #include <functional>  // IWYU pragma: keep  // for std::plus, etc.
@@ -33,6 +35,7 @@
 #include "Utilities/StdArrayHelpers.hpp"
 #include "Utilities/TypeTraits/IsComplexOfFundamental.hpp"
 
+#pragma GCC visibility push(hidden)
 /*!
  * \ingroup DataStructuresGroup
  * \brief Base class template for various DataVector and related types
@@ -567,6 +570,7 @@ std::ostream& operator<<(std::ostream& os, const VectorImpl<T, VectorType>& d) {
     }                                                                     \
   };                                                                      \
   }  // namespace MakeWithValueImpls
+#pragma GCC visibility pop
 
 /// @{
 /*!

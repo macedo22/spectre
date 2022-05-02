@@ -8,6 +8,7 @@
 
 #include "DataStructures/DynamicMatrix.hpp"
 
+#pragma GCC visibility push(hidden)
 /*!
  * \ingroup DataStructuresGroup
  * \brief A dynamically sized matrix of `double`s with column-major storage.
@@ -21,3 +22,4 @@ class Matrix : public blaze::DynamicMatrix<double, blaze::columnMajor> {
   // Inherit constructors
   using blaze::DynamicMatrix<double, blaze::columnMajor>::DynamicMatrix;
 };
+#pragma GCC visibility pop
