@@ -230,6 +230,17 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
     return op2_multi_index;
   }
 
+  SPECTRE_ALWAYS_INLINE decltype(auto) multiply(
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    return t1_.get(get_op1_multi_index(result_multi_index)) *
+           t2_.get(get_op2_multi_index(result_multi_index));
+  }
+
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) multiply_split(
+      const std::array<size_t, num_tensor_indices>& result_multi_index) const {
+    return multiply(result_multi_index);
+  }
+
   /// \brief Return the value of the component of the outer product tensor at a
   /// given multi-index
   ///
@@ -251,8 +262,36 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// product tensor
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
-    return t1_.get(get_op1_multi_index(result_multi_index)) *
-           t2_.get(get_op2_multi_index(result_multi_index));
+    if constexpr (not is_primary_start) {
+      return multiply(result_multi_index);
+    } else {
+      return multiply_split(result_multi_index);
+    }
+  }
+
+  SPECTRE_ALWAYS_INLINE decltype(auto) multiply_primary(
+      const type& result_component,
+      const std::array<size_t, op1_num_tensor_indices>& op1_multi_index,
+      const std::array<size_t, op2_num_tensor_indices>& op2_multi_index) const {
+    if constexpr (is_primary_end) {
+      (void)op1_multi_index;
+      // We've already computed the whole child subtree on the primary path, so
+      // just return the product of the current result component and the result
+      // of the other child's subtree
+      return result_component * t2_.get(op2_multi_index);
+    } else {
+      // We haven't yet evaluated the whole subtree for this expression, so
+      // return the product of the results of the two operands' subtrees
+      return t1_.get_primary(result_component, op1_multi_index) *
+             t2_.get(op2_multi_index);
+    }
+  }
+
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) multiply_primary_split(
+      const type& result_component,
+      const std::array<size_t, op1_num_tensor_indices>& op1_multi_index,
+      const std::array<size_t, op2_num_tensor_indices>& op2_multi_index) const {
+    return multiply_primary(result_component, op1_multi_index, op2_multi_index);
   }
 
   /// \brief Return the product of the components at the given multi-indices of
@@ -274,17 +313,12 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
       const type& result_component,
       const std::array<size_t, op1_num_tensor_indices>& op1_multi_index,
       const std::array<size_t, op2_num_tensor_indices>& op2_multi_index) const {
-    if constexpr (is_primary_end) {
-      (void)op1_multi_index;
-      // We've already computed the whole child subtree on the primary path, so
-      // just return the product of the current result component and the result
-      // of the other child's subtree
-      return result_component * t2_.get(op2_multi_index);
+    if constexpr (not is_primary_start) {
+      return multiply_primary(result_component, op1_multi_index,
+                              op2_multi_index);
     } else {
-      // We haven't yet evaluated the whole subtree for this expression, so
-      // return the product of the results of the two operands' subtrees
-      return t1_.get_primary(result_component, op1_multi_index) *
-             t2_.get(op2_multi_index);
+      return multiply_primary_split(result_component, op1_multi_index,
+                                    op2_multi_index);
     }
   }
 
@@ -333,7 +367,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// operand of the product to evaluate
   /// \param op2_multi_index the multi-index of the component of the second
   /// operand of the product to evaluate
-  SPECTRE_ALWAYS_INLINE void evaluate_primary_children(
+  /*SPECTRE_ALWAYS_INLINE*/ void evaluate_primary_children(
       type& result_component,
       const std::array<size_t, op1_num_tensor_indices>& op1_multi_index,
       const std::array<size_t, op2_num_tensor_indices>& op2_multi_index) const {
