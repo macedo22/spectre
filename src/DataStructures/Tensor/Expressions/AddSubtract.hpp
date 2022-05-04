@@ -564,6 +564,12 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
     }
   }
 
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) add_or_subtract_split(
+      const std::array<size_t, num_tensor_indices>& op1_multi_index,
+      const std::array<size_t, num_tensor_indices_op2>& op2_multi_index) const {
+    return add_or_subtract(op1_multi_index, op2_multi_index);
+  }
+
   /// \brief Return the value of the component at the given multi-index of the
   /// tensor resulting from addition or subtraction
   ///
@@ -610,8 +616,13 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   /// tensor
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
-    return add_or_subtract(result_multi_index,
-                           get_op2_multi_index(result_multi_index));
+    if constexpr (not is_primary_start) {
+      return add_or_subtract(result_multi_index,
+                             get_op2_multi_index(result_multi_index));
+    } else {
+      return add_or_subtract_split(result_multi_index,
+                                   get_op2_multi_index(result_multi_index));
+    }
   }
 
   /// \brief Helper for evaluating the LHS Tensor's result component at this
@@ -638,7 +649,10 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   /// operand of the sum or difference to evaluate
   /// \param op2_multi_index the multi-index of the component of the second
   /// operand of the sum or difference to evaluate
-  SPECTRE_ALWAYS_INLINE void add_or_subtract_primary_children(
+  // not inlined because, while a small function, the fact that we are calling
+  // this means that the two legs were big enough to warrant evaluating
+  // separately
+  /*SPECTRE_ALWAYS_INLINE*/ void add_or_subtract_primary_children(
       type& result_component,
       const std::array<size_t, num_tensor_indices>& op1_multi_index,
       const std::array<size_t, num_tensor_indices_op2>& op2_multi_index) const {
@@ -749,6 +763,14 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
     }
   }
 
+  /*SPECTRE_ALWAYS_INLINE*/ decltype(auto) add_or_subtract_primary_split(
+      const type& result_component,
+      const std::array<size_t, num_tensor_indices>& op1_multi_index,
+      const std::array<size_t, num_tensor_indices_op2>& op2_multi_index) const {
+    return add_or_subtract_primary(result_component, op1_multi_index,
+                                   op2_multi_index);
+  }
+
   /// \brief Return the value of the component at the given multi-index of the
   /// tensor resulting from addition or subtraction
   ///
@@ -767,8 +789,14 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
       const type& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
-    return add_or_subtract_primary(result_component, result_multi_index,
-                                   get_op2_multi_index(result_multi_index));
+    if constexpr (not is_primary_start) {
+      return add_or_subtract_primary(result_component, result_multi_index,
+                                     get_op2_multi_index(result_multi_index));
+    } else {
+      return add_or_subtract_primary_split(
+          result_component, result_multi_index,
+          get_op2_multi_index(result_multi_index));
+    }
   }
 
   /// \brief Successively evaluate the LHS Tensor's result component at each
