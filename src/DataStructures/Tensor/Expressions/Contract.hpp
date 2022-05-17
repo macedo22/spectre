@@ -452,6 +452,14 @@ struct TensorContract
       uncontracted_index_dims = contracted_type::uncontracted_index_dims;
   /// The number of terms to sum for this expression's contraction
   static constexpr size_t num_terms_summed = contracted_type::num_terms_summed;
+  static constexpr size_t leg_length = 16;
+  static constexpr size_t num_full_legs = num_terms_summed / leg_length;
+  static constexpr size_t remainder_leg_length =
+      num_terms_summed - leg_length * num_full_legs;
+  static constexpr size_t total_legs =
+      remainder_leg_length != 0 ? num_full_legs + 1 : num_full_legs;
+  static constexpr size_t final_leg_length =
+      remainder_leg_length != 0 ? remainder_leg_length : leg_length;
 
   explicit TensorContract(
       const TensorExpression<T, X, Symm, IndexList, ArgsList>& t)
@@ -711,6 +719,45 @@ struct TensorContract
     return next_lowest_uncontracted_multi_index;
   }
 
+  static std::array<size_t, num_uncontracted_tensor_indices>
+  get_nth_multi_index_to_sum(std::array<size_t, num_uncontracted_tensor_indices>
+                                 uncontracted_multi_index,
+                             size_t n) {
+    // fill contracted indices
+    size_t divisor = num_terms_summed;
+    for (size_t i = num_contracted_index_pairs - 1;
+         i < num_contracted_index_pairs; i++) {
+      const size_t current_index_first_position =
+          contracted_index_pair_positions[i].first;
+      const size_t current_index_second_position =
+          contracted_index_pair_positions[i].second;
+      const size_t current_index_first_shift =
+          contracted_index_first_values[i].first;
+      const size_t current_index_second_shift =
+          contracted_index_first_values[i].second;
+      const size_t current_index_first_dim =
+          uncontracted_index_dims[current_index_first_position];
+      // TODO : make this be a TensorContract member variable instead so this is
+      // not recomputed unnecessarily and repeatedly
+      const size_t current_index_num_dims_to_sum =
+          current_index_first_dim - current_index_first_shift;
+
+      divisor /= current_index_num_dims_to_sum;
+      // last contracted index unshifted value
+      const size_t current_index_unshifted_index_value = n / divisor;
+      // shift and fill first value in contracted pair
+      uncontracted_multi_index[current_index_first_position] =
+          current_index_unshifted_index_value + current_index_first_shift;
+      // shift and fill second value in contracted pair
+      uncontracted_multi_index[current_index_second_position] =
+          current_index_unshifted_index_value + current_index_second_shift;
+
+      n = n % divisor;
+    }
+
+    return uncontracted_multi_index;
+  }
+
   /// \brief Computes the value of a component in the resultant contracted
   /// tensor
   ///
@@ -754,6 +801,39 @@ struct TensorContract
     }
   }
 
+  template <size_t Iteration>
+  SPECTRE_ALWAYS_INLINE static decltype(auto) _compute_contraction_leg(
+      const T& t, const std::array<size_t, num_uncontracted_tensor_indices>&
+                      current_multi_index) {
+    if constexpr (Iteration > 0) {
+      // We have more than one component left to sum
+      return _compute_contraction_leg<Iteration - 1>(
+                 t, get_next_highest_multi_index_to_sum(current_multi_index)) +
+             t.get(current_multi_index);
+    } else {
+      // We only have one final component to sum
+      return t.get(current_multi_index);
+    }
+  }
+
+  template <size_t Iteration>
+  static decltype(auto) _compute_contraction(
+      const T& t, const std::array<size_t, num_uncontracted_tensor_indices>&
+                      current_multi_index) {
+    if constexpr (Iteration > 0) {
+      // We have more than one component left to sum
+      return _compute_contraction<Iteration - 1>(
+                 t,
+                 get_nth_multi_index_to_sum(current_multi_index,
+                                            (Iteration - 1) * leg_length - 1)) +
+             _compute_contraction_leg(t, current_multi_index);
+    } else {
+      // We only have one final component to sum
+      return _compute_contraction_leg<final_leg_length - 1>(
+          t, current_multi_index);
+    }
+  }
+
   /// \brief Return the value of the component of the resultant contracted
   /// tensor at a given multi-index
   ///
@@ -763,7 +843,7 @@ struct TensorContract
   /// resultant contracted tensor
   decltype(auto) get(const std::array<size_t, num_tensor_indices>&
                          contracted_multi_index) const {
-    return compute_contraction<0>(
+    return _compute_contraction<total_legs - 1>(
         t_, get_highest_multi_index_to_sum(contracted_multi_index));
   }
 
