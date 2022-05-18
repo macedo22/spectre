@@ -452,7 +452,7 @@ struct TensorContract
       uncontracted_index_dims = contracted_type::uncontracted_index_dims;
   /// The number of terms to sum for this expression's contraction
   static constexpr size_t num_terms_summed = contracted_type::num_terms_summed;
-  static constexpr size_t leg_length = 16;
+  static constexpr size_t leg_length = 4;
   static constexpr size_t num_full_legs = num_terms_summed / leg_length;
   static constexpr size_t remainder_leg_length =
       num_terms_summed - leg_length * num_full_legs;
@@ -483,7 +483,7 @@ struct TensorContract
   /// contracted expression
   /// \return the highest multi-index between the components being summed in
   /// the contraction
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<
+  /*SPECTRE_ALWAYS_INLINE*/ static constexpr std::array<
       size_t, num_uncontracted_tensor_indices>
   get_highest_multi_index_to_sum(
       const std::array<size_t, num_tensor_indices>& contracted_multi_index) {
@@ -585,8 +585,8 @@ struct TensorContract
   /// of the uncontracted operand expression to sum
   /// \return the next highest multi-index between the components being summed
   /// in the contraction
-  SPECTRE_ALWAYS_INLINE static std::array<size_t,
-                                          num_uncontracted_tensor_indices>
+  /*SPECTRE_ALWAYS_INLINE*/ static std::array<size_t,
+                                              num_uncontracted_tensor_indices>
   get_next_highest_multi_index_to_sum(
       const std::array<size_t, num_uncontracted_tensor_indices>&
           uncontracted_multi_index) {
@@ -726,7 +726,7 @@ struct TensorContract
     // fill contracted indices
     size_t divisor = num_terms_summed;
     for (size_t i = num_contracted_index_pairs - 1;
-         i < num_contracted_index_pairs; i++) {
+         i < num_contracted_index_pairs; i--) {
       const size_t current_index_first_position =
           contracted_index_pair_positions[i].first;
       const size_t current_index_second_position =
@@ -817,16 +817,16 @@ struct TensorContract
   }
 
   template <size_t Iteration>
-  static decltype(auto) _compute_contraction(
+  /*SPECTRE_ALWAYS_INLINE*/ static decltype(auto) _compute_contraction(
       const T& t, const std::array<size_t, num_uncontracted_tensor_indices>&
                       current_multi_index) {
     if constexpr (Iteration > 0) {
       // We have more than one component left to sum
       return _compute_contraction<Iteration - 1>(
-                 t,
-                 get_nth_multi_index_to_sum(current_multi_index,
-                                            (Iteration - 1) * leg_length - 1)) +
-             _compute_contraction_leg(t, current_multi_index);
+                 t, get_nth_multi_index_to_sum(
+                        current_multi_index,
+                        (Iteration - 1) * leg_length + final_leg_length - 1)) +
+             _compute_contraction_leg<leg_length - 1>(t, current_multi_index);
     } else {
       // We only have one final component to sum
       return _compute_contraction_leg<final_leg_length - 1>(
@@ -841,8 +841,9 @@ struct TensorContract
   /// tensor component to retrieve
   /// \return the value of the component at `contracted_multi_index` in the
   /// resultant contracted tensor
-  decltype(auto) get(const std::array<size_t, num_tensor_indices>&
-                         contracted_multi_index) const {
+  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+      const std::array<size_t, num_tensor_indices>& contracted_multi_index)
+      const {
     return _compute_contraction<total_legs - 1>(
         t_, get_highest_multi_index_to_sum(contracted_multi_index));
   }
