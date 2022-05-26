@@ -512,7 +512,7 @@ struct TensorContract
   static constexpr size_t num_ops_subexpression = T::num_ops_subtree;
   /// In the subtree for this contraction, how many terms we sum together for
   /// each leg of the contraction
-  static constexpr size_t leg_length = []() {
+  static constexpr size_t recommended_leg_length = []() {
     if constexpr (not is_primary_start) {
       // If we're not even stopping at the beginning of the contraction, it's
       // because there weren't enough terms to justify any splitting, so the
@@ -532,20 +532,25 @@ struct TensorContract
       return length;
     }
   }();
+  static constexpr size_t actual_leg_length =
+      recommended_leg_length != 0 ? recommended_leg_length : 1;
   /// After dividing up the contraction subtree into legs, the number of legs
   /// whose length is equal to `leg_length`
-  static constexpr size_t num_full_legs =
-      leg_length == 0 ? num_terms_summed : num_terms_summed / leg_length;
+  static constexpr size_t num_full_legs = num_terms_summed / actual_leg_length;
   /// After dividing up the contraction subtree into legs of even length, the
   /// number of terms we still have left to sum
+  static constexpr size_t remainder_leg_length =
+      num_terms_summed - actual_leg_length * num_full_legs;
+  static constexpr size_t total_legs =
+      remainder_leg_length != 0 ? num_full_legs + 1 : num_full_legs;
   static constexpr size_t last_leg_length =
-      leg_length == 0 ? 0 : num_terms_summed % leg_length;
+      remainder_leg_length != 0 ? remainder_leg_length : actual_leg_length;
   /// When evaluating along a primary path, whether each term's subtrees should
   /// be evaluated separately. Since `DataVector` expression runtime scales
   /// poorly with increased number of operations, evaluating individual terms'
   /// subtrees separately like this is beneficial when each term, itself,
   /// involves many tensor operations.
-  static constexpr bool evaluate_terms_separately = leg_length == 0;
+  static constexpr bool evaluate_terms_separately = recommended_leg_length == 0;
 
   explicit TensorContract(
       const TensorExpression<T, X, Symm, IndexList, ArgsList>& t)
@@ -696,8 +701,7 @@ struct TensorContract
   /// of the uncontracted operand expression to sum
   /// \return the next highest multi-index between the components being summed
   /// in the contraction
-  SPECTRE_ALWAYS_INLINE static std::array<size_t,
-                                          num_uncontracted_tensor_indices>
+  static std::array<size_t, num_uncontracted_tensor_indices>
   get_next_highest_multi_index_to_sum(
       const std::array<size_t, num_uncontracted_tensor_indices>&
           uncontracted_multi_index) {
@@ -779,8 +783,7 @@ struct TensorContract
   /// of the uncontracted operand expression to sum
   /// \return the next lowest multi-index between the components being summed in
   /// the contraction
-  SPECTRE_ALWAYS_INLINE static std::array<size_t,
-                                          num_uncontracted_tensor_indices>
+  static std::array<size_t, num_uncontracted_tensor_indices>
   get_next_lowest_multi_index_to_sum(
       const std::array<size_t, num_uncontracted_tensor_indices>&
           uncontracted_multi_index) {
@@ -830,46 +833,77 @@ struct TensorContract
     return next_lowest_uncontracted_multi_index;
   }
 
-  /// \brief Computes the value of a component in the resultant contracted
-  /// tensor
-  ///
-  /// \details
-  /// The contraction is computed by recursively adding up each component in the
-  /// summation, across all index pairs being contracted in the operand
-  /// expression. This function is called `Iteration = num_terms_summed` times,
-  /// once for each uncontracted tensor component being summed. It should
-  /// externally be called for the first time with `Iteration == 0` and
-  /// `current_multi_index == <highest multi index to sum>` (see
-  /// `get_next_highest_multi_index_to_sum` for details).
-  ///
-  /// In performing the recursive summation, the recursion is
-  /// specifically done "to the left," in that this function returns
-  /// `compute_contraction(next index) + get(this_index)` as opposed to
-  /// `get(this_index) + compute_contraction`. Benchmarking has shown that
-  /// increased breadth in an equation's expression tree can slow down runtime.
-  /// By "recursing left" here, we  minimize breadth in the overall tree for an
-  /// equation, as both `AddSub` addition and `OuterProduct` (other expressions
-  /// with two children) make efforts to make their operands with larger
-  /// subtrees be their left operand.
-  ///
-  /// \tparam Iteration the nth term to sum, where n is between
-  /// [0, num_terms_summed)
-  /// \param t the expression contained within this contraction expression
-  /// \param current_multi_index the multi-index of the uncontracted tensor
-  /// component to retrieve
-  /// \return the value of a component of the resulant contracted tensor
+  static std::array<size_t, num_uncontracted_tensor_indices>
+  get_nth_multi_index_to_sum(std::array<size_t, num_uncontracted_tensor_indices>
+                                 uncontracted_multi_index,
+                             size_t n) {
+    // fill contracted indices
+    size_t divisor = num_terms_summed;
+    for (size_t i = num_contracted_index_pairs - 1;
+         i < num_contracted_index_pairs; i--) {
+      const size_t current_index_first_position =
+          contracted_index_pair_positions[i].first;
+      const size_t current_index_second_position =
+          contracted_index_pair_positions[i].second;
+      const size_t current_index_first_shift =
+          contracted_index_first_values[i].first;
+      const size_t current_index_second_shift =
+          contracted_index_first_values[i].second;
+      const size_t current_index_first_dim =
+          uncontracted_index_dims[current_index_first_position];
+      // TODO : make this be a TensorContract member variable instead so this is
+      // not recomputed unnecessarily and repeatedly
+      const size_t current_index_num_dims_to_sum =
+          current_index_first_dim - current_index_first_shift;
+
+      divisor /= current_index_num_dims_to_sum;
+      // last contracted index unshifted value
+      const size_t current_index_unshifted_index_value = n / divisor;
+      // shift and fill first value in contracted pair
+      uncontracted_multi_index[current_index_first_position] =
+          current_index_unshifted_index_value + current_index_first_shift;
+      // shift and fill second value in contracted pair
+      uncontracted_multi_index[current_index_second_position] =
+          current_index_unshifted_index_value + current_index_second_shift;
+
+      n = n % divisor;
+    }
+
+    return uncontracted_multi_index;
+  }
+
   template <size_t Iteration>
-  SPECTRE_ALWAYS_INLINE static decltype(auto) compute_contraction(
+  SPECTRE_ALWAYS_INLINE static decltype(auto) compute_contraction_leg(
       const T& t, const std::array<size_t, num_uncontracted_tensor_indices>&
                       current_multi_index) {
-    if constexpr (Iteration < num_terms_summed - 1) {
+    if constexpr (Iteration > 0) {
       // We have more than one component left to sum
-      return compute_contraction<Iteration + 1>(
+      return compute_contraction_leg<Iteration - 1>(
                  t, get_next_highest_multi_index_to_sum(current_multi_index)) +
              t.get(current_multi_index);
     } else {
       // We only have one final component to sum
       return t.get(current_multi_index);
+    }
+  }
+
+  template <size_t Iteration>
+  static decltype(auto) compute_contraction(
+      const T& t, const std::array<size_t, num_uncontracted_tensor_indices>&
+                      current_multi_index) {
+    if constexpr (Iteration > 0) {
+      // We have more than one leg left to sum
+      return compute_contraction<Iteration - 1>(
+                 t,
+                 get_nth_multi_index_to_sum(
+                     current_multi_index, (Iteration - 1) * actual_leg_length +
+                                              last_leg_length - 1)) +
+             compute_contraction_leg<actual_leg_length - 1>(
+                 t, current_multi_index);
+    } else {
+      // We only have one final leg to sum
+      return compute_contraction_leg<last_leg_length - 1>(t,
+                                                          current_multi_index);
     }
   }
 
@@ -882,7 +916,7 @@ struct TensorContract
   /// resultant contracted tensor
   decltype(auto) get(const std::array<size_t, num_tensor_indices>&
                          contracted_multi_index) const {
-    return compute_contraction<0>(
+    return compute_contraction<total_legs - 1>(
         t_, get_highest_multi_index_to_sum(contracted_multi_index));
   }
 
@@ -906,7 +940,7 @@ struct TensorContract
   /// multi-index to update to be the next leg's starting multi-index
   /// \return the result of summing up the terms in the given leg
   template <size_t Iteration>
-  SPECTRE_ALWAYS_INLINE static decltype(auto) compute_contraction_leg(
+  SPECTRE_ALWAYS_INLINE static decltype(auto) compute_contraction_primary_leg(
       const T& t,
       const std::array<size_t, num_uncontracted_tensor_indices>&
           current_multi_index,
@@ -915,7 +949,7 @@ struct TensorContract
     if constexpr (Iteration != 0) {
       // We have more than one component left to sum
       (void)next_leg_starting_multi_index;
-      return compute_contraction_leg<Iteration - 1>(
+      return compute_contraction_primary_leg<Iteration - 1>(
                  t, get_next_highest_multi_index_to_sum(current_multi_index),
                  next_leg_starting_multi_index) +
              t.get(current_multi_index);
@@ -1048,7 +1082,7 @@ struct TensorContract
       std::array<size_t, num_uncontracted_tensor_indices>
           next_leg_starting_multi_index =
               get_highest_multi_index_to_sum(contracted_multi_index);
-      if constexpr (last_leg_length > 0) {
+      if constexpr (remainder_leg_length > 0) {
         // Case 2a: We have a remainder of terms that don't make up a full leg
         // length
 
@@ -1056,18 +1090,19 @@ struct TensorContract
         for (size_t i = 0; i < num_full_legs; i++) {
           const std::array<size_t, num_uncontracted_tensor_indices>
               current_multi_index = next_leg_starting_multi_index;
-          result_component += compute_contraction_leg<leg_length - 1>(
-              t_, current_multi_index, next_leg_starting_multi_index);
+          result_component +=
+              compute_contraction_primary_leg<actual_leg_length - 1>(
+                  t_, current_multi_index, next_leg_starting_multi_index);
         }
-        if constexpr (last_leg_length > 1) {
+        if constexpr (remainder_leg_length > 1) {
           // Get rest of the deepest (partial-length) leg if there are more
           // terms in it than just the one deepest term we already computed
           const std::array<size_t, num_uncontracted_tensor_indices>
               current_multi_index = next_leg_starting_multi_index;
           result_component +=
-              // start at last_leg_length - 2 because we already computed one of
-              // the terms in this deepest leg (the deepest term)
-              compute_contraction_leg<last_leg_length - 2>(
+              // start at remainder_leg_length - 2 because we already computed
+              // one of the terms in this deepest leg (the deepest term)
+              compute_contraction_primary_leg<remainder_leg_length - 2>(
                   t_, current_multi_index, next_leg_starting_multi_index);
         }
       } else {
@@ -1079,11 +1114,12 @@ struct TensorContract
           const std::array<size_t, num_uncontracted_tensor_indices>
               current_multi_index = next_leg_starting_multi_index;
 
-          result_component += compute_contraction_leg<leg_length - 1>(
-              t_, current_multi_index, next_leg_starting_multi_index);
+          result_component +=
+              compute_contraction_primary_leg<actual_leg_length - 1>(
+                  t_, current_multi_index, next_leg_starting_multi_index);
         }
 
-        if constexpr (leg_length > 1) {
+        if constexpr (actual_leg_length > 1) {
           // Get rest of the deepest leg if there are more terms in it than
           // just the one deepest term we already computed
           const std::array<size_t, num_uncontracted_tensor_indices>
@@ -1091,7 +1127,7 @@ struct TensorContract
           result_component +=
               // start at leg_length - 2 because we already computed one of the
               // terms in this deepest leg (the deepest term)
-              compute_contraction_leg<leg_length - 2>(
+              compute_contraction_primary_leg<actual_leg_length - 2>(
                   t_, current_multi_index, next_leg_starting_multi_index);
         }
       }
