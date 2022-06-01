@@ -149,6 +149,8 @@ compute_tensorindex_transformation(
 /// `input_multi_index`, according to generic index order differences
 // (`tensorindex_transformation`)
 // 4.8GB -> 3.7GB after removing SPECTRE_ALWAYS_INLINE
+// 2nd actual changes commit: removing inlining here didn't make a difference
+// when grouped with these changes
 template <size_t NumIndicesIn, size_t NumIndicesOut>
 SPECTRE_ALWAYS_INLINE constexpr std::array<size_t, NumIndicesOut>
 transform_multi_index(

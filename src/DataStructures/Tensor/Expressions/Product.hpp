@@ -204,7 +204,8 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// product tensor
   /// \return the first operand's multi-index
   // 4.8GB -> 3.6GB after removing SPECTRE_ALWAYS_INLINE here and get_op2_multi_index
-  constexpr SPECTRE_ALWAYS_INLINE std::array<size_t, op1_num_tensor_indices>
+  // 2nd actual changes commit: 3.3GB -> 2.3GB
+  constexpr /*SPECTRE_ALWAYS_INLINE*/ std::array<size_t, op1_num_tensor_indices>
   get_op1_multi_index(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     std::array<size_t, op1_num_tensor_indices> op1_multi_index{};
@@ -223,7 +224,8 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// product tensor
   /// \return the second operand's multi-index
   // 4.8GB -> 3.6GB after removing SPECTRE_ALWAYS_INLINE here and get_op1_multi_index
-  constexpr SPECTRE_ALWAYS_INLINE std::array<size_t, op2_num_tensor_indices>
+  // 2nd actual changes commit: 3.3GB -> 2.3GB
+  constexpr /*SPECTRE_ALWAYS_INLINE*/ std::array<size_t, op2_num_tensor_indices>
   get_op2_multi_index(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     std::array<size_t, op2_num_tensor_indices> op2_multi_index{};
