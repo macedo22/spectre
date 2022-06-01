@@ -14,6 +14,8 @@ spectre_target_sources(
   DerivLapse.cpp
   DerivZ4Constraint.cpp
   Ricci.cpp
+  RicciDataVector.cpp
+  RicciDouble.cpp
   RicciScalarPlusDivergenceZ4Constraint.cpp
   Z4Constraint.cpp
   )
