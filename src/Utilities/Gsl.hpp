@@ -123,14 +123,16 @@ SPECTRE_ALWAYS_INLINE T narrow(U u) {
  */
 template <class T, std::size_t N, typename Size>
 SPECTRE_ALWAYS_INLINE constexpr T& at(std::array<T, N>& arr, Size index) {
-  Expects(index >= 0 and index < narrow_cast<Size>(N));
+  // 4.8GB -> 1.7GB after commenting out this and below overload Expects
+  Expects(index >= 0 and index < narrow_cast<Size>(N)); // 4.8GB -> 3.6GB after commenting out
   return arr[static_cast<std::size_t>(index)];
 }
 
 template <class Cont, typename Size>
 SPECTRE_ALWAYS_INLINE constexpr const typename Cont::value_type& at(
     const Cont& cont, Size index) {
-  Expects(index >= 0 and index < narrow_cast<Size>(cont.size()));
+  // 4.8GB -> 1.7GB after commenting out this and below overload Expects
+  Expects(index >= 0 and index < narrow_cast<Size>(cont.size())); // 4.8GB -> 2.5GB after commenting out
   return cont[static_cast<typename Cont::size_type>(index)];
 }
 

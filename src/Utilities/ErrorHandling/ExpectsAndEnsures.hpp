@@ -28,9 +28,11 @@
  */
 #if defined(SPECTRE_DEBUG) || defined(EXPECTS_ENSURES)
 #define Expects(cond)                      \
-  if (UNLIKELY(!(cond))) {                 \
-    CERROR("Expects violated: "s + #cond); \
-  } else                                   \
+  if (UNLIKELY(!(cond))) { \
+    /* 4.8GB -> 2.3GB after using static_cast<void>(cond); instead*/ \
+    /* 4.8GB -> 1.9GB after commenting out */                        \
+    CERROR("Expects violated: "s + #cond);                           \
+  } else                                                             \
     static_cast<void>(0)
 #else
 #define Expects(cond)        \

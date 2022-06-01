@@ -203,12 +203,15 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// \param result_multi_index the multi-index of the component of the outer
   /// product tensor
   /// \return the first operand's multi-index
+  // 4.8GB -> 3.6GB after removing SPECTRE_ALWAYS_INLINE here and get_op2_multi_index
   constexpr SPECTRE_ALWAYS_INLINE std::array<size_t, op1_num_tensor_indices>
   get_op1_multi_index(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     std::array<size_t, op1_num_tensor_indices> op1_multi_index{};
     for (size_t i = 0; i < op1_num_tensor_indices; i++) {
+      // 4.8GB -> 3.6GB after removing gsl::at here and in get_op2_multi_index
       gsl::at(op1_multi_index, i) = gsl::at(result_multi_index, i);
+      // op1_multi_index[i] = result_multi_index[i];
     }
     return op1_multi_index;
   }
@@ -219,13 +222,16 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// \param result_multi_index the multi-index of the component of the outer
   /// product tensor
   /// \return the second operand's multi-index
+  // 4.8GB -> 3.6GB after removing SPECTRE_ALWAYS_INLINE here and get_op1_multi_index
   constexpr SPECTRE_ALWAYS_INLINE std::array<size_t, op2_num_tensor_indices>
   get_op2_multi_index(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     std::array<size_t, op2_num_tensor_indices> op2_multi_index{};
     for (size_t i = 0; i < op2_num_tensor_indices; i++) {
+      // 4.8GB -> 3.6GB after removing gsl::at here and in get_op1_multi_index
       gsl::at(op2_multi_index, i) =
           gsl::at(result_multi_index, op1_num_tensor_indices + i);
+      // op2_multi_index[i] = result_multi_index[op1_num_tensor_indices + i];
     }
     return op2_multi_index;
   }

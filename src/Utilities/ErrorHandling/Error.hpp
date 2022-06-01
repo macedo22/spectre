@@ -58,6 +58,10 @@
 #define CERROR(m)                                                             \
   do {                                                                        \
     breakpoint();                                                             \
+    /*4.8->4.5GB after removing just the NOLINT */                            \
+    /*4.8->3.9GB after removing just this line: m + NOLINT */                 \
+    /*4.8->2.3GB with empty msg string */                                     \
+    /*4.8->1.9GB with no sys::abort call */                                   \
     sys::abort("\n################ ERROR ################\nLine: "s +         \
                std::to_string(__LINE__) + " of file '"s + __FILE__ + "'\n"s + \
                m + /* NOLINT */                                               \

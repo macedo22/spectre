@@ -209,10 +209,13 @@ class Tensor<X, Symm, IndexList<Indices...>> {
       const std::array<T, sizeof...(Indices)>& tensor_index) {
     return gsl::at(data_, structure::get_storage_index(tensor_index));
   }
+  // 4.8GB -> 3.4GB after removing SPECTRE_ALWAYS_INLINE
   template <typename T>
   SPECTRE_ALWAYS_INLINE constexpr const_reference get(
       const std::array<T, sizeof...(Indices)>& tensor_index) const {
+    // 4.8GB -> 4.0GB after removing gsl::at
     return gsl::at(data_, structure::get_storage_index(tensor_index));
+    // return data_[structure::get_storage_index(tensor_index)];
   }
   /// @}
   /// @{

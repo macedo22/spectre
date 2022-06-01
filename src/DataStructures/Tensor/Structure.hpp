@@ -494,15 +494,22 @@ struct Structure {
   ///
   /// \param tensor_index the tensor_index of which to get the storage_index
   /// \return the storage_index of a tensor_index
+  // 4.8GB -> 4.0GB after removing SPECTRE_ALWAYS_INLINE
   template <typename I>
   SPECTRE_ALWAYS_INLINE static constexpr std::size_t get_storage_index(
       const std::array<I, sizeof...(Indices)>& tensor_index) {
     constexpr auto collapsed_to_storage = collapsed_to_storage_;
+    // 4.8GB -> 4.0GB after removing gsl::at
     return gsl::at(collapsed_to_storage,
                    compute_collapsed_index(
                        convert_to_cpp20_array(tensor_index),
                        make_cpp20_array_from_list<tmpl::conditional_t<
                            0 != sizeof...(Indices), index_list, size_t>>()));
+    // return collapsed_to_storage
+    //                [compute_collapsed_index(
+    //                    convert_to_cpp20_array(tensor_index),
+    //                    make_cpp20_array_from_list<tmpl::conditional_t<
+    //                        0 != sizeof...(Indices), index_list, size_t>>())];
   }
 
   /// \brief Get the storage_index of a tensor_index

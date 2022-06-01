@@ -602,6 +602,7 @@ struct TensorContract
     auto highest_multi_index = make_array<num_uncontracted_tensor_indices>(
         std::numeric_limits<size_t>::max());
 
+    // removing gsl::at didn't affect compile RAM
     // Fill uncontracted indices
     for (size_t i = 0; i < num_tensor_indices; i++) {
       gsl::at(highest_multi_index, gsl::at(index_transformation, i)) =
@@ -619,6 +620,24 @@ struct TensorContract
       gsl::at(highest_multi_index, second_index_position_in_pair) =
           gsl::at(uncontracted_index_dims, second_index_position_in_pair) - 1;
     }
+
+    // // Fill uncontracted indices
+    // for (size_t i = 0; i < num_tensor_indices; i++) {
+    //   gsl::at(highest_multi_index, gsl::at(index_transformation, i)) =
+    //       gsl::at(contracted_multi_index, i);
+    // }
+
+    // // Fill contracted indices
+    // for (size_t i = 0; i < num_contracted_index_pairs; i++) {
+    //   const size_t first_index_position_in_pair =
+    //       contracted_index_pair_positions[i].first;
+    //   const size_t second_index_position_in_pair =
+    //       contracted_index_pair_positions[i].second;
+    //   highest_multi_index[first_index_position_in_pair] =
+    //       uncontracted_index_dims[first_index_position_in_pair] - 1;
+    //   highest_multi_index[second_index_position_in_pair] =
+    //       uncontracted_index_dims[second_index_position_in_pair] - 1;
+    // }
 
     return highest_multi_index;
   }
@@ -648,6 +667,7 @@ struct TensorContract
     auto lowest_multi_index = make_array<num_uncontracted_tensor_indices>(
         std::numeric_limits<size_t>::max());
 
+    // removing gsl::at didn't affect compile RAM
     // Fill uncontracted indices
     for (size_t i = 0; i < num_tensor_indices; i++) {
       gsl::at(lowest_multi_index, gsl::at(index_transformation, i)) =
@@ -665,6 +685,24 @@ struct TensorContract
       gsl::at(lowest_multi_index, second_index_position_in_pair) =
           gsl::at(contracted_index_first_values, i).second;
     }
+
+    // // Fill uncontracted indices
+    // for (size_t i = 0; i < num_tensor_indices; i++) {
+    //   lowest_multi_index[index_transformation[i]] =
+    //       contracted_multi_index[i];
+    // }
+
+    // // Fill contracted indices
+    // for (size_t i = 0; i < num_contracted_index_pairs; i++) {
+    //   const size_t first_index_position_in_pair =
+    //       contracted_index_pair_positions[i].first;
+    //   const size_t second_index_position_in_pair =
+    //       contracted_index_pair_positions[i].second;
+    //   lowest_multi_index[first_index_position_in_pair] =
+    //       contracted_index_first_values[i].first;
+    //   lowest_multi_index[second_index_position_in_pair] =
+    //       contracted_index_first_values[i].second;
+    // }
 
     return lowest_multi_index;
   }
@@ -696,6 +734,7 @@ struct TensorContract
   /// of the uncontracted operand expression to sum
   /// \return the next highest multi-index between the components being summed
   /// in the contraction
+  // 4.8GB -> 4.1GB after removing SPECTRE_ALWAYS_INLINE
   SPECTRE_ALWAYS_INLINE static std::array<size_t,
                                           num_uncontracted_tensor_indices>
   get_next_highest_multi_index_to_sum(
@@ -705,6 +744,7 @@ struct TensorContract
         next_highest_uncontracted_multi_index = uncontracted_multi_index;
 
     size_t i = 0;
+    // 4.8GB -> 4.1GB after removing gsl::at
     while (i < num_contracted_index_pairs) {
       // the position of the first index in a pair being contracted
       const size_t current_index_first_position =
@@ -749,6 +789,43 @@ struct TensorContract
       i++;
     }
 
+    // while (i < num_contracted_index_pairs) {
+    //   // the position of the first index in a pair being contracted
+    //   const size_t current_index_first_position =
+    //       contracted_index_pair_positions[i].first;
+    //   // the position of the second index in a pair being contracted
+    //   const size_t current_index_second_position =
+    //       contracted_index_pair_positions[i].second;
+    //   // of the values being summed over, the lowest concrete value of the first
+    //   // index in the contracted pair
+    //   const size_t current_index_first_first_value =
+    //       contracted_index_first_values[i].first;
+
+    //   // decrement the current index pair's values
+    //   next_highest_uncontracted_multi_index[current_index_first_position]--;
+    //   next_highest_uncontracted_multi_index[current_index_second_position]--;
+
+    //   // If the index values of the index pair being contracted aren't lower
+    //   // than the minimum values included in the summation, then we're done
+    //   // computing this next multi-index
+    //   if (not(next_highest_uncontracted_multi_index[current_index_first_position] <
+    //               current_index_first_first_value or
+    //           next_highest_uncontracted_multi_index[current_index_first_position] >
+    //               uncontracted_index_dims[current_index_first_position])) {
+    //     break;
+    //   }
+    //   // Otherwise, we've wrapped around the lowest value being summed over for
+    //   // this index, so we need to set it back to the maximum values being
+    //   // summed and "carry" the decrementing over to the next contracted pair's
+    //   // values
+    //   next_highest_uncontracted_multi_index[current_index_first_position] =
+    //       uncontracted_index_dims[current_index_first_position] - 1;
+    //   next_highest_uncontracted_multi_index[current_index_second_position] =
+    //       uncontracted_index_dims[current_index_second_position] - 1;
+
+    //   i++;
+    // }
+
     return next_highest_uncontracted_multi_index;
   }
 
@@ -788,6 +865,7 @@ struct TensorContract
         next_lowest_uncontracted_multi_index = uncontracted_multi_index;
 
     size_t i = 0;
+    // removing gsl::at didn't affect compile RAM
     while (i < num_contracted_index_pairs) {
       // the position of the first index in a pair being contracted
       const size_t current_index_first_position =
@@ -826,6 +904,39 @@ struct TensorContract
 
       i++;
     }
+
+    // while (i < num_contracted_index_pairs) {
+    //   // the position of the first index in a pair being contracted
+    //   const size_t current_index_first_position =
+    //       contracted_index_pair_positions[i].first;
+    //   // the position of the second index in a pair being contracted
+    //   const size_t current_index_second_position =
+    //       contracted_index_pair_positions[i].second;
+
+    //   // increment the current index pair's values
+    //   next_lowest_uncontracted_multi_index[current_index_first_position]++;
+    //   next_lowest_uncontracted_multi_index[current_index_second_position]++;
+
+    //   // if the previous index value is > dim, then we've wrapped around
+    //   // and we need to go again
+    //   // If the index values of the index pair being contracted aren't higher
+    //   // than the maximum values included in the summation, then we're done
+    //   // computing this next multi-index
+    //   if (not(next_lowest_uncontracted_multi_index[current_index_first_position] >
+    //           uncontracted_index_dims[current_index_first_position] - 1)) {
+    //     break;
+    //   }
+    //   // Otherwise, we've wrapped around the highest value being summed over for
+    //   // this index, so we need to set it back to the minimum values being
+    //   // summed and "carry" the incrementing over to the next contracted pair's
+    //   // values
+    //   next_lowest_uncontracted_multi_index[current_index_first_position] =
+    //       contracted_index_first_values[i].first;
+    //   next_lowest_uncontracted_multi_index[current_index_second_position] =
+    //       contracted_index_first_values[i].second;
+
+    //   i++;
+    // }
 
     return next_lowest_uncontracted_multi_index;
   }

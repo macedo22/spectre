@@ -87,6 +87,12 @@ compute_tensorindex_transformation(
             : static_cast<size_t>(std::distance(
                   tensorindices1.begin(),
                   alg::find(tensorindices1, gsl::at(tensorindices2, i))));
+    // tensorindex_transformation[i] =
+    //     detail::is_time_index_value(tensorindices2[i])
+    //         ? TensorIndexTransformation_detail::time_index_position_placeholder
+    //         : static_cast<size_t>(std::distance(
+    //               tensorindices1.begin(),
+    //               alg::find(tensorindices1, tensorindices2[i])));
   }
   return tensorindex_transformation;
 }
@@ -142,6 +148,7 @@ compute_tensorindex_transformation(
 /// \return the output tensor multi-index that is equivalent to
 /// `input_multi_index`, according to generic index order differences
 // (`tensorindex_transformation`)
+// 4.8GB -> 3.7GB after removing SPECTRE_ALWAYS_INLINE
 template <size_t NumIndicesIn, size_t NumIndicesOut>
 SPECTRE_ALWAYS_INLINE constexpr std::array<size_t, NumIndicesOut>
 transform_multi_index(
@@ -150,6 +157,7 @@ transform_multi_index(
   std::array<size_t, NumIndicesOut> output_multi_index =
       make_array<NumIndicesOut, size_t>(0);
   for (size_t i = 0; i < NumIndicesOut; i++) {
+    // 4.8GB -> 3.8GB after removing gsl::at
     gsl::at(output_multi_index, i) =
         // Check that the index is not a time index instead of checking that it
         // is, because we expect it to not be a time index most of the time
@@ -157,6 +165,13 @@ transform_multi_index(
          TensorIndexTransformation_detail::time_index_position_placeholder)
             ? gsl::at(input_multi_index, gsl::at(tensorindex_transformation, i))
             : 0;
+    // output_multi_index[i] =
+    //     // Check that the index is not a time index instead of checking that it
+    //     // is, because we expect it to not be a time index most of the time
+    //     tensorindex_transformation[i] !=
+    //      TensorIndexTransformation_detail::time_index_position_placeholder
+    //         ? input_multi_index[tensorindex_transformation[i]]
+    //         : 0;
   }
   return output_multi_index;
 }
