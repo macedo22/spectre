@@ -735,7 +735,8 @@ struct TensorContract
   /// \return the next highest multi-index between the components being summed
   /// in the contraction
   // 4.8GB -> 4.1GB after removing SPECTRE_ALWAYS_INLINE
-  SPECTRE_ALWAYS_INLINE static std::array<size_t,
+  // 1st actual changes commit: 4.8GB -> 3.3GB
+  /*SPECTRE_ALWAYS_INLINE*/ static std::array<size_t,
                                           num_uncontracted_tensor_indices>
   get_next_highest_multi_index_to_sum(
       const std::array<size_t, num_uncontracted_tensor_indices>&
