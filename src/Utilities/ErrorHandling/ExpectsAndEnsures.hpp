@@ -29,7 +29,7 @@
 #if defined(SPECTRE_DEBUG) || defined(EXPECTS_ENSURES)
 #define Expects(cond)                      \
   if (UNLIKELY(!(cond))) {                 \
-    CERROR("Expects violated: "s + #cond); \
+    CERROR(#cond);                         \
   } else                                   \
     static_cast<void>(0)
 #else

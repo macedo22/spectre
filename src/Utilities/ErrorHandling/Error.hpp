@@ -59,7 +59,7 @@
   do {                                                                   \
     breakpoint();                                                        \
     if constexpr (__builtin_is_constant_evaluated()) {                   \
-      throw std::runtime_error("failed");                                \
+      throw std::runtime_error(m);                                       \
     } else {                                                             \
       sys::abort(                                                        \
           "\n################ ERROR ################\nLine: "s +         \
