@@ -14,6 +14,7 @@
 #include "Utilities/ErrorHandling/FloatingPointExceptions.hpp"
 #include "Utilities/Literals.hpp"
 #include "Utilities/System/Abort.hpp"
+#include "Utilities/TypeTraits.hpp"
 
 /*!
  * \ingroup ErrorHandlingGroup
@@ -34,34 +35,17 @@
 // 20160415) can't figure out that the else branch and everything
 // after it is unreachable, causing warnings (and possibly suboptimal
 // code generation).
-#define ERROR(m)                                                            \
-  do {                                                                      \
-    disable_floating_point_exceptions();                                    \
-    std::ostringstream avoid_name_collisions_ERROR;                         \
-    /* clang-tidy: macro arg in parentheses */                              \
-    avoid_name_collisions_ERROR << m; /* NOLINT */                          \
-    abort_with_error_message(__FILE__, __LINE__,                            \
-                             static_cast<const char*>(__PRETTY_FUNCTION__), \
-                             avoid_name_collisions_ERROR.str());            \
-  } while (false)
-
-/*!
- * \ingroup ErrorHandlingGroup
- * \brief prints an error message to the standard error and aborts the
- * program.
- *
- * CERROR is just like ERROR and so the same guidelines apply. However, because
- * it does not use std::stringstream it can be used in some constexpr
- * functions where ERROR cannot be.
- * \param m error message as a string, may need to use string literals
- */
-#define CERROR(m)                                                             \
+#define ERROR(m)                                                              \
   do {                                                                        \
-    breakpoint();                                                             \
-    sys::abort("\n################ ERROR ################\nLine: "s +         \
-               std::to_string(__LINE__) + " of file '"s + __FILE__ + "'\n"s + \
-               m + /* NOLINT */                                               \
-               "\n#######################################\n"s);               \
+    if (cpp20::is_constant_evaluated()) {                                     \
+      /* short string used to reduce time and memory usage for compilation */ \
+      throw std::runtime_error("Failed");                                     \
+    } else {                                                                  \
+      disable_floating_point_exceptions();                                    \
+      abort_with_error_message(                                               \
+          __FILE__, __LINE__, static_cast<const char*>(__PRETTY_FUNCTION__),  \
+          static_cast<std::ostringstream&>(std::ostringstream() << m).str()); \
+    }                                                                         \
   } while (false)
 
 /*!
@@ -69,13 +53,15 @@
  * \brief Same as ERROR but does not print a backtrace. Intended to be used for
  * user errors, such as incorrect values in an input file.
  */
-#define ERROR_NO_TRACE(m)                                                  \
-  do {                                                                     \
-    disable_floating_point_exceptions();                                   \
-    std::ostringstream avoid_name_collisions_ERROR;                        \
-    /* clang-tidy: macro arg in parentheses */                             \
-    avoid_name_collisions_ERROR << m; /* NOLINT */                         \
-    abort_with_error_message_no_trace(                                     \
-        __FILE__, __LINE__, static_cast<const char*>(__PRETTY_FUNCTION__), \
-        avoid_name_collisions_ERROR.str());                                \
+#define ERROR_NO_TRACE(m)                                                     \
+  do {                                                                        \
+    if (cpp20::is_constant_evaluated()) {                                     \
+      /* short string used to reduce time and memory usage for compilation */ \
+      throw std::runtime_error("Failed");                                     \
+    } else {                                                                  \
+      disable_floating_point_exceptions();                                    \
+      abort_with_error_message_no_trace(                                      \
+          __FILE__, __LINE__, static_cast<const char*>(__PRETTY_FUNCTION__),  \
+          static_cast<std::ostringstream&>(std::ostringstream() << m).str()); \
+    }                                                                         \
   } while (false)
