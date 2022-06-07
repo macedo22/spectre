@@ -55,13 +55,17 @@
  * functions where ERROR cannot be.
  * \param m error message as a string, may need to use string literals
  */
-#define CERROR(m)                                                             \
-  do {                                                                        \
-    breakpoint();                                                             \
-    sys::abort("\n################ ERROR ################\nLine: "s +         \
-               std::to_string(__LINE__) + " of file '"s + __FILE__ + "'\n"s + \
-               m + /* NOLINT */                                               \
-               "\n#######################################\n"s);               \
+#define CERROR(m)                                                       \
+  do {                                                                  \
+    breakpoint();                                                       \
+    if constexpr (__builtin_is_constant_evaluated()) {                  \
+      throw std::runtime_error("m");                                    \
+    } else {                                                            \
+      sys::abort("\n################ ERROR ################\nLine: "s + \
+                 std::to_string(__LINE__) + " of file '"s + __FILE__ +  \
+                 "'\n"s + m + /* NOLINT */                              \
+                 "\n#######################################\n"s);       \
+    }                                                                   \
   } while (false)
 
 /*!
