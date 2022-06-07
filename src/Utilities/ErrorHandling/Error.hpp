@@ -58,8 +58,8 @@
 #define CERROR(m)                                                       \
   do {                                                                  \
     breakpoint();                                                       \
-    if constexpr (__builtin_is_constant_evaluated()) {                  \
-      throw std::runtime_error("m");                                    \
+    if (__builtin_is_constant_evaluated()) {                            \
+      throw std::runtime_error("Failed");                               \
     } else {                                                            \
       sys::abort("\n################ ERROR ################\nLine: "s + \
                  std::to_string(__LINE__) + " of file '"s + __FILE__ +  \
