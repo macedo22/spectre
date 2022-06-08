@@ -19,7 +19,7 @@ class Object {
   Object& operator=(const Object& /*rhs*/) = delete;
   Object(Object&& /*rhs*/) = delete;             // NOLINT
   Object& operator=(Object&& /*rhs*/) = delete;  // NOLINT
-  virtual ~Object() = default;
+  virtual ~Object() noexcept(false) = default;
   /// \endcond
 
   /// Return the path to the subfile where this object is stored

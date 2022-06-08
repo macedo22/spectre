@@ -53,7 +53,7 @@ class Dat : public h5::Object {
   Dat(Dat&& /*rhs*/) = delete;             // NOLINT
   Dat& operator=(Dat&& /*rhs*/) = delete;  // NOLINT
 
-  ~Dat() override;
+  ~Dat() noexcept(false) override;
   /// \endcond HIDDEN_SYMBOLS
 
   /*!

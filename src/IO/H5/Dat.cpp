@@ -102,7 +102,9 @@ Dat::Dat(const bool exists, detail::OpenGroup&& group, const hid_t location,
   }
 }
 
-Dat::~Dat() { CHECK_H5(H5Dclose(dataset_id_), "Failed to close dataset"); }
+Dat::~Dat() noexcept(false) {
+  CHECK_H5(H5Dclose(dataset_id_), "Failed to close dataset");
+}
 
 void Dat::append_impl(const hsize_t number_of_rows,
                       const std::vector<double>& data) {
