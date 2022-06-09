@@ -56,7 +56,7 @@
       disable_floating_point_exceptions();                                   \
       abort_with_error_message(                                              \
           __FILE__, __LINE__, static_cast<const char*>(__PRETTY_FUNCTION__), \
-          static_cast<const std::ostringstream&>(std::ostringstream() << m)  \
+          dynamic_cast<const std::ostringstream&>(std::ostringstream() << m) \
               .str());                                                       \
     }                                                                        \
   } while (false)
@@ -74,7 +74,7 @@
       disable_floating_point_exceptions();                                   \
       abort_with_error_message_no_trace(                                     \
           __FILE__, __LINE__, static_cast<const char*>(__PRETTY_FUNCTION__), \
-          static_cast<const std::ostringstream&>(std::ostringstream() << m)  \
+          dynamic_cast<const std::ostringstream&>(std::ostringstream() << m) \
               .str());                                                       \
     }                                                                        \
   } while (false)
