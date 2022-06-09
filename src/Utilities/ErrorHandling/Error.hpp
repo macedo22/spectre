@@ -48,16 +48,17 @@
 // 20160415) can't figure out that the else branch and everything
 // after it is unreachable, causing warnings (and possibly suboptimal
 // code generation).
-#define ERROR(m)                                                              \
-  do {                                                                        \
-    if (__builtin_is_constant_evaluated()) {                                  \
-      throw std::runtime_error("Failed");                                     \
-    } else {                                                                  \
-      disable_floating_point_exceptions();                                    \
-      abort_with_error_message(                                               \
-          __FILE__, __LINE__, static_cast<const char*>(__PRETTY_FUNCTION__),  \
-          static_cast<std::ostringstream&>(std::ostringstream() << m).str()); \
-    }                                                                         \
+#define ERROR(m)                                                             \
+  do {                                                                       \
+    if (__builtin_is_constant_evaluated()) {                                 \
+      throw std::runtime_error("Failed");                                    \
+    } else {                                                                 \
+      disable_floating_point_exceptions();                                   \
+      abort_with_error_message(                                              \
+          __FILE__, __LINE__, static_cast<const char*>(__PRETTY_FUNCTION__), \
+          static_cast<const std::ostringstream&>(std::ostringstream() << m)  \
+              .str());                                                       \
+    }                                                                        \
   } while (false)
 
 /*!
@@ -65,14 +66,15 @@
  * \brief Same as ERROR but does not print a backtrace. Intended to be used for
  * user errors, such as incorrect values in an input file.
  */
-#define ERROR_NO_TRACE(m)                                                     \
-  do {                                                                        \
-    if (__builtin_is_constant_evaluated()) {                                  \
-      throw std::runtime_error("Failed");                                     \
-    } else {                                                                  \
-      disable_floating_point_exceptions();                                    \
-      abort_with_error_message_no_trace(                                      \
-          __FILE__, __LINE__, static_cast<const char*>(__PRETTY_FUNCTION__),  \
-          static_cast<std::ostringstream&>(std::ostringstream() << m).str()); \
-    }                                                                         \
+#define ERROR_NO_TRACE(m)                                                    \
+  do {                                                                       \
+    if (__builtin_is_constant_evaluated()) {                                 \
+      throw std::runtime_error("Failed");                                    \
+    } else {                                                                 \
+      disable_floating_point_exceptions();                                   \
+      abort_with_error_message_no_trace(                                     \
+          __FILE__, __LINE__, static_cast<const char*>(__PRETTY_FUNCTION__), \
+          static_cast<const std::ostringstream&>(std::ostringstream() << m)  \
+              .str());                                                       \
+    }                                                                        \
   } while (false)
