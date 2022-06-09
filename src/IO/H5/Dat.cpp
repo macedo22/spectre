@@ -102,7 +102,15 @@ Dat::Dat(const bool exists, detail::OpenGroup&& group, const hid_t location,
   }
 }
 
-Dat::~Dat() { CHECK_H5(H5Dclose(dataset_id_), "Failed to close dataset"); }
+Dat::~Dat() {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
+#pragma GCC diagnostic ignored "-Wunknown-warning-option"
+#pragma GCC diagnostic ignored "-Wterminate"
+#pragma GCC diagnostic ignored "-Wno-error=terminate"
+  CHECK_H5(H5Dclose(dataset_id_), "Failed to close dataset");
+#pragma GCC diagnostic pop
+}
 
 void Dat::append_impl(const hsize_t number_of_rows,
                       const std::vector<double>& data) {
