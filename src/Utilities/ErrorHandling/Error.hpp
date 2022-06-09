@@ -32,6 +32,11 @@
  * time greatly reduces the compile time and memory consumption during debug
  * builds of deep and heavily inlined `TensorExpression` tree traversals.
  *
+ * To accomplish this, `__builtin_is_constant_evaluated()` is used directly
+ * instead of calling a wrapper function because calling a wrapper was found to
+ * slightly increase the compile time and memory usage of large
+ * `TensorExpression`s when compiling in debug mode.
+ *
  * \param m an arbitrary output stream.
  */
 // isocpp.org recommends using an `if (true)` instead of a `do
