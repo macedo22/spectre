@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include <sstream>
 #include <string>
 
 #include "Utilities/ErrorHandling/AbortWithErrorMessage.hpp"
 #include "Utilities/ErrorHandling/Breakpoint.hpp"
 #include "Utilities/ErrorHandling/FloatingPointExceptions.hpp"
 #include "Utilities/Literals.hpp"
+#include "Utilities/MakeString.hpp"
 #include "Utilities/System/Abort.hpp"
 
 /*!
@@ -47,17 +47,16 @@
 // 20160415) can't figure out that the else branch and everything
 // after it is unreachable, causing warnings (and possibly suboptimal
 // code generation).
-#define ERROR(m)                                                             \
-  do {                                                                       \
-    if (__builtin_is_constant_evaluated()) {                                 \
-      throw std::runtime_error("Failed");                                    \
-    } else {                                                                 \
-      disable_floating_point_exceptions();                                   \
-      abort_with_error_message(                                              \
-          __FILE__, __LINE__, static_cast<const char*>(__PRETTY_FUNCTION__), \
-          dynamic_cast<std::ostringstream*>(&(std::ostringstream() << m))    \
-              ->str());                                                      \
-    }                                                                        \
+#define ERROR(m)                                                              \
+  do {                                                                        \
+    if (__builtin_is_constant_evaluated()) {                                  \
+      throw std::runtime_error("Failed");                                     \
+    } else {                                                                  \
+      disable_floating_point_exceptions();                                    \
+      abort_with_error_message(__FILE__, __LINE__,                            \
+                               static_cast<const char*>(__PRETTY_FUNCTION__), \
+                               MakeString{} << m);                            \
+    }                                                                         \
   } while (false)
 
 /*!
@@ -73,7 +72,6 @@
       disable_floating_point_exceptions();                                   \
       abort_with_error_message_no_trace(                                     \
           __FILE__, __LINE__, static_cast<const char*>(__PRETTY_FUNCTION__), \
-          dynamic_cast<std::ostringstream*>(&(std::ostringstream() << m))    \
-              ->str());                                                      \
+          MakeString{} << m);                                                \
     }                                                                        \
   } while (false)
