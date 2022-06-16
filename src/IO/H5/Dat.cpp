@@ -103,23 +103,18 @@ Dat::Dat(const bool exists, detail::OpenGroup&& group, const hid_t location,
 }
 
 Dat::~Dat() {
-// The pragmas here are used to suppress the warning that the compile time
-// branch of `ERROR` will always call `terminate()` because it throws an error.
+#ifdef __clang__
+  CHECK_H5(H5Dclose(dataset_id_), "Failed to close dataset");
+#else
+// The pragma here is used to suppress the warning that the compile time branch
+// of `ERROR` will always call `terminate()` because it throws an error.
 // Throwing that error is a code path that will never actually be entered at
 // runtime, so we suppress the warning here.
 #pragma GCC diagnostic push
-// Suppresses -Wpragmas warning for gcc builds that do not recognize
-// -Wunknown-warning-option
-#pragma GCC diagnostic ignored "-Wpragmas"
-// Suppresses -Wunknown-warning-option for clang builds that do not recognize
-// -Wterminate
-#pragma GCC diagnostic ignored "-Wunknown-warning-option"
-// Suppresses -Wterminate for gcc-9 and gcc-10 builds
 #pragma GCC diagnostic ignored "-Wterminate"
-// Suppresses -Werror=terminate for gcc-11 builds
-#pragma GCC diagnostic ignored "-Wno-error=terminate"
   CHECK_H5(H5Dclose(dataset_id_), "Failed to close dataset");
 #pragma GCC diagnostic pop
+#endif
 }
 
 void Dat::append_impl(const hsize_t number_of_rows,
