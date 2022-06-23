@@ -41,6 +41,10 @@ void test_simple_tags() {
       "DerivSlicingCondition");
   TestHelpers::db::test_simple_tag<Ccz4::Tags::Theta<DataType>>("Theta");
   TestHelpers::db::test_simple_tag<Ccz4::Tags::b<Dim, Frame, DataType>>("b");
+  TestHelpers::db::test_simple_tag<Ccz4::Tags::Eta<DataType>>("Eta");
+  TestHelpers::db::test_simple_tag<
+      Ccz4::Tags::LapseInitialTimeDerivative<DataType>>(
+      "LapseInitialTimeDerivative");
   TestHelpers::db::test_simple_tag<Ccz4::Tags::LogLapse<DataType>>("LogLapse");
   TestHelpers::db::test_simple_tag<Ccz4::Tags::FieldA<Dim, Frame, DataType>>(
       "FieldA");

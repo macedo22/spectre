@@ -158,6 +158,24 @@ struct b : db::SimpleTag {
 };
 
 /*!
+ * \brief Variable that helps control the evolution of the shift
+ *
+ * \details See eq 12i of \cite Dumbser2017okk
+ */
+template <typename DataType>
+struct Eta : db::SimpleTag {
+  using type = Scalar<DataType>;
+};
+
+/*!
+ * \brief The initial time derivative of the lapse \f$K_0\f$
+ */
+template <typename DataType>
+struct LapseInitialTimeDerivative : db::SimpleTag {
+  using type = Scalar<DataType>;
+};
+
+/*!
  * \brief The natural log of the lapse
  */
 template <typename DataType>

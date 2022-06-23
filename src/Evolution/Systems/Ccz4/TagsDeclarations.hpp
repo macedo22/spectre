@@ -36,6 +36,10 @@ template <size_t Dim, typename Frame = Frame::Inertial,
           typename DataType = DataVector>
 struct b;
 template <typename DataType = DataVector>
+struct Eta;
+template <typename DataType = DataVector>
+struct LapseInitialTimeDerivative;
+template <typename DataType = DataVector>
 struct LogLapse;
 template <size_t Dim, typename Frame = Frame::Inertial,
           typename DataType = DataVector>
