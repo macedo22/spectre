@@ -272,7 +272,7 @@ struct ContractedFieldDUp : db::SimpleTag {
 /*!
  * \brief The CCZ4 temporary expression \f$\alpha \partial_k \tilde{A}_{ij}\f$
  *
- * \details Here, \f$\alpha\f$ is the lapse defined by `gr::Tags::Lapse` and
+ * \details Here, \f$\alpha\f$ is the lapse defined by `gr::Tags::Lapse`,
  * \f$\tilde{A}_{ij}\f$ is the trace-free part of the extrinsic curvature
  * defined by `Ccz4::Tags::ATilde`, and \f$\partial_k \tilde{A}_{ij}\f$ is its
  * spatial derivative.
