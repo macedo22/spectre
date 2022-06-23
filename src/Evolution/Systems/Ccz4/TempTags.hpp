@@ -13,18 +13,6 @@
 namespace Ccz4 {
 namespace Tags {
 /*!
- * \brief The CCZ4 temporary expression \f$\frac{1}{2} \phi^2\f$, one half the
- * square of the conformal factor
- *
- * \details Here, \f$\phi^2\f$ is square of the conformal factor defined by
- * `gr::Tags::ConformalFactorSquared`.
- */
-template <typename DataType>
-struct HalfConformalFactorSquared : db::SimpleTag {
-  using type = Scalar<DataType>;
-};
-
-/*!
  * \brief The CCZ4 temporary expression \f$\tilde{A}_{ki} B_j{}^k\f$
  *
  * \details Here, \f$\tilde{A}_{ij}\f$ is the trace-free part of the extrinsic
@@ -179,6 +167,18 @@ struct ContractedSymmetrizedDerivFieldB : db::SimpleTag {
 template <size_t Dim, typename Frame, typename DataType>
 struct FieldBTimesFieldD : db::SimpleTag {
   using type = tnsr::ijk<DataType, Dim, Frame>;
+};
+
+/*!
+ * \brief The CCZ4 temporary expression \f$\frac{1}{2} \phi^2\f$, one half the
+ * square of the conformal factor
+ *
+ * \details Here, \f$\phi^2\f$ is square of the conformal factor defined by
+ * `gr::Tags::ConformalFactorSquared`.
+ */
+template <typename DataType>
+struct HalfConformalFactorSquared : db::SimpleTag {
+  using type = Scalar<DataType>;
 };
 
 /*!

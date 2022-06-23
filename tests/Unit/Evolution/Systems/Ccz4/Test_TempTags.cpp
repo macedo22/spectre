@@ -17,9 +17,6 @@ struct ArbitraryFrame;
 template <size_t Dim, typename Frame, typename DataType>
 void test_simple_tags() {
   TestHelpers::db::test_simple_tag<
-      Ccz4::Tags::HalfConformalFactorSquared<DataType>>(
-      "HalfConformalFactorSquared");
-  TestHelpers::db::test_simple_tag<
       Ccz4::Tags::ATildeTimesFieldB<Dim, Frame, DataType>>("ATildeTimesFieldB");
   TestHelpers::db::test_simple_tag<
       Ccz4::Tags::GammaHatMinusContractedConformalChristoffel<Dim, Frame,
@@ -50,6 +47,9 @@ void test_simple_tags() {
       "ContractedSymmetrizedDerivFieldB");
   TestHelpers::db::test_simple_tag<
       Ccz4::Tags::FieldBTimesFieldD<Dim, Frame, DataType>>("FieldBTimesFieldD");
+  TestHelpers::db::test_simple_tag<
+      Ccz4::Tags::HalfConformalFactorSquared<DataType>>(
+      "HalfConformalFactorSquared");
   TestHelpers::db::test_simple_tag<
       Ccz4::Tags::ConformalMetricTimesFieldB<Dim, Frame, DataType>>(
       "ConformalMetricTimesFieldB");
