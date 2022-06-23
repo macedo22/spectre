@@ -151,8 +151,7 @@ struct TimeDerivative {
       const gsl::not_null<tnsr::iJ<DataVector, Dim>*>
           d_contracted_conformal_christoffel_second_kind,
       const gsl::not_null<tnsr::i<DataVector, Dim>*> spatial_z4_constraint,
-      const gsl::not_null<Scalar<DataVector>*>
-          upper_spatial_z4_constraint_buffer,
+      const gsl::not_null<Scalar<DataVector>*> half_conformal_factor_squared,
       const gsl::not_null<tnsr::I<DataVector, Dim>*>
           upper_spatial_z4_constraint,
       const gsl::not_null<tnsr::ij<DataVector, Dim>*>

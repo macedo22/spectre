@@ -16,11 +16,25 @@ template <typename DataType = DataVector>
 struct ConformalFactor;
 template <typename DataType = DataVector>
 struct ConformalFactorSquared;
+template <typename DataType = DataVector>
+struct DetConformalSpatialMetric;
 template <size_t Dim, typename Frame = Frame::Inertial,
           typename DataType = DataVector>
 struct ATilde;
 template <typename DataType = DataVector>
 struct TraceATilde;
+template <size_t Dim, typename Frame = Frame::Inertial,
+          typename DataType = DataVector>
+struct InverseATilde;
+template <typename DataType = DataVector>
+struct SlicingCondition;
+template <typename DataType = DataVector>
+struct DerivSlicingCondition;
+template <typename DataType = DataVector>
+struct Theta;
+template <size_t Dim, typename Frame = Frame::Inertial,
+          typename DataType = DataVector>
+struct b;
 template <typename DataType = DataVector>
 struct LogLapse;
 template <size_t Dim, typename Frame = Frame::Inertial,

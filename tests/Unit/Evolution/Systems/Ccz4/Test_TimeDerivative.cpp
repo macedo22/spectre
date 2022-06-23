@@ -479,7 +479,7 @@ void test_minkowski(const Ccz4::EvolveShift evolve_shift,
   tnsr::iJ<DataVector, SpatialDim>
       d_contracted_conformal_christoffel_second_kind_actual(used_for_size);
   tnsr::i<DataVector, SpatialDim> spatial_z4_constraint_actual(used_for_size);
-  Scalar<DataVector> upper_spatial_z4_constraint_buffer_actual(used_for_size);
+  Scalar<DataVector> half_conformal_factor_squared_actual(used_for_size);
   tnsr::I<DataVector, SpatialDim> upper_spatial_z4_constraint_actual(
       used_for_size);
   tnsr::ij<DataVector, SpatialDim> grad_spatial_z4_constraint_actual(
@@ -542,7 +542,7 @@ void test_minkowski(const Ccz4::EvolveShift evolve_shift,
       make_not_null(&contracted_conformal_christoffel_second_kind_actual),
       make_not_null(&d_contracted_conformal_christoffel_second_kind_actual),
       make_not_null(&spatial_z4_constraint_actual),
-      make_not_null(&upper_spatial_z4_constraint_buffer_actual),
+      make_not_null(&half_conformal_factor_squared_actual),
       make_not_null(&upper_spatial_z4_constraint_actual),
       make_not_null(&grad_spatial_z4_constraint_actual),
       make_not_null(&ricci_scalar_plus_divergence_z4_constraint_actual), c,
@@ -1089,7 +1089,7 @@ void test_kerrschild(const Ccz4::EvolveShift evolve_shift,
   tnsr::iJ<DataVector, SpatialDim>
       d_contracted_conformal_christoffel_second_kind_actual(used_for_size);
   tnsr::i<DataVector, SpatialDim> spatial_z4_constraint_actual(used_for_size);
-  Scalar<DataVector> upper_spatial_z4_constraint_buffer_actual(used_for_size);
+  Scalar<DataVector> half_conformal_factor_squared_actual(used_for_size);
   tnsr::I<DataVector, SpatialDim> upper_spatial_z4_constraint_actual(
       used_for_size);
   tnsr::ij<DataVector, SpatialDim> grad_spatial_z4_constraint_actual(
@@ -1152,7 +1152,7 @@ void test_kerrschild(const Ccz4::EvolveShift evolve_shift,
       make_not_null(&contracted_conformal_christoffel_second_kind_actual),
       make_not_null(&d_contracted_conformal_christoffel_second_kind_actual),
       make_not_null(&spatial_z4_constraint_actual),
-      make_not_null(&upper_spatial_z4_constraint_buffer_actual),
+      make_not_null(&half_conformal_factor_squared_actual),
       make_not_null(&upper_spatial_z4_constraint_actual),
       make_not_null(&grad_spatial_z4_constraint_actual),
       make_not_null(&ricci_scalar_plus_divergence_z4_constraint_actual), c,

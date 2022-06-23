@@ -13,6 +13,30 @@
 namespace Ccz4 {
 namespace Tags {
 /*!
+ * \brief The CCZ4 temporary expression \f$\frac{1}{2} \phi^2\f$, one half the
+ * square of the conformal factor
+ *
+ * \details Here, \f$\phi^2\f$ is square of the conformal factor defined by
+ * `gr::Tags::ConformalFactorSquared`.
+ */
+template <typename DataType>
+struct HalfConformalFactorSquared : db::SimpleTag {
+  using type = Scalar<DataType>;
+};
+
+/*!
+ * \brief The CCZ4 temporary expression \f$\tilde{A}_{ki} B_j{}^k\f$
+ *
+ * \details Here, \f$\tilde{A}_{ij}\f$ is the trace-free part of the extrinsic
+ * curvature defined by `Ccz4::Tags::ATilde` and \f$B_i{}^j\f$ is the CCZ4
+ * auxiliary variable defined by `Ccz4::Tags::FieldB`.
+ */
+template <size_t Dim, typename Frame, typename DataType>
+struct ATildeTimesFieldB : db::SimpleTag {
+  using type = tnsr::ij<DataType, Dim, Frame>;
+};
+
+/*!
  * \brief The CCZ4 temporary expression
  * \f$\hat{\Gamma}^i - \tilde{\Gamma}^i\f$
  *
@@ -36,12 +60,54 @@ struct GammaHatMinusContractedConformalChristoffel : db::SimpleTag {
 };
 
 /*!
+ * \brief The CCZ4 temporary expression
+ * \f$\partial_i \hat{\Gamma}^l - \partial_i \tilde{\Gamma}^l\f$
+ *
+ * \details Here, \f$\hat{\Gamma}^{i}\f$ is the CCZ4 evolved variable defined by
+ * `Ccz4::Tags::GammaHat`, \f$\tilde{\Gamma}^{i}\f$ is the contraction of the
+ * conformal spatial Christoffel symbols of the second kind defined by
+ * `Ccz4::Tags::ContractedConformalChristoffelSecondKind`, and
+ * \f$\partial_j \tilde{\Gamma}^i\f$ is the spatial derivative defined by
+ * `Ccz4::Tags::DerivContractedConformalChristoffelSecondKind`.
+ */
+template <size_t Dim, typename Frame, typename DataType>
+struct DerivGammaHatMinusContractedConformalChristoffel : db::SimpleTag {
+  using type = tnsr::iJ<DataType, Dim, Frame>;
+};
+
+/*!
+ * \brief The CCZ4 temporary expression
+ * \f$\partial_m \tilde{\Gamma}^m{}_{ij} - \partial_j \tilde{\Gamma}^m{}_{im}\f$
+ *
+ * \details Here, \f$\partial_k \tilde{\Gamma}^m{}_{ij}\f$ is the spatial
+ * derivative of the conformal spatial christoffel symbols of the second kind
+ * defined by `Ccz4::Tags::DerivConformalChristoffelSecondKind`.
+ */
+template <size_t Dim, typename Frame, typename DataType>
+struct ContractedDerivConformalChristoffelDifference : db::SimpleTag {
+  using type = tnsr::ij<DataType, Dim, Frame>;
+};
+
+/*!
+ * \brief The CCZ4 temporary expression \f$\Gamma^m_{lm}\f$, the contraction
+ * of the spatial Christoffel symbols of the second kind
+ *
+ * \details Here, \f$\Gamma^k_{ij}\f$ is the spatial Christoffel symbols of the
+ * second kind defined by `Ccz4::Tags::ChristoffelSecondKind`.
+ */
+template <size_t Dim, typename Frame, typename DataType>
+struct ContractedChristoffelSecondKind : db::SimpleTag {
+  using type = tnsr::i<DataType, Dim, Frame>;
+};
+
+/*!
  * \brief The CCZ4 temporary expression \f$K - 2 \Theta c\f$
  *
  * \details Here, \f$K\f$ is the trace of the extrinsic curvature defined by
  * `gr::Tags::TraceExtrinsicCurvature`, \f$\Theta\f$ is the projection of the Z4
- * four-vector along the normal direction, and \f$c\f$ controls whether to
- * include algebraic source terms proportional to \f$\Theta\f$.
+ * four-vector along the normal direction defined by `Ccz4::Tags::Theta`, and
+ * \f$c\f$ controls whether to include algebraic source terms proportional to
+ * \f$\Theta\f$.
  */
 template <typename DataType>
 struct KMinus2ThetaC : db::SimpleTag {
@@ -54,8 +120,8 @@ struct KMinus2ThetaC : db::SimpleTag {
  * \details Here, \f$K\f$ is the trace of the extrinsic curvature defined by
  * `gr::Tags::TraceExtrinsicCurvature`, \f$K_0\f$ is the initial time derivative
  * of the lapse, \f$\Theta\f$ is the projection of the Z4 four-vector along the
- * normal direction, and \f$c\f$ controls whether to include algebraic source
- * terms proportional to \f$\Theta\f$.
+ * normal direction defined by `Ccz4::Tags::Theta`, and \f$c\f$ controls whether
+ * to include algebraic source terms proportional to \f$\Theta\f$.
  */
 template <typename DataType>
 struct KMinusK0Minus2ThetaC : db::SimpleTag {
@@ -74,6 +140,48 @@ struct ContractedFieldB : db::SimpleTag {
 };
 
 /*!
+ * \brief The CCZ4 temporary expression \f$\partial_{(k}B_{j)}{}^i\f$
+ *
+ * \details We define:
+ *
+ * \f{align}
+ *     \partial_{(k}B_{j)}{}^i &=
+ *         \frac{\partial_k B_j{}^i + \partial_j B_k{}^i }{2}
+ * \f}
+ *
+ * where \f$B_j{}^i\f$ is the CCZ4 auxiliary variable defined by
+ * `Ccz4::Tags::FieldB`.
+ */
+template <size_t Dim, typename Frame, typename DataType>
+struct SymmetrizedDerivFieldB : db::SimpleTag {
+  using type = tnsr::ijK<DataType, Dim, Frame>;
+};
+
+/*!
+ * \brief The CCZ4 temporary expression \f$\partial_{(k}B_{i)}{}^i\f$
+ *
+ * \details Here, \f$B_j{}^i\f$ is the CCZ4 auxiliary variable defined by
+ * `Ccz4::Tags::FieldB` and \f$\partial_{(k}B_{j)}{}^i\f$ is the temporary
+ * expression defined by `Ccz4::Tags::SymmetrizedDerivFieldB`.
+ */
+template <size_t Dim, typename Frame, typename DataType>
+struct ContractedSymmetrizedDerivFieldB : db::SimpleTag {
+  using type = tnsr::i<DataType, Dim, Frame>;
+};
+
+/*!
+ * \brief The CCZ4 temporary expression \f$B_i{}^l D_{jlk}\f$
+ *
+ * \details Here, \f$B_j{}^i\f$ is the CCZ4 auxiliary variable defined by
+ * `Ccz4::Tags::FieldB` and \f$D_{kij}\f$ is the CCZ4 auxiliary variable defined
+ * by `Ccz4::Tags::FieldD`.
+ */
+template <size_t Dim, typename Frame, typename DataType>
+struct FieldBTimesFieldD : db::SimpleTag {
+  using type = tnsr::ijk<DataType, Dim, Frame>;
+};
+
+/*!
  * \brief The CCZ4 temporary expression \f$\tilde{\gamma}_{ki} B_j{}^k\f$
  *
  * \details Here, \f$\tilde{\gamma}_{ij}\f$ is the conformal spatial metric
@@ -83,6 +191,19 @@ struct ContractedFieldB : db::SimpleTag {
 template <size_t Dim, typename Frame, typename DataType>
 struct ConformalMetricTimesFieldB : db::SimpleTag {
   using type = tnsr::ij<DataType, Dim, Frame>;
+};
+
+/*!
+ * \brief The CCZ4 temporary expression
+ * \f$\tilde{\gamma}_{mi} \partial_{(k}B_{j)}{}^m\f$
+ *
+ * \details Here, \f$\tilde{\gamma}_{ij}\f$ is the conformal spatial metric
+ * defined by `Ccz4::Tags::ConformalMetric` and \f$\partial_{(k}B_{j)}{}^i\f$ is
+ * the temporary expression defined by `Ccz4::Tags::SymmetrizedDerivFieldB`.
+ */
+template <size_t Dim, typename Frame, typename DataType>
+struct ConformalMetricTimesSymmetrizedDerivFieldB : db::SimpleTag {
+  using type = tnsr::ijk<DataType, Dim, Frame>;
 };
 
 /*!
@@ -134,6 +255,18 @@ struct LapseTimesATilde : db::SimpleTag {
 template <size_t Dim, typename Frame, typename DataType>
 struct FieldDUpTimesATilde : db::SimpleTag {
   using type = tnsr::i<DataType, Dim, Frame>;
+};
+
+/*!
+ * \brief The CCZ4 temporary expression \f$D_m{}^{ml}\f$
+ *
+ * \details Here, \f$D_k{}^{nm}\f$ is analytically negative one half the spatial
+ * derivative of the inverse conformal spatial metric defined by
+ * `Ccz4::Tags::FieldDUp`.
+ */
+template <size_t Dim, typename Frame, typename DataType>
+struct ContractedFieldDUp : db::SimpleTag {
+  using type = tnsr::I<DataType, Dim, Frame>;
 };
 
 /*!
@@ -190,6 +323,18 @@ struct LapseTimesFieldA : db::SimpleTag {
 };
 
 /*!
+ * \brief The CCZ4 temporary expression \f$\alpha \tilde{\gamma}_{ij}\f$
+ *
+ * \details Here, \f$\alpha\f$ is the lapse defined by `gr::Tags::Lapse` and
+ * \f$\tilde{\gamma}_{ij}\f$ is the conformal spatial metric defined by
+ * `Ccz4::Tags::ConformalMetric`.
+ */
+template <size_t Dim, typename Frame, typename DataType>
+struct LapseTimesConformalSpatialMetric : db::SimpleTag {
+  using type = tnsr::ii<DataType, Dim, Frame>;
+};
+
+/*!
  * \brief The CCZ4 temporary expression \f$\beta^k \partial_k \hat{\Gamma}^i\f$
  *
  * \details Here, \f$\beta^k\f$ is the shift defined by `gr::Tags::Shift`,
@@ -220,9 +365,8 @@ struct InverseTauTimesConformalMetric : db::SimpleTag {
  * \brief The CCZ4 temporary expression \f$\alpha g(\alpha)\f$
  *
  * \details Here, \f$\alpha\f$ is the lapse defined by `gr::Tags::Lapse` and
- * \f$g(\alpha)\f$ is a constant that controls the slicing conditions.
- * \f$g(\alpha) = 1\f$ leads to harmonic slicing and
- * \f$g(\alpha) = 2 / \alpha\f$ leads to 1 + log slicing.
+ * \f$g(\alpha)\f$ is a constant defined by `Ccz4::Tags::SlicingCondition` that
+ * controls the slicing conditions
  */
 template <typename DataType>
 struct LapseTimesSlicingCondition : db::SimpleTag {

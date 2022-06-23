@@ -77,9 +77,9 @@ void TimeDerivative<Dim>::apply(
     const gsl::not_null<tnsr::iJ<DataVector, Dim>*>
         d_gamma_hat_minus_contracted_conformal_christoffel,
     const gsl::not_null<tnsr::i<DataVector, Dim>*>
-        contracted_christoffel_second_kind,  // buffer for eq 18 -20
+        contracted_christoffel_second_kind,  // temp for eq 18 -20
     const gsl::not_null<tnsr::ij<DataVector, Dim>*>
-        contracted_d_conformal_christoffel_difference,  // buffer for eq 18 -20
+        contracted_d_conformal_christoffel_difference,  // temp for eq 18 -20
     const gsl::not_null<Scalar<DataVector>*> k_minus_2_theta_c,
     const gsl::not_null<Scalar<DataVector>*> k_minus_k0_minus_2_theta_c,
     const gsl::not_null<tnsr::ii<DataVector, Dim>*> lapse_times_a_tilde,
@@ -113,7 +113,7 @@ void TimeDerivative<Dim>::apply(
     const gsl::not_null<tnsr::i<DataVector, Dim>*>
         spatial_z4_constraint,  // eq 25
     const gsl::not_null<Scalar<DataVector>*>
-        upper_spatial_z4_constraint_buffer,  // buffer for eq 25
+        half_conformal_factor_squared,  // temp for eq 25
     const gsl::not_null<tnsr::I<DataVector, Dim>*>
         upper_spatial_z4_constraint,  // eq 25
     const gsl::not_null<tnsr::ij<DataVector, Dim>*>
@@ -279,7 +279,7 @@ void TimeDerivative<Dim>::apply(
 
   // eq 25
   ::Ccz4::upper_spatial_z4_constraint(
-      upper_spatial_z4_constraint, upper_spatial_z4_constraint_buffer,
+      upper_spatial_z4_constraint, half_conformal_factor_squared,
       *conformal_factor_squared,
       *gamma_hat_minus_contracted_conformal_christoffel);
 

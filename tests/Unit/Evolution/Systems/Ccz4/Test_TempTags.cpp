@@ -17,9 +17,25 @@ struct ArbitraryFrame;
 template <size_t Dim, typename Frame, typename DataType>
 void test_simple_tags() {
   TestHelpers::db::test_simple_tag<
+      Ccz4::Tags::HalfConformalFactorSquared<DataType>>(
+      "HalfConformalFactorSquared");
+  TestHelpers::db::test_simple_tag<
+      Ccz4::Tags::ATildeTimesFieldB<Dim, Frame, DataType>>("ATildeTimesFieldB");
+  TestHelpers::db::test_simple_tag<
       Ccz4::Tags::GammaHatMinusContractedConformalChristoffel<Dim, Frame,
                                                               DataType>>(
       "GammaHatMinusContractedConformalChristoffel");
+  TestHelpers::db::test_simple_tag<
+      Ccz4::Tags::DerivGammaHatMinusContractedConformalChristoffel<Dim, Frame,
+                                                                   DataType>>(
+      "DerivGammaHatMinusContractedConformalChristoffel");
+  TestHelpers::db::test_simple_tag<
+      Ccz4::Tags::ContractedDerivConformalChristoffelDifference<Dim, Frame,
+                                                                DataType>>(
+      "ContractedDerivConformalChristoffelDifference");
+  TestHelpers::db::test_simple_tag<
+      Ccz4::Tags::ContractedChristoffelSecondKind<Dim, Frame, DataType>>(
+      "ContractedChristoffelSecondKind");
   TestHelpers::db::test_simple_tag<Ccz4::Tags::KMinus2ThetaC<DataType>>(
       "KMinus2ThetaC");
   TestHelpers::db::test_simple_tag<Ccz4::Tags::KMinusK0Minus2ThetaC<DataType>>(
@@ -27,8 +43,20 @@ void test_simple_tags() {
   TestHelpers::db::test_simple_tag<Ccz4::Tags::ContractedFieldB<DataType>>(
       "ContractedFieldB");
   TestHelpers::db::test_simple_tag<
+      Ccz4::Tags::SymmetrizedDerivFieldB<Dim, Frame, DataType>>(
+      "SymmetrizedDerivFieldB");
+  TestHelpers::db::test_simple_tag<
+      Ccz4::Tags::ContractedSymmetrizedDerivFieldB<Dim, Frame, DataType>>(
+      "ContractedSymmetrizedDerivFieldB");
+  TestHelpers::db::test_simple_tag<
+      Ccz4::Tags::FieldBTimesFieldD<Dim, Frame, DataType>>("FieldBTimesFieldD");
+  TestHelpers::db::test_simple_tag<
       Ccz4::Tags::ConformalMetricTimesFieldB<Dim, Frame, DataType>>(
       "ConformalMetricTimesFieldB");
+  TestHelpers::db::test_simple_tag<
+      Ccz4::Tags::ConformalMetricTimesSymmetrizedDerivFieldB<Dim, Frame,
+                                                             DataType>>(
+      "ConformalMetricTimesSymmetrizedDerivFieldB");
   TestHelpers::db::test_simple_tag<
       Ccz4::Tags::LapseTimesRicciScalarPlus2DivergenceZ4Constraint<DataType>>(
       "LapseTimesRicciScalarPlus2DivergenceZ4Constraint");
@@ -41,6 +69,9 @@ void test_simple_tags() {
       Ccz4::Tags::FieldDUpTimesATilde<Dim, Frame, DataType>>(
       "FieldDUpTimesATilde");
   TestHelpers::db::test_simple_tag<
+      Ccz4::Tags::ContractedFieldDUp<Dim, Frame, DataType>>(
+      "ContractedFieldDUp");
+  TestHelpers::db::test_simple_tag<
       Ccz4::Tags::LapseTimesDerivATilde<Dim, Frame, DataType>>(
       "LapseTimesDerivATilde");
   TestHelpers::db::test_simple_tag<
@@ -52,6 +83,9 @@ void test_simple_tags() {
       "ATildeMinusOneThirdConformalMetricTimesTraceATilde");
   TestHelpers::db::test_simple_tag<
       Ccz4::Tags::LapseTimesFieldA<Dim, Frame, DataType>>("LapseTimesFieldA");
+  TestHelpers::db::test_simple_tag<
+      Ccz4::Tags::LapseTimesConformalSpatialMetric<Dim, Frame, DataType>>(
+      "LapseTimesConformalSpatialMetric");
   TestHelpers::db::test_simple_tag<
       Ccz4::Tags::ShiftTimesDerivGammaHat<Dim, Frame, DataType>>(
       "ShiftTimesDerivGammaHat");

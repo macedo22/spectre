@@ -24,12 +24,23 @@ void test_simple_tags() {
       Ccz4::Tags::ConformalMetric<Dim, Frame, DataType>>(
       "Conformal(SpatialMetric)");
   TestHelpers::db::test_simple_tag<
+      Ccz4::Tags::DetConformalSpatialMetric<DataType>>(
+      "DetConformalSpatialMetric");
+  TestHelpers::db::test_simple_tag<
       Ccz4::Tags::InverseConformalMetric<Dim, Frame, DataType>>(
       "Conformal(InverseSpatialMetric)");
   TestHelpers::db::test_simple_tag<Ccz4::Tags::ATilde<Dim, Frame, DataType>>(
       "ATilde");
   TestHelpers::db::test_simple_tag<Ccz4::Tags::TraceATilde<DataType>>(
       "TraceATilde");
+  TestHelpers::db::test_simple_tag<
+      Ccz4::Tags::InverseATilde<Dim, Frame, DataType>>("InverseATilde");
+  TestHelpers::db::test_simple_tag<Ccz4::Tags::SlicingCondition<DataType>>(
+      "SlicingCondition");
+  TestHelpers::db::test_simple_tag<Ccz4::Tags::DerivSlicingCondition<DataType>>(
+      "DerivSlicingCondition");
+  TestHelpers::db::test_simple_tag<Ccz4::Tags::Theta<DataType>>("Theta");
+  TestHelpers::db::test_simple_tag<Ccz4::Tags::b<Dim, Frame, DataType>>("b");
   TestHelpers::db::test_simple_tag<Ccz4::Tags::LogLapse<DataType>>("LogLapse");
   TestHelpers::db::test_simple_tag<Ccz4::Tags::FieldA<Dim, Frame, DataType>>(
       "FieldA");

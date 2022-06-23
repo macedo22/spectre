@@ -50,6 +50,16 @@ using ConformalMetric =
     gr::Tags::Conformal<gr::Tags::SpatialMetric<Dim, Frame, DataType>, 2>;
 
 /*!
+ * \brief The determinant of the conformally scaled spatial metric
+ *
+ * \details See `Ccz4::Tags::ConformalMetric` for more details
+ */
+template <typename DataType>
+struct DetConformalSpatialMetric : db::SimpleTag {
+  using type = Scalar<DataType>;
+};
+
+/*!
  * \brief The conformally scaled inverse spatial metric
  *
  * \details If \f$\phi\f$ is the conformal factor and \f$\gamma^{ij}\f$ is the
@@ -88,6 +98,63 @@ struct ATilde : db::SimpleTag {
 template <typename DataType>
 struct TraceATilde : db::SimpleTag {
   using type = Scalar<DataType>;
+};
+
+/*!
+ * \brief The inverse of the trace-free part of the extrinsic curvature
+ *
+ * \details We define:
+ *
+ * \f{align}
+ *     \tilde A^{ij} &= \tilde A_{kl} \tilde{\gamma}^{ik} \tilde{\gamma}^{jl}
+ * \f}
+ *
+ * where \f$\tilde A_{ij}\f$ is the trace-free part of the extrinsic curvature
+ * defined by `Ccz4::Tags::ATilde` and \f$\tilde{\gamma}^{ij}\f$ is the inverse
+ * conformal spatial metric defined by `Ccz4::Tags::InverseConformalMetric`.
+ */
+template <size_t Dim, typename Frame, typename DataType>
+struct InverseATilde : db::SimpleTag {
+  using type = tnsr::II<DataType, Dim, Frame>;
+};
+
+/*!
+ * \brief The slicing condition \f$g(\alpha)\f$
+ *
+ * \details For possible definitions, see `Ccz4::SlicingConditionType`
+ */
+template <typename DataType>
+struct SlicingCondition : db::SimpleTag {
+  using type = Scalar<DataType>;
+};
+
+/*!
+ * \brief The derivative of the slicing condition \f$g'(\alpha)\f$
+ *
+ * \details For possible definitions of \f$g(\alpha)\f$, see
+ * `Ccz4::SlicingConditionType`
+ */
+template <typename DataType>
+struct DerivSlicingCondition : db::SimpleTag {
+  using type = Scalar<DataType>;
+};
+
+/*!
+ * \brief The projection of the Z4 four-vector along the normal direction
+ */
+template <typename DataType>
+struct Theta : db::SimpleTag {
+  using type = Scalar<DataType>;
+};
+
+/*!
+ * \brief Variable that helps control the evolution of the shift
+ *
+ * \details See eq 12c, 12i, and 12k of \cite Dumbser2017okk
+ */
+template <size_t Dim, typename Frame, typename DataType>
+struct b : db::SimpleTag {
+  using type = tnsr::I<DataType, Dim, Frame>;
 };
 
 /*!
