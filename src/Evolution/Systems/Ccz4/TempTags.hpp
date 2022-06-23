@@ -65,9 +65,9 @@ struct DerivGammaHatMinusContractedConformalChristoffel : db::SimpleTag {
 
 /*!
  * \brief The CCZ4 temporary expression
- * \f$\partial_m \tilde{\Gamma}^m{}_{ij} - \partial_j \tilde{\Gamma}^m{}_{im}\f$
+ * \f$\partial_m \tilde{\Gamma}^m_{ij} - \partial_j \tilde{\Gamma}^m_{im}\f$
  *
- * \details Here, \f$\partial_k \tilde{\Gamma}^m{}_{ij}\f$ is the spatial
+ * \details Here, \f$\partial_k \tilde{\Gamma}^m_{ij}\f$ is the spatial
  * derivative of the conformal spatial christoffel symbols of the second kind
  * defined by `Ccz4::Tags::DerivConformalChristoffelSecondKind`.
  */
@@ -107,9 +107,10 @@ struct KMinus2ThetaC : db::SimpleTag {
  *
  * \details Here, \f$K\f$ is the trace of the extrinsic curvature defined by
  * `gr::Tags::TraceExtrinsicCurvature`, \f$K_0\f$ is the initial time derivative
- * of the lapse, \f$\Theta\f$ is the projection of the Z4 four-vector along the
- * normal direction defined by `Ccz4::Tags::Theta`, and \f$c\f$ controls whether
- * to include algebraic source terms proportional to \f$\Theta\f$.
+ * of the lapse defined by `Ccz4::Tags::LapseInitialTimeDerivative`,
+ * \f$\Theta\f$ is the projection of the Z4 four-vector along the normal
+ * direction defined by `Ccz4::Tags::Theta`, and \f$c\f$ controls whether to
+ * include algebraic source terms proportional to \f$\Theta\f$.
  */
 template <typename DataType>
 struct KMinusK0Minus2ThetaC : db::SimpleTag {
@@ -174,7 +175,7 @@ struct FieldBTimesFieldD : db::SimpleTag {
  * square of the conformal factor
  *
  * \details Here, \f$\phi^2\f$ is square of the conformal factor defined by
- * `gr::Tags::ConformalFactorSquared`.
+ * `Ccz4::Tags::ConformalFactorSquared`.
  */
 template <typename DataType>
 struct HalfConformalFactorSquared : db::SimpleTag {
@@ -366,7 +367,7 @@ struct InverseTauTimesConformalMetric : db::SimpleTag {
  *
  * \details Here, \f$\alpha\f$ is the lapse defined by `gr::Tags::Lapse` and
  * \f$g(\alpha)\f$ is a constant defined by `Ccz4::Tags::SlicingCondition` that
- * controls the slicing conditions
+ * controls the slicing condition
  */
 template <typename DataType>
 struct LapseTimesSlicingCondition : db::SimpleTag {

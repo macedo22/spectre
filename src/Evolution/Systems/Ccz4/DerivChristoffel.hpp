@@ -16,7 +16,7 @@ namespace Ccz4 {
  *
  * \details Computes the derivative as:
  * \f{align}
- *     \partial_k \tilde{\Gamma}^m{}_{ij} &=
+ *     \partial_k \tilde{\Gamma}^m_{ij} &=
  *       -2 D_k{}^{ml} (D_{ijl} + D_{jil} - D_{lij}) +
  *       \tilde{\gamma}^{ml}(\partial_{(k} D_{i)jl} + \partial_{(k} D_{j)il} -
  *       \partial_{(k} D_{l)ij})

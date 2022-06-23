@@ -279,7 +279,7 @@ struct ConformalChristoffelSecondKind : db::SimpleTag {
  *
  * \details We define:
  * \f{align}
- *     \partial_k \tilde{\Gamma}^m{}_{ij} &=
+ *     \partial_k \tilde{\Gamma}^m_{ij} &=
  *       -2 D_k{}^{ml} (D_{ijl} + D_{jil} - D_{lij}) +
  *       \tilde{\gamma}^{ml}(\partial_{(k} D_{i)jl} + \partial_{(k} D_{j)il} -
  *       \partial_{(k} D_{l)ij})
@@ -334,12 +334,12 @@ struct Ricci : db::SimpleTag {
  * \details We define:
  * \f{align}
  *     \nabla_i \nabla_j \alpha &= \alpha A_i A_j -
- *                 \alpha \Gamma^k{}_{ij} A_k + \alpha \partial_{(i} A_{j)}
+ *                 \alpha \Gamma^k_{ij} A_k + \alpha \partial_{(i} A_{j)}
  * \f}
- * where \f$\alpha\f$, \f$\Gamma^k{}_{ij}\f$, \f$A_i\f$, and
- * \f$\partial_j A_i\f$ are the lapse, spatial christoffel symbols of the second
- * kind, the CCZ4 auxiliary variable defined by `Ccz4::Tags::FieldA`, and its
- * spatial derivative, respectively.
+ * where \f$\alpha\f$, \f$\Gamma^k_{ij}\f$, \f$A_i\f$, and \f$\partial_j A_i\f$
+ * are the lapse, spatial christoffel symbols of the second kind, the CCZ4
+ * auxiliary variable defined by `Ccz4::Tags::FieldA`, and its spatial
+ * derivative, respectively.
  */
 template <size_t Dim, typename Frame, typename DataType>
 struct GradGradLapse : db::SimpleTag {
