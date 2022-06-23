@@ -76,11 +76,13 @@ namespace Ccz4 {
  * \f}
  *
  * The argument `contracted_christoffel_second_kind` corresponds to the
- * \f$\Gamma^m_{lm}\f$ term, the argument
+ * \f$\Gamma^m_{lm}\f$ term defined by
+ * `Ccz4::Tags::ContractedChristoffelSecondKind`, the argument
  * `contracted_d_conformal_christoffel_difference` corresponds to the
  * \f$\partial_m \tilde{\Gamma}^m_{ij} - \partial_j \tilde{\Gamma}^m_{im}\f$
- * term, and the argument `contracted_field_d_up` corresponds to the
- * \f$D_m{}^{ml}\f$ term.
+ * term defined by `Ccz4::Tags::ContractedDerivConformalChristoffelDifference`,
+ * and the argument `contracted_field_d_up` corresponds to the
+ * \f$D_m{}^{ml}\f$ term defined by `Ccz4::Tags::ContractedFieldDUp`.
  */
 template <size_t Dim, typename Frame, typename DataType>
 void spatial_ricci_tensor(

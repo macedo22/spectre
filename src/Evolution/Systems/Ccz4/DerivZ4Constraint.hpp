@@ -33,7 +33,8 @@ namespace Ccz4 {
  * expression defined by
  * `Ccz4::Tags::GammaHatMinusContractedConformalChristoffel`, and
  * \f$\left(\partial_i \hat{\Gamma}^j - \partial_i \tilde{\Gamma}^j\right)\f$ is
- * its spatial derivative.
+ * its spatial derivative defined by
+ * `Ccz4::Tags::DerivGammaHatMinusContractedConformalChristoffel`.
  */
 template <size_t Dim, typename Frame, typename DataType>
 void grad_spatial_z4_constraint(

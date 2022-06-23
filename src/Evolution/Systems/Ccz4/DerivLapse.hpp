@@ -18,10 +18,11 @@ namespace Ccz4 {
  *     \nabla_i \nabla_j \alpha &= \alpha A_i A_j -
  *                 \alpha \Gamma^k{}_{ij} A_k + \alpha \partial_{(i} A_{j)}
  * \f}
- * where \f$\alpha\f$, \f$\Gamma^k{}_{ij}\f$, \f$A_i\f$, and
- * \f$\partial_j A_i\f$ are the lapse, spatial christoffel symbols of the second
- * kind, the CCZ4 auxiliary variable defined by `Ccz4::Tags::FieldA`, and its
- * spatial derivative, respectively.
+ * where \f$\alpha\f$ is the lapse defined by `gr::Tags::Lapse`,
+ * \f$\Gamma^k{}_{ij}\f$ is the spatial christoffel symbols of the second kind
+ * defined by `Ccz4::Tags::ChristoffelSecondKind`, \f$A_i\f$ is the CCZ4
+ * auxiliary variable defined by `Ccz4::Tags::FieldA`, and
+ * \f$\partial_j A_i\f$ is its spatial derivative defined.
  */
 template <size_t Dim, typename Frame, typename DataType>
 void grad_grad_lapse(

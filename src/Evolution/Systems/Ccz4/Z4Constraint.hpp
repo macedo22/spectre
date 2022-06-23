@@ -51,8 +51,9 @@ tnsr::i<DataType, Dim, Frame> spatial_z4_constraint(
  *         \hat{\Gamma}^i - \tilde{\Gamma}^i\right)
  * \f}
  *
- * where \f$\phi^2 \f$ is the square of the conformal factor defined by
- * `Ccz4::Tags::ConformalFactorSquared` and
+ * where \f$\phi^2\f$ is the square of the conformal factor defined by
+ * `Ccz4::Tags::ConformalFactorSquared`, \f$\frac{1}{2} \phi^2\f$ is defined by
+ * `Ccz4::Tags::HalfConformalFactorSquared`, and
  * \f$\left(\hat{\Gamma}^i - \tilde{\Gamma}^i\right)\f$ is the CCZ4 temporary
  * expression defined by
  * `Ccz4::Tags::GammaHatMinusContractedConformalChristoffel`.
