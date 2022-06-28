@@ -229,6 +229,9 @@ using is_tensor_index_type_t = typename is_tensor_index_type<T>::type;
 /// @}
 }  // namespace tt
 
+template <typename... Ts>
+using index_list = tmpl::list<Ts...>;
+
 /// \ingroup TensorGroup
 /// Change the \ref SpacetimeIndex "TensorIndexType" to be covariant
 /// if it's contravariant and vice-versa
@@ -243,12 +246,12 @@ using change_index_up_lo = Tensor_detail::TensorIndexType<
     Index::ul == UpLo::Up ? UpLo::Lo : UpLo::Up, typename Index::Frame,
     Index::index_type>;
 
-template <typename... Ts>
-using index_list = tmpl::list<Ts...>;
-
 /// \ingroup TensorGroup
 /// Change the \ref SpacetimeIndex "TensorIndexType" to be spacetime
 /// if it's spatial and vice versa
+///
+/// Here is an example of how to use ::change_index_type
+/// \snippet Test_Tensor.cpp change_type
 ///
 /// \tparam Index the \ref SpacetimeIndex "TensorIndexType" to change
 template <typename Index>
@@ -257,3 +260,16 @@ using change_index_type = Tensor_detail::TensorIndexType<
     Index::ul, typename Index::Frame,
     Index::index_type == IndexType::Spatial ? IndexType::Spacetime
                                             : IndexType::Spatial>;
+
+/// \ingroup TensorGroup
+/// Change the ::Frame of a \ref SpacetimeIndex "TensorIndexType"
+///
+/// Here is an example of how to use ::change_index_frame
+/// \snippet Test_Tensor.cpp change_frame
+///
+/// \tparam Index the \ref SpacetimeIndex "TensorIndexType" to change
+/// \tparam TargetFrame the desired frame for the index
+template <typename Index, typename TargetFrame>
+using change_index_frame =
+    Tensor_detail::TensorIndexType<Index::dim, Index::ul, TargetFrame,
+                                   Index::index_type>;
