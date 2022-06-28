@@ -35,6 +35,20 @@ static_assert(std::is_same_v<UpIndex, SpatialIndex<3, UpLo::Up, Frame::Grid>>,
               "Failed testing change_index_up_lo");
 // [change_up_lo]
 
+// [change_type]
+using TestSpacetimeIndex = change_index_type<Index>;
+static_assert(std::is_same_v<TestSpacetimeIndex,
+                             SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>,
+              "Failed testing change_index_type");
+// [change_type]
+
+// [change_frame]
+using InertialIndex = change_index_frame<Index, Frame::Inertial>;
+static_assert(
+    std::is_same_v<InertialIndex, SpatialIndex<3, UpLo::Lo, Frame::Inertial>>,
+    "Failed testing change_index_frame");
+// [change_frame]
+
 // [is_frame_physical]
 static_assert(not Frame::is_frame_physical_v<Frame::BlockLogical>,
               "Failed testing Frame::is_frame_physical");
