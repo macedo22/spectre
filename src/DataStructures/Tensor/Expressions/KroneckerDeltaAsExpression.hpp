@@ -1,41 +1,68 @@
 // Distributed under the MIT License.
 // See LICENSE.txt for details.
 
+/// \file
+/// Defines expressions that represent the Kronecker delta
+
 #pragma once
 
 #include <array>
 #include <cstddef>
 
+#include "DataStructures/Tensor/Expressions/KroneckerDelta.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
-#include "Utilities/ForceInline.hpp"
+#include "DataStructures/Tensor/IndexType.hpp"
+#include "DataStructures/Tensor/Symmetry.hpp"
+#include "Utilities/Gsl.hpp"
 #include "Utilities/TMPL.hpp"
 
 namespace tenex {
+using KroneckerDeltaFrame = Frame::NoFrame;
+
 /// \ingroup TensorExpressionsGroup
-/// \brief Defines an expression representing a `double`
+/// \brief Defines an expression representing a
+/// \ref `KroneckerDelta` "Kronecker delta"
 ///
-/// \details
-/// For details on aliases and members defined in this class, as well as general
-/// `TensorExpression` terminology used in its members' documentation, see
-/// documentation for `TensorExpression`.
-struct NumberAsExpression
-    : public TensorExpression<NumberAsExpression, double, tmpl::list<>,
-                              tmpl::list<>, tmpl::list<>>,
+/// \tparam K the type of the \ref `KroneckerDelta` "Kronecker delta" being
+/// represented
+/// \tparam TensorIndex1 the first \ref TensorIndex "generic index"
+/// \tparam TensorIndex2 the second \ref TensorIndex "generic index"
+template <typename K, typename TensorIndex1, typename TensorIndex2>
+struct KroneckerDeltaAsExpression
+    : public TensorExpression<
+          KroneckerDeltaAsExpression<K, TensorIndex1, TensorIndex2>, double,
+          Symmetry<2, 1>,
+          index_list<Tensor_detail::TensorIndexType<
+                         K::dim, TensorIndex1::valence, KroneckerDeltaFrame,
+                         (TensorIndex1::is_spacetime ? IndexType::Spacetime
+                                                     : IndexType::Spatial)>,
+                     Tensor_detail::TensorIndexType<
+                         K::dim, TensorIndex2::valence, KroneckerDeltaFrame,
+                         (TensorIndex1::is_spacetime ? IndexType::Spacetime
+                                                     : IndexType::Spatial)>>,
+          tmpl::list<TensorIndex1, TensorIndex2>>,
       MarkAsDoubleValuedLeafExpression,
       MarkAsNonTensorLeafExpression {
   // === Index properties ===
   /// The type of the data being stored in the result of the expression
   using type = double;
+  /// The ::Symmetry of the result of the expression
+  using symmetry = Symmetry<2, 1>;
   /// The list of \ref SpacetimeIndex "TensorIndexType"s of the result of the
   /// expression
-  using symmetry = tmpl::list<>;
-  /// The list of \ref SpacetimeIndex "TensorIndexType"s of the result of the
-  /// expression
-  using index_list = tmpl::list<>;
+  using index_list =
+      index_list<Tensor_detail::TensorIndexType<
+                     K::dim, TensorIndex1::valence, KroneckerDeltaFrame,
+                     (TensorIndex1::is_spacetime ? IndexType::Spacetime
+                                                 : IndexType::Spatial)>,
+                 Tensor_detail::TensorIndexType<
+                     K::dim, TensorIndex2::valence, KroneckerDeltaFrame,
+                     (TensorIndex1::is_spacetime ? IndexType::Spacetime
+                                                 : IndexType::Spatial)>>;
   /// The list of generic `TensorIndex`s of the result of the expression
-  using args_list = tmpl::list<>;
+  using args_list = tmpl::list<TensorIndex1, TensorIndex2>;
   /// The number of tensor indices in the result of the expression
-  static constexpr auto num_tensor_indices = 0;
+  static constexpr size_t num_tensor_indices = 2;
 
   // === Arithmetic tensor operations properties ===
   /// The number of arithmetic tensor operations done in the subtree for the
@@ -70,16 +97,8 @@ struct NumberAsExpression
   /// we will have already computed the subtree at the next lowest leg's
   /// starting point. This is just 0 because this expression is a leaf.
   static constexpr size_t num_ops_to_evaluate_primary_subtree = 0;
-  /// \brief If on the primary path, whether or not the expression is a starting
-  /// point of a leg
-  ///
-  /// \details
-  /// Note: it's especially important for `NumberAsExpression` to define this as
-  /// `false` because if we have a case where this kind of an expression is the
-  /// leaf of the first leg being evaluated in the overall tree, we don't want
-  /// to use a `double` to initialize/size one of our LHS tensor's components,
-  /// because things would break if the LHS tensor components are supposed to
-  /// be e.g. a `DataVector` with a specific size.
+  /// If on the primary path, whether or not the expression is a starting point
+  /// of a leg
   static constexpr bool is_primary_start = false;
   /// If on the primary path, whether or not the expression's child along the
   /// primary path is a subtree that contains a starting point of a leg along
@@ -90,8 +109,11 @@ struct NumberAsExpression
   static constexpr bool primary_subtree_contains_primary_start =
       is_primary_start;
 
-  NumberAsExpression(const double number) : number_(number) {}
-  ~NumberAsExpression() override = default;
+  /// \brief Construct a `KroneckerDeltaAsExpression` from a `KroneckerDelta`
+  ///
+  /// \param k the `KroneckerDelta` to represent as a `TensorExpression`
+  KroneckerDeltaAsExpression(const K& k) : k_(&k) {}
+  ~KroneckerDeltaAsExpression() override = default;
 
   // This expression does not represent a tensor, nor does it have any children,
   // so we should never need to assert that the LHS `Tensor` is not equal to the
@@ -106,22 +128,32 @@ struct NumberAsExpression
   void assert_lhs_tensorindices_same_in_rhs(
       const gsl::not_null<LhsTensor*> lhs_tensor) const = delete;
 
-  /// \brief Returns the number represented by the expression
+  /// \brief Returns the value of the contained Kronecker delta's multi-index
   ///
-  /// \return the number represented by this expression
-  SPECTRE_ALWAYS_INLINE double get(
-      const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
-    return number_;
+  /// \param multi_index the multi-index of the component to retrieve
+  /// \return the value of the component at `multi_index` in the Kronecker delta
+  constexpr SPECTRE_ALWAYS_INLINE double get(
+      const std::array<size_t, num_tensor_indices>& multi_index) const {
+    if (gsl::at(multi_index, 0) != gsl::at(multi_index, 1)) {
+      return 0.0;
+    } else {
+      return 1.0;
+    }
   }
 
-  /// \brief Returns the number represented by the expression
+  /// \brief Returns the value of the contained Kronecker delta's multi-index
   ///
-  /// \return the number represented by this expression
+  /// \param multi_index the multi-index of the component to retrieve
+  /// \return the value of the component at `multi_index` in the Kronecker delta
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE double get_primary(
+  constexpr SPECTRE_ALWAYS_INLINE double get_primary(
       const ResultType& /*result_component*/,
-      const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
-    return number_;
+      const std::array<size_t, num_tensor_indices>& multi_index) const {
+    if (gsl::at(multi_index, 0) != gsl::at(multi_index, 1)) {
+      return 0.0;
+    } else {
+      return 1.0;
+    }
   }
 
   // This expression is a leaf but does not store any information related to the
@@ -137,7 +169,7 @@ struct NumberAsExpression
       const std::array<size_t, num_tensor_indices>&) const = delete;
 
  private:
-  /// Number represented by this expression
-  double number_;
+  /// Kronecker delta represented by this expression
+  const K* k_ = nullptr;
 };
 }  // namespace tenex
