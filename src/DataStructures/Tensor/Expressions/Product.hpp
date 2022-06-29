@@ -20,7 +20,37 @@
 #include "Utilities/TMPL.hpp"
 
 namespace tenex {
+// forward declare
+template <typename K, typename TensorIndex1, typename TensorIndex2>
+struct KroneckerDeltaAsExpression;
+
 namespace detail {
+// TODO : move this into metafunction sor KroneckerDelta.hpp after moving
+// KroneckerDeltaAsexpression and KroneckerDeltaOuterProduct into own files
+template <typename T1, typename T2,
+          Requires<std::is_base_of<T1, MarkAsKroneckerDeltaAsExpression>> =
+              nullptr>
+struct OuterProductIndexList {
+  using type = tmpl::append<replace_kronecker_delta_frame<T1, T2>::type,
+                            typename T2::index_list>;
+};
+
+template <typename T1, typename T2,
+          Requires<std::is_base_of<T2, MarkAsKroneckerDeltaAsExpression>> =
+              nullptr>
+struct OuterProductIndexList {
+  using type = tmpl::append<typename T1::index_list,
+                            replace_kronecker_delta_frame<T2, T1>::type>;
+};
+
+template <
+    typename T1, typename T2,
+    Requires<(not std::is_base_of<T1, MarkAsKroneckerDeltaAsExpression>)and(
+        not std::is_base_of<T2, MarkAsKroneckerDeltaAsExpression>)> = nullptr>
+struct OuterProductIndexList {
+  using type = tmpl::append<typename T1::index_list, typename T2::index_list>;
+}
+
 template <typename T1, typename T2, typename SymmList1 = typename T1::symmetry,
           typename SymmList2 = typename T2::symmetry>
 struct OuterProductType;
@@ -35,12 +65,19 @@ struct OuterProductType<T1, T2, SymmList1<Symm1...>, SymmList2<Symm2...>> {
                          DataVector, double>;
   using symmetry =
       Symmetry<(Symm1::value + sizeof...(Symm2))..., Symm2::value...>;
-  using index_list =
-      tmpl::append<typename T1::index_list, typename T2::index_list>;
+  using index_list = OuterProductIndexList<T1, T2>::type;
   using tensorindex_list =
       tmpl::append<typename T1::args_list, typename T2::args_list>;
 };
 }  // namespace detail
+
+/// \ingroup TensorExpressionsGroup
+/// \brief Marks a class as being a `TensorExpression::OuterProduct`
+///
+/// \details
+/// The empty base class provides a simple means for checking if a type is a
+/// `TensorExpression::OuterProduct`.
+struct MarkAsOuterProduct {};
 
 /// \ingroup TensorExpressionsGroup
 /// \brief Defines the tensor expression representing the outer product of two
@@ -71,7 +108,8 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
           OuterProduct<T1, T2>, typename detail::OuterProductType<T1, T2>::type,
           typename detail::OuterProductType<T1, T2>::symmetry,
           typename detail::OuterProductType<T1, T2>::index_list,
-          typename detail::OuterProductType<T1, T2>::tensorindex_list> {
+          typename detail::OuterProductType<T1, T2>::tensorindex_list>,
+      MarkAsOuterProduct {
   static_assert(std::is_same<typename T1::type, typename T2::type>::value or
                     std::is_same<T1, NumberAsExpression>::value or
                     std::is_same<T2, NumberAsExpression>::value,
