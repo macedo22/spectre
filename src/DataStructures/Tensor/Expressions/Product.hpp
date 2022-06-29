@@ -74,8 +74,8 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
           typename detail::OuterProductType<T1, T2>::tensorindex_list> {
   static_assert(
       std::is_same<typename T1::type, typename T2::type>::value or
-          std::is_base_of<T1, MarkAsDoubleValuedLeafExpression>::value or
-          std::is_base_of<T2, MarkAsDoubleValuedLeafExpression>::value,
+          std::is_base_of<MarkAsDoubleValuedLeafExpression, T1>::value or
+          std::is_base_of<MarkAsDoubleValuedLeafExpression, T2>::value,
       "Cannot product Tensors holding different data types.");
   // === Index properties ===
   /// The type of the data being stored in the result of the expression

@@ -296,8 +296,8 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
           typename detail::AddSubType<T1, T2>::tensorindex_list> {
   static_assert(
       std::is_same<typename T1::type, typename T2::type>::value or
-          std::is_base_of<T1, MarkAsDoubleValuedLeafExpression>::value or
-          std::is_base_of<T2, MarkAsDoubleValuedLeafExpression>::value,
+          std::is_base_of<MarkAsDoubleValuedLeafExpression, T1>::value or
+          std::is_base_of<MarkAsDoubleValuedLeafExpression, T2>::value,
       "Cannot add or subtract Tensors holding different data types.");
   static_assert(
       detail::IndexPropertyCheck<typename T1::index_list,
