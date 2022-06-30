@@ -56,10 +56,6 @@ struct KroneckerDelta {
             not tt::is_time_index<TensorIndex2>::value,
         "A Kronecker delta expression cannot be created using time indices.");
     static_assert(
-        TensorIndex1::valence != TensorIndex2::valence,
-        "Kronecker delta expressions need to be be created using one upper "
-        "index and one lower index.");
-    static_assert(
         TensorIndex1::is_spacetime == TensorIndex2::is_spacetime,
         "The TensorIndexs used to create a Kronecker delta expression must "
         "either be both spatial or both spacetime generic indices.");
@@ -81,8 +77,8 @@ struct KroneckerDelta {
 /// \brief The Kronecker delta objects to use in a `TensorExpression`
 ///
 /// \details
-/// To use in a `TensorExpression`, you must supply one upper and one lower
-/// generic index (`TensorIndex`), e.g.:
+/// To use in a `TensorExpression`, you must supply two generic indices
+/// (`TensorIndex`) that are both spatial or both spacetime, e.g.:
 ///
 /// \code
 /// // 3D Kronecker delta in the inertial frame
@@ -91,16 +87,15 @@ struct KroneckerDelta {
 /// kronecker_delta<2, Frame::Grid>(ti::I, ti::j)
 /// \endcode
 ///
-/// The upper and lower index can be in any order, but both need to be generic
-/// spatial indices or generic spacetime indices. Examples:
+/// Examples:
 ///
 /// \code
 /// kronecker_delta<3>(ti::I, ti::j)  // OK
 /// kronecker_delta<3>(ti::i, ti::J)  // OK
 /// kronecker_delta<3>(ti::A, ti::b)  // OK
+/// kronecker_delta<3>(ti::I, ti::J)  // OK
 /// kronecker_delta<3>(ti::J, ti::j)  // OK, not advised since its just the dim
 ///
-/// kronecker_delta<3>(ti::I, ti::J)  // ERROR: both upper indices
 /// kronecker_delta<3>(ti::I, ti::a)  // ERROR: spatial and spacetime index
 /// kronecker_delta<3>(ti::I, ti::t)  // ERROR: concrete index (time index)
 /// \endcode
