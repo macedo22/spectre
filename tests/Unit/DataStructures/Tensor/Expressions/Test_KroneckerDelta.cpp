@@ -28,7 +28,7 @@ void test_kronecker_delta_properties() {
   CHECK(kdeltaIj.get({{0}}) == 1.0);
 
   // dimension 2
-  const auto kdeltakJ = kronecker_delta<2, Frame>(ti::k, ti::J);
+  const auto kdeltakJ = kronecker_delta<2, Frame>(ti::K, ti::J);
   CHECK(kdeltakJ.get({{0, 0}}) == 1.0);
   CHECK(kdeltakJ.get({{1, 0}}) == 0.0);
   CHECK(kdeltakJ.get({{0, 1}}) == 0.0);
