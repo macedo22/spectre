@@ -29,10 +29,12 @@ struct KroneckerDeltaAsExpression;
 /// `KroneckerDeltaAsExpression` as `Tensor` is to `TensorAsExpression`.
 ///
 /// \tparam Dim the dimension of the Kronecker delta
-template <size_t Dim>
+template <size_t Dim, typename FrameType>
 struct KroneckerDelta {
   /// The ::Symmetry of the Kronecker delta
   using symmetry = Symmetry<2, 1>;
+  /// The ::Frame of the Kronecker delta
+  using Frame = FrameType;
   /// The dimension of the Kronecker delta
   static constexpr size_t dim = Dim;
 
@@ -65,8 +67,8 @@ struct KroneckerDelta {
     if constexpr (get_tensorindex_value_with_opposite_valence(
                       TensorIndex1::value) != TensorIndex2::value) {
       // don't contract indices
-      return KroneckerDeltaAsExpression<KroneckerDelta<Dim>, TensorIndex1,
-                                        TensorIndex2>{*this};
+      return KroneckerDeltaAsExpression<KroneckerDelta<Dim, Frame>,
+                                        TensorIndex1, TensorIndex2>{*this};
     } else {
       // contract indices, where trace of Kronecker delta = dim
       return NumberAsExpression(1.0 * Dim);
@@ -75,35 +77,32 @@ struct KroneckerDelta {
 };
 }  // namespace tenex
 
-/// @{
 /// \ingroup TensorExpressionsGroup
-/// \brief The available Kronecker delta objects to use in a `TensorExpression`
+/// \brief The Kronecker delta objects to use in a `TensorExpression`
 ///
 /// \details
-/// The numeric suffix represents the dimension of the Kronecker delta. To use
-/// in a `TensorExpression`, you must supply one upper and one lower generic
-/// index (`TensorIndex`), e.g.:
+/// To use in a `TensorExpression`, you must supply one upper and one lower
+/// generic index (`TensorIndex`), e.g.:
 ///
 /// \code
-/// kdelta3(ti::I, ti::j)
+/// // 3D Kronecker delta in the inertial frame
+/// kronecker_delta<3>(ti::I, ti::j)
+/// // 2D Kronecker delta in the grid frame
+/// kronecker_delta<2, Frame::Grid>(ti::I, ti::j)
 /// \endcode
 ///
 /// The upper and lower index can be in any order, but both need to be generic
 /// spatial indices or generic spacetime indices. Examples:
 ///
 /// \code
-/// kdelta3(ti::I, ti::j)  // OK
-/// kdelta3(ti::i, ti::J)  // OK
-/// kdelta3(ti::A, ti::b)  // OK
-/// kdelta3(ti::J, ti::j)  // OK, but not recommended as this is just the dim
+/// kronecker_delta<3>(ti::I, ti::j)  // OK
+/// kronecker_delta<3>(ti::i, ti::J)  // OK
+/// kronecker_delta<3>(ti::A, ti::b)  // OK
+/// kronecker_delta<3>(ti::J, ti::j)  // OK, not advised since its just the dim
 ///
-/// kdelta3(ti::I, ti::J)  // ERROR: both upper indices
-/// kdelta3(ti::I, ti::a)  // ERROR: spatial and spacetime index
-/// kdelta3(ti::I, ti::t)  // ERROR: concrete index (time index)
+/// kronecker_delta<3>(ti::I, ti::J)  // ERROR: both upper indices
+/// kronecker_delta<3>(ti::I, ti::a)  // ERROR: spatial and spacetime index
+/// kronecker_delta<3>(ti::I, ti::t)  // ERROR: concrete index (time index)
 /// \endcode
-// note: kept in global namespace to reduce keystrokes
-static constexpr tenex::KroneckerDelta<1> kdelta1{};
-static constexpr tenex::KroneckerDelta<2> kdelta2{};
-static constexpr tenex::KroneckerDelta<3> kdelta3{};
-static constexpr tenex::KroneckerDelta<4> kdelta4{};
-/// @}
+template <size_t Dim, typename FrameType = Frame::Inertial>
+constexpr tenex::KroneckerDelta<Dim, FrameType> kronecker_delta{};

@@ -16,8 +16,6 @@
 #include "Utilities/TMPL.hpp"
 
 namespace tenex {
-using KroneckerDeltaFrame = Frame::NoFrame;
-
 /// \ingroup TensorExpressionsGroup
 /// \brief Defines an expression representing a
 /// \ref KroneckerDelta "Kronecker delta"
@@ -32,11 +30,11 @@ struct KroneckerDeltaAsExpression
           KroneckerDeltaAsExpression<K, TensorIndex1, TensorIndex2>, double,
           Symmetry<2, 1>,
           index_list<Tensor_detail::TensorIndexType<
-                         K::dim, TensorIndex1::valence, KroneckerDeltaFrame,
+                         K::dim, TensorIndex1::valence, typename K::Frame,
                          (TensorIndex1::is_spacetime ? IndexType::Spacetime
                                                      : IndexType::Spatial)>,
                      Tensor_detail::TensorIndexType<
-                         K::dim, TensorIndex2::valence, KroneckerDeltaFrame,
+                         K::dim, TensorIndex2::valence, typename K::Frame,
                          (TensorIndex1::is_spacetime ? IndexType::Spacetime
                                                      : IndexType::Spatial)>>,
           tmpl::list<TensorIndex1, TensorIndex2>>,
@@ -51,11 +49,11 @@ struct KroneckerDeltaAsExpression
   /// expression
   using index_list =
       tmpl::list<Tensor_detail::TensorIndexType<
-                     K::dim, TensorIndex1::valence, KroneckerDeltaFrame,
+                     K::dim, TensorIndex1::valence, typename K::Frame,
                      (TensorIndex1::is_spacetime ? IndexType::Spacetime
                                                  : IndexType::Spatial)>,
                  Tensor_detail::TensorIndexType<
-                     K::dim, TensorIndex2::valence, KroneckerDeltaFrame,
+                     K::dim, TensorIndex2::valence, typename K::Frame,
                      (TensorIndex1::is_spacetime ? IndexType::Spacetime
                                                  : IndexType::Spatial)>>;
   /// The list of generic `TensorIndex`s of the result of the expression
@@ -109,25 +107,23 @@ struct KroneckerDeltaAsExpression
       is_primary_start;
 
   /// \brief Construct a `KroneckerDeltaAsExpression` from a `KroneckerDelta`
-  ///
-  /// \param k the `KroneckerDelta` to represent as a `TensorExpression`
-  KroneckerDeltaAsExpression(const K& k) : k_(&k) {}
+  KroneckerDeltaAsExpression(const K& /*k*/) {}
   ~KroneckerDeltaAsExpression() override = default;
 
   // This expression does not represent a `Tensor`, nor does it have any
   // children, so we should never need to assert that the LHS `Tensor` is not
-  // equal to the `KroneckerDelta` stored by this expression
+  // equal to the `KroneckerDelta` represented by this expression
   template <typename LhsTensor>
   void assert_lhs_tensor_not_in_rhs_expression(
       const gsl::not_null<LhsTensor*>) const = delete;
   // This expression does not represent a `Tensor`, nor does it have any
   // children, so we should never need to assert that the LHS `Tensor` is not
-  // equal to the `KroneckerDelta` stored by this expression
+  // equal to the `KroneckerDelta` represented by this expression
   template <typename LhsTensorIndices, typename LhsTensor>
   void assert_lhs_tensorindices_same_in_rhs(
       const gsl::not_null<LhsTensor*> lhs_tensor) const = delete;
 
-  /// \brief Returns the value of the contained Kronecker delta's multi-index
+  /// \brief Returns the value of the represented Kronecker delta's multi-index
   ///
   /// \param multi_index the multi-index of the component to retrieve
   /// \return the value of the component at `multi_index` in the Kronecker delta
@@ -140,7 +136,7 @@ struct KroneckerDeltaAsExpression
     }
   }
 
-  /// \brief Returns the value of the contained Kronecker delta's multi-index
+  /// \brief Returns the value of the represented Kronecker delta's multi-index
   ///
   /// \param multi_index the multi-index of the component to retrieve
   /// \return the value of the component at `multi_index` in the Kronecker delta
@@ -160,15 +156,11 @@ struct KroneckerDeltaAsExpression
   // `Tensor`. Therefore, this expression should never be used to initialize a
   // LHS result tensor component. We would run into trouble if e.g. the tensor
   // components in the equations are `DataVector`s, but then we initialize a LHS
-  // component using a Kronecker delta element stored in this leaf expression on
-  // the primary path.
+  // component using a Kronecker delta element in this leaf expression on the
+  // primary path.
   template <typename ResultType>
   void evaluate_primary_subtree(
       ResultType&,
       const std::array<size_t, num_tensor_indices>&) const = delete;
-
- private:
-  /// Kronecker delta represented by this expression
-  const K* k_ = nullptr;
 };
 }  // namespace tenex
