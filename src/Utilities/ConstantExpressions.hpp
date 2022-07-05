@@ -294,6 +294,21 @@ make_array_from_list() {
   return std::array<std::decay_t<TypeForZero>, 0>{{}};
 }
 
+template <typename List, typename TypeForZero,
+          Requires<not tt::is_a_v<tmpl::list, tmpl::front<List>> and
+                   (tmpl::size<List>::value > 0)> = nullptr>
+inline constexpr std::array<TypeForZero, tmpl::size<List>::value>
+make_array_from_list() {
+  return make_array_from_list<List>();
+}
+
+template <typename List, typename TypeForZero,
+          Requires<tmpl::size<List>::value == 0> = nullptr>
+inline constexpr std::array<TypeForZero, tmpl::size<List>::value>
+make_array_from_list() {
+  return make_array_from_list<TypeForZero>();
+}
+
 namespace detail {
 /// \cond
 template <typename List, size_t... indices,
