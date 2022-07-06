@@ -624,6 +624,25 @@ struct TensorContract
     return highest_multi_index;
   }
 
+  template <typename ContractedMultiIndex,
+            typename UncontractedIndexSequence =
+                std::make_index_sequence<num_uncontracted_tensor_indices>>
+  struct get_highest_multi_index_to_sum_helper;
+
+  template <typename... ContractedMultiIndexValues, size_t... UncontractedInts>
+  struct get_highest_multi_index_to_sum_helper<
+      tmpl::list<ContractedMultiIndexValues...>,
+      std::index_sequence<UncontractedInts...>> {
+    static constexpr std::array<size_t, num_tensor_indices>
+        contracted_multi_index = {{ContractedMultiIndexValues::value...}};
+    static constexpr std::array<size_t, num_uncontracted_tensor_indices>
+        highest_multi_index_to_sum =
+            get_highest_multi_index_to_sum(contracted_multi_index);
+    using type =
+        tmpl::integral_list<size_t,
+                            highest_multi_index_to_sum[UncontractedInts]...>;
+  };
+
   /// \brief Return the lowest multi-index between the components being summed
   /// in the contraction
   ///
@@ -669,6 +688,25 @@ struct TensorContract
 
     return lowest_multi_index;
   }
+
+  template <typename ContractedMultiIndex,
+            typename UncontractedIndexSequence =
+                std::make_index_sequence<num_uncontracted_tensor_indices>>
+  struct get_lowest_multi_index_to_sum_helper;
+
+  template <typename... ContractedMultiIndexValues, size_t... UncontractedInts>
+  struct get_lowest_multi_index_to_sum_helper<
+      tmpl::list<ContractedMultiIndexValues...>,
+      std::index_sequence<UncontractedInts...>> {
+    static constexpr std::array<size_t, num_tensor_indices>
+        contracted_multi_index = {{ContractedMultiIndexValues::value...}};
+    static constexpr std::array<size_t, num_uncontracted_tensor_indices>
+        lowest_multi_index_to_sum =
+            get_lowest_multi_index_to_sum(contracted_multi_index);
+    using type =
+        tmpl::integral_list<size_t,
+                            lowest_multi_index_to_sum[UncontractedInts]...>;
+  };
 
   /// \brief Given the multi-index of one term being summed in the contraction,
   /// return the next highest multi-index of a component being summed
@@ -753,6 +791,26 @@ struct TensorContract
     return next_highest_uncontracted_multi_index;
   }
 
+  template <typename UncontractedMultiIndex,
+            typename UncontractedIndexSequence =
+                std::make_index_sequence<num_uncontracted_tensor_indices>>
+  struct get_next_highest_multi_index_to_sum_helper;
+
+  template <typename... UncontractedMultiIndexValues,
+            size_t... UncontractedInts>
+  struct get_next_highest_multi_index_to_sum_helper<
+      tmpl::list<UncontractedMultiIndexValues...>,
+      std::index_sequence<UncontractedInts...>> {
+    static constexpr std::array<size_t, num_uncontracted_tensor_indices>
+        uncontracted_multi_index = {{UncontractedMultiIndexValues::value...}};
+    static constexpr std::array<size_t, num_uncontracted_tensor_indices>
+        next_highest_multi_index_to_sum =
+            get_next_highest_multi_index_to_sum(uncontracted_multi_index);
+    using type =
+        tmpl::integral_list<size_t,
+                            highest_multi_index_to_sum[UncontractedInts]...>;
+  };
+
   /// \brief Given the multi-index of one term being summed in the contraction,
   /// return the next lowest multi-index of a component being summed
   ///
@@ -831,6 +889,33 @@ struct TensorContract
     return next_lowest_uncontracted_multi_index;
   }
 
+  //     template <typename ContractedMultiIndex,
+  //             typename UncontractedIndexSequence =
+  //                 std::make_index_sequence<num_uncontracted_tensor_indices>>
+  //   struct get_operand_multi_index;
+
+  //   template <typename... ContractedMultiIndexValues, size_t...
+  //   UncontractedInts> struct
+  //   get_operand_multi_index<tmpl::list<ContractedMultiIndexValues...>,
+  //                                  std::index_sequence<UncontractedInts...>>
+  //                                  {
+  //     static constexpr std::array<size_t, num_uncontracted_tensor_indices>
+  //         contracted_multi_index = {{ResultIndexValues::value...}};
+  //     static constexpr std::array<size_t, num_uncontracted_tensor_indices>
+  //         highest_multi_index_to_sum =
+  //         get_highest_multi_index_to_sum(contracted_multi_index);
+  //     static constexpr std::array<size_t, num_uncontracted_tensor_indices>
+  //         lowest_multi_index_to_sum =
+  //         get_lowest_multi_index_to_sum(contracted_multi_index);
+
+  //     using highest_multi_index_to_sum_list =
+  //         tmpl::integral_list<size_t,
+  //         highest_multi_index_to_sum[UncontractedInts]...>;
+  //     using lowest_multi_index_to_sum_list =
+  //         tmpl::integral_list<size_t,
+  //         lowest_multi_index_to_sum[UncontractedInts]...>;
+  //   };
+
   /// \brief Computes the value of a component in the resultant contracted
   /// tensor
   ///
@@ -874,6 +959,24 @@ struct TensorContract
     }
   }
 
+  template <size_t Iteration, typename CurrentMultiIndex>
+  SPECTRE_ALWAYS_INLINE static decltype(auto) compute_contraction(
+      const T& t, const std::array<size_t, num_uncontracted_tensor_indices>&
+                      current_multi_index) {
+    if constexpr (Iteration < num_terms_summed - 1) {
+      // We have more than one component left to sum
+      using next_highest_multi_index_to_sum =
+          typename get_next_highest_multi_index_to_sum_helper<
+              CurrentMultiIndex>::type;
+      return compute_contraction<Iteration + 1,
+                                 next_highest_multi_index_to_sum>(t) +
+             t.template get<CurrentMultiIndex>();
+    } else {
+      // We only have one final component to sum
+      return t.template get<CurrentMultiIndex>();
+    }
+  }
+
   /// \brief Return the value of the component of the resultant contracted
   /// tensor at a given multi-index
   ///
@@ -885,6 +988,14 @@ struct TensorContract
                          contracted_multi_index) const {
     return compute_contraction<0>(
         t_, get_highest_multi_index_to_sum(contracted_multi_index));
+  }
+
+  template <ContractedMultiIndex>
+  decltype(auto) get() const {
+    using highest_multi_index_to_sum =
+        typename get_highest_multi_index_to_sum_helper<
+            ContractedMultiIndex>::type;
+    return compute_contraction<0, highest_multi_index_to_sum>();
   }
 
   /// \brief Computes the result of an internal leg of the contraction
@@ -925,6 +1036,28 @@ struct TensorContract
       next_leg_starting_multi_index =
           get_next_highest_multi_index_to_sum(current_multi_index);
       return t.get(current_multi_index);
+    }
+  }
+
+  template <size_t Iteration, typename CurrentMultiIndex,
+            typename NextLegStartingMultiIndex>
+  SPECTRE_ALWAYS_INLINE static decltype(auto) compute_contraction_leg(
+      const T& t) {
+    using next_highest_multi_index_to_sum =
+        typename get_next_highest_multi_index_to_sum_helper<
+            CurrentMultiIndex>::type;
+    if constexpr (Iteration != 0) {
+      // We have more than one component left to sum
+      return compute_contraction_leg<Iteration - 1,
+                                     next_highest_multi_index_to_sum,
+                                     NextLegStartingMultiIndex>(t) +
+             t.template get<CurrentMultiIndex>();
+    } else {
+      // We only have one final component to sum
+      // TODO : need to handle this because tparam can't be updated...
+      //   next_leg_starting_multi_index =
+      //       get_next_highest_multi_index_to_sum(current_multi_index);
+      return t.template get<CurrentMultiIndex>();
     }
   }
 
@@ -982,6 +1115,45 @@ struct TensorContract
     }
   }
 
+  template <size_t Iteration, typename CurrentMultiIndex>
+  SPECTRE_ALWAYS_INLINE static decltype(auto) compute_contraction_primary(
+      const T& t, const type& result_component) {
+    if constexpr (is_primary_end) {
+      // We've already computed the whole subtree of the term being summed that
+      // is at the lowest depth in the tree
+      if constexpr (Iteration < num_terms_summed - 1) {
+        // We have more than one component left to sum
+        using next_highest_multi_index_to_sum =
+            typename get_next_highest_multi_index_to_sum_helper<
+                CurrentMultiIndex>::type;
+        return compute_contraction_primary<Iteration + 1,
+                                           next_highest_multi_index_to_sum>(
+                   t, result_component) +
+               t.template get<CurrentMultiIndex>();
+      } else {
+        // The deepest term in the contraction subtree that is being summed is
+        // just our current result, so return it
+        return result_component;
+      }
+    } else {
+      // We've haven't yet computed the whole subtree of the term being summed
+      // that is at the lowest depth in the tree
+      if constexpr (Iteration < num_terms_summed - 1) {
+        // We have more than one component left to sum
+        using next_highest_multi_index_to_sum =
+            typename get_next_highest_multi_index_to_sum_helper<
+                CurrentMultiIndex>::type;
+        return compute_contraction_primary<Iteration + 1,
+                                           next_highest_multi_index_to_sum>(
+                   t, result_component) +
+               t.template get<CurrentMultiIndex>();
+      } else {
+        // We only have one final component to sum
+        return t.template get_primary<CurrentMultiIndex>(result_component);
+      }
+    }
+  }
+
   /// \brief Return the value of the component of the resultant contracted
   /// tensor at a given multi-index
   ///
@@ -1004,6 +1176,16 @@ struct TensorContract
     return compute_contraction_primary<0>(
         t_, result_component,
         get_highest_multi_index_to_sum(contracted_multi_index));
+  }
+
+  template <typename ContractedMultiIndex>
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
+      const type& result_component) const {
+    using highest_multi_index_to_sum =
+        typename get_highest_multi_index_to_sum_helper<
+            ContractedMultiIndex>::type;
+    return compute_contraction_primary<0, highest_multi_index_to_sum>(
+        t_, result_component);
   }
 
   /// \brief Successively evaluate the LHS Tensor's result component at each
@@ -1031,6 +1213,88 @@ struct TensorContract
       result_component = t_.get_primary(result_component, lowest_multi_index);
     }
 
+    if constexpr (evaluate_terms_separately) {
+      // Case 1: Evaluate all of the remaining terms, one TERM at a time
+      (void)contracted_multi_index;
+      std::array<size_t, num_uncontracted_tensor_indices> current_multi_index =
+          lowest_multi_index;
+      for (size_t i = 1; i < num_terms_summed; i++) {
+        const std::array<size_t, num_uncontracted_tensor_indices>
+            next_lowest_multi_index_to_sum =
+                get_next_lowest_multi_index_to_sum(current_multi_index);
+        result_component += t_.get(next_lowest_multi_index_to_sum);
+        current_multi_index = next_lowest_multi_index_to_sum;
+      }
+    } else {
+      // Case 2: Evaluate all of the remaining terms, one LEG at a time
+      (void)lowest_multi_index;
+      std::array<size_t, num_uncontracted_tensor_indices>
+          next_leg_starting_multi_index =
+              get_highest_multi_index_to_sum(contracted_multi_index);
+      if constexpr (last_leg_length > 0) {
+        // Case 2a: We have a remainder of terms that don't make up a full leg
+        // length
+
+        // Evaluate all the full-length legs
+        for (size_t i = 0; i < num_full_legs; i++) {
+          const std::array<size_t, num_uncontracted_tensor_indices>
+              current_multi_index = next_leg_starting_multi_index;
+          result_component += compute_contraction_leg<leg_length - 1>(
+              t_, current_multi_index, next_leg_starting_multi_index);
+        }
+        if constexpr (last_leg_length > 1) {
+          // Get rest of the deepest (partial-length) leg if there are more
+          // terms in it than just the one deepest term we already computed
+          const std::array<size_t, num_uncontracted_tensor_indices>
+              current_multi_index = next_leg_starting_multi_index;
+          result_component +=
+              // start at last_leg_length - 2 because we already computed one of
+              // the terms in this deepest leg (the deepest term)
+              compute_contraction_leg<last_leg_length - 2>(
+                  t_, current_multi_index, next_leg_starting_multi_index);
+        }
+      } else {
+        // Case 2b: We don't have remaining terms that only make up a
+        // partial leg length (i.e. we only have full-length legs)
+
+        // Evaluate all but the deepest leg
+        for (size_t i = 1; i < num_full_legs; i++) {
+          const std::array<size_t, num_uncontracted_tensor_indices>
+              current_multi_index = next_leg_starting_multi_index;
+
+          result_component += compute_contraction_leg<leg_length - 1>(
+              t_, current_multi_index, next_leg_starting_multi_index);
+        }
+
+        if constexpr (leg_length > 1) {
+          // Get rest of the deepest leg if there are more terms in it than
+          // just the one deepest term we already computed
+          const std::array<size_t, num_uncontracted_tensor_indices>
+              current_multi_index = next_leg_starting_multi_index;
+          result_component +=
+              // start at leg_length - 2 because we already computed one of the
+              // terms in this deepest leg (the deepest term)
+              compute_contraction_leg<leg_length - 2>(
+                  t_, current_multi_index, next_leg_starting_multi_index);
+        }
+      }
+    }
+  }
+
+  template <typename ContractedMultiIndex>
+  SPECTRE_ALWAYS_INLINE void evaluate_primary_contraction(
+      type& result_component) const {
+    using lowest_multi_index_to_sum =
+        typename get_lowest_multi_index_to_sum_helper<
+            ContractedMultiIndex>::type;
+    if constexpr (not is_primary_end) {
+      // We need to first evaluate the subtree of the term being summed that
+      // is deepest in the tree
+      result_component =
+          t_.template get_primary<lowest_multi_index_to_sum>(result_component);
+    }
+
+    // TODO : this is the next thing to figure out
     if constexpr (evaluate_terms_separately) {
       // Case 1: Evaluate all of the remaining terms, one TERM at a time
       (void)contracted_multi_index;
