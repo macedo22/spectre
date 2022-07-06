@@ -18,6 +18,7 @@
 #include "DataStructures/Tensor/Expressions/TimeIndex.hpp"
 #include "DataStructures/Tensor/Structure.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
+#include "Utilities/Algorithm.hpp"
 #include "Utilities/ContainerHelpers.hpp"
 #include "Utilities/ErrorHandling/Assert.hpp"
 #include "Utilities/Gsl.hpp"
@@ -46,6 +47,103 @@ constexpr bool contains_indices_to_contract(
     return false;
   }
 }
+
+template <typename IndicesWithSameValue, typename CurrentIndexValue,
+          typename Iteration, typename IndexValueToFind, typename TensorIndices>
+struct get_indices_with_same_value_impl {
+  using current_tensorindex = tmpl::at<TensorIndices, Iteration>;
+  using type = typename std::conditional_t<
+      (not ::tt::is_time_index<current_tensorindex>::value and
+       CurrentIndexValue::value == IndexValueToFind::value),
+      tmpl::push_back<IndicesWithSameValue, current_tensorindex>,
+      IndicesWithSameValue>;
+};
+
+template <typename IndicesWithSameValues, typename IndexValueToFind,
+          typename MultIndex, typename TensorIndices>
+struct get_indices_with_same_value_helper {
+  using indices_with_this_value = tmpl::enumerated_fold<
+      MultIndex, tmpl::list<>,
+      get_indices_with_same_value_impl<tmpl::_state, tmpl::_element, tmpl::_3,
+                                       tmpl::pin<IndexValueToFind>,
+                                       tmpl::pin<TensorIndices>>,
+      tmpl::size_t<0>>;
+
+  using type = typename std::conditional_t<
+      (tmpl::size<indices_with_this_value>::value > 1),
+      tmpl::push_back<IndicesWithSameValues, indices_with_this_value>,
+      IndicesWithSameValues>;
+};
+
+// template <typename MultiIndex, typename TensorIndices>
+// struct get_indices_with_same_value {
+//   static_assert(tmpl::size<MultiIndex>::value ==
+//                 tmpl::size<TensorIndices>::value);
+//   static constexpr size_t num_tensor_indices = tmpl::size<MultiIndex>::value;
+//   static constexpr size_t min_index_value = tmpl::min<MultiIndex>::value;
+//   static constexpr size_t max_index_value = tmpl::max<MultiIndex>::value;
+
+//   using index_value_range = tmpl::as_integral_list<
+//       tmpl::range<size_t, min_index_value, max_index_value + 1>>;
+
+//   using type = tmpl::fold<index_value_range, tmpl::list<>,
+//                           get_indices_with_same_value_helper<
+//                               tmpl::_state, tmpl::_element,
+//                               tmpl::pin<MultiIndex>,
+//                               tmpl::pin<TensorIndices>>>;
+// };
+
+// template <typename X, typename TensorIndices>
+// struct get_indices_with_same_value<Tensor<X, Symmetry<>, index_list<>>,
+//                                    TensorIndices> {
+//   using type = tmpl::list<>;
+// };
+
+template <typename MultiIndex, typename TensorIndices,
+          typename IndexSequence =
+              std::make_index_sequence<tmpl::size<MultiIndex>::value>>
+struct get_indices_with_same_value;
+
+template <>
+struct get_indices_with_same_value<tmpl::list<>, tmpl::list<>,
+                                   std::index_sequence<0>> {
+  using type = tmpl::list<>;
+};
+
+template <typename MultiIndex, typename TensorIndices, size_t... Ints>
+struct get_indices_with_same_value<MultiIndex, TensorIndices,
+                                   std::index_sequence<Ints...>> {
+  // static constexpr size_t num_tensor_indices =
+  //     tmpl::size<typename T::symmetry>::value;
+  // static constexpr std::array<size_t, num_tensor_indices> multi_index =
+  //     T::structure::get_canonical_tensor_index(StorageIndex);
+  static_assert(tmpl::size<MultiIndex>::value ==
+                    tmpl::size<TensorIndices>::value and
+                tmpl::size<TensorIndices>::value == sizeof...(Ints));
+  static constexpr size_t num_tensor_indices = tmpl::size<MultiIndex>::value;
+  static constexpr std::array<size_t, num_tensor_indices> multi_index = {
+      {tmpl::at_c<MultiIndex, Ints>::value...}};
+  static constexpr size_t min_index_value = *alg::min_element(multi_index);
+  static constexpr size_t max_index_value = *alg::max_element(multi_index);
+  // static constexpr size_t max_dim =
+  //     *alg::max_element({{tmpl::at_c<typename T::index_list,
+  //     Ints>::dim...}});
+  using index_value_range = tmpl::as_integral_list<
+      tmpl::range<size_t, min_index_value, max_index_value + 1>>;
+  // using multi_index_list = tmpl::integral_list<size_t,
+  // multi_index[Ints]...>;
+
+  // using type =
+  //     tmpl::fold<index_value_range, tmpl::list<>,
+  //                get_indices_with_same_value_helper<
+  //                    tmpl::_state, tmpl::_element,
+  //                    tmpl::pin<multi_index_list>,
+  // tmpl::pin<TensorIndices> >> ;
+  using type = tmpl::fold<index_value_range, tmpl::list<>,
+                          get_indices_with_same_value_helper<
+                              tmpl::_state, tmpl::_element,
+                              tmpl::pin<MultiIndex>, tmpl::pin<TensorIndices>>>;
+};
 
 /// \brief Given the list of the positions of the LHS tensor's spacetime indices
 /// where a generic spatial index is used and the list of positions where a
@@ -259,6 +357,213 @@ void evaluate_impl(
   }
 }
 
+template <size_t NumLhsIndices, size_t NumRhsIndices,
+          size_t NumLhsSpatialSpacetimeIndices,
+          size_t NumRhsSpatialSpacetimeIndices>
+constexpr std::array<size_t, NumRhsIndices> get_rhs_multi_index(
+    const std::array<size_t, NumLhsIndices>& lhs_multi_index,
+    const std::array<size_t, NumRhsIndices>& index_transformation,
+    const std::array<size_t, NumLhsSpatialSpacetimeIndices>&
+        lhs_spatial_spacetime_index_positions,
+    const std::array<size_t, NumRhsSpatialSpacetimeIndices>&
+        rhs_spatial_spacetime_index_positions) {
+  std::array<size_t, NumLhsIndices> shifted_lhs_multi_index = lhs_multi_index;
+  for (size_t j = 0; j < lhs_spatial_spacetime_index_positions.size(); j++) {
+    gsl::at(shifted_lhs_multi_index,
+            gsl::at(lhs_spatial_spacetime_index_positions, j)) -= 1;
+  }
+
+  auto rhs_multi_index =
+      transform_multi_index(shifted_lhs_multi_index, index_transformation);
+  for (size_t j = 0; j < rhs_spatial_spacetime_index_positions.size(); j++) {
+    gsl::at(rhs_multi_index,
+            gsl::at(rhs_spatial_spacetime_index_positions, j)) += 1;
+  }
+
+  return rhs_multi_index;
+}
+
+// template <size_t LhsStorageIndex, bool EvaluateSubtrees, typename L, typename
+// R,
+//           size_t NumLhsSpatialSpacetimeIndices,
+//           size_t NumRhsSpatialSpacetimeIndices, size_t NumLhsTimeIndices,
+//           size_t... RhsInts>
+// void evaluate_core(
+//     const gsl::not_null<L*> lhs_tensor, const R& rhs_tensorexpression,
+//     const std::array<size_t, R::num_tensor_indices>& index_transformation,
+//     const std::array<size_t, NumLhsSpatialSpacetimeIndices>&
+//         lhs_spatial_spacetime_index_positions,
+//     const std::array<size_t, NumRhsSpatialSpacetimeIndices>&
+//         rhs_spatial_spacetime_index_positions,
+//     const std::array<size_t, NumLhsTimeIndices>& lhs_time_index_positions,
+//     const std::index_sequence<RhsInts...>& /*rhs_seq*/) {
+template <size_t LhsStorageIndex, bool EvaluateSubtrees,
+          auto&... LhsTensorIndices, typename X, typename LhsSymmetry,
+          typename LhsIndexList, typename Derived, typename RhsSymmetry,
+          typename RhsIndexList, typename... RhsTensorIndices,
+          size_t... RhsInts>
+void evaluate_core(
+    const gsl::not_null<Tensor<X, LhsSymmetry, LhsIndexList>*> lhs_tensor,
+    const TensorExpression<Derived, X, RhsSymmetry, RhsIndexList,
+                           tmpl::list<RhsTensorIndices...>>&
+        rhs_tensorexpression,
+    const std::index_sequence<RhsInts...>& /*rhs_seq*/) {
+  using lhs_tensor_type = typename std::decay_t<decltype(*lhs_tensor)>;
+  using rhs_expression_type =
+      typename std::decay_t<decltype(~rhs_tensorexpression)>;
+  using lhs_tensorindex_list =
+      tmpl::list<std::decay_t<decltype(LhsTensorIndices)>...>;
+  using rhs_tensorindex_list = tmpl::list<RhsTensorIndices...>;
+  constexpr size_t num_lhs_indices = sizeof...(LhsTensorIndices);
+  constexpr size_t num_rhs_indices = sizeof...(RhsTensorIndices);
+
+  // positions of indices in LHS tensor where generic spatial indices are used
+  // for spacetime indices
+  constexpr auto lhs_spatial_spacetime_index_positions =
+      get_spatial_spacetime_index_positions<LhsIndexList,
+                                            lhs_tensorindex_list>();
+  // positions of indices in RHS tensor where generic spatial indices are used
+  // for spacetime indices
+  constexpr auto rhs_spatial_spacetime_index_positions =
+      get_spatial_spacetime_index_positions<RhsIndexList,
+                                            rhs_tensorindex_list>();
+
+  // positions of indices in LHS tensor where concrete time indices are used
+  constexpr auto lhs_time_index_positions =
+      get_time_index_positions<lhs_tensorindex_list>();
+
+  constexpr std::array<size_t, num_lhs_indices> lhs_multi_index =
+      lhs_tensor_type::structure::get_canonical_tensor_index(LhsStorageIndex);
+  if constexpr (is_evaluated_lhs_multi_index(
+                    lhs_multi_index, lhs_spatial_spacetime_index_positions,
+                    lhs_time_index_positions)) {
+    constexpr std::array<size_t, num_rhs_indices> index_transformation =
+        compute_tensorindex_transformation<num_lhs_indices, num_rhs_indices>(
+            {{std::decay_t<decltype(LhsTensorIndices)>::value...}},
+            {{RhsTensorIndices::value...}});
+
+    constexpr std::array<size_t, num_rhs_indices> rhs_multi_index =
+        get_rhs_multi_index(lhs_multi_index, index_transformation,
+                            lhs_spatial_spacetime_index_positions,
+                            rhs_spatial_spacetime_index_positions);
+    using rhs_multi_index_list =
+        tmpl::integral_list<size_t, rhs_multi_index[RhsInts]...>;
+
+    // Indicates which generic indices have the same value for this multi-index
+    using tensorindices_with_same_value =
+        typename get_indices_with_same_value<rhs_multi_index_list,
+                                             rhs_tensorindex_list>::type;
+
+    // The expression will either be evaluated as one whole expression
+    // or it will be split up into subtrees that are evaluated one at a
+    // time. See the section on splitting in the documentation for the
+    // `TensorExpression` class to understand the logic and terminology used
+    // in this control flow below.
+    if constexpr (EvaluateSubtrees) {
+      // the expression is split up, so evaluate subtrees at splits
+      (~rhs_tensorexpression)
+          .evaluate_primary_subtree((*lhs_tensor)[LhsStorageIndex],
+                                    rhs_multi_index);
+      // (~rhs_tensorexpression)
+      //     .template evaluate_primary_subtree<TODO>(
+      //         (*lhs_tensor)[LhsStorageIndex], rhs_multi_index);
+      if constexpr (not rhs_expression_type::is_primary_start) {
+        // the root expression type is not the starting point of a leg, so it
+        // has not yet been evaluated, so now we evaluate this last leg of the
+        // expression at the root of the tree
+        (*lhs_tensor)[LhsStorageIndex] =
+            (~rhs_tensorexpression)
+                .get_primary((*lhs_tensor)[LhsStorageIndex], rhs_multi_index);
+        // (*lhs_tensor)[LhsStorageIndex] =
+        //     (~rhs_tensorexpression)
+        //         .template get_primary<TODO>((*lhs_tensor)[LhsStorageIndex],
+        //                                     rhs_multi_index);
+      }
+    } else {
+      // the expression is not split up, so evaluate full expression
+      (*lhs_tensor)[LhsStorageIndex] =
+          (~rhs_tensorexpression).get(rhs_multi_index);
+      // (*lhs_tensor)[LhsStorageIndex] =
+      //     (~rhs_tensorexpression).template get<TODO>(rhs_multi_index);
+    }
+  }
+}
+
+template <bool EvaluateSubtrees, auto&... LhsTensorIndices, typename X,
+          typename LhsSymmetry, typename LhsIndexList, typename Derived,
+          typename RhsSymmetry, typename RhsIndexList,
+          typename... RhsTensorIndices, size_t... LhsInts>
+void evaluate_impl(
+    const gsl::not_null<Tensor<X, LhsSymmetry, LhsIndexList>*> lhs_tensor,
+    const TensorExpression<Derived, X, RhsSymmetry, RhsIndexList,
+                           tmpl::list<RhsTensorIndices...>>&
+        rhs_tensorexpression,
+    // TODO: might be better to do an unexpanded index sequence because it's
+    // easier to pass around? but maybe std::array is more light weight?
+    // const std::index_sequence<RhsInts...>& /*lhs_storage_index_seq*/ TODO:
+    // find a way to iterate over all LHS indices, probably best to make a
+    // helper function in between evaluate and evaluate impl that creates in
+    // index sequences and calls another helper that calls evaluate_impl with
+    // a tparam for the storage index
+    const std::index_sequence<LhsInts...>& /*lhs_seq*/) {
+  constexpr size_t num_lhs_indices = sizeof...(LhsTensorIndices);
+  constexpr size_t num_rhs_indices = sizeof...(RhsTensorIndices);
+
+  using lhs_tensorindex_list =
+      tmpl::list<std::decay_t<decltype(LhsTensorIndices)>...>;
+  using rhs_tensorindex_list = tmpl::list<RhsTensorIndices...>;
+
+  static_assert(
+      tmpl::equal_members<
+          typename remove_time_indices<lhs_tensorindex_list>::type,
+          typename remove_time_indices<rhs_tensorindex_list>::type>::value,
+      "The generic indices on the LHS of a tensor equation (that is, the "
+      "template parameters specified in evaluate<...>) must match the generic"
+      "indices of the RHS TensorExpression. This error occurs as a result of a "
+      "call like evaluate<ti::a, ti::b>(R(ti::A, ti::b) * S(ti::a, ti::c)), "
+      "where the generic indices of the evaluated RHS expression are ti::b and "
+      "ti::c, but the generic indices provided for the LHS are ti::a and "
+      "ti::b.");
+  static_assert(
+      tensorindex_list_is_valid<lhs_tensorindex_list>::value,
+      "Cannot assign a tensor expression to a LHS tensor with a repeated "
+      "generic index, e.g. evaluate<ti::a, ti::a>. (Note that the concrete "
+      "time indices (ti::T and ti::t) can be repeated.)");
+  static_assert(
+      not contains_indices_to_contract<num_lhs_indices>(
+          {{std::decay_t<decltype(LhsTensorIndices)>::value...}}),
+      "Cannot assign a tensor expression to a LHS tensor with generic "
+      "indices that would be contracted, e.g. evaluate<ti::A, ti::a>.");
+  // `IndexPropertyCheck` does also check that valence (Up/Lo) of indices that
+  // correspond in the RHS and LHS tensors are equal, but the assertion message
+  // below does not mention this because a mismatch in valence should have been
+  // caught due to the combination of (i) the Tensor::operator() assertion
+  // checking that generic indices' valences match the tensor's indices'
+  // valences and (ii) the above assertion that RHS and LHS generic indices
+  // match
+  static_assert(
+      IndexPropertyCheck<LhsIndexList, RhsIndexList, lhs_tensorindex_list,
+                         rhs_tensorindex_list>::value,
+      "At least one index of the tensor evaluated from the RHS expression "
+      "cannot be evaluated to its corresponding index in the LHS tensor. This "
+      "is due to a difference in number of spatial dimensions or Frame type "
+      "between the index on the RHS and LHS. "
+      "e.g. evaluate<ti::a, ti::b>(L, R(ti::b, ti::a));, where R's first "
+      "index has 2 spatial dimensions but L's second index has 3 spatial "
+      "dimensions. Check RHS and LHS indices that use the same generic index.");
+
+  if constexpr (EvaluateSubtrees) {
+    // Make sure the LHS tensor doesn't also appear in the RHS tensor expression
+    (~rhs_tensorexpression).assert_lhs_tensor_not_in_rhs_expression(lhs_tensor);
+  }
+
+  (void)std::initializer_list<int>{
+      (evaluate_core<LhsInts, EvaluateSubtrees, LhsTensorIndices...>(
+           lhs_tensor, rhs_tensorexpression,
+           std::make_index_sequence<num_rhs_indices>{}),
+       0)...};
+}
+
 /*!
  * \ingroup TensorExpressionsGroup
  * \brief Assign a `double` value to components of the LHS tensor
@@ -360,6 +665,22 @@ void evaluate_impl(
  * @param lhs_tensor pointer to the resultant LHS `Tensor` to fill
  * @param rhs_tensorexpression the RHS TensorExpression to be evaluated
  */
+// template <auto&... LhsTensorIndices, typename X, typename LhsSymmetry,
+//           typename LhsIndexList, typename Derived, typename RhsSymmetry,
+//           typename RhsIndexList, typename... RhsTensorIndices>
+// void evaluate(
+//     const gsl::not_null<Tensor<X, LhsSymmetry, LhsIndexList>*> lhs_tensor,
+//     const TensorExpression<Derived, X, RhsSymmetry, RhsIndexList,
+//                            tmpl::list<RhsTensorIndices...>>&
+//         rhs_tensorexpression) {
+//   using rhs_expression_type =
+//       typename std::decay_t<decltype(~rhs_tensorexpression)>;
+//   constexpr bool evaluate_subtrees =
+//       rhs_expression_type::primary_subtree_contains_primary_start;
+//   detail::evaluate_impl<evaluate_subtrees, LhsTensorIndices...>(
+//       lhs_tensor, rhs_tensorexpression);
+// }
+
 template <auto&... LhsTensorIndices, typename X, typename LhsSymmetry,
           typename LhsIndexList, typename Derived, typename RhsSymmetry,
           typename RhsIndexList, typename... RhsTensorIndices>
@@ -373,7 +694,8 @@ void evaluate(
   constexpr bool evaluate_subtrees =
       rhs_expression_type::primary_subtree_contains_primary_start;
   detail::evaluate_impl<evaluate_subtrees, LhsTensorIndices...>(
-      lhs_tensor, rhs_tensorexpression);
+      lhs_tensor, rhs_tensorexpression,
+      std::make_index_sequence<std::decay_t<decltype(*lhs_tensor)>::size()>{});
 }
 
 /*!
