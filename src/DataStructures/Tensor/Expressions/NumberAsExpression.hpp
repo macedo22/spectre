@@ -112,6 +112,12 @@ struct NumberAsExpression
     return number_;
   }
 
+  template <typename ResultMultiIndex>
+  SPECTRE_ALWAYS_INLINE double get() const {
+    static_assert(tmpl::size<ResultMultiIndex>::value == 0);
+    return number_;
+  }
+
   /// \brief Returns the number represented by the expression
   ///
   /// \return the number represented by this expression
