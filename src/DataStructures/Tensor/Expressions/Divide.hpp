@@ -168,6 +168,18 @@ struct Divide : public TensorExpression<
     }
   }
 
+  template <typename Op2IndexSequence =
+                std::make_index_sequence<op2_num_tensor_indices>>
+  struct get_op2_multi_index_helper;
+
+  template <size_t... Op2Ints>
+  struct get_op2_multi_index_helper<std::index_sequence<Op2Ints...>> {
+    using type = tmpl::integral_list<size_t, op2_multi_index[Op2Ints]...>;
+  };
+
+  using op2_multi_index_list = typename get_op2_multi_index_helper<
+      std::make_index_sequence<op2_num_tensor_indices>>::type;
+
   /// \brief Return the value of the component of the quotient tensor at a given
   /// multi-index
   ///
@@ -178,6 +190,11 @@ struct Divide : public TensorExpression<
   SPECTRE_ALWAYS_INLINE decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     return t1_.get(result_multi_index) / t2_.get(op2_multi_index);
+  }
+  template <typename ResultMultiIndex>
+  SPECTRE_ALWAYS_INLINE decltype(auto) get() const {
+    return t1_.template get<ResultMultiIndex>() /
+           t2_.template get<op2_multi_index_list>();
   }
 
   /// \brief Return the value of the component of the quotient tensor at a given
@@ -209,6 +226,22 @@ struct Divide : public TensorExpression<
       // return the quotient of the results of the two operands' subtrees
       return t1_.get_primary(result_component, result_multi_index) /
              t2_.get(op2_multi_index);
+    }
+  }
+
+  template <typename ResultMultiIndex>
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
+      const type& result_component) const {
+    if constexpr (is_primary_end) {
+      // We've already computed the whole child subtree on the primary path, so
+      // just return the quotient of the current result component and the result
+      // of the other child's subtree
+      return result_component / t2_.template get<op2_multi_index_list>();
+    } else {
+      // We haven't yet evaluated the whole subtree for this expression, so
+      // return the quotient of the results of the two operands' subtrees
+      return t1_.template get_primary<ResultMultiIndex>(result_component) /
+             t2_.template get<op2_multi_index_list>();
     }
   }
 
@@ -252,6 +285,26 @@ struct Divide : public TensorExpression<
     }
   }
 
+  template <typename ResultMultiIndex>
+  SPECTRE_ALWAYS_INLINE void evaluate_primary_children(
+      type& result_component) const {
+    if constexpr (is_primary_end) {
+      // We've already computed the whole child subtree on the primary path, so
+      // just divide the current result by the result of the other child's
+      // subtree
+      result_component /= t2_.template get<op2_multi_index_list>();
+    } else {
+      // We haven't yet evaluated the whole subtree of the primary child, so
+      // first assign the result component to be the result of computing the
+      // primary child's subtree
+      result_component =
+          t1_.template get_primary<ResultMultiIndex>(result_component);
+      // Now that the primary child's subtree has been computed, divide the
+      // current result by the result of evaluating the other child's subtree
+      result_component /= t2_.template get<op2_multi_index_list>();
+    }
+  }
+
   /// \brief Successively evaluate the LHS Tensor's result component at each
   /// leg in this expression's subtree
   ///
@@ -280,6 +333,26 @@ struct Divide : public TensorExpression<
       } else {
         // Evaluate whole subtree as one expression
         result_component = get_primary(result_component, result_multi_index);
+      }
+    }
+  }
+
+  template <typename ResultMultiIndex>
+  SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
+      type& result_component) const {
+    if constexpr (primary_child_subtree_contains_primary_start) {
+      // The primary child's subtree contains at least one leg, so recurse down
+      // and evaluate that first
+      t1_.template evaluate_primary_subtree<ResultMultiIndex>(result_component);
+    }
+    if constexpr (is_primary_start) {
+      // We want to evaluate the subtree for this expression
+      if constexpr (evaluate_children_separately) {
+        // Evaluate operand's subtrees separately
+        evaluate_primary_children<ResultMultiIndex>(result_component);
+      } else {
+        // Evaluate whole subtree as one expression
+        result_component = get_primary<ResultMultiIndex>(result_component);
       }
     }
   }

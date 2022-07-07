@@ -148,6 +148,11 @@ struct SquareRoot
     return sqrt(t_.get(multi_index));
   }
 
+  template <typename ResultMultiIndex>
+  SPECTRE_ALWAYS_INLINE decltype(auto) get() const {
+    return sqrt(t_.template get<ResultMultiIndex>());
+  }
+
   /// \brief Returns the square root of the component of the tensor evaluated
   /// from the contained tensor expression
   ///
@@ -181,6 +186,20 @@ struct SquareRoot
     }
   }
 
+  template <typename ResultMultiIndex>
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
+      const type& result_component) const {
+    if constexpr (is_primary_end) {
+      // We've already computed the whole child subtree on the primary path, so
+      // just return the square root of the current result component
+      return sqrt(result_component);
+    } else {
+      // We haven't yet evaluated the whole subtree for this expression, so
+      // return the square root of this expression's subtree
+      return sqrt(t_.template get_primary<ResultMultiIndex>(result_component));
+    }
+  }
+
   /// \brief Successively evaluate the LHS Tensor's result component at each
   /// leg in this expression's subtree
   ///
@@ -205,6 +224,21 @@ struct SquareRoot
     if constexpr (is_primary_start) {
       // We want to evaluate the subtree for this expression
       result_component = get_primary(result_component, multi_index);
+    }
+  }
+
+  template <typename ResultMultiIndex>
+  SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
+      type& result_component) const {
+    if constexpr (primary_child_subtree_contains_primary_start) {
+      // The primary child's subtree contains at least one leg, so recurse down
+      // and evaluate that first
+      t_.template evaluate_primary_subtree<ResultMultiIndex>(result_component);
+    }
+
+    if constexpr (is_primary_start) {
+      // We want to evaluate the subtree for this expression
+      result_component = get_primary<ResultMultiIndex>(result_component);
     }
   }
 
