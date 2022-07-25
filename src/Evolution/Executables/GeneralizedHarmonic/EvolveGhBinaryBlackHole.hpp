@@ -186,47 +186,47 @@ struct EvolutionMetavars {
     static constexpr bool enable_time_dependent_maps = true;
   };
 
-  struct AhA : tt::ConformsTo<intrp::protocols::InterpolationTargetTag> {
-    using temporal_id = ::Tags::Time;
-    using vars_to_interpolate_to_target = tmpl::append<
-        ::ah::vars_to_interpolate_to_target<volume_dim, ::Frame::Grid>,
-        ::ah::vars_to_interpolate_to_target<volume_dim, ::Frame::Inertial>>;
-    using compute_vars_to_interpolate = ah::ComputeHorizonVolumeQuantities;
-    using tags_to_observe = ::ah::tags_for_observing;
-    using surface_tags_to_observe = ::ah::surface_tags_for_observing;
-    using compute_items_on_target = ::ah::compute_items_on_target<volume_dim>;
-    using compute_target_points =
-        intrp::TargetPoints::ApparentHorizon<AhA, ::Frame::Grid>;
-    using post_interpolation_callback =
-        intrp::callbacks::FindApparentHorizon<AhA, ::Frame::Grid>;
-    using horizon_find_failure_callback =
-        intrp::callbacks::IgnoreFailedApparentHorizon;
-    using post_horizon_find_callbacks = tmpl::list<
-        intrp::callbacks::ObserveTimeSeriesOnSurface<tags_to_observe, AhA>,
-        intrp::callbacks::ObserveSurfaceData<surface_tags_to_observe, AhA>,
-        ah::callbacks::ObserveCenters<AhA>>;
-  };
+//   struct AhA : tt::ConformsTo<intrp::protocols::InterpolationTargetTag> {
+//     using temporal_id = ::Tags::Time;
+//     using vars_to_interpolate_to_target = tmpl::append<
+//         ::ah::vars_to_interpolate_to_target<volume_dim, ::Frame::Grid>,
+//         ::ah::vars_to_interpolate_to_target<volume_dim, ::Frame::Inertial>>;
+//     using compute_vars_to_interpolate = ah::ComputeHorizonVolumeQuantities;
+//     using tags_to_observe = ::ah::tags_for_observing;
+//     using surface_tags_to_observe = ::ah::surface_tags_for_observing;
+//     using compute_items_on_target = ::ah::compute_items_on_target<volume_dim>;
+//     using compute_target_points =
+//         intrp::TargetPoints::ApparentHorizon<AhA, ::Frame::Grid>;
+//     using post_interpolation_callback =
+//         intrp::callbacks::FindApparentHorizon<AhA, ::Frame::Grid>;
+//     using horizon_find_failure_callback =
+//         intrp::callbacks::IgnoreFailedApparentHorizon;
+//     using post_horizon_find_callbacks = tmpl::list<
+//         intrp::callbacks::ObserveTimeSeriesOnSurface<tags_to_observe, AhA>,
+//         intrp::callbacks::ObserveSurfaceData<surface_tags_to_observe, AhA>,
+//         ah::callbacks::ObserveCenters<AhA>>;
+//   };
 
-  struct AhB : tt::ConformsTo<intrp::protocols::InterpolationTargetTag> {
-    using temporal_id = ::Tags::Time;
-    using vars_to_interpolate_to_target = tmpl::append<
-        ::ah::vars_to_interpolate_to_target<volume_dim, ::Frame::Grid>,
-        ::ah::vars_to_interpolate_to_target<volume_dim, ::Frame::Inertial>>;
-    using compute_vars_to_interpolate = ah::ComputeHorizonVolumeQuantities;
-    using tags_to_observe = ::ah::tags_for_observing;
-    using surface_tags_to_observe = ::ah::surface_tags_for_observing;
-    using compute_items_on_target = ::ah::compute_items_on_target<volume_dim>;
-    using compute_target_points =
-        intrp::TargetPoints::ApparentHorizon<AhB, ::Frame::Grid>;
-    using post_interpolation_callback =
-        intrp::callbacks::FindApparentHorizon<AhB, ::Frame::Grid>;
-    using horizon_find_failure_callback =
-        intrp::callbacks::IgnoreFailedApparentHorizon;
-    using post_horizon_find_callbacks = tmpl::list<
-        intrp::callbacks::ObserveTimeSeriesOnSurface<tags_to_observe, AhB>,
-        intrp::callbacks::ObserveSurfaceData<surface_tags_to_observe, AhB>,
-        ah::callbacks::ObserveCenters<AhB>>;
-  };
+//   struct AhB : tt::ConformsTo<intrp::protocols::InterpolationTargetTag> {
+//     using temporal_id = ::Tags::Time;
+//     using vars_to_interpolate_to_target = tmpl::append<
+//         ::ah::vars_to_interpolate_to_target<volume_dim, ::Frame::Grid>,
+//         ::ah::vars_to_interpolate_to_target<volume_dim, ::Frame::Inertial>>;
+//     using compute_vars_to_interpolate = ah::ComputeHorizonVolumeQuantities;
+//     using tags_to_observe = ::ah::tags_for_observing;
+//     using surface_tags_to_observe = ::ah::surface_tags_for_observing;
+//     using compute_items_on_target = ::ah::compute_items_on_target<volume_dim>;
+//     using compute_target_points =
+//         intrp::TargetPoints::ApparentHorizon<AhB, ::Frame::Grid>;
+//     using post_interpolation_callback =
+//         intrp::callbacks::FindApparentHorizon<AhB, ::Frame::Grid>;
+//     using horizon_find_failure_callback =
+//         intrp::callbacks::IgnoreFailedApparentHorizon;
+//     using post_horizon_find_callbacks = tmpl::list<
+//         intrp::callbacks::ObserveTimeSeriesOnSurface<tags_to_observe, AhB>,
+//         intrp::callbacks::ObserveSurfaceData<surface_tags_to_observe, AhB>,
+//         ah::callbacks::ObserveCenters<AhB>>;
+//   };
 
   using control_systems = tmpl::list<control_system::Systems::Rotation<3>,
                                      control_system::Systems::Expansion<2>>;
@@ -235,8 +235,8 @@ struct EvolutionMetavars {
       tmpl::size<control_systems>::value > 0;
 
   using interpolation_target_tags = tmpl::push_back<
-      control_system::metafunctions::interpolation_target_tags<control_systems>,
-      AhA, AhB>;
+      control_system::metafunctions::interpolation_target_tags<control_systems>/*,
+      AhA, AhB*/>;
   using interpolator_source_vars = ::ah::source_vars<volume_dim>;
 
   using observe_fields = tmpl::append<
@@ -304,8 +304,8 @@ struct EvolutionMetavars {
         tmpl::pair<
             Event,
             tmpl::flatten<tmpl::list<
-                intrp::Events::Interpolate<3, AhA, interpolator_source_vars>,
-                intrp::Events::Interpolate<3, AhB, interpolator_source_vars>,
+                // intrp::Events::Interpolate<3, AhA, interpolator_source_vars>,
+                // intrp::Events::Interpolate<3, AhB, interpolator_source_vars>,
                 Events::MonitorMemory<3, ::Tags::Time>, Events::Completion,
                 dg::Events::field_observations<volume_dim, Tags::Time,
                                                observe_fields,
