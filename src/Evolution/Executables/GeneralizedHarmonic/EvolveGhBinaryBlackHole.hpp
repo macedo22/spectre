@@ -341,9 +341,8 @@ struct EvolutionMetavars {
         tmpl::pair<Trigger, tmpl::append<Triggers::logical_triggers,
                                          Triggers::time_triggers>>>;
   };
-
-  using observed_reduction_data_tags = observers::collect_reduction_data_tags<
-      tmpl::at<typename factory_creation::factory_classes, Event>>;
+  using observed_reduction_data_tags =
+      observers::collect_reduction_data_tags<tmpl::list<>>;
 
   // A tmpl::list of tags to be added to the GlobalCache by the
   // metavariables
