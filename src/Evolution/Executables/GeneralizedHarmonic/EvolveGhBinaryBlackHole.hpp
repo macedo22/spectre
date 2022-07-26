@@ -408,37 +408,70 @@ struct EvolutionMetavars {
       control_system::Actions::InitializeMeasurements<control_systems>,
       Initialization::Actions::RemoveOptionsAndTerminatePhase>;
 
+    // using gh_dg_element_array = DgElementArray<
+    //     EvolutionMetavars,
+    //     tmpl::flatten<tmpl::list<
+    //         Parallel::PhaseActions<Parallel::Phase::Initialization,
+    //                                initialization_actions>,
+    //         Parallel::PhaseActions<
+    //             Parallel::Phase::RegisterWithElementDataReader,
+    //             tmpl::list<importers::Actions::RegisterWithElementDataReader,
+    //                        Parallel::Actions::TerminatePhase>>,
+    //         Parallel::PhaseActions<
+    //             Parallel::Phase::ImportInitialData,
+    //             tmpl::list<GeneralizedHarmonic::Actions::ReadNumericInitialData<
+    //                            evolution::OptionTags::NumericInitialData>,
+    //                        GeneralizedHarmonic::Actions::SetNumericInitialData<
+    //                            evolution::OptionTags::NumericInitialData>,
+    //                        Parallel::Actions::TerminatePhase>>,
+    //         Parallel::PhaseActions<
+    //             Parallel::Phase::InitializeInitialDataDependentQuantities,
+    //             initialize_initial_data_dependent_quantities_actions>,
+    //         Parallel::PhaseActions<Parallel::Phase::Register,
+    //                                tmpl::list<dg_registration_list,
+    //                                           Parallel::Actions::TerminatePhase>>,
+    //         Parallel::PhaseActions<
+    //             Parallel::Phase::InitializeTimeStepperHistory,
+    //             SelfStart::self_start_procedure<step_actions, system>>,
+    //         Parallel::PhaseActions<
+    //             Parallel::Phase::Evolve,
+    //             tmpl::list<::domain::Actions::CheckFunctionsOfTimeAreReady,
+    //                        Actions::RunEventsAndTriggers,
+    //                        Actions::ChangeSlabSize, step_actions,
+    //                        Actions::AdvanceTime,
+    //                        PhaseControl::Actions::ExecutePhaseChange>>>>>;
   using gh_dg_element_array = DgElementArray<
-      EvolutionMetavars,
-      tmpl::flatten<tmpl::list<
-          Parallel::PhaseActions<Parallel::Phase::Initialization,
-                                 initialization_actions>,
-          Parallel::PhaseActions<
-              Parallel::Phase::RegisterWithElementDataReader,
-              tmpl::list<importers::Actions::RegisterWithElementDataReader,
-                         Parallel::Actions::TerminatePhase>>,
-          Parallel::PhaseActions<
-              Parallel::Phase::ImportInitialData,
-              tmpl::list<GeneralizedHarmonic::Actions::ReadNumericInitialData<
-                             evolution::OptionTags::NumericInitialData>,
-                         GeneralizedHarmonic::Actions::SetNumericInitialData<
-                             evolution::OptionTags::NumericInitialData>,
-                         Parallel::Actions::TerminatePhase>>,
-          Parallel::PhaseActions<
-              Parallel::Phase::InitializeInitialDataDependentQuantities,
-              initialize_initial_data_dependent_quantities_actions>,
-          Parallel::PhaseActions<Parallel::Phase::Register,
-                                 tmpl::list<dg_registration_list,
-                                            Parallel::Actions::TerminatePhase>>,
-          Parallel::PhaseActions<
-              Parallel::Phase::InitializeTimeStepperHistory,
-              SelfStart::self_start_procedure<step_actions, system>>,
-          Parallel::PhaseActions<
-              Parallel::Phase::Evolve,
-              tmpl::list<::domain::Actions::CheckFunctionsOfTimeAreReady,
-                         Actions::RunEventsAndTriggers, Actions::ChangeSlabSize,
-                         step_actions, Actions::AdvanceTime,
-                         PhaseControl::Actions::ExecutePhaseChange>>>>>;
+        EvolutionMetavars,
+        tmpl::flatten<tmpl::list<
+            Parallel::PhaseActions<Parallel::Phase::Initialization,
+                                   initialization_actions>,
+            Parallel::PhaseActions<
+                Parallel::Phase::RegisterWithElementDataReader,
+                tmpl::list<importers::Actions::RegisterWithElementDataReader,
+                           Parallel::Actions::TerminatePhase>>,
+            // Parallel::PhaseActions<
+            //     Parallel::Phase::ImportInitialData,
+            //     tmpl::list<GeneralizedHarmonic::Actions::ReadNumericInitialData<
+            //                    evolution::OptionTags::NumericInitialData>,
+            //                GeneralizedHarmonic::Actions::SetNumericInitialData<
+            //                    evolution::OptionTags::NumericInitialData>,
+            //                Parallel::Actions::TerminatePhase>>,
+            Parallel::PhaseActions<
+                Parallel::Phase::InitializeInitialDataDependentQuantities,
+                initialize_initial_data_dependent_quantities_actions>,
+            // Parallel::PhaseActions<Parallel::Phase::Register,
+            //                        tmpl::list<dg_registration_list,
+            //                                   Parallel::Actions::TerminatePhase>>,
+            // Parallel::PhaseActions<
+            //     Parallel::Phase::InitializeTimeStepperHistory,
+            //     SelfStart::self_start_procedure<step_actions, system>>,
+            Parallel::PhaseActions<
+                Parallel::Phase::Evolve,
+                tmpl::list<::domain::Actions::CheckFunctionsOfTimeAreReady,
+                           Actions::RunEventsAndTriggers,
+                           Actions::ChangeSlabSize, step_actions,
+                           Actions::AdvanceTime,
+                           PhaseControl::Actions::ExecutePhaseChange>>>>>;
 
   template <typename ParallelComponent>
   struct registration_list {
