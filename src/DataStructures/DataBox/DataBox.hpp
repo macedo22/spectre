@@ -533,20 +533,20 @@ constexpr DataBox<tmpl::list<Tags...>>::DataBox(
       sizeof...(Args) == 0 or sizeof...(Args) == sizeof...(AddMutableItemTags),
       "Must pass in as many arguments as AddTags, or none to "
       "default-construct them.");
-#ifdef SPECTRE_DEBUG
-  if constexpr (sizeof...(Args) > 0) {
-    // The check_argument_type call is very expensive compared to the majority
-    // of DataBox
-    expand_pack(detail::check_initialization_argument_type<
-                AddMutableItemTags, typename AddMutableItemTags::type,
-                std::decay_t<Args>>()...);
-  }
-#endif  // SPECTRE_DEBUG
+// #ifdef SPECTRE_DEBUG
+//   if constexpr (sizeof...(Args) > 0) {
+//     // The check_argument_type call is very expensive compared to the majority
+//     // of DataBox
+//     expand_pack(detail::check_initialization_argument_type<
+//                 AddMutableItemTags, typename AddMutableItemTags::type,
+//                 std::decay_t<Args>>()...);
+//   }
+// #endif  // SPECTRE_DEBUG
 
-  std::tuple<Args&&...> args_tuple(std::forward<Args>(args)...);
-  add_items_to_box(args_tuple, tmpl::list<AddMutableItemTags...>{},
-                   std::make_index_sequence<sizeof...(AddMutableItemTags)>{},
-                   AddImmutableItemTagsList{});
+//   std::tuple<Args&&...> args_tuple(std::forward<Args>(args)...);
+//   add_items_to_box(args_tuple, tmpl::list<AddMutableItemTags...>{},
+//                    std::make_index_sequence<sizeof...(AddMutableItemTags)>{},
+//                    AddImmutableItemTagsList{});
 }
 
 ////////////////////////////////////////////////////////////////
@@ -566,21 +566,21 @@ constexpr DataBox<tmpl::list<Tags...>>::DataBox(
     Box&& old_box, KeepTagsList /*meta*/,
     tmpl::list<AddMutableItemTags...> /*meta*/,
     tmpl::list<AddImmutableItemTags...> /*meta*/, Args&&... args) {
-#ifdef SPECTRE_DEBUG
-  if constexpr (sizeof...(Args) > 0) {
-    expand_pack(detail::check_initialization_argument_type<
-                AddMutableItemTags, typename AddMutableItemTags::type,
-                std::decay_t<Args>>()...);
-  }
-#endif  // SPECTRE_DEBUG
+// #ifdef SPECTRE_DEBUG
+//   if constexpr (sizeof...(Args) > 0) {
+//     expand_pack(detail::check_initialization_argument_type<
+//                 AddMutableItemTags, typename AddMutableItemTags::type,
+//                 std::decay_t<Args>>()...);
+//   }
+// #endif  // SPECTRE_DEBUG
 
-  merge_old_box(std::forward<Box>(old_box), KeepTagsList{});
+//   merge_old_box(std::forward<Box>(old_box), KeepTagsList{});
 
-  std::tuple<Args&&...> args_tuple(std::forward<Args>(args)...);
+//   std::tuple<Args&&...> args_tuple(std::forward<Args>(args)...);
 
-  add_items_to_box(args_tuple, tmpl::list<AddMutableItemTags...>{},
-                   std::make_index_sequence<sizeof...(AddMutableItemTags)>{},
-                   tmpl::list<AddImmutableItemTags...>{});
+//   add_items_to_box(args_tuple, tmpl::list<AddMutableItemTags...>{},
+//                    std::make_index_sequence<sizeof...(AddMutableItemTags)>{},
+//                    tmpl::list<AddImmutableItemTags...>{});
 }
 /// \endcond
 
@@ -1148,23 +1148,23 @@ static constexpr auto apply(F&& f, const DataBox<BoxTags>& box,
                     F, const_item_type<ArgumentTags, BoxTags>..., Args...>) {
     return F::apply(::db::get<ArgumentTags>(box)...,
                     std::forward<Args>(args)...);
-  } else if constexpr (::tt::is_callable_v<
+  } else /*if constexpr (::tt::is_callable_v<
                            std::remove_pointer_t<F>,
                            tmpl::conditional_t<
                                std::is_same_v<ArgumentTags, ::Tags::DataBox>,
                                const DataBox<BoxTags>&,
                                const_item_type<ArgumentTags, BoxTags>>...,
-                           Args...>) {
+                           Args...>)*/ {
     return std::forward<F>(f)(::db::get<ArgumentTags>(box)...,
                               std::forward<Args>(args)...);
-  } else {
+  } /*else {
     error_function_not_callable<
         std::remove_pointer_t<F>,
         tmpl::conditional_t<std::is_same_v<ArgumentTags, ::Tags::DataBox>,
                             const DataBox<BoxTags>&,
                             const_item_type<ArgumentTags, BoxTags>>...,
         Args...>();
-  }
+  }*/
 }
 }  // namespace detail
 
@@ -1260,11 +1260,11 @@ SPECTRE_ALWAYS_INLINE constexpr decltype(auto) mutate_apply(
                                         std::forward<Args>(l_args)...);
         },
         db::get<ArgumentTags>(*box)..., std::forward<Args>(args)...);
-  } else if constexpr (::tt::is_callable_v<
+  } else /*if constexpr (::tt::is_callable_v<
                            F,
                            const gsl::not_null<typename ReturnTags::type*>...,
                            const_item_type<ArgumentTags, BoxTags>...,
-                           Args...>) {
+                           Args...>)*/ {
     return ::db::mutate<ReturnTags...>(
         box,
         [&f](const gsl::not_null<typename ReturnTags::type*>... mutated_items,
@@ -1274,11 +1274,11 @@ SPECTRE_ALWAYS_INLINE constexpr decltype(auto) mutate_apply(
                    std::forward<Args>(l_args)...);
         },
         db::get<ArgumentTags>(*box)..., std::forward<Args>(args)...);
-  } else {
+  } /*else {
     error_function_not_callable<F, gsl::not_null<typename ReturnTags::type*>...,
                                 const_item_type<ArgumentTags, BoxTags>...,
                                 Args...>();
-  }
+  }*/
 }
 }  // namespace detail
 
