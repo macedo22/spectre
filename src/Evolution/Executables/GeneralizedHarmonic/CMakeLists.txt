@@ -31,6 +31,7 @@ set(LIBS_TO_LINK
   EventsAndDenseTriggers
   EventsAndTriggers
   Evolution
+  EvolveGhBinaryBlackHoleFactored
   GeneralRelativity
   GeneralizedHarmonic
   GeneralizedHarmonicGaugeSourceFunctions
@@ -98,5 +99,7 @@ add_spectre_parallel_executable(
   EvolveGhBinaryBlackHole
   Evolution/Executables/GeneralizedHarmonic
   "EvolutionMetavars"
-  "${LIBS_TO_LINK};ControlSystem;GeneralRelativitySolutions;Importers"
+  "${LIBS_TO_LINK};ControlSystem;EvolveGhBinaryBlackHoleFactored;GeneralRelativitySolutions;Importers"
 )
+
+add_subdirectory(EvolveGhBinaryBlackHoleFactored)

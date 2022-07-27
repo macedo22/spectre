@@ -1,10 +1,7 @@
 // Distributed under the MIT License.
 // See LICENSE.txt for details.
 
-#pragma once
-
-#include <cstdint>
-#include <vector>
+#include <cstddef>
 
 #include "ApparentHorizons/ComputeHorizonVolumeQuantities.hpp"
 #include "ApparentHorizons/ComputeHorizonVolumeQuantities.tpp"
@@ -140,52 +137,38 @@
 #include "Utilities/ErrorHandling/Error.hpp"
 #include "Utilities/ErrorHandling/FloatingPointExceptions.hpp"
 #include "Utilities/Functional.hpp"
+#include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/ProtocolHelpers.hpp"
 #include "Utilities/TMPL.hpp"
 
-/// \cond
-namespace Frame {
-// IWYU pragma: no_forward_declare MathFunction
-struct Inertial;
-}  // namespace Frame
-namespace PUP {
-class er;
-}  // namespace PUP
-namespace Parallel {
-template <typename Metavariables>
-class CProxy_GlobalCache;
-}  // namespace Parallel
-/// \endcond
+namespace test {
+struct idk {
+    using value = double;
+};
 
-// Note: this executable does not use GeneralizedHarmonicBase.hpp, because
-// using it would require a number of changes in GeneralizedHarmonicBase.hpp
-// that would apply only when evolving binary black holes. This would
-// require adding a number of compile-time switches, an outcome we would prefer
-// to avoid.
-struct EvolutionMetavars {
-  static constexpr size_t volume_dim = 3;
-  static constexpr bool use_damped_harmonic_rollon = false;
+constexpr size_t volume_dim = 3;
+//   constexpr bool use_damped_harmonic_rollon = false;
   using initial_data = evolution::NumericInitialData;
   using system = GeneralizedHarmonic::System<volume_dim>;
-  static constexpr dg::Formulation dg_formulation =
-      dg::Formulation::StrongInertial;
+//   constexpr dg::Formulation dg_formulation =
+//       dg::Formulation::StrongInertial;
   using temporal_id = Tags::TimeStepId;
-  static constexpr bool local_time_stepping = true;
-  // Set override_functions_of_time to true to override the
-  // 2nd or 3rd order piecewise polynomial functions of time using
-  // `read_spec_piecewise_polynomial()`
-  static constexpr bool override_functions_of_time = true;
+  constexpr bool local_time_stepping = true;
+//   // Set override_functions_of_time to true to override the
+//   // 2nd or 3rd order piecewise polynomial functions of time using
+//   // `read_spec_piecewise_polynomial()`
+//   constexpr bool override_functions_of_time = true;
 
-  using initialize_initial_data_dependent_quantities_actions =
-      tmpl::list<GeneralizedHarmonic::gauges::Actions::InitializeDampedHarmonic<
-                     volume_dim, use_damped_harmonic_rollon>,
-                 Parallel::Actions::TerminatePhase>;
+//   using initialize_initial_data_dependent_quantities_actions =
+//       tmpl::list<GeneralizedHarmonic::gauges::Actions::InitializeDampedHarmonic<
+//                      volume_dim, use_damped_harmonic_rollon>,
+//                  Parallel::Actions::TerminatePhase>;
 
-  // NOLINTNEXTLINE(google-runtime-references)
-  void pup(PUP::er& /*p*/) {}
-  struct domain : tt::ConformsTo<::domain::protocols::Metavariables> {
-    static constexpr bool enable_time_dependent_maps = true;
-  };
+//   // NOLINTNEXTLINE(google-runtime-references)
+//   void pup(PUP::er& /*p*/) {}
+//   struct domain : tt::ConformsTo<::domain::protocols::Metavariables> {
+//     static constexpr bool enable_time_dependent_maps = true;
+//   };
 
   struct AhA : tt::ConformsTo<intrp::protocols::InterpolationTargetTag> {
     using temporal_id = ::Tags::Time;
@@ -232,12 +215,12 @@ struct EvolutionMetavars {
   using control_systems = tmpl::list<control_system::Systems::Rotation<3>,
                                      control_system::Systems::Expansion<2>>;
 
-  static constexpr bool use_control_systems =
-      tmpl::size<control_systems>::value > 0;
+//   constexpr bool use_control_systems =
+//       tmpl::size<control_systems>::value > 0;
 
-  using interpolation_target_tags = tmpl::push_back<
-      control_system::metafunctions::interpolation_target_tags<control_systems>,
-      AhA, AhB>;
+//   using interpolation_target_tags = tmpl::push_back<
+//       control_system::metafunctions::interpolation_target_tags<control_systems>,
+//       AhA, AhB>;
   using interpolator_source_vars = ::ah::source_vars<volume_dim>;
 
   using observe_fields = tmpl::append<
@@ -294,9 +277,61 @@ struct EvolutionMetavars {
   using non_tensor_compute_tags =
       tmpl::list<::Events::Tags::ObserverMeshCompute<volume_dim>>;
 
-//   struct factory_creation
-//       : tt::ConformsTo<Options::protocols::FactoryCreation> {
-//     using factory_classes = tmpl::map<
+// template <typename AhA, typename AhB, typename control_systems, size_t volume_dim, typename interpolator_source_vars,
+//           typename observe_fields, typename non_tensor_compute_tags, typename system, bool local_time_stepping>
+struct factory_creation {
+    using factory_classes = tmpl::map<
+        tmpl::pair<DenseTrigger,
+                   tmpl::flatten<tmpl::list<
+                       control_system::control_system_triggers<control_systems>,
+                       DenseTriggers::standard_dense_triggers>>>,
+        tmpl::pair<DomainCreator<volume_dim>, domain_creators<volume_dim>>,
+        tmpl::pair<
+            Event,
+            tmpl::flatten<tmpl::list<
+                intrp::Events::Interpolate<3, AhA, interpolator_source_vars>,
+                intrp::Events::Interpolate<3, AhB, interpolator_source_vars>,
+                Events::MonitorMemory<3, ::Tags::Time>, Events::Completion,
+                dg::Events::field_observations<volume_dim, Tags::Time,
+                                               observe_fields,
+                                               non_tensor_compute_tags>,
+                control_system::control_system_events<control_systems>,
+                Events::time_events<system>>>>,
+        tmpl::pair<GeneralizedHarmonic::BoundaryConditions::BoundaryCondition<
+                       volume_dim>,
+                   tmpl::list<GeneralizedHarmonic::BoundaryConditions::
+                                  ConstraintPreservingBjorhus<volume_dim>,
+                              GeneralizedHarmonic::BoundaryConditions::
+                                  DirichletMinkowski<volume_dim>,
+                              GeneralizedHarmonic::BoundaryConditions::Outflow<
+                                  volume_dim>>>,
+        tmpl::pair<LtsTimeStepper, TimeSteppers::lts_time_steppers>,
+        tmpl::pair<
+            PhaseChange,
+            tmpl::list<
+                PhaseControl::VisitAndReturn<Parallel::Phase::LoadBalancing>,
+                PhaseControl::VisitAndReturn<Parallel::Phase::WriteCheckpoint>,
+                PhaseControl::CheckpointAndExitAfterWallclock>>,
+        tmpl::pair<StepChooser<StepChooserUse::LtsStep>,
+                   StepChoosers::standard_step_choosers<system>>,
+        tmpl::pair<
+            StepChooser<StepChooserUse::Slab>,
+            StepChoosers::standard_slab_choosers<system, local_time_stepping>>,
+        tmpl::pair<StepController, StepControllers::standard_step_controllers>,
+        tmpl::pair<TimeSequence<double>,
+                   TimeSequences::all_time_sequences<double>>,
+        tmpl::pair<TimeSequence<std::uint64_t>,
+                   TimeSequences::all_time_sequences<std::uint64_t>>,
+        tmpl::pair<TimeStepper, TimeSteppers::time_steppers>,
+        tmpl::pair<Trigger, tmpl::append<Triggers::logical_triggers,
+                                         Triggers::time_triggers>>>;
+  };
+
+// template <typename AhA, typename AhB, typename control_systems, size_t volume_dim, typename interpolator_source_vars,
+//           typename observe_fields, typename non_tensor_compute_tags, typename system, bool local_time_stepping>
+// struct factory_creation<AhA, AhB, control_systems, volume_dim, interpolator_source_vars,
+//           observe_fields, non_tensor_compute_tags, system, local_time_stepping>::factory_classes {
+//   using type = tmpl::map<
 //         tmpl::pair<DenseTrigger,
 //                    tmpl::flatten<tmpl::list<
 //                        control_system::control_system_triggers<control_systems>,
@@ -341,161 +376,14 @@ struct EvolutionMetavars {
 //         tmpl::pair<TimeStepper, TimeSteppers::time_steppers>,
 //         tmpl::pair<Trigger, tmpl::append<Triggers::logical_triggers,
 //                                          Triggers::time_triggers>>>;
-//   };
+// };
+}  // namespace test
 
-//   using factory_creation =
-//       typename ::test::factory_creation<AhA, AhB, control_systems, volume_dim, interpolator_source_vars,
-//           observe_fields, non_tensor_compute_tags, system, local_time_stepping>;
+// #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
+// #define INSTANTIATE(_, data)                                                 \
+//   template struct GeneralizedHarmonic::factory_creation<DIM(data)>;
 
-//   using observed_reduction_data_tags = observers::collect_reduction_data_tags<
-//       tmpl::at<typename factory_creation::factory_classes, Event>>;
+// GENERATE_INSTANTIATIONS(INSTANTIATE, (1, 2, 3))
 
-  using factory_creation =
-      typename ::test::factory_creation;
-
-//   using observed_reduction_data_tags = observers::collect_reduction_data_tags<
-//       tmpl::at<typename factory_creation::factory_classes::type, Event>>;
-
-  using observed_reduction_data_tags = observers::collect_reduction_data_tags<
-      tmpl::flatten<tmpl::list<
-                intrp::Events::Interpolate<3, AhA, interpolator_source_vars>,
-                intrp::Events::Interpolate<3, AhB, interpolator_source_vars>,
-                Events::MonitorMemory<3, ::Tags::Time>, Events::Completion,
-                dg::Events::field_observations<volume_dim, Tags::Time,
-                                               observe_fields,
-                                               non_tensor_compute_tags>,
-                control_system::control_system_events<control_systems>,
-                Events::time_events<system>>>>;
-
-  // A tmpl::list of tags to be added to the GlobalCache by the
-  // metavariables
-  using const_global_cache_tags = tmpl::list<
-      GeneralizedHarmonic::ConstraintDamping::Tags::DampingFunctionGamma0<
-          volume_dim, Frame::Grid>,
-      GeneralizedHarmonic::ConstraintDamping::Tags::DampingFunctionGamma1<
-          volume_dim, Frame::Grid>,
-      GeneralizedHarmonic::ConstraintDamping::Tags::DampingFunctionGamma2<
-          volume_dim, Frame::Grid>>;
-
-  using dg_registration_list =
-      tmpl::list<observers::Actions::RegisterEventsWithObservers,
-                 intrp::Actions::RegisterElementWithInterpolator>;
-
-  static constexpr std::array<Parallel::Phase, 8> default_phase_order{
-      {Parallel::Phase::Initialization,
-       Parallel::Phase::RegisterWithElementDataReader,
-       Parallel::Phase::ImportInitialData,
-       Parallel::Phase::InitializeInitialDataDependentQuantities,
-       Parallel::Phase::Register, Parallel::Phase::InitializeTimeStepperHistory,
-       Parallel::Phase::Evolve, Parallel::Phase::Exit}};
-
-  using step_actions = tmpl::list<
-      evolution::dg::Actions::ComputeTimeDerivative<EvolutionMetavars>,
-      tmpl::conditional_t<
-          local_time_stepping,
-          tmpl::list<evolution::Actions::RunEventsAndDenseTriggers<>,
-                     evolution::dg::Actions::ApplyLtsBoundaryCorrections<
-                         EvolutionMetavars>>,
-          tmpl::list<
-              evolution::dg::Actions::ApplyBoundaryCorrectionsToTimeDerivative<
-                  EvolutionMetavars>,
-              Actions::RecordTimeStepperData<>,
-              evolution::Actions::RunEventsAndDenseTriggers<>,
-              Actions::UpdateU<>,
-              dg::Actions::Filter<
-                  Filters::Exponential<0>,
-                  tmpl::list<gr::Tags::SpacetimeMetric<
-                                 volume_dim, Frame::Inertial, DataVector>,
-                             GeneralizedHarmonic::Tags::Pi<volume_dim,
-                                                           Frame::Inertial>,
-                             GeneralizedHarmonic::Tags::Phi<
-                                 volume_dim, Frame::Inertial>>>>>>;
-
-  using initialization_actions = tmpl::list<
-      Initialization::Actions::TimeAndTimeStep<EvolutionMetavars>,
-      evolution::dg::Initialization::Domain<
-          volume_dim, override_functions_of_time, use_control_systems>,
-      Initialization::Actions::NonconservativeSystem<system>,
-      Initialization::Actions::AddComputeTags<::Tags::DerivCompute<
-          typename system::variables_tag,
-          ::domain::Tags::InverseJacobian<volume_dim, Frame::ElementLogical,
-                                          Frame::Inertial>,
-          typename system::gradient_variables>>,
-      Initialization::Actions::TimeStepperHistory<EvolutionMetavars>,
-      GeneralizedHarmonic::Actions::InitializeGhAnd3Plus1Variables<volume_dim>,
-      Initialization::Actions::AddComputeTags<tmpl::push_back<
-          StepChoosers::step_chooser_compute_tags<EvolutionMetavars>>>,
-      ::evolution::dg::Initialization::Mortars<volume_dim, system>,
-      evolution::Actions::InitializeRunEventsAndDenseTriggers,
-      control_system::Actions::InitializeMeasurements<control_systems>,
-      Initialization::Actions::RemoveOptionsAndTerminatePhase>;
-
-  using gh_dg_element_array = DgElementArray<
-      EvolutionMetavars,
-      tmpl::flatten<tmpl::list<
-          Parallel::PhaseActions<Parallel::Phase::Initialization,
-                                 initialization_actions>,
-          Parallel::PhaseActions<
-              Parallel::Phase::RegisterWithElementDataReader,
-              tmpl::list<importers::Actions::RegisterWithElementDataReader,
-                         Parallel::Actions::TerminatePhase>>,
-          Parallel::PhaseActions<
-              Parallel::Phase::ImportInitialData,
-              tmpl::list<GeneralizedHarmonic::Actions::ReadNumericInitialData<
-                             evolution::OptionTags::NumericInitialData>,
-                         GeneralizedHarmonic::Actions::SetNumericInitialData<
-                             evolution::OptionTags::NumericInitialData>,
-                         Parallel::Actions::TerminatePhase>>,
-          Parallel::PhaseActions<
-              Parallel::Phase::InitializeInitialDataDependentQuantities,
-              initialize_initial_data_dependent_quantities_actions>,
-          Parallel::PhaseActions<Parallel::Phase::Register,
-                                 tmpl::list<dg_registration_list,
-                                            Parallel::Actions::TerminatePhase>>,
-          Parallel::PhaseActions<
-              Parallel::Phase::InitializeTimeStepperHistory,
-              SelfStart::self_start_procedure<step_actions, system>>,
-          Parallel::PhaseActions<
-              Parallel::Phase::Evolve,
-              tmpl::list<::domain::Actions::CheckFunctionsOfTimeAreReady,
-                         Actions::RunEventsAndTriggers, Actions::ChangeSlabSize,
-                         step_actions, Actions::AdvanceTime,
-                         PhaseControl::Actions::ExecutePhaseChange>>>>>;
-
-  template <typename ParallelComponent>
-  struct registration_list {
-    using type = std::conditional_t<
-        std::is_same_v<ParallelComponent, gh_dg_element_array>,
-        dg_registration_list, tmpl::list<>>;
-  };
-
-  using component_list = tmpl::flatten<tmpl::list<
-      observers::Observer<EvolutionMetavars>,
-      observers::ObserverWriter<EvolutionMetavars>,
-      importers::ElementDataReader<EvolutionMetavars>,
-      mem_monitor::MemoryMonitor<EvolutionMetavars>,
-      intrp::Interpolator<EvolutionMetavars>,
-      tmpl::transform<interpolation_target_tags,
-                      tmpl::bind<intrp::InterpolationTarget,
-                                 tmpl::pin<EvolutionMetavars>, tmpl::_1>>,
-      control_system::control_components<EvolutionMetavars, control_systems>,
-      gh_dg_element_array>>;
-
-  static constexpr Options::String help{
-      "Evolve a binary black hole using the Generalized Harmonic "
-      "formulation\n"};
-};
-
-static const std::vector<void (*)()> charm_init_node_funcs{
-    &setup_error_handling,
-    &setup_memory_allocation_failure_reporting,
-    &disable_openblas_multithreading,
-    &domain::creators::time_dependence::register_derived_with_charm,
-    &domain::FunctionsOfTime::register_derived_with_charm,
-    &GeneralizedHarmonic::BoundaryCorrections::register_derived_with_charm,
-    &domain::creators::register_derived_with_charm,
-    &GeneralizedHarmonic::ConstraintDamping::register_derived_with_charm,
-    &Parallel::register_factory_classes_with_charm<metavariables>};
-
-static const std::vector<void (*)()> charm_init_proc_funcs{
-    &enable_floating_point_exceptions};
+// #undef INSTANTIATE
+// #undef DIM
