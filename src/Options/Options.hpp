@@ -70,16 +70,7 @@ inline std::ostream& operator<<(std::ostream& s, const Context& c) {
 /// \param m error message, as for ERROR
 #define PARSE_ERROR(context, m)                                         \
   do {                                                                  \
-    if ((context).top_level) {                                          \
-      /* clang-tidy: macro arg in parentheses */                        \
-      ERROR_NO_TRACE("\n" << (context) << m); /* NOLINT */              \
-    } else {                                                            \
-      std::ostringstream avoid_name_collisions_PARSE_ERROR;             \
-      /* clang-tidy: macro arg in parentheses */                        \
-      avoid_name_collisions_PARSE_ERROR << (context) << m; /* NOLINT */ \
-      throw ::Options::Options_detail::propagate_context(               \
-          avoid_name_collisions_PARSE_ERROR.str());                     \
-    }                                                                   \
+    throw std::runtime_error("Failed");                                 \
   } while (false)
 
 namespace Options_detail {
