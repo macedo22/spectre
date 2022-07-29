@@ -74,7 +74,12 @@ inline std::ostream& operator<<(std::ostream& s, const Context& c) {
       /* clang-tidy: macro arg in parentheses */                        \
       ERROR_NO_TRACE(""); /* NOLINT */                                  \
     } else {                                                            \
-      throw ::Options::Options_detail::propagate_context("");           \
+      std::ostringstream avoid_name_collisions_PARSE_ERROR;             \
+      /* clang-tidy: macro arg in parentheses */                        \
+      avoid_name_collisions_PARSE_ERROR << "";             /* NOLINT */ \
+      avoid_name_collisions_PARSE_ERROR.str();                          \
+      throw ::Options::Options_detail::propagate_context(               \
+          avoid_name_collisions_PARSE_ERROR.str());                     \
     }                                                                   \
   } while (false)
 
