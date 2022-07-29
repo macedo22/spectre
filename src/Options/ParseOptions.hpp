@@ -95,15 +95,12 @@ T Option::parse_as() const {
   try {
     // yaml-cpp's `as` method won't parse empty nodes, so we need to
     // inline a bit of its logic.
-    // Options_detail::wrap_create_types<T, Metavariables> result{};
-    // if (YAML::convert<decltype(result)>::decode(node(), result)) {
-    //   return Options_detail::unwrap_create_types(std::move(result));
-    // }
-    YAML::Node test_node(5.0);
-    const auto result =
-        YAML::convert<YAML::Node>::decode(test_node, test_node);
+    Options_detail::wrap_create_types<T, Metavariables> result{};
+    // Calls overload at ParseOptions.hpp line 1125
+    if (YAML::convert<decltype(result)>::decode(node(), result)) {
+      return Options_detail::unwrap_create_types(std::move(result));
+    }
     // clang-tidy: thrown exception is not nothrow copy constructible
-    return T{};
     throw YAML::BadConversion(node().Mark());  // NOLINT
   } catch (const YAML::BadConversion& e) {
     // This happens when trying to parse an empty value as a container
@@ -1130,8 +1127,8 @@ struct YAML::convert<Options::Options_detail::CreateWrapper<T, Metavariables>> {
     context.top_level = false;
     context.append("While creating a " + pretty_type::name<T>());
     Options::Option options(node, std::move(context));
-    rhs = Options::Options_detail::CreateWrapper<T, Metavariables>{
-        Options::create_from_yaml<T>::template create<Metavariables>(options)};
+    // rhs = Options::Options_detail::CreateWrapper<T, Metavariables>{
+    //     Options::create_from_yaml<T>::template create<Metavariables>(options)};
     return true;
   }
 };
