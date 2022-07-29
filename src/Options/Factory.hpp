@@ -122,18 +122,18 @@ std::unique_ptr<BaseClass> create(const Option& options) {
   }
 
   std::unique_ptr<BaseClass> result;
-  tmpl::for_each<creatable_classes>(
-      [&id, &derived_opts, &result](auto derived_v) {
-        using Derived = tmpl::type_from<decltype(derived_v)>;
-        if (pretty_type::name<Derived>() == id) {
-          ASSERT(result == nullptr, "Duplicate factory id: " << id);
-          result = std::make_unique<Derived>(
-              derived_opts.parse_as<Derived, Metavariables>());
-        }
-      });
-  if (result != nullptr) {
+  // tmpl::for_each<creatable_classes>(
+  //     [&id, &derived_opts, &result](auto derived_v) {
+  //       using Derived = tmpl::type_from<decltype(derived_v)>;
+  //       if (pretty_type::name<Derived>() == id) {
+  //         ASSERT(result == nullptr, "Duplicate factory id: " << id);
+  //         result = std::make_unique<Derived>(
+  //             derived_opts.parse_as<Derived, Metavariables>());
+  //       }
+  //     });
+  // if (result != nullptr) {
     return result;
-  }
+  // }
   PARSE_ERROR(derived_opts.context(),
               "Unknown Id '" << id << "'\n"
               << help_derived<creatable_classes>());
