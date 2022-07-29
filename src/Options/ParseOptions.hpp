@@ -95,11 +95,15 @@ T Option::parse_as() const {
   try {
     // yaml-cpp's `as` method won't parse empty nodes, so we need to
     // inline a bit of its logic.
-    Options_detail::wrap_create_types<T, Metavariables> result{};
-    if (true /*YAML::convert<decltype(result)>::decode(node(), result)*/) {
-      return Options_detail::unwrap_create_types(std::move(result));
-    }
+    // Options_detail::wrap_create_types<T, Metavariables> result{};
+    // if (YAML::convert<decltype(result)>::decode(node(), result)) {
+    //   return Options_detail::unwrap_create_types(std::move(result));
+    // }
+    YAML::Node test_node(5.0);
+    const auto result =
+        YAML::convert<YAML::Node>::decode(test_node, test_node);
     // clang-tidy: thrown exception is not nothrow copy constructible
+    return T{};
     throw YAML::BadConversion(node().Mark());  // NOLINT
   } catch (const YAML::BadConversion& e) {
     // This happens when trying to parse an empty value as a container
