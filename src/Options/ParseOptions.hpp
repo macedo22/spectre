@@ -1018,33 +1018,6 @@ T create_from_yaml<T>::create(const Option& options) {
   Parser<typename Options_detail::get_options_list<T, Metavariables>::type>
       parser(T::help);
   parser.parse(options);
-  return parser.template apply_all<Metavariables>([&options](
-                                                      auto parsed_options,
-                                                      auto&&... args) {
-    if constexpr (std::is_constructible<T, decltype(parsed_options),
-                                        decltype(std::move(args))...,
-                                        const Context&, Metavariables>{}) {
-      return T(parsed_options, std::move(args)..., options.context(),
-               Metavariables{});
-    } else if constexpr (std::is_constructible<T, decltype(parsed_options),
-                                               decltype(std::move(args))...,
-                                               const Context&>{}) {
-      return T(parsed_options, std::move(args)..., options.context());
-    } else if constexpr (std::is_constructible<T, decltype(parsed_options),
-                                               decltype(
-                                                   std::move(args))...>{}) {
-      return T(parsed_options, std::move(args)...);
-    } else if constexpr (std::is_constructible<T, decltype(std::move(args))...,
-                                               const Context&,
-                                               Metavariables>{}) {
-      return T(std::move(args)..., options.context(), Metavariables{});
-    } else if constexpr (std::is_constructible<T, decltype(std::move(args))...,
-                                               const Context&>{}) {
-      return T(std::move(args)..., options.context());
-    } else {
-      return T{std::move(args)...};
-    }
-  });
 }
 
 // yaml-cpp doesn't handle C++11 types yet
