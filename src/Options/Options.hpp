@@ -49,6 +49,15 @@ struct Context {
 
   /// Append a line to the context.  Automatically appends a colon.
   void append(const std::string& c) { context += c + ":\n"; }
+
+  inline std::string to_str() const {
+    std::string s = context;
+    if (line >= 0 and column >= 0) {
+      s += "At line " + std::to_string(line + 1) + " column " +
+           std::to_string(column + 1) + ":\n";
+    }
+    return s;
+  }
 };
 
 inline std::ostream& operator<<(std::ostream& s, const Context& c) {
@@ -68,18 +77,16 @@ inline std::ostream& operator<<(std::ostream& s, const Context& c) {
 ///
 /// \param context Context used to print a parsing traceback
 /// \param m error message, as for ERROR
-#define PARSE_ERROR(context, m)                                         \
-  do {                                                                  \
-    if ((context).top_level) {                                          \
-      /* clang-tidy: macro arg in parentheses */                        \
-      ERROR_NO_TRACE("\n" << (context) << m); /* NOLINT */              \
-    } else {                                                            \
-      std::ostringstream avoid_name_collisions_PARSE_ERROR;             \
-      /* clang-tidy: macro arg in parentheses */                        \
-      avoid_name_collisions_PARSE_ERROR << (context) << m; /* NOLINT */ \
-      throw ::Options::Options_detail::propagate_context(               \
-          avoid_name_collisions_PARSE_ERROR.str());                     \
-    }                                                                   \
+#define PARSE_ERROR(context, m)                                             \
+  do {                                                                      \
+    if ((context).top_level) {                                              \
+      /* clang-tidy: macro arg in parentheses */                            \
+      ERROR_NO_TRACE(std::string("\n") + context.to_str() +                 \
+                     m.str()); /* NOLINT */                                 \
+    } else {                                                                \
+      throw ::Options::Options_detail::propagate_context(context.to_str() + \
+                                                         m.str());          \
+    }                                                                       \
   } while (false)
 
 namespace Options_detail {
