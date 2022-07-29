@@ -70,7 +70,9 @@ inline std::ostream& operator<<(std::ostream& s, const Context& c) {
 /// \param m error message, as for ERROR
 #define PARSE_ERROR(context, m)                                         \
   do {                                                                  \
-    if ((context).top_level) {                                          \
+    if (__builtin_is_constant_evaluated()) {                            \
+      throw std::runtime_error("Failed");                               \
+    } else if ((context).top_level) {                                   \
       /* clang-tidy: macro arg in parentheses */                        \
       ERROR_NO_TRACE("\n" << (context) << m); /* NOLINT */              \
     } else {                                                            \
