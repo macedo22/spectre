@@ -1018,7 +1018,7 @@ template <typename Metavariables>
 T create_from_yaml<T>::create(const Option& options) {
   Parser<typename Options_detail::get_options_list<T, Metavariables>::type>
       parser(T::help);
-  parser.parse(options);
+  // parser.parse(options);
   return T{};
   // return parser.template apply_all<Metavariables>([&options](
   //                                                     auto parsed_options,
