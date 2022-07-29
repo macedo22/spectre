@@ -96,7 +96,7 @@ T Option::parse_as() const {
     // yaml-cpp's `as` method won't parse empty nodes, so we need to
     // inline a bit of its logic.
     Options_detail::wrap_create_types<T, Metavariables> result{};
-    if (YAML::convert<decltype(result)>::decode(node(), result)) {
+    if (true /*YAML::convert<decltype(result)>::decode(node(), result)*/) {
       return Options_detail::unwrap_create_types(std::move(result));
     }
     // clang-tidy: thrown exception is not nothrow copy constructible
