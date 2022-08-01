@@ -542,43 +542,43 @@ struct get_impl<Tag, Metavariables, Tag> {
 
     auto t = option.parse_as<typename Tag::type, Metavariables>();
 
-    if constexpr (Options_detail::has_suggested<Tag>::value) {
-      static_assert(
-          std::is_same_v<decltype(Tag::suggested_value()), typename Tag::type>,
-          "Suggested value is not of the same type as the option.");
+    // if constexpr (Options_detail::has_suggested<Tag>::value) {
+    //   static_assert(
+    //       std::is_same_v<decltype(Tag::suggested_value()), typename Tag::type>,
+    //       "Suggested value is not of the same type as the option.");
 
-      // This can be easily relaxed, but using it would require
-      // writing comparison operators for abstract base classes.  If
-      // someone wants this enough to go though the effort of doing
-      // that, it would just require comparing the dereferenced
-      // pointers below to decide whether the suggestion was followed.
-      static_assert(not tt::is_a_v<std::unique_ptr, typename Tag::type>,
-                    "Suggestions are not supported for pointer types.");
+    //   // This can be easily relaxed, but using it would require
+    //   // writing comparison operators for abstract base classes.  If
+    //   // someone wants this enough to go though the effort of doing
+    //   // that, it would just require comparing the dereferenced
+    //   // pointers below to decide whether the suggestion was followed.
+    //   static_assert(not tt::is_a_v<std::unique_ptr, typename Tag::type>,
+    //                 "Suggestions are not supported for pointer types.");
 
-      const auto suggested_value = Tag::suggested_value();
-      {
-        Context context;
-        context.append("Checking SUGGESTED value for " +
-                       pretty_type::name<Tag>());
-        opts.template check_lower_bound_on_size<Tag>(suggested_value, context);
-        opts.template check_upper_bound_on_size<Tag>(suggested_value, context);
-        opts.template check_lower_bound<Tag>(suggested_value, context);
-        opts.template check_upper_bound<Tag>(suggested_value, context);
-      }
+    //   const auto suggested_value = Tag::suggested_value();
+    //   {
+    //     Context context;
+    //     context.append("Checking SUGGESTED value for " +
+    //                    pretty_type::name<Tag>());
+    //     opts.template check_lower_bound_on_size<Tag>(suggested_value, context);
+    //     opts.template check_upper_bound_on_size<Tag>(suggested_value, context);
+    //     opts.template check_lower_bound<Tag>(suggested_value, context);
+    //     opts.template check_upper_bound<Tag>(suggested_value, context);
+    //   }
 
-      if (t != suggested_value) {
-        Parallel::printf_error(
-            "%s, line %d:\n  Specified: %s\n  Suggested: %s\n",
-            label, option.context().line + 1,
-            (MakeString{} << std::boolalpha << t),
-            (MakeString{} << std::boolalpha << suggested_value));
-      }
-    }
+    //   if (t != suggested_value) {
+    //     Parallel::printf_error(
+    //         "%s, line %d:\n  Specified: %s\n  Suggested: %s\n",
+    //         label, option.context().line + 1,
+    //         (MakeString{} << std::boolalpha << t),
+    //         (MakeString{} << std::boolalpha << suggested_value));
+    //   }
+    // }
 
-    opts.template check_lower_bound_on_size<Tag>(t, option.context());
-    opts.template check_upper_bound_on_size<Tag>(t, option.context());
-    opts.template check_lower_bound<Tag>(t, option.context());
-    opts.template check_upper_bound<Tag>(t, option.context());
+    // opts.template check_lower_bound_on_size<Tag>(t, option.context());
+    // opts.template check_upper_bound_on_size<Tag>(t, option.context());
+    // opts.template check_lower_bound<Tag>(t, option.context());
+    // opts.template check_upper_bound<Tag>(t, option.context());
     return t;
   }
 };
