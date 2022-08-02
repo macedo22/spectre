@@ -96,7 +96,7 @@ T Option::parse_as() const {
     // yaml-cpp's `as` method won't parse empty nodes, so we need to
     // inline a bit of its logic.
     Options_detail::wrap_create_types<T, Metavariables> result{};
-    if (YAML::convert<decltype(result)>::decode(node(), result)) {
+    if (YAML::convert<decltype(result)>::decode(node(), result)) { // goes to ParseOptions.hpp:1130
       return Options_detail::unwrap_create_types(std::move(result));
     }
     // clang-tidy: thrown exception is not nothrow copy constructible
@@ -519,7 +519,7 @@ struct get_impl {
     return tuples::get<typename Parser<
         OptionList, Group>::template SubgroupParser<Subgroup>>(
                opts.subgroup_parsers_)
-        .template get<Tag, Metavariables>();
+        .template get<Tag, Metavariables>(); // goes to ParseOptions.hpp:598
   }
 };
 
@@ -540,7 +540,7 @@ struct get_impl<Tag, Metavariables, Tag> {
     Option option(supplied_option->second, opts.context_);
     option.append_context("While parsing option " + label);
 
-    auto t = option.parse_as<typename Tag::type, Metavariables>();
+    auto t = option.parse_as<typename Tag::type, Metavariables>();  // goes to ParseOptions.hpp:99
 
     if constexpr (Options_detail::has_suggested<Tag>::value) {
       static_assert(
@@ -594,7 +594,7 @@ struct get_impl<InputSource, Metavariables, InputSource> {
 
 template <typename OptionList, typename Group>
 template <typename Tag, typename Metavariables>
-typename Tag::type Parser<OptionList, Group>::get() const {
+typename Tag::type Parser<OptionList, Group>::get() const { // goes to ParseOptions.hpp:522 and back here a couple times, then eventually goes to ParseOptions.hpp:543
   return Options_detail::get_impl<
       Tag, Metavariables,
       typename Options_detail::find_subgroup<Tag, Group>::type>::apply(*this);
@@ -608,7 +608,7 @@ template <typename... Tags>
 struct apply_helper<tmpl::list<Tags...>> {
   template <typename Metavariables, typename Options, typename F>
   static decltype(auto) apply(const Options& opts, F&& func) {
-    return func(opts.template get<Tags, Metavariables>()...);
+    return func(opts.template get<Tags, Metavariables>()...); // goes to ParseOptions.hpp:598
   }
 };
 }  // namespace Options_detail
@@ -618,7 +618,7 @@ struct apply_helper<tmpl::list<Tags...>> {
 template <typename OptionList, typename Group>
 template <typename TagList, typename Metavariables, typename F>
 decltype(auto) Parser<OptionList, Group>::apply(F&& func) const {
-  return Options_detail::apply_helper<TagList>::template apply<Metavariables>(
+  return Options_detail::apply_helper<TagList>::template apply<Metavariables>( // goes to ParseOptions.hpp:611
       *this, std::forward<F>(func));
 }
 
@@ -1121,7 +1121,7 @@ template <typename T, typename Metavariables>
 struct YAML::convert<Options::Options_detail::CreateWrapper<T, Metavariables>> {
   static bool decode(
       const Node& node,
-      Options::Options_detail::CreateWrapper<T, Metavariables>& rhs) {
+      Options::Options_detail::CreateWrapper<T, Metavariables>& rhs) { // CreateWrapper goes to Factory.hpp:147
     Options::Context context;
     context.top_level = false;
     context.append("While creating a " + pretty_type::name<T>());

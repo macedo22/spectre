@@ -122,12 +122,12 @@ std::unique_ptr<BaseClass> create(const Option& options) {
   }
 
   std::unique_ptr<BaseClass> result;
-  tmpl::for_each<creatable_classes>(
+  tmpl::for_each<creatable_classes>( // enter the lambda
       [&id, &derived_opts, &result](auto derived_v) {
         using Derived = tmpl::type_from<decltype(derived_v)>;
         if (pretty_type::name<Derived>() == id) {
           ASSERT(result == nullptr, "Duplicate factory id: " << id);
-          result = std::make_unique<Derived>(
+          result = std::make_unique<Derived>( // goes to ParseOptions.hpp:99 and ends calls YAML:::convert::decode again
               derived_opts.parse_as<Derived, Metavariables>());
         }
       });
@@ -144,7 +144,7 @@ template <typename T>
 struct create_from_yaml<std::unique_ptr<T>> {
   template <typename Metavariables>
   static std::unique_ptr<T> create(const Option& options) {
-    return Factory_detail::create<T, Metavariables>(options);
+    return Factory_detail::create<T, Metavariables>(options); // goes to Factory.hpp:125
   }
 };
 }  // namespace Options
