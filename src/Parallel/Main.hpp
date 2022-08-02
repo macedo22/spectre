@@ -262,60 +262,60 @@ Main<Metavariables>::Main(CkArgMsg* msg) {
         ;
     // clang-format on
 
-    constexpr bool has_options = tmpl::size<option_list>::value > 0;
-    // Add input-file option if it makes sense
-    Overloader{
-        [&command_line_options](std::true_type /*meta*/, auto mv,
-                                int /*gcc_bug*/)
-            -> std::void_t<
-                decltype(tmpl::type_from<decltype(mv)>::input_file)> {
-          // Metavariables has options and default input file name
-          command_line_options.add_options()(
-              "input-file",
-              bpo::value<std::string>()->default_value(
-                  tmpl::type_from<decltype(mv)>::input_file),
-              "Input file name");
-        },
-        [&command_line_options](std::true_type /*meta*/, auto /*mv*/,
-                                auto... /*unused*/) {
-          // Metavariables has options and no default input file name
-          command_line_options.add_options()(
-              "input-file", bpo::value<std::string>(), "Input file name");
-        },
-        [](std::false_type /*meta*/, auto mv, int /*gcc_bug*/)
-            -> std::void_t<
-                decltype(tmpl::type_from<decltype(mv)>::input_file)> {
-          // Metavariables has no options and default input file name
+    // constexpr bool has_options = tmpl::size<option_list>::value > 0;
+    // // Add input-file option if it makes sense
+    // Overloader{
+    //     [&command_line_options](std::true_type /*meta*/, auto mv,
+    //                             int /*gcc_bug*/)
+    //         -> std::void_t<
+    //             decltype(tmpl::type_from<decltype(mv)>::input_file)> {
+    //       // Metavariables has options and default input file name
+    //       command_line_options.add_options()(
+    //           "input-file",
+    //           bpo::value<std::string>()->default_value(
+    //               tmpl::type_from<decltype(mv)>::input_file),
+    //           "Input file name");
+    //     },
+    //     [&command_line_options](std::true_type /*meta*/, auto /*mv*/,
+    //                             auto... /*unused*/) {
+    //       // Metavariables has options and no default input file name
+    //       command_line_options.add_options()(
+    //           "input-file", bpo::value<std::string>(), "Input file name");
+    //     },
+    //     [](std::false_type /*meta*/, auto mv, int /*gcc_bug*/)
+    //         -> std::void_t<
+    //             decltype(tmpl::type_from<decltype(mv)>::input_file)> {
+    //       // Metavariables has no options and default input file name
 
-          // always false, but must depend on mv
-          static_assert(std::is_same_v<decltype(mv), void>,
-                        "Metavariables supplies input file name, "
-                        "but there are no options");
-          ERROR("This should have failed at compile time");
-        },
-        [](std::false_type /*meta*/, auto... /*unused*/) {
-          // Metavariables has no options and no default input file name
-        }}(std::bool_constant<has_options>{}, tmpl::type_<Metavariables>{}, 0);
+    //       // always false, but must depend on mv
+    //       static_assert(std::is_same_v<decltype(mv), void>,
+    //                     "Metavariables supplies input file name, "
+    //                     "but there are no options");
+    //       ERROR("This should have failed at compile time");
+    //     },
+    //     [](std::false_type /*meta*/, auto... /*unused*/) {
+    //       // Metavariables has no options and no default input file name
+    //     }}(std::bool_constant<has_options>{}, tmpl::type_<Metavariables>{}, 0);
 
     bpo::command_line_parser command_line_parser(msg->argc, msg->argv);
     command_line_parser.options(command_line_options);
 
-    const bool ignore_unrecognized_command_line_options = Overloader{
-        [](auto mv, int /*gcc_bug*/)
-            -> decltype(tmpl::type_from<decltype(mv)>::
-                            ignore_unrecognized_command_line_options) {
-          return tmpl::type_from<decltype(
-              mv)>::ignore_unrecognized_command_line_options;
-        },
-        [](auto /*mv*/, auto... /*meta*/) { return false; }}(
-        tmpl::type_<Metavariables>{}, 0);
-    if (ignore_unrecognized_command_line_options) {
-      // Allow unknown --options
-      command_line_parser.allow_unregistered();
-    } else {
-      // Forbid positional parameters
-      command_line_parser.positional({});
-    }
+    // const bool ignore_unrecognized_command_line_options = Overloader{
+    //     [](auto mv, int /*gcc_bug*/)
+    //         -> decltype(tmpl::type_from<decltype(mv)>::
+    //                         ignore_unrecognized_command_line_options) {
+    //       return tmpl::type_from<decltype(
+    //           mv)>::ignore_unrecognized_command_line_options;
+    //     },
+    //     [](auto /*mv*/, auto... /*meta*/) { return false; }}(
+    //     tmpl::type_<Metavariables>{}, 0);
+    // if (ignore_unrecognized_command_line_options) {
+    //   // Allow unknown --options
+    //   command_line_parser.allow_unregistered();
+    // } else {
+    //   // Forbid positional parameters
+    //   command_line_parser.positional({});
+    // }
 
     bpo::variables_map parsed_command_line_options;
     bpo::store(command_line_parser.run(), parsed_command_line_options);
@@ -323,55 +323,55 @@ Main<Metavariables>::Main(CkArgMsg* msg) {
 
     Options::Parser<option_list> options(Metavariables::help);
 
-    if (parsed_command_line_options.count("help") != 0) {
-      Parallel::printf("%s\n%s", command_line_options, options.help());
-      sys::exit();
-    }
+    // if (parsed_command_line_options.count("help") != 0) {
+    //   Parallel::printf("%s\n%s", command_line_options, options.help());
+    //   sys::exit();
+    // }
 
-    if (parsed_command_line_options.count("dump-source-tree-as") != 0) {
-      formaline::write_to_file(
-          parsed_command_line_options["dump-source-tree-as"].as<std::string>());
-      Parallel::printf("Dumping archive of source tree at link time.\n");
-    }
-    if (parsed_command_line_options.count("dump-paths") != 0) {
-      Parallel::printf("Paths at link time were:\n%s\n",
-                       formaline::get_paths());
-    }
-    if (parsed_command_line_options.count("dump-environment") != 0) {
-      Parallel::printf("Environment variables at link time were:\n%s\n",
-                       formaline::get_environment_variables());
-    }
-    if (parsed_command_line_options.count("dump-build-info") != 0) {
-      Parallel::printf("BuildInfo.txt at link time was:\n%s\n",
-                       formaline::get_build_info());
-    }
-    if (parsed_command_line_options.count("dump-only") != 0) {
-      sys::exit();
-    }
+    // if (parsed_command_line_options.count("dump-source-tree-as") != 0) {
+    //   formaline::write_to_file(
+    //       parsed_command_line_options["dump-source-tree-as"].as<std::string>());
+    //   Parallel::printf("Dumping archive of source tree at link time.\n");
+    // }
+    // if (parsed_command_line_options.count("dump-paths") != 0) {
+    //   Parallel::printf("Paths at link time were:\n%s\n",
+    //                    formaline::get_paths());
+    // }
+    // if (parsed_command_line_options.count("dump-environment") != 0) {
+    //   Parallel::printf("Environment variables at link time were:\n%s\n",
+    //                    formaline::get_environment_variables());
+    // }
+    // if (parsed_command_line_options.count("dump-build-info") != 0) {
+    //   Parallel::printf("BuildInfo.txt at link time was:\n%s\n",
+    //                    formaline::get_build_info());
+    // }
+    // if (parsed_command_line_options.count("dump-only") != 0) {
+    //   sys::exit();
+    // }
 
-    std::string input_file;
-    if (has_options) {
-      if (parsed_command_line_options.count("input-file") == 0) {
-        ERROR("No default input file name.  Pass --input-file.");
-      }
-      input_file = parsed_command_line_options["input-file"].as<std::string>();
-      options.parse_file(input_file);
-    } else {
-      options.parse("");
-    }
+    // std::string input_file;
+    // if (has_options) {
+    //   if (parsed_command_line_options.count("input-file") == 0) {
+    //     ERROR("No default input file name.  Pass --input-file.");
+    //   }
+    //   input_file = parsed_command_line_options["input-file"].as<std::string>();
+    //   options.parse_file(input_file);
+    // } else {
+    //   options.parse("");
+    // }
 
     if (parsed_command_line_options.count("check-options") != 0) {
       // Force all the options to be created.
       options.template apply<option_list, Metavariables>([](auto... args) {
         (void)std::initializer_list<char>{((void)args, '0')...};
       });
-      if (has_options) {
-        Parallel::printf("\n%s parsed successfully!\n", input_file);
-      } else {
-        // This is still considered successful, since it means the
-        // program would have started.
-        Parallel::printf("\nNo options to check!\n");
-      }
+      // if (has_options) {
+      //   Parallel::printf("\n%s parsed successfully!\n", input_file);
+      // } else {
+      //   // This is still considered successful, since it means the
+      //   // program would have started.
+      //   Parallel::printf("\nNo options to check!\n");
+      // }
 
       // Include a check that the checkpoint dirs are available for writing as
       // part of checking the option parsing. Doing these checks together helps
