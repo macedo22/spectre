@@ -392,6 +392,7 @@ Main<Metavariables>::Main(CkArgMsg* msg) {
     //       return tuples::tagged_tuple_from_typelist<option_list>(
     //           std::move(args)...);
     //     });
+    options_ = tuples::tagged_tuple_from_typelist<option_list>();
 
     // If any component specified that it needs resource information from
     // options, use the ResourceInfo created from options rather than the
