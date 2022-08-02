@@ -396,144 +396,144 @@ Main<Metavariables>::Main(CkArgMsg* msg) {
     // If any component specified that it needs resource information from
     // options, use the ResourceInfo created from options rather than the
     // default
-    if constexpr (Parallel::detail::using_resource_info<Metavariables>) {
-      resource_info_ =
-          tuples::get<Parallel::OptionTags::ResourceInfo<Metavariables>>(
-              options_);
-    }
+    // if constexpr (Parallel::detail::using_resource_info<Metavariables>) {
+    //   resource_info_ =
+    //       tuples::get<Parallel::OptionTags::ResourceInfo<Metavariables>>(
+    //           options_);
+    // }
 
-    Parallel::printf("\nOption parsing completed.\n");
+    // Parallel::printf("\nOption parsing completed.\n");
   } catch (const bpo::error& e) {
-    ERROR(e.what());
+    // ERROR(e.what());
   }
 
-  check_future_checkpoint_dirs_available();
+//   check_future_checkpoint_dirs_available();
 
-  mutable_global_cache_proxy_ = CProxy_MutableGlobalCache<Metavariables>::ckNew(
-      Parallel::create_from_options<Metavariables>(
-          options_, mutable_global_cache_tags{}));
+//   mutable_global_cache_proxy_ = CProxy_MutableGlobalCache<Metavariables>::ckNew(
+//       Parallel::create_from_options<Metavariables>(
+//           options_, mutable_global_cache_tags{}));
 
-  // global_cache_proxy_ depends on mutable_global_cache_proxy_.
-  CkEntryOptions mutable_global_cache_dependency;
-  mutable_global_cache_dependency.setGroupDepID(
-      mutable_global_cache_proxy_.ckGetGroupID());
+//   // global_cache_proxy_ depends on mutable_global_cache_proxy_.
+//   CkEntryOptions mutable_global_cache_dependency;
+//   mutable_global_cache_dependency.setGroupDepID(
+//       mutable_global_cache_proxy_.ckGetGroupID());
 
-  global_cache_proxy_ = CProxy_GlobalCache<Metavariables>::ckNew(
-      Parallel::create_from_options<Metavariables>(options_,
-                                                   const_global_cache_tags{}),
-      mutable_global_cache_proxy_, this->thisProxy,
-      &mutable_global_cache_dependency);
+//   global_cache_proxy_ = CProxy_GlobalCache<Metavariables>::ckNew(
+//       Parallel::create_from_options<Metavariables>(options_,
+//                                                    const_global_cache_tags{}),
+//       mutable_global_cache_proxy_, this->thisProxy,
+//       &mutable_global_cache_dependency);
 
-  // Now that the GlobalCache has been built, create the singleton map which
-  // will be used to allocate all the singletons. We need to be careful here
-  // because the parallel components have not been set at this point, so if we
-  // try to Parallel::get_parallel_component here, an error will occur. This
-  // call is OK though because build_singleton_map() only uses the parallel info
-  // functions from the GlobalCache (like cache.number_of_procs()).
-  resource_info_.build_singleton_map(
-      *Parallel::local_branch(global_cache_proxy_));
+//   // Now that the GlobalCache has been built, create the singleton map which
+//   // will be used to allocate all the singletons. We need to be careful here
+//   // because the parallel components have not been set at this point, so if we
+//   // try to Parallel::get_parallel_component here, an error will occur. This
+//   // call is OK though because build_singleton_map() only uses the parallel info
+//   // functions from the GlobalCache (like cache.number_of_procs()).
+//   resource_info_.build_singleton_map(
+//       *Parallel::local_branch(global_cache_proxy_));
 
-  // Now that the singleton map has been built, we have to replace the
-  // ResourceInfo that was created from options with the one that has all the
-  // correct singleton assignments so simple tags can be created from options
-  // with a valid ResourceInfo.
-  if constexpr (Parallel::detail::using_resource_info<Metavariables>) {
-    get<Parallel::OptionTags::ResourceInfo<Metavariables>>(options_) =
-        resource_info_;
-  }
+//   // Now that the singleton map has been built, we have to replace the
+//   // ResourceInfo that was created from options with the one that has all the
+//   // correct singleton assignments so simple tags can be created from options
+//   // with a valid ResourceInfo.
+//   if constexpr (Parallel::detail::using_resource_info<Metavariables>) {
+//     get<Parallel::OptionTags::ResourceInfo<Metavariables>>(options_) =
+//         resource_info_;
+//   }
 
-  at_sync_indicator_proxy_ =
-      detail::CProxy_AtSyncIndicator<Metavariables>::ckNew();
-  at_sync_indicator_proxy_[0].insert(this->thisProxy, sys::my_proc());
-  at_sync_indicator_proxy_.doneInserting();
+//   at_sync_indicator_proxy_ =
+//       detail::CProxy_AtSyncIndicator<Metavariables>::ckNew();
+//   at_sync_indicator_proxy_[0].insert(this->thisProxy, sys::my_proc());
+//   at_sync_indicator_proxy_.doneInserting();
 
-  tuples::tagged_tuple_from_typelist<parallel_component_tag_list>
-      the_parallel_components;
+//   tuples::tagged_tuple_from_typelist<parallel_component_tag_list>
+//       the_parallel_components;
 
-  // Print info on DataBox variants
-#ifdef SPECTRE_DEBUG
-  Parallel::printf("\nParallel components:\n");
-  tmpl::for_each<component_list>([](auto parallel_component_v) {
-    using parallel_component = tmpl::type_from<decltype(parallel_component_v)>;
-    using chare_type = typename parallel_component::chare_type;
-    using charm_type = Parallel::charm_types_with_parameters<
-        parallel_component, typename Parallel::get_array_index<
-                                chare_type>::template f<parallel_component>>;
-    Parallel::printf(
-        "  %s (%s) has a DataBox with %u items.\n",
-        pretty_type::name<parallel_component>(),
-        pretty_type::name<chare_type>(),
-        tmpl::size<
-            typename charm_type::algorithm::databox_type::tags_list>::value);
-  });
-  Parallel::printf("\n");
-#endif  // SPECTRE_DEBUG
+//   // Print info on DataBox variants
+// #ifdef SPECTRE_DEBUG
+//   Parallel::printf("\nParallel components:\n");
+//   tmpl::for_each<component_list>([](auto parallel_component_v) {
+//     using parallel_component = tmpl::type_from<decltype(parallel_component_v)>;
+//     using chare_type = typename parallel_component::chare_type;
+//     using charm_type = Parallel::charm_types_with_parameters<
+//         parallel_component, typename Parallel::get_array_index<
+//                                 chare_type>::template f<parallel_component>>;
+//     Parallel::printf(
+//         "  %s (%s) has a DataBox with %u items.\n",
+//         pretty_type::name<parallel_component>(),
+//         pretty_type::name<chare_type>(),
+//         tmpl::size<
+//             typename charm_type::algorithm::databox_type::tags_list>::value);
+//   });
+//   Parallel::printf("\n");
+// #endif  // SPECTRE_DEBUG
 
-  // Construct the group proxies with a dependency on the GlobalCache proxy
-  CkEntryOptions global_cache_dependency;
-  global_cache_dependency.setGroupDepID(global_cache_proxy_.ckGetGroupID());
+//   // Construct the group proxies with a dependency on the GlobalCache proxy
+//   CkEntryOptions global_cache_dependency;
+//   global_cache_dependency.setGroupDepID(global_cache_proxy_.ckGetGroupID());
 
-  tmpl::for_each<group_component_list>([this, &the_parallel_components,
-                                        &global_cache_dependency](
-                                           auto parallel_component_v) {
-    using parallel_component = tmpl::type_from<decltype(parallel_component_v)>;
-    using ParallelComponentProxy =
-        Parallel::proxy_from_parallel_component<parallel_component>;
-    tuples::get<tmpl::type_<ParallelComponentProxy>>(the_parallel_components) =
-        ParallelComponentProxy::ckNew(
-            global_cache_proxy_,
-            Parallel::create_from_options<Metavariables>(
-                options_, typename parallel_component::initialization_tags{}),
-            &global_cache_dependency);
-  });
+//   tmpl::for_each<group_component_list>([this, &the_parallel_components,
+//                                         &global_cache_dependency](
+//                                            auto parallel_component_v) {
+//     using parallel_component = tmpl::type_from<decltype(parallel_component_v)>;
+//     using ParallelComponentProxy =
+//         Parallel::proxy_from_parallel_component<parallel_component>;
+//     tuples::get<tmpl::type_<ParallelComponentProxy>>(the_parallel_components) =
+//         ParallelComponentProxy::ckNew(
+//             global_cache_proxy_,
+//             Parallel::create_from_options<Metavariables>(
+//                 options_, typename parallel_component::initialization_tags{}),
+//             &global_cache_dependency);
+//   });
 
-  // Create proxies for empty array chares (whose elements will be created by
-  // the allocate functions of the array components during
-  // execute_initialization_phase)
-  tmpl::for_each<non_bound_array_component_list>([&the_parallel_components](
-                                                     auto parallel_component) {
-    using ParallelComponentProxy = Parallel::proxy_from_parallel_component<
-        tmpl::type_from<decltype(parallel_component)>>;
-    tuples::get<tmpl::type_<ParallelComponentProxy>>(the_parallel_components) =
-        ParallelComponentProxy::ckNew();
-  });
+//   // Create proxies for empty array chares (whose elements will be created by
+//   // the allocate functions of the array components during
+//   // execute_initialization_phase)
+//   tmpl::for_each<non_bound_array_component_list>([&the_parallel_components](
+//                                                      auto parallel_component) {
+//     using ParallelComponentProxy = Parallel::proxy_from_parallel_component<
+//         tmpl::type_from<decltype(parallel_component)>>;
+//     tuples::get<tmpl::type_<ParallelComponentProxy>>(the_parallel_components) =
+//         ParallelComponentProxy::ckNew();
+//   });
 
-  // Create proxies for empty bound array chares
-  tmpl::for_each<bound_array_component_list>([&the_parallel_components](
-                                                 auto parallel_component) {
-    using ParallelComponentProxy = Parallel::proxy_from_parallel_component<
-        tmpl::type_from<decltype(parallel_component)>>;
-    CkArrayOptions opts;
-    opts.bindTo(
-        tuples::get<tmpl::type_<Parallel::proxy_from_parallel_component<
-            typename tmpl::type_from<decltype(parallel_component)>::bind_to>>>(
-            the_parallel_components));
-    tuples::get<tmpl::type_<ParallelComponentProxy>>(the_parallel_components) =
-        ParallelComponentProxy::ckNew(opts);
-  });
+//   // Create proxies for empty bound array chares
+//   tmpl::for_each<bound_array_component_list>([&the_parallel_components](
+//                                                  auto parallel_component) {
+//     using ParallelComponentProxy = Parallel::proxy_from_parallel_component<
+//         tmpl::type_from<decltype(parallel_component)>>;
+//     CkArrayOptions opts;
+//     opts.bindTo(
+//         tuples::get<tmpl::type_<Parallel::proxy_from_parallel_component<
+//             typename tmpl::type_from<decltype(parallel_component)>::bind_to>>>(
+//             the_parallel_components));
+//     tuples::get<tmpl::type_<ParallelComponentProxy>>(the_parallel_components) =
+//         ParallelComponentProxy::ckNew(opts);
+//   });
 
-  // Create proxies for singletons (which are single-element charm++ arrays)
-  tmpl::for_each<singleton_component_list>([&the_parallel_components](
-                                               auto parallel_component) {
-    using ParallelComponentProxy = Parallel::proxy_from_parallel_component<
-        tmpl::type_from<decltype(parallel_component)>>;
-    tuples::get<tmpl::type_<ParallelComponentProxy>>(the_parallel_components) =
-        ParallelComponentProxy::ckNew();
-  });
+//   // Create proxies for singletons (which are single-element charm++ arrays)
+//   tmpl::for_each<singleton_component_list>([&the_parallel_components](
+//                                                auto parallel_component) {
+//     using ParallelComponentProxy = Parallel::proxy_from_parallel_component<
+//         tmpl::type_from<decltype(parallel_component)>>;
+//     tuples::get<tmpl::type_<ParallelComponentProxy>>(the_parallel_components) =
+//         ParallelComponentProxy::ckNew();
+//   });
 
-  // Send the complete list of parallel_components to the GlobalCache on
-  // each Charm++ node.  After all nodes have finished, the callback is
-  // executed.
-  CkCallback callback(
-      CkIndex_Main<Metavariables>::
-          allocate_remaining_components_and_execute_initialization_phase(),
-      this->thisProxy);
-  global_cache_proxy_.set_parallel_components(the_parallel_components,
-                                              callback);
+//   // Send the complete list of parallel_components to the GlobalCache on
+//   // each Charm++ node.  After all nodes have finished, the callback is
+//   // executed.
+//   CkCallback callback(
+//       CkIndex_Main<Metavariables>::
+//           allocate_remaining_components_and_execute_initialization_phase(),
+//       this->thisProxy);
+//   global_cache_proxy_.set_parallel_components(the_parallel_components,
+//                                               callback);
 
-  PhaseControl::initialize_phase_change_decision_data(
-      make_not_null(&phase_change_decision_data_),
-      *Parallel::local_branch(global_cache_proxy_));
+//   PhaseControl::initialize_phase_change_decision_data(
+//       make_not_null(&phase_change_decision_data_),
+//       *Parallel::local_branch(global_cache_proxy_));
 }
 
 template <typename Metavariables>
