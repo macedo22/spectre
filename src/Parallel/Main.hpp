@@ -362,7 +362,7 @@ Main<Metavariables>::Main(CkArgMsg* msg) {
 
     if (parsed_command_line_options.count("check-options") != 0) {
       // Force all the options to be created.
-      options.template apply<tmpl::list<>, Metavariables>([](auto... args) {
+      options.template apply<option_list, Metavariables>([](auto... args) {
         (void)std::initializer_list<char>{((void)args, '0')...};
       });
       if (has_options) {
