@@ -38,7 +38,8 @@ template <typename Metavariables, typename... Tags, typename... OptionTags>
 tuples::TaggedTuple<Tags...> create_from_options(
     const tuples::TaggedTuple<OptionTags...>& options,
     tmpl::list<Tags...> /*meta*/) {
-  return {detail::create_initialization_item_from_options<Metavariables, Tags>(
-      options)...};
+  // return {detail::create_initialization_item_from_options<Metavariables, Tags>(
+  //     options)...};
+  return tuples::TaggedTuple<Tags...>{};
 }
 }  // namespace Parallel
