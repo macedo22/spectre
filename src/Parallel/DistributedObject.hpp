@@ -1106,10 +1106,10 @@ std::ostream& operator<<(
     std::ostream& os,
     const DistributedObject<ParallelComponent, PhaseDepActionLists>&
         algorithm_impl) {
-  // os << algorithm_impl.print_types() << "\n";
-  // os << algorithm_impl.print_state() << "\n";
-  // os << algorithm_impl.print_inbox() << "\n";
-  // os << algorithm_impl.print_databox() << "\n";
+  os << algorithm_impl.print_types() << "\n";
+  os << algorithm_impl.print_state() << "\n";
+  os << algorithm_impl.print_inbox() << "\n";
+  os << algorithm_impl.print_databox() << "\n";
   return os;
 }
 }  // namespace Parallel
