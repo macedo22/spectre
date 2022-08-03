@@ -612,14 +612,14 @@ void Main<Metavariables>::
   // These are Spectre array components built on Charm++ array chares. Each
   // component is in charge of allocating and distributing its elements over the
   // computing system.
-  // tmpl::for_each<all_array_component_list>([this](auto parallel_component_v) {
-  //   using parallel_component = tmpl::type_from<decltype(parallel_component_v)>;
-  //   parallel_component::allocate_array(
-  //       global_cache_proxy_,
-  //       Parallel::create_from_options<Metavariables>(
-  //           options_, typename parallel_component::initialization_tags{}),
-  //       resource_info_.procs_to_ignore());
-  // });
+  tmpl::for_each<all_array_component_list>([this](auto parallel_component_v) {
+    using parallel_component = tmpl::type_from<decltype(parallel_component_v)>;
+    parallel_component::allocate_array(
+        global_cache_proxy_,
+        Parallel::create_from_options<Metavariables>(
+            options_, typename parallel_component::initialization_tags{}),
+        resource_info_.procs_to_ignore());
+  });
 
   // // Free any resources from the initial option parsing.
   // options_ = decltype(options_){};
