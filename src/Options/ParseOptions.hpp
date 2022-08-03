@@ -90,63 +90,63 @@ inline void Option::set_node(YAML::Node node) {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsuggest-attribute=noreturn"
 #endif  // defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 8
-// template <typename T, typename Metavariables>
-// T Option::parse_as() const {
-//   try {
-//     // yaml-cpp's `as` method won't parse empty nodes, so we need to
-//     // inline a bit of its logic.
-//     Options_detail::wrap_create_types<T, Metavariables> result{};
-//     if (YAML::convert<decltype(result)>::decode(node(), result)) {
-//       return Options_detail::unwrap_create_types(std::move(result));
-//     }
-//     // clang-tidy: thrown exception is not nothrow copy constructible
-//     throw YAML::BadConversion(node().Mark());  // NOLINT
-//   } catch (const YAML::BadConversion& e) {
-//     // This happens when trying to parse an empty value as a container
-//     // with no entries.
-//     if ((tt::is_a_v<std::vector, T> or tt::is_std_array_of_size_v<0, T> or
-//          tt::is_maplike_v<T>) and node().IsNull()) {
-//       return T{};
-//     }
-//     Context error_context = context();
-//     error_context.line = e.mark.line;
-//     error_context.column = e.mark.column;
-//     std::ostringstream ss;
-//     ss << "Failed to convert value to type "
-//        << Options_detail::yaml_type<T>::value() << ":";
+template <typename T, typename Metavariables>
+T Option::parse_as() const {
+  try {
+    // yaml-cpp's `as` method won't parse empty nodes, so we need to
+    // inline a bit of its logic.
+    Options_detail::wrap_create_types<T, Metavariables> result{};
+    if (YAML::convert<decltype(result)>::decode(node(), result)) {
+      return Options_detail::unwrap_create_types(std::move(result));
+    }
+    // clang-tidy: thrown exception is not nothrow copy constructible
+    throw YAML::BadConversion(node().Mark());  // NOLINT
+  } catch (const YAML::BadConversion& e) {
+    // This happens when trying to parse an empty value as a container
+    // with no entries.
+    if ((tt::is_a_v<std::vector, T> or tt::is_std_array_of_size_v<0, T> or
+         tt::is_maplike_v<T>) and node().IsNull()) {
+      return T{};
+    }
+    Context error_context = context();
+    error_context.line = e.mark.line;
+    error_context.column = e.mark.column;
+    std::ostringstream ss;
+    ss << "Failed to convert value to type "
+       << Options_detail::yaml_type<T>::value() << ":";
 
-//     const std::string value_text = YAML::Dump(node());
-//     if (value_text.find('\n') == std::string::npos) {
-//       ss << " " << value_text;
-//     } else {
-//       // Indent each line of the value by two spaces and start on a new line
-//       ss << "\n  ";
-//       for (char c : value_text) {
-//         ss << c;
-//         if (c == '\n') {
-//           ss << "  ";
-//         }
-//       }
-//     }
+    const std::string value_text = YAML::Dump(node());
+    if (value_text.find('\n') == std::string::npos) {
+      ss << " " << value_text;
+    } else {
+      // Indent each line of the value by two spaces and start on a new line
+      ss << "\n  ";
+      for (char c : value_text) {
+        ss << c;
+        if (c == '\n') {
+          ss << "  ";
+        }
+      }
+    }
 
-//     if (tt::is_a_v<std::vector, T> or tt::is_std_array_v<T>) {
-//       ss << "\n\nNote: For sequences this can happen because the length of the "
-//             "sequence specified\nin the input file is not equal to the length "
-//             "expected by the code. Sequences in\nfiles can be denoted either "
-//             "as a bracket enclosed list ([foo, bar]) or with each\nentry on a "
-//             "separate line, indented and preceeded by a dash (  - foo).";
-//     }
-//     PARSE_ERROR(error_context, ss.str());
-//   } catch (const Options_detail::propagate_context& e) {
-//     Context error_context = context();
-//     // Avoid line numbers in the middle of the trace
-//     error_context.line = -1;
-//     error_context.column = -1;
-//     PARSE_ERROR(error_context, e.message());
-//   } catch (std::exception& e) {
-//     ERROR("Unexpected exception: " << e.what());
-//   }
-// }
+    if (tt::is_a_v<std::vector, T> or tt::is_std_array_v<T>) {
+      ss << "\n\nNote: For sequences this can happen because the length of the "
+            "sequence specified\nin the input file is not equal to the length "
+            "expected by the code. Sequences in\nfiles can be denoted either "
+            "as a bracket enclosed list ([foo, bar]) or with each\nentry on a "
+            "separate line, indented and preceeded by a dash (  - foo).";
+    }
+    PARSE_ERROR(error_context, ss.str());
+  } catch (const Options_detail::propagate_context& e) {
+    Context error_context = context();
+    // Avoid line numbers in the middle of the trace
+    error_context.line = -1;
+    error_context.column = -1;
+    PARSE_ERROR(error_context, e.message());
+  } catch (std::exception& e) {
+    ERROR("Unexpected exception: " << e.what());
+  }
+}
 #if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 8
 #pragma GCC diagnostic pop
 #endif  // defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 8
