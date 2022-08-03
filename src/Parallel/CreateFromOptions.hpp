@@ -40,6 +40,6 @@ tuples::TaggedTuple<Tags...> create_from_options(
     tmpl::list<Tags...> /*meta*/) {
   // return {detail::create_initialization_item_from_options<Metavariables, Tags>(
   //     options)...};
-  return tuples::TaggedTuple<Tags...>{};
+  return tuples::TaggedTuple<>{};
 }
 }  // namespace Parallel
