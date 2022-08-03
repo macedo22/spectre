@@ -1119,17 +1119,20 @@ struct create_from_yaml<std::variant<T...>> {
 /// \cond
 template <typename T, typename Metavariables>
 struct YAML::convert<Options::Options_detail::CreateWrapper<T, Metavariables>> {
+  // static bool decode(
+  //     const Node& node,
+  //     Options::Options_detail::CreateWrapper<T, Metavariables>& rhs) {
+  //   Options::Context context;
+  //   context.top_level = false;
+  //   context.append("While creating a " + pretty_type::name<T>());
+  //   Options::Option options(node, std::move(context));
+  //   rhs = Options::Options_detail::CreateWrapper<T, Metavariables>{
+  //       Options::create_from_yaml<T>::template create<Metavariables>(options)};
+  //   return true;
+  // }
   static bool decode(
       const Node& node,
-      Options::Options_detail::CreateWrapper<T, Metavariables>& rhs) {
-    Options::Context context;
-    context.top_level = false;
-    context.append("While creating a " + pretty_type::name<T>());
-    Options::Option options(node, std::move(context));
-    rhs = Options::Options_detail::CreateWrapper<T, Metavariables>{
-        Options::create_from_yaml<T>::template create<Metavariables>(options)};
-    return true;
-  }
+      Options::Options_detail::CreateWrapper<T, Metavariables>& rhs);
 };
 /// \endcond
 
