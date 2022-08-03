@@ -922,55 +922,54 @@ template <typename PhaseDepActions, size_t... Is>
 constexpr bool
 DistributedObject<ParallelComponent, tmpl::list<PhaseDepActionListsPack...>>::
     iterate_over_actions(const std::index_sequence<Is...> /*meta*/) {
-//   bool take_next_action = true;
-//   const auto helper = [this, &take_next_action](auto iteration) {
-//     constexpr size_t iter = decltype(iteration)::value;
-//     if (not(take_next_action and not terminate_ and
-//             not halt_algorithm_until_next_phase_ and algorithm_step_ == iter)) {
-//       return;
-//     }
-//     using actions_list = typename PhaseDepActions::action_list;
-//     using this_action = tmpl::at_c<actions_list, iter>;
+  bool take_next_action = true;
+  const auto helper = [this, &take_next_action](auto iteration) {
+    constexpr size_t iter = decltype(iteration)::value;
+    if (not(take_next_action and not terminate_ and
+            not halt_algorithm_until_next_phase_ and algorithm_step_ == iter)) {
+      return;
+    }
+    using actions_list = typename PhaseDepActions::action_list;
+    using this_action = tmpl::at_c<actions_list, iter>;
 
-//     constexpr size_t phase_index =
-//         tmpl::index_of<phase_dependent_action_lists, PhaseDepActions>::value;
-//     performing_action_ = true;
-//     ++algorithm_step_;
-//     // While the overhead from using the local entry method to enable
-//     // profiling is fairly small (<2%), we still avoid it when we aren't
-//     // tracing.
-// #ifdef SPECTRE_CHARM_PROJECTIONS
-//     if constexpr (Parallel::is_array_proxy<cproxy_type>::value) {
-//       if (not this->thisProxy[array_index_]
-//                   .template invoke_iterable_action<
-//                       this_action, std::integral_constant<size_t, phase_index>,
-//                       std::integral_constant<size_t, iter>>()) {
-//         take_next_action = false;
-//         --algorithm_step_;
-//       }
-//     } else {
-// #endif  // SPECTRE_CHARM_PROJECTIONS
-//       if (not invoke_iterable_action<
-//               this_action, std::integral_constant<size_t, phase_index>,
-//               std::integral_constant<size_t, iter>>()) {
-//         take_next_action = false;
-//         --algorithm_step_;
-//       }
-// #ifdef SPECTRE_CHARM_PROJECTIONS
-//     }
-// #endif  // SPECTRE_CHARM_PROJECTIONS
-//     performing_action_ = false;
-//     // Wrap counter if necessary
-//     if (algorithm_step_ >= tmpl::size<actions_list>::value) {
-//       algorithm_step_ = 0;
-//     }
-//   };
-//   // In case of no Actions avoid compiler warning.
-//   (void)helper;
-//   // This is a template for loop for Is
-//   EXPAND_PACK_LEFT_TO_RIGHT(helper(std::integral_constant<size_t, Is>{}));
-//   return take_next_action;
-  return true;
+    constexpr size_t phase_index =
+        tmpl::index_of<phase_dependent_action_lists, PhaseDepActions>::value;
+    performing_action_ = true;
+    ++algorithm_step_;
+    // While the overhead from using the local entry method to enable
+    // profiling is fairly small (<2%), we still avoid it when we aren't
+    // tracing.
+#ifdef SPECTRE_CHARM_PROJECTIONS
+    if constexpr (Parallel::is_array_proxy<cproxy_type>::value) {
+      if (not this->thisProxy[array_index_]
+                  .template invoke_iterable_action<
+                      this_action, std::integral_constant<size_t, phase_index>,
+                      std::integral_constant<size_t, iter>>()) {
+        take_next_action = false;
+        --algorithm_step_;
+      }
+    } else {
+#endif  // SPECTRE_CHARM_PROJECTIONS
+      if (not invoke_iterable_action<
+              this_action, std::integral_constant<size_t, phase_index>,
+              std::integral_constant<size_t, iter>>()) {
+        take_next_action = false;
+        --algorithm_step_;
+      }
+#ifdef SPECTRE_CHARM_PROJECTIONS
+    }
+#endif  // SPECTRE_CHARM_PROJECTIONS
+    performing_action_ = false;
+    // Wrap counter if necessary
+    if (algorithm_step_ >= tmpl::size<actions_list>::value) {
+      algorithm_step_ = 0;
+    }
+  };
+  // In case of no Actions avoid compiler warning.
+  (void)helper;
+  // This is a template for loop for Is
+  EXPAND_PACK_LEFT_TO_RIGHT(helper(std::integral_constant<size_t, Is>{}));
+  return take_next_action;
 }
 
 template <typename ParallelComponent, typename... PhaseDepActionListsPack>
