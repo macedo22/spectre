@@ -82,7 +82,7 @@ template <bool ShowTrace>
   os << "Node: " << sys::my_node() << " Proc: " << sys::my_proc() << "\n"
      << "Line: " << line << " of " << file << "\n"
      << "Function: " << pretty_function << "\n"
-     << "" << "\n"
+     << message << "\n"
      << "############ ERROR ############\n"
      << "\n";
   breakpoint();
