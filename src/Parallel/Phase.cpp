@@ -81,7 +81,7 @@ Parallel::Phase Options::create_from_yaml<Parallel::Phase>::create<void>(
     }
   }
   using ::operator<<;
-  std::stringstream ss;
+  std::ostringstream ss;
   ss << "Failed to convert \""
                   << type_read << "\" to Parallel::Phase.\nMust be one of "
                   << Parallel::known_phases() << ".";

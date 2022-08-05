@@ -129,3 +129,21 @@ void abort_with_error_message_no_trace(const char* file, const int line,
                                        const std::string& message) {
   abort_with_error_message_impl<false>(file, line, pretty_function, context.context + message);
 }
+
+[[noreturn]] void abort_with_error_message_no_trace(const char* file, const int line,
+                                       const char* pretty_function,
+                                       const Options::Context& context,
+                                       const std::ostringstream& message) {
+  std::stringstream ss;
+  ss << context.context << message.str();
+  abort_with_error_message_impl<false>(file, line, pretty_function, ss.str());
+}
+
+[[noreturn]] void abort_with_error_message_no_trace(const char* file, int line,
+                                                    const char* pretty_function,
+                                                    const Options::Context& context,
+                                                    const std::stringstream& message) {
+  std::stringstream ss;
+  ss << context.context << message.str();
+  abort_with_error_message_impl<false>(file, line, pretty_function, ss.str());
+}
