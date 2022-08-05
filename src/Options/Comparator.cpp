@@ -36,9 +36,10 @@ Comparator create_from_yaml<Comparator>::create_impl(const Option& options) {
   if (name == "GreaterThanOrEqualTo") {
     return Comparator(Comparator::Comparison::GreaterThanOrEqualTo);
   }
-  PARSE_ERROR(options.context(),
-              "Invalid comparison " << name << ".  Should be EqualTo, "
+  std::stringstream ss;
+      ss << "Invalid comparison " << name << ".  Should be EqualTo, "
               "NotEqualTo, LessThan, GreaterThan, LessThanOrEqualTo, or "
-              "GreaterThanOrEqualTo.");
+              "GreaterThanOrEqualTo.";
+  PARSE_ERROR(options.context(), ss);
 }
 }  // namespace Options
