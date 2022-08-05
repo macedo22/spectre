@@ -201,11 +201,12 @@ void VolumeData::write_volume_data(
   detail::OpenGroup observation_group(volume_data_group_.id(), path,
                                       AccessType::ReadWrite);
   if (contains_attribute(observation_group.id(), "", "observation_value")) {
-    ERROR_NO_TRACE("Trying to write ObservationId "
-                   << std::to_string(observation_id)
-                   << " with observation_value " << observation_group.id()
-                   << " which already exists in file at " << path
-                   << ". Did you forget to clean up after an earlier run?");
+    std::ostringstream ss;
+    ss << "Trying to write ObservationId " << std::to_string(observation_id)
+       << " with observation_value " << observation_group.id()
+       << " which already exists in file at " << path
+       << ". Did you forget to clean up after an earlier run?";
+    ERROR_NO_TRACE(ss);
   }
   h5::write_to_attribute(observation_group.id(), "observation_value",
                          observation_value);

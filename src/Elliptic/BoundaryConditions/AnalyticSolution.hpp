@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <ostream>
 #include <pup.h>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -126,12 +127,16 @@ class AnalyticSolution<System, Dim, tmpl::list<FieldTags...>,
         -> const auto& {
       if constexpr (tt::is_a_v<std::optional, OptionalAnalyticSolutions>) {
         if (not optional_analytic_solutions.has_value()) {
-          ERROR_NO_TRACE(
-              "Trying to impose boundary conditions from an analytic solution, "
-              "but no analytic solution is available. You probably selected "
-              "the 'AnalyticSolution' boundary condition but chose to solve a "
-              "problem that has no analytic solution. If this is the case, you "
-              "should probably select a different boundary condition.");
+          std::ostringstream ss;
+          ss << "Trying to impose boundary conditions from an analytic "
+                "solution, "
+                "but no analytic solution is available. You probably selected "
+                "the 'AnalyticSolution' boundary condition but chose to solve "
+                "a "
+                "problem that has no analytic solution. If this is the case, "
+                "you "
+                "should probably select a different boundary condition.";
+          ERROR_NO_TRACE(ss);
         }
         return *optional_analytic_solutions;
       } else {
