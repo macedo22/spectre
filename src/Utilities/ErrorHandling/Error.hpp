@@ -72,6 +72,6 @@
       disable_floating_point_exceptions();                                   \
       abort_with_error_message_no_trace(                                     \
           __FILE__, __LINE__, static_cast<const char*>(__PRETTY_FUNCTION__), \
-          MakeString{} << "");                                                \
+          MakeString{} << m);                                                \
     }                                                                        \
   } while (false)
