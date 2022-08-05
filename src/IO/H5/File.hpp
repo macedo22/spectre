@@ -208,15 +208,19 @@ template <typename ObjectType, typename... Args>
 const ObjectType& H5File<Access_t>::get(const std::string& path,
                                         Args&&... args) const {
   if (current_object_ != nullptr) {
-    ERROR("Object " << current_object_->subfile_path()
-                    << " already open. Cannot open object " << path << ".");
+    std::ostringstream ss;
+    ss << "Object " << current_object_->subfile_path()
+       << " already open. Cannot open object " << path << ".";
+    ERROR(ss);
   }
   // C++17: structured bindings
   auto exists_group_name = check_if_object_exists<ObjectType>(path);
   hid_t group_id = std::get<1>(exists_group_name).id();
   if (not std::get<0>(exists_group_name)) {
-    ERROR("Cannot open the object '" << path + ObjectType::extension()
-                                     << "' because it does not exist.");
+    std::ostringstream ss;
+    ss << "Cannot open the object '" << path + ObjectType::extension()
+       << "' because it does not exist.";
+    ERROR(ss);
   }
   current_object_ = std::make_unique<ObjectType>(
       std::get<0>(exists_group_name), std::move(std::get<1>(exists_group_name)),
@@ -231,16 +235,19 @@ ObjectType& H5File<Access_t>::insert(const std::string& path, Args&&... args) {
   static_assert(AccessType::ReadWrite == Access_t,
                 "Can only insert into ReadWrite access H5 files.");
   if (current_object_ != nullptr) {
-    ERROR("Object " << current_object_->subfile_path()
-                    << " already open. Cannot insert object " << path << ".");
+    std::ostringstream ss;
+    ss << "Object " << current_object_->subfile_path()
+       << " already open. Cannot insert object " << path << ".";
+    ERROR(ss);
   }
   // C++17: structured bindings
   auto exists_group_name = check_if_object_exists<ObjectType>(path);
   if (std::get<0>(exists_group_name)) {
-    ERROR(
-        "Cannot insert an Object that already exists. Failed to add Object "
-        "named: "
-        << path);
+    std::ostringstream ss;
+    ss << "Cannot insert an Object that already exists. Failed to add Object "
+          "named: "
+       << path;
+    ERROR(ss);
   }
 
   hid_t group_id = std::get<1>(exists_group_name).id();
@@ -259,9 +266,10 @@ ObjectType& H5File<Access_t>::try_insert(const std::string& path,
   static_assert(AccessType::ReadWrite == Access_t,
                 "Can only insert into ReadWrite access H5 files.");
   if (current_object_ != nullptr) {
-    ERROR("Object " << current_object_->subfile_path()
-                    << " already open. Cannot try to insert object " << path
-                    << ".");
+    std::ostringstream ss;
+    ss << "Object " << current_object_->subfile_path()
+       << " already open. Cannot try to insert object " << path << ".";
+    ERROR(ss);
   }
   // C++17: structured bindings
   auto exists_group_name = check_if_object_exists<ObjectType>(path);
@@ -282,13 +290,19 @@ template <typename ObjectType,
 ObjectType& H5File<Access_t>::convert_to_derived(
     std::unique_ptr<h5::Object>& current_object) {
   if (nullptr == current_object) {
-    ERROR("No object to convert.");  // LCOV_EXCL_LINE
+    // LCOV_EXCL_START
+    std::ostringstream ss;
+    ss << "No object to convert.";
+    ERROR(ss);
+    // LCOV_EXCL_STOP
   }
   try {
     return dynamic_cast<ObjectType&>(*current_object);
     // LCOV_EXCL_START
   } catch (const std::bad_cast& e) {
-    ERROR("Failed to cast to object.\nCast error: " << e.what());
+    std::ostringstream ss;
+    ss << "Failed to cast to object.\nCast error: " << e.what();
+    ERROR(ss);
     // LCOV_EXCL_STOP
   }
 }
@@ -297,12 +311,16 @@ template <typename ObjectType>
 const ObjectType& H5File<Access_t>::convert_to_derived(
     const std::unique_ptr<h5::Object>& current_object) const {
   if (nullptr == current_object) {
-    ERROR("No object to convert.");
+    std::ostringstream ss;
+    ss << "No object to convert.";
+    ERROR(ss);
   }
   try {
     return dynamic_cast<const ObjectType&>(*current_object);
   } catch (const std::bad_cast& e) {
-    ERROR("Failed to cast to object.\nCast error: " << e.what());
+    std::ostringstream ss;
+    ss << "Failed to cast to object.\nCast error: " << e.what();
+    ERROR(ss);
   }
 }
 

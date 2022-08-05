@@ -591,7 +591,9 @@ void DistributedObject<
   p | non_action_time_start_;
 #endif
   if (performing_action_ and not p.isSizing()) {
-    ERROR("cannot serialize while performing action!");
+    std::ostringstream ss;
+    ss << "cannot serialize while performing action!";
+    ERROR(ss);
   }
   p | performing_action_;
   p | phase_;
@@ -668,11 +670,13 @@ void DistributedObject<
       node_lock_.lock();
     }
     if (performing_action_) {
-      ERROR(
-          "Already performing an Action and cannot execute additional Actions "
-          "from inside of an Action. This is only possible if the "
-          "reduction_action function is not invoked via a proxy, which makes "
-          "no sense for a reduction.");
+      std::ostringstream ss;
+      ss << "Already performing an Action and cannot execute additional "
+            "Actions "
+            "from inside of an Action. This is only possible if the "
+            "reduction_action function is not invoked via a proxy, which makes "
+            "no sense for a reduction.";
+      ERROR(ss);
     }
     performing_action_ = true;
     arg.finalize();
@@ -700,11 +704,13 @@ void DistributedObject<ParallelComponent,
       node_lock_.lock();
     }
     if (performing_action_) {
-      ERROR(
-          "Already performing an Action and cannot execute additional Actions "
-          "from inside of an Action. This is only possible if the "
-          "simple_action function is not invoked via a proxy, which "
-          "we do not allow.");
+      std::ostringstream ss;
+      ss << "Already performing an Action and cannot execute additional "
+            "Actions "
+            "from inside of an Action. This is only possible if the "
+            "simple_action function is not invoked via a proxy, which "
+            "we do not allow.";
+      ERROR(ss);
     }
     performing_action_ = true;
     forward_tuple_to_action<Action>(
@@ -731,11 +737,13 @@ void DistributedObject<
       node_lock_.lock();
     }
     if (performing_action_) {
-      ERROR(
-          "Already performing an Action and cannot execute additional Actions "
-          "from inside of an Action. This is only possible if the "
-          "simple_action function is not invoked via a proxy, which "
-          "we do not allow.");
+      std::ostringstream ss;
+      ss << "Already performing an Action and cannot execute additional "
+            "Actions "
+            "from inside of an Action. This is only possible if the "
+            "simple_action function is not invoked via a proxy, which "
+            "we do not allow.";
+      ERROR(ss);
     }
     performing_action_ = true;
     Action::template apply<ParallelComponent>(
@@ -874,13 +882,15 @@ void DistributedObject<ParallelComponent,
   try {
     // terminate should be true since we exited a phase previously.
     if (not get_terminate() and not halt_algorithm_until_next_phase_) {
-      ERROR(
-          "An algorithm must always be set to terminate at the beginning of a "
-          "phase. Since this is not the case the previous phase did not end "
-          "correctly. The previous phase is: "
-          << phase_ << " and the next phase is: " << next_phase
-          << ", The termination flag is: " << get_terminate()
-          << ", and the halt flag is: " << halt_algorithm_until_next_phase_);
+      std::ostringstream ss;
+      ss << "An algorithm must always be set to terminate at the beginning of "
+            "a "
+            "phase. Since this is not the case the previous phase did not end "
+            "correctly. The previous phase is: "
+         << phase_ << " and the next phase is: " << next_phase
+         << ", The termination flag is: " << get_terminate()
+         << ", and the halt flag is: " << halt_algorithm_until_next_phase_;
+      ERROR(ss);
     }
     // set terminate to true if there are no actions in this PDAL
     set_terminate(number_of_actions_in_phase(next_phase) == 0);

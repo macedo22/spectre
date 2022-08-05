@@ -5,6 +5,7 @@
 
 #include <limits>
 #include <memory>
+#include <sstream>
 #include <unordered_map>
 #include <vector>
 
@@ -196,9 +197,10 @@ EventsAndDenseTriggers::TriggeringState EventsAndDenseTriggers::is_ready(
 
     const auto is_triggered = current_trigger()->trigger->is_triggered(box);
     if (not after(is_triggered.next_check, current_trigger()->next_check)) {
-      ERROR("Trigger at time " << current_trigger()->next_check
-            << " rescheduled itself for earlier time "
-            << is_triggered.next_check);
+      std::ostringstream ss;
+      ss << "Trigger at time " << current_trigger()->next_check
+         << " rescheduled itself for earlier time " << is_triggered.next_check;
+      ERROR(ss);
     }
     current_trigger()->next_check = is_triggered.next_check;
     if (not is_triggered.is_triggered) {

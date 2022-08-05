@@ -7,6 +7,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -365,8 +366,10 @@ void apply_boundary_condition_on_face(
             apply_bc, interior_face_fields, bcondition_interior_tags{},
             db::get<BoundaryConditionVolumeTags>(*box)...);
     if (error_message.has_value()) {
-      ERROR(*error_message << "\n\nIn element:" << element.id()
-                           << "\nIn direction: " << direction);
+      std::ostringstream ss;
+      ss << *error_message << "\n\nIn element:" << element.id()
+         << "\nIn direction: " << direction;
+      ERROR(ss);
     }
     return;
   }
@@ -392,8 +395,10 @@ void apply_boundary_condition_on_face(
             apply_bc, interior_face_fields, bcondition_interior_tags{},
             db::get<BoundaryConditionVolumeTags>(*box)...);
     if (error_message.has_value()) {
-      ERROR(*error_message << "\n\nIn element:" << element.id()
-                           << "\nIn direction: " << direction);
+      std::ostringstream ss;
+      ss << *error_message << "\n\nIn element:" << element.id()
+         << "\nIn direction: " << direction;
+      ERROR(ss);
     }
   } else {
     (void)dt_time_derivative_correction;
@@ -467,8 +472,10 @@ void apply_boundary_condition_on_face(
             apply_bc, interior_face_fields, bcondition_interior_tags{},
             db::get<BoundaryConditionVolumeTags>(*box)...);
     if (error_message.has_value()) {
-      ERROR(*error_message << "\n\nIn element:" << element.id()
-                           << "\nIn direction: " << direction);
+      std::ostringstream ss;
+      ss << *error_message << "\n\nIn element:" << element.id()
+         << "\nIn direction: " << direction;
+      ERROR(ss);
     }
     // Subtract mesh velocity from the _exterior_ fluxes
     if (face_mesh_velocity.has_value()) {

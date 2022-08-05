@@ -4,6 +4,7 @@
 #include "Parallel/NodeLock.hpp"
 
 #include <converse.h>
+#include <sstream>
 
 #include "Utilities/ErrorHandling/Error.hpp"
 #include "Utilities/Gsl.hpp"
@@ -26,7 +27,9 @@ NodeLock::~NodeLock() { destroy(); }
 
 void NodeLock::lock() {
   if (UNLIKELY(nullptr == lock_)) {
-    ERROR("Trying to lock a destroyed lock");
+    std::ostringstream ss;
+    ss << "Trying to lock a destroyed lock";
+    ERROR(ss);
   }
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
@@ -36,7 +39,9 @@ void NodeLock::lock() {
 
 bool NodeLock::try_lock() {
   if (UNLIKELY(nullptr == lock_)) {
-    ERROR("Trying to try_lock a destroyed lock");
+    std::ostringstream ss;
+    ss << "Trying to try_lock a destroyed lock";
+    ERROR(ss);
   }
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
@@ -46,7 +51,9 @@ bool NodeLock::try_lock() {
 
 void NodeLock::unlock() {
   if (UNLIKELY(nullptr == lock_)) {
-    ERROR("Trying to unlock a destroyed lock");
+    std::ostringstream ss;
+    ss << "Trying to unlock a destroyed lock";
+    ERROR(ss);
   }
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"

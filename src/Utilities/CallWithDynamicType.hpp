@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <sstream>
 #include <type_traits>
 #include <typeinfo>
 #include <utility>
@@ -16,9 +17,11 @@
 template <typename Result, typename Classes, typename Base, typename Callable,
           Requires<(tmpl::size<Classes>::value == 0)> = nullptr>
 [[noreturn]] Result call_with_dynamic_type(Base* const obj, Callable&& /*f*/) {
-  ERROR("Class " << pretty_type::get_runtime_type_name(*obj)
-        << " is not registered with "
-        << pretty_type::get_name<std::remove_const_t<Base>>());
+  std::ostringstream ss;
+  ss << "Class " << pretty_type::get_runtime_type_name(*obj)
+     << " is not registered with "
+     << pretty_type::get_name<std::remove_const_t<Base>>();
+  ERROR(ss);
 }
 /// \endcond
 

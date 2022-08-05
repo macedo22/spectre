@@ -4,6 +4,7 @@
 #pragma once
 
 #include <cstddef>
+#include <sstream>
 #include <tuple>
 #include <unordered_map>
 #include <utility>
@@ -46,13 +47,16 @@ struct RegisterSingletonWithObserverWriter {
       case TypeOfObservation::Reduction:
         break;
       case TypeOfObservation::Volume:
-        ERROR(
-            "Registering volume observations is not supported for singletons. "
-            "The TypeOfObservation should be 'Reduction'.");
+        std::ostringstream ss;
+        ss << "Registering volume observations is not supported for "
+              "singletons. "
+              "The TypeOfObservation should be 'Reduction'.";
+        ERROR(ss);
       default:
-        ERROR(
-            "Registering an unknown TypeOfObservation. It should be "
-            "'Reduction' for singleton.");
+        std::ostringstream ss;
+        ss << "Registering an unknown TypeOfObservation. It should be "
+              "'Reduction' for singleton.";
+        ERROR(ss);
     };
 
     // We call only on node 0; the observation call will occur only

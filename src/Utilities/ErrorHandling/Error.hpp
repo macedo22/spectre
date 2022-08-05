@@ -55,7 +55,7 @@
       disable_floating_point_exceptions();                                    \
       abort_with_error_message(__FILE__, __LINE__,                            \
                                static_cast<const char*>(__PRETTY_FUNCTION__), \
-                               MakeString{} << m);                            \
+                               m);                                            \
     }                                                                         \
   } while (false)
 

@@ -132,9 +132,10 @@ struct SingletonPack<tmpl::list<>> {
 
   template <typename Component>
   const auto& get() const {
-    ERROR(
-        "Cannot call the get() member of a SingletonPack with an empty "
-        "component list.");
+    std::ostringstream ss;
+    ss << "Cannot call the get() member of a SingletonPack with an empty "
+          "component list.";
+    ERROR(ss);
     return fake_holder_;
   }
 
@@ -447,9 +448,10 @@ struct ResourceInfo {
 
  private:
   void singleton_map_not_built() const {
-    ERROR(
-        "The singleton map has not been built yet. You must call "
-        "build_singleton_map() before you call this function.");
+    std::ostringstream ss;
+    ss << "The singleton map has not been built yet. You must call "
+          "build_singleton_map() before you call this function.";
+    ERROR(ss);
   }
   bool avoid_global_proc_0_{false};
   bool singleton_map_has_been_set_{false};
@@ -633,13 +635,14 @@ void ResourceInfo<Metavariables>::build_singleton_map(
   // requested to be exclusive haven't been assigned yet so their procs haven't
   // been added to procs_to_ignore_
   if (num_procs_to_ignore_ >= num_procs) {
-    ERROR(
-        "The total number of cores requested is less than or equal to the "
-        "number of cores that requested to be exclusive, i.e. without "
-        "array elements or multiple singletons. The array elements have "
-        "nowhere to be placed. Number of cores requested: "
-        << num_procs << ". Number of cores that requested to be exclusive: "
-        << num_procs_to_ignore_ << ".");
+    std::ostringstream ss;
+    ss << "The total number of cores requested is less than or equal to the "
+          "number of cores that requested to be exclusive, i.e. without "
+          "array elements or multiple singletons. The array elements have "
+          "nowhere to be placed. Number of cores requested: "
+       << num_procs << ". Number of cores that requested to be exclusive: "
+       << num_procs_to_ignore_ << ".";
+    ERROR(ss);
   }
 
   // Check if any singletons that requested to be on specific proc requested to
@@ -650,10 +653,11 @@ void ResourceInfo<Metavariables>::build_singleton_map(
     const auto proc = singleton_map.second;
 
     if (proc.has_value() and *proc > num_procs - 1) {
-      ERROR("Singleton " << pretty_type::name<component>()
-                         << " requested to be placed on proc " << *proc
-                         << ", but that proc is beyond the last proc "
-                         << num_procs - 1 << ".");
+      std::ostringstream ss;
+      ss << "Singleton " << pretty_type::name<component>()
+         << " requested to be placed on proc " << *proc
+         << ", but that proc is beyond the last proc " << num_procs - 1 << ".";
+      ERROR(ss);
     }
   });
 

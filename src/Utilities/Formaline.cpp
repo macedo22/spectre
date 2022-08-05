@@ -20,7 +20,9 @@ void write_to_file(const std::string& filename_without_extension) {
   const std::string filename = filename_without_extension + ".tar.gz";
   outfile = std::fopen(filename.c_str(), "w");
   if (outfile == nullptr) {
-    ERROR("Failed to open file '" << filename << "' for Formaline output");
+    std::ostringstream ss;
+    ss << "Failed to open file '" << filename << "' for Formaline output";
+    ERROR(ss);
   }
   std::fwrite(archive.data(), sizeof(char), archive.size(), outfile);
   std::fclose(outfile);

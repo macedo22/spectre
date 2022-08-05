@@ -7,6 +7,7 @@
 #include <limits>
 #include <optional>
 #include <pup.h>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -369,23 +370,26 @@ operator()(const typename ObservationValueTag::type& observation_value,
     for (size_t i = 0; i < tensor_names_.size(); ++i) {
       if (tensor_name == tensor_names_[i]) {
         if (UNLIKELY(not has_value(get<tag>(box)))) {
-          ERROR("Cannot observe a norm of '"
-                << tensor_name
-                << "' because it is a std::optional and wasn't able to be "
-                   "computed. This can happen when you try to observe errors "
-                   "without an analytic solution.");
+          std::ostringstream ss;
+          ss << "Cannot observe a norm of '" << tensor_name
+             << "' because it is a std::optional and wasn't able to be "
+                "computed. This can happen when you try to observe errors "
+                "without an analytic solution.";
+          ERROR(ss);
         }
         const auto& tensor = value(get<tag>(box));
 
         auto& [values, names] = norm_values_and_names[tensor_norm_types_[i]];
         const auto [component_names, components] = tensor.get_vector_of_data();
         if (components[0].size() != number_of_points) {
-          ERROR("The number of grid points of the mesh is "
-                << number_of_points << " but the tensor '" << tensor_name
-                << "' has " << components[0].size()
-                << " points. This means you're computing norms of tensors over "
-                   "different grids, which will give the wrong answer for "
-                   "norms that use the grid points.");
+          std::ostringstream ss;
+          ss << "The number of grid points of the mesh is " << number_of_points
+             << " but the tensor '" << tensor_name << "' has "
+             << components[0].size()
+             << " points. This means you're computing norms of tensors over "
+                "different grids, which will give the wrong answer for "
+                "norms that use the grid points.";
+          ERROR(ss);
         }
 
         if (tensor_components_[i] == "Individual") {
@@ -400,9 +404,11 @@ operator()(const typename ObservationValueTag::type& observation_value,
                   alg::accumulate(square(components[storage_index]), 0.0));
             } else if (tensor_norm_types_[i] == "L2IntegralNorm") {
               if (mesh.basis(0) == Spectral::Basis::FiniteDifference) {
-                ERROR(
-                    "The 'L2IntegralNorm' is currently not supported on finite "
-                    "difference (subcell) meshes.");
+                std::ostringstream ss;
+                ss << "The 'L2IntegralNorm' is currently not supported on "
+                      "finite "
+                      "difference (subcell) meshes.";
+                ERROR(ss);
               }
               values.push_back(definite_integral(
                   square(components[storage_index]) * det_jacobian, mesh));

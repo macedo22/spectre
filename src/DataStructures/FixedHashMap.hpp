@@ -10,6 +10,7 @@
 #include <optional>
 #include <pup.h>
 #include <pup_stl.h>
+#include <sstream>
 #include <type_traits>
 
 #include "Parallel/PupStlCpp17.hpp"
@@ -416,14 +417,16 @@ auto FixedHashMap<MaxSize, Key, ValueType, Hash,
     -> std::pair<iterator, bool> {
   auto data_it = get_data_entry<true>(key);
   if (UNLIKELY(data_it == data_.end())) {
-    ERROR("Unable to insert element into FixedHashMap of maximum size "
-          << MaxSize << " because it is full. If the current size (" << size_
-          << ") is not equal to the maximum size then please file an issue "
-             "with the code you used to produce this error. "
-          << (hash_is_perfect ? " If a perfect hash is used and it hashes to "
-                                "past the last element stored, then this "
-                                "error may also be triggered."
-                              : ""));
+    std::ostringstream ss;
+    ss << "Unable to insert element into FixedHashMap of maximum size "
+       << MaxSize << " because it is full. If the current size (" << size_
+       << ") is not equal to the maximum size then please file an issue "
+          "with the code you used to produce this error. "
+       << (hash_is_perfect ? " If a perfect hash is used and it hashes to "
+                             "past the last element stored, then this "
+                             "error may also be triggered."
+                           : "");
+    ERROR(ss);
   }
   // data_it points to either the existing element or a new bucket to place the
   // element.
@@ -495,14 +498,16 @@ auto FixedHashMap<MaxSize, Key, ValueType, Hash, KeyEqual>::operator[](
     const key_type& key) -> mapped_type& {
   auto it = get_data_entry<true>(key);
   if (it == data_.end()) {
-    ERROR("Unable to insert element into FixedHashMap of maximum size "
-          << MaxSize << " because it is full. If the current size (" << size_
-          << ") is not equal to the maximum size then please file an issue "
-             "with the code you used to produce this error. "
-          << (hash_is_perfect ? " If a perfect hash is used and it hashes to "
-                                "past the last element stored, then this "
-                                "error may also be triggered."
-                              : ""));
+    std::ostringstream ss;
+    ss << "Unable to insert element into FixedHashMap of maximum size "
+       << MaxSize << " because it is full. If the current size (" << size_
+       << ") is not equal to the maximum size then please file an issue "
+          "with the code you used to produce this error. "
+       << (hash_is_perfect ? " If a perfect hash is used and it hashes to "
+                             "past the last element stored, then this "
+                             "error may also be triggered."
+                           : "");
+    ERROR(ss);
   }
   if (not is_set(*it)) {
     ++size_;

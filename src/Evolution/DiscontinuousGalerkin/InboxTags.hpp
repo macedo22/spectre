@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <map>
 #include <optional>
+#include <sstream>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -153,9 +154,10 @@ struct BoundaryCorrectionAndGhostCellsInbox {
       // We have not received ghost cells or fluxes at this time.
       if (not current_inbox.insert(std::forward<ReceiveDataType>(data))
                   .second) {
-        ERROR("Failed to insert data to receive at instance '"
-              << time_step_id
-              << "' with tag 'BoundaryCorrectionAndGhostCellsInbox'.\n");
+        std::ostringstream ss;
+        ss << "Failed to insert data to receive at instance '" << time_step_id
+           << "' with tag 'BoundaryCorrectionAndGhostCellsInbox'.\n";
+        ERROR(ss);
       }
     }
   }

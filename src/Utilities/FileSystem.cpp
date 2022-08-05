@@ -40,7 +40,9 @@ std::string get_parent_path(const std::string& path) {
 
 std::string get_file_name(const std::string& file_path) {
   if (file_path.empty()) {
-    ERROR("Received an empty path");
+    std::ostringstream ss;
+    ss << "Must be in the Initialization phase.";
+    ERROR(ss);
   }
   if (file_path.find('/') == std::string::npos) {
     // Handle file names such as 'dummy.txt' or '.dummy.txt'
@@ -50,7 +52,9 @@ std::string get_file_name(const std::string& file_path) {
   std::regex file_name_pattern{R"(^.*/([^/]+))"};
   auto regex_matched = std::regex_search(file_path, match, file_name_pattern);
   if (not regex_matched) {
-    ERROR("Failed to find a file in the given path: '" << file_path << "'");
+    std::ostringstream ss;
+    ss << "Failed to find a file in the given path: '" << file_path << "'";
+    ERROR(ss);
   }
   return match[1];
 }
@@ -61,32 +65,39 @@ std::string get_absolute_path(const std::string& rel_path) {
   if (nullptr == name) {
     if (ENAMETOOLONG == errno) {
       // LCOV_EXCL_START
-      ERROR(
-          "Failed to convert to absolute path because the resulting name is "
-          "too long. Relative path is: '"
-          << rel_path << "'.");
+      std::ostringstream ss;
+      ss << "Failed to convert to absolute path because the resulting name is "
+            "too long. Relative path is: '"
+         << rel_path << "'.";
+      ERROR(ss);
       // LCOV_EXCL_STOP
     } else if (EACCES == errno) {
       // LCOV_EXCL_START
-      ERROR(
-          "Failed to convert to absolute path because one of the components of "
-          "the path does not have proper read access. Relative path is: '"
-          << rel_path << "'.");
+      std::ostringstream ss;
+      ss << "Failed to convert to absolute path because one of the components "
+            "of "
+            "the path does not have proper read access. Relative path is: '"
+         << rel_path << "'.";
+      ERROR(ss);
       // LCOV_EXCL_STOP
     } else if (ENOENT == errno) {
-      ERROR(
-          "Failed to convert to absolute path because one of the path "
-          "components does not exist. Relative path is: '"
-          << rel_path << "'.");
+      std::ostringstream ss;
+      ss << "Failed to convert to absolute path because one of the path "
+            "components does not exist. Relative path is: '"
+         << rel_path << "'.";
+      ERROR(ss);
       // LCOV_EXCL_START
     } else if (ELOOP == errno) {
-      ERROR(
-          "Failed to convert to absolute path because the maximum number of "
-          "symlinks was in the path. Relative path is: '"
-          << rel_path << "'.");
+      std::ostringstream ss;
+      ss << "Failed to convert to absolute path because the maximum number of "
+            "symlinks was in the path. Relative path is: '"
+         << rel_path << "'.";
+      ERROR(ss);
     }
     const auto local_errno = errno;
-    ERROR("Failed to get absolute path for an unknown reason: " << local_errno);
+    std::ostringstream ss;
+    ss << "Failed to get absolute path for an unknown reason: " << local_errno;
+    ERROR(ss);
     // LCOV_EXCL_STOP
   }
   return name.get();
@@ -98,7 +109,9 @@ void create_directory(const std::string& dir, const double wait_time,
   // factor
   static constexpr double wait_time_increase_factor = 1.1;
   if (dir.empty()) {
-    ERROR("Cannot create a directory that has no name");
+    std::ostringstream ss;
+    ss << "Cannot create a directory that has no name";
+    ERROR(ss);
   }
   if (std::string::npos == dir.find_first_not_of('/')) {
     return;  // trying to create directory '/'
@@ -125,8 +138,10 @@ void create_directory(const std::string& dir, const double wait_time,
         // we already tried to create this parent directory, so we must
         // be stuck in an infinite loop, there's no point in trying further
         // LCOV_EXCL_START
-        ERROR("Got stuck in an infinite loop while trying to create '"
-              << dir << "'.\n");
+        std::ostringstream ss;
+        ss << "Got stuck in an infinite loop while trying to create '" << dir
+           << "'.\n";
+        ERROR(ss);
         // LCOV_EXCL_STOP
       }
       create_directory(file_system::get_parent_path(dir), wait_time, num_tries);
@@ -144,8 +159,10 @@ void create_directory(const std::string& dir, const double wait_time,
     }
   }
   // LCOV_EXCL_START
-  ERROR("Unable to mkdir '" << dir << "'. Giving up after " << num_tries
-                            << " tries\n");
+  std::ostringstream ss;
+  ss << "Unable to mkdir '" << dir << "'. Giving up after " << num_tries
+     << " tries\n";
+  ERROR(ss);
   // LCOV_EXCL_STOP
 }
 
@@ -165,10 +182,12 @@ bool is_file(const std::string& path) {
   struct stat buf {};
   // stat returns 0 if the operation is successful (thing exists)
   if (0 != stat(path.c_str(), &buf)) {
-    ERROR(
-        "Failed to check if path points to a file because the path is invalid. "
-        "Given path is: "
-        << path);
+    std::ostringstream ss;
+    ss << "Failed to check if path points to a file because the path is "
+          "invalid. "
+          "Given path is: "
+       << path;
+    ERROR(ss);
   }
   return S_ISREG(buf.st_mode);
 }
@@ -177,9 +196,11 @@ size_t file_size(const std::string& file) {
   struct stat buf {};
   // stat returns 0 if the operation is successful (thing exists)
   if (0 != stat(file.c_str(), &buf)) {
-    ERROR("Cannot get size of file '"
-          << file << "' because it cannot be accessed. Either it does not "
-                     "exist or you do not have the appropriate permissions.");
+    std::ostringstream ss;
+    ss << "Cannot get size of file '" << file
+       << "' because it cannot be accessed. Either it does not "
+          "exist or you do not have the appropriate permissions.";
+    ERROR(ss);
   }
   return static_cast<size_t>(buf.st_size);
 }
@@ -196,9 +217,10 @@ std::string cwd() {
     wait_time += 10;
     the_cwd.reset(getcwd(the_cwd.get(), 0));
     if (wait_time > 61) {
-      ERROR(
-          "Could not get the current directory. This is typically related to "
-          "filesystem issues.");
+      std::ostringstream ss;
+      ss << "Could not get the current directory. This is typically related to "
+            "filesystem issues.";
+      ERROR(ss);
     }
     // LCOV_EXCL_STOP
   }
@@ -214,7 +236,9 @@ std::vector<std::string> ls(const std::string& dir_name) {
     std::this_thread::sleep_for(std::chrono::duration<double>(wait_time));
     wait_time += 10;
     if (wait_time > 61) {
-      ERROR("Failed to open directory '" << dir_name << "'");
+      std::ostringstream ss;
+      ss << "Failed to open directory '" << dir_name << "'";
+      ERROR(ss);
     }
     dir = opendir(dir_name.c_str());
     // LCOV_EXCL_STOP
@@ -245,22 +269,33 @@ void rm(const std::string& path, bool recursive) {
   if (0 != remove(path.c_str())) {
     // LCOV_EXCL_START
     if (EACCES == errno) {
-      ERROR("Could not delete file '" << path
-                                      << "' because of incorrect permissions.");
+      std::ostringstream ss;
+      ss << "Could not delete file '" << path
+         << "' because of incorrect permissions.";
+      ERROR(ss);
     } else if (EBUSY == errno) {
-      ERROR("Could not delete file '" << path << "' because it is busy.");
+      std::ostringstream ss;
+      ss << "Could not delete file '" << path << "' because it is busy.";
+      ERROR(ss);
     } else if (ENOENT == errno) {
-      ERROR("Could not delete file '" << path
-                                      << "' because it does not exist.");
+      std::ostringstream ss;
+      ss << "Could not delete file '" << path << "' because it does not exist.";
+      ERROR(ss);
     } else if (EROFS == errno) {
-      ERROR("Could not delete file '"
-            << path << "' because it is on a read-only filesystem.");
+      std::ostringstream ss;
+      ss << "Could not delete file '" << path
+         << "' because it is on a read-only filesystem.";
+      ERROR(ss);
     } else if (ENOTEMPTY == errno or EEXIST == errno) {
-      ERROR("Could not delete file '"
-            << path << "' because the directory is not empty");
+      std::ostringstream ss;
+      ss << "Could not delete file '" << path
+         << "' because the directory is not empty";
+      ERROR(ss);
     }
-    ERROR("Could not delete file '" << path
-                                    << "' because an unknown error occurred.");
+    std::ostringstream ss;
+    ss << "Could not delete file '" << path
+       << "' because an unknown error occurred.";
+    ERROR(ss);
     // LCOV_EXCL_STOP
   }
 }
@@ -270,7 +305,9 @@ std::vector<std::string> glob(const std::string& pattern) {
   const int return_value =
       ::glob(pattern.c_str(), GLOB_TILDE, nullptr, &buffer);
   if (return_value != 0) {
-    ERROR("Unable to resolve glob '" + pattern + "': " + std::strerror(errno));
+    std::ostringstream ss;
+    ss << "Unable to resolve glob '" + pattern + "': " + std::strerror(errno);
+    ERROR(ss);
   }
   std::vector<std::string> file_names(
       buffer.gl_pathv,

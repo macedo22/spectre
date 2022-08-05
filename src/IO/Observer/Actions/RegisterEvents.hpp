@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <optional>
+#include <sstream>
 #include <unordered_map>
 
 #include "DataStructures/DataBox/DataBox.hpp"
@@ -72,12 +73,13 @@ get_registration_observation_type_and_key(const Event& event,
               dynamic_cast<const EventType*>(&event);
           if (derived_class_ptr != nullptr) {
             if (already_registered) {
-              ERROR(
-                  "Already registered the event by casting down to a "
-                  "different Event derived class. This means you have an "
-                  "Event where A inherits from B and both A and B define "
-                  "get_observation_type_and_id_for_registration. This "
-                  "behavior is not supported. Please make a separate Event.");
+              std::ostringstream ss;
+              ss << "Already registered the event by casting down to a "
+                    "different Event derived class. This means you have an "
+                    "Event where A inherits from B and both A and B define "
+                    "get_observation_type_and_id_for_registration. This "
+                    "behavior is not supported. Please make a separate Event.";
+              ERROR(ss);
             }
             already_registered = true;
             result =

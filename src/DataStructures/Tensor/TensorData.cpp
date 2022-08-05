@@ -6,6 +6,7 @@
 #include <ostream>
 #include <pup.h>
 #include <pup_stl.h>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <variant>
@@ -36,8 +37,10 @@ std::ostream& operator<<(std::ostream& os, const TensorComponent& t) {
     return os << "(" << t.name << ", " << std::get<std::vector<float>>(t.data)
               << ")";
   } else {
-    ERROR("Unknown index value (" << t.data.index()
-                                  << ") in std::variant of tensor component.");
+    std::ostringstream ss;
+    ss << "Unknown index value (" << t.data.index()
+       << ") in std::variant of tensor component.";
+    ERROR(ss);
   }
 }
 

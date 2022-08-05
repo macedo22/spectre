@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <sstream>
+
 #include "ApparentHorizons/FastFlow.hpp"
 #include "Utilities/ErrorHandling/Error.hpp"
 #include "Utilities/PrettyType.hpp"
@@ -28,9 +30,11 @@ struct ErrorOnFailedApparentHorizon {
                     const Parallel::GlobalCache<Metavariables>& /*cache*/,
                     const TemporalId& /*temporal_id*/,
                     const FastFlow::Status failure_reason) {
-    ERROR("Apparent horizon finder "
-          << pretty_type::name<InterpolationTargetTag>()
-          << " failed, reason = " << failure_reason);
+    std::ostringstream ss;
+    ss << "Apparent horizon finder "
+       << pretty_type::name<InterpolationTargetTag>()
+       << " failed, reason = " << failure_reason;
+    ERROR(ss);
   }
 };
 

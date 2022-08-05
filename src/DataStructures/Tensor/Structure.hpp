@@ -8,6 +8,7 @@
 
 #include <array>
 #include <limits>
+#include <sstream>
 
 #include "DataStructures/Tensor/IndexType.hpp"
 #include "DataStructures/Tensor/Metafunctions.hpp"
@@ -272,10 +273,11 @@ struct ComponentNameImpl {
               gsl::at(labels, i) = "txyz";
               break;
             default:
-              ERROR("Tensor dim["
-                    << i
-                    << "] must be 1,2,3, or 4 for default axis_labels. "
-                       "Either pass a string or extend the function.");
+              std::ostringstream ss;
+              ss << "Tensor dim[" << i
+                 << "] must be 1,2,3, or 4 for default axis_labels. "
+                    "Either pass a string or extend the function.";
+              ERROR(ss);
           }
         } else {
           switch (gsl::at(index_dim, i)) {
@@ -289,18 +291,20 @@ struct ComponentNameImpl {
               gsl::at(labels, i) = "xyz";
               break;
             default:
-              ERROR("Tensor dim["
-                    << i
-                    << "] must be 1,2, or 3 for default axis_labels. "
-                       "Either pass a string or extend the function.");
+              std::ostringstream ss;
+              ss << "Tensor dim[" << i
+                 << "] must be 1,2, or 3 for default axis_labels. "
+                    "Either pass a string or extend the function.";
+              ERROR(ss);
           }
         }
       } else {
         if (gsl::at(axis_labels, i).length() != gsl::at(index_dim, i)) {
-          ERROR("Dimension mismatch: Tensor has dim = "
-                << gsl::at(index_dim, i) << ", but you specified "
-                << gsl::at(axis_labels, i).length() << " different labels in "
-                << gsl::at(axis_labels, i));
+          std::ostringstream ss;
+          ss << "Dimension mismatch: Tensor has dim = " << gsl::at(index_dim, i)
+             << ", but you specified " << gsl::at(axis_labels, i).length()
+             << " different labels in " << gsl::at(axis_labels, i);
+          ERROR(ss);
         }
       }
     }

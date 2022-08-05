@@ -7,6 +7,7 @@
 #include <array>
 #include <cmath>
 #include <pup.h>
+#include <sstream>
 #include <string>
 #include <utility>
 
@@ -153,7 +154,9 @@ FastFlow::iterate_horizon_finder(
     } break;
     default:  // LCOV_EXCL_LINE
       // LCOV_EXCL_START
-      ERROR("Cannot find the specified value of FlowType, need to add a case?");
+      std::ostringstream ss;
+      ss << "Cannot find the specified value of FlowType, need to add a case?";
+      ERROR(ss);
       // LCOV_EXCL_STOP
   }
 
@@ -282,7 +285,9 @@ std::ostream& operator<<(std::ostream& os,
       return os << "Fast";
     default:  // LCOV_EXCL_LINE
       // LCOV_EXCL_START
-      ERROR("Unknown FastFlow::FlowType");
+      std::ostringstream ss;
+      ss << "Unknown FastFlow::FlowType";
+      ERROR(ss);
       // LCOV_EXCL_STOP
   }
 }
@@ -320,7 +325,9 @@ std::ostream& operator<<(std::ostream& os, const FastFlow::Status& status) {
       return os << "Failed: Cannot interpolate onto surface";
     default:  // LCOV_EXCL_LINE
       // LCOV_EXCL_START
-      ERROR("Need to add another case, don't understand value of 'status'");
+      std::ostringstream ss;
+      ss << "Need to add another case, don't understand value of 'status'";
+      ERROR(ss);
       // LCOV_EXCL_STOP
   }
 }
@@ -350,10 +357,11 @@ FastFlow::FlowType Options::create_from_yaml<FastFlow::FlowType>::create<void>(
   } else if ("Fast" == flow_type_read) {
     return FastFlow::FlowType::Fast;
   }
-  PARSE_ERROR(options.context(), "Failed to convert \""
-                                     << flow_type_read
-                                     << "\" to FastFlow::FlowType. Must be "
-                                        "one of Jacobi, Curvature, Fast.");
+  std::ostringstream ss;
+  ss << "Failed to convert \"" << flow_type_read
+     << "\" to FastFlow::FlowType. Must be "
+        "one of Jacobi, Curvature, Fast.";
+  PARSE_ERROR(options.context(), ss);
 }
 
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(0, data)

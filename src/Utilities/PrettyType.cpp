@@ -4,6 +4,7 @@
 #include "Utilities/PrettyType.hpp"
 
 #include <cstddef>
+#include <sstream>
 #include <string>
 #include <string_view>
 
@@ -183,7 +184,10 @@ std::string extract_short_name(const std::string& name) {
       case 'f': return "float";
       case 'd': return "double";
       case 'e': return "long double";
-      default: ERROR("Builtin type " << name << " not handled");
+      default:
+        std::ostringstream ss;
+        ss << "Builtin type " << name << " not handled";
+        ERROR(ss);
     }
   } else if (name[0] == 'S') {
     // More possible standard library special cases, but with template

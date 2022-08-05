@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <sstream>
+
 #include "DataStructures/DataBox/DataBox.hpp"
 #include "Parallel/NodeLock.hpp"
 #include "Utilities/ErrorHandling/Error.hpp"
@@ -41,8 +43,10 @@ struct GetLockPointer {
     } else {
       // silence 'unused variable' warnings
       (void)node_lock;
-      ERROR("Could not find required tag " << pretty_type::get_name<LockTag>()
-                                           << " in the databox");
+      std::ostringstream ss;
+      ss << "Could not find required tag " << pretty_type::get_name<LockTag>()
+         << " in the databox";
+      ERROR(ss);
     }
   }
 };

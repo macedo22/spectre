@@ -717,10 +717,11 @@ decltype(auto) mutate(const gsl::not_null<DataBox<TagList>*> box,
                     detail::first_matching_tag<TagList, MutateTags>>...>,
                 "Can only mutate mutable items");
   if (UNLIKELY(box->mutate_locked_box_)) {
-    ERROR(
-        "Unable to mutate a DataBox that is already being mutated. This "
-        "error occurs when mutating a DataBox from inside the invokable "
-        "passed to the mutate function.");
+    std::ostringstream ss;
+    ss << "Unable to mutate a DataBox that is already being mutated. This "
+          "error occurs when mutating a DataBox from inside the invokable "
+          "passed to the mutate function.";
+    ERROR(ss);
   }
   box->mutate_locked_box_ = true;
   using mutate_tags_list =
@@ -801,11 +802,13 @@ template <typename Tag>
 const auto& DataBox<tmpl::list<Tags...>>::get() const {
   if constexpr (std::is_same_v<Tag, ::Tags::DataBox>) {
     if (UNLIKELY(mutate_locked_box_)) {
-      ERROR(
-          "Unable to retrieve a (compute) item 'DataBox' from the DataBox from "
-          "within a call to mutate. You must pass these either through the "
-          "capture list of the lambda or the constructor of a class, this "
-          "restriction exists to avoid complexity.");
+      std::ostringstream ss;
+      ss << "Unable to retrieve a (compute) item 'DataBox' from the DataBox "
+            "from "
+            "within a call to mutate. You must pass these either through the "
+            "capture list of the lambda or the constructor of a class, this "
+            "restriction exists to avoid complexity.";
+      ERROR(ss);
     }
     return *this;
   } else {
@@ -819,12 +822,13 @@ const auto& DataBox<tmpl::list<Tags...>>::get() const {
         "base (class) tag was added to the DataBox.");
     using item_tag = detail::first_matching_tag<tags_list, Tag>;
     if (UNLIKELY(mutate_locked_box_)) {
-      ERROR("Unable to retrieve a (compute) item '"
-            << db::tag_name<item_tag>()
-            << "' from the DataBox from within a "
-               "call to mutate. You must pass these either through the capture "
-               "list of the lambda or the constructor of a class, this "
-               "restriction exists to avoid complexity.");
+      std::ostringstream ss;
+      ss << "Unable to retrieve a (compute) item '" << db::tag_name<item_tag>()
+         << "' from the DataBox from within a "
+            "call to mutate. You must pass these either through the capture "
+            "list of the lambda or the constructor of a class, this "
+            "restriction exists to avoid complexity.";
+      ERROR(ss);
     }
     if constexpr (detail::Item<item_tag>::item_type ==
                   detail::ItemType::Reference) {

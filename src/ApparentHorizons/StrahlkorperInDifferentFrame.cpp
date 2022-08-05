@@ -6,6 +6,7 @@
 #include <cmath>
 #include <cstddef>
 #include <optional>
+#include <sstream>
 #include <stdexcept>
 
 #include "DataStructures/DataVector.hpp"
@@ -240,14 +241,16 @@ void strahlkorper_in_different_frame(
         make_not_null(&get(f_bracket_r_min)),
         make_not_null(&get(f_bracket_r_max)), radius_function_for_bracketing);
   } catch (std::runtime_error& e) {
-    ERROR(
-        "StrahlkorperInDifferentFrame: Trying to find radius of Strahlkorper "
-        "by root finding, but cannot bracket the root between "
+    std::ostringstream
+        << "StrahlkorperInDifferentFrame: Trying to find radius of "
+           "Strahlkorper "
+           "by root finding, but cannot bracket the root between "
         << r_min * (1.0 - padding) << " and " << r_max * (1.0 + padding)
         << ". Maybe the padding interval needs to be increased?  Or maybe the "
            "Strahlkorper is extremely close to the excision boundary? Internal "
            "error message is "
-        << e.what());
+        << e.what();
+    ERROR(ss);
   }
   // Find the radius at each angular point by root finding.
   const auto radius_at_each_angle = RootFinder::toms748(

@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <set>
+#include <sstream>
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
@@ -62,8 +63,10 @@ struct RegisterVolumeContributorWithObserverWriter {
                     volume_observers_registered->at(observation_key)
                         .find(id_of_caller) !=
                     volume_observers_registered->at(observation_key).end())) {
-              ERROR("Trying to insert a Observer component more than once: "
-                    << id_of_caller);
+              std::ostringstream ss;
+              ss << "Trying to insert a Observer component more than once: "
+                 << id_of_caller;
+              ERROR(ss);
             }
 
             volume_observers_registered->at(observation_key)
@@ -73,10 +76,11 @@ struct RegisterVolumeContributorWithObserverWriter {
       (void)box;
       (void)observation_key;
       (void)id_of_caller;
-      ERROR(
-          "Could not find tag "
-          "observers::Tags::ExpectedContributorsForObservations in the "
-          "DataBox.");
+      std::ostringstream ss;
+      ss << "Could not find tag "
+            "observers::Tags::ExpectedContributorsForObservations in the "
+            "DataBox.";
+      ERROR(ss);
     }
   }
 };
@@ -107,18 +111,21 @@ struct DeregisterVolumeContributorWithObserverWriter {
                   volume_observers_registered) {
             if (UNLIKELY(volume_observers_registered->find(observation_key) ==
                          volume_observers_registered->end())) {
-              ERROR(
-                  "Trying to deregister a component associated with an "
-                  "unregistered observation key: "
-                  << observation_key);
+              std::ostringstream ss;
+              ss << "Trying to deregister a component associated with an "
+                    "unregistered observation key: "
+                 << observation_key;
+              ERROR(ss);
             }
 
             if (UNLIKELY(
                     volume_observers_registered->at(observation_key)
                         .find(id_of_caller) ==
                     volume_observers_registered->at(observation_key).end())) {
-              ERROR("Trying to deregister an unregistered component: "
-                    << id_of_caller);
+              std::ostringstream ss;
+              ss << "Trying to deregister an unregistered component: "
+                 << id_of_caller;
+              ERROR(ss);
             }
 
             volume_observers_registered->at(observation_key)
@@ -133,10 +140,11 @@ struct DeregisterVolumeContributorWithObserverWriter {
       (void)box;
       (void)observation_key;
       (void)id_of_caller;
-      ERROR(
-          "Could not find tag "
-          "observers::Tags::ExpectedContributorsForObservations in the "
-          "DataBox.");
+      std::ostringstream ss;
+      ss << "Could not find tag "
+            "observers::Tags::ExpectedContributorsForObservations in the "
+            "DataBox.";
+      ERROR(ss);
     }
   }
 };
@@ -177,8 +185,10 @@ struct RegisterReductionNodeWithWritingNode {
                 reduction_observers_registered_nodes->at(observation_key);
             if (UNLIKELY(registered_nodes_for_key.find(caller_node_id) !=
                          registered_nodes_for_key.end())) {
-              ERROR("Already registered node "
-                    << caller_node_id << " for reduction observations.");
+              std::ostringstream ss;
+              ss << "Already registered node " << caller_node_id
+                 << " for reduction observations.";
+              ERROR(ss);
             }
             registered_nodes_for_key.insert(caller_node_id);
           });
@@ -186,11 +196,12 @@ struct RegisterReductionNodeWithWritingNode {
       (void)box;
       (void)observation_key;
       (void)caller_node_id;
-      ERROR(
-          "Do not have tag "
-          "observers::Tags::NodesExpectedToContributeReductions "
-          "in the DataBox. This means components are registering for "
-          "reductions before initialization is complete.");
+      std::ostringstream ss;
+      ss << "Do not have tag "
+            "observers::Tags::NodesExpectedToContributeReductions "
+            "in the DataBox. This means components are registering for "
+            "reductions before initialization is complete.";
+      ERROR(ss);
     }
   }
 };
@@ -227,17 +238,21 @@ struct DeregisterReductionNodeWithWritingNode {
             if (UNLIKELY(reduction_observers_registered_nodes->find(
                              observation_key) ==
                          reduction_observers_registered_nodes->end())) {
-              ERROR(
-                  "Trying to deregister a node associated with an unregistered "
-                  "observation key: "
-                  << observation_key);
+              std::ostringstream ss;
+              ss << "Trying to deregister a node associated with an "
+                    "unregistered "
+                    "observation key: "
+                 << observation_key;
+              ERROR(ss);
             }
             auto& registered_nodes_for_key =
                 reduction_observers_registered_nodes->at(observation_key);
             if (UNLIKELY(registered_nodes_for_key.find(caller_node_id) ==
                          registered_nodes_for_key.end())) {
-              ERROR("Trying to deregister an unregistered node: "
-                    << caller_node_id);
+              std::ostringstream ss;
+              ss << "Trying to deregister an unregistered node: "
+                 << caller_node_id;
+              ERROR(ss);
             }
             registered_nodes_for_key.erase(caller_node_id);
             if (UNLIKELY(registered_nodes_for_key.size() == 0)) {
@@ -248,11 +263,12 @@ struct DeregisterReductionNodeWithWritingNode {
       (void)box;
       (void)observation_key;
       (void)caller_node_id;
-      ERROR(
-          "Do not have tag "
-          "observers::Tags::NodesExpectedToContributeReductions "
-          "in the DataBox. This means components are registering for "
-          "reductions before initialization is complete.");
+      std::ostringstream ss;
+      ss << "Do not have tag "
+            "observers::Tags::NodesExpectedToContributeReductions "
+            "in the DataBox. This means components are registering for "
+            "reductions before initialization is complete.";
+      ERROR(ss);
     }
   }
 };
@@ -303,9 +319,11 @@ struct RegisterReductionContributorWithObserverWriter {
               reduction_observers_registered->at(observation_key)
                   .insert(id_of_caller);
             } else {
-              ERROR("Trying to insert a Observer component more than once: "
-                    << id_of_caller
-                    << " with observation key: " << observation_key);
+              std::ostringstream ss;
+              ss << "Trying to insert a Observer component more than once: "
+                 << id_of_caller
+                 << " with observation key: " << observation_key;
+              ERROR(ss);
             }
           });
     } else {
@@ -313,10 +331,11 @@ struct RegisterReductionContributorWithObserverWriter {
       (void)cache;
       (void)observation_key;
       (void)id_of_caller;
-      ERROR(
-          "Could not find tag "
-          "observers::Tags::ExpectedContributorsForObservations in the "
-          "DataBox.");
+      std::ostringstream ss;
+      ss << "Could not find tag "
+            "observers::Tags::ExpectedContributorsForObservations in the "
+            "DataBox.";
+      ERROR(ss);
     }
   }
 };
@@ -353,18 +372,21 @@ struct DeregisterReductionContributorWithObserverWriter {
             if (UNLIKELY(
                     reduction_observers_registered->find(observation_key) ==
                     reduction_observers_registered->end())) {
-              ERROR(
-                  "Trying to deregister a component associated with an "
-                  "unregistered observation key: "
-                  << observation_key);
+              std::ostringstream ss;
+              ss << "Trying to deregister a component associated with an "
+                    "unregistered observation key: "
+                 << observation_key;
+              ERROR(ss);
             }
             auto& contributors_for_key =
                 reduction_observers_registered->at(observation_key);
             if (UNLIKELY(contributors_for_key.find(id_of_caller) ==
                          contributors_for_key.end())) {
-              ERROR("Trying to deregister an unregistered component: "
-                    << id_of_caller
-                    << " with observation key: " << observation_key);
+              std::ostringstream ss;
+              ss << "Trying to deregister an unregistered component: "
+                 << id_of_caller
+                 << " with observation key: " << observation_key;
+              ERROR(ss);
             }
             contributors_for_key.erase(id_of_caller);
             if (UNLIKELY(contributors_for_key.size() == 0)) {
@@ -381,10 +403,11 @@ struct DeregisterReductionContributorWithObserverWriter {
       (void)cache;
       (void)observation_key;
       (void)id_of_caller;
-      ERROR(
-          "Could not find tag "
-          "observers::Tags::ExpectedContributorsForObservations in the "
-          "DataBox.");
+      std::ostringstream ss;
+      ss << "Could not find tag "
+            "observers::Tags::ExpectedContributorsForObservations in the "
+            "DataBox.";
+      ERROR(ss);
     }
   }
 };
@@ -422,12 +445,13 @@ struct RegisterContributorWithObserver {
                          array_component_ids->at(observation_key)
                                  .find(component_id) !=
                              array_component_ids->at(observation_key).end())) {
-              ERROR(
-                  "Trying to insert a component_id more than once for "
-                  "observation. This means an element is registering itself "
-                  "with the observers more than once. The component_id is "
-                  << component_id << " and the observation key is "
-                  << observation_key);
+              std::ostringstream ss;
+              ss << "Trying to insert a component_id more than once for "
+                    "observation. This means an element is registering itself "
+                    "with the observers more than once. The component_id is "
+                 << component_id << " and the observation key is "
+                 << observation_key;
+              ERROR(ss);
             }
             array_component_ids->operator[](observation_key)
                 .insert(component_id);
@@ -459,16 +483,18 @@ struct RegisterContributorWithObserver {
                                Parallel::ArrayIndex<ArrayIndex>(array_index)});
           return;
         default:
-          ERROR(
-              "Registering an unknown TypeOfObservation. Should be one of "
-              "'Reduction' or 'Volume'");
+          std::ostringstream ss;
+          ss << "Registering an unknown TypeOfObservation. Should be one of "
+                "'Reduction' or 'Volume'";
+          ERROR(ss);
       };
     } else {
-      ERROR(
-          "The DataBox must contain the tag "
-          "observers::Tags::ExpectedContributorsForObservations when the "
-          "action "
-          "RegisterContributorWithObserver is called.");
+      std::ostringstream ss;
+      ss << "The DataBox must contain the tag "
+            "observers::Tags::ExpectedContributorsForObservations when the "
+            "action "
+            "RegisterContributorWithObserver is called.";
+      ERROR(ss);
     }
   }
 };
@@ -502,18 +528,21 @@ struct DeregisterContributorWithObserver {
                   array_component_ids) {
             if (UNLIKELY(array_component_ids->find(observation_key) ==
                          array_component_ids->end())) {
-              ERROR(
-                  "Trying to deregister a component associated with an "
-                  "unregistered observation key: "
-                  << observation_key);
+              std::ostringstream ss;
+              ss << "Trying to deregister a component associated with an "
+                    "unregistered observation key: "
+                 << observation_key;
+              ERROR(ss);
             }
             auto& component_ids_for_key =
                 array_component_ids->at(observation_key);
             if (UNLIKELY(component_ids_for_key.find(component_id) ==
                          array_component_ids->at(observation_key).end())) {
-              ERROR("Trying to deregister an unregistered component: "
-                    << component_id
-                    << " with observation key: " << observation_key);
+              std::ostringstream ss;
+              ss << "Trying to deregister an unregistered component: "
+                 << component_id
+                 << " with observation key: " << observation_key;
+              ERROR(ss);
             }
             component_ids_for_key.erase(component_id);
             if (UNLIKELY(component_ids_for_key.size() == 0)) {
@@ -548,15 +577,17 @@ struct DeregisterContributorWithObserver {
                                Parallel::ArrayIndex<ArrayIndex>(array_index)});
           return;
         default:
-          ERROR(
-              "Attempting to deregister an unknown TypeOfObservation. "
-              "Should be one of 'Reduction' or 'Volume'");
+          std::ostringstream ss;
+          ss << "Attempting to deregister an unknown TypeOfObservation. "
+                "Should be one of 'Reduction' or 'Volume'";
+          ERROR(ss);
       };
     } else {
-      ERROR(
-          "The DataBox must contain the tag "
-          "observers::Tags::ExpectedContributorsForObservations when the "
-          "action DeregisterContributorWithObserver is called.");
+      std::ostringstream ss;
+      ss << "The DataBox must contain the tag "
+            "observers::Tags::ExpectedContributorsForObservations when the "
+            "action DeregisterContributorWithObserver is called.";
+      ERROR(ss);
     }
   }
 };

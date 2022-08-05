@@ -6,6 +6,7 @@
 #include <array>
 #include <cmath>  // IWYU pragma: keep
 #include <cstddef>
+#include <sstream>
 #include <utility>
 
 #include "DataStructures/DataVector.hpp"
@@ -897,12 +898,13 @@ void radial_distance(const gsl::not_null<Scalar<DataVector>*> radial_distance,
                      const Strahlkorper<Frame>& strahlkorper_a,
                      const Strahlkorper<Frame>& strahlkorper_b) {
   if (strahlkorper_a.expansion_center() != strahlkorper_b.expansion_center()) {
-    ERROR(
-        "Currently computing the radial distance between two Strahlkorpers "
-        "is only supported if they have the same centers, but the "
-        "strahlkorpers provided have centers "
-        << strahlkorper_a.expansion_center() << " and "
-        << strahlkorper_b.expansion_center());
+    std::ostringstream ss;
+    ss << "Currently computing the radial distance between two Strahlkorpers "
+          "is only supported if they have the same centers, but the "
+          "strahlkorpers provided have centers "
+       << strahlkorper_a.expansion_center() << " and "
+       << strahlkorper_b.expansion_center();
+    ERROR(ss);
   }
   get(*radial_distance)
       .destructive_resize(strahlkorper_a.ylm_spherepack().physical_size());

@@ -12,6 +12,7 @@
 #include <iosfwd>
 #include <limits>
 #include <optional>
+#include <sstream>
 
 #include "Domain/Structure/SegmentId.hpp"
 #include "Domain/Structure/Side.hpp"
@@ -114,7 +115,9 @@ class ElementId {
       case 2:
         return {refinement_level_zeta_, index_zeta_};
       default:
-        ERROR("Invalid dimension: " << dim);
+        std::ostringstream ss;
+        ss << "Invalid dimension: " << dim;
+        ERROR(ss);
     }
   }
 

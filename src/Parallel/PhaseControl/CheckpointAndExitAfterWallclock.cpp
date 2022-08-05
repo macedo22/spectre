@@ -5,6 +5,7 @@
 
 #include <optional>
 #include <pup.h>
+#include <sstream>
 
 #include "Options/Options.hpp"
 #include "Parallel/Phase.hpp"
@@ -16,15 +17,19 @@ namespace Tags {
 std::optional<Parallel::Phase> RestartPhase::combine_method::operator()(
     const std::optional<Parallel::Phase> /*first_phase*/,
     const std::optional<Parallel::Phase>& /*second_phase*/) {
-  ERROR(
-      "The restart phase should only be altered by the phase change "
-      "arbitration in the Main chare, so no reduction data should be "
-      "provided.");
+  std::ostringstream ss;
+  ss << "The restart phase should only be altered by the phase change "
+        "arbitration in the Main chare, so no reduction data should be "
+        "provided.";
+  ERROR(ss);
 }
 
 std::optional<double> WallclockHoursAtCheckpoint::combine_method::operator()(
     const std::optional<double> /*first_time*/,
     const std::optional<double>& /*second_time*/) {
+  std::ostringstream ss;
+  ss << "Must be in the Initialization phase.";
+  ERROR(ss);
   ERROR(
       "The wallclock time at which a checkpoint was requested should "
       "only be altered by the phase change arbitration in the Main "
@@ -37,8 +42,10 @@ CheckpointAndExitAfterWallclock::CheckpointAndExitAfterWallclock(
     const Options::Context& context)
     : wallclock_hours_for_checkpoint_and_exit_(wallclock_hours) {
   if (wallclock_hours.has_value() and wallclock_hours.value() < 0.0) {
-    PARSE_ERROR(context, "Must give a positive time in hours, but got "
-                             << wallclock_hours.value());
+    std::ostringstream ss;
+    ss << "Must give a positive time in hours, but got "
+       << wallclock_hours.value();
+    PARSE_ERROR(context, ss);
   }
 }
 

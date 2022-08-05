@@ -117,8 +117,10 @@ class VolumeData : public h5::Object {
         return observation_id;
       }
     }
-    ERROR("No observation with value " << observation_value
-                                       << " found in volume file.");
+    std::ostringstream ss;
+    ss << "No observation with value " << observation_value
+       << " found in volume file.";
+    ERROR(ss);
   }
 
   /// List all the tensor components at observation id `observation_id`

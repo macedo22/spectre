@@ -9,6 +9,7 @@
 #include <map>
 #include <pup.h>
 #include <pup_stl.h>  // IWYU pragma: keep
+#include <sstream>
 #include <type_traits>
 #include <utility>
 
@@ -334,7 +335,9 @@ BoundaryHistory<LocalVars, RemoteVars, CouplingResult>::local_data(
       return *value_it;
     }
   }
-  ERROR("No local data was found at time " << time << ".");
+  std::ostringstream ss;
+  ss << "No local data was found at time " << time << ".";
+  ERROR(ss);
 }
 
 template <typename LocalVars, typename RemoteVars, typename CouplingResult>

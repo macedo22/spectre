@@ -11,6 +11,7 @@
 #include <numeric>
 #include <optional>
 #include <pup.h>
+#include <sstream>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -236,9 +237,11 @@ bool MutableGlobalCache<Metavariables>::mutable_cache_item_is_ready(
     std::get<1>(tuples::get<tag>(mutable_global_cache_))
         .push_back(std::move(optional_callback));
     if (std::get<1>(tuples::get<tag>(mutable_global_cache_)).size() > 20000) {
-      ERROR("The number of callbacks in MutableGlobalCache for tag "
-            << pretty_type::short_name<GlobalCacheTag>()
-            << " has gotten too large, and may be growing without bound");
+      std::ostringstream ss;
+      ss << "The number of callbacks in MutableGlobalCache for tag "
+         << pretty_type::short_name<GlobalCacheTag>()
+         << " has gotten too large, and may be growing without bound";
+      ERROR(ss);
     }
     return false;
   } else {
@@ -313,10 +316,11 @@ void MutableGlobalCache<Metavariables>::compute_size_for_memory_monitor(
   } else {
     (void)global_cache_proxy;
     (void)time;
-    ERROR(
-        "MutableGlobalCache::compute_size_for_memory_monitor can only be "
-        "called if the MemoryMonitor is in the component list in the "
-        "metavariables.\n");
+    std::ostringstream ss;
+    ss << "MutableGlobalCache::compute_size_for_memory_monitor can only be "
+          "called if the MemoryMonitor is in the component list in the "
+          "metavariables.\n";
+    ERROR(ss);
   }
 }
 #if defined(__GNUC__) && !defined(__clang__)
@@ -655,9 +659,10 @@ void GlobalCache<Metavariables>::compute_size_for_memory_monitor(
         mem_monitor_proxy, time, my_node, size_in_MB);
   } else {
     (void)time;
-    ERROR(
-        "GlobalCache::compute_size_for_memory_monitor can only be called if "
-        "the MemoryMonitor is in the component list in the metavariables.\n");
+    std::ostringstream ss;
+    ss << "GlobalCache::compute_size_for_memory_monitor can only be called if "
+          "the MemoryMonitor is in the component list in the metavariables.\n";
+    ERROR(ss);
   }
 }
 #if defined(__GNUC__) && !defined(__clang__)
@@ -676,9 +681,11 @@ GlobalCache<Metavariables>::get_main_proxy() {
   if (main_proxy_.has_value()) {
     return main_proxy_;
   } else {
-    ERROR(
-        "Attempting to retrieve the main proxy in a context in which the main "
-        "proxy has not been supplied to the constructor.");
+    std::ostringstream ss;
+    ss << "Attempting to retrieve the main proxy in a context in which the "
+          "main "
+          "proxy has not been supplied to the constructor.";
+    ERROR(ss);
   }
 }
 
@@ -691,9 +698,10 @@ template <typename Metavariables>
 typename Parallel::GlobalCache<Metavariables>::mutable_global_cache_proxy_type
 GlobalCache<Metavariables>::mutable_global_cache_proxy() {
   if (not mutable_global_cache_proxy_is_set()) {
-    ERROR(
-        "Cannot get a proxy to the mutable global cache because the proxy "
-        "isn't set.");
+    std::ostringstream ss;
+    ss << "Cannot get a proxy to the mutable global cache because the proxy "
+          "isn't set.";
+    ERROR(ss);
   }
   return mutable_global_cache_proxy_;
 }
@@ -786,11 +794,13 @@ void GlobalCache<Metavariables>::pup(PUP::er& p) {
   p | my_local_rank_;
   p | procs_per_node_;
   if (not p.isUnpacking() and mutable_global_cache_ != nullptr) {
-    ERROR(
-        "Cannot serialize the const global cache when the mutable global cache "
-        "is set to a local pointer. If this occurs in a unit test, avoid the "
-        "serialization. If this occurs in a production executable, be sure "
-        "that the MutableGlobalCache is accessed by a charm proxy.");
+    std::ostringstream ss;
+    ss << "Cannot serialize the const global cache when the mutable global "
+          "cache "
+          "is set to a local pointer. If this occurs in a unit test, avoid the "
+          "serialization. If this occurs in a production executable, be sure "
+          "that the MutableGlobalCache is accessed by a charm proxy.";
+    ERROR(ss);
   }
 }
 #if defined(__GNUC__) && !defined(__clang__)

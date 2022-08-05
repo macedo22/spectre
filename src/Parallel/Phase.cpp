@@ -63,9 +63,10 @@ std::ostream& operator<<(std::ostream& os, const Phase& phase) {
       return os << "WriteCheckpoint";
     default:  // LCOV_EXCL_LINE
       // LCOV_EXCL_START
-      ERROR("Stream operator does not have case for Phase with integral value "
-            << static_cast<std::underlying_type_t<Parallel::Phase>>(phase)
-            << "\n");
+      std::ostringstream ss;
+      ss << "Stream operator does not have case for Phase with integral value "
+         << static_cast<std::underlying_type_t<Parallel::Phase>>(phase) << "\n";
+      ERROR(ss);
       // LCOV_EXCL_STOP
   }
 }

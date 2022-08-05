@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <tuple>
 #include <variant>
@@ -227,16 +228,19 @@ struct ReadAllVolumeDataAndDistribute {
                   case ObservationSelector::Last:
                     return all_observation_ids.back();
                   default:
-                    ERROR("Unknown importers::ObservationSelector: "
-                          << local_obs_selector);
+                    std::ostringstream ss;
+                    ss << "Unknown importers::ObservationSelector: "
+                       << local_obs_selector;
+                    ERROR(ss);
                 }
               }},
           Parallel::get<Tags::ObservationValue<ImporterOptionsGroup>>(cache));
       if (prev_observation_id.has_value() and
           prev_observation_id.value() != observation_id) {
-        ERROR("Inconsistent selection of observation ID in file "
-              << file_name
-              << ". Make sure all files select the same observation ID.");
+        std::ostringstream ss;
+        ss << "Inconsistent selection of observation ID in file " << file_name
+           << ". Make sure all files select the same observation ID.";
+        ERROR(ss);
       }
       prev_observation_id = observation_id;
 

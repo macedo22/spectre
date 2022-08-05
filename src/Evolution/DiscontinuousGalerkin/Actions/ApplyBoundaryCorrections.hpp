@@ -7,6 +7,7 @@
 #include <limits>
 #include <map>
 #include <optional>
+#include <sstream>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -398,15 +399,16 @@ void apply_boundary_corrections(
           const auto& direction = mortar_id.first;
           if (UNLIKELY(mortar_id.second ==
                        ElementId<volume_dim>::external_boundary_id())) {
-            ERROR(
-                "Cannot impose boundary conditions on external boundary in "
-                "direction "
-                << direction
-                << " in the ApplyBoundaryCorrections action. Boundary "
-                   "conditions are applied in the ComputeTimeDerivative "
-                   "action "
-                   "instead. You may have unintentionally added external "
-                   "mortars in one of the initialization actions.");
+            std::ostringstream ss;
+            ss << "Cannot impose boundary conditions on external boundary in "
+                  "direction "
+               << direction
+               << " in the ApplyBoundaryCorrections action. Boundary "
+                  "conditions are applied in the ComputeTimeDerivative "
+                  "action "
+                  "instead. You may have unintentionally added external "
+                  "mortars in one of the initialization actions.";
+            ERROR(ss);
           }
 
           const Mesh<volume_dim - 1> face_mesh =

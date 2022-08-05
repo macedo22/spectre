@@ -146,7 +146,9 @@ T Option::parse_as() const {
     ss << e.message();
     PARSE_ERROR(error_context, ss);
   } catch (std::exception& e) {
-    ERROR("Unexpected exception: " << e.what());
+    std::ostringstream ss;
+    ss << "Unexpected exception: " << e.what();
+    ERROR(ss);
   }
 }
 #if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 8
@@ -406,7 +408,9 @@ inline std::ifstream open_file(const std::string& file_name) {
   if (not input) {
     // There is no standard way to get an error message from an
     // fstream, but this works on many implementations.
-    ERROR("Could not open " << file_name << ": " << strerror(errno));
+    std::ostringstream ss;
+    ss << "Could not open " << file_name << ": " << strerror(errno);
+    ERROR(ss);
   }
   return input;
 }
@@ -969,14 +973,15 @@ template <typename OptionList, typename Group>
   // Inline the top_level branch of PARSE_ERROR to avoid warning that
   // the other branch would call terminate.  (Parser errors can only
   // be generated at top level.)
-  ERROR(
-      "\n"
-      << context
-      << "Unable to correctly parse the input file because of a syntax error.\n"
-         "This is often due to placing a suboption on the same line as an "
-         "option, e.g.:\nDomainCreator: CreateInterval:\n  IsPeriodicIn: "
-         "[false]\n\nShould be:\nDomainCreator:\n  CreateInterval:\n    "
-         "IsPeriodicIn: [true]\n\nSee an example input file for help.");
+  std::ostringstream ss;
+  ss << "\n"
+     << context
+     << "Unable to correctly parse the input file because of a syntax error.\n"
+        "This is often due to placing a suboption on the same line as an "
+        "option, e.g.:\nDomainCreator: CreateInterval:\n  IsPeriodicIn: "
+        "[false]\n\nShould be:\nDomainCreator:\n  CreateInterval:\n    "
+        "IsPeriodicIn: [true]\n\nSee an example input file for help.";
+  ERROR(ss);
 }
 
 template <typename OptionList, typename Group>
