@@ -59,18 +59,6 @@ inline std::ostream& operator<<(std::ostream& s, const Context& c) {
   return s;
 }
 
-#define _ERROR_NO_TRACE(context, m)                                          \
-  do {                                                                       \
-    if (__builtin_is_constant_evaluated()) {                                 \
-      throw std::runtime_error("Failed");                                    \
-    } else {                                                                 \
-      disable_floating_point_exceptions();                                   \
-      abort_with_error_message_no_trace(                                     \
-          __FILE__, __LINE__, static_cast<const char*>(__PRETTY_FUNCTION__), \
-          MakeString{} << context << m);                                     \
-    }                                                                        \
-  } while (false)
-
 /// \ingroup OptionParsingGroup
 /// Like ERROR("\n" << (context) << m), but instead throws an
 /// exception that will be caught in a higher level Options if not
@@ -84,7 +72,7 @@ inline std::ostream& operator<<(std::ostream& s, const Context& c) {
   do {                                                                  \
     if ((context).top_level) {                                          \
       /* clang-tidy: macro arg in parentheses */                        \
-      _ERROR_NO_TRACE(context, m); /* NOLINT */                         \
+      ERROR_NO_TRACE("\n" << (context) << m); /* NOLINT */              \
     } else {                                                            \
       std::ostringstream avoid_name_collisions_PARSE_ERROR;             \
       /* clang-tidy: macro arg in parentheses */                        \
