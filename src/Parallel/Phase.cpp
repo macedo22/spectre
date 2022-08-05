@@ -81,8 +81,9 @@ Parallel::Phase Options::create_from_yaml<Parallel::Phase>::create<void>(
     }
   }
   using ::operator<<;
-  PARSE_ERROR(options.context(),
-              "Failed to convert \""
+  std::stringstream ss;
+  ss << "Failed to convert \""
                   << type_read << "\" to Parallel::Phase.\nMust be one of "
-                  << Parallel::known_phases() << ".");
+                  << Parallel::known_phases() << ".";
+  PARSE_ERROR(options.context(), ss);
 }
