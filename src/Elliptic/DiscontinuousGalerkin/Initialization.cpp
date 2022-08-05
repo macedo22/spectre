@@ -4,6 +4,7 @@
 #include "Elliptic/DiscontinuousGalerkin/Initialization.hpp"
 
 #include <array>
+#include <sstream>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -57,10 +58,13 @@ void InitializeGeometry<Dim>::operator()(
   // Element
   const auto& block = domain.blocks()[element_id.block_id()];
   if (block.is_time_dependent()) {
-    ERROR_NO_TRACE(
-        "The InitializeDomain action is for elliptic systems which do not have "
-        "any time-dependence, but the domain creator has set up the domain to "
-        "have time-dependence.");
+    std::ostringstream ss;
+    ss << "The InitializeDomain action is for elliptic systems which do not "
+          "have "
+          "any time-dependence, but the domain creator has set up the domain "
+          "to "
+          "have time-dependence.";
+    ERROR_NO_TRACE(ss);
   }
   *element = domain::Initialization::create_initial_element(element_id, block,
                                                             initial_refinement);
