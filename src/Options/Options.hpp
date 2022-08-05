@@ -86,8 +86,20 @@ class propagate_context : public std::exception {
 };
 }  // namespace Options_detail
 
-[[noreturn]] void propagate_context_helper(const Context& c, const std::string m) {
-  throw ::Options::Options_detail::propagate_context(c.context + m);
+// [[noreturn]] void propagate_context_helper(const Context& c, const std::string m) {
+//   throw ::Options::Options_detail::propagate_context(c.context + m);
+// }
+
+[[noreturn]] void propagate_context_helper(const Context& c, const std::stringstream& m) {
+  std::stringstream ss;
+  ss << c.context << m.str();
+  throw ::Options::Options_detail::propagate_context(ss.str());
+}
+
+[[noreturn]] void propagate_context_helper(const Context& c, const std::ostringstream& m) {
+  std::ostringstream ss;
+  ss << c.context << m.str();
+  throw ::Options::Options_detail::propagate_context(ss.str());
 }
 
 /// \ingroup OptionParsingGroup
@@ -102,9 +114,9 @@ class propagate_context : public std::exception {
 #define PARSE_ERROR(c, m)                                  \
   do {                                                     \
     if ((c).top_level) {                                   \
-      _ERROR_NO_TRACE(c, m.str()); /* NOLINT */            \
+      _ERROR_NO_TRACE(c, m);       /* NOLINT */            \
     } else {                                               \
-      propagate_context_helper(c, m.str());                \
+      propagate_context_helper(c, m);                      \
     }                                                      \
   } while (false)
 
