@@ -360,11 +360,13 @@ ObserveFields<VolumeDim, ObservationValueTag, tmpl::list<Tensors...>,
                              &variables_to_observe]() {
         if (floating_point_types.size() != 1 and
             floating_point_types.size() != variables_to_observe.size()) {
-          PARSE_ERROR(context, "The number of floating point types specified ("
-                                   << floating_point_types.size()
-                                   << ") must be 1 or the number of variables "
-                                      "specified for observing ("
-                                   << variables_to_observe.size() << ")");
+          std::stringstream ss;
+          ss << "The number of floating point types specified ("
+             << floating_point_types.size()
+             << ") must be 1 or the number of variables "
+                "specified for observing ("
+             << variables_to_observe.size() << ")";
+          PARSE_ERROR(context, ss);
         }
         std::unordered_map<std::string, FloatingPointType> result{};
         for (size_t i = 0; i < variables_to_observe.size(); ++i) {
@@ -393,13 +395,15 @@ ObserveFields<VolumeDim, ObservationValueTag, tmpl::list<Tensors...>,
   for (const auto& [name, floating_point_type] : variables_to_observe_) {
     (void)floating_point_type;
     if (valid_tensors.count(name) != 1) {
-      PARSE_ERROR(
-          context,
-          name << " is not an available variable.  Available variables:\n"
-               << (std::vector<std::string>{db::tag_name<Tensors>()...}));
+      std::stringstream ss;
+      ss << name << " is not an available variable.  Available variables:\n"
+         << (std::vector<std::string>{db::tag_name<Tensors>()...});
+      PARSE_ERROR(context, ss);
     }
     if (alg::count(variables_to_observe, name) != 1) {
-      PARSE_ERROR(context, name << " specified multiple times");
+      std::stringstream ss;
+      ss << name << " specified multiple times";
+      PARSE_ERROR(context, ss);
     }
   }
   variables_to_observe_["InertialCoordinates"] =

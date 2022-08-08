@@ -194,21 +194,20 @@ MonitorMemory<Dim, ObservationValueTag>::MonitorMemory(
       //  2. Currently the only charm Array you can monitor the memory of is
       //     the DgElementArray so enforce this.
       if (existing_components.count(component) != 1) {
-        PARSE_ERROR(
-            context,
-            "Cannot monitor memory usage of unknown parallel component '"
-                << component
-                << "'. Please choose from the existing parallel components:\n"
-                << str_component_list);
+        std::stringstream ss;
+        ss << "Cannot monitor memory usage of unknown parallel component '"
+           << component
+           << "'. Please choose from the existing parallel components:\n"
+           << str_component_list;
+        PARSE_ERROR(context, ss);
       } else if (existing_components.at(component) == "Array" and
                  component != "DgElementArray") {
-        PARSE_ERROR(
-            context,
-            "Cannot monitor the '"
-                << component
-                << "' parallel component. Currently, the only Array parallel "
-                   "component allowed to be monitored is the "
-                   "DgElementArray.");
+        std::stringstream ss;
+        ss << "Cannot monitor the '" << component
+           << "' parallel component. Currently, the only Array parallel "
+              "component allowed to be monitored is the "
+              "DgElementArray.";
+        PARSE_ERROR(context, ss);
       }
 
       components_to_monitor_.insert(component);

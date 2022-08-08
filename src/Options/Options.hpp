@@ -59,27 +59,16 @@ inline std::ostream& operator<<(std::ostream& s, const Context& c) {
   return s;
 }
 
-/// \ingroup OptionParsingGroup
-/// Like ERROR("\n" << (context) << m), but instead throws an
-/// exception that will be caught in a higher level Options if not
-/// passed a top-level context.  This is used to print a parsing
-/// "backtrace" since we can't pass any extra data through the
-/// yaml-cpp code.
-///
-/// \param context Context used to print a parsing traceback
-/// \param m error message, as for ERROR
-#define PARSE_ERROR(context, m)                                         \
-  do {                                                                  \
-    if ((context).top_level) {                                          \
-      /* clang-tidy: macro arg in parentheses */                        \
-      ERROR_NO_TRACE("\n" << (context) << m); /* NOLINT */              \
-    } else {                                                            \
-      std::ostringstream avoid_name_collisions_PARSE_ERROR;             \
-      /* clang-tidy: macro arg in parentheses */                        \
-      avoid_name_collisions_PARSE_ERROR << (context) << m; /* NOLINT */ \
-      throw ::Options::Options_detail::propagate_context(               \
-          avoid_name_collisions_PARSE_ERROR.str());                     \
-    }                                                                   \
+#define _ERROR_NO_TRACE(context, m)                                          \
+  do {                                                                       \
+    if (__builtin_is_constant_evaluated()) {                                 \
+      throw std::runtime_error("Failed");                                    \
+    } else {                                                                 \
+      disable_floating_point_exceptions();                                   \
+      abort_with_error_message_no_trace(                                     \
+          __FILE__, __LINE__, static_cast<const char*>(__PRETTY_FUNCTION__), \
+          context, m);                                                       \
+    }                                                                        \
   } while (false)
 
 namespace Options_detail {
@@ -96,6 +85,43 @@ class propagate_context : public std::exception {
   std::string message_;
 };
 }  // namespace Options_detail
+
+// [[noreturn]] void propagate_context_helper(const Context& c, const
+// std::string m) {
+//   throw ::Options::Options_detail::propagate_context(c.context + m);
+// }
+
+[[noreturn]] void propagate_context_helper(const Context& c,
+                                           const std::stringstream& m) {
+  std::stringstream ss;
+  ss << c.context << m.str();
+  throw ::Options::Options_detail::propagate_context(ss.str());
+}
+
+[[noreturn]] void propagate_context_helper(const Context& c,
+                                           const std::ostringstream& m) {
+  std::ostringstream ss;
+  ss << c.context << m.str();
+  throw ::Options::Options_detail::propagate_context(ss.str());
+}
+
+/// \ingroup OptionParsingGroup
+/// Like ERROR("\n" << (context) << m), but instead throws an
+/// exception that will be caught in a higher level Options if not
+/// passed a top-level context.  This is used to print a parsing
+/// "backtrace" since we can't pass any extra data through the
+/// yaml-cpp code.
+///
+/// \param context Context used to print a parsing traceback
+/// \param m error message, as for ERROR
+#define PARSE_ERROR(c, m)                 \
+  do {                                    \
+    if ((c).top_level) {                  \
+      _ERROR_NO_TRACE(c, m); /* NOLINT */ \
+    } else {                              \
+      propagate_context_helper(c, m);     \
+    }                                     \
+  } while (false)
 
 /// \ingroup OptionParsingGroup
 /// The type that options are passed around as.  Contains YAML node
