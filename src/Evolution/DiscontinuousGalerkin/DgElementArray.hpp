@@ -4,6 +4,7 @@
 #pragma once
 
 #include <cstddef>
+#include <iostream>
 #include <unordered_set>
 #include <vector>
 
@@ -11,6 +12,7 @@
 #include "Domain/Creators/DomainCreator.hpp"
 #include "Domain/Domain.hpp"
 #include "Domain/ElementDistribution.hpp"
+#include "Domain/MinimumGridSpacing.hpp"
 #include "Domain/OptionTags.hpp"
 #include "Domain/Structure/ElementId.hpp"
 #include "Domain/Structure/InitialElementIds.hpp"
@@ -54,7 +56,8 @@ struct DgElementArray {
   using phase_dependent_action_list = PhaseDepActionList;
   using array_index = ElementId<volume_dim>;
 
-  using const_global_cache_tags = tmpl::list<domain::Tags::Domain<volume_dim>>;
+  using const_global_cache_tags = tmpl::list<
+      domain::Tags::Domain<volume_dim>>;
 
   using array_allocation_tags =
       tmpl::list<domain::Tags::InitialRefinementLevels<volume_dim>>;
@@ -64,7 +67,7 @@ struct DgElementArray {
                        Parallel::get_initialization_actions_list<
                            phase_dependent_action_list>,
                        array_allocation_tags>,
-                   tmpl::list<Parallel::Tags::AvoidGlobalProc0>>;
+                   tmpl::list<Parallel::Tags::AvoidGlobalProc0/*, domain::Tags::Coordinates<volume_dim, Frame::Inertial>*/>>;
 
   static void allocate_array(
       Parallel::CProxy_GlobalCache<Metavariables>& global_cache,
@@ -95,6 +98,22 @@ void DgElementArray<Metavariables, PhaseDepActionList>::allocate_array(
   const auto& initial_refinement_levels =
       get<domain::Tags::InitialRefinementLevels<volume_dim>>(
           initialization_items);
+  const auto& initial_extents =
+      get<domain::Tags::InitialExtents<volume_dim>>(
+          initialization_items);
+  (void)initial_extents;
+//   const auto& coords =
+//       get<domain::Tags::Coordinates<volume_dim, Frame::Inertial>>(
+//           initialization_items);
+//   std::cout << coords << std::endl;
+//   std::cout << "initial_refinement_levels : " << initial_refinement_levels << std::endl;
+//   const auto& mesh =
+//       get<domain::Tags::Mesh<volume_dim>>(
+//           local_cache);
+//   const auto& minimum_grid_spacing =
+//       get<domain::Tags::MinimumGridSpacing<volume_dim, Frame::Inertial>>(
+//           initialization_items);
+//   std::cout << "minimum_grid_spacing : " << minimum_grid_spacing << std::endl;
   bool use_z_order_distribution = true;
   if constexpr (detail::has_use_z_order_distribution_v<Metavariables>) {
     use_z_order_distribution = Metavariables::use_z_order_distribution;
