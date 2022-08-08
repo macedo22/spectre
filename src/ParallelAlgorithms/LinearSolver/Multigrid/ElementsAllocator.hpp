@@ -7,6 +7,7 @@
 #include <charm++.h>
 #include <cstddef>
 #include <optional>
+#include <sstream>
 #include <unordered_set>
 #include <vector>
 
@@ -104,10 +105,11 @@ struct ElementsAllocator
     std::optional<size_t> max_levels =
         get<Tags::MaxLevels<OptionsGroup>>(local_cache);
     if (max_levels == 0) {
-      ERROR_NO_TRACE(
-          "The 'MaxLevels' option includes the finest grid, so '0' is not a "
-          "valid value. Set the option to '1' to effectively disable "
-          "multigrid.");
+      std::ostringstream ss
+          << "The 'MaxLevels' option includes the finest grid, so '0' is not a "
+             "valid value. Set the option to '1' to effectively disable "
+             "multigrid.";
+      ERROR_NO_TRACE(ss);
     }
     const size_t num_iterations =
         get<Convergence::Tags::Iterations<OptionsGroup>>(local_cache);

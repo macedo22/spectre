@@ -118,7 +118,9 @@ struct Options::create_from_yaml<Triggers::NearTimes_enums::Unit> {
     } else if (unit == "Slab") {
       return type::Slab;
     } else {
-      PARSE_ERROR(options.context(), "Unit must be 'Time', 'Step', or 'Slab'");
+      std::stringstream ss;
+      ss << "Unit must be 'Time', 'Step', or 'Slab'";
+      PARSE_ERROR(options.context(), ss);
     }
   }
 };
@@ -137,8 +139,9 @@ struct Options::create_from_yaml<
     } else if (unit == "Both") {
       return type::Both;
     } else {
-      PARSE_ERROR(options.context(),
-                  "Direction must be 'Before', 'After', or 'Both'");
+      std::stringstream ss;
+      ss << "Direction must be 'Before', 'After', or 'Both'";
+      PARSE_ERROR(options.context(), ss);
     }
   }
 };
