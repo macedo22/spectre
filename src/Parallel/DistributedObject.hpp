@@ -1020,73 +1020,73 @@ bool DistributedObject<
       tmpl::at_c<phase_dependent_action_lists, PhaseIndex::value>;
   using actions_list = typename phase_dep_action::action_list;
 
-#ifdef SPECTRE_CHARM_PROJECTIONS
-  if constexpr (Parallel::is_array_proxy<cproxy_type>::value) {
-    (void)Parallel::charmxx::RegisterInvokeIterableAction<
-        ParallelComponent, ThisAction, PhaseIndex, DataBoxIndex>::registrar;
-  }
-#endif // SPECTRE_CHARM_PROJECTIONS
-  static_assert(not Algorithm_detail::is_is_ready_callable_t<
-                    ThisAction, databox_type&,
-                    tuples::tagged_tuple_from_typelist<inbox_tags_list>&,
-                    Parallel::GlobalCache<metavariables>&, array_index>{},
-                "Actions no longer support is_ready methods.  Instead, "
-                "return AlgorithmExecution::Retry from apply().");
+// #ifdef SPECTRE_CHARM_PROJECTIONS
+//   if constexpr (Parallel::is_array_proxy<cproxy_type>::value) {
+//     (void)Parallel::charmxx::RegisterInvokeIterableAction<
+//         ParallelComponent, ThisAction, PhaseIndex, DataBoxIndex>::registrar;
+//   }
+// #endif // SPECTRE_CHARM_PROJECTIONS
+//   static_assert(not Algorithm_detail::is_is_ready_callable_t<
+//                     ThisAction, databox_type&,
+//                     tuples::tagged_tuple_from_typelist<inbox_tags_list>&,
+//                     Parallel::GlobalCache<metavariables>&, array_index>{},
+//                 "Actions no longer support is_ready methods.  Instead, "
+//                 "return AlgorithmExecution::Retry from apply().");
 
   auto action_return = ThisAction::apply(
       box_, inboxes_, *Parallel::local_branch(global_cache_proxy_),
       std::as_const(array_index_), actions_list{},
       std::add_pointer_t<ParallelComponent>{});
 
-  static_assert(
-      Algorithm_detail::check_iterable_action_return_type<
-          ParallelComponent, ThisAction,
-          std::decay_t<decltype(action_return)>>::value,
-      "An iterable action has an invalid return type.\n"
-      "See the template parameters of "
-      "Algorithm_detail::check_iterable_action_return_type for details: the "
-      "first is the parallel component in question, the second is the "
-      "iterable action, and the third is the return type at fault.\n"
-      "The return type must be a tuple of length one, two, or three "
-      "with:\n"
-      " first type is an updated DataBox;\n"
-      " second type is either a bool (indicating termination) or a "
-      "`Parallel::AlgorithmExecution` object;\n"
-      " third type is a size_t indicating the next action in the current"
-      " phase.");
+//   static_assert(
+//       Algorithm_detail::check_iterable_action_return_type<
+//           ParallelComponent, ThisAction,
+//           std::decay_t<decltype(action_return)>>::value,
+//       "An iterable action has an invalid return type.\n"
+//       "See the template parameters of "
+//       "Algorithm_detail::check_iterable_action_return_type for details: the "
+//       "first is the parallel component in question, the second is the "
+//       "iterable action, and the third is the return type at fault.\n"
+//       "The return type must be a tuple of length one, two, or three "
+//       "with:\n"
+//       " first type is an updated DataBox;\n"
+//       " second type is either a bool (indicating termination) or a "
+//       "`Parallel::AlgorithmExecution` object;\n"
+//       " third type is a size_t indicating the next action in the current"
+//       " phase.");
 
-  constexpr size_t tuple_size = std::tuple_size<decltype(action_return)>::value;
-  if constexpr (tuple_size >= 1_st) {
-    box_ = std::move(get<0>(action_return));
-  }
-  if constexpr (tuple_size >= 2_st) {
-    if constexpr (std::is_same_v<decltype(get<1>(action_return)), bool&>) {
-      terminate_ = get<1>(action_return);
-    } else {
-      switch (get<1>(action_return)) {
-        case AlgorithmExecution::Halt:
-          halt_algorithm_until_next_phase_ = true;
-          terminate_ = true;
-          break;
-        case AlgorithmExecution::Pause:
-          terminate_ = true;
-          break;
-        case AlgorithmExecution::Retry:
-          if constexpr (tuple_size >= 3_st) {
-            ASSERT(get<2>(action_return) == std::numeric_limits<size_t>::max(),
-                   "Switching actions on a Retry doesn't make sense.  If you "
-                   "need to return a three-element tuple, pass "
-                   "std::numeric_limits<size_t>::max() as the last element.");
-          }
-          return false;
-        default:
-          break;
-      }
-    }
-  }
-  if constexpr (tuple_size >= 3_st) {
-    algorithm_step_ = get<2>(action_return);
-  }
+//   constexpr size_t tuple_size = std::tuple_size<decltype(action_return)>::value;
+//   if constexpr (tuple_size >= 1_st) {
+//     box_ = std::move(get<0>(action_return));
+//   }
+//   if constexpr (tuple_size >= 2_st) {
+//     if constexpr (std::is_same_v<decltype(get<1>(action_return)), bool&>) {
+//       terminate_ = get<1>(action_return);
+//     } else {
+//       switch (get<1>(action_return)) {
+//         case AlgorithmExecution::Halt:
+//           halt_algorithm_until_next_phase_ = true;
+//           terminate_ = true;
+//           break;
+//         case AlgorithmExecution::Pause:
+//           terminate_ = true;
+//           break;
+//         case AlgorithmExecution::Retry:
+//           if constexpr (tuple_size >= 3_st) {
+//             ASSERT(get<2>(action_return) == std::numeric_limits<size_t>::max(),
+//                    "Switching actions on a Retry doesn't make sense.  If you "
+//                    "need to return a three-element tuple, pass "
+//                    "std::numeric_limits<size_t>::max() as the last element.");
+//           }
+//           return false;
+//         default:
+//           break;
+//       }
+//     }
+//   }
+//   if constexpr (tuple_size >= 3_st) {
+//     algorithm_step_ = get<2>(action_return);
+//   }
   return true;
 }
 
