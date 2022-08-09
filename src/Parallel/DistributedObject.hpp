@@ -602,7 +602,7 @@ void DistributedObject<
   }
   // p | terminate_;
   // p | halt_algorithm_until_next_phase_;
-  p | box_;
+  // p | box_;
   // After unpacking the DataBox, we "touch" the GlobalCache proxy inside.
   // This forces the DataBox to recompute the GlobalCache* the next time it
   // is needed, but delays this process until after the pupper is called.
