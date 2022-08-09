@@ -1016,9 +1016,9 @@ template <typename ThisAction, typename PhaseIndex, typename DataBoxIndex>
 bool DistributedObject<
     ParallelComponent,
     tmpl::list<PhaseDepActionListsPack...>>::invoke_iterable_action() {
-  using phase_dep_action =
-      tmpl::at_c<phase_dependent_action_lists, PhaseIndex::value>;
-  using actions_list = typename phase_dep_action::action_list;
+  // using phase_dep_action =
+  //     tmpl::at_c<phase_dependent_action_lists, PhaseIndex::value>;
+  // using actions_list = typename phase_dep_action::action_list;
 
 // #ifdef SPECTRE_CHARM_PROJECTIONS
 //   if constexpr (Parallel::is_array_proxy<cproxy_type>::value) {
@@ -1033,10 +1033,10 @@ bool DistributedObject<
 //                 "Actions no longer support is_ready methods.  Instead, "
 //                 "return AlgorithmExecution::Retry from apply().");
 
-  auto action_return = ThisAction::apply(
-      box_, inboxes_, *Parallel::local_branch(global_cache_proxy_),
-      std::as_const(array_index_), actions_list{},
-      std::add_pointer_t<ParallelComponent>{});
+  // auto action_return = ThisAction::apply(
+  //     box_, inboxes_, *Parallel::local_branch(global_cache_proxy_),
+  //     std::as_const(array_index_), actions_list{},
+  //     std::add_pointer_t<ParallelComponent>{});
 
 //   static_assert(
 //       Algorithm_detail::check_iterable_action_return_type<
