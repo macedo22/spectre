@@ -493,11 +493,11 @@ DistributedObject<ParallelComponent, tmpl::list<PhaseDepActionListsPack...>>::
             db::wrap_tags_in<Tags::FromGlobalCache, all_cache_tags>>>(
         metavariables{}, global_cache_proxy_,
         std::move(get<InitializationTags>(initialization_items))...);
-    box_ = db::create_from<
-        tmpl::list<>,
-        Algorithm_detail::action_list_simple_tags<ParallelComponent>,
-        Algorithm_detail::action_list_compute_tags<ParallelComponent>>(
-        std::move(temp_box));
+    // box_ = db::create_from<
+    //     tmpl::list<>,
+    //     Algorithm_detail::action_list_simple_tags<ParallelComponent>,
+    //     Algorithm_detail::action_list_compute_tags<ParallelComponent>>(
+    //     std::move(temp_box));
   } catch (const std::exception& exception) {
     initiate_shutdown(exception);
   }
