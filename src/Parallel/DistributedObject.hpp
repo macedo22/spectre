@@ -588,20 +588,20 @@ void DistributedObject<
     ParallelComponent,
     tmpl::list<PhaseDepActionListsPack...>>::pup(PUP::er& p) {  // NOLINT
 #ifdef SPECTRE_CHARM_PROJECTIONS
-  p | non_action_time_start_;
+  // p | non_action_time_start_;
 #endif
   if (performing_action_ and not p.isSizing()) {
     ERROR("cannot serialize while performing action!");
   }
-  p | performing_action_;
-  p | phase_;
-  p | phase_bookmarks_;
-  p | algorithm_step_;
+  // p | performing_action_;
+  // p | phase_;
+  // p | phase_bookmarks_;
+  // p | algorithm_step_;
   if constexpr (Parallel::is_node_group_proxy<cproxy_type>::value) {
-    p | node_lock_;
+    // p | node_lock_;
   }
-  p | terminate_;
-  p | halt_algorithm_until_next_phase_;
+  // p | terminate_;
+  // p | halt_algorithm_until_next_phase_;
   p | box_;
   // After unpacking the DataBox, we "touch" the GlobalCache proxy inside.
   // This forces the DataBox to recompute the GlobalCache* the next time it
@@ -617,9 +617,9 @@ void DistributedObject<
           (void)proxy;
         });
   }
-  p | inboxes_;
-  p | array_index_;
-  p | global_cache_proxy_;
+  // p | inboxes_;
+  // p | array_index_;
+  // p | global_cache_proxy_;
   // Note that `perform_registration_or_deregistration` passes the `box_` by
   // const reference. If mutable access is required to the box, this function
   // call needs to be carefully considered with respect to the `p | box_` call
