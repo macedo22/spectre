@@ -713,8 +713,8 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
     subgroup_parser.context_ = context_;
     subgroup_parser.context_.append("In group " +
                                     pretty_type::name<subgroup>());
-    subgroup_parser.parse(
-        parsed_options_.find(pretty_type::name<subgroup>())->second);
+    // subgroup_parser.parse(
+    //     parsed_options_.find(pretty_type::name<subgroup>())->second);
   });
 
   // Any actual warnings will be printed by later calls to get or
