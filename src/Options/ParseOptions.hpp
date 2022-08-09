@@ -706,16 +706,16 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
     PARSE_ERROR(context_, ss);
   }
 
-  tmpl::for_each<subgroups>([this](auto subgroup_v) {
-    using subgroup = tmpl::type_from<decltype(subgroup_v)>;
-    auto& subgroup_parser =
-        tuples::get<SubgroupParser<subgroup>>(subgroup_parsers_);
-    subgroup_parser.context_ = context_;
-    subgroup_parser.context_.append("In group " +
-                                    pretty_type::name<subgroup>());
-    // subgroup_parser.parse(
-    //     parsed_options_.find(pretty_type::name<subgroup>())->second);
-  });
+  // tmpl::for_each<subgroups>([this](auto subgroup_v) {
+  //   using subgroup = tmpl::type_from<decltype(subgroup_v)>;
+  //   auto& subgroup_parser =
+  //       tuples::get<SubgroupParser<subgroup>>(subgroup_parsers_);
+  //   subgroup_parser.context_ = context_;
+  //   subgroup_parser.context_.append("In group " +
+  //                                   pretty_type::name<subgroup>());
+  //   subgroup_parser.parse(
+  //       parsed_options_.find(pretty_type::name<subgroup>())->second);
+  // });
 
   // Any actual warnings will be printed by later calls to get or
   // apply, but it is not clear how to determine in those functions
