@@ -444,7 +444,7 @@ Main<Metavariables>::Main(CkArgMsg* msg) {
 
   at_sync_indicator_proxy_ =
       detail::CProxy_AtSyncIndicator<Metavariables>::ckNew();
-  at_sync_indicator_proxy_[0].insert(this->thisProxy, sys::my_proc());
+  // at_sync_indicator_proxy_[0].insert(this->thisProxy, sys::my_proc());
   at_sync_indicator_proxy_.doneInserting();
 
   tuples::tagged_tuple_from_typelist<parallel_component_tag_list>
@@ -605,7 +605,7 @@ void Main<Metavariables>::
         options_, typename singleton_component::initialization_tags{});
 
     const size_t proc = resource_info_.template proc_for<singleton_component>();
-    singleton_proxy[0].insert(global_cache_proxy_, std::move(options), proc);
+    // singleton_proxy[0].insert(global_cache_proxy_, std::move(options), proc);
     singleton_proxy.doneInserting();
   });
 
