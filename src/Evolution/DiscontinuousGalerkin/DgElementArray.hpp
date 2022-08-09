@@ -114,8 +114,8 @@ void DgElementArray<Metavariables, PhaseDepActionList>::allocate_array(
       for (const auto& element_id : element_ids) {
         const size_t target_proc =
             element_distribution.get_proc_for_element(element_id);
-        dg_element_array(element_id)
-            .insert(global_cache, initialization_items, target_proc);
+        // dg_element_array(element_id)
+        //     .insert(global_cache, initialization_items, target_proc);
       }
     } else {
       while (procs_to_ignore.find(which_proc) != procs_to_ignore.end()) {
@@ -123,8 +123,8 @@ void DgElementArray<Metavariables, PhaseDepActionList>::allocate_array(
             which_proc + 1 == total_number_of_procs ? 0 : which_proc + 1;
       }
       for (size_t i = 0; i < element_ids.size(); ++i) {
-        dg_element_array(ElementId<volume_dim>(element_ids[i]))
-            .insert(global_cache, initialization_items, which_proc);
+        // dg_element_array(ElementId<volume_dim>(element_ids[i]))
+        //     .insert(global_cache, initialization_items, which_proc);
         which_proc =
             which_proc + 1 == total_number_of_procs ? 0 : which_proc + 1;
       }
