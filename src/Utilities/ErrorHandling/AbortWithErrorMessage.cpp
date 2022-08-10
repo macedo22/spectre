@@ -14,6 +14,7 @@
 #include <memory>
 #include <sstream>
 
+#include "Options/Options.hpp"
 #include "Utilities/ErrorHandling/Breakpoint.hpp"
 #include "Utilities/ErrorHandling/Exceptions.hpp"
 #include "Utilities/System/ParallelInfo.hpp"
@@ -120,4 +121,20 @@ void abort_with_error_message_no_trace(const char* file, const int line,
                                        const char* pretty_function,
                                        const std::string& message) {
   abort_with_error_message_impl<false>(file, line, pretty_function, message);
+}
+
+void abort_with_error_message_no_trace(const char* file, const int line,
+                                       const char* pretty_function,
+                                       const Options::Context& context,
+                                       const std::string& message) {
+  abort_with_error_message_impl<false>(file, line, pretty_function,
+                                       context.context + message);
+}
+
+void abort_with_error_message_no_trace(const char* file, const int line,
+                                       const char* pretty_function,
+                                       const Options::Context& context,
+                                       const std::stringstream& message) {
+  abort_with_error_message_impl<false>(file, line, pretty_function,
+                                       context.context + message.str());
 }

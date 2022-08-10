@@ -75,3 +75,15 @@
           MakeString{} << m);                                                \
     }                                                                        \
   } while (false)
+
+#define ERROR_WITH_CONTEXT_NO_TRACE(context, m)                              \
+  do {                                                                       \
+    if (__builtin_is_constant_evaluated()) {                                 \
+      throw std::runtime_error("Failed");                                    \
+    } else {                                                                 \
+      disable_floating_point_exceptions();                                   \
+      abort_with_error_message_no_trace(                                     \
+          __FILE__, __LINE__, static_cast<const char*>(__PRETTY_FUNCTION__), \
+          context, m);                                                       \
+    }                                                                        \
+  } while (false)
