@@ -136,7 +136,7 @@ T Option::parse_as() const {
             "as a bracket enclosed list ([foo, bar]) or with each\nentry on a "
             "separate line, indented and preceeded by a dash (  - foo).";
     }
-    PARSE_ERROR(error_context, ss.str());
+    ALT_PARSE_ERROR(error_context, ss);
   } catch (const Options_detail::propagate_context& e) {
     Context error_context = context();
     // Avoid line numbers in the middle of the trace
