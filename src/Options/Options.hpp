@@ -80,10 +80,10 @@ namespace {
 //   throw ::Options::Options_detail::propagate_context(c.context + m);
 // }
 
-[[noreturn]] void propagate_context_helper(const Context& c,
-                                           const std::stringstream& m) {
-  throw ::Options::Options_detail::propagate_context(c.context + m.str());
-}
+// [[noreturn]] void propagate_context_helper(const Context& c,
+//                                            const std::stringstream& m) {
+//   throw ::Options::Options_detail::propagate_context(c.context + m.str());
+// }
 
 [[noreturn]] void propagate_context_helper(const Context& c,
                                            const std::ostringstream& m) {
@@ -119,7 +119,7 @@ namespace {
     if ((c).top_level) {                              \
       ERROR_WITH_CONTEXT_NO_TRACE(c, m); /* NOLINT */ \
     } else {                                          \
-      propagate_context_helper(c, m);                 \
+      ::Options::propagate_context_helper(c, m);      \
     }                                                 \
   } while (false)
 
