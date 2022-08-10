@@ -84,6 +84,11 @@ namespace {
                                            const std::stringstream& m) {
   throw ::Options::Options_detail::propagate_context(c.context + m.str());
 }
+
+[[noreturn]] void propagate_context_helper(const Context& c,
+                                           const std::ostringstream& m) {
+  throw ::Options::Options_detail::propagate_context(c.context + m.str());
+}
 }  // namespace
 
 /// \ingroup OptionParsingGroup
