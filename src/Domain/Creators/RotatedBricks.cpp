@@ -6,6 +6,7 @@
 #include <array>
 #include <cstddef>
 #include <memory>
+#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -57,10 +58,10 @@ RotatedBricks::RotatedBricks(
       boundary_condition_(std::move(boundary_condition)) {
   using domain::BoundaryConditions::is_none;
   if (is_none(boundary_condition_)) {
-    PARSE_ERROR(
-        context,
-        "None boundary condition is not supported. If you would like an "
-        "outflow boundary condition, you must use that.");
+    std::stringstream ss;
+    ss << "None boundary condition is not supported. If you would like an "
+          "outflow boundary condition, you must use that.";
+    PARSE_ERROR(context, ss);
   }
   using domain::BoundaryConditions::is_periodic;
   if (is_periodic(boundary_condition_)) {

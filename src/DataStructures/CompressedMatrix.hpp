@@ -83,8 +83,9 @@ struct Options::create_from_yaml<blaze::CompressedMatrix<Type, SO, Tag>> {
     for (size_t i = 0; i < num_rows; i++) {
       const auto& row = gsl::at(data, i);
       if (row.size() != num_cols) {
-        PARSE_ERROR(options.context(),
-                    "All matrix rows must have the same size.");
+        std::stringstream ss;
+        ss << "All matrix rows must have the same size.";
+        PARSE_ERROR(options.context(), ss);
       }
       for (size_t j = 0; j < num_cols; j++) {
         if (gsl::at(row, j) != 0.) {

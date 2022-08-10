@@ -5,6 +5,7 @@
 
 #include <array>
 #include <memory>
+#include <sstream>
 #include <vector>
 
 #include "Domain/Block.hpp"  // IWYU pragma: keep
@@ -73,18 +74,18 @@ Interval::Interval(
   using domain::BoundaryConditions::is_none;
   if (is_none(lower_boundary_condition_) or
       is_none(upper_boundary_condition_)) {
-    PARSE_ERROR(
-        context,
-        "None boundary condition is not supported. If you would like an "
-        "outflow boundary condition, you must use that.");
+    std::stringstream ss;
+    ss << "None boundary condition is not supported. If you would like an "
+          "outflow boundary condition, you must use that.";
+    PARSE_ERROR(context, ss);
   }
   using domain::BoundaryConditions::is_periodic;
   if (is_periodic(lower_boundary_condition_) !=
       is_periodic(upper_boundary_condition_)) {
-    PARSE_ERROR(
-        context,
-        "Both the upper and lower boundary condition must be set to periodic "
-        "if imposing periodic boundary conditions.");
+    std::stringstream ss;
+    ss << "Both the upper and lower boundary condition must be set to periodic "
+          "if imposing periodic boundary conditions.";
+    PARSE_ERROR(context, ss);
   }
   if (is_periodic(lower_boundary_condition_)) {
     is_periodic_in_x_[0] = true;

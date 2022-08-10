@@ -11,6 +11,7 @@
 #include <limits>
 #include <memory>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -107,58 +108,63 @@ BinaryCompactObject::BinaryCompactObject(
   }
 
   if (object_A_.x_coord >= 0.0) {
-    PARSE_ERROR(
-        context,
-        "The x-coordinate of ObjectA's center is expected to be negative.");
+    std::stringstream ss;
+    ss << "The x-coordinate of ObjectA's center is expected to be negative.";
+    PARSE_ERROR(context, ss);
   }
   if (object_B_.x_coord <= 0.0) {
-    PARSE_ERROR(
-        context,
-        "The x-coordinate of ObjectB's center is expected to be positive.");
+    std::stringstream ss;
+    ss << "The x-coordinate of ObjectB's center is expected to be positive.";
+    PARSE_ERROR(context, ss);
   }
   if (length_outer_cube_ <= 2.0 * length_inner_cube_) {
     const double suggested_value = 2.0 * length_inner_cube_ * sqrt(3.0);
-    PARSE_ERROR(
-        context,
-        "The radius for the enveloping cube is too small! The Frustums will be "
-        "malformed. A recommended radius is:\n"
-            << suggested_value);
+    std::stringstream ss;
+    ss << "The radius for the enveloping cube is too small! The Frustums will "
+          "be "
+          "malformed. A recommended radius is:\n"
+       << suggested_value;
+    PARSE_ERROR(context, ss);
   }
   if (object_A_.outer_radius < object_A_.inner_radius) {
-    PARSE_ERROR(context,
-                "ObjectA's inner radius must be less than its outer radius.");
+    std::stringstream ss;
+    ss << "ObjectA's inner radius must be less than its outer radius.";
+    PARSE_ERROR(context, ss);
   }
   if (object_B_.outer_radius < object_B_.inner_radius) {
-    PARSE_ERROR(context,
-                "ObjectB's inner radius must be less than its outer radius.");
+    std::stringstream ss;
+    ss << "ObjectB's inner radius must be less than its outer radius.";
+    PARSE_ERROR(context, ss);
   }
   if (object_A_.use_logarithmic_map and not object_A_.is_excised()) {
-    PARSE_ERROR(
-        context,
-        "Using a logarithmically spaced radial grid in the part "
-        "of Layer 1 enveloping Object A requires excising the interior of "
-        "Object A");
+    std::stringstream ss;
+    ss << "Using a logarithmically spaced radial grid in the part "
+          "of Layer 1 enveloping Object A requires excising the interior of "
+          "Object A";
+    PARSE_ERROR(context, ss);
   }
   if (object_B_.use_logarithmic_map and not object_B_.is_excised()) {
-    PARSE_ERROR(
-        context,
-        "Using a logarithmically spaced radial grid in the part "
-        "of Layer 1 enveloping Object B requires excising the interior of "
-        "Object B");
+    std::stringstream ss;
+    ss << "Using a logarithmically spaced radial grid in the part "
+          "of Layer 1 enveloping Object B requires excising the interior of "
+          "Object B";
+    PARSE_ERROR(context, ss);
   }
   if (object_A_.is_excised() and
       ((*object_A_.inner_boundary_condition == nullptr) !=
        (outer_boundary_condition_ == nullptr))) {
-    PARSE_ERROR(context,
-                "Must specify either both inner and outer boundary conditions "
-                "or neither.");
+    std::stringstream ss;
+    ss << "Must specify either both inner and outer boundary conditions "
+          "or neither.";
+    PARSE_ERROR(context, ss);
   }
   if (object_B_.is_excised() and
       ((*object_B_.inner_boundary_condition == nullptr) !=
        (outer_boundary_condition_ == nullptr))) {
-    PARSE_ERROR(context,
-                "Must specify either both inner and outer boundary conditions "
-                "or neither.");
+    std::stringstream ss;
+    ss << "Must specify either both inner and outer boundary conditions "
+          "or neither.";
+    PARSE_ERROR(context, ss);
   }
   using domain::BoundaryConditions::is_periodic;
   if (is_periodic(outer_boundary_condition_) or
@@ -166,9 +172,9 @@ BinaryCompactObject::BinaryCompactObject(
        is_periodic(*object_A_.inner_boundary_condition)) or
       (object_B_.is_excised() and
        is_periodic(*object_B_.inner_boundary_condition))) {
-    PARSE_ERROR(
-        context,
-        "Cannot have periodic boundary conditions with a binary domain");
+    std::stringstream ss;
+    ss << "Cannot have periodic boundary conditions with a binary domain";
+    PARSE_ERROR(context, ss);
   }
 
   // Create block names and groups
@@ -236,13 +242,17 @@ BinaryCompactObject::BinaryCompactObject(
   try {
     initial_refinement_ = std::visit(expand_over_blocks, initial_refinement);
   } catch (const std::exception& error) {
-    PARSE_ERROR(context, "Invalid 'InitialRefinement': " << error.what());
+    std::stringstream ss;
+    ss << "Invalid 'InitialRefinement': " << error.what();
+    PARSE_ERROR(context, ss);
   }
   try {
     initial_number_of_grid_points_ =
         std::visit(expand_over_blocks, initial_number_of_grid_points);
   } catch (const std::exception& error) {
-    PARSE_ERROR(context, "Invalid 'InitialGridPoints': " << error.what());
+    std::stringstream ss;
+    ss << "Invalid 'InitialGridPoints': " << error.what();
+    PARSE_ERROR(context, ss);
   }
 
   // Compute the inner radius of the outer spherical shell. The computation
@@ -251,14 +261,15 @@ BinaryCompactObject::BinaryCompactObject(
     radius_enveloping_sphere_ = radius_enveloping_sphere.value();
     if (radius_enveloping_sphere_ <= radius_enveloping_cube_ or
         radius_enveloping_sphere_ >= outer_radius_domain_) {
-      PARSE_ERROR(
-          context,
-          "The 'OuterShell.InnerRadius' must be within 'EnvelopingCube.Radius' "
-          "(" << radius_enveloping_cube_
-              << ") and 'OuterShell.OuterRadius' (" << outer_radius_domain_
-              << "), but is: " << radius_enveloping_sphere_
-              << ". Set it to 'Auto' so a reasonable value is chosen "
-                 "automatically.");
+      std::stringstream ss;
+      ss << "The 'OuterShell.InnerRadius' must be within "
+            "'EnvelopingCube.Radius' "
+            "("
+         << radius_enveloping_cube_ << ") and 'OuterShell.OuterRadius' ("
+         << outer_radius_domain_ << "), but is: " << radius_enveloping_sphere_
+         << ". Set it to 'Auto' so a reasonable value is chosen "
+            "automatically.";
+      PARSE_ERROR(context, ss);
     }
   } else if (frustum_sphericity == 1.0) {
     radius_enveloping_sphere_ = radius_enveloping_cube_;

@@ -23,10 +23,11 @@ Verbosity Options::create_from_yaml<Verbosity>::create<void>(
   } else if ("Debug" == type_read) {
     return Verbosity::Debug;
   }
-  PARSE_ERROR(options.context(), "Failed to convert \""
-                                     << type_read
-                                     << "\" to Verbosity. Must be one "
-                                        "of Silent, Quiet, Verbose, or Debug.");
+  std::stringstream ss;
+  ss << "Failed to convert \"" << type_read
+     << "\" to Verbosity. Must be one "
+        "of Silent, Quiet, Verbose, or Debug.";
+  PARSE_ERROR(options.context(), ss);
 }
 
 std::ostream& operator<<(std::ostream& os, const Verbosity& verbosity) {

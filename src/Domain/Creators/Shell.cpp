@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <sstream>
 #include <utility>
 
 #include "Domain/Block.hpp"  // IWYU pragma: keep
@@ -73,65 +74,70 @@ Shell::Shell(
        outer_boundary_condition_ == nullptr) or
       (inner_boundary_condition_ == nullptr and
        outer_boundary_condition_ != nullptr)) {
-    PARSE_ERROR(context,
-                "Must specify either both inner and outer boundary conditions "
-                "or neither.");
+    std::stringstream ss;
+    ss << "Must specify either both inner and outer boundary conditions "
+          "or neither.";
+    PARSE_ERROR(context, ss);
   }
   if (inner_boundary_condition_ != nullptr and
       which_wedges_ != ShellWedges::All) {
-    PARSE_ERROR(context,
-                "Can only apply boundary conditions when using the full shell. "
-                "Additional cases can be supported by adding them to the Shell "
-                "domain creator's create_domain function.");
+    std::stringstream ss;
+    ss << "Can only apply boundary conditions when using the full shell. "
+          "Additional cases can be supported by adding them to the Shell "
+          "domain creator's create_domain function.";
+    PARSE_ERROR(context, ss);
   }
   using domain::BoundaryConditions::is_none;
   if (is_none(inner_boundary_condition_) or
       is_none(outer_boundary_condition_)) {
-    PARSE_ERROR(
-        context,
-        "None boundary condition is not supported. If you would like an "
-        "outflow boundary condition, you must use that.");
+    std::stringstream ss;
+    ss << "None boundary condition is not supported. If you would like an "
+          "outflow boundary condition, you must use that.";
+    PARSE_ERROR(context, ss);
   }
   using domain::BoundaryConditions::is_periodic;
   if (is_periodic(inner_boundary_condition_) or
       is_periodic(outer_boundary_condition_)) {
-    PARSE_ERROR(context,
-                "Cannot have periodic boundary conditions with a shell");
+    std::stringstream ss;
+    ss << "Cannot have periodic boundary conditions with a shell";
+    PARSE_ERROR(context, ss);
   }
   if (not radial_partitioning_.empty()) {
     if (not std::is_sorted(radial_partitioning_.begin(),
                            radial_partitioning_.end())) {
-      PARSE_ERROR(context,
-                  "Specify radial partitioning in ascending order. Specified "
-                  "radial partitioning is: "
-                      << get_output(radial_partitioning_));
+      std::stringstream ss;
+      ss << "Specify radial partitioning in ascending order. Specified "
+            "radial partitioning is: "
+         << get_output(radial_partitioning_);
+      PARSE_ERROR(context, ss);
     }
     if (radial_partitioning_.front() <= inner_radius_) {
-      PARSE_ERROR(
-          context,
-          "First radial partition must be larger than inner radius, but is: "
-              << inner_radius_);
+      std::stringstream ss;
+      ss << "First radial partition must be larger than inner radius, but is: "
+         << inner_radius_;
+      PARSE_ERROR(context, ss);
     }
     if (radial_partitioning_.back() >= outer_radius_) {
-      PARSE_ERROR(
-          context,
-          "Last radial partition must be smaller than outer radius, but is: "
-              << outer_radius_);
+      std::stringstream ss;
+      ss << "Last radial partition must be smaller than outer radius, but is: "
+         << outer_radius_;
+      PARSE_ERROR(context, ss);
     }
     const auto duplicate = std::adjacent_find(radial_partitioning_.begin(),
                                               radial_partitioning_.end());
     if (duplicate != radial_partitioning_.end()) {
-      PARSE_ERROR(context, "Radial partitioning contains duplicate element: "
-                               << *duplicate);
+      std::stringstream ss;
+      ss << "Radial partitioning contains duplicate element: " << *duplicate;
+      PARSE_ERROR(context, ss);
     }
   }
   if (radial_distribution_.size() != number_of_layers_) {
-    PARSE_ERROR(context,
-                "Specify a 'RadialDistribution' for every spherical shell. You "
-                "specified "
-                    << radial_distribution_.size()
-                    << " items, but the domain has " << number_of_layers_
-                    << " shells.");
+    std::stringstream ss;
+    ss << "Specify a 'RadialDistribution' for every spherical shell. You "
+          "specified "
+       << radial_distribution_.size() << " items, but the domain has "
+       << number_of_layers_ << " shells.";
+    PARSE_ERROR(context, ss);
   }
 }
 

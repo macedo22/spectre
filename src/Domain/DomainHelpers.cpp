@@ -7,6 +7,7 @@
 #include <cmath>
 #include <limits>
 #include <ostream>
+#include <sstream>
 #include <string>
 #include <utility>
 
@@ -1383,8 +1384,9 @@ ShellWedges Options::create_from_yaml<ShellWedges>::create<void>(
   } else if (which_wedges == "OneAlongMinusX") {
     return ShellWedges::OneAlongMinusX;
   }
-  PARSE_ERROR(options.context(),
-              "WhichWedges must be 'All', 'FourOnEquator' or 'OneAlongMinusX'");
+  std::stringstream ss;
+  ss << "WhichWedges must be 'All', 'FourOnEquator' or 'OneAlongMinusX'";
+  PARSE_ERROR(options.context(), ss);
 }
 
 template std::vector<std::unique_ptr<

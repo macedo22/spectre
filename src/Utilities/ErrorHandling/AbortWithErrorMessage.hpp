@@ -34,6 +34,14 @@ struct Context;
 
 [[noreturn]] void abort_with_error_message_no_trace(
     const char* file, int line, const char* pretty_function,
+    const std::ostringstream& message);
+
+[[noreturn]] void abort_with_error_message_no_trace(
+    const char* file, int line, const char* pretty_function,
+    const std::stringstream& message);
+
+[[noreturn]] void abort_with_error_message_no_trace(
+    const char* file, int line, const char* pretty_function,
     const Options::Context& context, const std::string& message);
 
 [[noreturn]] void abort_with_error_message_no_trace(

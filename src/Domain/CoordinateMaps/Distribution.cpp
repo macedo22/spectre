@@ -43,6 +43,7 @@ Options::create_from_yaml<domain::CoordinateMaps::Distribution>::create<void>(
   } else if (distribution == "Inverse") {
     return domain::CoordinateMaps::Distribution::Inverse;
   }
-  PARSE_ERROR(options.context(),
-              "Distribution must be 'Linear', 'Logarithmic' or 'Inverse'");
+  std::stringstream ss;
+  ss << "Distribution must be 'Linear', 'Logarithmic' or 'Inverse'";
+  PARSE_ERROR(options.context(), ss);
 }

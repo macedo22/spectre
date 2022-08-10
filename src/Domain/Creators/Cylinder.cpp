@@ -7,6 +7,7 @@
 #include <array>
 #include <cmath>
 #include <memory>
+#include <sstream>
 #include <unordered_map>
 #include <variant>
 #include <vector>
@@ -47,94 +48,102 @@ Cylinder::Cylinder(
       radial_distribution_(std::move(radial_distribution)),
       distribution_in_z_(std::move(distribution_in_z)) {
   if (inner_radius_ > outer_radius_) {
-    PARSE_ERROR(context,
-                "Inner radius must be smaller than outer radius, but inner "
-                "radius is " +
-                    std::to_string(inner_radius_) + " and outer radius is " +
-                    std::to_string(outer_radius_) + ".");
+    std::stringstream ss;
+    ss << "Inner radius must be smaller than outer radius, but inner "
+          "radius is " +
+              std::to_string(inner_radius_) + " and outer radius is " +
+              std::to_string(outer_radius_) + ".";
+    PARSE_ERROR(context, ss);
   }
   if (lower_z_bound_ > upper_z_bound_) {
-    PARSE_ERROR(context,
-                "Lower z-bound must be smaller than upper z-bound, but lower "
-                "bound is " +
-                    std::to_string(lower_z_bound_) + " and upper bound is " +
-                    std::to_string(upper_z_bound_) + ".");
+    std::stringstream ss;
+    ss << "Lower z-bound must be smaller than upper z-bound, but lower "
+          "bound is " +
+              std::to_string(lower_z_bound_) + " and upper bound is " +
+              std::to_string(upper_z_bound_) + ".";
+    PARSE_ERROR(context, ss);
   }
   if (not std::is_sorted(radial_partitioning_.begin(),
                          radial_partitioning_.end())) {
-    PARSE_ERROR(context,
-                "Specify radial partitioning in ascending order. Specified "
-                "radial partitioning is: " +
-                    get_output(radial_partitioning_));
+    std::stringstream ss;
+    ss << "Specify radial partitioning in ascending order. Specified "
+          "radial partitioning is: " +
+              get_output(radial_partitioning_);
+    PARSE_ERROR(context, ss);
   }
   if (not radial_partitioning_.empty()) {
     if (radial_partitioning_.front() <= inner_radius_) {
-      PARSE_ERROR(
-          context,
-          "First radial partition must be larger than inner radius, but is: " +
-              std::to_string(inner_radius_));
+      std::stringstream ss;
+      ss << "First radial partition must be larger than inner radius, but "
+            "is: " +
+                std::to_string(inner_radius_);
+      PARSE_ERROR(context, ss);
     }
     if (radial_partitioning_.back() >= outer_radius_) {
-      PARSE_ERROR(
-          context,
-          "Last radial partition must be smaller than outer radius, but is: " +
-              std::to_string(outer_radius_));
+      std::stringstream ss;
+      ss << "Last radial partition must be smaller than outer radius, but "
+            "is: " +
+                std::to_string(outer_radius_);
+      PARSE_ERROR(context, ss);
     }
   }
   if (not std::is_sorted(partitioning_in_z_.begin(),
                          partitioning_in_z_.end())) {
-    PARSE_ERROR(context,
-                "Specify partitioning in z in ascending order. Specified "
-                "partitioning is: " +
-                    get_output(partitioning_in_z_));
+    std::stringstream ss;
+    ss << "Specify partitioning in z in ascending order. Specified "
+          "partitioning is: " +
+              get_output(partitioning_in_z_);
+    PARSE_ERROR(context, ss);
   }
   if (not partitioning_in_z_.empty()) {
     if (partitioning_in_z_.front() <= lower_z_bound_) {
-      PARSE_ERROR(
-          context,
-          "First partition in z must be larger than lower z-bound, but is: " +
-              std::to_string(lower_z_bound_));
+      std::stringstream ss;
+      ss << "First partition in z must be larger than lower z-bound, but is: " +
+                std::to_string(lower_z_bound_);
+      PARSE_ERROR(context, ss);
     }
     if (partitioning_in_z_.back() >= upper_z_bound_) {
-      PARSE_ERROR(
-          context,
-          "Last partition in z must be smaller than upper z-bound, but is: " +
-              std::to_string(upper_z_bound_));
+      std::stringstream ss;
+      ss << "Last partition in z must be smaller than upper z-bound, but is: " +
+                std::to_string(upper_z_bound_);
+      PARSE_ERROR(context, ss);
     }
   }
   const size_t num_shells = 1 + radial_partitioning_.size();
   const size_t num_layers = 1 + partitioning_in_z_.size();
   if (radial_distribution_.size() != num_shells) {
-    PARSE_ERROR(
-        context,
-        "Specify a 'RadialDistribution' for every cylindrical shell. You "
-        "specified "
-            << radial_distribution_.size() << " items, but the domain has "
-            << num_shells << " shells.");
+    std::stringstream ss;
+    ss << "Specify a 'RadialDistribution' for every cylindrical shell. You "
+          "specified "
+       << radial_distribution_.size() << " items, but the domain has "
+       << num_shells << " shells.";
+    PARSE_ERROR(context, ss);
   }
   if (radial_distribution_.front() !=
       domain::CoordinateMaps::Distribution::Linear) {
-    PARSE_ERROR(context,
-                "The 'RadialDistribution' must be 'Linear' for the innermost "
-                "shell because it changes in circularity. Add entries to "
-                "'RadialPartitioning' to add outer shells for which you can "
-                "select different radial distributions.");
+    std::stringstream ss;
+    ss << "The 'RadialDistribution' must be 'Linear' for the innermost "
+          "shell because it changes in circularity. Add entries to "
+          "'RadialPartitioning' to add outer shells for which you can "
+          "select different radial distributions.";
+    PARSE_ERROR(context, ss);
   }
   if (distribution_in_z_.size() != num_layers) {
-    PARSE_ERROR(context,
-                "Specify a 'DistributionInZ' for every layer. You specified "
-                    << distribution_in_z_.size()
-                    << " items, but the domain has " << num_layers
-                    << " layers.");
+    std::stringstream ss;
+    ss << "Specify a 'DistributionInZ' for every layer. You specified "
+       << distribution_in_z_.size() << " items, but the domain has "
+       << num_layers << " layers.";
+    PARSE_ERROR(context, ss);
   }
   if (distribution_in_z_.front() !=
       domain::CoordinateMaps::Distribution::Linear) {
-    PARSE_ERROR(context,
-                "The 'DistributionInZ' must be 'Linear' for the lowermost "
-                "layer because a 'Logarithmic' distribution places its "
-                "singularity at 'LowerZBound'. Add entries to "
-                "'PartitioningInZ' to add layers for which you can "
-                "select different distributions along z.");
+    std::stringstream ss;
+    ss << "The 'DistributionInZ' must be 'Linear' for the lowermost "
+          "layer because a 'Logarithmic' distribution places its "
+          "singularity at 'LowerZBound'. Add entries to "
+          "'PartitioningInZ' to add layers for which you can "
+          "select different distributions along z.";
+    PARSE_ERROR(context, ss);
   }
 
   // Create block names and groups
@@ -175,13 +184,17 @@ Cylinder::Cylinder(
   try {
     initial_refinement_ = std::visit(expand_over_blocks, initial_refinement);
   } catch (const std::exception& error) {
-    PARSE_ERROR(context, "Invalid 'InitialRefinement': " << error.what());
+    std::stringstream ss;
+    ss << "Invalid 'InitialRefinement': " << error.what();
+    PARSE_ERROR(context, ss);
   }
   try {
     initial_number_of_grid_points_ =
         std::visit(expand_over_blocks, initial_number_of_grid_points);
   } catch (const std::exception& error) {
-    PARSE_ERROR(context, "Invalid 'InitialGridPoints': " << error.what());
+    std::stringstream ss;
+    ss << "Invalid 'InitialGridPoints': " << error.what();
+    PARSE_ERROR(context, ss);
   }
 
   // Set refinement and number of grid points of the central cubes in x and y to
@@ -224,9 +237,10 @@ Cylinder::Cylinder(
   using domain::BoundaryConditions::is_periodic;
   if (is_periodic(lower_z_boundary_condition_) xor
       is_periodic(upper_z_boundary_condition_)) {
-    PARSE_ERROR(context,
-                "Either both lower and upper z-boundary condition must be "
-                "periodic, or neither.");
+    std::stringstream ss;
+    ss << "Either both lower and upper z-boundary condition must be "
+          "periodic, or neither.";
+    PARSE_ERROR(context, ss);
   }
   if (is_periodic(lower_z_boundary_condition_) and
       is_periodic(upper_z_boundary_condition_)) {
@@ -235,26 +249,28 @@ Cylinder::Cylinder(
     upper_z_boundary_condition_ = nullptr;
   }
   if (is_periodic(mantle_boundary_condition_)) {
-    PARSE_ERROR(context,
-                "A Cylinder can't have periodic boundary conditions in the "
-                "radial direction.");
+    std::stringstream ss;
+    ss << "A Cylinder can't have periodic boundary conditions in the "
+          "radial direction.";
+    PARSE_ERROR(context, ss);
   }
   using domain::BoundaryConditions::is_none;
   if (is_none(lower_z_boundary_condition_) or
       is_none(upper_z_boundary_condition_) or
       is_none(mantle_boundary_condition_)) {
-    PARSE_ERROR(
-        context,
-        "None boundary condition is not supported. If you would like an "
-        "outflow boundary condition, you must use that.");
+    std::stringstream ss;
+    ss << "None boundary condition is not supported. If you would like an "
+          "outflow boundary condition, you must use that.";
+    PARSE_ERROR(context, ss);
   }
   if (mantle_boundary_condition_ == nullptr or
       (not is_periodic_in_z_ and (lower_z_boundary_condition_ == nullptr or
                                   upper_z_boundary_condition_ == nullptr))) {
-    PARSE_ERROR(context,
-                "z-boundary conditions must not be 'nullptr'. Use the other "
-                "constructor to specify 'is_periodic_in_z' instead of boundary "
-                "conditions.");
+    std::stringstream ss;
+    ss << "z-boundary conditions must not be 'nullptr'. Use the other "
+          "constructor to specify 'is_periodic_in_z' instead of boundary "
+          "conditions.";
+    PARSE_ERROR(context, ss);
   }
 }
 

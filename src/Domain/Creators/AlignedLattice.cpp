@@ -6,6 +6,7 @@
 #include <array>
 #include <cstddef>
 #include <memory>
+#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -55,17 +56,20 @@ AlignedLattice<VolumeDim>::AlignedLattice(
       boundary_condition_(nullptr) {
   if (not blocks_to_exclude_.empty() and
       alg::any_of(is_periodic_in_, [](const bool t) { return t; })) {
-    PARSE_ERROR(context,
-                "Cannot exclude blocks as well as have periodic boundary "
-                "conditions!");
+    std::stringstream ss;
+    ss << "Cannot exclude blocks as well as have periodic boundary "
+          "conditions!";
+    PARSE_ERROR(context, ss);
   }
   for (const auto& refinement_region : refined_grid_points_) {
     for (size_t i = 0; i < VolumeDim; ++i) {
       if (gsl::at(refinement_region.upper_corner_index, i) >=
           gsl::at(block_bounds_, i).size()) {
-        PARSE_ERROR(context, "Refinement region extends to "
-                                 << refinement_region.upper_corner_index
-                                 << ", which is outside the domain");
+        std::stringstream ss;
+        ss << "Refinement region extends to "
+           << refinement_region.upper_corner_index
+           << ", which is outside the domain";
+        PARSE_ERROR(context, ss);
       }
     }
   }
@@ -73,9 +77,11 @@ AlignedLattice<VolumeDim>::AlignedLattice(
     for (size_t i = 0; i < VolumeDim; ++i) {
       if (gsl::at(refinement_region.upper_corner_index, i) >=
           gsl::at(block_bounds_, i).size()) {
-        PARSE_ERROR(context, "Refinement region extends to "
-                                 << refinement_region.upper_corner_index
-                                 << ", which is outside the domain");
+        std::stringstream ss;
+        ss << "Refinement region extends to "
+           << refinement_region.upper_corner_index
+           << ", which is outside the domain";
+        PARSE_ERROR(context, ss);
       }
     }
   }
@@ -108,10 +114,10 @@ AlignedLattice<VolumeDim>::AlignedLattice(
       boundary_condition_(std::move(boundary_condition)) {
   using domain::BoundaryConditions::is_none;
   if (is_none(boundary_condition_)) {
-    PARSE_ERROR(
-        context,
-        "None boundary condition is not supported. If you would like an "
-        "outflow boundary condition, you must use that.");
+    std::stringstream ss;
+    ss << "None boundary condition is not supported. If you would like an "
+          "outflow boundary condition, you must use that.";
+    PARSE_ERROR(context, ss);
   }
   using domain::BoundaryConditions::is_periodic;
   if (is_periodic(boundary_condition_)) {
@@ -122,17 +128,20 @@ AlignedLattice<VolumeDim>::AlignedLattice(
   }
   if (not blocks_to_exclude_.empty() and
       alg::any_of(is_periodic_in_, [](const bool t) { return t; })) {
-    PARSE_ERROR(context,
-                "Cannot exclude blocks as well as have periodic boundary "
-                "conditions!");
+    std::stringstream ss;
+    ss << "Cannot exclude blocks as well as have periodic boundary "
+          "conditions!";
+    PARSE_ERROR(context, ss);
   }
   for (const auto& refinement_region : refined_grid_points_) {
     for (size_t i = 0; i < VolumeDim; ++i) {
       if (gsl::at(refinement_region.upper_corner_index, i) >=
           gsl::at(block_bounds_, i).size()) {
-        PARSE_ERROR(context, "Refinement region extends to "
-                                 << refinement_region.upper_corner_index
-                                 << ", which is outside the domain");
+        std::stringstream ss;
+        ss << "Refinement region extends to "
+           << refinement_region.upper_corner_index
+           << ", which is outside the domain";
+        PARSE_ERROR(context, ss);
       }
     }
   }
@@ -140,9 +149,11 @@ AlignedLattice<VolumeDim>::AlignedLattice(
     for (size_t i = 0; i < VolumeDim; ++i) {
       if (gsl::at(refinement_region.upper_corner_index, i) >=
           gsl::at(block_bounds_, i).size()) {
-        PARSE_ERROR(context, "Refinement region extends to "
-                                 << refinement_region.upper_corner_index
-                                 << ", which is outside the domain");
+        std::stringstream ss;
+        ss << "Refinement region extends to "
+           << refinement_region.upper_corner_index
+           << ", which is outside the domain";
+        PARSE_ERROR(context, ss);
       }
     }
   }

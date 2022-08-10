@@ -4,6 +4,7 @@
 #include "Domain/Creators/CylindricalBinaryCompactObject.hpp"
 
 #include <cmath>
+#include <sstream>
 
 #include "Domain/BoundaryConditions/Periodic.hpp"
 #include "Domain/CoordinateMaps/CoordinateMap.hpp"
@@ -60,35 +61,41 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
       inner_boundary_condition_(std::move(inner_boundary_condition)),
       outer_boundary_condition_(std::move(outer_boundary_condition)) {
   if (center_A_[2] <= 0.0) {
-    PARSE_ERROR(
-        context,
-        "The x-coordinate of the input CenterA is expected to be positive");
+    std::stringstream ss;
+    ss << "The x-coordinate of the input CenterA is expected to be positive";
+    PARSE_ERROR(context, ss);
   }
   if (center_B_[2] >= 0.0) {
-    PARSE_ERROR(
-        context,
-        "The x-coordinate of the input CenterB is expected to be negative");
+    std::stringstream ss;
+    ss << "The x-coordinate of the input CenterB is expected to be negative";
+    PARSE_ERROR(context, ss);
   }
   if (radius_A_ <= 0.0 or radius_B_ <= 0.0) {
-    PARSE_ERROR(context, "RadiusA and RadiusB are expected to be positive");
+    std::stringstream ss;
+    ss << "RadiusA and RadiusB are expected to be positive";
+    PARSE_ERROR(context, ss);
   }
   if (radius_A_ < radius_B_) {
-    PARSE_ERROR(context, "RadiusA should not be smaller than RadiusB");
+    std::stringstream ss;
+    ss << "RadiusA should not be smaller than RadiusB";
+    PARSE_ERROR(context, ss);
   }
   if (std::abs(center_A_[2]) > std::abs(center_B_[2])) {
-    PARSE_ERROR(context,
-                "We expect |x_A| <= |x_B|, for x the x-coordinate of either "
-                "CenterA or CenterB.  We should roughly have "
-                "RadiusA x_A + RadiusB x_B = 0 (i.e. for BBHs the "
-                "center of mass should be about at the origin).");
+    std::stringstream ss;
+    ss << "We expect |x_A| <= |x_B|, for x the x-coordinate of either "
+          "CenterA or CenterB.  We should roughly have "
+          "RadiusA x_A + RadiusB x_B = 0 (i.e. for BBHs the "
+          "center of mass should be about at the origin).";
+    PARSE_ERROR(context, ss);
   }
   // The value 3.0 * (center_A_[2] - center_B_[2]) is what is
   // chosen in SpEC as the inner radius of the innermost outer sphere.
   if (outer_radius_ < 3.0 * (center_A_[2] - center_B_[2])) {
-    PARSE_ERROR(context,
-                "OuterRadius is too small. Please increase it "
-                "beyond "
-                    << 3.0 * (center_A_[2] - center_B_[2]));
+    std::stringstream ss;
+    ss << "OuterRadius is too small. Please increase it "
+          "beyond "
+       << 3.0 * (center_A_[2] - center_B_[2]);
+    PARSE_ERROR(context, ss);
   }
 
   if (time_dependence_ == nullptr) {
@@ -98,16 +105,17 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
 
   if ((outer_boundary_condition_ == nullptr) xor
       (inner_boundary_condition_ == nullptr)) {
-    PARSE_ERROR(context,
-                "Must specify either both inner and outer boundary conditions "
-                "or neither.");
+    std::stringstream ss;
+    ss << "Must specify either both inner and outer boundary conditions "
+          "or neither.";
+    PARSE_ERROR(context, ss);
   }
   using domain::BoundaryConditions::is_periodic;
   if (is_periodic(inner_boundary_condition_) or
       is_periodic(outer_boundary_condition_)) {
-    PARSE_ERROR(
-        context,
-        "Cannot have periodic boundary conditions with a binary domain");
+    std::stringstream ss;
+    ss << "Cannot have periodic boundary conditions with a binary domain";
+    PARSE_ERROR(context, ss);
   }
 
   // The choices made below for the quantities xi, z_cutting_plane_,
@@ -238,12 +246,16 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
   try {
     initial_refinement_ = std::visit(expand_over_blocks, initial_refinement);
   } catch (const std::exception& error) {
-    PARSE_ERROR(context, "Invalid 'InitialRefinement': " << error.what());
+    std::stringstream ss;
+    ss << "Invalid 'InitialRefinement': " << error.what();
+    PARSE_ERROR(context, ss);
   }
   try {
     initial_grid_points_ = std::visit(expand_over_blocks, initial_grid_points);
   } catch (const std::exception& error) {
-    PARSE_ERROR(context, "Invalid 'InitialGridPoints': " << error.what());
+    std::stringstream ss;
+    ss << "Invalid 'InitialGridPoints': " << error.what();
+    PARSE_ERROR(context, ss);
   }
 
   // Now we must change the initial refinement and initial grid points

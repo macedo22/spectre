@@ -5,6 +5,7 @@
 
 #include <cmath>
 #include <memory>
+#include <sstream>
 
 #include "Domain/Block.hpp"  // IWYU pragma: keep
 #include "Domain/BoundaryConditions/None.hpp"
@@ -48,15 +49,16 @@ Sphere::Sphere(typename InnerRadius::type inner_radius,
       boundary_condition_(std::move(boundary_condition)) {
   using domain::BoundaryConditions::is_none;
   if (is_none(boundary_condition_)) {
-    PARSE_ERROR(
-        context,
-        "None boundary condition is not supported. If you would like an "
-        "outflow boundary condition, you must use that.");
+    std::stringstream ss;
+    ss << "None boundary condition is not supported. If you would like an "
+          "outflow boundary condition, you must use that.";
+    PARSE_ERROR(context, ss);
   }
   using domain::BoundaryConditions::is_periodic;
   if (is_periodic(boundary_condition_)) {
-    PARSE_ERROR(context,
-                "Cannot have periodic boundary conditions with a Sphere");
+    std::stringstream ss;
+    ss << "Cannot have periodic boundary conditions with a Sphere";
+    PARSE_ERROR(context, ss);
   }
 }
 

@@ -41,11 +41,12 @@ SphericalCompression::SphericalCompression(
       initial_velocity_(initial_velocity),
       initial_acceleration_(initial_acceleration) {
   if (min_radius >= max_radius) {
-    PARSE_ERROR(context,
-                "Tried to create a SphericalCompression TimeDependence, but "
-                "the minimum radius ("
-                    << min_radius << ") is not less than the maximum radius ("
-                    << max_radius << ")");
+    std::stringstream ss;
+    ss << "Tried to create a SphericalCompression TimeDependence, but "
+          "the minimum radius ("
+       << min_radius << ") is not less than the maximum radius (" << max_radius
+       << ")";
+    PARSE_ERROR(context, ss);
   }
 }
 

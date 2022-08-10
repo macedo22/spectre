@@ -31,9 +31,10 @@ FloatingPointType Options::create_from_yaml<FloatingPointType>::create<void>(
   } else if (type_read == get_output(FloatingPointType::Double)) {
     return FloatingPointType::Double;
   }
-  PARSE_ERROR(options.context(),
-              "Failed to convert \""
-                  << type_read << "\" to FloatingPointType. Must be one of '"
-                  << get_output(FloatingPointType::Float) << "' or '"
-                  << get_output(FloatingPointType::Double) << "'.");
+  std::stringstream ss;
+  ss << "Failed to convert \"" << type_read
+     << "\" to FloatingPointType. Must be one of '"
+     << get_output(FloatingPointType::Float) << "' or '"
+     << get_output(FloatingPointType::Double) << "'.";
+  PARSE_ERROR(options.context(), ss);
 }

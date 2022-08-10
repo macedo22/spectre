@@ -677,12 +677,11 @@ Options::create_from_yaml<Spectral::Quadrature>::create<void>(
   try {
     return Spectral::to_quadrature(type_read);
   } catch (const std::exception& /*e*/) {
-    PARSE_ERROR(
-        options.context(),
-        "Failed to convert \""
-            << type_read
-            << "\" to Spectral::Quadrature. Must be one "
-               "of Gauss, GaussLobatto, CellCentered, or FaceCentered.");
+    std::stringstream ss;
+    ss << "Failed to convert \"" << type_read
+       << "\" to Spectral::Quadrature. Must be one "
+          "of Gauss, GaussLobatto, CellCentered, or FaceCentered.";
+    PARSE_ERROR(options.context(), ss);
   }
 }
 
@@ -693,10 +692,10 @@ Spectral::Basis Options::create_from_yaml<Spectral::Basis>::create<void>(
   try {
     return Spectral::to_basis(type_read);
   } catch (const std::exception& /*e*/) {
-    PARSE_ERROR(options.context(),
-                "Failed to convert \""
-                    << type_read
-                    << "\" to Spectral::Basis. Must be one "
-                       "of Chebyshev, Legendre, or FiniteDifference.");
+    std::stringstream ss;
+    ss << "Failed to convert \"" << type_read
+       << "\" to Spectral::Basis. Must be one "
+          "of Chebyshev, Legendre, or FiniteDifference.";
+    PARSE_ERROR(options.context(), ss);
   }
 }

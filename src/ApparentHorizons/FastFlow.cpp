@@ -7,6 +7,7 @@
 #include <array>
 #include <cmath>
 #include <pup.h>
+#include <sstream>
 #include <string>
 #include <utility>
 
@@ -350,10 +351,11 @@ FastFlow::FlowType Options::create_from_yaml<FastFlow::FlowType>::create<void>(
   } else if ("Fast" == flow_type_read) {
     return FastFlow::FlowType::Fast;
   }
-  PARSE_ERROR(options.context(), "Failed to convert \""
-                                     << flow_type_read
-                                     << "\" to FastFlow::FlowType. Must be "
-                                        "one of Jacobi, Curvature, Fast.");
+  std::stringstream ss;
+  ss << "Failed to convert \"" << flow_type_read
+     << "\" to FastFlow::FlowType. Must be "
+        "one of Jacobi, Curvature, Fast.";
+  PARSE_ERROR(options.context(), ss);
 }
 
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(0, data)
