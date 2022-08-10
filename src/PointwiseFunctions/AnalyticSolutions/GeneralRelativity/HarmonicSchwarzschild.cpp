@@ -32,7 +32,9 @@ HarmonicSchwarzschild::HarmonicSchwarzschild(
     const Options::Context& context)
     : mass_(mass), center_(center) {
   if (mass_ < 0.0) {
-    PARSE_ERROR(context, "Mass must be non-negative. Given mass: " << mass_);
+    std::stringstream ss;
+    ss << "Mass must be non-negative. Given mass: " << mass_;
+    PARSE_ERROR(context, ss);
   }
 }
 

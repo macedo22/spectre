@@ -31,8 +31,9 @@ dg::Formulation Options::create_from_yaml<dg::Formulation>::create<void>(
   } else if ("WeakInertial" == type_read) {
     return dg::Formulation::WeakInertial;
   }
-  PARSE_ERROR(options.context(), "Failed to convert \""
-                                     << type_read
-                                     << "\" to dg::Formulation. Must be one "
-                                        "of StrongInertial or WeakInertial.");
+  std::stringstream ss;
+  ss << "Failed to convert \"" << type_read
+     << "\" to dg::Formulation. Must be one "
+        "of StrongInertial or WeakInertial.";
+  PARSE_ERROR(options.context(), ss);
 }

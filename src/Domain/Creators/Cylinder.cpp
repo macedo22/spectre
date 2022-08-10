@@ -121,12 +121,11 @@ Cylinder::Cylinder(
   }
   if (radial_distribution_.front() !=
       domain::CoordinateMaps::Distribution::Linear) {
-    std::stringstream ss;
-    ss << "The 'RadialDistribution' must be 'Linear' for the innermost "
-          "shell because it changes in circularity. Add entries to "
-          "'RadialPartitioning' to add outer shells for which you can "
-          "select different radial distributions.";
-    PARSE_ERROR(context, ss);
+    PARSE_ERROR(context,
+                "The 'RadialDistribution' must be 'Linear' for the innermost "
+                "shell because it changes in circularity. Add entries to "
+                "'RadialPartitioning' to add outer shells for which you can "
+                "select different radial distributions.");
   }
   if (distribution_in_z_.size() != num_layers) {
     std::stringstream ss;
@@ -137,13 +136,12 @@ Cylinder::Cylinder(
   }
   if (distribution_in_z_.front() !=
       domain::CoordinateMaps::Distribution::Linear) {
-    std::stringstream ss;
-    ss << "The 'DistributionInZ' must be 'Linear' for the lowermost "
-          "layer because a 'Logarithmic' distribution places its "
-          "singularity at 'LowerZBound'. Add entries to "
-          "'PartitioningInZ' to add layers for which you can "
-          "select different distributions along z.";
-    PARSE_ERROR(context, ss);
+    PARSE_ERROR(context,
+                "The 'DistributionInZ' must be 'Linear' for the lowermost "
+                "layer because a 'Logarithmic' distribution places its "
+                "singularity at 'LowerZBound'. Add entries to "
+                "'PartitioningInZ' to add layers for which you can "
+                "select different distributions along z.");
   }
 
   // Create block names and groups
@@ -237,10 +235,9 @@ Cylinder::Cylinder(
   using domain::BoundaryConditions::is_periodic;
   if (is_periodic(lower_z_boundary_condition_) xor
       is_periodic(upper_z_boundary_condition_)) {
-    std::stringstream ss;
-    ss << "Either both lower and upper z-boundary condition must be "
-          "periodic, or neither.";
-    PARSE_ERROR(context, ss);
+    PARSE_ERROR(context,
+                "Either both lower and upper z-boundary condition must be "
+                "periodic, or neither.");
   }
   if (is_periodic(lower_z_boundary_condition_) and
       is_periodic(upper_z_boundary_condition_)) {
@@ -249,28 +246,26 @@ Cylinder::Cylinder(
     upper_z_boundary_condition_ = nullptr;
   }
   if (is_periodic(mantle_boundary_condition_)) {
-    std::stringstream ss;
-    ss << "A Cylinder can't have periodic boundary conditions in the "
-          "radial direction.";
-    PARSE_ERROR(context, ss);
+    PARSE_ERROR(context,
+                "A Cylinder can't have periodic boundary conditions in the "
+                "radial direction.");
   }
   using domain::BoundaryConditions::is_none;
   if (is_none(lower_z_boundary_condition_) or
       is_none(upper_z_boundary_condition_) or
       is_none(mantle_boundary_condition_)) {
-    std::stringstream ss;
-    ss << "None boundary condition is not supported. If you would like an "
-          "outflow boundary condition, you must use that.";
-    PARSE_ERROR(context, ss);
+    PARSE_ERROR(
+        context,
+        "None boundary condition is not supported. If you would like an "
+        "outflow boundary condition, you must use that.");
   }
   if (mantle_boundary_condition_ == nullptr or
       (not is_periodic_in_z_ and (lower_z_boundary_condition_ == nullptr or
                                   upper_z_boundary_condition_ == nullptr))) {
-    std::stringstream ss;
-    ss << "z-boundary conditions must not be 'nullptr'. Use the other "
-          "constructor to specify 'is_periodic_in_z' instead of boundary "
-          "conditions.";
-    PARSE_ERROR(context, ss);
+    PARSE_ERROR(context,
+                "z-boundary conditions must not be 'nullptr'. Use the other "
+                "constructor to specify 'is_periodic_in_z' instead of boundary "
+                "conditions.");
   }
 }
 

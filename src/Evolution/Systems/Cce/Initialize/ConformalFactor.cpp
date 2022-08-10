@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <sstream>
 #include <type_traits>
 
 #include "DataStructures/ComplexDataVector.hpp"
@@ -447,11 +448,10 @@ Options::create_from_yaml<Cce::InitializeJ::ConformalFactorIterationHeuristic>::
     return Cce::InitializeJ::ConformalFactorIterationHeuristic::OnlyVaryGaugeD;
   }
   // LCOV_EXCL_START
-  PARSE_ERROR(
-      options.context(),
-      "Failed to convert \""
-          << heuristic_read
-          << "\" to Cce::InitializeJ::ConformalFactorIterationHeuristic. "
-             "Must be one of SpinWeight1CoordPerturbation, OnlyVaryGaugeD.");
+  std::stringstream ss;
+  ss << "Failed to convert \"" << heuristic_read
+     << "\" to Cce::InitializeJ::ConformalFactorIterationHeuristic. "
+        "Must be one of SpinWeight1CoordPerturbation, OnlyVaryGaugeD.";
+  PARSE_ERROR(options.context(), ss);
   // LCOV_EXCL_STOP
 }

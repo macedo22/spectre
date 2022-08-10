@@ -44,12 +44,12 @@ Options::create_from_yaml<Convergence::Reason>::create<void>(
   } else if (type_read == get_output(Convergence::Reason::RelativeResidual)) {
     return Convergence::Reason::RelativeResidual;
   }
-  PARSE_ERROR(options.context(),
-              "Failed to convert \""
-                  << type_read << "\" to Convergence::Reason. Must be one of '"
-                  << get_output(Convergence::Reason::NumIterations) << "', '"
-                  << get_output(Convergence::Reason::MaxIterations) << "', '"
-                  << get_output(Convergence::Reason::AbsoluteResidual)
-                  << "' or '"
-                  << get_output(Convergence::Reason::RelativeResidual) << "'.");
+  std::stringstream ss;
+  ss << "Failed to convert \"" << type_read
+     << "\" to Convergence::Reason. Must be one of '"
+     << get_output(Convergence::Reason::NumIterations) << "', '"
+     << get_output(Convergence::Reason::MaxIterations) << "', '"
+     << get_output(Convergence::Reason::AbsoluteResidual) << "' or '"
+     << get_output(Convergence::Reason::RelativeResidual) << "'.";
+  PARSE_ERROR(options.context(), ss);
 }

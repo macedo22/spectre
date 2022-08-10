@@ -34,9 +34,9 @@ Options::create_from_yaml<evolution::dg::subcell::fd::ReconstructionMethod>::
   } else if (recons_method == get_output(type::AllDimsAtOnce)) {
     return type::AllDimsAtOnce;
   } else {
-    PARSE_ERROR(options.context(),
-                "ReconstructionMethod must be '"
-                    << get_output(type::DimByDim) << "', or '"
-                    << get_output(type::AllDimsAtOnce) << "'");
+    std::stringstream ss;
+    ss << "ReconstructionMethod must be '" << get_output(type::DimByDim)
+       << "', or '" << get_output(type::AllDimsAtOnce) << "'";
+    PARSE_ERROR(options.context(), ss);
   }
 }

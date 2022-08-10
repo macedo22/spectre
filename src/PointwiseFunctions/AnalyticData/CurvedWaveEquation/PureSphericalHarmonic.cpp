@@ -6,6 +6,7 @@
 #include <complex>
 #include <cstddef>
 #include <pup.h>
+#include <sstream>
 
 #include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/EagerMath/Magnitude.hpp"
@@ -23,18 +24,21 @@ PureSphericalHarmonic::PureSphericalHarmonic(const double radius,
                                              const Options::Context& context)
     : radius_(radius), width_sq_(width * width), mode_{std::move(mode)} {
   if (abs(mode_.second) > static_cast<int>(mode_.first)) {
-    PARSE_ERROR(
-        context,
-        "The absolute value of the m_mode must be less than or equal to the "
-        "l-mode but the m-mode is "
-            << mode_.second << " and the l-mode is " << mode_.first);
+    std::stringstream ss;
+    ss << "The absolute value of the m_mode must be less than or equal to the "
+          "l-mode but the m-mode is "
+       << mode_.second << " and the l-mode is " << mode_.first;
+    PARSE_ERROR(context, ss);
   }
   if (radius_ <= 0.) {
-    PARSE_ERROR(context,
-                "The radius must be greater than 0 but is " << radius_);
+    std::stringstream ss;
+    ss << "The radius must be greater than 0 but is " << radius_;
+    PARSE_ERROR(context, ss);
   }
   if (width <= 0.) {
-    PARSE_ERROR(context, "The width must be greater than 0 but is " << width);
+    std::stringstream ss;
+    ss << "The width must be greater than 0 but is " << width;
+    PARSE_ERROR(context, ss);
   }
 }
 

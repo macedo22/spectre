@@ -34,12 +34,15 @@ KerrSchild::KerrSchild(const double mass,
 {
   const double spin_magnitude = magnitude(dimensionless_spin_);
   if (spin_magnitude > 1.0) {
-    PARSE_ERROR(context, "Spin magnitude must be < 1. Given spin: "
-                             << dimensionless_spin_ << " with magnitude "
-                             << spin_magnitude);
+    std::stringstream ss;
+    ss << "Spin magnitude must be < 1. Given spin: " << dimensionless_spin_
+       << " with magnitude " << spin_magnitude;
+    PARSE_ERROR(context, ss);
   }
   if (mass_ < 0.0) {
-    PARSE_ERROR(context, "Mass must be non-negative. Given mass: " << mass_);
+    std::stringstream ss;
+    ss << "Mass must be non-negative. Given mass: " << mass_;
+    PARSE_ERROR(context, ss);
   }
 }
 

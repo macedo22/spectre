@@ -5,7 +5,6 @@
 
 #include <array>
 #include <memory>
-#include <sstream>
 #include <vector>
 
 #include "Domain/Block.hpp"  // IWYU pragma: keep
@@ -77,10 +76,10 @@ Brick::Brick(
   }
   using domain::BoundaryConditions::is_none;
   if (is_none(boundary_condition_)) {
-    std::stringstream ss;
-    ss << "None boundary condition is not supported. If you would like an "
-          "outflow boundary condition, you must use that.";
-    PARSE_ERROR(context, ss);
+    PARSE_ERROR(
+        context,
+        "None boundary condition is not supported. If you would like an "
+        "outflow boundary condition, you must use that.");
   }
   using domain::BoundaryConditions::is_periodic;
   if (is_periodic(boundary_condition_)) {

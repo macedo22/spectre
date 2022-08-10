@@ -86,10 +86,10 @@ class propagate_context : public std::exception {
 };
 }  // namespace Options_detail
 
-// [[noreturn]] void propagate_context_helper(const Context& c, const
-// std::string m) {
-//   throw ::Options::Options_detail::propagate_context(c.context + m);
-// }
+[[noreturn]] void propagate_context_helper(const Context& c,
+                                           const std::string m) {
+  throw ::Options::Options_detail::propagate_context(c.context + m);
+}
 
 [[noreturn]] void propagate_context_helper(const Context& c,
                                            const std::stringstream& m) {

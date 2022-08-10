@@ -3,6 +3,8 @@
 
 #include "Time/StepChoosers/Constant.hpp"
 
+#include <sstream>
+
 #include "Options/ParseOptions.hpp"
 
 namespace StepChoosers {
@@ -12,8 +14,9 @@ namespace Constant_detail {
 double parse_options(const Options::Option& options) {
   const auto value = options.parse_as<double>();
   if (value <= 0.) {
-    PARSE_ERROR(options.context(),
-                "Requested step magnitude should be positive.");
+    std::stringstream ss;
+    ss << "Requested step magnitude should be positive.";
+    PARSE_ERROR(options.context(), ss);
   }
   return value;
 }

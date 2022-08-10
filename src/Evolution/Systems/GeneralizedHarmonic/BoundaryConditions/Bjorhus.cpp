@@ -3,6 +3,8 @@
 
 #include "Evolution/Systems/GeneralizedHarmonic/BoundaryConditions/Bjorhus.hpp"
 
+#include <sstream>
+
 #include "DataStructures/Tags/TempTensor.hpp"
 #include "DataStructures/TempBuffer.hpp"
 #include "DataStructures/Tensor/EagerMath/DeterminantAndInverse.hpp"
@@ -57,10 +59,11 @@ convert_constraint_preserving_bjorhus_type_from_yaml(
   } else if (type_read == "ConstraintPreservingPhysical") {
     return ConstraintPreservingBjorhusType::ConstraintPreservingPhysical;
   }
-  PARSE_ERROR(options.context(),
-              "Failed to convert input option to "
-              "ConstraintPreservingBjorhusType::Type. Must "
-              "be one of ConstraintPreserving or ConstraintPreservingPhysical");
+  std::stringstream ss;
+  ss << "Failed to convert input option to "
+        "ConstraintPreservingBjorhusType::Type. Must "
+        "be one of ConstraintPreserving or ConstraintPreservingPhysical";
+  PARSE_ERROR(options.context(), ss);
 }
 }  // namespace detail
 

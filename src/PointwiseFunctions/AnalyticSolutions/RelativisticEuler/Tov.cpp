@@ -53,12 +53,11 @@ Options::create_from_yaml<RelativisticEuler::Solutions::TovCoordinates>::create<
   } else if ("Isotropic" == type_read) {
     return RelativisticEuler::Solutions::TovCoordinates::Isotropic;
   }
-  PARSE_ERROR(
-      options.context(),
-      "Failed to convert '"
-          << type_read
-          << "' to RelativisticEuler::Solutions::TovCoordinates. Must be "
-             "'Schwarzschild' or 'Isotropic'.");
+  std::stringstream ss;
+  ss << "Failed to convert '" << type_read
+     << "' to RelativisticEuler::Solutions::TovCoordinates. Must be "
+        "'Schwarzschild' or 'Isotropic'.";
+  PARSE_ERROR(options.context();, ss);
 }
 
 namespace RelativisticEuler::Solutions {

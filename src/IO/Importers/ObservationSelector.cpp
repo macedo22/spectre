@@ -34,8 +34,9 @@ Options::create_from_yaml<importers::ObservationSelector>::create<void>(
   } else if (value == "Last") {
     return importers::ObservationSelector::Last;
   }
-  PARSE_ERROR(options.context(), "Failed to convert '"
-                                     << value
-                                     << "' to importers::ObservationSelector. "
-                                        "Must be one of First, Last.");
+  std::stringstream ss;
+  ss << "Failed to convert '" << value
+     << "' to importers::ObservationSelector. "
+        "Must be one of First, Last.";
+  PARSE_ERROR(options.context(), ss);
 }

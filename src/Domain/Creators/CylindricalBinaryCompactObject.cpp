@@ -61,32 +61,27 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
       inner_boundary_condition_(std::move(inner_boundary_condition)),
       outer_boundary_condition_(std::move(outer_boundary_condition)) {
   if (center_A_[2] <= 0.0) {
-    std::stringstream ss;
-    ss << "The x-coordinate of the input CenterA is expected to be positive";
-    PARSE_ERROR(context, ss);
+    PARSE_ERROR(
+        context,
+        "The x-coordinate of the input CenterA is expected to be positive");
   }
   if (center_B_[2] >= 0.0) {
-    std::stringstream ss;
-    ss << "The x-coordinate of the input CenterB is expected to be negative";
-    PARSE_ERROR(context, ss);
+    PARSE_ERROR(
+        context,
+        "The x-coordinate of the input CenterB is expected to be negative");
   }
   if (radius_A_ <= 0.0 or radius_B_ <= 0.0) {
-    std::stringstream ss;
-    ss << "RadiusA and RadiusB are expected to be positive";
-    PARSE_ERROR(context, ss);
+    PARSE_ERROR(context, "RadiusA and RadiusB are expected to be positive");
   }
   if (radius_A_ < radius_B_) {
-    std::stringstream ss;
-    ss << "RadiusA should not be smaller than RadiusB";
-    PARSE_ERROR(context, ss);
+    PARSE_ERROR(context, "RadiusA should not be smaller than RadiusB");
   }
   if (std::abs(center_A_[2]) > std::abs(center_B_[2])) {
-    std::stringstream ss;
-    ss << "We expect |x_A| <= |x_B|, for x the x-coordinate of either "
-          "CenterA or CenterB.  We should roughly have "
-          "RadiusA x_A + RadiusB x_B = 0 (i.e. for BBHs the "
-          "center of mass should be about at the origin).";
-    PARSE_ERROR(context, ss);
+    PARSE_ERROR(context,
+                "We expect |x_A| <= |x_B|, for x the x-coordinate of either "
+                "CenterA or CenterB.  We should roughly have "
+                "RadiusA x_A + RadiusB x_B = 0 (i.e. for BBHs the "
+                "center of mass should be about at the origin).");
   }
   // The value 3.0 * (center_A_[2] - center_B_[2]) is what is
   // chosen in SpEC as the inner radius of the innermost outer sphere.
@@ -105,17 +100,16 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
 
   if ((outer_boundary_condition_ == nullptr) xor
       (inner_boundary_condition_ == nullptr)) {
-    std::stringstream ss;
-    ss << "Must specify either both inner and outer boundary conditions "
-          "or neither.";
-    PARSE_ERROR(context, ss);
+    PARSE_ERROR(context,
+                "Must specify either both inner and outer boundary conditions "
+                "or neither.");
   }
   using domain::BoundaryConditions::is_periodic;
   if (is_periodic(inner_boundary_condition_) or
       is_periodic(outer_boundary_condition_)) {
-    std::stringstream ss;
-    ss << "Cannot have periodic boundary conditions with a binary domain";
-    PARSE_ERROR(context, ss);
+    PARSE_ERROR(
+        context,
+        "Cannot have periodic boundary conditions with a binary domain");
   }
 
   // The choices made below for the quantities xi, z_cutting_plane_,

@@ -62,12 +62,12 @@ Options::create_from_yaml<Xcts::Solutions::SchwarzschildCoordinates>::create<
   } else if ("KerrSchildIsotropic" == type_read) {
     return Xcts::Solutions::SchwarzschildCoordinates::KerrSchildIsotropic;
   }
-  PARSE_ERROR(options.context(),
-              "Failed to convert \""
-                  << type_read
-                  << "\" to Xcts::Solutions::SchwarzschildCoordinates. Must be "
-                     "one of 'Isotropic', 'PainleveGullstrand', "
-                     "'KerrSchildIsotropic'.");
+  std::stringstream ss;
+  ss << "Failed to convert \"" << type_read
+     << "\" to Xcts::Solutions::SchwarzschildCoordinates. Must be "
+        "one of 'Isotropic', 'PainleveGullstrand', "
+        "'KerrSchildIsotropic'.";
+  PARSE_ERROR(options.context(), ss);
 }
 
 namespace Xcts::Solutions {

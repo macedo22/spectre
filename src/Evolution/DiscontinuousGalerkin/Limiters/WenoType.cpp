@@ -33,8 +33,9 @@ Limiters::WenoType Options::create_from_yaml<Limiters::WenoType>::create<void>(
   } else if (weno_type_read == "SimpleWeno") {
     return Limiters::WenoType::SimpleWeno;
   }
-  PARSE_ERROR(options.context(), "Failed to convert \""
-                                     << weno_type_read
-                                     << "\" to WenoType. Expected one of: "
-                                        "{Hweno, SimpleWeno}.");
+  std::stringstream ss;
+  ss << "Failed to convert \"" << weno_type_read
+     << "\" to WenoType. Expected one of: "
+        "{Hweno, SimpleWeno}.";
+  PARSE_ERROR(options.context(), ss);
 }

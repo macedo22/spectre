@@ -4,6 +4,7 @@
 #include "Evolution/VariableFixing/FixToAtmosphere.hpp"
 
 #include <pup.h>  // IWYU pragma: keep
+#include <sstream>
 
 #include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
@@ -28,24 +29,27 @@ FixToAtmosphere<Dim>::FixToAtmosphere(const double density_of_atmosphere,
       transition_density_cutoff_(transition_density_cutoff),
       max_velocity_magnitude_(max_velocity_magnitude) {
   if (density_of_atmosphere_ > density_cutoff_) {
-    PARSE_ERROR(context, "The cutoff density ("
-                             << density_cutoff_
-                             << ") must be greater than or equal to the "
-                                "density value in the atmosphere ("
-                             << density_of_atmosphere_ << ')');
+    std::stringstream ss;
+    ss << "The cutoff density (" << density_cutoff_
+       << ") must be greater than or equal to the "
+          "density value in the atmosphere ("
+       << density_of_atmosphere_ << ')';
+    PARSE_ERROR(context, ss);
   }
   if (transition_density_cutoff_ < density_of_atmosphere_ or
       transition_density_cutoff_ > 10.0 * density_of_atmosphere_) {
-    PARSE_ERROR(context, "The transition density must be in ["
-                             << density_of_atmosphere_ << ", "
-                             << 10 * density_of_atmosphere_ << "], but is "
-                             << transition_density_cutoff_);
+    std::stringstream ss;
+    ss << "The transition density must be in [" << density_of_atmosphere_
+       << ", " << 10 * density_of_atmosphere_ << "], but is "
+       << transition_density_cutoff_;
+    PARSE_ERROR(context, ss);
   }
   if (transition_density_cutoff_ <= density_cutoff_) {
-    PARSE_ERROR(context, "The transition density cutoff ("
-                             << transition_density_cutoff_
-                             << ") must be bigger than the density cutoff ("
-                             << density_cutoff_ << ")");
+    std::stringstream ss;
+    ss << "The transition density cutoff (" << transition_density_cutoff_
+       << ") must be bigger than the density cutoff (" << density_cutoff_
+       << ")";
+    PARSE_ERROR(context, ss);
   }
 }
 

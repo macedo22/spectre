@@ -6,6 +6,7 @@
 #include <cmath>
 #include <cstddef>
 #include <pup.h>  // IWYU pragma: keep
+#include <sstream>
 
 #include "DataStructures/DataBox/Prefixes.hpp"  // IWYU pragma: keep
 #include "DataStructures/DataVector.hpp"  // IWYU pragma: keep
@@ -40,14 +41,15 @@ GaugeWave<Dim>::GaugeWave(const double amplitude, const double wavelength,
                           const Options::Context& context)
     : amplitude_(amplitude), wavelength_(wavelength) {
   if (abs(amplitude) >= 1.0) {
-    PARSE_ERROR(context,
-                "Amplitude must be less than one. Given amplitude: "
-                << amplitude_);
+    std::stringstream ss;
+    ss << "Amplitude must be less than one. Given amplitude: " << amplitude_;
+    PARSE_ERROR(context, ss);
   }
   if (wavelength <= 0.0) {
-    PARSE_ERROR(context,
-                "Wavelength must be non-negative. Given wavelength: "
+    std::stringstream ss;
+        ss << "Wavelength must be non-negative. Given wavelength: "
                 << wavelength_);
+        PARSE_ERROR(context, ss);
   }
 }
 

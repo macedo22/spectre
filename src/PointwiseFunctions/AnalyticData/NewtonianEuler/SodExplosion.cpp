@@ -6,6 +6,7 @@
 #include <cmath>
 #include <cstddef>
 #include <pup.h>
+#include <sstream>
 
 #include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
@@ -43,18 +44,18 @@ SodExplosion<Dim>::SodExplosion(const double initial_radius,
   ASSERT(outer_pressure_ > 0.0,
          "The outer pressure must be positive but is " << outer_pressure_);
   if (outer_mass_density_ > inner_mass_density_) {
-    PARSE_ERROR(context, "The inner mass density ("
-                             << inner_mass_density_
-                             << ") must be larger than the outer mass density ("
-                             << outer_mass_density_
-                             << ") so the shock moves radially outward.");
+    std::stringstream ss;
+    ss << "The inner mass density (" << inner_mass_density_
+       << ") must be larger than the outer mass density ("
+       << outer_mass_density_ << ") so the shock moves radially outward.";
+    PARSE_ERROR(context, ss);
   }
   if (outer_pressure_ > inner_pressure_) {
-    PARSE_ERROR(context, "The inner pressure ("
-                             << inner_pressure_
-                             << ") must be larger than the outer pressure ("
-                             << outer_pressure_
-                             << ") so the shock moves radially outward.");
+    std::stringstream ss;
+    ss << "The inner pressure (" << inner_pressure_
+       << ") must be larger than the outer pressure (" << outer_pressure_
+       << ") so the shock moves radially outward.";
+    PARSE_ERROR(context, ss);
   }
 }
 

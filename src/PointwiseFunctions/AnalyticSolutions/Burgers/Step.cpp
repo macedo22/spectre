@@ -4,6 +4,7 @@
 #include "PointwiseFunctions/AnalyticSolutions/Burgers/Step.hpp"
 
 #include <pup.h>
+#include <sstream>
 
 #include "DataStructures/DataVector.hpp"  // IWYU pragma: keep
 #include "DataStructures/Tensor/Tensor.hpp"
@@ -21,6 +22,9 @@ Step::Step(const double left_value, const double right_value,
       right_value_(right_value),
       initial_shock_position_(initial_shock_position) {
   if (left_value <= right_value) {
+    // std::stringstream ss;
+    // ss << ____________________;
+    // PARSE_ERROR(context, ss);
     PARSE_ERROR(context, "Shock solution expects left_value > right_value");
   }
 }

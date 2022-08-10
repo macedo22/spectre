@@ -5,6 +5,7 @@
 
 #include <optional>
 #include <pup.h>
+#include <sstream>
 
 #include "Options/Options.hpp"
 #include "Parallel/Phase.hpp"
@@ -37,8 +38,10 @@ CheckpointAndExitAfterWallclock::CheckpointAndExitAfterWallclock(
     const Options::Context& context)
     : wallclock_hours_for_checkpoint_and_exit_(wallclock_hours) {
   if (wallclock_hours.has_value() and wallclock_hours.value() < 0.0) {
-    PARSE_ERROR(context, "Must give a positive time in hours, but got "
-                             << wallclock_hours.value());
+    std::stringstream ss;
+    ss << "Must give a positive time in hours, but got "
+       << wallclock_hours.value();
+    PARSE_ERROR(context, ss);
   }
 }
 

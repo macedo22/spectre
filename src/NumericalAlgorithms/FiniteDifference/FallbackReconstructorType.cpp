@@ -39,9 +39,9 @@ Options::create_from_yaml<fd::reconstruction::FallbackReconstructorType>::
   } else if (recons_type_read == "None") {
     return fd::reconstruction::FallbackReconstructorType::None;
   }
-  PARSE_ERROR(options.context(),
-              "Failed to convert \""
-                  << recons_type_read
-                  << "\" to FallbackReconstructorType. Expected one of: "
-                     "{Minmod, MonotonisedCentral, None}.");
+  std::stringstream ss;
+  ss << "Failed to convert \"" << recons_type_read
+     << "\" to FallbackReconstructorType. Expected one of: "
+        "{Minmod, MonotonisedCentral, None}.";
+  PARSE_ERROR(options.context(), ss);
 }

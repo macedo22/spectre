@@ -73,10 +73,11 @@ BlastWave::BlastWave(const double inner_radius, const double outer_radius,
       geometry_(geometry),
       equation_of_state_(adiabatic_index) {
   if (inner_radius >= outer_radius) {
-    PARSE_ERROR(context,
-                "BlastWave expects InnerRadius < OuterRadius, "
-                "but InnerRadius = "
-                    << inner_radius << " and OuterRadius = " << outer_radius);
+    std::stringstream ss;
+    ss << "BlastWave expects InnerRadius < OuterRadius, "
+          "but InnerRadius = "
+       << inner_radius << " and OuterRadius = " << outer_radius;
+    PARSE_ERROR(context, ss);
   }
 }
 
@@ -234,9 +235,8 @@ Options::create_from_yaml<grmhd::AnalyticData::BlastWave::Geometry>::create<
   } else if ("Spherical" == type_read) {
     return grmhd::AnalyticData::BlastWave::Geometry::Spherical;
   }
-  PARSE_ERROR(
-      options.context(),
-      "Failed to convert \""
-          << type_read
-          << "\" to Geometry. Must be one of Cylindrical or Spherical.");
+  std::stringstream ss;
+  ss << "Failed to convert \"" << type_read
+     << "\" to Geometry. Must be one of Cylindrical or Spherical.";
+  PARSE_ERROR(options.context(), ss);
 }

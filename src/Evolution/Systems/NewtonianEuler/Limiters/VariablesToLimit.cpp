@@ -39,9 +39,9 @@ Options::create_from_yaml<NewtonianEuler::Limiters::VariablesToLimit>::create<
   } else if (vars_to_limit_read_type == "NumericalCharacteristic") {
     return NewtonianEuler::Limiters::VariablesToLimit::NumericalCharacteristic;
   }
-  PARSE_ERROR(options.context(),
-              "Failed to convert \""
-                  << vars_to_limit_read_type
-                  << "\" to VariablesToLimit. Expected one of: "
-                     "{Conserved, Characteristic, NumericalCharacteristic}.");
+  std::stringstream ss;
+  ss << "Failed to convert \"" << vars_to_limit_read_type
+     << "\" to VariablesToLimit. Expected one of: "
+        "{Conserved, Characteristic, NumericalCharacteristic}.";
+  PARSE_ERROR(options.context(), ss);
 }

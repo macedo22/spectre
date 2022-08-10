@@ -7,6 +7,7 @@
 #include <boost/functional/hash.hpp>  // IWYU pragma: keep
 #include <cstddef>
 #include <optional>
+#include <sstream>
 #include <unordered_map>
 #include <utility>
 
@@ -342,25 +343,31 @@ Weno<VolumeDim>::Weno(
           disable_for_debugging_) {
   if (weno_type == ::Limiters::WenoType::Hweno) {
     if (tvb_constant.has_value() or not kxrcf_constant.has_value()) {
-      PARSE_ERROR(context,
-                  "The Hweno limiter uses the KXRCF TCI. The TvbConstant must "
-                  "be set to 'None', and the KxrcfConstant must be set to a "
-                  "non-negative value.");
+      std::stringstream ss;
+      ss << "The Hweno limiter uses the KXRCF TCI. The TvbConstant must "
+            "be set to 'None', and the KxrcfConstant must be set to a "
+            "non-negative value.";
+      PARSE_ERROR(context, ss);
     }
     if (kxrcf_constant.value() < 0.0) {
-      PARSE_ERROR(context, "The KXRCF constant must be non-negative, but got: "
-                               << kxrcf_constant.value());
+      std::stringstream ss;
+      ss << "The KXRCF constant must be non-negative, but got: "
+         << kxrcf_constant.value();
+      PARSE_ERROR(context, ss);
     }
   } else {  // SimpleWeno
     if (not tvb_constant.has_value() or kxrcf_constant.has_value()) {
-      PARSE_ERROR(context,
-                  "The SimpleWeno limiter uses the TVB minmod TCI. The "
-                  "TvbConstant must be set to a non-negative value, and the "
-                  "KxrcfConstant must be set to 'None'.");
+      std::stringstream ss;
+      ss << "The SimpleWeno limiter uses the TVB minmod TCI. The "
+            "TvbConstant must be set to a non-negative value, and the "
+            "KxrcfConstant must be set to 'None'.";
+      PARSE_ERROR(context, ss);
     }
     if (tvb_constant.value() < 0.0) {
-      PARSE_ERROR(context, "The TVB constant must be non-negative, but got: "
-                               << tvb_constant.value());
+      std::stringstream ss;
+      ss << "The TVB constant must be non-negative, but got: "
+         << tvb_constant.value();
+      PARSE_ERROR(context, ss);
     }
   }
 }

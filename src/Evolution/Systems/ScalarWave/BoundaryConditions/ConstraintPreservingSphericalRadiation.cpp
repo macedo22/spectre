@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <memory>
 #include <pup.h>
+#include <sstream>
 
 #include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/EagerMath/DotProduct.hpp"
@@ -27,12 +28,12 @@ convert_constraint_preserving_spherical_radiation_type_from_yaml(
   } else if ("SecondOrderBaylissTurkel" == type_read) {
     return ConstraintPreservingSphericalRadiationType::SecondOrderBaylissTurkel;
   }
-  PARSE_ERROR(options.context(),
-              "Failed to convert \""
-                  << type_read
-                  << "\" to ConstraintPreservingSphericalRadiation::Type. Must "
-                     "be one of Sommerfeld, FirstOrderBaylissTurkel, or "
-                     "SecondOrderBaylissTurkel.");
+  std::stringstream ss;
+  ss << "Failed to convert \"" << type_read
+     << "\" to ConstraintPreservingSphericalRadiation::Type. Must "
+        "be one of Sommerfeld, FirstOrderBaylissTurkel, or "
+        "SecondOrderBaylissTurkel.";
+  PARSE_ERROR(options.context(), ss);
 }
 }  // namespace detail
 

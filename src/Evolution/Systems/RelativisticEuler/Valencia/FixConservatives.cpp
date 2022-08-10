@@ -33,13 +33,13 @@ FixConservatives<Dim>::FixConservatives(
           1.0 - safety_factor_for_momentum_density) {
   if (minimum_rest_mass_density_times_lorentz_factor_ >
       rest_mass_density_times_lorentz_factor_cutoff_) {
-    PARSE_ERROR(
-        context,
-        "The cutoff value of D (D = rest mass density * Lorentz factor) must "
-        "not be below the minimum value of D.\nValues given: D_min = "
-            << minimum_rest_mass_density_times_lorentz_factor_
-            << ", D_cutoff = " << rest_mass_density_times_lorentz_factor_cutoff_
-            << ".");
+    std::stringstream ss;
+    ss << "The cutoff value of D (D = rest mass density * Lorentz factor) must "
+          "not be below the minimum value of D.\nValues given: D_min = "
+       << minimum_rest_mass_density_times_lorentz_factor_
+       << ", D_cutoff = " << rest_mass_density_times_lorentz_factor_cutoff_
+       << ".";
+    PARSE_ERROR(context, ss);
   }
 }
 

@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <pup.h>
+#include <sstream>
 
 #include "Utilities/StdArrayHelpers.hpp"
 
@@ -23,11 +24,15 @@ KerrHorizon::KerrHorizon(size_t l_max_in, std::array<double, 3> center_in,
   if (mass <= 0.0) {
     // Check here, rather than put a lower_bound on the Tag, because
     // we want to exclude mass being exactly zero.
-    PARSE_ERROR(context, "KerrHorizon expects mass>0, not " << mass);
+    std::stringstream ss;
+    ss << "KerrHorizon expects mass>0, not " << mass;
+    PARSE_ERROR(context, ss);
   }
   if (magnitude(dimensionless_spin) > 1.0) {
-    PARSE_ERROR(context, "KerrHorizon expects |dimensionless_spin|<=1, not "
-                             << magnitude(dimensionless_spin));
+    std::stringstream ss;
+    ss << "KerrHorizon expects |dimensionless_spin|<=1, not "
+       << magnitude(dimensionless_spin);
+    PARSE_ERROR(context, ss);
   }
 }
 

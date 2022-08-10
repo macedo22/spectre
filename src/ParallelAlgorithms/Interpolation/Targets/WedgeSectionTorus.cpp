@@ -4,6 +4,7 @@
 #include "ParallelAlgorithms/Interpolation/Targets/WedgeSectionTorus.hpp"
 
 #include <pup.h>
+#include <sstream>
 
 namespace intrp::OptionHolders {
 
@@ -24,10 +25,14 @@ WedgeSectionTorus::WedgeSectionTorus(
       use_uniform_radial_grid(use_uniform_radial_grid_in),
       use_uniform_theta_grid(use_uniform_theta_grid_in) {
   if (min_radius >= max_radius) {
-    PARSE_ERROR(context, "WedgeSectionTorus expects min_radius < max_radius");
+    std::stringstream ss;
+    ss << "WedgeSectionTorus expects min_radius < max_radius";
+    PARSE_ERROR(context, ss);
   }
   if (min_theta >= max_theta) {
-    PARSE_ERROR(context, "WedgeSectionTorus expects min_theta < max_theta");
+    std::stringstream ss;
+    ss << "WedgeSectionTorus expects min_theta < max_theta";
+    PARSE_ERROR(context, ss);
   }
 }
 

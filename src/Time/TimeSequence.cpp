@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstdint>
 #include <pup_stl.h>
+#include <sstream>
 #include <utility>
 
 #include "Utilities/ErrorHandling/Assert.hpp"
@@ -18,7 +19,9 @@ EvenlySpaced<T>::EvenlySpaced(const T interval, const T offset,
     : interval_(static_cast<SignedT>(interval)),
       offset_(static_cast<SignedT>(offset)) {
   if (interval_ == 0) {
-    PARSE_ERROR(context, "Interval must be positive.");
+    std::stringstream ss;
+    ss << "Interval must be positive.";
+    PARSE_ERROR(context, ss);
   }
 }
 

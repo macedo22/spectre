@@ -41,14 +41,16 @@ MagneticFieldLoop::MagneticFieldLoop(
       outer_radius_(outer_radius),
       equation_of_state_{adiabatic_index_} {
   if (magnitude(advection_velocity) >= 1.0) {
-    PARSE_ERROR(context, "MagneticFieldLoop: superluminal AdvectionVelocity = "
-                             << advection_velocity);
+    std::stringstream ss;
+    ss << "MagneticFieldLoop: superluminal AdvectionVelocity = "
+       << advection_velocity;
+    PARSE_ERROR(context, ss);
   }
   if (inner_radius >= outer_radius) {
-    PARSE_ERROR(context, "MagneticFieldLoop: InnerRadius of "
-                             << inner_radius
-                             << " is not less than OuterRadius of "
-                             << outer_radius);
+    std::stringstream ss;
+    ss << "MagneticFieldLoop: InnerRadius of " << inner_radius
+       << " is not less than OuterRadius of " << outer_radius;
+    PARSE_ERROR(context, ss);
   }
 }
 

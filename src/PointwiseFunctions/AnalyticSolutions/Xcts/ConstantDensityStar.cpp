@@ -76,10 +76,11 @@ ConstantDensityStar::ConstantDensityStar(const double density,
   if (density <= critical_density) {
     alpha_ = compute_alpha(density, radius);
   } else {
-    PARSE_ERROR(context,
-                "A ConstantDensityStar has no solutions for a density below "
-                "the critical density ("
-                    << critical_density << ").");
+    std::stringstream ss;
+    ss << "A ConstantDensityStar has no solutions for a density below "
+          "the critical density ("
+       << critical_density << ").";
+    PARSE_ERROR(context, ss);
   }
 }
 

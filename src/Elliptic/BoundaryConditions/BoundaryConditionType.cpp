@@ -35,9 +35,9 @@ Options::create_from_yaml<elliptic::BoundaryConditionType>::create<void>(
   } else if ("Neumann" == type_read) {
     return elliptic::BoundaryConditionType::Neumann;
   }
-  PARSE_ERROR(options.context(),
-              "Failed to convert \""
-                  << type_read
-                  << "\" to elliptic::BoundaryConditionType. Must be "
-                     "either 'Dirichlet' or 'Neumann'.");
+  std::stringstream ss;
+  ss << "Failed to convert \"" << type_read
+     << "\" to elliptic::BoundaryConditionType. Must be "
+        "either 'Dirichlet' or 'Neumann'.";
+  PARSE_ERROR(options.context(), ss);
 }

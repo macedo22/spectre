@@ -7,6 +7,7 @@
 #include <memory>
 #include <optional>
 #include <pup.h>
+#include <sstream>
 #include <string>
 
 #include "DataStructures/DataVector.hpp"
@@ -28,11 +29,11 @@ SphericalRadiationType convert_spherical_radiation_type_from_yaml(
   } else if ("BaylissTurkel" == type_read) {
     return SphericalRadiationType::BaylissTurkel;
   }
-  PARSE_ERROR(options.context(),
-              "Failed to convert \""
-                  << type_read
-                  << "\" to SphericalRadiation::Type. Must be one of "
-                     "Sommerfeld, or BaylissTurkel.");
+  std::stringstream ss;
+  ss << "Failed to convert \"" << type_read
+     << "\" to SphericalRadiation::Type. Must be one of "
+        "Sommerfeld, or BaylissTurkel.";
+  PARSE_ERROR(options.context(), ss);
 }
 }  // namespace detail
 

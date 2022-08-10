@@ -38,8 +38,9 @@ Options::create_from_yaml<Limiters::MinmodType>::create<void>(
   } else if (minmod_type_read == "Muscl") {
     return Limiters::MinmodType::Muscl;
   }
-  PARSE_ERROR(options.context(), "Failed to convert \""
-                                     << minmod_type_read
-                                     << "\" to MinmodType. Expected one of: "
-                                        "{LambdaPi1, LambdaPiN, Muscl}.");
+  std::stringstream ss;
+  ss << "Failed to convert \"" << minmod_type_read
+     << "\" to MinmodType. Expected one of: "
+        "{LambdaPi1, LambdaPiN, Muscl}.";
+  PARSE_ERROR(options.context(), ss);
 }

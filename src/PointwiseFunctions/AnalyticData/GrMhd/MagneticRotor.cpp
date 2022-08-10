@@ -51,11 +51,11 @@ MagneticRotor::MagneticRotor(
       adiabatic_index_(adiabatic_index),
       equation_of_state_(adiabatic_index) {
   if (fabs(rotor_radius * angular_velocity) >= 1.0) {
-    PARSE_ERROR(context,
-                "MagneticRotor expects RotorRadius * | AngularVelocity | < 1, "
-                "but RotorRadius = "
-                    << rotor_radius
-                    << " and AngularVelocity = " << angular_velocity);
+    std::stringstream ss;
+    ss << "MagneticRotor expects RotorRadius * | AngularVelocity | < 1, "
+          "but RotorRadius = "
+       << rotor_radius << " and AngularVelocity = " << angular_velocity;
+    PARSE_ERROR(context, ss);
   }
 }
 

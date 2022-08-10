@@ -7,6 +7,7 @@
 #include <complex>
 #include <cstddef>
 #include <memory>
+#include <sstream>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -45,14 +46,16 @@ RobinsonTrautman::RobinsonTrautman(
       start_time_{start_time},
       initial_modes_{std::move(initial_modes)} {
   if (initial_modes_.size() > square(l_max + 1)) {
-    PARSE_ERROR(context,
-                "There must not be more than (l_max + 1)^2 modes specified for "
-                "InitialModes");
+    std::stringstream ss;
+    ss << "There must not be more than (l_max + 1)^2 modes specified for "
+          "InitialModes";
+    PARSE_ERROR(context, ss);
   }
   if (tolerance == 0.0) {
-    PARSE_ERROR(context,
-                "A target tolerance of 0.0 is not permitted, as it will cause "
-                "the time-stepper to enter an infinite loop.");
+    std::stringstream ss;
+    ss << "A target tolerance of 0.0 is not permitted, as it will cause "
+          "the time-stepper to enter an infinite loop.";
+    PARSE_ERROR(context, ss);
   }
   initialize_stepper_from_start();
 }

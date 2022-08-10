@@ -4,6 +4,7 @@
 #include "PointwiseFunctions/AnalyticData/GeneralRelativity/BrillLindquist.hpp"
 
 #include <array>
+#include <sstream>
 
 #include "DataStructures/CachedTempBuffer.hpp"
 #include "DataStructures/DataVector.hpp"
@@ -27,12 +28,14 @@ BrillLindquist::BrillLindquist(const double mass_a, const double mass_b,
       center_a_(center_a),
       center_b_(center_b) {
   if (mass_a_ <= 0.0) {
-    PARSE_ERROR(context,
-                "Mass A must be positive. Given mass: " << mass_a_);
+    std::stringstream ss;
+    ss << "Mass A must be positive. Given mass: " << mass_a_;
+    PARSE_ERROR(context, ss);
   }
   if (mass_b_ <= 0.0) {
-    PARSE_ERROR(context,
-                "Mass B must be positive. Given mass: " << mass_b_);
+    std::stringstream ss;
+    ss << "Mass B must be positive. Given mass: " << mass_b_;
+    PARSE_ERROR(context, ss);
   }
 }
 
