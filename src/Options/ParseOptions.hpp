@@ -671,7 +671,7 @@ void Parser<OptionList, Group>::pup(PUP::er& p) {
 template <typename OptionList, typename Group>
 void Parser<OptionList, Group>::parse(const YAML::Node& node) {
   if (not(node.IsMap() or node.IsNull())) {
-    PARSE_ERROR(context_, "" << "'" << node << "' does not look like options.\n"
+    PARSE_ERROR(context_, "'" << node << "' does not look like options.\n"
                               << help());
   }
 
@@ -685,7 +685,7 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
   if (alg::any_of(alternative_choices_, [](const size_t x) {
         return x == std::numeric_limits<size_t>::max();
       })) {
-    PARSE_ERROR(context_, "" << "Cannot decide between alternative options.\n"
+    PARSE_ERROR(context_, "Cannot decide between alternative options.\n"
                               << parsing_help(node));
   }
 
@@ -718,7 +718,7 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
 
     // Check for duplicate key
     if (0 != parsed_options_.count(name)) {
-      PARSE_ERROR(context, "" << "Option '" << name << "' specified twice.\n"
+      PARSE_ERROR(context, "Option '" << name << "' specified twice.\n"
                                       << parsing_help(node));
     }
 
@@ -730,13 +730,13 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
         using Tag = tmpl::type_from<decltype(tag)>;
         if (name == pretty_type::name<Tag>()) {
           PARSE_ERROR(context,
-                      "" << "Option '"
+                      "Option '"
                           << name
                           << "' is unused because of other provided options.\n"
                           << parsing_help(node));
         }
       });
-      PARSE_ERROR(context, "" << "Option '" << name << "' is not a valid option.\n"
+      PARSE_ERROR(context, "Option '" << name << "' is not a valid option.\n"
                                       << parsing_help(node));
     }
 
@@ -745,7 +745,7 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
   }
 
   if (not valid_names.empty()) {
-    PARSE_ERROR(context_, "" << "You did not specify the option"
+    PARSE_ERROR(context_, "You did not specify the option"
                 << (valid_names.size() == 1 ? " " : "s ")
                 << (MakeString{} << valid_names) << "\n" << parsing_help(node));
   }
