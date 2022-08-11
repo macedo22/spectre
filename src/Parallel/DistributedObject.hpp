@@ -1028,39 +1028,7 @@ bool DistributedObject<
   }
 #endif // SPECTRE_CHARM_PROJECTIONS
 
-  const auto& [requested_execution, next_action_step] = ThisAction::apply(
-      box_, inboxes_, *Parallel::local_branch(global_cache_proxy_),
-      std::as_const(array_index_), actions_list{},
-      std::add_pointer_t<ParallelComponent>{});
-
-  if (next_action_step.has_value()) {
-    ASSERT(
-        AlgorithmExecution::Retry != requested_execution,
-        "Switching actions on Retry doesn't make sense. Specify std::nullopt "
-        "as the second argument of the iterable action return type");
-    algorithm_step_ = next_action_step.value();
-  }
-
-  switch (requested_execution) {
-    case AlgorithmExecution::Continue:
-      return true;
-    case AlgorithmExecution::Retry:
-      return false;
-    case AlgorithmExecution::Pause:
-      terminate_ = true;
-      return true;
-    case AlgorithmExecution::Halt:
-      halt_algorithm_until_next_phase_ = true;
-      terminate_ = true;
-      return true;
-    default:  // LCOV_EXCL_LINE
-      // LCOV_EXCL_START
-      ERROR("No case for a Parallel::AlgorithmExecution with integral value "
-            << static_cast<std::underlying_type_t<AlgorithmExecution>>(
-                   requested_execution)
-            << "\n");
-      // LCOV_EXCL_STOP
-  }
+  return true;
 }
 
 template <typename ParallelComponent, typename... PhaseDepActionListsPack>
