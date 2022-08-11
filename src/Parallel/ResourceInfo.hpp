@@ -77,7 +77,7 @@ struct SingletonInfoHolder {
     // If there is no value, we don't need to error so use 0 as a comparator
     // in both cases
     if (input_proc.value_or(0) < 0) {
-      PARSE_ERROR(
+      ALT_PARSE_ERROR(
           context,
           "Proc must be a non-negative integer. Please choose another proc.");
     }
@@ -506,9 +506,10 @@ ResourceInfo<Metavariables>::ResourceInfo(
         // Check that no singleton has requested to be on proc 0 while
         // AvoidGlobalProc0 is simultaneously true.
         if (avoid_global_proc_0_ and proc.has_value() and *proc == 0) {
-          PARSE_ERROR(context,
-                      "A singleton has requested to be exclusively on proc 0, "
-                      "but the AvoidGlobalProc0 option is also set to true.");
+          ALT_PARSE_ERROR(
+              context,
+              "A singleton has requested to be exclusively on proc 0, "
+              "but the AvoidGlobalProc0 option is also set to true.");
         }
 
         // This singleton is exclusive so set it.
@@ -555,11 +556,11 @@ ResourceInfo<Metavariables>::ResourceInfo(
         // or not)
         if (exclusive and proc.has_value() and
             requested_procs.count(*proc) > 1) {
-          PARSE_ERROR(context,
-                      "Two singletons have requested to be on proc "
-                          << proc.value()
-                          << ", but at least one of them has requested to be "
-                             "exclusively on this proc.");
+          std::ostringstream ss;
+          ss << "Two singletons have requested to be on proc " << proc.value()
+             << ", but at least one of them has requested to be "
+                "exclusively on this proc.";
+          ALT_PARSE_ERROR(context, ss);
         }
       };
 

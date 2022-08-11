@@ -79,6 +79,11 @@ class propagate_context : public std::exception {
   throw ::Options::Options_detail::propagate_context(c.context + m.str());
 }
 
+[[noreturn]] void propagate_context_helper(const Context& c,
+                                           const std::string& m) {
+  throw ::Options::Options_detail::propagate_context(c.context + m);
+}
+
 /// \ingroup OptionParsingGroup
 /// Like ERROR("\n" << (context) << m), but instead throws an
 /// exception that will be caught in a higher level Options if not
