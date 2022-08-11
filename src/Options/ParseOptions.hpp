@@ -794,7 +794,7 @@ void Parser<OptionList, Group>::overlay(const YAML::Node& node) {
           Options_detail::find_subgroup<tmpl::_1, tmpl::pin<Group>>>>;
 
   if (not(node.IsMap() or node.IsNull())) {
-    PARSE_ERROR(context_, "'" << node << "' Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborumdoes not look like options.\n"
+    PARSE_ERROR(context_, "'" << node << "' does not look like options.\n"
                               << help<overlayable_tags_and_subgroups_list>());
   }
 
@@ -814,7 +814,7 @@ void Parser<OptionList, Group>::overlay(const YAML::Node& node) {
               ...);
         })) {
       PARSE_ERROR(context,
-                  "Option '" << name << "' Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborumis not a valid option.\n"
+                  "Option '" << name << "' is not a valid option.\n"
                   << parsing_help<overlayable_tags_and_subgroups_list>(node));
     }
 
@@ -825,14 +825,14 @@ void Parser<OptionList, Group>::overlay(const YAML::Node& node) {
                       ...);
             })) {
       PARSE_ERROR(context,
-                  "Option '" << name << "' Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborumis not overlayable.\n"
+                  "Option '" << name << "' is not overlayable.\n"
                   << parsing_help<overlayable_tags_and_subgroups_list>(node));
     }
 
     // Check for duplicate key
     if (0 != overlaid_options.count(name)) {
       PARSE_ERROR(context,
-                  "Option '" << name << "' Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborumspecified twice.\n"
+                  "Option '" << name << "' specified twice.\n"
                   << parsing_help<overlayable_tags_and_subgroups_list>(node));
     }
 
