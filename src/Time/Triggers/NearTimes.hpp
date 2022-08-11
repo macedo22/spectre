@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <ostream>
 #include <pup.h>
 #include <pup_stl.h>
 #include <string>
@@ -118,7 +119,9 @@ struct Options::create_from_yaml<Triggers::NearTimes_enums::Unit> {
     } else if (unit == "Slab") {
       return type::Slab;
     } else {
-      PARSE_ERROR(options.context(), "Unit must be 'Time', 'Step', or 'Slab'");
+      std::ostringstream ss;
+      ss << "Unit must be 'Time', 'Step', or 'Slab'";
+      ALT_PARSE_ERROR(options.context(), ss);
     }
   }
 };
@@ -137,8 +140,9 @@ struct Options::create_from_yaml<
     } else if (unit == "Both") {
       return type::Both;
     } else {
-      PARSE_ERROR(options.context(),
-                  "Direction must be 'Before', 'After', or 'Both'");
+      std::ostringstream ss;
+      ss << "Direction must be 'Before', 'After', or 'Both'";
+      ALT_PARSE_ERROR(options.context(), ss);
     }
   }
 };

@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <limits>
 #include <optional>
+#include <ostream>
 #include <pup.h>
 #include <string>
 #include <unordered_map>
@@ -302,21 +303,22 @@ ObserveNorms<ObservationValueTag, tmpl::list<ObservableTensorTags...>,
       norm_type(std::move(in_norm_type)),
       components(std::move(in_components)) {
   if (((tensor != db::tag_name<ObservableTensorTags>()) and ...)) {
-    PARSE_ERROR(
-        context, "Tensor '"
-                     << tensor << "' is not known. Known tensors are: "
-                     << ((db::tag_name<ObservableTensorTags>() + ",") + ...));
+    std::ostringstream ss;
+    ss << "Tensor '" << tensor << "' is not known. Known tensors are: "
+       << ((db::tag_name<ObservableTensorTags>() + ",") + ...);
+    ALT_PARSE_ERROR(context, ss);
   }
   if (norm_type != "Max" and norm_type != "Min" and norm_type != "L2Norm" and
       norm_type != "L2IntegralNorm") {
-    PARSE_ERROR(
-        context,
-        "NormType must be one of Max, Min, L2Norm, or L2IntegralNorm, not "
-            << norm_type);
+    std::ostringstream ss;
+    ss << "NormType must be one of Max, Min, L2Norm, or L2IntegralNorm, not "
+       << norm_type;
+    ALT_PARSE_ERROR(context, ss);
   }
   if (components != "Individual" and components != "Sum") {
-    PARSE_ERROR(context,
-                "Components must be Individual or Sum, not " << components);
+    std::ostringstream ss;
+    ss << "Components must be Individual or Sum, not " << components;
+    ALT_PARSE_ERROR(context, ss);
   }
 }
 
