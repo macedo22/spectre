@@ -130,13 +130,16 @@ T Option::parse_as() const {
             "as a bracket enclosed list ([foo, bar]) or with each\nentry on a "
             "separate line, indented and preceeded by a dash (  - foo).";
     }
-    PARSE_ERROR(error_context, ss.str());
+    ALT_PARSE_ERROR(error_context, ss);
   } catch (const Options_detail::propagate_context& e) {
     Context error_context = context();
     // Avoid line numbers in the middle of the trace
     error_context.line = -1;
     error_context.column = -1;
-    PARSE_ERROR(error_context, e.message());
+
+    std::ostringstream ss;
+    ss << e.message();
+    ALT_PARSE_ERROR(error_context, ss);
   } catch (std::exception& e) {
     ERROR("Unexpected exception: " << e.what());
   }
@@ -802,8 +805,10 @@ void Parser<OptionList, Group>::overlay(const YAML::Node& node) {
           Options_detail::find_subgroup<tmpl::_1, tmpl::pin<Group>>>>;
 
   if (not(node.IsMap() or node.IsNull())) {
-    PARSE_ERROR(context_, "'" << node << "' does not look like options.\n"
-                              << help<overlayable_tags_and_subgroups_list>());
+    std::ostringstream ss;
+    ss << "'" << node << "' does not look like options.\n"
+       << help<overlayable_tags_and_subgroups_list>();
+    ALT_PARSE_ERROR(context_, ss);
   }
 
   std::unordered_set<std::string> overlaid_options{};
@@ -821,9 +826,10 @@ void Parser<OptionList, Group>::overlay(const YAML::Node& node) {
               (name != pretty_type::name<tmpl::type_from<decltype(opts)>>()) and
               ...);
         })) {
-      PARSE_ERROR(context,
-                  "Option '" << name << "' is not a valid option.\n"
-                  << parsing_help<overlayable_tags_and_subgroups_list>(node));
+      std::ostringstream ss;
+      ss << "Option '" << name << "' is not a valid option.\n"
+         << parsing_help<overlayable_tags_and_subgroups_list>(node);
+      ALT_PARSE_ERROR(context, ss);
     }
 
     if (tmpl::as_pack<overlayable_tags_and_subgroups_list>(
@@ -832,16 +838,18 @@ void Parser<OptionList, Group>::overlay(const YAML::Node& node) {
                        pretty_type::name<tmpl::type_from<decltype(opts)>>()) and
                       ...);
             })) {
-      PARSE_ERROR(context,
-                  "Option '" << name << "' is not overlayable.\n"
-                  << parsing_help<overlayable_tags_and_subgroups_list>(node));
+      std::ostringstream ss;
+      ss << "Option '" << name << "' is not overlayable.\n"
+         << parsing_help<overlayable_tags_and_subgroups_list>(node);
+      ALT_PARSE_ERROR(context, ss);
     }
 
     // Check for duplicate key
     if (0 != overlaid_options.count(name)) {
-      PARSE_ERROR(context,
-                  "Option '" << name << "' specified twice.\n"
-                  << parsing_help<overlayable_tags_and_subgroups_list>(node));
+      std::ostringstream ss;
+      ss << "Option '" << name << "' specified twice.\n"
+         << parsing_help<overlayable_tags_and_subgroups_list>(node);
+      ALT_PARSE_ERROR(context, ss);
     }
 
     overlaid_options.insert(name);
@@ -868,10 +876,11 @@ void Parser<OptionList, Group>::check_lower_bound_on_size(
     static_assert(std::is_same_v<decltype(T::lower_bound_on_size()), size_t>,
                   "lower_bound_on_size() is not a size_t.");
     if (t.size() < T::lower_bound_on_size()) {
-      PARSE_ERROR(context, "Value must have at least "
-                               << T::lower_bound_on_size() << " entries, but "
-                               << t.size() << " were given.\n"
-                               << help());
+      std::ostringstream ss;
+      ss << "Value must have at least " << T::lower_bound_on_size()
+         << " entries, but " << t.size() << " were given.\n"
+         << help();
+      ALT_PARSE_ERROR(context, ss);
     }
   }
 }
@@ -884,10 +893,11 @@ void Parser<OptionList, Group>::check_upper_bound_on_size(
     static_assert(std::is_same_v<decltype(T::upper_bound_on_size()), size_t>,
                   "upper_bound_on_size() is not a size_t.");
     if (t.size() > T::upper_bound_on_size()) {
-      PARSE_ERROR(context, "Value must have at most "
-                               << T::upper_bound_on_size() << " entries, but "
-                               << t.size() << " were given.\n"
-                               << help());
+      std::ostringstream ss;
+      ss << "Value must have at most " << T::upper_bound_on_size()
+         << " entries, but " << t.size() << " were given.\n"
+         << help();
+      ALT_PARSE_ERROR(context, ss);
     }
   }
 }
@@ -902,10 +912,11 @@ inline void Parser<OptionList, Group>::check_lower_bound(
     static_assert(not std::is_same_v<typename T::type, bool>,
                   "Cannot set a lower bound for a bool.");
     if (t < T::lower_bound()) {
-      PARSE_ERROR(context, "Value " << (MakeString{} << t)
-                                    << " is below the lower bound of "
-                                    << (MakeString{} << T::lower_bound())
-                                    << ".\n" << help());
+      std::ostringstream ss;
+      ss << "Value " << (MakeString{} << t) << " is below the lower bound of "
+         << (MakeString{} << T::lower_bound()) << ".\n"
+         << help();
+      ALT_PARSE_ERROR(context, ss);
     }
   }
 }
@@ -920,10 +931,11 @@ inline void Parser<OptionList, Group>::check_upper_bound(
     static_assert(not std::is_same_v<typename T::type, bool>,
                   "Cannot set an upper bound for a bool.");
     if (t > T::upper_bound()) {
-      PARSE_ERROR(context, "Value " << (MakeString{} << t)
-                                    << " is above the upper bound of "
-                                    << (MakeString{} << T::upper_bound())
-                                    << ".\n" << help());
+      std::ostringstream ss;
+      ss << "Value " << (MakeString{} << t) << " is above the upper bound of "
+         << (MakeString{} << T::upper_bound()) << ".\n"
+         << help();
+      ALT_PARSE_ERROR(context, ss);
     }
   }
 }
