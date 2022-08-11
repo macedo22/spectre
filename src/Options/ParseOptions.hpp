@@ -671,8 +671,7 @@ void Parser<OptionList, Group>::pup(PUP::er& p) {
 template <typename OptionList, typename Group>
 void Parser<OptionList, Group>::parse(const YAML::Node& node) {
   if (not(node.IsMap() or node.IsNull())) {
-    PARSE_ERROR(context_, "'" << node << "' does not look like options.\n"
-                              << help());
+    PARSE_ERROR(context_, "");
   }
 
   std::unordered_set<std::string> given_options{};
@@ -685,8 +684,7 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
   if (alg::any_of(alternative_choices_, [](const size_t x) {
         return x == std::numeric_limits<size_t>::max();
       })) {
-    PARSE_ERROR(context_, "Cannot decide between alternative options.\n"
-                              << parsing_help(node));
+    PARSE_ERROR(context_, "");
   }
 
   auto valid_names = call_with_chosen_alternatives([](auto option_list_v) {
@@ -718,8 +716,7 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
 
     // Check for duplicate key
     if (0 != parsed_options_.count(name)) {
-      PARSE_ERROR(context, "Option '" << name << "' specified twice.\n"
-                                      << parsing_help(node));
+      PARSE_ERROR(context, "");
     }
 
     // Check for invalid key
@@ -730,14 +727,10 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
         using Tag = tmpl::type_from<decltype(tag)>;
         if (name == pretty_type::name<Tag>()) {
           PARSE_ERROR(context,
-                      "Option '"
-                          << name
-                          << "' is unused because of other provided options.\n"
-                          << parsing_help(node));
+                      "");
         }
       });
-      PARSE_ERROR(context, "Option '" << name << "' is not a valid option.\n"
-                                      << parsing_help(node));
+      PARSE_ERROR(context, "");
     }
 
     parsed_options_.emplace(name, value);
@@ -745,9 +738,7 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
   }
 
   if (not valid_names.empty()) {
-    PARSE_ERROR(context_, "You did not specify the option"
-                << (valid_names.size() == 1 ? " " : "s ")
-                << (MakeString{} << valid_names) << "\n" << parsing_help(node));
+    PARSE_ERROR(context_, "");
   }
 
   tmpl::for_each<subgroups>([this](auto subgroup_v) {
