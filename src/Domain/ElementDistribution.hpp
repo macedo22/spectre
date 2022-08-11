@@ -119,6 +119,8 @@ struct BlockZCurveProcDistribution {
   /// assignment described in detail in the parent class documentation.
   size_t get_proc_for_element(const ElementId<Dim>& element_id) const;
 
+  void redistribute_elements();
+
  private:
   // in this nested data structure:
   // - The block id is the first index
@@ -126,6 +128,8 @@ struct BlockZCurveProcDistribution {
   //   allowance
   // - Each element allowance is represented by a pair of proc number, number of
   //   elements in the allowance
+  const size_t number_of_procs_with_elements_;
+  const std::unordered_set<size_t>& global_procs_to_ignore_;
   std::vector<std::vector<std::pair<size_t, size_t>>>
       block_element_distribution_;
 };
