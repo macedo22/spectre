@@ -729,11 +729,11 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
                                             &node](auto tag) {
         using Tag = tmpl::type_from<decltype(tag)>;
         if (name == pretty_type::name<Tag>()) {
-          PARSE_ERROR(context,
-                      "Option '"
-                          << name
-                          << "' is unused because of other provided options.\n"
-                          << parsing_help(node));
+          // PARSE_ERROR(context,
+          //             "Option '"
+          //                 << name
+          //                 << "' is unused because of other provided options.\n"
+          //                 << parsing_help(node));
         }
       });
       PARSE_ERROR(context, "Option '" << name << "' is not a valid option.\n"
