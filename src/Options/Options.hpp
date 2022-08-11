@@ -59,6 +59,26 @@ inline std::ostream& operator<<(std::ostream& s, const Context& c) {
   return s;
 }
 
+namespace Options_detail {
+class propagate_context : public std::exception {
+ public:
+  // cppcheck-suppress passedByValue
+  explicit propagate_context(std::string message)
+      : message_(std::move(message)) {}
+
+  const char* what() const noexcept(true) override { return message_.c_str(); }
+  const std::string& message() const { return message_; }
+
+ private:
+  std::string message_;
+};
+}  // namespace Options_detail
+
+[[noreturn]] void propagate_context_helper(const Context& c,
+                                           const std::ostringstream& m) {
+  throw ::Options::Options_detail::propagate_context(c.context + m.str());
+}
+
 /// \ingroup OptionParsingGroup
 /// Like ERROR("\n" << (context) << m), but instead throws an
 /// exception that will be caught in a higher level Options if not
@@ -82,20 +102,14 @@ inline std::ostream& operator<<(std::ostream& s, const Context& c) {
     }                                                                   \
   } while (false)
 
-namespace Options_detail {
-class propagate_context : public std::exception {
- public:
-  // cppcheck-suppress passedByValue
-  explicit propagate_context(std::string message)
-      : message_(std::move(message)) {}
-
-  const char* what() const noexcept(true) override { return message_.c_str(); }
-  const std::string& message() const { return message_; }
-
- private:
-  std::string message_;
-};
-}  // namespace Options_detail
+#define ALT_PARSE_ERROR(c, m)                    \
+  do {                                           \
+    if ((c).top_level) {                         \
+      ALT_ERROR_NO_TRACE(c, m); /* NOLINT */     \
+    } else {                                     \
+      ::Options::propagate_context_helper(c, m); \
+    }                                            \
+  } while (false)
 
 /// \ingroup OptionParsingGroup
 /// The type that options are passed around as.  Contains YAML node
