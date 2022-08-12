@@ -68,17 +68,18 @@ inline std::ostream& operator<<(std::ostream& s, const Context& c) {
 ///
 /// \param context Context used to print a parsing traceback
 /// \param m error message, as for ERROR
-#define PARSE_ERROR(context, m)                                             \
-  do {                                                                      \
-    std::ostringstream avoid_name_collisions_PARSE_ERROR; /* NOLINT */      \
-    /* clang-tidy: macro arg in parentheses */                              \
-    avoid_name_collisions_PARSE_ERROR << (context) << m;                    \
-    if ((context).top_level) { /* clang-tidy: macro arg in parentheses */   \
-      ERROR_NO_TRACE(avoid_name_collisions_PARSE_ERROR.str()); /* NOLINT */ \
-    } else {                                                                \
-      throw ::Options::Options_detail::propagate_context(                   \
-          avoid_name_collisions_PARSE_ERROR.str());                         \
-    }                                                                       \
+#define PARSE_ERROR(context, m)                                         \
+  do {                                                                  \
+    if ((context).top_level) {                                          \
+      /* clang-tidy: macro arg in parentheses */                        \
+      ERROR_NO_TRACE("\n" << (context) << m); /* NOLINT */              \
+    } else {                                                            \
+      std::ostringstream avoid_name_collisions_PARSE_ERROR;             \
+      /* clang-tidy: macro arg in parentheses */                        \
+      avoid_name_collisions_PARSE_ERROR << (context) << m; /* NOLINT */ \
+      throw ::Options::Options_detail::propagate_context(               \
+          avoid_name_collisions_PARSE_ERROR.str());                     \
+    }                                                                   \
   } while (false)
 
 namespace Options_detail {
