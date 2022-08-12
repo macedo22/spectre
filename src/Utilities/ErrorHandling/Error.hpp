@@ -70,8 +70,11 @@
       throw std::runtime_error("Failed");                                    \
     } else {                                                                 \
       disable_floating_point_exceptions();                                   \
+      std::ostringstream avoid_name_collisions_ERROR_NO_TRACE;               \
+      /* clang-tidy: macro arg in parentheses */                             \
+      avoid_name_collisions_ERROR_NO_TRACE << m; /* NOLINT */                \
       abort_with_error_message_no_trace(                                     \
           __FILE__, __LINE__, static_cast<const char*>(__PRETTY_FUNCTION__), \
-          MakeString{} << m);                                                \
+          avoid_name_collisions_ERROR_NO_TRACE.str());                       \
     }                                                                        \
   } while (false)
