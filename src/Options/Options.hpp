@@ -77,8 +77,7 @@ inline std::ostream& operator<<(std::ostream& s, const Context& c) {
       std::ostringstream avoid_name_collisions_PARSE_ERROR;             \
       /* clang-tidy: macro arg in parentheses */                        \
       avoid_name_collisions_PARSE_ERROR << (context) << m; /* NOLINT */ \
-      throw ::Options::Options_detail::propagate_context(               \
-          avoid_name_collisions_PARSE_ERROR.str());                     \
+      throw ::Options::Options_detail::propagate_context("");           \
     }                                                                   \
   } while (false)
 
