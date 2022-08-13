@@ -68,10 +68,10 @@ class ComplexDiagonalModalOperator
       default;
   ~ComplexDiagonalModalOperator() = default;
 
-  using VectorImpl<std::complex<double>, ComplexDiagonalModalOperator>::
-  operator=;
-  using VectorImpl<std::complex<double>,
-                   ComplexDiagonalModalOperator>::VectorImpl;
+  using BaseType = VectorImpl<std::complex<double>, ComplexDiagonalModalOperator>;
+
+  using BaseType::operator=;
+  using BaseType::VectorImpl;
 };
 
 namespace blaze {
