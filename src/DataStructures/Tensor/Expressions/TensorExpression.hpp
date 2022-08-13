@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <complex>
 #include <limits>
 
-#include "DataStructures/Tensor/IndexType.hpp"
 #include "Utilities/ForceInline.hpp"
 #include "Utilities/TMPL.hpp"
 
@@ -137,6 +137,21 @@ struct Expression {};
 /// `num_ops_left_child + num_ops_right_child + 1`, the sum of the number of
 /// operations in each operand's subtrees plus one for the operation done for
 /// the expression, itself.
+/// - variable `static constexpr size_t
+/// height_relative_to_closest_tensor_leaf_in_subtree` : The height of an
+/// expression's node in the overall expression tree relative to the closest
+/// `TensorAsExpression` leaf in its subtree. This is stored so that we can
+/// traverse from the root along the shortest path to a `Tensor` when
+/// retrieving the size of a component from the RHS expression (see
+/// `get_rhs_tensor_component_size()` below). Non-`Tensor` leaves (e.g.
+/// `NumberAsExpression`) are defined to have maximum height
+/// `std::numeric_limits<size_t>::max()` to encode that they are maximally
+/// far away from their nearest `Tensor` descendant, since the expression's
+/// subtree (a leaf) can never have a `TensorAsExpression` descedant from it.
+/// This maximal height is leveraged by `get_rhs_tensor_component_size()` so
+/// that in traversing the expression tree to find a `Tensor`, it will never
+/// take the path that ends in a non-`Tensor` leaf because it is the worst path
+/// option.
 /// - function `decltype(auto) get(const std::array<size_t, num_tensor_indices>&
 /// result_multi_index) const`: Accepts a multi-index for the result tensor
 /// represented by the expression and returns the computed result of the
@@ -162,6 +177,11 @@ struct Expression {};
 /// be used instead of `tenex::evaluate`. See the documentation for
 /// `tenex::update` for more details and `tenex::detail::evaluate_impl` for why
 /// this is safe to do.
+/// - function `size_t get_rhs_tensor_component_size() const`: Gets the size of
+/// a component from a `Tensor` in an expression's subtree of the RHS
+/// expression. This is used to size LHS components, if needed. Utilizes
+/// `height_relative_to_closest_tensor_leaf_in_subtree` to recursively find the
+/// nearest `TensorAsExpression` descendant leaf.
 ///
 /// Each derived `TensorExpression` class must also define the following
 /// members, which have real meaning for the expression *only* if it ends up
@@ -206,7 +226,8 @@ struct Expression {};
 /// If on the primary path, whether or not this subtree contains a starting
 /// point of a leg along the primary path. In other words, whether or not there
 /// is a split on the primary path at this expression or beneath it.
-/// - function `decltype(auto) get_primary(const type& result_component,
+/// - function template `template <typename ResultDataType>
+/// decltype(auto) get_primary(const ResultDataType& result_component,
 /// const std::array<size_t, num_tensor_indices>& result_multi_index) const`:
 /// This is similar to the required `get` function described above, but this
 /// should be used when the tree is split up. The main difference with this
@@ -216,7 +237,8 @@ struct Expression {};
 /// we substitute in the current LHS result for the subtree that we have already
 /// computed. This function should call `get_primary` on the child on the
 /// primary path and `get` on the other child, if one exists.
-/// - function `void evaluate_primary_subtree(type& result_component,
+/// - function template `template <typename ResultType>
+/// void evaluate_primary_subtree(ResultType& result_component,
 /// const std::array<size_t, num_tensor_indices>& result_multi_index) const`:
 /// This should first recursively evaluate the legs beneath it on the primary
 /// path, then if the expression itself is the start of a leg, it should
@@ -224,6 +246,14 @@ struct Expression {};
 /// it and update the result component being accumulated. `tenex::evaluate`
 /// should call this function on the root node for the whole tree if there is
 /// determined to be any splits in the tree.
+///
+/// ## Data type support
+/// Which types can be used, which operations with which types can be performed,
+/// and other type-specific support and configuration can be found in
+/// `DataStructures/Tensor/Expressions/DataTypeSupport.hpp`. To add support for
+/// equation terms with a certain type or to modify the configuration for a
+/// type that is already supported, see the contents of that file and modify
+/// settings as necessary.
 ///
 /// ## Current advice for improving and extending `TensorExpression`s
 /// - Derived `TensorExpression` classes (or the overloads that produce them)
@@ -310,60 +340,3 @@ template <typename Derived, typename DataType, typename Symm,
 TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
                  ArgsList<Args...>>::~TensorExpression() = default;
 /// @}
-
-namespace tenex {
-namespace detail {
-/// @{
-/// \brief The maximum number of arithmetic tensor operations allowed in a
-/// `TensorExpression` subtree before having it be a splitting point in the
-/// overall RHS expression, according to the data type held by the `Tensor`s in
-/// the expression
-///
-/// \details
-/// To enable splitting for `TensorExpression`s with a different data type,
-/// define a new variable below like `max_num_ops_in_datavector_sub_expression`
-/// for your data type, then update the control flow in
-/// `max_num_ops_in_sub_expression_helper`.
-///
-/// Before defining a max operations cap for some data type, the change should
-/// first be justified by benchmarking many different tensor expressions before
-/// and after introducing the new cap. The optimal cap will likely be
-/// hardware-dependent, so fine-tuning this would ideally involve benchmarking
-/// on each hardware architecture and then controling the value based on the
-/// hardware.
-///
-/// The current value set for when the data type is `DataVector` was benchmarked
-/// by compiling with clang-10 Release and running on Intel(R) Xeon(R)
-/// CPU E5-2630 v4 @ 2.20GHz.
-static constexpr size_t max_num_ops_in_datavector_sub_expression = 8;
-/// @}
-
-/// \brief Helper struct for getting the maximum number of arithmetic tensor
-/// operations allowed in a `TensorExpression` subtree before having it be a
-/// splitting point in the overall RHS expression, according to the `DataType`
-/// held by the `Tensor`s in the expression
-///
-/// \tparam DataType the type of the data being stored in the `Tensor`s in the
-/// `TensorExpression`
-template <typename DataType>
-struct max_num_ops_in_sub_expression_helper {
-  // Splitting is only enabled for expressions when DataType == DataVector
-  // because benchmarking has shown it to be beneficial. To enable splitting
-  // for other data types, define a new static variable like
-  // `max_num_ops_in_datavector_sub_expression` for the data type of interest,
-  // then update the control flow below
-  static constexpr size_t value = std::is_same_v<DataType, DataVector>
-                                      ? max_num_ops_in_datavector_sub_expression
-                                      // effectively, no splitting
-                                      : std::numeric_limits<size_t>::max();
-};
-
-/// \brief Get maximum number of arithmetic tensor operations allowed in a
-/// `TensorExpression` subtree before having it be a splitting point in the
-/// overall RHS expression, according to the `DataType` held by the `Tensor`s in
-/// the expression
-template <typename DataType>
-inline constexpr size_t max_num_ops_in_sub_expression =
-    max_num_ops_in_sub_expression_helper<DataType>::value;
-}  // namespace detail
-}  // namespace tenex

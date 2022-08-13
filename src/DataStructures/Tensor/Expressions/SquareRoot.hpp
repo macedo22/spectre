@@ -6,9 +6,11 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <limits>
 #include <type_traits>
 #include <utility>
 
+#include "DataStructures/Tensor/Expressions/NumberAsExpression.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Expressions/TimeIndex.hpp"
 #include "Utilities/ForceInline.hpp"
@@ -52,7 +54,7 @@ struct SquareRoot
   /// The number of tensor indices in the result of the expression
   static constexpr auto num_tensor_indices = sizeof...(Args);
 
-  // === Arithmetic tensor operations properties ===
+  // === Expression subtree properties ===
   /// The number of arithmetic tensor operations done in the subtree for the
   /// left operand
   static constexpr size_t num_ops_left_child = T::num_ops_subtree;
@@ -63,6 +65,13 @@ struct SquareRoot
   /// The total number of arithmetic tensor operations done in this expression's
   /// whole subtree
   static constexpr size_t num_ops_subtree = num_ops_left_child + 1;
+  /// The height of this expression's node in the expression tree relative to
+  /// the closest `TensorAsExpression` leaf in its subtree
+  static constexpr size_t height_relative_to_closest_tensor_leaf_in_subtree =
+      T::height_relative_to_closest_tensor_leaf_in_subtree !=
+              std::numeric_limits<size_t>::max()
+          ? T::height_relative_to_closest_tensor_leaf_in_subtree + 1
+          : T::height_relative_to_closest_tensor_leaf_in_subtree;
 
   // === Properties for splitting up subexpressions along the primary path ===
   // These definitions only have meaning if this expression actually ends up
@@ -112,7 +121,7 @@ struct SquareRoot
   template <typename LhsTensor>
   SPECTRE_ALWAYS_INLINE void assert_lhs_tensor_not_in_rhs_expression(
       const gsl::not_null<LhsTensor*> lhs_tensor) const {
-    if constexpr (not std::is_base_of_v<NumberAsExpression, T>) {
+    if constexpr (not std::is_base_of_v<MarkAsNumberAsExpression, T>) {
       t_.assert_lhs_tensor_not_in_rhs_expression(lhs_tensor);
     }
   }
@@ -126,10 +135,19 @@ struct SquareRoot
   template <typename LhsTensorIndices, typename LhsTensor>
   SPECTRE_ALWAYS_INLINE void assert_lhs_tensorindices_same_in_rhs(
       const gsl::not_null<LhsTensor*> lhs_tensor) const {
-    if constexpr (not std::is_base_of_v<NumberAsExpression, T>) {
+    if constexpr (not std::is_base_of_v<MarkAsNumberAsExpression, T>) {
       t_.template assert_lhs_tensorindices_same_in_rhs<LhsTensorIndices>(
           lhs_tensor);
     }
+  }
+
+  /// \brief Get the size of a component from a `Tensor` in this expression's
+  /// subtree of the RHS `TensorExpression`
+  ///
+  /// \return the size of a component from a `Tensor` in this expression's
+  /// subtree of the RHS `TensorExpression`
+  SPECTRE_ALWAYS_INLINE size_t get_rhs_tensor_component_size() const {
+    return t_.get_rhs_tensor_component_size();
   }
 
   /// \brief Returns the square root of the component of the tensor evaluated
@@ -166,8 +184,9 @@ struct SquareRoot
   /// square root
   /// \return the square root of the component of the tensor evaluated from the
   /// contained tensor expression
+  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
-      const type& result_component,
+      const ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     if constexpr (is_primary_end) {
       (void)multi_index;
@@ -177,7 +196,7 @@ struct SquareRoot
     } else {
       // We haven't yet evaluated the whole subtree for this expression, so
       // return the square root of this expression's subtree
-      return sqrt(t_.get_primary(result_component, multi_index));
+      return sqrt(t_.template get_primary(result_component, multi_index));
     }
   }
 
@@ -193,13 +212,14 @@ struct SquareRoot
   /// \param result_component the LHS tensor component to evaluate
   /// \param multi_index the multi-index of the component of the result tensor
   /// to evaluate
+  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
-      type& result_component,
+      ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     if constexpr (primary_child_subtree_contains_primary_start) {
       // The primary child's subtree contains at least one leg, so recurse down
       // and evaluate that first
-      t_.evaluate_primary_subtree(result_component, multi_index);
+      t_.template evaluate_primary_subtree(result_component, multi_index);
     }
 
     if constexpr (is_primary_start) {

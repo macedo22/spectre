@@ -5,25 +5,42 @@
 
 #include <array>
 #include <cstddef>
+#include <limits>
 
+#include "DataStructures/Tensor/Expressions/DataTypeSupport.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "Utilities/ForceInline.hpp"
 #include "Utilities/TMPL.hpp"
 
 namespace tenex {
 /// \ingroup TensorExpressionsGroup
-/// \brief Defines an expression representing a `double`
+/// \brief Marks a class as being a `NumberAsExpression<DataType>`
+///
+/// \details
+/// The empty base class provides a simple means for checking if a type is a
+/// `NumberAsExpression<DataType>`.
+struct MarkAsNumberAsExpression {};
+
+/// \ingroup TensorExpressionsGroup
+/// \brief Defines an expression representing a number
 ///
 /// \details
 /// For details on aliases and members defined in this class, as well as general
 /// `TensorExpression` terminology used in its members' documentation, see
 /// documentation for `TensorExpression`.
+template <typename DataType>
 struct NumberAsExpression
-    : public TensorExpression<NumberAsExpression, double, tmpl::list<>,
-                              tmpl::list<>, tmpl::list<>> {
+    : public TensorExpression<NumberAsExpression<DataType>, DataType,
+                              tmpl::list<>, tmpl::list<>, tmpl::list<>>,
+      MarkAsNumberAsExpression {
+  static_assert(detail::is_supported_number_datatype<DataType>::value,
+                "TensorExpressions currently only support numeric terms whose "
+                "type is double or std::complex<double>. It is possible to add "
+                "support for more numeric types.");
+
   // === Index properties ===
   /// The type of the data being stored in the result of the expression
-  using type = double;
+  using type = DataType;
   /// The list of \ref SpacetimeIndex "TensorIndexType"s of the result of the
   /// expression
   using symmetry = tmpl::list<>;
@@ -35,7 +52,7 @@ struct NumberAsExpression
   /// The number of tensor indices in the result of the expression
   static constexpr auto num_tensor_indices = 0;
 
-  // === Arithmetic tensor operations properties ===
+  // === Expression subtree properties ===
   /// The number of arithmetic tensor operations done in the subtree for the
   /// left operand, which is 0 because this is a leaf expression
   static constexpr size_t num_ops_left_child = 0;
@@ -45,6 +62,12 @@ struct NumberAsExpression
   /// The total number of arithmetic tensor operations done in this expression's
   /// whole subtree, which is 0 because this is a leaf expression
   static constexpr size_t num_ops_subtree = 0;
+  /// The height of this expression's node in the expression tree relative to
+  /// the closest `TensorAsExpression` leaf in its subtree. Because this
+  /// expression type is leaf, the height for this type is set to the maximum
+  /// `size_t` value to encode a sense of maximal height.
+  static constexpr size_t height_relative_to_closest_tensor_leaf_in_subtree =
+      std::numeric_limits<size_t>::max();
 
   // === Properties for splitting up subexpressions along the primary path ===
   // These definitions only have meaning if this expression actually ends up
@@ -77,7 +100,8 @@ struct NumberAsExpression
   /// leaf of the first leg being evaluated in the overall tree, we don't want
   /// to use a `double` to initialize/size one of our LHS tensor's components,
   /// because things would break if the LHS tensor components are supposed to
-  /// be e.g. a `DataVector` with a specific size.
+  /// be e.g. a `DataVector` with a specific size. TODO make sure this is
+  /// removed
   static constexpr bool is_primary_start = false;
   /// If on the primary path, whether or not the expression's child along the
   /// primary path is a subtree that contains a starting point of a leg along
@@ -88,12 +112,12 @@ struct NumberAsExpression
   static constexpr bool primary_subtree_contains_primary_start =
       is_primary_start;
 
-  NumberAsExpression(const double number) : number_(number) {}
+  NumberAsExpression(const type number) : number_(number) {}
   ~NumberAsExpression() override = default;
 
   // This expression does not represent a tensor, nor does it have any children,
   // so we should never need to assert that the LHS `Tensor` is not equal to the
-  // `double` stored by this expression
+  // number stored by this expression
   template <typename LhsTensor>
   void assert_lhs_tensor_not_in_rhs_expression(
       const gsl::not_null<LhsTensor*>) const = delete;
@@ -103,12 +127,15 @@ struct NumberAsExpression
   template <typename LhsTensorIndices, typename LhsTensor>
   void assert_lhs_tensorindices_same_in_rhs(
       const gsl::not_null<LhsTensor*> lhs_tensor) const = delete;
+  // This expression is a non-`Tensor` leaf, so we should never try to get the
+  // size of a `Tensor` component from this expression.
+  size_t get_rhs_tensor_component_size() const = delete;
 
   /// \brief Returns the number represented by the expression
   ///
   /// \return the number represented by this expression
-  SPECTRE_ALWAYS_INLINE double get(
-      const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
+  SPECTRE_ALWAYS_INLINE type
+  get(const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
     return number_;
   }
 
@@ -116,7 +143,7 @@ struct NumberAsExpression
   ///
   /// \return the number represented by this expression
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE double get_primary(
+  SPECTRE_ALWAYS_INLINE type get_primary(
       const ResultType& /*result_component*/,
       const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
     return number_;
@@ -128,7 +155,7 @@ struct NumberAsExpression
   // initialize a LHS result tensor component. We would run into trouble if e.g.
   // the tensor components in the equations are `DataVector`s, but then we
   // initialize a LHS component using the `double` stored in this leaf
-  // expression on the primary path.
+  // expression on the primary path. TODO make sure this is removed
   template <typename ResultType>
   void evaluate_primary_subtree(
       ResultType&,
@@ -136,6 +163,6 @@ struct NumberAsExpression
 
  private:
   /// Number represented by this expression
-  double number_;
+  type number_;
 };
 }  // namespace tenex
