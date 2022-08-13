@@ -203,10 +203,29 @@ void evaluate_impl(
       "e.g. evaluate<ti::a, ti::b>(L, R(ti::b, ti::a));, where R's first "
       "index has 2 spatial dimensions but L's second index has 3 spatial "
       "dimensions. Check RHS and LHS indices that use the same generic index.");
+  static_assert(Derived::height_relative_to_closest_tensor_leaf_in_subtree <
+                    std::numeric_limits<size_t>::max(),
+                "This either indicates that no Tensors were found in the RHS "
+                "TensorExpression or that the depth of the tree exceeded the "
+                "maximum size_t value. If there is indeed a Tensor in the RHS "
+                "expression, this indicates a flaw in the logic for the "
+                "derived TensorExpression types' member, "
+                "height_relative_to_closest_tensor_leaf_in_subtree.");
 
   if constexpr (EvaluateSubtrees) {
     // Make sure the LHS tensor doesn't also appear in the RHS tensor expression
     (~rhs_tensorexpression).assert_lhs_tensor_not_in_rhs_expression(lhs_tensor);
+    // If the data type is `DataVector`, size the LHS tensor components if their
+    // size does not match the size from a `Tensor` in the RHS expression
+    if constexpr (std::is_same_v<DataVector, X>) {
+      const DataVector& rhs_component =
+          (~rhs_tensorexpression).get_used_for_size();
+      if (rhs_component.size() != (*lhs_tensor)[0].size()) {
+        for (auto& lhs_component : *lhs_tensor) {
+          lhs_component = DataVector(rhs_component.size());
+        }
+      }
+    }
   }
 
   constexpr std::array<size_t, num_rhs_indices> index_transformation =

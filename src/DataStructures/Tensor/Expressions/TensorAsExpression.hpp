@@ -296,6 +296,11 @@ struct TensorAsExpression<Tensor<X, Symm<SymmValues...>, IndexList<Indices...>>,
     }
   }
 
+  /// \brief Get a component from the `Tensor` contained by this expression
+  ///
+  /// \return a component from the `Tensor` contained by this expression
+  SPECTRE_ALWAYS_INLINE auto get_used_for_size() const { return (*t_)[0]; }
+
   /// \brief Returns the value of the contained tensor's multi-index
   ///
   /// \param multi_index the multi-index of the tensor component to retrieve

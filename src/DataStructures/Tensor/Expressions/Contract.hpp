@@ -585,6 +585,15 @@ struct TensorContract
     }
   }
 
+  /// \brief Get a component from a `Tensor` in this expression's subtree of the
+  /// RHS `TensorExpression`
+  ///
+  /// \return a component from a `Tensor` in this expression's subtree of the
+  /// RHS `TensorExpression`
+  SPECTRE_ALWAYS_INLINE auto get_used_for_size() const {
+    return t_.get_used_for_size();
+  }
+
   /// \brief Return the highest multi-index between the components being summed
   /// in the contraction
   ///

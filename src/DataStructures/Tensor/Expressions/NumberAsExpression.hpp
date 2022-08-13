@@ -110,6 +110,9 @@ struct NumberAsExpression
   template <typename LhsTensorIndices, typename LhsTensor>
   void assert_lhs_tensorindices_same_in_rhs(
       const gsl::not_null<LhsTensor*> lhs_tensor) const = delete;
+  // This expression is a non-`Tensor` leaf, so we should never try to get a
+  // `Tensor` component from this expression.
+  auto get_used_for_size() const = delete;
 
   /// \brief Returns the number represented by the expression
   ///
