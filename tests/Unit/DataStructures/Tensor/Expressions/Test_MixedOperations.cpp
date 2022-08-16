@@ -15,6 +15,7 @@
 #include "DataStructures/Variables.hpp"
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
+#include "MockDivide.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/MakeWithValue.hpp"
 #include "Utilities/TMPL.hpp"
@@ -938,6 +939,31 @@ void test_assign_double(const DataType& used_for_size) {
   }
 }
 
+// This tests an edge case in tree splitting where the first assignment to
+// unsized LHS `Tensor<DataVector, ...>` components is to the result of a
+// subtree that is a `double` (see issue #4155 and PR #4159). Eliciting this is
+// dependent on `TensorExpression` implementation, meaning that if certain
+// details about the implementation change (the structure of the tree, where it
+// is split, if it is split at all, order of operations, or when/where/how the
+// first assignment to the LHS components occurs), a test expression that used
+// to test edge case behavior may silently no longer test it after the
+// implementation changes. To combat this, we use a mock `TensorExpression`,
+// `MockDivide`, whose implementation is known, won't change, and we know
+// elicits the edge case behavior we want to test.
+void test_unsized_lhs_assignment_to_number_in_tree_splitting() {
+  Scalar<DataVector> L{};
+  Scalar<DataVector> R{{{{1.0}}}};
+
+  const auto numerator_expression = tenex::NumberAsExpression(1.0);
+  const auto denominator_expression =
+      R() + R() + R() + R() + R() + R() + R() + R() + R();
+  const auto rhs_expression =
+      tenex::MockDivide(numerator_expression, denominator_expression);
+
+  tenex::evaluate(make_not_null(&L), rhs_expression);
+  CHECK(get(L) == 1.0 / (9.0 * get(R)));
+}
+
 // Test cases include equations with a mixture of arithmetic operations or more
 // that one assignment of the LHS tensor (more than one call to
 // `tenex::evaluate` or `tenex::update`)
@@ -961,4 +987,6 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.MixedOperations",
   test_mixed_operations(
       make_not_null(&generator),
       DataVector(5, std::numeric_limits<double>::signaling_NaN()));
+
+  test_unsized_lhs_assignment_to_number_in_tree_splitting();
 }
