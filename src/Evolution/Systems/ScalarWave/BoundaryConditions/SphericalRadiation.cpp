@@ -14,7 +14,6 @@
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Domain/BoundaryConditions/BoundaryCondition.hpp"
 #include "Options/Options.hpp"
-#include "Options/ParseOptions.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/Gsl.hpp"
 

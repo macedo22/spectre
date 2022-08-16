@@ -11,7 +11,7 @@
 #include "DataStructures/Tensor/EagerMath/DotProduct.hpp"
 #include "DataStructures/Tensor/EagerMath/Magnitude.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
-#include "Options/ParseOptions.hpp"
+#include "Options/Options.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
 
 namespace ScalarWave::BoundaryConditions {
