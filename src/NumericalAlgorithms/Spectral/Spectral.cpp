@@ -12,7 +12,6 @@
 #include "DataStructures/Matrix.hpp"
 #include "NumericalAlgorithms/Spectral/Mesh.hpp"
 #include "Options/Options.hpp"
-#include "Options/ParseOptions.hpp"
 #include "Utilities/Blas.hpp"
 #include "Utilities/ContainerHelpers.hpp"
 #include "Utilities/EqualWithinRoundoff.hpp"

@@ -6,7 +6,7 @@
 #include <ostream>
 #include <string>
 
-#include "Options/ParseOptions.hpp"
+#include "Options/Options.hpp"
 #include "Utilities/ErrorHandling/Error.hpp"
 
 namespace importers {
