@@ -16,6 +16,7 @@
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Utilities/Algorithm.hpp"
+#include "Utilities/ContainerHelpers.hpp"
 #include "Utilities/ErrorHandling/Assert.hpp"
 #include "Utilities/ForceInline.hpp"
 #include "Utilities/Gsl.hpp"
@@ -296,10 +297,14 @@ struct TensorAsExpression<Tensor<X, Symm<SymmValues...>, IndexList<Indices...>>,
     }
   }
 
-  /// \brief Get a component from the `Tensor` contained by this expression
+  /// \brief Get the size of a component from the `Tensor` contained by this
+  /// expression
   ///
-  /// \return a component from the `Tensor` contained by this expression
-  SPECTRE_ALWAYS_INLINE auto get_used_for_size() const { return (*t_)[0]; }
+  /// \return the size of a component from the `Tensor` contained by this
+  /// expression
+  SPECTRE_ALWAYS_INLINE size_t get_rhs_tensor_component_size() const {
+    return get_size((*t_)[0]);
+  }
 
   /// \brief Returns the value of the contained tensor's multi-index
   ///

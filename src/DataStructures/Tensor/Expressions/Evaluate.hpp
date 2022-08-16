@@ -205,11 +205,12 @@ void evaluate_impl(
       "dimensions. Check RHS and LHS indices that use the same generic index.");
   static_assert(Derived::height_relative_to_closest_tensor_leaf_in_subtree <
                     std::numeric_limits<size_t>::max(),
-                "This either indicates that no Tensors were found in the RHS "
-                "TensorExpression or that the depth of the tree exceeded the "
-                "maximum size_t value. If there is indeed a Tensor in the RHS "
-                "expression, this indicates a flaw in the logic for the "
-                "derived TensorExpression types' member, "
+                "Either no Tensors were found in the RHS TensorExpression or "
+                "the depth of the tree exceeded the maximum size_t value (very "
+                "unlikely). If there is indeed a Tensor in the RHS expression "
+                "and assuming the tree's height is not actually the maximum "
+                "size_t value, then there is a flaw in the logic for computing "
+                "the derived TensorExpression types' member, "
                 "height_relative_to_closest_tensor_leaf_in_subtree.");
 
   if constexpr (EvaluateSubtrees) {
@@ -218,11 +219,11 @@ void evaluate_impl(
     // If the data type is `DataVector`, size the LHS tensor components if their
     // size does not match the size from a `Tensor` in the RHS expression
     if constexpr (std::is_same_v<DataVector, X>) {
-      const DataVector& rhs_component =
-          (~rhs_tensorexpression).get_used_for_size();
-      if (rhs_component.size() != (*lhs_tensor)[0].size()) {
+      const size_t rhs_component_size =
+          (~rhs_tensorexpression).get_rhs_tensor_component_size();
+      if (rhs_component_size != (*lhs_tensor)[0].size()) {
         for (auto& lhs_component : *lhs_tensor) {
-          lhs_component = DataVector(rhs_component.size());
+          lhs_component = DataVector(rhs_component_size);
         }
       }
     }
