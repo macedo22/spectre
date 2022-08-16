@@ -14,7 +14,7 @@
 #include <pup.h>
 #include <type_traits>
 
-#include "Options/ParseOptions.hpp"
+#include "Options/Options.hpp"
 
 namespace PUP {
 /// @{

@@ -14,7 +14,7 @@
 #include <type_traits>
 #include <vector>
 
-#include "Options/ParseOptions.hpp"
+#include "Options/Options.hpp"
 #include "Utilities/Gsl.hpp"
 
 namespace PUP {
