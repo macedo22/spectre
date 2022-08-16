@@ -8,7 +8,6 @@
 #include <string>
 
 #include "Options/Options.hpp"
-#include "Options/ParseOptions.hpp"
 
 namespace Options {
 Comparator::Comparator(Comparison comparison) : comparison_(comparison) {}
