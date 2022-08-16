@@ -14,7 +14,7 @@
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Variables.hpp"
 #include "Evolution/Systems/CurvedScalarWave/Characteristics.hpp"
-#include "Options/ParseOptions.hpp"
+#include "Options/Options.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
 
 namespace CurvedScalarWave::BoundaryConditions {
