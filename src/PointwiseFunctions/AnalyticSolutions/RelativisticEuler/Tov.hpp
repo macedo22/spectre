@@ -9,7 +9,6 @@
 #include "NumericalAlgorithms/Interpolation/BarycentricRational.hpp"
 #include "NumericalAlgorithms/Interpolation/CubicSpline.hpp"
 #include "Options/Options.hpp"
-#include "Options/ParseOptions.hpp"
 #include "PointwiseFunctions/Hydro/EquationsOfState/EquationOfState.hpp"
 
 /// \cond

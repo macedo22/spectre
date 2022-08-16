@@ -48,6 +48,8 @@
 #include "NumericalAlgorithms/DiscontinuousGalerkin/Formulation.hpp"
 #include "NumericalAlgorithms/DiscontinuousGalerkin/Tags.hpp"
 #include "Options/Options.hpp"
+#include "Options/ParseOptions.hpp"
+#include "Options/ParseOptions.tpp"
 #include "Options/Protocols/FactoryCreation.hpp"
 #include "Parallel/InitializationFunctions.hpp"
 #include "Parallel/Local.hpp"

@@ -3,7 +3,9 @@
 
 #include "Time/StepChoosers/Constant.hpp"
 
+#include "Options/Options.hpp"
 #include "Options/ParseOptions.hpp"
+#include "Options/ParseOptions.tpp"
 
 namespace StepChoosers {
 namespace Constant_detail {

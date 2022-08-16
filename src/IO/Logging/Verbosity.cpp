@@ -8,6 +8,7 @@
 
 #include "Options/Options.hpp"
 #include "Options/ParseOptions.hpp"
+#include "Options/ParseOptions.tpp"
 #include "Utilities/ErrorHandling/Error.hpp"
 
 template <>

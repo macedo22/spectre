@@ -9,6 +9,7 @@ spectre_target_sources(
   ${LIBRARY}
   PRIVATE
   Comparator.cpp
+  Options.cpp
   )
 
 spectre_target_headers(
@@ -22,6 +23,7 @@ spectre_target_headers(
   Options.hpp
   OptionsDetails.hpp
   ParseOptions.hpp
+  ParseOptions.tpp
   StdComplex.hpp
   Tags.hpp
   )

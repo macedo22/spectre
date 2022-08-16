@@ -17,6 +17,7 @@
 #include <type_traits>
 
 #include "Informer/Informer.hpp"
+#include "Options/Options.hpp"
 #include "Options/ParseOptions.hpp"
 #include "Options/Tags.hpp"
 #include "Parallel/AlgorithmMetafunctions.hpp"
@@ -24,6 +25,7 @@
 #include "Parallel/CreateFromOptions.hpp"
 #include "Parallel/GlobalCache.hpp"
 #include "Parallel/Local.hpp"
+#include "Parallel/MainOptionList.hpp"
 #include "Parallel/ParallelComponentHelpers.hpp"
 #include "Parallel/Phase.hpp"
 #include "Parallel/PhaseControl/ExecutePhaseChange.hpp"
@@ -161,11 +163,7 @@ class Main : public CBase_Main<Metavariables> {
   using parallel_component_options =
       Parallel::get_option_tags<typename ParallelComponent::initialization_tags,
                                 Metavariables>;
-  using option_list = tmpl::remove_duplicates<tmpl::flatten<tmpl::list<
-      Parallel::get_option_tags<const_global_cache_tags, Metavariables>,
-      Parallel::get_option_tags<mutable_global_cache_tags, Metavariables>,
-      tmpl::transform<component_list,
-                      tmpl::bind<parallel_component_options, tmpl::_1>>>>>;
+  using option_list = typename get_main_option_list<Metavariables>::type;
   // Lists of all parallel component types
   using group_component_list =
       tmpl::filter<component_list, tmpl::or_<Parallel::is_group<tmpl::_1>,

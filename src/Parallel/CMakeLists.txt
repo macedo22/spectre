@@ -39,6 +39,7 @@ spectre_target_headers(
   Invoke.hpp
   Local.hpp
   Main.hpp
+  MainOptionList.hpp
   MaxInlineMethodsReached.hpp
   NodeLock.hpp
   ParallelComponentHelpers.hpp

@@ -48,6 +48,8 @@
 #include "NumericalAlgorithms/LinearOperators/ExponentialFilter.hpp"
 #include "NumericalAlgorithms/LinearOperators/FilterAction.hpp"
 #include "Options/Options.hpp"
+#include "Options/ParseOptions.hpp"
+#include "Options/ParseOptions.tpp"
 #include "Options/Protocols/FactoryCreation.hpp"
 #include "Parallel/InitializationFunctions.hpp"
 #include "Parallel/Local.hpp"

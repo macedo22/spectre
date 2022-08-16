@@ -18,6 +18,12 @@ add_test_library(
   "DataStructures;Domain;DomainStructure;LinearSolver;ParallelSchwarz;Spectral"
   )
 
+target_link_libraries(
+  ${LIBRARY}
+  PRIVATE
+  Options
+)
+
 add_standalone_test(
   "Integration.LinearSolver.SchwarzAlgorithm"
   INPUT_FILE "Test_SchwarzAlgorithm.yaml")

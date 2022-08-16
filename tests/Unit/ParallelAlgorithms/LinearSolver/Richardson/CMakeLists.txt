@@ -14,6 +14,12 @@ add_test_library(
   "ParallelLinearSolver"
   )
 
+target_link_libraries(
+  ${LIBRARY}
+  PRIVATE
+  Options
+)
+
 add_standalone_test(
   "Integration.LinearSolver.RichardsonAlgorithm"
   INPUT_FILE "Test_RichardsonAlgorithm.yaml")
