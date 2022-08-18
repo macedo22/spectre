@@ -35,17 +35,15 @@ namespace tenex {
 /// \tparam T2 the denominator operand expression of the division expression
 /// \tparam Args2 the generic indices of the denominator expression
 template <typename T1, typename T2, typename... Args2>
-struct Divide : public TensorExpression<
-                    Divide<T1, T2, Args2...>,
-                    typename std::conditional_t<
-                        std::is_same<typename T1::type, DataVector>::value or
-                            std::is_same<typename T2::type, DataVector>::value,
-                        DataVector, double>,
-                    typename T1::symmetry, typename T1::index_list,
-                    typename T1::args_list> {
-  static_assert(std::is_same<typename T1::type, typename T2::type>::value or
-                    std::is_same<T1, NumberAsExpression>::value,
-                "Cannot divide TensorExpressions holding different data types");
+struct Divide
+    : public TensorExpression<Divide<T1, T2, Args2...>,
+                              typename detail::get_binop_datatype<
+                                  typename T1::type, typename T2::type>::type,
+                              typename T1::symmetry, typename T1::index_list,
+                              typename T1::args_list> {
+  static_assert(detail::is_valid_tensorexpression_binop<T1, T2>::value,
+                "Cannot divide Tensors when one's data type is a number (e.g. "
+                "double) and the other's is a vector type (e.g. DataVector)");
   static_assert((... and tt::is_time_index<Args2>::value),
                 "Can only divide a tensor expression by a double or a tensor "
                 "expression that evaluates to "
@@ -53,10 +51,8 @@ struct Divide : public TensorExpression<
 
   // === Index properties ===
   /// The type of the data being stored in the result of the expression
-  using type =
-      std::conditional_t<std::is_same<typename T1::type, DataVector>::value or
-                             std::is_same<typename T2::type, DataVector>::value,
-                         DataVector, double>;
+  using type = typename detail::get_binop_datatype<typename T1::type,
+                                                   typename T2::type>::type;
   /// The ::Symmetry of the result of the expression
   using symmetry = typename T1::symmetry;
   /// The list of \ref SpacetimeIndex "TensorIndexType"s of the result of the

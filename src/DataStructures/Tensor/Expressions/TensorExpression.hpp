@@ -8,6 +8,8 @@
 
 #include <limits>
 
+#include "DataStructures/ComplexDataVector.hpp"
+#include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/IndexType.hpp"
 #include "Utilities/ForceInline.hpp"
 #include "Utilities/TMPL.hpp"
@@ -332,18 +334,17 @@ TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
 /// @}
 
 namespace tenex {
+struct NumberAsExpression;
+
 namespace detail {
-/// @{
 /// \brief The maximum number of arithmetic tensor operations allowed in a
 /// `TensorExpression` subtree before having it be a splitting point in the
 /// overall RHS expression, according to the data type held by the `Tensor`s in
 /// the expression
 ///
 /// \details
-/// To enable splitting for `TensorExpression`s with a different data type,
-/// define a new variable below like `max_num_ops_in_datavector_sub_expression`
-/// for your data type, then update the control flow in
-/// `max_num_ops_in_sub_expression_helper`.
+/// To enable splitting for `TensorExpression`s with data type, define a
+/// template specialization below for your data type and set the `value`.
 ///
 /// Before defining a max operations cap for some data type, the change should
 /// first be justified by benchmarking many different tensor expressions before
@@ -355,27 +356,43 @@ namespace detail {
 /// The current value set for when the data type is `DataVector` was benchmarked
 /// by compiling with clang-10 Release and running on Intel(R) Xeon(R)
 /// CPU E5-2630 v4 @ 2.20GHz.
-static constexpr size_t max_num_ops_in_datavector_sub_expression = 8;
-/// @}
-
-/// \brief Helper struct for getting the maximum number of arithmetic tensor
-/// operations allowed in a `TensorExpression` subtree before having it be a
-/// splitting point in the overall RHS expression, according to the `DataType`
-/// held by the `Tensor`s in the expression
 ///
-/// \tparam DataType the type of the data being stored in the `Tensor`s in the
-/// `TensorExpression`
+/// The current value for when the data type is `ComplexDataVector` is set to
+/// the same value as for `DataVector`, but its value should also be
+/// investigated and fined-tuned.
 template <typename DataType>
-struct max_num_ops_in_sub_expression_helper {
-  // Splitting is only enabled for expressions when DataType == DataVector
-  // because benchmarking has shown it to be beneficial. To enable splitting
-  // for other data types, define a new static variable like
-  // `max_num_ops_in_datavector_sub_expression` for the data type of interest,
-  // then update the control flow below
-  static constexpr size_t value = std::is_same_v<DataType, DataVector>
-                                      ? max_num_ops_in_datavector_sub_expression
-                                      // effectively, no splitting
-                                      : std::numeric_limits<size_t>::max();
+struct max_num_ops_in_sub_expression_impl {
+  // effectively, no splitting for any unspecialized template type
+  static constexpr size_t value = std::numeric_limits<size_t>::max();
+};
+
+/// \brief When the data type of the result of a `TensorExpression` is
+/// `DataVector`, the maximum number of arithmetic tensor operations allowed in
+/// a subtree before having it be a splitting point in the overall RHS
+/// expression
+///
+/// \details
+/// The current value set for when the data type is `DataVector` was benchmarked
+/// by compiling with clang-10 Release and running on Intel(R) Xeon(R)
+/// CPU E5-2630 v4 @ 2.20GHz.
+template <>
+struct max_num_ops_in_sub_expression_impl<DataVector> {
+  static constexpr size_t value = 8;
+};
+
+/// \brief When the data type of the result of a `TensorExpression` is
+/// `ComplexDataVector`, the maximum number of arithmetic tensor operations
+/// allowed in a subtree before having it be a splitting point in the overall
+/// RHS expression
+///
+/// \details
+/// The current value set for when the data type is `ComplexDataVector` is set
+/// to the value for `DataVector`, but the best `value` for `ComplexDataVector`
+/// should also be investigated and fine-tuned.
+template <>
+struct max_num_ops_in_sub_expression_impl<ComplexDataVector> {
+  static constexpr size_t value =
+      max_num_ops_in_sub_expression_impl<DataVector>::value;
 };
 
 /// \brief Get maximum number of arithmetic tensor operations allowed in a
@@ -384,6 +401,57 @@ struct max_num_ops_in_sub_expression_helper {
 /// the expression
 template <typename DataType>
 inline constexpr size_t max_num_ops_in_sub_expression =
-    max_num_ops_in_sub_expression_helper<DataType>::value;
+    max_num_ops_in_sub_expression_impl<DataType>::value;
+
+/// \brief Get the data type of a binary operation between two data types
+/// that may occur in a `TensorExpression`
+///
+/// \tparam X1 the data type of one operand
+/// \tparam X2 the data type of the other operand
+template <typename X1, typename X2>
+struct get_binop_datatype {
+  static_assert(
+      (std::is_same_v<X1, double> or std::is_same_v<X1, DataVector> or
+       std::is_same_v<
+           X1, ComplexDataVector>)and(std::is_same_v<X2, double> or
+                                      std::is_same_v<X2, DataVector> or
+                                      std::is_same_v<X2, ComplexDataVector>),
+      "Cannot perform a binary operation between two Tensors' data types where "
+      "at least one of their data types is not supported by "
+      "TensorExpressions.");
+  using type =
+      std::conditional_t<std::is_same_v<X1, ComplexDataVector> or
+                             std::is_same_v<X2, ComplexDataVector>,
+                         ComplexDataVector,
+                         std::conditional_t<std::is_same_v<X1, DataVector> or
+                                                std::is_same_v<X2, DataVector>,
+                                            DataVector, double>>;
+};
+
+/// \brief Check whether or not a binary operation between two
+/// `TensorExpression`s is valid
+///
+/// \details This is different from `get_binop_datatype` in that while it may
+/// be possible to perform a binary operation between two data types such as
+/// `double` and `DataVector`, it may not be valid to perform a binary operation
+/// between two `TensorExpression`s with those data types. For example,
+/// `TensorAsExpression<double, ...> + TensorAsExpression<DataVector, ...>` is
+/// not valid even though it is a valid C++ operation to do
+/// `double + DataVector`. Alternatively, it is valid to do
+/// `NumberAsExpression + TensorAsExpression<DataVector, ...>`.
+///
+/// \tparam T1 the derived type of one of the `TensorExpression`s
+/// \tparam T2 the derived type of one of the `TensorExpression`s
+template <typename T1, typename T2>
+struct is_valid_tensorexpression_binop {
+  static constexpr bool value =
+      std::is_same_v<typename T1::type, typename T2::type> or
+      std::is_same_v<T1, ::tenex::NumberAsExpression> or
+      std::is_same_v<T2, ::tenex::NumberAsExpression> or
+      (std::is_same_v<typename T1::type, DataVector> and
+       std::is_same_v<typename T2::type, ComplexDataVector>) or
+      (std::is_same_v<typename T1::type, ComplexDataVector> and
+       std::is_same_v<typename T2::type, DataVector>);
+};
 }  // namespace detail
 }  // namespace tenex

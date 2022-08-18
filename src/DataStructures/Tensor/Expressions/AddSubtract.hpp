@@ -253,9 +253,7 @@ struct AddSubType {
                     std::is_base_of_v<Expression, T2>,
                 "Parameters to AddSubType must be TensorExpressions");
   using type =
-      tmpl::conditional_t<std::is_same_v<typename T1::type, DataVector> or
-                              std::is_same_v<typename T2::type, DataVector>,
-                          DataVector, double>;
+      typename get_binop_datatype<typename T1::type, typename T2::type>::type;
   using symmetry =
       typename AddSubSymmetry<typename T1::symmetry, typename T2::symmetry,
                                    typename T1::args_list,
@@ -294,10 +292,10 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
           typename detail::AddSubType<T1, T2>::symmetry,
           typename detail::AddSubType<T1, T2>::index_list,
           typename detail::AddSubType<T1, T2>::tensorindex_list> {
-  static_assert(std::is_same<typename T1::type, typename T2::type>::value or
-                    std::is_same<T1, NumberAsExpression>::value or
-                    std::is_same<T2, NumberAsExpression>::value,
-                "Cannot add or subtract Tensors holding different data types.");
+  static_assert(detail::is_valid_tensorexpression_binop<T1, T2>::value,
+                "Cannot add or subtract Tensors when one's data type is a "
+                "number (e.g. double) and the other's is a vector type (e.g. "
+                "DataVector)");
   static_assert(
       detail::IndexPropertyCheck<typename T1::index_list,
                                  typename T2::index_list, ArgsList1<Args1...>,
