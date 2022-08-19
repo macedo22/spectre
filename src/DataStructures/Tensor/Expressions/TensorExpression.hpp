@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <complex>
 #include <limits>
 
 #include "DataStructures/ComplexDataVector.hpp"
@@ -334,7 +335,7 @@ TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
 /// @}
 
 namespace tenex {
-struct NumberAsExpression;
+struct MarkAsNumberAsExpression;
 
 namespace detail {
 /// \brief The maximum number of arithmetic tensor operations allowed in a
@@ -403,6 +404,56 @@ template <typename DataType>
 inline constexpr size_t max_num_ops_in_sub_expression =
     max_num_ops_in_sub_expression_impl<DataType>::value;
 
+template <typename T>
+struct is_supported_tensorexpression_datatype {
+  static constexpr bool value = false;
+};
+
+template <>
+struct is_supported_tensorexpression_datatype<double> {
+  static constexpr bool value = true;
+};
+
+template <>
+struct is_supported_tensorexpression_datatype<std::complex<double>> {
+  static constexpr bool value = true;
+};
+
+template <>
+struct is_supported_tensorexpression_datatype<DataVector> {
+  static constexpr bool value = true;
+};
+
+template <>
+struct is_supported_tensorexpression_datatype<ComplexDataVector> {
+  static constexpr bool value = true;
+};
+
+// Helper for determining a supported `TensorExpression` data type based on
+// (i) whether the type is a vector and (ii) whether the type is complex-valued
+template <bool IsVectorType, bool IsComplex>
+struct get_binop_datatype_helper;
+
+template <>
+struct get_binop_datatype_helper<true, true> {
+  using type = ComplexDataVector;
+};
+
+template <>
+struct get_binop_datatype_helper<true, false> {
+  using type = DataVector;
+};
+
+template <>
+struct get_binop_datatype_helper<false, true> {
+  using type = std::complex<double>;
+};
+
+template <>
+struct get_binop_datatype_helper<false, false> {
+  using type = double;
+};
+
 /// \brief Get the data type of a binary operation between two data types
 /// that may occur in a `TensorExpression`
 ///
@@ -411,21 +462,24 @@ inline constexpr size_t max_num_ops_in_sub_expression =
 template <typename X1, typename X2>
 struct get_binop_datatype {
   static_assert(
-      (std::is_same_v<X1, double> or std::is_same_v<X1, DataVector> or
-       std::is_same_v<
-           X1, ComplexDataVector>)and(std::is_same_v<X2, double> or
-                                      std::is_same_v<X2, DataVector> or
-                                      std::is_same_v<X2, ComplexDataVector>),
+      is_supported_tensorexpression_datatype<X1>::value and
+          is_supported_tensorexpression_datatype<X2>::value,
       "Cannot perform a binary operation between two Tensors' data types where "
       "at least one of their data types is not supported by "
       "TensorExpressions.");
-  using type =
-      std::conditional_t<std::is_same_v<X1, ComplexDataVector> or
-                             std::is_same_v<X2, ComplexDataVector>,
-                         ComplexDataVector,
-                         std::conditional_t<std::is_same_v<X1, DataVector> or
-                                                std::is_same_v<X2, DataVector>,
-                                            DataVector, double>>;
+
+  static constexpr bool result_is_vector_type =
+      std::is_same_v<X1, ComplexDataVector> or
+      std::is_same_v<X2, ComplexDataVector> or std::is_same_v<X1, DataVector> or
+      std::is_same_v<X2, DataVector>;
+  static constexpr bool result_is_complex =
+      std::is_same_v<X1, ComplexDataVector> or
+      std::is_same_v<X2, ComplexDataVector> or
+      std::is_same_v<X1, std::complex<double>> or
+      std::is_same_v<X2, std::complex<double>>;
+
+  using type = typename get_binop_datatype_helper<result_is_vector_type,
+                                                  result_is_complex>::type;
 };
 
 /// \brief Check whether or not a binary operation between two
@@ -444,14 +498,52 @@ struct get_binop_datatype {
 /// \tparam T2 the derived type of one of the `TensorExpression`s
 template <typename T1, typename T2>
 struct is_valid_tensorexpression_binop {
+  static_assert(
+      is_supported_tensorexpression_datatype<typename T1::type>::value and
+          is_supported_tensorexpression_datatype<typename T2::type>::value,
+      "Cannot perform a binary operation between two Tensors' data types where "
+      "at least one of their data types is not supported by "
+      "TensorExpressions.");
   static constexpr bool value =
       std::is_same_v<typename T1::type, typename T2::type> or
-      std::is_same_v<T1, ::tenex::NumberAsExpression> or
-      std::is_same_v<T2, ::tenex::NumberAsExpression> or
+      std::is_base_of_v<::tenex::MarkAsNumberAsExpression, T1> or
+      std::is_base_of_v<::tenex::MarkAsNumberAsExpression, T2> or
       (std::is_same_v<typename T1::type, DataVector> and
        std::is_same_v<typename T2::type, ComplexDataVector>) or
       (std::is_same_v<typename T1::type, ComplexDataVector> and
        std::is_same_v<typename T2::type, DataVector>);
+};
+
+template <typename LhsDataType, typename RhsDatatype>
+struct rhs_datatype_is_assignable_to_lhs_datatype {
+  static constexpr bool value = false;
+};
+
+template <typename RhsDatatype>
+struct rhs_datatype_is_assignable_to_lhs_datatype<RhsDatatype, RhsDatatype> {
+  static constexpr bool value = true;
+};
+
+template <>
+struct rhs_datatype_is_assignable_to_lhs_datatype<std::complex<double>,
+                                                  double> {
+  static constexpr bool value = true;
+};
+
+template <>
+struct rhs_datatype_is_assignable_to_lhs_datatype<DataVector, double> {
+  static constexpr bool value = true;
+};
+
+template <>
+struct rhs_datatype_is_assignable_to_lhs_datatype<ComplexDataVector, double> {
+  static constexpr bool value = true;
+};
+
+template <>
+struct rhs_datatype_is_assignable_to_lhs_datatype<ComplexDataVector,
+                                                  std::complex<double>> {
+  static constexpr bool value = true;
 };
 }  // namespace detail
 }  // namespace tenex

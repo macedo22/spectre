@@ -7,6 +7,7 @@
 #pragma once
 
 #include <array>
+#include <complex>
 #include <cstddef>
 #include <limits>
 #include <type_traits>
@@ -178,10 +179,10 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   template <typename LhsTensor>
   SPECTRE_ALWAYS_INLINE void assert_lhs_tensor_not_in_rhs_expression(
       const gsl::not_null<LhsTensor*> lhs_tensor) const {
-    if constexpr (not std::is_base_of_v<NumberAsExpression, T1>) {
+    if constexpr (not std::is_base_of_v<MarkAsNumberAsExpression, T1>) {
       t1_.assert_lhs_tensor_not_in_rhs_expression(lhs_tensor);
     }
-    if constexpr (not std::is_base_of_v<NumberAsExpression, T2>) {
+    if constexpr (not std::is_base_of_v<MarkAsNumberAsExpression, T2>) {
       t2_.assert_lhs_tensor_not_in_rhs_expression(lhs_tensor);
     }
   }
@@ -195,11 +196,11 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   template <typename LhsTensorIndices, typename LhsTensor>
   SPECTRE_ALWAYS_INLINE void assert_lhs_tensorindices_same_in_rhs(
       const gsl::not_null<LhsTensor*> lhs_tensor) const {
-    if constexpr (not std::is_base_of_v<NumberAsExpression, T1>) {
+    if constexpr (not std::is_base_of_v<MarkAsNumberAsExpression, T1>) {
       t1_.template assert_lhs_tensorindices_same_in_rhs<LhsTensorIndices>(
           lhs_tensor);
     }
-    if constexpr (not std::is_base_of_v<NumberAsExpression, T2>) {
+    if constexpr (not std::is_base_of_v<MarkAsNumberAsExpression, T2>) {
       t2_.template assert_lhs_tensorindices_same_in_rhs<LhsTensorIndices>(
           lhs_tensor);
     }
@@ -483,6 +484,37 @@ SPECTRE_ALWAYS_INLINE auto operator*(
 template <typename T, typename X, typename ArgsList>
 SPECTRE_ALWAYS_INLINE auto operator*(
     const double number,
+    const TensorExpression<T, X, typename T::symmetry, typename T::index_list,
+                           ArgsList>& t) {
+  return t * tenex::NumberAsExpression(number);
+}
+/// @}
+
+/// @{
+/// \ingroup TensorExpressionsGroup
+/// \brief Returns the tensor expression representing the product of a tensor
+/// expression and a `std::complex<double>`
+///
+/// \tparam T the derived TensorExpression type of the tensor expression operand
+/// of the product
+/// \tparam X the type of data stored in the tensor expression operand of the
+/// product
+/// \tparam ArgsList the TensorIndexs of the tensor expression operand of the
+/// product
+/// \param t the tensor expression operand of the product
+/// \param number the `std::complex<double>` operand of the product
+/// \return the tensor expression representing the product of a tensor
+/// expression and a `std::complex<double>`
+template <typename T, typename X, typename ArgsList>
+SPECTRE_ALWAYS_INLINE auto operator*(
+    const TensorExpression<T, X, typename T::symmetry, typename T::index_list,
+                           ArgsList>& t,
+    const std::complex<double>& number) {
+  return t * tenex::NumberAsExpression(number);
+}
+template <typename T, typename X, typename ArgsList>
+SPECTRE_ALWAYS_INLINE auto operator*(
+    const std::complex<double>& number,
     const TensorExpression<T, X, typename T::symmetry, typename T::index_list,
                            ArgsList>& t) {
   return t * tenex::NumberAsExpression(number);

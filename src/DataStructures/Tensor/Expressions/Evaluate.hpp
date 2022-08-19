@@ -7,6 +7,7 @@
 #pragma once
 
 #include <array>
+#include <complex>
 #include <cstddef>
 #include <type_traits>
 
@@ -141,13 +142,14 @@ struct CheckNoLhsAntiSymmetries<SymmList<Symm...>> {
  * @param lhs_tensor pointer to the resultant LHS `Tensor` to fill
  * @param rhs_tensorexpression the RHS TensorExpression to be evaluated
  */
-template <bool EvaluateSubtrees, auto&... LhsTensorIndices, typename X,
-          typename LhsSymmetry, typename LhsIndexList, typename Derived,
-          typename RhsSymmetry, typename RhsIndexList,
-          typename... RhsTensorIndices>
+template <bool EvaluateSubtrees, auto&... LhsTensorIndices,
+          typename LhsDataType, typename LhsSymmetry, typename LhsIndexList,
+          typename Derived, typename RhsDataType, typename RhsSymmetry,
+          typename RhsIndexList, typename... RhsTensorIndices>
 void evaluate_impl(
-    const gsl::not_null<Tensor<X, LhsSymmetry, LhsIndexList>*> lhs_tensor,
-    const TensorExpression<Derived, X, RhsSymmetry, RhsIndexList,
+    const gsl::not_null<Tensor<LhsDataType, LhsSymmetry, LhsIndexList>*>
+        lhs_tensor,
+    const TensorExpression<Derived, RhsDataType, RhsSymmetry, RhsIndexList,
                            tmpl::list<RhsTensorIndices...>>&
         rhs_tensorexpression) {
   constexpr size_t num_lhs_indices = sizeof...(LhsTensorIndices);
@@ -157,12 +159,20 @@ void evaluate_impl(
       tmpl::list<std::decay_t<decltype(LhsTensorIndices)>...>;
   using rhs_tensorindex_list = tmpl::list<RhsTensorIndices...>;
 
-  static_assert(std::is_same_v<double, X> or std::is_same_v<DataVector, X> or
-                    std::is_same_v<ComplexDataVector, X>,
-                "TensorExpressions currently only support Tensors whose data "
-                "type is double, DataVector, or ComplexDataVector. It is "
-                "possible to add support for other data types that are "
-                "supported by Tensor.");
+  using lhs_tensor_type = typename std::decay_t<decltype(*lhs_tensor)>;
+
+  static_assert(
+      detail::is_supported_tensorexpression_datatype<LhsDataType>::value and
+          detail::is_supported_tensorexpression_datatype<RhsDataType>::value,
+      "TensorExpressions currently only support Tensors whose data "
+      "type is double, std::complex<double> DataVector, or "
+      "ComplexDataVector. It is possible to add support for other "
+      "data types that are supported by Tensor.");
+  static_assert(
+      detail::rhs_datatype_is_assignable_to_lhs_datatype<LhsDataType,
+                                                         RhsDataType>::value,
+      "Cannot assign the RHS expression's data type to the LHS "
+      "Tensor data type");
   // `Symmetry` currently prevents this because antisymmetries are not currently
   // supported for `Tensor`s. This check is repeated here because if
   // antisymmetries are later supported for `Tensor`, using antisymmetries in
@@ -224,14 +234,15 @@ void evaluate_impl(
   if constexpr (EvaluateSubtrees) {
     // Make sure the LHS tensor doesn't also appear in the RHS tensor expression
     (~rhs_tensorexpression).assert_lhs_tensor_not_in_rhs_expression(lhs_tensor);
-    // If the data type is a vector type, size the LHS tensor components if
+    // If the LHS data type is a vector type, size the LHS tensor components if
     // their size does not match the size from a `Tensor` in the RHS expression
-    if constexpr (not std::is_same_v<double, X>) {
+    if constexpr (std::is_same_v<DataVector, LhsDataType> or
+                  std::is_same_v<ComplexDataVector, LhsDataType>) {
       const size_t rhs_component_size =
           (~rhs_tensorexpression).get_rhs_tensor_component_size();
       if (rhs_component_size != (*lhs_tensor)[0].size()) {
         for (auto& lhs_component : *lhs_tensor) {
-          lhs_component = X(rhs_component_size);
+          lhs_component = LhsDataType(rhs_component_size);
         }
       }
     }
@@ -257,7 +268,6 @@ void evaluate_impl(
   constexpr auto lhs_time_index_positions =
       get_time_index_positions<lhs_tensorindex_list>();
 
-  using lhs_tensor_type = typename std::decay_t<decltype(*lhs_tensor)>;
   using rhs_expression_type =
       typename std::decay_t<decltype(~rhs_tensorexpression)>;
 
@@ -307,7 +317,7 @@ void evaluate_impl(
 
 /*!
  * \ingroup TensorExpressionsGroup
- * \brief Assign a `double` value to components of the LHS tensor
+ * \brief Assign a value to components of the LHS tensor
  *
  * \details This is for internal use only and should never be directly called.
  * See `tenex::evaluate` and use it, instead.
@@ -321,21 +331,23 @@ void evaluate_impl(
  * @param rhs_value the RHS value to assigned
  */
 template <auto&... LhsTensorIndices, typename X, typename LhsSymmetry,
-          typename LhsIndexList>
+          typename LhsIndexList, typename NumberType>
 void evaluate_impl(
     const gsl::not_null<Tensor<X, LhsSymmetry, LhsIndexList>*> lhs_tensor,
-    const double rhs_value) {
+    const NumberType& rhs_value) {
+  using lhs_tensor_type = typename std::decay_t<decltype(*lhs_tensor)>;
   constexpr size_t num_lhs_indices = sizeof...(LhsTensorIndices);
-
   using lhs_tensorindex_list =
       tmpl::list<std::decay_t<decltype(LhsTensorIndices)>...>;
 
-  static_assert(std::is_same_v<double, X> or std::is_same_v<DataVector, X> or
-                    std::is_same_v<ComplexDataVector, X>,
+  static_assert(detail::is_supported_tensorexpression_datatype<X>::value and
                 "TensorExpressions currently only support Tensors whose data "
-                "type is double, DataVector, or ComplexDataVector. It is "
-                "possible to add support for other data types that are "
-                "supported by Tensor.");
+                "type is double, std::complex<double> DataVector, or "
+                "ComplexDataVector. It is possible to add support for other "
+                "data types that are supported by Tensor.");
+  static_assert(
+      detail::rhs_datatype_is_assignable_to_lhs_datatype<X, NumberType>::value,
+      "Cannot assign the RHS number type to the LHS Tensor data type");
   // `Symmetry` currently prevents this because antisymmetries are not currently
   // supported for `Tensor`s. This check is repeated here because if
   // antisymmetries are later supported for `Tensor`, using antisymmetries in
@@ -367,8 +379,6 @@ void evaluate_impl(
   constexpr auto lhs_time_index_positions =
       get_time_index_positions<lhs_tensorindex_list>();
 
-  using lhs_tensor_type = typename std::decay_t<decltype(*lhs_tensor)>;
-
   for (size_t i = 0; i < lhs_tensor_type::size(); i++) {
     auto lhs_multi_index =
         lhs_tensor_type::structure::get_canonical_tensor_index(i);
@@ -380,6 +390,15 @@ void evaluate_impl(
   }
 }
 }  // namespace detail
+
+// TODO : test evaluation of RHS Tensor<DataVector> to LHS
+// Tensor<ComplexDataVector> and RHS double to LHS Tensor to
+// std::complex<double>. Either instantiate existing tests for more combos or
+// create a dedicated Test_Complex.cpp where this stuff is specifically tested
+
+// TODO : need to generalize below so that not both LHS and RHS both have the
+// same X data type because we should able to do things like assign a
+// Tensor<DataVector> RHS to a Tensor<ComplexDataVector> LHS
 
 /*!
  * \ingroup TensorExpressionsGroup
@@ -438,9 +457,10 @@ void evaluate(
       lhs_tensor, rhs_tensorexpression);
 }
 
+/// @{
 /*!
  * \ingroup TensorExpressionsGroup
- * \brief Assign a `double` to components of a tensor with the LHS index order
+ * \brief Assign a number to components of a tensor with the LHS index order
  * set in the template parameters
  *
  * \details
@@ -463,7 +483,8 @@ template <auto&... LhsTensorIndices, typename X, typename LhsSymmetry,
 void evaluate(
     const gsl::not_null<Tensor<X, LhsSymmetry, LhsIndexList>*> lhs_tensor,
     const double rhs_value) {
-  if constexpr (not std::is_same_v<X, double>) {
+  if constexpr (std::is_same_v<DataVector, X> or
+                std::is_same_v<ComplexDataVector, X>) {
     ASSERT(get_size((*lhs_tensor)[0]) > 0,
            "Tensors with vector components must be sized before calling "
            "tenex::evaluate<...>("
@@ -472,6 +493,22 @@ void evaluate(
 
   detail::evaluate_impl<LhsTensorIndices...>(lhs_tensor, rhs_value);
 }
+
+template <auto&... LhsTensorIndices, typename X, typename LhsSymmetry,
+          typename LhsIndexList>
+void evaluate(
+    const gsl::not_null<Tensor<X, LhsSymmetry, LhsIndexList>*> lhs_tensor,
+    const std::complex<double>& rhs_value) {
+  if constexpr (std::is_same_v<ComplexDataVector, X>) {
+    ASSERT(get_size((*lhs_tensor)[0]) > 0,
+           "Tensors with vector components must be sized before calling "
+           "tenex::evaluate<...>("
+           "\tgsl::not_null<Tensor<VectorType, ...>*>, std::complex<double>).");
+  }
+
+  detail::evaluate_impl<LhsTensorIndices...>(lhs_tensor, rhs_value);
+}
+/// @}
 
 /*!
  * \ingroup TensorExpressionsGroup
@@ -582,12 +619,14 @@ auto evaluate(const RhsTE& rhs_tensorexpression) {
  * @param lhs_tensor pointer to the resultant LHS Tensor to fill
  * @param rhs_tensorexpression the RHS TensorExpression to be evaluated
  */
-template <auto&... LhsTensorIndices, typename X, typename LhsSymmetry,
-          typename LhsIndexList, typename Derived, typename RhsSymmetry,
-          typename RhsIndexList, typename... RhsTensorIndices>
+template <auto&... LhsTensorIndices, typename LhsDataType, typename RhsDataType,
+          typename LhsSymmetry, typename LhsIndexList, typename Derived,
+          typename RhsSymmetry, typename RhsIndexList,
+          typename... RhsTensorIndices>
 void update(
-    const gsl::not_null<Tensor<X, LhsSymmetry, LhsIndexList>*> lhs_tensor,
-    const TensorExpression<Derived, X, RhsSymmetry, RhsIndexList,
+    const gsl::not_null<Tensor<LhsDataType, LhsSymmetry, LhsIndexList>*>
+        lhs_tensor,
+    const TensorExpression<Derived, RhsDataType, RhsSymmetry, RhsIndexList,
                            tmpl::list<RhsTensorIndices...>>&
         rhs_tensorexpression) {
   using lhs_tensorindex_list =

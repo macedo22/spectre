@@ -4,6 +4,7 @@
 #pragma once
 
 #include <array>
+#include <complex>
 #include <cstddef>
 #include <limits>
 
@@ -13,18 +14,33 @@
 
 namespace tenex {
 /// \ingroup TensorExpressionsGroup
+/// \brief Marks a class as being a `NumberAsExpression<DataType>`
+///
+/// \details
+/// The empty base class provides a simple means for checking if a type is a
+/// `NumberAsExpression<DataType>`.
+struct MarkAsNumberAsExpression {};
+
+/// \ingroup TensorExpressionsGroup
 /// \brief Defines an expression representing a `double`
 ///
 /// \details
 /// For details on aliases and members defined in this class, as well as general
 /// `TensorExpression` terminology used in its members' documentation, see
 /// documentation for `TensorExpression`.
+template <typename DataType>
 struct NumberAsExpression
-    : public TensorExpression<NumberAsExpression, double, tmpl::list<>,
-                              tmpl::list<>, tmpl::list<>> {
+    : public TensorExpression<NumberAsExpression<DataType>, DataType,
+                              tmpl::list<>, tmpl::list<>, tmpl::list<>>,
+      MarkAsNumberAsExpression {
+  static_assert(std::is_same_v<DataType, double> or
+                    std::is_same_v<DataType, std::complex<double>>,
+                "The DataType for the NumberAsExpression is not a supported "
+                "type that can be represented as a NumberAsExpression");
+
   // === Index properties ===
   /// The type of the data being stored in the result of the expression
-  using type = double;
+  using type = DataType;
   /// The list of \ref SpacetimeIndex "TensorIndexType"s of the result of the
   /// expression
   using symmetry = tmpl::list<>;
@@ -95,12 +111,12 @@ struct NumberAsExpression
   static constexpr bool primary_subtree_contains_primary_start =
       is_primary_start;
 
-  NumberAsExpression(const double number) : number_(number) {}
+  NumberAsExpression(const type number) : number_(number) {}
   ~NumberAsExpression() override = default;
 
   // This expression does not represent a tensor, nor does it have any children,
   // so we should never need to assert that the LHS `Tensor` is not equal to the
-  // `double` stored by this expression
+  // number stored by this expression
   template <typename LhsTensor>
   void assert_lhs_tensor_not_in_rhs_expression(
       const gsl::not_null<LhsTensor*>) const = delete;
@@ -117,8 +133,8 @@ struct NumberAsExpression
   /// \brief Returns the number represented by the expression
   ///
   /// \return the number represented by this expression
-  SPECTRE_ALWAYS_INLINE double get(
-      const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
+  SPECTRE_ALWAYS_INLINE type
+  get(const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
     return number_;
   }
 
@@ -126,7 +142,7 @@ struct NumberAsExpression
   ///
   /// \return the number represented by this expression
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE double get_primary(
+  SPECTRE_ALWAYS_INLINE type get_primary(
       const ResultType& /*result_component*/,
       const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
     return number_;
@@ -146,6 +162,6 @@ struct NumberAsExpression
 
  private:
   /// Number represented by this expression
-  double number_;
+  type number_;
 };
 }  // namespace tenex

@@ -10,6 +10,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "DataStructures/Tensor/Expressions/NumberAsExpression.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Expressions/TimeIndex.hpp"
 #include "Utilities/ForceInline.hpp"
@@ -120,7 +121,7 @@ struct SquareRoot
   template <typename LhsTensor>
   SPECTRE_ALWAYS_INLINE void assert_lhs_tensor_not_in_rhs_expression(
       const gsl::not_null<LhsTensor*> lhs_tensor) const {
-    if constexpr (not std::is_base_of_v<NumberAsExpression, T>) {
+    if constexpr (not std::is_base_of_v<MarkAsNumberAsExpression, T>) {
       t_.assert_lhs_tensor_not_in_rhs_expression(lhs_tensor);
     }
   }
@@ -134,7 +135,7 @@ struct SquareRoot
   template <typename LhsTensorIndices, typename LhsTensor>
   SPECTRE_ALWAYS_INLINE void assert_lhs_tensorindices_same_in_rhs(
       const gsl::not_null<LhsTensor*> lhs_tensor) const {
-    if constexpr (not std::is_base_of_v<NumberAsExpression, T>) {
+    if constexpr (not std::is_base_of_v<MarkAsNumberAsExpression, T>) {
       t_.template assert_lhs_tensorindices_same_in_rhs<LhsTensorIndices>(
           lhs_tensor);
     }
