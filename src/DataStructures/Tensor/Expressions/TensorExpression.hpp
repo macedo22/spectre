@@ -545,5 +545,11 @@ struct rhs_datatype_is_assignable_to_lhs_datatype<ComplexDataVector,
                                                   std::complex<double>> {
   static constexpr bool value = true;
 };
+
+template <>
+struct rhs_datatype_is_assignable_to_lhs_datatype<ComplexDataVector,
+                                                  DataVector> {
+  static constexpr bool value = true;
+};
 }  // namespace detail
 }  // namespace tenex
