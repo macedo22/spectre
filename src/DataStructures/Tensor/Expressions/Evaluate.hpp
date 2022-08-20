@@ -441,12 +441,14 @@ void evaluate_impl(
  * @param lhs_tensor pointer to the resultant LHS `Tensor` to fill
  * @param rhs_tensorexpression the RHS TensorExpression to be evaluated
  */
-template <auto&... LhsTensorIndices, typename X, typename LhsSymmetry,
-          typename LhsIndexList, typename Derived, typename RhsSymmetry,
-          typename RhsIndexList, typename... RhsTensorIndices>
+template <auto&... LhsTensorIndices, typename LhsDataType, typename LhsSymmetry,
+          typename LhsIndexList, typename Derived, typename RhsDataType,
+          typename RhsSymmetry, typename RhsIndexList,
+          typename... RhsTensorIndices>
 void evaluate(
-    const gsl::not_null<Tensor<X, LhsSymmetry, LhsIndexList>*> lhs_tensor,
-    const TensorExpression<Derived, X, RhsSymmetry, RhsIndexList,
+    const gsl::not_null<Tensor<LhsDataType, LhsSymmetry, LhsIndexList>*>
+        lhs_tensor,
+    const TensorExpression<Derived, RhsDataType, RhsSymmetry, RhsIndexList,
                            tmpl::list<RhsTensorIndices...>>&
         rhs_tensorexpression) {
   using rhs_expression_type =
