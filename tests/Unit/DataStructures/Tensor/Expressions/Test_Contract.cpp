@@ -5,9 +5,11 @@
 
 #include <array>
 #include <climits>
+#include <complex>
 #include <cstddef>
 #include <random>
 
+#include "DataStructures/ComplexDataVector.hpp"
 #include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/IndexType.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
@@ -839,5 +841,12 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Contract",
                     std::numeric_limits<double>::signaling_NaN());
   test_contractions(
       make_not_null(&generator),
+      std::complex<double>(std::numeric_limits<double>::signaling_NaN(),
+                           std::numeric_limits<double>::signaling_NaN()));
+  test_contractions(
+      make_not_null(&generator),
       DataVector(5, std::numeric_limits<double>::signaling_NaN()));
+  test_contractions(
+      make_not_null(&generator),
+      ComplexDataVector(5, std::numeric_limits<double>::signaling_NaN()));
 }
