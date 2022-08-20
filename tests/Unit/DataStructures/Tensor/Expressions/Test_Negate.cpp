@@ -6,6 +6,7 @@
 #include <climits>
 #include <complex>
 #include <cstddef>
+#include <random>
 
 #include "DataStructures/ComplexDataVector.hpp"
 #include "DataStructures/DataVector.hpp"
