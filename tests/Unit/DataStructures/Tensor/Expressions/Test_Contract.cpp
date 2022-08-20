@@ -14,10 +14,12 @@
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/ComponentPlaceholder.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/MakeWithValue.hpp"
 
 namespace {
+
 // Checks that the number of ops in the expressions match what is expected
 void test_tensor_ops_properties() {
   const tnsr::Ij<double, 3> R{};
@@ -742,15 +744,15 @@ void test_time_index(const gsl::not_null<Generator*> generator,
   // Assign a placeholder to the LHS tensor's components before it is computed
   // so that when test expressions below only compute time components, we can
   // check that LHS spatial components haven't changed
-  const double spatial_component_placeholder =
-      std::numeric_limits<double>::max();
+  const auto spatial_component_placeholder_value =
+      TestHelpers::tenex::component_placeholder_value<DataType>::value;
   auto S_contracted = make_with_value<
       Tensor<DataType, Symmetry<4, 3, 2, 1>,
              index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                         SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                         SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
                         SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>>(
-      used_for_size, spatial_component_placeholder);
+      used_for_size, spatial_component_placeholder_value);
 
   // Contract a RHS tensor without time indices to a LHS tensor with time
   // indices
@@ -775,7 +777,7 @@ void test_time_index(const gsl::not_null<Generator*> generator,
       for (size_t j = 0; j < 3; j++) {
         for (size_t k = 0; k < 3; k++) {
           CHECK(S_contracted.get(i + 1, j + 1, b, k + 1) ==
-                spatial_component_placeholder);
+                spatial_component_placeholder_value);
         }
       }
     }
@@ -793,7 +795,7 @@ void test_time_index(const gsl::not_null<Generator*> generator,
              index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
                         SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
                         SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>>(
-      used_for_size, spatial_component_placeholder);
+      used_for_size, spatial_component_placeholder_value);
 
   // Contract a RHS tensor with time indices to a LHS tensor with time indices
   // \f$L^{tb}{}_{t} = R_{at}{}^{ab}\f$
@@ -810,7 +812,7 @@ void test_time_index(const gsl::not_null<Generator*> generator,
     for (size_t i = 0; i < 3; i++) {
       for (size_t j = 0; j < 3; j++) {
         CHECK(T_contracted.get(i + 1, b, j + 1) ==
-              spatial_component_placeholder);
+              spatial_component_placeholder_value);
       }
     }
   }

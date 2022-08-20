@@ -14,6 +14,7 @@
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/ComponentPlaceholder.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/MakeWithValue.hpp"
 
@@ -238,8 +239,8 @@ void test_addsub_tensor(const gsl::not_null<Generator*> generator,
   // Assign a placeholder to the LHS tensor's components before it is computed
   // so that when test expressions below only compute time components, we can
   // check that LHS spatial components haven't changed
-  const double spatial_component_placeholder =
-      std::numeric_limits<double>::max();
+  const auto spatial_component_placeholder_value =
+      TestHelpers::tenex::component_placeholder_value<DataType>::value;
 
   auto Gll10 = make_with_value<
       Tensor<DataType, Symmetry<4, 3, 2, 1>,
@@ -247,7 +248,7 @@ void test_addsub_tensor(const gsl::not_null<Generator*> generator,
                         SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
                         SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
                         SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>>(
-      used_for_size, spatial_component_placeholder);
+      used_for_size, spatial_component_placeholder_value);
   tenex::evaluate<ti::t, ti::d, ti::b, ti::T>(
       make_not_null(&Gll10), All(ti::b, ti::d) - Hll(ti::b, ti::d));
 
@@ -256,7 +257,8 @@ void test_addsub_tensor(const gsl::not_null<Generator*> generator,
       CHECK(Gll10.get(0, d, b, 0) == All.get(b, d) - Hll.get(b, d));
       for (size_t i = 0; i < 3; ++i) {
         for (size_t j = 0; j < 3; ++j) {
-          CHECK(Gll10.get(i + 1, d, b, j + 1) == spatial_component_placeholder);
+          CHECK(Gll10.get(i + 1, d, b, j + 1) ==
+                spatial_component_placeholder_value);
         }
       }
     }
@@ -267,7 +269,7 @@ void test_addsub_tensor(const gsl::not_null<Generator*> generator,
              index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
                         SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
                         SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>>(
-      used_for_size, spatial_component_placeholder);
+      used_for_size, spatial_component_placeholder_value);
   tenex::evaluate<ti::a, ti::c, ti::t>(
       make_not_null(&Gll11), Rlll(ti::t, ti::c, ti::a) + All(ti::a, ti::c));
 
@@ -275,13 +277,13 @@ void test_addsub_tensor(const gsl::not_null<Generator*> generator,
     for (int c = 0; c < 4; ++c) {
       CHECK(Gll11.get(a, c, 0) == Rlll.get(0, c, a) + All.get(a, c));
       for (size_t i = 0; i < 3; ++i) {
-        CHECK(Gll11.get(a, c, i + 1) == spatial_component_placeholder);
+        CHECK(Gll11.get(a, c, i + 1) == spatial_component_placeholder_value);
       }
     }
   }
 
   auto Gll12 = make_with_value<tnsr::abc<DataType, 3, Frame::Grid>>(
-      used_for_size, spatial_component_placeholder);
+      used_for_size, spatial_component_placeholder_value);
   tenex::evaluate<ti::g, ti::t, ti::h>(
       make_not_null(&Gll12), Hll(ti::h, ti::g) - Alll(ti::g, ti::t, ti::h));
 
@@ -289,20 +291,20 @@ void test_addsub_tensor(const gsl::not_null<Generator*> generator,
     for (int h = 0; h < 4; ++h) {
       CHECK(Gll12.get(g, 0, h) == Hll.get(h, g) - Alll.get(g, 0, h));
       for (size_t i = 0; i < 3; ++i) {
-        CHECK(Gll12.get(g, i + 1, h) == spatial_component_placeholder);
+        CHECK(Gll12.get(g, i + 1, h) == spatial_component_placeholder_value);
       }
     }
   }
 
   auto Gll13 = make_with_value<tnsr::ab<DataType, 3, Frame::Grid>>(
-      used_for_size, spatial_component_placeholder);
+      used_for_size, spatial_component_placeholder_value);
   tenex::evaluate<ti::t, ti::f>(make_not_null(&Gll13),
                                 Rlll(ti::t, ti::t, ti::f) - Hll(ti::f, ti::t));
 
   for (int f = 0; f < 4; ++f) {
     CHECK(Gll13.get(0, f) == Rlll.get(0, 0, f) - Hll.get(f, 0));
     for (size_t i = 0; i < 3; ++i) {
-      CHECK(Gll13.get(i + 1, f) == spatial_component_placeholder);
+      CHECK(Gll13.get(i + 1, f) == spatial_component_placeholder_value);
     }
   }
 
@@ -310,7 +312,7 @@ void test_addsub_tensor(const gsl::not_null<Generator*> generator,
       generator, distribution, used_for_size);
 
   auto Gll14 = make_with_value<tnsr::Ab<DataType, 3, Frame::Grid>>(
-      used_for_size, spatial_component_placeholder);
+      used_for_size, spatial_component_placeholder_value);
   tenex::evaluate<ti::T, ti::t>(
       make_not_null(&Gll14),
       Hll(ti::t, ti::t) - T() - Rlll(ti::t, ti::t, ti::t) + 9.1);
@@ -318,7 +320,7 @@ void test_addsub_tensor(const gsl::not_null<Generator*> generator,
   CHECK(Gll14.get(0, 0) == Hll.get(0, 0) - get(T) - Rlll.get(0, 0, 0) + 9.1);
   for (size_t i = 0; i < 3; ++i) {
     for (size_t j = 0; j < 3; ++j) {
-      CHECK(Gll14.get(i + 1, j + 1) == spatial_component_placeholder);
+      CHECK(Gll14.get(i + 1, j + 1) == spatial_component_placeholder_value);
     }
   }
 }

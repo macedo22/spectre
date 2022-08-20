@@ -14,11 +14,13 @@
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/ComponentPlaceholder.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/MakeWithValue.hpp"
 #include "Utilities/TMPL.hpp"
 
 namespace {
+
 template <typename... Ts>
 // Checks that the number of ops in the expressions match what is expected
 void test_tensor_ops_properties() {
@@ -1269,14 +1271,14 @@ void test_time_index(const gsl::not_null<Generator*> generator,
   // Assign a placeholder to the LHS tensor's components before it is computed
   // so that when test expressions below only compute time components, we can
   // check that LHS spatial components haven't changed
-  const double spatial_component_placeholder =
-      std::numeric_limits<double>::max();
+  const auto spatial_component_placeholder_value =
+      TestHelpers::tenex::component_placeholder_value<DataType>::value;
   auto L_Tba = make_with_value<
       Tensor<DataType, Symmetry<2, 1, 1>,
              index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
                         SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
                         SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>>(
-      used_for_size, spatial_component_placeholder);
+      used_for_size, spatial_component_placeholder_value);
   // \f$L^{T}{}_{ba} = R_{a} * R_{b}\f$
   tenex::evaluate<ti::T, ti::b, ti::a>(make_not_null(&L_Tba),
                                        R(ti::a) * R(ti::b));
@@ -1285,7 +1287,7 @@ void test_time_index(const gsl::not_null<Generator*> generator,
     for (size_t a = 0; a < 4; a++) {
       CHECK_ITERABLE_APPROX(L_Tba.get(0, b, a), R.get(a) * R.get(b));
       for (size_t i = 0; i < 3; i++) {
-        CHECK(L_Tba.get(i + 1, b, a) == spatial_component_placeholder);
+        CHECK(L_Tba.get(i + 1, b, a) == spatial_component_placeholder_value);
       }
     }
   }
@@ -1294,7 +1296,7 @@ void test_time_index(const gsl::not_null<Generator*> generator,
       Tensor<DataType, Symmetry<2, 1>,
              index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
                         SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>>(
-      used_for_size, spatial_component_placeholder);
+      used_for_size, spatial_component_placeholder_value);
   // \f$L_^{ct} = G_{t}{}^{b} * R_{b} * H_{t}^{ta}\f$
   tenex::evaluate<ti::C, ti::T>(
       make_not_null(&L_CT),
@@ -1310,7 +1312,7 @@ void test_time_index(const gsl::not_null<Generator*> generator,
     CHECK_ITERABLE_APPROX(L_CT.get(c, 0), expected_product);
 
     for (size_t i = 0; i < 3; i++) {
-      CHECK(L_CT.get(c, i + 1) == spatial_component_placeholder);
+      CHECK(L_CT.get(c, i + 1) == spatial_component_placeholder_value);
     }
   }
 }
