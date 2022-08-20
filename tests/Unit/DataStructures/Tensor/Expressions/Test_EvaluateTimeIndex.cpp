@@ -3,9 +3,12 @@
 
 #include "Framework/TestingFramework.hpp"
 
+#include <complex>
 #include <cstddef>
 #include <random>
 
+#include "DataStructures/ComplexDataVector.hpp"
+#include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/IndexType.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
@@ -14,7 +17,30 @@
 #include "Utilities/Gsl.hpp"
 
 namespace {
-const double spatial_component_placeholder = std::numeric_limits<double>::max();
+template <typename DataType>
+struct spatial_component_placeholder;
+
+template <>
+struct spatial_component_placeholder<double> {
+  static constexpr double value = std::numeric_limits<double>::max();
+};
+
+template <>
+struct spatial_component_placeholder<std::complex<double>> {
+  static constexpr std::complex<double> value = std::complex<double>(
+      std::numeric_limits<double>::max(), std::numeric_limits<double>::max());
+};
+
+template <>
+struct spatial_component_placeholder<DataVector> {
+  static constexpr double value = spatial_component_placeholder<double>::value;
+};
+
+template <>
+struct spatial_component_placeholder<ComplexDataVector> {
+  static constexpr std::complex<double> value =
+      spatial_component_placeholder<std::complex<double>>::value;
+};
 
 // \brief Test evaluation of tensors where concrete time indices are used for
 // RHS spacetime indices
@@ -71,13 +97,14 @@ void test_lhs(const gsl::not_null<Generator*> generator,
       Tensor<DataType, Symmetry<2, 1>,
              index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>,
                         SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>>>>(
-      used_for_size, spatial_component_placeholder);
+      used_for_size, spatial_component_placeholder<DataType>::value);
   tenex::evaluate<ti::a, ti::t>(make_not_null(&Lat_from_R_a), R(ti::a));
 
   for (size_t a = 0; a < dim + 1; a++) {
     CHECK(Lat_from_R_a.get(a, 0) == R.get(a));
     for (size_t i = 0; i < dim; i++) {
-      CHECK(Lat_from_R_a.get(a, i + 1) == spatial_component_placeholder);
+      CHECK(Lat_from_R_a.get(a, i + 1) ==
+            spatial_component_placeholder<DataType>::value);
     }
   }
 }
@@ -113,7 +140,7 @@ void test_rhs_and_lhs(const gsl::not_null<Generator*> generator,
                         SpacetimeIndex<dim, UpLo::Up, Frame::Grid>,
                         SpacetimeIndex<dim, UpLo::Lo, Frame::Grid>,
                         SpacetimeIndex<dim, UpLo::Lo, Frame::Grid>>>>(
-      used_for_size, spatial_component_placeholder);
+      used_for_size, spatial_component_placeholder<DataType>::value);
   tenex::evaluate<ti::a, ti::T, ti::t, ti::b>(make_not_null(&LaTtb_from_R_tba),
                                               R(ti::t, ti::b, ti::a));
 
@@ -124,7 +151,7 @@ void test_rhs_and_lhs(const gsl::not_null<Generator*> generator,
       for (size_t i = 0; i < 3; i++) {
         for (size_t j = 0; j < 3; j++) {
           CHECK(LaTtb_from_R_tba.get(a, i + 1, j + 1, b) ==
-                spatial_component_placeholder);
+                spatial_component_placeholder<DataType>::value);
         }
       }
     }
@@ -146,5 +173,10 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateTimeIndex",
   test_evaluate_spatial_spacetime_index(
       std::numeric_limits<double>::signaling_NaN());
   test_evaluate_spatial_spacetime_index(
+      std::complex<double>(std::numeric_limits<double>::signaling_NaN(),
+                           std::numeric_limits<double>::signaling_NaN()));
+  test_evaluate_spatial_spacetime_index(
       DataVector(5, std::numeric_limits<double>::signaling_NaN()));
+  test_evaluate_spatial_spacetime_index(
+      ComplexDataVector(5, std::numeric_limits<double>::signaling_NaN()));
 }
