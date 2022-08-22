@@ -681,7 +681,9 @@ void test_large_equation(const gsl::not_null<Generator*> generator,
           shift(ti::J) * d_pi(ti::j, ti::a, ti::b));
   // [use_update]
 
-  CHECK_ITERABLE_APPROX(actual_result_tensor_filled, expected_result_tensor);
+  Approx approx = Approx::custom().epsilon(1e-12).scale(1.0);
+  CHECK_ITERABLE_CUSTOM_APPROX(actual_result_tensor_filled,
+                               expected_result_tensor, approx);
 
   // Test with TempTensor for LHS tensor
   if constexpr (std::is_same_v<DataType, DataVector> or
