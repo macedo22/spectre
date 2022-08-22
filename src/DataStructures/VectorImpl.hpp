@@ -172,9 +172,7 @@ class VectorImpl
   // This is a converting constructor. clang-tidy complains that it's not
   // explicit, but we want it to allow conversion.
   // clang-tidy: mark as explicit (we want conversion to VectorImpl type)
-  template <
-      typename VT, bool VF,
-      Requires<std::is_same_v<typename VT::ResultType, VectorType>> = nullptr>
+  template <typename VT, bool VF>
   VectorImpl(const blaze::DenseVector<VT, VF>& expression);  // NOLINT
 
   template <typename VT, bool VF>
@@ -322,21 +320,29 @@ VectorImpl<T, VectorType>& VectorImpl<T, VectorType>::operator=(
   return *this;
 }
 
+class ComplexDataVector;
+class ComplexModalVector;
+class DataVector;
+class ModalVector;
+
 /// \cond HIDDEN_SYMBOLS
 // This is a converting constructor. clang-tidy complains that it's not
 // explicit, but we want it to allow conversion.
 // clang-tidy: mark as explicit (we want conversion to VectorImpl)
 template <typename T, typename VectorType>
-template <typename VT, bool VF,
-          Requires<std::is_same_v<typename VT::ResultType, VectorType>>>
+template <typename VT, bool VF>
 VectorImpl<T, VectorType>::VectorImpl(
     const blaze::DenseVector<VT, VF>& expression)  // NOLINT
     : owned_data_(cpp20::make_unique_for_overwrite<value_type[]>(
           (*expression).size())) {
-  static_assert(std::is_same_v<typename VT::ResultType, VectorType>,
-                "You are attempting to assign the result of an expression "
-                "that is not consistent with the VectorImpl type you are "
-                "assigning to.");
+  static_assert(
+      std::is_same_v<typename VT::ResultType, VectorType> or
+          (std::is_same_v<typename VT::ResultType, DataVector> and
+           std::is_same_v<VectorType, ComplexDataVector>) or
+          (std::is_same_v<typename VT::ResultType, ModalVector> and
+           std::is_same_v<VectorType, ComplexModalVector>),
+      "You are attempting to assign the result of an expression that is not "
+      "assignable to the VectorImpl type you are assigning to.");
   reset_pointer_vector((*expression).size());
   **this = expression;
 }
@@ -345,10 +351,14 @@ template <typename T, typename VectorType>
 template <typename VT, bool VF>
 VectorImpl<T, VectorType>& VectorImpl<T, VectorType>::operator=(
     const blaze::DenseVector<VT, VF>& expression) {
-  static_assert(std::is_same_v<typename VT::ResultType, VectorType>,
-                "You are attempting to assign the result of an expression "
-                "that is not consistent with the VectorImpl type you are "
-                "assigning to.");
+  static_assert(
+      std::is_same_v<typename VT::ResultType, VectorType> or
+          (std::is_same_v<typename VT::ResultType, DataVector> and
+           std::is_same_v<VectorType, ComplexDataVector>) or
+          (std::is_same_v<typename VT::ResultType, ModalVector> and
+           std::is_same_v<VectorType, ComplexModalVector>),
+      "You are attempting to assign the result of an expression that is not "
+      "assignable to the VectorImpl type you are assigning to.");
   if (owning_ and (*expression).size() != size()) {
     owned_data_ =
         cpp20::make_unique_for_overwrite<value_type[]>((*expression).size());

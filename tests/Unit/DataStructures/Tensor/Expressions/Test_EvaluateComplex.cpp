@@ -107,8 +107,8 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateComplex",
                 used_for_size_complex_double);
   test_evaluate(make_not_null(&generator), used_for_size_complex_datavector,
                 used_for_size_real_double);
-//   test_evaluate(make_not_null(&generator), used_for_size_complex_datavector,
-//                 used_for_size_real_datavector);
+  test_evaluate(make_not_null(&generator), used_for_size_complex_datavector,
+                used_for_size_real_datavector);
   test_evaluate(make_not_null(&generator), used_for_size_complex_datavector,
                 used_for_size_complex_datavector);
 }
