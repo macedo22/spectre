@@ -53,7 +53,7 @@ template <typename Generator, typename LhsDataType, typename RhsDataType>
 void test_evaluate(const gsl::not_null<Generator*> generator,
                    const LhsDataType& used_for_size_lhs,
                    const RhsDataType& used_for_size_rhs) {
-  std::uniform_real_distribution<> distribution(1.0, 1.0);
+  std::uniform_real_distribution<> distribution(-1.0, 1.0);
 
   if constexpr (std::is_same_v<RhsDataType, double> or
                 std::is_same_v<RhsDataType, std::complex<double>>) {
