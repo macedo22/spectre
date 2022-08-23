@@ -234,16 +234,17 @@ void evaluate_impl(
   if constexpr (EvaluateSubtrees) {
     // Make sure the LHS tensor doesn't also appear in the RHS tensor expression
     (~rhs_tensorexpression).assert_lhs_tensor_not_in_rhs_expression(lhs_tensor);
-    // If the LHS data type is a vector type, size the LHS tensor components if
-    // their size does not match the size from a `Tensor` in the RHS expression
-    if constexpr (std::is_same_v<DataVector, LhsDataType> or
-                  std::is_same_v<ComplexDataVector, LhsDataType>) {
-      const size_t rhs_component_size =
-          (~rhs_tensorexpression).get_rhs_tensor_component_size();
-      if (rhs_component_size != (*lhs_tensor)[0].size()) {
-        for (auto& lhs_component : *lhs_tensor) {
-          lhs_component = LhsDataType(rhs_component_size);
-        }
+  }
+
+  // If the LHS data type is a vector type, size the LHS tensor components if
+  // their size does not match the size from a `Tensor` in the RHS expression
+  if constexpr (std::is_same_v<DataVector, LhsDataType> or
+                std::is_same_v<ComplexDataVector, LhsDataType>) {
+    const size_t rhs_component_size =
+        (~rhs_tensorexpression).get_rhs_tensor_component_size();
+    if (rhs_component_size != (*lhs_tensor)[0].size()) {
+      for (auto& lhs_component : *lhs_tensor) {
+        lhs_component = LhsDataType(rhs_component_size);
       }
     }
   }

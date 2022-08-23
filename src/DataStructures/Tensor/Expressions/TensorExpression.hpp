@@ -482,6 +482,8 @@ struct get_binop_datatype {
                                                   result_is_complex>::type;
 };
 
+// TODO : define the valid bin_ops in each bin_op file but reduce this
+// helper to just checking which TENSOR expression bin op data types are ok
 /// \brief Check whether or not a binary operation between two
 /// `TensorExpression`s is valid
 ///
@@ -508,6 +510,10 @@ struct is_valid_tensorexpression_binop {
       std::is_same_v<typename T1::type, typename T2::type> or
       std::is_base_of_v<::tenex::MarkAsNumberAsExpression, T1> or
       std::is_base_of_v<::tenex::MarkAsNumberAsExpression, T2> or
+      (std::is_same_v<typename T1::type, double> and
+       std::is_same_v<typename T2::type, std::complex<double>>) or
+      (std::is_same_v<typename T1::type, std::complex<double>> and
+       std::is_same_v<typename T2::type, double>) or
       (std::is_same_v<typename T1::type, DataVector> and
        std::is_same_v<typename T2::type, ComplexDataVector>) or
       (std::is_same_v<typename T1::type, ComplexDataVector> and

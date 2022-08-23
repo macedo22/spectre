@@ -20,14 +20,14 @@
 namespace {
 template <typename T1, typename T2>
 void check_values_equal(const T1& lhs_value, const T2& rhs_value) {
-  CHECK(lhs_value == rhs_value);
+  CHECK_ITERABLE_APPROX(lhs_value, rhs_value);
 }
 
 template <>
 void check_values_equal<std::complex<double>, double>(
     const std::complex<double>& lhs_value, const double& rhs_value) {
   CHECK(std::imag(lhs_value) == 0.0);
-  CHECK(std::real(lhs_value) == rhs_value);
+  CHECK_ITERABLE_APPROX(std::real(lhs_value), rhs_value);
 }
 
 template <>
@@ -35,7 +35,7 @@ void check_values_equal<ComplexDataVector, double>(
     const ComplexDataVector& lhs_value, const double& rhs_value) {
   for (size_t i = 0; i < lhs_value.size(); i++) {
     CHECK(std::imag(lhs_value[i]) == 0.0);
-    CHECK(std::real(lhs_value[i]) == rhs_value);
+    CHECK_ITERABLE_APPROX(std::real(lhs_value[i]), rhs_value);
   }
 }
 
@@ -44,14 +44,14 @@ void check_values_equal<ComplexDataVector, DataVector>(
     const ComplexDataVector& lhs_value, const DataVector& rhs_value) {
   for (size_t i = 0; i < lhs_value.size(); i++) {
     CHECK(std::imag(lhs_value[i]) == 0.0);
-    CHECK(std::real(lhs_value[i]) == rhs_value[i]);
+    CHECK_ITERABLE_APPROX(std::real(lhs_value[i]), rhs_value[i]);
   }
 }
 
 template <typename Generator, typename LhsDataType, typename RhsDataType>
-void test_evaluate_assignment(const gsl::not_null<Generator*> generator,
-                              const LhsDataType& used_for_size_lhs,
-                              const RhsDataType& used_for_size_rhs) {
+void test_assign(const gsl::not_null<Generator*> generator,
+                 const LhsDataType& used_for_size_lhs,
+                 const RhsDataType& used_for_size_rhs) {
   std::uniform_real_distribution<> distribution(-1.0, 1.0);
 
   if constexpr (std::is_same_v<RhsDataType, double> or
@@ -84,16 +84,16 @@ void test_evaluate_assignment(const gsl::not_null<Generator*> generator,
 }
 
 template <typename Generator, typename LhsDataType, typename RhsDataType>
-void test_evaluate_ops(const gsl::not_null<Generator*> generator,
-                       const LhsDataType& used_for_size_lhs,
-                       const RhsDataType& used_for_size_rhs) {
+void test_tensor_ops(const gsl::not_null<Generator*> generator,
+                     const LhsDataType& used_for_size_lhs,
+                     const RhsDataType& used_for_size_rhs) {
   std::uniform_real_distribution<> distribution(0.1, 1.0);
 
   const auto R =
       make_with_random_values<tnsr::Ab<RhsDataType, 3, Frame::Inertial>>(
           generator, distribution, used_for_size_rhs);
   const auto S =
-      make_with_random_values<tnsr::aa<RhsDataType, 3, Frame::Inertial>>(
+      make_with_random_values<tnsr::aB<RhsDataType, 3, Frame::Inertial>>(
           generator, distribution, used_for_size_rhs);
   const auto T = make_with_random_values<Scalar<RhsDataType>>(
       generator, distribution, used_for_size_rhs);
@@ -108,8 +108,8 @@ void test_evaluate_ops(const gsl::not_null<Generator*> generator,
   }
   check_values_equal(get(L_contraction), expected_L_contraction);
 
-  tnsr::aa<LhsDataType, 3, Frame::Inertial> L_negation{used_for_size_lhs};
-  tenex::evaluate<ti::b, ti::a>(make_not_null(&L_negation), -S(ti::a, ti::b));
+  tnsr::Ab<LhsDataType, 3, Frame::Inertial> L_negation{used_for_size_lhs};
+  tenex::evaluate<ti::B, ti::a>(make_not_null(&L_negation), -S(ti::a, ti::B));
   for (size_t a = 0; a < 4; a++) {
     for (size_t b = 0; b < 4; b++) {
       check_values_equal(L_negation.get(b, a), -S.get(a, b));
@@ -121,6 +121,231 @@ void test_evaluate_ops(const gsl::not_null<Generator*> generator,
   check_values_equal(get(L_square_root), sqrt(get(T)));
 
   // test evaluation of binary ops
+  tnsr::Ab<LhsDataType, 3, Frame::Inertial> L_addition{used_for_size_lhs};
+  tnsr::Ab<LhsDataType, 3, Frame::Inertial> L_subtraction{used_for_size_lhs};
+  tenex::evaluate<ti::A, ti::b>(make_not_null(&L_addition),
+                                R(ti::A, ti::b) + S(ti::b, ti::A));
+  tenex::evaluate<ti::B, ti::a>(make_not_null(&L_subtraction),
+                                S(ti::a, ti::B) - R(ti::B, ti::a));
+  for (size_t a = 0; a < 4; a++) {
+    for (size_t b = 0; b < 4; b++) {
+      check_values_equal(L_addition.get(a, b), R.get(a, b) + S.get(b, a));
+      check_values_equal(L_subtraction.get(b, a), S.get(a, b) - R.get(b, a));
+    }
+  }
+
+  tnsr::aB<LhsDataType, 3, Frame::Inertial> L_product{used_for_size_lhs};
+  tenex::evaluate<ti::a, ti::B>(make_not_null(&L_product),
+                                R(ti::C, ti::a) * S(ti::c, ti::B));
+  for (size_t a = 0; a < 4; a++) {
+    for (size_t b = 0; b < 4; b++) {
+      RhsDataType expected_sum =
+          make_with_value<RhsDataType>(used_for_size_rhs, 0.0);
+      for (size_t c = 0; c < 4; c++) {
+        expected_sum += R.get(c, a) * S.get(c, b);
+      }
+      check_values_equal(L_product.get(a, b), expected_sum);
+    }
+  }
+
+  tnsr::aB<LhsDataType, 3, Frame::Inertial> L_division{used_for_size_lhs};
+  tenex::evaluate<ti::a, ti::B>(make_not_null(&L_division),
+                                S(ti::a, ti::B) / T());
+  for (size_t a = 0; a < 4; a++) {
+    for (size_t b = 0; b < 4; b++) {
+      check_values_equal(L_division.get(a, b), S.get(a, b) / get(T));
+    }
+  }
+}
+
+template <typename Generator, typename ComplexDataType, typename RealDataType>
+void test_bin_ops_with_mixed_datatypes(
+    const gsl::not_null<Generator*> generator,
+    const ComplexDataType& used_for_size_complex,
+    const RealDataType& used_for_size_real,
+    const std::complex<double>& used_for_random_complex_number,
+    const double used_for_random_real_number) {
+  std::uniform_real_distribution<> distribution(0.1, 1.0);
+  constexpr size_t Dim = 2;
+
+  // Operands for test expressions
+
+  const auto real_Ij =
+      make_with_random_values<tnsr::Ij<RealDataType, Dim, Frame::Grid>>(
+          generator, distribution, used_for_size_real);
+  const auto complex_Ij =
+      make_with_random_values<tnsr::Ij<ComplexDataType, Dim, Frame::Grid>>(
+          generator, distribution, used_for_size_complex);
+  const auto real_iJ =
+      make_with_random_values<tnsr::iJ<RealDataType, Dim, Frame::Grid>>(
+          generator, distribution, used_for_size_real);
+  const auto complex_iJ =
+      make_with_random_values<tnsr::iJ<ComplexDataType, Dim, Frame::Grid>>(
+          generator, distribution, used_for_size_complex);
+  const auto real_scalar = make_with_random_values<Scalar<RealDataType>>(
+      generator, distribution, used_for_size_real);
+  const auto complex_scalar = make_with_random_values<Scalar<ComplexDataType>>(
+      generator, distribution, used_for_size_complex);
+  const auto real_number = make_with_random_values<double>(
+      generator, distribution, used_for_random_real_number);
+  const auto complex_number = make_with_random_values<std::complex<double>>(
+      generator, distribution, used_for_random_complex_number);
+
+  // Tested expressions
+
+  // addition
+  const Scalar<ComplexDataType> complex_tensor_plus_real_number =
+      tenex::evaluate(complex_scalar() + real_number);
+  const Scalar<ComplexDataType> real_number_plus_complex_tensor =
+      tenex::evaluate(real_number + complex_scalar());
+  // decltype(result) test = "a";
+  // const Scalar<ComplexDataType> complex_number_plus_real_tensor =
+  //     tenex::evaluate(complex_number + real_scalar());
+  // const Scalar<ComplexDataType> real_tensor_plus_complex_number =
+  //     tenex::evaluate(real_scalar() + complex_number);
+  const tnsr::iJ<ComplexDataType, Dim, Frame::Grid>
+      complex_tensor_plus_real_tensor = tenex::evaluate<ti::i, ti::J>(
+          complex_iJ(ti::i, ti::J) + real_iJ(ti::i, ti::J));
+  const tnsr::iJ<ComplexDataType, Dim, Frame::Grid>
+      real_tensor_plus_complex_tensor = tenex::evaluate<ti::i, ti::J>(
+          real_Ij(ti::J, ti::i) + complex_Ij(ti::J, ti::i));
+
+  // subtraction
+  const Scalar<ComplexDataType> complex_tensor_minus_real_number =
+      tenex::evaluate(complex_scalar() - real_number);
+  const Scalar<ComplexDataType> real_number_minus_complex_tensor =
+      tenex::evaluate(real_number - complex_scalar());
+  // const Scalar<ComplexDataType> complex_number_minus_real_tensor =
+  //     tenex::evaluate(complex_number - real_scalar());
+  // const Scalar<ComplexDataType> real_tensor_minus_complex_number =
+  //     tenex::evaluate(real_scalar() - complex_number);
+  const tnsr::iJ<ComplexDataType, Dim, Frame::Grid>
+      complex_tensor_minus_real_tensor = tenex::evaluate<ti::i, ti::J>(
+          complex_iJ(ti::i, ti::J) - real_iJ(ti::i, ti::J));
+  const tnsr::iJ<ComplexDataType, Dim, Frame::Grid>
+      real_tensor_minus_complex_tensor = tenex::evaluate<ti::i, ti::J>(
+          real_Ij(ti::J, ti::i) - complex_Ij(ti::J, ti::i));
+
+  // multiplication
+  const tnsr::iJ<ComplexDataType, Dim, Frame::Grid>
+      complex_tensor_times_real_number =
+          tenex::evaluate<ti::i, ti::J>(complex_iJ(ti::i, ti::J) * real_number);
+  const tnsr::iJ<ComplexDataType, Dim, Frame::Grid>
+      real_number_times_complex_tensor =
+          tenex::evaluate<ti::i, ti::J>(real_number * complex_Ij(ti::J, ti::i));
+  // const tnsr::iJ<ComplexDataType, Dim, Frame::Grid>
+  //     complex_number_times_real_tensor =
+  //         tenex::evaluate<ti::i, ti::J>(complex_number * real_iJ(ti::i,
+  //         ti::J));
+  // const tnsr::iJ<ComplexDataType, Dim, Frame::Grid>
+  //     real_tensor_times_complex_number =
+  //         tenex::evaluate<ti::i, ti::J>(real_Ij(ti::J, ti::i) *
+  //         complex_number);
+  const tnsr::iJ<ComplexDataType, Dim, Frame::Grid>
+      complex_tensor_times_real_tensor = tenex::evaluate<ti::i, ti::J>(
+          complex_iJ(ti::i, ti::K) * real_iJ(ti::k, ti::J));
+  const tnsr::iJ<ComplexDataType, Dim, Frame::Grid>
+      real_tensor_times_complex_tensor = tenex::evaluate<ti::i, ti::J>(
+          real_Ij(ti::K, ti::i) * complex_Ij(ti::J, ti::k));
+
+  // division
+  const tnsr::iJ<ComplexDataType, Dim, Frame::Grid>
+      complex_tensor_over_real_number =
+          tenex::evaluate<ti::i, ti::J>(complex_iJ(ti::i, ti::J) / real_number);
+  const Scalar<ComplexDataType> real_number_over_complex_tensor =
+      tenex::evaluate(real_number / complex_scalar());
+  // const Scalar<ComplexDataType> complex_number_over_real_tensor =
+  //     tenex::evaluate(complex_number / real_scalar());
+  // const tnsr::iJ<ComplexDataType, Dim, Frame::Grid>
+  //     real_tensor_over_complex_number =
+  //         tenex::evaluate<ti::i, ti::J>(real_Ij(ti::J, ti::i) /
+  //         complex_number);
+  const tnsr::iJ<ComplexDataType, Dim, Frame::Grid>
+      complex_tensor_over_real_tensor = tenex::evaluate<ti::i, ti::J>(
+          complex_iJ(ti::i, ti::J) / real_scalar());
+  const tnsr::iJ<ComplexDataType, Dim, Frame::Grid>
+      real_tensor_over_complex_tensor = tenex::evaluate<ti::i, ti::J>(
+          real_Ij(ti::J, ti::i) / complex_scalar());
+
+  // Check rank == 0 results
+
+  // addition
+  CHECK(get(complex_tensor_plus_real_number) ==
+        get(complex_scalar) + real_number);
+  CHECK(get(real_number_plus_complex_tensor) ==
+        real_number + get(complex_scalar));
+  // CHECK(get(complex_number_plus_real_tensor) ==
+  //       complex_number + get(real_scalar));
+  // CHECK(get(real_tensor_plus_complex_number) ==
+  //       get(real_scalar) + complex_number);
+
+  // subtraction
+  CHECK(get(complex_tensor_minus_real_number) ==
+        get(complex_scalar) - real_number);
+  CHECK(get(real_number_minus_complex_tensor) ==
+        real_number - get(complex_scalar));
+  // CHECK(get(complex_number_minus_real_tensor) ==
+  //       complex_number - get(real_scalar));
+  // CHECK(get(real_tensor_minus_complex_number) ==
+  //       get(real_scalar) - complex_number);
+
+  // division
+  CHECK(get(real_number_over_complex_tensor) ==
+        real_number / get(complex_scalar));
+  // CHECK(get(complex_number_over_real_tensor) ==
+  //       complex_number / get(real_scalar));
+
+  // Check rank > 0 results
+  for (size_t i = 0; i < Dim; i++) {
+    for (size_t j = 0; j < Dim; j++) {
+      ComplexDataType expected_sum_complex_tensor_times_real_tensor =
+          complex_iJ.get(i, 0) * real_iJ.get(0, j);
+      ComplexDataType expected_sum_real_tensor_times_complex_tensor =
+          real_Ij.get(0, i) * complex_Ij.get(j, 0);
+      for (size_t k = 1; k < Dim; k++) {
+        expected_sum_complex_tensor_times_real_tensor +=
+            complex_iJ.get(i, k) * real_iJ.get(k, j);
+        expected_sum_real_tensor_times_complex_tensor +=
+            real_Ij.get(k, i) * complex_Ij.get(j, k);
+      }
+
+      // addition
+      CHECK(complex_tensor_plus_real_tensor.get(i, j) ==
+            complex_iJ.get(i, j) + real_iJ.get(i, j));
+      CHECK(real_tensor_plus_complex_tensor.get(i, j) ==
+            real_Ij.get(j, i) + complex_Ij.get(j, i));
+
+      // subtraction
+      CHECK(complex_tensor_minus_real_tensor.get(i, j) ==
+            complex_iJ.get(i, j) - real_iJ.get(i, j));
+      CHECK(real_tensor_minus_complex_tensor.get(i, j) ==
+            real_Ij.get(j, i) - complex_Ij.get(j, i));
+
+      // multiplication
+      CHECK(complex_tensor_times_real_number.get(i, j) ==
+            complex_iJ.get(i, j) * real_number);
+      CHECK(real_number_times_complex_tensor.get(i, j) ==
+            real_number * complex_Ij.get(j, i));
+      // CHECK(complex_number_times_real_tensor.get(i, j) ==
+      //       complex_number * real_iJ.get(i, j));
+      // CHECK(real_tensor_times_complex_number.get(i, j) ==
+      //       real_Ij.get(j, i) * complex_number);
+      CHECK_ITERABLE_APPROX(complex_tensor_times_real_tensor.get(i, j),
+                            expected_sum_complex_tensor_times_real_tensor);
+      CHECK_ITERABLE_APPROX(real_tensor_times_complex_tensor.get(i, j),
+                            expected_sum_real_tensor_times_complex_tensor);
+
+      // division
+      CHECK_ITERABLE_APPROX(complex_tensor_over_real_number.get(i, j),
+                            complex_iJ.get(i, j) / real_number);
+      // CHECK_ITERABLE_APPROX(real_tensor_over_complex_number.get(i, j),
+      //                       real_Ij.get(j, i) / complex_number);
+      CHECK(complex_tensor_over_real_tensor.get(i, j) ==
+            complex_iJ.get(i, j) / get(real_scalar));
+      CHECK(real_tensor_over_complex_tensor.get(i, j) ==
+            real_Ij.get(j, i) / get(complex_scalar));
+    }
+  }
 }
 }  // namespace
 
@@ -140,30 +365,34 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateComplex",
   const ComplexDataVector used_for_size_complex_datavector = ComplexDataVector(
       vector_size, std::numeric_limits<double>::signaling_NaN());
 
-  test_evaluate_assignment(make_not_null(&generator),
-                           used_for_size_complex_double,
-                           used_for_size_real_double);
-  test_evaluate_assignment(make_not_null(&generator),
-                           used_for_size_complex_double,
-                           used_for_size_complex_double);
-  test_evaluate_assignment(make_not_null(&generator),
-                           used_for_size_complex_datavector,
-                           used_for_size_real_double);
-  test_evaluate_assignment(make_not_null(&generator),
-                           used_for_size_complex_datavector,
-                           used_for_size_real_datavector);
-  test_evaluate_assignment(make_not_null(&generator),
-                           used_for_size_complex_datavector,
-                           used_for_size_complex_datavector);
+  test_assign(make_not_null(&generator), used_for_size_complex_double,
+              used_for_size_real_double);
+  test_assign(make_not_null(&generator), used_for_size_complex_double,
+              used_for_size_complex_double);
+  test_assign(make_not_null(&generator), used_for_size_complex_datavector,
+              used_for_size_real_double);
+  test_assign(make_not_null(&generator), used_for_size_complex_datavector,
+              used_for_size_real_datavector);
+  test_assign(make_not_null(&generator), used_for_size_complex_datavector,
+              used_for_size_complex_datavector);
 
-  test_evaluate_ops(make_not_null(&generator), used_for_size_complex_double,
-                    used_for_size_real_double);
-  test_evaluate_ops(make_not_null(&generator), used_for_size_complex_double,
-                    used_for_size_complex_double);
-  test_evaluate_ops(make_not_null(&generator), used_for_size_complex_datavector,
-                    used_for_size_real_double);
-  test_evaluate_ops(make_not_null(&generator), used_for_size_complex_datavector,
-                    used_for_size_real_datavector);
-  test_evaluate_ops(make_not_null(&generator), used_for_size_complex_datavector,
-                    used_for_size_complex_datavector);
+  test_tensor_ops(make_not_null(&generator), used_for_size_complex_double,
+                  used_for_size_real_double);
+  test_tensor_ops(make_not_null(&generator), used_for_size_complex_double,
+                  used_for_size_complex_double);
+  test_tensor_ops(make_not_null(&generator), used_for_size_complex_datavector,
+                  used_for_size_real_double);
+  test_tensor_ops(make_not_null(&generator), used_for_size_complex_datavector,
+                  used_for_size_real_datavector);
+  test_tensor_ops(make_not_null(&generator), used_for_size_complex_datavector,
+                  used_for_size_complex_datavector);
+
+  test_bin_ops_with_mixed_datatypes(
+      make_not_null(&generator), used_for_size_complex_double,
+      used_for_size_real_double, used_for_size_complex_double,
+      used_for_size_real_double);
+  test_bin_ops_with_mixed_datatypes(
+      make_not_null(&generator), used_for_size_complex_datavector,
+      used_for_size_real_datavector, used_for_size_complex_double,
+      used_for_size_real_double);
 }
