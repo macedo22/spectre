@@ -33,6 +33,35 @@
 #include "Utilities/StdArrayHelpers.hpp"
 #include "Utilities/TypeTraits/IsComplexOfFundamental.hpp"
 
+class ComplexDataVector;
+class ComplexModalVector;
+class DataVector;
+class ModalVector;
+
+namespace VectorImpl_detail {
+template <typename LhsDataType, typename RhsDatatype>
+struct rhs_datatype_is_convertible_to_lhs_datatype {
+  static constexpr bool value = false;
+};
+
+template <typename RhsDatatype>
+struct rhs_datatype_is_convertible_to_lhs_datatype<RhsDatatype, RhsDatatype> {
+  static constexpr bool value = true;
+};
+
+template <>
+struct rhs_datatype_is_convertible_to_lhs_datatype<ComplexDataVector,
+                                                   DataVector> {
+  static constexpr bool value = true;
+};
+
+template <>
+struct rhs_datatype_is_convertible_to_lhs_datatype<ComplexModalVector,
+                                                   ModalVector> {
+  static constexpr bool value = true;
+};
+}  // namespace VectorImpl_detail
+
 /*!
  * \ingroup DataStructuresGroup
  * \brief Base class template for various DataVector and related types
@@ -172,7 +201,10 @@ class VectorImpl
   // This is a converting constructor. clang-tidy complains that it's not
   // explicit, but we want it to allow conversion.
   // clang-tidy: mark as explicit (we want conversion to VectorImpl type)
-  template <typename VT, bool VF>
+  template <
+      typename VT, bool VF,
+      Requires<VectorImpl_detail::rhs_datatype_is_convertible_to_lhs_datatype<
+          VectorType, typename VT::ResultType>::value> = nullptr>
   VectorImpl(const blaze::DenseVector<VT, VF>& expression);  // NOLINT
 
   template <typename VT, bool VF>
@@ -320,29 +352,23 @@ VectorImpl<T, VectorType>& VectorImpl<T, VectorType>::operator=(
   return *this;
 }
 
-class ComplexDataVector;
-class ComplexModalVector;
-class DataVector;
-class ModalVector;
-
 /// \cond HIDDEN_SYMBOLS
 // This is a converting constructor. clang-tidy complains that it's not
 // explicit, but we want it to allow conversion.
 // clang-tidy: mark as explicit (we want conversion to VectorImpl)
 template <typename T, typename VectorType>
-template <typename VT, bool VF>
+template <
+    typename VT, bool VF,
+    Requires<VectorImpl_detail::rhs_datatype_is_convertible_to_lhs_datatype<
+        VectorType, typename VT::ResultType>::value>>
 VectorImpl<T, VectorType>::VectorImpl(
     const blaze::DenseVector<VT, VF>& expression)  // NOLINT
     : owned_data_(cpp20::make_unique_for_overwrite<value_type[]>(
           (*expression).size())) {
   static_assert(
-      std::is_same_v<typename VT::ResultType, VectorType> or
-          (std::is_same_v<typename VT::ResultType, DataVector> and
-           std::is_same_v<VectorType, ComplexDataVector>) or
-          (std::is_same_v<typename VT::ResultType, ModalVector> and
-           std::is_same_v<VectorType, ComplexModalVector>),
-      "You are attempting to assign the result of an expression that is not "
-      "assignable to the VectorImpl type you are assigning to.");
+      VectorImpl_detail::rhs_datatype_is_convertible_to_lhs_datatype<
+          VectorType, typename VT::ResultType>::value,
+      "Cannot construct the VectorImpl type from the given expression type.");
   reset_pointer_vector((*expression).size());
   **this = expression;
 }
@@ -352,13 +378,9 @@ template <typename VT, bool VF>
 VectorImpl<T, VectorType>& VectorImpl<T, VectorType>::operator=(
     const blaze::DenseVector<VT, VF>& expression) {
   static_assert(
-      std::is_same_v<typename VT::ResultType, VectorType> or
-          (std::is_same_v<typename VT::ResultType, DataVector> and
-           std::is_same_v<VectorType, ComplexDataVector>) or
-          (std::is_same_v<typename VT::ResultType, ModalVector> and
-           std::is_same_v<VectorType, ComplexModalVector>),
-      "You are attempting to assign the result of an expression that is not "
-      "assignable to the VectorImpl type you are assigning to.");
+      VectorImpl_detail::rhs_datatype_is_convertible_to_lhs_datatype<
+          VectorType, typename VT::ResultType>::value,
+      "Cannot assign to the VectorImpl type from the given expression type.");
   if (owning_ and (*expression).size() != size()) {
     owned_data_ =
         cpp20::make_unique_for_overwrite<value_type[]>((*expression).size());
