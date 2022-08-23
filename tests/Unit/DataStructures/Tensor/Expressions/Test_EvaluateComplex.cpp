@@ -49,9 +49,9 @@ void check_values_equal<ComplexDataVector, DataVector>(
 }
 
 template <typename Generator, typename LhsDataType, typename RhsDataType>
-void test_assign(const gsl::not_null<Generator*> generator,
-                 const LhsDataType& used_for_size_lhs,
-                 const RhsDataType& used_for_size_rhs) {
+void test_evaluate_without_ops(const gsl::not_null<Generator*> generator,
+                               const LhsDataType& used_for_size_lhs,
+                               const RhsDataType& used_for_size_rhs) {
   std::uniform_real_distribution<> distribution(-1.0, 1.0);
 
   if constexpr (std::is_same_v<RhsDataType, double> or
@@ -84,9 +84,9 @@ void test_assign(const gsl::not_null<Generator*> generator,
 }
 
 template <typename Generator, typename LhsDataType, typename RhsDataType>
-void test_tensor_ops(const gsl::not_null<Generator*> generator,
-                     const LhsDataType& used_for_size_lhs,
-                     const RhsDataType& used_for_size_rhs) {
+void test_evaluate_with_ops(const gsl::not_null<Generator*> generator,
+                            const LhsDataType& used_for_size_lhs,
+                            const RhsDataType& used_for_size_rhs) {
   std::uniform_real_distribution<> distribution(0.1, 1.0);
 
   const auto R =
@@ -159,11 +159,11 @@ void test_tensor_ops(const gsl::not_null<Generator*> generator,
 }
 
 template <typename Generator, typename ComplexDataType, typename RealDataType>
-void test_bin_ops_with_mixed_datatypes(
+void test_evaluate_bin_ops_with_mixed_datatypes(
     const gsl::not_null<Generator*> generator,
     const ComplexDataType& used_for_size_complex,
     const RealDataType& used_for_size_real,
-    const std::complex<double>& used_for_random_complex_number,
+    const std::complex<double>& /*used_for_random_complex_number*/,
     const double used_for_random_real_number) {
   std::uniform_real_distribution<> distribution(0.1, 1.0);
   constexpr size_t Dim = 2;
@@ -188,8 +188,8 @@ void test_bin_ops_with_mixed_datatypes(
       generator, distribution, used_for_size_complex);
   const auto real_number = make_with_random_values<double>(
       generator, distribution, used_for_random_real_number);
-  const auto complex_number = make_with_random_values<std::complex<double>>(
-      generator, distribution, used_for_random_complex_number);
+  // const auto complex_number = make_with_random_values<std::complex<double>>(
+  //     generator, distribution, used_for_random_complex_number);
 
   // Tested expressions
 
@@ -365,33 +365,43 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateComplex",
   const ComplexDataVector used_for_size_complex_datavector = ComplexDataVector(
       vector_size, std::numeric_limits<double>::signaling_NaN());
 
-  test_assign(make_not_null(&generator), used_for_size_complex_double,
-              used_for_size_real_double);
-  test_assign(make_not_null(&generator), used_for_size_complex_double,
-              used_for_size_complex_double);
-  test_assign(make_not_null(&generator), used_for_size_complex_datavector,
-              used_for_size_real_double);
-  test_assign(make_not_null(&generator), used_for_size_complex_datavector,
-              used_for_size_real_datavector);
-  test_assign(make_not_null(&generator), used_for_size_complex_datavector,
-              used_for_size_complex_datavector);
+  test_evaluate_without_ops(make_not_null(&generator),
+                            used_for_size_complex_double,
+                            used_for_size_real_double);
+  test_evaluate_without_ops(make_not_null(&generator),
+                            used_for_size_complex_double,
+                            used_for_size_complex_double);
+  test_evaluate_without_ops(make_not_null(&generator),
+                            used_for_size_complex_datavector,
+                            used_for_size_real_double);
+  test_evaluate_without_ops(make_not_null(&generator),
+                            used_for_size_complex_datavector,
+                            used_for_size_real_datavector);
+  test_evaluate_without_ops(make_not_null(&generator),
+                            used_for_size_complex_datavector,
+                            used_for_size_complex_datavector);
 
-  test_tensor_ops(make_not_null(&generator), used_for_size_complex_double,
-                  used_for_size_real_double);
-  test_tensor_ops(make_not_null(&generator), used_for_size_complex_double,
-                  used_for_size_complex_double);
-  test_tensor_ops(make_not_null(&generator), used_for_size_complex_datavector,
-                  used_for_size_real_double);
-  test_tensor_ops(make_not_null(&generator), used_for_size_complex_datavector,
-                  used_for_size_real_datavector);
-  test_tensor_ops(make_not_null(&generator), used_for_size_complex_datavector,
-                  used_for_size_complex_datavector);
+  test_evaluate_with_ops(make_not_null(&generator),
+                         used_for_size_complex_double,
+                         used_for_size_real_double);
+  test_evaluate_with_ops(make_not_null(&generator),
+                         used_for_size_complex_double,
+                         used_for_size_complex_double);
+  test_evaluate_with_ops(make_not_null(&generator),
+                         used_for_size_complex_datavector,
+                         used_for_size_real_double);
+  test_evaluate_with_ops(make_not_null(&generator),
+                         used_for_size_complex_datavector,
+                         used_for_size_real_datavector);
+  test_evaluate_with_ops(make_not_null(&generator),
+                         used_for_size_complex_datavector,
+                         used_for_size_complex_datavector);
 
-  test_bin_ops_with_mixed_datatypes(
+  test_evaluate_bin_ops_with_mixed_datatypes(
       make_not_null(&generator), used_for_size_complex_double,
       used_for_size_real_double, used_for_size_complex_double,
       used_for_size_real_double);
-  test_bin_ops_with_mixed_datatypes(
+  test_evaluate_bin_ops_with_mixed_datatypes(
       make_not_null(&generator), used_for_size_complex_datavector,
       used_for_size_real_datavector, used_for_size_complex_double,
       used_for_size_real_double);
