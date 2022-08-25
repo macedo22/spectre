@@ -170,10 +170,12 @@ void evaluate_impl(
       "ComplexDataVector. It is possible to add support for other "
       "data types that are supported by Tensor.");
   static_assert(
-      rhs_datatype_is_assignable_to_lhs_datatype<LhsDataType,
+      lhs_datatype_is_assignable_to_rhs_datatype<LhsDataType,
                                                  RhsDataType>::type::value,
-      "Cannot assign the RHS expression's data type to the LHS "
-      "Tensor data type");
+      "Assignment of the LHS Tensor's data type to the RHS TensorExpression's "
+      "data type is not supported. This happens from doing something like e.g. "
+      "trying to assign a double to a DataVector or a DataVector to a "
+      "ComplexDataVector.");
   // `Symmetry` currently prevents this because antisymmetries are not currently
   // supported for `Tensor`s. This check is repeated here because if
   // antisymmetries are later supported for `Tensor`, using antisymmetries in
@@ -348,8 +350,11 @@ void evaluate_impl(
                 "ComplexDataVector. It is possible to add support for other "
                 "data types that are supported by Tensor.");
   static_assert(
-      rhs_datatype_is_assignable_to_lhs_datatype<X, NumberType>::type::value,
-      "Cannot assign the RHS number type to the LHS Tensor data type");
+      lhs_datatype_is_assignable_to_rhs_datatype<X, NumberType>::type::value,
+      "Assignment of the LHS Tensor's data type to the RHS number's data type "
+      "is not supported within TensorExpressions. This happens from doing "
+      "something like e.g. trying to assign a double to a DataVector or a "
+      "DataVector to a ComplexDataVector.");
   // `Symmetry` currently prevents this because antisymmetries are not currently
   // supported for `Tensor`s. This check is repeated here because if
   // antisymmetries are later supported for `Tensor`, using antisymmetries in

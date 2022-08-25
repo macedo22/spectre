@@ -295,7 +295,8 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
           typename detail::AddSubType<T1, T2>::index_list,
           typename detail::AddSubType<T1, T2>::tensorindex_list> {
   static_assert(
-      detail::tensorexpression_binop_datatypes_are_valid<T1, T2>::type::value,
+      detail::tensorexpression_binop_datatypes_are_supported<T1,
+                                                             T2>::type::value,
       "Cannot add or subtract the given TensorExpression types with the given "
       "data types. This can occur from e.g. trying to add a Tensor with data "
       "type double and a Tensor with data type DataVector.");

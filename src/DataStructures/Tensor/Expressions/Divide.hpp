@@ -44,7 +44,8 @@ struct Divide
                               typename T1::symmetry, typename T1::index_list,
                               typename T1::args_list> {
   static_assert(
-      detail::tensorexpression_binop_datatypes_are_valid<T1, T2>::type::value,
+      detail::tensorexpression_binop_datatypes_are_supported<T1,
+                                                             T2>::type::value,
       "Cannot divide the given TensorExpressions with the given data types. "
       "This can occur from e.g. trying to divide a Tensor with data type "
       "double and a Tensor with data type DataVector.");
