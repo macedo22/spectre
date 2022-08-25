@@ -13,6 +13,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "DataStructures/Tensor/Expressions/DataTypeSupport.hpp"
 #include "DataStructures/Tensor/Expressions/NumberAsExpression.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Expressions/TimeIndex.hpp"
@@ -42,9 +43,11 @@ struct Divide
                                   typename T1::type, typename T2::type>::type,
                               typename T1::symmetry, typename T1::index_list,
                               typename T1::args_list> {
-  static_assert(detail::is_valid_tensorexpression_binop<T1, T2>::value,
-                "Cannot divide Tensors when one's data type is a number (e.g. "
-                "double) and the other's is a vector type (e.g. DataVector)");
+  static_assert(
+      detail::tensorexpression_binop_datatypes_are_valid<T1, T2>::type::value,
+      "Cannot divide the given TensorExpressions with the given data types. "
+      "This can occur from e.g. trying to divide a Tensor with data type "
+      "double and a Tensor with data type DataVector.");
   static_assert((... and tt::is_time_index<Args2>::value),
                 "Can only divide a tensor expression by a number or a tensor "
                 "expression that evaluates to "

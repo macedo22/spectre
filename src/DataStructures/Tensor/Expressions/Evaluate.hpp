@@ -13,6 +13,7 @@
 
 #include "DataStructures/ComplexDataVector.hpp"
 #include "DataStructures/DataVector.hpp"
+#include "DataStructures/Tensor/Expressions/DataTypeSupport.hpp"
 #include "DataStructures/Tensor/Expressions/IndexPropertyCheck.hpp"
 #include "DataStructures/Tensor/Expressions/LhsTensorSymmAndIndices.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
@@ -162,15 +163,15 @@ void evaluate_impl(
   using lhs_tensor_type = typename std::decay_t<decltype(*lhs_tensor)>;
 
   static_assert(
-      detail::is_supported_tensorexpression_datatype<LhsDataType>::value and
-          detail::is_supported_tensorexpression_datatype<RhsDataType>::value,
+      is_supported_tensorexpression_datatype<LhsDataType>::type::value and
+          is_supported_tensorexpression_datatype<RhsDataType>::type::value,
       "TensorExpressions currently only support Tensors whose data "
       "type is double, std::complex<double> DataVector, or "
       "ComplexDataVector. It is possible to add support for other "
       "data types that are supported by Tensor.");
   static_assert(
-      detail::rhs_datatype_is_assignable_to_lhs_datatype<LhsDataType,
-                                                         RhsDataType>::value,
+      rhs_datatype_is_assignable_to_lhs_datatype<LhsDataType,
+                                                 RhsDataType>::type::value,
       "Cannot assign the RHS expression's data type to the LHS "
       "Tensor data type");
   // `Symmetry` currently prevents this because antisymmetries are not currently
@@ -341,13 +342,13 @@ void evaluate_impl(
   using lhs_tensorindex_list =
       tmpl::list<std::decay_t<decltype(LhsTensorIndices)>...>;
 
-  static_assert(detail::is_supported_tensorexpression_datatype<X>::value and
+  static_assert(is_supported_tensorexpression_datatype<X>::type::value and
                 "TensorExpressions currently only support Tensors whose data "
                 "type is double, std::complex<double> DataVector, or "
                 "ComplexDataVector. It is possible to add support for other "
                 "data types that are supported by Tensor.");
   static_assert(
-      detail::rhs_datatype_is_assignable_to_lhs_datatype<X, NumberType>::value,
+      rhs_datatype_is_assignable_to_lhs_datatype<X, NumberType>::type::value,
       "Cannot assign the RHS number type to the LHS Tensor data type");
   // `Symmetry` currently prevents this because antisymmetries are not currently
   // supported for `Tensor`s. This check is repeated here because if

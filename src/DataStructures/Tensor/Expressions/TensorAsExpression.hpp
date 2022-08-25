@@ -12,6 +12,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "DataStructures/Tensor/Expressions/DataTypeSupport.hpp"
 #include "DataStructures/Tensor/Expressions/SpatialSpacetimeIndex.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
@@ -187,6 +188,11 @@ struct TensorAsExpression<Tensor<X, Symm<SymmValues...>, IndexList<Indices...>>,
                                   Symm<SymmValues...>, IndexList<Indices...>,
                                   ArgsList<Args...>>::type,
                               IndexList<Indices...>, ArgsList<Args...>> {
+  static_assert(detail::is_supported_tensorexpression_datatype<X>::type::value,
+                "TensorExpressions currently only support Tensors whose data "
+                "type is double, std::complex<double> DataVector, or "
+                "ComplexDataVector. It is possible to add support for other "
+                "data types that are supported by Tensor.");
   // `Symmetry` currently prevents this because antisymmetries are not currently
   // supported for `Tensor`s. This check is repeated here because if
   // antisymmetries are later supported for `Tensor`, using antisymmetries in

@@ -14,6 +14,7 @@
 #include <utility>
 
 #include "DataStructures/Tensor/Expressions/Contract.hpp"
+#include "DataStructures/Tensor/Expressions/DataTypeSupport.hpp"
 #include "DataStructures/Tensor/Expressions/NumberAsExpression.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
@@ -72,9 +73,11 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
           typename detail::OuterProductType<T1, T2>::symmetry,
           typename detail::OuterProductType<T1, T2>::index_list,
           typename detail::OuterProductType<T1, T2>::tensorindex_list> {
-  static_assert(detail::is_valid_tensorexpression_binop<T1, T2>::value,
-                "Cannot product Tensors when one's data type is a number (e.g. "
-                "double) and the other's is a vector type (e.g. DataVector)");
+  static_assert(
+      detail::tensorexpression_binop_datatypes_are_valid<T1, T2>::type::value,
+      "Cannot multiply the given TensorExpressions with the given data types. "
+      "This can occur from e.g. trying to multiply a Tensor with data type "
+      "double and a Tensor with data type DataVector.");
   // === Index properties ===
   /// The type of the data being stored in the result of the expression
   using type = typename detail::OuterProductType<T1, T2>::type;

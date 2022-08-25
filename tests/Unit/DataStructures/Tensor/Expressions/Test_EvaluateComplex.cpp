@@ -159,11 +159,10 @@ void test_evaluate_with_ops(const gsl::not_null<Generator*> generator,
 }
 
 template <typename Generator, typename ComplexDataType, typename RealDataType>
-void test_evaluate_bin_ops_with_mixed_datatypes(
+void test_evaluate_bin_ops_with_real_and_complex_terms(
     const gsl::not_null<Generator*> generator,
     const ComplexDataType& used_for_size_complex,
     const RealDataType& used_for_size_real,
-    const std::complex<double>& /*used_for_random_complex_number*/,
     const double used_for_random_real_number) {
   std::uniform_real_distribution<> distribution(0.1, 1.0);
   constexpr size_t Dim = 2;
@@ -188,8 +187,6 @@ void test_evaluate_bin_ops_with_mixed_datatypes(
       generator, distribution, used_for_size_complex);
   const auto real_number = make_with_random_values<double>(
       generator, distribution, used_for_random_real_number);
-  // const auto complex_number = make_with_random_values<std::complex<double>>(
-  //     generator, distribution, used_for_random_complex_number);
 
   // Tested expressions
 
@@ -198,11 +195,6 @@ void test_evaluate_bin_ops_with_mixed_datatypes(
       tenex::evaluate(complex_scalar() + real_number);
   const Scalar<ComplexDataType> real_number_plus_complex_tensor =
       tenex::evaluate(real_number + complex_scalar());
-  // decltype(result) test = "a";
-  // const Scalar<ComplexDataType> complex_number_plus_real_tensor =
-  //     tenex::evaluate(complex_number + real_scalar());
-  // const Scalar<ComplexDataType> real_tensor_plus_complex_number =
-  //     tenex::evaluate(real_scalar() + complex_number);
   const tnsr::iJ<ComplexDataType, Dim, Frame::Grid>
       complex_tensor_plus_real_tensor = tenex::evaluate<ti::i, ti::J>(
           complex_iJ(ti::i, ti::J) + real_iJ(ti::i, ti::J));
@@ -215,10 +207,6 @@ void test_evaluate_bin_ops_with_mixed_datatypes(
       tenex::evaluate(complex_scalar() - real_number);
   const Scalar<ComplexDataType> real_number_minus_complex_tensor =
       tenex::evaluate(real_number - complex_scalar());
-  // const Scalar<ComplexDataType> complex_number_minus_real_tensor =
-  //     tenex::evaluate(complex_number - real_scalar());
-  // const Scalar<ComplexDataType> real_tensor_minus_complex_number =
-  //     tenex::evaluate(real_scalar() - complex_number);
   const tnsr::iJ<ComplexDataType, Dim, Frame::Grid>
       complex_tensor_minus_real_tensor = tenex::evaluate<ti::i, ti::J>(
           complex_iJ(ti::i, ti::J) - real_iJ(ti::i, ti::J));
@@ -233,14 +221,6 @@ void test_evaluate_bin_ops_with_mixed_datatypes(
   const tnsr::iJ<ComplexDataType, Dim, Frame::Grid>
       real_number_times_complex_tensor =
           tenex::evaluate<ti::i, ti::J>(real_number * complex_Ij(ti::J, ti::i));
-  // const tnsr::iJ<ComplexDataType, Dim, Frame::Grid>
-  //     complex_number_times_real_tensor =
-  //         tenex::evaluate<ti::i, ti::J>(complex_number * real_iJ(ti::i,
-  //         ti::J));
-  // const tnsr::iJ<ComplexDataType, Dim, Frame::Grid>
-  //     real_tensor_times_complex_number =
-  //         tenex::evaluate<ti::i, ti::J>(real_Ij(ti::J, ti::i) *
-  //         complex_number);
   const tnsr::iJ<ComplexDataType, Dim, Frame::Grid>
       complex_tensor_times_real_tensor = tenex::evaluate<ti::i, ti::J>(
           complex_iJ(ti::i, ti::K) * real_iJ(ti::k, ti::J));
@@ -254,12 +234,6 @@ void test_evaluate_bin_ops_with_mixed_datatypes(
           tenex::evaluate<ti::i, ti::J>(complex_iJ(ti::i, ti::J) / real_number);
   const Scalar<ComplexDataType> real_number_over_complex_tensor =
       tenex::evaluate(real_number / complex_scalar());
-  // const Scalar<ComplexDataType> complex_number_over_real_tensor =
-  //     tenex::evaluate(complex_number / real_scalar());
-  // const tnsr::iJ<ComplexDataType, Dim, Frame::Grid>
-  //     real_tensor_over_complex_number =
-  //         tenex::evaluate<ti::i, ti::J>(real_Ij(ti::J, ti::i) /
-  //         complex_number);
   const tnsr::iJ<ComplexDataType, Dim, Frame::Grid>
       complex_tensor_over_real_tensor = tenex::evaluate<ti::i, ti::J>(
           complex_iJ(ti::i, ti::J) / real_scalar());
@@ -274,26 +248,16 @@ void test_evaluate_bin_ops_with_mixed_datatypes(
         get(complex_scalar) + real_number);
   CHECK(get(real_number_plus_complex_tensor) ==
         real_number + get(complex_scalar));
-  // CHECK(get(complex_number_plus_real_tensor) ==
-  //       complex_number + get(real_scalar));
-  // CHECK(get(real_tensor_plus_complex_number) ==
-  //       get(real_scalar) + complex_number);
 
   // subtraction
   CHECK(get(complex_tensor_minus_real_number) ==
         get(complex_scalar) - real_number);
   CHECK(get(real_number_minus_complex_tensor) ==
         real_number - get(complex_scalar));
-  // CHECK(get(complex_number_minus_real_tensor) ==
-  //       complex_number - get(real_scalar));
-  // CHECK(get(real_tensor_minus_complex_number) ==
-  //       get(real_scalar) - complex_number);
 
   // division
   CHECK(get(real_number_over_complex_tensor) ==
         real_number / get(complex_scalar));
-  // CHECK(get(complex_number_over_real_tensor) ==
-  //       complex_number / get(real_scalar));
 
   // Check rank > 0 results
   for (size_t i = 0; i < Dim; i++) {
@@ -326,10 +290,6 @@ void test_evaluate_bin_ops_with_mixed_datatypes(
             complex_iJ.get(i, j) * real_number);
       CHECK(real_number_times_complex_tensor.get(i, j) ==
             real_number * complex_Ij.get(j, i));
-      // CHECK(complex_number_times_real_tensor.get(i, j) ==
-      //       complex_number * real_iJ.get(i, j));
-      // CHECK(real_tensor_times_complex_number.get(i, j) ==
-      //       real_Ij.get(j, i) * complex_number);
       CHECK_ITERABLE_APPROX(complex_tensor_times_real_tensor.get(i, j),
                             expected_sum_complex_tensor_times_real_tensor);
       CHECK_ITERABLE_APPROX(real_tensor_times_complex_tensor.get(i, j),
@@ -338,8 +298,6 @@ void test_evaluate_bin_ops_with_mixed_datatypes(
       // division
       CHECK_ITERABLE_APPROX(complex_tensor_over_real_number.get(i, j),
                             complex_iJ.get(i, j) / real_number);
-      // CHECK_ITERABLE_APPROX(real_tensor_over_complex_number.get(i, j),
-      //                       real_Ij.get(j, i) / complex_number);
       CHECK(complex_tensor_over_real_tensor.get(i, j) ==
             complex_iJ.get(i, j) / get(real_scalar));
       CHECK(real_tensor_over_complex_tensor.get(i, j) ==
@@ -397,12 +355,10 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateComplex",
                          used_for_size_complex_datavector,
                          used_for_size_complex_datavector);
 
-  test_evaluate_bin_ops_with_mixed_datatypes(
+  test_evaluate_bin_ops_with_real_and_complex_terms(
       make_not_null(&generator), used_for_size_complex_double,
-      used_for_size_real_double, used_for_size_complex_double,
-      used_for_size_real_double);
-  test_evaluate_bin_ops_with_mixed_datatypes(
+      used_for_size_real_double, used_for_size_real_double);
+  test_evaluate_bin_ops_with_real_and_complex_terms(
       make_not_null(&generator), used_for_size_complex_datavector,
-      used_for_size_real_datavector, used_for_size_complex_double,
-      used_for_size_real_double);
+      used_for_size_real_datavector, used_for_size_real_double);
 }
