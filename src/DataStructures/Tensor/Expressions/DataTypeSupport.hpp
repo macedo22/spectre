@@ -367,11 +367,8 @@ struct tensorexpression_binop_datatypes_are_supported_impl {
 template <typename TensorExpressionType, typename NumberType>
 struct tensorexpression_binop_datatypes_are_supported_impl<
     TensorExpressionType, NumberAsExpression<NumberType>> {
-  using result_datatype =
-      typename get_binop_datatype<typename TensorExpressionType::type,
-                                  NumberType>::type;
-  using type = std::bool_constant<(
-      not std::is_same_v<result_datatype, std::false_type>)>;
+  using type = typename binop_datatypes_are_supported<
+      typename TensorExpressionType::type, NumberType>::type;
 };
 template <typename NumberType, typename TensorExpressionType>
 struct tensorexpression_binop_datatypes_are_supported_impl<
