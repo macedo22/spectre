@@ -145,6 +145,27 @@ struct lhs_datatype_is_assignable_to_rhs_datatype {
       lhs_datatype_is_assignable_to_rhs_datatype_impl<LhsDataType, RhsDataType>;
 };
 
+// TODO : remove binop_datatypes_are_supported and then anything
+// that needs to check if binop datatypes are valid can just call
+// get_binop_data_types_impl to avoid the static assert check in
+// get_binop_data_types
+
+// TODO simplify things in general by just separating into categories:
+// 1. number, make a helper struct that checks if std::complex or std::is_arithmetic
+// 2. vector, add a VectorType base class and check if base of
+// 3. else, false type
+//
+// Then, for get_bin_op, do each combo:
+// 1. number op number
+// 2. number op vector
+// 3. vector op number
+// 4. vector op vector
+//
+// Then for tensor/TE ops, need to fix data type checking in failed tests
+
+// TODO : only have one ordering of nested helper type calls to
+// reduce # of instantiations? e.g. <double, complex> and <complex, double>
+
 template <typename X1, typename X2, typename = void>
 struct binop_datatypes_are_supported_impl : std::false_type {};
 
