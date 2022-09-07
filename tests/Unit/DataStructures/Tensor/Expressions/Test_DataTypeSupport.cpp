@@ -6,7 +6,9 @@
 #include <complex>
 
 #include "DataStructures/ComplexDataVector.hpp"
+#include "DataStructures/ComplexModalVector.hpp"
 #include "DataStructures/DataVector.hpp"
+#include "DataStructures/ModalVector.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Utilities/TMPL.hpp"
 
@@ -18,6 +20,26 @@ using number_expression = tenex::NumberAsExpression<ValueType>;
 template <typename ValueType>
 using tensor_expression =
     tenex::TensorAsExpression<Scalar<ValueType>, tmpl::list<>>;
+
+template <typename T>
+void test_is_real_number(const bool real_number_expected) {
+  CHECK(tenex::detail::is_real_number<T>::value == real_number_expected);
+}
+
+template <typename T>
+void test_is_complex_number(const bool complex_number_expected) {
+  CHECK(tenex::detail::is_complex_number<T>::value == complex_number_expected);
+}
+
+template <typename T>
+void test_is_real_vector(const bool real_vector_expected) {
+  CHECK(tenex::detail::is_real_vector<T>::value == real_vector_expected);
+}
+
+template <typename T>
+void test_is_complex_vector(const bool complex_vector_expected) {
+  CHECK(tenex::detail::is_complex_vector<T>::value == complex_vector_expected);
+}
 
 template <typename T>
 void test_is_supported_tensorexpression_datatype(const bool support_expected) {
@@ -34,9 +56,8 @@ void test_lhs_datatype_is_assignable_to_rhs_datatype(
 
 template <typename X1, typename X2>
 void test_binop_datatypes_are_supported(const bool support_expected) {
-  CHECK(
-      tenex::detail::binop_datatypes_are_supported_impl<X1, X2>::type::value ==
-      support_expected);
+  CHECK(tenex::detail::binop_datatypes_are_supported<X1, X2>::type::value ==
+        support_expected);
 }
 
 template <typename X1, typename X2, typename ExpectedBinOpDataType>
@@ -62,6 +83,63 @@ void test_tensorexpression_binop_datatypes_are_supported(
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.DataTypeSupport",
                   "[DataStructures][Unit]") {
+  // Test
+  test_is_real_number<double>(true);
+  test_is_real_number<int>(true);
+  test_is_real_number<float>(true);
+  test_is_real_number<std::complex<double>>(false);
+  test_is_real_number<std::complex<int>>(false);
+  test_is_real_number<std::complex<float>>(false);
+  test_is_real_number<DataVector>(false);
+  test_is_real_number<ComplexDataVector>(false);
+  test_is_real_number<ModalVector>(false);
+  test_is_real_number<ComplexModalVector>(false);
+  test_is_real_number<std::string>(false);
+  test_is_real_number<ArbitraryType>(false);
+
+  test_is_complex_number<double>(false);
+  test_is_complex_number<int>(false);
+  test_is_complex_number<float>(false);
+  test_is_complex_number<std::complex<double>>(true);
+  test_is_complex_number<std::complex<int>>(true);
+  test_is_complex_number<std::complex<float>>(true);
+  test_is_complex_number<DataVector>(false);
+  test_is_complex_number<ComplexDataVector>(false);
+  test_is_complex_number<ModalVector>(false);
+  test_is_complex_number<ComplexModalVector>(false);
+  test_is_complex_number<std::string>(false);
+  test_is_complex_number<ArbitraryType>(false);
+
+  test_is_real_vector<double>(false);
+  test_is_real_vector<int>(false);
+  test_is_real_vector<float>(false);
+  test_is_real_vector<std::complex<double>>(false);
+  test_is_real_vector<std::complex<int>>(false);
+  test_is_real_vector<std::complex<float>>(false);
+  test_is_real_vector<DataVector>(true);
+  test_is_real_vector<ComplexDataVector>(false);
+  test_is_real_vector<ModalVector>(true);
+  test_is_real_vector<ComplexModalVector>(false);
+  test_is_real_vector<std::string>(false);
+  test_is_real_vector<ArbitraryType>(false);
+
+  test_is_complex_vector<double>(false);
+  test_is_complex_vector<int>(false);
+  test_is_complex_vector<float>(false);
+  test_is_complex_vector<std::complex<double>>(false);
+  test_is_complex_vector<std::complex<int>>(false);
+  test_is_complex_vector<std::complex<float>>(false);
+  test_is_complex_vector<DataVector>(false);
+  test_is_complex_vector<ComplexDataVector>(true);
+  test_is_complex_vector<ModalVector>(false);
+  test_is_complex_vector<ComplexModalVector>(true);
+  test_is_complex_vector<std::string>(false);
+  test_is_complex_vector<ArbitraryType>(false);
+
+  //   CHECK(not tenex::detail::is_vector<double>::value);
+  //   CHECK(tenex::detail::is_vector<DataVector>::value);
+  //   CHECK(tenex::detail::is_vector<VectorImpl<double, DataVector>>::value);
+
   // Test is_supported_tensorexpression_datatype
   test_is_supported_tensorexpression_datatype<double>(true);
   test_is_supported_tensorexpression_datatype<std::complex<double>>(true);
