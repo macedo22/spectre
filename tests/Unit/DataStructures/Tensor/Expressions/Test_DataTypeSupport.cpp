@@ -40,11 +40,6 @@ void test_is_supported_tensorexpression_datatype(const bool support_expected) {
         support_expected);
 }
 
-template <typename T>
-void test_is_number(const bool expected) {
-  CHECK(tenex::detail::is_number<T>::value == expected);
-}
-
 template <typename T, bool Expected>
 void test_is_vector() {
   // Tested at compile time because upcast_if_derived_vector_type is used by
@@ -157,24 +152,6 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.DataTypeSupport",
   test_is_supported_tensorexpression_datatype<ModalVector>(false);
   test_is_supported_tensorexpression_datatype<ComplexModalVector>(false);
   test_is_supported_tensorexpression_datatype<ArbitraryType>(false);
-
-  // Test helper function that determines if a type is a numeric type
-
-  test_is_number<double>(true);
-  test_is_number<int>(true);
-  test_is_number<float>(true);
-  test_is_number<std::complex<double>>(true);
-  test_is_number<std::complex<int>>(true);
-  test_is_number<std::complex<float>>(true);
-  test_is_number<DataVector>(false);
-  test_is_number<VectorImpl<double, DataVector>>(false);
-  test_is_number<ComplexDataVector>(false);
-  test_is_number<VectorImpl<std::complex<double>, ComplexDataVector>>(false);
-  test_is_number<ModalVector>(false);
-  test_is_number<VectorImpl<double, ModalVector>>(false);
-  test_is_number<ComplexModalVector>(false);
-  test_is_number<VectorImpl<std::complex<double>, ComplexModalVector>>(false);
-  test_is_number<ArbitraryType>(false);
 
   // Test helper function that determines if a type is a `VectorImpl` type
 

@@ -466,61 +466,38 @@ SPECTRE_ALWAYS_INLINE auto operator*(
 /// @{
 /// \ingroup TensorExpressionsGroup
 /// \brief Returns the tensor expression representing the product of a tensor
-/// expression and a `double`
+/// expression and a number
 ///
-/// \tparam T the derived TensorExpression type of the tensor expression operand
-/// of the product
-/// \tparam X the type of data stored in the tensor expression operand of the
-/// product
-/// \tparam ArgsList the TensorIndexs of the tensor expression operand of the
-/// product
 /// \param t the tensor expression operand of the product
-/// \param number the `double` operand of the product
-/// \return the tensor expression representing the product of a tensor
-/// expression and a `double`
-template <typename T, typename X, typename ArgsList>
+/// \param number the numeric operand of the product
+/// \return the tensor expression representing the product of the tensor
+/// expression and the number
+template <typename T, typename N, Requires<std::is_arithmetic_v<N>> = nullptr>
 SPECTRE_ALWAYS_INLINE auto operator*(
-    const TensorExpression<T, X, typename T::symmetry, typename T::index_list,
-                           ArgsList>& t,
-    const double number) {
+    const TensorExpression<T, typename T::type, typename T::symmetry,
+                           typename T::index_list, typename T::args_list>& t,
+    const N number) {
   return t * tenex::NumberAsExpression(number);
 }
-template <typename T, typename X, typename ArgsList>
+template <typename T, typename N, Requires<std::is_arithmetic_v<N>> = nullptr>
 SPECTRE_ALWAYS_INLINE auto operator*(
-    const double number,
-    const TensorExpression<T, X, typename T::symmetry, typename T::index_list,
-                           ArgsList>& t) {
+    const N number,
+    const TensorExpression<T, typename T::type, typename T::symmetry,
+                           typename T::index_list, typename T::args_list>& t) {
   return t * tenex::NumberAsExpression(number);
 }
-/// @}
-
-/// @{
-/// \ingroup TensorExpressionsGroup
-/// \brief Returns the tensor expression representing the product of a tensor
-/// expression and a `std::complex<double>`
-///
-/// \tparam T the derived TensorExpression type of the tensor expression operand
-/// of the product
-/// \tparam X the type of data stored in the tensor expression operand of the
-/// product
-/// \tparam ArgsList the TensorIndexs of the tensor expression operand of the
-/// product
-/// \param t the tensor expression operand of the product
-/// \param number the `std::complex<double>` operand of the product
-/// \return the tensor expression representing the product of a tensor
-/// expression and a `std::complex<double>`
-template <typename T, typename X, typename ArgsList>
+template <typename T, typename N>
 SPECTRE_ALWAYS_INLINE auto operator*(
-    const TensorExpression<T, X, typename T::symmetry, typename T::index_list,
-                           ArgsList>& t,
-    const std::complex<double>& number) {
+    const TensorExpression<T, typename T::type, typename T::symmetry,
+                           typename T::index_list, typename T::args_list>& t,
+    const std::complex<N>& number) {
   return t * tenex::NumberAsExpression(number);
 }
-template <typename T, typename X, typename ArgsList>
+template <typename T, typename N>
 SPECTRE_ALWAYS_INLINE auto operator*(
-    const std::complex<double>& number,
-    const TensorExpression<T, X, typename T::symmetry, typename T::index_list,
-                           ArgsList>& t) {
+    const std::complex<N>& number,
+    const TensorExpression<T, typename T::type, typename T::symmetry,
+                           typename T::index_list, typename T::args_list>& t) {
   return t * tenex::NumberAsExpression(number);
 }
 /// @}

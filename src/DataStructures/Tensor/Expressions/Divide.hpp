@@ -20,6 +20,7 @@
 #include "Utilities/ForceInline.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/MakeArray.hpp"
+#include "Utilities/Requires.hpp"
 #include "Utilities/TMPL.hpp"
 
 namespace tenex {
@@ -342,72 +343,54 @@ SPECTRE_ALWAYS_INLINE auto operator/(
   return tenex::Divide<T1, T2, Args2...>(~t1, ~t2);
 }
 
+/// @{
 /// \ingroup TensorExpressionsGroup
 /// \brief Returns the tensor expression representing the quotient of a tensor
-/// expression over a `double`
+/// expression over a number
 ///
 /// \note The implementation instead uses the operation, `t * (1.0 / number)`
 ///
 /// \param t the tensor expression operand of the quotient
-/// \param number the `double` operand of the quotient
-/// \return the tensor expression representing the quotient of a tensor
-/// expression and a `double`
-template <typename T>
+/// \param number the numeric operand of the quotient
+/// \return the tensor expression representing the quotient of the tensor
+/// expression over the number
+template <typename T, typename N, Requires<std::is_arithmetic_v<N>> = nullptr>
 SPECTRE_ALWAYS_INLINE auto operator/(
     const TensorExpression<T, typename T::type, typename T::symmetry,
                            typename T::index_list, typename T::args_list>& t,
-    const double number) {
+    const N number) {
   return t * tenex::NumberAsExpression(1.0 / number);
 }
+template <typename T, typename N>
+SPECTRE_ALWAYS_INLINE auto operator/(
+    const TensorExpression<T, typename T::type, typename T::symmetry,
+                           typename T::index_list, typename T::args_list>& t,
+    const std::complex<N>& number) {
+  return t * tenex::NumberAsExpression(1.0 / number);
+}
+/// @}
 
+/// @{
 /// \ingroup TensorExpressionsGroup
-/// \brief Returns the tensor expression representing the quotient of a `double`
+/// \brief Returns the tensor expression representing the quotient of a number
 /// over a tensor expression that evaluates to a rank 0 tensor
 ///
-/// \param number the `double` numerator of the quotient
+/// \param number the numeric numerator of the quotient
 /// \param t the tensor expression denominator of the quotient
-/// \return the tensor expression representing the quotient of a `double` over a
-/// tensor expression that evaluates to a rank 0 tensor
-template <typename T>
+/// \return the tensor expression representing the quotient of the number over
+/// the tensor expression
+template <typename T, typename N, Requires<std::is_arithmetic_v<N>> = nullptr>
 SPECTRE_ALWAYS_INLINE auto operator/(
-    const double number,
+    const N number,
     const TensorExpression<T, typename T::type, typename T::symmetry,
                            typename T::index_list, typename T::args_list>& t) {
   return tenex::NumberAsExpression(number) / t;
 }
-
-/// \ingroup TensorExpressionsGroup
-/// \brief Returns the tensor expression representing the quotient of a tensor
-/// expression over a `std::complex<double>`
-///
-/// \note The implementation instead uses the operation, `t * (1.0 / number)`
-///
-/// \param t the tensor expression operand of the quotient
-/// \param number the `std::complex<double>` operand of the quotient
-/// \return the tensor expression representing the quotient of a tensor
-/// expression and a `std::complex<double>`
-template <typename T>
+template <typename T, typename N>
 SPECTRE_ALWAYS_INLINE auto operator/(
-    const TensorExpression<T, typename T::type, typename T::symmetry,
-                           typename T::index_list, typename T::args_list>& t,
-    const std::complex<double>& number) {
-  return t * tenex::NumberAsExpression(1.0 / number);
-}
-
-/// \ingroup TensorExpressionsGroup
-/// \brief Returns the tensor expression representing the quotient of a
-/// `std::complex<double>` over a tensor expression that evaluates to a rank 0
-/// tensor
-///
-/// \param number the `std::complex<double>` numerator of the quotient
-/// \param t the tensor expression denominator of the quotient
-/// \return the tensor expression representing the quotient of a
-/// `std::complex<double>` over a tensor expression that evaluates to a rank 0
-/// tensor
-template <typename T>
-SPECTRE_ALWAYS_INLINE auto operator/(
-    const std::complex<double>& number,
+    const std::complex<N>& number,
     const TensorExpression<T, typename T::type, typename T::symmetry,
                            typename T::index_list, typename T::args_list>& t) {
   return tenex::NumberAsExpression(number) / t;
 }
+/// @}

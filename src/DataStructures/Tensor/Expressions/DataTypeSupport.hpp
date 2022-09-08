@@ -6,16 +6,20 @@
 /// and other type-specific properties and configuration for `TensorExpression`s
 ///
 /// \details
-/// To add support for a data type, modify the templates in this file and add
-/// tests as necessary
+/// To add support for a data type, modify the templates in this file and the
+/// arithmetic operator overloads as necessary. Then, add tests as appropriate.
 
 #pragma once
 
 #include <complex>
+#include <cstddef>
 #include <limits>
+#include <type_traits>
 
 #include "DataStructures/ComplexDataVector.hpp"
+#include "DataStructures/ComplexModalVector.hpp"
 #include "DataStructures/DataVector.hpp"
+#include "DataStructures/ModalVector.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/VectorImpl.hpp"
 
@@ -61,30 +65,14 @@ using is_supported_tensor_datatype = std::bool_constant<
 ///
 /// \details
 /// See `is_supported_number_datatype` and `is_supported_tensor_datatype` for
-/// details
+/// which numeric types and which `Tensor` types can be the types of the terms
+/// in `TensorExpression`s
 ///
 /// \tparam X the `Tensor` data type
 template <typename X>
 using is_supported_tensorexpression_datatype =
     std::bool_constant<is_supported_tensor_datatype<X>::value or
                        is_supported_number_datatype<X>::value>;
-
-/// \brief Whether or not the given type is a number
-///
-/// \tparam T the given type
-template <typename T>
-struct is_number_impl;
-
-template <typename T>
-struct is_number_impl : std::is_arithmetic<T> {};
-template <typename T>
-struct is_number_impl<std::complex<T>> : std::true_type {};
-
-/// \brief Whether or not the given type is a number
-///
-/// \tparam T the given type
-template <typename T>
-using is_number = is_number_impl<T>;
 
 /// \brief Whether or not the given type is a `VectorImpl` type
 ///
@@ -153,7 +141,7 @@ struct is_complex_datatype_of_impl<typename ComplexModalVector::BaseType,
 /// given type
 ///
 /// \details
-/// See `is_complex_datatype_of_impl` for details
+/// See `is_complex_datatype_of_impl` for which pairings are defined
 ///
 /// \tparam MaybeComplexDataType the given type to check for being the complex
 /// partner to the other type
@@ -206,7 +194,8 @@ struct lhs_datatype_is_assignable_to_rhs_datatype_impl<
 /// `TensorExpression`s
 ///
 /// \details
-/// See `lhs_datatype_is_assignable_to_rhs_datatype_impl` for details
+/// See `lhs_datatype_is_assignable_to_rhs_datatype_impl` for which assignments
+/// are permitted
 ///
 /// \tparam LhsDataType the type being assigned
 /// \tparam RhsDataType the type to assign the `LhsDataType` to
@@ -317,7 +306,8 @@ struct get_binop_datatype_impl<typename DataVector::BaseType,
 /// that may occur in a `TensorExpression`
 ///
 /// \details
-/// See `get_binop_datatype_impl` for details
+/// See `get_binop_datatype_impl` for which data type combinations have a
+/// defined result type
 ///
 /// \tparam X1 the data type of one operand
 /// \tparam X2 the data type of the other operand
@@ -338,7 +328,8 @@ struct get_binop_datatype {
 /// operations with the given types within `TensorExpression`
 ///
 /// \details
-/// See `get_binop_datatype_impl` for details
+/// See `get_binop_datatype_impl` for which data type combinations have a
+/// defined result type
 ///
 /// \tparam X1 the data type of one operand
 /// \tparam X2 the data type of the other operand
@@ -381,7 +372,8 @@ struct tensor_binop_datatypes_are_supported_impl
 /// operations with `Tensor`s with the given types within `TensorExpression`s
 ///
 /// \details
-/// See `tensor_binop_datatypes_are_supported_impl` for details
+/// See `tensor_binop_datatypes_are_supported_impl` for which data type
+/// combinations are permitted
 ///
 /// \tparam X1 the data type of one `Tensor` operand
 /// \tparam X2 the data type of the other `Tensor` operand
@@ -456,7 +448,8 @@ struct tensorexpression_binop_datatypes_are_supported_impl<
 /// operations with `TensorExpression`s, based on their data types
 ///
 /// \details
-/// See `tensorexpression_binop_datatypes_are_supported_impl` for details
+/// See `tensorexpression_binop_datatypes_are_supported_impl` for which data
+/// type combinations are permitted
 ///
 /// \tparam T1 the first `TensorExpression` operand
 /// \tparam T2 the second `TensorExpression` operand

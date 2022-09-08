@@ -870,7 +870,7 @@ SPECTRE_ALWAYS_INLINE auto operator+(
 /// @{
 /// \ingroup TensorExpressionsGroup
 /// \brief Returns the tensor expression representing the sum of a tensor
-/// expression and a `double`
+/// expression and a number
 ///
 /// \details
 /// The tensor expression operand must represent an expression that, when
@@ -882,25 +882,16 @@ SPECTRE_ALWAYS_INLINE auto operator+(
 /// - `(R(ti::A, ti::B) * S(ti::a, ti::b))`
 /// - `R(ti::t, ti::t)`
 ///
-/// \tparam T the derived TensorExpression type of the tensor expression operand
-/// of the sum
-/// \tparam X the type of data stored in the tensor expression operand of the
-/// sum
-/// \tparam Symm the ::Symmetry of the derived TensorExpression type of the
-/// tensor expression operand of the sum
-/// \tparam IndexList the \ref SpacetimeIndex "TensorIndexType"s of the derived
-/// TensorExpression type of the tensor expression operand of the sum
-/// \tparam Args the comma-separated list of generic indices of the derived
-/// TensorExpression type of the tensor expression operand of the sum
 /// \param t the tensor expression operand of the sum
-/// \param number the `double` operand of the sum
-/// \return the tensor expression representing the sum of a tensor expression
-/// and a `double`
+/// \param number the numeric operand of the sum
+/// \return the tensor expression representing the sum of the tensor expression
+/// and the number
 template <typename T, typename X, typename Symm, typename IndexList,
-          typename... Args>
+          typename... Args, typename N,
+          Requires<std::is_arithmetic_v<N>> = nullptr>
 SPECTRE_ALWAYS_INLINE auto operator+(
     const TensorExpression<T, X, Symm, IndexList, tmpl::list<Args...>>& t,
-    const double number) {
+    const N number) {
   static_assert(
       (... and tt::is_time_index<Args>::value),
       "Can only add a number to a tensor expression that evaluates to a rank 0"
@@ -908,9 +899,10 @@ SPECTRE_ALWAYS_INLINE auto operator+(
   return t + tenex::NumberAsExpression(number);
 }
 template <typename T, typename X, typename Symm, typename IndexList,
-          typename... Args>
+          typename... Args, typename N,
+          Requires<std::is_arithmetic_v<N>> = nullptr>
 SPECTRE_ALWAYS_INLINE auto operator+(
-    const double number,
+    const N number,
     const TensorExpression<T, X, Symm, IndexList, tmpl::list<Args...>>& t) {
   static_assert(
       (... and tt::is_time_index<Args>::value),
@@ -918,42 +910,11 @@ SPECTRE_ALWAYS_INLINE auto operator+(
       "tensor.");
   return t + tenex::NumberAsExpression(number);
 }
-/// @}
-
-/// @{
-/// \ingroup TensorExpressionsGroup
-/// \brief Returns the tensor expression representing the sum of a tensor
-/// expression and a `std::complex<double>`
-///
-/// \details
-/// The tensor expression operand must represent an expression that, when
-/// evaluated, would be a rank 0 tensor. For example, if `R` and `S` are
-/// Tensors, here is a non-exhaustive list of some of the acceptable forms that
-/// the tensor expression operand could take:
-/// - `R()`
-/// - `R(ti::A, ti::a)`
-/// - `(R(ti::A, ti::B) * S(ti::a, ti::b))`
-/// - `R(ti::t, ti::t)`
-///
-/// \tparam T the derived TensorExpression type of the tensor expression operand
-/// of the sum
-/// \tparam X the type of data stored in the tensor expression operand of the
-/// sum
-/// \tparam Symm the ::Symmetry of the derived TensorExpression type of the
-/// tensor expression operand of the sum
-/// \tparam IndexList the \ref SpacetimeIndex "TensorIndexType"s of the derived
-/// TensorExpression type of the tensor expression operand of the sum
-/// \tparam Args the comma-separated list of generic indices of the derived
-/// TensorExpression type of the tensor expression operand of the sum
-/// \param t the tensor expression operand of the sum
-/// \param number the `std::complex<double>` operand of the sum
-/// \return the tensor expression representing the sum of a tensor expression
-/// and a `std::complex<double>`
 template <typename T, typename X, typename Symm, typename IndexList,
-          typename... Args>
+          typename... Args, typename N>
 SPECTRE_ALWAYS_INLINE auto operator+(
     const TensorExpression<T, X, Symm, IndexList, tmpl::list<Args...>>& t,
-    const std::complex<double>& number) {
+    const std::complex<N>& number) {
   static_assert(
       (... and tt::is_time_index<Args>::value),
       "Can only add a number to a tensor expression that evaluates to a rank 0"
@@ -961,9 +922,9 @@ SPECTRE_ALWAYS_INLINE auto operator+(
   return t + tenex::NumberAsExpression(number);
 }
 template <typename T, typename X, typename Symm, typename IndexList,
-          typename... Args>
+          typename... Args, typename N>
 SPECTRE_ALWAYS_INLINE auto operator+(
-    const std::complex<double>& number,
+    const std::complex<N>& number,
     const TensorExpression<T, X, Symm, IndexList, tmpl::list<Args...>>& t) {
   static_assert(
       (... and tt::is_time_index<Args>::value),
@@ -1000,7 +961,7 @@ SPECTRE_ALWAYS_INLINE auto operator-(
 /// @{
 /// \ingroup TensorExpressionsGroup
 /// \brief Returns the tensor expression representing the difference of a tensor
-/// expression and a `double`
+/// expression and a number
 ///
 /// \details
 /// The tensor expression operand must represent an expression that, when
@@ -1012,25 +973,16 @@ SPECTRE_ALWAYS_INLINE auto operator-(
 /// - `(R(ti::A, ti::B) * S(ti::a, ti::b))`
 /// - `R(ti::t, ti::t)`
 ///
-/// \tparam T the derived TensorExpression type of the tensor expression operand
-/// of the difference
-/// \tparam X the type of data stored in the tensor expression operand of the
-/// difference
-/// \tparam Symm the ::Symmetry of the derived TensorExpression type of the
-/// tensor expression operand of the difference
-/// \tparam IndexList the \ref SpacetimeIndex "TensorIndexType"s of the derived
-/// TensorExpression type of the tensor expression operand of the difference
-/// \tparam Args the comma-separated list of generic indices of the derived
-/// TensorExpression type of the tensor expression operand of the difference
 /// \param t the tensor expression operand of the difference
-/// \param number the `double` operand of the difference
-/// \return the tensor expression representing the difference of a tensor
-/// expression and a `double`
+/// \param number the numeric operand of the difference
+/// \return the tensor expression representing the difference of the tensor
+/// expression and the number
 template <typename T, typename X, typename Symm, typename IndexList,
-          typename... Args>
+          typename... Args, typename N,
+          Requires<std::is_arithmetic_v<N>> = nullptr>
 SPECTRE_ALWAYS_INLINE auto operator-(
     const TensorExpression<T, X, Symm, IndexList, tmpl::list<Args...>>& t,
-    const double number) {
+    const N number) {
   static_assert(
       (... and tt::is_time_index<Args>::value),
       "Can only subtract a number from a tensor expression that evaluates to a "
@@ -1038,9 +990,10 @@ SPECTRE_ALWAYS_INLINE auto operator-(
   return t + tenex::NumberAsExpression(-number);
 }
 template <typename T, typename X, typename Symm, typename IndexList,
-          typename... Args>
+          typename... Args, typename N,
+          Requires<std::is_arithmetic_v<N>> = nullptr>
 SPECTRE_ALWAYS_INLINE auto operator-(
-    const double number,
+    const N number,
     const TensorExpression<T, X, Symm, IndexList, tmpl::list<Args...>>& t) {
   static_assert(
       (... and tt::is_time_index<Args>::value),
@@ -1048,42 +1001,11 @@ SPECTRE_ALWAYS_INLINE auto operator-(
       "rank 0 tensor.");
   return tenex::NumberAsExpression(number) - t;
 }
-/// @}
-
-/// @{
-/// \ingroup TensorExpressionsGroup
-/// \brief Returns the tensor expression representing the difference of a tensor
-/// expression and a `std::complex<double>`
-///
-/// \details
-/// The tensor expression operand must represent an expression that, when
-/// evaluated, would be a rank 0 tensor. For example, if `R` and `S` are
-/// Tensors, here is a non-exhaustive list of some of the acceptable forms that
-/// the tensor expression operand could take:
-/// - `R()`
-/// - `R(ti::A, ti::a)`
-/// - `(R(ti::A, ti::B) * S(ti::a, ti::b))`
-/// - `R(ti::t, ti::t)`
-///
-/// \tparam T the derived TensorExpression type of the tensor expression operand
-/// of the difference
-/// \tparam X the type of data stored in the tensor expression operand of the
-/// difference
-/// \tparam Symm the ::Symmetry of the derived TensorExpression type of the
-/// tensor expression operand of the difference
-/// \tparam IndexList the \ref SpacetimeIndex "TensorIndexType"s of the derived
-/// TensorExpression type of the tensor expression operand of the difference
-/// \tparam Args the comma-separated list of generic indices of the derived
-/// TensorExpression type of the tensor expression operand of the difference
-/// \param t the tensor expression operand of the difference
-/// \param number the `std::complex<double>` operand of the difference
-/// \return the tensor expression representing the difference of a tensor
-/// expression and a `std::complex<double>`
 template <typename T, typename X, typename Symm, typename IndexList,
-          typename... Args>
+          typename... Args, typename N>
 SPECTRE_ALWAYS_INLINE auto operator-(
     const TensorExpression<T, X, Symm, IndexList, tmpl::list<Args...>>& t,
-    const std::complex<double>& number) {
+    const std::complex<N>& number) {
   static_assert(
       (... and tt::is_time_index<Args>::value),
       "Can only subtract a number from a tensor expression that evaluates to a "
@@ -1091,9 +1013,9 @@ SPECTRE_ALWAYS_INLINE auto operator-(
   return t + tenex::NumberAsExpression(-number);
 }
 template <typename T, typename X, typename Symm, typename IndexList,
-          typename... Args>
+          typename... Args, typename N>
 SPECTRE_ALWAYS_INLINE auto operator-(
-    const std::complex<double>& number,
+    const std::complex<N>& number,
     const TensorExpression<T, X, Symm, IndexList, tmpl::list<Args...>>& t) {
   static_assert(
       (... and tt::is_time_index<Args>::value),
