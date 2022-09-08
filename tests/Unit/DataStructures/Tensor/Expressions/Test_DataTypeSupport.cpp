@@ -1,6 +1,10 @@
 // Distributed under the MIT License.
 // See LICENSE.txt for details.
 
+// \file
+// Tests data-type specific properties and configuration within
+// `TensorExpression`s
+
 #include "Framework/TestingFramework.hpp"
 
 #include <complex>
@@ -22,36 +26,43 @@ template <typename ValueType>
 using tensor_expression =
     tenex::TensorAsExpression<Scalar<ValueType>, tmpl::list<>>;
 
-template <typename T>
-void test_is_supported_number_datatype(const bool support_expected) {
-  CHECK(tenex::detail::is_supported_number_datatype<T>::value ==
-        support_expected);
+template <typename T, bool Expected>
+void test_is_supported_number_datatype() {
+  // Tested at compile time so other tests can use this
+  static_assert(
+      tenex::detail::is_supported_number_datatype<T>::value == Expected,
+      "Test for tenex::detail::test_is_supported_number_datatype failed.");
 }
 
-template <typename T>
-void test_is_supported_tensor_datatype(const bool support_expected) {
-  CHECK(tenex::detail::is_supported_tensor_datatype<T>::value ==
-        support_expected);
+template <typename T, bool Expected>
+void test_is_supported_tensor_datatype() {
+  // Tested at compile time so other tests can use this
+  static_assert(
+      tenex::detail::is_supported_tensor_datatype<T>::value == Expected,
+      "Test for tenex::detail::test_is_supported_tensor_datatype failed.");
 }
 
-template <typename T>
-void test_is_supported_tensorexpression_datatype(const bool support_expected) {
-  CHECK(tenex::detail::is_supported_tensorexpression_datatype<T>::value ==
-        support_expected);
+template <typename T, bool Expected>
+void test_is_supported_tensorexpression_datatype() {
+  // Tested at compile time so other tests can use this
+  static_assert(
+      tenex::detail::is_supported_tensorexpression_datatype<T>::value ==
+          Expected,
+      "Test for tenex::detail::test_is_supported_tensorexpression_datatype "
+      "failed.");
 }
 
 template <typename T, bool Expected>
 void test_is_vector() {
-  // Tested at compile time because upcast_if_derived_vector_type is used by
-  // other tests and relies on is_vector
+  // Tested at compile time so upcast_if_derived_vector_type can be used by
+  // other tests, since upcast_if_derived_vector_type relies on is_vector
   static_assert(tenex::detail::is_vector<T>::value == Expected,
                 "Test for tenex::detail::is_vector failed.");
 }
 
 template <typename T, typename Expected>
 void test_upcast_if_derived_vector_type() {
-  // Tested at compile time because upcast_if_derived_vector_type is used by
-  // other tests
+  // Tested at compile time so other tests can use this
   static_assert(
       std::is_same_v<
           typename tenex::detail::upcast_if_derived_vector_type<T>::type,
@@ -111,47 +122,47 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.DataTypeSupport",
   // Test which numeric types can and can't appear as terms in
   // `TensorExpression`s
 
-  test_is_supported_number_datatype<double>(true);
-  test_is_supported_number_datatype<int>(false);
-  test_is_supported_number_datatype<float>(false);
-  test_is_supported_number_datatype<std::complex<double>>(true);
-  test_is_supported_number_datatype<std::complex<int>>(false);
-  test_is_supported_number_datatype<std::complex<float>>(false);
-  test_is_supported_number_datatype<DataVector>(false);
-  test_is_supported_number_datatype<ComplexDataVector>(false);
-  test_is_supported_number_datatype<ModalVector>(false);
-  test_is_supported_number_datatype<ComplexModalVector>(false);
-  test_is_supported_number_datatype<ArbitraryType>(false);
+  test_is_supported_number_datatype<double, true>();
+  test_is_supported_number_datatype<int, false>();
+  test_is_supported_number_datatype<float, false>();
+  test_is_supported_number_datatype<std::complex<double>, true>();
+  test_is_supported_number_datatype<std::complex<int>, false>();
+  test_is_supported_number_datatype<std::complex<float>, false>();
+  test_is_supported_number_datatype<DataVector, false>();
+  test_is_supported_number_datatype<ComplexDataVector, false>();
+  test_is_supported_number_datatype<ModalVector, false>();
+  test_is_supported_number_datatype<ComplexModalVector, false>();
+  test_is_supported_number_datatype<ArbitraryType, false>();
 
   // Test which types can and can't appear as a `Tensor`s data type in a
   // `TensorExpression`
 
-  test_is_supported_tensor_datatype<double>(true);
-  test_is_supported_tensor_datatype<int>(false);
-  test_is_supported_tensor_datatype<float>(false);
-  test_is_supported_tensor_datatype<std::complex<double>>(true);
-  test_is_supported_tensor_datatype<std::complex<int>>(false);
-  test_is_supported_tensor_datatype<std::complex<float>>(false);
-  test_is_supported_tensor_datatype<DataVector>(true);
-  test_is_supported_tensor_datatype<ComplexDataVector>(true);
-  test_is_supported_tensor_datatype<ModalVector>(false);
-  test_is_supported_tensor_datatype<ComplexModalVector>(false);
-  test_is_supported_tensor_datatype<ArbitraryType>(false);
+  test_is_supported_tensor_datatype<double, true>();
+  test_is_supported_tensor_datatype<int, false>();
+  test_is_supported_tensor_datatype<float, false>();
+  test_is_supported_tensor_datatype<std::complex<double>, true>();
+  test_is_supported_tensor_datatype<std::complex<int>, false>();
+  test_is_supported_tensor_datatype<std::complex<float>, false>();
+  test_is_supported_tensor_datatype<DataVector, true>();
+  test_is_supported_tensor_datatype<ComplexDataVector, true>();
+  test_is_supported_tensor_datatype<ModalVector, false>();
+  test_is_supported_tensor_datatype<ComplexModalVector, false>();
+  test_is_supported_tensor_datatype<ArbitraryType, false>();
 
   // Test which types can and can't appear as a data type for a
   // `TensorExpression`
 
-  test_is_supported_tensorexpression_datatype<double>(true);
-  test_is_supported_tensorexpression_datatype<int>(false);
-  test_is_supported_tensorexpression_datatype<float>(false);
-  test_is_supported_tensorexpression_datatype<std::complex<double>>(true);
-  test_is_supported_tensorexpression_datatype<std::complex<int>>(false);
-  test_is_supported_tensorexpression_datatype<std::complex<float>>(false);
-  test_is_supported_tensorexpression_datatype<DataVector>(true);
-  test_is_supported_tensorexpression_datatype<ComplexDataVector>(true);
-  test_is_supported_tensorexpression_datatype<ModalVector>(false);
-  test_is_supported_tensorexpression_datatype<ComplexModalVector>(false);
-  test_is_supported_tensorexpression_datatype<ArbitraryType>(false);
+  test_is_supported_tensorexpression_datatype<double, true>();
+  test_is_supported_tensorexpression_datatype<int, false>();
+  test_is_supported_tensorexpression_datatype<float, false>();
+  test_is_supported_tensorexpression_datatype<std::complex<double>, true>();
+  test_is_supported_tensorexpression_datatype<std::complex<int>, false>();
+  test_is_supported_tensorexpression_datatype<std::complex<float>, false>();
+  test_is_supported_tensorexpression_datatype<DataVector, true>();
+  test_is_supported_tensorexpression_datatype<ComplexDataVector, true>();
+  test_is_supported_tensorexpression_datatype<ModalVector, false>();
+  test_is_supported_tensorexpression_datatype<ComplexModalVector, false>();
+  test_is_supported_tensorexpression_datatype<ArbitraryType, false>();
 
   // Test helper function that determines if a type is a `VectorImpl` type
 
