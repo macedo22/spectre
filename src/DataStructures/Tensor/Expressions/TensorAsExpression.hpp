@@ -188,7 +188,7 @@ struct TensorAsExpression<Tensor<X, Symm<SymmValues...>, IndexList<Indices...>>,
                                   Symm<SymmValues...>, IndexList<Indices...>,
                                   ArgsList<Args...>>::type,
                               IndexList<Indices...>, ArgsList<Args...>> {
-  static_assert(detail::is_supported_tensorexpression_datatype<X>::type::value,
+  static_assert(detail::is_supported_tensorexpression_datatype<X>::value,
                 "TensorExpressions currently only support Tensors whose data "
                 "type is double, std::complex<double> DataVector, or "
                 "ComplexDataVector. It is possible to add support for other "

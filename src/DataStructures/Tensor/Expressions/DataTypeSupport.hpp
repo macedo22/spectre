@@ -16,120 +16,21 @@
 
 namespace tenex {
 namespace detail {
-template <typename X>
-struct is_supported_tensorexpression_datatype {
-  using type = std::bool_constant<
-      std::is_same_v<X, double> or std::is_same_v<X, std::complex<double>> or
-      std::is_same_v<X, DataVector> or std::is_same_v<X, ComplexDataVector>>;
-};
-
-template <typename T, typename = void>
-struct is_complex_number : std::false_type {};
-template <typename T>
-struct is_complex_number<std::complex<T>> : std::true_type {};
-
-template <typename T>
-using is_real_number = std::bool_constant<(std::is_arithmetic_v<T>)>;
-
-template <typename T>
-using is_number = std::bool_constant<(is_real_number<T>::value or
-                                      is_complex_number<T>::value)>;
-
+/// \brief Whether or not the given type is a `VectorImpl` type
+///
+/// \tparam T the given type
 template <typename T>
 using is_vector = std::bool_constant<std::is_base_of_v<MarkAsVectorImpl, T>>;
 
-template <typename T>
-using is_number_or_vector =
-    std::bool_constant<is_number<T>::value or is_vector<T>::value>;
-
-// template <typename T, Requires<is_vector<T>::value> = nullptr>
-// struct is_real_vector_impl {
-//   using type =
-//       std::bool_constant<is_vector<T>::value and
-//                          is_real_number<typename T::value_type>::value>;
-// };
-
-// template <typename T, Requires<not is_vector<T>::value> = nullptr>
-// struct is_real_vector_impl {
-//   using type = std::bool_constant<false>;
-// };
-
-// template <typename T>
-// using is_real_vector = typename is_real_vector_impl<T>::type;
-
-template <typename T, Requires<is_vector<T>::value> = nullptr>
-constexpr bool is_real_vector_impl() {
-  return is_real_number<typename T::value_type>::value;
-}
-
-template <typename T, Requires<not is_vector<T>::value> = nullptr>
-constexpr bool is_real_vector_impl() {
-  return false;
-}
-
-template <typename T>
-using is_real_vector = std::bool_constant<is_real_vector_impl<T>()>;
-
-// template <typename T, Requires<is_vector<T>::value> = nullptr>
-// struct is_complex_vector_impl {
-//   using type = std::bool_constant<is_vector<T>::value and
-//                                   is_complex_number<typename
-//                                   T::value_type>::value>;
-// };
-
-// template <typename T, Requires<not is_vector<T>::value> = nullptr>
-// struct is_complex_vector_impl {
-//   using type = std::bool_constant<false>;
-// };
-
-// template <typename T>
-// using is_complex_vector = typename is_complex_vector_impl<T>::type;
-
-template <typename T, Requires<is_vector<T>::value> = nullptr>
-constexpr bool is_complex_vector_impl() {
-  return is_complex_number<typename T::value_type>::value;
-}
-
-template <typename T, Requires<not is_vector<T>::value> = nullptr>
-constexpr bool is_complex_vector_impl() {
-  return false;
-}
-
-template <typename T>
-using is_complex_vector = std::bool_constant<is_complex_vector_impl<T>()>;
-
-template <typename T>
-using is_real = std::bool_constant<is_real_number<T>::value or is_real_vector_impl<T>()>;
-
-template <typename T>
-using is_complex = std::bool_constant<is_complex_number<T>::value or is_complex_vector_impl<T>()>;
-
-template <typename MaybeComplexDataType, typename DataType, typename = void>
-struct is_complex_datatype_of : std::false_type {};
-template <typename T>
-struct is_complex_datatype_of<std::complex<T>, T> : std::true_type {};
-template <>
-struct is_complex_datatype_of<ComplexDataVector, DataVector> : std::true_type {
-};
-template <>
-struct is_complex_datatype_of<ComplexModalVector, ModalVector>
-    : std::true_type {};
-// template <>
-// struct is_complex_datatype_of<typename ComplexDataVector::BaseType,
-//                               typename DataVector::BaseType> : std::true_type
-//                               {
-// };
-// template <>
-// struct is_complex_datatype_of<typename ComplexModalVector::BaseType,
-//                               typename ModalVector::BaseType> :
-//                               std::true_type {
-// };
-
+/// @{
+/// \brief If the given type is a derived `VectorImpl` type, get the base
+/// `VectorImpl` type, else return the given type
+///
+/// \tparam T the given type
 template <typename T, typename = void>
 struct upcast_if_derived_vector_type {
   using type = T;
 };
-
 template <typename T>
 struct upcast_if_derived_vector_type<
     T, typename std::enable_if<is_vector<T>::value>::type> {
@@ -139,6 +40,375 @@ struct upcast_if_derived_vector_type<
   using type =
       tmpl::conditional_t<std::is_base_of_v<MarkAsVectorImpl, upcasted_type>,
                           upcasted_type, T>;
+};
+/// @}
+
+/// \brief Whether or not a given type is the complex-valued parter to another
+/// given type
+///
+/// \details
+/// This is used to define pairings between complex-valued types and their
+/// real-valued counterparts. For example, `std::complex<double>`'s
+/// real-valued partner is `double` and `ComplexDataVector`'s real-valued
+/// partner is `DataVector`. Keeping track of this is useful in determining
+/// which operations can and can't be performed in `TensorExpression`s.
+///
+/// To make `TensorExpression`s aware of a new pairing, modify a current
+/// template specialization or add a new one.
+///
+/// \tparam MaybeComplexDataType the given type to check for being the complex
+/// partner to the other type
+/// \tparam OtherDataType the other type
+template <typename MaybeComplexDataType, typename OtherDataType>
+struct is_complex_datatype_of_impl;
+
+/// No template specialization was matched, so it's not a known pairing
+template <typename MaybeComplexDataType, typename OtherDataType>
+struct is_complex_datatype_of_impl : std::false_type {};
+/// std::complex<T> is the complex type to T
+template <typename T>
+struct is_complex_datatype_of_impl<std::complex<T>, T> : std::true_type {};
+/// ComplexDataVector is the complex type to DataVector
+template <>
+struct is_complex_datatype_of_impl<typename ComplexDataVector::BaseType,
+                                   typename DataVector::BaseType>
+    : std::true_type {};
+/// ComplexModalVector is the complex type to ModalVector
+template <>
+struct is_complex_datatype_of_impl<typename ComplexModalVector::BaseType,
+                                   typename ModalVector::BaseType>
+    : std::true_type {};
+
+/// \brief Whether or not a given type is the complex-valued parter to another
+/// given type
+///
+/// \details
+/// See `is_complex_datatype_of_impl` for details
+///
+/// \tparam MaybeComplexDataType the given type to check for being the complex
+/// partner to the other type
+/// \tparam OtherDataType the other type
+template <typename MaybeComplexDataType, typename OtherDataType>
+using is_complex_datatype_of = is_complex_datatype_of_impl<
+    typename upcast_if_derived_vector_type<MaybeComplexDataType>::type,
+    typename upcast_if_derived_vector_type<OtherDataType>::type>;
+
+/// \brief Whether or not `Tensor`s with the data type are currently supported
+/// by `TensorExpression`s
+///
+/// \details
+/// To add support for a new `TensorExpression` data type:
+/// - modify this alias to include the new data type
+/// - modify other templates in this file as necessary to accommodate your data
+/// type's properties for assignment and arithmetic
+/// - add tests for new data type
+///     - test templates in this file with new data type
+///     - test actual tensor expressions with new data type
+///
+/// \tparam X the `Tensor` data type
+template <typename X>
+using is_supported_tensorexpression_datatype = std::bool_constant<
+    std::is_same_v<X, double> or std::is_same_v<X, std::complex<double>> or
+    std::is_same_v<X, DataVector> or std::is_same_v<X, ComplexDataVector>>;
+
+/// \brief Whether or not a given type is assignable to another within
+/// `TensorExpression`s
+///
+/// \details
+/// This is used to define which types can be assigned to which when evaluating
+/// the result of a `TensorExpression`. For example, you can assign a
+/// `ComplexDataVector` to a `DataVector`, but not vice versa.
+///
+/// To make `TensorExpression`s aware of a new pairing, modify a current
+/// template specialization or add a new one.
+///
+/// \tparam LhsDataType the type being assigned
+/// \tparam RhsDataType the type to assign the `LhsDataType` to
+template <typename LhsDataType, typename RhsDataType>
+struct lhs_datatype_is_assignable_to_rhs_datatype_impl;
+
+/// No template specialization was matched, so it's not a known pairing
+template <typename LhsDataType, typename RhsDataType>
+struct lhs_datatype_is_assignable_to_rhs_datatype_impl
+    : std::bool_constant<(
+          is_complex_datatype_of_impl<LhsDataType, RhsDataType>::value)> {};
+/// Can assign a type to itself
+template <typename X>
+struct lhs_datatype_is_assignable_to_rhs_datatype_impl<X, X> : std::true_type {
+};
+/// Can assign a `VectorImpl` to its value type, e.g. can assign a `DataVector`
+/// to a `double`
+template <typename ValueType, typename VectorType>
+struct lhs_datatype_is_assignable_to_rhs_datatype_impl<
+    VectorImpl<ValueType, VectorType>, ValueType> : std::true_type {};
+/// Can assign a complex-valued `VectorImpl` to its real component's type, e.g.
+/// can assign a `ComplexDataVector` to a `double` because the underlying type
+/// of `ComplexDataVector` is `std::complex<double>`, whose real component is a
+/// `double`
+template <typename ValueType, typename VectorType>
+struct lhs_datatype_is_assignable_to_rhs_datatype_impl<
+    VectorImpl<std::complex<ValueType>, VectorType>, ValueType>
+    : std::true_type {};
+
+/// \brief Whether or not a given type is assignable to another within
+/// `TensorExpression`s
+///
+/// \details
+/// See `lhs_datatype_is_assignable_to_rhs_datatype_impl` for details
+///
+/// \tparam LhsDataType the type being assigned
+/// \tparam RhsDataType the type to assign the `LhsDataType` to
+template <typename LhsDataType, typename RhsDataType>
+struct lhs_datatype_is_assignable_to_rhs_datatype {
+  static_assert(
+      is_supported_tensorexpression_datatype<LhsDataType>::value and
+          is_supported_tensorexpression_datatype<RhsDataType>::value,
+      "Cannot assign the LHS Tensor's data type to the RHS TensorExpression's "
+      "data type because at least one of the data types is not supported by "
+      "TensorExpressions. See "
+      "tenex::detail::is_supported_tensorexpression_datatype.");
+  using type = lhs_datatype_is_assignable_to_rhs_datatype_impl<
+      typename upcast_if_derived_vector_type<LhsDataType>::type,
+      typename upcast_if_derived_vector_type<RhsDataType>::type>;
+};
+
+/// \brief Get the data type of a binary operation between two data types
+/// that may occur in a `TensorExpression`
+///
+/// \details
+/// This is used to define the resulting types of binary arithmetic operations
+/// within `TensorExpression`s, e.g. `double OP double = double` and
+/// `ComplexDataVector OP DataVector = ComplexDataVector`.
+///
+/// To make `TensorExpression`s aware of a new pairing, modify a current
+/// template specialization or add a new one.
+///
+/// \tparam X1 the data type of one operand
+/// \tparam X2 the data type of the other operand
+template <typename X1, typename X2>
+struct get_binop_datatype_impl;
+
+/// No template specialization was matched, so it's not a known pairing
+template <typename X1, typename X2>
+struct get_binop_datatype_impl {
+  using type = std::bool_constant<false>;
+};
+/// A binary operation between two terms of the same type will yield a result
+/// with that type
+template <typename X>
+struct get_binop_datatype_impl<X, X> {
+  using type = X;
+};
+/// A binary operation between two `VectorImpl`s of the same type will
+/// yield the shared derived `VectorImpl`, e.g.
+/// `DataVector OP DataVector = DataVector`
+template <typename ValueType, typename VectorType>
+struct get_binop_datatype_impl<VectorImpl<ValueType, VectorType>,
+                               VectorImpl<ValueType, VectorType>> {
+  using type = VectorType;
+};
+/// @{
+/// A binary operation between a type `T` and `std::complex<T>` yields a
+/// `std::complex<T>`
+template <typename T>
+struct get_binop_datatype_impl<T, std::complex<T>> {
+  using type = std::complex<T>;
+};
+template <typename T>
+struct get_binop_datatype_impl<std::complex<T>, T> {
+  using type = std::complex<T>;
+};
+/// @}
+/// @{
+/// A binary operation between a `VectorImpl` and its underlying value type
+/// yields the `VectorImpl`, e.g. `DataVector OP double = DataVector`
+template <typename ValueType, typename VectorType>
+struct get_binop_datatype_impl<VectorImpl<ValueType, VectorType>, ValueType> {
+  using type = VectorType;
+};
+template <typename ValueType, typename VectorType>
+struct get_binop_datatype_impl<ValueType, VectorImpl<ValueType, VectorType>> {
+  using type = VectorType;
+};
+/// @}
+/// @{
+/// A binary operation between a complex-valued `VectorImpl` and its real
+/// component's type yields the `VectorImpl`, e.g.
+/// `ComplexDataVector OP double = ComplexDataVector`
+template <typename ValueType, typename VectorType>
+struct get_binop_datatype_impl<VectorImpl<std::complex<ValueType>, VectorType>,
+                               ValueType> {
+  using type = VectorType;
+};
+template <typename ValueType, typename VectorType>
+struct get_binop_datatype_impl<
+    ValueType, VectorImpl<std::complex<ValueType>, VectorType>> {
+  using type = VectorType;
+};
+/// @}
+/// @{
+/// A binary operation between a `DataVector` and a `ComplexDataVector` yields a
+/// `ComplexDataVector`
+template <>
+struct get_binop_datatype_impl<typename ComplexDataVector::BaseType,
+                               typename DataVector::BaseType> {
+  using type = ComplexDataVector;
+};
+template <>
+struct get_binop_datatype_impl<typename DataVector::BaseType,
+                               typename ComplexDataVector::BaseType> {
+  using type = ComplexDataVector;
+};
+/// @}
+
+/// \brief Get the data type of a binary operation between two data types
+/// that may occur in a `TensorExpression`
+///
+/// \details
+/// See `get_binop_datatype_impl` for details
+///
+/// \tparam X1 the data type of one operand
+/// \tparam X2 the data type of the other operand
+template <typename X1, typename X2>
+struct get_binop_datatype {
+  using type = typename get_binop_datatype_impl<
+      typename upcast_if_derived_vector_type<X1>::type,
+      typename upcast_if_derived_vector_type<X2>::type>::type;
+
+  static_assert(
+      not std::is_same_v<type, std::bool_constant<false>>,
+      "You are attempting to perform a binary arithmetic operation between "
+      "two data types, but the data type of the result is not known within "
+      "TensorExpressions. See tenex::detail::get_binop_datatype_impl.");
+};
+
+/// \brief Whether or not it is permitted to perform binary arithmetic
+/// operations with the given types within `TensorExpression`
+///
+/// \details
+/// See `get_binop_datatype_impl` for details
+///
+/// \tparam X1 the data type of one operand
+/// \tparam X2 the data type of the other operand
+template <typename X1, typename X2>
+struct binop_datatypes_are_supported {
+  using type = std::bool_constant<not std::is_same_v<
+      typename get_binop_datatype_impl<
+          typename upcast_if_derived_vector_type<X1>::type,
+          typename upcast_if_derived_vector_type<X2>::type>::type,
+      std::bool_constant<false>>>;
+};
+
+/// \brief Whether or not it is permitted to perform binary arithmetic
+/// operations with `Tensor`s with the given types within `TensorExpression`s
+///
+/// \details
+/// This is used to define which data types can be contained by the two
+/// `Tensor`s in a binary operation, e.g.
+/// `Tensor<ComplexDataVector>() OP Tensor<DataVector>()` is permitted, but
+/// `Tensor<DataVector>() OP Tensor<double>()` is not.
+///
+/// To make `TensorExpression`s aware of a new pairing, modify a current
+/// template specialization or add a new one.
+///
+/// \tparam X1 the data type of one `Tensor` operand
+/// \tparam X2 the data type of the other `Tensor` operand
+template <typename X1, typename X2>
+struct tensor_binop_datatypes_are_supported_impl;
+
+/// Can only do `Tensor<X1>() OP Tensor<X2>()` if `X1 == X2` or if `X1` and
+/// `X2` are real/complex partners like `DataVector` and `ComplexDataVector`
+/// (see `is_complex_datatype_of_impl`)
+template <typename X1, typename X2>
+struct tensor_binop_datatypes_are_supported_impl
+    : std::bool_constant<(std::is_same_v<X1, X2> or
+                          is_complex_datatype_of<X1, X2>::value or
+                          is_complex_datatype_of<X2, X1>::value)> {};
+
+/// \brief Whether or not it is permitted to perform binary arithmetic
+/// operations with `Tensor`s with the given types within `TensorExpression`s
+///
+/// \details
+/// See `tensor_binop_datatypes_are_supported_impl` for details
+///
+/// \tparam X1 the data type of one `Tensor` operand
+/// \tparam X2 the data type of the other `Tensor` operand
+template <typename X1, typename X2>
+struct tensor_binop_datatypes_are_supported {
+  static_assert(
+      is_supported_tensorexpression_datatype<X1>::value and
+          is_supported_tensorexpression_datatype<X2>::value,
+      "Cannot perform binary operations between the two Tensors with the "
+      "given data types because at least one of the data types is not "
+      "supported by TensorExpressions. See "
+      "tenex::detail::is_supported_tensorexpression_datatype.");
+  using type = typename tensor_binop_datatypes_are_supported_impl<X1, X2>::type;
+};
+
+/// \brief Whether or not it is permitted to perform binary arithmetic
+/// operations with `TensorExpression`s, based on their data types
+///
+/// \details
+/// This is used to define which data types can be contained by the two
+/// `TensorExpression`s in a binary operation, e.g.
+/// `Tensor<DataVector>() OP double` abd
+/// `Tensor<ComplexDataVector>() OP Tensor<DataVector>()` are permitted, but
+/// `Tensor<DataVector>() OP Tensor<double>()` is not. This differs from
+/// `tensor_binop_datatypes_are_supported` in that
+/// `tensorexpression_binop_datatypes_are_supported_impl` handles all derived
+/// `TensorExpression` types, whether they represent `Tensor`s or numbers.
+/// `tensor_binop_datatypes_are_supported` only handles the cases where both
+/// `TensorExpression`s represent `Tensor`s.
+///
+/// To make `TensorExpression`s aware of a new pairing, modify a current
+/// template specialization or add a new one.
+///
+/// \tparam T1 the first `TensorExpression` operand
+/// \tparam T2 the second `TensorExpression` operand
+template <typename T1, typename T2>
+struct tensorexpression_binop_datatypes_are_supported_impl;
+
+/// Since `T1` and `T2` represent `Tensor`s, check if we can do
+/// `Tensor<T1::type>() OP Tensor<T2::type>()`
+template <typename T1, typename T2>
+struct tensorexpression_binop_datatypes_are_supported_impl {
+  using type = typename tensor_binop_datatypes_are_supported_impl<
+      typename T1::type, typename T2::type>::type;
+};
+/// @{
+/// Can do `Tensor<X>() OP NUMBER` if we can do `X OP NUMBER`
+template <typename TensorExpressionType, typename NumberType>
+struct tensorexpression_binop_datatypes_are_supported_impl<
+    TensorExpressionType, NumberAsExpression<NumberType>> {
+  using type = std::bool_constant<binop_datatypes_are_supported<
+      typename TensorExpressionType::type, NumberType>::type::value>;
+};
+template <typename NumberType, typename TensorExpressionType>
+struct tensorexpression_binop_datatypes_are_supported_impl<
+    NumberAsExpression<NumberType>, TensorExpressionType> {
+  using type = typename tensorexpression_binop_datatypes_are_supported_impl<
+      TensorExpressionType, NumberAsExpression<NumberType>>::type;
+};
+/// @}
+
+/// \brief Whether or not it is permitted to perform binary arithmetic
+/// operations with `TensorExpression`s, based on their data types
+///
+/// \details
+/// See `tensorexpression_binop_datatypes_are_supported_impl` for details
+///
+/// \tparam T1 the first `TensorExpression` operand
+/// \tparam T2 the second `TensorExpression` operand
+template <typename T1, typename T2>
+struct tensorexpression_binop_datatypes_are_supported {
+  static_assert(
+      std::is_base_of_v<Expression, T1> and std::is_base_of_v<Expression, T2>,
+      "Template arguments to "
+      "tenex::detail::tensorexpression_binop_datatypes_are_supported must be "
+      "TensorExpressions.");
+  using type =
+      typename tensorexpression_binop_datatypes_are_supported_impl<T1,
+                                                                   T2>::type;
 };
 
 /// \brief The maximum number of arithmetic tensor operations allowed in a
@@ -206,464 +476,5 @@ struct max_num_ops_in_sub_expression_impl<ComplexDataVector> {
 template <typename DataType>
 inline constexpr size_t max_num_ops_in_sub_expression =
     max_num_ops_in_sub_expression_impl<DataType>::value;
-
-// TODO : update this documentation
-// For any `T1`, `T2` that does not match a specialization below, binary
-// operations between the two types is said to be undefined. To add support for
-// binary operations between two data types, define a new specialization with
-// a `type` alias to the resulting data type.
-template <typename X1, typename X2, typename = void>
-struct lhs_datatype_is_assignable_to_rhs_datatype_impl : std::false_type {};
-
-// A binary operation between two terms of the same type will yield a result
-// with that type
-template <typename X>
-struct lhs_datatype_is_assignable_to_rhs_datatype_impl<X, X> : std::true_type {
-};
-
-// A binary operation between a `double` and `std::complex<double>` will yield a
-// `std::complex<double>` result
-template <typename T>
-struct lhs_datatype_is_assignable_to_rhs_datatype_impl<std::complex<T>, T>
-    : std::true_type {};
-
-template <typename ValueType, typename VectorType>
-struct lhs_datatype_is_assignable_to_rhs_datatype_impl<
-    VectorImpl<ValueType, VectorType>, ValueType> : std::true_type {};
-
-template <typename ValueType, typename VectorType>
-struct lhs_datatype_is_assignable_to_rhs_datatype_impl<
-    VectorImpl<std::complex<ValueType>, VectorType>, ValueType>
-    : std::true_type {};
-
-template <>
-struct lhs_datatype_is_assignable_to_rhs_datatype_impl<
-    typename ComplexDataVector::BaseType, typename DataVector::BaseType>
-    : std::true_type {};
-
-// // template <>
-// // struct lhs_datatype_is_assignable_to_rhs_datatype_impl<DataVector, double>
-// //     : std::true_type {};
-
-// // A binary operation between a `VectorImpl` type and its `value_type` will
-// // yield a result with the `VectorImpl` type, e.g. adding a `DataVector` and
-// a
-// // `double` is defined and the result is a `DataVector`
-// template <>
-// struct lhs_datatype_is_assignable_to_rhs_datatype_impl<ComplexDataVector,
-//                                                        double>
-//     : std::true_type {};
-
-// template <>
-// struct lhs_datatype_is_assignable_to_rhs_datatype_impl<ComplexDataVector,
-//                                                        std::complex<double>>
-//     : std::true_type {};
-
-// // A binary operation between a `ComplexDataVector` and `DataVector` will
-// yield
-// // a `ComplexDataVector` result
-// template <>
-// struct lhs_datatype_is_assignable_to_rhs_datatype_impl<ComplexDataVector,
-//                                                        DataVector>
-//     : std::true_type {};
-
-// template <typename X1, typename X2, typename = void>
-// struct lhs_datatype_is_assignable_to_rhs_datatype_impl : std::false_type {};
-
-// // template <typename X1, typename X2>
-// // struct lhs_datatype_is_assignable_to_rhs_datatype_impl<X1, X2,
-// Requires<(is_vector<X1>::value and not is_vector<X2>::value)>> :
-// std::false_type {};
-
-// // template <typename X1, typename X2>
-// // struct lhs_datatype_is_assignable_to_rhs_datatype_impl<X1, X2,
-// Requires<(not is_vector<X1>::value and is_vector<X2>::value)>> :
-// std::false_type {};
-
-// // template <typename X1, typename X2>
-// // struct lhs_datatype_is_assignable_to_rhs_datatype_impl<X1, X2,
-// Requires<(not is_vector<X1>::value and not is_vector<X2>::value)>> :
-// std::false_type {};
-
-// // template <typename X1, typename X2>
-// // struct lhs_datatype_is_assignable_to_rhs_datatype_impl<X1, X2,
-// Requires<(is_vector<X1>::value is_vector<X2>::value)>> : std::false_type {};
-
-// template <typename X>
-// struct lhs_datatype_is_assignable_to_rhs_datatype_impl<X, X> : std::true_type
-// {};
-
-// template <typename T>
-// struct lhs_datatype_is_assignable_to_rhs_datatype_impl<std::complex<T>, T> :
-// std::true_type {};
-
-// template <typename X1, typename X2>
-// struct lhs_datatype_is_assignable_to_rhs_datatype_impl<X1, X2, typename
-// std::enable_if<is_vector<X1>::value>::type> :
-//     std::bool_constant<(std::is_same_v<typename X1::value_type, X2> or
-//     std::is_same_v<typename X1::value_type, std::complex<X2>> or
-//                         is_complex_datatype_of<X1, X2>::value)> {};
-
-// template <typename X1, typename X2>
-// struct lhs_datatype_is_assignable_to_rhs_datatype_impl<X1, X2, typename
-// std::enable_if<not std::is_same_v<X1, X2> and not
-// is_vector<X1>::value>::type> :
-//     std::false_type {};
-
-template <typename LhsDataType, typename RhsDataType>
-struct lhs_datatype_is_assignable_to_rhs_datatype {
-  static_assert(
-      is_supported_tensorexpression_datatype<LhsDataType>::type::value and
-          is_supported_tensorexpression_datatype<RhsDataType>::type::value,
-      "Cannot assign the LHS Tensor's data type to the RHS TensorExpression's "
-      "data type because at least one of the data types is not supported by "
-      "TensorExpressions.");
-  using type = lhs_datatype_is_assignable_to_rhs_datatype_impl<
-      typename upcast_if_derived_vector_type<LhsDataType>::type,
-      typename upcast_if_derived_vector_type<RhsDataType>::type>;
-};
-
-// TODO : remove binop_datatypes_are_supported and then anything
-// that needs to check if binop datatypes are valid can just call
-// get_binop_data_types_impl to avoid the static assert check in
-// get_binop_data_types
-
-// TODO simplify things in general by just separating into categories:
-// 1. number, make a helper struct that checks if std::complex or std::is_arithmetic
-// 2. vector, add a VectorType base class and check if base of
-// 3. else, false type
-//
-// Then, for get_bin_op, do each combo:
-// 1. number op number
-// 2. number op vector
-// 3. vector op number
-// 4. vector op vector
-//
-// Then for tensor/TE ops, need to fix data type checking in failed tests
-
-// TODO : only have one ordering of nested helper type calls to
-// reduce # of instantiations? e.g. <double, complex> and <complex, double>
-
-// template <typename X1, typename X2, typename = void>
-// struct binop_datatypes_are_supported_impl : std::false_type {};
-
-// template <typename X>
-// struct binop_datatypes_are_supported_impl<X, X> : std::true_type {};
-
-// template <typename ValueType>
-// struct binop_datatypes_are_supported_impl<ValueType, std::complex<ValueType>>
-//     : std::true_type {};
-// template <typename ValueType>
-// struct binop_datatypes_are_supported_impl<std::complex<ValueType>, ValueType>
-//     : std::true_type {};
-
-// template <>
-// struct binop_datatypes_are_supported_impl<DataVector, double> :
-// std::true_type {
-// };
-// template <>
-// struct binop_datatypes_are_supported_impl<double, DataVector> :
-// std::true_type {
-// };
-
-// template <>
-// struct binop_datatypes_are_supported_impl<ComplexDataVector, double>
-//     : std::true_type {};
-// template <>
-// struct binop_datatypes_are_supported_impl<double, ComplexDataVector>
-//     : std::true_type {};
-
-// template <typename ValueType>
-// struct binop_datatypes_are_supported_impl<ComplexDataVector,
-//                                           std::complex<ValueType>>
-//     : std::true_type {};
-// template <typename ValueType>
-// struct binop_datatypes_are_supported_impl<std::complex<ValueType>,
-//                                           ComplexDataVector> : std::true_type
-//                                           {
-// };
-
-// template <>
-// struct binop_datatypes_are_supported_impl<ComplexDataVector, DataVector>
-//     : std::true_type {};
-// template <>
-// struct binop_datatypes_are_supported_impl<DataVector, ComplexDataVector>
-//     : std::true_type {};
-
-// template <typename X1, typename X2>
-// struct binop_datatypes_are_supported {
-//   static_assert(
-//       is_supported_tensorexpression_datatype<X1>::type::value and
-//           is_supported_tensorexpression_datatype<X2>::type::value,
-//       "Cannot perform binary operations between the two given data types "
-//       "because at least one of the data types is not supported by "
-//       "TensorExpressions.");
-//   using type =
-//       std::bool_constant<(binop_datatypes_are_supported_impl<X1,
-//       X2>::value)>;
-// };
-
-// For any `X1`, `X2` that does not match a specialization below, binary
-// operations between the two types is said to be undefined. To add support for
-// binary operations between two data types, define a new specialization with
-// a `type` alias to the resulting data type.
-// template <typename X1, typename X2,
-//           Requires<not is_number_or_vector<X1>::value or
-//                    not is_number_or_vector<X1>::value> = nullptr>
-// struct get_binop_datatype_impl {
-//   using type = std::bool_constant<false>;
-// };
-
-// template <typename X1, typename X2,
-//           Requires<is_number_or_vector<X1>::value and
-//                    is_number_or_vector<X1>::value> = nullptr>
-// struct get_binop_datatype_impl {
-//   using type = std::bool_constant<false>;
-// };
-
-template <typename X1, typename X2, typename = void>
-struct get_binop_datatype_impl {
-  using type = std::bool_constant<false>;
-};
-
-// A binary operation between two terms of the same type will yield a result
-// with that type
-template <typename X>
-struct get_binop_datatype_impl<X, X> {
-  using type = X;
-};
-
-template <typename ValueType, typename VectorType>
-struct get_binop_datatype_impl<VectorImpl<ValueType, VectorType>,
-                               VectorImpl<ValueType, VectorType>> {
-  using type = VectorType;
-};
-
-template <typename ValueType>
-struct get_binop_datatype_impl<ValueType, std::complex<ValueType>> {
-  using type = std::complex<ValueType>;
-};
-template <typename ValueType>
-struct get_binop_datatype_impl<std::complex<ValueType>, ValueType> {
-  using type = std::complex<ValueType>;
-};
-
-template <typename ValueType, typename VectorType>
-struct get_binop_datatype_impl<VectorImpl<ValueType, VectorType>, ValueType> {
-  using type = VectorType;
-};
-template <typename ValueType, typename VectorType>
-struct get_binop_datatype_impl<ValueType, VectorImpl<ValueType, VectorType>> {
-  using type = VectorType;
-};
-
-template <typename ValueType, typename VectorType>
-struct get_binop_datatype_impl<VectorImpl<std::complex<ValueType>, VectorType>,
-                               ValueType> {
-  using type = VectorType;
-};
-template <typename ValueType, typename VectorType>
-struct get_binop_datatype_impl<
-    ValueType, VectorImpl<std::complex<ValueType>, VectorType>> {
-  using type = VectorType;
-};
-
-template <>
-struct get_binop_datatype_impl<typename ComplexDataVector::BaseType,
-                               typename DataVector::BaseType> {
-  using type = ComplexDataVector;
-};
-template <>
-struct get_binop_datatype_impl<typename DataVector::BaseType,
-                               typename ComplexDataVector::BaseType> {
-  using type = ComplexDataVector;
-};
-
-// // A binary operation between a `VectorImpl` type and its `value_type` will
-// // yield a result with the `VectorImpl` type, e.g. adding a `DataVector` and
-// a
-// // `double` is defined and the result is a `DataVector`
-// template <>
-// struct get_binop_datatype_impl<DataVector, double> {
-//   using type = DataVector;
-// };
-// template <>
-// struct get_binop_datatype_impl<double, DataVector> {
-//   using type = DataVector;
-// };
-
-// // A binary operation between a `ComplexDataVector` and `double` will yield a
-// // `ComplexDataVector` result
-// template <>
-// struct get_binop_datatype_impl<ComplexDataVector, double> {
-//   using type = ComplexDataVector;
-// };
-// template <>
-// struct get_binop_datatype_impl<double, ComplexDataVector> {
-//   using type = ComplexDataVector;
-// };
-
-// template <>
-// struct get_binop_datatype_impl<ComplexDataVector, std::complex<double>> {
-//   using type = ComplexDataVector;
-// };
-// template <>
-// struct get_binop_datatype_impl<std::complex<double>, ComplexDataVector> {
-//   using type = ComplexDataVector;
-// };
-
-// // A binary operation between a `ComplexDataVector` and `DataVector` will
-// yield
-// // a `ComplexDataVector` result
-// template <>
-// struct get_binop_datatype_impl<ComplexDataVector, DataVector> {
-//   using type = ComplexDataVector;
-// };
-// template <>
-// struct get_binop_datatype_impl<DataVector, ComplexDataVector> {
-//   using type = ComplexDataVector;
-// };
-
-template <typename X1, typename X2>
-struct binop_datatypes_are_supported {
-  using type = std::bool_constant<not std::is_same_v<
-      typename get_binop_datatype_impl<
-          typename upcast_if_derived_vector_type<X1>::type,
-          typename upcast_if_derived_vector_type<X2>::type>::type,
-      std::bool_constant<false>>>;
-};
-
-/// \brief Get the data type of a binary operation between two data types
-/// that may occur in a `TensorExpression`
-///
-/// \tparam X1 the data type of one operand
-/// \tparam X2 the data type of the other operand
-template <typename X1, typename X2>
-struct get_binop_datatype {
-  using type = typename get_binop_datatype_impl<
-      typename upcast_if_derived_vector_type<X1>::type,
-      typename upcast_if_derived_vector_type<X2>::type>::type;
-
-  static_assert(
-      not std::is_same_v<type, std::bool_constant<false>>,
-      "You are attempting to perform a binary arithmetic operation between "
-      "two data types, but the data type of the result is not known within "
-      "TensorExpressions.");
-};
-
-// // For any `T1`, `T2` that does not match a specialization below, binary
-// // operations between the two types is said to be undefined. To add support
-// for
-// // binary operations between two data types, define a new specialization with
-// // a `type` alias to the resulting data type.
-// template <typename X1, typename X2, typename = void>
-// struct tensor_binop_datatypes_are_supported_impl :
-// std::bool_constant<(is_complex_datatype_of<X1, X2>::value or
-// is_complex_datatype_of<X1, X2>::value)> {};
-
-// // A binary operation between two terms of the same type will yield a result
-// // with that type
-// template <typename X>
-// struct tensor_binop_datatypes_are_supported_impl<X, X> : std::true_type {};
-
-// // A binary operation between a `double` and `std::complex<double>` will
-// yield a
-// // `std::complex<double>` result
-// template <typename T>
-// struct tensor_binop_datatypes_are_supported_impl<T, std::complex<T>>
-//     : std::true_type {};
-// template <typename T>
-// struct tensor_binop_datatypes_are_supported_impl<std::complex<T>, T>
-//     : std::true_type {};
-
-// // A binary operation between a `VectorImpl` type and its `value_type` will
-// // yield a result with the `VectorImpl` type, e.g. adding a `DataVector` and
-// a
-// // `double` is defined and the result is a `DataVector`
-// template <typename ValueType, typename VectorType>
-// struct tensor_binop_datatypes_are_supported_impl<
-//     VectorImpl<ValueType, VectorType>, ValueType> : std::true_type {};
-// template <typename ValueType, typename VectorType>
-// struct tensor_binop_datatypes_are_supported_impl<
-//     ValueType, VectorImpl<ValueType, VectorType>> : std::true_type {};
-
-// // A binary operation between a `ComplexDataVector` and `DataVector` will
-// yield
-// // a `ComplexDataVector` result
-// template <>
-// struct tensor_binop_datatypes_are_supported_impl<ComplexDataVector,
-// DataVector>
-//     : std::true_type {};
-// template <>
-// struct tensor_binop_datatypes_are_supported_impl<DataVector,
-// ComplexDataVector>
-//     : std::true_type {};
-template <typename X1, typename X2>
-struct tensor_binop_datatypes_are_supported_impl
-    : std::bool_constant<(std::is_same_v<X1, X2> or
-                          is_complex_datatype_of<X1, X2>::value or
-                          is_complex_datatype_of<X2, X1>::value)> {};
-
-// TODO : define the valid bin_ops in each bin_op file but reduce this
-// helper to just checking which TENSOR expression bin op data types are ok
-/// \brief Check whether or not a binary operation between two
-/// `TensorExpression`s is valid
-///
-/// \details This is different from `get_binop_datatype` in that while it may
-/// be possible to perform a binary operation between two data types such as
-/// `double` and `DataVector`, it may not be valid to perform a binary operation
-/// between two `TensorExpression`s with those data types. For example,
-/// `TensorAsExpression<double, ...> + TensorAsExpression<DataVector, ...>` is
-/// not valid even though it is a valid C++ operation to do
-/// `double + DataVector`. Alternatively, it is valid to do
-/// `NumberAsExpression + TensorAsExpression<DataVector, ...>`.
-///
-/// \tparam X1 TODO
-/// \tparam X2 TODO
-template <typename X1, typename X2>
-struct tensor_binop_datatypes_are_supported {
-  static_assert(
-      is_supported_tensorexpression_datatype<X1>::type::value and
-          is_supported_tensorexpression_datatype<X2>::type::value,
-      "Cannot perform binary operations between the two Tensors with the "
-      "given data types because at least one of the data types is not "
-      "supported by TensorExpressions.");
-  using type = typename tensor_binop_datatypes_are_supported_impl<X1, X2>::type;
-};
-
-template <typename T1, typename T2>
-struct tensorexpression_binop_datatypes_are_supported_impl {
-  using type =
-      typename tensor_binop_datatypes_are_supported<typename T1::type,
-                                                    typename T2::type>::type;
-};
-
-template <typename TensorExpressionType, typename NumberType>
-struct tensorexpression_binop_datatypes_are_supported_impl<
-    TensorExpressionType, NumberAsExpression<NumberType>> {
-  using type = std::bool_constant<(binop_datatypes_are_supported<
-      typename TensorExpressionType::type, NumberType>::type::value and
-      not (is_real<typename TensorExpressionType::type>::value and is_complex<NumberType>::value))>;
-};
-template <typename NumberType, typename TensorExpressionType>
-struct tensorexpression_binop_datatypes_are_supported_impl<
-    NumberAsExpression<NumberType>, TensorExpressionType> {
-  using type = typename tensorexpression_binop_datatypes_are_supported_impl<
-      TensorExpressionType, NumberAsExpression<NumberType>>::type;
-};
-
-template <typename T1, typename T2>
-struct tensorexpression_binop_datatypes_are_supported {
-  static_assert(
-      is_supported_tensorexpression_datatype<typename T1::type>::type::value and
-          is_supported_tensorexpression_datatype<
-              typename T2::type>::type::value,
-      "Cannot perform binary operations between the two TensorExpressions with "
-      "the given data types because at least one of the data types is not "
-      "supported by TensorExpressions.");
-  using type =
-      typename tensorexpression_binop_datatypes_are_supported_impl<T1,
-                                                                   T2>::type;
-};
 }  // namespace detail
 }  // namespace tenex
