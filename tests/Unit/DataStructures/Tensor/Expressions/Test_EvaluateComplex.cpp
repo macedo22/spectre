@@ -48,6 +48,7 @@ void check_values_equal<ComplexDataVector, DataVector>(
   }
 }
 
+// Test evaluation of a single RHS term to a LHS `Tensor`
 template <typename Generator, typename LhsDataType, typename RhsDataType>
 void test_evaluate_without_ops(const gsl::not_null<Generator*> generator,
                                const LhsDataType& used_for_size_lhs,
@@ -83,6 +84,7 @@ void test_evaluate_without_ops(const gsl::not_null<Generator*> generator,
   }
 }
 
+// Test evaluation of a RHS `TensorExpression` to a LHS `Tensor`
 template <typename Generator, typename LhsDataType, typename RhsDataType>
 void test_evaluate_with_ops(const gsl::not_null<Generator*> generator,
                             const LhsDataType& used_for_size_lhs,
@@ -158,11 +160,13 @@ void test_evaluate_with_ops(const gsl::not_null<Generator*> generator,
   }
 }
 
+// Test evaluation of a RHS binary operation between two different types
 template <typename Generator, typename ComplexDataType, typename RealDataType>
-void test_evaluate_bin_ops(const gsl::not_null<Generator*> generator,
-                           const ComplexDataType& used_for_size_complex,
-                           const RealDataType& used_for_size_real,
-                           const double used_for_random_real_number) {
+void test_evaluate_bin_ops_mixed_datatype(
+    const gsl::not_null<Generator*> generator,
+    const ComplexDataType& used_for_size_complex,
+    const RealDataType& used_for_size_real,
+    const double used_for_random_real_number) {
   std::uniform_real_distribution<> distribution(0.1, 1.0);
   constexpr size_t Dim = 2;
 
@@ -240,36 +244,6 @@ void test_evaluate_bin_ops(const gsl::not_null<Generator*> generator,
       real_tensor_over_complex_tensor = tenex::evaluate<ti::i, ti::J>(
           real_Ij(ti::J, ti::i) / complex_scalar());
 
-  // large real-valued expression
-  const auto real_scalar_times_8 =
-      real_scalar() + real_scalar() + real_scalar() + real_scalar() +
-      real_scalar() + real_scalar() + real_scalar() + real_scalar();
-  const auto real_scalar_times_64 = real_scalar_times_8 + real_scalar_times_8 +
-                                    real_scalar_times_8 + real_scalar_times_8 +
-                                    real_scalar_times_8 + real_scalar_times_8 +
-                                    real_scalar_times_8 + real_scalar_times_8;
-  const Scalar<RealDataType> real_plus_real_large_expression_result =
-      tenex::evaluate(real_scalar_times_64);
-
-  // large complex-valued expression
-  const auto complex_scalar_times_8 = complex_scalar() + complex_scalar() +
-                                      complex_scalar() + complex_scalar() +
-                                      complex_scalar() + complex_scalar() +
-                                      complex_scalar() + complex_scalar();
-  const auto complex_scalar_times_64 =
-      complex_scalar_times_8 + complex_scalar_times_8 + complex_scalar_times_8 +
-      complex_scalar_times_8 + complex_scalar_times_8 + complex_scalar_times_8 +
-      complex_scalar_times_8 + complex_scalar_times_8;
-  const Scalar<ComplexDataType> complex_plus_complex_large_expression_result =
-      tenex::evaluate(complex_scalar_times_64);
-
-  // large complex-valued expressions made of large real-valued and large
-  // complex-valued subexpressions
-  const Scalar<ComplexDataType> complex_plus_real_large_expression_result =
-      tenex::evaluate(complex_scalar_times_64 + real_scalar_times_64);
-  const Scalar<ComplexDataType> real_plus_complex_large_expression_result =
-      tenex::evaluate(real_scalar_times_64 + complex_scalar_times_64);
-
   // Check rank == 0 results
 
   // addition
@@ -287,16 +261,6 @@ void test_evaluate_bin_ops(const gsl::not_null<Generator*> generator,
   // division
   CHECK(get(real_number_over_complex_tensor) ==
         real_number / get(complex_scalar));
-
-  // large expressions
-  CHECK_ITERABLE_APPROX(get(real_plus_real_large_expression_result),
-                        64.0 * get(real_scalar));
-  CHECK_ITERABLE_APPROX(get(complex_plus_complex_large_expression_result),
-                        64.0 * get(complex_scalar));
-  CHECK_ITERABLE_APPROX(get(complex_plus_real_large_expression_result),
-                        64.0 * (get(complex_scalar) + get(real_scalar)));
-  CHECK_ITERABLE_APPROX(get(real_plus_complex_large_expression_result),
-                        64.0 * (get(complex_scalar) + get(real_scalar)));
 
   // Check rank > 0 results
   for (size_t i = 0; i < Dim; i++) {
@@ -343,6 +307,95 @@ void test_evaluate_bin_ops(const gsl::not_null<Generator*> generator,
             real_Ij.get(j, i) / get(complex_scalar));
     }
   }
+}
+
+// Test evaluation of large RHS `TensorExpression`s
+template <typename Generator, typename ComplexDataType, typename RealDataType>
+void test_evaluate_large_expressions(
+    const gsl::not_null<Generator*> generator,
+    const ComplexDataType& used_for_size_complex,
+    const RealDataType& used_for_size_real,
+    const double used_for_random_real_number,
+    const std::complex<double> used_for_random_complex_number) {
+  std::uniform_real_distribution<> distribution(0.1, 1.0);
+
+  // Operands for test expressions
+
+  const auto real_scalar = make_with_random_values<Scalar<RealDataType>>(
+      generator, distribution, used_for_size_real);
+  const auto complex_scalar = make_with_random_values<Scalar<ComplexDataType>>(
+      generator, distribution, used_for_size_complex);
+  const auto real_number = make_with_random_values<double>(
+      generator, distribution, used_for_random_real_number);
+  const auto complex_number = make_with_random_values<std::complex<double>>(
+      generator, distribution, used_for_random_complex_number);
+
+  // Tested expressions
+
+  const auto real_scalar_times_8 =
+      real_scalar() + real_scalar() + real_scalar() + real_scalar() +
+      real_scalar() + real_scalar() + real_scalar() + real_scalar();
+  const auto real_scalar_times_64 = real_scalar_times_8 + real_scalar_times_8 +
+                                    real_scalar_times_8 + real_scalar_times_8 +
+                                    real_scalar_times_8 + real_scalar_times_8 +
+                                    real_scalar_times_8 + real_scalar_times_8;
+
+  const auto complex_scalar_times_8 = complex_scalar() + complex_scalar() +
+                                      complex_scalar() + complex_scalar() +
+                                      complex_scalar() + complex_scalar() +
+                                      complex_scalar() + complex_scalar();
+  const auto complex_scalar_times_64 =
+      complex_scalar_times_8 + complex_scalar_times_8 + complex_scalar_times_8 +
+      complex_scalar_times_8 + complex_scalar_times_8 + complex_scalar_times_8 +
+      complex_scalar_times_8 + complex_scalar_times_8;
+
+  // large expressions of `Tensor`s
+  const Scalar<RealDataType> real_tensor_plus_real_tensor_result =
+      tenex::evaluate(real_scalar_times_64);
+  const Scalar<ComplexDataType> complex_tensor_plus_complex_tensor_result =
+      tenex::evaluate(complex_scalar_times_64);
+  const Scalar<ComplexDataType> complex_tensor_plus_real_tensor_result =
+      tenex::evaluate(complex_scalar_times_64 + real_scalar_times_64);
+  const Scalar<ComplexDataType> real_tensor_plus_complex_tensor_result =
+      tenex::evaluate(real_scalar_times_64 + complex_scalar_times_64);
+
+  // large expressions of `Tensor`s and a number
+  const Scalar<RealDataType> real_tensor_plus_real_number_result =
+      tenex::evaluate(real_scalar_times_64 + real_number);
+  const Scalar<RealDataType> real_number_plus_real_tensor_result =
+      tenex::evaluate(real_number + real_scalar_times_64);
+  const Scalar<ComplexDataType> complex_tensor_plus_real_number_result =
+      tenex::evaluate(complex_scalar_times_64 + real_number);
+  const Scalar<ComplexDataType> real_number_plus_complex_tensor_result =
+      tenex::evaluate(real_number + complex_scalar_times_64);
+  const Scalar<ComplexDataType> complex_tensor_plus_complex_number_result =
+      tenex::evaluate(complex_scalar_times_64 + complex_number);
+  const Scalar<ComplexDataType> complex_number_plus_complex_tensor_result =
+      tenex::evaluate(complex_number + complex_scalar_times_64);
+
+  // check expressions with only `Tensor`s
+  CHECK_ITERABLE_APPROX(get(real_tensor_plus_real_tensor_result),
+                        64.0 * get(real_scalar));
+  CHECK_ITERABLE_APPROX(get(complex_tensor_plus_complex_tensor_result),
+                        64.0 * get(complex_scalar));
+  CHECK_ITERABLE_APPROX(get(complex_tensor_plus_real_tensor_result),
+                        64.0 * (get(complex_scalar) + get(real_scalar)));
+  CHECK_ITERABLE_APPROX(get(real_tensor_plus_complex_tensor_result),
+                        64.0 * (get(complex_scalar) + get(real_scalar)));
+
+  // check expressions with `Tensor`s and numbers
+  CHECK_ITERABLE_APPROX(get(real_tensor_plus_real_number_result),
+                        64.0 * get(real_scalar) + real_number);
+  CHECK_ITERABLE_APPROX(get(real_number_plus_real_tensor_result),
+                        64.0 * get(real_scalar) + real_number);
+  CHECK_ITERABLE_APPROX(get(complex_tensor_plus_real_number_result),
+                        64.0 * get(complex_scalar) + real_number);
+  CHECK_ITERABLE_APPROX(get(real_number_plus_complex_tensor_result),
+                        64.0 * get(complex_scalar) + real_number);
+  CHECK_ITERABLE_APPROX(get(complex_tensor_plus_complex_number_result),
+                        64.0 * get(complex_scalar) + complex_number);
+  CHECK_ITERABLE_APPROX(get(complex_number_plus_complex_tensor_result),
+                        64.0 * get(complex_scalar) + complex_number);
 }
 }  // namespace
 
@@ -394,9 +447,19 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateComplex",
                          used_for_size_complex_datavector,
                          used_for_size_complex_datavector);
 
-  test_evaluate_bin_ops(make_not_null(&generator), used_for_size_complex_double,
-                        used_for_size_real_double, used_for_size_real_double);
-  test_evaluate_bin_ops(
+  test_evaluate_bin_ops_mixed_datatype(
+      make_not_null(&generator), used_for_size_complex_double,
+      used_for_size_real_double, used_for_size_real_double);
+  test_evaluate_bin_ops_mixed_datatype(
       make_not_null(&generator), used_for_size_complex_datavector,
       used_for_size_real_datavector, used_for_size_real_double);
+
+  test_evaluate_large_expressions(
+      make_not_null(&generator), used_for_size_complex_double,
+      used_for_size_real_double, used_for_size_real_double,
+      used_for_size_complex_double);
+  test_evaluate_large_expressions(
+      make_not_null(&generator), used_for_size_complex_datavector,
+      used_for_size_real_datavector, used_for_size_real_double,
+      used_for_size_complex_double);
 }
