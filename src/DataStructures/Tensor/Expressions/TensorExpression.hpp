@@ -226,7 +226,8 @@ struct Expression {};
 /// If on the primary path, whether or not this subtree contains a starting
 /// point of a leg along the primary path. In other words, whether or not there
 /// is a split on the primary path at this expression or beneath it.
-/// - function `decltype(auto) get_primary(const type& result_component,
+/// - function template `template <typename ResultDataType>
+/// decltype(auto) get_primary(const ResultDataType& result_component,
 /// const std::array<size_t, num_tensor_indices>& result_multi_index) const`:
 /// This is similar to the required `get` function described above, but this
 /// should be used when the tree is split up. The main difference with this

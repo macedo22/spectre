@@ -325,8 +325,9 @@ struct TensorAsExpression<Tensor<X, Symm<SymmValues...>, IndexList<Indices...>>,
   ///
   /// \param multi_index the multi-index of the tensor component to retrieve
   /// \return the value of the component at `multi_index` in the tensor
+  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
-      const type& /*result_component*/,
+      const ResultType& /*result_component*/,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     return t_->get(multi_index);
   }

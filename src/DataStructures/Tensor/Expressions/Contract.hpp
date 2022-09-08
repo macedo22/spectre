@@ -1015,8 +1015,9 @@ struct TensorContract
   /// tensor component to retrieve
   /// \return the value of the component at `contracted_multi_index` in the
   /// resultant contracted tensor
+  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
-      const type& result_component,
+      const ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& contracted_multi_index)
       const {
     return compute_contraction_primary<0>(
@@ -1046,7 +1047,8 @@ struct TensorContract
     if constexpr (not is_primary_end) {
       // We need to first evaluate the subtree of the term being summed that
       // is deepest in the tree
-      result_component = t_.get_primary(result_component, lowest_multi_index);
+      result_component =
+          t_.template get_primary(result_component, lowest_multi_index);
     }
 
     if constexpr (evaluate_terms_separately) {

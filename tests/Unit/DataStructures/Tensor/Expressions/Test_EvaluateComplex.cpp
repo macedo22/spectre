@@ -295,8 +295,8 @@ void test_evaluate_bin_ops(const gsl::not_null<Generator*> generator,
                         64.0 * get(complex_scalar));
   CHECK_ITERABLE_APPROX(get(complex_plus_real_large_expression_result),
                         64.0 * (get(complex_scalar) + get(real_scalar)));
-  // CHECK_ITERABLE_APPROX(get(real_plus_complex_large_expression_result),
-  //                       64.0 * (get(complex_scalar) + get(real_scalar)));
+  CHECK_ITERABLE_APPROX(get(real_plus_complex_large_expression_result),
+                        64.0 * (get(complex_scalar) + get(real_scalar)));
 
   // Check rank > 0 results
   for (size_t i = 0; i < Dim; i++) {

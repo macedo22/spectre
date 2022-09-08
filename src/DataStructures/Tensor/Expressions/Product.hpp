@@ -297,8 +297,9 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// operand of the product to retrieve
   /// \param op2_multi_index the multi-index of the component of the second
   /// operand of the product to retrieve
+  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
-      const type& result_component,
+      const ResultType& result_component,
       const std::array<size_t, op1_num_tensor_indices>& op1_multi_index,
       const std::array<size_t, op2_num_tensor_indices>& op2_multi_index) const {
     if constexpr (is_primary_end) {
@@ -310,7 +311,7 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
     } else {
       // We haven't yet evaluated the whole subtree for this expression, so
       // return the product of the results of the two operands' subtrees
-      return t1_.get_primary(result_component, op1_multi_index) *
+      return t1_.template get_primary(result_component, op1_multi_index) *
              t2_.get(op2_multi_index);
     }
   }
@@ -330,8 +331,9 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// product tensor to retrieve
   /// \return the value of the component at `result_multi_index` in the outer
   /// product tensor
+  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
-      const type& result_component,
+      const ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     return get_primary(result_component,
                        get_op1_multi_index(result_multi_index),
@@ -360,8 +362,9 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// operand of the product to evaluate
   /// \param op2_multi_index the multi-index of the component of the second
   /// operand of the product to evaluate
+  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void evaluate_primary_children(
-      type& result_component,
+      ResultType& result_component,
       const std::array<size_t, op1_num_tensor_indices>& op1_multi_index,
       const std::array<size_t, op2_num_tensor_indices>& op2_multi_index) const {
     if constexpr (is_primary_end) {
@@ -374,7 +377,8 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
       // We haven't yet evaluated the whole subtree of the primary child, so
       // first assign the result component to be the result of computing the
       // primary child's subtree
-      result_component = t1_.get_primary(result_component, op1_multi_index);
+      result_component =
+          t1_.template get_primary(result_component, op1_multi_index);
       // Now that the primary child's subtree has been computed, multiply the
       // current result by the result of evaluating the other child's subtree
       result_component *= t2_.get(op2_multi_index);

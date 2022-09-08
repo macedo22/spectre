@@ -169,8 +169,9 @@ struct Negate
   /// negated tensor expression
   /// \return the value of the component at `multi_index` in the negated tensor
   /// expression
+  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
-      const type& result_component,
+      const ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     if constexpr (is_primary_end) {
       (void)multi_index;
@@ -180,7 +181,7 @@ struct Negate
     } else {
       // We haven't yet evaluated the whole subtree for this expression, so
       // return the negation of this expression's subtree
-      return -t_.get_primary(result_component, multi_index);
+      return -t_.template get_primary(result_component, multi_index);
     }
   }
 

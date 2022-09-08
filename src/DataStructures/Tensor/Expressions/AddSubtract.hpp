@@ -664,8 +664,9 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   /// operand of the sum or difference to evaluate
   /// \param op2_multi_index the multi-index of the component of the second
   /// operand of the sum or difference to evaluate
+  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void add_or_subtract_primary_children(
-      type& result_component,
+      ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& op1_multi_index,
       const std::array<size_t, num_tensor_indices_op2>& op2_multi_index) const {
     if constexpr (Sign == 1) {
@@ -680,7 +681,8 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
         // We haven't yet evaluated the whole subtree of the primary child, so
         // first assign the result component to be the result of computing the
         // primary child's subtree
-        result_component = t1_.get_primary(result_component, op1_multi_index);
+        result_component =
+            t1_.template get_primary(result_component, op1_multi_index);
         // Now that the primary child's subtree has been computed, add the
         // result of evaluating the other child's subtree to the current result
         result_component += t2_.get(op2_multi_index);
@@ -697,7 +699,8 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
         // We haven't yet evaluated the whole subtree of the primary child, so
         // first assign the result component to be the result of computing the
         // primary child's subtree
-        result_component = t1_.get_primary(result_component, op1_multi_index);
+        result_component =
+            t1_.template get_primary(result_component, op1_multi_index);
         // Now that the primary child's subtree has been computed, subtract the
         // result of evaluating the other child's subtree from the current
         // result
@@ -716,8 +719,9 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   /// \param result_component the LHS tensor component to evaluate
   /// \param result_multi_index the multi-index of the component of the result
   /// tensor to evaluate
+  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void evaluate_primary_children(
-      type& result_component,
+      ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     add_or_subtract_primary_children(result_component, result_multi_index,
                                      get_op2_multi_index(result_multi_index));
@@ -739,8 +743,9 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   /// \param op2_multi_index the multi-index of the component of the second
   /// operand
   /// \return the sum of or difference between the two components' values
+  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE decltype(auto) add_or_subtract_primary(
-      const type& result_component,
+      const ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& op1_multi_index,
       const std::array<size_t, num_tensor_indices_op2>& op2_multi_index) const {
     if constexpr (Sign == 1) {
@@ -754,7 +759,7 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
       } else {
         // We haven't yet evaluated the whole subtree for this expression, so
         // return the sum of the results of the two operands' subtrees
-        return t1_.get_primary(result_component, op1_multi_index) +
+        return t1_.template get_primary(result_component, op1_multi_index) +
                t2_.get(op2_multi_index);
       }
     } else {
@@ -769,7 +774,7 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
         // We haven't yet evaluated the whole subtree for this expression, so
         // return the difference between the results of the two operands'
         // subtrees
-        return t1_.get_primary(result_component, op1_multi_index) -
+        return t1_.template get_primary(result_component, op1_multi_index) -
                t2_.get(op2_multi_index);
       }
     }
@@ -790,8 +795,9 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
   /// tensor to retrieve
   /// \return the value of the component at `result_multi_index` in the result
   /// tensor
+  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
-      const type& result_component,
+      const ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     return add_or_subtract_primary(result_component, result_multi_index,
                                    get_op2_multi_index(result_multi_index));
