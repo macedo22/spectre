@@ -1,13 +1,23 @@
 // Distributed under the MIT License.
 // See LICENSE.txt for details.
 
+// \file
+// Tests evaluation of `TensorExpression`s with complex-valued LHS `Tensor`s
+// and RHS expressions that may contain real-valued terms, complex-valued terms,
+// or both
+//
+// \details
+// The tests in this file are designed to test that these funamentally work:
+// - Using `evaluate` with complex types on the RHS and/or LHS
+// - Using `TensorExpression` mathematical operations with complex types
+// - Evaluating expressions with both real-valued and complex-valued terms
+
 #include "Framework/TestingFramework.hpp"
 
 #include <climits>
 #include <complex>
 #include <cstddef>
 #include <random>
-#include <type_traits>
 
 #include "DataStructures/ComplexDataVector.hpp"
 #include "DataStructures/DataVector.hpp"
@@ -48,16 +58,19 @@ void check_values_equal<ComplexDataVector, DataVector>(
   }
 }
 
-// Test evaluation of a single RHS term to a LHS `Tensor`
+// \brief Test assignment of LHS `Tensor` to single RHS term
+//
+// \tparam LhsDataType the data type of LHS `Tensor`
+// \tparam RhsDataType the data type of the RHS term
 template <typename Generator, typename LhsDataType, typename RhsDataType>
-void test_evaluate_without_ops(const gsl::not_null<Generator*> generator,
-                               const LhsDataType& used_for_size_lhs,
-                               const RhsDataType& used_for_size_rhs) {
+void test_assignment_to_single_term(const gsl::not_null<Generator*> generator,
+                                    const LhsDataType& used_for_size_lhs,
+                                    const RhsDataType& used_for_size_rhs) {
   std::uniform_real_distribution<> distribution(-1.0, 1.0);
 
-  if constexpr (std::is_same_v<RhsDataType, double> or
-                std::is_same_v<RhsDataType, std::complex<double>>) {
-    // assign number
+  // if the RHS is a number, also test the assignment of LHS to the number
+  if constexpr (tenex::detail::is_supported_number_datatype<
+                    RhsDataType>::value) {
     const auto R1 = make_with_random_values<RhsDataType>(
         generator, distribution, used_for_size_rhs);
     Scalar<LhsDataType> L1{used_for_size_lhs};
@@ -65,14 +78,14 @@ void test_evaluate_without_ops(const gsl::not_null<Generator*> generator,
     check_values_equal(get(L1), R1);
   }
 
-  // assign Scalar<RhsDataType>
+  // assign Scalar<LhsDataType> to Scalar<RhsDataType>
   const auto R2 = make_with_random_values<Scalar<RhsDataType>>(
       generator, distribution, used_for_size_rhs);
   Scalar<LhsDataType> L2{used_for_size_lhs};
   tenex::evaluate(make_not_null(&L2), R2());
   check_values_equal(get(L2), get(R2));
 
-  // assign Tensor<RhsDataType, ...> rank > 0
+  // assign Tensor<LhsDataType, ...> to Tensor<RhsDataType, ...>
   const auto R3 = make_with_random_values<tnsr::ij<RhsDataType, 3>>(
       generator, distribution, used_for_size_rhs);
   tnsr::ii<LhsDataType, 3> L3{used_for_size_lhs};
@@ -84,11 +97,15 @@ void test_evaluate_without_ops(const gsl::not_null<Generator*> generator,
   }
 }
 
-// Test evaluation of a RHS `TensorExpression` to a LHS `Tensor`
+// \brief Test assignment of LHS `Tensor` to a RHS expression containing
+// mathematical operations
+//
+// \tparam LhsDataType the data type of LHS `Tensor`
+// \tparam RhsDataType the data type of the RHS term
 template <typename Generator, typename LhsDataType, typename RhsDataType>
-void test_evaluate_with_ops(const gsl::not_null<Generator*> generator,
-                            const LhsDataType& used_for_size_lhs,
-                            const RhsDataType& used_for_size_rhs) {
+void test_evaluate_ops(const gsl::not_null<Generator*> generator,
+                       const LhsDataType& used_for_size_lhs,
+                       const RhsDataType& used_for_size_rhs) {
   std::uniform_real_distribution<> distribution(0.1, 1.0);
 
   const auto R =
@@ -160,9 +177,17 @@ void test_evaluate_with_ops(const gsl::not_null<Generator*> generator,
   }
 }
 
-// Test evaluation of a RHS binary operation between two different types
+// \brief Test evaluation of RHS binary operations between real-valued and
+// complex-valued terms
+//
+// \details
+// Tests when (1) the terms are both `Tensor`s and (2) when one term is a
+// `Tensor` and the other is a number
+//
+// \tparam ComplexDataType the data type of the complex-valued operand
+// \tparam RhsDataType the data type of the real-valued operand
 template <typename Generator, typename ComplexDataType, typename RealDataType>
-void test_evaluate_bin_ops_mixed_datatype(
+void test_bin_ops_with_real_and_complex(
     const gsl::not_null<Generator*> generator,
     const ComplexDataType& used_for_size_complex,
     const RealDataType& used_for_size_real,
@@ -309,7 +334,19 @@ void test_evaluate_bin_ops_mixed_datatype(
   }
 }
 
-// Test evaluation of large RHS `TensorExpression`s
+// \brief Test evaluation of large RHS `TensorExpression`s
+//
+// \details
+// Test cases include large expressions with:
+// - only real-valued `Tensor`s
+// - only complex-valued `Tensor`s
+// - real-valued and complex-valued `Tensor`s
+// - real-valued `Tensor`s and a real-valued number
+// - complex-valued `Tensor`s and a real-valued number
+// - complex-valued `Tensor`s and a complex-valued number
+//
+// \tparam ComplexDataType the data type of the complex-valued operand
+// \tparam RhsDataType the data type of the real-valued operand
 template <typename Generator, typename ComplexDataType, typename RealDataType>
 void test_evaluate_large_expressions(
     const gsl::not_null<Generator*> generator,
@@ -400,10 +437,10 @@ void test_evaluate_large_expressions(
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateComplex",
-                  "[DataStructures][Unit]") {
+                  "[Unit][DataStructures]") {
   MAKE_GENERATOR(generator);
 
-  const size_t vector_size = 5;
+  const size_t vector_size = 3;
 
   const double used_for_size_real_double =
       std::numeric_limits<double>::signaling_NaN();
@@ -415,45 +452,46 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateComplex",
   const ComplexDataVector used_for_size_complex_datavector = ComplexDataVector(
       vector_size, std::numeric_limits<double>::signaling_NaN());
 
-  test_evaluate_without_ops(make_not_null(&generator),
-                            used_for_size_complex_double,
-                            used_for_size_real_double);
-  test_evaluate_without_ops(make_not_null(&generator),
-                            used_for_size_complex_double,
-                            used_for_size_complex_double);
-  test_evaluate_without_ops(make_not_null(&generator),
-                            used_for_size_complex_datavector,
-                            used_for_size_real_double);
-  test_evaluate_without_ops(make_not_null(&generator),
-                            used_for_size_complex_datavector,
-                            used_for_size_real_datavector);
-  test_evaluate_without_ops(make_not_null(&generator),
-                            used_for_size_complex_datavector,
-                            used_for_size_complex_datavector);
+  // Test assignment of complex-valued LHS `Tensor` to single RHS term
+  test_assignment_to_single_term(make_not_null(&generator),
+                                 used_for_size_complex_double,
+                                 used_for_size_real_double);
+  test_assignment_to_single_term(make_not_null(&generator),
+                                 used_for_size_complex_double,
+                                 used_for_size_complex_double);
+  test_assignment_to_single_term(make_not_null(&generator),
+                                 used_for_size_complex_datavector,
+                                 used_for_size_real_double);
+  test_assignment_to_single_term(make_not_null(&generator),
+                                 used_for_size_complex_datavector,
+                                 used_for_size_real_datavector);
+  test_assignment_to_single_term(make_not_null(&generator),
+                                 used_for_size_complex_datavector,
+                                 used_for_size_complex_datavector);
 
-  test_evaluate_with_ops(make_not_null(&generator),
-                         used_for_size_complex_double,
-                         used_for_size_real_double);
-  test_evaluate_with_ops(make_not_null(&generator),
-                         used_for_size_complex_double,
-                         used_for_size_complex_double);
-  test_evaluate_with_ops(make_not_null(&generator),
-                         used_for_size_complex_datavector,
-                         used_for_size_real_double);
-  test_evaluate_with_ops(make_not_null(&generator),
-                         used_for_size_complex_datavector,
-                         used_for_size_real_datavector);
-  test_evaluate_with_ops(make_not_null(&generator),
-                         used_for_size_complex_datavector,
-                         used_for_size_complex_datavector);
+  // Test assignment of a complex-valued LHS `Tensor` to a RHS expression
+  // containing mathematical operations
+  test_evaluate_ops(make_not_null(&generator), used_for_size_complex_double,
+                    used_for_size_real_double);
+  test_evaluate_ops(make_not_null(&generator), used_for_size_complex_double,
+                    used_for_size_complex_double);
+  test_evaluate_ops(make_not_null(&generator), used_for_size_complex_datavector,
+                    used_for_size_real_double);
+  test_evaluate_ops(make_not_null(&generator), used_for_size_complex_datavector,
+                    used_for_size_real_datavector);
+  test_evaluate_ops(make_not_null(&generator), used_for_size_complex_datavector,
+                    used_for_size_complex_datavector);
 
-  test_evaluate_bin_ops_mixed_datatype(
+  // Test evaluation of RHS binary operations between real-valued and
+  // complex-valued terms
+  test_bin_ops_with_real_and_complex(
       make_not_null(&generator), used_for_size_complex_double,
       used_for_size_real_double, used_for_size_real_double);
-  test_evaluate_bin_ops_mixed_datatype(
+  test_bin_ops_with_real_and_complex(
       make_not_null(&generator), used_for_size_complex_datavector,
       used_for_size_real_datavector, used_for_size_real_double);
 
+  // Test evaluation of large RHS `TensorExpression`s
   test_evaluate_large_expressions(
       make_not_null(&generator), used_for_size_complex_double,
       used_for_size_real_double, used_for_size_real_double,
