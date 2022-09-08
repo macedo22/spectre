@@ -41,6 +41,15 @@ void test_is_complex_vector(const bool complex_vector_expected) {
   CHECK(tenex::detail::is_complex_vector<T>::value == complex_vector_expected);
 }
 
+template <typename T, typename Expected>
+void test_upcast_if_derived_vector_type() {
+  static_assert(
+      std::is_same_v<
+          typename tenex::detail::upcast_if_derived_vector_type<T>::type,
+          Expected>,
+      "Test for tenex::detail::upcast_if_derived_vector_type failed.");
+}
+
 template <typename T>
 void test_is_supported_tensorexpression_datatype(const bool support_expected) {
   CHECK(tenex::detail::is_supported_tensorexpression_datatype<T>::type::value ==
@@ -51,7 +60,10 @@ template <typename LhsDataType, typename RhsDataType>
 void test_lhs_datatype_is_assignable_to_rhs_datatype(
     const bool support_expected) {
   CHECK(tenex::detail::lhs_datatype_is_assignable_to_rhs_datatype_impl<
-            LhsDataType, RhsDataType>::type::value == support_expected);
+            typename tenex::detail::upcast_if_derived_vector_type<
+                LhsDataType>::type,
+            typename tenex::detail::upcast_if_derived_vector_type<
+                RhsDataType>::type>::type::value == support_expected);
 }
 
 template <typename X1, typename X2>
@@ -63,7 +75,10 @@ void test_binop_datatypes_are_supported(const bool support_expected) {
 template <typename X1, typename X2, typename ExpectedBinOpDataType>
 void test_get_binop_datatype() {
   CHECK(std::is_same_v<
-        typename tenex::detail::get_binop_datatype_impl<X1, X2>::type,
+        typename tenex::detail::get_binop_datatype_impl<
+            typename tenex::detail::upcast_if_derived_vector_type<X1>::type,
+            typename tenex::detail::upcast_if_derived_vector_type<X2>::type>::
+            type,
         ExpectedBinOpDataType>);
 }
 
@@ -135,6 +150,36 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.DataTypeSupport",
   test_is_complex_vector<ComplexModalVector>(true);
   test_is_complex_vector<std::string>(false);
   test_is_complex_vector<ArbitraryType>(false);
+
+  test_upcast_if_derived_vector_type<double, double>();
+  test_upcast_if_derived_vector_type<int, int>();
+  test_upcast_if_derived_vector_type<float, float>();
+  test_upcast_if_derived_vector_type<std::complex<double>,
+                                     std::complex<double>>();
+  test_upcast_if_derived_vector_type<std::complex<int>, std::complex<int>>();
+  test_upcast_if_derived_vector_type<std::complex<float>,
+                                     std::complex<float>>();
+  test_upcast_if_derived_vector_type<DataVector,
+                                     VectorImpl<double, DataVector>>();
+  test_upcast_if_derived_vector_type<VectorImpl<double, DataVector>,
+                                     VectorImpl<double, DataVector>>();
+  test_upcast_if_derived_vector_type<
+      ComplexDataVector, VectorImpl<std::complex<double>, ComplexDataVector>>();
+  test_upcast_if_derived_vector_type<
+      VectorImpl<std::complex<double>, ComplexDataVector>,
+      VectorImpl<std::complex<double>, ComplexDataVector>>();
+  test_upcast_if_derived_vector_type<ModalVector,
+                                     VectorImpl<double, ModalVector>>();
+  test_upcast_if_derived_vector_type<VectorImpl<double, ModalVector>,
+                                     VectorImpl<double, ModalVector>>();
+  test_upcast_if_derived_vector_type<
+      ComplexModalVector,
+      VectorImpl<std::complex<double>, ComplexModalVector>>();
+  test_upcast_if_derived_vector_type<
+      VectorImpl<std::complex<double>, ComplexModalVector>,
+      VectorImpl<std::complex<double>, ComplexModalVector>>();
+  test_upcast_if_derived_vector_type<std::string, std::string>();
+  test_upcast_if_derived_vector_type<ArbitraryType, ArbitraryType>();
 
   //   CHECK(not tenex::detail::is_vector<double>::value);
   //   CHECK(tenex::detail::is_vector<DataVector>::value);
@@ -342,9 +387,9 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.DataTypeSupport",
   test_tensorexpression_binop_datatypes_are_supported<
       number_expression<double>, tensor_expression<ComplexDataVector>>(true);
 
-  //   test_tensorexpression_binop_datatypes_are_supported<
-  //       number_expression<std::complex<double>>, tensor_expression<double>>(
-  //       false);
+    test_tensorexpression_binop_datatypes_are_supported<
+        number_expression<std::complex<double>>, tensor_expression<double>>(
+        false);
   test_tensorexpression_binop_datatypes_are_supported<
       number_expression<std::complex<double>>,
       tensor_expression<std::complex<double>>>(true);
@@ -357,9 +402,9 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.DataTypeSupport",
 
   test_tensorexpression_binop_datatypes_are_supported<
       tensor_expression<double>, number_expression<double>>(true);
-  //   test_tensorexpression_binop_datatypes_are_supported<
-  //       tensor_expression<double>, number_expression<std::complex<double>>>(
-  //       false);
+    test_tensorexpression_binop_datatypes_are_supported<
+        tensor_expression<double>, number_expression<std::complex<double>>>(
+        false);
   test_tensorexpression_binop_datatypes_are_supported<
       tensor_expression<double>, tensor_expression<double>>(true);
   test_tensorexpression_binop_datatypes_are_supported<
