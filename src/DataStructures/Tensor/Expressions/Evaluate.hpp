@@ -241,8 +241,7 @@ void evaluate_impl(
 
   // If the LHS data type is a vector type, size the LHS tensor components if
   // their size does not match the size from a `Tensor` in the RHS expression
-  if constexpr (std::is_same_v<DataVector, LhsDataType> or
-                std::is_same_v<ComplexDataVector, LhsDataType>) {
+  if constexpr (tenex::detail::is_vector<LhsDataType>::value) {
     const size_t rhs_component_size =
         (~rhs_tensorexpression).get_rhs_tensor_component_size();
     if (rhs_component_size != (*lhs_tensor)[0].size()) {
@@ -344,7 +343,7 @@ void evaluate_impl(
   using lhs_tensorindex_list =
       tmpl::list<std::decay_t<decltype(LhsTensorIndices)>...>;
 
-  static_assert(is_supported_tensorexpression_datatype<X>::type::value and
+  static_assert(is_supported_tensorexpression_datatype<X>::value and
                 "TensorExpressions currently only support Tensors whose data "
                 "type is double, std::complex<double> DataVector, or "
                 "ComplexDataVector. It is possible to add support for other "
@@ -376,6 +375,13 @@ void evaluate_impl(
       "Cannot assign a tensor expression to a LHS tensor with generic "
       "indices that would be contracted, e.g. evaluate<ti::A, ti::a>.");
 
+  if constexpr (tenex::detail::is_vector<X>::value) {
+    ASSERT(get_size((*lhs_tensor)[0]) > 0,
+           "Tensors with vector components must be sized before calling "
+           "tenex::evaluate<...>("
+           "\tgsl::not_null<Tensor<VectorType, ...>*>, number).");
+  }
+
   // positions of indices in LHS tensor where generic spatial indices are used
   // for spacetime indices
   constexpr auto lhs_spatial_spacetime_index_positions =
@@ -397,15 +403,6 @@ void evaluate_impl(
   }
 }
 }  // namespace detail
-
-// TODO : test evaluation of RHS Tensor<DataVector> to LHS
-// Tensor<ComplexDataVector> and RHS double to LHS Tensor to
-// std::complex<double>. Either instantiate existing tests for more combos or
-// create a dedicated Test_Complex.cpp where this stuff is specifically tested
-
-// TODO : need to generalize below so that not both LHS and RHS both have the
-// same X data type because we should able to do things like assign a
-// Tensor<DataVector> RHS to a Tensor<ComplexDataVector> LHS
 
 /*!
  * \ingroup TensorExpressionsGroup
@@ -488,33 +485,18 @@ void evaluate(
  * @param rhs_value the RHS value to assign
  */
 template <auto&... LhsTensorIndices, typename X, typename LhsSymmetry,
-          typename LhsIndexList>
+          typename LhsIndexList, typename N,
+          Requires<std::is_arithmetic_v<N>> = nullptr>
 void evaluate(
     const gsl::not_null<Tensor<X, LhsSymmetry, LhsIndexList>*> lhs_tensor,
-    const double rhs_value) {
-  if constexpr (std::is_same_v<DataVector, X> or
-                std::is_same_v<ComplexDataVector, X>) {
-    ASSERT(get_size((*lhs_tensor)[0]) > 0,
-           "Tensors with vector components must be sized before calling "
-           "tenex::evaluate<...>("
-           "\tgsl::not_null<Tensor<VectorType, ...>*>, double).");
-  }
-
+    const N rhs_value) {
   detail::evaluate_impl<LhsTensorIndices...>(lhs_tensor, rhs_value);
 }
-
 template <auto&... LhsTensorIndices, typename X, typename LhsSymmetry,
-          typename LhsIndexList>
+          typename LhsIndexList, typename N>
 void evaluate(
     const gsl::not_null<Tensor<X, LhsSymmetry, LhsIndexList>*> lhs_tensor,
-    const std::complex<double>& rhs_value) {
-  if constexpr (std::is_same_v<ComplexDataVector, X>) {
-    ASSERT(get_size((*lhs_tensor)[0]) > 0,
-           "Tensors with vector components must be sized before calling "
-           "tenex::evaluate<...>("
-           "\tgsl::not_null<Tensor<VectorType, ...>*>, std::complex<double>).");
-  }
-
+    const std::complex<N>& rhs_value) {
   detail::evaluate_impl<LhsTensorIndices...>(lhs_tensor, rhs_value);
 }
 /// @}

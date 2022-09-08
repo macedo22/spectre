@@ -212,13 +212,14 @@ struct SquareRoot
   /// \param result_component the LHS tensor component to evaluate
   /// \param multi_index the multi-index of the component of the result tensor
   /// to evaluate
+  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
-      type& result_component,
+      ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     if constexpr (primary_child_subtree_contains_primary_start) {
       // The primary child's subtree contains at least one leg, so recurse down
       // and evaluate that first
-      t_.evaluate_primary_subtree(result_component, multi_index);
+      t_.template evaluate_primary_subtree(result_component, multi_index);
     }
 
     if constexpr (is_primary_start) {

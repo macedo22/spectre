@@ -236,7 +236,8 @@ struct Expression {};
 /// we substitute in the current LHS result for the subtree that we have already
 /// computed. This function should call `get_primary` on the child on the
 /// primary path and `get` on the other child, if one exists.
-/// - function `void evaluate_primary_subtree(type& result_component,
+/// - function template `template <typename ResultType>
+/// void evaluate_primary_subtree(ResultType& result_component,
 /// const std::array<size_t, num_tensor_indices>& result_multi_index) const`:
 /// This should first recursively evaluate the legs beneath it on the primary
 /// path, then if the expression itself is the start of a leg, it should

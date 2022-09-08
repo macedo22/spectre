@@ -159,11 +159,10 @@ void test_evaluate_with_ops(const gsl::not_null<Generator*> generator,
 }
 
 template <typename Generator, typename ComplexDataType, typename RealDataType>
-void test_evaluate_bin_ops_with_real_and_complex_terms(
-    const gsl::not_null<Generator*> generator,
-    const ComplexDataType& used_for_size_complex,
-    const RealDataType& used_for_size_real,
-    const double used_for_random_real_number) {
+void test_evaluate_bin_ops(const gsl::not_null<Generator*> generator,
+                           const ComplexDataType& used_for_size_complex,
+                           const RealDataType& used_for_size_real,
+                           const double used_for_random_real_number) {
   std::uniform_real_distribution<> distribution(0.1, 1.0);
   constexpr size_t Dim = 2;
 
@@ -241,6 +240,36 @@ void test_evaluate_bin_ops_with_real_and_complex_terms(
       real_tensor_over_complex_tensor = tenex::evaluate<ti::i, ti::J>(
           real_Ij(ti::J, ti::i) / complex_scalar());
 
+  // large real-valued expression
+  const auto real_scalar_times_8 =
+      real_scalar() + real_scalar() + real_scalar() + real_scalar() +
+      real_scalar() + real_scalar() + real_scalar() + real_scalar();
+  const auto real_scalar_times_64 = real_scalar_times_8 + real_scalar_times_8 +
+                                    real_scalar_times_8 + real_scalar_times_8 +
+                                    real_scalar_times_8 + real_scalar_times_8 +
+                                    real_scalar_times_8 + real_scalar_times_8;
+  const Scalar<RealDataType> real_plus_real_large_expression_result =
+      tenex::evaluate(real_scalar_times_64);
+
+  // large complex-valued expression
+  const auto complex_scalar_times_8 = complex_scalar() + complex_scalar() +
+                                      complex_scalar() + complex_scalar() +
+                                      complex_scalar() + complex_scalar() +
+                                      complex_scalar() + complex_scalar();
+  const auto complex_scalar_times_64 =
+      complex_scalar_times_8 + complex_scalar_times_8 + complex_scalar_times_8 +
+      complex_scalar_times_8 + complex_scalar_times_8 + complex_scalar_times_8 +
+      complex_scalar_times_8 + complex_scalar_times_8;
+  const Scalar<ComplexDataType> complex_plus_complex_large_expression_result =
+      tenex::evaluate(complex_scalar_times_64);
+
+  // large complex-valued expressions made of large real-valued and large
+  // complex-valued subexpressions
+  const Scalar<ComplexDataType> complex_plus_real_large_expression_result =
+      tenex::evaluate(complex_scalar_times_64 + real_scalar_times_64);
+  const Scalar<ComplexDataType> real_plus_complex_large_expression_result =
+      tenex::evaluate(real_scalar_times_64 + complex_scalar_times_64);
+
   // Check rank == 0 results
 
   // addition
@@ -258,6 +287,16 @@ void test_evaluate_bin_ops_with_real_and_complex_terms(
   // division
   CHECK(get(real_number_over_complex_tensor) ==
         real_number / get(complex_scalar));
+
+  // large expressions
+  CHECK_ITERABLE_APPROX(get(real_plus_real_large_expression_result),
+                        64.0 * get(real_scalar));
+  CHECK_ITERABLE_APPROX(get(complex_plus_complex_large_expression_result),
+                        64.0 * get(complex_scalar));
+  CHECK_ITERABLE_APPROX(get(complex_plus_real_large_expression_result),
+                        64.0 * (get(complex_scalar) + get(real_scalar)));
+  // CHECK_ITERABLE_APPROX(get(real_plus_complex_large_expression_result),
+  //                       64.0 * (get(complex_scalar) + get(real_scalar)));
 
   // Check rank > 0 results
   for (size_t i = 0; i < Dim; i++) {
@@ -355,10 +394,9 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateComplex",
                          used_for_size_complex_datavector,
                          used_for_size_complex_datavector);
 
-  test_evaluate_bin_ops_with_real_and_complex_terms(
-      make_not_null(&generator), used_for_size_complex_double,
-      used_for_size_real_double, used_for_size_real_double);
-  test_evaluate_bin_ops_with_real_and_complex_terms(
+  test_evaluate_bin_ops(make_not_null(&generator), used_for_size_complex_double,
+                        used_for_size_real_double, used_for_size_real_double);
+  test_evaluate_bin_ops(
       make_not_null(&generator), used_for_size_complex_datavector,
       used_for_size_real_datavector, used_for_size_real_double);
 }

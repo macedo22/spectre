@@ -338,8 +338,9 @@ struct TensorAsExpression<Tensor<X, Symm<SymmValues...>, IndexList<Indices...>>,
   /// \param result_component the LHS tensor component to evaluate
   /// \param multi_index the multi-index of the component of the `Tensor`
   /// represented by the expression
+  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
-      type& result_component,
+      ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     if constexpr (is_primary_start) {
       // We want to evaluate the subtree for this expression

@@ -393,15 +393,16 @@ struct OuterProduct<T1, T2, IndexList1<Indices1...>, IndexList2<Indices2...>,
   /// \param result_component the LHS tensor component to evaluate
   /// \param result_multi_index the multi-index of the component of the outer
   /// product tensor to evaluate
+  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
-      type& result_component,
+      ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     const std::array<size_t, op1_num_tensor_indices> op1_multi_index =
         get_op1_multi_index(result_multi_index);
     if constexpr (primary_child_subtree_contains_primary_start) {
       // The primary child's subtree contains at least one leg, so recurse down
       // and evaluate that first
-      t1_.evaluate_primary_subtree(result_component, op1_multi_index);
+      t1_.template evaluate_primary_subtree(result_component, op1_multi_index);
     }
 
     if constexpr (is_primary_start) {

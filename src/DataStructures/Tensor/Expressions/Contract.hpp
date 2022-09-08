@@ -1133,8 +1133,9 @@ struct TensorContract
   /// \param result_component the LHS tensor component to evaluate
   /// \param contracted_multi_index the multi-index of the component of the
   /// contracted result tensor to evaluate
+  template <typename ResultType>
   SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
-      type& result_component,
+      ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& contracted_multi_index)
       const {
     const auto lowest_multi_index_to_sum =
@@ -1145,7 +1146,8 @@ struct TensorContract
       // because, according to `compute_contraction`, the lowest multi-index is
       // the one in the last/leaf/final call to `compute_contraction` (i.e. the
       // multi-index of the final term to sum)
-      t_.evaluate_primary_subtree(result_component, lowest_multi_index_to_sum);
+      t_.template evaluate_primary_subtree(result_component,
+                                           lowest_multi_index_to_sum);
     }
     if constexpr (is_primary_start) {
       // We want to evaluate the subtree for this expression, one leg of
