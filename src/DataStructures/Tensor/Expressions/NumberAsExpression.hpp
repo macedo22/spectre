@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <limits>
 
+#include "DataStructures/Tensor/Expressions/DataTypeSupport.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "Utilities/ForceInline.hpp"
 #include "Utilities/TMPL.hpp"
@@ -33,10 +34,8 @@ struct NumberAsExpression
     : public TensorExpression<NumberAsExpression<DataType>, DataType,
                               tmpl::list<>, tmpl::list<>, tmpl::list<>>,
       MarkAsNumberAsExpression {
-  static_assert(std::is_same_v<DataType, double> or
-                    std::is_same_v<DataType, std::complex<double>>,
-                "The DataType for the NumberAsExpression is not a supported "
-                "type that can be represented as a NumberAsExpression");
+  static_assert(detail::is_supported_number_datatype<DataType>::value,
+                "TensorExpressions do not support numeric terms of this type");
 
   // === Index properties ===
   /// The type of the data being stored in the result of the expression

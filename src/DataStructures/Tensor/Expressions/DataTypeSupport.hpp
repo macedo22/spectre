@@ -2,7 +2,12 @@
 // See LICENSE.txt for details.
 
 /// \file
-/// TODO
+/// Which types are allowed, whether operations which certain types are allowed,
+/// and other type-specific properties and configuration for `TensorExpression`s
+///
+/// \details
+/// To add support for a data type, modify the templates in this file and add
+/// tests as necessary
 
 #pragma once
 
@@ -11,11 +16,76 @@
 
 #include "DataStructures/ComplexDataVector.hpp"
 #include "DataStructures/DataVector.hpp"
-#include "DataStructures/Tensor/Expressions/NumberAsExpression.hpp"
+#include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/VectorImpl.hpp"
 
 namespace tenex {
+template <typename DataType>
+struct NumberAsExpression;
+
 namespace detail {
+/// \brief Whether or not `TensorExpression`s supports using a given type as a
+/// numeric term
+///
+/// \details
+/// To add support for a new numeric data type:
+/// - modify this to include the new data type
+/// - modify other templates in this file as necessary to accommodate the data
+/// type's properties
+/// - add tests for the new data type
+///
+/// \tparam X the arithmetic data type
+template <typename X>
+using is_supported_number_datatype =
+    std::bool_constant<std::is_same_v<X, double> or
+                       std::is_same_v<X, std::complex<double>>>;
+
+/// \brief Whether or not `Tensor`s with the given data type are currently
+/// supported by `TensorExpression`s
+///
+/// \details
+/// To add support for a new `Tensor` data type:
+/// - modify this to include the new data type
+/// - modify other templates in this file as necessary to accommodate the data
+/// type's properties
+/// - add tests for the new data type
+///
+/// \tparam X the `Tensor` data type
+template <typename X>
+using is_supported_tensor_datatype = std::bool_constant<
+    std::is_same_v<X, double> or std::is_same_v<X, std::complex<double>> or
+    std::is_same_v<X, DataVector> or std::is_same_v<X, ComplexDataVector>>;
+
+/// \brief Whether or not `TensorExpression`s with the given data type are
+/// currently supported by `TensorExpression`s
+///
+/// \details
+/// See `is_supported_number_datatype` and `is_supported_tensor_datatype` for
+/// details
+///
+/// \tparam X the `Tensor` data type
+template <typename X>
+using is_supported_tensorexpression_datatype =
+    std::bool_constant<is_supported_tensor_datatype<X>::value or
+                       is_supported_number_datatype<X>::value>;
+
+/// \brief Whether or not the given type is a number
+///
+/// \tparam T the given type
+template <typename T>
+struct is_number_impl;
+
+template <typename T>
+struct is_number_impl : std::is_arithmetic<T> {};
+template <typename T>
+struct is_number_impl<std::complex<T>> : std::true_type {};
+
+/// \brief Whether or not the given type is a number
+///
+/// \tparam T the given type
+template <typename T>
+using is_number = is_number_impl<T>;
+
 /// \brief Whether or not the given type is a `VectorImpl` type
 ///
 /// \tparam T the given type
@@ -92,24 +162,6 @@ template <typename MaybeComplexDataType, typename OtherDataType>
 using is_complex_datatype_of = is_complex_datatype_of_impl<
     typename upcast_if_derived_vector_type<MaybeComplexDataType>::type,
     typename upcast_if_derived_vector_type<OtherDataType>::type>;
-
-/// \brief Whether or not `Tensor`s with the data type are currently supported
-/// by `TensorExpression`s
-///
-/// \details
-/// To add support for a new `TensorExpression` data type:
-/// - modify this alias to include the new data type
-/// - modify other templates in this file as necessary to accommodate your data
-/// type's properties for assignment and arithmetic
-/// - add tests for new data type
-///     - test templates in this file with new data type
-///     - test actual tensor expressions with new data type
-///
-/// \tparam X the `Tensor` data type
-template <typename X>
-using is_supported_tensorexpression_datatype = std::bool_constant<
-    std::is_same_v<X, double> or std::is_same_v<X, std::complex<double>> or
-    std::is_same_v<X, DataVector> or std::is_same_v<X, ComplexDataVector>>;
 
 /// \brief Whether or not a given type is assignable to another within
 /// `TensorExpression`s
@@ -336,12 +388,12 @@ struct tensor_binop_datatypes_are_supported_impl
 template <typename X1, typename X2>
 struct tensor_binop_datatypes_are_supported {
   static_assert(
-      is_supported_tensorexpression_datatype<X1>::value and
-          is_supported_tensorexpression_datatype<X2>::value,
+      is_supported_tensor_datatype<X1>::value and
+          is_supported_tensor_datatype<X2>::value,
       "Cannot perform binary operations between the two Tensors with the "
       "given data types because at least one of the data types is not "
       "supported by TensorExpressions. See "
-      "tenex::detail::is_supported_tensorexpression_datatype.");
+      "tenex::detail::is_supported_tensor_datatype.");
   using type = typename tensor_binop_datatypes_are_supported_impl<X1, X2>::type;
 };
 
@@ -351,7 +403,7 @@ struct tensor_binop_datatypes_are_supported {
 /// \details
 /// This is used to define which data types can be contained by the two
 /// `TensorExpression`s in a binary operation, e.g.
-/// `Tensor<DataVector>() OP double` abd
+/// `Tensor<DataVector>() OP double` and
 /// `Tensor<ComplexDataVector>() OP Tensor<DataVector>()` are permitted, but
 /// `Tensor<DataVector>() OP Tensor<double>()` is not. This differs from
 /// `tensor_binop_datatypes_are_supported` in that
@@ -380,6 +432,15 @@ struct tensorexpression_binop_datatypes_are_supported_impl {
 template <typename TensorExpressionType, typename NumberType>
 struct tensorexpression_binop_datatypes_are_supported_impl<
     TensorExpressionType, NumberAsExpression<NumberType>> {
+  static_assert(
+      is_supported_tensor_datatype<
+          typename TensorExpressionType::type>::value and
+          is_supported_number_datatype<NumberType>::value,
+      "Cannot perform binary operations between Tensor and number with the "
+      "given data types because at least one of the data types is not "
+      "supported by TensorExpressions. See "
+      "tenex::detail::is_supported_number_datatype and "
+      "tenex::detail::is_supported_tensor_datatype.");
   using type = std::bool_constant<binop_datatypes_are_supported<
       typename TensorExpressionType::type, NumberType>::type::value>;
 };
