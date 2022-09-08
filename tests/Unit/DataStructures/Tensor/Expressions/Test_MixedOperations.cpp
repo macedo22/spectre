@@ -857,7 +857,8 @@ void test_large_equation(const gsl::not_null<Generator*> generator,
                 shift_dot_three_index_constraint_temp(ti::a, ti::b) +
             shift_temp(ti::J) * d_pi_temp(ti::j, ti::a, ti::b));
 
-    CHECK_ITERABLE_APPROX(actual_result_tensor_temp, expected_result_tensor);
+    CHECK_ITERABLE_CUSTOM_APPROX(actual_result_tensor_temp,
+                                 expected_result_tensor, approx);
   }
 }
 
