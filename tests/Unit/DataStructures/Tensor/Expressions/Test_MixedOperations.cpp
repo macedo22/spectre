@@ -5,8 +5,7 @@
 
 #include <climits>
 #include <cstddef>
-#include <iterator>
-#include <numeric>
+#include <random>
 #include <type_traits>
 
 #include "DataStructures/DataVector.hpp"
@@ -196,18 +195,18 @@ result_tensor_type<DataType, Dim> compute_expected_large_equation(
 
       for (size_t delta = 0; delta < Dim + 1; ++delta) {
         expected_result.get(mu, nu) +=
-            2 * christoffel_second_kind.get(delta, mu, nu) *
+            2.0 * christoffel_second_kind.get(delta, mu, nu) *
                 gauge_function.get(delta) -
-            2 * pi.get(mu, delta) * pi_2_up.get(nu, delta);
+            2.0 * pi.get(mu, delta) * pi_2_up.get(nu, delta);
 
         for (size_t n = 0; n < Dim; ++n) {
           expected_result.get(mu, nu) +=
-              2 * phi_1_up.get(n, mu, delta) * phi_3_up.get(n, nu, delta);
+              2.0 * phi_1_up.get(n, mu, delta) * phi_3_up.get(n, nu, delta);
         }
 
         for (size_t alpha = 0; alpha < Dim + 1; ++alpha) {
           expected_result.get(mu, nu) -=
-              2. * christoffel_first_kind_3_up.get(mu, alpha, delta) *
+              2.0 * christoffel_first_kind_3_up.get(mu, alpha, delta) *
               christoffel_first_kind_3_up.get(nu, delta, alpha);
         }
       }
@@ -677,7 +676,9 @@ void test_large_equation(const gsl::not_null<Generator*> generator,
           shift(ti::J) * d_pi(ti::j, ti::a, ti::b));
   // [use_update]
 
-  CHECK_ITERABLE_APPROX(actual_result_tensor_filled, expected_result_tensor);
+  Approx approx = Approx::custom().epsilon(1e-12).scale(1.0);
+  CHECK_ITERABLE_CUSTOM_APPROX(actual_result_tensor_filled,
+                               expected_result_tensor, approx);
 
   // Test with TempTensor for LHS tensor
   if constexpr (not std::is_same_v<DataType, double>) {
@@ -850,7 +851,8 @@ void test_large_equation(const gsl::not_null<Generator*> generator,
                 shift_dot_three_index_constraint_temp(ti::a, ti::b) +
             shift_temp(ti::J) * d_pi_temp(ti::j, ti::a, ti::b));
 
-    CHECK_ITERABLE_APPROX(actual_result_tensor_temp, expected_result_tensor);
+    CHECK_ITERABLE_CUSTOM_APPROX(actual_result_tensor_temp,
+                                 expected_result_tensor, approx);
   }
 }
 
