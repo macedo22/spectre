@@ -38,7 +38,8 @@ namespace detail {
 /// \tparam X the arithmetic data type
 template <typename X>
 using is_supported_number_datatype =
-    std::bool_constant<std::is_same_v<X, double>>;
+    std::bool_constant<std::is_same_v<X, double> or
+                       std::is_same_v<X, std::complex<double>>>;
 
 /// \brief Whether or not `Tensor`s with the given data type are currently
 /// supported by `TensorExpression`s
@@ -50,10 +51,9 @@ using is_supported_number_datatype =
 ///
 /// \tparam X the `Tensor` data type
 template <typename X>
-using is_supported_tensor_datatype =
-    std::bool_constant<std::is_same_v<X, double> or
-                       std::is_same_v<X, DataVector> or
-                       std::is_same_v<X, ComplexDataVector>>;
+using is_supported_tensor_datatype = std::bool_constant<
+    std::is_same_v<X, double> or std::is_same_v<X, std::complex<double>> or
+    std::is_same_v<X, DataVector> or std::is_same_v<X, ComplexDataVector>>;
 
 /// \brief Whether or not the given type is a `VectorImpl` type
 ///
@@ -87,7 +87,8 @@ struct upcast_if_derived_vector_type<
 ///
 /// \details
 /// This is used to define pairings between complex-valued types and their
-/// real-valued counterparts. For example, a `ComplexDataVector`'s real-valued
+/// real-valued counterparts. For example, `std::complex<double>`'s
+/// real-valued partner is `double` and `ComplexDataVector`'s real-valued
 /// partner is `DataVector`. Keeping track of this is useful in determining
 /// which operations can and can't be performed in `TensorExpression`s.
 ///
@@ -103,6 +104,9 @@ struct is_complex_datatype_of_impl;
 /// No template specialization was matched, so it's not a known pairing
 template <typename MaybeComplexDataType, typename OtherDataType>
 struct is_complex_datatype_of_impl : std::false_type {};
+/// std::complex<T> is the complex type to T
+template <typename T>
+struct is_complex_datatype_of_impl<std::complex<T>, T> : std::true_type {};
 /// ComplexDataVector is the complex type to DataVector
 template <>
 struct is_complex_datatype_of_impl<typename ComplexDataVector::BaseType,
@@ -215,6 +219,18 @@ struct get_binop_datatype_impl<VectorImpl<ValueType, VectorType>,
   using type = VectorType;
 };
 /// @{
+/// A binary operation between a type `T` and `std::complex<T>` yields a
+/// `std::complex<T>`
+template <typename T>
+struct get_binop_datatype_impl<T, std::complex<T>> {
+  using type = std::complex<T>;
+};
+template <typename T>
+struct get_binop_datatype_impl<std::complex<T>, T> {
+  using type = std::complex<T>;
+};
+/// @}
+/// @{
 /// A binary operation between a `VectorImpl` and its underlying value type
 /// yields the `VectorImpl`, e.g. `DataVector OP double = DataVector`
 template <typename ValueType, typename VectorType>
@@ -302,7 +318,7 @@ struct binop_datatypes_are_supported {
 /// \details
 /// This is used to define which data types can be contained by the two
 /// `Tensor`s in a binary operation, e.g.
-/// `Tensor<DataVector>() OP Tensor<DataVector>()` is permitted, but
+/// `Tensor<ComplexDataVector>() OP Tensor<DataVector>()` is permitted, but
 /// `Tensor<DataVector>() OP Tensor<double>()` is not.
 ///
 /// To enable binary operations between `Tensor`s with types that are not yet
@@ -349,7 +365,8 @@ struct tensor_binop_datatypes_are_supported {
 /// \details
 /// This is used to define which data types can be contained by the two
 /// `TensorExpression`s in a binary operation, e.g.
-/// `Tensor<DataVector>() OP double` is permitted, but
+/// `Tensor<DataVector>() OP double` and
+/// `Tensor<ComplexDataVector>() OP Tensor<DataVector>()` are permitted, but
 /// `Tensor<DataVector>() OP Tensor<double>()` is not. This differs from
 /// `tensor_binop_datatypes_are_supported` in that
 /// `tensorexpression_binop_datatypes_are_supported_impl` handles all derived

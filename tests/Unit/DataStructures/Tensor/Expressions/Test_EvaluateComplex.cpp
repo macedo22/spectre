@@ -34,6 +34,13 @@ void check_values_equal(const T1& lhs_value, const T2& rhs_value) {
 }
 
 template <>
+void check_values_equal<std::complex<double>, double>(
+    const std::complex<double>& lhs_value, const double& rhs_value) {
+  CHECK(std::imag(lhs_value) == 0.0);
+  CHECK_ITERABLE_APPROX(std::real(lhs_value), rhs_value);
+}
+
+template <>
 void check_values_equal<ComplexDataVector, double>(
     const ComplexDataVector& lhs_value, const double& rhs_value) {
   for (size_t i = 0; i < lhs_value.size(); i++) {
@@ -336,6 +343,7 @@ void test_bin_ops_with_real_and_complex(
 // - real-valued and complex-valued `Tensor`s
 // - real-valued `Tensor`s and a real-valued number
 // - complex-valued `Tensor`s and a real-valued number
+// - complex-valued `Tensor`s and a complex-valued number
 //
 // \tparam ComplexDataType the data type of the complex-valued operand
 // \tparam RhsDataType the data type of the real-valued operand
@@ -344,7 +352,8 @@ void test_evaluate_large_expressions(
     const gsl::not_null<Generator*> generator,
     const ComplexDataType& used_for_size_complex,
     const RealDataType& used_for_size_real,
-    const double used_for_random_real_number) {
+    const double used_for_random_real_number,
+    const std::complex<double> used_for_random_complex_number) {
   std::uniform_real_distribution<> distribution(0.1, 1.0);
 
   // Operands for test expressions
@@ -355,6 +364,8 @@ void test_evaluate_large_expressions(
       generator, distribution, used_for_size_complex);
   const auto real_number = make_with_random_values<double>(
       generator, distribution, used_for_random_real_number);
+  const auto complex_number = make_with_random_values<std::complex<double>>(
+      generator, distribution, used_for_random_complex_number);
 
   // Tested expressions
 
@@ -394,6 +405,10 @@ void test_evaluate_large_expressions(
       tenex::evaluate(complex_scalar_times_64 + real_number);
   const Scalar<ComplexDataType> real_number_plus_complex_tensor_result =
       tenex::evaluate(real_number + complex_scalar_times_64);
+  const Scalar<ComplexDataType> complex_tensor_plus_complex_number_result =
+      tenex::evaluate(complex_scalar_times_64 + complex_number);
+  const Scalar<ComplexDataType> complex_number_plus_complex_tensor_result =
+      tenex::evaluate(complex_number + complex_scalar_times_64);
 
   // check expressions with only `Tensor`s
   CHECK_ITERABLE_APPROX(get(real_tensor_plus_real_tensor_result),
@@ -414,6 +429,10 @@ void test_evaluate_large_expressions(
                         64.0 * get(complex_scalar) + real_number);
   CHECK_ITERABLE_APPROX(get(real_number_plus_complex_tensor_result),
                         64.0 * get(complex_scalar) + real_number);
+  CHECK_ITERABLE_APPROX(get(complex_tensor_plus_complex_number_result),
+                        64.0 * get(complex_scalar) + complex_number);
+  CHECK_ITERABLE_APPROX(get(complex_number_plus_complex_tensor_result),
+                        64.0 * get(complex_scalar) + complex_number);
 }
 }  // namespace
 
@@ -425,12 +444,21 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateComplex",
 
   const double used_for_size_real_double =
       std::numeric_limits<double>::signaling_NaN();
+  const std::complex<double> used_for_size_complex_double =
+      std::complex<double>(std::numeric_limits<double>::signaling_NaN(),
+                           std::numeric_limits<double>::signaling_NaN());
   const DataVector used_for_size_real_datavector =
       DataVector(vector_size, std::numeric_limits<double>::signaling_NaN());
   const ComplexDataVector used_for_size_complex_datavector = ComplexDataVector(
       vector_size, std::numeric_limits<double>::signaling_NaN());
 
   // Test assignment of complex-valued LHS `Tensor` to single RHS term
+  test_assignment_to_single_term(make_not_null(&generator),
+                                 used_for_size_complex_double,
+                                 used_for_size_real_double);
+  test_assignment_to_single_term(make_not_null(&generator),
+                                 used_for_size_complex_double,
+                                 used_for_size_complex_double);
   test_assignment_to_single_term(make_not_null(&generator),
                                  used_for_size_complex_datavector,
                                  used_for_size_real_double);
@@ -443,6 +471,10 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateComplex",
 
   // Test assignment of a complex-valued LHS `Tensor` to a RHS expression
   // containing mathematical operations
+  test_evaluate_ops(make_not_null(&generator), used_for_size_complex_double,
+                    used_for_size_real_double);
+  test_evaluate_ops(make_not_null(&generator), used_for_size_complex_double,
+                    used_for_size_complex_double);
   test_evaluate_ops(make_not_null(&generator), used_for_size_complex_datavector,
                     used_for_size_real_double);
   test_evaluate_ops(make_not_null(&generator), used_for_size_complex_datavector,
@@ -453,11 +485,19 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateComplex",
   // Test evaluation of RHS binary operations between real-valued and
   // complex-valued terms
   test_bin_ops_with_real_and_complex(
+      make_not_null(&generator), used_for_size_complex_double,
+      used_for_size_real_double, used_for_size_real_double);
+  test_bin_ops_with_real_and_complex(
       make_not_null(&generator), used_for_size_complex_datavector,
       used_for_size_real_datavector, used_for_size_real_double);
 
   // Test evaluation of large RHS `TensorExpression`s
   test_evaluate_large_expressions(
+      make_not_null(&generator), used_for_size_complex_double,
+      used_for_size_real_double, used_for_size_real_double,
+      used_for_size_complex_double);
+  test_evaluate_large_expressions(
       make_not_null(&generator), used_for_size_complex_datavector,
-      used_for_size_real_datavector, used_for_size_real_double);
+      used_for_size_real_datavector, used_for_size_real_double,
+      used_for_size_complex_double);
 }
