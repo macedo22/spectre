@@ -115,7 +115,7 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.DataTypeSupport",
   test_is_supported_number_datatype<double, true>();
   test_is_supported_number_datatype<int, false>();
   test_is_supported_number_datatype<float, false>();
-  test_is_supported_number_datatype<std::complex<double>, false>();
+  test_is_supported_number_datatype<std::complex<double>, true>();
   test_is_supported_number_datatype<std::complex<int>, false>();
   test_is_supported_number_datatype<std::complex<float>, false>();
   test_is_supported_number_datatype<DataVector, false>();
@@ -130,7 +130,7 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.DataTypeSupport",
   test_is_supported_tensor_datatype<double, true>();
   test_is_supported_tensor_datatype<int, false>();
   test_is_supported_tensor_datatype<float, false>();
-  test_is_supported_tensor_datatype<std::complex<double>, false>();
+  test_is_supported_tensor_datatype<std::complex<double>, true>();
   test_is_supported_tensor_datatype<std::complex<int>, false>();
   test_is_supported_tensor_datatype<std::complex<float>, false>();
   test_is_supported_tensor_datatype<DataVector, true>();
@@ -194,18 +194,33 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.DataTypeSupport",
 
   test_is_complex_datatype_of<double, double>(false);
   test_is_complex_datatype_of<double, float>(false);
+  test_is_complex_datatype_of<double, std::complex<double>>(false);
+  test_is_complex_datatype_of<double, std::complex<float>>(false);
   test_is_complex_datatype_of<double, DataVector>(false);
   test_is_complex_datatype_of<double, ComplexDataVector>(false);
   test_is_complex_datatype_of<double, ArbitraryType>(false);
 
+  test_is_complex_datatype_of<std::complex<double>, double>(true);
+  test_is_complex_datatype_of<std::complex<double>, float>(false);
+  test_is_complex_datatype_of<std::complex<double>, std::complex<double>>(
+      false);
+  test_is_complex_datatype_of<std::complex<double>, std::complex<float>>(false);
+  test_is_complex_datatype_of<std::complex<double>, DataVector>(false);
+  test_is_complex_datatype_of<std::complex<double>, ComplexDataVector>(false);
+  test_is_complex_datatype_of<std::complex<double>, ArbitraryType>(false);
+
   test_is_complex_datatype_of<DataVector, double>(false);
   test_is_complex_datatype_of<DataVector, float>(false);
+  test_is_complex_datatype_of<DataVector, std::complex<double>>(false);
+  test_is_complex_datatype_of<DataVector, std::complex<float>>(false);
   test_is_complex_datatype_of<DataVector, DataVector>(false);
   test_is_complex_datatype_of<DataVector, ComplexDataVector>(false);
   test_is_complex_datatype_of<DataVector, ArbitraryType>(false);
 
   test_is_complex_datatype_of<ComplexDataVector, double>(false);
   test_is_complex_datatype_of<ComplexDataVector, float>(false);
+  test_is_complex_datatype_of<ComplexDataVector, std::complex<double>>(false);
+  test_is_complex_datatype_of<ComplexDataVector, std::complex<float>>(false);
   test_is_complex_datatype_of<ComplexDataVector, DataVector>(true);
   test_is_complex_datatype_of<ComplexDataVector, ComplexDataVector>(false);
   test_is_complex_datatype_of<ComplexDataVector, ArbitraryType>(false);
@@ -213,12 +228,27 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.DataTypeSupport",
   // Test whether the first data type is assignable to the second data type
 
   test_lhs_datatype_is_assignable_to_rhs_datatype<double, double>(true);
+  test_lhs_datatype_is_assignable_to_rhs_datatype<double, std::complex<double>>(
+      false);
   test_lhs_datatype_is_assignable_to_rhs_datatype<double, DataVector>(false);
   test_lhs_datatype_is_assignable_to_rhs_datatype<double, ComplexDataVector>(
       false);
   test_lhs_datatype_is_assignable_to_rhs_datatype<double, ArbitraryType>(false);
 
+  test_lhs_datatype_is_assignable_to_rhs_datatype<std::complex<double>, double>(
+      true);
+  test_lhs_datatype_is_assignable_to_rhs_datatype<std::complex<double>,
+                                                  std::complex<double>>(true);
+  test_lhs_datatype_is_assignable_to_rhs_datatype<std::complex<double>,
+                                                  DataVector>(false);
+  test_lhs_datatype_is_assignable_to_rhs_datatype<std::complex<double>,
+                                                  ComplexDataVector>(false);
+  test_lhs_datatype_is_assignable_to_rhs_datatype<std::complex<double>,
+                                                  ArbitraryType>(false);
+
   test_lhs_datatype_is_assignable_to_rhs_datatype<DataVector, double>(true);
+  test_lhs_datatype_is_assignable_to_rhs_datatype<DataVector,
+                                                  std::complex<double>>(false);
   test_lhs_datatype_is_assignable_to_rhs_datatype<DataVector, DataVector>(true);
   test_lhs_datatype_is_assignable_to_rhs_datatype<DataVector,
                                                   ComplexDataVector>(false);
@@ -228,6 +258,8 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.DataTypeSupport",
   test_lhs_datatype_is_assignable_to_rhs_datatype<ComplexDataVector, double>(
       true);
   test_lhs_datatype_is_assignable_to_rhs_datatype<ComplexDataVector,
+                                                  std::complex<double>>(true);
+  test_lhs_datatype_is_assignable_to_rhs_datatype<ComplexDataVector,
                                                   DataVector>(true);
   test_lhs_datatype_is_assignable_to_rhs_datatype<ComplexDataVector,
                                                   ComplexDataVector>(true);
@@ -235,6 +267,8 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.DataTypeSupport",
                                                   ArbitraryType>(false);
 
   test_lhs_datatype_is_assignable_to_rhs_datatype<ArbitraryType, double>(false);
+  test_lhs_datatype_is_assignable_to_rhs_datatype<ArbitraryType,
+                                                  std::complex<double>>(false);
   test_lhs_datatype_is_assignable_to_rhs_datatype<ArbitraryType, DataVector>(
       false);
   test_lhs_datatype_is_assignable_to_rhs_datatype<ArbitraryType,
@@ -247,22 +281,37 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.DataTypeSupport",
   // Test whether binary operations can be performed between two data types
 
   test_binop_datatypes_are_supported<double, double>(true);
+  test_binop_datatypes_are_supported<double, std::complex<double>>(true);
   test_binop_datatypes_are_supported<double, DataVector>(true);
   test_binop_datatypes_are_supported<double, ComplexDataVector>(true);
   test_binop_datatypes_are_supported<double, ArbitraryType>(false);
 
+  test_binop_datatypes_are_supported<std::complex<double>, double>(true);
+  test_binop_datatypes_are_supported<std::complex<double>,
+                                     std::complex<double>>(true);
+  test_binop_datatypes_are_supported<std::complex<double>, DataVector>(false);
+  test_binop_datatypes_are_supported<std::complex<double>, ComplexDataVector>(
+      true);
+  test_binop_datatypes_are_supported<std::complex<double>, ArbitraryType>(
+      false);
+
   test_binop_datatypes_are_supported<DataVector, double>(true);
+  test_binop_datatypes_are_supported<DataVector, std::complex<double>>(false);
   test_binop_datatypes_are_supported<DataVector, DataVector>(true);
   test_binop_datatypes_are_supported<DataVector, ComplexDataVector>(true);
   test_binop_datatypes_are_supported<DataVector, ArbitraryType>(false);
 
   test_binop_datatypes_are_supported<ComplexDataVector, double>(true);
+  test_binop_datatypes_are_supported<ComplexDataVector, std::complex<double>>(
+      true);
   test_binop_datatypes_are_supported<ComplexDataVector, DataVector>(true);
   test_binop_datatypes_are_supported<ComplexDataVector, ComplexDataVector>(
       true);
   test_binop_datatypes_are_supported<ComplexDataVector, ArbitraryType>(false);
 
   test_binop_datatypes_are_supported<ArbitraryType, double>(false);
+  test_binop_datatypes_are_supported<ArbitraryType, std::complex<double>>(
+      false);
   test_binop_datatypes_are_supported<ArbitraryType, DataVector>(false);
   test_binop_datatypes_are_supported<ArbitraryType, ComplexDataVector>(false);
   // true because binop_datatypes_are_supported_impl does not check if the types
@@ -273,17 +322,32 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.DataTypeSupport",
   // between two types
 
   test_get_binop_datatype<double, double, double>();
+  test_get_binop_datatype<double, std::complex<double>, std::complex<double>>();
   test_get_binop_datatype<double, DataVector, DataVector>();
   test_get_binop_datatype<double, ComplexDataVector, ComplexDataVector>();
   test_get_binop_datatype<double, ArbitraryType, std::bool_constant<false>>();
 
+  test_get_binop_datatype<std::complex<double>, double, std::complex<double>>();
+  test_get_binop_datatype<std::complex<double>, std::complex<double>,
+                          std::complex<double>>();
+  test_get_binop_datatype<std::complex<double>, DataVector,
+                          std::bool_constant<false>>();
+  test_get_binop_datatype<std::complex<double>, ComplexDataVector,
+                          ComplexDataVector>();
+  test_get_binop_datatype<std::complex<double>, ArbitraryType,
+                          std::bool_constant<false>>();
+
   test_get_binop_datatype<DataVector, double, DataVector>();
+  test_get_binop_datatype<DataVector, std::complex<double>,
+                          std::bool_constant<false>>();
   test_get_binop_datatype<DataVector, DataVector, DataVector>();
   test_get_binop_datatype<DataVector, ComplexDataVector, ComplexDataVector>();
   test_get_binop_datatype<DataVector, ArbitraryType,
                           std::bool_constant<false>>();
 
   test_get_binop_datatype<ComplexDataVector, double, ComplexDataVector>();
+  test_get_binop_datatype<ComplexDataVector, std::complex<double>,
+                          ComplexDataVector>();
   test_get_binop_datatype<ComplexDataVector, DataVector, ComplexDataVector>();
   test_get_binop_datatype<ComplexDataVector, ComplexDataVector,
                           ComplexDataVector>();
@@ -291,6 +355,8 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.DataTypeSupport",
                           std::bool_constant<false>>();
 
   test_get_binop_datatype<ArbitraryType, double, std::bool_constant<false>>();
+  test_get_binop_datatype<ArbitraryType, std::complex<double>,
+                          std::bool_constant<false>>();
   test_get_binop_datatype<ArbitraryType, DataVector,
                           std::bool_constant<false>>();
   test_get_binop_datatype<ArbitraryType, ComplexDataVector,
@@ -303,17 +369,32 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.DataTypeSupport",
   // the given data types
 
   test_tensor_binop_datatypes_are_supported<double, double>(true);
+  test_tensor_binop_datatypes_are_supported<double, std::complex<double>>(true);
   test_tensor_binop_datatypes_are_supported<double, DataVector>(false);
   test_tensor_binop_datatypes_are_supported<double, ComplexDataVector>(false);
   test_tensor_binop_datatypes_are_supported<double, ArbitraryType>(false);
 
+  test_tensor_binop_datatypes_are_supported<std::complex<double>, double>(true);
+  test_tensor_binop_datatypes_are_supported<std::complex<double>,
+                                            std::complex<double>>(true);
+  test_tensor_binop_datatypes_are_supported<std::complex<double>, DataVector>(
+      false);
+  test_tensor_binop_datatypes_are_supported<std::complex<double>,
+                                            ComplexDataVector>(false);
+  test_tensor_binop_datatypes_are_supported<std::complex<double>,
+                                            ArbitraryType>(false);
+
   test_tensor_binop_datatypes_are_supported<DataVector, double>(false);
+  test_tensor_binop_datatypes_are_supported<DataVector, std::complex<double>>(
+      false);
   test_tensor_binop_datatypes_are_supported<DataVector, DataVector>(true);
   test_tensor_binop_datatypes_are_supported<DataVector, ComplexDataVector>(
       true);
   test_tensor_binop_datatypes_are_supported<DataVector, ArbitraryType>(false);
 
   test_tensor_binop_datatypes_are_supported<ComplexDataVector, double>(false);
+  test_tensor_binop_datatypes_are_supported<ComplexDataVector,
+                                            std::complex<double>>(false);
   test_tensor_binop_datatypes_are_supported<ComplexDataVector, DataVector>(
       true);
   test_tensor_binop_datatypes_are_supported<ComplexDataVector,
@@ -322,6 +403,8 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.DataTypeSupport",
       false);
 
   test_tensor_binop_datatypes_are_supported<ArbitraryType, double>(false);
+  test_tensor_binop_datatypes_are_supported<ArbitraryType,
+                                            std::complex<double>>(false);
   test_tensor_binop_datatypes_are_supported<ArbitraryType, DataVector>(false);
   test_tensor_binop_datatypes_are_supported<ArbitraryType, ComplexDataVector>(
       false);
@@ -335,23 +418,64 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.DataTypeSupport",
   test_tensorexpression_binop_datatypes_are_supported<
       number_expression<double>, tensor_expression<double>>(true);
   test_tensorexpression_binop_datatypes_are_supported<
+      number_expression<double>, tensor_expression<std::complex<double>>>(true);
+  test_tensorexpression_binop_datatypes_are_supported<
       number_expression<double>, tensor_expression<DataVector>>(true);
   test_tensorexpression_binop_datatypes_are_supported<
       number_expression<double>, tensor_expression<ComplexDataVector>>(true);
 
   test_tensorexpression_binop_datatypes_are_supported<
+      number_expression<std::complex<double>>, tensor_expression<double>>(true);
+  test_tensorexpression_binop_datatypes_are_supported<
+      number_expression<std::complex<double>>,
+      tensor_expression<std::complex<double>>>(true);
+  test_tensorexpression_binop_datatypes_are_supported<
+      number_expression<std::complex<double>>, tensor_expression<DataVector>>(
+      false);
+  test_tensorexpression_binop_datatypes_are_supported<
+      number_expression<std::complex<double>>,
+      tensor_expression<ComplexDataVector>>(true);
+
+  test_tensorexpression_binop_datatypes_are_supported<
       tensor_expression<double>, number_expression<double>>(true);
   test_tensorexpression_binop_datatypes_are_supported<
+      tensor_expression<double>, number_expression<std::complex<double>>>(true);
+  test_tensorexpression_binop_datatypes_are_supported<
       tensor_expression<double>, tensor_expression<double>>(true);
+  test_tensorexpression_binop_datatypes_are_supported<
+      tensor_expression<double>, tensor_expression<std::complex<double>>>(true);
   test_tensorexpression_binop_datatypes_are_supported<
       tensor_expression<double>, tensor_expression<DataVector>>(false);
   test_tensorexpression_binop_datatypes_are_supported<
       tensor_expression<double>, tensor_expression<ComplexDataVector>>(false);
 
   test_tensorexpression_binop_datatypes_are_supported<
+      tensor_expression<std::complex<double>>, number_expression<double>>(true);
+  test_tensorexpression_binop_datatypes_are_supported<
+      tensor_expression<std::complex<double>>,
+      number_expression<std::complex<double>>>(true);
+  test_tensorexpression_binop_datatypes_are_supported<
+      tensor_expression<std::complex<double>>, tensor_expression<double>>(true);
+  test_tensorexpression_binop_datatypes_are_supported<
+      tensor_expression<std::complex<double>>,
+      tensor_expression<std::complex<double>>>(true);
+  test_tensorexpression_binop_datatypes_are_supported<
+      tensor_expression<std::complex<double>>, tensor_expression<DataVector>>(
+      false);
+  test_tensorexpression_binop_datatypes_are_supported<
+      tensor_expression<std::complex<double>>,
+      tensor_expression<ComplexDataVector>>(false);
+
+  test_tensorexpression_binop_datatypes_are_supported<
       tensor_expression<DataVector>, number_expression<double>>(true);
   test_tensorexpression_binop_datatypes_are_supported<
+      tensor_expression<DataVector>, number_expression<std::complex<double>>>(
+      false);
+  test_tensorexpression_binop_datatypes_are_supported<
       tensor_expression<DataVector>, tensor_expression<double>>(false);
+  test_tensorexpression_binop_datatypes_are_supported<
+      tensor_expression<DataVector>, tensor_expression<std::complex<double>>>(
+      false);
   test_tensorexpression_binop_datatypes_are_supported<
       tensor_expression<DataVector>, tensor_expression<DataVector>>(true);
   test_tensorexpression_binop_datatypes_are_supported<

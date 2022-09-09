@@ -7,6 +7,7 @@
 #pragma once
 
 #include <array>
+#include <complex>
 #include <cstddef>
 #include <limits>
 #include <type_traits>
@@ -347,6 +348,7 @@ SPECTRE_ALWAYS_INLINE auto operator/(
   return tenex::Divide<T1, T2, Args2...>(~t1, ~t2);
 }
 
+/// @{
 /// \ingroup TensorExpressionsGroup
 /// \brief Returns the tensor expression representing the quotient of a tensor
 /// expression over a number
@@ -364,7 +366,16 @@ SPECTRE_ALWAYS_INLINE auto operator/(
     const N number) {
   return t * tenex::NumberAsExpression(1.0 / number);
 }
+template <typename T, typename N>
+SPECTRE_ALWAYS_INLINE auto operator/(
+    const TensorExpression<T, typename T::type, typename T::symmetry,
+                           typename T::index_list, typename T::args_list>& t,
+    const std::complex<N>& number) {
+  return t * tenex::NumberAsExpression(1.0 / number);
+}
+/// @}
 
+/// @{
 /// \ingroup TensorExpressionsGroup
 /// \brief Returns the tensor expression representing the quotient of a number
 /// over a tensor expression that evaluates to a rank 0 tensor
@@ -380,3 +391,11 @@ SPECTRE_ALWAYS_INLINE auto operator/(
                            typename T::index_list, typename T::args_list>& t) {
   return tenex::NumberAsExpression(number) / t;
 }
+template <typename T, typename N>
+SPECTRE_ALWAYS_INLINE auto operator/(
+    const std::complex<N>& number,
+    const TensorExpression<T, typename T::type, typename T::symmetry,
+                           typename T::index_list, typename T::args_list>& t) {
+  return tenex::NumberAsExpression(number) / t;
+}
+/// @}
