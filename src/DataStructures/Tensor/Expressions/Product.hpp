@@ -20,6 +20,7 @@
 #include "DataStructures/Tensor/Symmetry.hpp"
 #include "Utilities/ForceInline.hpp"
 #include "Utilities/Gsl.hpp"
+#include "Utilities/Requires.hpp"
 #include "Utilities/TMPL.hpp"
 
 namespace tenex {

@@ -2,8 +2,9 @@
 // See LICENSE.txt for details.
 
 /// \file
-/// Which types are allowed, whether operations which certain types are allowed,
-/// and other type-specific properties and configuration for `TensorExpression`s
+/// Defines which types are allowed, whether operations which certain types are
+/// allowed, and other type-specific properties and configuration for
+/// `TensorExpression`s
 ///
 /// \details
 /// To add support for a data type, modify the templates in this file and the
@@ -32,11 +33,9 @@ namespace detail {
 /// numeric term
 ///
 /// \details
-/// To add support for a new numeric data type:
-/// - modify this to include the new data type
-/// - modify other templates in this file as necessary to accommodate the data
-/// type's properties
-/// - add tests for the new data type
+/// To make it possible to use a new numeric data type as a term in
+/// `TensorExpression`s, add the type to this alias and adjust other templates
+/// in this file, as necessary.
 ///
 /// \tparam X the arithmetic data type
 template <typename X>
@@ -48,31 +47,15 @@ using is_supported_number_datatype =
 /// supported by `TensorExpression`s
 ///
 /// \details
-/// To add support for a new `Tensor` data type:
-/// - modify this to include the new data type
-/// - modify other templates in this file as necessary to accommodate the data
-/// type's properties
-/// - add tests for the new data type
+/// To make it possible to use a new data type in a `Tensor` term in
+/// `TensorExpression`s, add the type to this alias and adjust other templates
+/// in this file, as necessary.
 ///
 /// \tparam X the `Tensor` data type
 template <typename X>
 using is_supported_tensor_datatype = std::bool_constant<
     std::is_same_v<X, double> or std::is_same_v<X, std::complex<double>> or
     std::is_same_v<X, DataVector> or std::is_same_v<X, ComplexDataVector>>;
-
-/// \brief Whether or not `TensorExpression`s with the given data type are
-/// currently supported by `TensorExpression`s
-///
-/// \details
-/// See `is_supported_number_datatype` and `is_supported_tensor_datatype` for
-/// which numeric types and which `Tensor` types can be the types of the terms
-/// in `TensorExpression`s
-///
-/// \tparam X the `Tensor` data type
-template <typename X>
-using is_supported_tensorexpression_datatype =
-    std::bool_constant<is_supported_tensor_datatype<X>::value or
-                       is_supported_number_datatype<X>::value>;
 
 /// \brief Whether or not the given type is a `VectorImpl` type
 ///
@@ -159,8 +142,8 @@ using is_complex_datatype_of = is_complex_datatype_of_impl<
 /// the result of a `TensorExpression`. For example, you can assign a
 /// `ComplexDataVector` to a `DataVector`, but not vice versa.
 ///
-/// To make `TensorExpression`s aware of a new pairing, modify a current
-/// template specialization or add a new one.
+/// To enable assignment between two types that is not yet supported, modify a
+/// current template specialization or add a new one.
 ///
 /// \tparam LhsDataType the type being assigned
 /// \tparam RhsDataType the type to assign the `LhsDataType` to
@@ -201,13 +184,6 @@ struct lhs_datatype_is_assignable_to_rhs_datatype_impl<
 /// \tparam RhsDataType the type to assign the `LhsDataType` to
 template <typename LhsDataType, typename RhsDataType>
 struct lhs_datatype_is_assignable_to_rhs_datatype {
-  static_assert(
-      is_supported_tensorexpression_datatype<LhsDataType>::value and
-          is_supported_tensorexpression_datatype<RhsDataType>::value,
-      "Cannot assign the LHS Tensor's data type to the RHS TensorExpression's "
-      "data type because at least one of the data types is not supported by "
-      "TensorExpressions. See "
-      "tenex::detail::is_supported_tensorexpression_datatype.");
   using type = lhs_datatype_is_assignable_to_rhs_datatype_impl<
       typename upcast_if_derived_vector_type<LhsDataType>::type,
       typename upcast_if_derived_vector_type<RhsDataType>::type>;
@@ -221,8 +197,8 @@ struct lhs_datatype_is_assignable_to_rhs_datatype {
 /// within `TensorExpression`s, e.g. `double OP double = double` and
 /// `ComplexDataVector OP DataVector = ComplexDataVector`.
 ///
-/// To make `TensorExpression`s aware of a new pairing, modify a current
-/// template specialization or add a new one.
+/// To enable binary operations between two types that is not yet supported,
+/// modify a current template specialization or add a new one.
 ///
 /// \tparam X1 the data type of one operand
 /// \tparam X2 the data type of the other operand
@@ -351,8 +327,8 @@ struct binop_datatypes_are_supported {
 /// `Tensor<ComplexDataVector>() OP Tensor<DataVector>()` is permitted, but
 /// `Tensor<DataVector>() OP Tensor<double>()` is not.
 ///
-/// To make `TensorExpression`s aware of a new pairing, modify a current
-/// template specialization or add a new one.
+/// To enable binary operations between `Tensor`s with types that are not yet
+/// supported, modify a current template specialization or add a new one.
 ///
 /// \tparam X1 the data type of one `Tensor` operand
 /// \tparam X2 the data type of the other `Tensor` operand
@@ -404,8 +380,9 @@ struct tensor_binop_datatypes_are_supported {
 /// `tensor_binop_datatypes_are_supported` only handles the cases where both
 /// `TensorExpression`s represent `Tensor`s.
 ///
-/// To make `TensorExpression`s aware of a new pairing, modify a current
-/// template specialization or add a new one.
+/// To enable binary operations between `TensorExpression`s with types that
+/// are not yet supported, modify a current template specialization or add a
+/// new one.
 ///
 /// \tparam T1 the first `TensorExpression` operand
 /// \tparam T2 the second `TensorExpression` operand

@@ -43,16 +43,6 @@ void test_is_supported_tensor_datatype() {
 }
 
 template <typename T, bool Expected>
-void test_is_supported_tensorexpression_datatype() {
-  // Tested at compile time so other tests can use this
-  static_assert(
-      tenex::detail::is_supported_tensorexpression_datatype<T>::value ==
-          Expected,
-      "Test for tenex::detail::test_is_supported_tensorexpression_datatype "
-      "failed.");
-}
-
-template <typename T, bool Expected>
 void test_is_vector() {
   // Tested at compile time so upcast_if_derived_vector_type can be used by
   // other tests, since upcast_if_derived_vector_type relies on is_vector
@@ -148,21 +138,6 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.DataTypeSupport",
   test_is_supported_tensor_datatype<ModalVector, false>();
   test_is_supported_tensor_datatype<ComplexModalVector, false>();
   test_is_supported_tensor_datatype<ArbitraryType, false>();
-
-  // Test which types can and can't appear as a data type for a
-  // `TensorExpression`
-
-  test_is_supported_tensorexpression_datatype<double, true>();
-  test_is_supported_tensorexpression_datatype<int, false>();
-  test_is_supported_tensorexpression_datatype<float, false>();
-  test_is_supported_tensorexpression_datatype<std::complex<double>, true>();
-  test_is_supported_tensorexpression_datatype<std::complex<int>, false>();
-  test_is_supported_tensorexpression_datatype<std::complex<float>, false>();
-  test_is_supported_tensorexpression_datatype<DataVector, true>();
-  test_is_supported_tensorexpression_datatype<ComplexDataVector, true>();
-  test_is_supported_tensorexpression_datatype<ModalVector, false>();
-  test_is_supported_tensorexpression_datatype<ComplexModalVector, false>();
-  test_is_supported_tensorexpression_datatype<ArbitraryType, false>();
 
   // Test helper function that determines if a type is a `VectorImpl` type
 

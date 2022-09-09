@@ -4,7 +4,6 @@
 #pragma once
 
 #include <array>
-#include <complex>
 #include <cstddef>
 #include <limits>
 
@@ -23,7 +22,7 @@ namespace tenex {
 struct MarkAsNumberAsExpression {};
 
 /// \ingroup TensorExpressionsGroup
-/// \brief Defines an expression representing a `double`
+/// \brief Defines an expression representing a number
 ///
 /// \details
 /// For details on aliases and members defined in this class, as well as general
@@ -35,7 +34,9 @@ struct NumberAsExpression
                               tmpl::list<>, tmpl::list<>, tmpl::list<>>,
       MarkAsNumberAsExpression {
   static_assert(detail::is_supported_number_datatype<DataType>::value,
-                "TensorExpressions do not support numeric terms of this type");
+                "TensorExpressions currently only support numeric terms whose "
+                "type is double or std::complex<double>. It is possible to add "
+                "support for more numeric types.");
 
   // === Index properties ===
   /// The type of the data being stored in the result of the expression
@@ -99,7 +100,8 @@ struct NumberAsExpression
   /// leaf of the first leg being evaluated in the overall tree, we don't want
   /// to use a `double` to initialize/size one of our LHS tensor's components,
   /// because things would break if the LHS tensor components are supposed to
-  /// be e.g. a `DataVector` with a specific size.
+  /// be e.g. a `DataVector` with a specific size. TODO make sure this is
+  /// removed
   static constexpr bool is_primary_start = false;
   /// If on the primary path, whether or not the expression's child along the
   /// primary path is a subtree that contains a starting point of a leg along
@@ -153,7 +155,7 @@ struct NumberAsExpression
   // initialize a LHS result tensor component. We would run into trouble if e.g.
   // the tensor components in the equations are `DataVector`s, but then we
   // initialize a LHS component using the `double` stored in this leaf
-  // expression on the primary path.
+  // expression on the primary path. TODO make sure this is removed
   template <typename ResultType>
   void evaluate_primary_subtree(
       ResultType&,

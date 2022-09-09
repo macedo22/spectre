@@ -247,6 +247,14 @@ struct Expression {};
 /// should call this function on the root node for the whole tree if there is
 /// determined to be any splits in the tree.
 ///
+/// ## Data type support
+/// Which types can be used, which operations with which types can be performed,
+/// and other type-specific support and configuration can be found in
+/// `DataStructures/Tensor/Expressions/DataTypeSupport.hpp`. To add support for
+/// equation terms with a certain type or to modify the configuration for a
+/// type that is already supported, see the contents of that file and modify
+/// settings as necessary.
+///
 /// ## Current advice for improving and extending `TensorExpression`s
 /// - Derived `TensorExpression` classes (or the overloads that produce them)
 /// should include `static_assert`s for ensuring mathematical correctness
@@ -313,9 +321,6 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   static constexpr auto num_tensor_indices = tmpl::size<index_list>::value;
 
   virtual ~TensorExpression() = 0;
-
-  /// The derived `TensorExpression` type
-  using derived_type = Derived;
 
   /// @{
   /// Derived is casted down to the derived class. This is enabled by the
