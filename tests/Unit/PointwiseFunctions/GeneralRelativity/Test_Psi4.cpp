@@ -88,7 +88,7 @@ void test_psi_4(const DataType& used_for_size) {
                         const tnsr::I<DataType, SpatialDim, Frame::Inertial>&) =
       &gr::psi_4<SpatialDim, Frame::Inertial, DataType>;
   pypp::check_with_random_values<1>(f, "GeneralRelativity.Psi4", "psi_4",
-                                    {{{-1., 1.}}}, used_for_size);
+                                    {{{0.1, 1.}}}, used_for_size);
 }
 }  // namespace
 
