@@ -1109,6 +1109,28 @@ struct create_from_yaml<std::variant<T...>> {
     return result;
   }
 };
+
+template <typename OptionList>
+Parser<tmpl::remove<OptionList, Tags::InputSource>> get_options_parser(
+    String help) {
+  return Parser<tmpl::remove<OptionList, Tags::InputSource>> options(
+      Metavariables::help);
+}
+
+template <typename OptionList, typename Metavariables, typename Group>
+void initialize_options(Parser<OptionList, Group>& parser) {
+  parser.template apply<OptionList, Metavariables>([](auto... args) {
+    (void)std::initializer_list<char>{((void)args, '0')...};
+  });
+}
+
+template <typename OptionList, typename Metavariables, typename Group>
+tuples::tagged_tuple_from_typelist<OptionList> get_tagged_tuple_of_options(
+    Parser<OptionList, Group>& parser) {
+  return options.template apply<OptionList, Metavariables>([](auto... args) {
+    return tuples::tagged_tuple_from_typelist<OptionList>(std::move(args)...);
+  });
+}
 }  // namespace Options
 
 /// \cond
