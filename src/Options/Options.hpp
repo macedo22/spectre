@@ -14,12 +14,10 @@
 #include <string>
 #include <utility>
 
-#include "Options/Tags.hpp"
 #include "Utilities/ErrorHandling/Error.hpp"
 #include "Utilities/NoSuchType.hpp"
 #include "Utilities/PrettyType.hpp"
 #include "Utilities/TMPL.hpp"
-#include "Utilities/TaggedTuple.hpp"
 #include "Utilities/TypeTraits.hpp"
 
 /// \cond
@@ -30,9 +28,6 @@ class Node;
 
 /// Utilities for parsing input files.
 namespace Options {
-template <typename OptionList, typename Group = NoSuchType>
-class Parser;
-
 /// The string used in option structs
 using String = const char* const;
 
@@ -142,28 +137,6 @@ class Option {
   std::unique_ptr<YAML::Node> node_;
   Context context_;
 };
-
-/// Construct and return an options parser from an options list
-///
-/// \warning This method is for internal use of the option parser.
-template <typename OptionList>
-Parser<tmpl::remove<OptionList, Tags::InputSource>> get_options_parser(
-    String help);
-
-/// Initialze all the options from an options list
-///
-/// \warning This method is for internal use of the option parser.
-template <typename OptionList, typename Metavariables,
-          typename Group = NoSuchType>
-void initialize_options(Parser<OptionList, Group>& parser);
-
-/// Get a `TaggedTuple` of the options from an options list
-///
-/// \warning This method is for internal use of the option parser.
-template <typename OptionList, typename Metavariables,
-          typename Group = NoSuchType>
-tuples::tagged_tuple_from_typelist<OptionList> get_tagged_tuple_of_options(
-    Parser<OptionList, Group>& parser);
 
 /// \ingroup OptionParsingGroup
 /// Used by the parser to create an object.  The default action is to
