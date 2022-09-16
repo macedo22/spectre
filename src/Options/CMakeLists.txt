@@ -22,6 +22,7 @@ spectre_target_headers(
   Options.hpp
   OptionsDetails.hpp
   ParseOptions.hpp
+  ParseOptions.tpp
   StdComplex.hpp
   Tags.hpp
   )

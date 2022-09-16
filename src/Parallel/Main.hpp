@@ -25,6 +25,7 @@
 #include "Parallel/CreateFromOptions.hpp"
 #include "Parallel/GlobalCache.hpp"
 #include "Parallel/Local.hpp"
+#include "Parallel/MainOptionList.hpp"
 #include "Parallel/ParallelComponentHelpers.hpp"
 #include "Parallel/Phase.hpp"
 #include "Parallel/PhaseControl/ExecutePhaseChange.hpp"
@@ -127,15 +128,16 @@ class Main : public CBase_Main<Metavariables> {
   // Check if future checkpoint dirs are available; error if any already exist.
   void check_future_checkpoint_dirs_available() const;
 
-  template <typename ParallelComponent>
-  using parallel_component_options =
-      Parallel::get_option_tags<typename ParallelComponent::initialization_tags,
-                                Metavariables>;
-  using option_list = tmpl::remove_duplicates<tmpl::flatten<tmpl::list<
-      Parallel::get_option_tags<const_global_cache_tags, Metavariables>,
-      Parallel::get_option_tags<mutable_global_cache_tags, Metavariables>,
-      tmpl::transform<component_list,
-                      tmpl::bind<parallel_component_options, tmpl::_1>>>>>;
+  // template <typename ParallelComponent>
+  // using parallel_component_options =
+  //     Parallel::get_option_tags<typename ParallelComponent::initialization_tags,
+  //                               Metavariables>;
+  // using option_list = tmpl::remove_duplicates<tmpl::flatten<tmpl::list<
+  //     Parallel::get_option_tags<const_global_cache_tags, Metavariables>,
+  //     Parallel::get_option_tags<mutable_global_cache_tags, Metavariables>,
+  //     tmpl::transform<component_list,
+  //                     tmpl::bind<parallel_component_options, tmpl::_1>>>>>;
+  using option_list = typename get_main_option_list<Metavariables>::type;
   using parallel_component_tag_list = tmpl::transform<
       component_list,
       tmpl::bind<
@@ -369,6 +371,7 @@ Main<Metavariables>::Main(CkArgMsg* msg) {
       options.template apply<option_list, Metavariables>([](auto... args) {
         (void)std::initializer_list<char>{((void)args, '0')...};
       });
+      // create_all_options<option_list, Metavariables>();
       if (has_options) {
         Parallel::printf("\n%s parsed successfully!\n", input_file);
       } else {
