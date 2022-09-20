@@ -26,28 +26,26 @@ template <typename ValueType>
 using tensor_expression =
     tenex::TensorAsExpression<Scalar<ValueType>, tmpl::list<>>;
 
-template <typename T, bool Expected>
+template <bool Expected, typename DataTypes>
 void test_is_supported_number_datatype() {
-  // Tested at compile time so other tests can use this
-  static_assert(
-      tenex::detail::is_supported_number_datatype<T>::value == Expected,
-      "Test for tenex::detail::test_is_supported_number_datatype failed.");
+  tmpl::for_each<DataTypes>([](auto datatype_value) {
+    using datatype = tmpl::type_from<decltype(datatype_value)>;
+    // Tested at compile time so other tests can use this
+    static_assert(
+        tenex::detail::is_supported_number_datatype_v<datatype> == Expected,
+        "Test for tenex::detail::test_is_supported_number_datatype failed.");
+  });
 }
 
-template <typename T, bool Expected>
+template <bool Expected, typename DataTypes>
 void test_is_supported_tensor_datatype() {
-  // Tested at compile time so other tests can use this
-  static_assert(
-      tenex::detail::is_supported_tensor_datatype<T>::value == Expected,
-      "Test for tenex::detail::test_is_supported_tensor_datatype failed.");
-}
-
-template <typename T, bool Expected>
-void test_is_vector() {
-  // Tested at compile time so upcast_if_derived_vector_type can be used by
-  // other tests, since upcast_if_derived_vector_type relies on is_vector
-  static_assert(tenex::detail::is_vector<T>::value == Expected,
-                "Test for tenex::detail::is_vector failed.");
+  tmpl::for_each<DataTypes>([](auto datatype_value) {
+    using datatype = tmpl::type_from<decltype(datatype_value)>;
+    // Tested at compile time so other tests can use this
+    static_assert(
+        tenex::detail::is_supported_tensor_datatype_v<datatype> == Expected,
+        "Test for tenex::detail::test_is_supported_tensor_datatype failed.");
+  });
 }
 
 template <typename T, typename Expected>
@@ -62,29 +60,24 @@ void test_upcast_if_derived_vector_type() {
 
 template <typename MaybeComplexDataType, typename OtherDataType>
 void test_is_complex_datatype_of(const bool expected) {
-  CHECK(tenex::detail::is_complex_datatype_of<MaybeComplexDataType,
-                                              OtherDataType>::value ==
-        expected);
+  CHECK(tenex::detail::is_complex_datatype_of_v<MaybeComplexDataType,
+                                                OtherDataType> == expected);
 }
 
 template <typename LhsDataType, typename RhsDataType>
-void test_lhs_datatype_is_assignable_to_rhs_datatype(
-    const bool support_expected) {
-  CHECK(tenex::detail::lhs_datatype_is_assignable_to_rhs_datatype_impl<
-            typename tenex::detail::upcast_if_derived_vector_type<
-                LhsDataType>::type,
-            typename tenex::detail::upcast_if_derived_vector_type<
-                RhsDataType>::type>::type::value == support_expected);
-}
-
-template <typename X1, typename X2>
-void test_binop_datatypes_are_supported(const bool support_expected) {
-  CHECK(tenex::detail::binop_datatypes_are_supported<X1, X2>::type::value ==
+void test_is_assignable(const bool support_expected) {
+  CHECK(tenex::detail::is_assignable_v<LhsDataType, RhsDataType> ==
         support_expected);
 }
 
 template <typename X1, typename X2, typename ExpectedBinOpDataType>
-void test_get_binop_datatype() {
+void test_binop_datatype_support() {
+  if constexpr (not std::is_same_v<ExpectedBinOpDataType, NoSuchType>) {
+    CHECK(tenex::detail::binop_datatypes_are_supported_v<X1, X2> == true);
+  } else {
+    CHECK(tenex::detail::binop_datatypes_are_supported_v<X1, X2> == false);
+  }
+
   CHECK(std::is_same_v<
         typename tenex::detail::get_binop_datatype_impl<
             typename tenex::detail::upcast_if_derived_vector_type<X1>::type,
@@ -95,15 +88,16 @@ void test_get_binop_datatype() {
 
 template <typename X1, typename X2>
 void test_tensor_binop_datatypes_are_supported(const bool support_expected) {
-  CHECK(tenex::detail::tensor_binop_datatypes_are_supported_impl<
-            X1, X2>::type::value == support_expected);
+  CHECK(
+      tenex::detail::tensor_binop_datatypes_are_supported_impl<X1, X2>::value ==
+      support_expected);
 }
 
 template <typename T1, typename T2>
 void test_tensorexpression_binop_datatypes_are_supported(
     const bool support_expected) {
   CHECK(tenex::detail::tensorexpression_binop_datatypes_are_supported_impl<
-            T1, T2>::type::value == support_expected);
+            T1, T2>::value == support_expected);
 }
 }  // namespace
 
@@ -112,50 +106,22 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.DataTypeSupport",
   // Test which numeric types can and can't appear as terms in
   // `TensorExpression`s
 
-  test_is_supported_number_datatype<double, true>();
-  test_is_supported_number_datatype<int, false>();
-  test_is_supported_number_datatype<float, false>();
-  test_is_supported_number_datatype<std::complex<double>, true>();
-  test_is_supported_number_datatype<std::complex<int>, false>();
-  test_is_supported_number_datatype<std::complex<float>, false>();
-  test_is_supported_number_datatype<DataVector, false>();
-  test_is_supported_number_datatype<ComplexDataVector, false>();
-  test_is_supported_number_datatype<ModalVector, false>();
-  test_is_supported_number_datatype<ComplexModalVector, false>();
-  test_is_supported_number_datatype<ArbitraryType, false>();
+  test_is_supported_number_datatype<true,
+                                    tmpl::list<double, std::complex<double>>>();
+  test_is_supported_number_datatype<
+      false, tmpl::list<int, float, std::complex<int>, std::complex<float>,
+                        DataVector, ComplexDataVector, ModalVector,
+                        ComplexModalVector, ArbitraryType>>();
 
   // Test which types can and can't appear as a `Tensor`s data type in a
   // `TensorExpression`
 
-  test_is_supported_tensor_datatype<double, true>();
-  test_is_supported_tensor_datatype<int, false>();
-  test_is_supported_tensor_datatype<float, false>();
-  test_is_supported_tensor_datatype<std::complex<double>, true>();
-  test_is_supported_tensor_datatype<std::complex<int>, false>();
-  test_is_supported_tensor_datatype<std::complex<float>, false>();
-  test_is_supported_tensor_datatype<DataVector, true>();
-  test_is_supported_tensor_datatype<ComplexDataVector, true>();
-  test_is_supported_tensor_datatype<ModalVector, false>();
-  test_is_supported_tensor_datatype<ComplexModalVector, false>();
-  test_is_supported_tensor_datatype<ArbitraryType, false>();
-
-  // Test helper function that determines if a type is a `VectorImpl` type
-
-  test_is_vector<double, false>();
-  test_is_vector<int, false>();
-  test_is_vector<float, false>();
-  test_is_vector<std::complex<double>, false>();
-  test_is_vector<std::complex<int>, false>();
-  test_is_vector<std::complex<float>, false>();
-  test_is_vector<DataVector, true>();
-  test_is_vector<VectorImpl<double, DataVector>, true>();
-  test_is_vector<ComplexDataVector, true>();
-  test_is_vector<VectorImpl<std::complex<double>, ComplexDataVector>, true>();
-  test_is_vector<ModalVector, true>();
-  test_is_vector<VectorImpl<double, ModalVector>, true>();
-  test_is_vector<ComplexModalVector, true>();
-  test_is_vector<VectorImpl<std::complex<double>, ComplexModalVector>, true>();
-  test_is_vector<ArbitraryType, false>();
+  test_is_supported_tensor_datatype<
+      true, tmpl::list<double, std::complex<double>, DataVector,
+                       ComplexDataVector>>();
+  test_is_supported_tensor_datatype<
+      false, tmpl::list<int, float, std::complex<int>, std::complex<float>,
+                        ModalVector, ComplexModalVector, ArbitraryType>>();
 
   // Test helper function that upcasts derived `VectorImpl` types to their
   // base `VectorImpl` types
@@ -199,6 +165,7 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.DataTypeSupport",
   test_is_complex_datatype_of<double, DataVector>(false);
   test_is_complex_datatype_of<double, ComplexDataVector>(false);
   test_is_complex_datatype_of<double, ArbitraryType>(false);
+  test_is_complex_datatype_of<double, NoSuchType>(false);
 
   test_is_complex_datatype_of<std::complex<double>, double>(true);
   test_is_complex_datatype_of<std::complex<double>, float>(false);
@@ -208,6 +175,7 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.DataTypeSupport",
   test_is_complex_datatype_of<std::complex<double>, DataVector>(false);
   test_is_complex_datatype_of<std::complex<double>, ComplexDataVector>(false);
   test_is_complex_datatype_of<std::complex<double>, ArbitraryType>(false);
+  test_is_complex_datatype_of<std::complex<double>, NoSuchType>(false);
 
   test_is_complex_datatype_of<DataVector, double>(false);
   test_is_complex_datatype_of<DataVector, float>(false);
@@ -216,6 +184,7 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.DataTypeSupport",
   test_is_complex_datatype_of<DataVector, DataVector>(false);
   test_is_complex_datatype_of<DataVector, ComplexDataVector>(false);
   test_is_complex_datatype_of<DataVector, ArbitraryType>(false);
+  test_is_complex_datatype_of<DataVector, NoSuchType>(false);
 
   test_is_complex_datatype_of<ComplexDataVector, double>(false);
   test_is_complex_datatype_of<ComplexDataVector, float>(false);
@@ -224,146 +193,106 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.DataTypeSupport",
   test_is_complex_datatype_of<ComplexDataVector, DataVector>(true);
   test_is_complex_datatype_of<ComplexDataVector, ComplexDataVector>(false);
   test_is_complex_datatype_of<ComplexDataVector, ArbitraryType>(false);
+  test_is_complex_datatype_of<ComplexDataVector, NoSuchType>(false);
+
+  test_is_complex_datatype_of<NoSuchType, double>(false);
+  test_is_complex_datatype_of<NoSuchType, float>(false);
+  test_is_complex_datatype_of<NoSuchType, std::complex<double>>(false);
+  test_is_complex_datatype_of<NoSuchType, std::complex<float>>(false);
+  test_is_complex_datatype_of<NoSuchType, DataVector>(false);
+  test_is_complex_datatype_of<NoSuchType, ComplexDataVector>(false);
+  test_is_complex_datatype_of<NoSuchType, ArbitraryType>(false);
+  test_is_complex_datatype_of<NoSuchType, NoSuchType>(false);
 
   // Test whether the first data type is assignable to the second data type
 
-  test_lhs_datatype_is_assignable_to_rhs_datatype<double, double>(true);
-  test_lhs_datatype_is_assignable_to_rhs_datatype<double, std::complex<double>>(
-      false);
-  test_lhs_datatype_is_assignable_to_rhs_datatype<double, DataVector>(false);
-  test_lhs_datatype_is_assignable_to_rhs_datatype<double, ComplexDataVector>(
-      false);
-  test_lhs_datatype_is_assignable_to_rhs_datatype<double, ArbitraryType>(false);
+  test_is_assignable<double, double>(true);
+  test_is_assignable<double, std::complex<double>>(false);
+  test_is_assignable<double, DataVector>(false);
+  test_is_assignable<double, ComplexDataVector>(false);
+  test_is_assignable<double, ArbitraryType>(false);
 
-  test_lhs_datatype_is_assignable_to_rhs_datatype<std::complex<double>, double>(
-      true);
-  test_lhs_datatype_is_assignable_to_rhs_datatype<std::complex<double>,
-                                                  std::complex<double>>(true);
-  test_lhs_datatype_is_assignable_to_rhs_datatype<std::complex<double>,
-                                                  DataVector>(false);
-  test_lhs_datatype_is_assignable_to_rhs_datatype<std::complex<double>,
-                                                  ComplexDataVector>(false);
-  test_lhs_datatype_is_assignable_to_rhs_datatype<std::complex<double>,
-                                                  ArbitraryType>(false);
+  test_is_assignable<std::complex<double>, double>(true);
+  test_is_assignable<std::complex<double>, std::complex<double>>(true);
+  test_is_assignable<std::complex<double>, DataVector>(false);
+  test_is_assignable<std::complex<double>, ComplexDataVector>(false);
+  test_is_assignable<std::complex<double>, ArbitraryType>(false);
 
-  test_lhs_datatype_is_assignable_to_rhs_datatype<DataVector, double>(true);
-  test_lhs_datatype_is_assignable_to_rhs_datatype<DataVector,
-                                                  std::complex<double>>(false);
-  test_lhs_datatype_is_assignable_to_rhs_datatype<DataVector, DataVector>(true);
-  test_lhs_datatype_is_assignable_to_rhs_datatype<DataVector,
-                                                  ComplexDataVector>(false);
-  test_lhs_datatype_is_assignable_to_rhs_datatype<DataVector, ArbitraryType>(
-      false);
+  test_is_assignable<DataVector, double>(true);
+  test_is_assignable<DataVector, std::complex<double>>(false);
+  test_is_assignable<DataVector, DataVector>(true);
+  test_is_assignable<DataVector, ComplexDataVector>(false);
+  test_is_assignable<DataVector, ArbitraryType>(false);
 
-  test_lhs_datatype_is_assignable_to_rhs_datatype<ComplexDataVector, double>(
-      true);
-  test_lhs_datatype_is_assignable_to_rhs_datatype<ComplexDataVector,
-                                                  std::complex<double>>(true);
-  test_lhs_datatype_is_assignable_to_rhs_datatype<ComplexDataVector,
-                                                  DataVector>(true);
-  test_lhs_datatype_is_assignable_to_rhs_datatype<ComplexDataVector,
-                                                  ComplexDataVector>(true);
-  test_lhs_datatype_is_assignable_to_rhs_datatype<ComplexDataVector,
-                                                  ArbitraryType>(false);
+  test_is_assignable<ComplexDataVector, double>(true);
+  test_is_assignable<ComplexDataVector, std::complex<double>>(true);
+  test_is_assignable<ComplexDataVector, DataVector>(true);
+  test_is_assignable<ComplexDataVector, ComplexDataVector>(true);
+  test_is_assignable<ComplexDataVector, ArbitraryType>(false);
 
-  test_lhs_datatype_is_assignable_to_rhs_datatype<ArbitraryType, double>(false);
-  test_lhs_datatype_is_assignable_to_rhs_datatype<ArbitraryType,
-                                                  std::complex<double>>(false);
-  test_lhs_datatype_is_assignable_to_rhs_datatype<ArbitraryType, DataVector>(
-      false);
-  test_lhs_datatype_is_assignable_to_rhs_datatype<ArbitraryType,
-                                                  ComplexDataVector>(false);
-  // true because lhs_datatype_is_assignable_to_rhs_datatype_impl does not check
-  // if the types are supported types
-  test_lhs_datatype_is_assignable_to_rhs_datatype<ArbitraryType, ArbitraryType>(
-      true);
+  test_is_assignable<ArbitraryType, double>(false);
+  test_is_assignable<ArbitraryType, std::complex<double>>(false);
+  test_is_assignable<ArbitraryType, DataVector>(false);
+  test_is_assignable<ArbitraryType, ComplexDataVector>(false);
+  // true because is_assignable does not check if the types are supported types
+  test_is_assignable<ArbitraryType, ArbitraryType>(true);
 
-  // Test whether binary operations can be performed between two data types
-
-  test_binop_datatypes_are_supported<double, double>(true);
-  test_binop_datatypes_are_supported<double, std::complex<double>>(true);
-  test_binop_datatypes_are_supported<double, DataVector>(true);
-  test_binop_datatypes_are_supported<double, ComplexDataVector>(true);
-  test_binop_datatypes_are_supported<double, ArbitraryType>(false);
-
-  test_binop_datatypes_are_supported<std::complex<double>, double>(true);
-  test_binop_datatypes_are_supported<std::complex<double>,
-                                     std::complex<double>>(true);
-  test_binop_datatypes_are_supported<std::complex<double>, DataVector>(false);
-  test_binop_datatypes_are_supported<std::complex<double>, ComplexDataVector>(
-      true);
-  test_binop_datatypes_are_supported<std::complex<double>, ArbitraryType>(
-      false);
-
-  test_binop_datatypes_are_supported<DataVector, double>(true);
-  test_binop_datatypes_are_supported<DataVector, std::complex<double>>(false);
-  test_binop_datatypes_are_supported<DataVector, DataVector>(true);
-  test_binop_datatypes_are_supported<DataVector, ComplexDataVector>(true);
-  test_binop_datatypes_are_supported<DataVector, ArbitraryType>(false);
-
-  test_binop_datatypes_are_supported<ComplexDataVector, double>(true);
-  test_binop_datatypes_are_supported<ComplexDataVector, std::complex<double>>(
-      true);
-  test_binop_datatypes_are_supported<ComplexDataVector, DataVector>(true);
-  test_binop_datatypes_are_supported<ComplexDataVector, ComplexDataVector>(
-      true);
-  test_binop_datatypes_are_supported<ComplexDataVector, ArbitraryType>(false);
-
-  test_binop_datatypes_are_supported<ArbitraryType, double>(false);
-  test_binop_datatypes_are_supported<ArbitraryType, std::complex<double>>(
-      false);
-  test_binop_datatypes_are_supported<ArbitraryType, DataVector>(false);
-  test_binop_datatypes_are_supported<ArbitraryType, ComplexDataVector>(false);
-  // true because binop_datatypes_are_supported_impl does not check if the types
-  // are supported types
-  test_binop_datatypes_are_supported<ArbitraryType, ArbitraryType>(true);
-
-  // Get the type resulting from performing a binary arithmetic operation
+  // Test the type resulting from performing a binary arithmetic operation
   // between two types
 
-  test_get_binop_datatype<double, double, double>();
-  test_get_binop_datatype<double, std::complex<double>, std::complex<double>>();
-  test_get_binop_datatype<double, DataVector, DataVector>();
-  test_get_binop_datatype<double, ComplexDataVector, ComplexDataVector>();
-  test_get_binop_datatype<double, ArbitraryType, std::bool_constant<false>>();
+  test_binop_datatype_support<double, double, double>();
+  test_binop_datatype_support<double, std::complex<double>,
+                              std::complex<double>>();
+  test_binop_datatype_support<double, DataVector, DataVector>();
+  test_binop_datatype_support<double, ComplexDataVector, ComplexDataVector>();
+  test_binop_datatype_support<double, ArbitraryType, NoSuchType>();
+  test_binop_datatype_support<double, NoSuchType, NoSuchType>();
 
-  test_get_binop_datatype<std::complex<double>, double, std::complex<double>>();
-  test_get_binop_datatype<std::complex<double>, std::complex<double>,
-                          std::complex<double>>();
-  test_get_binop_datatype<std::complex<double>, DataVector,
-                          std::bool_constant<false>>();
-  test_get_binop_datatype<std::complex<double>, ComplexDataVector,
-                          ComplexDataVector>();
-  test_get_binop_datatype<std::complex<double>, ArbitraryType,
-                          std::bool_constant<false>>();
+  test_binop_datatype_support<std::complex<double>, double,
+                              std::complex<double>>();
+  test_binop_datatype_support<std::complex<double>, std::complex<double>,
+                              std::complex<double>>();
+  test_binop_datatype_support<std::complex<double>, DataVector, NoSuchType>();
+  test_binop_datatype_support<std::complex<double>, ComplexDataVector,
+                              ComplexDataVector>();
+  test_binop_datatype_support<std::complex<double>, ArbitraryType,
+                              NoSuchType>();
+  test_binop_datatype_support<std::complex<double>, NoSuchType, NoSuchType>();
 
-  test_get_binop_datatype<DataVector, double, DataVector>();
-  test_get_binop_datatype<DataVector, std::complex<double>,
-                          std::bool_constant<false>>();
-  test_get_binop_datatype<DataVector, DataVector, DataVector>();
-  test_get_binop_datatype<DataVector, ComplexDataVector, ComplexDataVector>();
-  test_get_binop_datatype<DataVector, ArbitraryType,
-                          std::bool_constant<false>>();
+  test_binop_datatype_support<DataVector, double, DataVector>();
+  test_binop_datatype_support<DataVector, std::complex<double>, NoSuchType>();
+  test_binop_datatype_support<DataVector, DataVector, DataVector>();
+  test_binop_datatype_support<DataVector, ComplexDataVector,
+                              ComplexDataVector>();
+  test_binop_datatype_support<DataVector, ArbitraryType, NoSuchType>();
+  test_binop_datatype_support<DataVector, NoSuchType, NoSuchType>();
 
-  test_get_binop_datatype<ComplexDataVector, double, ComplexDataVector>();
-  test_get_binop_datatype<ComplexDataVector, std::complex<double>,
-                          ComplexDataVector>();
-  test_get_binop_datatype<ComplexDataVector, DataVector, ComplexDataVector>();
-  test_get_binop_datatype<ComplexDataVector, ComplexDataVector,
-                          ComplexDataVector>();
-  test_get_binop_datatype<ComplexDataVector, ArbitraryType,
-                          std::bool_constant<false>>();
+  test_binop_datatype_support<ComplexDataVector, double, ComplexDataVector>();
+  test_binop_datatype_support<ComplexDataVector, std::complex<double>,
+                              ComplexDataVector>();
+  test_binop_datatype_support<ComplexDataVector, DataVector,
+                              ComplexDataVector>();
+  test_binop_datatype_support<ComplexDataVector, ComplexDataVector,
+                              ComplexDataVector>();
+  test_binop_datatype_support<ComplexDataVector, ArbitraryType, NoSuchType>();
+  test_binop_datatype_support<ComplexDataVector, NoSuchType, NoSuchType>();
 
-  test_get_binop_datatype<ArbitraryType, double, std::bool_constant<false>>();
-  test_get_binop_datatype<ArbitraryType, std::complex<double>,
-                          std::bool_constant<false>>();
-  test_get_binop_datatype<ArbitraryType, DataVector,
-                          std::bool_constant<false>>();
-  test_get_binop_datatype<ArbitraryType, ComplexDataVector,
-                          std::bool_constant<false>>();
+  test_binop_datatype_support<ArbitraryType, double, NoSuchType>();
+  test_binop_datatype_support<ArbitraryType, std::complex<double>,
+                              NoSuchType>();
+  test_binop_datatype_support<ArbitraryType, DataVector, NoSuchType>();
+  test_binop_datatype_support<ArbitraryType, ComplexDataVector, NoSuchType>();
   // ArbitraryType is result because get_binop_datatype_impl does not check if
   // the types are supported types
-  test_get_binop_datatype<ArbitraryType, ArbitraryType, ArbitraryType>();
+  test_binop_datatype_support<ArbitraryType, ArbitraryType, ArbitraryType>();
+  test_binop_datatype_support<ArbitraryType, NoSuchType, NoSuchType>();
+
+  test_binop_datatype_support<NoSuchType, double, NoSuchType>();
+  test_binop_datatype_support<NoSuchType, std::complex<double>, NoSuchType>();
+  test_binop_datatype_support<NoSuchType, DataVector, NoSuchType>();
+  test_binop_datatype_support<NoSuchType, ComplexDataVector, NoSuchType>();
+  test_binop_datatype_support<NoSuchType, ArbitraryType, NoSuchType>();
+  test_binop_datatype_support<NoSuchType, NoSuchType, NoSuchType>();
 
   // Test whether binary operations can be performed between two `Tensor`s with
   // the given data types

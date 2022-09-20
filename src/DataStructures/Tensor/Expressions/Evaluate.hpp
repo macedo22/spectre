@@ -162,15 +162,14 @@ void evaluate_impl(
 
   using lhs_tensor_type = typename std::decay_t<decltype(*lhs_tensor)>;
 
-  static_assert(is_supported_tensor_datatype<LhsDataType>::type::value and
-                    is_supported_tensor_datatype<RhsDataType>::type::value,
+  static_assert(is_supported_tensor_datatype_v<LhsDataType> and
+                    is_supported_tensor_datatype_v<RhsDataType>,
                 "TensorExpressions currently only support Tensors whose data "
                 "type is double, std::complex<double>, DataVector, or "
                 "ComplexDataVector. It is possible to add support for other "
                 "data types that are supported by Tensor.");
   static_assert(
-      lhs_datatype_is_assignable_to_rhs_datatype<LhsDataType,
-                                                 RhsDataType>::type::value,
+      is_assignable_v<LhsDataType, RhsDataType>,
       "Assignment of the LHS Tensor's data type to the RHS TensorExpression's "
       "data type is not supported. This happens from doing something like e.g. "
       "trying to assign a Tensor<double> to a Tensor<DataVector> or a "
@@ -238,7 +237,7 @@ void evaluate_impl(
     (~rhs_tensorexpression).assert_lhs_tensor_not_in_rhs_expression(lhs_tensor);
     // If the LHS data type is a vector, size the LHS tensor components if their
     // size does not match the size from a `Tensor` in the RHS expression
-    if constexpr (tenex::detail::is_vector<LhsDataType>::value) {
+    if constexpr (is_derived_of_vector_impl_v<LhsDataType>) {
       const size_t rhs_component_size =
           (~rhs_tensorexpression).get_rhs_tensor_component_size();
       if (rhs_component_size != (*lhs_tensor)[0].size()) {
@@ -341,13 +340,13 @@ void evaluate_impl(
   using lhs_tensorindex_list =
       tmpl::list<std::decay_t<decltype(LhsTensorIndices)>...>;
 
-  static_assert(is_supported_tensor_datatype<X>::value and
+  static_assert(is_supported_tensor_datatype_v<X> and
                 "TensorExpressions currently only support Tensors whose data "
                 "type is double, std::complex<double>, DataVector, or "
                 "ComplexDataVector. It is possible to add support for other "
                 "data types that are supported by Tensor.");
   static_assert(
-      lhs_datatype_is_assignable_to_rhs_datatype<X, NumberType>::type::value,
+      is_assignable_v<X, NumberType>,
       "Assignment of the LHS Tensor's data type to the RHS number's data type "
       "is not supported within TensorExpressions. This happens from doing "
       "something like e.g. trying to assign a double to a DataVector or a "
@@ -373,7 +372,7 @@ void evaluate_impl(
       "Cannot assign a tensor expression to a LHS tensor with generic "
       "indices that would be contracted, e.g. evaluate<ti::A, ti::a>.");
 
-  if constexpr (tenex::detail::is_vector<X>::value) {
+  if constexpr (is_derived_of_vector_impl_v<X>) {
     ASSERT(get_size((*lhs_tensor)[0]) > 0,
            "Tensors with vector components must be sized before calling "
            "\ntenex::evaluate<...>("

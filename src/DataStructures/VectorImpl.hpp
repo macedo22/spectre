@@ -52,25 +52,27 @@ namespace VectorImpl_detail {
 /// \tparam LhsDataType the type being assigned
 /// \tparam RhsDataType the type to convert to `LhsDataType`
 template <typename LhsDataType, typename RhsDataType>
-struct lhs_datatype_is_assignable_to_rhs_datatype_impl;
+struct is_assignable;
 
 /// No template specialization was matched, so LHS is not assignable to RHS
 template <typename LhsDataType, typename RhsDataType>
-struct lhs_datatype_is_assignable_to_rhs_datatype_impl : std::false_type {};
+struct is_assignable : std::false_type {};
 /// Can assign a type to itself
 template <typename RhsDataType>
-struct lhs_datatype_is_assignable_to_rhs_datatype_impl<RhsDataType, RhsDataType>
-    : std::true_type {};
+struct is_assignable<RhsDataType, RhsDataType> : std::true_type {};
 /// Can assign a `ComplexDataVector` to a `DataVector`
 template <>
-struct lhs_datatype_is_assignable_to_rhs_datatype_impl<ComplexDataVector,
-                                                       DataVector>
-    : std::true_type {};
+struct is_assignable<ComplexDataVector, DataVector> : std::true_type {};
 /// Can assign a `ComplexModalVector` to a `ModalVector`
 template <>
-struct lhs_datatype_is_assignable_to_rhs_datatype_impl<ComplexModalVector,
-                                                       ModalVector>
-    : std::true_type {};
+struct is_assignable<ComplexModalVector, ModalVector> : std::true_type {};
+
+/// \brief Whether or not a given vector type is assignable to another
+///
+/// \details
+/// See `is_assignable` for which assignments are permitted
+template <typename LhsDataType, typename RhsDataType>
+constexpr bool is_assignable_v = is_assignable<LhsDataType, RhsDataType>::value;
 }  // namespace VectorImpl_detail
 
 /// \ingroup TensorExpressionsGroup
@@ -221,11 +223,9 @@ class VectorImpl
   // This is a converting constructor. clang-tidy complains that it's not
   // explicit, but we want it to allow conversion.
   // clang-tidy: mark as explicit (we want conversion to VectorImpl type)
-  template <
-      typename VT, bool VF,
-      Requires<
-          VectorImpl_detail::lhs_datatype_is_assignable_to_rhs_datatype_impl<
-              VectorType, typename VT::ResultType>::value> = nullptr>
+  template <typename VT, bool VF,
+            Requires<VectorImpl_detail::is_assignable_v<
+                VectorType, typename VT::ResultType>> = nullptr>
   VectorImpl(const blaze::DenseVector<VT, VF>& expression);  // NOLINT
 
   template <typename VT, bool VF>
@@ -378,17 +378,15 @@ VectorImpl<T, VectorType>& VectorImpl<T, VectorType>::operator=(
 // explicit, but we want it to allow conversion.
 // clang-tidy: mark as explicit (we want conversion to VectorImpl)
 template <typename T, typename VectorType>
-template <
-    typename VT, bool VF,
-    Requires<VectorImpl_detail::lhs_datatype_is_assignable_to_rhs_datatype_impl<
-        VectorType, typename VT::ResultType>::value>>
+template <typename VT, bool VF,
+          Requires<VectorImpl_detail::is_assignable_v<VectorType,
+                                                      typename VT::ResultType>>>
 VectorImpl<T, VectorType>::VectorImpl(
     const blaze::DenseVector<VT, VF>& expression)  // NOLINT
     : owned_data_(cpp20::make_unique_for_overwrite<value_type[]>(
           (*expression).size())) {
   static_assert(
-      VectorImpl_detail::lhs_datatype_is_assignable_to_rhs_datatype_impl<
-          VectorType, typename VT::ResultType>::value,
+      VectorImpl_detail::is_assignable_v<VectorType, typename VT::ResultType>,
       "Cannot construct the VectorImpl type from the given expression type.");
   reset_pointer_vector((*expression).size());
   **this = expression;
@@ -399,8 +397,7 @@ template <typename VT, bool VF>
 VectorImpl<T, VectorType>& VectorImpl<T, VectorType>::operator=(
     const blaze::DenseVector<VT, VF>& expression) {
   static_assert(
-      VectorImpl_detail::lhs_datatype_is_assignable_to_rhs_datatype_impl<
-          VectorType, typename VT::ResultType>::value,
+      VectorImpl_detail::is_assignable_v<VectorType, typename VT::ResultType>,
       "Cannot assign to the VectorImpl type from the given expression type.");
   if (owning_ and (*expression).size() != size()) {
     owned_data_ =

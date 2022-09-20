@@ -69,8 +69,7 @@ void test_assignment_to_single_term(const gsl::not_null<Generator*> generator,
   std::uniform_real_distribution<> distribution(-1.0, 1.0);
 
   // if the RHS is a number, also test the assignment of LHS to the number
-  if constexpr (tenex::detail::is_supported_number_datatype<
-                    RhsDataType>::value) {
+  if constexpr (tenex::detail::is_supported_number_datatype_v<RhsDataType>) {
     const auto R1 = make_with_random_values<RhsDataType>(
         generator, distribution, used_for_size_rhs);
     Scalar<LhsDataType> L1{used_for_size_lhs};

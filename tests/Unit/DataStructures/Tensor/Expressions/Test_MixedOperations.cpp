@@ -14,6 +14,7 @@
 #include "DataStructures/Tags/TempTensor.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Variables.hpp"
+#include "DataStructures/VectorImpl.hpp"
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
 #include "Utilities/Gsl.hpp"
@@ -284,7 +285,7 @@ void test_mixed_arithmetic_ops(const gsl::not_null<Generator*> generator,
   }
 
   // Test with TempTensor for LHS tensor
-  if constexpr (tenex::detail::is_vector<DataType>::value) {
+  if constexpr (is_derived_of_vector_impl_v<DataType>) {
     Variables<tmpl::list<::Tags::TempTensor<1, result_tensor_type>>>
         actual_result_tensor_temp_var{used_for_size.size()};
     result_tensor_type& actual_result_tensor_temp =
@@ -347,7 +348,7 @@ void test_rhs_spacetime_index_subsets(const gsl::not_null<Generator*> generator,
                         expected_result_tensor.get());
 
   // Test with TempTensor for LHS tensor
-  if constexpr (tenex::detail::is_vector<DataType>::value) {
+  if constexpr (is_derived_of_vector_impl_v<DataType>) {
     Variables<tmpl::list<::Tags::TempTensor<1, Tensor<DataType>>>>
         actual_result_tensor_temp_var{used_for_size.size()};
     Scalar<DataType>& actual_result_tensor_temp =
@@ -414,7 +415,7 @@ void test_lhs_spacetime_index_subsets(const gsl::not_null<Generator*> generator,
   }
 
   // Test with TempTensor for LHS tensor
-  if constexpr (tenex::detail::is_vector<DataType>::value) {
+  if constexpr (is_derived_of_vector_impl_v<DataType>) {
     Variables<tmpl::list<::Tags::TempTensor<1, result_tensor_type>>>
         actual_result_tensor_temp_var{used_for_size.size()};
     result_tensor_type& actual_result_tensor_temp =
@@ -683,7 +684,7 @@ void test_large_equation(const gsl::not_null<Generator*> generator,
                                expected_result_tensor, approx);
 
   // Test with TempTensor for LHS tensor
-  if constexpr (tenex::detail::is_vector<DataType>::value) {
+  if constexpr (is_derived_of_vector_impl_v<DataType>) {
     Variables<tmpl::list<
         ::Tags::TempTensor<0, result_tensor_type>,
         ::Tags::TempTensor<1, spacetime_deriv_gauge_function_type>,
@@ -900,7 +901,7 @@ void test_assign_double(const DataType& used_for_size) {
   }
 
   // Test with TempTensor for LHS tensor
-  if constexpr (tenex::detail::is_vector<DataType>::value) {
+  if constexpr (is_derived_of_vector_impl_v<DataType>) {
     Variables<tmpl::list<
         ::Tags::TempTensor<1, tnsr::iab<DataType, 3, Frame::Inertial>>>>
         L_temp_var{used_for_size.size()};

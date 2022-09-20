@@ -33,7 +33,7 @@ struct NumberAsExpression
     : public TensorExpression<NumberAsExpression<DataType>, DataType,
                               tmpl::list<>, tmpl::list<>, tmpl::list<>>,
       MarkAsNumberAsExpression {
-  static_assert(detail::is_supported_number_datatype<DataType>::value,
+  static_assert(detail::is_supported_number_datatype_v<DataType>,
                 "TensorExpressions currently only support numeric terms whose "
                 "type is double or std::complex<double>. It is possible to add "
                 "support for more numeric types.");
