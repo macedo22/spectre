@@ -49,6 +49,14 @@ struct Divide
       "Cannot divide the given TensorExpressions with the given data types. "
       "This can occur from e.g. trying to divide a Tensor with data type "
       "double and a Tensor with data type DataVector.");
+  static_assert(
+      not((std::is_same_v<T1, NumberAsExpression<std::complex<double>>> and
+           std::is_same_v<typename T2::type, DataVector>) or
+          (std::is_same_v<T2, NumberAsExpression<std::complex<double>>> and
+           std::is_same_v<typename T1::type, DataVector>)),
+      "Cannot perform division between a std::complex<double> and a "
+      "TensorExpression whose data type is DataVector because Blaze does not "
+      "support division between std::complex<double> and DataVector.");
   static_assert((... and tt::is_time_index<Args2>::value),
                 "Can only divide a tensor expression by a number or a tensor "
                 "expression that evaluates to "

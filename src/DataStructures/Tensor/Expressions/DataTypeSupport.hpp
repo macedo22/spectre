@@ -93,52 +93,55 @@ struct upcast_if_derived_vector_type<T, true> {
                           upcasted_type, T>;
 };
 
-/// \brief Whether or not a given type is the complex-valued partner to another
-/// given type
+/// \brief Get the complex-valued partner type to a given type
 ///
 /// \details
-/// This is used to define pairings between complex-valued types and their
-/// real-valued counterparts. For example, `std::complex<double>`'s
-/// real-valued partner is `double` and `ComplexDataVector`'s real-valued
-/// partner is `DataVector`. Keeping track of this is useful in determining
-/// which operations can and can't be performed in `TensorExpression`s.
+/// This is used to define pairings between real-valued types and their
+/// complex-valued counterparts. For example, `double`'s complex-valued partner
+/// is `std::complex<double>` and `DataVector`'s complex-valued partner is
+/// `ComplexDataVector`. Keeping track of this is useful in determining which
+/// operations can and can't be performed in `TensorExpression`s.
 ///
 /// To make `TensorExpression`s aware of a new pairing, modify a current
 /// template specialization or add a new one.
 ///
-/// \tparam MaybeComplexDataType the given type to check for being the complex
-/// partner to the other type
-/// \tparam OtherDataType the other type
-template <typename MaybeComplexDataType, typename OtherDataType>
-struct is_complex_datatype_of_impl;
+/// \tparam X the given type
+template <typename X, bool IsArithmetic = std::is_arithmetic_v<X>>
+struct get_complex_datatype;
 
-/// No template specialization was matched, so it's not a known pairing
-template <typename MaybeComplexDataType, typename OtherDataType>
-struct is_complex_datatype_of_impl : std::false_type {};
-/// std::complex<T> is the complex type to T
-template <typename T>
-struct is_complex_datatype_of_impl<std::complex<T>, T> : std::true_type {};
-/// ComplexDataVector is the complex type to DataVector
+/// If the type is not arithmetic, the complex partner to this type is not
+/// known
+template <typename X>
+struct get_complex_datatype<X, false> {
+  using type = NoSuchType;
+};
+/// If the type is arithmetic, the complex partner to `X` is `std::complex<X>`
+template <typename X>
+struct get_complex_datatype<X, true> {
+  using type = std::complex<X>;
+};
+/// The complex partner to `DataVector` is `ComplexDataVector`
 template <>
-struct is_complex_datatype_of_impl<typename ComplexDataVector::BaseType,
-                                   typename DataVector::BaseType>
-    : std::true_type {};
+struct get_complex_datatype<DataVector> {
+  using type = ComplexDataVector;
+};
 
 /// @{
 /// \brief Whether or not a given type is the complex-valued partner to another
 /// given type
 ///
 /// \details
-/// See `is_complex_datatype_of_impl` for which pairings are defined
+/// See `get_complex_datatype` for which pairings are defined
 ///
 /// \tparam MaybeComplexDataType the given type to check for being the complex
 /// partner to the other type
 /// \tparam OtherDataType the other type
 template <typename MaybeComplexDataType, typename OtherDataType>
 struct is_complex_datatype_of
-    : is_complex_datatype_of_impl<
-          typename upcast_if_derived_vector_type<MaybeComplexDataType>::type,
-          typename upcast_if_derived_vector_type<OtherDataType>::type> {};
+    : std::is_same<typename get_complex_datatype<OtherDataType>::type,
+                   MaybeComplexDataType> {};
+template <typename OtherDataType>
+struct is_complex_datatype_of<NoSuchType, OtherDataType> : std::false_type {};
 
 template <typename MaybeComplexDataType, typename OtherDataType>
 constexpr bool is_complex_datatype_of_v =
@@ -269,6 +272,32 @@ template <typename ValueType, typename VectorType>
 struct get_binop_datatype_impl<
     ValueType, VectorImpl<std::complex<ValueType>, VectorType>> {
   using type = VectorType;
+};
+/// @}
+/// @{
+/// A binary operation between a real-valued `VectorImpl` and the complex-valued
+/// partner to the `VectorImpl`'s underlying type yields the complex partner
+/// type of the `VectorImpl`, e.g.
+/// `std::complex<double> OP DataVector = ComplexDataVector`
+///
+/// \note Blaze supports multiplication between a `std::complex<double>` and a
+/// `DataVector`, but does not support addition, subtraction, or division
+/// between these two types. This specialization of `get_binop_datatype_impl`
+/// simply defines that the result of any of the binary operations should be
+/// `ComplexDataVector`. Because Blaze doesn't support addition, subtraction,
+/// and division between these two types, the `AddSub` and `Divide` classes
+/// disallow this type combination in their class definitions to prevent these
+/// operations. That way, if Blaze support is later added for e.g. division,
+/// we simply need to remove the assert in `Divide` that prevents it.
+template <typename ValueType, typename VectorType>
+struct get_binop_datatype_impl<VectorImpl<ValueType, VectorType>,
+                               std::complex<ValueType>> {
+  using type = typename get_complex_datatype<VectorType>::type;
+};
+template <typename ValueType, typename VectorType>
+struct get_binop_datatype_impl<std::complex<ValueType>,
+                               VectorImpl<ValueType, VectorType>> {
+  using type = typename get_complex_datatype<VectorType>::type;
 };
 /// @}
 /// @{

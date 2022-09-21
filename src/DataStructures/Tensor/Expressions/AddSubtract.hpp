@@ -300,6 +300,15 @@ struct AddSub<T1, T2, ArgsList1<Args1...>, ArgsList2<Args2...>, Sign>
       "data types. This can occur from e.g. trying to add a Tensor with data "
       "type double and a Tensor with data type DataVector.");
   static_assert(
+      not((std::is_same_v<T1, NumberAsExpression<std::complex<double>>> and
+           std::is_same_v<typename T2::type, DataVector>) or
+          (std::is_same_v<T2, NumberAsExpression<std::complex<double>>> and
+           std::is_same_v<typename T1::type, DataVector>)),
+      "Cannot perform addition and subtraction between a std::complex<double> "
+      "and a TensorExpression whose data type is DataVector because Blaze does "
+      "not support addition and subtraction between std::complex<double> and "
+      "DataVector.");
+  static_assert(
       detail::IndexPropertyCheck<typename T1::index_list,
                                  typename T2::index_list, ArgsList1<Args1...>,
                                  ArgsList2<Args2...>>::value,
