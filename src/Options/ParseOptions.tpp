@@ -345,9 +345,13 @@ struct get_impl<Tags::InputSource, Metavariables, Tags::InputSource> {
 };
 }  // namespace Options_detail
 
+// template <typename...T>
+// struct td;
+
 template <typename OptionList, typename Group>
 template <typename Tag, typename Metavariables>
-typename Tag::type Parser<OptionList, Group>::get() const {
+typename Tag::type __attribute__((used)) Parser<OptionList, Group>::get() const {
+  // td<Metavariables, OptionList, Group, Tag> idk{};
   return Options_detail::get_impl<
       Tag, Metavariables,
       typename Options_detail::find_subgroup<Tag, Group>::type>::apply(*this);
@@ -800,7 +804,7 @@ void create_all_options(const Parser<TagList, Group>& options) {
 }
 
 template <typename TagList, typename Metavariables>
-void create_all_options() {
+tuples::tagged_tuple_from_typelist<TagList> create_all_options() {
   Parser<tmpl::remove<TagList, Tags::InputSource>>
         options(Metavariables::help);
 
@@ -808,6 +812,13 @@ void create_all_options() {
   options.help();
   options.parse_file("");
   options.parse("");
+
+  tuples::tagged_tuple_from_typelist<TagList> result =
+      options.template apply<TagList, Metavariables>([](auto... args) {
+          return tuples::tagged_tuple_from_typelist<TagList>(
+              std::move(args)...);
+        });
+  return result;
 }
 }  // namespace Options
 

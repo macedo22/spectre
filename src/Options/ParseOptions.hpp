@@ -44,41 +44,41 @@
 #include "Utilities/TypeTraits/IsStdArrayOfSize.hpp"
 
 namespace Options {
-// Defining methods as inline in a different header from the class
-// definition is somewhat strange.  It is done here to minimize the
-// amount of code in the frequently-included Options.hpp file.  The
-// only external consumers of Option should be create_from_yaml
-// specializations, and they should only be instantiated by code in
-// this file.  (Or explicitly instantiated in cpp files, which can
-// include this file.)
+// // Defining methods as inline in a different header from the class
+// // definition is somewhat strange.  It is done here to minimize the
+// // amount of code in the frequently-included Options.hpp file.  The
+// // only external consumers of Option should be create_from_yaml
+// // specializations, and they should only be instantiated by code in
+// // this file.  (Or explicitly instantiated in cpp files, which can
+// // include this file.)
 
-// clang-tidy: YAML::Node not movable (as of yaml-cpp-0.5.3)
-// NOLINTNEXTLINE(performance-unnecessary-value-param)
-inline Option::Option(YAML::Node node, Context context)
-    : node_(std::make_unique<YAML::Node>(std::move(node))),
-      context_(std::move(context)) {  // NOLINT
-  context_.line = node.Mark().line;
-  context_.column = node.Mark().column;
-}
+// // clang-tidy: YAML::Node not movable (as of yaml-cpp-0.5.3)
+// // NOLINTNEXTLINE(performance-unnecessary-value-param)
+// inline Option::Option(YAML::Node node, Context context)
+//     : node_(std::make_unique<YAML::Node>(std::move(node))),
+//       context_(std::move(context)) {  // NOLINT
+//   context_.line = node.Mark().line;
+//   context_.column = node.Mark().column;
+// }
 
-inline Option::Option(Context context)
-    : node_(std::make_unique<YAML::Node>()), context_(std::move(context)) {}
+// inline Option::Option(Context context)
+//     : node_(std::make_unique<YAML::Node>()), context_(std::move(context)) {}
 
-inline const YAML::Node& Option::node() const { return *node_; }
-inline const Context& Option::context() const { return context_; }
+// inline const YAML::Node& Option::node() const { return *node_; }
+// inline const Context& Option::context() const { return context_; }
 
-/// Append a line to the contained context.
-inline void Option::append_context(const std::string& context) {
-  context_.append(context);
-}
+// /// Append a line to the contained context.
+// inline void Option::append_context(const std::string& context) {
+//   context_.append(context);
+// }
 
-// NOLINTNEXTLINE(performance-unnecessary-value-param)
-inline void Option::set_node(YAML::Node node) {
-  // clang-tidy: YAML::Node not movable (as of yaml-cpp-0.5.3)
-  *node_ = std::move(node);  // NOLINT
-  context_.line = node_->Mark().line;
-  context_.column = node_->Mark().column;
-}
+// // NOLINTNEXTLINE(performance-unnecessary-value-param)
+// inline void Option::set_node(YAML::Node node) {
+//   // clang-tidy: YAML::Node not movable (as of yaml-cpp-0.5.3)
+//   *node_ = std::move(node);  // NOLINT
+//   context_.line = node_->Mark().line;
+//   context_.column = node_->Mark().column;
+// }
 
 // #if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 8
 // #pragma GCC diagnostic push
@@ -215,7 +215,7 @@ class Parser {
   /// \tparam T the option to retrieve
   /// \return the value of the option
   template <typename T, typename Metavariables = NoSuchType>
-  typename T::type get() const;
+  typename T::type __attribute__((used)) get() const;
 
   /// Call a function with the specified options as arguments.
   ///

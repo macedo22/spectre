@@ -6,9 +6,12 @@
 #include "Options/ParseOptions.hpp"
 #include "Options/ParseOptions.tpp"
 #include "Parallel/MainOptionList.hpp"
+#include "Utilities/TaggedTuple.hpp"
 
 template
-void Options::create_all_options<typename Parallel::get_main_option_list<EvolutionMetavars>::type, EvolutionMetavars>();
+tuples::tagged_tuple_from_typelist<typename Parallel::get_main_option_list<EvolutionMetavars>::type> Options::create_all_options<
+    typename Parallel::get_main_option_list<EvolutionMetavars>::type,
+    EvolutionMetavars>();
 
 // namespace {
 // using Metavariables = EvolutionMetavars;
