@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "Options/ParseOptions.hpp"
+#include "Options/ParseOptions.tpp"
 #include "Parallel/CreateFromOptions.hpp"
 #include "Parallel/ParallelComponentHelpers.hpp"  // IWYU pragma: keep
 #include "Parallel/Phase.hpp"

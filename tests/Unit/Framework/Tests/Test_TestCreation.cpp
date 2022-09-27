@@ -12,6 +12,7 @@
 #include "Framework/TestCreation.hpp"
 #include "Options/Options.hpp"
 #include "Options/ParseOptions.hpp"
+#include "Options/ParseOptions.tpp"
 #include "Utilities/NoSuchType.hpp"
 #include "Utilities/TMPL.hpp"
 

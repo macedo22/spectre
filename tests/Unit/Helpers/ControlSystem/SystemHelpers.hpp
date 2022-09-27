@@ -52,6 +52,7 @@
 #include "IO/Observer/ObserverComponent.hpp"
 #include "IO/Observer/Tags.hpp"
 #include "Options/ParseOptions.hpp"
+#include "Options/ParseOptions.tpp"
 #include "Options/Protocols/FactoryCreation.hpp"
 #include "Parallel/CreateFromOptions.hpp"
 #include "Parallel/GlobalCache.hpp"

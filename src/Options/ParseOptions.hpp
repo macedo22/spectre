@@ -649,27 +649,27 @@ std::string Parser<OptionList, Group>::help() const {
   return ss.str();
 }
 
-// template <typename OptionList, typename Group>
-// void Parser<OptionList, Group>::pup(PUP::er& p) {
-//   static_assert(std::is_same_v<Group, NoSuchType>,
-//                 "Inner parsers should be recreated by the root parser, not "
-//                 "serialized.");
-//   // We reconstruct most of the state when deserializing, rather than
-//   // trying to package it.
-//   p | help_text_;
-//   p | input_source_;
-//   if (p.isUnpacking() and not input_source_.empty()) {
-//     // input_source_ is populated by the `parse` and `overlay` calls
-//     // below, so we have to clear out the old values before calling
-//     // them.
-//     auto received_source = std::move(input_source_);
-//     input_source_.clear();
-//     parse(std::move(received_source[0]));
-//     for (size_t i = 1; i < received_source.size(); ++i) {
-//       overlay<OptionList>(std::move(received_source[i]));
-//     }
-//   }
-// }
+template <typename OptionList, typename Group>
+void Parser<OptionList, Group>::pup(PUP::er& p) {
+  static_assert(std::is_same_v<Group, NoSuchType>,
+                "Inner parsers should be recreated by the root parser, not "
+                "serialized.");
+  // We reconstruct most of the state when deserializing, rather than
+  // trying to package it.
+  p | help_text_;
+  p | input_source_;
+  if (p.isUnpacking() and not input_source_.empty()) {
+    // input_source_ is populated by the `parse` and `overlay` calls
+    // below, so we have to clear out the old values before calling
+    // them.
+    auto received_source = std::move(input_source_);
+    input_source_.clear();
+    parse(std::move(received_source[0]));
+    for (size_t i = 1; i < received_source.size(); ++i) {
+      overlay<OptionList>(std::move(received_source[i]));
+    }
+  }
+}
 
 // template <typename OptionList, typename Group>
 // void Parser<OptionList, Group>::parse(const YAML::Node& node) {

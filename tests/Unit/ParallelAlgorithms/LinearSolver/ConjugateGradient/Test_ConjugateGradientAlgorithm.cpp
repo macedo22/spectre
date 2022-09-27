@@ -6,6 +6,8 @@
 #include <vector>
 
 #include "Helpers/ParallelAlgorithms/LinearSolver/LinearSolverAlgorithmTestHelpers.hpp"
+#include "Options/ParseOptions.hpp"
+#include "Options/ParseOptions.tpp"
 #include "Parallel/InitializationFunctions.hpp"
 #include "Parallel/Main.hpp"
 #include "ParallelAlgorithms/LinearSolver/ConjugateGradient/ConjugateGradient.hpp"

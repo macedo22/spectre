@@ -34,6 +34,7 @@
 #include "Options/Auto.hpp"
 #include "Options/Options.hpp"
 #include "Options/ParseOptions.hpp"
+#include "Options/ParseOptions.tpp"
 #include "Utilities/FileSystem.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/TMPL.hpp"
