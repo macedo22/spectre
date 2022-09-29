@@ -5,6 +5,7 @@
 
 #include "DataStructures/DataBox/DataBox.hpp"  // IWYU pragma: keep
 #include "Options/Options.hpp"
+#include "Options/ParseOptions.tpp"
 #include "Parallel/Algorithms/AlgorithmSingleton.hpp"
 #include "Parallel/GlobalCache.hpp"
 #include "Parallel/InitializationFunctions.hpp"

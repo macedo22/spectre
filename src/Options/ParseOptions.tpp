@@ -395,7 +395,7 @@ typename Tag::type __attribute__((used)) Parser<OptionList, Group>::get() const 
 // }
 
 template <typename OptionList, typename Group>
-void Parser<OptionList, Group>::parse(const YAML::Node& node) {
+void __attribute__((used)) Parser<OptionList, Group>::parse(const YAML::Node& node) {
   if (not(node.IsMap() or node.IsNull())) {
     PARSE_ERROR(context_, "'" << node << "' does not look like options.\n"
                               << help());

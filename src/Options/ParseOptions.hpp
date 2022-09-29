@@ -210,12 +210,19 @@ class Parser {
   void overlay_file(const std::string& file_name);
   /// @}
 
+  #if defined(__GNUC__)
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Wundefined-internal"
+  #endif  //
   /// Get the value of the specified option
   ///
   /// \tparam T the option to retrieve
   /// \return the value of the option
   template <typename T, typename Metavariables = NoSuchType>
   typename T::type __attribute__((used)) get() const;
+  #if defined(__GNUC__)
+  #pragma GCC diagnostic pop
+  #endif  // defined(__GNUC__)
 
   /// Call a function with the specified options as arguments.
   ///
@@ -273,7 +280,7 @@ class Parser {
   static constexpr int max_label_size_ = 70;
 
   /// Parse a YAML node containing options
-  void parse(const YAML::Node& node);
+  void __attribute__((used)) parse(const YAML::Node& node);
 
   /// Overlay data from a YAML node
   template <typename OverlayOptions>
@@ -592,7 +599,7 @@ void Parser<OptionList, Group>::parse_file(const std::string& file_name) {
 
 // template <typename OptionList, typename Group>
 // template <typename Tag, typename Metavariables>
-// typename Tag::type Parser<OptionList, Group>::get() const {
+// typename Tag::type /*__attribute__((used))*/ Parser<OptionList, Group>::get() const {
 //   return Options_detail::get_impl<
 //       Tag, Metavariables,
 //       typename Options_detail::find_subgroup<Tag, Group>::type>::apply(*this);
