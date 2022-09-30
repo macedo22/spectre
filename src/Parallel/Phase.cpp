@@ -8,6 +8,8 @@
 #include <utility>
 
 #include "Options/Options.hpp"
+#include "Options/ParseOptions.hpp"
+#include "Options/ParseOptions.tpp"
 #include "Utilities/ErrorHandling/Error.hpp"
 #include "Utilities/GetOutput.hpp"
 #include "Utilities/StdHelpers.hpp"

@@ -13,6 +13,8 @@
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/Parallel/RoundRobinArrayElements.hpp"
 #include "Options/Options.hpp"
+#include "Options/ParseOptions.hpp"
+#include "Options/ParseOptions.tpp"
 #include "Parallel/AlgorithmExecution.hpp"
 #include "Parallel/Algorithms/AlgorithmArray.hpp"
 #include "Parallel/Algorithms/AlgorithmSingleton.hpp"
