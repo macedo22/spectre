@@ -17,6 +17,7 @@
 #include "DataStructures/DataBox/Tag.hpp"
 #include "Helpers/Parallel/RoundRobinArrayElements.hpp"
 #include "Options/Options.hpp"
+#include "Options/ParseOptions.hpp"
 #include "Options/ParseOptions.tpp"
 #include "Parallel/Algorithms/AlgorithmArray.hpp"
 #include "Parallel/Algorithms/AlgorithmNodegroup.hpp"

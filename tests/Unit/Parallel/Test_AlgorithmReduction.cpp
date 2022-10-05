@@ -18,6 +18,7 @@
 #include "DataStructures/DataBox/DataBox.hpp"  // IWYU pragma: keep
 #include "Helpers/Parallel/RoundRobinArrayElements.hpp"
 #include "Options/Options.hpp"
+#include "Options/ParseOptions.hpp"
 #include "Options/ParseOptions.tpp"
 #include "Parallel/Algorithms/AlgorithmArray.hpp"
 #include "Parallel/Algorithms/AlgorithmSingleton.hpp"

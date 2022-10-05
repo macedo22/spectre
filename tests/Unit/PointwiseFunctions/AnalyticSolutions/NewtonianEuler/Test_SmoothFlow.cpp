@@ -18,8 +18,6 @@
 #include "Framework/SetupLocalPythonEnvironment.hpp"
 #include "Framework/TestCreation.hpp"
 #include "Framework/TestHelpers.hpp"
-#include "Options/ParseOptions.hpp"
-#include "Options/ParseOptions.tpp"
 #include "PointwiseFunctions/AnalyticSolutions/NewtonianEuler/SmoothFlow.hpp"
 #include "PointwiseFunctions/Hydro/Tags.hpp"
 #include "Utilities/MakeWithValue.hpp"

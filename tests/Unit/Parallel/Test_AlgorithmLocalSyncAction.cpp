@@ -15,6 +15,7 @@
 #include "DataStructures/DataBox/DataBox.hpp"
 #include "DataStructures/DataBox/Tag.hpp"
 #include "Options/Options.hpp"
+#include "Options/ParseOptions.hpp"
 #include "Options/ParseOptions.tpp"
 #include "Parallel/AlgorithmExecution.hpp"
 #include "Parallel/Algorithms/AlgorithmArray.hpp"

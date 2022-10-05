@@ -8,6 +8,7 @@
 
 #include "Helpers/ParallelAlgorithms/NonlinearSolver/Algorithm.hpp"
 #include "Options/Options.hpp"
+#include "Options/ParseOptions.hpp"
 #include "Options/ParseOptions.tpp"
 #include "Parallel/AlgorithmExecution.hpp"
 #include "Parallel/InitializationFunctions.hpp"

@@ -22,6 +22,7 @@ target_link_libraries(
   DataStructures
   IO
   Logging
+  Options
   ParallelLinearSolver
 )
 

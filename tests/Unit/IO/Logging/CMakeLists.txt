@@ -20,5 +20,6 @@ target_link_libraries(
   PRIVATE
   DataStructures
   Logging
+  Options
   Utilities
   )

@@ -14,6 +14,12 @@ add_test_library(
   "ParallelNonlinearSolver"
   )
 
+target_link_libraries(
+  ${LIBRARY}
+  PRIVATE
+  Options
+)
+
 set(INTEGRATION_TEST_LINK_LIBRARIES
   # Link against Boost::program_options for now until we have proper
   # dependency handling for header-only libs
