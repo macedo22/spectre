@@ -14,7 +14,6 @@ spectre_target_sources(
 target_link_libraries(
   ${LIBRARY}
   PUBLIC
+  Importers
   Options
-  Parallel
-  Utilities
   )
