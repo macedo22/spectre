@@ -9,7 +9,7 @@ spectre_target_sources(
   ${LIBRARY}
   PRIVATE
   Comparator.cpp
-  ParseOptions.cpp
+  Options.cpp
   )
 
 spectre_target_headers(

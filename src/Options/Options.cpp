@@ -24,7 +24,7 @@ Option::Option(Context context)
 const YAML::Node& Option::node() const { return *node_; }
 const Context& Option::context() const { return context_; }
 
-/// Append a line to the contained context.
+// Append a line to the contained context.
 void Option::append_context(const std::string& context) {
   context_.append(context);
 }
