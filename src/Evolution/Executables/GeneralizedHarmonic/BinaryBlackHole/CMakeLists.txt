@@ -29,7 +29,7 @@ set(LIBS_TO_LINK
 add_spectre_parallel_executable(
   "EvolveGhBinaryBlackHole"
   EvolveGhBinaryBlackHole
-  Evolution/Executables/GeneralizedHarmonic
+  Evolution/Executables/GeneralizedHarmonic/BinaryBlackHole
   "EvolutionMetavars"
   "${LIBS_TO_LINK};ControlSystem;GeneralRelativitySolutions;Importers;EvolveGhBinaryBlackHoleOptions"
 )
