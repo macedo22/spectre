@@ -83,12 +83,22 @@ function(
     "#include \"${SUBDIR_NAME}/${HPP_NAME}Fwd.hpp\"\n"
     "using metavariables = ${METAVARS};\n"
     "#include \"${SUBDIR_NAME}/${HPP_NAME}.hpp\"\n"
+  )
+  if("${EXECUTABLE_NAME}" STREQUAL "EvolveGhBinaryBlackHole")
+    file(APPEND
+      "${BUILD_TARGET_FILENAME}.out"
+      "#include \"${SUBDIR_NAME}/CharmInit.hpp\"\n"
+    )
+  endif()
+  file(APPEND
+    "${BUILD_TARGET_FILENAME}.out"
     "#include \"Parallel/Main.hpp\"\n"
     "\n"
     "using charmxx_main_component = Parallel::Main<${METAVARS}>;\n"
     "\n"
     "#include \"Parallel/CharmMain.tpp\"\n"
-    )
+  )
+
   configure_file(
     "${BUILD_TARGET_FILENAME}.out"
     ${BUILD_TARGET_FILENAME}
