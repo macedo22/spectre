@@ -168,8 +168,11 @@ class Parser {
   // The maximum length of an option label.
   static constexpr int max_label_size_ = 70;
 
-  /// Parse a YAML node containing options
+  /// \cond
+  // Doxygen is confused by decltype(auto)
+  // Parse a YAML node containing options
   void __attribute__((used)) parse(const YAML::Node& node);
+  /// \endcond
 
   /// Overlay data from a YAML node
   template <typename OverlayOptions>
