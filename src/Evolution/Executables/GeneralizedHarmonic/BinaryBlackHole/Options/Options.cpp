@@ -1,7 +1,7 @@
 // Distributed under the MIT License.
 // See LICENSE.txt for details.
 
-#include "Evolution/Executables/GeneralizedHarmonic/EvolveGhBinaryBlackHole.hpp"
+#include "Evolution/Executables/GeneralizedHarmonic/BinaryBlackHole/EvolveGhBinaryBlackHole.hpp"
 #include "Options/ParseOptions.tpp"
 #include "Parallel/MainOptionList.hpp"
 #include "Utilities/TaggedTuple.hpp"

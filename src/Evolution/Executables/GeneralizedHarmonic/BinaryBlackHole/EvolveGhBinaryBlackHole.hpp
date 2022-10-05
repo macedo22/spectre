@@ -457,5 +457,3 @@ struct EvolutionMetavars {
       "Evolve a binary black hole using the Generalized Harmonic "
       "formulation\n"};
 };
-
-#include "Evolution/Executables/GeneralizedHarmonic/BinaryBlackHole/CharmInit.hpp"

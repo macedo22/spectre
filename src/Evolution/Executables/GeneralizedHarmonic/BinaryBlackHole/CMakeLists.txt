@@ -31,7 +31,8 @@ add_spectre_parallel_executable(
   EvolveGhBinaryBlackHole
   Evolution/Executables/GeneralizedHarmonic/BinaryBlackHole
   "EvolutionMetavars"
-  "${LIBS_TO_LINK};ControlSystem;GeneralRelativitySolutions;Importers;EvolveGhBinaryBlackHoleOptions"
+  "${LIBS_TO_LINK};ControlSystem;EvolveGhBinaryBlackHoleOptions;"
+  "GeneralRelativitySolutions;Importers"
 )
 
 add_subdirectory(Options)
