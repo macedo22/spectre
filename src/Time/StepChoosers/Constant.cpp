@@ -7,8 +7,7 @@
 #include "Options/ParseOptions.hpp"
 #include "Options/ParseOptions.tpp"
 
-namespace StepChoosers {
-namespace Constant_detail {
+namespace StepChoosers::Constant_detail {
 // This function lets us avoid including ParseOptions.hpp in the
 // header.
 double parse_options(const Options::Option& options) {
@@ -19,5 +18,4 @@ double parse_options(const Options::Option& options) {
   }
   return value;
 }
-}  // namespace Constant_detail
-}  // namespace StepChoosers
+}  // namespace StepChoosers::Constant_detail
