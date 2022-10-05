@@ -53,7 +53,7 @@ template <typename X, typename Symm, typename IndexList>
 class Tensor;
 template <typename TagsList>
 class Variables;
-template <typename T, typename VectorType>
+template <typename T, typename VectorType, size_t StaticSize>
 class VectorImpl;
 namespace Tags {
 template <typename TagsList>
