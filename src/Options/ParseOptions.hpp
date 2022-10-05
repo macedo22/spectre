@@ -99,19 +99,19 @@ class Parser {
   void overlay_file(const std::string& file_name);
   /// @}
 
-  #if defined(__GNUC__)
+  #if defined(__clang__)
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wundefined-internal"
-  #endif  //
+  #endif  // defined(__clang__)
   /// Get the value of the specified option
   ///
   /// \tparam T the option to retrieve
   /// \return the value of the option
   template <typename T, typename Metavariables = NoSuchType>
   typename T::type __attribute__((used)) get() const;
-  #if defined(__GNUC__)
+  #if defined(__clang__)
   #pragma GCC diagnostic pop
-  #endif  // defined(__GNUC__)
+  #endif  // defined(__clang__)
 
   /// Call a function with the specified options as arguments.
   ///
@@ -288,9 +288,6 @@ void Parser<OptionList, Group>::parse(const Option& options) {
   parse(options.node());
 }
 
-// TODO : instantiate parse_file in Options.cpp  or create_all_options?
-// then we don't need to have this open_file or parse_error defined?
-// maybe also need to instantiate parse?
 namespace Options_detail {
 inline std::ifstream open_file(const std::string& file_name) {
   errno = 0;
