@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "DataStructures/Matrix.hpp"
+#include "Options/Options.hpp"
 
 namespace TestHelpers::observers {
 /*!
