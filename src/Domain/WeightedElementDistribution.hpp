@@ -103,23 +103,28 @@ namespace domain {
  * recursively, so a generalization of the present method is possible for blocks
  * with internal refinement
  */
-template <size_t Dim>
-struct BlockZCurveProcDistribution {
+struct WeightedBlockZCurveProcDistribution {
   /// The `number_of_procs_with_elements` argument represents how many procs
   /// will have elements. This is not necessarily equal to the total number of
   /// procs because some global procs may be ignored by the third argument
   /// `global_procs_to_ignore`
-  BlockZCurveProcDistribution(
+  WeightedBlockZCurveProcDistribution(
       size_t number_of_procs_with_elements,
-      const std::vector<std::array<size_t, Dim>>& refinements_by_block,
+      const std::vector<std::vector<double>>& cost_by_element_by_block,
       const std::unordered_set<size_t>& global_procs_to_ignore = {});
 
   /// Gets the suggested processor number for a particular element,
   /// determined by the greedy block assignment and Morton curve element
   /// assignment described in detail in the parent class documentation.
+  template <size_t Dim>
   size_t get_proc_for_element(const ElementId<Dim>& element_id) const;
 
   void redistribute_elements();
+
+  std::vector<std::vector<std::pair<size_t, size_t>>>
+  block_element_distribution() const {
+    return block_element_distribution_;
+  }
 
  private:
   // in this nested data structure:
@@ -128,8 +133,8 @@ struct BlockZCurveProcDistribution {
   //   allowance
   // - Each element allowance is represented by a pair of proc number, number of
   //   elements in the allowance
-//   const size_t number_of_procs_with_elements_;
-//   const std::unordered_set<size_t>& global_procs_to_ignore_;
+  //   const size_t number_of_procs_with_elements_;
+  //   const std::unordered_set<size_t>& global_procs_to_ignore_;
   std::vector<std::vector<std::pair<size_t, size_t>>>
       block_element_distribution_;
 };
