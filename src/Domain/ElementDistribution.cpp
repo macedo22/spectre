@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <iostream>
 #include <numeric>
 #include <utility>
 #include <vector>
@@ -16,7 +17,7 @@
 
 namespace domain {
 
-namespace {
+// namespace {
 // This interleaves the bits of the element index.
 // A sketch of a 2D block with 4x2 elements, with bit indices and resulting
 // z-curve
@@ -45,6 +46,17 @@ size_t z_curve_index(const ElementId<Dim>& element_id) {
                const std::pair<size_t, size_t>& rhs) {
               return lhs.first < rhs.first;
             });
+  // std::cout << "dimension_by_highest_refinement_level {L, Dim} : {{"
+  //   << dimension_by_highest_refinement_level[0].first << ", "
+  //   << dimension_by_highest_refinement_level[0].second << "}";
+
+  // for (size_t i = 1; i < Dim; i++) {
+  //   std::cout << ", {"
+  //   << dimension_by_highest_refinement_level[i].first << ", "
+  //   << dimension_by_highest_refinement_level[i].second << "}";
+  // }
+
+  // std::cout << "}" << std::endl;
 
   size_t element_order_index = 0;
 
@@ -60,23 +72,38 @@ size_t z_curve_index(const ElementId<Dim>& element_id) {
   // not present
   size_t leading_gap = 0;
   for (size_t i = 0; i < Dim; ++i) {
+    // std::cout << "Dim index (i) : " << i << std::endl;
+    // std::cout << "Dim at i : " << gsl::at(dimension_by_highest_refinement_level, i).second << std::endl;
+    // std::cout << "element_id.segment_id(that) : " << element_id
+    //         .segment_id(
+    //             gsl::at(dimension_by_highest_refinement_level, i).second) << std::endl;
+    // std::cout << "element_id.segment_id(...).index() : " << element_id
+    //         .segment_id(
+    //             gsl::at(dimension_by_highest_refinement_level, i).second)
+    //         .index() << std::endl;
+
     const size_t id_to_gap_and_shift =
         element_id
             .segment_id(
                 gsl::at(dimension_by_highest_refinement_level, i).second)
             .index();
+    // std::cout << "id_to_gap_and_shift : " << id_to_gap_and_shift << std::endl;
     size_t total_gap = leading_gap;
     if (gsl::at(dimension_by_highest_refinement_level, i).first > 0) {
       ++leading_gap;
     }
+    // std::cout << "leading_gap : " << leading_gap << std::endl;
     for (size_t bit_index = 0;
+         // while less than # of refinement levels
          bit_index < gsl::at(dimension_by_highest_refinement_level, i).first;
          ++bit_index) {
+      // std::cout << "bit_index (for ref. level indexing) : " << bit_index std::endl;
       // This operation will not overflow for our present use of `ElementId`s.
       // This technique densely assigns an ElementID a unique size_t identifier
       // determining the Morton curve order, and `ElementId` supports refinement
       // levels such that a global index within a block will fit in a 64-bit
       // unsigned integer.
+      // std::cout << "element_order_index != "
       element_order_index |=
           ((id_to_gap_and_shift & two_to_the(bit_index)) << total_gap);
       for (size_t j = 0; j < Dim; ++j) {
@@ -88,9 +115,272 @@ size_t z_curve_index(const ElementId<Dim>& element_id) {
       }
     }
   }
+
+  // std::cout << "element_order_index : " << element_order_index << std::endl;
   return element_order_index;
 }
-}  // namespace
+
+template <size_t Dim>
+std::array<size_t, Dim> element_id_from_z_curve_index(
+    const size_t z_order_index,
+    const std::array<size_t, Dim>& block_refinements) {
+  std::array<std::pair<size_t, size_t>, Dim>
+      dimension_by_highest_refinement_level;
+  for (size_t i = 0; i < Dim; ++i) {
+    dimension_by_highest_refinement_level.at(i) =
+        std::make_pair(gsl::at(block_refinements, i), i);
+  }
+  // {{L, Dim}, {L, Dim}, ...}
+  alg::sort(dimension_by_highest_refinement_level,
+            [](const std::pair<size_t, size_t>& lhs,
+               const std::pair<size_t, size_t>& rhs) {
+              return lhs.first < rhs.first;
+            });
+  
+  std::cout << "dimension_by_highest_refinement_level {L, Dim} : {{"
+    << dimension_by_highest_refinement_level[0].first << ", "
+    << dimension_by_highest_refinement_level[0].second << "}";
+
+  for (size_t i = 1; i < Dim; i++) {
+    std::cout << ", {"
+    << dimension_by_highest_refinement_level[i].first << ", "
+    << dimension_by_highest_refinement_level[i].second << "}";
+  }
+
+  std::cout << "}" << std::endl;
+  
+  // pairs are: {SegmentId index, dim}, where dim = 0, 1, or 2 for x, y, or z
+  // init as {{0, least refined dim}, {0, next least}, ...}
+  std::array<std::pair<size_t, size_t>, Dim>
+      segment_indices_by_highest_refinement_level;
+  for (size_t i = 0; i < Dim; ++i) {
+    segment_indices_by_highest_refinement_level.at(i) =
+        std::make_pair(0, gsl::at(dimension_by_highest_refinement_level, i).second);
+  }
+
+  std::cout << "BEFORE segment_indices_by_highest_refinement_level {Index, Dim} : {{"
+    << segment_indices_by_highest_refinement_level[0].first << ", "
+    << segment_indices_by_highest_refinement_level[0].second << "}";
+
+  for (size_t i = 1; i < Dim; i++) {
+    std::cout << ", {"
+    << segment_indices_by_highest_refinement_level[i].first << ", "
+    << segment_indices_by_highest_refinement_level[i].second << "}";
+  }
+
+  std::cout << "}" << std::endl;
+
+  // const highest_refinement_level =
+  //     gsl::at(dimension_by_highest_refinement_level, Dim - 1);
+  // // initialize to lowest refinement
+  // size_t refinement_level =
+  //     gsl::at(dimension_by_highest_refinement_level, 0);
+  // // size_t refinements_processed = 0;
+  // const size_t num_refinement_bits = two_to_the(refinement_level);
+  size_t starting_dim_index = 0;
+  // size_t mask_index = 0;
+  size_t bit_index = 0;
+  size_t element_order_index = z_order_index;
+  std::cout << "z_order_index : " << z_order_index << std::endl;
+      
+  // size_t refinement_levels_processed = 0;
+  // TODO : try to optimize by handling last case separately when it's the
+  // remaining bits of the highest refinement, i.e. probably do:
+  // starting_dim_index < (Dim - 1) then handle the last case separately after
+  while (starting_dim_index < Dim) {
+    std::cout << "starting_dim_index : " << starting_dim_index << std::endl;
+    const size_t refinement_level =
+      gsl::at(dimension_by_highest_refinement_level, starting_dim_index).first;
+    // TODO : this is probably wrong
+    // const size_t num_refinement_bits =
+    //     bit_index == 0 ? two_to_the(refinement_level) : 
+    //         two_to_the(refinement_level) - two_to_the(bit_index);
+    const size_t num_refinement_bits =
+        refinement_level - bit_index;
+    std::cout << "refinement_level : " << refinement_level << std::endl;
+    std::cout << "num_refinement_bits : " << num_refinement_bits << std::endl;
+    for (size_t i = 0; i < num_refinement_bits; i++) {
+      std::cout << "i : " << i << std::endl;
+      // const size_t shift =
+      //     bit_index == 0 ? 0 : 
+      //       bit_index - 1;
+      for (size_t dim_index = starting_dim_index; dim_index < Dim; dim_index++) {
+        std::cout << "dim_index : " << dim_index << std::endl;
+        // segment_indices_by_highest_refinement_level.at(dim_index).first |=
+        //     ((z_order_index & (two_to_the(mask_index))) >> (mask_index - bit_index));
+        // // mask << 1;
+        // mask_index++;
+        std::cout << "current segment index BEFORE |= : "
+                  << segment_indices_by_highest_refinement_level.at(dim_index).first << std::endl;
+        segment_indices_by_highest_refinement_level.at(dim_index).first |=
+            ((element_order_index & 1) << bit_index);
+        std::cout << "current segment index AFTER |= : "
+                  << segment_indices_by_highest_refinement_level.at(dim_index).first << std::endl;
+        element_order_index >>= 1;
+        std::cout << "element_order_index updated to : " << element_order_index << std::endl;
+      }
+      bit_index++;
+      std::cout << "bit_index updated to : " << bit_index << std::endl;
+    }
+
+    // mask_index += num_refinement_bits * (dim_index - starting_dim_index);
+    // bit_index = two_to_the(refinement_level);
+    // bit_index += num_refinement_bits;
+    // // bit_index += (num_refinement_bits * (dim_index - starting_dim_index));
+    // refinement_levels_processed = refinement_level;
+
+    starting_dim_index++;
+    while (starting_dim_index < Dim and
+           refinement_level ==
+               gsl::at(dimension_by_highest_refinement_level, starting_dim_index).first) {
+      // starting_dim_index++;
+      // refinement_level =
+      //     gsl::at(dimension_by_highest_refinement_level, starting_dim_index).first;
+      starting_dim_index++;
+    }
+    std::cout << "starting_dim_index at end of loop : " << starting_dim_index << std::endl;
+  }
+
+  std::cout << "AFTER segment_indices_by_highest_refinement_level {Index, Dim} : {{"
+    << segment_indices_by_highest_refinement_level[0].first << ", "
+    << segment_indices_by_highest_refinement_level[0].second << "}";
+
+  for (size_t i = 1; i < Dim; i++) {
+    std::cout << ", {"
+    << segment_indices_by_highest_refinement_level[i].first << ", "
+    << segment_indices_by_highest_refinement_level[i].second << "}";
+  }
+
+  std::cout << "}" << std::endl;
+
+  // alg::sort(segment_indices_by_highest_refinement_level,
+  //           [](const std::pair<size_t, size_t>& lhs,
+  //              const std::pair<size_t, size_t>& rhs) {
+  //             return lhs.second < rhs.second;
+  //           });
+  std::array<size_t, Dim> element_id{};
+
+  for (size_t i = 0; i < Dim; i++) {
+    gsl::at(element_id,
+       gsl::at(segment_indices_by_highest_refinement_level, i).second) =
+           gsl::at(segment_indices_by_highest_refinement_level, i).first;
+  }
+  
+  return element_id;
+  
+
+  // // const highest_refinement_level =
+  // //     gsl::at(dimension_by_highest_refinement_level, Dim - 1);
+  // // // initialize to lowest refinement
+  // // size_t refinement_level =
+  // //     gsl::at(dimension_by_highest_refinement_level, 0);
+  // // // size_t refinements_processed = 0;
+  // // const size_t num_refinement_bits = two_to_the(refinement_level);
+  // size_t starting_dim_index = 0;
+  // size_t mask_index = 0;
+  // size_t bit_index = 0;
+  // // size_t refinement_levels_processed = 0;
+  // while (starting_dim_index < Dim) {
+  //   const size_t refinement_level =
+  //     gsl::at(dimension_by_highest_refinement_level, starting_dim_index).first;
+  //   // TODO : this is probably wrong
+  //   const size_t num_refinement_bits =
+  //       bit_index == 0 ? two_to_the(refinement_level) : 
+  //           two_to_the(refinement_level) - two_to_the(bit_index);
+  //   for (size_t i = 0; i < num_refinement_bits; i++) {
+  //     // const size_t shift =
+  //     //     bit_index == 0 ? 0 : 
+  //     //       bit_index - 1;
+  //     for (size_t dim_index = starting_dim_index; dim_index < Dim - 1; dim_index++) {
+  //       segment_indices_by_highest_refinement_level.at(dim_index).first |=
+  //           ((z_order_index & (two_to_the(mask_index))) >> (mask_index - bit_index));
+  //       // mask << 1;
+  //       mask_index++;
+  //     }
+  //     bit_index++;
+  //   }
+
+  //   // mask_index += num_refinement_bits * (dim_index - starting_dim_index);
+  //   // bit_index = two_to_the(refinement_level);
+  //   // bit_index += num_refinement_bits;
+  //   // // bit_index += (num_refinement_bits * (dim_index - starting_dim_index));
+  //   // refinement_levels_processed = refinement_level;
+
+  //   starting_dim_index++;
+  //   while (starting_dim_index < Dim and
+  //          refinement_level ==
+  //              gsl::at(dimension_by_highest_refinement_level, starting_dim_index).first) {
+  //     // starting_dim_index++;
+  //     // refinement_level =
+  //     //     gsl::at(dimension_by_highest_refinement_level, starting_dim_index).first;
+  //     starting_dim_index++;
+  //   }
+
+  //   // while (starting_dim_index < (Dim - 1) and
+  //   //        refinement_level ==
+  //   //            gsl::at(dimension_by_highest_refinement_level, starting_dim_index).first) {
+  //   //   starting_dim_index++;
+  //   //   refinement_level =
+  //   //       gsl::at(dimension_by_highest_refinement_level, starting_dim_index).first;
+  //   //   starting_dim_index++;
+  //   // }
+  // }
+
+  // const highest_refinement_level =
+  //     gsl::at(dimension_by_highest_refinement_level, Dim - 1);
+  // // initialize to lowest refinement
+  // size_t refinement_level =
+  //     gsl::at(dimension_by_highest_refinement_level, 0);
+  // // size_t refinements_processed = 0;
+  // const size_t num_refinement_bits = two_to_the(refinement_level);
+  // size_t starting_dim_index = 0;
+  // size_t mask = 1;
+  // while (true) {
+  //   for (size_t i = 0; i < num_refinement_bits; i++) {
+  //     for (size_t dim_index = starting_dim_index; dim_index < Dim - 1; dim_index++) {
+  //       segment_indices_by_highest_refinement_level.at(dim_index).first +=
+  //           z_order_index & mask;
+  //       mask << 1;
+  //     }
+  //   }
+
+  //   if (refinement_level == highest_refinement_level) {
+  //     break; 
+  //   }
+
+  //   starting_dim_index++;
+  //   refinement_level = dimension_by_highest_refinement_level.at(starting_dim_index);
+  //   num_refinement_bits = two_to_the(refinement_level);
+
+  //   // refinement_level =
+  //   //     dimension_by_highest_refinement_level.at(starting_dim_index + 1).second;
+    
+  //   // size_t next_refinement_level = refinement_level;
+  //   // while (refinement_level < highest_refinement_level
+  //   //        and next_refinement_level == refinement_level) {
+      
+  //   // }
+  // }
+
+  // // TODO : handle when refinement = 0?;
+  // size_t refinement_levels_left =
+  //     gsl::at(dimension_by_highest_refinement_level); 
+  // for (size_t i = 0; i < Dim; i++) {
+  //   const size_t refinement =
+  //       gsl::at(dimension_by_highest_refinement_level, i);
+  //   // TODO : handle case with 0 refinement?
+  //   const size_t num_refinement_bits = two_to_the(refinement);
+
+  //   size_t segment_id_index = 0;
+  //   size_t mask = 1;
+  //   for (size_t bit_index = 0; bit_index < num_refinement_bits * (Dim - i); bit_index++) {
+  //     segment_id_index += z_order_index & mask;
+  //     mask *= 2;
+  //   }
+
+  // }
+}
+// }  // namespace
 
 template <size_t Dim>
 BlockZCurveProcDistribution<Dim>::BlockZCurveProcDistribution(
@@ -204,7 +494,11 @@ size_t BlockZCurveProcDistribution<Dim>::get_proc_for_element(
 #define GET_DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
 
 #define INSTANTIATION(r, data) \
-  template class BlockZCurveProcDistribution<GET_DIM(data)>;
+  template class BlockZCurveProcDistribution<GET_DIM(data)>; \
+  template size_t z_curve_index(const ElementId<GET_DIM(data)>& element_id); \
+  template std::array<size_t, GET_DIM(data)> element_id_from_z_curve_index( \
+    const size_t z_order_index, \
+    const std::array<size_t, GET_DIM(data)>& block_refinements);
 
 GENERATE_INSTANTIATIONS(INSTANTIATION, (1, 2, 3))
 

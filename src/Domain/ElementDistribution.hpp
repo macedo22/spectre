@@ -13,6 +13,14 @@
 
 namespace domain {
 
+template <size_t Dim>
+size_t z_curve_index(const ElementId<Dim>& element_id);
+
+template <size_t Dim>
+std::array<size_t, Dim> element_id_from_z_curve_index(
+    const size_t z_order_index,
+    const std::array<size_t, Dim>& block_refinements);
+
 /*!
  * \brief Distribution strategy for assigning elements to CPUs using a
  * Morton ('Z-order') space-filling curve to determine placement within each
