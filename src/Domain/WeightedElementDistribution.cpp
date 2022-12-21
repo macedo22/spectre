@@ -151,7 +151,7 @@ WeightedBlockZCurveProcDistribution::WeightedBlockZCurveProcDistribution(
     }
   }
 
-  std::cout << "total_cost : " << total_cost << std::endl;
+  // std::cout << "total_cost : " << total_cost << std::endl;
 
   // const double cost_range = max_cost - min_cost;
 
@@ -168,8 +168,8 @@ WeightedBlockZCurveProcDistribution::WeightedBlockZCurveProcDistribution(
   const double cost_allowance_per_proc =
       total_cost / number_of_procs_with_elements;
 
-  std::cout << "cost_allowance_per_proc : " << cost_allowance_per_proc
-            << std::endl;
+  // std::cout << "cost_allowance_per_proc : " << cost_allowance_per_proc
+  //           << std::endl;
 
   // size_t remaining_elements_in_block = cost_by_element_by_block[0].size();
   size_t current_block = 0;
@@ -186,7 +186,7 @@ WeightedBlockZCurveProcDistribution::WeightedBlockZCurveProcDistribution(
       ++number_of_ignored_procs_so_far;
       ++global_proc_number;
     }
-    std::cout << "global_proc_number : " << global_proc_number << std::endl;
+    // std::cout << "global_proc_number : " << global_proc_number << std::endl;
 
     // initialize cost for this proc to be the current element
     // double cost_spent_on_proc =
@@ -197,17 +197,17 @@ WeightedBlockZCurveProcDistribution::WeightedBlockZCurveProcDistribution(
     // while we still have cost allowed on the proc
     while (current_block < cost_by_element_by_block.size() and
            cost_spent_on_proc <= cost_allowance_per_proc) {
-      std::cout << "current_block : " << current_block << std::endl;
-      std::cout << "current_element_of_current_block : "
-                << current_element_of_current_block << std::endl;
+      // std::cout << "current_block : " << current_block << std::endl;
+      // std::cout << "current_element_of_current_block : "
+      //           << current_element_of_current_block << std::endl;
       const size_t num_elements_current_block =
           cost_by_element_by_block[current_block].size();
       // while we still have elements left on the block and we still
       // have cost allowed on the proc
       size_t num_elements_distributed_to_proc = 0;
       // std::cout << "begin while : " << std::endl;
-      std::cout << "cost_spent_on_proc before : " << cost_spent_on_proc
-                << std::endl;
+      // std::cout << "cost_spent_on_proc before : " << cost_spent_on_proc
+      //           << std::endl;
       while (current_element_of_current_block < num_elements_current_block and
              cost_spent_on_proc <= cost_allowance_per_proc) {
         cost_spent_on_proc +=
@@ -217,8 +217,8 @@ WeightedBlockZCurveProcDistribution::WeightedBlockZCurveProcDistribution(
         current_element_of_current_block++;
       }
       // std::cout << "end while : " << std::endl;
-      std::cout << "cost_spent_on_proc after : " << cost_spent_on_proc
-                << std::endl;
+      // std::cout << "cost_spent_on_proc after : " << cost_spent_on_proc
+      //           << std::endl;
 
       block_element_distribution_.at(current_block)
           .emplace_back(std::make_pair(global_proc_number,

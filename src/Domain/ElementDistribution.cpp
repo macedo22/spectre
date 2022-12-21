@@ -137,17 +137,17 @@ std::array<size_t, Dim> element_id_from_z_curve_index(
               return lhs.first < rhs.first;
             });
   
-  std::cout << "dimension_by_highest_refinement_level {L, Dim} : {{"
-    << dimension_by_highest_refinement_level[0].first << ", "
-    << dimension_by_highest_refinement_level[0].second << "}";
+  // std::cout << "dimension_by_highest_refinement_level {L, Dim} : {{"
+  //   << dimension_by_highest_refinement_level[0].first << ", "
+  //   << dimension_by_highest_refinement_level[0].second << "}";
 
-  for (size_t i = 1; i < Dim; i++) {
-    std::cout << ", {"
-    << dimension_by_highest_refinement_level[i].first << ", "
-    << dimension_by_highest_refinement_level[i].second << "}";
-  }
+  // for (size_t i = 1; i < Dim; i++) {
+  //   std::cout << ", {"
+  //   << dimension_by_highest_refinement_level[i].first << ", "
+  //   << dimension_by_highest_refinement_level[i].second << "}";
+  // }
 
-  std::cout << "}" << std::endl;
+  // std::cout << "}" << std::endl;
   
   // pairs are: {SegmentId index, dim}, where dim = 0, 1, or 2 for x, y, or z
   // init as {{0, least refined dim}, {0, next least}, ...}
@@ -158,17 +158,17 @@ std::array<size_t, Dim> element_id_from_z_curve_index(
         std::make_pair(0, gsl::at(dimension_by_highest_refinement_level, i).second);
   }
 
-  std::cout << "BEFORE segment_indices_by_highest_refinement_level {Index, Dim} : {{"
-    << segment_indices_by_highest_refinement_level[0].first << ", "
-    << segment_indices_by_highest_refinement_level[0].second << "}";
+  // std::cout << "BEFORE segment_indices_by_highest_refinement_level {Index, Dim} : {{"
+  //   << segment_indices_by_highest_refinement_level[0].first << ", "
+  //   << segment_indices_by_highest_refinement_level[0].second << "}";
 
-  for (size_t i = 1; i < Dim; i++) {
-    std::cout << ", {"
-    << segment_indices_by_highest_refinement_level[i].first << ", "
-    << segment_indices_by_highest_refinement_level[i].second << "}";
-  }
+  // for (size_t i = 1; i < Dim; i++) {
+  //   std::cout << ", {"
+  //   << segment_indices_by_highest_refinement_level[i].first << ", "
+  //   << segment_indices_by_highest_refinement_level[i].second << "}";
+  // }
 
-  std::cout << "}" << std::endl;
+  // std::cout << "}" << std::endl;
 
   // const highest_refinement_level =
   //     gsl::at(dimension_by_highest_refinement_level, Dim - 1);
@@ -181,14 +181,14 @@ std::array<size_t, Dim> element_id_from_z_curve_index(
   // size_t mask_index = 0;
   size_t bit_index = 0;
   size_t element_order_index = z_order_index;
-  std::cout << "z_order_index : " << z_order_index << std::endl;
+  // std::cout << "z_order_index : " << z_order_index << std::endl;
       
   // size_t refinement_levels_processed = 0;
   // TODO : try to optimize by handling last case separately when it's the
   // remaining bits of the highest refinement, i.e. probably do:
   // starting_dim_index < (Dim - 1) then handle the last case separately after
   while (starting_dim_index < Dim) {
-    std::cout << "starting_dim_index : " << starting_dim_index << std::endl;
+    // std::cout << "starting_dim_index : " << starting_dim_index << std::endl;
     const size_t refinement_level =
       gsl::at(dimension_by_highest_refinement_level, starting_dim_index).first;
     // TODO : this is probably wrong
@@ -197,30 +197,30 @@ std::array<size_t, Dim> element_id_from_z_curve_index(
     //         two_to_the(refinement_level) - two_to_the(bit_index);
     const size_t num_refinement_bits =
         refinement_level - bit_index;
-    std::cout << "refinement_level : " << refinement_level << std::endl;
-    std::cout << "num_refinement_bits : " << num_refinement_bits << std::endl;
+    // std::cout << "refinement_level : " << refinement_level << std::endl;
+    // std::cout << "num_refinement_bits : " << num_refinement_bits << std::endl;
     for (size_t i = 0; i < num_refinement_bits; i++) {
-      std::cout << "i : " << i << std::endl;
+      // std::cout << "i : " << i << std::endl;
       // const size_t shift =
       //     bit_index == 0 ? 0 : 
       //       bit_index - 1;
       for (size_t dim_index = starting_dim_index; dim_index < Dim; dim_index++) {
-        std::cout << "dim_index : " << dim_index << std::endl;
+        // std::cout << "dim_index : " << dim_index << std::endl;
         // segment_indices_by_highest_refinement_level.at(dim_index).first |=
         //     ((z_order_index & (two_to_the(mask_index))) >> (mask_index - bit_index));
         // // mask << 1;
         // mask_index++;
-        std::cout << "current segment index BEFORE |= : "
-                  << segment_indices_by_highest_refinement_level.at(dim_index).first << std::endl;
+        // std::cout << "current segment index BEFORE |= : "
+        //           << segment_indices_by_highest_refinement_level.at(dim_index).first << std::endl;
         segment_indices_by_highest_refinement_level.at(dim_index).first |=
             ((element_order_index & 1) << bit_index);
-        std::cout << "current segment index AFTER |= : "
-                  << segment_indices_by_highest_refinement_level.at(dim_index).first << std::endl;
+        // std::cout << "current segment index AFTER |= : "
+        //           << segment_indices_by_highest_refinement_level.at(dim_index).first << std::endl;
         element_order_index >>= 1;
-        std::cout << "element_order_index updated to : " << element_order_index << std::endl;
+        // std::cout << "element_order_index updated to : " << element_order_index << std::endl;
       }
       bit_index++;
-      std::cout << "bit_index updated to : " << bit_index << std::endl;
+      // std::cout << "bit_index updated to : " << bit_index << std::endl;
     }
 
     // mask_index += num_refinement_bits * (dim_index - starting_dim_index);
@@ -238,20 +238,20 @@ std::array<size_t, Dim> element_id_from_z_curve_index(
       //     gsl::at(dimension_by_highest_refinement_level, starting_dim_index).first;
       starting_dim_index++;
     }
-    std::cout << "starting_dim_index at end of loop : " << starting_dim_index << std::endl;
+    // std::cout << "starting_dim_index at end of loop : " << starting_dim_index << std::endl;
   }
 
-  std::cout << "AFTER segment_indices_by_highest_refinement_level {Index, Dim} : {{"
-    << segment_indices_by_highest_refinement_level[0].first << ", "
-    << segment_indices_by_highest_refinement_level[0].second << "}";
+  // std::cout << "AFTER segment_indices_by_highest_refinement_level {Index, Dim} : {{"
+  //   << segment_indices_by_highest_refinement_level[0].first << ", "
+  //   << segment_indices_by_highest_refinement_level[0].second << "}";
 
-  for (size_t i = 1; i < Dim; i++) {
-    std::cout << ", {"
-    << segment_indices_by_highest_refinement_level[i].first << ", "
-    << segment_indices_by_highest_refinement_level[i].second << "}";
-  }
+  // for (size_t i = 1; i < Dim; i++) {
+  //   std::cout << ", {"
+  //   << segment_indices_by_highest_refinement_level[i].first << ", "
+  //   << segment_indices_by_highest_refinement_level[i].second << "}";
+  // }
 
-  std::cout << "}" << std::endl;
+  // std::cout << "}" << std::endl;
 
   // alg::sort(segment_indices_by_highest_refinement_level,
   //           [](const std::pair<size_t, size_t>& lhs,

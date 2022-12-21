@@ -150,14 +150,14 @@ void test_z_curve_index(
     const std::vector<ElementId<Dim>> element_ids =
         initial_element_ids(block.id(), initial_ref_levs);
     for (const auto& element_id : element_ids) {
-      std::cout << "element_id : " << element_id << std::endl;
+      // std::cout << "element_id : " << element_id << std::endl;
 
       // const size_t target_proc =
       //     element_distribution.get_proc_for_element(element_id);
 
       const size_t result_z_order_index =
           domain::z_curve_index(element_id);
-      std::cout << "result_z_order_index : " << result_z_order_index << std::endl;
+      // std::cout << "result_z_order_index : " << result_z_order_index << std::endl;
       const std::array<size_t, Dim> result_element_id =
           domain::element_id_from_z_curve_index(result_z_order_index, initial_ref_levs);
       
