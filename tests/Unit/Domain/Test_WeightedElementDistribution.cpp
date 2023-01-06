@@ -12,15 +12,20 @@
 #include <vector>
 
 #include "Domain/Block.hpp"
+#include "Domain/CreateInitialElement.hpp"
 #include "Domain/Creators/Brick.hpp"
 #include "Domain/Creators/Sphere.hpp"
 #include "Domain/Domain.hpp"
 #include "Domain/ElementDistribution.hpp"
+#include "Domain/LogicalCoordinates.hpp"
+#include "Domain/Structure/CreateInitialMesh.hpp"
 #include "Domain/Structure/ElementId.hpp"
 #include "Domain/Structure/InitialElementIds.hpp"
 #include "Domain/Structure/SegmentId.hpp"
 #include "Domain/Tags.hpp"
+#include "Domain/TagsTimeDependent.hpp"
 #include "Domain/WeightedElementDistribution.hpp"
+#include "NumericalAlgorithms/Spectral/Mesh.hpp"
 #include "Utilities/Literals.hpp"
 #include "Utilities/Rational.hpp"
 
@@ -177,6 +182,71 @@ void test_z_curve_index(
     }
     // std::cout << std::endl;
   }
+}
+
+template <size_t Dim>
+void test_compute_minimum_grid_spacing(
+    const std::vector<std::array<size_t, Dim>>& initial_extents,
+    const std::vector<std::array<size_t, Dim>>& initial_refinement,
+    const Domain<Dim>& domain, const Spectral::Quadrature& quadrature,
+    const size_t array_index) {
+  // ===== From DgDomain.hpp =====
+  const ElementId<Dim> element_id{array_index};
+    const auto& my_block = domain.blocks()[element_id.block_id()];
+    Mesh<Dim> mesh = ::domain::Initialization::create_initial_mesh(
+        initial_extents, element_id, quadrature);
+    Element<Dim> element = ::domain::Initialization::create_initial_element(
+        element_id, my_block, initial_refinement);
+    ElementMap<Dim, Frame::Grid> element_map{
+        element_id, my_block.is_time_dependent()
+                        ? my_block.moving_mesh_logical_to_grid_map().get_clone()
+                        : my_block.stationary_map().get_to_grid_frame()};
+
+    std::unique_ptr<
+        ::domain::CoordinateMapBase<Frame::Grid, Frame::Inertial, Dim>>
+        grid_to_inertial_map;
+    if (my_block.is_time_dependent()) {
+      grid_to_inertial_map =
+          my_block.moving_mesh_grid_to_inertial_map().get_clone();
+    } else {
+      grid_to_inertial_map =
+          ::domain::make_coordinate_map_base<Frame::Grid, Frame::Inertial>(
+              ::domain::CoordinateMaps::Identity<Dim>{});
+    }
+    // ===========================
+
+    // Get logical coordinates, i.e. domain::tags::LogicalCoordinates<Dim>
+    tnsr::I<DataVector, Dim, Frame::ElementLogical> logical_coords{};
+    domain::Tags::LogicalCoordinates<Dim>::function(
+      make_not_null(&logical_coords), mesh
+    );
+
+    // Get grid coordinates, i.e.
+    //     domain::tags::MappedCoordinates<
+    //         domain::Tags::ElementMap<Dim, Frame::Grid>,
+    //         domain::Tags::Coordinates<Dim, Frame::ElementLogical>>
+    //
+    // (aka domain::Tags::Coordinates<Dim, Frame::Grid>)
+    tnsr::I<DataVector, Dim, Frame::Grid> grid_coords{};
+    domain::Tags::MappedCoordinates<
+        domain::Tags::ElementMap<Dim, Frame::Grid>,
+        domain::Tags::Coordinates<Dim, Frame::ElementLogical>>::function(
+      make_not_null(&grid_coords), element_map, logical_coords
+    );
+
+    // Get ::Tags::Time
+
+    // Get domain::Tags::FunctionsOfTime
+
+    // Get domain::Tags::CoordinatesMeshVelocityAndJacobians<Dim>
+
+    // Get inertial coordinates, i.e.
+    //     domain::Tags::InertialFromGridCoordinatesCompute<Dim>
+    //
+    // (aka domain::Tags::Coordinates<Dim, Frame::Inertial>)
+
+    // Get minimum grid spacing, i.e.
+    //     domain::Tags::MinimumGridSpacingCompute<Dim, Frame::Inertial>
 }
 }  // namespace
 

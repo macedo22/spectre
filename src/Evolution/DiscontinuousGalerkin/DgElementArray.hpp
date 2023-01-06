@@ -32,6 +32,9 @@ CREATE_HAS_STATIC_MEMBER_VARIABLE(use_z_order_distribution)
 CREATE_HAS_STATIC_MEMBER_VARIABLE_V(use_z_order_distribution)
 }  // namespace detail
 
+template <typename...T>
+struct td;
+
 /*!
  * \brief The parallel component responsible for managing the DG elements that
  * compose the computational domain
@@ -60,7 +63,8 @@ struct DgElementArray {
       domain::Tags::Domain<volume_dim>>;
 
   using array_allocation_tags =
-      tmpl::list<domain::Tags::InitialRefinementLevels<volume_dim>>;
+      tmpl::list<domain::Tags::InitialRefinementLevels<volume_dim>/*,
+                 domain::Tags::Coordinates<volume_dim, Frame::Inertial>*/>;
 
   using initialization_tags =
       tmpl::append<Parallel::get_initialization_tags<
@@ -68,6 +72,14 @@ struct DgElementArray {
                            phase_dependent_action_list>,
                        array_allocation_tags>,
                    tmpl::list<Parallel::Tags::AvoidGlobalProc0/*, domain::Tags::Coordinates<volume_dim, Frame::Inertial>*/>>;
+
+//   td<Parallel::get_initialization_actions_list<
+//                            phase_dependent_action_list>> idk1{};
+
+//   td<Parallel::get_initialization_tags<
+//                        Parallel::get_initialization_actions_list<
+//                            phase_dependent_action_list>,
+//                        array_allocation_tags>> idk2{};
 
   static void allocate_array(
       Parallel::CProxy_GlobalCache<Metavariables>& global_cache,
