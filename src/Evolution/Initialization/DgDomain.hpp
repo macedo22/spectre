@@ -19,6 +19,7 @@
 #include "Domain/CreateInitialElement.hpp"
 #include "Domain/Domain.hpp"
 #include "Domain/ElementMap.hpp"
+#include "Domain/FunctionsOfTime/FunctionOfTime.hpp"
 #include "Domain/LogicalCoordinates.hpp"
 #include "Domain/MinimumGridSpacing.hpp"
 #include "Domain/Structure/CreateInitialMesh.hpp"
@@ -142,6 +143,13 @@ struct Domain {
     const auto& initial_refinement =
         db::get<::domain::Tags::InitialRefinementLevels<Dim>>(box);
     const auto& domain = db::get<::domain::Tags::Domain<Dim>>(box);
+    // const auto& functions_of_time =
+    //     Parallel::Tags::FromGlobalCache<tmpl::conditional_t<
+    //       UseControlSystems, ::control_system::Tags::FunctionsOfTimeInitialize,
+    //       ::domain::Tags::FunctionsOfTimeInitialize>>::get(&cache);
+    // (void)functions_of_time;
+    // const auto time = db::get<::Tags::Time>(box);
+    // (void)time;
 
     const ElementId<Dim> element_id{array_index};
     const auto& my_block = domain.blocks()[element_id.block_id()];
