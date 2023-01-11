@@ -26,6 +26,7 @@
 #include "Domain/TagsTimeDependent.hpp"
 #include "Domain/WeightedElementDistribution.hpp"
 #include "NumericalAlgorithms/Spectral/Mesh.hpp"
+#include "Utilities/ConstantExpressions.hpp"
 #include "Utilities/Literals.hpp"
 #include "Utilities/Rational.hpp"
 
@@ -143,6 +144,20 @@ void test_z_curve_index(
 
   const std::vector<std::array<size_t, Dim>> initial_refinement_levels =
       get_initial_refinement_levels(blocks, initial_refinement_level_xyz);
+  
+  // size_t num_elements = two_to_the(initial_refinement_levels[0]);
+  // for (size_t i = 1; i < Dim; i++) {
+  //   num_elements *= two_to_the(initial_refinement_levels[1]);
+  // }
+
+  size_t num_elements = 0;
+  for (size_t i = 0; i < initial_refinement_levels.size(); i++) {
+    size_t num_elements_this_block = two_to_the(initial_refinement_levels[i][0]);
+    for (size_t j = 1; j < Dim; j++) {
+      num_elements_this_block *= two_to_the(initial_refinement_levels[i][j]);
+    }
+    num_elements += num_elements_this_block;
+  }
 
   const auto element_distribution = get_element_distribution<Dim, IsWeighted>(
       initial_refinement_levels, num_of_procs_to_use, procs_to_ignore);
@@ -154,7 +169,9 @@ void test_z_curve_index(
     const auto initial_ref_levs = initial_refinement_levels[block.id()];
     const std::vector<ElementId<Dim>> element_ids =
         initial_element_ids(block.id(), initial_ref_levs);
-    for (const auto& element_id : element_ids) {
+    // for (const auto& element_id : element_ids) {
+    for (size_t j = 0; j < num_elements; j++) {
+      const auto& element_id = element_ids[j];
       // std::cout << "element_id : " << element_id << std::endl;
 
       // const size_t target_proc =
@@ -179,6 +196,12 @@ void test_z_curve_index(
       // if (run > 1) break;
       // run++;
       // std::cout << std::endl;
+    }
+    const std::vector<ElementId<Dim>> element_ids_in_z_score_order =
+        initial_element_ids_in_z_score_order(block.id(), initial_ref_levs);
+    for (size_t j = 0; j < num_elements; j++) {
+      const auto& element_id = element_ids_in_z_score_order[j];
+      CHECK(domain::z_curve_index(element_id) == j);
     }
     // std::cout << std::endl;
   }

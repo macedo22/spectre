@@ -140,7 +140,7 @@ void DgElementArray<Metavariables, PhaseDepActionList>::allocate_array(
   for (const auto& block : domain.blocks()) {
     const auto initial_ref_levs = initial_refinement_levels[block.id()];
     const std::vector<ElementId<volume_dim>> element_ids =
-        initial_element_ids(block.id(), initial_ref_levs);
+        initial_element_ids_in_z_score_order(block.id(), initial_ref_levs);
     if (use_z_order_distribution) {
       for (const auto& element_id : element_ids) {
         const size_t target_proc =
