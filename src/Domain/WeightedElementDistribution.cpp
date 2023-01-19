@@ -6,7 +6,8 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
-// #include <iostream>
+#include <iostream>
+#include <limits>
 #include <numeric>
 #include <utility>
 #include <vector>
@@ -30,26 +31,29 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
 
   // size_t total_elements = 0;
   double total_cost = 0.0;
-  // double min_cost = std::numeric_limits<double>::max();
-  // double max_cost = std::numeric_limits<double>::min();
+  double min_cost = std::numeric_limits<double>::max();
+  double max_cost = std::numeric_limits<double>::min();
 
   for (auto& block : cost_by_element_by_block) {
-    // const auto min_element_this_block = alg::min_element(block);
-    // const auto max_element_this_block = alg::max_element(block);
-    // if (min_element_this_block < min_cost) {
-    //   min_cost = min_element_this_block;
-    // }
-    // if (max_element_this_block > max_cost) {
-    //   max_cost = max_element_this_block;
-    // }
+    const auto min_element_this_block = *alg::min_element(block);
+    const auto max_element_this_block = *alg::max_element(block);
+    if (min_element_this_block < min_cost) {
+      min_cost = min_element_this_block;
+    }
+    if (max_element_this_block > max_cost) {
+      max_cost = max_element_this_block;
+    }
 
     // total_elements += block.size();
     for (double element_cost : block) {
       total_cost += element_cost;
+      std::cout << "element_cost : " << element_cost << std::endl;
     }
   }
 
-  // std::cout << "total_cost : " << total_cost << std::endl;
+  std::cout << "total_cost : " << total_cost << std::endl;
+  std::cout << "min_cost : " << min_cost << std::endl;
+  std::cout << "max_cost : " << max_cost << std::endl;
 
   // const double cost_range = max_cost - min_cost;
 
