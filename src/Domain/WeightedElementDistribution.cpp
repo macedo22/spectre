@@ -92,32 +92,72 @@ size_t z_curve_index(const ElementId<Dim>& element_id) {
   return element_order_index;
 }
 
-// std::vector<std::vector<size_t> > get_normalized_element_cost(
-//     const std::vector<std::vector<double> >& cost_by_element_by_block) {
-//   auto get_total_cost = [](size_t lhs, const std::array<size_t, Dim>& rhs) {
-//     size_t value = 1;
-//     for (size_t i = 0; i < Dim; ++i) {
-//       // value *= 2^[refinement along one dimension]
-//       value *= two_to_the(gsl::at(rhs, i));
-//     }
-//     return lhs + value;
-//   };
-//   const size_t number_of_elements =
-//       std::accumulate(cost_by_element_by_block.begin(),
-//                       cost_by_element_by_block.end(), 0_st, get_total_cost);
+template <size_t Dim>
+std::array<size_t, Dim> element_id_from_z_curve_index(
+    const size_t z_order_index,
+    const std::array<size_t, Dim>& block_refinements) {
+  std::array<std::pair<size_t, size_t>, Dim>
+      dimension_by_highest_refinement_level;
+  for (size_t i = 0; i < Dim; ++i) {
+    dimension_by_highest_refinement_level.at(i) =
+        std::make_pair(gsl::at(block_refinements, i), i);
+  }
+  // {{L, Dim}, {L, Dim}, ...}
+  alg::sort(dimension_by_highest_refinement_level,
+            [](const std::pair<size_t, size_t>& lhs,
+               const std::pair<size_t, size_t>& rhs) {
+              return lhs.first < rhs.first;
+            });
+  
+  std::array<std::pair<size_t, size_t>, Dim>
+      segment_indices_by_highest_refinement_level;
+  for (size_t i = 0; i < Dim; ++i) {
+    segment_indices_by_highest_refinement_level.at(i) =
+        std::make_pair(0, gsl::at(dimension_by_highest_refinement_level, i).second);
+  }
+  size_t starting_dim_index = 0;
+  size_t bit_index = 0;
+  size_t element_order_index = z_order_index;
+      
+  // TODO : try to optimize by handling last case separately when it's the
+  // remaining bits of the highest refinement, i.e. probably do:
+  // starting_dim_index < (Dim - 1) then handle the last case separately after
+  while (starting_dim_index < Dim) {
+    const size_t refinement_level =
+      gsl::at(dimension_by_highest_refinement_level, starting_dim_index).first;
+    // TODO : this is probably wrong
+    // const size_t num_refinement_bits =
+    //     bit_index == 0 ? two_to_the(refinement_level) : 
+    //         two_to_the(refinement_level) - two_to_the(bit_index);
+    const size_t num_refinement_bits =
+        refinement_level - bit_index;
+    for (size_t i = 0; i < num_refinement_bits; i++) {
+      for (size_t dim_index = starting_dim_index; dim_index < Dim; dim_index++) {
+        segment_indices_by_highest_refinement_level.at(dim_index).first |=
+            ((element_order_index & 1) << bit_index);
+        element_order_index >>= 1;
+      }
+      bit_index++;
+    }
 
-//   auto get_total_cost = [](size_t lhs, const std::array<size_t, Dim>& rhs) {
-//     size_t value = 1;
-//     for (size_t i = 0; i < Dim; ++i) {
-//       // value *= 2^[refinement along one dimension]
-//       value *= two_to_the(gsl::at(rhs, i));
-//     }
-//     return lhs + value;
-//   };
-//   const size_t number_of_elements =
-//       std::accumulate(cost_by_element_by_block.begin(),
-//                       cost_by_element_by_block.end(), 0_st, get_total_cost);
-// }
+    starting_dim_index++;
+    while (starting_dim_index < Dim and
+           refinement_level ==
+               gsl::at(dimension_by_highest_refinement_level, starting_dim_index).first) {
+      starting_dim_index++;
+    }
+  }
+
+  std::array<size_t, Dim> element_id{};
+
+  for (size_t i = 0; i < Dim; i++) {
+    gsl::at(element_id,
+       gsl::at(segment_indices_by_highest_refinement_level, i).second) =
+           gsl::at(segment_indices_by_highest_refinement_level, i).first;
+  }
+  
+  return element_id;
+}
 }  // namespace
 
 WeightedBlockZCurveProcDistribution::WeightedBlockZCurveProcDistribution(
