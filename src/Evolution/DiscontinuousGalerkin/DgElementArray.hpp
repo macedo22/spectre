@@ -116,6 +116,8 @@ void DgElementArray<Metavariables, PhaseDepActionList>::allocate_array(
   std::vector<size_t> elements_per_node(number_of_nodes, 0_st);
   std::vector<size_t> grid_points_per_core(number_of_procs, 0_st);
   std::vector<size_t> grid_points_per_node(number_of_nodes, 0_st);
+  std::vector<double> cost_per_core(number_of_procs, 0_st);
+  std::vector<double> cost_per_node(number_of_nodes, 0_st);
 
   if (use_z_order_distribution) {
     std::vector<std::vector<double>> cost_by_element_by_block(
@@ -183,15 +185,18 @@ void DgElementArray<Metavariables, PhaseDepActionList>::allocate_array(
         element_distribution{num_of_procs_to_use, cost_by_element_by_block,
                              procs_to_ignore};
 
-    for (const auto& block : domain.blocks()) {
+    for (size_t block_number = 0; block_number < domain.blocks().size();
+         block_number++) {
+      const auto& block = domain.blocks()[block_number];
       const size_t grid_points_per_element = alg::accumulate(
           initial_extents[block.id()], 1_st, std::multiplies<size_t>());
       const auto initial_ref_levs = initial_refinement_levels[block.id()];
       const std::vector<ElementId<volume_dim>> element_ids =
-          initial_element_ids(block.id(), initial_ref_levs);
+          initial_element_ids_in_z_score_order(block.id(), initial_ref_levs);
       // TODO: doesn't really make sense to iterate in this different order than
       // z-curve order but doing it just for a sanity check for now
-      for (const auto& element_id : element_ids) {
+      for (size_t i = 0; i < element_ids.size(); i++) {
+        const auto& element_id = element_ids[i];
         const size_t target_proc =
             element_distribution.get_proc_for_element(element_id);
         dg_element_array(element_id)
@@ -203,6 +208,8 @@ void DgElementArray<Metavariables, PhaseDepActionList>::allocate_array(
         ++elements_per_node[target_node];
         grid_points_per_core[target_proc] += grid_points_per_element;
         grid_points_per_node[target_node] += grid_points_per_element;
+        cost_per_core[target_proc] += cost_by_element_by_block[block_number][i];
+        cost_per_node[target_node] += cost_by_element_by_block[block_number][i];
       }
     }
   } else {
@@ -232,8 +239,16 @@ void DgElementArray<Metavariables, PhaseDepActionList>::allocate_array(
   }
   dg_element_array.doneInserting();
 
-  Parallel::printf(
-      "\n%s\n", domain::diagnostic_info(domain, local_cache, elements_per_core,
-                                        elements_per_node, grid_points_per_core,
-                                        grid_points_per_node));
+  if (use_z_order_distribution) {
+    Parallel::printf(
+        "\n%s\n", domain::diagnostic_info(
+                      domain, local_cache, elements_per_core, elements_per_node,
+                      grid_points_per_core, grid_points_per_node, cost_per_core,
+                      cost_per_node));
+  } else {
+    Parallel::printf(
+        "\n%s\n", domain::diagnostic_info(
+                      domain, local_cache, elements_per_core, elements_per_node,
+                      grid_points_per_core, grid_points_per_node));
+  }
 }
