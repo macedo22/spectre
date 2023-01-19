@@ -103,6 +103,7 @@ namespace domain {
  * recursively, so a generalization of the present method is possible for blocks
  * with internal refinement
  */
+template <size_t Dim>
 struct WeightedBlockZCurveProcDistribution {
   /// The `number_of_procs_with_elements` argument represents how many procs
   /// will have elements. This is not necessarily equal to the total number of
@@ -116,10 +117,7 @@ struct WeightedBlockZCurveProcDistribution {
   /// Gets the suggested processor number for a particular element,
   /// determined by the greedy block assignment and Morton curve element
   /// assignment described in detail in the parent class documentation.
-  template <size_t Dim>
   size_t get_proc_for_element(const ElementId<Dim>& element_id) const;
-
-  void redistribute_elements();
 
   std::vector<std::vector<std::pair<size_t, size_t>>>
   block_element_distribution() const {

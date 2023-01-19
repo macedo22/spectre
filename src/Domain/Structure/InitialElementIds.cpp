@@ -5,9 +5,9 @@
 
 #include <iterator>
 
-#include "Domain/ElementDistribution.hpp"
 #include "Domain/Structure/ElementId.hpp"
 #include "Domain/Structure/SegmentId.hpp"
+#include "Domain/ZCurveIndex.hpp"
 #include "Utilities/ConstantExpressions.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/MakeArray.hpp"

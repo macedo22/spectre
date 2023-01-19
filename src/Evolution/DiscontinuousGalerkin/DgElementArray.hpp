@@ -5,23 +5,23 @@
 
 #include <cstddef>
 #include <iostream>
-// #include <limits>
+#include <limits>
 #include <unordered_set>
 #include <vector>
 
 #include "Domain/Block.hpp"
-// #include "Domain/CreateInitialElement.hpp"
+#include "Domain/CreateInitialElement.hpp"
 #include "Domain/Creators/DomainCreator.hpp"
 #include "Domain/Domain.hpp"
-#include "Domain/ElementDistribution.hpp"
-// #include "Domain/LogicalCoordinates.hpp"
+#include "Domain/LogicalCoordinates.hpp"
 #include "Domain/MinimumGridSpacing.hpp"
 #include "Domain/OptionTags.hpp"
-// #include "Domain/Structure/CreateInitialMesh.hpp"
+#include "Domain/Structure/CreateInitialMesh.hpp"
 #include "Domain/Structure/ElementId.hpp"
 #include "Domain/Structure/InitialElementIds.hpp"
 #include "Domain/Tags.hpp"
-// #include "Evolution/DiscontinuousGalerkin/Initialization/QuadratureTag.hpp"
+#include "Domain/WeightedElementDistribution.hpp"
+#include "Evolution/DiscontinuousGalerkin/Initialization/QuadratureTag.hpp"
 #include "Parallel/Algorithms/AlgorithmArray.hpp"
 #include "Parallel/GlobalCache.hpp"
 #include "Parallel/Local.hpp"
@@ -119,88 +119,112 @@ void DgElementArray<Metavariables, PhaseDepActionList>::allocate_array(
       get<domain::Tags::InitialExtents<volume_dim>>(
           initialization_items);
   (void)initial_extents;
-//   const auto& quadrature =
-//       get<evolution::dg::Tags::Quadrature>(
-//           initialization_items);
-//   (void)quadrature;
-//   const auto& coords =
-//       get<domain::Tags::Coordinates<volume_dim, Frame::Inertial>>(
-//           initialization_items);
-//   std::cout << coords << std::endl;
-//   std::cout << "initial_refinement_levels : " << initial_refinement_levels << std::endl;
-//   const auto& mesh =
-//       get<domain::Tags::Mesh<volume_dim>>(
-//           local_cache);
-//   const auto& minimum_grid_spacing =
-//       get<domain::Tags::MinimumGridSpacing<volume_dim, Frame::Inertial>>(
-//           initialization_items);
-//   std::cout << "minimum_grid_spacing : " << minimum_grid_spacing << std::endl;
-  bool use_z_order_distribution = true;
-  if constexpr (detail::has_use_z_order_distribution_v<Metavariables>) {
-    use_z_order_distribution = Metavariables::use_z_order_distribution;
-  }
+  const auto& quadrature =
+      get<evolution::dg::Tags::Quadrature>(initialization_items);
+  (void)quadrature;
+  //   const auto& coords =
+  //       get<domain::Tags::Coordinates<volume_dim, Frame::Inertial>>(
+  //           initialization_items);
+  //   std::cout << coords << std::endl;
+  //   std::cout << "initial_refinement_levels : " << initial_refinement_levels
+  //   << std::endl; const auto& mesh =
+  //       get<domain::Tags::Mesh<volume_dim>>(
+  //           local_cache);
+  //   const auto& minimum_grid_spacing =
+  //       get<domain::Tags::MinimumGridSpacing<volume_dim, Frame::Inertial>>(
+  //           initialization_items);
+  //   std::cout << "minimum_grid_spacing : " << minimum_grid_spacing <<
+  //   std::endl;
   const size_t total_number_of_procs =
       static_cast<size_t>(sys::number_of_procs());
-  const size_t num_of_procs_to_use =
-      total_number_of_procs - procs_to_ignore.size();
-  size_t which_proc = 0;
-  const domain::BlockZCurveProcDistribution<volume_dim> element_distribution{
-      num_of_procs_to_use, initial_refinement_levels, procs_to_ignore};
-  for (const auto& block : domain.blocks()) {
-    const auto initial_ref_levs = initial_refinement_levels[block.id()];
-    const std::vector<ElementId<volume_dim>> element_ids =
-        initial_element_ids_in_z_score_order(block.id(), initial_ref_levs);
-    if (use_z_order_distribution) {
+
+  if constexpr (detail::has_use_z_order_distribution_v<Metavariables>) {
+    std::vector<std::vector<double>> minimum_grid_spacing_by_element_by_block(
+        domain.blocks().size());
+
+    for (size_t block_number = 0; block_number < domain.blocks().size();
+         block_number++) {
+      const auto& block = domain.blocks()[block_number];
+      const auto initial_ref_levs = initial_refinement_levels[block.id()];
+      const std::vector<ElementId<volume_dim>> element_ids =
+          initial_element_ids_in_z_score_order(block.id(), initial_ref_levs);
+
+      minimum_grid_spacing_by_element_by_block[block_number].reserve(
+          element_ids.size());
+
       for (const auto& element_id : element_ids) {
-        // TODO : move this out of here, need another for loop looping over blocks
-        // and elements to calculate cost, probably best to put it in
+        // TODO : move this out of here, need another for loop looping over
+        // blocks and elements to calculate cost, probably best to put it in
         // WeightedElementDistribution to keep all the logic handled there in
         // one class.
-        // Mesh<volume_dim> mesh = ::domain::Initialization::create_initial_mesh(
-        //     initial_extents, element_id,
-        //     quadrature);
-        // Element<volume_dim> element = ::domain::Initialization::create_initial_element(
-        //     element_id, block, initial_refinement_levels);
-        // ElementMap<volume_dim, Frame::Grid> element_map{
-        //     element_id, block.is_time_dependent()
-        //                     ? block.moving_mesh_logical_to_grid_map().get_clone()
-        //                     : block.stationary_map().get_to_grid_frame()};
-        
-        // std::unique_ptr<
-        //     ::domain::CoordinateMapBase<Frame::Grid, Frame::Inertial, volume_dim>>
-        //     grid_to_inertial_map;
-        // if (block.is_time_dependent()) {
-        //   grid_to_inertial_map =
-        //       block.moving_mesh_grid_to_inertial_map().get_clone();
-        // } else {
-        //   grid_to_inertial_map =
-        //       ::domain::make_coordinate_map_base<Frame::Grid, Frame::Inertial>(
-        //           ::domain::CoordinateMaps::Identity<volume_dim>{});
-        // }
+        Mesh<volume_dim> mesh = ::domain::Initialization::create_initial_mesh(
+            initial_extents, element_id, quadrature);
+        Element<volume_dim> element =
+            ::domain::Initialization::create_initial_element(
+                element_id, block, initial_refinement_levels);
+        ElementMap<volume_dim, Frame::Grid> element_map{
+            element_id,
+            block.is_time_dependent()
+                ? block.moving_mesh_logical_to_grid_map().get_clone()
+                : block.stationary_map().get_to_grid_frame()};
 
-        // tnsr::I<DataVector, volume_dim, Frame::ElementLogical> logical_coords{};
-        // domain::Tags::LogicalCoordinates<volume_dim>::function(
-        //   make_not_null(&logical_coords), mesh
-        // );
+        std::unique_ptr<::domain::CoordinateMapBase<
+            Frame::Grid, Frame::Inertial, volume_dim>>
+            grid_to_inertial_map;
+        if (block.is_time_dependent()) {
+          grid_to_inertial_map =
+              block.moving_mesh_grid_to_inertial_map().get_clone();
+        } else {
+          grid_to_inertial_map =
+              ::domain::make_coordinate_map_base<Frame::Grid, Frame::Inertial>(
+                  ::domain::CoordinateMaps::Identity<volume_dim>{});
+        }
 
-        // tnsr::I<DataVector, volume_dim, Frame::Grid> grid_coords{};
-        // domain::Tags::MappedCoordinates<
-        //     domain::Tags::ElementMap<volume_dim, Frame::Grid>,
-        //     domain::Tags::Coordinates<volume_dim, Frame::ElementLogical>>::function(
-        //   make_not_null(&grid_coords), element_map, logical_coords
-        // );
+        tnsr::I<DataVector, volume_dim, Frame::ElementLogical> logical_coords{};
+        domain::Tags::LogicalCoordinates<volume_dim>::function(
+            make_not_null(&logical_coords), mesh);
 
-        // double minimum_grid_spacing = std::numeric_limits<double>::signaling_NaN();
-        // domain::Tags::MinimumGridSpacingCompute<volume_dim, Frame::Grid>::function(
-        //   make_not_null(&minimum_grid_spacing), mesh, grid_coords
-        // );
+        tnsr::I<DataVector, volume_dim, Frame::Grid> grid_coords{};
+        domain::Tags::MappedCoordinates<
+            domain::Tags::ElementMap<volume_dim, Frame::Grid>,
+            domain::Tags::Coordinates<volume_dim, Frame::ElementLogical>>::
+            function(make_not_null(&grid_coords), element_map, logical_coords);
 
+        double minimum_grid_spacing =
+            std::numeric_limits<double>::signaling_NaN();
+        domain::Tags::MinimumGridSpacingCompute<volume_dim, Frame::Grid>::
+            function(make_not_null(&minimum_grid_spacing), mesh, grid_coords);
+
+        minimum_grid_spacing_by_element_by_block[block_number].emplace_back(
+            minimum_grid_spacing);
+      }
+    }
+
+    const size_t num_of_procs_to_use =
+        total_number_of_procs - procs_to_ignore.size();
+    const domain::WeightedBlockZCurveProcDistribution<volume_dim> element_distribution{
+        num_of_procs_to_use, minimum_grid_spacing_by_element_by_block,
+        procs_to_ignore};
+
+    for (const auto& block : domain.blocks()) {
+      const auto initial_ref_levs = initial_refinement_levels[block.id()];
+      const std::vector<ElementId<volume_dim>> element_ids =
+          initial_element_ids(block.id(), initial_ref_levs);
+      // TODO: doesn't really make sense to iterate in this different order than
+      // z-curve order but doing it just for a sanity check for now
+      for (const auto& element_id : element_ids) {
         const size_t target_proc =
             element_distribution.get_proc_for_element(element_id);
         dg_element_array(element_id)
             .insert(global_cache, initialization_items, target_proc);
       }
-    } else {
+    }
+  } else {
+    size_t which_proc = 0;
+    for (const auto& block : domain.blocks()) {
+      const auto initial_ref_levs = initial_refinement_levels[block.id()];
+      const std::vector<ElementId<volume_dim>> element_ids =
+          initial_element_ids(block.id(), initial_ref_levs);
       while (procs_to_ignore.find(which_proc) != procs_to_ignore.end()) {
         which_proc =
             which_proc + 1 == total_number_of_procs ? 0 : which_proc + 1;
@@ -214,4 +238,89 @@ void DgElementArray<Metavariables, PhaseDepActionList>::allocate_array(
     }
   }
   dg_element_array.doneInserting();
+
+  //   size_t which_proc = 0;
+  //   const domain::BlockZCurveProcDistribution<volume_dim>
+  //   element_distribution{
+  //       num_of_procs_to_use, initial_refinement_levels, procs_to_ignore};
+  //   for (const auto& block : domain.blocks()) {
+  //     const auto initial_ref_levs = initial_refinement_levels[block.id()];
+  //     const std::vector<ElementId<volume_dim>> element_ids =
+  //         initial_element_ids_in_z_score_order(block.id(), initial_ref_levs);
+  //     if (use_z_order_distribution) {
+  //       for (const auto& element_id : element_ids) {
+  //         // TODO : move this out of here, need another for loop looping over
+  //         blocks
+  //         // and elements to calculate cost, probably best to put it in
+  //         // WeightedElementDistribution to keep all the logic handled there
+  //         in
+  //         // one class.
+  //         // Mesh<volume_dim> mesh =
+  //         ::domain::Initialization::create_initial_mesh(
+  //         //     initial_extents, element_id,
+  //         //     quadrature);
+  //         // Element<volume_dim> element =
+  //         ::domain::Initialization::create_initial_element(
+  //         //     element_id, block, initial_refinement_levels);
+  //         // ElementMap<volume_dim, Frame::Grid> element_map{
+  //         //     element_id, block.is_time_dependent()
+  //         //                     ?
+  //         block.moving_mesh_logical_to_grid_map().get_clone()
+  //         //                     :
+  //         block.stationary_map().get_to_grid_frame()};
+
+  //         // std::unique_ptr<
+  //         //     ::domain::CoordinateMapBase<Frame::Grid, Frame::Inertial,
+  //         volume_dim>>
+  //         //     grid_to_inertial_map;
+  //         // if (block.is_time_dependent()) {
+  //         //   grid_to_inertial_map =
+  //         //       block.moving_mesh_grid_to_inertial_map().get_clone();
+  //         // } else {
+  //         //   grid_to_inertial_map =
+  //         //       ::domain::make_coordinate_map_base<Frame::Grid,
+  //         Frame::Inertial>(
+  //         //           ::domain::CoordinateMaps::Identity<volume_dim>{});
+  //         // }
+
+  //         // tnsr::I<DataVector, volume_dim, Frame::ElementLogical>
+  //         logical_coords{};
+  //         // domain::Tags::LogicalCoordinates<volume_dim>::function(
+  //         //   make_not_null(&logical_coords), mesh
+  //         // );
+
+  //         // tnsr::I<DataVector, volume_dim, Frame::Grid> grid_coords{};
+  //         // domain::Tags::MappedCoordinates<
+  //         //     domain::Tags::ElementMap<volume_dim, Frame::Grid>,
+  //         //     domain::Tags::Coordinates<volume_dim,
+  //         Frame::ElementLogical>>::function(
+  //         //   make_not_null(&grid_coords), element_map, logical_coords
+  //         // );
+
+  //         // double minimum_grid_spacing =
+  //         std::numeric_limits<double>::signaling_NaN();
+  //         // domain::Tags::MinimumGridSpacingCompute<volume_dim,
+  //         Frame::Grid>::function(
+  //         //   make_not_null(&minimum_grid_spacing), mesh, grid_coords
+  //         // );
+
+  //         const size_t target_proc =
+  //             element_distribution.get_proc_for_element(element_id);
+  //         dg_element_array(element_id)
+  //             .insert(global_cache, initialization_items, target_proc);
+  //       }
+  //     } else {
+  //       while (procs_to_ignore.find(which_proc) != procs_to_ignore.end()) {
+  //         which_proc =
+  //             which_proc + 1 == total_number_of_procs ? 0 : which_proc + 1;
+  //       }
+  //       for (size_t i = 0; i < element_ids.size(); ++i) {
+  //         dg_element_array(ElementId<volume_dim>(element_ids[i]))
+  //             .insert(global_cache, initialization_items, which_proc);
+  //         which_proc =
+  //             which_proc + 1 == total_number_of_procs ? 0 : which_proc + 1;
+  //       }
+  //     }
+  //   }
+  //   dg_element_array.doneInserting();
 }

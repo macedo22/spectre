@@ -25,6 +25,7 @@
 #include "Domain/Tags.hpp"
 #include "Domain/TagsTimeDependent.hpp"
 #include "Domain/WeightedElementDistribution.hpp"
+#include "Domain/ZCurveIndex.hpp"
 #include "NumericalAlgorithms/Spectral/Mesh.hpp"
 #include "Utilities/ConstantExpressions.hpp"
 #include "Utilities/Literals.hpp"
@@ -78,11 +79,12 @@ void print_element_distribution(
   std::cout << std::endl;
 }
 
+template <size_t Dim>
 void test(const size_t number_of_procs_with_elements,
           const std::vector<std::vector<double>>& cost_by_element_by_block,
           const std::unordered_set<size_t>& global_procs_to_ignore = {}) {
   // print_costs_by_element_by_block(cost_by_element_by_block);
-  const domain::WeightedBlockZCurveProcDistribution element_distribution{
+  const domain::WeightedBlockZCurveProcDistribution<Dim> element_distribution{
       number_of_procs_with_elements, cost_by_element_by_block,
       global_procs_to_ignore};
   // // std::cout << element_distribution.block_element_distribution() <<
@@ -124,7 +126,7 @@ std::vector<std::array<size_t, Dim>> get_initial_refinement_levels(
 
 template <size_t Dim, bool IsWeighted = true,
           typename ElementDistribution = tmpl::conditional_t<
-              IsWeighted, domain::WeightedBlockZCurveProcDistribution,
+              IsWeighted, domain::WeightedBlockZCurveProcDistribution<Dim>,
               domain::BlockZCurveProcDistribution<Dim>>>
 ElementDistribution get_element_distribution(
     const std::vector<std::array<size_t, Dim>>& initial_refinement_levels,
@@ -178,7 +180,7 @@ void test_z_curve_index(
       //     element_distribution.get_proc_for_element(element_id);
 
       const size_t result_z_order_index =
-          domain::z_curve_index(element_id);
+          domain::z_curve_index_from_element_id(element_id);
       // std::cout << "result_z_order_index : " << result_z_order_index << std::endl;
       const std::array<size_t, Dim> result_element_id =
           domain::element_id_from_z_curve_index(result_z_order_index, initial_ref_levs);
@@ -201,7 +203,7 @@ void test_z_curve_index(
         initial_element_ids_in_z_score_order(block.id(), initial_ref_levs);
     for (size_t j = 0; j < num_elements; j++) {
       const auto& element_id = element_ids_in_z_score_order[j];
-      CHECK(domain::z_curve_index(element_id) == j);
+      CHECK(domain::z_curve_index_from_element_id(element_id) == j);
     }
     // std::cout << std::endl;
   }
@@ -274,7 +276,7 @@ void test_compute_minimum_grid_spacing(
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.Domain.WeightedElementDistribution", "[Domain][Unit]") {
-  // test(10, get_uniform_cost(6, 4, 1.0));
+  // test<3>(10, get_uniform_cost(6, 4, 1.0));
 
   const size_t Dim = 3;
 
