@@ -22,6 +22,8 @@ spectre_target_sources(
   SizeOfElement.cpp
   Tags.cpp
   TagsTimeDependent.cpp
+  WeightedElementDistribution.cpp
+  ZCurveIndex.cpp
   )
 
 spectre_target_headers(
@@ -47,6 +49,8 @@ spectre_target_headers(
   Tags.hpp
   TagsCharacteristicSpeeds.hpp
   TagsTimeDependent.hpp
+  WeightedElementDistribution.hpp
+  ZCurveIndex.hpp
   )
 
 target_link_libraries(
