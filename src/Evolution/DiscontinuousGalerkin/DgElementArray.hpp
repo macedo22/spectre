@@ -4,6 +4,7 @@
 #pragma once
 
 #include <cstddef>
+#include <iostream>
 #include <limits>
 #include <unordered_set>
 #include <vector>
@@ -185,6 +186,8 @@ void DgElementArray<Metavariables, PhaseDepActionList>::allocate_array(
         element_distribution{num_of_procs_to_use, cost_by_element_by_block,
                              procs_to_ignore};
 
+    std::vector<size_t> grid_points_by_element{};
+
     for (size_t block_number = 0; block_number < domain.blocks().size();
          block_number++) {
       const auto& block = domain.blocks()[block_number];
@@ -196,6 +199,7 @@ void DgElementArray<Metavariables, PhaseDepActionList>::allocate_array(
       // TODO: doesn't really make sense to iterate in this different order than
       // z-curve order but doing it just for a sanity check for now
       for (size_t i = 0; i < element_ids.size(); i++) {
+        grid_points_by_element.push_back(grid_points_per_element);
         const auto& element_id = element_ids[i];
         const size_t target_proc =
             element_distribution.get_proc_for_element(element_id);
@@ -212,6 +216,9 @@ void DgElementArray<Metavariables, PhaseDepActionList>::allocate_array(
         cost_per_node[target_node] += cost_by_element_by_block[block_number][i];
       }
     }
+
+    std::cout << "grid_points_by_element : " << grid_points_by_element
+              << std::endl;
   } else {
     size_t which_proc = 0;
     for (const auto& block : domain.blocks()) {
