@@ -130,6 +130,8 @@ void DgElementArray<Metavariables, PhaseDepActionList>::allocate_array(
       const auto initial_ref_levs = initial_refinement_levels[block.id()];
       const std::vector<ElementId<volume_dim>> element_ids =
           initial_element_ids_in_z_score_order(block.id(), initial_ref_levs);
+      const size_t grid_points_per_element = alg::accumulate(
+          initial_extents[block.id()], 1_st, std::multiplies<size_t>());
 
       cost_by_element_by_block[block_number].reserve(element_ids.size());
 
@@ -177,7 +179,7 @@ void DgElementArray<Metavariables, PhaseDepActionList>::allocate_array(
             function(make_not_null(&minimum_grid_spacing), mesh, grid_coords);
 
         cost_by_element_by_block[block_number].emplace_back(
-            1.0 / minimum_grid_spacing);
+            grid_points_per_element / minimum_grid_spacing);
       }
     }
 
