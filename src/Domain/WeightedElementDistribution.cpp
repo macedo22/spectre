@@ -67,8 +67,8 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
   // element cost is much greater than the cost_allowance_per_proc,
   // e.g. maybe that would mean taking p-refinement into account
 
-  const double cost_allowance_per_proc =
-      total_cost / number_of_procs_with_elements;
+  // double cost_allowance_per_proc =
+  //     total_cost / number_of_procs_with_elements;
 
   // std::cout << "cost_allowance_per_proc : " << cost_allowance_per_proc
   //           << std::endl;
@@ -76,12 +76,14 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
   // size_t remaining_elements_in_block = cost_by_element_by_block[0].size();
   size_t current_block = 0;
   size_t current_element_of_current_block = 0;
+  double cost_remaining = total_cost;
   // This variable will keep track of how many global procs we've skipped over
   // so far. This bookkeeping is necessary so the element gets placed on the
   // correct global proc. The loop variable `i` does not correspond to global
   // proc number. It's just an index
   size_t number_of_ignored_procs_so_far = 0;
   for (size_t i = 0; i < number_of_procs_with_elements; ++i) {
+    // std::cout << "proc number : " << i << std::endl;
     size_t global_proc_number = i + number_of_ignored_procs_so_far;
     while (global_procs_to_ignore.find(global_proc_number) !=
            global_procs_to_ignore.end()) {
@@ -92,13 +94,18 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
 
     // initialize cost for this proc to be the current element
     // double cost_spent_on_proc =
-    //     cost_by_element_by_block[current_block][current_element_of_current_block];
+    //     cost_by_element_by_block[current_block]
+    //         [current_element_of_current_block];
     // size_t num_elements_distributed_to_proc = 1;
+    double target_cost_per_proc =
+        cost_remaining / (number_of_procs_with_elements - i);
     double cost_spent_on_proc = 0.0;
+    size_t total_elements_distributed_to_proc = 0;
+    bool add_more_elements_to_proc = true;
+    const size_t num_blocks = cost_by_element_by_block.size();
     // size_t num_elements_distributed_to_proc = 0;
     // while we still have cost allowed on the proc
-    while (current_block < cost_by_element_by_block.size() and
-           cost_spent_on_proc <= cost_allowance_per_proc) {
+    while (add_more_elements_to_proc and (current_block < num_blocks)) {
       // std::cout << "current_block : " << current_block << std::endl;
       // std::cout << "current_element_of_current_block : "
       //           << current_element_of_current_block << std::endl;
@@ -107,16 +114,70 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
       // while we still have elements left on the block and we still
       // have cost allowed on the proc
       size_t num_elements_distributed_to_proc = 0;
-      // std::cout << "begin while : " << std::endl;
+      // std::cout << "before inner while" << std::endl;
       // std::cout << "cost_spent_on_proc before : " << cost_spent_on_proc
       //           << std::endl;
-      while (current_element_of_current_block < num_elements_current_block and
-             cost_spent_on_proc <= cost_allowance_per_proc) {
-        cost_spent_on_proc +=
+      while (add_more_elements_to_proc and
+             (current_element_of_current_block < num_elements_current_block)) {
+        // cost_spent_on_proc +=
+        //     cost_by_element_by_block[current_block]
+        //                             [current_element_of_current_block];
+        // num_elements_distributed_to_proc++;
+        // current_element_of_current_block++;
+        //   std::cout << "begin while" << std::endl;
+        //   std::cout << "current_block : " << current_block << std::endl;
+        // std::cout << "current_element_of_current_block : "
+        //           << current_element_of_current_block << std::endl;
+        const double element_cost =
             cost_by_element_by_block[current_block]
                                     [current_element_of_current_block];
-        num_elements_distributed_to_proc++;
-        current_element_of_current_block++;
+        // std::cout << "element_cost : " << element_cost << std::endl;
+
+        if (total_elements_distributed_to_proc == 0) {
+          // std::cout << "adding first element to proc " << global_proc_number
+          // << std::endl;
+          cost_remaining -= element_cost;
+          cost_spent_on_proc = element_cost;
+          num_elements_distributed_to_proc = 1;
+          total_elements_distributed_to_proc = 1;
+          current_element_of_current_block++;
+          // std::cout << "cost_remaining : " << cost_remaining << std::endl;
+          // std::cout << "cost_spent_on_proc : " << cost_spent_on_proc <<
+          // std::endl; std::cout << "current_element_of_current_block : " <<
+          // current_element_of_current_block << std::endl;
+        } else {
+          const double current_cost_diff =
+              abs(target_cost_per_proc - cost_spent_on_proc);
+          const double next_cost_diff =
+              abs(target_cost_per_proc - (cost_spent_on_proc + element_cost));
+
+          // std::cout << "current_cost_diff : " << current_cost_diff <<
+          // std::endl; std::cout << "next_cost_diff : " << next_cost_diff <<
+          // std::endl;
+
+          if (current_cost_diff <= next_cost_diff) {
+            // std::cout << "\n ===== done with proc " << global_proc_number <<
+            // " =====" << std::endl;
+            add_more_elements_to_proc = false;
+          } else {
+            // std::cout << "adding to proc " << global_proc_number <<
+            // std::endl;
+            cost_spent_on_proc += element_cost;
+            cost_remaining -= element_cost;
+            num_elements_distributed_to_proc++;
+            total_elements_distributed_to_proc++;
+            current_element_of_current_block++;
+            //   std::cout << "cost_remaining : " << cost_remaining <<
+            //   std::endl;
+            // std::cout << "cost_spent_on_proc : " << cost_spent_on_proc <<
+            // std::endl; std::cout << "current_element_of_current_block : " <<
+            // current_element_of_current_block << std::endl; std::cout <<
+            // "num_elements_distributed_to_proc : " <<
+            // num_elements_distributed_to_proc << std::endl; std::cout <<
+            // "total_elements_distributed_to_proc : " <<
+            // total_elements_distributed_to_proc << std::endl;
+          }
+        }
       }
       // std::cout << "end while : " << std::endl;
       // std::cout << "cost_spent_on_proc after : " << cost_spent_on_proc
@@ -125,9 +186,13 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
       block_element_distribution_.at(current_block)
           .emplace_back(std::make_pair(global_proc_number,
                                        num_elements_distributed_to_proc));
-      if (current_element_of_current_block >=
-          cost_by_element_by_block[current_block].size()) {
-        // whole block has been distributed
+      // std::cout << "added this to the dist for block " << current_block
+      //           << " (global proc, num elements): (" << global_proc_number
+      //           << ", " << num_elements_distributed_to_proc << ")" <<
+      //           std::endl;
+      if (current_element_of_current_block >= num_elements_current_block) {
+        // std::cout << "whole block has been distributed, so going to next one"
+        // << std::endl; whole block has been distributed
         ++current_block;
         current_element_of_current_block = 0;
       }
