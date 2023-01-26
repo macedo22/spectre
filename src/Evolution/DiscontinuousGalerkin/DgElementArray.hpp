@@ -179,7 +179,8 @@ void DgElementArray<Metavariables, PhaseDepActionList>::allocate_array(
             function(make_not_null(&minimum_grid_spacing), mesh, grid_coords);
 
         cost_by_element_by_block[block_number].emplace_back(
-            grid_points_per_element / minimum_grid_spacing);
+            grid_points_per_element /
+            (minimum_grid_spacing * minimum_grid_spacing));
       }
     }
 
