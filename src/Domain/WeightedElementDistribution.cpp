@@ -7,7 +7,7 @@
 #include <array>
 #include <cstddef>
 #include <limits>
-#include <numeric>
+#include <memory>
 #include <utility>
 #include <vector>
 
@@ -31,6 +31,7 @@
 #include "NumericalAlgorithms/Spectral/Spectral.hpp"
 #include "Utilities/Algorithm.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
+#include "Utilities/Gsl.hpp"
 
 namespace domain {
 template <size_t Dim>

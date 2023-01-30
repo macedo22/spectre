@@ -9,10 +9,12 @@
 #include <utility>
 #include <vector>
 
-#include "Domain/Structure/ElementId.hpp"
 
 template <size_t Dim>
 class Block;
+
+template <size_t Dim>
+class ElementId;
 
 namespace Spectral {
 enum class Quadrature;

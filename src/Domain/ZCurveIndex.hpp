@@ -6,7 +6,8 @@
 #include <array>
 #include <cstddef>
 
-#include "Domain/Structure/ElementId.hpp"
+template <size_t Dim>
+class ElementId;
 
 namespace domain {
 

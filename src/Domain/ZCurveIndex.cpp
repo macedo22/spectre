@@ -10,6 +10,7 @@
 #include "Domain/Structure/ElementId.hpp"
 #include "Utilities/Algorithm.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
+#include "Utilities/Gsl.hpp"
 
 namespace domain {
 

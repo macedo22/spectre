@@ -3,26 +3,19 @@
 
 #pragma once
 
-#include <cmath>
 #include <cstddef>
-#include <limits>
+#include <functional>
 #include <unordered_set>
 #include <vector>
 
 #include "Domain/Block.hpp"
-#include "Domain/CreateInitialElement.hpp"
-#include "Domain/Creators/DomainCreator.hpp"
 #include "Domain/DiagnosticInfo.hpp"
 #include "Domain/Domain.hpp"
-#include "Domain/MinimumGridSpacing.hpp"
-#include "Domain/OptionTags.hpp"
-#include "Domain/Structure/CreateInitialMesh.hpp"
 #include "Domain/Structure/ElementId.hpp"
 #include "Domain/Structure/InitialElementIds.hpp"
 #include "Domain/Tags.hpp"
 #include "Domain/WeightedElementDistribution.hpp"
 #include "Evolution/DiscontinuousGalerkin/Initialization/QuadratureTag.hpp"
-#include "NumericalAlgorithms/Spectral/LogicalCoordinates.hpp"
 #include "Parallel/Algorithms/AlgorithmArray.hpp"
 #include "Parallel/GlobalCache.hpp"
 #include "Parallel/Info.hpp"
@@ -30,7 +23,6 @@
 #include "Parallel/ParallelComponentHelpers.hpp"
 #include "Parallel/Phase.hpp"
 #include "Parallel/Printf.hpp"
-#include "Parallel/Tags/ResourceInfo.hpp"
 #include "Utilities/System/ParallelInfo.hpp"
 #include "Utilities/TMPL.hpp"
 #include "Utilities/TypeTraits/CreateHasStaticMemberVariable.hpp"
@@ -124,16 +116,13 @@ void DgElementArray<Metavariables, PhaseDepActionList>::allocate_array(
                              initial_refinement_levels, initial_extents,
                              quadrature, procs_to_ignore);
 
-    for (size_t block_number = 0; block_number < domain.blocks().size();
-         block_number++) {
-      const auto& block = domain.blocks()[block_number];
+    for (const auto& block : domain.blocks()) {
       const size_t grid_points_per_element = alg::accumulate(
           initial_extents[block.id()], 1_st, std::multiplies<size_t>());
       const auto initial_ref_levs = initial_refinement_levels[block.id()];
       const std::vector<ElementId<volume_dim>> element_ids =
           initial_element_ids_in_z_score_order(block.id(), initial_ref_levs);
-      for (size_t i = 0; i < element_ids.size(); i++) {
-        const auto& element_id = element_ids[i];
+      for (const auto& element_id : element_ids) {
         const size_t target_proc =
             element_distribution.get_proc_for_element(element_id);
         dg_element_array(element_id)
@@ -174,8 +163,8 @@ void DgElementArray<Metavariables, PhaseDepActionList>::allocate_array(
   }
   dg_element_array.doneInserting();
 
-    Parallel::printf(
-        "\n%s\n", domain::diagnostic_info(
-                      domain, local_cache, elements_per_core, elements_per_node,
-                      grid_points_per_core, grid_points_per_node));
+  Parallel::printf(
+      "\n%s\n", domain::diagnostic_info(domain, local_cache, elements_per_core,
+                                        elements_per_node, grid_points_per_core,
+                                        grid_points_per_node));
 }
