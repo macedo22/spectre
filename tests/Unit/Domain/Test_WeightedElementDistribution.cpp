@@ -124,22 +124,24 @@ std::vector<std::array<size_t, Dim>> get_initial_refinement_levels(
   return initial_refinement_levels;
 }
 
-template <size_t Dim, bool IsWeighted = true,
-          typename ElementDistribution = tmpl::conditional_t<
-              IsWeighted, domain::WeightedBlockZCurveProcDistribution<Dim>,
-              domain::BlockZCurveProcDistribution<Dim>>>
-ElementDistribution get_element_distribution(
-    const std::vector<std::array<size_t, Dim>>& initial_refinement_levels,
-    const size_t num_of_procs_to_use,
-    const std::unordered_set<size_t>& procs_to_ignore) {
-  return ElementDistribution{num_of_procs_to_use, initial_refinement_levels,
-                             procs_to_ignore};
-}
+// template <size_t Dim, bool IsWeighted = true,
+//           typename ElementDistribution = tmpl::conditional_t<
+//               IsWeighted, domain::WeightedBlockZCurveProcDistribution<Dim>,
+//               domain::BlockZCurveProcDistribution<Dim>>>
+// ElementDistribution get_element_distribution(
+//     const std::vector<std::array<size_t, Dim>>& initial_refinement_levels,
+//     const size_t num_of_procs_to_use,
+//     const std::unordered_set<size_t>& procs_to_ignore) {
+//   return ElementDistribution{num_of_procs_to_use, initial_refinement_levels,
+//                              procs_to_ignore};
+// }
 
-template <size_t Dim, bool IsWeighted = true>
+template <size_t Dim>
 void test_z_curve_index(
     const Domain<Dim>& domain,
-    const std::array<size_t, 3>& initial_refinement_level_xyz,
+    const std::vector<std::array<size_t, Dim>>& initial_extents,
+    const Spectral::Quadrature quadrature,
+    const std::array<size_t, Dim>& initial_refinement_level_xyz,
     const size_t num_of_procs_to_use,
     const std::unordered_set<size_t>& procs_to_ignore) {
   const std::vector<Block<Dim>>& blocks = domain.blocks();
@@ -162,8 +164,13 @@ void test_z_curve_index(
     num_elements += num_elements_this_block;
   }
 
-  const auto element_distribution = get_element_distribution<Dim, IsWeighted>(
-      initial_refinement_levels, num_of_procs_to_use, procs_to_ignore);
+  // const auto element_distribution = get_element_distribution<Dim, IsWeighted>(
+  //     initial_refinement_levels, num_of_procs_to_use, procs_to_ignore);
+
+  const domain::WeightedBlockZCurveProcDistribution<Dim>
+        weighted_element_distribution(num_of_procs_to_use, domain.blocks(),
+        initial_refinement_levels,
+                             initial_extents, quadrature);
 
   // size_t run = 0;
   for (const auto& block : blocks) {
@@ -306,7 +313,8 @@ SPECTRE_TEST_CASE("Unit.Domain.WeightedElementDistribution", "[Domain][Unit]") {
   // const domain::BlockZCurveProcDistribution<Dim> element_distribution{
   //     num_of_procs_to_use, initial_refinement_levels, procs_to_ignore};
 
-  test_z_curve_index<Dim, false>(brick.create_domain(),
+  test_z_curve_index<Dim>(brick.create_domain(), brick.initial_extents(),
+                                 Spectral::Quadrature::GaussLobatto,
                                  initial_refinement_level_xyz,
                                  num_of_procs_to_use, procs_to_ignore);
 }

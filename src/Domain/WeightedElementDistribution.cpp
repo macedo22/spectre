@@ -11,8 +11,24 @@
 #include <utility>
 #include <vector>
 
+#include "DataStructures/DataVector.hpp"
+#include "DataStructures/Tensor/IndexType.hpp"
+#include "Domain/Block.hpp"
+#include "Domain/CoordinateMaps/CoordinateMap.hpp"
+#include "Domain/CoordinateMaps/CoordinateMap.tpp"
+#include "Domain/CoordinateMaps/Identity.hpp"
+#include "Domain/CreateInitialElement.hpp"
+#include "Domain/ElementMap.hpp"
+#include "Domain/MinimumGridSpacing.hpp"
+#include "Domain/Structure/CreateInitialMesh.hpp"
+#include "Domain/Structure/Element.hpp"
 #include "Domain/Structure/ElementId.hpp"
+#include "Domain/Structure/InitialElementIds.hpp"
+#include "Domain/Tags.hpp"
 #include "Domain/ZCurveIndex.hpp"
+#include "NumericalAlgorithms/Spectral/LogicalCoordinates.hpp"
+#include "NumericalAlgorithms/Spectral/Mesh.hpp"
+#include "NumericalAlgorithms/Spectral/Spectral.hpp"
 #include "Utilities/Algorithm.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
 
@@ -20,8 +36,15 @@ namespace domain {
 template <size_t Dim>
 WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
     const size_t number_of_procs_with_elements,
-    const std::vector<std::vector<double> >& cost_by_element_by_block,
+    const std::vector<Block<Dim>>& blocks,
+    const std::vector<std::array<size_t, Dim>>& initial_refinement_levels,
+    const std::vector<std::array<size_t, Dim>>& initial_extents,
+    const Spectral::Quadrature quadrature,
     const std::unordered_set<size_t>& global_procs_to_ignore) {
+  const std::vector<std::vector<double>> cost_by_element_by_block =
+      get_cost_by_element_by_block(blocks, initial_refinement_levels,
+                                   initial_extents, quadrature);
+
   block_element_distribution_ =
       std::vector<std::vector<std::pair<size_t, size_t> > >(
           cost_by_element_by_block.size());
@@ -119,6 +142,73 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
       }
     }
   }
+}
+
+template <size_t Dim>
+std::vector<std::vector<double>>
+WeightedBlockZCurveProcDistribution<Dim>::get_cost_by_element_by_block(
+    const std::vector<Block<Dim>>& blocks,
+    const std::vector<std::array<size_t, Dim>>& initial_refinement_levels,
+    const std::vector<std::array<size_t, Dim>>& initial_extents,
+    const Spectral::Quadrature quadrature) {
+  std::vector<std::vector<double>> cost_by_element_by_block(blocks.size());
+
+  for (size_t block_number = 0; block_number < blocks.size(); block_number++) {
+    const auto& block = blocks[block_number];
+    const auto initial_ref_levs = initial_refinement_levels[block.id()];
+    const std::vector<ElementId<Dim>> element_ids =
+        initial_element_ids_in_z_score_order(block.id(), initial_ref_levs);
+    const size_t grid_points_per_element = alg::accumulate(
+        initial_extents[block.id()], 1_st, std::multiplies<size_t>());
+
+    cost_by_element_by_block[block_number].reserve(element_ids.size());
+
+    for (const auto& element_id : element_ids) {
+      // TODO : move this out of here, probably best to put it in
+      // WeightedElementDistribution to keep all the logic handled there in
+      // one class.
+      Mesh<Dim> mesh = ::domain::Initialization::create_initial_mesh(
+          initial_extents, element_id, quadrature);
+      Element<Dim> element = ::domain::Initialization::create_initial_element(
+          element_id, block, initial_refinement_levels);
+      ElementMap<Dim, Frame::Grid> element_map{
+          element_id, block.is_time_dependent()
+                          ? block.moving_mesh_logical_to_grid_map().get_clone()
+                          : block.stationary_map().get_to_grid_frame()};
+
+      std::unique_ptr<
+          ::domain::CoordinateMapBase<Frame::Grid, Frame::Inertial, Dim>>
+          grid_to_inertial_map;
+      if (block.is_time_dependent()) {
+        grid_to_inertial_map =
+            block.moving_mesh_grid_to_inertial_map().get_clone();
+      } else {
+        grid_to_inertial_map =
+            ::domain::make_coordinate_map_base<Frame::Grid, Frame::Inertial>(
+                ::domain::CoordinateMaps::Identity<Dim>{});
+      }
+
+      tnsr::I<DataVector, Dim, Frame::ElementLogical> logical_coords{};
+      domain::Tags::LogicalCoordinates<Dim>::function(
+          make_not_null(&logical_coords), mesh);
+
+      tnsr::I<DataVector, Dim, Frame::Grid> grid_coords{};
+      domain::Tags::MappedCoordinates<
+          domain::Tags::ElementMap<Dim, Frame::Grid>,
+          domain::Tags::Coordinates<Dim, Frame::ElementLogical>>::
+          function(make_not_null(&grid_coords), element_map, logical_coords);
+
+      double minimum_grid_spacing =
+          std::numeric_limits<double>::signaling_NaN();
+      domain::Tags::MinimumGridSpacingCompute<Dim, Frame::Grid>::function(
+          make_not_null(&minimum_grid_spacing), mesh, grid_coords);
+
+      cost_by_element_by_block[block_number].emplace_back(
+          grid_points_per_element / sqrt(minimum_grid_spacing));
+    }
+  }
+
+  return cost_by_element_by_block;
 }
 
 template <size_t Dim>

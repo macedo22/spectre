@@ -11,6 +11,13 @@
 
 #include "Domain/Structure/ElementId.hpp"
 
+template <size_t Dim>
+class Block;
+
+namespace Spectral {
+enum class Quadrature;
+}  // namespace Spectral
+
 namespace domain {
 
 /*!
@@ -111,8 +118,17 @@ struct WeightedBlockZCurveProcDistribution {
   /// `global_procs_to_ignore`
   WeightedBlockZCurveProcDistribution(
       size_t number_of_procs_with_elements,
-      const std::vector<std::vector<double>>& cost_by_element_by_block,
+      const std::vector<Block<Dim>>& blocks,
+      const std::vector<std::array<size_t, Dim>>& initial_refinement_levels,
+      const std::vector<std::array<size_t, Dim>>& initial_extents,
+      const Spectral::Quadrature quadrature,
       const std::unordered_set<size_t>& global_procs_to_ignore = {});
+
+  std::vector<std::vector<double>> get_cost_by_element_by_block(
+      const std::vector<Block<Dim>>& blocks,
+      const std::vector<std::array<size_t, Dim>>& initial_refinement_levels,
+      const std::vector<std::array<size_t, Dim>>& initial_extents,
+      const Spectral::Quadrature quadrature);
 
   /// Gets the suggested processor number for a particular element,
   /// determined by the greedy block assignment and Morton curve element
