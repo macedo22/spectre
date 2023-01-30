@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "Domain/Structure/ElementId.hpp"
-#include "Domain/ZCurveIndex.hpp"
+#include "Domain/ZCurve.hpp"
 #include "Utilities/Algorithm.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
 

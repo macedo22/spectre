@@ -24,7 +24,7 @@
 #include "Domain/Tags.hpp"
 #include "Domain/TagsTimeDependent.hpp"
 #include "Domain/WeightedElementDistribution.hpp"
-#include "Domain/ZCurveIndex.hpp"
+#include "Domain/ZCurve.hpp"
 #include "NumericalAlgorithms/Spectral/LogicalCoordinates.hpp"
 #include "NumericalAlgorithms/Spectral/Mesh.hpp"
 #include "Utilities/ConstantExpressions.hpp"
