@@ -128,44 +128,29 @@ void test_z_curve(const std::array<size_t, Dim>& block_refinements) {
   // std::cout << std::endl;
 }
 
-template <size_t Dim>
 void test_z_curve_for_refinement_levels(const size_t min_refinement_level,
-                                        const size_t max_refinement_level);
+                                        const size_t max_refinement_level) {
+  std::array<size_t, 1> block_refinement_levels_1d{};
+  std::array<size_t, 2> block_refinement_levels_2d{};
+  std::array<size_t, 3> block_refinement_levels_3d{};
 
-template <>
-void test_z_curve_for_refinement_levels<1>(const size_t min_refinement_level,
-                                           const size_t max_refinement_level) {
-  std::array<size_t, 1> block_refinement_levels{};
   for (size_t i = min_refinement_level; i < max_refinement_level + 1; i++) {
-    block_refinement_levels[0] = i;
-    test_z_curve(block_refinement_levels);
-  }
-}
+    block_refinement_levels_1d[0] = i;
+    block_refinement_levels_2d[0] = i;
+    block_refinement_levels_3d[0] = i;
 
-template <>
-void test_z_curve_for_refinement_levels<2>(const size_t min_refinement_level,
-                                           const size_t max_refinement_level) {
-  std::array<size_t, 2> block_refinement_levels{};
-  for (size_t i = min_refinement_level; i < max_refinement_level + 1; i++) {
-    block_refinement_levels[0] = i;
+    test_z_curve(block_refinement_levels_1d);
+
     for (size_t j = min_refinement_level; j < max_refinement_level + 1; j++) {
-      block_refinement_levels[1] = j;
-      test_z_curve(block_refinement_levels);
-    }
-  }
-}
+      block_refinement_levels_2d[1] = j;
+      block_refinement_levels_3d[1] = j;
 
-template <>
-void test_z_curve_for_refinement_levels<3>(const size_t min_refinement_level,
-                                           const size_t max_refinement_level) {
-  std::array<size_t, 3> block_refinement_levels{};
-  for (size_t i = min_refinement_level; i < max_refinement_level + 1; i++) {
-    block_refinement_levels[0] = i;
-    for (size_t j = min_refinement_level; j < max_refinement_level + 1; j++) {
-      block_refinement_levels[1] = j;
+      test_z_curve(block_refinement_levels_2d);
+
       for (size_t k = min_refinement_level; k < max_refinement_level + 1; k++) {
-        block_refinement_levels[2] = k;
-        test_z_curve(block_refinement_levels);
+        block_refinement_levels_3d[2] = k;
+
+        test_z_curve(block_refinement_levels_3d);
       }
     }
   }
@@ -176,12 +161,15 @@ SPECTRE_TEST_CASE("Unit.Domain.ZCurve", "[Domain][Unit]") {
   const size_t min_refinement_level = 0;
   const size_t max_refinement_level = 3;
 
-  test_z_curve_for_refinement_levels<1>(min_refinement_level,
-                                        max_refinement_level);
-  test_z_curve_for_refinement_levels<2>(min_refinement_level,
-                                        max_refinement_level);
-  test_z_curve_for_refinement_levels<3>(min_refinement_level,
-                                        max_refinement_level);
+  test_z_curve_for_refinement_levels(min_refinement_level,
+                                     max_refinement_level);
+
+  // test_z_curve_for_refinement_levels<1>(min_refinement_level,
+  //                                       max_refinement_level);
+  // test_z_curve_for_refinement_levels<2>(min_refinement_level,
+  //                                       max_refinement_level);
+  // test_z_curve_for_refinement_levels<3>(min_refinement_level,
+  //                                       max_refinement_level);
 
   // test_z_curve_index_from_element_id(
   //   ElementId<1>(0, {{SegmentId(0, 0)}}), 0);
