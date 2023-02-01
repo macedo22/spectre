@@ -72,20 +72,20 @@ void test(const size_t block_id,
     // const size_t target_proc =
     //     element_distribution.get_proc_for_element(element_id);
 
-    const size_t result_z_order_index =
+    const size_t result_z_curve_index =
         domain::z_curve_index_from_element_id(element_id);
-    // std::cout << "result_z_order_index : " << result_z_order_index <<
+    // std::cout << "result_z_curve_index : " << result_z_curve_index <<
     // std::endl;
-    const std::array<size_t, Dim> result_element_id =
-        domain::segment_indices_from_z_curve_index(result_z_order_index,
+    const std::array<size_t, Dim> result_segment_indices =
+        domain::segment_indices_from_z_curve_index(result_z_curve_index,
                                                    block_refinements);
 
-    std::array<size_t, Dim> expected_element_id;
+    std::array<size_t, Dim> expected_segment_indices;
     for (size_t i = 0; i < Dim; ++i) {
-      expected_element_id[i] = element_id.segment_id(i).index();
+      expected_segment_indices[i] = element_id.segment_id(i).index();
     }
 
-    CHECK(result_element_id == expected_element_id);
+    CHECK(result_segment_indices == expected_segment_indices);
 
     // // std::cout << "target_proc : " << target_proc << std::endl;
     // if (run > 1) break;
@@ -94,7 +94,11 @@ void test(const size_t block_id,
   }
   const std::vector<ElementId<Dim>> element_ids_in_z_curve_order =
       initial_element_ids_in_z_curve_order(block_id, block_refinements);
-  for (size_t i = 0; i < element_ids_in_default_order.size(); i++) {
+
+  CHECK(element_ids_in_z_curve_order.size() ==
+        element_ids_in_default_order.size());
+
+  for (size_t i = 0; i < element_ids_in_z_curve_order.size(); i++) {
     const auto& element_id = element_ids_in_z_curve_order[i];
     CHECK(domain::z_curve_index_from_element_id(element_id) == i);
   }
