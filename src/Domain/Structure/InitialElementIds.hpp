@@ -27,6 +27,6 @@ std::vector<ElementId<VolumeDim>> initial_element_ids(
     size_t grid_index = 0);
 
 template <size_t VolumeDim>
-std::vector<ElementId<VolumeDim>> initial_element_ids_in_z_score_order(
+std::vector<ElementId<VolumeDim>> initial_element_ids_in_z_curve_order(
     size_t block_id, std::array<size_t, VolumeDim> initial_ref_levs,
     size_t grid_index = 0);

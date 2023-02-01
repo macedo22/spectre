@@ -83,7 +83,7 @@ std::vector<ElementId<VolumeDim>> initial_element_ids(
 }
 
 template <>
-std::vector<ElementId<1>> initial_element_ids_in_z_score_order<1>(
+std::vector<ElementId<1>> initial_element_ids_in_z_curve_order<1>(
     const size_t block_id, const std::array<size_t, 1> initial_ref_levs,
     const size_t grid_index) {
   std::vector<ElementId<1>> ids;
@@ -102,7 +102,7 @@ std::vector<ElementId<1>> initial_element_ids_in_z_score_order<1>(
 }
 
 template <>
-std::vector<ElementId<2>> initial_element_ids_in_z_score_order<2>(
+std::vector<ElementId<2>> initial_element_ids_in_z_curve_order<2>(
     const size_t block_id, const std::array<size_t, 2> initial_ref_levs,
     const size_t grid_index) {
   std::vector<ElementId<2>> ids;
@@ -123,7 +123,7 @@ std::vector<ElementId<2>> initial_element_ids_in_z_score_order<2>(
 }
 
 template <>
-std::vector<ElementId<3>> initial_element_ids_in_z_score_order<3>(
+std::vector<ElementId<3>> initial_element_ids_in_z_curve_order<3>(
     const size_t block_id, const std::array<size_t, 3> initial_ref_levs,
     const size_t grid_index) {
   std::vector<ElementId<3>> ids;

@@ -29,7 +29,6 @@
 #include "NumericalAlgorithms/Spectral/Mesh.hpp"
 #include "Utilities/ConstantExpressions.hpp"
 #include "Utilities/Literals.hpp"
-#include "Utilities/Rational.hpp"
 
 namespace {
 std::vector<std::vector<double>> get_uniform_cost(const size_t num_blocks,
@@ -207,10 +206,10 @@ void test_z_curve_index(
       // run++;
       // std::cout << std::endl;
     }
-    const std::vector<ElementId<Dim>> element_ids_in_z_score_order =
-        initial_element_ids_in_z_score_order(block.id(), initial_ref_levs);
+    const std::vector<ElementId<Dim>> element_ids_in_z_curve_order =
+        initial_element_ids_in_z_curve_order(block.id(), initial_ref_levs);
     for (size_t j = 0; j < num_elements; j++) {
-      const auto& element_id = element_ids_in_z_score_order[j];
+      const auto& element_id = element_ids_in_z_curve_order[j];
       CHECK(domain::z_curve_index_from_element_id(element_id) == j);
     }
     // std::cout << std::endl;

@@ -158,7 +158,7 @@ WeightedBlockZCurveProcDistribution<Dim>::get_cost_by_element_by_block(
     const auto& block = blocks[block_number];
     const auto initial_ref_levs = initial_refinement_levels[block.id()];
     const std::vector<ElementId<Dim>> element_ids =
-        initial_element_ids_in_z_score_order(block.id(), initial_ref_levs);
+        initial_element_ids_in_z_curve_order(block.id(), initial_ref_levs);
     const size_t grid_points_per_element = alg::accumulate(
         initial_extents[block.id()], 1_st, std::multiplies<size_t>());
 
