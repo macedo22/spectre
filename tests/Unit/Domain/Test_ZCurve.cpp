@@ -31,11 +31,21 @@
 #include "Utilities/Literals.hpp"
 
 namespace {
+// template <size_t Dim>
+// void test_z_curve_index_from_element_id(const ElementId<Dim>& element_id,
+// const size_t expected_z_curve_index) {
+//   CHECK(domain::z_curve_index_from_element_id(element_id) ==
+//   expected_z_curve_index);
+// }
+
 template <size_t Dim>
 void test(const size_t block_id,
           const std::array<size_t, Dim>& block_refinements, size_t grid_index) {
   std::vector<ElementId<Dim>> element_ids_in_default_order =
       initial_element_ids(block_id, block_refinements, grid_index);
+  const size_t num_elements = element_ids_in_default_order.size();
+  std::vector<bool> z_curve_index_hit(num_elements);
+  std::fill(z_curve_index_hit.begin(), z_curve_index_hit.end(), false);
   //   std::vector<ElementId<Dim>> element_ids_in_z_curve_order =
   //   initial_element_ids_in_z_curve_order(
   //     block_id, block_refinements, grid_index);
@@ -87,11 +97,18 @@ void test(const size_t block_id,
 
     CHECK(result_segment_indices == expected_segment_indices);
 
+    z_curve_index_hit[result_z_curve_index] = true;
+
     // // std::cout << "target_proc : " << target_proc << std::endl;
     // if (run > 1) break;
     // run++;
     // std::cout << std::endl;
   }
+
+  for (const size_t index_hit : z_curve_index_hit) {
+    CHECK(index_hit);
+  }
+
   const std::vector<ElementId<Dim>> element_ids_in_z_curve_order =
       initial_element_ids_in_z_curve_order(block_id, block_refinements);
 
@@ -110,9 +127,12 @@ void test(const size_t block_id,
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.Domain.ZCurve", "[Domain][Unit]") {
+  // test_z_curve_index_from_element_id(
+  //   ElementId<1>(0, {{SegmentId(0, 0)}}), 0);
+
   // test<3>(10, get_uniform_cost(6, 4, 1.0));
 
-  const size_t Dim = 3;
+  // const size_t Dim = 3;
 
   // const double inner_radius = 10.0;
   // const double outer_radius = 110.0;
@@ -124,18 +144,18 @@ SPECTRE_TEST_CASE("Unit.Domain.ZCurve", "[Domain][Unit]") {
   //     inner_radius, outer_radius, initial_refinement,
   //     initial_number_of_grid_points, use_equiangular_map);
 
-  const std::array<double, 3> lower_xyz = {0.0, 0.0, 0.0};
-  const std::array<double, 3> upper_xyz = {1.0, 10.0, 100.0};
-  const std::array<size_t, 3> initial_refinement_level_xyz = {1, 2, 3};
-  const std::array<size_t, 3> initial_number_of_grid_points_in_xyz = {2, 4, 6};
-  const std::array<bool, 3> is_periodic_in_xyz = {{false, false, false}};
+  // const std::array<double, 3> lower_xyz = {0.0, 0.0, 0.0};
+  // const std::array<double, 3> upper_xyz = {1.0, 10.0, 100.0};
+  // const std::array<size_t, 3> initial_refinement_level_xyz = {1, 2, 3};
+  // const std::array<size_t, 3> initial_number_of_grid_points_in_xyz = {2, 4, 6};
+  // const std::array<bool, 3> is_periodic_in_xyz = {{false, false, false}};
 
-  domain::creators::Brick brick(
-      lower_xyz, upper_xyz, initial_refinement_level_xyz,
-      initial_number_of_grid_points_in_xyz, is_periodic_in_xyz);
+  // domain::creators::Brick brick(
+  //     lower_xyz, upper_xyz, initial_refinement_level_xyz,
+  //     initial_number_of_grid_points_in_xyz, is_periodic_in_xyz);
 
-  const size_t num_of_procs_to_use = 3;
-  const std::unordered_set<size_t> procs_to_ignore{};
+  // const size_t num_of_procs_to_use = 3;
+  // const std::unordered_set<size_t> procs_to_ignore{};
   // std::vector<std::array<size_t, Dim>> initial_refinement_levels
 
   // const domain::BlockZCurveProcDistribution<Dim> element_distribution{
@@ -146,5 +166,5 @@ SPECTRE_TEST_CASE("Unit.Domain.ZCurve", "[Domain][Unit]") {
   //                                  initial_refinement_level_xyz,
   //                                  num_of_procs_to_use, procs_to_ignore);
 
-  test(1, initial_refinement_level_xyz, 2);
+  test<3>(1, {{1, 2, 3}}, 2);
 }
