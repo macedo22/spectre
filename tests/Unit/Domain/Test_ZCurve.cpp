@@ -39,59 +39,34 @@ namespace {
 // }
 
 template <size_t Dim>
-void test_z_curve(const std::array<size_t, Dim>& block_refinements) {
-  // The z curve does not depend on the block ID or grid index, so the choice of
+void test_z_curve(const std::array<size_t, Dim>& block_refinement_levels) {
+  // The Z-curve does not depend on the block ID or grid index, so the choice of
   // these two values for this test is arbitrary
   const size_t block_id = 1;
   const size_t grid_index = 2;
+
   std::vector<ElementId<Dim>> element_ids_in_default_order =
-      initial_element_ids(block_id, block_refinements, grid_index);
+      initial_element_ids(block_id, block_refinement_levels, grid_index);
+
   const size_t num_elements = element_ids_in_default_order.size();
+  // Whether or not we have encountered certain result Z-curve indices
+  // when transforming ElementIds of a block to their Z-curve indices
   std::vector<bool> z_curve_index_hit(num_elements);
   std::fill(z_curve_index_hit.begin(), z_curve_index_hit.end(), false);
-  //   std::vector<ElementId<Dim>> element_ids_in_z_curve_order =
-  //   initial_element_ids_in_z_curve_order(
-  //     block_id, block_refinements, grid_index);
 
-  //   const std::vector<Block<Dim>>& blocks = domain.blocks();
-
-  //   const std::vector<std::array<size_t, Dim>> initial_refinement_levels =
-  //       get_initial_refinement_levels(blocks, initial_refinement_level_xyz);
-
-  // size_t num_elements = two_to_the(initial_refinement_levels[0]);
-  // for (size_t i = 1; i < Dim; i++) {
-  //   num_elements *= two_to_the(initial_refinement_levels[1]);
-  // }
-
-  // size_t num_elements = two_to_the(block_refinements[0]);
-  // for (size_t i = 1; i < Dim; i++) {
-  //   num_elements *= two_to_the(block_refinements[i]);
-  // }
-
-  // const auto element_distribution = get_element_distribution<Dim,
-  // IsWeighted>(
-  //     initial_refinement_levels, num_of_procs_to_use, procs_to_ignore);
-
-  //   const domain::WeightedBlockZCurveProcDistribution<Dim>
-  //         weighted_element_distribution(num_of_procs_to_use, domain.blocks(),
-  //         initial_refinement_levels,
-  //                              initial_extents, quadrature);
-
+  // Check that computing the Z-curve index from an ElementId and then
+  // Segment indices from the computed Z-curve index matches the Segment indices
+  // of the original ElementId (i.e. transforming to and back from Z-curve index
+  // recovers the original Segment indices of an ElementId). This checks that
+  // domain::z_curve_index_from_element_i` and
+  // domain::segment_indices_from_z_curve_index are consistent with each other
+  // in that they are inverses.
   for (const auto& element_id : element_ids_in_default_order) {
-    // for (size_t j = 0; j < num_elements; j++) {
-    //   const auto& element_id = element_ids[j];
-    // std::cout << "element_id : " << element_id << std::endl;
-
-    // const size_t target_proc =
-    //     element_distribution.get_proc_for_element(element_id);
-
     const size_t result_z_curve_index =
         domain::z_curve_index_from_element_id(element_id);
-    // std::cout << "result_z_curve_index : " << result_z_curve_index <<
-    // std::endl;
     const std::array<size_t, Dim> result_segment_indices =
         domain::segment_indices_from_z_curve_index(result_z_curve_index,
-                                                   block_refinements);
+                                                   block_refinement_levels);
 
     std::array<size_t, Dim> expected_segment_indices;
     for (size_t i = 0; i < Dim; ++i) {
@@ -101,33 +76,44 @@ void test_z_curve(const std::array<size_t, Dim>& block_refinements) {
     CHECK(result_segment_indices == expected_segment_indices);
 
     z_curve_index_hit[result_z_curve_index] = true;
-
-    // // std::cout << "target_proc : " << target_proc << std::endl;
-    // if (run > 1) break;
-    // run++;
-    // std::cout << std::endl;
   }
 
+  // Check that there is a 1:1 mapping of ElementId to Z-curve index
   for (const size_t index_hit : z_curve_index_hit) {
     CHECK(index_hit);
   }
 
   const std::vector<ElementId<Dim>> element_ids_in_z_curve_order =
-      initial_element_ids_in_z_curve_order(block_id, block_refinements);
+      initial_element_ids_in_z_curve_order(block_id, block_refinement_levels,
+                                           grid_index);
 
-  CHECK(element_ids_in_z_curve_order.size() ==
-        element_ids_in_default_order.size());
+  // Check that there is a 1:1 mapping of ElementIds in the original input list
+  // to the output list of ElementIds in Z-curve order (i.e. we preserved the
+  // input list of ElementIds)
+  CHECK(element_ids_in_z_curve_order.size() == num_elements);
+  for (size_t i = 0; i < num_elements; i++) {
+    const ElementId<Dim> element_id_from_z_curve_order =
+        element_ids_in_z_curve_order[i];
+    bool element_id_found = false;
+    for (size_t j = 0; j < num_elements; j++) {
+      const ElementId<Dim> element_id_from_default_order =
+          element_ids_in_default_order[j];
+      if (element_id_from_z_curve_order == element_id_from_default_order) {
+        element_id_found = true;
+        break;
+      }
+    }
+    CHECK(element_id_found);
+  }
 
+  // Check that the ElementIds are ordered by Z-curve index
   for (size_t i = 0; i < element_ids_in_z_curve_order.size(); i++) {
     const auto& element_id = element_ids_in_z_curve_order[i];
     CHECK(domain::z_curve_index_from_element_id(element_id) == i);
   }
-
-  // TODO : check that the ElementIds preserve grid index?
-
-  // std::cout << std::endl;
 }
 
+// Test Z-curve for each refinement level permutation for dimensions 1, 2, and 3
 void test_z_curve_for_refinement_levels(const size_t min_refinement_level,
                                         const size_t max_refinement_level) {
   std::array<size_t, 1> block_refinement_levels_1d{};
@@ -163,52 +149,4 @@ SPECTRE_TEST_CASE("Unit.Domain.ZCurve", "[Domain][Unit]") {
 
   test_z_curve_for_refinement_levels(min_refinement_level,
                                      max_refinement_level);
-
-  // test_z_curve_for_refinement_levels<1>(min_refinement_level,
-  //                                       max_refinement_level);
-  // test_z_curve_for_refinement_levels<2>(min_refinement_level,
-  //                                       max_refinement_level);
-  // test_z_curve_for_refinement_levels<3>(min_refinement_level,
-  //                                       max_refinement_level);
-
-  // test_z_curve_index_from_element_id(
-  //   ElementId<1>(0, {{SegmentId(0, 0)}}), 0);
-
-  // test<3>(10, get_uniform_cost(6, 4, 1.0));
-
-  // const size_t Dim = 3;
-
-  // const double inner_radius = 10.0;
-  // const double outer_radius = 110.0;
-  // const size_t initial_refinement = 1;
-  // const std::array<size_t, 2> initial_number_of_grid_points{{5, 7}};
-  // const bool use_equiangular_map = false;
-
-  // domain::creators::Sphere sphere(
-  //     inner_radius, outer_radius, initial_refinement,
-  //     initial_number_of_grid_points, use_equiangular_map);
-
-  // const std::array<double, 3> lower_xyz = {0.0, 0.0, 0.0};
-  // const std::array<double, 3> upper_xyz = {1.0, 10.0, 100.0};
-  // const std::array<size_t, 3> initial_refinement_level_xyz = {1, 2, 3};
-  // const std::array<size_t, 3> initial_number_of_grid_points_in_xyz = {2, 4, 6};
-  // const std::array<bool, 3> is_periodic_in_xyz = {{false, false, false}};
-
-  // domain::creators::Brick brick(
-  //     lower_xyz, upper_xyz, initial_refinement_level_xyz,
-  //     initial_number_of_grid_points_in_xyz, is_periodic_in_xyz);
-
-  // const size_t num_of_procs_to_use = 3;
-  // const std::unordered_set<size_t> procs_to_ignore{};
-  // std::vector<std::array<size_t, Dim>> initial_refinement_levels
-
-  // const domain::BlockZCurveProcDistribution<Dim> element_distribution{
-  //     num_of_procs_to_use, initial_refinement_levels, procs_to_ignore};
-
-  //   test_z_curve_index<Dim>(brick.create_domain(), brick.initial_extents(),
-  //                                  Spectral::Quadrature::GaussLobatto,
-  //                                  initial_refinement_level_xyz,
-  //                                  num_of_procs_to_use, procs_to_ignore);
-
-  // test<3>({{1, 2, 3}});
 }

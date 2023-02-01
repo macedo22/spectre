@@ -91,10 +91,9 @@ std::vector<ElementId<1>> initial_element_ids_in_z_curve_order<1>(
   ids.reserve(num_elements);
 
   for (size_t i = 0; i < num_elements; i++) {
-    std::array<size_t, 1> element_id_as_array =
+    std::array<size_t, 1> segment_indices =
         domain::segment_indices_from_z_curve_index(i, initial_ref_levs);
-    SegmentId x_segment_id(initial_ref_levs[0], element_id_as_array[0]);
-    SegmentId y_segment_id(initial_ref_levs[1], element_id_as_array[1]);
+    SegmentId x_segment_id(initial_ref_levs[0], segment_indices[0]);
     ids.emplace_back(block_id, make_array<1>(x_segment_id), grid_index);
   }
 
@@ -111,10 +110,10 @@ std::vector<ElementId<2>> initial_element_ids_in_z_curve_order<2>(
   ids.reserve(num_elements);
 
   for (size_t i = 0; i < num_elements; i++) {
-    std::array<size_t, 2> element_id_as_array =
+    std::array<size_t, 2> segment_indices =
         domain::segment_indices_from_z_curve_index(i, initial_ref_levs);
-    SegmentId x_segment_id(initial_ref_levs[0], element_id_as_array[0]);
-    SegmentId y_segment_id(initial_ref_levs[1], element_id_as_array[1]);
+    SegmentId x_segment_id(initial_ref_levs[0], segment_indices[0]);
+    SegmentId y_segment_id(initial_ref_levs[1], segment_indices[1]);
     ids.emplace_back(block_id, make_array(x_segment_id, y_segment_id),
                      grid_index);
   }
@@ -133,11 +132,11 @@ std::vector<ElementId<3>> initial_element_ids_in_z_curve_order<3>(
   ids.reserve(num_elements);
 
   for (size_t i = 0; i < num_elements; i++) {
-    std::array<size_t, 3> element_id_as_array =
+    std::array<size_t, 3> segment_indices =
         domain::segment_indices_from_z_curve_index(i, initial_ref_levs);
-    SegmentId x_segment_id(initial_ref_levs[0], element_id_as_array[0]);
-    SegmentId y_segment_id(initial_ref_levs[1], element_id_as_array[1]);
-    SegmentId z_segment_id(initial_ref_levs[2], element_id_as_array[2]);
+    SegmentId x_segment_id(initial_ref_levs[0], segment_indices[0]);
+    SegmentId y_segment_id(initial_ref_levs[1], segment_indices[1]);
+    SegmentId z_segment_id(initial_ref_levs[2], segment_indices[2]);
     ids.emplace_back(block_id,
                      make_array(x_segment_id, y_segment_id, z_segment_id),
                      grid_index);
