@@ -191,8 +191,8 @@ void test_z_curve_index(
       // std::cout << "result_z_order_index : " << result_z_order_index <<
       // std::endl;
       const std::array<size_t, Dim> result_element_id =
-          domain::element_id_from_z_curve_index(result_z_order_index,
-                                                initial_ref_levs);
+          domain::segment_indices_from_z_curve_index(result_z_order_index,
+                                                     initial_ref_levs);
 
       std::array<size_t, Dim> expected_element_id;
       for (size_t i = 0; i < Dim; ++i) {

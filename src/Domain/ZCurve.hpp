@@ -24,7 +24,7 @@ template <size_t Dim>
 size_t z_curve_index_from_element_id(const ElementId<Dim>& element_id);
 
 template <size_t Dim>
-std::array<size_t, Dim> element_id_from_z_curve_index(
+std::array<size_t, Dim> segment_indices_from_z_curve_index(
     const size_t z_order_index,
     const std::array<size_t, Dim>& block_refinements);
 

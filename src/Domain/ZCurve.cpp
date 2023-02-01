@@ -80,7 +80,7 @@ size_t z_curve_index_from_element_id(const ElementId<Dim>& element_id) {
 }
 
 template <size_t Dim>
-std::array<size_t, Dim> element_id_from_z_curve_index(
+std::array<size_t, Dim> segment_indices_from_z_curve_index(
     const size_t z_order_index,
     const std::array<size_t, Dim>& block_refinements) {
   std::array<std::pair<size_t, size_t>, Dim>
@@ -137,23 +137,24 @@ std::array<size_t, Dim> element_id_from_z_curve_index(
     }
   }
 
-  std::array<size_t, Dim> element_id{};
+  std::array<size_t, Dim> result_segment_indices{};
 
   for (size_t i = 0; i < Dim; i++) {
-    gsl::at(element_id,
+    gsl::at(result_segment_indices,
             gsl::at(segment_indices_by_highest_refinement_level, i).second) =
         gsl::at(segment_indices_by_highest_refinement_level, i).first;
   }
 
-  return element_id;
+  return result_segment_indices;
 }
 #define GET_DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
 
-#define INSTANTIATION(r, data)                                              \
-  template size_t z_curve_index_from_element_id(                            \
-      const ElementId<GET_DIM(data)>& element_id);                          \
-  template std::array<size_t, GET_DIM(data)> element_id_from_z_curve_index( \
-      const size_t z_order_index,                                           \
+#define INSTANTIATION(r, data)                     \
+  template size_t z_curve_index_from_element_id(   \
+      const ElementId<GET_DIM(data)>& element_id); \
+  template std::array<size_t, GET_DIM(data)>       \
+  segment_indices_from_z_curve_index(              \
+      const size_t z_order_index,                  \
       const std::array<size_t, GET_DIM(data)>& block_refinements);
 
 GENERATE_INSTANTIATIONS(INSTANTIATION, (1, 2, 3))

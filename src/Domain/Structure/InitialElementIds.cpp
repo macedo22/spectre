@@ -92,7 +92,7 @@ std::vector<ElementId<1>> initial_element_ids_in_z_curve_order<1>(
 
   for (size_t i = 0; i < num_elements; i++) {
     std::array<size_t, 1> element_id_as_array =
-        domain::element_id_from_z_curve_index(i, initial_ref_levs);
+        domain::segment_indices_from_z_curve_index(i, initial_ref_levs);
     SegmentId x_segment_id(initial_ref_levs[0], element_id_as_array[0]);
     SegmentId y_segment_id(initial_ref_levs[1], element_id_as_array[1]);
     ids.emplace_back(block_id, make_array<1>(x_segment_id), grid_index);
@@ -112,7 +112,7 @@ std::vector<ElementId<2>> initial_element_ids_in_z_curve_order<2>(
 
   for (size_t i = 0; i < num_elements; i++) {
     std::array<size_t, 2> element_id_as_array =
-        domain::element_id_from_z_curve_index(i, initial_ref_levs);
+        domain::segment_indices_from_z_curve_index(i, initial_ref_levs);
     SegmentId x_segment_id(initial_ref_levs[0], element_id_as_array[0]);
     SegmentId y_segment_id(initial_ref_levs[1], element_id_as_array[1]);
     ids.emplace_back(block_id, make_array(x_segment_id, y_segment_id),
@@ -134,7 +134,7 @@ std::vector<ElementId<3>> initial_element_ids_in_z_curve_order<3>(
 
   for (size_t i = 0; i < num_elements; i++) {
     std::array<size_t, 3> element_id_as_array =
-        domain::element_id_from_z_curve_index(i, initial_ref_levs);
+        domain::segment_indices_from_z_curve_index(i, initial_ref_levs);
     SegmentId x_segment_id(initial_ref_levs[0], element_id_as_array[0]);
     SegmentId y_segment_id(initial_ref_levs[1], element_id_as_array[1]);
     SegmentId z_segment_id(initial_ref_levs[2], element_id_as_array[2]);

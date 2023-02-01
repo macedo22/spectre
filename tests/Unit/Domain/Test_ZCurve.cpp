@@ -50,10 +50,10 @@ void test(const size_t block_id,
   //   num_elements *= two_to_the(initial_refinement_levels[1]);
   // }
 
-  size_t num_elements = two_to_the(block_refinements[0]);
-  for (size_t i = 1; i < Dim; i++) {
-    num_elements *= two_to_the(block_refinements[i]);
-  }
+  // size_t num_elements = two_to_the(block_refinements[0]);
+  // for (size_t i = 1; i < Dim; i++) {
+  //   num_elements *= two_to_the(block_refinements[i]);
+  // }
 
   // const auto element_distribution = get_element_distribution<Dim,
   // IsWeighted>(
@@ -77,8 +77,8 @@ void test(const size_t block_id,
     // std::cout << "result_z_order_index : " << result_z_order_index <<
     // std::endl;
     const std::array<size_t, Dim> result_element_id =
-        domain::element_id_from_z_curve_index(result_z_order_index,
-                                              block_refinements);
+        domain::segment_indices_from_z_curve_index(result_z_order_index,
+                                                   block_refinements);
 
     std::array<size_t, Dim> expected_element_id;
     for (size_t i = 0; i < Dim; ++i) {
@@ -94,7 +94,7 @@ void test(const size_t block_id,
   }
   const std::vector<ElementId<Dim>> element_ids_in_z_curve_order =
       initial_element_ids_in_z_curve_order(block_id, block_refinements);
-  for (size_t i = 0; i < num_elements; i++) {
+  for (size_t i = 0; i < element_ids_in_default_order.size(); i++) {
     const auto& element_id = element_ids_in_z_curve_order[i];
     CHECK(domain::z_curve_index_from_element_id(element_id) == i);
   }
