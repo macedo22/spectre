@@ -207,7 +207,8 @@ void test_z_curve_index(
       // std::cout << std::endl;
     }
     const std::vector<ElementId<Dim>> element_ids_in_z_curve_order =
-        initial_element_ids_in_z_curve_order(block.id(), initial_ref_levs);
+        domain::initial_element_ids_in_z_curve_order(block.id(),
+                                                     initial_ref_levs);
     for (size_t j = 0; j < num_elements; j++) {
       const auto& element_id = element_ids_in_z_curve_order[j];
       CHECK(domain::z_curve_index_from_element_id(element_id) == j);

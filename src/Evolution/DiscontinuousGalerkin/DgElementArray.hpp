@@ -12,9 +12,9 @@
 #include "Domain/DiagnosticInfo.hpp"
 #include "Domain/Domain.hpp"
 #include "Domain/Structure/ElementId.hpp"
-#include "Domain/Structure/InitialElementIds.hpp"
 #include "Domain/Tags.hpp"
 #include "Domain/WeightedElementDistribution.hpp"
+#include "Domain/ZCurve.hpp"
 #include "Evolution/DiscontinuousGalerkin/Initialization/QuadratureTag.hpp"
 #include "Parallel/Algorithms/AlgorithmArray.hpp"
 #include "Parallel/GlobalCache.hpp"
@@ -121,7 +121,8 @@ void DgElementArray<Metavariables, PhaseDepActionList>::allocate_array(
           initial_extents[block.id()], 1_st, std::multiplies<size_t>());
       const auto initial_ref_levs = initial_refinement_levels[block.id()];
       const std::vector<ElementId<volume_dim>> element_ids =
-          initial_element_ids_in_z_curve_order(block.id(), initial_ref_levs);
+          domain::initial_element_ids_in_z_curve_order(block.id(),
+                                                       initial_ref_levs);
       for (const auto& element_id : element_ids) {
         const size_t target_proc =
             element_distribution.get_proc_for_element(element_id);

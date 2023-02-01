@@ -362,8 +362,8 @@ void test_z_curve(const std::array<size_t, Dim>& block_refinement_levels) {
   }
 
   const std::vector<ElementId<Dim>> element_ids_in_z_curve_order =
-      initial_element_ids_in_z_curve_order(block_id, block_refinement_levels,
-                                           grid_index);
+      domain::initial_element_ids_in_z_curve_order(
+          block_id, block_refinement_levels, grid_index);
 
   // Check that there is a 1:1 mapping of ElementIds in the original input list
   // to the output list of ElementIds in Z-curve order (i.e. we preserved the

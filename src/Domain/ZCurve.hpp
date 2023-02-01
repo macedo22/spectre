@@ -28,4 +28,9 @@ std::array<size_t, Dim> segment_indices_from_z_curve_index(
     const size_t z_order_index,
     const std::array<size_t, Dim>& block_refinements);
 
+template <size_t Dim>
+std::vector<ElementId<Dim>> initial_element_ids_in_z_curve_order(
+    size_t block_id, std::array<size_t, Dim> initial_ref_levs,
+    size_t grid_index = 0);
+
 }  // namespace domain

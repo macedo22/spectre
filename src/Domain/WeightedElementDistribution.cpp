@@ -23,7 +23,6 @@
 #include "Domain/Structure/CreateInitialMesh.hpp"
 #include "Domain/Structure/Element.hpp"
 #include "Domain/Structure/ElementId.hpp"
-#include "Domain/Structure/InitialElementIds.hpp"
 #include "Domain/Tags.hpp"
 #include "Domain/ZCurve.hpp"
 #include "NumericalAlgorithms/Spectral/LogicalCoordinates.hpp"
