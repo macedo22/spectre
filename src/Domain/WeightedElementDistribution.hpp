@@ -126,7 +126,7 @@ struct WeightedBlockZCurveProcDistribution {
       const Spectral::Quadrature quadrature,
       const std::unordered_set<size_t>& global_procs_to_ignore = {});
 
-  std::vector<std::vector<double>> get_cost_by_element_by_block(
+  static std::vector<std::vector<double>> get_cost_by_element_by_block(
       const std::vector<Block<Dim>>& blocks,
       const std::vector<std::array<size_t, Dim>>& initial_refinement_levels,
       const std::vector<std::array<size_t, Dim>>& initial_extents,
