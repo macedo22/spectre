@@ -40,35 +40,35 @@
 #include "Utilities/Literals.hpp"
 
 namespace {
-void print_costs_by_element_by_block(
-    const std::vector<std::vector<double>>& costs_by_element_by_block) {
-  std::cout << "Costs by element by block" << std::endl;
-  for (size_t i = 0; i < costs_by_element_by_block.size(); i++) {
-    std::cout << "Block " << i << ":\n\t[" << costs_by_element_by_block[i][0];
-    for (size_t j = 1; j < costs_by_element_by_block[i].size(); j++) {
-      std::cout << ", " << costs_by_element_by_block[i][j];
-    }
-    std::cout << "]" << std::endl;
-  }
-  std::cout << std::endl;
-}
+// void print_costs_by_element_by_block(
+//     const std::vector<std::vector<double>>& costs_by_element_by_block) {
+//   std::cout << "Costs by element by block" << std::endl;
+//   for (size_t i = 0; i < costs_by_element_by_block.size(); i++) {
+//     std::cout << "Block " << i << ":\n\t[" << costs_by_element_by_block[i][0];
+//     for (size_t j = 1; j < costs_by_element_by_block[i].size(); j++) {
+//       std::cout << ", " << costs_by_element_by_block[i][j];
+//     }
+//     std::cout << "]" << std::endl;
+//   }
+//   std::cout << std::endl;
+// }
 
-void print_element_distribution(
-    const std::vector<std::vector<std::pair<size_t, size_t>>>&
-        block_element_distribution) {
-  std::cout << "Block element distribution" << std::endl;
-  for (size_t i = 0; i < block_element_distribution.size(); i++) {
-    std::cout << "Block " << i << ":\n\t{{"
-              << block_element_distribution[i][0].first << ", "
-              << block_element_distribution[i][0].second << "}";
-    for (size_t j = 1; j < block_element_distribution[i].size(); j++) {
-      std::cout << ", {" << block_element_distribution[i][j].first << ", "
-                << block_element_distribution[i][j].second << "}";
-    }
-    std::cout << "}" << std::endl;
-  }
-  std::cout << std::endl;
-}
+// void print_element_distribution(
+//     const std::vector<std::vector<std::pair<size_t, size_t>>>&
+//         block_element_distribution) {
+//   std::cout << "Block element distribution" << std::endl;
+//   for (size_t i = 0; i < block_element_distribution.size(); i++) {
+//     std::cout << "Block " << i << ":\n\t{{"
+//               << block_element_distribution[i][0].first << ", "
+//               << block_element_distribution[i][0].second << "}";
+//     for (size_t j = 1; j < block_element_distribution[i].size(); j++) {
+//       std::cout << ", {" << block_element_distribution[i][j].first << ", "
+//                 << block_element_distribution[i][j].second << "}";
+//     }
+//     std::cout << "}" << std::endl;
+//   }
+//   std::cout << std::endl;
+// }
 
 // template <size_t Dim>
 // void test_cost_function(
@@ -372,22 +372,20 @@ void test_cost_function() {
   CHECK(elemental_cost3 == custom_approx(elemental_cost1 * 3.0 / 8.0));
 }
 
-void test_element_distribution() {
-  const auto binary_compact_object_creator =
-
-     TestHelpers::test_option_tag<domain::OptionTags::DomainCreator<3>,
-                                          Metavariables<3, true, false>>(
-          create_option_string(true, true, true, false, 0, 0, 0,
-                               false));
-  const auto domain = binary_compact_object_creator->create_domain();
+template <size_t Dim>
+void test_element_distribution(
+  const DomainCreator<Dim>& domain_creator,
+  const size_t number_of_procs_with_elements,
+  const std::unordered_set<size_t>& global_procs_to_ignore) {
+  const auto domain = domain_creator.create_domain();
   const auto& blocks = domain.blocks();
-  const auto initial_refinement_levels = binary_compact_object_creator->initial_refinement_levels();
-  const auto initial_extents = binary_compact_object_creator->initial_extents();
+  const auto initial_refinement_levels = domain_creator.initial_refinement_levels();
+  const auto initial_extents = domain_creator.initial_extents();
 
   // TODO : run this test for different proc # and procs to skip?;
-  const size_t number_of_procs_with_elements = 73;
-  const std::unordered_set<size_t> global_procs_to_ignore{{5, 8, 9, number_of_procs_with_elements + 2}};
-  const domain::WeightedBlockZCurveProcDistribution<3> element_distribution(
+  // const size_t number_of_procs_with_elements = 73;
+  // const std::unordered_set<size_t> global_procs_to_ignore{{5, 8, 9, number_of_procs_with_elements + 2}};
+  const domain::WeightedBlockZCurveProcDistribution<Dim> element_distribution(
     number_of_procs_with_elements,
     blocks,
     initial_refinement_levels,
@@ -397,8 +395,8 @@ void test_element_distribution() {
   );
 
   const auto proc_map = element_distribution.block_element_distribution();
-  std::cout << "proc map : " << std::endl;
-  print_element_distribution(proc_map);
+  // std::cout << "proc map : " << std::endl;
+  // print_element_distribution(proc_map);
 
   // std::cout << "[";
   // for (size_t i = 0; i < proc_map.size(); i++) {
@@ -412,7 +410,7 @@ void test_element_distribution() {
 
   size_t num_elements = 0;
 
-  std::vector<std::vector<ElementId<3>>> element_ids_in_z_curve_order(blocks.size());
+  std::vector<std::vector<ElementId<Dim>>> element_ids_in_z_curve_order(blocks.size());
   for (size_t i = 0; i < blocks.size(); i++) {
     // const std::vector<ElementId<Dim>> element_ids_in_z_curve_order =
     //   domain::initial_element_ids_in_z_curve_order(
@@ -423,7 +421,7 @@ void test_element_distribution() {
   }
 
   const auto costs =
-      domain::WeightedBlockZCurveProcDistribution<3>::get_cost_by_element_by_block(
+      domain::WeightedBlockZCurveProcDistribution<Dim>::get_cost_by_element_by_block(
     blocks,
     initial_refinement_levels,
     initial_extents,
@@ -447,7 +445,7 @@ void test_element_distribution() {
     }
   }
 
-  std::cout << "costs_flattened : " << costs_flattened << std::endl;
+  // std::cout << "costs_flattened : " << costs_flattened << std::endl;
 
   // double average = total_cost / number_of_procs_with_elements;
   // double current_cost = 0.0;
@@ -475,7 +473,7 @@ void test_element_distribution() {
     }
   }
 
-  std::cout << "num_elements_each_proc : " << num_elements_each_proc << std::endl;
+  // std::cout << "num_elements_each_proc : " << num_elements_each_proc << std::endl;
 
   // std::cout << costs_by_proc << std::endl;
   // std::cout << num_elements_each_proc << std::endl;
@@ -503,10 +501,10 @@ void test_element_distribution() {
   double cost_remaining = total_cost;
   size_t procs_skipped = 0;
   for (size_t i = 0; i < total_procs; i++) {
-    std::cout << "global_proc_number : " << i << std::endl;
-    std::cout << "cost_index : " << cost_index << std::endl;
-    std::cout << "cost_remaining : " << cost_remaining << std::endl;
-    std::cout << "cost spent : " << (total_cost - cost_remaining) << std::endl;
+    // std::cout << "global_proc_number : " << i << std::endl;
+    // std::cout << "cost_index : " << cost_index << std::endl;
+    // std::cout << "cost_remaining : " << cost_remaining << std::endl;
+    // std::cout << "cost spent : " << (total_cost - cost_remaining) << std::endl;
     if (global_procs_to_ignore.count(i)) {
       //cost_index++;
       procs_skipped++;
@@ -514,40 +512,43 @@ void test_element_distribution() {
     }
     const double target_proc_cost =
         cost_remaining / (number_of_procs_with_elements - i + procs_skipped);
-    std::cout << "target_proc_cost: " << target_proc_cost << std::endl;
+    // std::cout << "target_proc_cost: " << target_proc_cost << std::endl;
     double proc_cost_without_final_element = 0.0;
     const size_t num_elements_this_proc = num_elements_each_proc[i];
-    std::cout << "num_elements_this_proc : " << num_elements_this_proc << std::endl;
+    // std::cout << "num_elements_this_proc : " << num_elements_this_proc << std::endl;
+    if (num_elements_this_proc == 0) {
+      continue;
+    }
     // go to the element before the last one included
     for (size_t j = 0; j < num_elements_this_proc - 1; j++) {
       const double this_cost = costs_flattened[cost_index + j];
-      std::cout << "this_cost : " << this_cost << std::endl;
+      // std::cout << "this_cost : " << this_cost << std::endl;
       proc_cost_without_final_element += this_cost;
     }
     // cost_index += num_elements_this_proc;
     // cost_remaining-=proc_cost_without_final_element;
 
-    std::cout << "proc_cost_without_final_element: " << proc_cost_without_final_element << std::endl;
+    // std::cout << "proc_cost_without_final_element: " << proc_cost_without_final_element << std::endl;
 
     const double proc_cost_with_final_element =
       proc_cost_without_final_element + costs_flattened[cost_index + num_elements_this_proc - 1];
 
-     std::cout << "proc_cost_with_final_element: " << proc_cost_with_final_element << std::endl;
+    //  std::cout << "proc_cost_with_final_element: " << proc_cost_with_final_element << std::endl;
 
     const double diff_without_final_element =
         abs(proc_cost_without_final_element - target_proc_cost);
     
-    std::cout << "diff_without_final_element: " << diff_without_final_element << std::endl;
+    // std::cout << "diff_without_final_element: " << diff_without_final_element << std::endl;
 
     const double diff_with_final_element =
         abs(proc_cost_with_final_element - target_proc_cost);
     
-    std::cout << "diff_with_final_element: " << diff_with_final_element << std::endl;
+    // std::cout << "diff_with_final_element: " << diff_with_final_element << std::endl;
 
     // if we've exceeded the target, make sure we're including this element because
-    // it is closer to the target than if we don't include it  
-    if (proc_cost_with_final_element > target_proc_cost) {
-      std::cout << "proc_cost_with_final_element > target_proc_cost";
+    // it is closer to the target than if we don't include it
+    if (num_elements_this_proc > 1 and proc_cost_with_final_element > target_proc_cost) {
+      // std::cout << "proc_cost_with_final_element > target_proc_cost";
       CHECK(diff_with_final_element <= diff_without_final_element);
     }
 
@@ -557,7 +558,7 @@ void test_element_distribution() {
       const double diff_with_extra_element =
         abs(proc_cost_with_extra_element - target_proc_cost);
 
-        // CHECK(diff_with_extra_element >= diff_with_final_element);
+        CHECK(diff_with_extra_element >= diff_with_final_element);
     }
 
     cost_index += num_elements_this_proc;
@@ -600,7 +601,40 @@ void test_element_distribution() {
 
 SPECTRE_TEST_CASE("Unit.Domain.WeightedElementDistribution", "[Domain][Unit]") {
   test_cost_function();
-  test_element_distribution();
+
+  const auto lattice_1d = make_domain_creator<1>(
+        "AlignedLattice:\n"
+        "  BlockBounds: [[0.0, 1.0, 2.0]]\n" +
+            std::string{"  IsPeriodicIn: [false]\n"} +
+            "  InitialGridPoints: [6]\n"
+            "  InitialLevels: [4]\n"
+            "  RefinedLevels: []\n"
+            "  RefinedGridPoints: []\n"
+            "  BlocksToExclude: []\n");
+  
+  const auto lattice_2d = make_domain_creator<2>(
+        "AlignedLattice:\n"
+        "  BlockBounds: [[0.0, 0.3], [0.0, 0.8, 2.5, 4.9]]\n" +
+            std::string{"  IsPeriodicIn: [false, false]\n"} +
+            "  InitialGridPoints: [4, 5]\n"
+            "  InitialLevels: [2, 3]\n"
+            "  RefinedLevels: []\n"
+            "  RefinedGridPoints: []\n"
+            "  BlocksToExclude: []\n");
+
+  const auto binary_compact_object_creator =
+
+     TestHelpers::test_option_tag<domain::OptionTags::DomainCreator<3>,
+                                          Metavariables<3, true, false>>(
+          create_option_string(true, true, true, false, 0, 0, 0,
+                               false));
+
+   const size_t number_of_procs_with_elements = 73;
+  const std::unordered_set<size_t> global_procs_to_ignore{{5, 8, 9, number_of_procs_with_elements + 2}};
+
+  test_element_distribution(*lattice_1d, number_of_procs_with_elements, global_procs_to_ignore);
+  test_element_distribution(*lattice_2d, number_of_procs_with_elements, global_procs_to_ignore);
+  test_element_distribution(*binary_compact_object_creator, number_of_procs_with_elements, global_procs_to_ignore);
 
   // test<3>(10, get_uniform_cost(6, 4, 1.0));
 
