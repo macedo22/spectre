@@ -53,22 +53,22 @@ namespace {
 //   std::cout << std::endl;
 // }
 
-// void print_element_distribution(
-//     const std::vector<std::vector<std::pair<size_t, size_t>>>&
-//         block_element_distribution) {
-//   std::cout << "Block element distribution" << std::endl;
-//   for (size_t i = 0; i < block_element_distribution.size(); i++) {
-//     std::cout << "Block " << i << ":\n\t{{"
-//               << block_element_distribution[i][0].first << ", "
-//               << block_element_distribution[i][0].second << "}";
-//     for (size_t j = 1; j < block_element_distribution[i].size(); j++) {
-//       std::cout << ", {" << block_element_distribution[i][j].first << ", "
-//                 << block_element_distribution[i][j].second << "}";
-//     }
-//     std::cout << "}" << std::endl;
-//   }
-//   std::cout << std::endl;
-// }
+void print_element_distribution(
+    const std::vector<std::vector<std::pair<size_t, size_t>>>&
+        block_element_distribution) {
+  std::cout << "Block element distribution" << std::endl;
+  for (size_t i = 0; i < block_element_distribution.size(); i++) {
+    std::cout << "Block " << i << ":\n\t{{"
+              << block_element_distribution[i][0].first << ", "
+              << block_element_distribution[i][0].second << "}";
+    for (size_t j = 1; j < block_element_distribution[i].size(); j++) {
+      std::cout << ", {" << block_element_distribution[i][j].first << ", "
+                << block_element_distribution[i][j].second << "}";
+    }
+    std::cout << "}" << std::endl;
+  }
+  std::cout << std::endl;
+}
 
 // template <size_t Dim>
 // void test_cost_function(
@@ -597,44 +597,126 @@ void test_element_distribution(
 
   // }
 }
-}  // namespace
 
-SPECTRE_TEST_CASE("Unit.Domain.WeightedElementDistribution", "[Domain][Unit]") {
-  test_cost_function();
+void test_proc_distribution() {
+  const size_t number_of_procs_with_elements = 10;
+  const std::unordered_set<size_t> global_procs_to_ignore{{1, 2}};
 
   const auto lattice_1d = make_domain_creator<1>(
         "AlignedLattice:\n"
-        "  BlockBounds: [[0.0, 1.0, 2.0]]\n" +
+        "  BlockBounds: [[0.0, 1.0, 2.0, 3.0, 4.0]]\n" +
             std::string{"  IsPeriodicIn: [false]\n"} +
-            "  InitialGridPoints: [6]\n"
-            "  InitialLevels: [4]\n"
-            "  RefinedLevels: []\n"
+            "  BlocksToExclude: []\n"
+            "  InitialGridPoints: [5]\n"
+            "  InitialLevels: [2]\n"
             "  RefinedGridPoints: []\n"
-            "  BlocksToExclude: []\n");
+            "  RefinedLevels:\n"
+            "  - LowerCornerIndex: [1]\n"
+            "    UpperCornerIndex: [2]\n"
+            "    Refinement: [3]\n"
+            "  - LowerCornerIndex: [3]\n"
+            "    UpperCornerIndex: [4]\n"
+            "    Refinement: [4]");
   
-  const auto lattice_2d = make_domain_creator<2>(
-        "AlignedLattice:\n"
-        "  BlockBounds: [[0.0, 0.3], [0.0, 0.8, 2.5, 4.9]]\n" +
-            std::string{"  IsPeriodicIn: [false, false]\n"} +
-            "  InitialGridPoints: [4, 5]\n"
-            "  InitialLevels: [2, 3]\n"
-            "  RefinedLevels: []\n"
-            "  RefinedGridPoints: []\n"
-            "  BlocksToExclude: []\n");
+  const auto domain = lattice_1d->create_domain();
+  const auto& blocks = domain.blocks();
+  const auto initial_refinement_levels = lattice_1d->initial_refinement_levels();
+  const auto initial_extents = lattice_1d->initial_extents();
 
-  const auto binary_compact_object_creator =
+  const domain::WeightedBlockZCurveProcDistribution<1> element_distribution(
+    number_of_procs_with_elements,
+    blocks,
+    initial_refinement_levels,
+    initial_extents,
+    Spectral::Quadrature::GaussLobatto,
+    global_procs_to_ignore
+  );
 
-     TestHelpers::test_option_tag<domain::OptionTags::DomainCreator<3>,
-                                          Metavariables<3, true, false>>(
-          create_option_string(true, true, true, false, 0, 0, 0,
-                               false));
+  size_t num_elements = 0;
+  const size_t num_blocks = blocks.size();
 
-   const size_t number_of_procs_with_elements = 73;
-  const std::unordered_set<size_t> global_procs_to_ignore{{5, 8, 9, number_of_procs_with_elements + 2}};
+  std::vector<std::vector<ElementId<1>>> element_ids_in_z_curve_order(blocks.size());
+  std::vector<size_t> num_elements_by_block(num_blocks);
+  for (size_t i = 0; i < blocks.size(); i++) {
+    // const std::vector<ElementId<Dim>> element_ids_this_block =
+    //   domain::initial_element_ids_in_z_curve_order(
+    //       block_id, block_refinement_levels, grid_index);
+    element_ids_in_z_curve_order[i] = domain::initial_element_ids_in_z_curve_order(
+          i, initial_refinement_levels[i], 0);
+    // std::cout << "initial_refinement_levels for this block : " << initial_refinement_levels[i][0] << std::endl;
+    num_elements_by_block[i] = two_to_the(initial_refinement_levels[i][0]);
+    num_elements += num_elements_by_block[i];
+  }
 
-  test_element_distribution(*lattice_1d, number_of_procs_with_elements, global_procs_to_ignore);
-  test_element_distribution(*lattice_2d, number_of_procs_with_elements, global_procs_to_ignore);
-  test_element_distribution(*binary_compact_object_creator, number_of_procs_with_elements, global_procs_to_ignore);
+  const auto proc_map = element_distribution.block_element_distribution();
+
+  std::cout << "num_blocks : " << blocks.size() << std::endl;
+  std::cout << "num_elements : " << num_elements << std::endl;
+
+  print_element_distribution(proc_map);
+  
+  for (size_t i = 0; i < blocks.size(); i++) {
+    size_t element_index = 0;
+    const size_t num_elements_this_block = num_elements_by_block[i];
+    const std::vector<std::pair<size_t, size_t>>& proc_map_this_block =
+        proc_map[i];
+    const size_t num_procs_this_block = proc_map_this_block.size();
+
+    for (size_t j = 0; j < num_procs_this_block; j++) {
+      const size_t expected_proc = proc_map_this_block[j].first;
+      const size_t proc_allowance = proc_map_this_block[j].second;
+
+      for (size_t k = 0; k < proc_allowance; k++) {
+        // std::cout << "block " << i << ", proc_index " << j << ", k " << k << ", element_index " << element_index << std::endl;
+        CHECK(element_distribution.get_proc_for_element(
+          element_ids_in_z_curve_order[i][element_index]) == expected_proc);
+      }
+      element_index += proc_allowance;
+    }
+  }
+}
+}  // namespace
+
+SPECTRE_TEST_CASE("Unit.Domain.WeightedElementDistribution", "[Domain][Unit]") {
+  // test_cost_function();
+
+  // const auto lattice_1d = make_domain_creator<1>(
+  //       "AlignedLattice:\n"
+  //       "  BlockBounds: [[0.0, 1.0, 2.0]]\n" +
+  //           std::string{"  IsPeriodicIn: [false]\n"} +
+  //           "  InitialGridPoints: [6]\n"
+  //           "  InitialLevels: [4]\n"
+  //           "  RefinedLevels: []\n"
+  //           "  RefinedGridPoints: []\n"
+  //           "  BlocksToExclude: []\n");
+  
+  // const auto lattice_2d = make_domain_creator<2>(
+  //       "AlignedLattice:\n"
+  //       "  BlockBounds: [[0.0, 0.3], [0.0, 0.8, 2.5, 4.9]]\n" +
+  //           std::string{"  IsPeriodicIn: [false, false]\n"} +
+  //           "  InitialGridPoints: [4, 5]\n"
+  //           "  InitialLevels: [2, 3]\n"
+  //           "  RefinedLevels: []\n"
+  //           "  RefinedGridPoints: []\n"
+  //           "  BlocksToExclude: []\n");
+
+  // const auto binary_compact_object_creator =
+
+  //    TestHelpers::test_option_tag<domain::OptionTags::DomainCreator<3>,
+  //                                         Metavariables<3, true, false>>(
+  //         create_option_string(true, true, true, false, 0, 0, 0,
+  //                              false));
+
+  //  const size_t number_of_procs_with_elements = 73;
+  // const std::unordered_set<size_t> global_procs_to_ignore{{5, 8, 9, number_of_procs_with_elements + 2}};
+
+  // test_element_distribution(*lattice_1d, number_of_procs_with_elements, global_procs_to_ignore);
+  // test_element_distribution(*lattice_2d, number_of_procs_with_elements, global_procs_to_ignore);
+  // test_element_distribution(*binary_compact_object_creator, number_of_procs_with_elements, global_procs_to_ignore);
+
+  // const size_t number_of_procs_with_elements_2 = 10;
+  // const std::unordered_set<size_t> global_procs_to_ignore_2{{1, 2}};
+  test_proc_distribution();
 
   // test<3>(10, get_uniform_cost(6, 4, 1.0));
 
