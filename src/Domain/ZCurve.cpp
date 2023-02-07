@@ -110,10 +110,8 @@ std::array<size_t, Dim> segment_indices_from_z_curve_index(
   size_t bit_index = 0;
   size_t element_order_index = z_order_index;
 
-  // TODO : try to optimize by handling last case separately when it's the
-  // remaining bits of the highest refinement, i.e. probably do:
-  // starting_dim_index < (Dim - 1) then handle the last case separately after
-  while (starting_dim_index < Dim) {
+  // process all but highest-refined dimension
+  while (starting_dim_index < Dim - 1) {
     const size_t refinement_level =
         gsl::at(dimension_by_highest_refinement_level, starting_dim_index)
             .first;
@@ -140,6 +138,10 @@ std::array<size_t, Dim> segment_indices_from_z_curve_index(
       starting_dim_index++;
     }
   }
+
+  // process highest-refined dimension
+  segment_indices_by_highest_refinement_level.at(Dim - 1).first |=
+      (element_order_index << bit_index);
 
   std::array<size_t, Dim> result_segment_indices{};
 
