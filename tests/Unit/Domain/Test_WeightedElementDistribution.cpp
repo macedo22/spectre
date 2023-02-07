@@ -206,44 +206,6 @@ std::string create_option_string(const bool excise_A, const bool excise_B,
 }
 
 void test_cost_function() {
-  // const size_t grid_points = 4;
-  // // l_111 refers to refinement level 1 in x, y, and z
-  // const std::array<size_t, 3> l_111{1, 1, 1}; // 8 subcells
-  // const std::array<size_t, 3> l_112{1, 1, 2}; // 16 subcells
-  // const std::array<size_t, 3> l_322{3, 2, 2}; // 128 subcells
-
-  // std::vector<std::array<size_t, 3>> refinements_by_block(3);
-  // refinements_by_block[0] = l_111;
-  // refinements_by_block[0] = l_112;
-  // refinements_by_block[0] = l_322;
-
-  // const std::array<double, 3> block1_lower_xyz = {0.0, 0.0, 0.0};
-  // const std::array<double, 3> block1_upper_xyz = {1.0, 1.0, 1.0};
-  // const std::array<size_t, 3> block1_refinements = {2, 2, 1};
-  // const std::array<size_t, 3> block1_grid_points = {1, 2, 3};
-  // const std::array<bool, 3> block1_is_periodic = {{false, false, false}};
-
-  // domain::creators::Brick brick1(
-  //     block1_lower_xyz, block1_upper_xyz, block1_refinements,
-  //     block1_grid_points, block1_is_periodic);
-  
-  // const auto domain1 = brick1.create_domain();
-  // const auto blocks1 = domain1.blocks();
-  // const auto block1 = std::move(blocks1[0]);
-  // const auto block1_initial_extents = brick1.initial_extents()[0];
-
-  // const size_t num_of_procs_to_use = 3;
-  // const std::unordered_set<size_t> procs_to_ignore{};
-  // std::vector<std::array<size_t, Dim>> initial_refinement_levels
-
-  // const domain::BlockZCurveProcDistribution<Dim> element_distribution{
-  //     num_of_procs_to_use, initial_refinement_levels, procs_to_ignore};
-
-  // test_z_curve_index<Dim>(brick.create_domain(), brick.initial_extents(),
-  //                                Spectral::Quadrature::GaussLobatto,
-  //                                initial_refinement_level_xyz,
-  //                                num_of_procs_to_use, procs_to_ignore);
-
   const auto domain_creator1 = make_domain_creator<3>(
         "AlignedLattice:\n"
         "  BlockBounds: [[0.0, 1.0, 2.0], [0.0, 1.0], [0.0, 1.0]]\n" +
@@ -376,7 +338,7 @@ template <size_t Dim>
 void test_element_distribution(
   const DomainCreator<Dim>& domain_creator,
   const size_t number_of_procs_with_elements,
-  const std::unordered_set<size_t>& global_procs_to_ignore) {
+  const std::unordered_set<size_t>& global_procs_to_ignore = {}) {
   const auto domain = domain_creator.create_domain();
   const auto& blocks = domain.blocks();
   const auto initial_refinement_levels = domain_creator.initial_refinement_levels();
@@ -598,32 +560,19 @@ void test_element_distribution(
   // }
 }
 
-void test_proc_distribution() {
-  const size_t number_of_procs_with_elements = 10;
-  const std::unordered_set<size_t> global_procs_to_ignore{{1, 2}};
-
-  const auto lattice_1d = make_domain_creator<1>(
-        "AlignedLattice:\n"
-        "  BlockBounds: [[0.0, 1.0, 2.0, 3.0, 4.0]]\n" +
-            std::string{"  IsPeriodicIn: [false]\n"} +
-            "  BlocksToExclude: []\n"
-            "  InitialGridPoints: [5]\n"
-            "  InitialLevels: [2]\n"
-            "  RefinedGridPoints: []\n"
-            "  RefinedLevels:\n"
-            "  - LowerCornerIndex: [1]\n"
-            "    UpperCornerIndex: [2]\n"
-            "    Refinement: [3]\n"
-            "  - LowerCornerIndex: [3]\n"
-            "    UpperCornerIndex: [4]\n"
-            "    Refinement: [4]");
+template <size_t Dim>
+void test_proc_retrieval(
+    const DomainCreator<Dim>& domain_creator,
+  const size_t number_of_procs_with_elements,
+  const std::unordered_set<size_t>& global_procs_to_ignore = {}
+) {
   
-  const auto domain = lattice_1d->create_domain();
+  const auto domain = domain_creator.create_domain();
   const auto& blocks = domain.blocks();
-  const auto initial_refinement_levels = lattice_1d->initial_refinement_levels();
-  const auto initial_extents = lattice_1d->initial_extents();
+  const auto initial_refinement_levels = domain_creator.initial_refinement_levels();
+  const auto initial_extents = domain_creator.initial_extents();
 
-  const domain::WeightedBlockZCurveProcDistribution<1> element_distribution(
+  const domain::WeightedBlockZCurveProcDistribution<Dim> element_distribution(
     number_of_procs_with_elements,
     blocks,
     initial_refinement_levels,
@@ -632,125 +581,133 @@ void test_proc_distribution() {
     global_procs_to_ignore
   );
 
-  size_t num_elements = 0;
+  size_t expected_total_num_elements = 0;
   const size_t num_blocks = blocks.size();
 
-  std::vector<std::vector<ElementId<1>>> element_ids_in_z_curve_order(blocks.size());
-  std::vector<size_t> num_elements_by_block(num_blocks);
-  for (size_t i = 0; i < blocks.size(); i++) {
-    // const std::vector<ElementId<Dim>> element_ids_this_block =
-    //   domain::initial_element_ids_in_z_curve_order(
-    //       block_id, block_refinement_levels, grid_index);
+  std::vector<std::vector<ElementId<Dim>>> element_ids_in_z_curve_order(blocks.size());
+  std::vector<size_t> expected_num_elements_by_block(num_blocks);
+  for (size_t i = 0; i < num_blocks; i++) {
     element_ids_in_z_curve_order[i] = domain::initial_element_ids_in_z_curve_order(
           i, initial_refinement_levels[i], 0);
     // std::cout << "initial_refinement_levels for this block : " << initial_refinement_levels[i][0] << std::endl;
-    num_elements_by_block[i] = two_to_the(initial_refinement_levels[i][0]);
-    num_elements += num_elements_by_block[i];
+    expected_num_elements_by_block[i] = 1;
+    for (size_t j = 0; j < Dim; j++) {
+      expected_num_elements_by_block[i] *= two_to_the(initial_refinement_levels[i][j]);
+    }
+    expected_total_num_elements += expected_num_elements_by_block[i];
   }
 
   const auto proc_map = element_distribution.block_element_distribution();
 
   std::cout << "num_blocks : " << blocks.size() << std::endl;
-  std::cout << "num_elements : " << num_elements << std::endl;
+  std::cout << "expected_total_num_elements : " << expected_total_num_elements << std::endl;
 
   print_element_distribution(proc_map);
+
+  const size_t total_number_of_procs =
+      number_of_procs_with_elements + global_procs_to_ignore.size();
   
+  std::vector<bool> proc_hit(total_number_of_procs);
+  std::fill(proc_hit.begin(), proc_hit.end(), false);
+
+  size_t actual_total_num_elements = 0;
+  size_t highest_proc_assigned = 0;
   for (size_t i = 0; i < blocks.size(); i++) {
     size_t element_index = 0;
-    const size_t num_elements_this_block = num_elements_by_block[i];
+    const size_t expected_num_elements_this_block = expected_num_elements_by_block[i];
     const std::vector<std::pair<size_t, size_t>>& proc_map_this_block =
         proc_map[i];
     const size_t num_procs_this_block = proc_map_this_block.size();
+    size_t actual_num_elements_this_block = 0;
 
     for (size_t j = 0; j < num_procs_this_block; j++) {
       const size_t expected_proc = proc_map_this_block[j].first;
       const size_t proc_allowance = proc_map_this_block[j].second;
 
+      if (highest_proc_assigned < expected_proc) {
+        highest_proc_assigned = expected_proc;
+      }
+
       for (size_t k = 0; k < proc_allowance; k++) {
-        // std::cout << "block " << i << ", proc_index " << j << ", k " << k << ", element_index " << element_index << std::endl;
         CHECK(element_distribution.get_proc_for_element(
           element_ids_in_z_curve_order[i][element_index]) == expected_proc);
       }
+      proc_hit[expected_proc] = true;
       element_index += proc_allowance;
+      actual_num_elements_this_block += proc_allowance;
+    }
+    CHECK(actual_num_elements_this_block == expected_num_elements_this_block);
+    actual_total_num_elements += actual_num_elements_this_block;
+  }
+  CHECK(actual_total_num_elements == expected_total_num_elements);
+
+  for (size_t i = 0; i < highest_proc_assigned + 1; i++) {
+    if (global_procs_to_ignore.count(i) == 0) {
+      CHECK(proc_hit[i]);
+    } else {
+      CHECK(not proc_hit[i]);
     }
   }
 }
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.Domain.WeightedElementDistribution", "[Domain][Unit]") {
-  // test_cost_function();
-
-  // const auto lattice_1d = make_domain_creator<1>(
-  //       "AlignedLattice:\n"
-  //       "  BlockBounds: [[0.0, 1.0, 2.0]]\n" +
-  //           std::string{"  IsPeriodicIn: [false]\n"} +
-  //           "  InitialGridPoints: [6]\n"
-  //           "  InitialLevels: [4]\n"
-  //           "  RefinedLevels: []\n"
-  //           "  RefinedGridPoints: []\n"
-  //           "  BlocksToExclude: []\n");
+  test_cost_function();
   
-  // const auto lattice_2d = make_domain_creator<2>(
-  //       "AlignedLattice:\n"
-  //       "  BlockBounds: [[0.0, 0.3], [0.0, 0.8, 2.5, 4.9]]\n" +
-  //           std::string{"  IsPeriodicIn: [false, false]\n"} +
-  //           "  InitialGridPoints: [4, 5]\n"
-  //           "  InitialLevels: [2, 3]\n"
-  //           "  RefinedLevels: []\n"
-  //           "  RefinedGridPoints: []\n"
-  //           "  BlocksToExclude: []\n");
+  // Test inputs
 
-  // const auto binary_compact_object_creator =
+  // 1D, single block
+  const auto lattice_1d = make_domain_creator<1>(
+        "AlignedLattice:\n"
+        "  BlockBounds: [[0.0, 1.0]]\n" +
+            std::string{"  IsPeriodicIn: [false]\n"} +
+            "  InitialGridPoints: [6]\n"
+            "  InitialLevels: [4]\n"
+            "  RefinedLevels: []\n"
+            "  RefinedGridPoints: []\n"
+            "  BlocksToExclude: []\n");
+  
+  // 2D
+  const auto lattice_2d = make_domain_creator<2>(
+        "AlignedLattice:\n"
+        "  BlockBounds: [[0.0, 0.3], [0.0, 0.8, 2.5, 4.9]]\n" +
+            std::string{"  IsPeriodicIn: [false, false]\n"} +
+            "  InitialGridPoints: [4, 5]\n"
+            "  InitialLevels: [2, 3]\n"
+            "  RefinedLevels: []\n"
+            "  RefinedGridPoints: []\n"
+            "  BlocksToExclude: []\n");
 
-  //    TestHelpers::test_option_tag<domain::OptionTags::DomainCreator<3>,
-  //                                         Metavariables<3, true, false>>(
-  //         create_option_string(true, true, true, false, 0, 0, 0,
-  //                              false));
+  // 3D
+  const auto binary_compact_object_creator =
+     TestHelpers::test_option_tag<domain::OptionTags::DomainCreator<3>,
+                                          Metavariables<3, true, false>>(
+          create_option_string(true, true, true, false, 0, 0, 0,
+                               false));
 
-  //  const size_t number_of_procs_with_elements = 73;
-  // const std::unordered_set<size_t> global_procs_to_ignore{{5, 8, 9, number_of_procs_with_elements + 2}};
+  // Test element distribution for 1D, 2D, 3D with and without procs to ignore
+  test_element_distribution(*lattice_1d, 1);
+  test_element_distribution(*lattice_1d, 5);
+  test_element_distribution(*lattice_1d, 33, std::unordered_set<size_t>{7});
 
-  // test_element_distribution(*lattice_1d, number_of_procs_with_elements, global_procs_to_ignore);
-  // test_element_distribution(*lattice_2d, number_of_procs_with_elements, global_procs_to_ignore);
-  // test_element_distribution(*binary_compact_object_creator, number_of_procs_with_elements, global_procs_to_ignore);
+  test_element_distribution(*lattice_2d, 1);
+  test_element_distribution(*lattice_2d, 10);
+  test_element_distribution(*lattice_2d, 54, std::unordered_set<size_t>{0, 1});
 
-  // const size_t number_of_procs_with_elements_2 = 10;
-  // const std::unordered_set<size_t> global_procs_to_ignore_2{{1, 2}};
-  test_proc_distribution();
+  test_element_distribution(*binary_compact_object_creator, 1);
+  test_element_distribution(*binary_compact_object_creator, 12);
+  test_element_distribution(*binary_compact_object_creator, 73, std::unordered_set<size_t>{5, 8, 9, 75});
 
-  // test<3>(10, get_uniform_cost(6, 4, 1.0));
+  // Test proc retrieval for 1D, 2D, 3D with and without procs to ignore
+  test_proc_retrieval(*lattice_1d, 1);
+  test_proc_retrieval(*lattice_1d, 5);
+  test_proc_retrieval(*lattice_1d, 33, std::unordered_set<size_t>{7});
 
-  // const size_t Dim = 3;
+  test_proc_retrieval(*lattice_2d, 1);
+  test_proc_retrieval(*lattice_2d, 10);
+  test_proc_retrieval(*lattice_2d, 54, std::unordered_set<size_t>{0, 1});
 
-  // const double inner_radius = 10.0;
-  // const double outer_radius = 110.0;
-  // const size_t initial_refinement = 1;
-  // const std::array<size_t, 2> initial_number_of_grid_points{{5, 7}};
-  // const bool use_equiangular_map = false;
-
-  // domain::creators::Sphere sphere(
-  //     inner_radius, outer_radius, initial_refinement,
-  //     initial_number_of_grid_points, use_equiangular_map);
-
-// const std::array<double, 3> lower_xyz = {0.0, 0.0, 0.0};
-  // const std::array<double, 3> upper_xyz = {1.0, 10.0, 100.0};
-  // const std::array<size_t, 3> initial_refinement_level_xyz = {1, 2, 3};
-  // const std::array<size_t, 3> initial_number_of_grid_points_in_xyz = {2, 4, 6};
-  // const std::array<bool, 3> is_periodic_in_xyz = {{false, false, false}};  
-
-  // domain::creators::Brick brick(
-  //     lower_xyz, upper_xyz, initial_refinement_level_xyz,
-  //     initial_number_of_grid_points_in_xyz, is_periodic_in_xyz);
-
-  // const size_t num_of_procs_to_use = 3;
-  // const std::unordered_set<size_t> procs_to_ignore{};
-  // // std::vector<std::array<size_t, Dim>> initial_refinement_levels
-
-  // // const domain::BlockZCurveProcDistribution<Dim> element_distribution{
-  // //     num_of_procs_to_use, initial_refinement_levels, procs_to_ignore};
-
-  // test_z_curve_index<Dim>(brick.create_domain(), brick.initial_extents(),
-  //                                Spectral::Quadrature::GaussLobatto,
-  //                                initial_refinement_level_xyz,
-  //                                num_of_procs_to_use, procs_to_ignore);
+  test_proc_retrieval(*binary_compact_object_creator, 1);
+  test_proc_retrieval(*binary_compact_object_creator, 12);
+  test_proc_retrieval(*binary_compact_object_creator, 73, std::unordered_set<size_t>{5, 8, 9, 75});
 }

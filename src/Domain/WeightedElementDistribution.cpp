@@ -29,6 +29,7 @@
 #include "NumericalAlgorithms/Spectral/Mesh.hpp"
 #include "NumericalAlgorithms/Spectral/Spectral.hpp"
 #include "Utilities/Algorithm.hpp"
+#include "Utilities/ErrorHandling/Assert.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/Gsl.hpp"
 
@@ -41,6 +42,15 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
     const std::vector<std::array<size_t, Dim>>& initial_extents,
     const Spectral::Quadrature quadrature,
     const std::unordered_set<size_t>& global_procs_to_ignore) {
+  const size_t num_blocks = blocks.size();
+
+  ASSERT(num_blocks > 0,
+         "Must have a non-zero number of blocks.");
+  ASSERT(initial_refinement_levels.size() == num_blocks,
+         "`initial_refinement_levels` is not the same size as number of blocks");
+  ASSERT(initial_extents.size() == num_blocks,
+         "`initial_extents` is not the same size as number of blocks");
+
   const std::vector<std::vector<double>> cost_by_element_by_block =
       get_cost_by_element_by_block(blocks, initial_refinement_levels,
                                    initial_extents, quadrature);
@@ -94,7 +104,7 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
     double cost_spent_on_proc = 0.0;
     size_t total_elements_distributed_to_proc = 0;
     bool add_more_elements_to_proc = true;
-    const size_t num_blocks = cost_by_element_by_block.size();
+    // const size_t num_blocks = cost_by_element_by_block.size();
     // while we still have cost allowed on the proc
     while (add_more_elements_to_proc and (current_block < num_blocks)) {
       const size_t num_elements_current_block =
