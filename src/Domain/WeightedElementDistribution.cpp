@@ -3,11 +3,13 @@
 
 #include "Domain/WeightedElementDistribution.hpp"
 
-#include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
+#include <functional>
 #include <limits>
 #include <memory>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -30,6 +32,7 @@
 #include "NumericalAlgorithms/Spectral/Spectral.hpp"
 #include "Utilities/Algorithm.hpp"
 #include "Utilities/ErrorHandling/Assert.hpp"
+#include "Utilities/ErrorHandling/Error.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/Gsl.hpp"
 
@@ -44,10 +47,10 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
     const std::unordered_set<size_t>& global_procs_to_ignore) {
   const size_t num_blocks = blocks.size();
 
-  ASSERT(num_blocks > 0,
-         "Must have a non-zero number of blocks.");
-  ASSERT(initial_refinement_levels.size() == num_blocks,
-         "`initial_refinement_levels` is not the same size as number of blocks");
+  ASSERT(num_blocks > 0, "Must have a non-zero number of blocks.");
+  ASSERT(
+      initial_refinement_levels.size() == num_blocks,
+      "`initial_refinement_levels` is not the same size as number of blocks");
   ASSERT(initial_extents.size() == num_blocks,
          "`initial_extents` is not the same size as number of blocks");
 
@@ -56,7 +59,7 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
                                    initial_extents, quadrature);
 
   block_element_distribution_ =
-      std::vector<std::vector<std::pair<size_t, size_t> > >(
+      std::vector<std::vector<std::pair<size_t, size_t>>>(
           cost_by_element_by_block.size());
 
   double total_cost = 0.0;

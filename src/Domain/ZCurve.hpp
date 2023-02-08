@@ -5,12 +5,12 @@
 
 #include <array>
 #include <cstddef>
+#include <vector>
 
 template <size_t Dim>
 class ElementId;
 
 namespace domain {
-
 // This interleaves the bits of the element index.
 // A sketch of a 2D block with 4x2 elements, with bit indices and resulting
 // z-curve
@@ -32,5 +32,4 @@ template <size_t Dim>
 std::vector<ElementId<Dim>> initial_element_ids_in_z_curve_order(
     size_t block_id, std::array<size_t, Dim> initial_ref_levs,
     size_t grid_index = 0);
-
 }  // namespace domain
