@@ -25,45 +25,31 @@ namespace domain {
 /*!
  * \brief Distribution strategy for assigning elements to CPUs using a
  * Morton ('Z-order') space-filling curve to determine placement within each
- * block.
+ * block, where elements are assigned weighted costs that are distributed
+ * across CPUs
  *
- * \details The element distribution assigns a balanced number of elements to
- * each processor that is allowed to have elements (default all). Specify which
- * processors aren't allowed to have elements by passing in an unordered set of
- * `size_t`s corresponding to the processor number. This distribution is
- * computed by first greedily assigning to each available processor an allowance
- * of [total number of elements]/[number of processors available] elements from
- * one or more blocks, starting with the lowest number block that still has
- * elements to contribute to an allowance. Then, once those allowances are
- * determined, a separate Z-order curve is established for each block and the
- * elements are assigned to processors within each block by greedily filling
- * each available processors' allowance by contiguous intervals along the
- * Z-order curve. Some examples:
- * - If there are 8 blocks, 16 elements per block, 16 cores, and all cores are
- * allowed to have elements: each core gets an allowance of 128 / 16 = 8
- * elements, so each core gets half of a block, and the 8 elements for each core
- * within the block are chosen via Z-order curve for the respective blocks.
- * - If there are 3 blocks, 4 elements per block, 4 cores, and all cores are
- * allowed to have elements: each core gets an allowance of 12 / 4 = 3 elements.
- * Core 0 gets three elements from the first block, core 1 gets one element from
- * the first block and two elements from the second block, core 2 gets two
- * elements from the second block and one from the third, and core 3 gets the
- * remaining three elements from the third block. Each collection of elements
- * within the blocks are then assigned using intervals along the Z-order curve
- * for each block.
- * - Same as the previous example, 3 blocks, 4 elements per block, and 4 cores,
- * except now we require that physical cores 1 and 3 don't have any elements on
- * them. The new distribution would look like:
- *   - Elements on old core 0 -> new core 0
- *   - No elements on new core 1
- *   - Elements on old core 1 -> new core 2
- *   - No elements on new core 3
- *   - Elements on old core 2 -> new core 4
- *   - Elements on old core 3 -> new core 5
- *
- * \note In the third example, even though only 4 cores are used to place
- * elements, the simulation is required to be run on at least 6 cores (4 cores
- * for elements + 2 cores without elements)
+ * \details The element distribution attempts to assign a balanced total
+ * computational cost to each processor that is allowed to have elements. The
+ * cost assigned to a processor is defined as the sum of the costs of the
+ * `Element`s assigned to a processor, and the cost of an `Element` is defined
+ * as `(number of grid points) / sqrt(minimum grid spacing in Frame::Grid)`.
+ * First, each `Block`'s `Element`s are ordered by their Z-curve index (see more
+ * below). `Element`s are traversed in this order and assigned to CPUs, moving
+ * onto the next CPU once the target cost allowance per CPU is met. The target
+ * cost per CPU is defined as the remaining cost to distribute divided by the
+ * remaining number of CPUs to distribute to. This is an important distinction
+ * from simply having one constant target cost per CPU defined as the total cost
+ * divided by the total number of CPUs with elements. Since elemental costs will
+ * nearly never add up to be exactly the average cost per CPU, this means that
+ * we would either have to decide to overshoot or undershoot the average as we
+ * iterate over the CPUs and assign `Element`s. If we overshoot the average on
+ * each processor, the final processor could have a much lower cost than the
+ * rest of the processors, and we run the risk of overshooting so much that one
+ * or more of the requested processors don't get assigned any `Element`s at all.
+ * If we undershoot the average on each processor, the final processor could
+ * have a much higher cost than the others due to remainder cost piling up.
+ * This algorithm avoids these risks by instead adjusting the target cost per
+ * CPU as we finish assigning cost to previous CPUs.
  *
  * Morton curves are a simple and easily-computed space-filling curve that
  * (unlike Hilbert curves) permit diagonal traversal. See, for instance,
@@ -111,6 +97,8 @@ namespace domain {
  * internal structure from h-refinement. Morton curves can be defined
  * recursively, so a generalization of the present method is possible for blocks
  * with internal refinement
+ *
+ * \tparam Dim the number of spatial dimensions of the `Block`s
  */
 template <size_t Dim>
 struct WeightedBlockZCurveProcDistribution {
@@ -126,6 +114,10 @@ struct WeightedBlockZCurveProcDistribution {
       const Spectral::Quadrature quadrature,
       const std::unordered_set<size_t>& global_procs_to_ignore = {});
 
+  /// Get the cost of each `Element` of each `Block` where the elemental costs
+  /// are ordered Z-curve index (see
+  /// domain::segment_indices_from_z_curve_index) and computed as
+  /// `(number of grid points) / sqrt(minimum grid spacing in Frame::Grid)`
   static std::vector<std::vector<double>> get_cost_by_element_by_block(
       const std::vector<Block<Dim>>& blocks,
       const std::vector<std::array<size_t, Dim>>& initial_refinement_levels,
