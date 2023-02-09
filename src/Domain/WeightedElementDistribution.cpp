@@ -35,6 +35,8 @@
 #include "Utilities/ErrorHandling/Error.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/Gsl.hpp"
+#include "Utilities/Literals.hpp"
+#include "Utilities/Numeric.hpp"
 
 namespace domain {
 template <size_t Dim>
