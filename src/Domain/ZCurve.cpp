@@ -93,7 +93,7 @@ std::array<size_t, Dim> segment_indices_from_z_curve_index(
     dimension_by_highest_refinement_level.at(i) =
         std::make_pair(gsl::at(block_refinements, i), i);
   }
-  // in order of ascending refinement
+  // dimensions in order of ascending refinement
   alg::sort(dimension_by_highest_refinement_level,
             [](const std::pair<size_t, size_t>& lhs,
                const std::pair<size_t, size_t>& rhs) {
@@ -109,27 +109,29 @@ std::array<size_t, Dim> segment_indices_from_z_curve_index(
   }
 
   // index of lowest-refined dimension to loop over for extracting ElementId
-  // bits (any dim below this index has already had all bits processed)
+  // bits (any dim below this index has already had all bits extracted)
   size_t starting_dim_index = 0;
-  // current bit position of result segment indices
+  // current bit position of result segment indices, i.e. how many bits of the
+  // segment indices that we've already extracted
   size_t bit_index = 0;
   // Z-curve index value for extracting the corresponding ElementId
   size_t element_order_index = z_curve_index;
 
   // Extract all but the highest bits of the highest refined dimension that are
   // not shared by the dimension with the next-highest refinement. For example,
-  // if we have refinement 2 in x, 3 in y, and 5 in z, this will process all
+  // if we have refinement 2 in x, 3 in y, and 5 in z, this will extract all
   // bits of x and y, but only the first 3 bits of z since the next-highest
-  // refinement (y) is 3. i.e. process only the [z2 y2 z1 y1 x1 z0 y0 x0] bits
+  // refinement (y) is 3. i.e. extract only the z2 y2 z1 y1 x1 z0 y0 x0 bits
   // of the whole Z-curve index, z4 z3 z2 y2 z1 y1 x1 z0 y0 x0.
   while (starting_dim_index < Dim - 1) {
-    // refinement level of lowest dim we're looping over
+    // refinement level of lowest dim we're still extracting bits for
     const size_t refinement_level =
         gsl::at(dimension_by_highest_refinement_level, starting_dim_index)
             .first;
-    // number of bits to extract for each dimension we're looping over
-    const size_t num_refinement_bits = refinement_level - bit_index;
-    for (size_t i = 0; i < num_refinement_bits; i++) {
+    // number of bits to extract for each dimension we're still extracting bits
+    // for, where bit_index represents how many bits we've already extracted
+    const size_t num_bits_to_extract = refinement_level - bit_index;
+    for (size_t i = 0; i < num_bits_to_extract; i++) {
       for (size_t dim_index = starting_dim_index; dim_index < Dim;
            dim_index++) {
         // extract lowest bit of current Z-curve index value, shift the bit up
@@ -144,7 +146,7 @@ std::array<size_t, Dim> segment_indices_from_z_curve_index(
 
     starting_dim_index++;
     // move the starting dim index to the dim with the next-highest refinement
-    // since we've processed all bits up to this refinement level for all dims
+    // since we've extracted all bits up to this refinement level for all dims
     while (starting_dim_index < Dim and
            refinement_level == gsl::at(dimension_by_highest_refinement_level,
                                        starting_dim_index)
