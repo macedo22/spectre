@@ -16,14 +16,16 @@
 #include "Utilities/MakeArray.hpp"
 
 namespace {
-void test_z_curve_1d() {
+// Test the Z-curve index computed for ElementIds in 1D. Tests
+// domain::z_curve_index_from_element_id.
+void test_z_curve_index_from_element_id_1d() {
   // The Z-curve does not depend on the block ID or grid index, so the choice of
   // these two values for this test is arbitrary
   const size_t block_id = 0;
   const size_t grid_index = 0;
 
   // Create SegmentIds from refinement 0 to 2
-  // l0x0 refers to refinement 0, at index 0
+  // l0i0 refers to refinement 0, at index 0
   SegmentId l0i0(0, 0);
 
   SegmentId l1i0(1, 0);
@@ -35,7 +37,6 @@ void test_z_curve_1d() {
   SegmentId l2i3(2, 3);
 
   // Create ElementIds with 1D SegmentIds from refinement 0 to 2
-  // 1D ElementId with refinement 0, at index 0
   const ElementId<1> e_l0x0(block_id, make_array<1>(l0i0), grid_index);
 
   const ElementId<1> e_l1x0(block_id, make_array<1>(l1i0), grid_index);
@@ -58,14 +59,16 @@ void test_z_curve_1d() {
   CHECK(domain::z_curve_index_from_element_id(e_l2x3) == 3);
 }
 
-void test_z_curve_2d() {
+// Test the Z-curve index computed for ElementIds in 2D. Tests
+// domain::z_curve_index_from_element_id.
+void test_z_curve_index_from_element_id_2d() {
   // The Z-curve does not depend on the block ID or grid index, so the choice of
   // these two values for this test is arbitrary
   const size_t block_id = 0;
   const size_t grid_index = 0;
 
   // Create SegmentIds from refinement 0 to 2
-  // l0x0 refers to refinement 0, at index 0
+  // l0i0 refers to refinement 0, at index 0
   SegmentId l0i0(0, 0);
 
   SegmentId l1i0(1, 0);
@@ -76,8 +79,8 @@ void test_z_curve_2d() {
   SegmentId l2i2(2, 2);
   SegmentId l2i3(2, 3);
 
-  // Create ElementIds with 1D SegmentIds from refinement 0 to 2
-  // 1D ElementId with refinement 0, at index 0
+  // Create ElementIds with 2D SegmentIds from refinement 0 to 2 and check that
+  // ElementIds are mapped to their correct Z-curve index
   const ElementId<2> e_l0x0_l0y0(block_id, make_array(l0i0, l0i0), grid_index);
   CHECK(domain::z_curve_index_from_element_id(e_l0x0_l0y0) == 0);
 
@@ -186,18 +189,23 @@ void test_z_curve_2d() {
   CHECK(domain::z_curve_index_from_element_id(e_l2x3_l2y3) == 15);
 }
 
-void test_z_curve_3d() {
+// Test the Z-curve index computed for ElementIds in 3D. Tests
+// domain::z_curve_index_from_element_id.
+void test_z_curve_index_from_element_id_3d() {
   // The Z-curve does not depend on the block ID or grid index, so the choice of
   // these two values for this test is arbitrary
   const size_t block_id = 0;
   const size_t grid_index = 0;
 
   // Create SegmentIds for 3D test case. Since the 1D and 2D test cases are
-  // exhaustive and exhaustively testing 3D in the same way is a lot, we
-  // instead test one interesting 3D case
-  // TODO: make a note that having a test case with a gap of 2 levels of
-  // refinement is significant because it has 2 extra bits, not just 1,
-  // which is a meaningful test case
+  // exhaustive and exhaustively testing 3D in the same way is a lot to hard
+  // code, we instead test one interesting 3D case. Having the highest
+  // refinement (z ref = 4) at least 2 levels higher than the next highest
+  // refinement (x ref = 2) is an important test case where the highest bits
+  // of the Z-curve index come from one dimension, not an interleaving of more
+  // than one dimension's segment index bits. More concretely, the bits for the
+  // Z-curve index will be z3 z2 z1 x1 z0 x0, where the z3 z2 bits are not
+  // interleaved with another dimension's segment index.
   const size_t x_refinement = 2;
   const size_t y_refinement = 0;
   const size_t z_refinement = 4;
@@ -217,9 +225,18 @@ void test_z_curve_3d() {
   SegmentId z5(z_refinement, 5);
   SegmentId z6(z_refinement, 6);
   SegmentId z7(z_refinement, 7);
+  SegmentId z8(z_refinement, 8);
+  SegmentId z9(z_refinement, 9);
+  SegmentId z10(z_refinement, 10);
+  SegmentId z11(z_refinement, 11);
+  SegmentId z12(z_refinement, 12);
+  SegmentId z13(z_refinement, 13);
+  SegmentId z14(z_refinement, 14);
+  SegmentId z15(z_refinement, 15);
 
-  // Create ElementIds and check their Z-curve index
-  // e_000 denotes indices x=0, y=0, z=0
+  // Create ElementIds with 3D SegmentIds from refinement 0 to 2 and check that
+  // ElementIds are mapped to their correct Z-curve index
+  // e_000 denotes segment indices x=0, y=0, z=0
   const ElementId<3> e_000(block_id, make_array(x0, y0, z0), grid_index);
   CHECK(domain::z_curve_index_from_element_id(e_000) == 0);
   const ElementId<3> e_100(block_id, make_array(x1, y0, z0), grid_index);
@@ -291,10 +308,86 @@ void test_z_curve_3d() {
   CHECK(domain::z_curve_index_from_element_id(e_207) == 30);
   const ElementId<3> e_307(block_id, make_array(x3, y0, z7), grid_index);
   CHECK(domain::z_curve_index_from_element_id(e_307) == 31);
+
+  const ElementId<3> e_008(block_id, make_array(x0, y0, z8), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_008) == 32);
+  const ElementId<3> e_108(block_id, make_array(x1, y0, z8), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_108) == 33);
+  const ElementId<3> e_208(block_id, make_array(x2, y0, z8), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_208) == 36);
+  const ElementId<3> e_308(block_id, make_array(x3, y0, z8), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_308) == 37);
+
+  const ElementId<3> e_009(block_id, make_array(x0, y0, z9), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_009) == 34);
+  const ElementId<3> e_109(block_id, make_array(x1, y0, z9), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_109) == 35);
+  const ElementId<3> e_209(block_id, make_array(x2, y0, z9), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_209) == 38);
+  const ElementId<3> e_309(block_id, make_array(x3, y0, z9), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_309) == 39);
+
+  const ElementId<3> e_0010(block_id, make_array(x0, y0, z10), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_0010) == 40);
+  const ElementId<3> e_1010(block_id, make_array(x1, y0, z10), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_1010) == 41);
+  const ElementId<3> e_2010(block_id, make_array(x2, y0, z10), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_2010) == 44);
+  const ElementId<3> e_3010(block_id, make_array(x3, y0, z10), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_3010) == 45);
+
+  const ElementId<3> e_0011(block_id, make_array(x0, y0, z11), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_0011) == 42);
+  const ElementId<3> e_1011(block_id, make_array(x1, y0, z11), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_1011) == 43);
+  const ElementId<3> e_2011(block_id, make_array(x2, y0, z11), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_2011) == 46);
+  const ElementId<3> e_3011(block_id, make_array(x3, y0, z11), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_3011) == 47);
+
+  const ElementId<3> e_0012(block_id, make_array(x0, y0, z12), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_0012) == 48);
+  const ElementId<3> e_1012(block_id, make_array(x1, y0, z12), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_1012) == 49);
+  const ElementId<3> e_2012(block_id, make_array(x2, y0, z12), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_2012) == 52);
+  const ElementId<3> e_3012(block_id, make_array(x3, y0, z12), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_3012) == 53);
+
+  const ElementId<3> e_0013(block_id, make_array(x0, y0, z13), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_0013) == 50);
+  const ElementId<3> e_1013(block_id, make_array(x1, y0, z13), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_1013) == 51);
+  const ElementId<3> e_2013(block_id, make_array(x2, y0, z13), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_2013) == 54);
+  const ElementId<3> e_3013(block_id, make_array(x3, y0, z13), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_3013) == 55);
+
+  const ElementId<3> e_0014(block_id, make_array(x0, y0, z14), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_0014) == 56);
+  const ElementId<3> e_1014(block_id, make_array(x1, y0, z14), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_1014) == 57);
+  const ElementId<3> e_2014(block_id, make_array(x2, y0, z14), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_2014) == 60);
+  const ElementId<3> e_3014(block_id, make_array(x3, y0, z14), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_3014) == 61);
+
+  const ElementId<3> e_0015(block_id, make_array(x0, y0, z15), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_0015) == 58);
+  const ElementId<3> e_1015(block_id, make_array(x1, y0, z15), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_1015) == 59);
+  const ElementId<3> e_2015(block_id, make_array(x2, y0, z15), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_2015) == 62);
+  const ElementId<3> e_3015(block_id, make_array(x3, y0, z15), grid_index);
+  CHECK(domain::z_curve_index_from_element_id(e_3015) == 63);
 }
 
+// Test the segment indices computed from a Z-curve index. Tests
+// domain::segment_indices_from_z_curve_index and
+// domain::initial_element_ids_in_z_curve_order.
 template <size_t Dim>
-void test_z_curve(const std::array<size_t, Dim>& block_refinement_levels) {
+void test_z_curve_index_mapping(
+    const std::array<size_t, Dim>& block_refinement_levels) {
   // The Z-curve does not depend on the block ID or grid index, so the choice of
   // these two values for this test is arbitrary
   const size_t block_id = 1;
@@ -313,7 +406,7 @@ void test_z_curve(const std::array<size_t, Dim>& block_refinement_levels) {
   // Segment indices from the computed Z-curve index matches the Segment indices
   // of the original ElementId (i.e. transforming to and back from Z-curve index
   // recovers the original Segment indices of an ElementId). This checks that
-  // domain::z_curve_index_from_element_i` and
+  // domain::z_curve_index_from_element_i and
   // domain::segment_indices_from_z_curve_index are consistent with each other
   // in that they are inverses.
   for (const auto& element_id : element_ids_in_default_order) {
@@ -368,9 +461,10 @@ void test_z_curve(const std::array<size_t, Dim>& block_refinement_levels) {
   }
 }
 
-// Test Z-curve for each refinement level permutation for dimensions 1, 2, and 3
-void test_z_curve_for_refinement_levels(const size_t min_refinement_level,
-                                        const size_t max_refinement_level) {
+// Test the segment indices computed from a Z-curve index for each refinement
+// level permutation for dimensions 1, 2, and 3
+void test_z_curve_index_mapping_for_refinement_levels(
+    const size_t min_refinement_level, const size_t max_refinement_level) {
   std::array<size_t, 1> block_refinement_levels_1d{};
   std::array<size_t, 2> block_refinement_levels_2d{};
   std::array<size_t, 3> block_refinement_levels_3d{};
@@ -380,18 +474,18 @@ void test_z_curve_for_refinement_levels(const size_t min_refinement_level,
     gsl::at(block_refinement_levels_2d, 0) = i;
     gsl::at(block_refinement_levels_3d, 0) = i;
 
-    test_z_curve(block_refinement_levels_1d);
+    test_z_curve_index_mapping(block_refinement_levels_1d);
 
     for (size_t j = min_refinement_level; j < max_refinement_level + 1; j++) {
       gsl::at(block_refinement_levels_2d, 1) = j;
       gsl::at(block_refinement_levels_3d, 1) = j;
 
-      test_z_curve(block_refinement_levels_2d);
+      test_z_curve_index_mapping(block_refinement_levels_2d);
 
       for (size_t k = min_refinement_level; k < max_refinement_level + 1; k++) {
         gsl::at(block_refinement_levels_3d, 2) = k;
 
-        test_z_curve(block_refinement_levels_3d);
+        test_z_curve_index_mapping(block_refinement_levels_3d);
       }
     }
   }
@@ -399,23 +493,13 @@ void test_z_curve_for_refinement_levels(const size_t min_refinement_level,
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.Domain.ZCurve", "[Domain][Unit]") {
-  // // The Z-curve does not depend on the block ID or grid index, so the choice
-  // of
-  // // these two values for this test is arbitrary
-  // const block_id = 0;
-  // const grid_index = 0;
-
-  // SegmentId x_(initial_ref_levs[0], x_i)
-
-  // const ElementId<1> (block_id, )
-
-  test_z_curve_1d();
-  test_z_curve_2d();
-  test_z_curve_3d();
+  test_z_curve_index_from_element_id_1d();
+  test_z_curve_index_from_element_id_2d();
+  test_z_curve_index_from_element_id_3d();
 
   const size_t min_refinement_level = 0;
   const size_t max_refinement_level = 3;
 
-  test_z_curve_for_refinement_levels(min_refinement_level,
-                                     max_refinement_level);
+  test_z_curve_index_mapping_for_refinement_levels(min_refinement_level,
+                                                   max_refinement_level);
 }
