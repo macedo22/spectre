@@ -6,39 +6,16 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
-#include <iostream>
-#include <set>
-#include <unordered_set>
 #include <vector>
 
-#include "Domain/Block.hpp"
-#include "Domain/CreateInitialElement.hpp"
-#include "Domain/Creators/Brick.hpp"
-#include "Domain/Creators/Sphere.hpp"
-#include "Domain/Domain.hpp"
-#include "Domain/ElementDistribution.hpp"
-#include "Domain/Structure/CreateInitialMesh.hpp"
 #include "Domain/Structure/ElementId.hpp"
 #include "Domain/Structure/InitialElementIds.hpp"
 #include "Domain/Structure/SegmentId.hpp"
-#include "Domain/Tags.hpp"
-#include "Domain/TagsTimeDependent.hpp"
-#include "Domain/WeightedElementDistribution.hpp"
 #include "Domain/ZCurve.hpp"
-#include "NumericalAlgorithms/Spectral/LogicalCoordinates.hpp"
-#include "NumericalAlgorithms/Spectral/Mesh.hpp"
-#include "Utilities/ConstantExpressions.hpp"
-#include "Utilities/Literals.hpp"
+#include "Utilities/Gsl.hpp"
 #include "Utilities/MakeArray.hpp"
 
 namespace {
-// template <size_t Dim>
-// void test_z_curve_index_from_element_id(const ElementId<Dim>& element_id,
-// const size_t expected_z_curve_index) {
-//   CHECK(domain::z_curve_index_from_element_id(element_id) ==
-//   expected_z_curve_index);
-// }
-
 void test_z_curve_1d() {
   // The Z-curve does not depend on the block ID or grid index, so the choice of
   // these two values for this test is arbitrary
@@ -348,7 +325,7 @@ void test_z_curve(const std::array<size_t, Dim>& block_refinement_levels) {
 
     std::array<size_t, Dim> expected_segment_indices;
     for (size_t i = 0; i < Dim; ++i) {
-      expected_segment_indices[i] = element_id.segment_id(i).index();
+      gsl::at(expected_segment_indices, i) = element_id.segment_id(i).index();
     }
 
     CHECK(result_segment_indices == expected_segment_indices);
@@ -399,20 +376,20 @@ void test_z_curve_for_refinement_levels(const size_t min_refinement_level,
   std::array<size_t, 3> block_refinement_levels_3d{};
 
   for (size_t i = min_refinement_level; i < max_refinement_level + 1; i++) {
-    block_refinement_levels_1d[0] = i;
-    block_refinement_levels_2d[0] = i;
-    block_refinement_levels_3d[0] = i;
+    gsl::at(block_refinement_levels_1d, 0) = i;
+    gsl::at(block_refinement_levels_2d, 0) = i;
+    gsl::at(block_refinement_levels_3d, 0) = i;
 
     test_z_curve(block_refinement_levels_1d);
 
     for (size_t j = min_refinement_level; j < max_refinement_level + 1; j++) {
-      block_refinement_levels_2d[1] = j;
-      block_refinement_levels_3d[1] = j;
+      gsl::at(block_refinement_levels_2d, 1) = j;
+      gsl::at(block_refinement_levels_3d, 1) = j;
 
       test_z_curve(block_refinement_levels_2d);
 
       for (size_t k = min_refinement_level; k < max_refinement_level + 1; k++) {
-        block_refinement_levels_3d[2] = k;
+        gsl::at(block_refinement_levels_3d, 2) = k;
 
         test_z_curve(block_refinement_levels_3d);
       }
