@@ -4,6 +4,7 @@
 #include "Framework/TestingFramework.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <string>
@@ -24,9 +25,11 @@
 #include "Framework/TestCreation.hpp"
 #include "Helpers/Domain/BoundaryConditions/BoundaryCondition.hpp"
 #include "Utilities/ConstantExpressions.hpp"
+#include "Utilities/Gsl.hpp"
 #include "Utilities/TMPL.hpp"
 
 namespace {
+// Make a `domain::creators::AlignedLattice` from an option string
 template <size_t Dim>
 auto make_domain_creator(const std::string& opt_string) {
   return TestHelpers::test_option_tag<
@@ -36,6 +39,7 @@ auto make_domain_creator(const std::string& opt_string) {
               Dim, domain::creators::AlignedLattice<Dim>>>(opt_string);
 }
 
+// Metavariables for a `domain::creators::BinaryCompactObject`
 template <size_t Dim, bool EnableTimeDependentMaps, bool WithBoundaryConditions>
 struct Metavariables {
   struct domain : tt::ConformsTo<::domain::protocols::Metavariables> {
@@ -53,8 +57,10 @@ struct Metavariables {
   };
 };
 
+// Stringify a bool
 std::string stringize(const bool t) { return t ? "true" : "false"; }
 
+// Create an option string for a `domain::creators::BinaryCompactObject`
 std::string create_option_string(const bool excise_A, const bool excise_B,
                                  const bool add_time_dependence,
                                  const bool use_logarithmic_map_AB,
@@ -146,6 +152,8 @@ std::string create_option_string(const bool excise_A, const bool excise_B,
          time_dependence;
 }
 
+// Test the computation of the weighting done by
+// `domain::WeightedBlockZCurveProcDistribution::get_cost_by_element_by_block`
 void test_cost_function() {
   const auto domain_creator1 = make_domain_creator<3>(
       "AlignedLattice:\n"
@@ -162,6 +170,8 @@ void test_cost_function() {
   const auto domain1 = aligned_blocks_creator1->create_domain();
   const auto& blocks1 = domain1.blocks();
 
+  // Block size and grid points are the same as blocks in `domain1`, but
+  // refinement levels are different
   const auto domain_creator2 = make_domain_creator<3>(
       "AlignedLattice:\n"
       "  BlockBounds: [[0.0, 1.0], [0.0, 1.0], [0.0, 1.0]]\n" +
@@ -177,6 +187,8 @@ void test_cost_function() {
   const auto domain2 = aligned_blocks_creator2->create_domain();
   const auto& blocks2 = domain2.blocks();
 
+  // Block size and refinement levels are the same as blocks in `domain1`, but
+  // grid points are different
   const auto domain_creator3 = make_domain_creator<3>(
       "AlignedLattice:\n"
       "  BlockBounds: [[0.0, 1.0], [0.0, 1.0], [0.0, 1.0]]\n" +
@@ -210,30 +222,49 @@ void test_cost_function() {
           aligned_blocks_creator3->initial_extents(),
           Spectral::Quadrature::GaussLobatto);
 
-  Approx custom_approx = Approx::custom().epsilon(1.0e-14).scale(1.0);
+  Approx custom_approx_e16 = Approx::custom().epsilon(1.0e-15).scale(1.0);
 
   const double elemental_cost1 = costs1[0][0];
   for (size_t i = 0; i < costs1[0].size(); i++) {
-    CHECK(elemental_cost1 == custom_approx(costs1[0][i]));
-    CHECK(elemental_cost1 == custom_approx(costs1[1][i]));
+    // check that all elements in a block have the same cost
+    CHECK(elemental_cost1 == custom_approx_e16(costs1[0][i]));
+    CHECK(elemental_cost1 == custom_approx_e16(costs1[1][i]));
   }
+  // check that the elements in both blocks have the same cost
   CHECK_ITERABLE_APPROX(costs1[0], costs1[1]);
 
   const double elemental_cost2 = costs2[0][0];
   for (size_t i = 1; i < costs2[0].size(); i++) {
-    CHECK(elemental_cost2 == custom_approx(costs2[0][i]));
+    // check that all elements in the block have the same cost
+    CHECK(elemental_cost2 == costs2[0][i]);
   }
 
-  CHECK(elemental_cost2 == custom_approx(sqrt(2.0) * elemental_cost1));
+  Approx custom_approx_e15 = Approx::custom().epsilon(1.0e-15).scale(1.0);
+  // The highest refinement for the first test domain is 2 while the highest
+  // refinement for the second test domain is 3, grid points held constant.
+  // Since the minimum grid spacing of the second domain is half the minimum
+  // grid spacing of the first and since
+  // elemental cost = (# of grid points) / sqrt(min grid spacing), the
+  // elemental cost of the second domain should be a factor of sqrt(2) the cost.
+  CHECK(elemental_cost2 == custom_approx_e15(sqrt(2.0) * elemental_cost1));
 
   const double elemental_cost3 = costs3[0][0];
   for (size_t i = 1; i < costs3[0].size(); i++) {
-    CHECK(elemental_cost3 == custom_approx(costs3[0][i]));
+    // check that all elements in the block have the same cost
+    CHECK(elemental_cost3 == custom_approx_e16(costs3[0][i]));
   }
 
-  CHECK(elemental_cost3 == custom_approx(elemental_cost1 * 3.0 / 8.0));
+  // The minimum grid spacing for the first and third domain are equal, but the
+  // number of grid points in an element in the first is 64 while the number of
+  // grid points in an element in the third is 24. Since
+  // elemental cost = (# of grid points) / sqrt(min grid spacing), the
+  // elemental cost of the second domain should be a factor of 24/64 = 3/8 the
+  // cost.
+  CHECK(elemental_cost3 == elemental_cost1 * 3.0 / 8.0);
 }
 
+// Test the processor distribution logic of the
+// `domain::WeightedBlockZCurveProcDistribution` constructor
 template <size_t Dim>
 void test_element_distribution(
     const DomainCreator<Dim>& domain_creator,
@@ -245,27 +276,53 @@ void test_element_distribution(
       domain_creator.initial_refinement_levels();
   const auto initial_extents = domain_creator.initial_extents();
 
-  // TODO : run this test for different proc # and procs to skip?;
-  // const size_t number_of_procs_with_elements = 73;
-  // const std::unordered_set<size_t> global_procs_to_ignore{{5, 8, 9,
-  // number_of_procs_with_elements + 2}};
+  const size_t num_blocks = blocks.size();
+  size_t num_elements = 0;
+  std::vector<size_t> num_elements_by_block(num_blocks);
+  std::fill(num_elements_by_block.begin(), num_elements_by_block.end(), 0);
+  for (size_t i = 0; i < num_blocks; i++) {
+    size_t num_elements_this_block =
+        two_to_the(gsl::at(initial_refinement_levels[i], 0));
+    for (size_t j = 1; j < Dim; j++) {
+      num_elements_this_block *=
+          two_to_the(gsl::at(initial_refinement_levels[i], j));
+    }
+    num_elements_by_block[i] = num_elements_this_block;
+    num_elements += num_elements_this_block;
+  }
+
   const domain::WeightedBlockZCurveProcDistribution<Dim> element_distribution(
       number_of_procs_with_elements, blocks, initial_refinement_levels,
       initial_extents, Spectral::Quadrature::GaussLobatto,
       global_procs_to_ignore);
-
   const auto proc_map = element_distribution.block_element_distribution();
 
-  size_t num_elements = 0;
-
-  std::vector<std::vector<ElementId<Dim>>> element_ids_in_z_curve_order(
-      blocks.size());
-  for (size_t i = 0; i < blocks.size(); i++) {
-    element_ids_in_z_curve_order[i] =
-        domain::initial_element_ids_in_z_curve_order(
-            i, initial_refinement_levels[i], 0);
-    num_elements += element_ids_in_z_curve_order[i].size();
+  const size_t total_procs =
+      number_of_procs_with_elements + global_procs_to_ignore.size();
+  std::vector<size_t> num_elements_by_proc(total_procs);
+  std::fill(num_elements_by_proc.begin(), num_elements_by_proc.end(), 0);
+  std::vector<size_t> actual_num_elements_by_block_in_dist(num_blocks);
+  std::fill(actual_num_elements_by_block_in_dist.begin(),
+            actual_num_elements_by_block_in_dist.end(), 0);
+  size_t actual_num_elements_in_dist = 0;
+  for (size_t block_number = 0; block_number < proc_map.size();
+       block_number++) {
+    for (const auto& proc_allowance : proc_map[block_number]) {
+      const size_t proc_number = proc_allowance.first;
+      const size_t element_allowance = proc_allowance.second;
+      num_elements_by_proc[proc_number] += element_allowance;
+      actual_num_elements_by_block_in_dist[block_number] += element_allowance;
+    }
+    // check that the number of elements in this block accounted for in the
+    // distribution matches the expected number of total elements for this block
+    CHECK(actual_num_elements_by_block_in_dist[block_number] ==
+          num_elements_by_block[block_number]);
+    actual_num_elements_in_dist +=
+        actual_num_elements_by_block_in_dist[block_number];
   }
+  // check that the number of elements accounted for in the distribution matches
+  // the expected number of total elements
+  CHECK(actual_num_elements_in_dist == num_elements);
 
   const auto costs = domain::WeightedBlockZCurveProcDistribution<
       Dim>::get_cost_by_element_by_block(blocks, initial_refinement_levels,
@@ -279,6 +336,7 @@ void test_element_distribution(
     }
   }
 
+  // one flattened vector instead of vectors by Block
   std::vector<double> costs_flattened(num_elements);
   size_t cost_index = 0;
   for (const auto& block : costs) {
@@ -288,41 +346,46 @@ void test_element_distribution(
     }
   }
 
-  const size_t total_procs =
-      number_of_procs_with_elements + global_procs_to_ignore.size();
-  std::vector<size_t> num_elements_each_proc(total_procs);
-  std::fill(num_elements_each_proc.begin(), num_elements_each_proc.end(), 0);
-  for (size_t block_number = 0; block_number < proc_map.size();
-       block_number++) {
-    for (const auto& proc_allowance : proc_map[block_number]) {
-      const size_t proc_number = proc_allowance.first;
-      const size_t element_allowance = proc_allowance.second;
-      num_elements_each_proc[proc_number] += element_allowance;
-    }
-  }
-
   cost_index = 0;
-
   double cost_remaining = total_cost;
   size_t procs_skipped = 0;
+  // check that we distributed the right number of elements to each proc based
+  // on the sum of their costs in Z-curve index order
   for (size_t i = 0; i < total_procs; i++) {
     if (global_procs_to_ignore.count(i)) {
       procs_skipped++;
       continue;
     }
+
+    if (cost_index < num_elements) {
+      // if we haven't accounted for all elements yet, we should still have cost
+      // left to account for
+      CHECK(cost_remaining <= total_cost);
+    } else {
+      // if we've already accounted for all the elements, we shouldn't have any
+      // cost left to account for, and it's the case that more procs were
+      // requested than could be used, e.g. in the case of less elements than
+      // procs
+      Approx custom_approx = Approx::custom().epsilon(1.0e-11).scale(1.0);
+      CHECK(cost_remaining == custom_approx(0.0));
+      break;
+    }
+
+    // the average cost per proc that we're aiming for
     const double target_proc_cost =
         cost_remaining / (number_of_procs_with_elements - i + procs_skipped);
+
+    // total cost on the processor before adding the cost of the final element
+    // assigned to this proc
     double proc_cost_without_final_element = 0.0;
-    const size_t num_elements_this_proc = num_elements_each_proc[i];
-    if (num_elements_this_proc == 0) {
-      continue;
-    }
-    // go to the element before the last one included
+    const size_t num_elements_this_proc = num_elements_by_proc[i];
+    // add up costs of all elements but the final one to add
     for (size_t j = 0; j < num_elements_this_proc - 1; j++) {
       const double this_cost = costs_flattened[cost_index + j];
       proc_cost_without_final_element += this_cost;
     }
 
+    // the cost of all of the elements assigned to this proc
     const double proc_cost_with_final_element =
         proc_cost_without_final_element +
         costs_flattened[cost_index + num_elements_this_proc - 1];
@@ -333,28 +396,44 @@ void test_element_distribution(
     const double diff_with_final_element =
         abs(proc_cost_with_final_element - target_proc_cost);
 
-    // if we've exceeded the target, make sure we're including this element
-    // because it is closer to the target than if we don't include it
-    if (num_elements_this_proc > 1 and
-        proc_cost_with_final_element > target_proc_cost) {
-      CHECK(diff_with_final_element <= diff_without_final_element);
+    // if the elements assigned to this proc have a cost that is over the target
+    // cost per proc, make sure that either it's because only one element is
+    // being assigned to the proc or this cost is closer to the target than if
+    // we omitted the final element, i.e. check that it's better to keep the
+    // final element than to not
+    if (proc_cost_with_final_element > target_proc_cost) {
+      const bool result = num_elements_this_proc == 1 or
+                          diff_with_final_element <= diff_without_final_element;
+      CHECK(result);
     }
 
     if (cost_index + num_elements_this_proc < num_elements) {
+      // total cost on the processor if we were to add the cost of the next
+      // element (one additional than the number chosen)
       const double proc_cost_with_extra_element =
           proc_cost_with_final_element +
           costs_flattened[cost_index + num_elements_this_proc];
       const double diff_with_extra_element =
           abs(proc_cost_with_extra_element - target_proc_cost);
 
+      // check that it's better to not add one more element than the number
+      // chosen
       CHECK(diff_with_extra_element >= diff_with_final_element);
     }
 
     cost_index += num_elements_this_proc;
     cost_remaining -= proc_cost_with_final_element;
   }
+
+  // check that any remainder of processors we didn't need do indeed have 0
+  // elements assigned to them
+  for (size_t j = cost_index + 1; j < total_procs; j++) {
+    CHECK(num_elements_by_proc[j] == 0);
+  }
 }
 
+// Test the retrieval of the assigned processor that is done by
+// `domain::WeightedBlockZCurveProcDistribution::get_proc_for_element`
 template <size_t Dim>
 void test_proc_retrieval(
     const DomainCreator<Dim>& domain_creator,
@@ -366,70 +445,55 @@ void test_proc_retrieval(
       domain_creator.initial_refinement_levels();
   const auto initial_extents = domain_creator.initial_extents();
 
+  const size_t num_blocks = blocks.size();
+  std::vector<std::vector<ElementId<Dim>>> element_ids_in_z_curve_order(
+      num_blocks);
+  for (size_t i = 0; i < num_blocks; i++) {
+    element_ids_in_z_curve_order[i] =
+        domain::initial_element_ids_in_z_curve_order(
+            i, gsl::at(initial_refinement_levels, i), 0);
+  }
+
   const domain::WeightedBlockZCurveProcDistribution<Dim> element_distribution(
       number_of_procs_with_elements, blocks, initial_refinement_levels,
       initial_extents, Spectral::Quadrature::GaussLobatto,
       global_procs_to_ignore);
-
-  size_t expected_total_num_elements = 0;
-  const size_t num_blocks = blocks.size();
-
-  std::vector<std::vector<ElementId<Dim>>> element_ids_in_z_curve_order(
-      blocks.size());
-  std::vector<size_t> expected_num_elements_by_block(num_blocks);
-  for (size_t i = 0; i < num_blocks; i++) {
-    element_ids_in_z_curve_order[i] =
-        domain::initial_element_ids_in_z_curve_order(
-            i, initial_refinement_levels[i], 0);
-    expected_num_elements_by_block[i] = 1;
-    for (size_t j = 0; j < Dim; j++) {
-      expected_num_elements_by_block[i] *=
-          two_to_the(initial_refinement_levels[i][j]);
-    }
-    expected_total_num_elements += expected_num_elements_by_block[i];
-  }
-
   const auto proc_map = element_distribution.block_element_distribution();
 
   const size_t total_number_of_procs =
       number_of_procs_with_elements + global_procs_to_ignore.size();
 
+  // whether or not we've assigned elements to a proc
   std::vector<bool> proc_hit(total_number_of_procs);
   std::fill(proc_hit.begin(), proc_hit.end(), false);
 
-  size_t actual_total_num_elements = 0;
   size_t highest_proc_assigned = 0;
-  for (size_t i = 0; i < blocks.size(); i++) {
+  for (size_t i = 0; i < num_blocks; i++) {
     size_t element_index = 0;
-    const size_t expected_num_elements_this_block =
-        expected_num_elements_by_block[i];
     const std::vector<std::pair<size_t, size_t>>& proc_map_this_block =
         proc_map[i];
     const size_t num_procs_this_block = proc_map_this_block.size();
-    size_t actual_num_elements_this_block = 0;
 
     for (size_t j = 0; j < num_procs_this_block; j++) {
       const size_t expected_proc = proc_map_this_block[j].first;
       const size_t proc_allowance = proc_map_this_block[j].second;
 
-      if (highest_proc_assigned < expected_proc) {
-        highest_proc_assigned = expected_proc;
-      }
-
       for (size_t k = 0; k < proc_allowance; k++) {
-        CHECK(element_distribution.get_proc_for_element(
-                  element_ids_in_z_curve_order[i][element_index]) ==
-              expected_proc);
+        const size_t actual_proc = element_distribution.get_proc_for_element(
+            element_ids_in_z_curve_order[i][element_index]);
+        // check that the correct processor is returned for the `ElementId`
+        CHECK(actual_proc == expected_proc);
+        proc_hit[actual_proc] = true;
+        if (highest_proc_assigned < actual_proc) {
+          highest_proc_assigned = actual_proc;
+        }
       }
-      proc_hit[expected_proc] = true;
       element_index += proc_allowance;
-      actual_num_elements_this_block += proc_allowance;
     }
-    CHECK(actual_num_elements_this_block == expected_num_elements_this_block);
-    actual_total_num_elements += actual_num_elements_this_block;
   }
-  CHECK(actual_total_num_elements == expected_total_num_elements);
 
+  // check that ignored procs were indeed skipped and that all other procs
+  // up to the highest one assigned were hit
   for (size_t i = 0; i < highest_proc_assigned + 1; i++) {
     if (global_procs_to_ignore.count(i) == 0) {
       CHECK(proc_hit[i]);
@@ -441,6 +505,7 @@ void test_proc_retrieval(
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.Domain.WeightedElementDistribution", "[Domain][Unit]") {
+  // Test computation of elemental weights
   test_cost_function();
 
   // Test inputs
@@ -473,31 +538,48 @@ SPECTRE_TEST_CASE("Unit.Domain.WeightedElementDistribution", "[Domain][Unit]") {
                                    Metavariables<3, true, false>>(
           create_option_string(true, true, true, false, 0, 0, 0, false));
 
-  // Test element distribution for 1D, 2D, 3D with and without procs to ignore
+  // Test element distribution and proc retrieval for 1D, 2D, and 3D. For each
+  // dimension, four cases are tested: single proc requested, multiple procs
+  // requested, procs to ignore requested, and more procs requested than
+  // elements to distribute.
+
+  // 1D
   test_element_distribution(*lattice_1d, 1);
   test_element_distribution(*lattice_1d, 5);
+  test_element_distribution(*lattice_1d, 10, std::unordered_set<size_t>{4, 6});
   test_element_distribution(*lattice_1d, 33, std::unordered_set<size_t>{7});
 
+  // 2D
   test_element_distribution(*lattice_2d, 1);
-  test_element_distribution(*lattice_2d, 10);
+  test_element_distribution(*lattice_2d, 5);
+  test_element_distribution(*lattice_2d, 20, std::unordered_set<size_t>{4, 20});
   test_element_distribution(*lattice_2d, 54, std::unordered_set<size_t>{0, 1});
 
+  // 3D
   test_element_distribution(*binary_compact_object_creator, 1);
   test_element_distribution(*binary_compact_object_creator, 12);
   test_element_distribution(*binary_compact_object_creator, 73,
                             std::unordered_set<size_t>{5, 8, 9, 75});
+  test_element_distribution(*binary_compact_object_creator, 500,
+                            std::unordered_set<size_t>{100});
 
-  // Test proc retrieval for 1D, 2D, 3D with and without procs to ignore
+  // 1D
   test_proc_retrieval(*lattice_1d, 1);
   test_proc_retrieval(*lattice_1d, 5);
+  test_proc_retrieval(*lattice_1d, 10, std::unordered_set<size_t>{4, 6});
   test_proc_retrieval(*lattice_1d, 33, std::unordered_set<size_t>{7});
 
+  // 2D
   test_proc_retrieval(*lattice_2d, 1);
-  test_proc_retrieval(*lattice_2d, 10);
+  test_proc_retrieval(*lattice_2d, 5);
+  test_proc_retrieval(*lattice_2d, 20, std::unordered_set<size_t>{4, 20});
   test_proc_retrieval(*lattice_2d, 54, std::unordered_set<size_t>{0, 1});
 
+  // 3D
   test_proc_retrieval(*binary_compact_object_creator, 1);
   test_proc_retrieval(*binary_compact_object_creator, 12);
   test_proc_retrieval(*binary_compact_object_creator, 73,
                       std::unordered_set<size_t>{5, 8, 9, 75});
+  test_proc_retrieval(*binary_compact_object_creator, 500,
+                      std::unordered_set<size_t>{100});
 }
