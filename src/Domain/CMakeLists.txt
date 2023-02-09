@@ -24,6 +24,7 @@ spectre_target_sources(
   SizeOfElement.cpp
   SurfaceJacobian.cpp
   TagsTimeDependent.cpp
+  ZCurve.cpp
 )
 
 spectre_target_headers(
@@ -51,6 +52,7 @@ spectre_target_headers(
   Tags.hpp
   TagsCharacteristicSpeeds.hpp
   TagsTimeDependent.hpp
+  ZCurve.hpp
 )
 
 target_link_libraries(
