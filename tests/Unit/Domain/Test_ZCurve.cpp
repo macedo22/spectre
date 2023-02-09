@@ -382,7 +382,8 @@ void test_z_curve_index_from_element_id_3d() {
   CHECK(domain::z_curve_index_from_element_id(e_3015) == 63);
 }
 
-// Test the segment indices computed from a Z-curve index. Tests
+// Test the segment indices computed from a Z-curve index and creating initial
+// ElementIds in Z-curve index order. Tests
 // domain::segment_indices_from_z_curve_index and
 // domain::initial_element_ids_in_z_curve_order.
 template <size_t Dim>
@@ -461,8 +462,9 @@ void test_z_curve_index_mapping(
   }
 }
 
-// Test the segment indices computed from a Z-curve index for each refinement
-// level permutation for dimensions 1, 2, and 3
+// Test the segment indices computed from a Z-curve index and creating initial
+// ElementIds in Z-curve index order for each refinement level permutation for
+// dimensions 1, 2, and 3
 void test_z_curve_index_mapping_for_refinement_levels(
     const size_t min_refinement_level, const size_t max_refinement_level) {
   std::array<size_t, 1> block_refinement_levels_1d{};
@@ -493,13 +495,15 @@ void test_z_curve_index_mapping_for_refinement_levels(
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.Domain.ZCurve", "[Domain][Unit]") {
+  // Test transforming ElementId to Z-curve index
   test_z_curve_index_from_element_id_1d();
   test_z_curve_index_from_element_id_2d();
   test_z_curve_index_from_element_id_3d();
 
   const size_t min_refinement_level = 0;
   const size_t max_refinement_level = 3;
-
+  // Test transforming Z-curve index to ElementId and creating initial
+  // ElementIds in Z-curve index order
   test_z_curve_index_mapping_for_refinement_levels(min_refinement_level,
                                                    max_refinement_level);
 }
