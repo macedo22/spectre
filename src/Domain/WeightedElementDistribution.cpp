@@ -8,7 +8,6 @@
 #include <cstddef>
 #include <functional>
 #include <limits>
-#include <memory>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -16,9 +15,6 @@
 #include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/IndexType.hpp"
 #include "Domain/Block.hpp"
-#include "Domain/CoordinateMaps/CoordinateMap.hpp"
-#include "Domain/CoordinateMaps/CoordinateMap.tpp"
-#include "Domain/CoordinateMaps/Identity.hpp"
 #include "Domain/CreateInitialElement.hpp"
 #include "Domain/ElementMap.hpp"
 #include "Domain/MinimumGridSpacing.hpp"
@@ -49,6 +45,9 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
     const std::unordered_set<size_t>& global_procs_to_ignore) {
   const size_t num_blocks = blocks.size();
 
+  ASSERT(
+      number_of_procs_with_elements > 0,
+      "Must have a non-zero number of processors to distribute elements to.");
   ASSERT(num_blocks > 0, "Must have a non-zero number of blocks.");
   ASSERT(
       initial_refinement_levels.size() == num_blocks,
@@ -65,19 +64,7 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
           cost_by_element_by_block.size());
 
   double total_cost = 0.0;
-  double min_cost = std::numeric_limits<double>::max();
-  double max_cost = std::numeric_limits<double>::min();
-
   for (auto& block : cost_by_element_by_block) {
-    const auto min_element_this_block = *alg::min_element(block);
-    const auto max_element_this_block = *alg::max_element(block);
-    if (min_element_this_block < min_cost) {
-      min_cost = min_element_this_block;
-    }
-    if (max_element_this_block > max_cost) {
-      max_cost = max_element_this_block;
-    }
-
     for (double element_cost : block) {
       total_cost += element_cost;
     }
@@ -86,10 +73,6 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
   size_t current_block = 0;
   size_t current_element_of_current_block = 0;
   double cost_remaining = total_cost;
-  // This variable will keep track of how many global procs we've skipped over
-  // so far. This bookkeeping is necessary so the element gets placed on the
-  // correct global proc. The loop variable `i` does not correspond to global
-  // proc number. It's just an index
   size_t number_of_ignored_procs_so_far = 0;
   for (size_t i = 0; i < number_of_procs_with_elements; ++i) {
     size_t global_proc_number = i + number_of_ignored_procs_so_far;
@@ -99,25 +82,26 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
       ++global_proc_number;
     }
 
-    // initialize cost for this proc to be the current element
-    // double cost_spent_on_proc =
-    //     cost_by_element_by_block[current_block]
-    //         [current_element_of_current_block];
-    // size_t num_elements_distributed_to_proc = 1;
+    // The target cost per proc is updated as we distribute to each proc since
+    // the total cost on a proc will nearly never be exactly the target average.
+    // If we don't adjust the target cost, then we risk either not using all
+    // procs (from overshooting the average too much on multiple procs) or
+    // piling up cost on the last proc (from undershooting the average on
+    // multiple procs). Updating the target cost per proc keeps the total cost
+    // spread somewhat evenly to each proc.
     double target_cost_per_proc =
         cost_remaining / (number_of_procs_with_elements - i);
     double cost_spent_on_proc = 0.0;
     size_t total_elements_distributed_to_proc = 0;
     bool add_more_elements_to_proc = true;
-    // const size_t num_blocks = cost_by_element_by_block.size();
-    // while we still have cost allowed on the proc
+    // while we haven't yet distributed all blocks and we still have cost
+    // allowed on the proc
     while (add_more_elements_to_proc and (current_block < num_blocks)) {
       const size_t num_elements_current_block =
           cost_by_element_by_block[current_block].size();
-      // while we still have elements left on the block and we still
-      // have cost allowed on the proc
       size_t num_elements_distributed_to_proc = 0;
-
+      // while we still have elements left on the block to distribute and we
+      // still have cost allowed on the proc
       while (add_more_elements_to_proc and
              (current_element_of_current_block < num_elements_current_block)) {
         const double element_cost =
@@ -125,6 +109,9 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
                                     [current_element_of_current_block];
 
         if (total_elements_distributed_to_proc == 0) {
+          // if we haven't yet assigned any elements to this proc, assign the
+          // current element to the current proc to ensure it gets at least one
+          // element
           cost_remaining -= element_cost;
           cost_spent_on_proc = element_cost;
           num_elements_distributed_to_proc = 1;
@@ -137,8 +124,14 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
               abs(target_cost_per_proc - (cost_spent_on_proc + element_cost));
 
           if (current_cost_diff <= next_cost_diff) {
+            // if the current proc cost is closer to the target than if we were
+            // to add one more element, then we're done adding elements to this
+            // proc
             add_more_elements_to_proc = false;
           } else {
+            // otherwise, the current proc cost is farther from the target then
+            // if we were to add one more element, so we add the current element
+            // to the current proc
             cost_spent_on_proc += element_cost;
             cost_remaining -= element_cost;
             num_elements_distributed_to_proc++;
@@ -148,10 +141,13 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
         }
       }
 
+      // add a proc and its element allowance for the current block
       block_element_distribution_.at(current_block)
           .emplace_back(std::make_pair(global_proc_number,
                                        num_elements_distributed_to_proc));
       if (current_element_of_current_block >= num_elements_current_block) {
+        // if we're done assigning elements from the current block, move on to
+        // the elements in the next block
         ++current_block;
         current_element_of_current_block = 0;
       }
@@ -166,6 +162,7 @@ WeightedBlockZCurveProcDistribution<Dim>::get_cost_by_element_by_block(
     const std::vector<std::array<size_t, Dim>>& initial_refinement_levels,
     const std::vector<std::array<size_t, Dim>>& initial_extents,
     const Spectral::Quadrature quadrature) {
+  // elemental costs correspond to elements in Z-curve order
   std::vector<std::vector<double>> cost_by_element_by_block(blocks.size());
 
   for (size_t block_number = 0; block_number < blocks.size(); block_number++) {
@@ -178,10 +175,9 @@ WeightedBlockZCurveProcDistribution<Dim>::get_cost_by_element_by_block(
 
     cost_by_element_by_block[block_number].reserve(element_ids.size());
 
+    // compute the minimum grid spacing (in Frame::Grid) and cost of each
+    // element
     for (const auto& element_id : element_ids) {
-      // TODO : move this out of here, probably best to put it in
-      // WeightedElementDistribution to keep all the logic handled there in
-      // one class.
       Mesh<Dim> mesh = ::domain::Initialization::create_initial_mesh(
           initial_extents, element_id, quadrature);
       Element<Dim> element = ::domain::Initialization::create_initial_element(
@@ -190,18 +186,6 @@ WeightedBlockZCurveProcDistribution<Dim>::get_cost_by_element_by_block(
           element_id, block.is_time_dependent()
                           ? block.moving_mesh_logical_to_grid_map().get_clone()
                           : block.stationary_map().get_to_grid_frame()};
-
-      std::unique_ptr<
-          ::domain::CoordinateMapBase<Frame::Grid, Frame::Inertial, Dim>>
-          grid_to_inertial_map;
-      if (block.is_time_dependent()) {
-        grid_to_inertial_map =
-            block.moving_mesh_grid_to_inertial_map().get_clone();
-      } else {
-        grid_to_inertial_map =
-            ::domain::make_coordinate_map_base<Frame::Grid, Frame::Inertial>(
-                ::domain::CoordinateMaps::Identity<Dim>{});
-      }
 
       tnsr::I<DataVector, Dim, Frame::ElementLogical> logical_coords{};
       domain::Tags::LogicalCoordinates<Dim>::function(
