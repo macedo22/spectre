@@ -90,7 +90,7 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
     // multiple procs). Updating the target cost per proc keeps the total cost
     // spread somewhat evenly to each proc.
     double target_cost_per_proc =
-        cost_remaining / (number_of_procs_with_elements - i);
+        cost_remaining / static_cast<double>(number_of_procs_with_elements - i);
     double cost_spent_on_proc = 0.0;
     size_t total_elements_distributed_to_proc = 0;
     bool add_more_elements_to_proc = true;
