@@ -43,12 +43,12 @@ CREATE_HAS_STATIC_MEMBER_VARIABLE_V(use_z_order_distribution)
  * `PhaseDepActionList`.
  *
  * The element assignment to processors is performed by
- * `domain::BlockZCurveProcDistribution` (using a Morton space-filling curve),
- * unless `static constexpr bool use_z_order_distribution = false;` is specified
- * in the `Metavariables`, in which case elements are assigned to processors via
- * round-robin assignment. In both cases, an unordered set of `size_t`s can be
- * passed to the `allocate_array` function which represents physical processors
- * to avoid placing elements on.
+ * `domain::WeightedBlockZCurveProcDistribution` (using a Morton space-filling
+ * curve), unless `static constexpr bool use_z_order_distribution = false;` is
+ * specified in the `Metavariables`, in which case elements are assigned to
+ * processors via round-robin assignment. In both cases, an unordered set of
+ * `size_t`s can be passed to the `allocate_array` function which represents
+ * physical processors to avoid placing elements on.
  */
 template <class Metavariables, class PhaseDepActionList>
 struct DgElementArray {
