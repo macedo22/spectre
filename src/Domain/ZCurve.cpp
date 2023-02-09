@@ -86,12 +86,12 @@ size_t z_curve_index_from_element_id(const ElementId<Dim>& element_id) {
 template <size_t Dim>
 std::array<size_t, Dim> segment_indices_from_z_curve_index(
     const size_t z_curve_index,
-    const std::array<size_t, Dim>& block_refinements) {
+    const std::array<size_t, Dim>& initial_ref_levs) {
   std::array<std::pair<size_t, size_t>, Dim>
       dimension_by_highest_refinement_level;
   for (size_t i = 0; i < Dim; ++i) {
     dimension_by_highest_refinement_level.at(i) =
-        std::make_pair(gsl::at(block_refinements, i), i);
+        std::make_pair(gsl::at(initial_ref_levs, i), i);
   }
   // dimensions in order of ascending refinement
   alg::sort(dimension_by_highest_refinement_level,
@@ -114,7 +114,7 @@ std::array<size_t, Dim> segment_indices_from_z_curve_index(
   // current bit position of result segment indices, i.e. how many bits of the
   // segment indices that we've already extracted
   size_t bit_index = 0;
-  // Z-curve index value for extracting the corresponding ElementId
+  // Z-curve index value for extracting the result ElementId
   size_t element_order_index = z_curve_index;
 
   // Extract all but the highest bits of the highest refined dimension that are
@@ -129,13 +129,14 @@ std::array<size_t, Dim> segment_indices_from_z_curve_index(
         gsl::at(dimension_by_highest_refinement_level, starting_dim_index)
             .first;
     // number of bits to extract for each dimension we're still extracting bits
-    // for, where bit_index represents how many bits we've already extracted
+    // for
     const size_t num_bits_to_extract = refinement_level - bit_index;
     for (size_t i = 0; i < num_bits_to_extract; i++) {
       for (size_t dim_index = starting_dim_index; dim_index < Dim;
            dim_index++) {
-        // extract lowest bit of current Z-curve index value, shift the bit up
-        // to the bit position we're on, and add it to the result segment index
+        // extract lowest bit of what remains of the Z-curve index value, shift
+        // the bit up to the bit position we're on, and add it to the result
+        // segment index
         segment_indices_by_highest_refinement_level.at(dim_index).first |=
             ((element_order_index & 1) << bit_index);
         // clear the lowest bit that we just completed extracting
@@ -159,8 +160,8 @@ std::array<size_t, Dim> segment_indices_from_z_curve_index(
   // example, if we have refinement 2 in x, 3 in y, and 5 in z, then all bits of
   // x and y and only the first 3 bits of z have already been extracted, so this
   // will just extract the remaining 2 bits for z. i.e. extract only the
-  // remaining z4 z3 bits of the whole Z-curve index, z4 z3 z2 y2 z1 y1 x1 z0 y0
-  // x0.
+  // remaining z4 z3 bits of the whole Z-curve index,
+  // z4 z3 z2 y2 z1 y1 x1 z0 y0 x0.
   //
   // If the highest refinement is shared by more than one dimension, this will
   // have no effect since all bits have already been extracted in the loop
@@ -251,7 +252,7 @@ std::vector<ElementId<3>> initial_element_ids_in_z_curve_order<3>(
   template std::array<size_t, GET_DIM(data)>       \
   segment_indices_from_z_curve_index(              \
       const size_t z_curve_index,                  \
-      const std::array<size_t, GET_DIM(data)>& block_refinements);
+      const std::array<size_t, GET_DIM(data)>& initial_ref_levs);
 
 GENERATE_INSTANTIATIONS(INSTANTIATION, (1, 2, 3))
 

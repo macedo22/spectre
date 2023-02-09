@@ -124,9 +124,9 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
               abs(target_cost_per_proc - (cost_spent_on_proc + element_cost));
 
           if (current_cost_diff <= next_cost_diff) {
-            // if the current proc cost is closer to the target than if we were
-            // to add one more element, then we're done adding elements to this
-            // proc
+            // if the current proc cost is closer to the target cost than if we
+            // were to add one more element, then we're done adding elements to
+            // this proc and don't add the current one
             add_more_elements_to_proc = false;
           } else {
             // otherwise, the current proc cost is farther from the target then

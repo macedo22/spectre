@@ -46,20 +46,20 @@ size_t z_curve_index_from_element_id(const ElementId<Dim>& element_id);
 ///
 /// \param z_curve_index the Z-curve index for which to compute the `Segment`
 /// indices
-/// \param block_refinements the refinements of the block that the `ElementId`
+/// \param initial_ref_levs the refinements of the block that the `ElementId`
 /// belongs to
 template <size_t Dim>
 std::array<size_t, Dim> segment_indices_from_z_curve_index(
     const size_t z_curve_index,
-    const std::array<size_t, Dim>& block_refinements);
+    const std::array<size_t, Dim>& initial_ref_levs);
 
-/// \brief Create the `ElementId`s of the a single `Block` ordered by their
-/// Z-curve index
+/// \brief Create the `ElementId`s of a single `Block` ordered by their Z-curve
+/// index
 ///
 /// \details For details on `ElementId`'s Z-curve indices, see
 /// `domain::segment_indices_from_z_curve_index`
 ///
-/// \param block_id the `BlockId` of the `Block`
+/// \param block_id the `Block` number
 /// \param initial_ref_levs the refinements levels of the `Block`
 /// \param grid_index the grid index of the `Block`
 template <size_t Dim>

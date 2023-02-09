@@ -9,7 +9,6 @@
 #include <utility>
 #include <vector>
 
-
 template <size_t Dim>
 class Block;
 
@@ -34,9 +33,9 @@ namespace domain {
  * `Element`s assigned to a processor, and the cost of an `Element` is defined
  * as `(number of grid points) / sqrt(minimum grid spacing in Frame::Grid)`.
  * First, each `Block`'s `Element`s are ordered by their Z-curve index (see more
- * below). `Element`s are traversed in this order and assigned to CPUs, moving
- * onto the next CPU once the target cost allowance per CPU is met. The target
- * cost per CPU is defined as the remaining cost to distribute divided by the
+ * below). `Element`s are traversed in this order and assigned to CPUs in order,
+ * moving onto the next CPU once the target cost per CPU is met. The target cost
+ * per CPU is defined as the remaining cost to distribute divided by the
  * remaining number of CPUs to distribute to. This is an important distinction
  * from simply having one constant target cost per CPU defined as the total cost
  * divided by the total number of CPUs with elements. Since elemental costs will
@@ -44,7 +43,7 @@ namespace domain {
  * we would either have to decide to overshoot or undershoot the average as we
  * iterate over the CPUs and assign `Element`s. If we overshoot the average on
  * each processor, the final processor could have a much lower cost than the
- * rest of the processors, and we run the risk of overshooting so much that one
+ * rest of the processors and we run the risk of overshooting so much that one
  * or more of the requested processors don't get assigned any `Element`s at all.
  * If we undershoot the average on each processor, the final processor could
  * have a much higher cost than the others due to remainder cost piling up.
@@ -104,8 +103,8 @@ template <size_t Dim>
 struct WeightedBlockZCurveProcDistribution {
   /// The `number_of_procs_with_elements` argument represents how many procs
   /// will have elements. This is not necessarily equal to the total number of
-  /// procs because some global procs may be ignored by the third argument
-  /// `global_procs_to_ignore`
+  /// procs because some global procs may be ignored by the sixth argument
+  /// `global_procs_to_ignore`.
   WeightedBlockZCurveProcDistribution(
       size_t number_of_procs_with_elements,
       const std::vector<Block<Dim>>& blocks,
@@ -115,18 +114,17 @@ struct WeightedBlockZCurveProcDistribution {
       const std::unordered_set<size_t>& global_procs_to_ignore = {});
 
   /// Get the cost of each `Element` of each `Block` where the elemental costs
-  /// are ordered Z-curve index (see
-  /// domain::segment_indices_from_z_curve_index) and computed as
-  /// `(number of grid points) / sqrt(minimum grid spacing in Frame::Grid)`
+  /// are ordered by Z-curve index (see parent class documentation) and computed
+  /// as `(number of grid points) / sqrt(minimum grid spacing in Frame::Grid)`
   static std::vector<std::vector<double>> get_cost_by_element_by_block(
       const std::vector<Block<Dim>>& blocks,
       const std::vector<std::array<size_t, Dim>>& initial_refinement_levels,
       const std::vector<std::array<size_t, Dim>>& initial_extents,
       const Spectral::Quadrature quadrature);
 
-  /// Gets the suggested processor number for a particular element,
-  /// determined by the greedy block assignment and Morton curve element
-  /// assignment described in detail in the parent class documentation.
+  /// Gets the suggested processor number for a particular `ElementId`,
+  /// determined by the Morton curve weighted element assignment described in
+  /// detail in the parent class documentation.
   size_t get_proc_for_element(const ElementId<Dim>& element_id) const;
 
   std::vector<std::vector<std::pair<size_t, size_t>>>
