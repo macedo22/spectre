@@ -110,7 +110,7 @@ struct WeightedBlockZCurveProcDistribution {
       const std::vector<Block<Dim>>& blocks,
       const std::vector<std::array<size_t, Dim>>& initial_refinement_levels,
       const std::vector<std::array<size_t, Dim>>& initial_extents,
-      const Spectral::Quadrature quadrature,
+      Spectral::Quadrature quadrature,
       const std::unordered_set<size_t>& global_procs_to_ignore = {});
 
   /// Get the cost of each `Element` of each `Block` where the elemental costs
@@ -120,14 +120,14 @@ struct WeightedBlockZCurveProcDistribution {
       const std::vector<Block<Dim>>& blocks,
       const std::vector<std::array<size_t, Dim>>& initial_refinement_levels,
       const std::vector<std::array<size_t, Dim>>& initial_extents,
-      const Spectral::Quadrature quadrature);
+      Spectral::Quadrature quadrature);
 
   /// Gets the suggested processor number for a particular `ElementId`,
   /// determined by the Morton curve weighted element assignment described in
   /// detail in the parent class documentation.
   size_t get_proc_for_element(const ElementId<Dim>& element_id) const;
 
-  std::vector<std::vector<std::pair<size_t, size_t>>>
+  const std::vector<std::vector<std::pair<size_t, size_t>>>&
   block_element_distribution() const {
     return block_element_distribution_;
   }
@@ -139,8 +139,6 @@ struct WeightedBlockZCurveProcDistribution {
   //   allowance
   // - Each element allowance is represented by a pair of proc number, number of
   //   elements in the allowance
-  //   const size_t number_of_procs_with_elements_;
-  //   const std::unordered_set<size_t>& global_procs_to_ignore_;
   std::vector<std::vector<std::pair<size_t, size_t>>>
       block_element_distribution_;
 };

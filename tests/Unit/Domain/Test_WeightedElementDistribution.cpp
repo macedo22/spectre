@@ -3,7 +3,6 @@
 
 #include "Framework/TestingFramework.hpp"
 
-#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
@@ -158,79 +157,68 @@ std::string create_option_string(const bool excise_A, const bool excise_B,
 // `domain::WeightedBlockZCurveProcDistribution::get_cost_by_element_by_block`
 void test_cost_function() {
   const auto domain_creator1 = make_domain_creator<3>(
-      "AlignedLattice:\n"
+      std::string("AlignedLattice:\n") +
       "  BlockBounds: [[0.0, 1.0, 2.0], [0.0, 1.0], [0.0, 1.0]]\n" +
-      std::string{"  IsPeriodicIn: [false, false, false]\n"} +
+      "  IsPeriodicIn: [false, false, false]\n" +
       "  InitialGridPoints: [4, 4, 4]\n"
       "  InitialLevels: [2, 1, 0]\n"
       "  RefinedLevels: []\n"
       "  RefinedGridPoints: []\n"
       "  BlocksToExclude: []\n");
-  const auto* aligned_blocks_creator1 =
-      dynamic_cast<const domain::creators::AlignedLattice<3>*>(
-          domain_creator1.get());
-  const auto domain1 = aligned_blocks_creator1->create_domain();
+  const auto domain1 = domain_creator1->create_domain();
   const auto& blocks1 = domain1.blocks();
 
   // Block size and grid points are the same as blocks in `domain1`, but
   // refinement levels are different
   const auto domain_creator2 = make_domain_creator<3>(
-      "AlignedLattice:\n"
+      std::string("AlignedLattice:\n") +
       "  BlockBounds: [[0.0, 1.0], [0.0, 1.0], [0.0, 1.0]]\n" +
-      std::string{"  IsPeriodicIn: [false, false, false]\n"} +
+      "  IsPeriodicIn: [false, false, false]\n" +
       "  InitialGridPoints: [4, 4, 4]\n"
       "  InitialLevels: [2, 3, 2]\n"
       "  RefinedLevels: []\n"
       "  RefinedGridPoints: []\n"
       "  BlocksToExclude: []\n");
-  const auto* aligned_blocks_creator2 =
-      dynamic_cast<const domain::creators::AlignedLattice<3>*>(
-          domain_creator2.get());
-  const auto domain2 = aligned_blocks_creator2->create_domain();
+  const auto domain2 = domain_creator2->create_domain();
   const auto& blocks2 = domain2.blocks();
 
   // Block size and refinement levels are the same as blocks in `domain1`, but
   // grid points are different
   const auto domain_creator3 = make_domain_creator<3>(
-      "AlignedLattice:\n"
+      std::string("AlignedLattice:\n") +
       "  BlockBounds: [[0.0, 1.0], [0.0, 1.0], [0.0, 1.0]]\n" +
-      std::string{"  IsPeriodicIn: [false, false, false]\n"} +
+      "  IsPeriodicIn: [false, false, false]\n" +
       "  InitialGridPoints: [4, 3, 2]\n"
       "  InitialLevels: [2, 1, 0]\n"
       "  RefinedLevels: []\n"
       "  RefinedGridPoints: []\n"
       "  BlocksToExclude: []\n");
-  const auto* aligned_blocks_creator3 =
-      dynamic_cast<const domain::creators::AlignedLattice<3>*>(
-          domain_creator3.get());
-  const auto domain3 = aligned_blocks_creator3->create_domain();
+  const auto domain3 = domain_creator3->create_domain();
   const auto& blocks3 = domain2.blocks();
 
   const auto costs1 = domain::WeightedBlockZCurveProcDistribution<3>::
-      get_cost_by_element_by_block(
-          blocks1, aligned_blocks_creator1->initial_refinement_levels(),
-          aligned_blocks_creator1->initial_extents(),
-          Spectral::Quadrature::GaussLobatto);
+      get_cost_by_element_by_block(blocks1,
+                                   domain_creator1->initial_refinement_levels(),
+                                   domain_creator1->initial_extents(),
+                                   Spectral::Quadrature::GaussLobatto);
 
   const auto costs2 = domain::WeightedBlockZCurveProcDistribution<3>::
-      get_cost_by_element_by_block(
-          blocks2, aligned_blocks_creator2->initial_refinement_levels(),
-          aligned_blocks_creator2->initial_extents(),
-          Spectral::Quadrature::GaussLobatto);
+      get_cost_by_element_by_block(blocks2,
+                                   domain_creator2->initial_refinement_levels(),
+                                   domain_creator2->initial_extents(),
+                                   Spectral::Quadrature::GaussLobatto);
 
   const auto costs3 = domain::WeightedBlockZCurveProcDistribution<3>::
-      get_cost_by_element_by_block(
-          blocks3, aligned_blocks_creator3->initial_refinement_levels(),
-          aligned_blocks_creator3->initial_extents(),
-          Spectral::Quadrature::GaussLobatto);
-
-  Approx custom_approx_e16 = Approx::custom().epsilon(1.0e-15).scale(1.0);
+      get_cost_by_element_by_block(blocks3,
+                                   domain_creator3->initial_refinement_levels(),
+                                   domain_creator3->initial_extents(),
+                                   Spectral::Quadrature::GaussLobatto);
 
   const double elemental_cost1 = costs1[0][0];
   for (size_t i = 0; i < costs1[0].size(); i++) {
     // check that all elements in a block have the same cost
-    CHECK(elemental_cost1 == custom_approx_e16(costs1[0][i]));
-    CHECK(elemental_cost1 == custom_approx_e16(costs1[1][i]));
+    CHECK(elemental_cost1 == approx(costs1[0][i]));
+    CHECK(elemental_cost1 == approx(costs1[1][i]));
   }
   // check that the elements in both blocks have the same cost
   CHECK_ITERABLE_APPROX(costs1[0], costs1[1]);
@@ -241,19 +229,18 @@ void test_cost_function() {
     CHECK(elemental_cost2 == costs2[0][i]);
   }
 
-  Approx custom_approx_e15 = Approx::custom().epsilon(1.0e-15).scale(1.0);
   // The highest refinement for the first test domain is 2 while the highest
   // refinement for the second test domain is 3, grid points held constant.
   // Since the minimum grid spacing of the second domain is half the minimum
   // grid spacing of the first and since
   // elemental cost = (# of grid points) / sqrt(min grid spacing), the
   // elemental cost of the second domain should be a factor of sqrt(2) the cost.
-  CHECK(elemental_cost2 == custom_approx_e15(sqrt(2.0) * elemental_cost1));
+  CHECK(elemental_cost2 == approx(sqrt(2.0) * elemental_cost1));
 
   const double elemental_cost3 = costs3[0][0];
   for (size_t i = 1; i < costs3[0].size(); i++) {
     // check that all elements in the block have the same cost
-    CHECK(elemental_cost3 == custom_approx_e16(costs3[0][i]));
+    CHECK(elemental_cost3 == approx(costs3[0][i]));
   }
 
   // The minimum grid spacing for the first and third domain are equal, but the
@@ -280,8 +267,7 @@ void test_element_distribution(
 
   const size_t num_blocks = blocks.size();
   size_t num_elements = 0;
-  std::vector<size_t> num_elements_by_block(num_blocks);
-  std::fill(num_elements_by_block.begin(), num_elements_by_block.end(), 0);
+  std::vector<size_t> num_elements_by_block(num_blocks, 0);
   for (size_t i = 0; i < num_blocks; i++) {
     size_t num_elements_this_block =
         two_to_the(gsl::at(initial_refinement_levels[i], 0));
@@ -301,11 +287,8 @@ void test_element_distribution(
 
   const size_t total_procs =
       number_of_procs_with_elements + global_procs_to_ignore.size();
-  std::vector<size_t> num_elements_by_proc(total_procs);
-  std::fill(num_elements_by_proc.begin(), num_elements_by_proc.end(), 0);
-  std::vector<size_t> actual_num_elements_by_block_in_dist(num_blocks);
-  std::fill(actual_num_elements_by_block_in_dist.begin(),
-            actual_num_elements_by_block_in_dist.end(), 0);
+  std::vector<size_t> num_elements_by_proc(total_procs, 0);
+  std::vector<size_t> actual_num_elements_by_block_in_dist(num_blocks, 0);
   size_t actual_num_elements_in_dist = 0;
   for (size_t block_number = 0; block_number < proc_map.size();
        block_number++) {
@@ -466,8 +449,7 @@ void test_proc_retrieval(
       number_of_procs_with_elements + global_procs_to_ignore.size();
 
   // whether or not we've assigned elements to a proc
-  std::vector<bool> proc_hit(total_number_of_procs);
-  std::fill(proc_hit.begin(), proc_hit.end(), false);
+  std::vector<bool> proc_hit(total_number_of_procs, false);
 
   size_t highest_proc_assigned = 0;
   for (size_t i = 0; i < num_blocks; i++) {

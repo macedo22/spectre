@@ -400,8 +400,7 @@ void test_z_curve_index_mapping(
   const size_t num_elements = element_ids_in_default_order.size();
   // Whether or not we have encountered certain result Z-curve indices
   // when transforming ElementIds of a block to their Z-curve indices
-  std::vector<bool> z_curve_index_hit(num_elements);
-  std::fill(z_curve_index_hit.begin(), z_curve_index_hit.end(), false);
+  std::vector<bool> z_curve_index_hit(num_elements, false);
 
   // Check that computing the Z-curve index from an ElementId and then
   // Segment indices from the computed Z-curve index matches the Segment indices
@@ -428,7 +427,7 @@ void test_z_curve_index_mapping(
   }
 
   // Check that there is a 1:1 mapping of ElementId to Z-curve index
-  for (const size_t index_hit : z_curve_index_hit) {
+  for (const bool index_hit : z_curve_index_hit) {
     CHECK(index_hit);
   }
 

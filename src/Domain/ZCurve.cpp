@@ -32,11 +32,7 @@ size_t z_curve_index_from_element_id(const ElementId<Dim>& element_id) {
     dimension_by_highest_refinement_level.at(i) =
         std::make_pair(element_id.segment_id(i).refinement_level(), i);
   }
-  alg::sort(dimension_by_highest_refinement_level,
-            [](const std::pair<size_t, size_t>& lhs,
-               const std::pair<size_t, size_t>& rhs) {
-              return lhs.first < rhs.first;
-            });
+  alg::sort(dimension_by_highest_refinement_level);
 
   size_t element_order_index = 0;
 
@@ -94,11 +90,7 @@ std::array<size_t, Dim> segment_indices_from_z_curve_index(
         std::make_pair(gsl::at(initial_ref_levs, i), i);
   }
   // dimensions in order of ascending refinement
-  alg::sort(dimension_by_highest_refinement_level,
-            [](const std::pair<size_t, size_t>& lhs,
-               const std::pair<size_t, size_t>& rhs) {
-              return lhs.first < rhs.first;
-            });
+  alg::sort(dimension_by_highest_refinement_level);
 
   // result segment indices to compute
   std::array<std::pair<size_t, size_t>, Dim>
@@ -181,64 +173,37 @@ std::array<size_t, Dim> segment_indices_from_z_curve_index(
   return result_segment_indices;
 }
 
-template <>
-std::vector<ElementId<1>> initial_element_ids_in_z_curve_order<1>(
-    const size_t block_id, const std::array<size_t, 1> initial_ref_levs,
+template <size_t Dim>
+std::vector<ElementId<Dim>> initial_element_ids_in_z_curve_order(
+    const size_t block_id, const std::array<size_t, Dim> initial_ref_levs,
     const size_t grid_index) {
-  std::vector<ElementId<1>> ids;
-  const size_t num_elements = two_to_the(initial_ref_levs[0]);
-  ids.reserve(num_elements);
-
-  for (size_t i = 0; i < num_elements; i++) {
-    std::array<size_t, 1> segment_indices =
-        domain::segment_indices_from_z_curve_index(i, initial_ref_levs);
-    SegmentId x_segment_id(initial_ref_levs[0], segment_indices[0]);
-    ids.emplace_back(block_id, make_array<1>(x_segment_id), grid_index);
+  std::vector<ElementId<Dim>> ids;
+  size_t num_elements = two_to_the(initial_ref_levs[0]);
+  for (size_t i = 1; i < Dim; i++) {
+    num_elements *= two_to_the(initial_ref_levs[i]);
   }
-
-  return ids;
-}
-
-template <>
-std::vector<ElementId<2>> initial_element_ids_in_z_curve_order<2>(
-    const size_t block_id, const std::array<size_t, 2> initial_ref_levs,
-    const size_t grid_index) {
-  std::vector<ElementId<2>> ids;
-  const size_t num_elements =
-      two_to_the(initial_ref_levs[0]) * two_to_the(initial_ref_levs[1]);
   ids.reserve(num_elements);
 
   for (size_t i = 0; i < num_elements; i++) {
-    std::array<size_t, 2> segment_indices =
+    std::array<size_t, Dim> segment_indices =
         domain::segment_indices_from_z_curve_index(i, initial_ref_levs);
-    SegmentId x_segment_id(initial_ref_levs[0], segment_indices[0]);
-    SegmentId y_segment_id(initial_ref_levs[1], segment_indices[1]);
-    ids.emplace_back(block_id, make_array(x_segment_id, y_segment_id),
-                     grid_index);
-  }
 
-  return ids;
-}
-
-template <>
-std::vector<ElementId<3>> initial_element_ids_in_z_curve_order<3>(
-    const size_t block_id, const std::array<size_t, 3> initial_ref_levs,
-    const size_t grid_index) {
-  std::vector<ElementId<3>> ids;
-  const size_t num_elements = two_to_the(initial_ref_levs[0]) *
-                              two_to_the(initial_ref_levs[1]) *
-                              two_to_the(initial_ref_levs[2]);
-  ids.reserve(num_elements);
-
-  for (size_t i = 0; i < num_elements; i++) {
-    std::array<size_t, 3> segment_indices =
-        domain::segment_indices_from_z_curve_index(i, initial_ref_levs);
-    SegmentId x_segment_id(initial_ref_levs[0], segment_indices[0]);
-    SegmentId y_segment_id(initial_ref_levs[1], segment_indices[1]);
-    SegmentId z_segment_id(initial_ref_levs[2], segment_indices[2]);
-    ids.emplace_back(block_id,
-                     make_array(x_segment_id, y_segment_id, z_segment_id),
-                     grid_index);
+    if constexpr (Dim == 1) {
+      SegmentId x_segment_id(initial_ref_levs[0], segment_indices[0]);
+      ids.emplace_back(block_id, make_array<1>(x_segment_id), grid_index);
+    } else if constexpr (Dim == 2) {
+      SegmentId x_segment_id(initial_ref_levs[0], segment_indices[0]);
+      SegmentId y_segment_id(initial_ref_levs[1], segment_indices[1]);
+      ids.emplace_back(block_id, make_array(x_segment_id, y_segment_id),
+                       grid_index);
+    } else {
+      SegmentId x_segment_id(initial_ref_levs[0], segment_indices[0]);
+      SegmentId y_segment_id(initial_ref_levs[1], segment_indices[1]);
+      SegmentId z_segment_id(initial_ref_levs[2], segment_indices[2]);
+      ids.emplace_back(block_id,
+                       make_array(x_segment_id, y_segment_id, z_segment_id),
+                       grid_index);
+    }
   }
 
   return ids;
@@ -246,14 +211,18 @@ std::vector<ElementId<3>> initial_element_ids_in_z_curve_order<3>(
 
 #define GET_DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
 
-#define INSTANTIATION(r, data)                     \
-  template size_t z_curve_index_from_element_id(   \
-      const ElementId<GET_DIM(data)>& element_id); \
-  template std::array<size_t, GET_DIM(data)>       \
-  segment_indices_from_z_curve_index(              \
-      const size_t z_curve_index,                  \
-      const std::array<size_t, GET_DIM(data)>& initial_ref_levs);
+#define INSTANTIATION(r, data)                                    \
+  template size_t z_curve_index_from_element_id(                  \
+      const ElementId<GET_DIM(data)>& element_id);                \
+  template std::array<size_t, GET_DIM(data)>                      \
+  segment_indices_from_z_curve_index(                             \
+      const size_t z_curve_index,                                 \
+      const std::array<size_t, GET_DIM(data)>& initial_ref_levs); \
+  template std::vector<ElementId<GET_DIM(data)>>                  \
+  initial_element_ids_in_z_curve_order(                           \
+      const size_t block_id,                                      \
+      const std::array<size_t, GET_DIM(data)> initial_ref_levs,   \
+      const size_t grid_index);
 
 GENERATE_INSTANTIATIONS(INSTANTIATION, (1, 2, 3))
-
 }  // namespace domain

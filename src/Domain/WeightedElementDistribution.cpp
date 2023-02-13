@@ -186,24 +186,15 @@ WeightedBlockZCurveProcDistribution<Dim>::get_cost_by_element_by_block(
           element_id, block.is_time_dependent()
                           ? block.moving_mesh_logical_to_grid_map().get_clone()
                           : block.stationary_map().get_to_grid_frame()};
-
-      tnsr::I<DataVector, Dim, Frame::ElementLogical> logical_coords{};
-      domain::Tags::LogicalCoordinates<Dim>::function(
-          make_not_null(&logical_coords), mesh);
-
-      tnsr::I<DataVector, Dim, Frame::Grid> grid_coords{};
-      domain::Tags::MappedCoordinates<
-          domain::Tags::ElementMap<Dim, Frame::Grid>,
-          domain::Tags::Coordinates<Dim, Frame::ElementLogical>>::
-          function(make_not_null(&grid_coords), element_map, logical_coords);
-
-      double minimum_grid_spacing =
-          std::numeric_limits<double>::signaling_NaN();
-      domain::Tags::MinimumGridSpacingCompute<Dim, Frame::Grid>::function(
-          make_not_null(&minimum_grid_spacing), mesh, grid_coords);
+      const tnsr::I<DataVector, Dim, Frame::ElementLogical> logical_coords =
+          logical_coordinates(mesh);
+      const tnsr::I<DataVector, Dim, Frame::Grid> grid_coords =
+          element_map(logical_coords);
+      const double min_grid_spacing =
+          minimum_grid_spacing(mesh.extents(), grid_coords);
 
       cost_by_element_by_block[block_number].emplace_back(
-          grid_points_per_element / sqrt(minimum_grid_spacing));
+          grid_points_per_element / sqrt(min_grid_spacing));
     }
   }
 

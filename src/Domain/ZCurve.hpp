@@ -25,6 +25,10 @@ namespace domain {
 /// v  1 |  1   3   5   7
 /// \endcode
 ///
+/// For the Z-curve mapping, this function takes you from `ElementId` to
+/// Z-curve index, whereas `domain::segment_indices_from_z_curve_index` is the
+/// inverse and takes you from Z-curve index to segment indices.
+///
 /// \param element_id the `ElementId` for which to compute the Z-curve index
 template <size_t Dim>
 size_t z_curve_index_from_element_id(const ElementId<Dim>& element_id);
@@ -44,14 +48,17 @@ size_t z_curve_index_from_element_id(const ElementId<Dim>& element_id);
 /// v  1 |  1   3   5   7
 /// \endcode
 ///
+/// For the Z-curve mapping, this function takes you from Z-curve index to
+/// segment indices, whereas `domain::z_curve_index_from_element_id` is the
+/// inverse and takes you from `ElementId` to Z-curve index.
+///
 /// \param z_curve_index the Z-curve index for which to compute the `Segment`
 /// indices
 /// \param initial_ref_levs the refinements of the block that the `ElementId`
 /// belongs to
 template <size_t Dim>
 std::array<size_t, Dim> segment_indices_from_z_curve_index(
-    const size_t z_curve_index,
-    const std::array<size_t, Dim>& initial_ref_levs);
+    size_t z_curve_index, const std::array<size_t, Dim>& initial_ref_levs);
 
 /// \brief Create the `ElementId`s of a single `Block` ordered by their Z-curve
 /// index
