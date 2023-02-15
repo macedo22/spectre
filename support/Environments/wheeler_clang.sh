@@ -51,7 +51,8 @@ spectre_load_modules() {
     module load doxygen/1.8.13
     module load git/2.8.4
     module load llvm/13.0.1
-    module load charm/7.0.0-intelmpi-smp
+    module use /home/knelli/tools/modules
+    module load charm/7.0.0-tracing
     module load python/miniconda-3.9.7
     module load pybind11/2.6.1
     module load hdf5/1.12.0
@@ -79,6 +80,9 @@ spectre_run_cmake() {
           -D CMAKE_PREFIX_PATH="$PYTHON_HOME" \
           -D BOOTSTRAP_PY_DEPS=ON \
           -D MACHINE=Wheeler \
+          -DCHARM_TRACE_PROJECTIONS=ON \
+          -DCHARM_TRACE_SUMMARY=ON \
+          -DENABLE_PROFILING=ON \
           "$@" \
           $SPECTRE_HOME
 }
