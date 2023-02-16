@@ -20,6 +20,12 @@ enum class Quadrature;
 }  // namespace Spectral
 
 namespace domain {
+template <size_t Dim>
+std::unordered_map<ElementId<Dim>, double> get_num_points_grid_spacing_cost(
+    const std::vector<Block<Dim>>& blocks,
+    const std::vector<std::array<size_t, Dim>>& initial_refinement_levels,
+    const std::vector<std::array<size_t, Dim>>& initial_extents,
+    const Spectral::Quadrature quadrature);
 
 /*!
  * \brief Distribution strategy for assigning elements to CPUs using a
