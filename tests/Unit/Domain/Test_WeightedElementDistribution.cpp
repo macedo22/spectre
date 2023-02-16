@@ -153,8 +153,9 @@ std::string create_option_string(const bool excise_A, const bool excise_B,
          stringize(use_equiangular_map) + "\n" + time_dependence;
 }
 
-// Test the computation of the weighting done by `domain::get_element_costs`
-void test_unweighted_cost_function() {
+// Test the weighting done by `domain::get_element_costs` for a uniform cost
+// function
+void test_uniform_cost_function() {
   const auto domain_creator = TestHelpers::test_option_tag<
       domain::OptionTags::DomainCreator<2>,
       TestHelpers::domain::BoundaryConditions::
@@ -194,7 +195,8 @@ void test_unweighted_cost_function() {
   }
 }
 
-// Test the computation of the weighting done by `domain::get_element_costs`
+// Test the weighting done by `domain::get_element_costs` for weighted cost
+// functions
 void test_weighted_cost_function(const domain::ElementWeight element_weight) {
   const auto domain_creator1 = make_domain_creator<3>(
       std::string("AlignedLattice:\n") +
@@ -304,9 +306,113 @@ void test_weighted_cost_function(const domain::ElementWeight element_weight) {
 }
 
 // Test the processor distribution logic of the
-// `domain::WeightedBlockZCurveProcDistribution` constructor
+// `domain::WeightedBlockZCurveProcDistribution` constructor for an unweighted
+// element distributions
 template <size_t Dim>
-void test_element_distribution_construction(
+void test_uniform_element_distribution_construction(
+    const DomainCreator<Dim>& domain_creator,
+    const size_t number_of_procs_with_elements,
+    const std::unordered_set<size_t>& global_procs_to_ignore = {}) {
+  const auto domain = domain_creator.create_domain();
+  const auto& blocks = domain.blocks();
+  const auto initial_refinement_levels =
+      domain_creator.initial_refinement_levels();
+  const auto initial_extents = domain_creator.initial_extents();
+
+  const size_t num_blocks = blocks.size();
+  size_t num_elements = 0;
+  std::vector<size_t> num_elements_by_block(num_blocks, 0);
+  for (size_t i = 0; i < num_blocks; i++) {
+    size_t num_elements_this_block =
+        two_to_the(gsl::at(initial_refinement_levels[i], 0));
+    for (size_t j = 1; j < Dim; j++) {
+      num_elements_this_block *=
+          two_to_the(gsl::at(initial_refinement_levels[i], j));
+    }
+    num_elements_by_block[i] = num_elements_this_block;
+    num_elements += num_elements_this_block;
+  }
+
+  const auto costs = domain::get_element_costs(
+      blocks, initial_refinement_levels, initial_extents,
+      Spectral::Quadrature::GaussLobatto, domain::ElementWeight::Uniform);
+
+  const domain::WeightedBlockZCurveProcDistribution<Dim> element_distribution(
+      costs, number_of_procs_with_elements, blocks, initial_refinement_levels,
+      initial_extents, global_procs_to_ignore);
+  const auto proc_map = element_distribution.block_element_distribution();
+
+  const size_t total_procs =
+      number_of_procs_with_elements + global_procs_to_ignore.size();
+  std::vector<size_t> num_elements_by_proc(total_procs, 0);
+  std::vector<size_t> actual_num_elements_by_block_in_dist(num_blocks, 0);
+  size_t actual_num_elements_in_dist = 0;
+  for (size_t block_number = 0; block_number < proc_map.size();
+       block_number++) {
+    for (const auto& proc_allowance : proc_map[block_number]) {
+      const size_t proc_number = proc_allowance.first;
+      const size_t element_allowance = proc_allowance.second;
+      num_elements_by_proc[proc_number] += element_allowance;
+      actual_num_elements_by_block_in_dist[block_number] += element_allowance;
+    }
+    // check that the number of elements in this block accounted for in the
+    // distribution matches the expected number of total elements for this block
+    CHECK(actual_num_elements_by_block_in_dist[block_number] ==
+          num_elements_by_block[block_number]);
+    actual_num_elements_in_dist +=
+        actual_num_elements_by_block_in_dist[block_number];
+  }
+  // check that the number of elements accounted for in the distribution matches
+  // the expected number of total elements
+  CHECK(actual_num_elements_in_dist == num_elements);
+
+  size_t lowest_proc_with_elements = 0;
+  while (global_procs_to_ignore.count(lowest_proc_with_elements) == 1) {
+    lowest_proc_with_elements++;
+  }
+  const size_t num_elements_on_lowest_proc =
+      num_elements_by_proc[lowest_proc_with_elements];
+
+  // for (size_t proc_num = lowest_proc_with_elements + 1; proc_num <
+  // total_procs; proc_num++) {
+  //   const size_t num_elements_this_proc = num_elements_by_proc[proc_num];
+  //   if (global_procs_to_ignore.count(proc_num) == 1) {
+  //     CHECK(num_elements_this_proc == 0);
+  //   } else {
+  //     // check that the distribution is near-uniform
+  //     CHECK((num_elements_this_proc == num_elements_on_lowest_proc or
+  //     num_elements_this_proc == num_elements_on_lowest_proc + 1 or
+  //         num_elements_this_proc == num_elements_on_lowest_proc - 1));
+  //   }
+  // }
+  size_t num_elements_so_far = num_elements_on_lowest_proc;
+  size_t proc_num = lowest_proc_with_elements + 1;
+  while (proc_num < total_procs and num_elements_so_far < num_elements) {
+    const size_t num_elements_this_proc = num_elements_by_proc[proc_num];
+    if (global_procs_to_ignore.count(proc_num) == 1) {
+      CHECK(num_elements_this_proc == 0);
+    } else {
+      // check that the distribution is near-uniform
+      CHECK((num_elements_this_proc == num_elements_on_lowest_proc or
+             num_elements_this_proc == num_elements_on_lowest_proc + 1 or
+             num_elements_this_proc == num_elements_on_lowest_proc - 1));
+    }
+    num_elements_so_far += num_elements_this_proc;
+    proc_num++;
+  }
+
+  // check that any remainder of processors we didn't need do indeed have 0
+  // elements assigned to them
+  for (size_t j = proc_num; j < total_procs; j++) {
+    CHECK(num_elements_by_proc[j] == 0);
+  }
+}
+
+// Test the processor distribution logic of the
+// `domain::WeightedBlockZCurveProcDistribution` constructor for weighted
+// element distributions
+template <size_t Dim>
+void test_weighted_element_distribution_construction(
     const domain::ElementWeight element_weight,
     const DomainCreator<Dim>& domain_creator,
     const size_t number_of_procs_with_elements,
@@ -487,7 +593,7 @@ void test_element_distribution_construction(
 // Test the retrieval of the assigned processor that is done by
 // `domain::WeightedBlockZCurveProcDistribution::get_proc_for_element`
 template <size_t Dim>
-void test_proc_retrieval(
+void test_proc_retrieval_impl(
     const domain::ElementWeight element_weight,
     const DomainCreator<Dim>& domain_creator,
     const size_t number_of_procs_with_elements,
@@ -558,7 +664,112 @@ void test_proc_retrieval(
   }
 }
 
-void test_element_distribution(const domain::ElementWeight element_weight) {
+void test_uniform_element_distribution(
+    const DomainCreator<1>& domain_creator_1d,
+    const DomainCreator<2>& domain_creator_2d,
+    const DomainCreator<3>& domain_creator_3d) {
+  // Test element distribution and proc retrieval for 1D, 2D, and 3D. For each
+  // dimension, four cases are tested: single proc requested, multiple procs
+  // requested, procs to ignore requested, and more procs requested than
+  // elements to distribute.
+
+  // 1D
+  test_uniform_element_distribution_construction(domain_creator_1d, 1);
+  test_uniform_element_distribution_construction(domain_creator_1d, 5);
+  test_uniform_element_distribution_construction(
+      domain_creator_1d, 10, std::unordered_set<size_t>{4, 6});
+  test_uniform_element_distribution_construction(domain_creator_1d, 33,
+                                                 std::unordered_set<size_t>{7});
+
+  // 2D
+  test_uniform_element_distribution_construction(domain_creator_2d, 1);
+  test_uniform_element_distribution_construction(domain_creator_2d, 5);
+  test_uniform_element_distribution_construction(
+      domain_creator_2d, 20, std::unordered_set<size_t>{4, 20});
+  test_uniform_element_distribution_construction(
+      domain_creator_2d, 54, std::unordered_set<size_t>{0, 1});
+
+  // 3D
+  test_uniform_element_distribution_construction(domain_creator_3d, 1);
+  test_uniform_element_distribution_construction(domain_creator_3d, 12);
+  test_uniform_element_distribution_construction(
+      domain_creator_3d, 73, std::unordered_set<size_t>{5, 8, 9, 75});
+  test_uniform_element_distribution_construction(
+      domain_creator_3d, 500, std::unordered_set<size_t>{100});
+}
+
+void test_weighted_element_distribution(
+    const domain::ElementWeight element_weight,
+    const DomainCreator<1>& domain_creator_1d,
+    const DomainCreator<2>& domain_creator_2d,
+    const DomainCreator<3>& domain_creator_3d) {
+  // Test element distribution and proc retrieval for 1D, 2D, and 3D. For each
+  // dimension, four cases are tested: single proc requested, multiple procs
+  // requested, procs to ignore requested, and more procs requested than
+  // elements to distribute.
+
+  // 1D
+  test_weighted_element_distribution_construction(element_weight,
+                                                  domain_creator_1d, 1);
+  test_weighted_element_distribution_construction(element_weight,
+                                                  domain_creator_1d, 5);
+  test_weighted_element_distribution_construction(
+      element_weight, domain_creator_1d, 10, std::unordered_set<size_t>{4, 6});
+  test_weighted_element_distribution_construction(
+      element_weight, domain_creator_1d, 33, std::unordered_set<size_t>{7});
+
+  // 2D
+  test_weighted_element_distribution_construction(element_weight,
+                                                  domain_creator_2d, 1);
+  test_weighted_element_distribution_construction(element_weight,
+                                                  domain_creator_2d, 5);
+  test_weighted_element_distribution_construction(
+      element_weight, domain_creator_2d, 20, std::unordered_set<size_t>{4, 20});
+  test_weighted_element_distribution_construction(
+      element_weight, domain_creator_2d, 54, std::unordered_set<size_t>{0, 1});
+
+  // 3D
+  test_weighted_element_distribution_construction(element_weight,
+                                                  domain_creator_3d, 1);
+  test_weighted_element_distribution_construction(element_weight,
+                                                  domain_creator_3d, 12);
+  test_weighted_element_distribution_construction(
+      element_weight, domain_creator_3d, 73,
+      std::unordered_set<size_t>{5, 8, 9, 75});
+  test_weighted_element_distribution_construction(
+      element_weight, domain_creator_3d, 500, std::unordered_set<size_t>{100});
+}
+
+void test_proc_retrieval(const domain::ElementWeight element_weight,
+                         const DomainCreator<1>& domain_creator_1d,
+                         const DomainCreator<2>& domain_creator_2d,
+                         const DomainCreator<3>& domain_creator_3d) {
+  // 1D
+  test_proc_retrieval_impl(element_weight, domain_creator_1d, 1);
+  test_proc_retrieval_impl(element_weight, domain_creator_1d, 5);
+  test_proc_retrieval_impl(element_weight, domain_creator_1d, 10,
+                           std::unordered_set<size_t>{4, 6});
+  test_proc_retrieval_impl(element_weight, domain_creator_1d, 33,
+                           std::unordered_set<size_t>{7});
+
+  // 2D
+  test_proc_retrieval_impl(element_weight, domain_creator_2d, 1);
+  test_proc_retrieval_impl(element_weight, domain_creator_2d, 5);
+  test_proc_retrieval_impl(element_weight, domain_creator_2d, 20,
+                           std::unordered_set<size_t>{4, 20});
+  test_proc_retrieval_impl(element_weight, domain_creator_2d, 54,
+                           std::unordered_set<size_t>{0, 1});
+
+  // 3D
+  test_proc_retrieval_impl(element_weight, domain_creator_3d, 1);
+  test_proc_retrieval_impl(element_weight, domain_creator_3d, 12);
+  test_proc_retrieval_impl(element_weight, domain_creator_3d, 73,
+                           std::unordered_set<size_t>{5, 8, 9, 75});
+  test_proc_retrieval_impl(element_weight, domain_creator_3d, 500,
+                           std::unordered_set<size_t>{100});
+}
+
+void test(const domain::ElementWeight element_weight) {
   // Test inputs
 
   // 1D, single block
@@ -589,74 +800,23 @@ void test_element_distribution(const domain::ElementWeight element_weight) {
                                    Metavariables<3, true, false>>(
           create_option_string(true, true, true, false, false, 0, 0, 0, false));
 
-  // Test element distribution and proc retrieval for 1D, 2D, and 3D. For each
-  // dimension, four cases are tested: single proc requested, multiple procs
-  // requested, procs to ignore requested, and more procs requested than
-  // elements to distribute.
+  if (element_weight == domain::ElementWeight::Uniform) {
+    test_uniform_cost_function();
+    test_uniform_element_distribution(*lattice_1d, *lattice_2d,
+                                      *binary_compact_object_creator);
+  } else {
+    test_weighted_cost_function(element_weight);
+    test_weighted_element_distribution(element_weight, *lattice_1d, *lattice_2d,
+                                       *binary_compact_object_creator);
+  }
 
-  // 1D
-  test_element_distribution_construction(element_weight, *lattice_1d, 1);
-  test_element_distribution_construction(element_weight, *lattice_1d, 5);
-  test_element_distribution_construction(element_weight, *lattice_1d, 10,
-                                         std::unordered_set<size_t>{4, 6});
-  test_element_distribution_construction(element_weight, *lattice_1d, 33,
-                                         std::unordered_set<size_t>{7});
-
-  // 2D
-  test_element_distribution_construction(element_weight, *lattice_2d, 1);
-  test_element_distribution_construction(element_weight, *lattice_2d, 5);
-  test_element_distribution_construction(element_weight, *lattice_2d, 20,
-                                         std::unordered_set<size_t>{4, 20});
-  test_element_distribution_construction(element_weight, *lattice_2d, 54,
-                                         std::unordered_set<size_t>{0, 1});
-
-  // 3D
-  test_element_distribution_construction(element_weight,
-                                         *binary_compact_object_creator, 1);
-  test_element_distribution_construction(element_weight,
-                                         *binary_compact_object_creator, 12);
-  test_element_distribution_construction(
-      element_weight, *binary_compact_object_creator, 73,
-      std::unordered_set<size_t>{5, 8, 9, 75});
-  test_element_distribution_construction(element_weight,
-                                         *binary_compact_object_creator, 500,
-                                         std::unordered_set<size_t>{100});
-
-  // 1D
-  test_proc_retrieval(element_weight, *lattice_1d, 1);
-  test_proc_retrieval(element_weight, *lattice_1d, 5);
-  test_proc_retrieval(element_weight, *lattice_1d, 10,
-                      std::unordered_set<size_t>{4, 6});
-  test_proc_retrieval(element_weight, *lattice_1d, 33,
-                      std::unordered_set<size_t>{7});
-
-  // 2D
-  test_proc_retrieval(element_weight, *lattice_2d, 1);
-  test_proc_retrieval(element_weight, *lattice_2d, 5);
-  test_proc_retrieval(element_weight, *lattice_2d, 20,
-                      std::unordered_set<size_t>{4, 20});
-  test_proc_retrieval(element_weight, *lattice_2d, 54,
-                      std::unordered_set<size_t>{0, 1});
-
-  // 3D
-  test_proc_retrieval(element_weight, *binary_compact_object_creator, 1);
-  test_proc_retrieval(element_weight, *binary_compact_object_creator, 12);
-  test_proc_retrieval(element_weight, *binary_compact_object_creator, 73,
-                      std::unordered_set<size_t>{5, 8, 9, 75});
-  test_proc_retrieval(element_weight, *binary_compact_object_creator, 500,
-                      std::unordered_set<size_t>{100});
+  test_proc_retrieval(element_weight, *lattice_1d, *lattice_2d,
+                      *binary_compact_object_creator);
 }
-
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.Domain.WeightedElementDistribution", "[Domain][Unit]") {
-  // Test computation of elemental weights
-  test_unweighted_cost_function();
-  test_weighted_cost_function(domain::ElementWeight::NumGridPoints);
-  test_weighted_cost_function(
-      domain::ElementWeight::NumGridPointsAndGridSpacing);
-
-  // test_element_distribution(domain::ElementWeight::Uniform);
-  // test_element_distribution(domain::ElementWeight::NumGridPoints);
-  test_element_distribution(domain::ElementWeight::NumGridPointsAndGridSpacing);
+  test(domain::ElementWeight::Uniform);
+  test(domain::ElementWeight::NumGridPoints);
+  test(domain::ElementWeight::NumGridPointsAndGridSpacing);
 }
