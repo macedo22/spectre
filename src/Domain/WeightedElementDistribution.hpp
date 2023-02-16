@@ -20,6 +20,7 @@ enum class Quadrature;
 }  // namespace Spectral
 
 namespace domain {
+/// The weighting scheme for assigning computational costs to `Element`s
 enum class ElementWeight {
   Uniform,
   NumGridPoints,
@@ -47,14 +48,10 @@ std::unordered_map<ElementId<Dim>, double> get_element_costs(
 /*!
  * \brief Distribution strategy for assigning elements to CPUs using a
  * Morton ('Z-order') space-filling curve to determine placement within each
- * block, where elements are assigned weighted costs that are distributed
- * across CPUs
+ * block, where `Element`s are distributed across CPUs
  *
  * \details The element distribution attempts to assign a balanced total
- * computational cost to each processor that is allowed to have elements. The
- * cost assigned to a processor is defined as the sum of the costs of the
- * `Element`s assigned to a processor, and the cost of an `Element` is defined
- * as `(number of grid points) / sqrt(minimum grid spacing in Frame::Grid)`.
+ * computational cost to each processor that is allowed to have `Element`s.
  * First, each `Block`'s `Element`s are ordered by their Z-curve index (see more
  * below). `Element`s are traversed in this order and assigned to CPUs in order,
  * moving onto the next CPU once the target cost per CPU is met. The target cost
