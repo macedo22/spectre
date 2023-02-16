@@ -53,8 +53,8 @@ CREATE_HAS_STATIC_MEMBER_VARIABLE_V(use_z_order_distribution)
  * `static constexpr bool local_time_stepping = true;` is specified
  * in the `Metavariables`, `Element`s will be distributed uniformly to
  * processors, else they will be distributed according to their computational
- * costs determined by the number of points and minimum grid spacing of that
- * `Element` (see `domain::get_num_points_and_grid_spacing_cost()`).
+ * costs determined by the number of grid points and minimum grid spacing of
+ * that `Element` (see `domain::get_num_points_and_grid_spacing_cost()`).
  */
 template <class Metavariables, class PhaseDepActionList>
 struct DgElementArray {
@@ -114,12 +114,6 @@ void DgElementArray<Metavariables, PhaseDepActionList>::allocate_array(
   const size_t number_of_nodes = Parallel::number_of_nodes<size_t>(local_cache);
   const size_t num_of_procs_to_use = number_of_procs - procs_to_ignore.size();
 
-  // Will be used to print domain diagnostic info
-  std::vector<size_t> elements_per_core(number_of_procs, 0_st);
-  std::vector<size_t> elements_per_node(number_of_nodes, 0_st);
-  std::vector<size_t> grid_points_per_core(number_of_procs, 0_st);
-  std::vector<size_t> grid_points_per_node(number_of_nodes, 0_st);
-
   const auto& blocks = domain.blocks();
 
   const auto element_costs = domain::get_element_costs(
@@ -130,6 +124,12 @@ void DgElementArray<Metavariables, PhaseDepActionList>::allocate_array(
   const domain::BlockZCurveProcDistribution<volume_dim> element_distribution{
       element_costs,   num_of_procs_to_use, blocks, initial_refinement_levels,
       initial_extents, procs_to_ignore};
+
+  // Will be used to print domain diagnostic info
+  std::vector<size_t> elements_per_core(number_of_procs, 0_st);
+  std::vector<size_t> elements_per_node(number_of_nodes, 0_st);
+  std::vector<size_t> grid_points_per_core(number_of_procs, 0_st);
+  std::vector<size_t> grid_points_per_node(number_of_nodes, 0_st);
 
   size_t which_proc = 0;
   for (const auto& block : blocks) {
