@@ -307,7 +307,7 @@ void test_weighted_cost_function(const domain::ElementWeight element_weight) {
 
 // Test the processor distribution logic of the
 // `domain::WeightedBlockZCurveProcDistribution` constructor for an unweighted
-// element distributions
+// element distribution
 template <size_t Dim>
 void test_uniform_element_distribution_construction(
     const DomainCreator<Dim>& domain_creator,
@@ -652,15 +652,13 @@ void test_proc_retrieval_impl(
   }
 }
 
+// Test unweighted element distribution for 1D, 2D, and 3D. For each dimension,
+// four cases are tested: single proc requested, multiple procs requested, procs
+// to ignore requested, and more procs requested than elements to distribute.
 void test_uniform_element_distribution(
     const DomainCreator<1>& domain_creator_1d,
     const DomainCreator<2>& domain_creator_2d,
     const DomainCreator<3>& domain_creator_3d) {
-  // Test element distribution and proc retrieval for 1D, 2D, and 3D. For each
-  // dimension, four cases are tested: single proc requested, multiple procs
-  // requested, procs to ignore requested, and more procs requested than
-  // elements to distribute.
-
   // 1D
   test_uniform_element_distribution_construction(domain_creator_1d, 1);
   test_uniform_element_distribution_construction(domain_creator_1d, 5);
@@ -686,16 +684,14 @@ void test_uniform_element_distribution(
       domain_creator_3d, 500, std::unordered_set<size_t>{100});
 }
 
+// Test weighted element distribution for 1D, 2D, and 3D. For each dimension,
+// four cases are tested: single proc requested, multiple procs requested, procs
+// to ignore requested, and more procs requested than elements to distribute.
 void test_weighted_element_distribution(
     const domain::ElementWeight element_weight,
     const DomainCreator<1>& domain_creator_1d,
     const DomainCreator<2>& domain_creator_2d,
     const DomainCreator<3>& domain_creator_3d) {
-  // Test element distribution and proc retrieval for 1D, 2D, and 3D. For each
-  // dimension, four cases are tested: single proc requested, multiple procs
-  // requested, procs to ignore requested, and more procs requested than
-  // elements to distribute.
-
   // 1D
   test_weighted_element_distribution_construction(element_weight,
                                                   domain_creator_1d, 1);
@@ -728,6 +724,9 @@ void test_weighted_element_distribution(
       element_weight, domain_creator_3d, 500, std::unordered_set<size_t>{100});
 }
 
+// Test processor retrieval for 1D, 2D, and 3D. For each dimension, four cases
+// are tested: single proc requested, multiple procs requested, procs to ignore
+// requested, and more procs requested than elements to distribute.
 void test_proc_retrieval(const domain::ElementWeight element_weight,
                          const DomainCreator<1>& domain_creator_1d,
                          const DomainCreator<2>& domain_creator_2d,
