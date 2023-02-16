@@ -28,6 +28,7 @@
 #include "NumericalAlgorithms/Spectral/Mesh.hpp"
 #include "NumericalAlgorithms/Spectral/Spectral.hpp"
 #include "Utilities/Algorithm.hpp"
+#include "Utilities/ConstantExpressions.hpp"
 #include "Utilities/ErrorHandling/Assert.hpp"
 #include "Utilities/ErrorHandling/Error.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
@@ -109,11 +110,11 @@ std::unordered_map<ElementId<Dim>, double> get_element_costs(
 
 template <size_t Dim>
 WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
+    const std::unordered_map<ElementId<Dim>, double>& element_costs,
     const size_t number_of_procs_with_elements,
     const std::vector<Block<Dim>>& blocks,
     const std::vector<std::array<size_t, Dim>>& initial_refinement_levels,
     const std::vector<std::array<size_t, Dim>>& initial_extents,
-    const Spectral::Quadrature quadrature,
     const std::unordered_set<size_t>& global_procs_to_ignore) {
   const size_t num_blocks = blocks.size();
 
@@ -127,23 +128,26 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
   ASSERT(initial_extents.size() == num_blocks,
          "`initial_extents` is not the same size as number of blocks");
 
-  const std::vector<std::vector<double>> cost_by_element_by_block =
-      get_cost_by_element_by_block(blocks, initial_refinement_levels,
-                                   initial_extents, quadrature);
-
   block_element_distribution_ =
-      std::vector<std::vector<std::pair<size_t, size_t>>>(
-          cost_by_element_by_block.size());
+      std::vector<std::vector<std::pair<size_t, size_t>>>(num_blocks);
 
-  double total_cost = 0.0;
-  for (auto& block : cost_by_element_by_block) {
-    for (double element_cost : block) {
-      total_cost += element_cost;
-    }
+  std::vector<std::vector<ElementId<Dim>>> initial_element_ids_by_block(
+      num_blocks);
+  for (size_t i = 0; i < num_blocks; i++) {
+    const size_t num_elements = two_to_the(alg::accumulate(
+        initial_refinement_levels[i], 1_st, std::plus<size_t>()));
+    initial_element_ids_by_block[i].reserve(num_elements);
+    initial_element_ids_by_block[i] = initial_element_ids_in_z_curve_order(
+        blocks[i].id(), initial_refinement_levels[i]);
   }
 
-  size_t current_block = 0;
-  size_t current_element_of_current_block = 0;
+  double total_cost = 0.0;
+  for (const auto& element_id_and_cost : element_costs) {
+    total_cost += element_id_and_cost.second;
+  }
+
+  size_t current_block_num = 0;
+  size_t element_num_of_block = 0;
   double cost_remaining = total_cost;
   size_t number_of_ignored_procs_so_far = 0;
   for (size_t i = 0; i < number_of_procs_with_elements; ++i) {
@@ -168,17 +172,19 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
     bool add_more_elements_to_proc = true;
     // while we haven't yet distributed all blocks and we still have cost
     // allowed on the proc
-    while (add_more_elements_to_proc and (current_block < num_blocks)) {
-      const size_t num_elements_current_block =
-          cost_by_element_by_block[current_block].size();
+    while (add_more_elements_to_proc and (current_block_num < num_blocks)) {
+      const size_t num_elements_current_block = two_to_the(
+          alg::accumulate(initial_refinement_levels[current_block_num], 0_st,
+                          std::plus<size_t>()));
       size_t num_elements_distributed_to_proc = 0;
       // while we still have elements left on the block to distribute and we
       // still have cost allowed on the proc
       while (add_more_elements_to_proc and
-             (current_element_of_current_block < num_elements_current_block)) {
-        const double element_cost =
-            cost_by_element_by_block[current_block]
-                                    [current_element_of_current_block];
+             (element_num_of_block < num_elements_current_block)) {
+        const ElementId<Dim>& element_id =
+            initial_element_ids_by_block[current_block_num]
+                                        [element_num_of_block];
+        const double element_cost = element_costs.at(element_id);
 
         if (total_elements_distributed_to_proc == 0) {
           // if we haven't yet assigned any elements to this proc, assign the
@@ -188,7 +194,7 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
           cost_spent_on_proc = element_cost;
           num_elements_distributed_to_proc = 1;
           total_elements_distributed_to_proc = 1;
-          current_element_of_current_block++;
+          element_num_of_block++;
         } else {
           const double current_cost_diff =
               abs(target_cost_per_proc - cost_spent_on_proc);
@@ -208,69 +214,23 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
             cost_remaining -= element_cost;
             num_elements_distributed_to_proc++;
             total_elements_distributed_to_proc++;
-            current_element_of_current_block++;
+            element_num_of_block++;
           }
         }
       }
 
       // add a proc and its element allowance for the current block
-      block_element_distribution_.at(current_block)
+      block_element_distribution_.at(current_block_num)
           .emplace_back(std::make_pair(global_proc_number,
                                        num_elements_distributed_to_proc));
-      if (current_element_of_current_block >= num_elements_current_block) {
+      if (element_num_of_block >= num_elements_current_block) {
         // if we're done assigning elements from the current block, move on to
         // the elements in the next block
-        ++current_block;
-        current_element_of_current_block = 0;
+        ++current_block_num;
+        element_num_of_block = 0;
       }
     }
   }
-}
-
-template <size_t Dim>
-std::vector<std::vector<double>>
-WeightedBlockZCurveProcDistribution<Dim>::get_cost_by_element_by_block(
-    const std::vector<Block<Dim>>& blocks,
-    const std::vector<std::array<size_t, Dim>>& initial_refinement_levels,
-    const std::vector<std::array<size_t, Dim>>& initial_extents,
-    const Spectral::Quadrature quadrature) {
-  // elemental costs correspond to elements in Z-curve order
-  std::vector<std::vector<double>> cost_by_element_by_block(blocks.size());
-
-  for (size_t block_number = 0; block_number < blocks.size(); block_number++) {
-    const auto& block = blocks[block_number];
-    const auto initial_ref_levs = initial_refinement_levels[block.id()];
-    const std::vector<ElementId<Dim>> element_ids =
-        initial_element_ids_in_z_curve_order(block.id(), initial_ref_levs);
-    const size_t grid_points_per_element = alg::accumulate(
-        initial_extents[block.id()], 1_st, std::multiplies<size_t>());
-
-    cost_by_element_by_block[block_number].reserve(element_ids.size());
-
-    // compute the minimum grid spacing (in Frame::Grid) and cost of each
-    // element
-    for (const auto& element_id : element_ids) {
-      Mesh<Dim> mesh = ::domain::Initialization::create_initial_mesh(
-          initial_extents, element_id, quadrature);
-      Element<Dim> element = ::domain::Initialization::create_initial_element(
-          element_id, block, initial_refinement_levels);
-      ElementMap<Dim, Frame::Grid> element_map{
-          element_id, block.is_time_dependent()
-                          ? block.moving_mesh_logical_to_grid_map().get_clone()
-                          : block.stationary_map().get_to_grid_frame()};
-      const tnsr::I<DataVector, Dim, Frame::ElementLogical> logical_coords =
-          logical_coordinates(mesh);
-      const tnsr::I<DataVector, Dim, Frame::Grid> grid_coords =
-          element_map(logical_coords);
-      const double min_grid_spacing =
-          minimum_grid_spacing(mesh.extents(), grid_coords);
-
-      cost_by_element_by_block[block_number].emplace_back(
-          grid_points_per_element / sqrt(min_grid_spacing));
-    }
-  }
-
-  return cost_by_element_by_block;
 }
 
 template <size_t Dim>

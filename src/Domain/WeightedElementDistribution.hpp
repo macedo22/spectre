@@ -26,6 +26,8 @@ enum class ElementWeight {
   NumGridPointsAndGridSpacing
 };
 
+/// Get the cost of an `Element` computed as
+/// `(number of grid points) / sqrt(minimum grid spacing in Frame::Grid)`
 template <size_t Dim>
 double get_num_points_and_grid_spacing_cost(
     const ElementId<Dim>& element_id, const Block<Dim>& block,
@@ -33,6 +35,8 @@ double get_num_points_and_grid_spacing_cost(
     const std::vector<std::array<size_t, Dim>>& initial_extents,
     Spectral::Quadrature quadrature, size_t num_grid_points);
 
+/// Get the cost of each `Element` in a list of `Block`s where `element_weight`
+/// specifies which weight distribution scheme to use
 template <size_t Dim>
 std::unordered_map<ElementId<Dim>, double> get_element_costs(
     const std::vector<Block<Dim>>& blocks,
@@ -125,21 +129,12 @@ struct WeightedBlockZCurveProcDistribution {
   /// procs because some global procs may be ignored by the sixth argument
   /// `global_procs_to_ignore`.
   WeightedBlockZCurveProcDistribution(
+      const std::unordered_map<ElementId<Dim>, double>& element_costs,
       size_t number_of_procs_with_elements,
       const std::vector<Block<Dim>>& blocks,
       const std::vector<std::array<size_t, Dim>>& initial_refinement_levels,
       const std::vector<std::array<size_t, Dim>>& initial_extents,
-      Spectral::Quadrature quadrature,
       const std::unordered_set<size_t>& global_procs_to_ignore = {});
-
-  /// Get the cost of each `Element` of each `Block` where the elemental costs
-  /// are ordered by Z-curve index (see parent class documentation) and computed
-  /// as `(number of grid points) / sqrt(minimum grid spacing in Frame::Grid)`
-  static std::vector<std::vector<double>> get_cost_by_element_by_block(
-      const std::vector<Block<Dim>>& blocks,
-      const std::vector<std::array<size_t, Dim>>& initial_refinement_levels,
-      const std::vector<std::array<size_t, Dim>>& initial_extents,
-      Spectral::Quadrature quadrature);
 
   /// Gets the suggested processor number for a particular `ElementId`,
   /// determined by the Morton curve weighted element assignment described in

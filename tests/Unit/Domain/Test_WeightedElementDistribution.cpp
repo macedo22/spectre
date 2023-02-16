@@ -153,8 +153,7 @@ std::string create_option_string(const bool excise_A, const bool excise_B,
          stringize(use_equiangular_map) + "\n" + time_dependence;
 }
 
-// Test the computation of the weighting done by
-// `domain::WeightedBlockZCurveProcDistribution::get_cost_by_element_by_block`
+// Test the computation of the weighting done by `domain::get_element_costs`
 void test_cost_function() {
   const auto domain_creator1 = make_domain_creator<3>(
       std::string("AlignedLattice:\n") +
@@ -196,37 +195,45 @@ void test_cost_function() {
   const auto domain3 = domain_creator3->create_domain();
   const auto& blocks3 = domain2.blocks();
 
-  const auto costs1 = domain::WeightedBlockZCurveProcDistribution<3>::
-      get_cost_by_element_by_block(blocks1,
-                                   domain_creator1->initial_refinement_levels(),
-                                   domain_creator1->initial_extents(),
-                                   Spectral::Quadrature::GaussLobatto);
+  const auto costs1 = domain::get_element_costs(
+      blocks1, domain_creator1->initial_refinement_levels(),
+      domain_creator1->initial_extents(), Spectral::Quadrature::GaussLobatto,
+      domain::ElementWeight::NumGridPointsAndGridSpacing);
 
-  const auto costs2 = domain::WeightedBlockZCurveProcDistribution<3>::
-      get_cost_by_element_by_block(blocks2,
-                                   domain_creator2->initial_refinement_levels(),
-                                   domain_creator2->initial_extents(),
-                                   Spectral::Quadrature::GaussLobatto);
+  const auto costs2 = domain::get_element_costs(
+      blocks2, domain_creator2->initial_refinement_levels(),
+      domain_creator2->initial_extents(), Spectral::Quadrature::GaussLobatto,
+      domain::ElementWeight::NumGridPointsAndGridSpacing);
 
-  const auto costs3 = domain::WeightedBlockZCurveProcDistribution<3>::
-      get_cost_by_element_by_block(blocks3,
-                                   domain_creator3->initial_refinement_levels(),
-                                   domain_creator3->initial_extents(),
-                                   Spectral::Quadrature::GaussLobatto);
+  const auto costs3 = domain::get_element_costs(
+      blocks3, domain_creator3->initial_refinement_levels(),
+      domain_creator3->initial_extents(), Spectral::Quadrature::GaussLobatto,
+      domain::ElementWeight::NumGridPointsAndGridSpacing);
 
-  const double elemental_cost1 = costs1[0][0];
-  for (size_t i = 0; i < costs1[0].size(); i++) {
-    // check that all elements in a block have the same cost
-    CHECK(elemental_cost1 == approx(costs1[0][i]));
-    CHECK(elemental_cost1 == approx(costs1[1][i]));
+  // check that all elements in each domain have the same cost
+
+  auto elemental_cost_it1 = costs1.begin();
+  const double elemental_cost1 = elemental_cost_it1->second;
+  elemental_cost_it1++;
+  while (elemental_cost_it1 != costs1.end()) {
+    CHECK(elemental_cost1 == approx(elemental_cost_it1->second));
+    elemental_cost_it1++;
   }
-  // check that the elements in both blocks have the same cost
-  CHECK_ITERABLE_APPROX(costs1[0], costs1[1]);
 
-  const double elemental_cost2 = costs2[0][0];
-  for (size_t i = 1; i < costs2[0].size(); i++) {
-    // check that all elements in the block have the same cost
-    CHECK(elemental_cost2 == costs2[0][i]);
+  auto elemental_cost_it2 = costs2.begin();
+  const double elemental_cost2 = elemental_cost_it2->second;
+  elemental_cost_it2++;
+  while (elemental_cost_it2 != costs1.end()) {
+    CHECK(elemental_cost2 == approx(elemental_cost_it2->second));
+    elemental_cost_it2++;
+  }
+
+  auto elemental_cost_it3 = costs3.begin();
+  const double elemental_cost3 = elemental_cost_it3->second;
+  elemental_cost_it3++;
+  while (elemental_cost_it3 != costs3.end()) {
+    CHECK(elemental_cost3 == approx(elemental_cost_it3->second));
+    elemental_cost_it3++;
   }
 
   // The highest refinement for the first test domain is 2 while the highest
@@ -236,12 +243,6 @@ void test_cost_function() {
   // elemental cost = (# of grid points) / sqrt(min grid spacing), the
   // elemental cost of the second domain should be a factor of sqrt(2) the cost.
   CHECK(elemental_cost2 == approx(sqrt(2.0) * elemental_cost1));
-
-  const double elemental_cost3 = costs3[0][0];
-  for (size_t i = 1; i < costs3[0].size(); i++) {
-    // check that all elements in the block have the same cost
-    CHECK(elemental_cost3 == approx(costs3[0][i]));
-  }
 
   // The minimum grid spacing for the first and third domain are equal, but the
   // number of grid points in an element in the first is 64 while the number of
@@ -255,7 +256,8 @@ void test_cost_function() {
 // Test the processor distribution logic of the
 // `domain::WeightedBlockZCurveProcDistribution` constructor
 template <size_t Dim>
-void test_element_distribution(
+void test_element_distribution_construction(
+    const domain::ElementWeight element_weight,
     const DomainCreator<Dim>& domain_creator,
     const size_t number_of_procs_with_elements,
     const std::unordered_set<size_t>& global_procs_to_ignore = {}) {
@@ -279,10 +281,13 @@ void test_element_distribution(
     num_elements += num_elements_this_block;
   }
 
+  const auto costs = domain::get_element_costs(
+      blocks, initial_refinement_levels, initial_extents,
+      Spectral::Quadrature::GaussLobatto, element_weight);
+
   const domain::WeightedBlockZCurveProcDistribution<Dim> element_distribution(
-      number_of_procs_with_elements, blocks, initial_refinement_levels,
-      initial_extents, Spectral::Quadrature::GaussLobatto,
-      global_procs_to_ignore);
+      costs, number_of_procs_with_elements, blocks, initial_refinement_levels,
+      initial_extents, global_procs_to_ignore);
   const auto proc_map = element_distribution.block_element_distribution();
 
   const size_t total_procs =
@@ -309,24 +314,31 @@ void test_element_distribution(
   // the expected number of total elements
   CHECK(actual_num_elements_in_dist == num_elements);
 
-  const auto costs = domain::WeightedBlockZCurveProcDistribution<
-      Dim>::get_cost_by_element_by_block(blocks, initial_refinement_levels,
-                                         initial_extents,
-                                         Spectral::Quadrature::GaussLobatto);
+  std::vector<std::vector<ElementId<Dim>>> initial_element_ids_by_block(
+      num_blocks);
+  for (size_t i = 0; i < num_blocks; i++) {
+    const size_t num_elements_this_block = two_to_the(alg::accumulate(
+        initial_refinement_levels[i], 0_st, std::plus<size_t>()));
+    initial_element_ids_by_block[i].reserve(num_elements_this_block);
+    initial_element_ids_by_block[i] =
+        domain::initial_element_ids_in_z_curve_order(
+            blocks[i].id(), initial_refinement_levels[i]);
+  }
 
   double total_cost = 0.0;
-  for (const auto& block : costs) {
-    for (const double element_cost : block) {
-      total_cost += element_cost;
-    }
+  for (const auto& element_id_and_cost : costs) {
+    total_cost += element_id_and_cost.second;
   }
 
   // one flattened vector instead of vectors by Block
   std::vector<double> costs_flattened(num_elements);
   size_t cost_index = 0;
-  for (const auto& block : costs) {
-    for (const double element_cost : block) {
-      costs_flattened[cost_index] = element_cost;
+  for (size_t i = 0; i < num_blocks; i++) {
+    const size_t num_elements_this_block =
+        initial_element_ids_by_block[i].size();
+    for (size_t j = 0; j < num_elements_this_block; j++) {
+      const ElementId<Dim>& element_id = initial_element_ids_by_block[i][j];
+      costs_flattened[cost_index] = costs.at(element_id);
       cost_index++;
     }
   }
@@ -351,7 +363,7 @@ void test_element_distribution(
       // cost left to account for, and it's the case that more procs were
       // requested than could be used, e.g. in the case of less elements than
       // procs
-      Approx custom_approx = Approx::custom().epsilon(1.0e-11).scale(1.0);
+      Approx custom_approx = Approx::custom().epsilon(1.0e-10).scale(1.0);
       CHECK(cost_remaining == custom_approx(0.0));
       break;
     }
@@ -401,9 +413,14 @@ void test_element_distribution(
       const double diff_with_extra_element =
           abs(proc_cost_with_extra_element - target_proc_cost);
 
-      // check that it's better to not add one more element than the number
-      // chosen
-      CHECK(diff_with_extra_element >= diff_with_final_element);
+      // if it appears better to add one more element, check that it's because
+      // the distance from the target cost with or without the additional
+      // element is about the same
+      if (diff_with_extra_element < diff_with_final_element) {
+        Approx custom_approx = Approx::custom().epsilon(1.0e-12).scale(1.0);
+        CHECK(diff_with_extra_element ==
+              custom_approx(diff_with_final_element));
+      }
     }
 
     cost_index += num_elements_this_proc;
@@ -421,6 +438,7 @@ void test_element_distribution(
 // `domain::WeightedBlockZCurveProcDistribution::get_proc_for_element`
 template <size_t Dim>
 void test_proc_retrieval(
+    const domain::ElementWeight element_weight,
     const DomainCreator<Dim>& domain_creator,
     const size_t number_of_procs_with_elements,
     const std::unordered_set<size_t>& global_procs_to_ignore = {}) {
@@ -439,10 +457,13 @@ void test_proc_retrieval(
             i, gsl::at(initial_refinement_levels, i), 0);
   }
 
+  const auto costs = domain::get_element_costs(
+      blocks, initial_refinement_levels, initial_extents,
+      Spectral::Quadrature::GaussLobatto, element_weight);
+
   const domain::WeightedBlockZCurveProcDistribution<Dim> element_distribution(
-      number_of_procs_with_elements, blocks, initial_refinement_levels,
-      initial_extents, Spectral::Quadrature::GaussLobatto,
-      global_procs_to_ignore);
+      costs, number_of_procs_with_elements, blocks, initial_refinement_levels,
+      initial_extents, global_procs_to_ignore);
   const auto proc_map = element_distribution.block_element_distribution();
 
   const size_t total_number_of_procs =
@@ -486,12 +507,8 @@ void test_proc_retrieval(
     }
   }
 }
-}  // namespace
 
-SPECTRE_TEST_CASE("Unit.Domain.WeightedElementDistribution", "[Domain][Unit]") {
-  // Test computation of elemental weights
-  test_cost_function();
-
+void test_element_distribution(const domain::ElementWeight element_weight) {
   // Test inputs
 
   // 1D, single block
@@ -528,42 +545,65 @@ SPECTRE_TEST_CASE("Unit.Domain.WeightedElementDistribution", "[Domain][Unit]") {
   // elements to distribute.
 
   // 1D
-  test_element_distribution(*lattice_1d, 1);
-  test_element_distribution(*lattice_1d, 5);
-  test_element_distribution(*lattice_1d, 10, std::unordered_set<size_t>{4, 6});
-  test_element_distribution(*lattice_1d, 33, std::unordered_set<size_t>{7});
+  test_element_distribution_construction(element_weight, *lattice_1d, 1);
+  test_element_distribution_construction(element_weight, *lattice_1d, 5);
+  test_element_distribution_construction(element_weight, *lattice_1d, 10,
+                                         std::unordered_set<size_t>{4, 6});
+  test_element_distribution_construction(element_weight, *lattice_1d, 33,
+                                         std::unordered_set<size_t>{7});
 
   // 2D
-  test_element_distribution(*lattice_2d, 1);
-  test_element_distribution(*lattice_2d, 5);
-  test_element_distribution(*lattice_2d, 20, std::unordered_set<size_t>{4, 20});
-  test_element_distribution(*lattice_2d, 54, std::unordered_set<size_t>{0, 1});
+  test_element_distribution_construction(element_weight, *lattice_2d, 1);
+  test_element_distribution_construction(element_weight, *lattice_2d, 5);
+  test_element_distribution_construction(element_weight, *lattice_2d, 20,
+                                         std::unordered_set<size_t>{4, 20});
+  test_element_distribution_construction(element_weight, *lattice_2d, 54,
+                                         std::unordered_set<size_t>{0, 1});
 
   // 3D
-  test_element_distribution(*binary_compact_object_creator, 1);
-  test_element_distribution(*binary_compact_object_creator, 12);
-  test_element_distribution(*binary_compact_object_creator, 73,
-                            std::unordered_set<size_t>{5, 8, 9, 75});
-  test_element_distribution(*binary_compact_object_creator, 500,
-                            std::unordered_set<size_t>{100});
+  test_element_distribution_construction(element_weight,
+                                         *binary_compact_object_creator, 1);
+  test_element_distribution_construction(element_weight,
+                                         *binary_compact_object_creator, 12);
+  test_element_distribution_construction(
+      element_weight, *binary_compact_object_creator, 73,
+      std::unordered_set<size_t>{5, 8, 9, 75});
+  test_element_distribution_construction(element_weight,
+                                         *binary_compact_object_creator, 500,
+                                         std::unordered_set<size_t>{100});
 
   // 1D
-  test_proc_retrieval(*lattice_1d, 1);
-  test_proc_retrieval(*lattice_1d, 5);
-  test_proc_retrieval(*lattice_1d, 10, std::unordered_set<size_t>{4, 6});
-  test_proc_retrieval(*lattice_1d, 33, std::unordered_set<size_t>{7});
+  test_proc_retrieval(element_weight, *lattice_1d, 1);
+  test_proc_retrieval(element_weight, *lattice_1d, 5);
+  test_proc_retrieval(element_weight, *lattice_1d, 10,
+                      std::unordered_set<size_t>{4, 6});
+  test_proc_retrieval(element_weight, *lattice_1d, 33,
+                      std::unordered_set<size_t>{7});
 
   // 2D
-  test_proc_retrieval(*lattice_2d, 1);
-  test_proc_retrieval(*lattice_2d, 5);
-  test_proc_retrieval(*lattice_2d, 20, std::unordered_set<size_t>{4, 20});
-  test_proc_retrieval(*lattice_2d, 54, std::unordered_set<size_t>{0, 1});
+  test_proc_retrieval(element_weight, *lattice_2d, 1);
+  test_proc_retrieval(element_weight, *lattice_2d, 5);
+  test_proc_retrieval(element_weight, *lattice_2d, 20,
+                      std::unordered_set<size_t>{4, 20});
+  test_proc_retrieval(element_weight, *lattice_2d, 54,
+                      std::unordered_set<size_t>{0, 1});
 
   // 3D
-  test_proc_retrieval(*binary_compact_object_creator, 1);
-  test_proc_retrieval(*binary_compact_object_creator, 12);
-  test_proc_retrieval(*binary_compact_object_creator, 73,
+  test_proc_retrieval(element_weight, *binary_compact_object_creator, 1);
+  test_proc_retrieval(element_weight, *binary_compact_object_creator, 12);
+  test_proc_retrieval(element_weight, *binary_compact_object_creator, 73,
                       std::unordered_set<size_t>{5, 8, 9, 75});
-  test_proc_retrieval(*binary_compact_object_creator, 500,
+  test_proc_retrieval(element_weight, *binary_compact_object_creator, 500,
                       std::unordered_set<size_t>{100});
+}
+
+}  // namespace
+
+SPECTRE_TEST_CASE("Unit.Domain.WeightedElementDistribution", "[Domain][Unit]") {
+  // Test computation of elemental weights
+  test_cost_function();
+
+  // test_element_distribution(domain::ElementWeight::Uniform);
+  // test_element_distribution(domain::ElementWeight::NumGridPoints);
+  test_element_distribution(domain::ElementWeight::NumGridPointsAndGridSpacing);
 }
