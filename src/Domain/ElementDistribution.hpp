@@ -40,7 +40,8 @@ enum class ElementWeight {
 ///
 /// The reason that we use the square root of the spacing as opposed to just the
 /// spacing in the denominator of the cost is that it was found experimentally
-/// that using the square root yielded faster BBH simulation runtimes.
+/// that using the square root yielded faster BBH simulation runtimes when using
+/// local time stepping.
 template <size_t Dim>
 double get_num_points_and_grid_spacing_cost(
     const ElementId<Dim>& element_id, const Block<Dim>& block,
