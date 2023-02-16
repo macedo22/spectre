@@ -20,12 +20,25 @@ enum class Quadrature;
 }  // namespace Spectral
 
 namespace domain {
+enum class ElementWeight {
+  Uniform,
+  NumGridPoints,
+  NumGridPointsAndGridSpacing
+};
+
 template <size_t Dim>
-std::unordered_map<ElementId<Dim>, double> get_num_points_grid_spacing_cost(
+double get_num_points_and_grid_spacing_cost(
+    const ElementId<Dim>& element_id, const Block<Dim>& block,
+    const std::vector<std::array<size_t, Dim>>& initial_refinement_levels,
+    const std::vector<std::array<size_t, Dim>>& initial_extents,
+    Spectral::Quadrature quadrature, size_t num_grid_points);
+
+template <size_t Dim>
+std::unordered_map<ElementId<Dim>, double> get_element_costs(
     const std::vector<Block<Dim>>& blocks,
     const std::vector<std::array<size_t, Dim>>& initial_refinement_levels,
     const std::vector<std::array<size_t, Dim>>& initial_extents,
-    const Spectral::Quadrature quadrature);
+    Spectral::Quadrature quadrature, ElementWeight element_weight);
 
 /*!
  * \brief Distribution strategy for assigning elements to CPUs using a
