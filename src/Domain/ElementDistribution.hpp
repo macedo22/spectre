@@ -27,8 +27,20 @@ enum class ElementWeight {
   NumGridPointsAndGridSpacing
 };
 
-/// Get the cost of an `Element` computed as
+/// \brief Get the cost of an `Element` computed as
 /// `(number of grid points) / sqrt(minimum grid spacing in Frame::Grid)`
+///
+/// \details As grid points in an `Element` increase, we expect the
+/// computational cost of an `Element` to scale proportionally (if the minimum
+/// grid spacing is held constant). In addition, the minimum grid spacing
+/// between two points in an `Element` informs the time step that we take, where
+/// the smaller the minimum spacing, the smaller time step we must take, which
+/// means we expect computational work to scale inversely with the minimum grid
+/// spacing.
+///
+/// The reason that we use the square root of the spacing as opposed to just the
+/// spacing in the denominator of the cost is that it was found experimentally
+/// that using the square root yielded faster BBH simulation runtimes.
 template <size_t Dim>
 double get_num_points_and_grid_spacing_cost(
     const ElementId<Dim>& element_id, const Block<Dim>& block,
@@ -58,17 +70,18 @@ std::unordered_map<ElementId<Dim>, double> get_element_costs(
  * per CPU is defined as the remaining cost to distribute divided by the
  * remaining number of CPUs to distribute to. This is an important distinction
  * from simply having one constant target cost per CPU defined as the total cost
- * divided by the total number of CPUs with elements. Since elemental costs will
- * nearly never add up to be exactly the average cost per CPU, this means that
- * we would either have to decide to overshoot or undershoot the average as we
- * iterate over the CPUs and assign `Element`s. If we overshoot the average on
- * each processor, the final processor could have a much lower cost than the
- * rest of the processors and we run the risk of overshooting so much that one
- * or more of the requested processors don't get assigned any `Element`s at all.
- * If we undershoot the average on each processor, the final processor could
- * have a much higher cost than the others due to remainder cost piling up.
- * This algorithm avoids these risks by instead adjusting the target cost per
- * CPU as we finish assigning cost to previous CPUs.
+ * divided by the total number of CPUs with elements. Since the total cost of
+ * `Element`s on a processor will nearly never add up to be exactly the average
+ * cost per CPU, this means that we would either have to decide to overshoot or
+ * undershoot the average as we iterate over the CPUs and assign `Element`s. If
+ * we overshoot the average on each processor, the final processor could have a
+ * much lower cost than the rest of the processors and we run the risk of
+ * overshooting so much that one or more of the requested processors don't get
+ * assigned any `Element`s at all. If we undershoot the average on each
+ * processor, the final processor could have a much higher cost than the others
+ * due to remainder cost piling up. This algorithm avoids these risks by instead
+ * adjusting the target cost per CPU as we finish assigning cost to previous
+ * CPUs.
  *
  * Morton curves are a simple and easily-computed space-filling curve that
  * (unlike Hilbert curves) permit diagonal traversal. See, for instance,
