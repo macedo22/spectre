@@ -373,18 +373,6 @@ void test_uniform_element_distribution_construction(
   const size_t num_elements_on_lowest_proc =
       num_elements_by_proc[lowest_proc_with_elements];
 
-  // for (size_t proc_num = lowest_proc_with_elements + 1; proc_num <
-  // total_procs; proc_num++) {
-  //   const size_t num_elements_this_proc = num_elements_by_proc[proc_num];
-  //   if (global_procs_to_ignore.count(proc_num) == 1) {
-  //     CHECK(num_elements_this_proc == 0);
-  //   } else {
-  //     // check that the distribution is near-uniform
-  //     CHECK((num_elements_this_proc == num_elements_on_lowest_proc or
-  //     num_elements_this_proc == num_elements_on_lowest_proc + 1 or
-  //         num_elements_this_proc == num_elements_on_lowest_proc - 1));
-  //   }
-  // }
   size_t num_elements_so_far = num_elements_on_lowest_proc;
   size_t proc_num = lowest_proc_with_elements + 1;
   while (proc_num < total_procs and num_elements_so_far < num_elements) {
