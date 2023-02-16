@@ -154,7 +154,48 @@ std::string create_option_string(const bool excise_A, const bool excise_B,
 }
 
 // Test the computation of the weighting done by `domain::get_element_costs`
-void test_cost_function() {
+void test_unweighted_cost_function() {
+  const auto domain_creator = TestHelpers::test_option_tag<
+      domain::OptionTags::DomainCreator<2>,
+      TestHelpers::domain::BoundaryConditions::
+          MetavariablesWithoutBoundaryConditions<
+              2, domain::creators::AlignedLattice<2>>>(
+      "AlignedLattice:\n"
+      "  BlockBounds: [[70, 71, 72, 73], [90, 92, 95, 99]]\n"
+      "  IsPeriodicIn: [true, false]\n"
+      "  InitialGridPoints: [3, 3]\n"
+      "  InitialLevels: [2, 5]\n"
+      "  BlocksToExclude: []\n"
+      "  RefinedLevels:\n"
+      "  - LowerCornerIndex: [1, 0]\n"
+      "    UpperCornerIndex: [3, 2]\n"
+      "    Refinement: [3, 5]\n"
+      "  - LowerCornerIndex: [2, 1]\n"
+      "    UpperCornerIndex: [3, 3]\n"
+      "    Refinement: [4, 6]\n"
+      "  RefinedGridPoints:\n"
+      "  - LowerCornerIndex: [1, 0]\n"
+      "    UpperCornerIndex: [3, 2]\n"
+      "    Refinement: [4, 5]\n"
+      "  - LowerCornerIndex: [2, 1]\n"
+      "    UpperCornerIndex: [3, 3]\n"
+      "    Refinement: [6, 7]");
+
+  const auto domain = domain_creator->create_domain();
+  const auto& blocks = domain.blocks();
+
+  const auto costs = domain::get_element_costs(
+      blocks, domain_creator->initial_refinement_levels(),
+      domain_creator->initial_extents(), Spectral::Quadrature::GaussLobatto,
+      domain::ElementWeight::Uniform);
+
+  for (const auto& element_id_and_cost : costs) {
+    CHECK(element_id_and_cost.second == 1.0);
+  }
+}
+
+// Test the computation of the weighting done by `domain::get_element_costs`
+void test_weighted_cost_function(const domain::ElementWeight element_weight) {
   const auto domain_creator1 = make_domain_creator<3>(
       std::string("AlignedLattice:\n") +
       "  BlockBounds: [[0.0, 1.0, 2.0], [0.0, 1.0], [0.0, 1.0]]\n" +
@@ -198,17 +239,17 @@ void test_cost_function() {
   const auto costs1 = domain::get_element_costs(
       blocks1, domain_creator1->initial_refinement_levels(),
       domain_creator1->initial_extents(), Spectral::Quadrature::GaussLobatto,
-      domain::ElementWeight::NumGridPointsAndGridSpacing);
+      element_weight);
 
   const auto costs2 = domain::get_element_costs(
       blocks2, domain_creator2->initial_refinement_levels(),
       domain_creator2->initial_extents(), Spectral::Quadrature::GaussLobatto,
-      domain::ElementWeight::NumGridPointsAndGridSpacing);
+      element_weight);
 
   const auto costs3 = domain::get_element_costs(
       blocks3, domain_creator3->initial_refinement_levels(),
       domain_creator3->initial_extents(), Spectral::Quadrature::GaussLobatto,
-      domain::ElementWeight::NumGridPointsAndGridSpacing);
+      element_weight);
 
   // check that all elements in each domain have the same cost
 
@@ -236,20 +277,29 @@ void test_cost_function() {
     elemental_cost_it3++;
   }
 
-  // The highest refinement for the first test domain is 2 while the highest
-  // refinement for the second test domain is 3, grid points held constant.
-  // Since the minimum grid spacing of the second domain is half the minimum
-  // grid spacing of the first and since
-  // elemental cost = (# of grid points) / sqrt(min grid spacing), the
-  // elemental cost of the second domain should be a factor of sqrt(2) the cost.
-  CHECK(elemental_cost2 == approx(sqrt(2.0) * elemental_cost1));
+  if (element_weight == domain::ElementWeight::NumGridPoints) {
+    // check that varying refinement doesn't affect the cost
+    CHECK(elemental_cost2 == elemental_cost1);
+  } else {
+    // element_weight == domain::ElementWeight::NumGridPointsAndGridSpacing
+
+    // The highest refinement for the first test domain is 2 while the highest
+    // refinement for the second test domain is 3, grid points held constant.
+    // Since the minimum grid spacing of the second domain is half the minimum
+    // grid spacing of the first and since
+    // elemental cost = (# of grid points) / sqrt(min grid spacing), the
+    // elemental cost of the second domain should be a factor of sqrt(2) the
+    // cost.
+    CHECK(elemental_cost2 == approx(sqrt(2.0) * elemental_cost1));
+  }
 
   // The minimum grid spacing for the first and third domain are equal, but the
   // number of grid points in an element in the first is 64 while the number of
-  // grid points in an element in the third is 24. Since
-  // elemental cost = (# of grid points) / sqrt(min grid spacing), the
-  // elemental cost of the second domain should be a factor of 24/64 = 3/8 the
-  // cost.
+  // grid points in an element in the third is 24. Since elemental cost for
+  // either domain::Elementweight::NumGridPoints or
+  // domain::Elementweight::NumGridPointsAndGridSpacing should only scale by
+  // the # of grid points, the elemental cost of the second domain should be a
+  // factor of 24/64 = 3/8 the cost.
   CHECK(elemental_cost3 == elemental_cost1 * 3.0 / 8.0);
 }
 
@@ -601,7 +651,10 @@ void test_element_distribution(const domain::ElementWeight element_weight) {
 
 SPECTRE_TEST_CASE("Unit.Domain.WeightedElementDistribution", "[Domain][Unit]") {
   // Test computation of elemental weights
-  test_cost_function();
+  test_unweighted_cost_function();
+  test_weighted_cost_function(domain::ElementWeight::NumGridPoints);
+  test_weighted_cost_function(
+      domain::ElementWeight::NumGridPointsAndGridSpacing);
 
   // test_element_distribution(domain::ElementWeight::Uniform);
   // test_element_distribution(domain::ElementWeight::NumGridPoints);
