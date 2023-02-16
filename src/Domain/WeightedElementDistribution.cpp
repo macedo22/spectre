@@ -128,15 +128,26 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
   ASSERT(initial_extents.size() == num_blocks,
          "`initial_extents` is not the same size as number of blocks");
 
+  size_t num_elements = 0;
+  std::vector<size_t> num_elements_by_block(num_blocks);
+  for (size_t i = 0; i < num_blocks; i++) {
+    const size_t num_elements_current_block = two_to_the(alg::accumulate(
+        initial_refinement_levels[i], 0_st, std::plus<size_t>()));
+    num_elements_by_block[i] = num_elements_current_block;
+    num_elements += num_elements_current_block;
+  }
+
+  ASSERT(element_costs.size() == num_elements,
+         "`element_costs` is not the same size as the total number of elements "
+         "computed from `initial_refinement_levels`");
+
   block_element_distribution_ =
       std::vector<std::vector<std::pair<size_t, size_t>>>(num_blocks);
 
   std::vector<std::vector<ElementId<Dim>>> initial_element_ids_by_block(
       num_blocks);
   for (size_t i = 0; i < num_blocks; i++) {
-    const size_t num_elements = two_to_the(alg::accumulate(
-        initial_refinement_levels[i], 1_st, std::plus<size_t>()));
-    initial_element_ids_by_block[i].reserve(num_elements);
+    initial_element_ids_by_block[i].reserve(num_elements_by_block[i]);
     initial_element_ids_by_block[i] = initial_element_ids_in_z_curve_order(
         blocks[i].id(), initial_refinement_levels[i]);
   }
@@ -173,9 +184,8 @@ WeightedBlockZCurveProcDistribution<Dim>::WeightedBlockZCurveProcDistribution(
     // while we haven't yet distributed all blocks and we still have cost
     // allowed on the proc
     while (add_more_elements_to_proc and (current_block_num < num_blocks)) {
-      const size_t num_elements_current_block = two_to_the(
-          alg::accumulate(initial_refinement_levels[current_block_num], 0_st,
-                          std::plus<size_t>()));
+      const size_t num_elements_current_block =
+          num_elements_by_block[current_block_num];
       size_t num_elements_distributed_to_proc = 0;
       // while we still have elements left on the block to distribute and we
       // still have cost allowed on the proc
