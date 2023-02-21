@@ -394,8 +394,9 @@ void test_uniform_element_distribution_construction(
 
   // check that any remainder of processors we didn't need do indeed have 0
   // elements assigned to them
-  for (size_t j = proc_num; j < total_procs; j++) {
-    CHECK(num_elements_by_proc[j] == 0);
+  while (proc_num < total_procs) {
+    CHECK(num_elements_by_proc[proc_num] == 0);
+    proc_num++;
   }
 }
 
@@ -492,13 +493,14 @@ void test_weighted_element_distribution_construction(
 
   cost_index = 0;
   double cost_remaining = total_cost;
-  size_t highest_proc_assigned = 0;
   size_t procs_skipped = 0;
+  size_t proc_num = 0;
   // check that we distributed the right number of elements to each proc based
   // on the sum of their costs in Z-curve index order
-  for (size_t i = 0; i < total_procs; i++) {
-    if (global_procs_to_ignore.count(i)) {
+  while (proc_num < total_procs) {
+    if (global_procs_to_ignore.count(proc_num)) {
       procs_skipped++;
+      proc_num++;
       continue;
     }
 
@@ -518,12 +520,13 @@ void test_weighted_element_distribution_construction(
 
     // the average cost per proc that we're aiming for
     const double target_proc_cost =
-        cost_remaining / (number_of_procs_with_elements - i + procs_skipped);
+        cost_remaining /
+        (number_of_procs_with_elements - proc_num + procs_skipped);
 
     // total cost on the processor before adding the cost of the final element
     // assigned to this proc
     double proc_cost_without_final_element = 0.0;
-    const size_t num_elements_this_proc = num_elements_by_proc[i];
+    const size_t num_elements_this_proc = num_elements_by_proc[proc_num];
     // add up costs of all elements but the final one to add
     for (size_t j = 0; j < num_elements_this_proc - 1; j++) {
       const double this_cost = costs_flattened[cost_index + j];
@@ -573,13 +576,14 @@ void test_weighted_element_distribution_construction(
 
     cost_index += num_elements_this_proc;
     cost_remaining -= proc_cost_with_final_element;
-    highest_proc_assigned = i;
+    proc_num++;
   }
 
   // check that any remainder of processors we didn't need do indeed have 0
   // elements assigned to them
-  for (size_t j = highest_proc_assigned + 1; j < total_procs; j++) {
-    CHECK(num_elements_by_proc[j] == 0);
+  while (proc_num < total_procs) {
+    CHECK(num_elements_by_proc[proc_num] == 0);
+    proc_num++;
   }
 }
 
