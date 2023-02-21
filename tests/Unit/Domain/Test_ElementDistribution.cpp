@@ -584,7 +584,7 @@ void test_weighted_element_distribution_construction(
 // Test the retrieval of the assigned processor that is done by
 // `domain::BlockZCurveProcDistribution::get_proc_for_element`
 template <size_t Dim>
-void test_proc_retrieval_impl(
+void test_proc_retrieval(
     const domain::ElementWeight element_weight,
     const DomainCreator<Dim>& domain_creator,
     const size_t number_of_procs_with_elements,
@@ -726,41 +726,16 @@ void test_weighted_element_distribution(
   test_weighted_element_distribution_construction(
       element_weight, domain_creator_3d, 500, std::unordered_set<size_t>{100});
 }
+}  // namespace
 
-// Test processor retrieval for 1D, 2D, and 3D. For each dimension, four cases
-// are tested: single proc requested, multiple procs requested, procs to ignore
-// requested, and more procs requested than elements to distribute.
-void test_proc_retrieval(const domain::ElementWeight element_weight,
-                         const DomainCreator<1>& domain_creator_1d,
-                         const DomainCreator<2>& domain_creator_2d,
-                         const DomainCreator<3>& domain_creator_3d) {
-  // 1D
-  test_proc_retrieval_impl(element_weight, domain_creator_1d, 1);
-  test_proc_retrieval_impl(element_weight, domain_creator_1d, 5);
-  test_proc_retrieval_impl(element_weight, domain_creator_1d, 10,
-                           std::unordered_set<size_t>{4, 6});
-  test_proc_retrieval_impl(element_weight, domain_creator_1d, 33,
-                           std::unordered_set<size_t>{7});
+SPECTRE_TEST_CASE("Unit.Domain.ElementDistribution", "[Domain][Unit]") {
+  // Test cost functions
+  test_uniform_cost_function();
+  test_weighted_cost_function(domain::ElementWeight::NumGridPoints);
+  test_weighted_cost_function(
+      domain::ElementWeight::NumGridPointsAndGridSpacing);
 
-  // 2D
-  test_proc_retrieval_impl(element_weight, domain_creator_2d, 1);
-  test_proc_retrieval_impl(element_weight, domain_creator_2d, 5);
-  test_proc_retrieval_impl(element_weight, domain_creator_2d, 20,
-                           std::unordered_set<size_t>{4, 20});
-  test_proc_retrieval_impl(element_weight, domain_creator_2d, 54,
-                           std::unordered_set<size_t>{0, 1});
-
-  // 3D
-  test_proc_retrieval_impl(element_weight, domain_creator_3d, 1);
-  test_proc_retrieval_impl(element_weight, domain_creator_3d, 12);
-  test_proc_retrieval_impl(element_weight, domain_creator_3d, 73,
-                           std::unordered_set<size_t>{5, 8, 9, 75});
-  test_proc_retrieval_impl(element_weight, domain_creator_3d, 500,
-                           std::unordered_set<size_t>{100});
-}
-
-void test(const domain::ElementWeight element_weight) {
-  // Test inputs
+  // Inputs for testing `BlockZCurveProcDistribution`
 
   // 1D, single block
   const auto lattice_1d = make_domain_creator<1>(
@@ -790,23 +765,23 @@ void test(const domain::ElementWeight element_weight) {
                                    Metavariables<3, true, false>>(
           create_option_string(true, true, true, false, false, 0, 0, 0, false));
 
-  if (element_weight == domain::ElementWeight::Uniform) {
-    test_uniform_cost_function();
-    test_uniform_element_distribution(*lattice_1d, *lattice_2d,
-                                      *binary_compact_object_creator);
-  } else {
-    test_weighted_cost_function(element_weight);
-    test_weighted_element_distribution(element_weight, *lattice_1d, *lattice_2d,
-                                       *binary_compact_object_creator);
-  }
+  // Test element distribution construction logic
+  test_uniform_element_distribution(*lattice_1d, *lattice_2d,
+                                    *binary_compact_object_creator);
+  test_weighted_element_distribution(
+      domain::ElementWeight::NumGridPointsAndGridSpacing, *lattice_1d,
+      *lattice_2d, *binary_compact_object_creator);
+  test_weighted_element_distribution(domain::ElementWeight::NumGridPoints,
+                                     *lattice_1d, *lattice_2d,
+                                     *binary_compact_object_creator);
 
-  test_proc_retrieval(element_weight, *lattice_1d, *lattice_2d,
-                      *binary_compact_object_creator);
-}
-}  // namespace
-
-SPECTRE_TEST_CASE("Unit.Domain.ElementDistribution", "[Domain][Unit]") {
-  test(domain::ElementWeight::Uniform);
-  test(domain::ElementWeight::NumGridPoints);
-  test(domain::ElementWeight::NumGridPointsAndGridSpacing);
+  // Test processor retrieval with ignored processors
+  test_proc_retrieval(domain::ElementWeight::NumGridPointsAndGridSpacing,
+                      *binary_compact_object_creator, 73,
+                      std::unordered_set<size_t>{0, 8, 9, 75});
+  // Test processor retrieval when there are more processors requested than
+  // `Element`s in the domain
+  test_proc_retrieval(domain::ElementWeight::NumGridPointsAndGridSpacing,
+                      *binary_compact_object_creator, 500,
+                      std::unordered_set<size_t>{17});
 }
