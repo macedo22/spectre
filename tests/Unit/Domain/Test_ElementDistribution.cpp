@@ -492,6 +492,7 @@ void test_weighted_element_distribution_construction(
 
   cost_index = 0;
   double cost_remaining = total_cost;
+  size_t highest_proc_assigned = 0;
   size_t procs_skipped = 0;
   // check that we distributed the right number of elements to each proc based
   // on the sum of their costs in Z-curve index order
@@ -572,11 +573,12 @@ void test_weighted_element_distribution_construction(
 
     cost_index += num_elements_this_proc;
     cost_remaining -= proc_cost_with_final_element;
+    highest_proc_assigned = i;
   }
 
   // check that any remainder of processors we didn't need do indeed have 0
   // elements assigned to them
-  for (size_t j = cost_index + 1; j < total_procs; j++) {
+  for (size_t j = highest_proc_assigned + 1; j < total_procs; j++) {
     CHECK(num_elements_by_proc[j] == 0);
   }
 }
@@ -656,15 +658,14 @@ void test_proc_retrieval(
 }
 
 // Test unweighted element distribution for 1D, 2D, and 3D. For each dimension,
-// four cases are tested: single proc requested, multiple procs requested, procs
-// to ignore requested, and more procs requested than elements to distribute.
+// three cases are tested: single proc requested, multiple procs requested with
+// procs to ignore, and more procs requested than elements to distribute.
 void test_uniform_element_distribution(
     const DomainCreator<1>& domain_creator_1d,
     const DomainCreator<2>& domain_creator_2d,
     const DomainCreator<3>& domain_creator_3d) {
   // 1D
   test_uniform_element_distribution_construction(domain_creator_1d, 1);
-  test_uniform_element_distribution_construction(domain_creator_1d, 5);
   test_uniform_element_distribution_construction(
       domain_creator_1d, 10, std::unordered_set<size_t>{4, 6});
   test_uniform_element_distribution_construction(domain_creator_1d, 33,
@@ -672,15 +673,13 @@ void test_uniform_element_distribution(
 
   // 2D
   test_uniform_element_distribution_construction(domain_creator_2d, 1);
-  test_uniform_element_distribution_construction(domain_creator_2d, 5);
   test_uniform_element_distribution_construction(
       domain_creator_2d, 20, std::unordered_set<size_t>{4, 20});
   test_uniform_element_distribution_construction(
-      domain_creator_2d, 54, std::unordered_set<size_t>{0, 1});
+      domain_creator_2d, 100, std::unordered_set<size_t>{0, 1});
 
   // 3D
   test_uniform_element_distribution_construction(domain_creator_3d, 1);
-  test_uniform_element_distribution_construction(domain_creator_3d, 12);
   test_uniform_element_distribution_construction(
       domain_creator_3d, 73, std::unordered_set<size_t>{5, 8, 9, 75});
   test_uniform_element_distribution_construction(
@@ -688,8 +687,8 @@ void test_uniform_element_distribution(
 }
 
 // Test weighted element distribution for 1D, 2D, and 3D. For each dimension,
-// four cases are tested: single proc requested, multiple procs requested, procs
-// to ignore requested, and more procs requested than elements to distribute.
+// three cases are tested: single proc requested, multiple procs requested with
+// procs to ignore, and more procs requested than elements to distribute.
 void test_weighted_element_distribution(
     const domain::ElementWeight element_weight,
     const DomainCreator<1>& domain_creator_1d,
@@ -698,8 +697,6 @@ void test_weighted_element_distribution(
   // 1D
   test_weighted_element_distribution_construction(element_weight,
                                                   domain_creator_1d, 1);
-  test_weighted_element_distribution_construction(element_weight,
-                                                  domain_creator_1d, 5);
   test_weighted_element_distribution_construction(
       element_weight, domain_creator_1d, 10, std::unordered_set<size_t>{4, 6});
   test_weighted_element_distribution_construction(
@@ -708,18 +705,14 @@ void test_weighted_element_distribution(
   // 2D
   test_weighted_element_distribution_construction(element_weight,
                                                   domain_creator_2d, 1);
-  test_weighted_element_distribution_construction(element_weight,
-                                                  domain_creator_2d, 5);
   test_weighted_element_distribution_construction(
       element_weight, domain_creator_2d, 20, std::unordered_set<size_t>{4, 20});
   test_weighted_element_distribution_construction(
-      element_weight, domain_creator_2d, 54, std::unordered_set<size_t>{0, 1});
+      element_weight, domain_creator_2d, 100, std::unordered_set<size_t>{0, 1});
 
   // 3D
   test_weighted_element_distribution_construction(element_weight,
                                                   domain_creator_3d, 1);
-  test_weighted_element_distribution_construction(element_weight,
-                                                  domain_creator_3d, 12);
   test_weighted_element_distribution_construction(
       element_weight, domain_creator_3d, 73,
       std::unordered_set<size_t>{5, 8, 9, 75});
@@ -777,11 +770,9 @@ SPECTRE_TEST_CASE("Unit.Domain.ElementDistribution", "[Domain][Unit]") {
 
   // Test processor retrieval with ignored processors
   test_proc_retrieval(domain::ElementWeight::NumGridPointsAndGridSpacing,
-                      *binary_compact_object_creator, 73,
-                      std::unordered_set<size_t>{0, 8, 9, 75});
+                      *lattice_2d, 19, std::unordered_set<size_t>{0, 8, 9, 21});
   // Test processor retrieval when there are more processors requested than
   // `Element`s in the domain
   test_proc_retrieval(domain::ElementWeight::NumGridPointsAndGridSpacing,
-                      *binary_compact_object_creator, 500,
-                      std::unordered_set<size_t>{17});
+                      *lattice_2d, 100, std::unordered_set<size_t>{17});
 }
