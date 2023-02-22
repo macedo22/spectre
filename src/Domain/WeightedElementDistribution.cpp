@@ -203,7 +203,7 @@ WeightedBlockZCurveProcDistribution<Dim>::get_cost_by_element_by_block(
           make_not_null(&minimum_grid_spacing), mesh, grid_coords);
 
       cost_by_element_by_block[block_number].emplace_back(
-          grid_points_per_element / sqrt(minimum_grid_spacing));
+          grid_points_per_element / cbrt(minimum_grid_spacing));
     }
   }
 
