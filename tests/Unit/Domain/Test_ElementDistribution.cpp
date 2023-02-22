@@ -550,8 +550,10 @@ void test_weighted_element_distribution_construction(
     // we omitted the final element, i.e. check that it's better to keep the
     // final element than to not
     if (proc_cost_with_final_element > target_proc_cost) {
+      Approx custom_approx = Approx::custom().epsilon(1.0e-12).scale(1.0);
       CHECK((num_elements_this_proc == 1 or
-             diff_with_final_element == approx(diff_without_final_element) or
+             diff_with_final_element ==
+                 custom_approx(diff_without_final_element) or
              diff_with_final_element < diff_without_final_element));
     }
 
