@@ -59,7 +59,7 @@ double get_num_points_and_grid_spacing_cost(
     const ElementId<Dim>& element_id, const Block<Dim>& block,
     const std::vector<std::array<size_t, Dim>>& initial_refinement_levels,
     const std::vector<std::array<size_t, Dim>>& initial_extents,
-    Spectral::Quadrature quadrature, size_t num_grid_points);
+    Spectral::Quadrature quadrature);
 
 /// \brief Get the cost of each `Element` in a list of `Block`s where
 /// `element_weight` specifies which weight distribution scheme to use

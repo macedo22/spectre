@@ -170,7 +170,7 @@ struct ElementsAllocator
       const std::unordered_map<ElementId<Dim>, double> element_costs =
           domain::get_element_costs(
               blocks, initial_refinement_levels, initial_extents,
-              domain::ElementWeight::Uniform, std::nullopt);
+              domain::ElementWeight::NumGridPoints, std::nullopt);
       const domain::BlockZCurveProcDistribution<Dim> element_distribution{
           element_costs,   num_of_procs_to_use,
           blocks,          initial_refinement_levels,

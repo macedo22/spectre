@@ -41,7 +41,7 @@ double get_num_points_and_grid_spacing_cost(
     const ElementId<Dim>& element_id, const Block<Dim>& block,
     const std::vector<std::array<size_t, Dim>>& initial_refinement_levels,
     const std::vector<std::array<size_t, Dim>>& initial_extents,
-    const Spectral::Quadrature quadrature, const size_t num_grid_points) {
+    const Spectral::Quadrature quadrature) {
   Mesh<Dim> mesh = ::domain::Initialization::create_initial_mesh(
       initial_extents, element_id, quadrature);
   Element<Dim> element = ::domain::Initialization::create_initial_element(
@@ -57,7 +57,7 @@ double get_num_points_and_grid_spacing_cost(
   const double min_grid_spacing =
       minimum_grid_spacing(mesh.extents(), grid_coords);
 
-  return num_grid_points / sqrt(min_grid_spacing);
+  return mesh.number_of_grid_points() / sqrt(min_grid_spacing);
 }
 
 template <size_t Dim>
@@ -87,24 +87,11 @@ std::unordered_map<ElementId<Dim>, double> get_element_costs(
                "Since element_weight is "
                "ElementWeight::NumGridPointsAndGridSpacing, quadrature must "
                "have a value");
-        Mesh<Dim> mesh = ::domain::Initialization::create_initial_mesh(
-            initial_extents, element_id, quadrature.value());
-        Element<Dim> element = ::domain::Initialization::create_initial_element(
-            element_id, block, initial_refinement_levels);
-        ElementMap<Dim, Frame::Grid> element_map{
-            element_id,
-            block.is_time_dependent()
-                ? block.moving_mesh_logical_to_grid_map().get_clone()
-                : block.stationary_map().get_to_grid_frame()};
-        const tnsr::I<DataVector, Dim, Frame::ElementLogical> logical_coords =
-            logical_coordinates(mesh);
-        const tnsr::I<DataVector, Dim, Frame::Grid> grid_coords =
-            element_map(logical_coords);
-        const double min_grid_spacing =
-            minimum_grid_spacing(mesh.extents(), grid_coords);
 
         element_costs.insert(
-            {element_id, grid_points_per_element / sqrt(min_grid_spacing)});
+            {element_id, get_num_points_and_grid_spacing_cost(
+                             element_id, block, initial_refinement_levels,
+                             initial_extents, quadrature.value())});
       }
     }
   }
@@ -275,7 +262,7 @@ size_t BlockZCurveProcDistribution<Dim>::get_proc_for_element(
       const std::vector<std::array<size_t, GET_DIM(data)>>&                  \
           initial_refinement_levels,                                         \
       const std::vector<std::array<size_t, GET_DIM(data)>>& initial_extents, \
-      Spectral::Quadrature quadrature, size_t num_grid_points);              \
+      Spectral::Quadrature quadrature);                                      \
   template std::unordered_map<ElementId<GET_DIM(data)>, double>              \
   get_element_costs(                                                         \
       const std::vector<Block<GET_DIM(data)>>& blocks,                       \

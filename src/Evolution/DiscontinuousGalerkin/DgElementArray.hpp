@@ -54,10 +54,11 @@ CREATE_HAS_STATIC_MEMBER_VARIABLE_V(use_z_order_distribution)
  * passed to the `allocate_array` function which represents physical processors
  * to avoid placing elements on. If the space-filling curve is used, then if
  * `static constexpr bool local_time_stepping = true;` is specified
- * in the `Metavariables`, `Element`s will be distributed uniformly to
- * processors, else they will be distributed according to their computational
- * costs determined by the number of grid points and minimum grid spacing of
- * that `Element` (see `domain::get_num_points_and_grid_spacing_cost()`).
+ * in the `Metavariables`, `Element`s will be distributed according to their
+ * computational costs determined by the number of grid points and minimum grid
+ * spacing of that `Element` (see
+ * `domain::get_num_points_and_grid_spacing_cost()`), else the computational
+ * cost is determined only by the number of grid points in the `Element`.
  */
 template <class Metavariables, class PhaseDepActionList>
 struct DgElementArray {
@@ -124,7 +125,7 @@ void DgElementArray<Metavariables, PhaseDepActionList>::allocate_array(
           blocks, initial_refinement_levels, initial_extents,
           Metavariables::local_time_stepping
               ? domain::ElementWeight::NumGridPointsAndGridSpacing
-              : domain::ElementWeight::Uniform,
+              : domain::ElementWeight::NumGridPoints,
           quadrature);
   const domain::BlockZCurveProcDistribution<volume_dim> element_distribution{
       element_costs,   num_of_procs_to_use, blocks, initial_refinement_levels,

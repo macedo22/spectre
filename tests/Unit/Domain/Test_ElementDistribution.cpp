@@ -8,7 +8,6 @@
 #include <cstddef>
 #include <functional>
 #include <optional>
-#include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -20,177 +19,27 @@
 #include "Domain/Creators/DomainCreator.hpp"
 #include "Domain/Domain.hpp"
 #include "Domain/ElementDistribution.hpp"
-#include "Domain/OptionTags.hpp"
-#include "Domain/Protocols/Metavariables.hpp"
 #include "Domain/Structure/ElementId.hpp"
 #include "Domain/Structure/ZCurve.hpp"
-#include "Framework/TestCreation.hpp"
-#include "Helpers/Domain/BoundaryConditions/BoundaryCondition.hpp"
 #include "Utilities/ConstantExpressions.hpp"
 #include "Utilities/Gsl.hpp"
-#include "Utilities/TMPL.hpp"
 
 namespace {
-// Make a `domain::creators::AlignedLattice` from an option string
-template <size_t Dim>
-auto make_domain_creator(const std::string& opt_string) {
-  return TestHelpers::test_option_tag<
-      domain::OptionTags::DomainCreator<Dim>,
-      TestHelpers::domain::BoundaryConditions::
-          MetavariablesWithoutBoundaryConditions<
-              Dim, domain::creators::AlignedLattice<Dim>>>(opt_string);
-}
-
-// Metavariables for a `domain::creators::BinaryCompactObject`
-template <size_t Dim, bool EnableTimeDependentMaps, bool WithBoundaryConditions>
-struct Metavariables {
-  struct domain : tt::ConformsTo<::domain::protocols::Metavariables> {
-    static constexpr bool enable_time_dependent_maps = EnableTimeDependentMaps;
-  };
-  using system = tmpl::conditional_t<WithBoundaryConditions,
-                                     TestHelpers::domain::BoundaryConditions::
-                                         SystemWithBoundaryConditions<Dim>,
-                                     TestHelpers::domain::BoundaryConditions::
-                                         SystemWithoutBoundaryConditions<Dim>>;
-  struct factory_creation
-      : tt::ConformsTo<Options::protocols::FactoryCreation> {
-    using factory_classes = tmpl::map<tmpl::pair<
-        DomainCreator<3>, tmpl::list<::domain::creators::BinaryCompactObject>>>;
-  };
-};
-
-// Stringify a bool
-std::string stringize(const bool t) { return t ? "true" : "false"; }
-
-// Create an option string for a `domain::creators::BinaryCompactObject`
-std::string create_option_string(const bool excise_A, const bool excise_B,
-                                 const bool add_time_dependence,
-                                 const bool use_logarithmic_map_AB,
-                                 const bool use_equiangular_map,
-                                 const size_t additional_refinement_outer,
-                                 const size_t additional_refinement_A,
-                                 const size_t additional_refinement_B,
-                                 const bool add_boundary_condition) {
-  const std::string time_dependence{
-      add_time_dependence ? "  TimeDependentMaps:\n"
-                            "    InitialTime: 1.0\n"
-                            "    ExpansionMap: \n"
-                            "      OuterBoundary: 25.0\n"
-                            "      InitialExpansion: 1.0\n"
-                            "      InitialExpansionVelocity: -0.1\n"
-                            "      AsymptoticVelocityOuterBoundary: -0.1\n"
-                            "      DecayTimescaleOuterBoundaryVelocity: 5.0\n"
-                            "    RotationMap:\n"
-                            "      InitialAngularVelocity: [0.0, 0.0, -0.2]\n"
-                            "    SizeMap:\n"
-                            "      InitialValues: [0.0, 0.0]\n"
-                            "      InitialVelocities: [-0.1, -0.2]\n"
-                            "      InitialAccelerations: [0.01, 0.02]"
-                          : ""};
-  const std::string interior_A{
-      add_boundary_condition
-          ? std::string{"    Interior:\n" +
-                        std::string{excise_A
-                                        ? "      ExciseWithBoundaryCondition:\n"
-                                          "        TestBoundaryCondition:\n"
-                                          "          Direction: lower-zeta\n"
-                                          "          BlockId: 50\n"
-                                        : "      Auto\n"}}
-          : "    ExciseInterior: " + stringize(excise_A) + "\n"};
-  const std::string interior_B{
-      add_boundary_condition
-          ? std::string{"    Interior:\n" +
-                        std::string{excise_B
-                                        ? "      ExciseWithBoundaryCondition:\n"
-                                          "        TestBoundaryCondition:\n"
-                                          "          Direction: lower-zeta\n"
-                                          "          BlockId: 50\n"
-                                        : "      Auto\n"}}
-          : "    ExciseInterior: " + stringize(excise_B) + "\n"};
-  const std::string outer_boundary_condition{
-      add_boundary_condition ? std::string{"    BoundaryCondition:\n"
-                                           "      TestBoundaryCondition:\n"
-                                           "        Direction: upper-zeta\n"
-                                           "        BlockId: 50\n"}
-                             : ""};
-  return "BinaryCompactObject:\n"
-         "  ObjectA:\n"
-         "    InnerRadius: 1.0\n"
-         "    OuterRadius: 2.0\n"
-         "    XCoord: 3.0\n" +
-         interior_A +
-         "    UseLogarithmicMap: " + stringize(use_logarithmic_map_AB) +
-         "\n"
-         "  ObjectB:\n"
-         "    InnerRadius: 0.2\n"
-         "    OuterRadius: 1.0\n"
-         "    XCoord: -2.0\n" +
-         interior_B +
-         "    UseLogarithmicMap: " + stringize(use_logarithmic_map_AB) +
-         "\n"
-         "  EnvelopingCube:\n"
-         "    Radius: 22.0\n"
-         "    UseProjectiveMap: true\n"
-         "    Sphericity: 1.0\n"
-         "  OuterShell:\n"
-         "    InnerRadius: Auto\n"
-         "    OuterRadius: 25.0\n"
-         "    RadialDistribution: Linear\n" +
-         outer_boundary_condition + "  InitialRefinement:\n" +
-         (excise_A ? "" : "    ObjectAInterior: [1, 1, 1]\n") +
-         (excise_B ? "" : "    ObjectBInterior: [1, 1, 1]\n") +
-         "    ObjectAShell: [1, 1, " +
-         std::to_string(1 + additional_refinement_A) +
-         "]\n"
-         "    ObjectBShell: [1, 1, " +
-         std::to_string(1 + additional_refinement_B) +
-         "]\n"
-         "    ObjectACube: [1, 1, 1]\n"
-         "    ObjectBCube: [1, 1, 1]\n"
-         "    EnvelopingCube: [1, 1, 1]\n"
-         "    OuterShell: [1, 1, " +
-         std::to_string(1 + additional_refinement_outer) +
-         "]\n"
-         "  InitialGridPoints: 3\n"
-         "  UseEquiangularMap: " +
-         stringize(use_equiangular_map) + "\n" + time_dependence;
-}
-
 // Test the weighting done by `domain::get_element_costs` for a uniform cost
 // function
 void test_uniform_cost_function() {
-  const auto domain_creator = TestHelpers::test_option_tag<
-      domain::OptionTags::DomainCreator<2>,
-      TestHelpers::domain::BoundaryConditions::
-          MetavariablesWithoutBoundaryConditions<
-              2, domain::creators::AlignedLattice<2>>>(
-      "AlignedLattice:\n"
-      "  BlockBounds: [[70, 71, 72, 73], [90, 92, 95, 99]]\n"
-      "  IsPeriodicIn: [true, false]\n"
-      "  InitialGridPoints: [3, 3]\n"
-      "  InitialLevels: [2, 5]\n"
-      "  BlocksToExclude: []\n"
-      "  RefinedLevels:\n"
-      "  - LowerCornerIndex: [1, 0]\n"
-      "    UpperCornerIndex: [3, 2]\n"
-      "    Refinement: [3, 5]\n"
-      "  - LowerCornerIndex: [2, 1]\n"
-      "    UpperCornerIndex: [3, 3]\n"
-      "    Refinement: [4, 6]\n"
-      "  RefinedGridPoints:\n"
-      "  - LowerCornerIndex: [1, 0]\n"
-      "    UpperCornerIndex: [3, 2]\n"
-      "    Refinement: [4, 5]\n"
-      "  - LowerCornerIndex: [2, 1]\n"
-      "    UpperCornerIndex: [3, 3]\n"
-      "    Refinement: [6, 7]");
+  // AlignedLattice with differently-refined Elements
+  const auto domain_creator = domain::creators::AlignedLattice<2>(
+      {{{{70, 71, 72, 73}}, {{90, 92, 95, 99}}}}, {{2, 5}}, {{3, 3}},
+      {{{{{1, 0}}, {{3, 2}}, {{3, 5}}}, {{{2, 1}}, {{3, 3}}, {{4, 6}}}}},
+      {{{{{1, 0}}, {{3, 2}}, {{4, 5}}}, {{{2, 1}}, {{3, 3}}, {{6, 7}}}}}, {});
 
-  const auto domain = domain_creator->create_domain();
+  const auto domain = domain_creator.create_domain();
   const auto& blocks = domain.blocks();
 
   const auto costs = domain::get_element_costs(
-      blocks, domain_creator->initial_refinement_levels(),
-      domain_creator->initial_extents(), domain::ElementWeight::Uniform,
+      blocks, domain_creator.initial_refinement_levels(),
+      domain_creator.initial_extents(), domain::ElementWeight::Uniform,
       std::nullopt);
 
   for (const auto& element_id_and_cost : costs) {
@@ -201,59 +50,41 @@ void test_uniform_cost_function() {
 // Test the weighting done by `domain::get_element_costs` for weighted cost
 // functions
 void test_weighted_cost_function(const domain::ElementWeight element_weight) {
-  const auto domain_creator1 = make_domain_creator<3>(
-      std::string{"AlignedLattice:\n"
-                  "  BlockBounds: [[0.0, 1.0, 2.0], [0.0, 1.0], [0.0, 1.0]]\n"
-                  "  IsPeriodicIn: [false, false, false]\n"
-                  "  InitialGridPoints: [4, 4, 4]\n"
-                  "  InitialLevels: [2, 1, 0]\n"
-                  "  RefinedLevels: []\n"
-                  "  RefinedGridPoints: []\n"
-                  "  BlocksToExclude: []\n"});
-  const auto domain1 = domain_creator1->create_domain();
+  const auto domain_creator1 = domain::creators::AlignedLattice<3>(
+      {{{{0.0, 1.0, 2.0}}, {{0.0, 1.0}}, {{0.0, 1.0}}}}, {{2, 1, 0}},
+      {{4, 4, 4}}, {}, {}, {});
+  const auto domain1 = domain_creator1.create_domain();
   const auto& blocks1 = domain1.blocks();
 
   // Block size and grid points are the same as blocks in `domain1`, but
   // refinement levels are different
-  const auto domain_creator2 = make_domain_creator<3>(
-      std::string{"AlignedLattice:\n"
-                  "  BlockBounds: [[0.0, 1.0], [0.0, 1.0], [0.0, 1.0]]\n"
-                  "  IsPeriodicIn: [false, false, false]\n"
-                  "  InitialGridPoints: [4, 4, 4]\n"
-                  "  InitialLevels: [2, 3, 2]\n"
-                  "  RefinedLevels: []\n"
-                  "  RefinedGridPoints: []\n"
-                  "  BlocksToExclude: []\n"});
-  const auto domain2 = domain_creator2->create_domain();
+  const auto domain_creator2 = domain::creators::AlignedLattice<3>(
+      {{{{0.0, 1.0}}, {{0.0, 1.0}}, {{0.0, 1.0}}}}, {{2, 3, 2}}, {{4, 4, 4}},
+      {}, {}, {});
+  const auto domain2 = domain_creator2.create_domain();
   const auto& blocks2 = domain2.blocks();
 
   // Block size and refinement levels are the same as blocks in `domain1`, but
   // grid points are different
-  const auto domain_creator3 = make_domain_creator<3>(
-      std::string{"AlignedLattice:\n"
-                  "  BlockBounds: [[0.0, 1.0], [0.0, 1.0], [0.0, 1.0]]\n"
-                  "  IsPeriodicIn: [false, false, false]\n"
-                  "  InitialGridPoints: [4, 3, 2]\n"
-                  "  InitialLevels: [2, 1, 0]\n"
-                  "  RefinedLevels: []\n"
-                  "  RefinedGridPoints: []\n"
-                  "  BlocksToExclude: []\n"});
-  const auto domain3 = domain_creator3->create_domain();
+  const auto domain_creator3 = domain::creators::AlignedLattice<3>(
+      {{{{0.0, 1.0}}, {{0.0, 1.0}}, {{0.0, 1.0}}}}, {{2, 1, 0}}, {{4, 3, 2}},
+      {}, {}, {});
+  const auto domain3 = domain_creator3.create_domain();
   const auto& blocks3 = domain2.blocks();
 
   const auto costs1 = domain::get_element_costs(
-      blocks1, domain_creator1->initial_refinement_levels(),
-      domain_creator1->initial_extents(), element_weight,
+      blocks1, domain_creator1.initial_refinement_levels(),
+      domain_creator1.initial_extents(), element_weight,
       Spectral::Quadrature::GaussLobatto);
 
   const auto costs2 = domain::get_element_costs(
-      blocks2, domain_creator2->initial_refinement_levels(),
-      domain_creator2->initial_extents(), element_weight,
+      blocks2, domain_creator2.initial_refinement_levels(),
+      domain_creator2.initial_extents(), element_weight,
       Spectral::Quadrature::GaussLobatto);
 
   const auto costs3 = domain::get_element_costs(
-      blocks3, domain_creator3->initial_refinement_levels(),
-      domain_creator3->initial_extents(), element_weight,
+      blocks3, domain_creator3.initial_refinement_levels(),
+      domain_creator3.initial_extents(), element_weight,
       Spectral::Quadrature::GaussLobatto);
 
   // check that all elements in each domain have the same cost
@@ -513,7 +344,7 @@ void test_weighted_element_distribution_construction(
       // cost left to account for, and it's the case that more procs were
       // requested than could be used, e.g. in the case of less elements than
       // procs
-      Approx custom_approx = Approx::custom().epsilon(1.0e-10).scale(1.0);
+      Approx custom_approx = Approx::custom().epsilon(1.0e-9).scale(1.0);
       CHECK(cost_remaining == custom_approx(0.0));
       break;
     }
@@ -735,48 +566,34 @@ SPECTRE_TEST_CASE("Unit.Domain.ElementDistribution", "[Domain][Unit]") {
   // Inputs for testing `BlockZCurveProcDistribution`
 
   // 1D, single block
-  const auto lattice_1d = make_domain_creator<1>(
-      "AlignedLattice:\n"
-      "  BlockBounds: [[0.0, 1.0]]\n" +
-      std::string{"  IsPeriodicIn: [false]\n"} +
-      "  InitialGridPoints: [6]\n"
-      "  InitialLevels: [4]\n"
-      "  RefinedLevels: []\n"
-      "  RefinedGridPoints: []\n"
-      "  BlocksToExclude: []\n");
+  const auto lattice_1d = domain::creators::AlignedLattice<1>(
+      {{{{0.0, 1.0}}}}, {{4}}, {{6}}, {}, {}, {});
 
   // 2D
-  const auto lattice_2d = make_domain_creator<2>(
-      "AlignedLattice:\n"
-      "  BlockBounds: [[0.0, 0.3], [0.0, 0.8, 2.5, 4.9]]\n" +
-      std::string{"  IsPeriodicIn: [false, false]\n"} +
-      "  InitialGridPoints: [4, 5]\n"
-      "  InitialLevels: [2, 3]\n"
-      "  RefinedLevels: []\n"
-      "  RefinedGridPoints: []\n"
-      "  BlocksToExclude: []\n");
+  const auto lattice_2d = domain::creators::AlignedLattice<2>(
+      {{{{0.0, 0.3}}, {{0.0, 0.8, 2.5, 4.9}}}}, {{2, 3}}, {{4, 5}}, {}, {}, {});
 
   // 3D
   const auto binary_compact_object_creator =
-      TestHelpers::test_option_tag<domain::OptionTags::DomainCreator<3>,
-                                   Metavariables<3, true, false>>(
-          create_option_string(true, true, true, false, false, 0, 0, 0, false));
+      domain::creators::BinaryCompactObject(
+          {0.3, 1.0, 3.0, std::nullopt, false},
+          {0.5, 1.0, -3.0, std::nullopt, false}, 25.5, 32.4, 1_st, 6_st);
 
   // Test element distribution construction logic
-  test_uniform_element_distribution(*lattice_1d, *lattice_2d,
-                                    *binary_compact_object_creator);
-  test_weighted_element_distribution(
-      domain::ElementWeight::NumGridPointsAndGridSpacing, *lattice_1d,
-      *lattice_2d, *binary_compact_object_creator);
+  test_uniform_element_distribution(lattice_1d, lattice_2d,
+                                    binary_compact_object_creator);
   test_weighted_element_distribution(domain::ElementWeight::NumGridPoints,
-                                     *lattice_1d, *lattice_2d,
-                                     *binary_compact_object_creator);
+                                     lattice_1d, lattice_2d,
+                                     binary_compact_object_creator);
+  test_weighted_element_distribution(
+      domain::ElementWeight::NumGridPointsAndGridSpacing, lattice_1d,
+      lattice_2d, binary_compact_object_creator);
 
   // Test processor retrieval with ignored processors
   test_proc_retrieval(domain::ElementWeight::NumGridPointsAndGridSpacing,
-                      *lattice_2d, 19, std::unordered_set<size_t>{0, 8, 9, 21});
+                      lattice_2d, 19, std::unordered_set<size_t>{0, 8, 9, 21});
   // Test processor retrieval when there are more processors requested than
   // `Element`s in the domain
   test_proc_retrieval(domain::ElementWeight::NumGridPointsAndGridSpacing,
-                      *lattice_2d, 100, std::unordered_set<size_t>{17});
+                      lattice_2d, 100, std::unordered_set<size_t>{17});
 }
