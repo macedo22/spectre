@@ -134,8 +134,8 @@ void test_weighted_cost_function(const domain::ElementWeight element_weight) {
   // grid points in an element in the third is 24. Since elemental cost for
   // either domain::Elementweight::NumGridPoints or
   // domain::Elementweight::NumGridPointsAndGridSpacing should only scale by
-  // the # of grid points, the elemental cost of the second domain should be a
-  // factor of 24/64 = 3/8 the cost.
+  // the # of grid points, the elemental cost of the third domain should be a
+  // factor of 24/64 = 3/8 the cost of the first domain.
   CHECK(elemental_cost3 == elemental_cost1 * 3.0 / 8.0);
 }
 

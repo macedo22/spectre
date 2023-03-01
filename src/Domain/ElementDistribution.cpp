@@ -83,6 +83,8 @@ std::unordered_map<ElementId<Dim>, double> get_element_costs(
       } else if (element_weight == ElementWeight::NumGridPoints) {
         element_costs.insert({element_id, grid_points_per_element});
       } else {
+        ASSERT(element_weight == ElementWeight::NumGridPointsAndGridSpacing,
+               "Unknown element_weight");
         ASSERT(quadrature.has_value(),
                "Since element_weight is "
                "ElementWeight::NumGridPointsAndGridSpacing, quadrature must "
