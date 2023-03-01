@@ -23,7 +23,7 @@
 #include "Domain/OptionTags.hpp"
 #include "Domain/Protocols/Metavariables.hpp"
 #include "Domain/Structure/ElementId.hpp"
-#include "Domain/ZCurve.hpp"
+#include "Domain/Structure/ZCurve.hpp"
 #include "Framework/TestCreation.hpp"
 #include "Helpers/Domain/BoundaryConditions/BoundaryCondition.hpp"
 #include "Utilities/ConstantExpressions.hpp"

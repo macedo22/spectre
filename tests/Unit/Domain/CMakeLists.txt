@@ -31,7 +31,6 @@ set(LIBRARY_SOURCES
   Test_Tags.cpp
   Test_TagsCharacteristicSpeeds.cpp
   Test_TagsTimeDependent.cpp
-  Test_ZCurve.cpp
 )
 
 add_subdirectory(Amr)

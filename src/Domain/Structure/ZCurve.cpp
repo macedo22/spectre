@@ -1,7 +1,7 @@
 // Distributed under the MIT License.
 // See LICENSE.txt for details.
 
-#include "Domain/ZCurve.hpp"
+#include "Domain/Structure/ZCurve.hpp"
 
 #include <array>
 #include <cstddef>

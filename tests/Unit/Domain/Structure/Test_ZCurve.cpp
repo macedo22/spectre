@@ -11,7 +11,7 @@
 #include "Domain/Structure/ElementId.hpp"
 #include "Domain/Structure/InitialElementIds.hpp"
 #include "Domain/Structure/SegmentId.hpp"
-#include "Domain/ZCurve.hpp"
+#include "Domain/Structure/ZCurve.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/MakeArray.hpp"
 
