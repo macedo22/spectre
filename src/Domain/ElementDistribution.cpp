@@ -250,7 +250,7 @@ BlockZCurveProcDistribution<Dim>::BlockZCurveProcDistribution(
 template <size_t Dim>
 size_t BlockZCurveProcDistribution<Dim>::get_proc_for_element(
     const ElementId<Dim>& element_id) const {
-  const size_t element_order_index = z_curve_index_from_element_id(element_id);
+  const size_t element_order_index = z_curve_index(element_id);
   size_t total_so_far = 0;
   for (const std::pair<size_t, size_t>& element_info :
        gsl::at(block_element_distribution_, element_id.block_id())) {
