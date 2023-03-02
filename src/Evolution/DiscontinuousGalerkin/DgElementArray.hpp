@@ -37,6 +37,8 @@
 namespace detail {
 CREATE_HAS_STATIC_MEMBER_VARIABLE(use_z_order_distribution)
 CREATE_HAS_STATIC_MEMBER_VARIABLE_V(use_z_order_distribution)
+CREATE_HAS_STATIC_MEMBER_VARIABLE(local_time_stepping)
+CREATE_HAS_STATIC_MEMBER_VARIABLE_V(local_time_stepping)
 }  // namespace detail
 
 /*!
@@ -114,6 +116,11 @@ void DgElementArray<Metavariables, PhaseDepActionList>::allocate_array(
     use_z_order_distribution = Metavariables::use_z_order_distribution;
   }
 
+  bool local_time_stepping = false;
+  if constexpr (detail::has_local_time_stepping_v<Metavariables>) {
+    local_time_stepping = Metavariables::local_time_stepping;
+  }
+
   const size_t number_of_procs = Parallel::number_of_procs<size_t>(local_cache);
   const size_t number_of_nodes = Parallel::number_of_nodes<size_t>(local_cache);
   const size_t num_of_procs_to_use = number_of_procs - procs_to_ignore.size();
@@ -123,7 +130,7 @@ void DgElementArray<Metavariables, PhaseDepActionList>::allocate_array(
   const std::unordered_map<ElementId<volume_dim>, double> element_costs =
       domain::get_element_costs(
           blocks, initial_refinement_levels, initial_extents,
-          Metavariables::local_time_stepping
+          local_time_stepping
               ? domain::ElementWeight::NumGridPointsAndGridSpacing
               : domain::ElementWeight::NumGridPoints,
           quadrature);
