@@ -405,12 +405,18 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
   using VarsDivFluxes = Variables<db::wrap_tags_in<
       ::Tags::div, db::wrap_tags_in<::Tags::Flux, flux_variables,
                                     tmpl::size_t<Dim>, Frame::Inertial>>>;
+  using UpwindPackageDataTemporaries = Variables<
+      typename GeneralizedHarmonic::ComputeUpwindTempTags::temporary_tags>;
+  using UpwindPackageDataArgs = Variables<
+      typename GeneralizedHarmonic::ComputeUpwindTempTags::argument_tags>;
   const size_t number_of_grid_points = mesh.number_of_grid_points();
   auto buffer = cpp20::make_unique_for_overwrite<double[]>(
       (VarsTemporaries::number_of_independent_components +
        VarsFluxes::number_of_independent_components +
        VarsPartialDerivatives::number_of_independent_components +
-       VarsDivFluxes::number_of_independent_components) *
+       VarsDivFluxes::number_of_independent_components +
+       UpwindPackageDataTemporaries::number_of_independent_components +
+       UpwindPackageDataArgs::number_of_independent_components) *
       number_of_grid_points);
   VarsTemporaries temporaries{
       &buffer[0], VarsTemporaries::number_of_independent_components *
@@ -431,6 +437,23 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
                VarsPartialDerivatives::number_of_independent_components) *
               number_of_grid_points],
       VarsDivFluxes::number_of_independent_components * number_of_grid_points};
+  UpwindPackageDataTemporaries upwind_temporaries{
+      &buffer[(VarsTemporaries::number_of_independent_components +
+               VarsFluxes::number_of_independent_components +
+               VarsPartialDerivatives::number_of_independent_components +
+               VarsDivFluxes::number_of_independent_components) *
+              number_of_grid_points],
+      UpwindPackageDataTemporaries::number_of_independent_components *
+          number_of_grid_points};
+  UpwindPackageDataArgs upwind_args{
+      &buffer[(VarsTemporaries::number_of_independent_components +
+               VarsFluxes::number_of_independent_components +
+               VarsPartialDerivatives::number_of_independent_components +
+               VarsDivFluxes::number_of_independent_components +
+               UpwindPackageDataTemporaries::number_of_independent_components) *
+              number_of_grid_points],
+      UpwindPackageDataArgs::number_of_independent_components *
+          number_of_grid_points};
 
   const Scalar<DataVector>* det_inverse_jacobian = nullptr;
   if constexpr (tmpl::size<flux_variables>::value != 0) {
@@ -440,6 +463,36 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
           box);
     }
   }
+
+  // compute terms for Upwind
+  ::GeneralizedHarmonic::ComputeUpwindTempTags::apply(
+      make_not_null(
+          &get<
+              ::GeneralizedHarmonic::ConstraintDamping::Tags::ConstraintGamma1>(
+              upwind_temporaries)),
+      make_not_null(
+          &get<
+              ::GeneralizedHarmonic::ConstraintDamping::Tags::ConstraintGamma2>(
+              upwind_temporaries)),
+      make_not_null(&get<gr::Tags::Lapse<DataVector>>(upwind_temporaries)),
+      make_not_null(&get<gr::Tags::Shift<Dim, Frame::Inertial, DataVector>>(
+          upwind_temporaries)),
+      make_not_null(
+          &get<gr::Tags::SpatialMetric<Dim, Frame::Inertial, DataVector>>(
+              upwind_temporaries)),
+      make_not_null(
+          &get<
+              gr::Tags::InverseSpatialMetric<Dim, Frame::Inertial, DataVector>>(
+              upwind_temporaries)),
+      make_not_null(
+          &get<gr::Tags::DetSpatialMetric<DataVector>>(upwind_temporaries)),
+      get<gr::Tags::SpacetimeMetric<Dim>>(upwind_args),
+      get<::GeneralizedHarmonic::ConstraintDamping::Tags::ConstraintGamma1>(
+          upwind_args),
+      get<::GeneralizedHarmonic::ConstraintDamping::Tags::ConstraintGamma2>(
+          upwind_args));
+
+  // compute RHS
   db::mutate_apply<
       tmpl::list<dt_variables_tag>,
       typename compute_volume_time_derivative_terms::argument_tags>(

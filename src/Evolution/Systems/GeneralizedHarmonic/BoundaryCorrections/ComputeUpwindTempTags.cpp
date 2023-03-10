@@ -1,7 +1,7 @@
 // Distributed under the MIT License.
 // See LICENSE.txt for details.
 
-#include "Evolution/Systems/GeneralizedHarmonic/DgPackageDataQuantities.hpp"
+#include "Evolution/Systems/GeneralizedHarmonic/ComputeUpwindTempTags.hpp"
 
 #include <cstddef>
 
@@ -16,7 +16,7 @@
 
 namespace GeneralizedHarmonic {
 template <size_t Dim>
-void DgPackageDataQuantities<Dim>::apply(
+void ComputeUpwindTempTags<Dim>::apply(
     const gsl::not_null<Scalar<DataVector>*> temp_gamma1,
     const gsl::not_null<Scalar<DataVector>*> temp_gamma2,
     const gsl::not_null<Scalar<DataVector>*> lapse,
@@ -40,7 +40,7 @@ void DgPackageDataQuantities<Dim>::apply(
 
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define INSTANTIATE(_, data) \
-  template struct GeneralizedHarmonic::DgPackageDataQuantities<DIM(data)>;
+  template struct GeneralizedHarmonic::ComputeUpwindTempTags<DIM(data)>;
 
 GENERATE_INSTANTIATIONS(INSTANTIATE, (3))
 

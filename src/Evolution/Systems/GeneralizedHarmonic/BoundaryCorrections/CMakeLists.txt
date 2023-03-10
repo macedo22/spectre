@@ -4,7 +4,7 @@
 spectre_target_sources(
   ${LIBRARY}
   PRIVATE
-  DgPackageDataQuantities.cpp
+  ComputeUpwindTempTags.cpp
   RegisterDerived.cpp
   UpwindPenalty.cpp
   )
@@ -14,7 +14,7 @@ spectre_target_headers(
   INCLUDE_DIRECTORY ${CMAKE_SOURCE_DIR}/src
   HEADERS
   BoundaryCorrection.hpp
-  DgPackageDataQuantities.hpp
+  ComputeUpwindTempTags.hpp
   Factory.hpp
   RegisterDerived.hpp
   UpwindPenalty.hpp

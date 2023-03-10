@@ -29,7 +29,7 @@ class Tensor;
 
 namespace GeneralizedHarmonic {
 template <size_t Dim>
-struct DgPackageDataQuantities {
+struct ComputeUpwindTempTags {
  public:
   using temporary_tags = tmpl::list<
       ::GeneralizedHarmonic::ConstraintDamping::Tags::ConstraintGamma1,
