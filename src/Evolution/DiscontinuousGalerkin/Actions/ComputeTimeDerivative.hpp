@@ -352,10 +352,15 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
           Parallel::GlobalCache<Metavariables>& cache,
           const ArrayIndex& /*array_index*/, ActionList /*meta*/,
           const ParallelComponent* const /*meta*/) {  // NOLINT const
+  // evolved variables
   using variables_tag = typename EvolutionSystem::variables_tag;
+  // time derivatives of derived variables
   using dt_variables_tag = db::add_tag_prefix<::Tags::dt, variables_tag>;
+  // spatial derivatives of derived variables
   using partial_derivative_tags = typename EvolutionSystem::gradient_variables;
+  // ?
   using flux_variables = typename EvolutionSystem::flux_variables;
+  // ?
   using compute_volume_time_derivative_terms =
       typename EvolutionSystem::compute_volume_time_derivative_terms;
 
