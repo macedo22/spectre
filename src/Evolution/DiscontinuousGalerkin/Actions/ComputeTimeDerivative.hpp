@@ -375,10 +375,15 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
           Parallel::GlobalCache<Metavariables>& cache,
           const ArrayIndex& /*array_index*/, ActionList /*meta*/,
           const ParallelComponent* const /*meta*/) {  // NOLINT const
+  // evolved variables
   using variables_tag = typename EvolutionSystem::variables_tag;
+  // time derivatives of derived variables
   using dt_variables_tag = db::add_tag_prefix<::Tags::dt, variables_tag>;
+  // spatial derivatives of derived variables
   using partial_derivative_tags = typename EvolutionSystem::gradient_variables;
+  // ?
   using flux_variables = typename EvolutionSystem::flux_variables;
+  // ?
   using compute_volume_time_derivative_terms =
       typename EvolutionSystem::compute_volume_time_derivative_terms;
 
@@ -507,6 +512,14 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
                VarsPartialDerivatives::number_of_independent_components) *
               number_of_grid_points],
       VarsDivFluxes::number_of_independent_components * number_of_grid_points};
+  VarsFaceTemporaries vars_face_temporaries{
+      &buffer[(VarsTemporaries::number_of_independent_components +
+               VarsFluxes::number_of_independent_components +
+               VarsPartialDerivatives::number_of_independent_components) *
+              number_of_grid_points +
+              VarsFaceTemporaries::number_of_independent_components *
+          num_face_temporary_grid_points)],
+      VarsFaceTemporaries::number_of_independent_components * num_face_temporary_grid_points};
   // Lighter weight data structure than a Variables to avoid passing even more
   // templates to internal_mortar_data.
   gsl::span<double> face_temporaries = gsl::make_span<double>(
@@ -540,6 +553,36 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
           box);
     }
   }
+
+  // compute terms for Upwind
+  ::GeneralizedHarmonic::ComputeUpwindTempTags::apply(
+      make_not_null(
+          &get<
+              ::GeneralizedHarmonic::ConstraintDamping::Tags::ConstraintGamma1>(
+              vars_face_temporaries)),
+      make_not_null(
+          &get<
+              ::GeneralizedHarmonic::ConstraintDamping::Tags::ConstraintGamma2>(
+              vars_face_temporaries)),
+      make_not_null(&get<gr::Tags::Lapse<DataVector>>(vars_face_temporaries)),
+      make_not_null(&get<gr::Tags::Shift<Dim, Frame::Inertial, DataVector>>(
+          vars_face_temporaries)),
+      make_not_null(
+          &get<gr::Tags::SpatialMetric<Dim, Frame::Inertial, DataVector>>(
+              vars_face_temporaries)),
+      make_not_null(
+          &get<
+              gr::Tags::InverseSpatialMetric<Dim, Frame::Inertial, DataVector>>(
+              vars_face_temporaries)),
+      make_not_null(
+          &get<gr::Tags::DetSpatialMetric<DataVector>>(vars_face_temporaries)),
+      get<gr::Tags::SpacetimeMetric<Dim>>(upwind_args),
+      get<::GeneralizedHarmonic::ConstraintDamping::Tags::ConstraintGamma1>(
+          upwind_args),
+      get<::GeneralizedHarmonic::ConstraintDamping::Tags::ConstraintGamma2>(
+          upwind_args));
+
+  // compute RHS
   db::mutate_apply<
       tmpl::list<dt_variables_tag>,
       typename compute_volume_time_derivative_terms::argument_tags>(

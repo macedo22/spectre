@@ -99,8 +99,6 @@ template <size_t Dim>
 struct TimeDerivative {
  public:
   using temporary_tags = tmpl::list<
-      ::GeneralizedHarmonic::ConstraintDamping::Tags::ConstraintGamma1,
-      ::GeneralizedHarmonic::ConstraintDamping::Tags::ConstraintGamma2,
       Tags::GaugeH<Dim>, Tags::SpacetimeDerivGaugeH<Dim>, Tags::Gamma1Gamma2,
       Tags::HalfPiTwoNormals, Tags::NormalDotOneIndexConstraint,
       Tags::Gamma1Plus1, Tags::PiOneNormal<Dim>,
@@ -111,11 +109,6 @@ struct TimeDerivative {
       Tags::ThreeIndexConstraint<Dim, Frame::Inertial>,
       Tags::PhiFirstIndexUp<Dim>, Tags::PhiThirdIndexUp<Dim>,
       Tags::SpacetimeChristoffelFirstKindThirdIndexUp<Dim>,
-      gr::Tags::Lapse<DataVector>,
-      gr::Tags::Shift<Dim, Frame::Inertial, DataVector>,
-      gr::Tags::SpatialMetric<Dim, Frame::Inertial, DataVector>,
-      gr::Tags::InverseSpatialMetric<Dim, Frame::Inertial, DataVector>,
-      gr::Tags::DetSpatialMetric<DataVector>,
       gr::Tags::SqrtDetSpatialMetric<DataVector>,
       gr::Tags::InverseSpacetimeMetric<Dim, Frame::Inertial, DataVector>,
       gr::Tags::SpacetimeChristoffelFirstKind<Dim, Frame::Inertial, DataVector>,
@@ -135,14 +128,16 @@ struct TimeDerivative {
       domain::Tags::Coordinates<Dim, Frame::Inertial>,
       domain::Tags::InverseJacobian<Dim, Frame::ElementLogical,
                                     Frame::Inertial>,
-      domain::Tags::MeshVelocity<Dim, Frame::Inertial>>;
+      domain::Tags::MeshVelocity<Dim, Frame::Inertial>,
+      gr::Tags::Lapse<DataVector>,
+      gr::Tags::Shift<Dim, Frame::Inertial, DataVector>,
+      gr::Tags::InverseSpatialMetric<Dim, Frame::Inertial, DataVector>,
+      gr::Tags::DetSpatialMetric<DataVector>>;
 
   static void apply(
       gsl::not_null<tnsr::aa<DataVector, Dim>*> dt_spacetime_metric,
       gsl::not_null<tnsr::aa<DataVector, Dim>*> dt_pi,
       gsl::not_null<tnsr::iaa<DataVector, Dim>*> dt_phi,
-      gsl::not_null<Scalar<DataVector>*> temp_gamma1,
-      gsl::not_null<Scalar<DataVector>*> temp_gamma2,
       gsl::not_null<tnsr::a<DataVector, Dim>*> temp_gauge_function,
       gsl::not_null<tnsr::ab<DataVector, Dim>*>
           temp_spacetime_deriv_gauge_function,
@@ -163,11 +158,6 @@ struct TimeDerivative {
       gsl::not_null<tnsr::Iaa<DataVector, Dim>*> phi_1_up,
       gsl::not_null<tnsr::iaB<DataVector, Dim>*> phi_3_up,
       gsl::not_null<tnsr::abC<DataVector, Dim>*> christoffel_first_kind_3_up,
-      gsl::not_null<Scalar<DataVector>*> lapse,
-      gsl::not_null<tnsr::I<DataVector, Dim>*> shift,
-      gsl::not_null<tnsr::ii<DataVector, Dim>*> spatial_metric,
-      gsl::not_null<tnsr::II<DataVector, Dim>*> inverse_spatial_metric,
-      gsl::not_null<Scalar<DataVector>*> det_spatial_metric,
       gsl::not_null<Scalar<DataVector>*> sqrt_det_spatial_metric,
       gsl::not_null<tnsr::AA<DataVector, Dim>*> inverse_spacetime_metric,
       gsl::not_null<tnsr::abb<DataVector, Dim>*> christoffel_first_kind,
@@ -189,6 +179,9 @@ struct TimeDerivative {
       const InverseJacobian<DataVector, Dim, Frame::ElementLogical,
                             Frame::Inertial>& inverse_jacobian,
       const std::optional<tnsr::I<DataVector, Dim, Frame::Inertial>>&
-          mesh_velocity);
+          mesh_velocity,
+      const Scalar<DataVector>& lapse, const tnsr::I<DataVector, Dim>& shift,
+      const tnsr::II<DataVector, Dim>& inverse_spatial_metric,
+      const Scalar<DataVector>& det_spatial_metric);
 };
 }  // namespace GeneralizedHarmonic
