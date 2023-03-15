@@ -39,6 +39,19 @@ enum class ElementWeight {
   NumGridPointsAndGridSpacing
 };
 
+template <Derived D>
+struct ElementDistributionType {
+  using type = D;
+}
+
+struct RoundRobin : ElementDistributionType<RoundRobin> {
+  using type = RoundRobin;
+};
+template<ElementWeight W>
+struct ZCurve : ElementDistributionType<ZCurve<W>> {
+  using type = ZCurve<W>;
+};
+
 /// \brief Get the cost of each `Element` in a list of `Block`s where
 /// `element_weight` specifies which weight distribution scheme to use
 ///
