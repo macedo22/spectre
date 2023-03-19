@@ -362,6 +362,15 @@ void AdamsBashforth::add_boundary_delta_impl(
 }
 
 template <typename T>
+void AdamsBashforth::boundary_precompute_impl(
+    const TimeSteppers::BoundaryHistoryEvaluator<T>& coupling,
+    const TimeDelta& time_step) const {
+  T unused_result{};
+  boundary_impl<true>(make_not_null(&unused_result), coupling,
+                      *(coupling.local_end() - 1) + time_step);
+}
+
+template <typename T>
 void AdamsBashforth::boundary_dense_output_impl(
     const gsl::not_null<T*> result,
     const TimeSteppers::BoundaryHistoryEvaluator<T>& coupling,
@@ -516,7 +525,7 @@ It bounded_next(const It& it, const It& bound, const size_t n) {
 }
 }  // namespace
 
-template <typename T, typename TimeType>
+template <bool Precompute, typename T, typename TimeType>
 void AdamsBashforth::boundary_impl(const gsl::not_null<T*> result,
                                    const BoundaryHistoryEvaluator<T>& coupling,
                                    const TimeType& end_time) const {
@@ -558,7 +567,10 @@ void AdamsBashforth::boundary_impl(const gsl::not_null<T*> result,
     for (auto coefficients_it = coefficients.rbegin();
          coefficients_it != coefficients.rend();
          ++coefficients_it, ++local_it, ++remote_it) {
-      *result += *coefficients_it * *coupling(local_it, remote_it);
+      const auto& this_coupling = *coupling(local_it, remote_it);
+      if constexpr (not Precompute) {
+        *result += *coefficients_it * this_coupling;
+      }
     }
     return;
   }
@@ -599,7 +611,7 @@ void AdamsBashforth::boundary_impl(const gsl::not_null<T*> result,
   // larger if two elements decide to do 4:1 stepping or something.
   boost::container::small_vector<OrderVector<double>, 2>
       small_step_coefficients{};
-  {
+  if constexpr (not Precompute) {
     auto coefficient_eval_begin = contributing_small_step;
     auto coefficient_eval_end = small_step_of_current_step;
     while (coefficient_eval_end != SmallStepIterator<T>{}) {
@@ -620,35 +632,44 @@ void AdamsBashforth::boundary_impl(const gsl::not_null<T*> result,
   for (;;) {
     if (contributing_small_step.side() != SmallStepIterator<T>::Side::Local) {
       double overall_prefactor = 0.0;
-      const size_t n_end =
-          std::min(small_step_coefficients.size(),
-                   current_order - current_step_minus_contributing_step);
-      for (size_t n = coefficient_start_index; n < n_end; ++n) {
-        overall_prefactor +=
-            small_step_coefficients[n]
-                                   [n + current_step_minus_contributing_step];
+      if constexpr (not Precompute) {
+        const size_t n_end =
+            std::min(small_step_coefficients.size(),
+                     current_order - current_step_minus_contributing_step);
+        for (size_t n = coefficient_start_index; n < n_end; ++n) {
+          overall_prefactor +=
+              small_step_coefficients[n]
+                                     [n + current_step_minus_contributing_step];
+        }
       }
       if (contributing_small_step.side() == SmallStepIterator<T>::Side::Both) {
-        *result += overall_prefactor *
-                   *coupling(contributing_small_step.local_iterator(),
-                             contributing_small_step.remote_iterator());
+        const auto& this_coupling =
+            *coupling(contributing_small_step.local_iterator(),
+                      contributing_small_step.remote_iterator());
+        if constexpr (not Precompute) {
+          *result += overall_prefactor * this_coupling;
+        }
       } else {
         // Side::Remote
         OrderVector<double> past_steps(current_order);
-        std::transform(
-            coupling.local_end() - static_cast<difference_type>(current_order),
-            coupling.local_end(), past_steps.begin(),
-            [](const Time& t) { return t.value(); });
+        if constexpr (not Precompute) {
+          std::transform(coupling.local_end() -
+                             static_cast<difference_type>(current_order),
+                         coupling.local_end(), past_steps.begin(),
+                         [](const Time& t) { return t.value(); });
+        }
         for (size_t p = 0; p < current_order; ++p) {
-          const double coefficient =
-              overall_prefactor *
-              lagrange_polynomial(p, contributing_small_step->value(),
-                                  past_steps.begin(), past_steps.end());
-          *result +=
-              coefficient *
+          const auto& this_coupling =
               *coupling(coupling.local_end() -
                             static_cast<difference_type>(current_order - p),
                         contributing_small_step.remote_iterator());
+          if constexpr (not Precompute) {
+            const double coefficient =
+                overall_prefactor *
+                lagrange_polynomial(p, contributing_small_step->value(),
+                                    past_steps.begin(), past_steps.end());
+            *result += coefficient * this_coupling;
+          }
         }
       }
     } else {
@@ -661,55 +682,60 @@ void AdamsBashforth::boundary_impl(const gsl::not_null<T*> result,
                                       SmallStepIterator<T>{}, current_order)
                              .remote_iterator();
       for (auto p = p_begin; p != p_end; ++p) {
-        double coefficient = 0.0;
-        auto n_begin = small_step_of_current_step;
-        while (n_begin.remote_iterator() < p) {
-          ++n_begin;
-        }
-        auto n_end = contributing_small_step;
-        const auto n_bound_from_p =
-            bounded_next(p, coupling.remote_end(), current_order);
-        for (size_t i = 0;
-             i < current_order and n_end != SmallStepIterator<T>{} and
-             n_end.remote_iterator() < n_bound_from_p;
-             ++i) {
-          ++n_end;
-        }
-        auto remote_bound = coupling.remote_begin();
-        double lagrange_factor = std::numeric_limits<double>::signaling_NaN();
-        auto coefficient_index = static_cast<size_t>(
-            std::distance(small_step_of_current_step, n_begin));
-        for (auto n = n_begin; n != n_end; ++n, ++coefficient_index) {
-          if (remote_bound != n.remote_iterator() + 1) {
-            remote_bound = n.remote_iterator() + 1;
-            OrderVector<double> past_steps(current_order);
-            std::transform(
-                remote_bound - static_cast<difference_type>(current_order),
-                remote_bound, past_steps.begin(),
-                [](const Time& t) { return t.value(); });
-            lagrange_factor = lagrange_polynomial(
-                current_order - static_cast<size_t>(remote_bound - p),
-                contributing_small_step->value(), past_steps.begin(),
-                past_steps.end());
+        const auto& this_coupling =
+            *coupling(contributing_small_step.local_iterator(), p);
+        if constexpr (not Precompute) {
+          double coefficient = 0.0;
+          auto n_begin = small_step_of_current_step;
+          while (n_begin.remote_iterator() < p) {
+            ++n_begin;
           }
-          coefficient +=
-              lagrange_factor *
-              small_step_coefficients[coefficient_index]
-                                     [coefficient_index +
-                                      current_step_minus_contributing_step];
+          auto n_end = contributing_small_step;
+          const auto n_bound_from_p =
+              bounded_next(p, coupling.remote_end(), current_order);
+          for (size_t i = 0;
+               i < current_order and n_end != SmallStepIterator<T>{} and
+               n_end.remote_iterator() < n_bound_from_p;
+               ++i) {
+            ++n_end;
+          }
+          auto remote_bound = coupling.remote_begin();
+          double lagrange_factor = std::numeric_limits<double>::signaling_NaN();
+          auto coefficient_index = static_cast<size_t>(
+              std::distance(small_step_of_current_step, n_begin));
+          for (auto n = n_begin; n != n_end; ++n, ++coefficient_index) {
+            if (remote_bound != n.remote_iterator() + 1) {
+              remote_bound = n.remote_iterator() + 1;
+              OrderVector<double> past_steps(current_order);
+              std::transform(
+                  remote_bound - static_cast<difference_type>(current_order),
+                  remote_bound, past_steps.begin(),
+                  [](const Time& t) { return t.value(); });
+              lagrange_factor = lagrange_polynomial(
+                  current_order - static_cast<size_t>(remote_bound - p),
+                  contributing_small_step->value(), past_steps.begin(),
+                  past_steps.end());
+            }
+            coefficient +=
+                lagrange_factor *
+                small_step_coefficients[coefficient_index]
+                                       [coefficient_index +
+                                        current_step_minus_contributing_step];
+          }
+          *result += coefficient * this_coupling;
         }
-        *result += coefficient *
-                   *coupling(contributing_small_step.local_iterator(), p);
       }
     }
 
     if (++contributing_small_step == SmallStepIterator<T>{}) {
       return;
     }
-    if (less(start_time, *contributing_small_step)) {
-      ++coefficient_start_index;
+    if constexpr (not Precompute) {
+      if (less(start_time, *contributing_small_step)) {
+        ++coefficient_start_index;
+      }
+      --current_step_minus_contributing_step;
     }
-    --current_step_minus_contributing_step;
   }
 }
 
