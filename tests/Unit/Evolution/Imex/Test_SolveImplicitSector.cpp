@@ -330,7 +330,7 @@ void test_internal_jacobian_ordering() {
 
   imex::solve_implicit_sector_detail::ImplicitSolver<
       sector, std::decay_t<decltype(evolution_box)>>
-      solver(evolution_box);
+      solver(&evolution_box);
   solver.set_index(
       make_not_null(
           &db::get_mutable_reference<imex::Tags::ImplicitHistory<sector>>(

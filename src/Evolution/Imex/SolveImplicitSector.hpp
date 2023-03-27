@@ -172,15 +172,17 @@ class ImplicitSolver {
       db::compute_databox_type<tmpl::append<simple_tags, compute_tags>>;
 
  public:
-  ImplicitSolver(const EvolutionBox& evolution_box)
+  ImplicitSolver(const gsl::not_null<EvolutionBox*> evolution_box)
       : solve_box_(db::create<simple_tags, compute_tags>()),
         // The implicit weight depends on on the step pattern, not on
         // any of the values in the history.
         implicit_weight_(
-            db::get<::Tags::TimeStepper<>>(evolution_box)
-                .implicit_weight(db::get<Tags::ImplicitHistory<ImplicitSector>>(
-                                     evolution_box),
-                                 db::get<::Tags::TimeStep>(evolution_box))) {
+            db::get<::Tags::TimeStepper<>>(*evolution_box)
+                .implicit_weight(
+                    make_not_null(&db::get_mutable_reference<
+                                  Tags::ImplicitHistory<ImplicitSector>>(
+                        evolution_box)),
+                    db::get<::Tags::TimeStep>(*evolution_box))) {
     db::mutate_apply<
         tmpl::push_front<
             tmpl::filter<
@@ -191,7 +193,7 @@ class ImplicitSolver {
         [&evolution_box](
             const gsl::not_null<const EvolutionBox**> evolution_box_pointer,
             const auto... vars) {
-          *evolution_box_pointer = &evolution_box;
+          *evolution_box_pointer = &*evolution_box;
           expand_pack((vars->initialize(1, 0.0), 0)...);
         },
         make_not_null(&solve_box_));
@@ -388,9 +390,11 @@ class ImplicitSolver {
 template <typename ImplicitSector, typename DbTags>
 void solve_implicit_sector(const gsl::not_null<db::DataBox<DbTags>*> box) {
   using ImplicitVars = Variables<typename ImplicitSector::tensors>;
+  // The only change to the box done by this class is expiring old
+  // history entries.
   solve_implicit_sector_detail::ImplicitSolver<ImplicitSector,
                                                db::DataBox<DbTags>>
-      solver(*box);
+      solver(box);
 
   Matrix semi_implicit_jacobian{};
 
@@ -402,8 +406,8 @@ void solve_implicit_sector(const gsl::not_null<db::DataBox<DbTags>*> box) {
       db::get_mutable_reference<imex::Tags::ImplicitHistory<ImplicitSector>>(
           box);
   using History = std::decay_t<decltype(implicit_history)>;
-  History pointwise_history{};
   for (size_t point = 0; point < number_of_grid_points; ++point) {
+    History pointwise_history{};
     transform(make_not_null(&pointwise_history), implicit_history,
               [&](const auto& v) { return extract_point(v, point); });
 
@@ -466,14 +470,6 @@ void solve_implicit_sector(const gsl::not_null<db::DataBox<DbTags>*> box) {
               });
         },
         box);
-  }
-
-  // Copy the cleanup to the history for the full element.
-  if (pointwise_history.substeps().empty()) {
-    implicit_history.clear_substeps();
-  }
-  while (implicit_history.size() > pointwise_history.size()) {
-    implicit_history.pop_front();
   }
 }
 }  // namespace imex
