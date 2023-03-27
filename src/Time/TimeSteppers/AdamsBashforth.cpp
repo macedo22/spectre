@@ -567,9 +567,11 @@ void AdamsBashforth::boundary_impl(const gsl::not_null<T*> result,
     for (auto coefficients_it = coefficients.rbegin();
          coefficients_it != coefficients.rend();
          ++coefficients_it, ++local_it, ++remote_it) {
-      const auto& this_coupling = *coupling(local_it, remote_it);
       if constexpr (not Precompute) {
-        *result += *coefficients_it * this_coupling;
+        *result += *coefficients_it * (*coupling(local_it, remote_it));
+      } else {
+        const auto& this_coupling = *coupling(local_it, remote_it);
+        (void)this_coupling;
       }
     }
     return;
@@ -643,11 +645,15 @@ void AdamsBashforth::boundary_impl(const gsl::not_null<T*> result,
         }
       }
       if (contributing_small_step.side() == SmallStepIterator<T>::Side::Both) {
-        const auto& this_coupling =
-            *coupling(contributing_small_step.local_iterator(),
-                      contributing_small_step.remote_iterator());
         if constexpr (not Precompute) {
-          *result += overall_prefactor * this_coupling;
+          *result += overall_prefactor *
+                     (*coupling(contributing_small_step.local_iterator(),
+                                contributing_small_step.remote_iterator()));
+        } else {
+          const auto& this_coupling =
+              *coupling(contributing_small_step.local_iterator(),
+                        contributing_small_step.remote_iterator());
+          (void)this_coupling;
         }
       } else {
         // Side::Remote
@@ -659,16 +665,22 @@ void AdamsBashforth::boundary_impl(const gsl::not_null<T*> result,
                          [](const Time& t) { return t.value(); });
         }
         for (size_t p = 0; p < current_order; ++p) {
-          const auto& this_coupling =
-              *coupling(coupling.local_end() -
-                            static_cast<difference_type>(current_order - p),
-                        contributing_small_step.remote_iterator());
           if constexpr (not Precompute) {
             const double coefficient =
                 overall_prefactor *
                 lagrange_polynomial(p, contributing_small_step->value(),
                                     past_steps.begin(), past_steps.end());
-            *result += coefficient * this_coupling;
+            *result +=
+                coefficient *
+                (*coupling(coupling.local_end() -
+                               static_cast<difference_type>(current_order - p),
+                           contributing_small_step.remote_iterator()));
+          } else {
+            const auto& this_coupling =
+                *coupling(coupling.local_end() -
+                              static_cast<difference_type>(current_order - p),
+                          contributing_small_step.remote_iterator());
+            (void)this_coupling;
           }
         }
       }
@@ -682,8 +694,6 @@ void AdamsBashforth::boundary_impl(const gsl::not_null<T*> result,
                                       SmallStepIterator<T>{}, current_order)
                              .remote_iterator();
       for (auto p = p_begin; p != p_end; ++p) {
-        const auto& this_coupling =
-            *coupling(contributing_small_step.local_iterator(), p);
         if constexpr (not Precompute) {
           double coefficient = 0.0;
           auto n_begin = small_step_of_current_step;
@@ -722,7 +732,12 @@ void AdamsBashforth::boundary_impl(const gsl::not_null<T*> result,
                                        [coefficient_index +
                                         current_step_minus_contributing_step];
           }
-          *result += coefficient * this_coupling;
+          *result += coefficient *
+                     (*coupling(contributing_small_step.local_iterator(), p));
+        } else {
+          const auto& this_coupling =
+              *coupling(contributing_small_step.local_iterator(), p);
+          (void)this_coupling;
         }
       }
     }
