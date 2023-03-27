@@ -11,6 +11,18 @@ namespace TimeSteppers {
 
 namespace {
 template <typename T>
+void remove_old_values(const MutableUntypedHistory<T>& implicit_history) {
+  if (implicit_history.at_step_start()) {
+    implicit_history.clear_substeps();
+    if (implicit_history.size() > 1) {
+      implicit_history.pop_front();
+    }
+  }
+  ASSERT(implicit_history.size() == 1,
+         "Have more than one step after cleanup.");
+}
+
+template <typename T>
 void apply_explicit_coefficients(const gsl::not_null<T*> u,
                                  const ConstUntypedHistory<T>& implicit_history,
                                  const std::vector<double>& coefficients,
@@ -37,15 +49,7 @@ void ImexRungeKutta::add_inhomogeneous_implicit_terms_impl(
   ASSERT(implicit_history.integration_order() == order(),
          "Fixed-order stepper cannot run at order "
              << implicit_history.integration_order());
-  // Clean up old history
-  if (implicit_history.at_step_start()) {
-    implicit_history.clear_substeps();
-    if (implicit_history.size() > 1) {
-      implicit_history.pop_front();
-    }
-  }
-  ASSERT(implicit_history.size() == 1,
-         "Have more than one step after cleanup.");
+  remove_old_values(implicit_history);
 
   auto substep = implicit_history.substeps().size();
 
@@ -67,8 +71,9 @@ void ImexRungeKutta::add_inhomogeneous_implicit_terms_impl(
 
 template <typename T>
 double ImexRungeKutta::implicit_weight_impl(
-    const ConstUntypedHistory<T>& implicit_history,
+    const MutableUntypedHistory<T>& implicit_history,
     const TimeDelta& time_step) const {
+  remove_old_values(implicit_history);
   const auto substep = implicit_history.substeps().size();
   const auto& coefficients = implicit_butcher_tableau().substep_coefficients;
   if (coefficients.size() > substep and

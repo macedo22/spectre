@@ -725,14 +725,28 @@ void check_imex_convergence_order(const ImexTimeStepper& stepper,
       stepper.update_u(make_not_null(&y), make_not_null(&history), step_size);
       // This system is simple enough that we can do the implicit
       // solve analytically.
+
+      // Verify that the functions can be called in either order.  The
+      // order used by the IMEX code has not been consistent during
+      // development, so make sure to support both orders.
+      auto y2 = y;
+      auto implicit_history2 = implicit_history;
       stepper.add_inhomogeneous_implicit_terms(
-          make_not_null(&y), make_not_null(&implicit_history), step_size);
+          make_not_null(&y2), make_not_null(&implicit_history2), step_size);
+      const double weight =
+          stepper.implicit_weight(make_not_null(&implicit_history), step_size);
+      // Both methods are required to do history cleanup
+      CHECK(implicit_history == implicit_history2);
       // Verify that the weight calculation only uses the history times.
-      auto erased_history = implicit_history;
-      erased_history.map_entries([](const auto value) {
+      implicit_history2.map_entries([](const auto value) {
         *value = std::numeric_limits<double>::signaling_NaN();
       });
-      const double weight = stepper.implicit_weight(erased_history, step_size);
+      CHECK(stepper.implicit_weight(make_not_null(&implicit_history2),
+                                    step_size) == weight);
+      stepper.add_inhomogeneous_implicit_terms(
+          make_not_null(&y), make_not_null(&implicit_history), step_size);
+      CHECK(y == y2);
+
       y /= 1.0 + 2.0 * weight;
       time_step_id = stepper.next_time_id(time_step_id, step_size);
     }

@@ -63,7 +63,7 @@ class ImexRungeKutta : public virtual RungeKutta,
       const TimeDelta& time_step) const;
 
   template <typename T>
-  double implicit_weight_impl(const ConstUntypedHistory<T>& implicit_history,
+  double implicit_weight_impl(const MutableUntypedHistory<T>& implicit_history,
                               const TimeDelta& time_step) const;
 
   IMEX_TIME_STEPPER_DECLARE_OVERLOADS
