@@ -19,6 +19,7 @@
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
 #include "Helpers/Domain/CoordinateMaps/TestMapHelpers.hpp"
+#include "PointwiseFunctions/MathFunctions/Gaussian.hpp"
 #include "Utilities/ConstantExpressions.hpp"
 #include "Utilities/StdArrayHelpers.hpp"
 #include "Utilities/TypeTraits.hpp"
@@ -34,6 +35,14 @@ void test_translation() {
   const double dt = 0.6;
   const double final_time = 4.0;
   constexpr size_t deriv_order = 3;
+  const double amplitude = 1.0;
+  const double width = 20.0;
+  std::array<double, Dim> center{0.};
+  std::unique_ptr<MathFunction<1, Frame::Inertial>> gaussian =
+      std::make_unique<MathFunctions::Gaussian<1, Frame::Inertial>>(
+          amplitude, width, center);
+  // *gaussian = MathFunctions::Gaussian<1, Frame::Inertial>{amplitude, width,
+  // center};
 
   const std::array<DataVector, deriv_order + 1> init_func{
       {{Dim, 1.0}, {Dim, -2.0}, {Dim, 2.0}, {Dim, 0.0}}};
@@ -47,7 +56,7 @@ void test_translation() {
   const FoftPtr& f_of_t = f_of_t_list.at("translation");
 
   const CoordinateMaps::TimeDependent::Translation<Dim> trans_map{
-      "translation"};
+      "translation", gaussian, center};
   // test serialized/deserialized map
   const auto trans_map_deserialized = serialize_and_deserialize(trans_map);
 
@@ -58,18 +67,24 @@ void test_translation() {
 
   while (t < final_time) {
     std::array<double, Dim> translation{};
+    double radius = 0;
     for (size_t i = 0; i < Dim; i++) {
       gsl::at(translation, i) = square(t);
+      radius += square(point_xi[i]);
     }
     std::array<double, Dim> frame_vel{};
     for (size_t i = 0; i < Dim; i++) {
       gsl::at(frame_vel, i) = f_of_t->func_and_deriv(t)[1][i];
     }
+    radius = sqrt(radius);
 
     CHECK_ITERABLE_APPROX(trans_map(point_xi, t, f_of_t_list),
-                          point_xi + translation);
+                          point_xi + translation * (*gaussian)(radius));
     CHECK_ITERABLE_APPROX(
-        trans_map.inverse(point_xi + translation, t, f_of_t_list).value(),
+        trans_map
+            .inverse(point_xi + translation * (*gaussian)(radius), t,
+                     f_of_t_list)
+            .value(),
         point_xi);
     CHECK_ITERABLE_APPROX(trans_map.frame_velocity(point_xi, t, f_of_t_list),
                           frame_vel);

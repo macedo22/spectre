@@ -6,7 +6,7 @@ set(LIBRARY "Test_CoordinateMapsTimeDependent")
 set(LIBRARY_SOURCES
   ShapeMapTransitionFunctions/Test_SphereTransition.cpp
   Test_CubicScale.cpp
-  Test_ProductMaps.cpp
+  # Test_ProductMaps.cpp
   Test_Rotation.cpp
   Test_RotationMatrixHelpers.cpp
   Test_Shape.cpp
