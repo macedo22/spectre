@@ -29,6 +29,7 @@ target_link_libraries(
   Domain
   DataStructuresHelpers
   FunctionsOfTime
+  MathFunctions
   SphericalHarmonics
   Spectral
   Utilities
