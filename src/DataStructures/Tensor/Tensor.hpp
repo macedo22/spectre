@@ -46,11 +46,9 @@
 // Not all the TensorExpression includes are necessary, but we include them so
 // that Tensor.hpp provides a uniform interface to Tensors and TensorExpressions
 
-/// \cond
 template <typename X, typename Symm = Symmetry<>,
           typename IndexList = index_list<>>
 class Tensor;
-/// \endcond
 
 namespace Tensor_detail {
 template <typename T, typename = void>
