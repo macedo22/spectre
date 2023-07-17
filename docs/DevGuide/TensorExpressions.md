@@ -21,19 +21,23 @@ evaluated using `tenex::evaluate`. Terms used in the expression may be `Tensor`s
 or numbers (see [supported types](#te_data_type_support)).
 
 As a simple example of how `TensorExpression`s are used, if you would like to
-raise the index of some `Tensor` `R` with some spacetime metric `Tensor` `g`,
-i.e. \f$R^c{}_b = R_{ab} g^{ac}\f$, you can compute this with
+raise the index of some `Tensor` `R` with some inverse spacetime metric `Tensor`
+`g`, i.e. \f$R^c{}_b = R_{ab} g^{ac}\f$, you can compute this with
 `TensorExpression`s by doing:
 ```
 auto R_up = tenex::evaluate<ti::C, ti::b>(R(ti::a, ti::b) * g(ti::A, ti::C));
 ```
-
 where `R_up`, `R`, and `g` are rank 2 spacetime `Tensor`s and the `ti::*`
-variables are `TensorIndex`s. Here, the argument to
-\ref tenex::evaluate "evaluate" is the RHS tensor expression to compute, `R_up`
-is the result LHS `Tensor`, and the template arguments to
-\ref tenex::evaluate "evaluate" are the LHS `Tensor`'s indices. The LHS symmetry
-will be deduced from the RHS tensors' symmetries and order of operations.
+variables are `TensorIndex`s representing generic tensor indices. Here is a
+breakdown of the different parts of this line:
+- the RHS expression to compute is the argument to
+\ref tenex::evaluate "evaluate": `R(ti::a, ti::b) * g(ti::A, ti::C)`
+- the result LHS `Tensor` is `R_up`
+- the LHS `Tensor`'s indices are the template arguments to
+\ref tenex::evaluate "evaluate": `ti::C, ti::b`
+
+The LHS \ref ::Symmetry "Symmetry" will be deduced from the RHS tensors'
+symmetries and order of operations.
 
 Alternatively, if you already have a LHS `Tensor` variable, you can pass it into
 the following \ref tenex::evaluate "evaluate" overload, where the LHS `Tensor`
@@ -43,24 +47,31 @@ provided will be assigned to the result of the RHS expression:
 tenex::evaluate<ti::C, ti::b>(
     make_not_null(&R_up), R(ti::a, ti::b) * g(ti::A, ti::C));
 ```
+Note that to use this \ref tenex::evaluate "evaluate" overload, the LHS `Tensor`
+does not need to be previously sized unless the data type is a Blaze vector type
+(e.g. `DataVector`) *and* the RHS expression contains no `Tensor` terms
+(see [example](#te_assigning_to_a_number) where sizing is necessary). This
+overload is useful in a couple cases:
+- [Specifying the LHS symmetry](#te_specify_lhs_symmetry): One advantage of this
+overload is that it uses the \ref ::Symmetry "Symmetry" of the provided LHS
+tensor instead of deducing it from the RHS expression. This enables you to
+specify the LHS symmetry in cases where the previous
+\ref tenex::evaluate "evaluate" overload does not deduce the one you want. While
+the LHS index order in this example (`ti::C, ti::b`) could theoretically be
+deduced from the index types of `R_up`, we still require specifying them because
+this isn't the case for all equations and we would like to have a unified
+interface. See [this example](#te_specify_lhs_symmetry), which demonstrates a
+case where you might want to specify the LHS symmetry and where the LHS index
+order would not be deducible.
+- **[Assigning subsets of components](#te_assigning_subsets_of_components)**
 
-One advantage of this overload is that it uses the symmetry and index types
-(spatial/spacetime) of the provided LHS tensor instead of deducing them from the
-RHS expression, so this enables you to specify the LHS index structure in cases
-where the previous \ref tenex::evaluate "evaluate" overload does not deduce the
-one you want. Note that the LHS tensor does not need to be previously sized
-unless the data type is a Blaze vector type (e.g. `DataVector`) *and* the RHS
-expression contains no `Tensor` terms (see [example](#te_assigning_to_a_number)
-where sizing is necessary). This overload is also used to
-[assign subsets of tensor components](#te_assigning_subsets_of_components).
-
-## Tensor indices (TensorIndexs) {#te_tensor_indices}
+## Tensor indices {#te_tensor_indices}
 
 `TensorIndex`s represent generic tensor indices and are supplied as
-comma-separated lists in two places: (1) in parentheses for each tensor in the
-RHS expression and (2) in the template parameters of
-\ref tenex::evaluate "evaluate" to specify the order of the LHS result tensor's
-indices.
+comma-separated lists in two places:
+- in parentheses for each tensor in the RHS expression
+- in the template parameters of \ref tenex::evaluate "evaluate" to specify the
+order of the LHS result tensor's indices.
 
 Each `TensorIndex` takes the form `ti::*` where `*` is a letter that encodes
 index properties:
@@ -69,11 +80,12 @@ indices
 - Letters `A/a - H/h` indicate spacetime indices, `I/i - N/n` indicate spatial
 indices, and `T/t` indicates a concrete time index. This is what is currently
 defined, but more spatial and spacetime indices (letters) can easily be added if
-needed
+needed. Note that there is no precedence or difference between the indices of
+some type, e.g. `ti::a`, `ti::b`, ... `ti::h` are equivalent
 
 The properties of each `TensorIndex` and the `Tensor`'s indices (typelist of
 \ref SpacetimeIndex "TensorIndexType"s) must be compatible:
-- valences must match
+- valences (being upper or lower indices) must match
 - if a `Tensor`'s index is spacetime, you can use a spacetime `TensorIndex`,
 spatial `TensorIndex`, or concrete time `TensorIndex`
 - if a `Tensor`'s index is spatial, you must use a spatial `TensorIndex`
@@ -162,17 +174,44 @@ auto L = tenex::evaluate(sqrt(G(ti::a) * H(ti::A)));
 
 ## More features {#te_more_features}
 
+### Specifying the LHS symmetry {#te_specify_lhs_symmetry}
+When using the \ref tenex::evaluate "evaluate" overload that returns the LHS
+`Tensor`, the \ref ::Symmetry "Symmetry" of the LHS `Tensor` will be deduced
+from the RHS expression. However, in some cases the deduced LHS symmetry may
+not be what you want. To specify it yourself, you can pass your LHS `Tensor`
+(that has the desired \ref ::Symmetry "Symmetry") to the
+\ref tenex::evaluate "evaluate" overload that takes the LHS `Tensor` as the
+first argument.
+
+For example, if we have \f$L_{ab} = R_a R_b\f$, the indices of \f$L\f$ are
+symmetric. However, when we do:
+```
+tnsr::a<double, 3> R{};
+auto L = tenex::evaluate<ti::a, ti::b>(R(ti::a) * R(ti::b));
+```
+the type of `L` will be \ref tnsr "tnsr::ab" because it is not known at
+compile time that the two vectors in the product are the same. To override the
+deduced symmetry and make it a symmetric result, we can create a
+\ref tnsr "tnsr::aa" and pass it into the other overload:
+```
+tnsr::a<double, 3> R{};
+tnsr::aa<double, 3> L{};
+tenex::evaluate<ti::a, ti::b>(make_not_null(&L), R(ti::a) * R(ti::b));
+```
+
 ### Assigning to a number {#te_assigning_to_a_number}
 You can assign a number (e.g. `double`) to a `Tensor` of any rank to fill all
-components with that value:
+components with that value, e.g. \f$L_{ab} = -1\f$. How you do that is slightly
+different depending on the underlying data type of your `Tensor`:
 
-\f$L_{ab} = -1\f$
+- When your `Tensor`'s data type is a number type (e.g. `double`,
+`std::complex<double>`):
 ```
 tnsr::ab<double, 3> L{};
 tenex::evaluate<ti::a, ti::b>(make_not_null(&L), -1.0);
 ```
-If the data type of your LHS `Tensor` is a Blaze vector type
-(e.g. `DataVector`), the `Tensor` must be sized before calling
+- When your `Tensor`'s data type is a Blaze vector type (e.g. `DataVector`,
+`ComplexDataVector`), the `Tensor` must first be sized before calling
 \ref tenex::evaluate "evaluate" because there is no sizing information (from a
 `Tensor` component) in the RHS expression:
 ```
@@ -181,7 +220,8 @@ tnsr::ab<DataVector, 3> L{DataVector(0.0, 5)};
 tenex::evaluate<ti::a, ti::b>(make_not_null(&L), -1.0);
 ```
 
-See [supported number types](#te_data_type_support).
+See [supported number types](#te_data_type_support) for the data types that the
+RHS number can be.
 
 ### Using spatial and time indices on spacetime indices {#te_spatial_time_index}
 If a `Tensor` has spacetime indices, you can use generic spatial indices and
@@ -236,10 +276,10 @@ You can use the LHS `Tensor` in the RHS expression to emulate operations like
 ```
 // pseudocode
 L_ab = R_ab
-L_ab += + 2.0 * S_ba
+L_ab += 2.0 * S_ba
 ```
-You can do the operation in the 2nd line above by calling
-\ref tenex::update "update" instead of \ref tenex::evaluate "evaluate":
+You can emulate the `+=` operation by calling \ref tenex::update "update"
+instead of \ref tenex::evaluate "evaluate":
 ```
 auto L = tenex::evaluate<ti::a, ti::b>(R(ti::a, ti::b));
 // use the LHS tensor in the RHS
@@ -247,8 +287,11 @@ tenex::update<ti::a, ti::b>(
     make_not_null(&L), L(ti::a, ti::b) + 2.0 * S(ti::b, ti::a));
 ```
 One limitation is that when using the LHS tensor in the RHS expression, the
-index order used for the LHS tensor must be the same in the LHS and RHS, e.g.
-the following is not allowed and will yield a runtime error:
+LHS tensor's index order must be the same on the LHS and RHS. This means that
+the order of the `TensorIndex` template parameters of
+\ref tenex::update "update" must match the order of the `TensorIndex` arguments
+in the parentheses that come after the LHS `Tensor` in the RHS expression. For
+example, the following is not allowed and will yield a runtime error:
 ```
 // ERROR: index order for L on LHS and RHS is not the same
 tenex::update<ti::a, ti::b>(
@@ -278,16 +321,21 @@ tnsr::ab<double, 3, Frame::Grid> T{};
 tnsr::AB<double, 2, Frame::Inertial> G{};
 
 // ERROR: LHS and RHS indices don't match
-auto result1 = tenex::evaluate<ti::a, ti::c>(R(ti::a, ti::b) + S(ti:a::ti::b));
+auto result1 = tenex::evaluate<ti::a, ti::c>(R(ti::a, ti::b) + S(ti::a, ti::b));
+
 // ERROR: Can't add Tensors with different indices
-auto result2 = tenex::evaluate<ti::a, ti::b>(R(ti::a, ti::b) + S(ti:a::ti:c));
+auto result2 = tenex::evaluate<ti::a, ti::b>(R(ti::a, ti::b) + S(ti::a, ti:c));
+
 // ERROR: Repeated index in the RHS
 auto result3 =
-    tenex::evaluate<ti::a, ti::b, ti::c>(R(ti::a, ti::b) * S(ti:a::ti::c));
+    tenex::evaluate<ti::a, ti::b, ti::c>(R(ti::a, ti::b) * S(ti::a, ti::c));
+
 // ERROR: Can't add Tensors with different Frame types
-auto result4 = tenex::evaluate<ti::a, ti::b>(R(ti::a, ti::b) + T(ti:a::ti::b));
+auto result4 = tenex::evaluate<ti::a, ti::b>(R(ti::a, ti::b) + T(ti::a, ti::b));
+
 // ERROR: Can't contract indices with different number of spatial dimensions
 auto result5 = tenex::evaluate(R(ti::a, ti::b) * G(ti::A, ti::B));
+
 // ERROR: Can't divide by a rank > 0 Tensor
 auto result6 = tenex::evaluate<ti::a, ti::b>(R(ti::a, ti::b) / S(ti::a, ti::b));
 ```
@@ -323,12 +371,6 @@ operation (`+`, `-`, `*`, `/`) between two terms of given data types:
 
   <tr>
     <th></th>
-    <th colspan="8">RHS operand type</th>
-  </tr>
-
-  <tr>
-    <th rowspan="8">LHS operand type</th>
-    <th></th>
     <th><code>double</code></th>
     <th><code>std::complex&lt;double&gt;</code></th>
     <th><code>Tensor&lt;double&gt;</code></th>
@@ -340,60 +382,60 @@ operation (`+`, `-`, `*`, `/`) between two terms of given data types:
   <tr>
     <th><code>double</code></th>
     <td><code>double</code></td>
-    <td><code>std::complex&lt;double&gt;</code></td>
-    <td><code>Tensor&lt;double&gt;</code></td>
-    <td><code>Tensor&lt;std::complex&lt;double&gt;&gt;</code></td>
-    <td><code>Tensor&lt;DataVector&gt;</code></td>
-    <td><code>Tensor&lt;ComplexDataVector&gt;</code></td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
   </tr>
 
   <tr>
     <th><code>std::complex&lt;double&gt;</code></th>
-    <td>-</td>
     <td><code>std::complex&lt;double&gt;</code></td>
-    <td><code>Tensor&lt;std::complex&lt;double&gt;&gt;</code></td>
-    <td><code>Tensor&lt;std::complex&lt;double&gt;&gt;</code></td>
-    <td><code>Tensor&lt;ComplexDataVector&gt;</code>*</td>
-    <td><code>Tensor&lt;ComplexDataVector&gt;</code></td>
+    <td><code>std::complex&lt;double&gt;</code></td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
   </tr>
 
   <tr>
     <th><code>Tensor&lt;double&gt;</code></th>
-    <td>-</td>
-    <td>-</td>
     <td><code>Tensor&lt;double&gt;</code></td>
     <td><code>Tensor&lt;std::complex&lt;double&gt;&gt;</code></td>
-    <td>Not supported</td>
-    <td>Not supported</td>
+    <td><code>Tensor&lt;double&gt;</code></td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
   </tr>
 
   <tr>
     <th><code>Tensor&lt;std::complex&lt;double&gt;&gt;</code></th>
-    <td>-</td>
-    <td>-</td>
-    <td>-</td>
     <td><code>Tensor&lt;std::complex&lt;double&gt;&gt;</code></td>
-    <td>Not supported</td>
-    <td>Not supported</td>
+    <td><code>Tensor&lt;std::complex&lt;double&gt;&gt;</code></td>
+    <td><code>Tensor&lt;std::complex&lt;double&gt;&gt;</code></td>
+    <td><code>Tensor&lt;std::complex&lt;double&gt;&gt;</code></td>
+    <td>-</td>
+    <td>-</td>
   </tr>
 
   <tr>
     <th><code>Tensor&lt;DataVector&gt;</code></th>
-    <td>-</td>
-    <td>-</td>
-    <td>-</td>
-    <td>-</td>
     <td><code>Tensor&lt;DataVector&gt;</code></td>
-    <td><code>Tensor&lt;ComplexDataVector&gt;</code></td>
+    <td><code>Tensor&lt;ComplexDataVector&gt;</code><strong>*</strong></td>
+    <td>Not supported</td>
+    <td>Not supported</td>
+    <td><code>Tensor&lt;DataVector&gt;</code></td>
+    <td>-</td>
   </tr>
 
   <tr>
     <th><code>Tensor&lt;ComplexDataVector&gt;</code></th>
-    <td>-</td>
-    <td>-</td>
-    <td>-</td>
-    <td>-</td>
-    <td>-</td>
+    <td><code>Tensor&lt;ComplexDataVector&gt;</code></td>
+    <td><code>Tensor&lt;ComplexDataVector&gt;</code></td>
+    <td>Not supported</td>
+    <td>Not supported</td>
+    <td><code>Tensor&lt;ComplexDataVector&gt;</code></td>
     <td><code>Tensor&lt;ComplexDataVector&gt;</code></td>
   </tr>
 </table>
