@@ -9,6 +9,7 @@
 #include <array>
 #include <complex>
 #include <cstddef>
+#include <iostream>  // TODO remove
 #include <type_traits>
 
 #include "DataStructures/ComplexDataVector.hpp"
@@ -81,12 +82,16 @@ constexpr bool is_evaluated_lhs_multi_index(
         lhs_spatial_spacetime_index_positions,
     const std::array<size_t, NumLhsConcreteTimeIndices>&
         lhs_time_index_positions) {
+  // TODO : have this function get templated on symmetry or take it as an arg or
+  // something and then check if the set of symmetric indices and total the
+  // number of 0s and see if it is the total we expect?
   for (size_t i = 0; i < lhs_spatial_spacetime_index_positions.size(); i++) {
     if (gsl::at(lhs_multi_index,
                 gsl::at(lhs_spatial_spacetime_index_positions, i)) == 0) {
       return false;
     }
   }
+  // TODO : same as above but check if # of non-zero is what we expect?
   for (size_t i = 0; i < lhs_time_index_positions.size(); i++) {
     if (gsl::at(lhs_multi_index, gsl::at(lhs_time_index_positions, i)) != 0) {
       return false;
@@ -266,15 +271,24 @@ void evaluate_impl(
   constexpr auto lhs_time_index_positions =
       get_time_index_positions<lhs_tensorindex_list>();
 
+  std::cout << "rhs_spatial_spacetime_index_positions : "
+            << rhs_spatial_spacetime_index_positions << std::endl;
+  std::cout << "lhs_spatial_spacetime_index_positions : "
+            << lhs_spatial_spacetime_index_positions << std::endl;
+  std::cout << "lhs_time_index_positions : " << lhs_time_index_positions
+            << std::endl;
+
   using rhs_expression_type =
       typename std::decay_t<decltype(~rhs_tensorexpression)>;
 
   for (size_t i = 0; i < lhs_tensor_type::size(); i++) {
     auto lhs_multi_index =
         lhs_tensor_type::structure::get_canonical_tensor_index(i);
+    std::cout << "lhs_multi_index : " << lhs_multi_index << std::endl;
     if (is_evaluated_lhs_multi_index(lhs_multi_index,
                                      lhs_spatial_spacetime_index_positions,
                                      lhs_time_index_positions)) {
+      std::cout << "lhs_multi_index evaluated " << std::endl;
       for (size_t j = 0; j < lhs_spatial_spacetime_index_positions.size();
            j++) {
         gsl::at(lhs_multi_index,

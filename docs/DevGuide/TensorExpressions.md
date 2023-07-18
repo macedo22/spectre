@@ -235,10 +235,10 @@ metric \f$\gamma_{ij}\f$:
 ```
 // spatial_metric is type tnsr::ii<DataVector, 3> and spacetime_metric is type
 // tnsr::aa<DataVector, 3>
-auto lapse = tenex::evaluate(
-      sqrt(spatial_metric(ti::I, ti::J) * spacetime_metric(ti::j, ti::t) *
-               spacetime_metric(ti::i, ti::t) -
-           spacetime_metric(ti::t, ti::t)));
+auto lapse = tenex::evaluate(sqrt(inverse_spatial_metric(ti::I, ti::J) *
+                                        spacetime_metric(ti::j, ti::t) *
+                                        spacetime_metric(ti::i, ti::t) -
+                                    spacetime_metric(ti::t, ti::t)));
 ```
 
 ### Assigning subsets of tensor components {#te_assigning_subsets_of_components}
