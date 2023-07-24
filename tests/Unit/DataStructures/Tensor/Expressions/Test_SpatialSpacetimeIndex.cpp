@@ -66,6 +66,78 @@ using positions_list_12 = tmpl::integral_list<size_t, 1, 2>;
 using positions_list_02 = tmpl::integral_list<size_t, 0, 2>;
 using positions_list_012 = tmpl::integral_list<size_t, 0, 1, 2>;
 
+// Test that generic spatial and spacetime `TensorIndex` values correctly
+// indicate that they are spatial and spacetime, respectively
+void test_spatial_and_spacetime_index_values() {
+  // Test is_generic_spacetime_index_value
+  CHECK(tenex::detail::is_generic_spacetime_index_value(ti::a.value));
+  CHECK(tenex::detail::is_generic_spacetime_index_value(ti::b.value));
+  CHECK(tenex::detail::is_generic_spacetime_index_value(ti::c.value));
+  CHECK(tenex::detail::is_generic_spacetime_index_value(ti::d.value));
+  CHECK(tenex::detail::is_generic_spacetime_index_value(ti::e.value));
+  CHECK(tenex::detail::is_generic_spacetime_index_value(ti::f.value));
+  CHECK(tenex::detail::is_generic_spacetime_index_value(ti::g.value));
+  CHECK(tenex::detail::is_generic_spacetime_index_value(ti::h.value));
+  CHECK(tenex::detail::is_generic_spacetime_index_value(ti::A.value));
+  CHECK(tenex::detail::is_generic_spacetime_index_value(ti::B.value));
+  CHECK(tenex::detail::is_generic_spacetime_index_value(ti::C.value));
+  CHECK(tenex::detail::is_generic_spacetime_index_value(ti::D.value));
+  CHECK(tenex::detail::is_generic_spacetime_index_value(ti::E.value));
+  CHECK(tenex::detail::is_generic_spacetime_index_value(ti::F.value));
+  CHECK(tenex::detail::is_generic_spacetime_index_value(ti::G.value));
+  CHECK(tenex::detail::is_generic_spacetime_index_value(ti::H.value));
+
+  CHECK(not tenex::detail::is_generic_spacetime_index_value(ti::i.value));
+  CHECK(not tenex::detail::is_generic_spacetime_index_value(ti::j.value));
+  CHECK(not tenex::detail::is_generic_spacetime_index_value(ti::k.value));
+  CHECK(not tenex::detail::is_generic_spacetime_index_value(ti::l.value));
+  CHECK(not tenex::detail::is_generic_spacetime_index_value(ti::m.value));
+  CHECK(not tenex::detail::is_generic_spacetime_index_value(ti::n.value));
+  CHECK(not tenex::detail::is_generic_spacetime_index_value(ti::I.value));
+  CHECK(not tenex::detail::is_generic_spacetime_index_value(ti::J.value));
+  CHECK(not tenex::detail::is_generic_spacetime_index_value(ti::K.value));
+  CHECK(not tenex::detail::is_generic_spacetime_index_value(ti::L.value));
+  CHECK(not tenex::detail::is_generic_spacetime_index_value(ti::M.value));
+  CHECK(not tenex::detail::is_generic_spacetime_index_value(ti::N.value));
+
+  CHECK(not tenex::detail::is_generic_spacetime_index_value(ti::t.value));
+  CHECK(not tenex::detail::is_generic_spacetime_index_value(ti::T.value));
+
+  // Test is_generic_spatial_index_value
+  CHECK(tenex::detail::is_generic_spatial_index_value(ti::i.value));
+  CHECK(tenex::detail::is_generic_spatial_index_value(ti::j.value));
+  CHECK(tenex::detail::is_generic_spatial_index_value(ti::k.value));
+  CHECK(tenex::detail::is_generic_spatial_index_value(ti::l.value));
+  CHECK(tenex::detail::is_generic_spatial_index_value(ti::m.value));
+  CHECK(tenex::detail::is_generic_spatial_index_value(ti::n.value));
+  CHECK(tenex::detail::is_generic_spatial_index_value(ti::I.value));
+  CHECK(tenex::detail::is_generic_spatial_index_value(ti::J.value));
+  CHECK(tenex::detail::is_generic_spatial_index_value(ti::K.value));
+  CHECK(tenex::detail::is_generic_spatial_index_value(ti::L.value));
+  CHECK(tenex::detail::is_generic_spatial_index_value(ti::M.value));
+  CHECK(tenex::detail::is_generic_spatial_index_value(ti::N.value));
+
+  CHECK(not tenex::detail::is_generic_spatial_index_value(ti::a.value));
+  CHECK(not tenex::detail::is_generic_spatial_index_value(ti::b.value));
+  CHECK(not tenex::detail::is_generic_spatial_index_value(ti::c.value));
+  CHECK(not tenex::detail::is_generic_spatial_index_value(ti::d.value));
+  CHECK(not tenex::detail::is_generic_spatial_index_value(ti::e.value));
+  CHECK(not tenex::detail::is_generic_spatial_index_value(ti::f.value));
+  CHECK(not tenex::detail::is_generic_spatial_index_value(ti::g.value));
+  CHECK(not tenex::detail::is_generic_spatial_index_value(ti::h.value));
+  CHECK(not tenex::detail::is_generic_spatial_index_value(ti::A.value));
+  CHECK(not tenex::detail::is_generic_spatial_index_value(ti::B.value));
+  CHECK(not tenex::detail::is_generic_spatial_index_value(ti::C.value));
+  CHECK(not tenex::detail::is_generic_spatial_index_value(ti::D.value));
+  CHECK(not tenex::detail::is_generic_spatial_index_value(ti::E.value));
+  CHECK(not tenex::detail::is_generic_spatial_index_value(ti::F.value));
+  CHECK(not tenex::detail::is_generic_spatial_index_value(ti::G.value));
+  CHECK(not tenex::detail::is_generic_spatial_index_value(ti::H.value));
+
+  CHECK(not tenex::detail::is_generic_spatial_index_value(ti::t.value));
+  CHECK(not tenex::detail::is_generic_spatial_index_value(ti::T.value));
+}
+
 void test_spatial_spacetime_index_positions() {
   CHECK(std::is_same_v<tenex::detail::spatial_spacetime_index_positions<
                            index_list_empty, ti_list_empty>,
@@ -275,6 +347,7 @@ void test_spatial_spacetime_index_transformation_from_positions() {
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.SpatialSpacetimeIndex",
                   "[DataStructures][Unit]") {
+  test_spatial_and_spacetime_index_values();
   test_spatial_spacetime_index_positions();
   test_get_spatial_spacetime_index_symmetry();
   test_replace_spatial_spacetime_indices();
