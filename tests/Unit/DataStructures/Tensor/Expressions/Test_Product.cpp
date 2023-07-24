@@ -414,10 +414,17 @@ void test_outer_product_rank_2x2_operands(
       L_cIba = tenex::evaluate<ti::c, ti::I, ti::b, ti::a>(Rll(ti::a, ti::b) *
                                                            Sul(ti::I, ti::c));
 
+  //   std::cout << "Rll : " << Rll << std::endl;
+  //   std::cout << "Sul : " << Sul << std::endl;
+
   for (size_t a = 0; a < R_index::dim; a++) {
     for (size_t b = 0; b < R_index::dim; b++) {
       for (size_t i = 0; i < S_first_index::dim; i++) {
         for (size_t c = 0; c < S_second_index::dim; c++) {
+          // std::cout << "(a, b, i, c) : (" << a << ", " << b << ", "
+          //     << i << ", " << c << ")" << std::endl;
+          // std::cout << "Rll.get(a, b) : " << Rll.get(a, b) << std::endl;
+          // std::cout << "Sul.get(i, c) : " << Sul.get(i, c) << std::endl;
           CHECK_ITERABLE_APPROX(L_abIc.get(a, b, i, c),
                                 Rll.get(a, b) * Sul.get(i, c));
           CHECK_ITERABLE_APPROX(L_abcI.get(a, b, c, i),

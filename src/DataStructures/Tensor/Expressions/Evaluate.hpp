@@ -9,6 +9,7 @@
 #include <array>
 #include <complex>
 #include <cstddef>
+#include <iostream>
 #include <type_traits>
 
 #include "DataStructures/ComplexDataVector.hpp"
@@ -16,12 +17,14 @@
 #include "DataStructures/Tensor/Expressions/DataTypeSupport.hpp"
 #include "DataStructures/Tensor/Expressions/IndexPropertyCheck.hpp"
 #include "DataStructures/Tensor/Expressions/LhsTensorSymmAndIndices.hpp"
+#include "DataStructures/Tensor/Expressions/SpatialSpacetimeIndex.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Expressions/TensorIndex.hpp"
 #include "DataStructures/Tensor/Expressions/TensorIndexTransformation.hpp"
 #include "DataStructures/Tensor/Expressions/TimeIndex.hpp"
 #include "DataStructures/Tensor/Structure.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
+#include "Utilities/Algorithm.hpp"
 #include "Utilities/ContainerHelpers.hpp"
 #include "Utilities/ErrorHandling/Assert.hpp"
 #include "Utilities/Gsl.hpp"
@@ -103,6 +106,325 @@ struct CheckNoLhsAntiSymmetries<SymmList<Symm...>> {
   static constexpr bool value = (... and (Symm::value > 0));
 };
 
+template <size_t NumIndices, typename... LhsTensorIndices>
+std::array<size_t, NumIndices> runtime_get_reordered_tensorindex_values(
+    const std::array<std::int32_t, NumIndices>& symmetry) {
+  constexpr std::array<size_t, NumIndices> lhs_tensorindex_values = {
+      {LhsTensorIndices::value...}};
+  if (NumIndices < 2) {
+    return lhs_tensorindex_values;
+  }
+
+  std::int32_t max_symm_value = *alg::max_element(symmetry);
+
+  std::array<size_t, NumIndices> reordered_lhs_tensorindex_values =
+      lhs_tensorindex_values;
+
+  // const bool swap_needed = [](const size_t tensorindex_value1,
+  //                             const size_t tensorindex_value2) {
+  //   return (is_time_index_value(tensorindex_value1) and
+  //           not is_time_index_value(tensorindex_value2)) or
+  //          (is_generic_spacetime_index_value(tensorindex_value1) and
+  //           is_generic_spatial_index_value(tensorindex_value2)) or
+  //          (tensorindex_value1 > tensorindex_value2 and
+  //           is_generic_spacetime_index_value(tensorindex_value1) ==
+  //               is_generic_spacetime_index_value(tensorindex_value2));
+  // };
+
+  const auto compare = [](const size_t tensorindex_value1,
+                          const size_t tensorindex_value2) {
+    return (is_time_index_value(tensorindex_value1) and
+            not is_time_index_value(tensorindex_value2)) or
+           (is_generic_spacetime_index_value(tensorindex_value1) and
+            is_generic_spatial_index_value(tensorindex_value2)) or
+           (tensorindex_value1 > tensorindex_value2 and
+            is_generic_spacetime_index_value(tensorindex_value1) ==
+                is_generic_spacetime_index_value(tensorindex_value2));
+  };
+
+  std::cout << "input symmetry : " << symmetry << std::endl;
+
+  // don't need the next line that gets the max if we know we will
+  // encounter unique symm index values in decreasing order as we
+  // iterate from left to right
+  // const size_t max_symm_value = *alg::max_element(symmetry);
+  // assumes min value is 1, which is part of assuming canon symm
+  // size_t symm_value_to_find = symmetry[NumIndices - 1];
+
+  // size_t start_index = NumIndices - 1;
+  std::int32_t symm_value_to_find = 1;
+  while (symm_value_to_find <= max_symm_value) {
+    std::cout << "symm_value_to_find : " << symm_value_to_find << std::endl;
+    // skip forward until we get to the position with the value we care about
+    // TODO: what if the value isn't found? we just assume we get a canon
+    // symmetry
+    size_t i = NumIndices - 1;
+    // while (i < NumIndices and symmetry[i] != symm_value_to_find) {
+    //   i--;
+    // }
+    // TODO : check and fix this logic
+    // current_index = start_index;
+    while (true) {
+      while (i > 0 and symmetry[i] != symm_value_to_find) {
+        i--;
+      }
+      if (i == 0) {
+        break;
+      }
+      std::cout << "i : " << i << std::endl;
+      // const size_t current_symm_value = symmetry[i];
+      // const size_t current_tensorindex_value =
+      //     reordered_lhs_tensorindex_values[i];
+      // size_t max_symm_value = symmetry[i];
+      size_t max_tensorindex_value = reordered_lhs_tensorindex_values[i];
+      size_t max_index = i;
+
+      size_t j = i - 1;
+      // note: because we need to hit 0 and size_t wraps around to max size_t
+      while (j < NumIndices) {
+        std::cout << "j : " << j << std::endl;
+        const std::int32_t compare_symm_value = symmetry[j];
+        const size_t compare_tensorindex_value =
+            reordered_lhs_tensorindex_values[j];
+        std::cout << "compare_symm_value : " << compare_symm_value << std::endl;
+        std::cout << "compare_tensorindex_value : " << compare_tensorindex_value
+                  << std::endl;
+        if (compare_symm_value == symm_value_to_find and
+            compare(compare_tensorindex_value, max_tensorindex_value)) {
+          std::cout << "new max found" << std::endl;
+          max_tensorindex_value = compare_tensorindex_value;
+          max_index = j;
+          std::cout << "new max_tensorindex_value : " << max_tensorindex_value
+                    << std::endl;
+          std::cout << "new max_index : " << max_index << std::endl;
+        }
+        j--;
+      }
+      std::cout << "swapping max_index and i" << std::endl;
+      reordered_lhs_tensorindex_values[max_index] =
+          reordered_lhs_tensorindex_values[i];
+      reordered_lhs_tensorindex_values[i] = max_tensorindex_value;
+      std::cout << "new reordered_lhs_tensorindex_values[max_index] : "
+                << reordered_lhs_tensorindex_values[max_index] << std::endl;
+      std::cout << "new reordered_lhs_tensorindex_values[i] : "
+                << reordered_lhs_tensorindex_values[i] << std::endl;
+      std::cout << "new reordered_lhs_tensorindex_values : "
+                << reordered_lhs_tensorindex_values << std::endl;
+
+      i--;
+      //   while (i > 0 and symmetry[i] != symm_value_to_find) {
+      //   i--;
+      // }
+    }
+    symm_value_to_find++;
+  }
+
+  // // don't need the next line that gets the max if we know we will
+  // // encounter unique symm index values in decreasing order as we
+  // // iterate from left to right
+  // // const size_t max_symm_value = *alg::max_element(symmetry);
+  // // assumes min value is 1, which is part of assuming canon symm
+  // size_t symm_value_to_find = symmetry[0];
+  // size_t start_index = 0;
+  // size_t iteration = 0;
+  // size_t current_index;
+  // size_t compare_index;
+  // while (symm_value_to_find > 0) {
+  //   // skip forward until we get to the position with the value we care about
+  //   // TODO: what if the value isn't found? we just assume we get a canon
+  //   // symmetry
+  //   while (symmetry[start_index] != symm_value_to_find) {
+  //     start_index++;
+  //   }
+  //   // TODO : check and fix this logic
+  //   // current_index = start_index;
+  //   size_t
+  //   for (size_t iteration = 0; iteration < Numindices; iteration++) {
+  //     const size_t current_symm_value = symmetry[start_index];
+  //     const size_t current_tensorindex_value =
+  //         reordered_lhs_tensorindex_values[start_index];
+  //     for (size_t compare_index = 0; compare_index < Numindices;
+  //          compare_index++) {
+  //       const size_t compare_symm_value = symmetry[compare_index];
+  //       const size_t compare_tensorindex_value =
+  //           reordered_lhs_tensorindex_values[compare_index];
+  //       if (current_symm_value == compare_symm_value and
+  //           swap_needed(current_tensorindex_value,
+  //           compare_tensorindex_value)) {
+  //         const size_t temp =
+  //             reordered_lhs_tensorindex_values[compare_tensorindex_value];
+  //         reordered_lhs_tensorindex_values[compare_tensorindex_value] =
+  //             reordered_lhs_tensorindex_values[current_tensorindex_value];
+  //         reordered_lhs_tensorindex_values[current_tensorindex_value] = temp;
+  //       }
+  //     }
+  //     // start_index++;
+  //   }
+  //   symm_value_to_find--;
+  // }
+  return reordered_lhs_tensorindex_values;
+}
+
+// TODO : this assumes symmetry is canonicalized already
+template <typename... LhsTensorIndices, size_t NumIndices>
+constexpr std::array<size_t, NumIndices> get_reordered_tensorindex_values(
+    const std::array<std::int32_t, NumIndices>& symmetry) {
+  constexpr std::array<size_t, NumIndices> lhs_tensorindex_values = {
+      {LhsTensorIndices::value...}};
+  if (NumIndices < 2) {
+    return lhs_tensorindex_values;
+  }
+
+  std::int32_t max_symm_value = *alg::max_element(symmetry);
+
+  std::array<size_t, NumIndices> reordered_lhs_tensorindex_values =
+      lhs_tensorindex_values;
+
+  // const bool swap_needed = [](const size_t tensorindex_value1,
+  //                             const size_t tensorindex_value2) {
+  //   return (is_time_index_value(tensorindex_value1) and
+  //           not is_time_index_value(tensorindex_value2)) or
+  //          (is_generic_spacetime_index_value(tensorindex_value1) and
+  //           is_generic_spatial_index_value(tensorindex_value2)) or
+  //          (tensorindex_value1 > tensorindex_value2 and
+  //           is_generic_spacetime_index_value(tensorindex_value1) ==
+  //               is_generic_spacetime_index_value(tensorindex_value2));
+  // };
+
+  const auto compare = [](const size_t tensorindex_value1,
+                          const size_t tensorindex_value2) {
+    return (is_time_index_value(tensorindex_value1) and
+            not is_time_index_value(tensorindex_value2)) or
+           (is_generic_spacetime_index_value(tensorindex_value1) and
+            is_generic_spatial_index_value(tensorindex_value2)) or
+           (tensorindex_value1 > tensorindex_value2 and
+            is_generic_spacetime_index_value(tensorindex_value1) ==
+                is_generic_spacetime_index_value(tensorindex_value2));
+  };
+
+  // std::cout << "input symmetry : " << symmetry << std::endl;
+
+  // don't need the next line that gets the max if we know we will
+  // encounter unique symm index values in decreasing order as we
+  // iterate from left to right
+  // const size_t max_symm_value = *alg::max_element(symmetry);
+  // assumes min value is 1, which is part of assuming canon symm
+  // size_t symm_value_to_find = symmetry[NumIndices - 1];
+
+  // size_t start_index = NumIndices - 1;
+  std::int32_t symm_value_to_find = 1;
+  while (symm_value_to_find <= max_symm_value) {
+    // std::cout << "symm_value_to_find : " << symm_value_to_find << std::endl;
+    // skip forward until we get to the position with the value we care about
+    // TODO: what if the value isn't found? we just assume we get a canon
+    // symmetry
+    size_t i = NumIndices - 1;
+    // while (symmetry[i] != symm_value_to_find and i < NumIndices) {
+    //   i--;
+    // }
+    // TODO : check and fix this logic
+    // current_index = start_index;
+    while (true) {
+      while (i > 0 and symmetry[i] != symm_value_to_find) {
+        i--;
+      }
+      if (i == 0) {
+        break;
+      }
+      // std::cout << "i : " << i << std::endl;
+      // const size_t current_symm_value = symmetry[i];
+      // const size_t current_tensorindex_value =
+      //     reordered_lhs_tensorindex_values[i];
+      // size_t max_symm_value = symmetry[i];
+      size_t max_tensorindex_value = reordered_lhs_tensorindex_values[i];
+      size_t max_index = i;
+
+      size_t j = i - 1;
+      // note: because we need to hit 0 and size_t wraps around to max size_t
+      while (j < NumIndices) {
+        // std::cout << "j : " << j << std::endl;
+        const std::int32_t compare_symm_value = symmetry[j];
+        const size_t compare_tensorindex_value =
+            reordered_lhs_tensorindex_values[j];
+        // std::cout << "compare_symm_value : " << compare_symm_value <<
+        // std::endl; std::cout << "compare_tensorindex_value : " <<
+        // compare_tensorindex_value << std::endl;
+        if (compare_symm_value == symm_value_to_find and
+            compare(compare_tensorindex_value, max_tensorindex_value)) {
+          // std::cout << "new max found" << std::endl;
+          max_tensorindex_value = compare_tensorindex_value;
+          max_index = j;
+          // std::cout << "new max_tensorindex_value : " <<
+          // max_tensorindex_value << std::endl; std::cout << "new max_index : "
+          // << max_index << std::endl;
+        }
+        j--;
+      }
+      // std::cout << "swapping max_index and i" << std::endl;
+      reordered_lhs_tensorindex_values[max_index] =
+          reordered_lhs_tensorindex_values[i];
+      reordered_lhs_tensorindex_values[i] = max_tensorindex_value;
+      // std::cout << "new reordered_lhs_tensorindex_values[max_index] : " <<
+      // reordered_lhs_tensorindex_values[max_index] << std::endl; std::cout <<
+      // "new reordered_lhs_tensorindex_values[i] : " <<
+      // reordered_lhs_tensorindex_values[i] << std::endl;
+      i--;
+    }
+    symm_value_to_find++;
+  }
+
+  // // don't need the next line that gets the max if we know we will
+  // // encounter unique symm index values in decreasing order as we
+  // // iterate from left to right
+  // // const size_t max_symm_value = *alg::max_element(symmetry);
+  // // assumes min value is 1, which is part of assuming canon symm
+  // size_t symm_value_to_find = symmetry[0];
+  // size_t start_index = 0;
+  // size_t iteration = 0;
+  // size_t current_index;
+  // size_t compare_index;
+  // while (symm_value_to_find > 0) {
+  //   // skip forward until we get to the position with the value we care about
+  //   // TODO: what if the value isn't found? we just assume we get a canon
+  //   // symmetry
+  //   while (symmetry[start_index] != symm_value_to_find) {
+  //     start_index++;
+  //   }
+  //   // TODO : check and fix this logic
+  //   // current_index = start_index;
+  //   size_t
+  //   for (size_t iteration = 0; iteration < Numindices; iteration++) {
+  //     const size_t current_symm_value = symmetry[start_index];
+  //     const size_t current_tensorindex_value =
+  //         reordered_lhs_tensorindex_values[start_index];
+  //     for (size_t compare_index = 0; compare_index < Numindices;
+  //          compare_index++) {
+  //       const size_t compare_symm_value = symmetry[compare_index];
+  //       const size_t compare_tensorindex_value =
+  //           reordered_lhs_tensorindex_values[compare_index];
+  //       if (current_symm_value == compare_symm_value and
+  //           swap_needed(current_tensorindex_value,
+  //           compare_tensorindex_value)) {
+  //         const size_t temp =
+  //             reordered_lhs_tensorindex_values[compare_tensorindex_value];
+  //         reordered_lhs_tensorindex_values[compare_tensorindex_value] =
+  //             reordered_lhs_tensorindex_values[current_tensorindex_value];
+  //         reordered_lhs_tensorindex_values[current_tensorindex_value] = temp;
+  //       }
+  //     }
+  //     // start_index++;
+  //   }
+  //   symm_value_to_find--;
+  // }
+  return reordered_lhs_tensorindex_values;
+}
+
+// template <>
+// std::array<size_t, 0> get_reordered_tensorindex_values<0>(
+//     const std::array<size_t, 0>& symmetry) {
+//   return {};
+// }
+
 /*!
  * \ingroup TensorExpressionsGroup
  * \brief Evaluate subtrees of the RHS expression or the RHS expression as a
@@ -146,13 +468,15 @@ struct CheckNoLhsAntiSymmetries<SymmList<Symm...>> {
 template <bool EvaluateSubtrees, typename... LhsTensorIndices,
           typename LhsDataType, typename LhsSymmetry, typename LhsIndexList,
           typename Derived, typename RhsDataType, typename RhsSymmetry,
-          typename RhsIndexList, typename... RhsTensorIndices>
+          typename RhsIndexList, typename... RhsTensorIndices,
+          size_t... LhsInts>
 void evaluate_impl(
     const gsl::not_null<Tensor<LhsDataType, LhsSymmetry, LhsIndexList>*>
         lhs_tensor,
     const TensorExpression<Derived, RhsDataType, RhsSymmetry, RhsIndexList,
                            tmpl::list<RhsTensorIndices...>>&
-        rhs_tensorexpression) {
+        rhs_tensorexpression,
+    const std::index_sequence<LhsInts...>& /*lhs_ints*/) {
   constexpr size_t num_lhs_indices = sizeof...(LhsTensorIndices);
   constexpr size_t num_rhs_indices = sizeof...(RhsTensorIndices);
 
@@ -247,15 +571,39 @@ void evaluate_impl(
     }
   }
 
+  // constexpr std::array<std::int32_t, num_lhs_indices> symm =
+  // {{tmpl::at_c<LhsSymmetry, LhsInts>::value...}}; std::cout << "symm : " <<
+  // symm << std::endl;
+
+  // const std::array<size_t, num_lhs_indices>
+  // runtime_reordered_tensorindex_values =
+  //     runtime_get_reordered_tensorindex_values<
+  //         num_lhs_indices, std::decay_t<decltype(LhsTensorIndices)>...>(
+  //         {{tmpl::at_c<LhsSymmetry, LhsInts>::value...}});
+  // std::cout << "runtime_reordered_tensorindex_values : " <<
+  // runtime_reordered_tensorindex_values
+  //           << std::endl;
+
+  constexpr std::array<std::int32_t, num_lhs_indices> lhs_symmetry = {
+      {tmpl::at_c<LhsSymmetry, LhsInts>::value...}};
+  constexpr std::array<size_t, num_lhs_indices> reordered_tensorindex_values =
+      get_reordered_tensorindex_values<LhsTensorIndices...>(lhs_symmetry);
+  using reordered_lhs_tensorindex_list =
+      tmpl::list<TensorIndex<reordered_tensorindex_values[LhsInts]>...>;
+
+  // std::cout << "reordered_tensorindex_values : " <<
+  // reordered_tensorindex_values
+  //           << std::endl;
+
   constexpr std::array<size_t, num_rhs_indices> index_transformation =
       compute_tensorindex_transformation<num_lhs_indices, num_rhs_indices>(
-          {{LhsTensorIndices::value...}}, {{RhsTensorIndices::value...}});
+          reordered_tensorindex_values, {{RhsTensorIndices::value...}});
 
   // positions of indices in LHS tensor where generic spatial indices are used
   // for spacetime indices
   constexpr auto lhs_spatial_spacetime_index_positions =
       get_spatial_spacetime_index_positions<LhsIndexList,
-                                            lhs_tensorindex_list>();
+                                            reordered_lhs_tensorindex_list>();
   // positions of indices in RHS tensor where generic spatial indices are used
   // for spacetime indices
   constexpr auto rhs_spatial_spacetime_index_positions =
@@ -264,17 +612,22 @@ void evaluate_impl(
 
   // positions of indices in LHS tensor where concrete time indices are used
   constexpr auto lhs_time_index_positions =
-      get_time_index_positions<lhs_tensorindex_list>();
+      get_time_index_positions<reordered_lhs_tensorindex_list>();
 
   using rhs_expression_type =
       typename std::decay_t<decltype(~rhs_tensorexpression)>;
 
+  // std::cout << "lhs_spatial_spacetime_index_positions : " <<
+  // lhs_spatial_spacetime_index_positions << std::endl; std::cout <<
+  // "lhs_time_index_positions : " << lhs_time_index_positions << std::endl;
   for (size_t i = 0; i < lhs_tensor_type::size(); i++) {
     auto lhs_multi_index =
         lhs_tensor_type::structure::get_canonical_tensor_index(i);
+    // std::cout << "lhs_multi_index : " << lhs_multi_index << std::endl;
     if (is_evaluated_lhs_multi_index(lhs_multi_index,
                                      lhs_spatial_spacetime_index_positions,
                                      lhs_time_index_positions)) {
+      // std::cout << "\t\tevaluated" << std::endl;
       for (size_t j = 0; j < lhs_spatial_spacetime_index_positions.size();
            j++) {
         gsl::at(lhs_multi_index,
@@ -329,10 +682,11 @@ void evaluate_impl(
  * @param rhs_value the RHS value to assigned
  */
 template <typename... LhsTensorIndices, typename X, typename LhsSymmetry,
-          typename LhsIndexList, typename NumberType>
+          typename LhsIndexList, typename NumberType, size_t... LhsInts>
 void evaluate_impl(
     const gsl::not_null<Tensor<X, LhsSymmetry, LhsIndexList>*> lhs_tensor,
-    const NumberType& rhs_value) {
+    const NumberType& rhs_value,
+    const std::index_sequence<LhsInts...>& /*lhs_ints*/) {
   using lhs_tensor_type = typename std::decay_t<decltype(*lhs_tensor)>;
   constexpr size_t num_lhs_indices = sizeof...(LhsTensorIndices);
   using lhs_tensorindex_list = tmpl::list<LhsTensorIndices...>;
@@ -376,15 +730,22 @@ void evaluate_impl(
            "\n\tgsl::not_null<Tensor<VectorType, ...>*>, number).");
   }
 
+  constexpr std::array<std::int32_t, num_lhs_indices> lhs_symmetry = {
+      {tmpl::at_c<LhsSymmetry, LhsInts>::value...}};
+  constexpr std::array<size_t, num_lhs_indices> reordered_tensorindex_values =
+      get_reordered_tensorindex_values<LhsTensorIndices...>(lhs_symmetry);
+  using reordered_lhs_tensorindex_list =
+      tmpl::list<TensorIndex<reordered_tensorindex_values[LhsInts]>...>;
+
   // positions of indices in LHS tensor where generic spatial indices are used
   // for spacetime indices
   constexpr auto lhs_spatial_spacetime_index_positions =
       get_spatial_spacetime_index_positions<LhsIndexList,
-                                            lhs_tensorindex_list>();
+                                            reordered_lhs_tensorindex_list>();
 
   // positions of indices in LHS tensor where concrete time indices are used
   constexpr auto lhs_time_index_positions =
-      get_time_index_positions<lhs_tensorindex_list>();
+      get_time_index_positions<reordered_lhs_tensorindex_list>();
 
   for (size_t i = 0; i < lhs_tensor_type::size(); i++) {
     auto lhs_multi_index =
@@ -455,7 +816,8 @@ void evaluate(
       rhs_expression_type::primary_subtree_contains_primary_start;
   detail::evaluate_impl<evaluate_subtrees,
                         std::decay_t<decltype(LhsTensorIndices)>...>(
-      lhs_tensor, rhs_tensorexpression);
+      lhs_tensor, rhs_tensorexpression,
+      std::make_index_sequence<sizeof...(LhsTensorIndices)>{});
 }
 
 /// @{
@@ -485,16 +847,18 @@ template <auto&... LhsTensorIndices, typename X, typename LhsSymmetry,
 void evaluate(
     const gsl::not_null<Tensor<X, LhsSymmetry, LhsIndexList>*> lhs_tensor,
     const N rhs_value) {
-  detail::evaluate_impl<std::decay_t<decltype(LhsTensorIndices)>...>(lhs_tensor,
-                                                                     rhs_value);
+  detail::evaluate_impl<std::decay_t<decltype(LhsTensorIndices)>...>(
+      lhs_tensor, rhs_value,
+      std::make_index_sequence<sizeof...(LhsTensorIndices)>{});
 }
 template <auto&... LhsTensorIndices, typename X, typename LhsSymmetry,
           typename LhsIndexList, typename N>
 void evaluate(
     const gsl::not_null<Tensor<X, LhsSymmetry, LhsIndexList>*> lhs_tensor,
     const std::complex<N>& rhs_value) {
-  detail::evaluate_impl<std::decay_t<decltype(LhsTensorIndices)>...>(lhs_tensor,
-                                                                     rhs_value);
+  detail::evaluate_impl<std::decay_t<decltype(LhsTensorIndices)>...>(
+      lhs_tensor, rhs_value,
+      std::make_index_sequence<sizeof...(LhsTensorIndices)>{});
 }
 /// @}
 
@@ -626,6 +990,7 @@ void update(
           lhs_tensor);
 
   detail::evaluate_impl<false, std::decay_t<decltype(LhsTensorIndices)>...>(
-      lhs_tensor, rhs_tensorexpression);
+      lhs_tensor, rhs_tensorexpression,
+      std::make_index_sequence<sizeof...(LhsTensorIndices)>{});
 }
 }  // namespace tenex
