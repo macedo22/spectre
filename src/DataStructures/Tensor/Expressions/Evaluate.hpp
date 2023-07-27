@@ -133,8 +133,31 @@ std::array<size_t, NumIndices> runtime_get_reordered_tensorindex_values(
 
   const auto compare = [](const size_t tensorindex_value1,
                           const size_t tensorindex_value2) {
-    return (is_time_index_value(tensorindex_value1) and
-            not is_time_index_value(tensorindex_value2)) or
+    std::cout << "Comparing current max " << tensorindex_value2
+              << "to current compare value " << tensorindex_value1 << std::endl;
+
+    if (is_time_index_value(tensorindex_value2)) {
+      return false;
+    }
+
+    // const bool result1 = is_time_index_value(tensorindex_value1) and
+    //                      not is_time_index_value(tensorindex_value2);
+    const bool result2 =
+        is_generic_spacetime_index_value(tensorindex_value1) and
+        is_generic_spatial_index_value(tensorindex_value2);
+    const bool result3 =
+        tensorindex_value1 > tensorindex_value2 and
+        is_generic_spacetime_index_value(tensorindex_value1) ==
+            is_generic_spacetime_index_value(tensorindex_value2);
+
+    // std::cout << "compare is time and current is not time : " << result1
+    //           << std::endl;
+    std::cout << "compare is spacetime and current is spatial : " << result2
+              << std::endl;
+    std::cout
+        << "compare > current and both are either generic spacetime or not : "
+        << result3 << std::endl;
+    return is_time_index_value(tensorindex_value1) or
            (is_generic_spacetime_index_value(tensorindex_value1) and
             is_generic_spatial_index_value(tensorindex_value2)) or
            (tensorindex_value1 > tensorindex_value2 and
@@ -293,8 +316,11 @@ constexpr std::array<size_t, NumIndices> get_reordered_tensorindex_values(
 
   const auto compare = [](const size_t tensorindex_value1,
                           const size_t tensorindex_value2) {
-    return (is_time_index_value(tensorindex_value1) and
-            not is_time_index_value(tensorindex_value2)) or
+    if (is_time_index_value(tensorindex_value2)) {
+      return false;
+    }
+
+    return is_time_index_value(tensorindex_value1) or
            (is_generic_spacetime_index_value(tensorindex_value1) and
             is_generic_spatial_index_value(tensorindex_value2)) or
            (tensorindex_value1 > tensorindex_value2 and
@@ -575,14 +601,13 @@ void evaluate_impl(
   // {{tmpl::at_c<LhsSymmetry, LhsInts>::value...}}; std::cout << "symm : " <<
   // symm << std::endl;
 
-  // const std::array<size_t, num_lhs_indices>
-  // runtime_reordered_tensorindex_values =
-  //     runtime_get_reordered_tensorindex_values<
-  //         num_lhs_indices, std::decay_t<decltype(LhsTensorIndices)>...>(
-  //         {{tmpl::at_c<LhsSymmetry, LhsInts>::value...}});
-  // std::cout << "runtime_reordered_tensorindex_values : " <<
-  // runtime_reordered_tensorindex_values
-  //           << std::endl;
+  const std::array<size_t, num_lhs_indices>
+      runtime_reordered_tensorindex_values =
+          runtime_get_reordered_tensorindex_values<
+              num_lhs_indices, std::decay_t<decltype(LhsTensorIndices)>...>(
+              {{tmpl::at_c<LhsSymmetry, LhsInts>::value...}});
+  std::cout << "runtime_reordered_tensorindex_values : "
+            << runtime_reordered_tensorindex_values << std::endl;
 
   constexpr std::array<std::int32_t, num_lhs_indices> lhs_symmetry = {
       {tmpl::at_c<LhsSymmetry, LhsInts>::value...}};
