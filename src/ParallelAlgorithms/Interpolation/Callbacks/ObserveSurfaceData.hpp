@@ -110,9 +110,10 @@ struct ObserveSurfaceData
         2, Spectral::Basis::SphericalHarmonic};
     const std::vector<Spectral::Quadrature> quadratures_vector{
         {Spectral::Quadrature::Gauss, Spectral::Quadrature::Equiangular}};
-    const observers::ObservationId& observation_id = observers::ObservationId(
-        InterpolationTarget_detail::get_temporal_id_value(temporal_id),
-        subfile_path + ".vol");
+    const double time =
+        InterpolationTarget_detail::get_temporal_id_value(temporal_id);
+    const observers::ObservationId& observation_id =
+        observers::ObservationId(time, subfile_path + ".vol");
 
     auto& proxy = Parallel::get_parallel_component<
         observers::ObserverWriter<Metavariables>>(cache);
@@ -130,22 +131,19 @@ struct ObserveSurfaceData
     // l_max == m_max
     const size_t num_coefficients =
         ylm::Spherepack::physical_size(l_max, l_max);
-
     const std::array<double, 3> expansion_center =
         strahlkorper.expansion_center();
 
-    // l_max + 3 dims of expansion center = 4 columns
-    const size_t num_columns = num_coefficients + 4;
+    // time + 3 dims of expansion center + Lmax = 5 columns
+    const size_t num_columns = num_coefficients + 5;
 
     std::vector<std::string> ylm_legend;
     ylm_legend.reserve(num_columns);
     std::vector<double> ylm_data;
     ylm_data.reserve(num_columns);
-    // ylm_legend[0] = "Lmax";
-    // ylm_legend[1] = "Mmax";
-    // ylm_legend[2] = "ExpansionCenter_x";
-    // ylm_legend[3] = "ExpansionCenter_y";
-    // ylm_legend[4] = "ExpansionCenter_z";
+
+    ylm_legend.emplace_back("Time");
+    ylm_data.emplace_back(time);
     ylm_legend.emplace_back("ExpansionCenter_x");
     ylm_data.emplace_back(expansion_center[0]);
     ylm_legend.emplace_back("ExpansionCenter_y");
@@ -176,19 +174,8 @@ struct ObserveSurfaceData
                          "components as data to write ("
                       << ylm_data.size() << ")");
 
-    // // const auto& reduction_file_lock =
-    // //     db::get<observers::Tags::H5FileLock>(
-    // //         make_not_null(&box));
-    // // const std::lock_guard hold_lock(reduction_file_lock);
-    // observers::ThreadedActions::ReductionActions_detail::write_data(
-    //     ylm_subfile_name, observers::input_source_from_cache(cache),
-    //     ylm_legend, std::make_tuple(ylm_data),
-    //     Parallel::get<observers::Tags::ReductionFileName>(cache),
-    //     std::index_sequence<0>{});
     Parallel::threaded_action<
         observers::ThreadedActions::WriteReductionDataRow>(
-        // Node 0 is always the writer, so directly call the component on that
-        // node
         proxy[0], ylm_subfile_name, ylm_legend, std::make_tuple(ylm_data));
   }
 };
