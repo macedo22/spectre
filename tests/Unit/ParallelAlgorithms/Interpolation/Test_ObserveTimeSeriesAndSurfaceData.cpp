@@ -6,6 +6,7 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <iostream>
 #include <pup.h>
 #include <random>
 #include <string>
@@ -85,6 +86,63 @@ struct SurfaceIntegral;
 }  // namespace StrahlkorperGr::Tags
 
 namespace {
+void check_ylm_data(const std::string& h5_file_name) {
+  // Parameters chosen to match SurfaceD choices below
+  constexpr size_t l_max = 10;
+//   constexpr size_t m_max = 10;
+  constexpr double sphere_radius = 2.8;
+  constexpr std::array<double, 3> center{{0.01, 0.02, 0.03}};
+//   const Strahlkorper<Frame::Inertial> strahlkorper{l_max, m_max, sphere_radius,
+//                                                    center};
+//   const ylm::Spherepack& ylm = strahlkorper.ylm_spherepack();
+//   const DataVector expected_ylm_coefficients = strahlkorper.coefficients();
+//   std::cout << "size of expected_ylm_coefficients : " << expected_ylm_coefficients.size() << std::endl;
+//   std::cout << "expected_ylm_coefficients : " << expected_ylm_coefficients << std::endl;
+
+// sum of first n odds = n^2
+const size_t expected_num_coefficients = square(l_max + 1);
+
+// Check that the H5 file was written correctly.
+  const auto file = h5::H5File<h5::AccessType::ReadOnly>(h5_file_name);
+std::vector<std::string> ylm_expected_legend{
+    "ExpansionCenter_x",
+    "ExpansionCenter_y",
+    "ExpansionCenter_z",
+    "Lmax"
+    };
+// ylm_expected_legend.resize(ylm_expected_legend.size() + expected_num_coefficients, "");
+SpherepackIterator iter(l_max, l_max);
+    for (size_t l = 0; l <= l_max; l++) {
+      for (int m = -l; m <= static_cast<int>(l); m++) {
+        ylm_expected_legend.push_back(MakeString{} << "coef(" << l << "," << m << ")");
+      }
+    }
+
+std::vector<double> ylm_expected_data{
+    center[0],
+    center[1],
+    center[2],
+    l_max,
+    sqrt(8.0) * sphere_radius};
+ylm_expected_data.resize(ylm_expected_data.size() + expected_num_coefficients -1, 0.0);
+
+file.close_current_object();
+const auto& ylm_dat_file = file.get<h5::Dat>("/SurfaceD_Ylm");
+const Matrix ylm_written_data = ylm_dat_file.get_data();
+const auto& ylm_written_legend = ylm_dat_file.get_legend();
+
+CHECK(ylm_written_legend.size() == expected_num_coefficients + 4);
+CHECK(ylm_written_data.columns() == expected_num_coefficients + 4);
+
+CHECK(ylm_written_legend == ylm_expected_legend);
+for (size_t i = 0; i < 4; i++) {
+  CHECK(ylm_written_data(0, i) == ylm_expected_data[i]);
+}
+for (size_t i = 4; i < ylm_written_data.columns(); i++) {
+  CHECK_ITERABLE_APPROX(ylm_written_data(0, i), ylm_expected_data[i]);
+}
+}
+
 void check_surface_volume_data(const std::string& surfaces_file_prefix) {
   // Parameters chosen to match SurfaceD choices below
   constexpr size_t l_max = 10;
@@ -545,16 +603,36 @@ SPECTRE_TEST_CASE(
             metavars::component_list>(make_not_null(&runner));
   }
 
+//    std::cout << "Before invoking remaining threaded actions" << std::endl;
+//    std::cout << "remaining on 0 : " <<
+//        ActionTesting::number_of_queued_threaded_actions<obs_writer>(runner, 0)
+//        << std::endl;
   // There should be four more threaded actions, so invoke them and check
   // that there are no more.  They should all be on node zero.
   ActionTesting::invoke_queued_threaded_action<obs_writer>(
       make_not_null(&runner), 0);
+//   std::cout << "remaining on 0 after 1 call : " <<
+//        ActionTesting::number_of_queued_threaded_actions<obs_writer>(runner, 0)
+//        << std::endl;
   ActionTesting::invoke_queued_threaded_action<obs_writer>(
       make_not_null(&runner), 0);
+//   std::cout << "remaining on 0 after 2 calls : " <<
+//        ActionTesting::number_of_queued_threaded_actions<obs_writer>(runner, 0)
+//        << std::endl;
   ActionTesting::invoke_queued_threaded_action<obs_writer>(
       make_not_null(&runner), 0);
+//   std::cout << "remaining on 0 after 3 calls : " <<
+//        ActionTesting::number_of_queued_threaded_actions<obs_writer>(runner, 0)
+//        << std::endl;
   ActionTesting::invoke_queued_threaded_action<obs_writer>(
       make_not_null(&runner), 0);
+//   std::cout << "remaining on 0 after 4 calls : " <<
+//        ActionTesting::number_of_queued_threaded_actions<obs_writer>(runner, 0)
+//        << std::endl;
+  // try to invoke the 5th one but probably won't work
+  ActionTesting::invoke_queued_threaded_action<obs_writer>(
+      make_not_null(&runner), 0);
+//   CHECK(ActionTesting::number_of_queued_threaded_actions<obs_writer>(runner, 0) == 1);
   CHECK(ActionTesting::is_threaded_action_queue_empty<obs_writer>(runner, 0));
   CHECK(ActionTesting::is_threaded_action_queue_empty<obs_writer>(runner, 1));
   CHECK(ActionTesting::is_threaded_action_queue_empty<obs_writer>(runner, 2));
@@ -603,15 +681,172 @@ SPECTRE_TEST_CASE(
   check_file_contents(expected_integral_b, expected_legend_b, "/SurfaceB");
   check_file_contents(expected_integral_c, expected_legend_c, "/SurfaceC");
 
-  if (file_system::check_if_file_exists(h5_file_name)) {
-    file_system::rm(h5_file_name, true);
-  }
+//   auto& mock_h5_file =
+//       ActionTesting::get_databox_tag<mock_observer_writer,
+//                                      MockReductionFileTag>(runner, 0);
+ 
+//   const auto& mock_dat_file = mock_h5_file.get_dat(subfile_path);
+//   CHECK(mock_dat_file.get_legend() == legend);
+//   CHECK(mock_dat_file.get_data() == Matrix{{1.0, 9.3}});
+
+// const std::vector<std::string> ylm_expected_legend{
+//     "ExpansionCenter_x",
+//     "ExpansionCenter_y",
+//     "ExpansionCenter_z",
+//     "Lmax",
+//     "coef(0,0)",
+//     "coef(1,-1)",
+//     "coef(1,0)",
+//     "coef(1,1)",
+//     "coef(2,-2)",
+//     "coef(2,-1)",
+//     "coef(2,0)",
+//     "coef(2,1)",
+//     "coef(2,2)",
+//     "coef(3,-3)",
+//     "coef(3,-2)",
+//     "coef(3,-1)",
+//     "coef(3,0)",
+//     "coef(3,1)",
+//     "coef(3,2)",
+//     "coef(3,3)",
+
+//     "coef(4,-4)",
+//     "coef(4,-3)",
+//     "coef(4,-2)",
+//     "coef(4,-1)",
+//     "coef(4,0)",
+//     "coef(4,1)",
+//     "coef(4,2)",
+//     "coef(4,3)",
+//     "coef(4,4)",
+
+//     "coef(5,-5)",
+//     "coef(5,-4)",
+//     "coef(5,-3)",
+//     "coef(5,-2)",
+//     "coef(5,-1)",
+//     "coef(5,0)",
+//     "coef(5,1)",
+//     "coef(5,2)",
+//     "coef(5,3)",
+//     "coef(5,4)",
+//     "coef(5,5)",
+
+//     "coef(6,-6)",
+//     "coef(6,-5)",
+//     "coef(6,-4)",
+//     "coef(6,-3)",
+//     "coef(6,-2)",
+//     "coef(6,-1)",
+//     "coef(6,0)",
+//     "coef(6,1)",
+//     "coef(6,2)",
+//     "coef(6,3)",
+//     "coef(6,4)",
+//     "coef(6,5)",
+//     "coef(6,6)",
+
+//     "coef(7,-7)",
+//     "coef(7,-6)",
+//     "coef(7,-5)",
+//     "coef(7,-4)",
+//     "coef(7,-3)",
+//     "coef(7,-2)",
+//     "coef(7,-1)",
+//     "coef(7,0)",
+//     "coef(7,1)",
+//     "coef(7,2)",
+//     "coef(7,3)",
+//     "coef(7,4)",
+//     "coef(7,5)",
+//     "coef(7,6)",
+//     "coef(7,7)",
+
+//     "coef(8,-8)",
+//     "coef(8,-7)",
+//     "coef(8,-6)",
+//     "coef(8,-5)",
+//     "coef(8,-4)",
+//     "coef(8,-3)",
+//     "coef(8,-2)",
+//     "coef(8,-1)",
+//     "coef(8,0)",
+//     "coef(8,1)",
+//     "coef(8,2)",
+//     "coef(8,3)",
+//     "coef(8,4)",
+//     "coef(8,5)",
+//     "coef(8,6)",
+//     "coef(8,7)",
+//     "coef(8,8)",
+
+//     "coef(9,-9)",
+//     "coef(9,-8)",
+//     "coef(9,-7)",
+//     "coef(9,-6)",
+//     "coef(9,-5)",
+//     "coef(9,-4)",
+//     "coef(9,-3)",
+//     "coef(9,-2)",
+//     "coef(9,-1)",
+//     "coef(9,0)",
+//     "coef(9,1)",
+//     "coef(9,2)",
+//     "coef(9,3)",
+//     "coef(9,4)",
+//     "coef(9,5)",
+//     "coef(9,6)",
+//     "coef(9,7)",
+//     "coef(9,8)",
+//     "coef(9,9)",
+
+//     "coef(10,-10)",
+//     "coef(10,-9)",
+//     "coef(10,-8)",
+//     "coef(10,-7)",
+//     "coef(10,-6)",
+//     "coef(10,-5)",
+//     "coef(10,-4)",
+//     "coef(10,-3)",
+//     "coef(10,-2)",
+//     "coef(10,-1)",
+//     "coef(10,0)",
+//     "coef(10,1)",
+//     "coef(10,2)",
+//     "coef(10,3)",
+//     "coef(10,4)",
+//     "coef(10,5)",
+//     "coef(10,6)",
+//     "coef(10,7)",
+//     "coef(10,8)",
+//     "coef(10,9)",
+//     "coef(10,10)"
+//     };
+
+// file.close_current_object();
+// const auto& ylm_dat_file = file.get<h5::Dat>("/SurfaceD_Ylm");
+// const Matrix ylm_written_data = ylm_dat_file.get_data();
+// const auto& ylm_written_legend = ylm_dat_file.get_legend();
+// CHECK(ylm_written_legend == ylm_expected_legend);
+// CHECK(0.0 == written_data(0, 0));
+// // The interpolation is not perfect because I use too few grid points.
+// Approx custom_approx = Approx::custom().epsilon(1.e-4).scale(1.0);
+// for (size_t i = 0; i < expected_integral.size(); ++i) {
+//     CHECK(expected_integral[i] == custom_approx(written_data(0, i + 1)));
+// }
+
+//   if (file_system::check_if_file_exists(h5_file_name)) {
+//     file_system::rm(h5_file_name, true);
+//   }
+
+  check_ylm_data(h5_file_name);
 
   // Check that the Surfaces file contains the correct surface data
   check_surface_volume_data(surfaces_file_prefix);
 
-  if (file_system::check_if_file_exists(surfaces_file_prefix + ".h5"s)) {
-    file_system::rm(surfaces_file_prefix + ".h5"s, true);
-  }
+//   if (file_system::check_if_file_exists(surfaces_file_prefix + ".h5"s)) {
+//     file_system::rm(surfaces_file_prefix + ".h5"s, true);
+//   }
 }
 }  // namespace

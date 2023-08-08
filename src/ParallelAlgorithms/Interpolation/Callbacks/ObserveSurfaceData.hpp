@@ -13,9 +13,11 @@
 #include "DataStructures/DataBox/TagName.hpp"
 #include "IO/H5/TensorData.hpp"
 #include "IO/Observer/ObserverComponent.hpp"
+#include "IO/Observer/ReductionActions.hpp"
 #include "IO/Observer/Tags.hpp"
 #include "IO/Observer/VolumeActions.hpp"
 #include "NumericalAlgorithms/SphericalHarmonics/Spherepack.hpp"
+#include "NumericalAlgorithms/SphericalHarmonics/SpherepackIterator.hpp"
 #include "NumericalAlgorithms/SphericalHarmonics/Strahlkorper.hpp"
 #include "NumericalAlgorithms/SphericalHarmonics/Tags.hpp"
 #include "Parallel/GlobalCache.hpp"
@@ -81,6 +83,7 @@ struct ObserveSurfaceData
       tensor_components.push_back(
           {"InertialCoordinates_z"s, get<2>(inertial_strahlkorper_coords)});
     }
+
     // Output each tag if it is a scalar. Otherwise, throw a compile-time
     // error. This could be generalized to handle tensors of nonzero rank by
     // looping over the components, so each component could be visualized
@@ -122,6 +125,71 @@ struct ObserveSurfaceData
         std::vector<ElementVolumeData>{{surface_name, tensor_components,
                                         extents_vector, bases_vector,
                                         quadratures_vector}});
+
+    const size_t l_max = ylm.l_max();
+    // l_max == m_max
+    const size_t num_coefficients =
+        ylm::Spherepack::physical_size(l_max, l_max);
+
+    const std::array<double, 3> expansion_center =
+        strahlkorper.expansion_center();
+
+    // l_max + 3 dims of expansion center = 4 columns
+    const size_t num_columns = num_coefficients + 4;
+
+    std::vector<std::string> ylm_legend;
+    ylm_legend.reserve(num_columns);
+    std::vector<double> ylm_data;
+    ylm_data.reserve(num_columns);
+    // ylm_legend[0] = "Lmax";
+    // ylm_legend[1] = "Mmax";
+    // ylm_legend[2] = "ExpansionCenter_x";
+    // ylm_legend[3] = "ExpansionCenter_y";
+    // ylm_legend[4] = "ExpansionCenter_z";
+    ylm_legend.emplace_back("ExpansionCenter_x");
+    ylm_data.emplace_back(expansion_center[0]);
+    ylm_legend.emplace_back("ExpansionCenter_y");
+    ylm_data.emplace_back(expansion_center[1]);
+    ylm_legend.emplace_back("ExpansionCenter_z");
+    ylm_data.emplace_back(expansion_center[2]);
+    ylm_legend.emplace_back("Lmax");
+    ylm_data.emplace_back(l_max);
+
+    const DataVector ylm_coefficients = strahlkorper.coefficients();
+    // l_max == m_max
+    SpherepackIterator iter(l_max, l_max);
+    for (size_t l = 0; l <= l_max; l++) {
+      for (int m = -l; m <= static_cast<int>(l); m++) {
+        ylm_legend.push_back(MakeString{} << "coef(" << l << "," << m << ")");
+
+        iter.set(l, m);
+        ylm_data.push_back(ylm_coefficients[iter()]);
+      }
+    }
+
+    const std::string ylm_subfile_name{std::string{"/"} + surface_name +
+                                       "_Ylm"};
+
+    ASSERT(ylm_legend.size() == ylm_data.size(),
+           "Legend (" << ylm_legend.size()
+                      << ") does not have the same number of "
+                         "components as data to write ("
+                      << ylm_data.size() << ")");
+
+    // // const auto& reduction_file_lock =
+    // //     db::get<observers::Tags::H5FileLock>(
+    // //         make_not_null(&box));
+    // // const std::lock_guard hold_lock(reduction_file_lock);
+    // observers::ThreadedActions::ReductionActions_detail::write_data(
+    //     ylm_subfile_name, observers::input_source_from_cache(cache),
+    //     ylm_legend, std::make_tuple(ylm_data),
+    //     Parallel::get<observers::Tags::ReductionFileName>(cache),
+    //     std::index_sequence<0>{});
+    Parallel::threaded_action<
+        observers::ThreadedActions::WriteReductionDataRow>(
+        // Node 0 is always the writer, so directly call the component on that
+        // node
+        proxy[0], ylm_subfile_name, ylm_legend, std::make_tuple(ylm_data));
   }
 };
 }  // namespace callbacks
