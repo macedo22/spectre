@@ -1,0 +1,130 @@
+// Distributed under the MIT License.
+// See LICENSE.txt for details.
+
+#include "Domain/FunctionsOfTime/ReadSpecPiecewisePolynomial.hpp"
+
+#include <array>
+#include <cstddef>
+#include <map>
+#include <memory>
+#include <string>
+#include <unordered_map>
+
+#include "DataStructures/DataVector.hpp"
+#include "DataStructures/Matrix.hpp"
+#include "Domain/Creators/DomainCreator.hpp"
+#include "Domain/FunctionsOfTime/FunctionOfTime.hpp"
+#include "Domain/FunctionsOfTime/PiecewisePolynomial.hpp"
+#include "Domain/FunctionsOfTime/QuaternionFunctionOfTime.hpp"
+#include "IO/H5/AccessType.hpp"
+#include "IO/H5/Dat.hpp"
+#include "IO/H5/File.hpp"
+#include "NumericalAlgorithms/SphericalHarmonics/Strahlkorper.hpp"
+#include "Utilities/ErrorHandling/Error.hpp"
+#include "Utilities/GenerateInstantiations.hpp"
+#include "Utilities/Gsl.hpp"
+#include "Utilities/StdHelpers.hpp"
+
+namespace ylm {
+Strahlkorper read_ylm_coefficients_row(const Matrix& ylm_data,
+                               const size_t row_number) {
+  const double time = ylm_data(row_number, 0);
+  const std::array<size_t, 3> expansion_center{{
+    ylm_data(row_number, 1), ylm_data(row_number, 2), ylm_data(row_number, 3)}};
+  const double l_max = ylm_data(row_number, 4);
+  // number of terms in
+  // \sum_{l=0}^{l_{max}} \sum_{m=-l}^{l} F^{lm} Y^{lm}(\theta,\phi) is the
+  // sum of the first (l_max + 1) odd numbers, which is (l_max + 1)^2
+  const size_t expected_num_cofficients = square(l_max + 1);
+  // l_max == m_max
+  const size_t spectral_size = Spherepack::spectral_size(l_max, l_max);
+  std::vector<double> spectral_coefficients(spectral_size, 0.0);
+
+  // std::vector<double> ylm_coefficients;
+  // ylm_coefficients.reserve(expected_num_cofficients);
+  // 6 = column of first coefficient
+  size_t coef_column_number = 6;
+  SpherepackIterator iter(l_max, l_max);
+    for (size_t l = 0; l <= l_max; l++) {
+      for (int m = -l; m <= static_cast<int>(l); m++) {
+        iter.set(l, m);
+        // 5 = number of non-coef columns preceding coef columns
+        const double coefficient = ylm_data(row_number, coef_column_number);
+        // ylm_coefficients.emplace_back(coefficient);
+        spectral_coefficients[iter()] = coefficient;
+        coef_column_number++;
+      }
+    }
+
+  Strahlkorper strahlkorper(l_max, l_max, spectral_coefficients,
+  expansion_center, StrahlkorperContructorData::SpectralCoefficients);
+
+  return strahlkorper;
+}
+void read_ylm_coefficients(
+    const gsl::not_null<std::vector<Strahlkorper>*> strahlkorpers,
+    const std::string& file_name, const std::string& surface_name) {
+  h5::H5File<h5::AccessType::ReadOnly> file{file_name};
+  const std::string ylm_subfile_name{std::string{"/"} + surface_name + "_Ylm"};
+  const auto& ylm_file = file.get<h5::Dat>(ylm_subfile_name);
+  const auto& ylm_data = ylm_file.get_data();
+
+  const size_t total_number_of_time_values = ylm_data.rows();
+  if (total_number_of_time_values == 0) {
+    ERROR("The input Ylm data contains no data.");
+  }
+
+  const size_t requested_number_of_time_values = strahlkorpers.size();
+  if (requested_number_of_time_values == 0) {
+    ERROR("No Ylm data is being requested to be read in.");
+  }
+
+  if (requested_number_of_time_values > total_number_of_time_values) {
+    ERROR("The requested number of time values ("
+          << requested_number_of_time_values
+          << ") is more than the number of rows in the input Ylm data ("
+          << total_number_of_time_values << ")\n");
+  }
+
+  const size_t l_max_column_number = 4;
+  const size_t first_row_l_max = ylm_data(0, l_max_column_number);
+  // number of terms in
+  // \sum_{l=0}^{l_{max}} \sum_{m=-l}^{l} F^{lm} Y^{lm}(\theta,\phi) is the
+  // sum of the first (l_max + 1) odd numbers, which is (l_max + 1)^2
+  const size_t expected_num_coefficients = square(first_row_l_max + 1);
+  // 5 columns with non-coef data: time, 3 coords of center, and Lmax
+  const size_t expected_num_columns = expected_num_coefficients + 5;
+  const size_t actual_num_columns = ylm_data.columns();
+
+  // TODO : this error checking can maybe be moved into the row function
+  const std::string expected_ylm_legend =
+      "\'Time, ExpansionCenter_x, ExpansionCenter_y, Expansion_Center_z, "
+      "Lmax, coefs...\'";
+  const std::string format_error_message{
+      "The Ylm data does not have the expected format. "
+      "The expected format of the data is " +
+      expected_ylm_legend +
+      ", where the number of coefficients (coefs...) is equal to "
+      "(Lmax + 1)^2"};
+
+  if (expected_num_columns != actual_num_columns) {
+    ERROR(format_error_message);
+  }
+  for (size_t i = 1; i < requested_number_of_time_values; i++) {
+    const size_t l_max = ylm_data(i, l_max_column_number);
+    if (l_max != first_row_l_max) {
+      ERROR(format_error_message);
+    }
+  }
+
+  // read_ylm_coefficients_row(make_not_null(&((*strahlkorpers)[0])), ylm_data, 0);
+  (*strahlkorpers)[0] = read_ylm_coefficients_row(ylm_data, 0);
+
+  for (size_t i = 1; i < requested_number_of_time_values; i++) {
+    // read_ylm_coefficients_row(make_not_null(&((*strahlkorpers)[i])), ylm_data, i);
+    (*strahlkorpers)[i] = read_ylm_coefficients_row(ylm_data, i);
+  }
+
+  file.close_current_object();
+}
+}  // namespace ylm
