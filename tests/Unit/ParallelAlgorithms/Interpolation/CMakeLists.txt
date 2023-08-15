@@ -57,5 +57,6 @@ target_link_libraries(
   ParallelInterpolation
   RelativisticEulerSolutions
   Spectral
+  SphericalHarmonics
   Utilities
   )

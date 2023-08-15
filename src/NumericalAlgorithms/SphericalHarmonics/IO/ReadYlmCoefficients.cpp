@@ -1,49 +1,46 @@
 // Distributed under the MIT License.
 // See LICENSE.txt for details.
 
-#include "Domain/FunctionsOfTime/ReadSpecPiecewisePolynomial.hpp"
+#include "NumericalAlgorithms/SphericalHarmonics/IO/ReadYlmCoefficients.hpp"
 
 #include <array>
 #include <cstddef>
-#include <map>
-#include <memory>
 #include <string>
-#include <unordered_map>
+#include <vector>
 
 #include "DataStructures/DataVector.hpp"
 #include "DataStructures/Matrix.hpp"
-#include "Domain/Creators/DomainCreator.hpp"
-#include "Domain/FunctionsOfTime/FunctionOfTime.hpp"
-#include "Domain/FunctionsOfTime/PiecewisePolynomial.hpp"
-#include "Domain/FunctionsOfTime/QuaternionFunctionOfTime.hpp"
+#include "DataStructures/Tensor/IndexType.hpp"
 #include "IO/H5/AccessType.hpp"
 #include "IO/H5/Dat.hpp"
 #include "IO/H5/File.hpp"
+#include "NumericalAlgorithms/SphericalHarmonics/SpherepackIterator.hpp"
 #include "NumericalAlgorithms/SphericalHarmonics/Strahlkorper.hpp"
+#include "Utilities/ConstantExpressions.hpp"
 #include "Utilities/ErrorHandling/Error.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
-#include "Utilities/Gsl.hpp"
-#include "Utilities/StdHelpers.hpp"
 
 namespace ylm {
-Strahlkorper read_ylm_coefficients_row(const Matrix& ylm_data,
-                               const size_t row_number) {
-  const double time = ylm_data(row_number, 0);
-  const std::array<size_t, 3> expansion_center{{
-    ylm_data(row_number, 1), ylm_data(row_number, 2), ylm_data(row_number, 3)}};
+namespace {
+template <typename Frame>
+Strahlkorper<Frame> read_ylm_coefficients_row(const Matrix& ylm_data,
+                                              const size_t row_number) {
+  const std::array<double, 3> expansion_center{{ylm_data(row_number, 1),
+                                                ylm_data(row_number, 2),
+                                                ylm_data(row_number, 3)}};
   const double l_max = ylm_data(row_number, 4);
   // number of terms in
   // \sum_{l=0}^{l_{max}} \sum_{m=-l}^{l} F^{lm} Y^{lm}(\theta,\phi) is the
   // sum of the first (l_max + 1) odd numbers, which is (l_max + 1)^2
-  const size_t expected_num_cofficients = square(l_max + 1);
+  // const size_t expected_num_cofficients = square(l_max + 1);
   // l_max == m_max
   const size_t spectral_size = Spherepack::spectral_size(l_max, l_max);
-  std::vector<double> spectral_coefficients(spectral_size, 0.0);
+  DataVector spectral_coefficients(spectral_size, 0.0);
 
   // std::vector<double> ylm_coefficients;
   // ylm_coefficients.reserve(expected_num_cofficients);
-  // 6 = column of first coefficient
-  size_t coef_column_number = 6;
+  // 5 = column # of first coefficient
+  size_t coef_column_number = 5;
   SpherepackIterator iter(l_max, l_max);
     for (size_t l = 0; l <= l_max; l++) {
       for (int m = -l; m <= static_cast<int>(l); m++) {
@@ -56,14 +53,18 @@ Strahlkorper read_ylm_coefficients_row(const Matrix& ylm_data,
       }
     }
 
-  Strahlkorper strahlkorper(l_max, l_max, spectral_coefficients,
-  expansion_center, StrahlkorperContructorData::SpectralCoefficients);
+    Strahlkorper<Frame> strahlkorper(
+        l_max, l_max, spectral_coefficients, expansion_center,
+        StrahlkorperContructorData::SpectralCoefficients);
 
-  return strahlkorper;
+    return strahlkorper;
 }
-void read_ylm_coefficients(
-    const gsl::not_null<std::vector<Strahlkorper>*> strahlkorpers,
-    const std::string& file_name, const std::string& surface_name) {
+}  // namespace
+
+template <typename Frame>
+std::vector<Strahlkorper<Frame>> read_ylm_coefficients(
+    const std::string& file_name, const std::string& surface_name,
+    const size_t requested_number_of_time_values) {
   h5::H5File<h5::AccessType::ReadOnly> file{file_name};
   const std::string ylm_subfile_name{std::string{"/"} + surface_name + "_Ylm"};
   const auto& ylm_file = file.get<h5::Dat>(ylm_subfile_name);
@@ -74,7 +75,6 @@ void read_ylm_coefficients(
     ERROR("The input Ylm data contains no data.");
   }
 
-  const size_t requested_number_of_time_values = strahlkorpers.size();
   if (requested_number_of_time_values == 0) {
     ERROR("No Ylm data is being requested to be read in.");
   }
@@ -117,14 +117,29 @@ void read_ylm_coefficients(
     }
   }
 
+  std::vector<Strahlkorper<Frame>> strahlkorpers(
+      requested_number_of_time_values);
   // read_ylm_coefficients_row(make_not_null(&((*strahlkorpers)[0])), ylm_data, 0);
-  (*strahlkorpers)[0] = read_ylm_coefficients_row(ylm_data, 0);
-
+  strahlkorpers[0] = read_ylm_coefficients_row<Frame>(ylm_data, 0);
   for (size_t i = 1; i < requested_number_of_time_values; i++) {
     // read_ylm_coefficients_row(make_not_null(&((*strahlkorpers)[i])), ylm_data, i);
-    (*strahlkorpers)[i] = read_ylm_coefficients_row(ylm_data, i);
+    strahlkorpers[i] = read_ylm_coefficients_row<Frame>(ylm_data, i);
   }
 
   file.close_current_object();
+  return strahlkorpers;
 }
 }  // namespace ylm
+
+#define FRAMETYPE(data) BOOST_PP_TUPLE_ELEM(0, data)
+
+#define INSTANTIATE(_, data)                                    \
+  template std::vector<Strahlkorper<FRAMETYPE(data)>>           \
+  ylm::read_ylm_coefficients<>(const std::string& file_name,    \
+                               const std::string& surface_name, \
+                               const size_t requested_number_of_time_values);
+
+GENERATE_INSTANTIATIONS(INSTANTIATE, (Frame::Grid, Frame::Inertial))
+
+#undef INSTANTIATE
+#undef FRAMETYPE

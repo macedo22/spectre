@@ -166,7 +166,7 @@ struct Sphere : tt::ConformsTo<intrp::protocols::ComputeTargetPoints> {
     for (const double radius : radii) {
       ::Strahlkorper<Frame> strahlkorper(
           l_max, l_max, DataVector{(l_max + 1) * (2 * l_max + 1), radius},
-          sphere.center);
+          sphere.center, StrahlkorperContructorData::RadiusAtCollocationPoints);
 
       db::mutate<StrahlkorperTags::Strahlkorper<Frame>>(
           [&strahlkorper](

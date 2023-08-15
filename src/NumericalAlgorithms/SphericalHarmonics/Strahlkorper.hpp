@@ -18,7 +18,7 @@ class er;
 enum class StrahlkorperContructorData {
   RadiusAtCollocationPoints,
   SpectralCoefficients
-}
+};
 
 /// \ingroup SurfacesGroup
 /// \brief A star-shaped surface expanded in spherical harmonics.
@@ -76,7 +76,7 @@ class Strahlkorper {
   /// coefficients to exactly match all points in
   /// `radius_at_collocation_points`.
   Strahlkorper(size_t l_max, size_t m_max,
-               const DataVector& collocation_radius_or_spectral_coefs,
+               const DataVector& collocation_radii_or_spectral_coefs,
                std::array<double, 3> center,
                const StrahlkorperContructorData data_type);
 
