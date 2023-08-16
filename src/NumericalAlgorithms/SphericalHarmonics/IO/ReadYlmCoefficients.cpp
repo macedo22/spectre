@@ -87,6 +87,7 @@ std::vector<Strahlkorper<Frame>> read_ylm_coefficients(
   }
 
   const size_t l_max_column_number = 4;
+  // TODO : assert it's a positive integer?
   const size_t first_row_l_max = ylm_data(0, l_max_column_number);
   // number of terms in
   // \sum_{l=0}^{l_{max}} \sum_{m=-l}^{l} F^{lm} Y^{lm}(\theta,\phi) is the
