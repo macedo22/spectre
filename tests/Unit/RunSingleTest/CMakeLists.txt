@@ -32,7 +32,8 @@ add_spectre_executable(
 
   # The following lines list the source files with tests in them to be
   # compiled into the executable.
-  ../ParallelAlgorithms/Interpolation/Test_ObserveTimeSeriesAndSurfaceData.cpp
+  ../NumericalAlgorithms/SphericalHarmonics/Test_ReadYlmCoefficients.cpp
+  #../ParallelAlgorithms/Interpolation/Test_ObserveTimeSeriesAndSurfaceData.cpp
   )
 
 # Modify which libraries to link for your test case.

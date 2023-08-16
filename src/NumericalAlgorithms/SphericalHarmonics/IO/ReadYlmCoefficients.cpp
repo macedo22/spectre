@@ -119,11 +119,10 @@ std::vector<Strahlkorper<Frame>> read_ylm_coefficients(
 
   std::vector<Strahlkorper<Frame>> strahlkorpers(
       requested_number_of_time_values);
-  // read_ylm_coefficients_row(make_not_null(&((*strahlkorpers)[0])), ylm_data, 0);
-  strahlkorpers[0] = read_ylm_coefficients_row<Frame>(ylm_data, 0);
-  for (size_t i = 1; i < requested_number_of_time_values; i++) {
-    // read_ylm_coefficients_row(make_not_null(&((*strahlkorpers)[i])), ylm_data, i);
-    strahlkorpers[i] = read_ylm_coefficients_row<Frame>(ylm_data, i);
+  for (size_t i = 0, row_number = total_number_of_time_values -
+                                  requested_number_of_time_values;
+       i < requested_number_of_time_values; i++, row_number++) {
+    strahlkorpers[i] = read_ylm_coefficients_row<Frame>(ylm_data, row_number);
   }
 
   file.close_current_object();
