@@ -164,7 +164,7 @@ SPECTRE_TEST_CASE("Unit.NumericalAlgorithms.ReadYlmCoefficients",
   l_max_3_coef_headers.push_back("coef(3,3)");
 
   // first test surface
-  const std::string excision_name = "ExcisionSurface";
+  const std::string excision_subfile_name = "ExcisionSurface_Ylm";
   const std::array<double, 3> excision_expansion_center{{-0.5, -0.1, 0.3}};
   const size_t excision_l_max = 2;
   std::vector<std::string> excision_legend = ylm_legend_without_coefs;
@@ -172,7 +172,7 @@ SPECTRE_TEST_CASE("Unit.NumericalAlgorithms.ReadYlmCoefficients",
                          l_max_2_coef_headers.end());
 
   // second test surface
-  const std::string horizon_name = "ApparentHorizon";
+  const std::string horizon_subfile_name = "ApparentHorizon_Ylm";
   const std::array<double, 3> horizon_expansion_center{{0.0, 0.2, -0.6}};
   const size_t horizon_l_max = 3;
   std::vector<std::string> horizon_legend = ylm_legend_without_coefs;
@@ -194,19 +194,19 @@ SPECTRE_TEST_CASE("Unit.NumericalAlgorithms.ReadYlmCoefficients",
 
   h5::H5File<h5::AccessType::ReadWrite> test_file(test_filename);
   auto& excision_file =
-      test_file.insert<h5::Dat>("/" + excision_name + "_Ylm", excision_legend);
+      test_file.insert<h5::Dat>("/" + excision_subfile_name, excision_legend);
   excision_file.append(excision_data);
   test_file.close_current_object();
   auto& horizon_file =
-      test_file.insert<h5::Dat>("/" + horizon_name + "_Ylm", horizon_legend);
+      test_file.insert<h5::Dat>("/" + horizon_subfile_name, horizon_legend);
   horizon_file.append(horizon_data);
   test_file.close_current_object();
 
-  check_read_ylm_data<Frame::Inertial>(test_filename, excision_name,
+  check_read_ylm_data<Frame::Inertial>(test_filename, excision_subfile_name,
                                        excision_data, 3);
 
-  check_read_ylm_data<Frame::Grid>(test_filename, horizon_name, horizon_data,
-                                   1);
+  check_read_ylm_data<Frame::Grid>(test_filename, horizon_subfile_name,
+                                   horizon_data, 1);
 
   //   Delete the temporary file created for this test
   //   file_system::rm(test_filename, true);

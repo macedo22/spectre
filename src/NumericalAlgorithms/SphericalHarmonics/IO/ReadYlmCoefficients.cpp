@@ -22,13 +22,36 @@
 
 namespace ylm {
 namespace {
+const size_t l_max_column_number = 4;
+const size_t num_non_coef_headers = 5;
+
 template <typename Frame>
 Strahlkorper<Frame> read_ylm_coefficients_row(const Matrix& ylm_data,
                                               const size_t row_number) {
   const std::array<double, 3> expansion_center{{ylm_data(row_number, 1),
                                                 ylm_data(row_number, 2),
                                                 ylm_data(row_number, 3)}};
-  const double l_max = ylm_data(row_number, 4);
+  const size_t l_max = ylm_data(row_number, l_max_column_number);
+  // number of terms in
+  // \sum_{l=0}^{l_{max}} \sum_{m=-l}^{l} F^{lm} Y^{lm}(\theta,\phi) is the
+  // sum of the first (l_max + 1) odd numbers, which is (l_max + 1)^2
+  const size_t expected_num_coefficients = square(l_max + 1);
+  // 5 columns with non-coef data: time, 3 coords of center, and Lmax
+  const size_t min_expected_num_columns =
+      expected_num_coefficients + num_non_coef_headers;
+  const size_t actual_num_columns = ylm_data.columns();
+  if (actual_num_columns < min_expected_num_columns) {
+    ERROR("Row "
+          << row_number
+          << " of the Ylm data does not have the expected format. The expected "
+             "format of the data is \'Time, ExpansionCenter_x, "
+             "ExpansionCenter_y, Expansion_Center_z, Lmax, coef(0,0), "
+             "coef(1,-1), coef(1,0), coef(1,1), ..., coef(Lmax,Lmax), "
+             "[0.0...]\', where the number of coefficients is equal to (Lmax + "
+             "1)^2 and the coefficient columns are padded with columns of 0.0 "
+             "for any higher order coefficients beyond Lmax.");
+  }
+
   // number of terms in
   // \sum_{l=0}^{l_{max}} \sum_{m=-l}^{l} F^{lm} Y^{lm}(\theta,\phi) is the
   // sum of the first (l_max + 1) odd numbers, which is (l_max + 1)^2
@@ -40,7 +63,7 @@ Strahlkorper<Frame> read_ylm_coefficients_row(const Matrix& ylm_data,
   // std::vector<double> ylm_coefficients;
   // ylm_coefficients.reserve(expected_num_cofficients);
   // 5 = column # of first coefficient
-  size_t coef_column_number = 5;
+  size_t coef_column_number = num_non_coef_headers;
   SpherepackIterator iter(l_max, l_max);
     for (size_t l = 0; l <= l_max; l++) {
       for (int m = -l; m <= static_cast<int>(l); m++) {
@@ -63,10 +86,10 @@ Strahlkorper<Frame> read_ylm_coefficients_row(const Matrix& ylm_data,
 
 template <typename Frame>
 std::vector<Strahlkorper<Frame>> read_ylm_coefficients(
-    const std::string& file_name, const std::string& surface_name,
+    const std::string& file_name, const std::string& surface_subfile_name,
     const size_t requested_number_of_time_values) {
   h5::H5File<h5::AccessType::ReadOnly> file{file_name};
-  const std::string ylm_subfile_name{std::string{"/"} + surface_name + "_Ylm"};
+  const std::string ylm_subfile_name{std::string{"/"} + surface_subfile_name};
   const auto& ylm_file = file.get<h5::Dat>(ylm_subfile_name);
   const auto& ylm_data = ylm_file.get_data();
 
@@ -86,38 +109,6 @@ std::vector<Strahlkorper<Frame>> read_ylm_coefficients(
           << total_number_of_time_values << ")\n");
   }
 
-  const size_t l_max_column_number = 4;
-  // TODO : assert it's a positive integer?
-  const size_t first_row_l_max = ylm_data(0, l_max_column_number);
-  // number of terms in
-  // \sum_{l=0}^{l_{max}} \sum_{m=-l}^{l} F^{lm} Y^{lm}(\theta,\phi) is the
-  // sum of the first (l_max + 1) odd numbers, which is (l_max + 1)^2
-  const size_t expected_num_coefficients = square(first_row_l_max + 1);
-  // 5 columns with non-coef data: time, 3 coords of center, and Lmax
-  const size_t expected_num_columns = expected_num_coefficients + 5;
-  const size_t actual_num_columns = ylm_data.columns();
-
-  // TODO : this error checking can maybe be moved into the row function
-  const std::string expected_ylm_legend =
-      "\'Time, ExpansionCenter_x, ExpansionCenter_y, Expansion_Center_z, "
-      "Lmax, coefs...\'";
-  const std::string format_error_message{
-      "The Ylm data does not have the expected format. "
-      "The expected format of the data is " +
-      expected_ylm_legend +
-      ", where the number of coefficients (coefs...) is equal to "
-      "(Lmax + 1)^2"};
-
-  if (expected_num_columns != actual_num_columns) {
-    ERROR(format_error_message);
-  }
-  for (size_t i = 1; i < requested_number_of_time_values; i++) {
-    const size_t l_max = ylm_data(i, l_max_column_number);
-    if (l_max != first_row_l_max) {
-      ERROR(format_error_message);
-    }
-  }
-
   std::vector<Strahlkorper<Frame>> strahlkorpers(
       requested_number_of_time_values);
   for (size_t i = 0, row_number = total_number_of_time_values -
@@ -133,10 +124,10 @@ std::vector<Strahlkorper<Frame>> read_ylm_coefficients(
 
 #define FRAMETYPE(data) BOOST_PP_TUPLE_ELEM(0, data)
 
-#define INSTANTIATE(_, data)                                    \
-  template std::vector<Strahlkorper<FRAMETYPE(data)>>           \
-  ylm::read_ylm_coefficients<>(const std::string& file_name,    \
-                               const std::string& surface_name, \
+#define INSTANTIATE(_, data)                                            \
+  template std::vector<Strahlkorper<FRAMETYPE(data)>>                   \
+  ylm::read_ylm_coefficients<>(const std::string& file_name,            \
+                               const std::string& surface_subfile_name, \
                                const size_t requested_number_of_time_values);
 
 GENERATE_INSTANTIATIONS(INSTANTIATE, (Frame::Grid, Frame::Inertial))
