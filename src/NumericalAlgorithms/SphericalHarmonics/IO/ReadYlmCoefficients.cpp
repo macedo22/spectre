@@ -49,7 +49,9 @@ Strahlkorper<Frame> read_ylm_coefficients_row(const Matrix& ylm_data,
              "coef(1,-1), coef(1,0), coef(1,1), ..., coef(Lmax,Lmax), "
              "[0.0...]\', where the number of coefficients is equal to (Lmax + "
              "1)^2 and the coefficient columns are padded with columns of 0.0 "
-             "for any higher order coefficients beyond Lmax.");
+             "for any higher order coefficients beyond Lmax. For Lmax "
+          << l_max << ", expected at least " << min_expected_num_columns
+          << " columns.");
   }
 
   // number of terms in
