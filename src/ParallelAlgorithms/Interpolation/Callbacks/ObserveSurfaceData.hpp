@@ -34,6 +34,55 @@
 
 namespace intrp {
 namespace callbacks {
+namespace detail {
+template <typename Frame>
+void fill_ylm_legend_and_data(
+    const gsl::not_null<std::vector<std::string>*> legend,
+    const gsl::not_null<std::vector<double>*> data,
+    const Strahlkorper<Frame>& strahlkorper, const double time) {
+  const size_t l_max = strahlkorper.l_max();
+  const std::array<double, 3> expansion_center =
+      strahlkorper.expansion_center();
+  // number of terms in
+  // \sum_{l=0}^{l_{max}} \sum_{m=-l}^{l} F^{lm} Y^{lm}(\theta,\phi) is the
+  // sum of the first (l_max + 1) odd numbers, which is (l_max + 1)^2
+  const size_t num_coefficients = square(l_max + 1);
+  // time + 3 dims of expansion center + Lmax = 5 columns
+  const size_t num_columns = num_coefficients + 5;
+
+  legend->reserve(num_columns);
+  data->reserve(num_columns);
+
+  legend->emplace_back("Time");
+  data->emplace_back(time);
+  legend->emplace_back("ExpansionCenter_x");
+  data->emplace_back(expansion_center[0]);
+  legend->emplace_back("ExpansionCenter_y");
+  data->emplace_back(expansion_center[1]);
+  legend->emplace_back("ExpansionCenter_z");
+  data->emplace_back(expansion_center[2]);
+  legend->emplace_back("Lmax");
+  data->emplace_back(l_max);
+
+  const DataVector ylm_coefficients = strahlkorper.coefficients();
+  // l_max == m_max
+  SpherepackIterator iter(l_max, l_max);
+  for (size_t l = 0; l <= l_max; l++) {
+    for (int m = -l; m <= static_cast<int>(l); m++) {
+      legend->push_back(MakeString{} << "coef(" << l << "," << m << ")");
+
+      iter.set(l, m);
+      data->push_back(ylm_coefficients[iter()]);
+    }
+  }
+
+  ASSERT(legend->size() == data->size(),
+         "Legend (" << legend->size()
+                    << ") does not have the same number of "
+                       "components as data to write ("
+                    << data->size() << ")");
+}
+}  // namespace detail
 
 /// \brief post_interpolation_callback that outputs
 /// 2D "volume" data on a surface.
@@ -127,52 +176,14 @@ struct ObserveSurfaceData
                                         extents_vector, bases_vector,
                                         quadratures_vector}});
 
-    const size_t l_max = ylm.l_max();
-    // l_max == m_max
-    const size_t num_coefficients =
-        ylm::Spherepack::physical_size(l_max, l_max);
-    const std::array<double, 3> expansion_center =
-        strahlkorper.expansion_center();
-
-    // time + 3 dims of expansion center + Lmax = 5 columns
-    const size_t num_columns = num_coefficients + 5;
-
     std::vector<std::string> ylm_legend;
-    ylm_legend.reserve(num_columns);
     std::vector<double> ylm_data;
-    ylm_data.reserve(num_columns);
-
-    ylm_legend.emplace_back("Time");
-    ylm_data.emplace_back(time);
-    ylm_legend.emplace_back("ExpansionCenter_x");
-    ylm_data.emplace_back(expansion_center[0]);
-    ylm_legend.emplace_back("ExpansionCenter_y");
-    ylm_data.emplace_back(expansion_center[1]);
-    ylm_legend.emplace_back("ExpansionCenter_z");
-    ylm_data.emplace_back(expansion_center[2]);
-    ylm_legend.emplace_back("Lmax");
-    ylm_data.emplace_back(l_max);
-
-    const DataVector ylm_coefficients = strahlkorper.coefficients();
-    // l_max == m_max
-    SpherepackIterator iter(l_max, l_max);
-    for (size_t l = 0; l <= l_max; l++) {
-      for (int m = -l; m <= static_cast<int>(l); m++) {
-        ylm_legend.push_back(MakeString{} << "coef(" << l << "," << m << ")");
-
-        iter.set(l, m);
-        ylm_data.push_back(ylm_coefficients[iter()]);
-      }
-    }
+    detail::fill_ylm_legend_and_data(make_not_null(&ylm_legend),
+                                     make_not_null(&ylm_data), strahlkorper,
+                                     time);
 
     const std::string ylm_subfile_name{std::string{"/"} + surface_name +
                                        "_Ylm"};
-
-    ASSERT(ylm_legend.size() == ylm_data.size(),
-           "Legend (" << ylm_legend.size()
-                      << ") does not have the same number of "
-                         "components as data to write ("
-                      << ylm_data.size() << ")");
 
     Parallel::threaded_action<
         observers::ThreadedActions::WriteReductionDataRow>(
