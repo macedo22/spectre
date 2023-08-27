@@ -17,6 +17,7 @@
 #include "NumericalAlgorithms/SphericalHarmonics/SpherepackIterator.hpp"
 #include "NumericalAlgorithms/SphericalHarmonics/Strahlkorper.hpp"
 #include "Utilities/ConstantExpressions.hpp"
+#include "Utilities/ErrorHandling/Assert.hpp"
 #include "Utilities/ErrorHandling/Error.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
 
@@ -40,18 +41,21 @@ Strahlkorper<Frame> read_ylm_coefficients_row(const Matrix& ylm_data,
   const size_t min_expected_num_columns =
       expected_num_coefficients + num_non_coef_headers;
   const size_t actual_num_columns = ylm_data.columns();
+  const std::string expected_format{
+      "The expected format of the data is \'Time, ExpansionCenter_x, "
+      "ExpansionCenter_y, Expansion_Center_z, Lmax, coef(0,0), coef(1,-1), "
+      "coef(1,0), coef(1,1), coef(2,-2), coef(2,-1), coef(2,0), coef(2,1), "
+      "coef(2,-2), ..., coef(Lmax,Lmax), [0.0...]\', where the number of "
+      "coefficients is equal to (Lmax + 1)^2 and the coefficient columns are "
+      "padded with columns of 0.0 for any higher order coefficients for "
+      "l > Lmax."};
   if (actual_num_columns < min_expected_num_columns) {
     ERROR("Row "
           << row_number
-          << " of the Ylm data does not have the expected format. The expected "
-             "format of the data is \'Time, ExpansionCenter_x, "
-             "ExpansionCenter_y, Expansion_Center_z, Lmax, coef(0,0), "
-             "coef(1,-1), coef(1,0), coef(1,1), ..., coef(Lmax,Lmax), "
-             "[0.0...]\', where the number of coefficients is equal to (Lmax + "
-             "1)^2 and the coefficient columns are padded with columns of 0.0 "
-             "for any higher order coefficients beyond Lmax. For Lmax "
+          << " of the Ylm data does not have the expected format. For Lmax "
           << l_max << ", expected at least " << min_expected_num_columns
-          << " columns.");
+          << " columns.\n\n"
+          << expected_format);
   }
 
   // number of terms in
@@ -67,22 +71,30 @@ Strahlkorper<Frame> read_ylm_coefficients_row(const Matrix& ylm_data,
   // 5 = column # of first coefficient
   size_t coef_column_number = num_non_coef_headers;
   SpherepackIterator iter(l_max, l_max);
-    for (size_t l = 0; l <= l_max; l++) {
-      for (int m = -l; m <= static_cast<int>(l); m++) {
-        iter.set(l, m);
-        // 5 = number of non-coef columns preceding coef columns
-        const double coefficient = ylm_data(row_number, coef_column_number);
-        // ylm_coefficients.emplace_back(coefficient);
-        spectral_coefficients[iter()] = coefficient;
-        coef_column_number++;
-      }
+  for (size_t l = 0; l <= l_max; l++) {
+    for (int m = -l; m <= static_cast<int>(l); m++) {
+      iter.set(l, m);
+      // 5 = number of non-coef columns preceding coef columns
+      const double coefficient = ylm_data(row_number, coef_column_number);
+      // ylm_coefficients.emplace_back(coefficient);
+      spectral_coefficients[iter()] = coefficient;
+      coef_column_number++;
     }
+  }
+  while (coef_column_number < actual_num_columns) {
+    if (ylm_data(row_number, coef_column_number) != 0.0) {
+      ERROR("Row " << row_number << " of the Ylm data has Lmax " << l_max
+                   << " but non-zero coefficients for l > Lmax.\n\n"
+                   << expected_format);
+    }
+    coef_column_number++;
+  }
 
-    Strahlkorper<Frame> strahlkorper(
-        l_max, l_max, spectral_coefficients, expansion_center,
-        StrahlkorperContructorData::SpectralCoefficients);
+  Strahlkorper<Frame> strahlkorper(
+      l_max, l_max, spectral_coefficients, expansion_center,
+      StrahlkorperContructorData::SpectralCoefficients);
 
-    return strahlkorper;
+  return strahlkorper;
 }
 }  // namespace
 
@@ -97,17 +109,17 @@ std::vector<Strahlkorper<Frame>> read_ylm_coefficients(
 
   const size_t total_number_of_time_values = ylm_data.rows();
   if (total_number_of_time_values == 0) {
-    ERROR("The input Ylm data contains no data.");
+    ERROR("The Ylm data to read from contains 0 rows (times) of data.");
   }
 
-  if (requested_number_of_time_values == 0) {
-    ERROR("No Ylm data is being requested to be read in.");
-  }
+  ASSERT(requested_number_of_time_values > 0,
+         "Must request to read in at least one row (time) of Ylm data.");
 
   if (requested_number_of_time_values > total_number_of_time_values) {
     ERROR("The requested number of time values ("
           << requested_number_of_time_values
-          << ") is more than the number of rows in the input Ylm data ("
+          << ") is more than the number of rows in the Ylm data that was read "
+             "in ("
           << total_number_of_time_values << ")\n");
   }
 
