@@ -37,9 +37,6 @@
 #include "Utilities/TMPL.hpp"
 
 namespace {
-// Time, ExpansionCenter_x, ExpansionCenter_y, ExpansionCenter_z, Lmax
-// const size_t num_non_coef_columns = 5;
-
 // generate a test Strahlkorper with a random radius function and a given l_max
 // and expansion center
 template <typename Frame, typename Generator>
@@ -60,21 +57,8 @@ Strahlkorper<Frame> generate_test_strahlkorper(
 
 template <typename Frame, size_t NumTimes>
 std::array<Strahlkorper<Frame>, NumTimes> generate_test_strahlkorpers(
-    // const gsl::not_null<std::array<Strahlkorper<Frame>, NumTimes>*>
-    // strahlkorpers, const std::string& test_filename, const std::string&
-    // subfile_name, const std::array<double, NumTimes> times,
     const std::array<double, 3> expansion_center,
-    const std::array<size_t, NumTimes> l_maxes  //,
-    /*const size_t max_l*/) {
-  //   // Make sure test input can be written in the correct format
-  //   constexpr size_t expected_num_coefs = square(max_l + 1);
-  //   constexpr size_t expected_num_total_columns =
-  //       num_non_coef_columns + expected_num_coefs;
-  //   ASSERT(expected_legend.size() == expected_num_total_columns,
-  //          "The test Ylm legend expected to be writen does not have the
-  //          expected " "number of columns for the given max_l");
-
-  // // Write test ylm data
+    const std::array<size_t, NumTimes> l_maxes) {
   MAKE_GENERATOR(generator);
   std::uniform_real_distribution<> distribution(0.1, 2.0);
 
@@ -85,24 +69,6 @@ std::array<Strahlkorper<Frame>, NumTimes> generate_test_strahlkorpers(
   }
 
   return strahlkorpers;
-
-  //   std::vector<std::vector<std::string>> legends_to_write(NumTimes);
-  //   std::vector<std::vector<double>> data(NumTimes);
-  //   for (size_t i = 0; i < NumTimes; i++) {
-  //     intrp::callbacks::detail::fill_ylm_legend_and_data(
-  //         make_not_null(&(legends[i])), make_not_null(&(data[i])),
-  //         strahlkorpers[i], written_times[i], max_l);
-  //     ASSERT(legends[i] == expected_legend,
-  //       ""
-  //     );
-  //   }
-
-  // h5::H5File<h5::AccessType::ReadWrite> test_file(test_filename);
-  // auto& file = test_file.insert<h5::Dat>("/" + subfile_name, legend);
-  // file.append(data);
-  // test_file.close_current_object();
-
-  //   return strahlkorper;
 }
 
 template <typename Frame, size_t NumTimes>
@@ -128,93 +94,6 @@ void write_test_strahlkorpers(
   file.append(data);
   test_file.close_current_object();
 }
-
-// bool is_nonnegative_int(const double n) {
-//   return n == abs(n) and n == floor(n);
-// }
-
-// template <typename Frame, typename Generator>
-// void check_writing_format_consistency_impl(
-//     const std::vector<std::string> expected_legend,
-//     const Strahlkorper<Frame>& strahlkorper, const double time,
-//     const size_t max_l) {
-//   const size_t expected_total_num_columns =
-//       square(max_l + 1) + num_non_coef_columns;
-//   ASSERT(expected_legend.size() == expected_total_num_columns,
-//          "Expected legend for Ylm test data is not the expected length.");
-
-//   std::vector<std::string> actual_legend;
-//   std::vector<double> actual_data;
-//   intrp::callbacks::detail::fill_ylm_legend_and_data(
-//       make_not_null(&actual_legend), make_not_null(&actual_data),
-//       strahlkorper, time, max_l);
-
-//   CHECK(actual_legend == expected_legend);
-//   ASSERT(actual_data.size() == actual_legend.size());
-
-//   const std::array<double, 3> expansion_center =
-//   strahlkorper.expansion_center(); const double l_max = strahlkorper.l_max();
-
-//   CHECK(actual_data[0] == time);
-//   CHECK(actual_data[1] == expansion_center[0]);
-//   CHECK(actual_data[2] == expansion_center[1]);
-//   CHECK(actual_data[3] == expansion_center[2]);
-//   CHECK(actual_data[4] == l_max);
-
-//   for () {
-
-//   }
-// }
-
-// // TODO : maybe call in separate test from other stuff
-// template <typename Frame, typename Generator>
-// void check_writing_format_consistency(
-//     const gsl::not_null<Generator*> generator,
-//     const std::uniform_real_distribution<>& distribution) {
-//   const std::vector<std::string> expected_ylm_legend_without_coefs{
-//       "Time", "ExpansionCenter_x", "ExpansionCenter_y", "ExpansionCenter_z",
-//       "Lmax"};
-//   ASSERT(expected_ylm_legend_without_coefs.size() == num_non_coef_columns,
-//          "Test Ylm legend does not contain the expected number of "
-//          "non-coefficient columns.");
-
-//   const std::vector<std::string> l_max_2_coef_headers = {
-//       "coef(0,0)",  "coef(1,-1)", "coef(1,0)", "coef(1,1)", "coef(2,-2)",
-//       "coef(2,-1)", "coef(2,0)",  "coef(2,1)", "coef(2,2)"};
-
-//   std::vector<std::string> l_max_3_coef_headers = l_max_2_coef_headers;
-//   l_max_3_coef_headers.push_back("coef(3,-3)");
-//   l_max_3_coef_headers.push_back("coef(3,-2)");
-//   l_max_3_coef_headers.push_back("coef(3,-1)");
-//   l_max_3_coef_headers.push_back("coef(3,0)");
-//   l_max_3_coef_headers.push_back("coef(3,1)");
-//   l_max_3_coef_headers.push_back("coef(3,2)");
-//   l_max_3_coef_headers.push_back("coef(3,3)");
-
-//   const std::array<double, 3> expansion_center{0.3, 0.0, -0.4};
-//   const double time = 0.7;
-//   const size_t max_l = 3;
-
-//   const auto strahlkorper_lmax_2 = generate_test_strahlkorper<Frame>(
-//       make_not_null(&generator), distribution, 2, expansion_center);
-//   //   std::vector<std::string> legend_lmax_2;
-//   //   std::vector<double> data_lmax_2;
-//   //   intrp::callbacks::detail::fill_ylm_legend_and_data(
-//   //       make_not_null(&legend_lmax_2), make_not_null(&data_lmax_2),
-//   //       strahlkorper_lmax_2, time, max_l);
-
-//   const auto strahlkorper_lmax_3 = generate_test_strahlkorper<Frame>(
-//       make_not_null(&generator), distribution, 3, expansion_center);
-//   std::vector<std::string> legend_lmax_3;
-//   std::vector<double> data_lmax_3;
-//   intrp::callbacks::detail::fill_ylm_legend_and_data(
-//       make_not_null(&legend_lmax_3), make_not_null(&data_lmax_3),
-//       strahlkorper_lmax_3, time, max_l);
-
-//   //   const size_t expected_total_num_columns =
-//   //       square(max_l + 1) + num_non_coef_columns;
-//   //   ASSERT(is_positive_int());
-// }
 
 // test reading in the n last times of data expected to have been written
 // (expected_strahlkorpers), where n = num_times_requested
@@ -263,9 +142,6 @@ SPECTRE_TEST_CASE("Unit.NumericalAlgorithms.ReadYlmCoefficients",
     file_system::rm(test_filename, true);
   }
 
-  MAKE_GENERATOR(generator);
-  std::uniform_real_distribution<> distribution(0.1, 2.0);
-
   // first test surface
   using frame_a = Frame::Grid;
   const std::string subfile_name_a = "SurfaceA_Ylm";
@@ -306,6 +182,6 @@ SPECTRE_TEST_CASE("Unit.NumericalAlgorithms.ReadYlmCoefficients",
   check_read_ylm_data<frame_b>(test_filename, subfile_name_b, 1,
                                strahlkorpers_b);
 
-  //   Delete the temporary file created for this test
-  //   file_system::rm(test_filename, true);
+  // Delete the temporary file created for this test
+  file_system::rm(test_filename, true);
 }
