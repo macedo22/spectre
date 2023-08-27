@@ -6,7 +6,6 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
-#include <iostream>
 #include <pup.h>
 #include <random>
 #include <string>
@@ -118,11 +117,11 @@ void check_ylm_data(const std::string& h5_file_name) {
          "The size of the constructed test Ylm legend and its expected size do "
          "not match.");
 
-  // Last element in this initialization is coef(0,0) of a KerrHorizon
-  // (SurfaceD)
+  // last element in this initialization is coef(0,0) of a KerrHorizon with no
+  // spin (SurfaceD, i.e. a sphere)
   std::vector<double> ylm_expected_data{
       0.0, center[0], center[1], center[2], l_max, sqrt(8.0) * sphere_radius};
-  // Since SurfaceD is a KerrHorizon, remaining coefs should be 0.0
+  // all coefs besides coef(0,0) should be 0.0
   ylm_expected_data.resize(
       ylm_expected_data.size() + expected_num_coefficients - 1, 0.0);
 
@@ -138,7 +137,6 @@ void check_ylm_data(const std::string& h5_file_name) {
 
   CHECK(ylm_written_legend.size() == expected_total_num_columns);
   CHECK(ylm_written_data.columns() == expected_total_num_columns);
-
   CHECK(ylm_written_legend == ylm_expected_legend);
 
   // non-coef data should be exact, but coefs might not be
@@ -611,36 +609,18 @@ SPECTRE_TEST_CASE(
             metavars::component_list>(make_not_null(&runner));
   }
 
-//    std::cout << "Before invoking remaining threaded actions" << std::endl;
-//    std::cout << "remaining on 0 : " <<
-//        ActionTesting::number_of_queued_threaded_actions<obs_writer>(runner, 0)
-//        << std::endl;
-  // There should be four more threaded actions, so invoke them and check
+  // There should be five more threaded actions, so invoke them and check
   // that there are no more.  They should all be on node zero.
   ActionTesting::invoke_queued_threaded_action<obs_writer>(
       make_not_null(&runner), 0);
-//   std::cout << "remaining on 0 after 1 call : " <<
-//        ActionTesting::number_of_queued_threaded_actions<obs_writer>(runner, 0)
-//        << std::endl;
   ActionTesting::invoke_queued_threaded_action<obs_writer>(
       make_not_null(&runner), 0);
-//   std::cout << "remaining on 0 after 2 calls : " <<
-//        ActionTesting::number_of_queued_threaded_actions<obs_writer>(runner, 0)
-//        << std::endl;
   ActionTesting::invoke_queued_threaded_action<obs_writer>(
       make_not_null(&runner), 0);
-//   std::cout << "remaining on 0 after 3 calls : " <<
-//        ActionTesting::number_of_queued_threaded_actions<obs_writer>(runner, 0)
-//        << std::endl;
   ActionTesting::invoke_queued_threaded_action<obs_writer>(
       make_not_null(&runner), 0);
-//   std::cout << "remaining on 0 after 4 calls : " <<
-//        ActionTesting::number_of_queued_threaded_actions<obs_writer>(runner, 0)
-//        << std::endl;
-  // try to invoke the 5th one but probably won't work
   ActionTesting::invoke_queued_threaded_action<obs_writer>(
       make_not_null(&runner), 0);
-//   CHECK(ActionTesting::number_of_queued_threaded_actions<obs_writer>(runner, 0) == 1);
   CHECK(ActionTesting::is_threaded_action_queue_empty<obs_writer>(runner, 0));
   CHECK(ActionTesting::is_threaded_action_queue_empty<obs_writer>(runner, 1));
   CHECK(ActionTesting::is_threaded_action_queue_empty<obs_writer>(runner, 2));
@@ -689,18 +669,18 @@ SPECTRE_TEST_CASE(
   check_file_contents(expected_integral_b, expected_legend_b, "/SurfaceB");
   check_file_contents(expected_integral_c, expected_legend_c, "/SurfaceC");
 
-//   if (file_system::check_if_file_exists(h5_file_name)) {
-//     file_system::rm(h5_file_name, true);
-//   }
-
   // Check that the Ylm data were written correctly
   check_ylm_data(h5_file_name);
+
+  if (file_system::check_if_file_exists(h5_file_name)) {
+    file_system::rm(h5_file_name, true);
+  }
 
   // Check that the Surfaces file contains the correct surface data
   check_surface_volume_data(surfaces_file_prefix);
 
-//   if (file_system::check_if_file_exists(surfaces_file_prefix + ".h5"s)) {
-//     file_system::rm(surfaces_file_prefix + ".h5"s, true);
-//   }
+  if (file_system::check_if_file_exists(surfaces_file_prefix + ".h5"s)) {
+    file_system::rm(surfaces_file_prefix + ".h5"s, true);
+  }
 }
 }  // namespace

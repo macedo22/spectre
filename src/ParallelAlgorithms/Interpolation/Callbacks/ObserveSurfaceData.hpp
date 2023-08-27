@@ -26,6 +26,7 @@
 #include "Parallel/Reduction.hpp"
 #include "ParallelAlgorithms/Interpolation/InterpolationTargetDetail.hpp"
 #include "ParallelAlgorithms/Interpolation/Protocols/PostInterpolationCallback.hpp"
+#include "Utilities/ErrorHandling/Assert.hpp"
 #include "Utilities/Functional.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/PrettyType.hpp"
@@ -39,14 +40,19 @@ template <typename Frame>
 void fill_ylm_legend_and_data(
     const gsl::not_null<std::vector<std::string>*> legend,
     const gsl::not_null<std::vector<double>*> data,
-    const Strahlkorper<Frame>& strahlkorper, const double time) {
+    const Strahlkorper<Frame>& strahlkorper, const double time,
+    const size_t max_l) {
   const size_t l_max = strahlkorper.l_max();
+  ASSERT(max_l >= l_max,
+         "The Lmax of the Ylm data to write ("
+             << l_max << ") is larger than the maximum value that l can be ("
+             << max_l << ").");
   const std::array<double, 3> expansion_center =
       strahlkorper.expansion_center();
   // number of terms in
   // \sum_{l=0}^{l_{max}} \sum_{m=-l}^{l} F^{lm} Y^{lm}(\theta,\phi) is the
   // sum of the first (l_max + 1) odd numbers, which is (l_max + 1)^2
-  const size_t num_coefficients = square(l_max + 1);
+  const size_t num_coefficients = square(max_l + 1);
   // time + 3 dims of expansion center + Lmax = 5 columns
   const size_t num_columns = num_coefficients + 5;
 
@@ -73,6 +79,12 @@ void fill_ylm_legend_and_data(
 
       iter.set(l, m);
       data->push_back(ylm_coefficients[iter()]);
+    }
+  }
+  data->resize(num_columns, 0.0);
+  for (size_t l = l_max + 1; l <= max_l; l++) {
+    for (int m = -l; m <= static_cast<int>(l); m++) {
+      legend->push_back(MakeString{} << "coef(" << l << "," << m << ")");
     }
   }
 
@@ -180,7 +192,7 @@ struct ObserveSurfaceData
     std::vector<double> ylm_data;
     detail::fill_ylm_legend_and_data(make_not_null(&ylm_legend),
                                      make_not_null(&ylm_data), strahlkorper,
-                                     time);
+                                     time, strahlkorper.l_max());
 
     const std::string ylm_subfile_name{std::string{"/"} + surface_name +
                                        "_Ylm"};
