@@ -26,12 +26,23 @@ namespace {
 const size_t l_max_column_number = 4;
 const size_t num_non_coef_headers = 5;
 
+bool is_nonnegative_int(const double n) {
+  return n == abs(n) and n == floor(n);
+}
+
 template <typename Frame>
 Strahlkorper<Frame> read_ylm_coefficients_row(const Matrix& ylm_data,
                                               const size_t row_number) {
   const std::array<double, 3> expansion_center{{ylm_data(row_number, 1),
                                                 ylm_data(row_number, 2),
                                                 ylm_data(row_number, 3)}};
+  const double l_max_from_file = ylm_data(row_number, l_max_column_number);
+  if (not is_nonnegative_int(l_max_from_file)) {
+    ERROR("Row " << row_number << " of the Ylm data has an invalid Lmax value ("
+                 << l_max_from_file << ") in column " << l_max_column_number
+                 << ". The value of Lmax should be a nonnegative integer.");
+  }
+
   const size_t l_max = ylm_data(row_number, l_max_column_number);
   // number of terms in
   // \sum_{l=0}^{l_{max}} \sum_{m=-l}^{l} F^{lm} Y^{lm}(\theta,\phi) is the
@@ -52,7 +63,7 @@ Strahlkorper<Frame> read_ylm_coefficients_row(const Matrix& ylm_data,
   if (actual_num_columns < min_expected_num_columns) {
     ERROR("Row "
           << row_number
-          << " of the Ylm data does not have the expected format. For Lmax "
+          << " of the Ylm data does not have the expected format. For Lmax = "
           << l_max << ", expected at least " << min_expected_num_columns
           << " columns.\n\n"
           << expected_format);
