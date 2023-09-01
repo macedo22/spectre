@@ -254,7 +254,7 @@ void strahlkorper_in_different_frame(
   // Keep the same l_max() and m_max() as the source strahlkorper.
   *dest_strahlkorper = Strahlkorper<DestFrame>(
       src_strahlkorper.l_max(), src_strahlkorper.m_max(), radius_at_each_angle,
-      center_dest);
+      center_dest, StrahlkorperContructorData::RadiusAtCollocationPoints);
 }
 
 template <typename SrcFrame, typename DestFrame>
@@ -303,7 +303,8 @@ void strahlkorper_in_different_frame_aligned(
   // Because center and angles are preserved by the map, we can easily
   // construct the destination Strahlkorper.
   *dest_strahlkorper = Strahlkorper<DestFrame>(
-      src_strahlkorper.l_max(), src_strahlkorper.m_max(), get(radius), center);
+      src_strahlkorper.l_max(), src_strahlkorper.m_max(), get(radius), center,
+      StrahlkorperContructorData::RadiusAtCollocationPoints);
 }
 
 #define SRCFRAME(data) BOOST_PP_TUPLE_ELEM(0, data)

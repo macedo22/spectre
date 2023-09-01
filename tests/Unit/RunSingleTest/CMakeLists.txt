@@ -32,14 +32,27 @@ add_spectre_executable(
 
   # The following lines list the source files with tests in them to be
   # compiled into the executable.
-  ../DataStructures/Test_DataVector.cpp
+  ../NumericalAlgorithms/SphericalHarmonics/Test_ChangeCenterOfStrahlkorper.cpp
+  # ../NumericalAlgorithms/SphericalHarmonics/Test_ReadSurfaceYlm.cpp
+  # ../ParallelAlgorithms/Interpolation/Test_ObserveTimeSeriesAndSurfaceData.cpp
   )
 
 # Modify which libraries to link for your test case.
 target_link_libraries(
   ${EXECUTABLE}
   PRIVATE
+  CoordinateMaps
   DataStructures
+  Domain
+  DomainCreators
+  DomainStructure
+  H5
+  IoTestHelpers
+  Observer
+  ParallelInterpolation
+  Spectral
+  Time
+  Utilities
   )
 
 # Core required libraries
