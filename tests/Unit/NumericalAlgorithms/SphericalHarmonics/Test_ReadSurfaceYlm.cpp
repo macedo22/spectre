@@ -163,15 +163,15 @@ void test_errors() {
   l_max_3_coef_headers.push_back("Re(3,3)");
 
   // construct a legend that is properly formatted
-  std::vector<std::string> good_legend = ylm_legend_without_coefs;
-  good_legend.insert(good_legend.end(), l_max_3_coef_headers.begin(),
-                     l_max_3_coef_headers.end());
+  std::vector<std::string> legend = ylm_legend_without_coefs;
+  legend.insert(legend.end(), l_max_3_coef_headers.begin(),
+                l_max_3_coef_headers.end());
 
   // construct data that is properly formatted
   const std::array<double, 3> times{{0.1, 0.2, 0.3}};
   const std::array<double, 3> l_maxes{{2.0, 3.0, 2.0}};
   std::vector<std::vector<double>> good_data{
-      times.size(), std::vector<double>(good_legend.size(), 0.0)};
+      times.size(), std::vector<double>(legend.size(), 0.0)};
   good_data[0][l_max_column_number] = l_maxes[0];
   good_data[1][l_max_column_number] = l_maxes[1];
   good_data[2][l_max_column_number] = l_maxes[2];
@@ -183,65 +183,64 @@ void test_errors() {
   }
 
   CHECK_THROWS_WITH(
-      ([&filename, &good_legend]() {
+      ([&filename, &legend]() {
         const std::vector<std::vector<double>> data{};
-        write_error_file_and_try_to_read(filename, "EmptyData", good_legend,
-                                         data, 0);
+        write_error_file_and_try_to_read(filename, "EmptyData", legend, data,
+                                         0);
       }()),
       Catch::Contains("The Ylm data to read from contains 0 rows"));
 
   CHECK_THROWS_WITH(
-      ([&filename, &good_legend, &good_data]() {
+      ([&filename, &legend, &good_data]() {
         write_error_file_and_try_to_read(filename, "NotEnoughTimesWritten",
-                                         good_legend, good_data, 4);
+                                         legend, good_data, 4);
       }()),
       Catch::Contains("The requested number of time values (4) is more than "
                       "the number of rows in the Ylm data"));
 
   CHECK_THROWS_WITH(
-      ([&filename, &good_legend, &good_data]() {
+      ([&filename, &legend, &good_data]() {
         std::vector<std::vector<double>> bad_data = good_data;
         // set an Lmax to a non-integral value
         bad_data[0][l_max_column_number] = 1.2;
 
-        write_error_file_and_try_to_read(filename, "NonIntegralLmax",
-                                         good_legend, bad_data, 3);
+        write_error_file_and_try_to_read(filename, "NonIntegralLmax", legend,
+                                         bad_data, 3);
       }()),
       Catch::Contains("Row 0 of the Ylm data has an invalid Lmax value"));
 
   CHECK_THROWS_WITH(
-      ([&filename, &good_legend, &good_data]() {
+      ([&filename, &legend, &good_data]() {
         std::vector<std::vector<double>> bad_data = good_data;
         // set an Lmax to a negative value
         bad_data[1][l_max_column_number] = -1.0;
 
-        write_error_file_and_try_to_read(filename, "NegativeLmax", good_legend,
+        write_error_file_and_try_to_read(filename, "NegativeLmax", legend,
                                          bad_data, 3);
       }()),
       Catch::Contains("Row 1 of the Ylm data has an invalid Lmax value"));
 
   CHECK_THROWS_WITH(
-      ([&filename, &good_legend, &good_data]() {
+      ([&filename, &legend, &good_data]() {
         std::vector<std::vector<double>> bad_data = good_data;
         // set an Lmax that requires more columns of data than given,
-        // i.e. good_legend can only hold coefs up to l = 3
+        // i.e. legend can only hold coefs up to l = 3
         bad_data[2][l_max_column_number] = 4;
 
         write_error_file_and_try_to_read(filename, "NotEnoughColumnsForLmax",
-                                         good_legend, bad_data, 3);
+                                         legend, bad_data, 3);
       }()),
       Catch::Contains("Row 2 of the Ylm data does not have the expected "
                       "format. For Lmax = 4, expected at least 30 columns"));
 
-  CHECK_THROWS_WITH(([&filename, &good_legend, &good_data]() {
+  CHECK_THROWS_WITH(([&filename, &legend, &good_data]() {
                       std::vector<std::vector<double>> bad_data = good_data;
                       // set a non-zero coefficient value for some coef(l,m)
                       // where l > Lmax
-                      bad_data[0][good_legend.size() - 1] = 0.8;
+                      bad_data[0][legend.size() - 1] = 0.8;
 
                       write_error_file_and_try_to_read(
-                          filename, "NonZeroHigherCoefs", good_legend, bad_data,
-                          3);
+                          filename, "NonZeroHigherCoefs", legend, bad_data, 3);
                     }()),
                     Catch::Contains("Row 0 of the Ylm data has Lmax 2 but "
                                     "non-zero coefficients for l > Lmax"));
