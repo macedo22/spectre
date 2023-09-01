@@ -40,6 +40,8 @@
 #include "NumericalAlgorithms/Spectral/LogicalCoordinates.hpp"
 #include "NumericalAlgorithms/Spectral/Mesh.hpp"
 #include "NumericalAlgorithms/Spectral/Spectral.hpp"
+#include "NumericalAlgorithms/SphericalHarmonics/SpherepackIterator.hpp"
+#include "NumericalAlgorithms/SphericalHarmonics/Strahlkorper.hpp"
 #include "Parallel/ParallelComponentHelpers.hpp"
 #include "Parallel/Phase.hpp"
 #include "Parallel/PhaseDependentActionList.hpp"  // IWYU pragma: keep
@@ -67,6 +69,7 @@
 #include "Time/Time.hpp"
 #include "Time/TimeStepId.hpp"
 #include "Utilities/ConstantExpressions.hpp"
+#include "Utilities/ErrorHandling/Assert.hpp"
 #include "Utilities/FileSystem.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/Literals.hpp"
@@ -85,6 +88,73 @@ struct SurfaceIntegral;
 }  // namespace gr::surfaces::Tags
 
 namespace {
+void check_ylm_data(const std::string& h5_file_name) {
+  // Parameters chosen to match SurfaceE choices below
+  constexpr size_t l_max = 3;
+  constexpr std::array<double, 3> expansion_center{{0.04, 0.05, 0.06}};
+  constexpr double mass = 1.1;
+  constexpr std::array<double, 3> dimensionless_spin{{1.0, 0.0, 0.0}};
+  ylm::Strahlkorper<Frame::Inertial> expected_surface(
+      l_max, l_max,
+      get(gr::Solutions::kerr_horizon_radius(
+          ::ylm::Spherepack(l_max, l_max).theta_phi_points(), mass,
+          dimensionless_spin)),
+      expansion_center,
+      ylm::StrahlkorperConstructorData::RadiusAtCollocationPoints);
+
+  const std::vector<std::string> ylm_expected_legend{
+      "Time",     "ExpansionCenter_x", "ExpansionCenter_y", "ExpansionCenter_z",
+      "Lmax",     "Re(0,0)",           "Im(1,-1)",          "Re(1,0)",
+      "Re(1,1)",  "Im(2,-2)",          "Im(2,-1)",          "Re(2,0)",
+      "Re(2,1)",  "Re(2,2)",           "Im(3,-3)",          "Im(3,-2)",
+      "Im(3,-1)", "Re(3,0)",           "Re(3,1)",           "Re(3,2)",
+      "Re(3,3)"};
+
+  // number of terms in
+  // \sum_{l=0}^{l_{max}} \sum_{m=-l}^{l} F^{lm} Y^{lm}(\theta,\phi) is the
+  // sum of the first (l_max + 1) odd numbers, which is (l_max + 1)^2
+  const size_t expected_num_coefficients = square(l_max + 1);
+  const size_t expected_num_non_coef_columns = 5;
+  const size_t expected_total_num_columns =
+      expected_num_non_coef_columns + expected_num_coefficients;
+
+  ASSERT(ylm_expected_legend.size() == expected_total_num_columns,
+         "The size of the constructed test Ylm legend ("
+             << ylm_expected_legend.size() << ") and its expected size ("
+             << expected_total_num_columns << ") do not match.");
+
+  std::vector<double> ylm_expected_data{0.0, expansion_center[0],
+                                        expansion_center[1],
+                                        expansion_center[2], l_max};
+
+  ylm::SpherepackIterator iter(l_max, l_max);
+  for (size_t l = 0; l <= l_max; l++) {
+    for (int m = -l; m <= static_cast<int>(l); m++) {
+      iter.set(l, m);
+      ylm_expected_data.push_back(expected_surface.coefficients()[iter()]);
+    }
+  }
+
+  ASSERT(ylm_expected_data.size() == expected_total_num_columns,
+         "The size of the constructed test Ylm data ("
+             << ylm_expected_data.size() << ") and its expected size ("
+             << expected_total_num_columns << ") do not match.");
+
+  // Check that the H5 file was written correctly.
+  const auto file = h5::H5File<h5::AccessType::ReadOnly>(h5_file_name);
+  const auto& ylm_dat_file = file.get<h5::Dat>("/SurfaceE_Ylm");
+  const Matrix ylm_written_data = ylm_dat_file.get_data();
+  const auto& ylm_written_legend = ylm_dat_file.get_legend();
+
+  CHECK(ylm_written_legend.size() == expected_total_num_columns);
+  CHECK(ylm_written_data.columns() == expected_total_num_columns);
+  CHECK(ylm_written_legend == ylm_expected_legend);
+
+  for (size_t i = 0; i < expected_total_num_columns; i++) {
+    CHECK(ylm_written_data(0, i) == ylm_expected_data[i]);
+  }
+}
+
 void check_surface_volume_data(const std::string& surfaces_file_prefix) {
   // Parameters chosen to match SurfaceD choices below
   constexpr size_t l_max = 10;
@@ -295,12 +365,28 @@ struct MockMetavariables {
                                              ::Frame::Inertial>;
   };
 
+  struct SurfaceE : tt::ConformsTo<intrp::protocols::InterpolationTargetTag> {
+    using temporal_id = ::Tags::Time;
+    using vars_to_interpolate_to_target =
+        tmpl::list<Tags::TestSolution, gr::Tags::SpatialMetric<DataVector, 3>>;
+    using compute_items_on_target =
+        tmpl::list<Tags::SquareCompute,
+                   gr::surfaces::Tags::AreaElementCompute<Frame::Inertial>,
+                   gr::surfaces::Tags::SurfaceIntegralCompute<
+                       Tags::Square, ::Frame::Inertial>>;
+    using compute_target_points =
+        intrp::TargetPoints::KerrHorizon<SurfaceE, ::Frame::Inertial>;
+    using post_interpolation_callback =
+        intrp::callbacks::ObserveSurfaceData<tmpl::list<Tags::Square>, SurfaceE,
+                                             ::Frame::Inertial>;
+  };
+
   using observed_reduction_data_tags = tmpl::list<>;
 
   using interpolator_source_vars =
       tmpl::list<Tags::TestSolution, gr::Tags::SpatialMetric<DataVector, 3>>;
   using interpolation_target_tags =
-      tmpl::list<SurfaceA, SurfaceB, SurfaceC, SurfaceD>;
+      tmpl::list<SurfaceA, SurfaceB, SurfaceC, SurfaceD, SurfaceE>;
   static constexpr size_t volume_dim = 3;
   using component_list =
       tmpl::list<MockObserverWriter<MockMetavariables>,
@@ -308,6 +394,7 @@ struct MockMetavariables {
                  MockInterpolationTarget<MockMetavariables, SurfaceB>,
                  MockInterpolationTarget<MockMetavariables, SurfaceC>,
                  MockInterpolationTarget<MockMetavariables, SurfaceD>,
+                 MockInterpolationTarget<MockMetavariables, SurfaceE>,
                  MockInterpolator<MockMetavariables>>;
 };
 
@@ -339,11 +426,14 @@ SPECTRE_TEST_CASE(
       typename MockMetavariables::SurfaceC::post_interpolation_callback;
   using callback_D =
       typename MockMetavariables::SurfaceD::post_interpolation_callback;
+  using callback_E =
+      typename MockMetavariables::SurfaceE::post_interpolation_callback;
   using protocol = intrp::protocols::PostInterpolationCallback;
   static_assert(tt::assert_conforms_to_v<callback_A, protocol>);
   static_assert(tt::assert_conforms_to_v<callback_B, protocol>);
   static_assert(tt::assert_conforms_to_v<callback_C, protocol>);
   static_assert(tt::assert_conforms_to_v<callback_D, protocol>);
+  static_assert(tt::assert_conforms_to_v<callback_E, protocol>);
 
   using metavars = MockMetavariables;
   using interp_component = MockInterpolator<metavars>;
@@ -355,6 +445,8 @@ SPECTRE_TEST_CASE(
       MockInterpolationTarget<metavars, metavars::SurfaceC>;
   using target_d_component =
       MockInterpolationTarget<metavars, metavars::SurfaceD>;
+  using target_e_component =
+      MockInterpolationTarget<metavars, metavars::SurfaceE>;
   using obs_writer = MockObserverWriter<metavars>;
 
   // Options for all InterpolationTargets.
@@ -370,6 +462,9 @@ SPECTRE_TEST_CASE(
   intrp::OptionHolders::KerrHorizon kerr_horizon_opts_D(
       10, {{0.01, 0.02, 0.03}}, 1.4, {{0.0, 0.0, 0.0}},
       intrp::AngularOrdering::Strahlkorper);
+  intrp::OptionHolders::KerrHorizon kerr_horizon_opts_E(
+      3, {{0.04, 0.05, 0.06}}, 1.1, {{1.0, 0.0, 0.0}},
+      intrp::AngularOrdering::Strahlkorper);
   const auto domain_creator = domain::creators::Sphere(
       0.9, 4.9, domain::creators::Sphere::Excision{}, 1_st, 5_st, false);
   tuples::TaggedTuple<
@@ -377,11 +472,12 @@ SPECTRE_TEST_CASE(
       ::intrp::Tags::KerrHorizon<metavars::SurfaceA>, domain::Tags::Domain<3>,
       ::intrp::Tags::KerrHorizon<metavars::SurfaceB>,
       ::intrp::Tags::KerrHorizon<metavars::SurfaceC>,
-      ::intrp::Tags::KerrHorizon<metavars::SurfaceD>>
+      ::intrp::Tags::KerrHorizon<metavars::SurfaceD>,
+      ::intrp::Tags::KerrHorizon<metavars::SurfaceE>>
       tuple_of_opts{h5_file_prefix,      surfaces_file_prefix,
                     kerr_horizon_opts_A, domain_creator.create_domain(),
                     kerr_horizon_opts_B, kerr_horizon_opts_C,
-                    kerr_horizon_opts_D};
+                    kerr_horizon_opts_D, kerr_horizon_opts_E};
 
   // Three mock nodes, with 2, 1, and 4 mock cores.
   ActionTesting::MockRuntimeSystem<metavars> runner{
@@ -415,6 +511,11 @@ SPECTRE_TEST_CASE(
       &runner, ActionTesting::NodeId{2}, ActionTesting::LocalCoreId{3});
   for (size_t i = 0; i < 2; ++i) {
     ActionTesting::next_action<target_d_component>(make_not_null(&runner), 0);
+  }
+  ActionTesting::emplace_singleton_component<target_e_component>(
+      &runner, ActionTesting::NodeId{2}, ActionTesting::LocalCoreId{0});
+  for (size_t i = 0; i < 2; ++i) {
+    ActionTesting::next_action<target_e_component>(make_not_null(&runner), 0);
   }
   ActionTesting::emplace_nodegroup_component<obs_writer>(&runner);
   for (size_t i = 0; i < 2; ++i) {
@@ -475,6 +576,11 @@ SPECTRE_TEST_CASE(
   ActionTesting::simple_action<
       target_d_component,
       intrp::Actions::AddTemporalIdsToInterpolationTarget<metavars::SurfaceD>>(
+      make_not_null(&runner), 0,
+      std::vector<double>{temporal_id.substep_time()});
+  ActionTesting::simple_action<
+      target_e_component,
+      intrp::Actions::AddTemporalIdsToInterpolationTarget<metavars::SurfaceE>>(
       make_not_null(&runner), 0,
       std::vector<double>{temporal_id.substep_time()});
 
@@ -545,8 +651,14 @@ SPECTRE_TEST_CASE(
             metavars::component_list>(make_not_null(&runner));
   }
 
-  // There should be four more threaded actions, so invoke them and check
+  // There should be seven more threaded actions, so invoke them and check
   // that there are no more.  They should all be on node zero.
+  ActionTesting::invoke_queued_threaded_action<obs_writer>(
+      make_not_null(&runner), 0);
+  ActionTesting::invoke_queued_threaded_action<obs_writer>(
+      make_not_null(&runner), 0);
+  ActionTesting::invoke_queued_threaded_action<obs_writer>(
+      make_not_null(&runner), 0);
   ActionTesting::invoke_queued_threaded_action<obs_writer>(
       make_not_null(&runner), 0);
   ActionTesting::invoke_queued_threaded_action<obs_writer>(
@@ -602,6 +714,9 @@ SPECTRE_TEST_CASE(
   check_file_contents(expected_integral_a, expected_legend_a, "/SurfaceA");
   check_file_contents(expected_integral_b, expected_legend_b, "/SurfaceB");
   check_file_contents(expected_integral_c, expected_legend_c, "/SurfaceC");
+
+  // Check that the Ylm data were written correctly
+  check_ylm_data(h5_file_name);
 
   if (file_system::check_if_file_exists(h5_file_name)) {
     file_system::rm(h5_file_name, true);
