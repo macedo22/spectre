@@ -849,8 +849,9 @@ SPECTRE_TEST_CASE("Unit.ApparentHorizons.StrahlkorperGr.Expansion",
           .theta_phi_points(),
       mass, spin);
 
-  const auto kerr_horizon =
-      Strahlkorper<Frame::Inertial>(l_max, l_max, get(horizon_radius), center);
+  const auto kerr_horizon = Strahlkorper<Frame::Inertial>(
+      l_max, l_max, get(horizon_radius), center,
+      StrahlkorperContructorData::RadiusAtCollocationPoints);
 
   test_expansion(gr::Solutions::KerrSchild{mass, spin, center}, kerr_horizon,
                  [](const size_t size) { return DataVector(size, 0.0); });
@@ -915,8 +916,9 @@ SPECTRE_TEST_CASE("Unit.ApparentHorizons.StrahlkorperGr.AreaElement",
           .theta_phi_points(),
       mass, spin);
 
-  const auto kerr_horizon =
-      Strahlkorper<Frame::Inertial>(l_max, l_max, get(horizon_radius), center);
+  const auto kerr_horizon = Strahlkorper<Frame::Inertial>(
+      l_max, l_max, get(horizon_radius), center,
+      StrahlkorperContructorData::RadiusAtCollocationPoints);
 
   test_area(gr::Solutions::KerrSchild{mass, spin, center}, kerr_horizon,
             expected_area, expected_irreducible_mass,
@@ -932,9 +934,11 @@ SPECTRE_TEST_CASE("Unit.ApparentHorizons.StrahlkorperGr.AreaElement",
   // still equal for a surface inside and outside the horizon
   // (that is, for spacelike and timelike Strahlkorpers).
   const auto inside_kerr_horizon = Strahlkorper<Frame::Inertial>(
-      l_max, l_max, 0.9 * get(horizon_radius), center);
+      l_max, l_max, 0.9 * get(horizon_radius), center,
+      StrahlkorperContructorData::RadiusAtCollocationPoints);
   const auto outside_kerr_horizon = Strahlkorper<Frame::Inertial>(
-      l_max, l_max, 2.0 * get(horizon_radius), center);
+      l_max, l_max, 2.0 * get(horizon_radius), center,
+      StrahlkorperContructorData::RadiusAtCollocationPoints);
   test_integral_correspondence(gr::Solutions::KerrSchild{mass, spin, center},
                                inside_kerr_horizon);
   test_integral_correspondence(gr::Solutions::KerrSchild{mass, spin, center},
@@ -983,8 +987,9 @@ SPECTRE_TEST_CASE("Unit.ApparentHorizons.StrahlkorperGr.SpinFunction",
           .theta_phi_points(),
       mass, spin);
 
-  const auto kerr_horizon =
-      Strahlkorper<Frame::Inertial>(l_max, l_max, get(horizon_radius), center);
+  const auto kerr_horizon = Strahlkorper<Frame::Inertial>(
+      l_max, l_max, get(horizon_radius), center,
+      StrahlkorperContructorData::RadiusAtCollocationPoints);
 
   // Check value of SpinFunction^2 integrated over the surface for
   // Schwarzschild. Expected result is zero.
@@ -1027,7 +1032,8 @@ SPECTRE_TEST_CASE(
           .theta_phi_points(),
       mass, aligned_dimensionless_spin);
   const auto aligned_kerr_horizon = Strahlkorper<Frame::Inertial>(
-      aligned_l_max, aligned_l_max, get(aligned_horizon_radius), center);
+      aligned_l_max, aligned_l_max, get(aligned_horizon_radius), center,
+      StrahlkorperContructorData::RadiusAtCollocationPoints);
   test_dimensionful_spin_magnitude(
       gr::Solutions::KerrSchild{mass, aligned_dimensionless_spin, center},
       aligned_kerr_horizon, mass, aligned_dimensionless_spin,
@@ -1046,7 +1052,8 @@ SPECTRE_TEST_CASE(
           .theta_phi_points(),
       mass, generic_dimensionless_spin);
   const auto generic_kerr_horizon = Strahlkorper<Frame::Inertial>(
-      generic_l_max, generic_l_max, get(generic_horizon_radius), center);
+      generic_l_max, generic_l_max, get(generic_horizon_radius), center,
+      StrahlkorperContructorData::RadiusAtCollocationPoints);
 
   // Create rotated horizon radius, Strahlkorper, with same spin magnitude
   // but with spin on the z axis
@@ -1056,7 +1063,8 @@ SPECTRE_TEST_CASE(
           .theta_phi_points(),
       mass, aligned_dimensionless_spin);
   const auto rotated_kerr_horizon = Strahlkorper<Frame::Inertial>(
-      generic_l_max, generic_l_max, get(rotated_horizon_radius), center);
+      generic_l_max, generic_l_max, get(rotated_horizon_radius), center,
+      StrahlkorperContructorData::RadiusAtCollocationPoints);
   test_dimensionful_spin_magnitude(
       gr::Solutions::KerrSchild{mass, generic_dimensionless_spin, center},
       generic_kerr_horizon, mass, generic_dimensionless_spin,
@@ -1078,8 +1086,9 @@ SPECTRE_TEST_CASE("Unit.ApparentHorizons.StrahlkorperGr.SpinVector",
           .ylm_spherepack()
           .theta_phi_points(),
       mass, spin);
-  const auto kerr_horizon =
-      Strahlkorper<Frame::Inertial>(l_max, l_max, get(horizon_radius), center);
+  const auto kerr_horizon = Strahlkorper<Frame::Inertial>(
+      l_max, l_max, get(horizon_radius), center,
+      StrahlkorperContructorData::RadiusAtCollocationPoints);
 
   const auto horizon_radius_with_spin_on_z_axis =
       gr::Solutions::kerr_horizon_radius(
@@ -1088,7 +1097,8 @@ SPECTRE_TEST_CASE("Unit.ApparentHorizons.StrahlkorperGr.SpinVector",
               .theta_phi_points(),
           mass, {{0.0, 0.0, spin_magnitude}});
   const auto kerr_horizon_with_spin_on_z_axis = Strahlkorper<Frame::Inertial>(
-      l_max, l_max, get(horizon_radius_with_spin_on_z_axis), center);
+      l_max, l_max, get(horizon_radius_with_spin_on_z_axis), center,
+      StrahlkorperContructorData::RadiusAtCollocationPoints);
 
   // Check that the StrahlkorperGr::spin_vector() correctly recovers the
   // chosen dimensionless spin
@@ -1113,8 +1123,9 @@ SPECTRE_TEST_CASE(
           .theta_phi_points(),
       mass, spin);
 
-  const auto kerr_horizon =
-      Strahlkorper<Frame::Inertial>(l_max, l_max, get(horizon_radius), center);
+  const auto kerr_horizon = Strahlkorper<Frame::Inertial>(
+      l_max, l_max, get(horizon_radius), center,
+      StrahlkorperContructorData::RadiusAtCollocationPoints);
 
   // Set up dimensionful spin magnitude
   const double spin_magnitude = magnitude(spin);
