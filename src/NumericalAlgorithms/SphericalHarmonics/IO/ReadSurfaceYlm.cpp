@@ -118,7 +118,7 @@ std::vector<Strahlkorper<Frame>> read_surface_ylm(
 
   const size_t total_number_of_time_values = ylm_data.rows();
   if (total_number_of_time_values == 0) {
-    ERROR("The Ylm data to read from contains 0 rows (times) of data.");
+    ERROR("The Ylm data to read from contain 0 rows (times) of data.");
   }
 
   ASSERT(requested_number_of_time_values > 0,

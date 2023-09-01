@@ -4,37 +4,25 @@
 #include "Framework/TestingFramework.hpp"
 
 #include <array>
-#include <cmath>
 #include <cstddef>
-#include <iostream>
 #include <limits>
-#include <map>
-#include <memory>
-#include <optional>
 #include <random>
 #include <string>
-#include <unordered_map>
+#include <vector>
 
 #include "DataStructures/DataVector.hpp"
-#include "DataStructures/Matrix.hpp"
 #include "DataStructures/Tensor/IndexType.hpp"
-#include "Framework/TestCreation.hpp"
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
 #include "IO/H5/AccessType.hpp"
 #include "IO/H5/Dat.hpp"
 #include "IO/H5/File.hpp"
-#include "Informer/InfoFromBuild.hpp"
 #include "NumericalAlgorithms/SphericalHarmonics/IO/ReadSurfaceYlm.hpp"
-#include "NumericalAlgorithms/SphericalHarmonics/SpherepackIterator.hpp"
 #include "NumericalAlgorithms/SphericalHarmonics/Strahlkorper.hpp"
-#include "ParallelAlgorithms/Interpolation/Actions/TryToInterpolate.hpp"
 #include "ParallelAlgorithms/Interpolation/Callbacks/ObserveSurfaceData.hpp"
-#include "Utilities/ConstantExpressions.hpp"
 #include "Utilities/ErrorHandling/Assert.hpp"
 #include "Utilities/FileSystem.hpp"
 #include "Utilities/Gsl.hpp"
-#include "Utilities/TMPL.hpp"
 
 namespace {
 const size_t l_max_column_number = 4;
@@ -184,11 +172,11 @@ void test_errors() {
 
   CHECK_THROWS_WITH(
       ([&filename, &legend]() {
-        const std::vector<std::vector<double>> data{};
-        write_error_file_and_try_to_read(filename, "EmptyData", legend, data,
-                                         0);
+        const std::vector<std::vector<double>> bad_data{};
+        write_error_file_and_try_to_read(filename, "EmptyData", legend,
+                                         bad_data, 0);
       }()),
-      Catch::Contains("The Ylm data to read from contains 0 rows"));
+      Catch::Contains("The Ylm data to read from contain 0 rows"));
 
   CHECK_THROWS_WITH(
       ([&filename, &legend, &good_data]() {
@@ -201,7 +189,6 @@ void test_errors() {
   CHECK_THROWS_WITH(
       ([&filename, &legend, &good_data]() {
         std::vector<std::vector<double>> bad_data = good_data;
-        // set an Lmax to a non-integral value
         bad_data[0][l_max_column_number] = 1.2;
 
         write_error_file_and_try_to_read(filename, "NonIntegralLmax", legend,
@@ -212,7 +199,6 @@ void test_errors() {
   CHECK_THROWS_WITH(
       ([&filename, &legend, &good_data]() {
         std::vector<std::vector<double>> bad_data = good_data;
-        // set an Lmax to a negative value
         bad_data[1][l_max_column_number] = -1.0;
 
         write_error_file_and_try_to_read(filename, "NegativeLmax", legend,
@@ -224,7 +210,7 @@ void test_errors() {
       ([&filename, &legend, &good_data]() {
         std::vector<std::vector<double>> bad_data = good_data;
         // set an Lmax that requires more columns of data than given,
-        // i.e. legend can only hold coefs up to l = 3
+        // i.e. `legend` only has room for coefs for l <= 3
         bad_data[2][l_max_column_number] = 4;
 
         write_error_file_and_try_to_read(filename, "NotEnoughColumnsForLmax",
@@ -235,8 +221,6 @@ void test_errors() {
 
   CHECK_THROWS_WITH(([&filename, &legend, &good_data]() {
                       std::vector<std::vector<double>> bad_data = good_data;
-                      // set a non-zero coefficient value for some coef(l,m)
-                      // where l > Lmax
                       bad_data[0][legend.size() - 1] = 0.8;
 
                       write_error_file_and_try_to_read(
@@ -254,8 +238,7 @@ SPECTRE_TEST_CASE("Unit.NumericalAlgorithms.ReadSurfaceYlm",
                   "[ApparentHorizons][Unit]") {
   test_errors();
 
-  // Create a temporary file with test data to read in
-  // First, check if the file exists, and delete it if so
+  // Temporary file with test data to read in
   const std::string test_filename{"TestReadYlm.h5"};
   if (file_system::check_if_file_exists(test_filename)) {
     file_system::rm(test_filename, true);
