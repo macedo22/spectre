@@ -32,7 +32,7 @@ add_spectre_executable(
 
   # The following lines list the source files with tests in them to be
   # compiled into the executable.
-  ../NumericalAlgorithms/SphericalHarmonics/Test_ReadYlmCoefficients.cpp
+  ../NumericalAlgorithms/SphericalHarmonics/Test_ReadSurfaceYlm.cpp
   ../ParallelAlgorithms/Interpolation/Test_ObserveTimeSeriesAndSurfaceData.cpp
   )
 

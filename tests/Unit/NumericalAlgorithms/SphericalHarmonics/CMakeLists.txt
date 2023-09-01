@@ -5,7 +5,7 @@ set(LIBRARY "Test_SphericalHarmonics")
 
 set(LIBRARY_SOURCES
   Test_ChangeCenterOfStrahlkorper.cpp
-  Test_ReadYlmCoefficients.cpp
+  Test_ReadSurfaceYlm.cpp
   Test_RealSphericalHarmonics.cpp
   Test_Spherepack.cpp
   Test_SpherepackIterator.cpp

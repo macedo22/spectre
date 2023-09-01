@@ -101,27 +101,13 @@ void check_ylm_data(const std::string& h5_file_name) {
           dimensionless_spin)),
       expansion_center, StrahlkorperContructorData::RadiusAtCollocationPoints);
 
-  const std::vector<std::string> ylm_expected_legend{"Time",
-                                                     "ExpansionCenter_x",
-                                                     "ExpansionCenter_y",
-                                                     "ExpansionCenter_z",
-                                                     "Lmax",
-                                                     "coef(0,0)",
-                                                     "coef(1,-1)",
-                                                     "coef(1,0)",
-                                                     "coef(1,1)",
-                                                     "coef(2,-2)",
-                                                     "coef(2,-1)",
-                                                     "coef(2,0)",
-                                                     "coef(2,1)",
-                                                     "coef(2,2)",
-                                                     "coef(3,-3)",
-                                                     "coef(3,-2)",
-                                                     "coef(3,-1)",
-                                                     "coef(3,0)",
-                                                     "coef(3,1)",
-                                                     "coef(3,2)",
-                                                     "coef(3,3)"};
+  const std::vector<std::string> ylm_expected_legend{
+      "Time",     "ExpansionCenter_x", "ExpansionCenter_y", "ExpansionCenter_z",
+      "Lmax",     "Re(0,0)",           "Im(1,-1)",          "Re(1,0)",
+      "Re(1,1)",  "Im(2,-2)",          "Im(2,-1)",          "Re(2,0)",
+      "Re(2,1)",  "Re(2,2)",           "Im(3,-3)",          "Im(3,-2)",
+      "Im(3,-1)", "Re(3,0)",           "Re(3,1)",           "Re(3,2)",
+      "Re(3,3)"};
 
   // number of terms in
   // \sum_{l=0}^{l_{max}} \sum_{m=-l}^{l} F^{lm} Y^{lm}(\theta,\phi) is the

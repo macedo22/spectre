@@ -25,7 +25,7 @@
 #include "IO/H5/Dat.hpp"
 #include "IO/H5/File.hpp"
 #include "Informer/InfoFromBuild.hpp"
-#include "NumericalAlgorithms/SphericalHarmonics/IO/ReadYlmCoefficients.hpp"
+#include "NumericalAlgorithms/SphericalHarmonics/IO/ReadSurfaceYlm.hpp"
 #include "NumericalAlgorithms/SphericalHarmonics/SpherepackIterator.hpp"
 #include "NumericalAlgorithms/SphericalHarmonics/Strahlkorper.hpp"
 #include "ParallelAlgorithms/Interpolation/Actions/TryToInterpolate.hpp"
@@ -39,24 +39,8 @@
 namespace {
 const size_t l_max_column_number = 4;
 
-// generate a test Strahlkorper with a random radius function and a given l_max
+// generate test Strahlkorpers with a random radius function and given l_maxes
 // and expansion center
-template <typename Frame, typename Generator>
-Strahlkorper<Frame> generate_test_strahlkorper(
-    const gsl::not_null<Generator*> generator,
-    const std::uniform_real_distribution<>& distribution, const size_t l_max,
-    const std::array<double, 3>& expansion_center) {
-  const auto radius = make_with_random_values<DataVector>(
-      generator, distribution,
-      DataVector(ylm::Spherepack::physical_size(l_max, l_max),
-                 std::numeric_limits<double>::signaling_NaN()));
-  Strahlkorper<Frame> strahlkorper(
-      l_max, l_max, radius, expansion_center,
-      StrahlkorperContructorData::RadiusAtCollocationPoints);
-
-  return strahlkorper;
-}
-
 template <typename Frame, size_t NumTimes>
 std::array<Strahlkorper<Frame>, NumTimes> generate_test_strahlkorpers(
     const std::array<double, 3> expansion_center,
@@ -66,13 +50,23 @@ std::array<Strahlkorper<Frame>, NumTimes> generate_test_strahlkorpers(
 
   std::array<Strahlkorper<Frame>, NumTimes> strahlkorpers{};
   for (size_t i = 0; i < NumTimes; i++) {
-    strahlkorpers[i] = generate_test_strahlkorper<Frame>(
-        make_not_null(&generator), distribution, l_maxes[i], expansion_center);
+    const auto radius = make_with_random_values<DataVector>(
+        make_not_null(&generator), distribution,
+        DataVector(ylm::Spherepack::physical_size(l_maxes[i], l_maxes[i]),
+                   std::numeric_limits<double>::signaling_NaN()));
+    strahlkorpers[i] = Strahlkorper<Frame>(
+        l_maxes[i], l_maxes[i], radius, expansion_center,
+        StrahlkorperContructorData::RadiusAtCollocationPoints);
   }
 
   return strahlkorpers;
 }
 
+// Generate the data to be written using the helper function for
+// ::intrp::callbacks::ObserveSurfaceData instead of spinning up the Action
+// Testing Framework (AFT) to write it since the helper function handles all
+// of the legend and data building logic and ObserveSurfaceData simply writes
+// what it generates
 template <typename Frame, size_t NumTimes>
 void write_test_strahlkorpers(
     const std::array<Strahlkorper<Frame>, NumTimes>& strahlkorpers,
@@ -101,7 +95,7 @@ void write_test_strahlkorpers(
 // (expected_strahlkorpers), where n = num_times_requested
 template <typename Frame, size_t NumTimes>
 void check_read_ylm_data(
-    const std::string& test_filename, const std::string& surface_name,
+    const std::string& test_filename, const std::string& surface_subfile_name,
     const size_t num_times_requested,
     const std::array<Strahlkorper<Frame>, NumTimes>& expected_strahlkorpers) {
   ASSERT(
@@ -110,8 +104,8 @@ void check_read_ylm_data(
       "rows expected to be written and therefore able to be read.");
 
   const std::vector<Strahlkorper<Frame>> strahlkorpers =
-      ylm::read_ylm_coefficients<Frame>(test_filename, surface_name,
-                                        num_times_requested);
+      ylm::read_surface_ylm<Frame>(test_filename, surface_subfile_name,
+                                   num_times_requested);
   CHECK(strahlkorpers.size() == num_times_requested);
 
   // check n last times where n = num_times_requested
@@ -133,8 +127,9 @@ void check_read_ylm_data(
     CHECK(strahlkorper.coefficients() == expected_spectral_coefficients);
   }
 }
-
-// Create a temporary file with test data to read in
+// TODO : is this making the CHECK_THROWS_WITH too slow?
+// Write and read in a file containing a legend or data that is expected to
+// generate an error upon attempting to read
 void write_error_file_and_try_to_read(
     const std::string& filename, const std::string& subfile_name,
     const std::vector<std::string>& legend,
@@ -145,7 +140,7 @@ void write_error_file_and_try_to_read(
   file.append(data);
   test_file.close_current_object();
 
-  const auto strahlkorpers = ylm::read_ylm_coefficients<Frame::Grid>(
+  const auto strahlkorpers = ylm::read_surface_ylm<Frame::Grid>(
       filename, subfile_name, num_times_to_read);
 };
 
@@ -155,17 +150,17 @@ void test_errors() {
       "Lmax"};
 
   const std::vector<std::string> l_max_2_coef_headers = {
-      "coef(0,0)",  "coef(1,-1)", "coef(1,0)", "coef(1,1)", "coef(2,-2)",
-      "coef(2,-1)", "coef(2,0)",  "coef(2,1)", "coef(2,2)"};
+      "Re(0,0)",  "Im(1,-1)", "Re(1,0)", "Re(1,1)", "Im(2,-2)",
+      "Im(2,-1)", "Re(2,0)",  "Re(2,1)", "Re(2,2)"};
 
   std::vector<std::string> l_max_3_coef_headers = l_max_2_coef_headers;
-  l_max_3_coef_headers.push_back("coef(3,-3)");
-  l_max_3_coef_headers.push_back("coef(3,-2)");
-  l_max_3_coef_headers.push_back("coef(3,-1)");
-  l_max_3_coef_headers.push_back("coef(3,0)");
-  l_max_3_coef_headers.push_back("coef(3,1)");
-  l_max_3_coef_headers.push_back("coef(3,2)");
-  l_max_3_coef_headers.push_back("coef(3,3)");
+  l_max_3_coef_headers.push_back("Im(3,-3)");
+  l_max_3_coef_headers.push_back("Im(3,-2)");
+  l_max_3_coef_headers.push_back("Im(3,-1)");
+  l_max_3_coef_headers.push_back("Re(3,0)");
+  l_max_3_coef_headers.push_back("Re(3,1)");
+  l_max_3_coef_headers.push_back("Re(3,2)");
+  l_max_3_coef_headers.push_back("Re(3,3)");
 
   // construct a legend that is properly formatted
   std::vector<std::string> good_legend = ylm_legend_without_coefs;
@@ -181,8 +176,8 @@ void test_errors() {
   good_data[1][l_max_column_number] = l_maxes[1];
   good_data[2][l_max_column_number] = l_maxes[2];
 
-  const std::string filename{"TestYlmCoefErrors.h5"};
-  const std::string subfile_name{std::string{"/Surface_Ylm"}};
+  const std::string filename{"TestReadYlmErrors.h5"};
+  const std::string subfile_name{std::string{"/BadSurfaceData"}};
 
   if (file_system::check_if_file_exists(filename)) {
     file_system::rm(filename, true);
@@ -271,13 +266,13 @@ void test_errors() {
 }
 }  // namespace
 
-SPECTRE_TEST_CASE("Unit.NumericalAlgorithms.ReadYlmCoefficients",
+SPECTRE_TEST_CASE("Unit.NumericalAlgorithms.ReadSurfaceYlm",
                   "[ApparentHorizons][Unit]") {
   test_errors();
 
   // Create a temporary file with test data to read in
   // First, check if the file exists, and delete it if so
-  const std::string test_filename{"TestYlmCoefs.h5"};
+  const std::string test_filename{"TestReadYlm.h5"};
   if (file_system::check_if_file_exists(test_filename)) {
     file_system::rm(test_filename, true);
   }
@@ -290,6 +285,7 @@ SPECTRE_TEST_CASE("Unit.NumericalAlgorithms.ReadYlmCoefficients",
 
   constexpr size_t number_of_times_a = 3;
   const std::array<double, number_of_times_a> written_times_a{{0.0, 0.1, 0.2}};
+  // test that a mix of different l_max values can be read from the same subfile
   const std::array<size_t, number_of_times_a> l_maxes_a{{3, 2, 3}};
 
   const auto strahlkorpers_a =
@@ -303,6 +299,7 @@ SPECTRE_TEST_CASE("Unit.NumericalAlgorithms.ReadYlmCoefficients",
   const std::array<double, 3> expansion_center_b{{0.0, 0.2, -0.6}};
   const size_t max_l_b = 4;
 
+  // edge case: only one row written
   constexpr size_t number_of_times_b = 1;
   const std::array<double, number_of_times_b> written_times_b{{0.7}};
   const std::array<size_t, number_of_times_b> l_maxes_b{{3}};
