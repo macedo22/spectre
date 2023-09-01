@@ -85,7 +85,7 @@ spectre_run_cmake() {
     spectre_load_modules
     export GCC_HOME=/opt/ohpc/pub/compiler/gcc/11.3.0/bin
     cmake -D CHARM_ROOT=$CHARM_ROOT \
-          -D CMAKE_BUILD_TYPE=Release \
+          -D CMAKE_BUILD_TYPE=Debug \
           -D CMAKE_C_COMPILER=gcc \
           -D CMAKE_CXX_COMPILER=g++ \
           -D CMAKE_Fortran_COMPILER=${GCC_HOME}/gfortran \

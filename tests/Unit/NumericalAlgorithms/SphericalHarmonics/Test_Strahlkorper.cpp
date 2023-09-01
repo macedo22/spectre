@@ -48,7 +48,9 @@ void test_invert_spec_phys_transform() {
   CAPTURE(radius);
 
   // Initialize a strahlkorper of l_max=l_grid
-  const Strahlkorper<Frame::Inertial> sk(l_grid, l_grid, radius, center);
+  const Strahlkorper<Frame::Inertial> sk(
+      l_grid, l_grid, radius, center,
+      ylm::StrahlkorperConstructorData::RadiusAtCollocationPoints);
 
   // Put that Strahlkorper onto a larger grid
   const Strahlkorper<Frame::Inertial> sk_high_res(l_grid_high_res,
@@ -118,7 +120,9 @@ void test_physical_center() {
   // above, centered at expansion_center, so that
   // sk_test.physical_center() should recover the physical center of
   // this surface.
-  Strahlkorper<Frame::Inertial> sk_test(l_max, l_max, r, expansion_center);
+  Strahlkorper<Frame::Inertial> sk_test(
+      l_max, l_max, r, expansion_center,
+      ylm::StrahlkorperConstructorData::RadiusAtCollocationPoints);
   for (size_t i = 0; i < 3; ++i) {
     CHECK(approx(gsl::at(physical_center, i)) ==
           gsl::at(sk_test.physical_center(), i));

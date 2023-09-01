@@ -18,6 +18,11 @@ class er;
 /// \endcond
 
 namespace ylm {
+enum class StrahlkorperConstructorData {
+  RadiusAtCollocationPoints,
+  SpectralCoefficients
+};
+
 /// \ingroup SurfacesGroup
 /// \brief A star-shaped surface expanded in spherical harmonics.
 template <typename Frame>
@@ -74,8 +79,9 @@ class Strahlkorper {
   /// coefficients to exactly match all points in
   /// `radius_at_collocation_points`.
   Strahlkorper(size_t l_max, size_t m_max,
-               const DataVector& radius_at_collocation_points,
-               std::array<double, 3> center);
+               const DataVector& collocation_radii_or_spectral_coefs,
+               std::array<double, 3> center,
+               const StrahlkorperConstructorData data_type);
 
   /// Prolong or restrict another surface to the given `l_max` and `m_max`.
   Strahlkorper(size_t l_max, size_t m_max,
