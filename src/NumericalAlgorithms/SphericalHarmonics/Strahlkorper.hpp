@@ -18,6 +18,12 @@ class er;
 /// \endcond
 
 namespace ylm {
+/// \brief The kind of data points used to construct a `Strahlkorper`
+enum class StrahlkorperConstructorData {
+  RadiusAtCollocationPoints,
+  SpectralCoefficients
+};
+
 /// \ingroup SurfacesGroup
 /// \brief A star-shaped surface expanded in spherical harmonics.
 template <typename Frame>
@@ -57,25 +63,32 @@ class Strahlkorper {
   Strahlkorper(size_t l_max, double radius, std::array<double, 3> center)
       : Strahlkorper(l_max, l_max, radius, center) {}
 
-  /// Construct a Strahlkorper from a DataVector containing the radius
-  /// at the collocation points.
+  /// \brief Construct a Strahlkorper from a DataVector containing the radius
+  /// at the collocation points or spectral coefficients
   ///
-  /// \note The collocation points of the constructed Strahlkorper
-  /// will not be exactly `radius_at_collocation_points`.  Instead,
-  /// the constructed Strahlkorper will match the shape given by
-  /// `radius_at_collocation_points` only to order (`l_max`,`m_max`).
-  /// This is because the ylm::Spherepack representation of the
-  /// Strahlkorper has more collocation points than spectral
-  /// coefficients.  Specifically, `radius_at_collocation_points` has
-  /// \f$(l_{\rm max} + 1) (2 m_{\rm max} + 1)\f$ degrees of freedom,
-  /// but because there are only
+  /// \details `data_type` tells the constructor whether the `DataVector` passed
+  /// in refers to collocation radii or spectral coefficients. If spectral
+  /// coefficients are passed in, they should be in the form defined
+  /// by `ylm::Strahlkorper::coefficients() const`.
+  ///
+  /// \note The collocation points of the Strahlkorper constructed using
+  /// collocation points (i.e. when
+  /// `data_type == StrahlkorperConstructorData::RadiusAtCollocationPoints`)
+  /// will not be exactly `collocation_radii_or_spectral_coefs`. Instead, the
+  /// constructed Strahlkorper will match the shape given by
+  /// `collocation_radii_or_spectral_coefs` only to order (`l_max`,`m_max`).
+  /// This is because the ylm::Spherepack representation of the Strahlkorper has
+  /// more collocation points than spectral coefficients.  Specifically,
+  /// `collocation_radii_or_spectral_coefs` (when it is collocation points) has
+  /// \f$(l_{\rm max} + 1) (2 m_{\rm max} + 1)\f$ degrees of freedom, but
+  /// because there are only
   /// \f$m_{\rm max}^2+(l_{\rm max}-m_{\rm max})(2m_{\rm max}+1)\f$
-  /// spectral coefficients, it is not possible to choose spectral
-  /// coefficients to exactly match all points in
-  /// `radius_at_collocation_points`.
+  /// spectral coefficients, it is not possible to choose spectral coefficients
+  /// to exactly match all points in `collocation_radii_or_spectral_coefs`.
   Strahlkorper(size_t l_max, size_t m_max,
-               const DataVector& radius_at_collocation_points,
-               std::array<double, 3> center);
+               const DataVector& collocation_radii_or_spectral_coefs,
+               std::array<double, 3> center,
+               StrahlkorperConstructorData data_type);
 
   /// Prolong or restrict another surface to the given `l_max` and `m_max`.
   Strahlkorper(size_t l_max, size_t m_max,
