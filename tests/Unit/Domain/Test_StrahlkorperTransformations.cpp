@@ -92,7 +92,8 @@ void test_strahlkorper_in_different_frame() {
             2.0, ylm.theta_phi_points(), 1.0,
             std::array<double, 3>{{0.1, 0.2, 0.3}}));
     strahlkorper_expected.reset(new ylm::Strahlkorper<DestFrame>(
-        l_max, l_max, new_radius, strahlkorper_grid_center));
+        l_max, l_max, new_radius, strahlkorper_grid_center,
+        ylm::StrahlkorperConstructorData::RadiusAtCollocationPoints));
   } else {
     strahlkorper_expected.reset(new ylm::Strahlkorper<DestFrame>(
         l_max, 2.0,

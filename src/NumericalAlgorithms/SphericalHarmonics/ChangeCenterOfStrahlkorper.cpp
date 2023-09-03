@@ -100,9 +100,9 @@ void change_expansion_center(
       2.0 * std::numeric_limits<double>::epsilon());
 
   // Now reset the radius and center of the new strahlkorper.
-  *strahlkorper =
-      Strahlkorper<Frame>(strahlkorper->l_max(), strahlkorper->m_max(),
-                          radius_at_each_angle, new_center);
+  *strahlkorper = Strahlkorper<Frame>(
+      strahlkorper->l_max(), strahlkorper->m_max(), radius_at_each_angle,
+      new_center, StrahlkorperConstructorData::RadiusAtCollocationPoints);
 }
 }  // namespace
 
