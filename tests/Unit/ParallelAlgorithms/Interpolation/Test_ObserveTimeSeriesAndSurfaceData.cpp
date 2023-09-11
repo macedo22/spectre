@@ -72,6 +72,7 @@
 #include "Utilities/ConstantExpressions.hpp"
 #include "Utilities/ErrorHandling/Assert.hpp"
 #include "Utilities/FileSystem.hpp"
+#include "Utilities/GetOutput.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/Literals.hpp"
 #include "Utilities/MakeWithValue.hpp"
@@ -95,6 +96,7 @@ void check_ylm_data(const std::string& h5_file_name) {
   constexpr std::array<double, 3> expansion_center{{0.04, 0.05, 0.06}};
   constexpr double mass = 1.1;
   constexpr std::array<double, 3> dimensionless_spin{{1.0, 0.0, 0.0}};
+
   ylm::Strahlkorper<Frame::Inertial> expected_surface(
       l_max, l_max,
       get(gr::Solutions::kerr_horizon_radius(
@@ -104,12 +106,27 @@ void check_ylm_data(const std::string& h5_file_name) {
       ylm::StrahlkorperConstructorData::RadiusAtCollocationPoints);
 
   const std::vector<std::string> ylm_expected_legend{
-      "Time",     "ExpansionCenter_x", "ExpansionCenter_y", "ExpansionCenter_z",
-      "Lmax",     "Re(0,0)",           "Im(1,-1)",          "Re(1,0)",
-      "Re(1,1)",  "Im(2,-2)",          "Im(2,-1)",          "Re(2,0)",
-      "Re(2,1)",  "Re(2,2)",           "Im(3,-3)",          "Im(3,-2)",
-      "Im(3,-1)", "Re(3,0)",           "Re(3,1)",           "Re(3,2)",
-      "Re(3,3)"};
+      "Time",
+      "InertialExpansionCenter_x",
+      "InertialExpansionCenter_y",
+      "InertialExpansionCenter_z",
+      "Lmax",
+      "coef(0,0)",
+      "coef(1,-1)",
+      "coef(1,0)",
+      "coef(1,1)",
+      "coef(2,-2)",
+      "coef(2,-1)",
+      "coef(2,0)",
+      "coef(2,1)",
+      "coef(2,2)",
+      "coef(3,-3)",
+      "coef(3,-2)",
+      "coef(3,-1)",
+      "coef(3,0)",
+      "coef(3,1)",
+      "coef(3,2)",
+      "coef(3,3)"};
   const size_t expected_num_columns = ylm_expected_legend.size();
 
   std::vector<double> ylm_expected_data{0.0, expansion_center[0],
@@ -118,7 +135,7 @@ void check_ylm_data(const std::string& h5_file_name) {
 
   ylm::SpherepackIterator iter(l_max, l_max);
   for (size_t l = 0; l <= l_max; l++) {
-    for (int m = -l; m <= static_cast<int>(l); m++) {
+    for (int m = -static_cast<int>(l); m <= static_cast<int>(l); m++) {
       iter.set(l, m);
       ylm_expected_data.push_back(expected_surface.coefficients()[iter()]);
     }
