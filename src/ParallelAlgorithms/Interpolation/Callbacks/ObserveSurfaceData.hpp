@@ -122,8 +122,8 @@ void fill_ylm_legend_and_data(
 ///
 /// \code
 /// [Time, {Frame}ExpansionCenter_x, {Frame}ExpansionCenter_y,
-/// {Frame}Expansion_Center_z, Lmax, coef(0,0),coef(1,-1), coef(1,0), coef(1,1),
-/// coef(2,-2), coef(2,-1), coef(2,0), coef(2,1), coef(2,2), ...,
+/// {Frame}Expansion_Center_z, Lmax, coef(0,0), coef(1,-1), coef(1,0),
+/// coef(1,1), coef(2,-2), coef(2,-1), coef(2,0), coef(2,1), coef(2,2), ...,
 /// coef(Lmax,Lmax)]
 /// \endcode
 ///
