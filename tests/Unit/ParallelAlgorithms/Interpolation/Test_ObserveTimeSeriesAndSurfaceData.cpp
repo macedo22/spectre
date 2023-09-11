@@ -102,8 +102,7 @@ void check_ylm_data(const std::string& h5_file_name) {
       get(gr::Solutions::kerr_horizon_radius(
           ::ylm::Spherepack(l_max, l_max).theta_phi_points(), mass,
           dimensionless_spin)),
-      expansion_center,
-      ylm::StrahlkorperConstructorData::RadiusAtCollocationPoints);
+      expansion_center);
 
   const std::vector<std::string> ylm_expected_legend{
       "Time",

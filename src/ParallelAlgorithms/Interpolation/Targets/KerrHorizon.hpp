@@ -176,8 +176,7 @@ struct KerrHorizon : tt::ConformsTo<intrp::protocols::ComputeTargetPoints> {
             ::ylm::Spherepack(kerr_horizon.l_max, kerr_horizon.l_max)
                 .theta_phi_points(),
             kerr_horizon.mass, kerr_horizon.dimensionless_spin)),
-        kerr_horizon.center,
-        ylm::StrahlkorperConstructorData::RadiusAtCollocationPoints);
+        kerr_horizon.center);
     Initialization::mutate_assign<simple_tags>(box, std::move(strahlkorper));
   }
 

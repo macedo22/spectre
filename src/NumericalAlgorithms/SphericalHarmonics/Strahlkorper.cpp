@@ -3,12 +3,15 @@
 
 #include "NumericalAlgorithms/SphericalHarmonics/Strahlkorper.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <ostream>
 #include <pup.h>
 #include <pup_stl.h>
 #include <utility>
 
+#include "DataStructures/DataVector.hpp"
+#include "DataStructures/ModalVector.hpp"
 #include "NumericalAlgorithms/SphericalHarmonics/SpherepackIterator.hpp"
 #include "Utilities/ErrorHandling/Assert.hpp"
 #include "Utilities/StdArrayHelpers.hpp"
@@ -34,27 +37,33 @@ Strahlkorper<Frame>::Strahlkorper(const size_t l_max, const size_t m_max,
 template <typename Frame>
 Strahlkorper<Frame>::Strahlkorper(
     const size_t l_max, const size_t m_max,
-    const DataVector& collocation_radii_or_spectral_coefs,
-    std::array<double, 3> center, const StrahlkorperConstructorData data_type)
+    const DataVector& radius_at_collocation_points,
+    std::array<double, 3> center)
     : l_max_(l_max),
       m_max_(m_max),
       ylm_(l_max, m_max),
       // clang-tidy: do not std::move trivially constructable types
-      center_(std::move(center)) {  //,  // NOLINT
-  if (data_type == StrahlkorperConstructorData::RadiusAtCollocationPoints) {
-    ASSERT(collocation_radii_or_spectral_coefs.size() == ylm_.physical_size(),
-           "Bad size " << collocation_radii_or_spectral_coefs.size()
-                       << ", expected " << ylm_.physical_size());
-    strahlkorper_coefs_ =
-        ylm_.phys_to_spec(collocation_radii_or_spectral_coefs);
-  } else if (data_type == StrahlkorperConstructorData::SpectralCoefficients) {
-    ASSERT(collocation_radii_or_spectral_coefs.size() == ylm_.spectral_size(),
-           "Bad size " << collocation_radii_or_spectral_coefs.size()
-                       << ", expected " << ylm_.spectral_size());
-    strahlkorper_coefs_ = collocation_radii_or_spectral_coefs;
-  } else {
-    ERROR("Unknown StrahlkorperConstructorData type.");
-  }
+      center_(std::move(center)),  // NOLINT
+      strahlkorper_coefs_(ylm_.phys_to_spec(radius_at_collocation_points)) {
+  ASSERT(radius_at_collocation_points.size() == ylm_.physical_size(),
+         "Bad size " << radius_at_collocation_points.size() << ", expected "
+                     << ylm_.physical_size());
+}
+
+template <typename Frame>
+Strahlkorper<Frame>::Strahlkorper(const size_t l_max, const size_t m_max,
+                                  const ModalVector& spectral_coefficients,
+                                  std::array<double, 3> center)
+    : l_max_(l_max),
+      m_max_(m_max),
+      ylm_(l_max, m_max),
+      // clang-tidy: do not std::move trivially constructable types
+      center_(std::move(center)) {  // NOLINT
+  ASSERT(spectral_coefficients.size() == strahlkorper_coefs_.size(),
+         "Bad size " << spectral_coefficients.size() << ", expected "
+                     << strahlkorper_coefs_.size());
+  std::copy(spectral_coefficients.begin(), spectral_coefficients.end(),
+            strahlkorper_coefs_.begin());
 }
 
 template <typename Frame>

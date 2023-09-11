@@ -258,7 +258,7 @@ void strahlkorper_in_different_frame(
   // Keep the same l_max() and m_max() as the source strahlkorper.
   *dest_strahlkorper = ylm::Strahlkorper<DestFrame>(
       src_strahlkorper.l_max(), src_strahlkorper.m_max(), radius_at_each_angle,
-      center_dest, ylm::StrahlkorperConstructorData::RadiusAtCollocationPoints);
+      center_dest);
 }
 
 template <typename SrcFrame, typename DestFrame>
@@ -307,8 +307,7 @@ void strahlkorper_in_different_frame_aligned(
   // Because center and angles are preserved by the map, we can easily
   // construct the destination Strahlkorper.
   *dest_strahlkorper = ylm::Strahlkorper<DestFrame>(
-      src_strahlkorper.l_max(), src_strahlkorper.m_max(), get(radius), center,
-      ylm::StrahlkorperConstructorData::RadiusAtCollocationPoints);
+      src_strahlkorper.l_max(), src_strahlkorper.m_max(), get(radius), center);
 }
 
 template <typename SrcFrame, typename DestFrame>

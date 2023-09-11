@@ -50,9 +50,7 @@ void test_invert_spec_phys_transform() {
   CAPTURE(radius);
 
   // Initialize a strahlkorper of l_max=l_grid
-  const Strahlkorper<Frame::Inertial> sk(
-      l_grid, l_grid, radius, center,
-      ylm::StrahlkorperConstructorData::RadiusAtCollocationPoints);
+  const Strahlkorper<Frame::Inertial> sk(l_grid, l_grid, radius, center);
 
   // Put that Strahlkorper onto a larger grid
   const Strahlkorper<Frame::Inertial> sk_high_res(l_grid_high_res,
@@ -86,18 +84,25 @@ void test_phys_spec_constructor_consistency() {
 
   std::uniform_real_distribution<double> distribution(0.0, 1.0);
   MAKE_GENERATOR(generator);
+
+  // create Strahlkorper using radius at collocation points
   const auto radius = make_with_random_values<DataVector>(
       make_not_null(&generator), distribution,
       DataVector(physical_size, std::numeric_limits<double>::signaling_NaN()));
+  const Strahlkorper<Frame::Inertial> strahlkorper_physical(l_max, l_max,
+                                                            radius, center);
 
-  const Strahlkorper<Frame::Inertial> s_physical(
-      l_max, l_max, radius, center,
-      ylm::StrahlkorperConstructorData::RadiusAtCollocationPoints);
-  const Strahlkorper<Frame::Inertial> s_spectral(
-      l_max, l_max, s_physical.coefficients(), center,
-      ylm::StrahlkorperConstructorData::SpectralCoefficients);
+  // create Strahlkorper using spectral coefficients
+  const size_t spectral_size = ylm::Spherepack::spectral_size(l_max, l_max);
+  ModalVector spectral_coefficients(
+      spectral_size, std::numeric_limits<double>::signaling_NaN());
+  std::copy(strahlkorper_physical.coefficients().begin(),
+            strahlkorper_physical.coefficients().end(),
+            spectral_coefficients.begin());
+  const Strahlkorper<Frame::Inertial> strahlkorper_spectral(
+      l_max, l_max, spectral_coefficients, center);
 
-  CHECK(s_physical == s_spectral);
+  CHECK(strahlkorper_physical == strahlkorper_spectral);
 }
 
 void test_average_radius() {
@@ -143,9 +148,7 @@ void test_physical_center() {
   // above, centered at expansion_center, so that
   // sk_test.physical_center() should recover the physical center of
   // this surface.
-  Strahlkorper<Frame::Inertial> sk_test(
-      l_max, l_max, r, expansion_center,
-      ylm::StrahlkorperConstructorData::RadiusAtCollocationPoints);
+  Strahlkorper<Frame::Inertial> sk_test(l_max, l_max, r, expansion_center);
   for (size_t i = 0; i < 3; ++i) {
     CHECK(approx(gsl::at(physical_center, i)) ==
           gsl::at(sk_test.physical_center(), i));
