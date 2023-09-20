@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <array>
 #include <cstddef>
 #include <string>
 #include <utility>
@@ -19,7 +18,6 @@
 #include "NumericalAlgorithms/Spectral/Basis.hpp"
 #include "NumericalAlgorithms/Spectral/Quadrature.hpp"
 #include "NumericalAlgorithms/SphericalHarmonics/Spherepack.hpp"
-#include "NumericalAlgorithms/SphericalHarmonics/SpherepackIterator.hpp"
 #include "NumericalAlgorithms/SphericalHarmonics/Strahlkorper.hpp"
 #include "NumericalAlgorithms/SphericalHarmonics/Tags.hpp"
 #include "Parallel/GlobalCache.hpp"
@@ -28,11 +26,8 @@
 #include "Parallel/Reduction.hpp"
 #include "ParallelAlgorithms/Interpolation/InterpolationTargetDetail.hpp"
 #include "ParallelAlgorithms/Interpolation/Protocols/PostInterpolationCallback.hpp"
-#include "Utilities/ErrorHandling/Assert.hpp"
 #include "Utilities/Functional.hpp"
-#include "Utilities/GetOutput.hpp"
 #include "Utilities/Gsl.hpp"
-#include "Utilities/MakeString.hpp"
 #include "Utilities/PrettyType.hpp"
 #include "Utilities/ProtocolHelpers.hpp"
 #include "Utilities/TMPL.hpp"
@@ -53,56 +48,7 @@ void fill_ylm_legend_and_data(
     const gsl::not_null<std::vector<std::string>*> legend,
     const gsl::not_null<std::vector<double>*> data,
     const ylm::Strahlkorper<Frame>& strahlkorper, const double time,
-    const size_t max_l) {
-  ASSERT(max_l >= strahlkorper.l_max(),
-         "The Lmax of the Ylm data to write ("
-             << strahlkorper.l_max()
-             << ") is larger than the maximum value that l can be (" << max_l
-             << ").");
-  const std::array<double, 3> expansion_center =
-      strahlkorper.expansion_center();
-  const std::string frame{get_output(Frame{})};
-  // we only store half and thus only write half of the coefficients
-  const size_t num_coefficients =
-      ylm::Spherepack::spectral_size(max_l, max_l) / 2;
-  // time + 3 dims of expansion center + Lmax = 5 columns
-  const size_t num_columns = num_coefficients + 5;
-
-  legend->reserve(num_columns);
-  data->reserve(num_columns);
-
-  legend->emplace_back("Time");
-  data->emplace_back(time);
-  legend->emplace_back(frame + "ExpansionCenter_x");
-  data->emplace_back(expansion_center[0]);
-  legend->emplace_back(frame + "ExpansionCenter_y");
-  data->emplace_back(expansion_center[1]);
-  legend->emplace_back(frame + "ExpansionCenter_z");
-  data->emplace_back(expansion_center[2]);
-  legend->emplace_back("Lmax");
-  data->emplace_back(strahlkorper.l_max());
-
-  const DataVector& ylm_coefficients = strahlkorper.coefficients();
-  // fill coefficients for l in [0, l_max]
-  // l_max == m_max
-  ylm::SpherepackIterator iter(strahlkorper.l_max(), strahlkorper.l_max());
-  for (size_t l = 0; l <= strahlkorper.l_max(); l++) {
-    for (int m = -static_cast<int>(l); m <= static_cast<int>(l); m++) {
-      legend->push_back(MakeString{} << "coef(" << l << "," << m << ")");
-
-      iter.set(l, m);
-      data->push_back(ylm_coefficients[iter()]);
-    }
-  }
-  // fill coefficients for l in [l_max + 1, max_l],
-  // i.e. higher order coefficients beyond this Strahlkorper's l_max == 0.0
-  data->resize(num_columns, 0.0);
-  for (size_t l = strahlkorper.l_max() + 1; l <= max_l; l++) {
-    for (int m = -static_cast<int>(l); m <= static_cast<int>(l); m++) {
-      legend->push_back(MakeString{} << "coef(" << l << "," << m << ")");
-    }
-  }
-}
+    const size_t max_l);
 }  // namespace detail
 
 /// \brief post_interpolation_callback that outputs 2D "volume" data on a
