@@ -27,6 +27,61 @@
 
 namespace ylm {
 namespace {
+const size_t num_non_coef_headers = 5;
+
+// check that the headers of the legend are what we expect them to be
+template <typename Frame>
+void check_legend(const std::vector<std::string>& legend) {
+  const std::string expected_frame{get_output(Frame{})};
+
+  // check format and ordering of non-coefficient headers
+  const auto check_header = [&legend](const size_t column,
+                                      const std::string expected_header) {
+    const std::string& read_header = gsl::at(legend, column);
+    if (read_header != expected_header) {
+      ERROR("In column " << column << " of the Ylm legend, expected header "
+                         << expected_header << " but got header " << read_header
+                         << ".");
+    }
+  };
+  check_header(0, "Time");
+  check_header(1, expected_frame + "ExpansionCenter_x");
+  check_header(2, expected_frame + "ExpansionCenter_y");
+  check_header(3, expected_frame + "ExpansionCenter_z");
+  check_header(4, "Lmax");
+
+  // check format and ordering of coefficient headers
+  int expected_l = 0;
+  int expected_m = 0;
+  size_t coef_column_number = num_non_coef_headers;
+  while (coef_column_number < legend.size()) {
+    const std::string& coefficient_header = legend[coef_column_number];
+    const std::string expected_coefficient_header = {
+        MakeString{} << "coef(" << std::to_string(expected_l) << ","
+                     << std::to_string(expected_m) << ")"};
+    if (coefficient_header != expected_coefficient_header) {
+      ERROR(MakeString{}
+            << "In column " << coef_column_number
+            << " of the Ylm legend, expected header "
+            << expected_coefficient_header << " but got header "
+            << coefficient_header
+            << ".\n\n Coefficient headers are expected to take the form "
+               "coef(l,m) and be ordered first by ascending l and then for "
+               "each l, ordered by ascending m, i.e. coef(0,0), coef(1,-1), "
+               "coef(1,0), coef(1,1), coef(2,-2), ...");
+    }
+
+    if (expected_l == expected_m) {
+      expected_l++;
+      expected_m = -expected_l;
+    } else {
+      expected_m++;
+    }
+
+    coef_column_number++;
+  }
+}
+
 // checks if a double is a nonnegative integer
 bool is_nonnegative_int(const double n) {
   return n == abs(n) and n == floor(n);
@@ -46,35 +101,24 @@ Strahlkorper<Frame> read_surface_ylm_row(const Matrix& ylm_data,
                  << ". The value of Lmax should be a nonnegative integer.");
   }
 
-  const size_t l_max = ylm_data(row_number, l_max_column_number);
+  const size_t l_max = static_cast<size_t>(l_max_from_file);
   // l_max == m_max
   const size_t spectral_size = Spherepack::spectral_size(l_max, l_max);
   // We only write and store half of the coefficients. This is the minimum
   // number of coefficients needed to describe the strahlkorper given the l_max,
   // i.e. columns of 0.0 for higher coefficients are okay
   const size_t min_expected_num_coefficients = spectral_size / 2;
-  const size_t num_non_coef_headers = 5;
   const size_t min_expected_num_columns =
       min_expected_num_coefficients + num_non_coef_headers;
   const size_t actual_num_columns = ylm_data.columns();
 
-  const std::string frame{get_output(Frame{})};
-  const std::string expected_format{
-      MakeString{}
-      << "The expected format of the data is \'Time, " << frame
-      << "ExpansionCenter_x, " << frame << "ExpansionCenter_y, " << frame
-      << "Expansion_Center_z, Lmax, coef(0,0), coef(1,-1), coef(1,0), "
-         "coef(1,1), coef(2,-2), coef(2,-1), coef(2,0), coef(2,1), coef(2,2), "
-         "..., coef(Lmax,Lmax), [0.0...]\', where the number of coefficients "
-         "is equal to (Lmax + 1)^2 and the coefficient columns may be padded "
-         "with columns of 0.0 for any higher order coefficients for l > Lmax."};
   if (actual_num_columns < min_expected_num_columns) {
-    ERROR("Row "
-          << row_number
-          << " of the Ylm data does not have the expected format. For Lmax = "
-          << l_max << ", expected at least " << min_expected_num_columns
-          << " columns.\n\n"
-          << expected_format);
+    ERROR("Row " << row_number
+                 << " of the Ylm data does not have enough coefficients for "
+                    "the Lmax. For Lmax = "
+                 << l_max << ", expected at least "
+                 << min_expected_num_coefficients << " coefficient columns and "
+                 << min_expected_num_columns << " total columns.");
   }
 
   ModalVector spectral_coefficients(spectral_size, 0.0);
@@ -95,9 +139,8 @@ Strahlkorper<Frame> read_surface_ylm_row(const Matrix& ylm_data,
   // that was read in are 0.0
   while (coef_column_number < actual_num_columns) {
     if (ylm_data(row_number, coef_column_number) != 0.0) {
-      ERROR("Row " << row_number << " of the Ylm data has Lmax " << l_max
-                   << " but non-zero coefficients for l > Lmax.\n\n"
-                   << expected_format);
+      ERROR("Row " << row_number << " of the Ylm data has Lmax = " << l_max
+                   << " but non-zero coefficients for l > Lmax.");
     }
     coef_column_number++;
   }
@@ -113,53 +156,29 @@ template <typename Frame>
 std::vector<Strahlkorper<Frame>> read_surface_ylm(
     const std::string& file_name, const std::string& surface_subfile_name,
     const size_t requested_number_of_times_from_end) {
+  ASSERT(requested_number_of_times_from_end > 0,
+         "Must request to read in at least one row (time) of Ylm data.");
+
   h5::H5File<h5::AccessType::ReadOnly> file{file_name};
   const std::string ylm_subfile_name{std::string{"/"} + surface_subfile_name};
   const auto& ylm_file = file.get<h5::Dat>(ylm_subfile_name);
-  const auto& ylm_legend = ylm_file.get_legend();
 
-  const std::string expected_frame{get_output(Frame{})};
-  const auto check_frame = [&expected_frame, &ylm_legend](const size_t column) {
-    const std::string& expansion_center_header = gsl::at(ylm_legend, column);
-    const size_t frame_name_length = expansion_center_header.find("Expansion");
-    if (frame_name_length == 0 or frame_name_length == std::string::npos) {
-      ERROR(
-          "The frame type for an expansion center coordinate was not found in "
-          "the Ylm subfile legend in column "
-          << column
-          << ". Expansion center column names are expected to have the format "
-             "\'{Frame}ExpansionCenter_{x, y, or z}\'.");
-    }
-    const std::string read_frame =
-        expansion_center_header.substr(0, frame_name_length);
-    if (read_frame != expected_frame) {
-      ERROR("The frame type in column "
-            << column << " (" << read_frame
-            << ") does not match the expected frame for the Strahlkorper to "
-               "construct ("
-            << expected_frame << ")");
-    }
-  };
-  check_frame(1);  // for {Frame}ExpansionCenter_x
-  check_frame(2);  // for {Frame}ExpansionCenter_y
-  check_frame(3);  // for {Frame}ExpansionCenter_z
-
-  // number of rows available
+  // number of rows available to read in
   const size_t total_number_of_times = gsl::at(ylm_file.get_dimensions(), 0);
   if (total_number_of_times == 0) {
     ERROR("The Ylm data to read from contain 0 rows (times) of data.");
   }
-
-  ASSERT(requested_number_of_times_from_end > 0,
-         "Must request to read in at least one row (time) of Ylm data.");
 
   if (requested_number_of_times_from_end > total_number_of_times) {
     ERROR("The requested number of time values ("
           << requested_number_of_times_from_end
           << ") is more than the number of rows in the Ylm data that was read "
              "in ("
-          << total_number_of_times << ")\n");
+          << total_number_of_times << ")");
   }
+
+  const auto& ylm_legend = ylm_file.get_legend();
+  check_legend<Frame>(ylm_legend);
 
   std::vector<size_t> columns(ylm_legend.size());
   std::iota(std::begin(columns), std::end(columns), 0);

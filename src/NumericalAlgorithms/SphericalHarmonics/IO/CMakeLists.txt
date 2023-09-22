@@ -20,8 +20,9 @@ spectre_target_headers(
 
 target_link_libraries(
   ${LIBRARY}
-  PRIVATE
+  PUBLIC
   DataStructures
+  ErrorHandling
   H5
   SphericalHarmonics
   Utilities

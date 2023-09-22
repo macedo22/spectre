@@ -168,43 +168,72 @@ void test_errors() {
     file_system::rm(filename, true);
   }
 
-  CHECK_THROWS_WITH(([&filename, &good_legend, &good_data]() {
-                      std::vector<std::string> bad_legend = good_legend;
-                      bad_legend[2] = "ExpansionCenter_y";
-
-                      write_error_file_and_try_to_read<Frame::Inertial>(
-                          filename, "EmptyStringFrame", bad_legend, good_data,
-                          3);
-                    }()),
-                    Catch::Matchers::ContainsSubstring(
-                        "The frame type for an expansion center coordinate was "
-                        "not found in the Ylm subfile legend in column 2"));
+  // expansion center legend errors
 
   CHECK_THROWS_WITH(([&filename, &good_legend, &good_data]() {
                       std::vector<std::string> bad_legend = good_legend;
-                      bad_legend[3] = "Center_z";
+                      bad_legend[2] = "InertialExpansionCenter_z";
 
                       write_error_file_and_try_to_read<Frame::Inertial>(
-                          filename, "FailedFrameSubstringSearch", bad_legend,
-                          good_data, 3);
+                          filename, "WrongCoord", bad_legend, good_data, 3);
                     }()),
                     Catch::Matchers::ContainsSubstring(
-                        "The frame type for an expansion center coordinate was "
-                        "not found in the Ylm subfile legend in column 3"));
+                        "In column 2 of the Ylm legend, expected header "
+                        "InertialExpansionCenter_y but got header "
+                        "InertialExpansionCenter_z"));
 
   CHECK_THROWS_WITH(
       ([&filename, &good_legend, &good_data]() {
-        write_error_file_and_try_to_read<Frame::Grid>(
-            filename, "FrameMismatch", good_legend, good_data, 3);
+        std::vector<std::string> bad_legend = good_legend;
+        bad_legend[3] = "ExpansionCenter_z";
+
+        write_error_file_and_try_to_read<Frame::Inertial>(
+            filename, "NoFrame", bad_legend, good_data, 3);
       }()),
       Catch::Matchers::ContainsSubstring(
-          "The frame type in column 1 (Inertial) does not match the expected "
-          "frame for the Strahlkorper to construct (Grid)"));
+          "In column 3 of the Ylm legend, expected header "
+          "InertialExpansionCenter_z but got header ExpansionCenter_z"));
+
+  CHECK_THROWS_WITH(([&filename, &good_legend, &good_data]() {
+                      write_error_file_and_try_to_read<Frame::Grid>(
+                          filename, "WrongFrame", good_legend, good_data, 3);
+                    }()),
+                    Catch::Matchers::ContainsSubstring(
+                        "In column 1 of the Ylm legend, expected header "
+                        "GridExpansionCenter_x but got header "
+                        "InertialExpansionCenter_x"));
+
+  // coefficient legend errors
+
+  CHECK_THROWS_WITH(
+      ([&filename, &good_legend, &good_data]() {
+        std::vector<std::string> bad_legend = good_legend;
+        bad_legend[8] = "1, 1";
+
+        write_error_file_and_try_to_read<Frame::Inertial>(
+            filename, "WrongCoefFormat", bad_legend, good_data, 3);
+      }()),
+      Catch::Matchers::ContainsSubstring(
+          "In column 8 of the Ylm legend, expected header coef(1,1) but got "
+          "header 1, 1"));
+
+  CHECK_THROWS_WITH(([&filename, &good_legend, &good_data]() {
+                      std::vector<std::string> bad_legend = good_legend;
+                      bad_legend[12] = "coef(2,2)";
+
+                      write_error_file_and_try_to_read<Frame::Inertial>(
+                          filename, "WrongCoefOrder", bad_legend, good_data, 3);
+                    }()),
+                    Catch::Matchers::ContainsSubstring(
+                        "In column 12 of the Ylm legend, expected header "
+                        "coef(2,1) but got header coef(2,2)"));
+
+  // data errors
 
   CHECK_THROWS_WITH(([&filename, &good_legend]() {
                       const std::vector<std::vector<double>> bad_data{};
                       write_error_file_and_try_to_read<Frame::Inertial>(
-                          filename, "EmptyData", good_legend, bad_data, 0);
+                          filename, "EmptyData", good_legend, bad_data, 1);
                     }()),
                     Catch::Matchers::ContainsSubstring(
                         "The Ylm data to read from contain 0 rows"));
@@ -251,8 +280,9 @@ void test_errors() {
                           bad_data, 3);
                     }()),
                     Catch::Matchers::ContainsSubstring(
-                        "Row 2 of the Ylm data does not have the expected "
-                        "format. For Lmax = 4, expected at least 30 columns"));
+                        "Row 2 of the Ylm data does not have enough "
+                        "coefficients for the Lmax. For Lmax = 4, expected at "
+                        "least 25 coefficient columns and 30 total columns"));
 
   CHECK_THROWS_WITH(
       ([&filename, &good_legend, &good_data]() {
@@ -262,8 +292,9 @@ void test_errors() {
         write_error_file_and_try_to_read<Frame::Inertial>(
             filename, "NonZeroHigherCoefs", good_legend, bad_data, 3);
       }()),
-      Catch::Matchers::ContainsSubstring("Row 0 of the Ylm data has Lmax 2 but "
-                                         "non-zero coefficients for l > Lmax"));
+      Catch::Matchers::ContainsSubstring(
+          "Row 0 of the Ylm data has Lmax = 2 but non-zero coefficients for "
+          "l > Lmax"));
   if (file_system::check_if_file_exists(filename)) {
     file_system::rm(filename, true);
   }
