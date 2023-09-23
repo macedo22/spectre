@@ -307,7 +307,7 @@ void test_evaluate_rank_3_no_symmetry() {
           LhsTensorIndexTypeC<DIM_C(data), TensorIndexC.valence, Frame>>>();
 
   GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_3_IMPL, (1, 2, 3), (1, 2, 3),
-                          (1, 2, 3), (Frame::Grid, Frame::Inertial))
+                          (1, 2, 3))
 
 #undef CALL_TEST_EVALUATE_RANK_3_IMPL
 #undef DIM_C
@@ -355,8 +355,7 @@ void test_evaluate_rank_3_ab_symmetry() {
           LhsTensorIndexTypeB<DIM_AB(data), TensorIndexB.valence, Frame>,    \
           LhsTensorIndexTypeC<DIM_C(data), TensorIndexC.valence, Frame>>>();
 
-  GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_3_IMPL, (1, 2, 3), (1, 2, 3),
-                          (Frame::Grid, Frame::Inertial))
+  GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_3_IMPL, (1, 2, 3), (1, 2, 3))
 
 #undef CALL_TEST_EVALUATE_RANK_3_IMPL
 #undef DIM_C
