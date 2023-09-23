@@ -188,48 +188,42 @@ void test_evaluate_rank_3_impl() {
         used_for_size};
     L_abc_type& L_abc_temp = get<::Tags::TempTensor<1, L_abc_type>>(L_abc_var);
     ::tenex::evaluate<TensorIndexA, TensorIndexB, TensorIndexC>(
-        make_not_null(&L_abc_temp),
-        R_abc(TensorIndexA, TensorIndexB, TensorIndexC));
+        make_not_null(&L_abc_temp), rhs_expression);
 
     // L_{acb} = R_{abc}
     Variables<tmpl::list<::Tags::TempTensor<1, L_acb_type>>> L_acb_var{
         used_for_size};
     L_acb_type& L_acb_temp = get<::Tags::TempTensor<1, L_acb_type>>(L_acb_var);
     ::tenex::evaluate<TensorIndexA, TensorIndexC, TensorIndexB>(
-        make_not_null(&L_acb_temp),
-        R_abc(TensorIndexA, TensorIndexB, TensorIndexC));
+        make_not_null(&L_acb_temp), rhs_expression);
 
     // L_{bac} = R_{abc}
     Variables<tmpl::list<::Tags::TempTensor<1, L_bac_type>>> L_bac_var{
         used_for_size};
     L_bac_type& L_bac_temp = get<::Tags::TempTensor<1, L_bac_type>>(L_bac_var);
     ::tenex::evaluate<TensorIndexB, TensorIndexA, TensorIndexC>(
-        make_not_null(&L_bac_temp),
-        R_abc(TensorIndexA, TensorIndexB, TensorIndexC));
+        make_not_null(&L_bac_temp), rhs_expression);
 
     // L_{bca} = R_{abc}
     Variables<tmpl::list<::Tags::TempTensor<1, L_bca_type>>> L_bca_var{
         used_for_size};
     L_bca_type& L_bca_temp = get<::Tags::TempTensor<1, L_bca_type>>(L_bca_var);
     ::tenex::evaluate<TensorIndexB, TensorIndexC, TensorIndexA>(
-        make_not_null(&L_bca_temp),
-        R_abc(TensorIndexA, TensorIndexB, TensorIndexC));
+        make_not_null(&L_bca_temp), rhs_expression);
 
     // L_{cab} = R_{abc}
     Variables<tmpl::list<::Tags::TempTensor<1, L_cab_type>>> L_cab_var{
         used_for_size};
     L_cab_type& L_cab_temp = get<::Tags::TempTensor<1, L_cab_type>>(L_cab_var);
     ::tenex::evaluate<TensorIndexC, TensorIndexA, TensorIndexB>(
-        make_not_null(&L_cab_temp),
-        R_abc(TensorIndexA, TensorIndexB, TensorIndexC));
+        make_not_null(&L_cab_temp), rhs_expression);
 
     // L_{cba} = R_{abc}
     Variables<tmpl::list<::Tags::TempTensor<1, L_cba_type>>> L_cba_var{
         used_for_size};
     L_cba_type& L_cba_temp = get<::Tags::TempTensor<1, L_cba_type>>(L_cba_var);
     ::tenex::evaluate<TensorIndexC, TensorIndexB, TensorIndexA>(
-        make_not_null(&L_cba_temp),
-        R_abc(TensorIndexA, TensorIndexB, TensorIndexC));
+        make_not_null(&L_cba_temp), rhs_expression);
 
     for (size_t i = 0; i < dim_a; ++i) {
       for (size_t j = 0; j < dim_b; ++j) {
@@ -274,35 +268,43 @@ void test_evaluate_rank_3_impl() {
 ///
 ///
 /// \tparam DataType the type of data being stored in the Tensors
-/// \tparam TensorIndexTypeA the \ref SpacetimeIndex "TensorIndexType" of the
-/// first index of the RHS Tensor
-/// \tparam TensorIndexTypeB the \ref SpacetimeIndex "TensorIndexType" of the
-/// second index of the RHS Tensor
-/// \tparam TensorIndexTypeC the \ref SpacetimeIndex "TensorIndexType" of the
-/// third index of the RHS Tensor
-/// \tparam TensorIndexA the first TensorIndex used on the RHS of the
-/// TensorExpression, e.g. `ti::a`
-/// \tparam TensorIndexB the second TensorIndex used on the RHS of the
-/// TensorExpression, e.g. `ti::B`
+/// \tparam RhsTensorIndexTypeA the \ref SpacetimeIndex "RhsTensorIndexType" of
+/// the first index of the RHS Tensor \tparam RhsTensorIndexTypeB the \ref
+/// SpacetimeIndex "RhsTensorIndexType" of the second index of the RHS Tensor
+/// \tparam RhsTensorIndexTypeC the \ref SpacetimeIndex "RhsTensorIndexType" of
+/// the third index of the RHS Tensor \tparam TensorIndexA the first TensorIndex
+/// used on the RHS of the TensorExpression, e.g. `ti::a` \tparam TensorIndexB
+/// the second TensorIndex used on the RHS of the TensorExpression, e.g. `ti::B`
 /// \tparam TensorIndexC the third TensorIndex used on the RHS of the
 /// TensorExpression, e.g. `ti::c`
 template <typename DataType, typename Frame,
-          template <size_t, UpLo, typename> class TensorIndexTypeA,
-          template <size_t, UpLo, typename> class TensorIndexTypeB,
-          template <size_t, UpLo, typename> class TensorIndexTypeC,
-          auto& TensorIndexA, auto& TensorIndexB, auto& TensorIndexC>
+          template <size_t, UpLo, typename> class RhsTensorIndexTypeA,
+          template <size_t, UpLo, typename> class RhsTensorIndexTypeB,
+          template <size_t, UpLo, typename> class RhsTensorIndexTypeC,
+          auto& TensorIndexA, auto& TensorIndexB, auto& TensorIndexC,
+          template <size_t, UpLo, typename>
+          class LhsTensorIndexTypeA = RhsTensorIndexTypeA,
+          template <size_t, UpLo, typename>
+          class LhsTensorIndexTypeB = RhsTensorIndexTypeB,
+          template <size_t, UpLo, typename>
+          class LhsTensorIndexTypeC = RhsTensorIndexTypeC>
 void test_evaluate_rank_3_no_symmetry() {
 #define DIM_A(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define DIM_B(data) BOOST_PP_TUPLE_ELEM(1, data)
 #define DIM_C(data) BOOST_PP_TUPLE_ELEM(2, data)
 
-#define CALL_TEST_EVALUATE_RANK_3_IMPL(_, data)                               \
-  test_evaluate_rank_3_impl<                                                  \
-      DataType, Symmetry<3, 2, 1>,                                            \
-      index_list<TensorIndexTypeA<DIM_A(data), TensorIndexA.valence, Frame>,  \
-                 TensorIndexTypeB<DIM_B(data), TensorIndexB.valence, Frame>,  \
-                 TensorIndexTypeC<DIM_C(data), TensorIndexC.valence, Frame>>, \
-      TensorIndexA, TensorIndexB, TensorIndexC>();
+#define CALL_TEST_EVALUATE_RANK_3_IMPL(_, data)                           \
+  test_evaluate_rank_3_impl<                                              \
+      DataType, Symmetry<3, 2, 1>,                                        \
+      index_list<                                                         \
+          RhsTensorIndexTypeA<DIM_A(data), TensorIndexA.valence, Frame>,  \
+          RhsTensorIndexTypeB<DIM_B(data), TensorIndexB.valence, Frame>,  \
+          RhsTensorIndexTypeC<DIM_C(data), TensorIndexC.valence, Frame>>, \
+      TensorIndexA, TensorIndexB, TensorIndexC, Symmetry<3, 2, 1>,        \
+      index_list<                                                         \
+          LhsTensorIndexTypeA<DIM_A(data), TensorIndexA.valence, Frame>,  \
+          LhsTensorIndexTypeB<DIM_B(data), TensorIndexB.valence, Frame>,  \
+          LhsTensorIndexTypeC<DIM_C(data), TensorIndexC.valence, Frame>>>();
 
   GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_3_IMPL, (1, 2, 3), (1, 2, 3),
                           (1, 2, 3), (Frame::Grid, Frame::Inertial))
@@ -316,20 +318,42 @@ void test_evaluate_rank_3_no_symmetry() {
 /// \ingroup TestingFrameworkGroup
 /// \copydoc test_evaluate_rank_3_no_symmetry()
 template <typename DataType, typename Frame,
-          template <size_t, UpLo, typename> class TensorIndexTypeAB,
-          template <size_t, UpLo, typename> class TensorIndexTypeC,
-          auto& TensorIndexA, auto& TensorIndexB, auto& TensorIndexC>
+          template <size_t, UpLo, typename> class RhsTensorIndexTypeAB,
+          template <size_t, UpLo, typename> class RhsTensorIndexTypeC,
+          auto& TensorIndexA, auto& TensorIndexB, auto& TensorIndexC,
+          template <size_t, UpLo, typename>
+          class LhsTensorIndexTypeA = RhsTensorIndexTypeAB,
+          template <size_t, UpLo, typename>
+          class LhsTensorIndexTypeB = RhsTensorIndexTypeAB,
+          template <size_t, UpLo, typename>
+          class LhsTensorIndexTypeC = RhsTensorIndexTypeC>
 void test_evaluate_rank_3_ab_symmetry() {
 #define DIM_AB(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define DIM_C(data) BOOST_PP_TUPLE_ELEM(1, data)
 
-#define CALL_TEST_EVALUATE_RANK_3_IMPL(_, data)                                \
-  test_evaluate_rank_3_impl<                                                   \
-      DataType, Symmetry<2, 2, 1>,                                             \
-      index_list<TensorIndexTypeAB<DIM_AB(data), TensorIndexA.valence, Frame>, \
-                 TensorIndexTypeAB<DIM_AB(data), TensorIndexB.valence, Frame>, \
-                 TensorIndexTypeC<DIM_C(data), TensorIndexC.valence, Frame>>,  \
-      TensorIndexA, TensorIndexB, TensorIndexC>();
+#define CALL_TEST_EVALUATE_RANK_3_IMPL(_, data)                              \
+  test_evaluate_rank_3_impl<                                                 \
+      DataType, Symmetry<2, 2, 1>,                                           \
+      index_list<                                                            \
+          RhsTensorIndexTypeAB<DIM_AB(data), TensorIndexA.valence, Frame>,   \
+          RhsTensorIndexTypeAB<DIM_AB(data), TensorIndexB.valence, Frame>,   \
+          RhsTensorIndexTypeC<DIM_C(data), TensorIndexC.valence, Frame>>,    \
+      TensorIndexA, TensorIndexB, TensorIndexC, Symmetry<2, 2, 1>,           \
+      index_list<                                                            \
+          LhsTensorIndexTypeA<DIM_AB(data), TensorIndexA.valence, Frame>,    \
+          LhsTensorIndexTypeB<DIM_AB(data), TensorIndexB.valence, Frame>,    \
+          LhsTensorIndexTypeC<DIM_C(data), TensorIndexC.valence, Frame>>>(); \
+  test_evaluate_rank_3_impl<                                                 \
+      DataType, Symmetry<2, 2, 1>,                                           \
+      index_list<                                                            \
+          RhsTensorIndexTypeAB<DIM_AB(data), TensorIndexA.valence, Frame>,   \
+          RhsTensorIndexTypeAB<DIM_AB(data), TensorIndexB.valence, Frame>,   \
+          RhsTensorIndexTypeC<DIM_C(data), TensorIndexC.valence, Frame>>,    \
+      TensorIndexA, TensorIndexB, TensorIndexC, Symmetry<3, 2, 1>,           \
+      index_list<                                                            \
+          LhsTensorIndexTypeA<DIM_AB(data), TensorIndexA.valence, Frame>,    \
+          LhsTensorIndexTypeB<DIM_AB(data), TensorIndexB.valence, Frame>,    \
+          LhsTensorIndexTypeC<DIM_C(data), TensorIndexC.valence, Frame>>>();
 
   GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_3_IMPL, (1, 2, 3), (1, 2, 3),
                           (Frame::Grid, Frame::Inertial))
@@ -342,21 +366,42 @@ void test_evaluate_rank_3_ab_symmetry() {
 /// \ingroup TestingFrameworkGroup
 /// \copydoc test_evaluate_rank_3_no_symmetry()
 template <typename DataType, typename Frame,
-          template <size_t, UpLo, typename> class TensorIndexTypeAC,
-          template <size_t, UpLo, typename> class TensorIndexTypeB,
-          auto& TensorIndexA, auto& TensorIndexB, auto& TensorIndexC>
+          template <size_t, UpLo, typename> class RhsTensorIndexTypeAC,
+          template <size_t, UpLo, typename> class RhsTensorIndexTypeB,
+          auto& TensorIndexA, auto& TensorIndexB, auto& TensorIndexC,
+          template <size_t, UpLo, typename>
+          class LhsTensorIndexTypeA = RhsTensorIndexTypeAC,
+          template <size_t, UpLo, typename>
+          class LhsTensorIndexTypeB = RhsTensorIndexTypeB,
+          template <size_t, UpLo, typename>
+          class LhsTensorIndexTypeC = RhsTensorIndexTypeAC>
 void test_evaluate_rank_3_ac_symmetry() {
 #define DIM_AC(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define DIM_B(data) BOOST_PP_TUPLE_ELEM(1, data)
 
-#define CALL_TEST_EVALUATE_RANK_3_IMPL(_, data)                          \
-  test_evaluate_rank_3_impl<                                             \
-      DataType, Symmetry<2, 1, 2>,                                       \
-      index_list<                                                        \
-          TensorIndexTypeAC<DIM_AC(data), TensorIndexA.valence, Frame>,  \
-          TensorIndexTypeB<DIM_B(data), TensorIndexB.valence, Frame>,    \
-          TensorIndexTypeAC<DIM_AC(data), TensorIndexC.valence, Frame>>, \
-      TensorIndexA, TensorIndexB, TensorIndexC>();
+#define CALL_TEST_EVALUATE_RANK_3_IMPL(_, data)                               \
+  test_evaluate_rank_3_impl<                                                  \
+      DataType, Symmetry<1, 2, 1>,                                            \
+      index_list<                                                             \
+          RhsTensorIndexTypeAC<DIM_AC(data), TensorIndexA.valence, Frame>,    \
+          RhsTensorIndexTypeB<DIM_B(data), TensorIndexB.valence, Frame>,      \
+          RhsTensorIndexTypeAC<DIM_AC(data), TensorIndexC.valence, Frame>>,   \
+      TensorIndexA, TensorIndexB, TensorIndexC, Symmetry<1, 2, 1>,            \
+      index_list<                                                             \
+          LhsTensorIndexTypeA<DIM_AC(data), TensorIndexA.valence, Frame>,     \
+          LhsTensorIndexTypeB<DIM_B(data), TensorIndexB.valence, Frame>,      \
+          LhsTensorIndexTypeC<DIM_AC(data), TensorIndexC.valence, Frame>>>(); \
+  test_evaluate_rank_3_impl<                                                  \
+      DataType, Symmetry<1, 2, 1>,                                            \
+      index_list<                                                             \
+          RhsTensorIndexTypeAC<DIM_AC(data), TensorIndexA.valence, Frame>,    \
+          RhsTensorIndexTypeB<DIM_B(data), TensorIndexB.valence, Frame>,      \
+          RhsTensorIndexTypeAC<DIM_AC(data), TensorIndexC.valence, Frame>>,   \
+      TensorIndexA, TensorIndexB, TensorIndexC, Symmetry<3, 2, 1>,            \
+      index_list<                                                             \
+          LhsTensorIndexTypeA<DIM_AC(data), TensorIndexA.valence, Frame>,     \
+          LhsTensorIndexTypeB<DIM_B(data), TensorIndexB.valence, Frame>,      \
+          LhsTensorIndexTypeC<DIM_AC(data), TensorIndexC.valence, Frame>>>();
 
   GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_3_IMPL, (1, 2, 3), (1, 2, 3))
 
@@ -368,21 +413,42 @@ void test_evaluate_rank_3_ac_symmetry() {
 /// \ingroup TestingFrameworkGroup
 /// \copydoc test_evaluate_rank_3_no_symmetry()
 template <typename DataType, typename Frame,
-          template <size_t, UpLo, typename> class TensorIndexTypeA,
-          template <size_t, UpLo, typename> class TensorIndexTypeBC,
-          auto& TensorIndexA, auto& TensorIndexB, auto& TensorIndexC>
+          template <size_t, UpLo, typename> class RhsTensorIndexTypeA,
+          template <size_t, UpLo, typename> class RhsTensorIndexTypeBC,
+          auto& TensorIndexA, auto& TensorIndexB, auto& TensorIndexC,
+          template <size_t, UpLo, typename>
+          class LhsTensorIndexTypeA = RhsTensorIndexTypeA,
+          template <size_t, UpLo, typename>
+          class LhsTensorIndexTypeB = RhsTensorIndexTypeBC,
+          template <size_t, UpLo, typename>
+          class LhsTensorIndexTypeC = RhsTensorIndexTypeBC>
 void test_evaluate_rank_3_bc_symmetry() {
 #define DIM_A(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define DIM_BC(data) BOOST_PP_TUPLE_ELEM(1, data)
 
-#define CALL_TEST_EVALUATE_RANK_3_IMPL(_, data)                          \
-  test_evaluate_rank_3_impl<                                             \
-      DataType, Symmetry<2, 1, 1>,                                       \
-      index_list<                                                        \
-          TensorIndexTypeA<DIM_A(data), TensorIndexA.valence, Frame>,    \
-          TensorIndexTypeBC<DIM_BC(data), TensorIndexB.valence, Frame>,  \
-          TensorIndexTypeBC<DIM_BC(data), TensorIndexC.valence, Frame>>, \
-      TensorIndexA, TensorIndexB, TensorIndexC>();
+#define CALL_TEST_EVALUATE_RANK_3_IMPL(_, data)                               \
+  test_evaluate_rank_3_impl<                                                  \
+      DataType, Symmetry<2, 1, 1>,                                            \
+      index_list<                                                             \
+          RhsTensorIndexTypeA<DIM_A(data), TensorIndexA.valence, Frame>,      \
+          RhsTensorIndexTypeBC<DIM_BC(data), TensorIndexB.valence, Frame>,    \
+          RhsTensorIndexTypeBC<DIM_BC(data), TensorIndexC.valence, Frame>>,   \
+      TensorIndexA, TensorIndexB, TensorIndexC, Symmetry<2, 1, 1>,            \
+      index_list<                                                             \
+          LhsTensorIndexTypeA<DIM_A(data), TensorIndexA.valence, Frame>,      \
+          LhsTensorIndexTypeB<DIM_BC(data), TensorIndexB.valence, Frame>,     \
+          LhsTensorIndexTypeC<DIM_BC(data), TensorIndexC.valence, Frame>>>(); \
+  test_evaluate_rank_3_impl<                                                  \
+      DataType, Symmetry<2, 1, 1>,                                            \
+      index_list<                                                             \
+          RhsTensorIndexTypeA<DIM_A(data), TensorIndexA.valence, Frame>,      \
+          RhsTensorIndexTypeBC<DIM_BC(data), TensorIndexB.valence, Frame>,    \
+          RhsTensorIndexTypeBC<DIM_BC(data), TensorIndexC.valence, Frame>>,   \
+      TensorIndexA, TensorIndexB, TensorIndexC, Symmetry<3, 2, 1>,            \
+      index_list<                                                             \
+          LhsTensorIndexTypeA<DIM_A(data), TensorIndexA.valence, Frame>,      \
+          LhsTensorIndexTypeB<DIM_BC(data), TensorIndexB.valence, Frame>,     \
+          LhsTensorIndexTypeC<DIM_BC(data), TensorIndexC.valence, Frame>>>();
 
   GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_3_IMPL, (1, 2, 3), (1, 2, 3))
 
@@ -394,57 +460,68 @@ void test_evaluate_rank_3_bc_symmetry() {
 /// \ingroup TestingFrameworkGroup
 /// \copydoc test_evaluate_rank_3_no_symmetry()
 template <typename DataType, typename Frame,
-          template <size_t, UpLo, typename> class TensorIndexType,
-          auto& TensorIndexA, auto& TensorIndexB, auto& TensorIndexC>
+          template <size_t, UpLo, typename> class RhsTensorIndexType,
+          auto& TensorIndexA, auto& TensorIndexB, auto& TensorIndexC,
+          template <size_t, UpLo, typename>
+          class LhsTensorIndexTypeA = RhsTensorIndexType,
+          template <size_t, UpLo, typename>
+          class LhsTensorIndexTypeB = RhsTensorIndexType,
+          template <size_t, UpLo, typename>
+          class LhsTensorIndexTypeC = RhsTensorIndexType>
 void test_evaluate_rank_3_abc_symmetry() {
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
 
 #define CALL_TEST_EVALUATE_RANK_3_IMPL(_, data)                               \
   test_evaluate_rank_3_impl<                                                  \
       DataType, Symmetry<1, 1, 1>,                                            \
-      index_list<TensorIndexType<DIM(data), TensorIndexA.valence, Frame>,     \
-                 TensorIndexType<DIM(data), TensorIndexB.valence, Frame>,     \
-                 TensorIndexType<DIM(data), TensorIndexC.valence, Frame>>,    \
+      index_list<RhsTensorIndexType<DIM(data), TensorIndexA.valence, Frame>,  \
+                 RhsTensorIndexType<DIM(data), TensorIndexB.valence, Frame>,  \
+                 RhsTensorIndexType<DIM(data), TensorIndexC.valence, Frame>>, \
       TensorIndexA, TensorIndexB, TensorIndexC, Symmetry<1, 1, 1>,            \
-      index_list<TensorIndexType<DIM(data), TensorIndexA.valence, Frame>,     \
-                 TensorIndexType<DIM(data), TensorIndexB.valence, Frame>,     \
-                 TensorIndexType<DIM(data), TensorIndexC.valence, Frame>>>(); \
+      index_list<                                                             \
+          LhsTensorIndexTypeA<DIM(data), TensorIndexA.valence, Frame>,        \
+          LhsTensorIndexTypeB<DIM(data), TensorIndexB.valence, Frame>,        \
+          LhsTensorIndexTypeC<DIM(data), TensorIndexC.valence, Frame>>>();    \
   test_evaluate_rank_3_impl<                                                  \
       DataType, Symmetry<1, 1, 1>,                                            \
-      index_list<TensorIndexType<DIM(data), TensorIndexA.valence, Frame>,     \
-                 TensorIndexType<DIM(data), TensorIndexB.valence, Frame>,     \
-                 TensorIndexType<DIM(data), TensorIndexC.valence, Frame>>,    \
+      index_list<RhsTensorIndexType<DIM(data), TensorIndexA.valence, Frame>,  \
+                 RhsTensorIndexType<DIM(data), TensorIndexB.valence, Frame>,  \
+                 RhsTensorIndexType<DIM(data), TensorIndexC.valence, Frame>>, \
       TensorIndexA, TensorIndexB, TensorIndexC, Symmetry<2, 1, 1>,            \
-      index_list<TensorIndexType<DIM(data), TensorIndexA.valence, Frame>,     \
-                 TensorIndexType<DIM(data), TensorIndexB.valence, Frame>,     \
-                 TensorIndexType<DIM(data), TensorIndexC.valence, Frame>>>(); \
+      index_list<                                                             \
+          LhsTensorIndexTypeA<DIM(data), TensorIndexA.valence, Frame>,        \
+          LhsTensorIndexTypeB<DIM(data), TensorIndexB.valence, Frame>,        \
+          LhsTensorIndexTypeC<DIM(data), TensorIndexC.valence, Frame>>>();    \
   test_evaluate_rank_3_impl<                                                  \
       DataType, Symmetry<1, 1, 1>,                                            \
-      index_list<TensorIndexType<DIM(data), TensorIndexA.valence, Frame>,     \
-                 TensorIndexType<DIM(data), TensorIndexB.valence, Frame>,     \
-                 TensorIndexType<DIM(data), TensorIndexC.valence, Frame>>,    \
+      index_list<RhsTensorIndexType<DIM(data), TensorIndexA.valence, Frame>,  \
+                 RhsTensorIndexType<DIM(data), TensorIndexB.valence, Frame>,  \
+                 RhsTensorIndexType<DIM(data), TensorIndexC.valence, Frame>>, \
       TensorIndexA, TensorIndexB, TensorIndexC, Symmetry<1, 2, 1>,            \
-      index_list<TensorIndexType<DIM(data), TensorIndexA.valence, Frame>,     \
-                 TensorIndexType<DIM(data), TensorIndexB.valence, Frame>,     \
-                 TensorIndexType<DIM(data), TensorIndexC.valence, Frame>>>(); \
+      index_list<                                                             \
+          LhsTensorIndexTypeA<DIM(data), TensorIndexA.valence, Frame>,        \
+          LhsTensorIndexTypeB<DIM(data), TensorIndexB.valence, Frame>,        \
+          LhsTensorIndexTypeC<DIM(data), TensorIndexC.valence, Frame>>>();    \
   test_evaluate_rank_3_impl<                                                  \
       DataType, Symmetry<1, 1, 1>,                                            \
-      index_list<TensorIndexType<DIM(data), TensorIndexA.valence, Frame>,     \
-                 TensorIndexType<DIM(data), TensorIndexB.valence, Frame>,     \
-                 TensorIndexType<DIM(data), TensorIndexC.valence, Frame>>,    \
+      index_list<RhsTensorIndexType<DIM(data), TensorIndexA.valence, Frame>,  \
+                 RhsTensorIndexType<DIM(data), TensorIndexB.valence, Frame>,  \
+                 RhsTensorIndexType<DIM(data), TensorIndexC.valence, Frame>>, \
       TensorIndexA, TensorIndexB, TensorIndexC, Symmetry<1, 1, 2>,            \
-      index_list<TensorIndexType<DIM(data), TensorIndexA.valence, Frame>,     \
-                 TensorIndexType<DIM(data), TensorIndexB.valence, Frame>,     \
-                 TensorIndexType<DIM(data), TensorIndexC.valence, Frame>>>(); \
+      index_list<                                                             \
+          LhsTensorIndexTypeA<DIM(data), TensorIndexA.valence, Frame>,        \
+          LhsTensorIndexTypeB<DIM(data), TensorIndexB.valence, Frame>,        \
+          LhsTensorIndexTypeC<DIM(data), TensorIndexC.valence, Frame>>>();    \
   test_evaluate_rank_3_impl<                                                  \
       DataType, Symmetry<1, 1, 1>,                                            \
-      index_list<TensorIndexType<DIM(data), TensorIndexA.valence, Frame>,     \
-                 TensorIndexType<DIM(data), TensorIndexB.valence, Frame>,     \
-                 TensorIndexType<DIM(data), TensorIndexC.valence, Frame>>,    \
+      index_list<RhsTensorIndexType<DIM(data), TensorIndexA.valence, Frame>,  \
+                 RhsTensorIndexType<DIM(data), TensorIndexB.valence, Frame>,  \
+                 RhsTensorIndexType<DIM(data), TensorIndexC.valence, Frame>>, \
       TensorIndexA, TensorIndexB, TensorIndexC, Symmetry<3, 2, 1>,            \
-      index_list<TensorIndexType<DIM(data), TensorIndexA.valence, Frame>,     \
-                 TensorIndexType<DIM(data), TensorIndexB.valence, Frame>,     \
-                 TensorIndexType<DIM(data), TensorIndexC.valence, Frame>>>();
+      index_list<                                                             \
+          LhsTensorIndexTypeA<DIM(data), TensorIndexA.valence, Frame>,        \
+          LhsTensorIndexTypeB<DIM(data), TensorIndexB.valence, Frame>,        \
+          LhsTensorIndexTypeC<DIM(data), TensorIndexC.valence, Frame>>>();
 
   GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_3_IMPL, (1, 2, 3))
 
