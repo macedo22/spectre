@@ -33,7 +33,7 @@ add_spectre_executable(
   # The following lines list the source files with tests in them to be
   # compiled into the executable.
   ../DataStructures/Tensor/Expressions/Test_EvaluateRank3Symmetric.cpp
-  ../DataStructures/Tensor/Expressions/Test_EvaluateRank3NonSymmetric.cpp
+  #../DataStructures/Tensor/Expressions/Test_EvaluateRank3NonSymmetric.cpp
   )
 
 # Modify which libraries to link for your test case.
