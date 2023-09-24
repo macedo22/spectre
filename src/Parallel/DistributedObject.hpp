@@ -779,7 +779,7 @@ void DistributedObject<
       //     static_cast<const array_index&>(array_index_));
       performing_action_ = false;
     }
-    perform_algorithm();
+    // perform_algorithm();
   } catch (const std::exception& exception) {
     initiate_shutdown(exception);
   }
