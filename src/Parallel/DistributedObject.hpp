@@ -759,8 +759,8 @@ void DistributedObject<
     ParallelComponent,
     tmpl::list<PhaseDepActionListsPack...>>::simple_action() {
   try {
-    (void)Parallel::charmxx::RegisterSimpleAction<ParallelComponent,
-                                                  Action>::registrar;
+    // (void)Parallel::charmxx::RegisterSimpleAction<ParallelComponent,
+    //                                               Action>::registrar;
     {
       std::optional<std::lock_guard<Parallel::NodeLock>> hold_lock{};
       if constexpr (std::is_same_v<Parallel::NodeLock, decltype(node_lock_)>) {
