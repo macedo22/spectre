@@ -427,60 +427,62 @@ struct EvolutionMetavars {
     using factory_classes = tmpl::map<
         tmpl::pair<
             evolution::initial_data::InitialData,
-            tmpl::flatten<tmpl::list<
-                gh::NumericInitialData,
-                tmpl::conditional_t<std::is_same_v<SpecInitialData, NoSuchType>,
-                                    tmpl::list<>, SpecInitialData>>>>,
-        tmpl::pair<DenseTrigger,
-                   tmpl::flatten<tmpl::list<
-                       control_system::control_system_triggers<control_systems>,
-                       DenseTriggers::standard_dense_triggers>>>,
-        tmpl::pair<
-            DomainCreator<volume_dim>,
-            tmpl::list<::domain::creators::BinaryCompactObject,
-                       ::domain::creators::CylindricalBinaryCompactObject>>,
+            // tmpl::flatten<tmpl::list<
+            //     gh::NumericInitialData,
+            //     tmpl::conditional_t<std::is_same_v<SpecInitialData, NoSuchType>,
+            //                         tmpl::list<>, SpecInitialData>>>>,
+            tmpl::list<>>,
+        // tmpl::pair<DenseTrigger,
+        //            tmpl::flatten<tmpl::list<
+        //                control_system::control_system_triggers<control_systems>,
+        //                DenseTriggers::standard_dense_triggers>>>,
+        // tmpl::pair<
+        //     DomainCreator<volume_dim>,
+        //     tmpl::list<::domain::creators::BinaryCompactObject,
+        //                ::domain::creators::CylindricalBinaryCompactObject>>,
         tmpl::pair<
             Event,
-            tmpl::flatten<tmpl::list<
-                intrp::Events::Interpolate<3, AhA, interpolator_source_vars>,
-                intrp::Events::Interpolate<3, AhB, interpolator_source_vars>,
-                intrp::Events::Interpolate<3, AhC, interpolator_source_vars>,
-                intrp::Events::InterpolateWithoutInterpComponent<
-                    3, BondiSachs, source_vars_no_deriv>,
-                intrp::Events::InterpolateWithoutInterpComponent<
-                    3, ExcisionBoundaryA, interpolator_source_vars>,
-                intrp::Events::InterpolateWithoutInterpComponent<
-                    3, ExcisionBoundaryB, interpolator_source_vars>,
-                Events::MonitorMemory<3>, Events::Completion,
-                dg::Events::field_observations<volume_dim, observe_fields,
-                                               non_tensor_compute_tags>,
-                control_system::control_system_events<control_systems>,
-                Events::time_events<system>>>>,
-        tmpl::pair<
-            gh::BoundaryConditions::BoundaryCondition<volume_dim>,
-            tmpl::list<
-                gh::BoundaryConditions::ConstraintPreservingBjorhus<volume_dim>,
-                gh::BoundaryConditions::DirichletMinkowski<volume_dim>,
-                gh::BoundaryConditions::DemandOutgoingCharSpeeds<volume_dim>>>,
-        tmpl::pair<
-            gh::gauges::GaugeCondition,
-            tmpl::list<gh::gauges::DampedHarmonic, gh::gauges::Harmonic>>,
-        tmpl::pair<LtsTimeStepper, TimeSteppers::lts_time_steppers>,
-        tmpl::pair<PhaseChange, PhaseControl::factory_creatable_classes>,
-        tmpl::pair<StepChooser<StepChooserUse::LtsStep>,
-                   StepChoosers::standard_step_choosers<system>>,
-        tmpl::pair<
-            StepChooser<StepChooserUse::Slab>,
-            StepChoosers::standard_slab_choosers<system, local_time_stepping>>,
-        tmpl::pair<TimeSequence<double>,
-                   TimeSequences::all_time_sequences<double>>,
-        tmpl::pair<TimeSequence<std::uint64_t>,
-                   TimeSequences::all_time_sequences<std::uint64_t>>,
-        tmpl::pair<TimeStepper, TimeSteppers::time_steppers>,
-        tmpl::pair<
+            tmpl::list<>>//,
+            // tmpl::flatten<tmpl::list<
+            //     intrp::Events::Interpolate<3, AhA, interpolator_source_vars>,
+            //     intrp::Events::Interpolate<3, AhB, interpolator_source_vars>,
+            //     intrp::Events::Interpolate<3, AhC, interpolator_source_vars>,
+            //     intrp::Events::InterpolateWithoutInterpComponent<
+            //         3, BondiSachs, source_vars_no_deriv>,
+            //     intrp::Events::InterpolateWithoutInterpComponent<
+            //         3, ExcisionBoundaryA, interpolator_source_vars>,
+            //     intrp::Events::InterpolateWithoutInterpComponent<
+            //         3, ExcisionBoundaryB, interpolator_source_vars>,
+            //     Events::MonitorMemory<3>, Events::Completion,
+            //     dg::Events::field_observations<volume_dim, observe_fields,
+            //                                    non_tensor_compute_tags>,
+            //     control_system::control_system_events<control_systems>,
+            //     Events::time_events<system>>>>,
+        // tmpl::pair<
+        //     gh::BoundaryConditions::BoundaryCondition<volume_dim>,
+        //     tmpl::list<
+        //         gh::BoundaryConditions::ConstraintPreservingBjorhus<volume_dim>,
+        //         gh::BoundaryConditions::DirichletMinkowski<volume_dim>,
+        //         gh::BoundaryConditions::DemandOutgoingCharSpeeds<volume_dim>>>,
+        // tmpl::pair<
+        //     gh::gauges::GaugeCondition,
+        //     tmpl::list<gh::gauges::DampedHarmonic, gh::gauges::Harmonic>>,
+        // tmpl::pair<LtsTimeStepper, TimeSteppers::lts_time_steppers>,
+        // tmpl::pair<PhaseChange, PhaseControl::factory_creatable_classes>,
+        // tmpl::pair<StepChooser<StepChooserUse::LtsStep>,
+        //            StepChoosers::standard_step_choosers<system>>,
+        // tmpl::pair<
+        //     StepChooser<StepChooserUse::Slab>,
+        //     StepChoosers::standard_slab_choosers<system, local_time_stepping>>,
+        // tmpl::pair<TimeSequence<double>,
+        //            TimeSequences::all_time_sequences<double>>,
+        // tmpl::pair<TimeSequence<std::uint64_t>,
+        //            TimeSequences::all_time_sequences<std::uint64_t>>,
+        // tmpl::pair<TimeStepper, TimeSteppers::time_steppers>,
+        /*tmpl::pair<
             Trigger,
             tmpl::append<Triggers::logical_triggers, Triggers::time_triggers,
-                         tmpl::list<Triggers::SeparationLessThan>>>>;
+                         tmpl::list<Triggers::SeparationLessThan>>>*/>;
   };
 
   // A tmpl::list of tags to be added to the GlobalCache by the
