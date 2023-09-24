@@ -228,9 +228,9 @@ class AtSyncIndicator : public CBase_AtSyncIndicator<Metavariables> {
   AtSyncIndicator(AtSyncIndicator&&) = default;
   AtSyncIndicator& operator=(AtSyncIndicator&&) = default;
   ~AtSyncIndicator() override {
-    (void)Parallel::charmxx::RegisterChare<
-        AtSyncIndicator<Metavariables>,
-        CkIndex_AtSyncIndicator<Metavariables>>::registrar;
+    // (void)Parallel::charmxx::RegisterChare<
+    //     AtSyncIndicator<Metavariables>,
+    //     CkIndex_AtSyncIndicator<Metavariables>>::registrar;
   }
 
   void IndicateAtSync();
@@ -240,7 +240,7 @@ class AtSyncIndicator : public CBase_AtSyncIndicator<Metavariables> {
   explicit AtSyncIndicator(CkMigrateMessage* msg)
       : CBase_AtSyncIndicator<Metavariables>(msg) {}
 
-  void pup(PUP::er& p) override { p | main_proxy_; }
+  void pup(PUP::er& /*p*/) override { /*p | main_proxy_;*/ }
 
  private:
   CProxy_Main<Metavariables> main_proxy_;
