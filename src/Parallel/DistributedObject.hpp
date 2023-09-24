@@ -747,7 +747,7 @@ void DistributedObject<ParallelComponent,
           std::move(args), std::make_index_sequence<sizeof...(Args)>{});
       performing_action_ = false;
     }
-    perform_algorithm();
+    // perform_algorithm();
   } catch (const std::exception& exception) {
     initiate_shutdown(exception);
   }
