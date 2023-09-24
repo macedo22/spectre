@@ -589,52 +589,52 @@ Main<Metavariables>::Main(CkMigrateMessage* msg)
     : CBase_Main<Metavariables>(msg) {}
 
 template <typename Metavariables>
-void Main<Metavariables>::pup(PUP::er& p) {  // NOLINT
-  p | current_phase_;
-  p | global_cache_proxy_;
-  p | at_sync_indicator_proxy_;
-  // Note: we do NOT serialize the options.
-  // This is because options are only used in the initialization phase when
-  // the executable first starts up. Thereafter, the information from the
-  // options will be held in various code objects that will themselves be
-  // serialized.
-  p | phase_change_decision_data_;
+void Main<Metavariables>::pup(PUP::er& /*p*/) {  // NOLINT
+  // p | current_phase_;
+  // p | global_cache_proxy_;
+  // p | at_sync_indicator_proxy_;
+  // // Note: we do NOT serialize the options.
+  // // This is because options are only used in the initialization phase when
+  // // the executable first starts up. Thereafter, the information from the
+  // // options will be held in various code objects that will themselves be
+  // // serialized.
+  // p | phase_change_decision_data_;
 
-  p | checkpoint_dir_counter_;
-  p | resource_info_;
-  p | exception_messages_;
-  p | current_termination_check_index_;
-  p | components_that_did_not_terminate_;
-  if (p.isUnpacking()) {
-    check_future_checkpoint_dirs_available();
-  }
+  // p | checkpoint_dir_counter_;
+  // p | resource_info_;
+  // p | exception_messages_;
+  // p | current_termination_check_index_;
+  // p | components_that_did_not_terminate_;
+  // if (p.isUnpacking()) {
+  //   check_future_checkpoint_dirs_available();
+  // }
 
-  // For now we only support restarts on the same hardware configuration (same
-  // number of nodes and same procs per node) used when writing the checkpoint.
-  // We check this by adding counters to the pup stream.
-  if (p.isUnpacking()) {
-    int previous_nodes = 0;
-    int previous_procs = 0;
-    p | previous_nodes;
-    p | previous_procs;
-    if (previous_nodes != sys::number_of_nodes() or
-        previous_procs != sys::number_of_procs()) {
-      ERROR(
-          "Must restart on the same hardware configuration used when writing "
-          "the checkpoint.\n"
-          "Checkpoint written with "
-          << previous_nodes << " nodes, " << previous_procs
-          << " procs.\n"
-             "Restarted with "
-          << sys::number_of_nodes() << " nodes, " << sys::number_of_procs()
-          << " procs.");
-    }
-  } else {
-    int current_nodes = sys::number_of_nodes();
-    int current_procs = sys::number_of_procs();
-    p | current_nodes;
-    p | current_procs;
-  }
+  // // For now we only support restarts on the same hardware configuration (same
+  // // number of nodes and same procs per node) used when writing the checkpoint.
+  // // We check this by adding counters to the pup stream.
+  // if (p.isUnpacking()) {
+  //   int previous_nodes = 0;
+  //   int previous_procs = 0;
+  //   p | previous_nodes;
+  //   p | previous_procs;
+  //   if (previous_nodes != sys::number_of_nodes() or
+  //       previous_procs != sys::number_of_procs()) {
+  //     ERROR(
+  //         "Must restart on the same hardware configuration used when writing "
+  //         "the checkpoint.\n"
+  //         "Checkpoint written with "
+  //         << previous_nodes << " nodes, " << previous_procs
+  //         << " procs.\n"
+  //            "Restarted with "
+  //         << sys::number_of_nodes() << " nodes, " << sys::number_of_procs()
+  //         << " procs.");
+  //   }
+  // } else {
+  //   int current_nodes = sys::number_of_nodes();
+  //   int current_procs = sys::number_of_procs();
+  //   p | current_nodes;
+  //   p | current_procs;
+  // }
 }
 
 template <typename Metavariables>
@@ -991,4 +991,4 @@ void Main<Metavariables>::check_future_checkpoint_dirs_available() const {
 
 #define CK_TEMPLATES_ONLY
 #include "Parallel/Main.def.h"
-#undef CK_TEMPLATES_ONLY
+#undef CK_TEMPLATES_O
