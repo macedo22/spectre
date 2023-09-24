@@ -802,25 +802,25 @@ void Main<Metavariables>::execute_next_phase() {
 
 template <typename Metavariables>
 void Main<Metavariables>::start_load_balance() {
-  at_sync_indicator_proxy_.IndicateAtSync();
-  // No need for a callback to return to execute_next_phase: this is done by
-  // ResumeFromSync instead.
+  // at_sync_indicator_proxy_.IndicateAtSync();
+  // // No need for a callback to return to execute_next_phase: this is done by
+  // // ResumeFromSync instead.
 }
 
 template <typename Metavariables>
 void Main<Metavariables>::start_write_checkpoint() {
-  // Reset the counter if the checkpoints directory does not exist.
-  // This happens when the simulation continues in a new segment.
-  const auto [checkpoints_dir, prefix, pad] = checkpoints_dir_prefix_pad();
-  if (not file_system::check_if_dir_exists(checkpoints_dir)) {
-    checkpoint_dir_counter_ = 0;
-  }
-  const std::string dir = next_checkpoint_dir();
-  checkpoint_dir_counter_++;
-  file_system::create_directory(dir);
-  CkStartCheckpoint(
-      dir.c_str(), CkCallback(CkIndex_Main<Metavariables>::execute_next_phase(),
-                              this->thisProxy));
+  // // Reset the counter if the checkpoints directory does not exist.
+  // // This happens when the simulation continues in a new segment.
+  // const auto [checkpoints_dir, prefix, pad] = checkpoints_dir_prefix_pad();
+  // if (not file_system::check_if_dir_exists(checkpoints_dir)) {
+  //   checkpoint_dir_counter_ = 0;
+  // }
+  // const std::string dir = next_checkpoint_dir();
+  // checkpoint_dir_counter_++;
+  // file_system::create_directory(dir);
+  // CkStartCheckpoint(
+  //     dir.c_str(), CkCallback(CkIndex_Main<Metavariables>::execute_next_phase(),
+  //                             this->thisProxy));
 }
 
 template <typename Metavariables>
@@ -828,163 +828,163 @@ template <typename InvokeCombine, typename... Tags>
 void Main<Metavariables>::phase_change_reduction(
     ReductionData<ReductionDatum<tuples::TaggedTuple<Tags...>, InvokeCombine,
                                  funcl::Identity, std::index_sequence<>>>
-        reduction_data) {
-  using tagged_tuple_type = std::decay_t<
-      std::tuple_element_t<0, std::decay_t<decltype(reduction_data.data())>>>;
-  (void)Parallel::charmxx::RegisterPhaseChangeReduction<
-      Metavariables, InvokeCombine, Tags...>::registrar;
-  static_assert(tt::is_a_v<tuples::TaggedTuple, tagged_tuple_type>,
-                "The main chare expects a tagged tuple in the phase change "
-                "reduction target.");
-  reduction_data.finalize();
-  PhaseControl::TaggedTupleMainCombine::apply(
-      make_not_null(&phase_change_decision_data_),
-      get<0>(reduction_data.data()));
+        /*reduction_data*/) {
+  // using tagged_tuple_type = std::decay_t<
+  //     std::tuple_element_t<0, std::decay_t<decltype(reduction_data.data())>>>;
+  // (void)Parallel::charmxx::RegisterPhaseChangeReduction<
+  //     Metavariables, InvokeCombine, Tags...>::registrar;
+  // static_assert(tt::is_a_v<tuples::TaggedTuple, tagged_tuple_type>,
+  //               "The main chare expects a tagged tuple in the phase change "
+  //               "reduction target.");
+  // reduction_data.finalize();
+  // PhaseControl::TaggedTupleMainCombine::apply(
+  //     make_not_null(&phase_change_decision_data_),
+  //     get<0>(reduction_data.data()));
 }
 
 template <typename Metavariables>
-void Main<Metavariables>::add_exception_message(std::string exception_message) {
-  exception_messages_.push_back(std::move(exception_message));
-  auto* global_cache = Parallel::local_branch(global_cache_proxy_);
-  ASSERT(global_cache != nullptr, "Could not retrieve the local global cache.");
-  // Set terminate_=true on all components to cause them to stop the current
-  // phase.
-  tmpl::for_each<component_list>([global_cache](auto component_tag_v) {
-    using component_tag = tmpl::type_from<decltype(component_tag_v)>;
-    Parallel::get_parallel_component<component_tag>(*global_cache)
-        .set_terminate(true);
-  });
+void Main<Metavariables>::add_exception_message(std::string /*exception_message*/) {
+  // exception_messages_.push_back(std::move(exception_message));
+  // auto* global_cache = Parallel::local_branch(global_cache_proxy_);
+  // ASSERT(global_cache != nullptr, "Could not retrieve the local global cache.");
+  // // Set terminate_=true on all components to cause them to stop the current
+  // // phase.
+  // tmpl::for_each<component_list>([global_cache](auto component_tag_v) {
+  //   using component_tag = tmpl::type_from<decltype(component_tag_v)>;
+  //   Parallel::get_parallel_component<component_tag>(*global_cache)
+  //       .set_terminate(true);
+  // });
 }
 
 template <typename Metavariables>
 void Main<Metavariables>::did_all_elements_terminate(
-    const bool all_elements_terminated) {
-  if (not all_elements_terminated) {
-    tmpl::for_each<component_list>([this](auto component_tag_v) {
-      using component_tag = tmpl::type_from<decltype(component_tag_v)>;
-      if (tmpl::index_of<component_list, component_tag>::value ==
-          current_termination_check_index_ - 1) {
-        components_that_did_not_terminate_.push_back(
-            pretty_type::name<component_tag>());
-      }
-    });
-  }
-  if (current_termination_check_index_ == tmpl::size<component_list>::value) {
-    if (not components_that_did_not_terminate_.empty()) {
-      using ::operator<<;
-      // Need the MakeString to avoid GCC compilation failure that it can't
-      // print out the vector...
-      Parallel::printf(
-          "\n############ ERROR ############\n"
-          "The following components did not terminate cleanly:\n"
-          "%s\n\n"
-          "This means the executable stopped because of a hang/deadlock.\n"
-          "############ ERROR ############\n\n",
-          std::string{MakeString{} << components_that_did_not_terminate_});
-      if constexpr (detail::is_run_deadlock_analysis_simple_actions_callable_v<
-                        Metavariables, Parallel::GlobalCache<Metavariables>&,
-                        const std::vector<std::string>&>) {
-        Parallel::printf("Starting deadlock analysis.\n");
-        Metavariables::run_deadlock_analysis_simple_actions(
-            *Parallel::local_branch(global_cache_proxy_),
-            components_that_did_not_terminate_);
-        CkStartQD(CkCallback(
-            CkIndex_Main<Metavariables>::post_deadlock_analysis_termination(),
-            this->thisProxy));
-        return;
-      } else {
-        Parallel::printf(
-            "No deadlock analysis function found in metavariables. To enable "
-            "deadlock analysis via simple actions add a function:\n"
-            "  static void run_deadlock_analysis_simple_actions(\n"
-            "        Parallel::GlobalCache<metavariables>& cache,\n"
-            "        const std::vector<std::string>& deadlocked_components);\n"
-            "to your metavariables.\n");
-      }
-    }
-    post_deadlock_analysis_termination();
-  }
+    const bool /*all_elements_terminated*/) {
+  // if (not all_elements_terminated) {
+  //   tmpl::for_each<component_list>([this](auto component_tag_v) {
+  //     using component_tag = tmpl::type_from<decltype(component_tag_v)>;
+  //     if (tmpl::index_of<component_list, component_tag>::value ==
+  //         current_termination_check_index_ - 1) {
+  //       components_that_did_not_terminate_.push_back(
+  //           pretty_type::name<component_tag>());
+  //     }
+  //   });
+  // }
+  // if (current_termination_check_index_ == tmpl::size<component_list>::value) {
+  //   if (not components_that_did_not_terminate_.empty()) {
+  //     using ::operator<<;
+  //     // Need the MakeString to avoid GCC compilation failure that it can't
+  //     // print out the vector...
+  //     Parallel::printf(
+  //         "\n############ ERROR ############\n"
+  //         "The following components did not terminate cleanly:\n"
+  //         "%s\n\n"
+  //         "This means the executable stopped because of a hang/deadlock.\n"
+  //         "############ ERROR ############\n\n",
+  //         std::string{MakeString{} << components_that_did_not_terminate_});
+  //     if constexpr (detail::is_run_deadlock_analysis_simple_actions_callable_v<
+  //                       Metavariables, Parallel::GlobalCache<Metavariables>&,
+  //                       const std::vector<std::string>&>) {
+  //       Parallel::printf("Starting deadlock analysis.\n");
+  //       Metavariables::run_deadlock_analysis_simple_actions(
+  //           *Parallel::local_branch(global_cache_proxy_),
+  //           components_that_did_not_terminate_);
+  //       CkStartQD(CkCallback(
+  //           CkIndex_Main<Metavariables>::post_deadlock_analysis_termination(),
+  //           this->thisProxy));
+  //       return;
+  //     } else {
+  //       Parallel::printf(
+  //           "No deadlock analysis function found in metavariables. To enable "
+  //           "deadlock analysis via simple actions add a function:\n"
+  //           "  static void run_deadlock_analysis_simple_actions(\n"
+  //           "        Parallel::GlobalCache<metavariables>& cache,\n"
+  //           "        const std::vector<std::string>& deadlocked_components);\n"
+  //           "to your metavariables.\n");
+  //     }
+  //   }
+  //   post_deadlock_analysis_termination();
+  // }
 
-  check_if_component_terminated_correctly();
+  // check_if_component_terminated_correctly();
 }
 
 template <typename Metavariables>
 void Main<Metavariables>::check_if_component_terminated_correctly() {
-  auto* global_cache = Parallel::local_branch(global_cache_proxy_);
-  ASSERT(global_cache != nullptr, "Could not retrieve the local global cache.");
+  // auto* global_cache = Parallel::local_branch(global_cache_proxy_);
+  // ASSERT(global_cache != nullptr, "Could not retrieve the local global cache.");
 
-  tmpl::for_each<component_list>([global_cache, this](auto component_tag_v) {
-    using component_tag = tmpl::type_from<decltype(component_tag_v)>;
-    if (tmpl::index_of<component_list, component_tag>::value ==
-        current_termination_check_index_) {
-      Parallel::get_parallel_component<component_tag>(*global_cache)
-          .contribute_termination_status_to_main();
-    }
-  });
-  current_termination_check_index_++;
+  // tmpl::for_each<component_list>([global_cache, this](auto component_tag_v) {
+  //   using component_tag = tmpl::type_from<decltype(component_tag_v)>;
+  //   if (tmpl::index_of<component_list, component_tag>::value ==
+  //       current_termination_check_index_) {
+  //     Parallel::get_parallel_component<component_tag>(*global_cache)
+  //         .contribute_termination_status_to_main();
+  //   }
+  // });
+  // current_termination_check_index_++;
 }
 
 template <typename Metavariables>
 void Main<Metavariables>::post_deadlock_analysis_termination() {
-  Informer::print_exit_info();
-  if (not components_that_did_not_terminate_.empty()) {
-    sys::abort("");
-  } else {
-    const Parallel::ExitCode exit_code =
-        get<Tags::ExitCode>(phase_change_decision_data_);
-    sys::exit(static_cast<int>(exit_code));
-  }
+  // Informer::print_exit_info();
+  // if (not components_that_did_not_terminate_.empty()) {
+  //   sys::abort("");
+  // } else {
+  //   const Parallel::ExitCode exit_code =
+  //       get<Tags::ExitCode>(phase_change_decision_data_);
+  //   sys::exit(static_cast<int>(exit_code));
+  // }
 }
 
 template <typename Metavariables>
 std::tuple<std::string, std::string, size_t>
 Main<Metavariables>::checkpoints_dir_prefix_pad() const {
-  const std::string checkpoints_dir = "Checkpoints";
-  const std::string prefix = "Checkpoint_";
-  constexpr size_t pad = 4;
-  return std::make_tuple(checkpoints_dir, prefix, pad);
+  // const std::string checkpoints_dir = "Checkpoints";
+  // const std::string prefix = "Checkpoint_";
+  // constexpr size_t pad = 4;
+  // return std::make_tuple(checkpoints_dir, prefix, pad);
 }
 
 template <typename Metavariables>
 std::string Main<Metavariables>::next_checkpoint_dir() const {
-  const auto [checkpoints_dir, prefix, pad] = checkpoints_dir_prefix_pad();
-  const std::string counter = std::to_string(checkpoint_dir_counter_);
-  const std::string padded_counter =
-      std::string(pad - counter.size(), '0').append(counter);
-  const std::string result = checkpoints_dir + "/" + prefix + padded_counter;
-  if (file_system::check_if_dir_exists(result)) {
-    ERROR("Can't write checkpoint: dir " + result + " already exists!");
-  }
-  return result;
+  // const auto [checkpoints_dir, prefix, pad] = checkpoints_dir_prefix_pad();
+  // const std::string counter = std::to_string(checkpoint_dir_counter_);
+  // const std::string padded_counter =
+  //     std::string(pad - counter.size(), '0').append(counter);
+  // const std::string result = checkpoints_dir + "/" + prefix + padded_counter;
+  // if (file_system::check_if_dir_exists(result)) {
+  //   ERROR("Can't write checkpoint: dir " + result + " already exists!");
+  // }
+  // return result;
 }
 
 template <typename Metavariables>
 void Main<Metavariables>::check_future_checkpoint_dirs_available() const {
-  const auto [checkpoints_dir, prefix, pad] = checkpoints_dir_prefix_pad();
-  if (not file_system::check_if_dir_exists(checkpoints_dir)) {
-    return;
-  }
-  const auto next_checkpoint = next_checkpoint_dir();
+  // const auto [checkpoints_dir, prefix, pad] = checkpoints_dir_prefix_pad();
+  // if (not file_system::check_if_dir_exists(checkpoints_dir)) {
+  //   return;
+  // }
+  // const auto next_checkpoint = next_checkpoint_dir();
 
-  // Find existing files with names that match the checkpoint dir name pattern
-  const auto all_files = file_system::ls(checkpoints_dir);
-  const std::regex re(prefix + "[0-9]{" + std::to_string(pad) + "}");
-  std::vector<std::string> checkpoint_files;
-  std::copy_if(all_files.begin(), all_files.end(),
-               std::back_inserter(checkpoint_files),
-               [&re](const std::string& s) { return std::regex_match(s, re); });
+  // // Find existing files with names that match the checkpoint dir name pattern
+  // const auto all_files = file_system::ls(checkpoints_dir);
+  // const std::regex re(prefix + "[0-9]{" + std::to_string(pad) + "}");
+  // std::vector<std::string> checkpoint_files;
+  // std::copy_if(all_files.begin(), all_files.end(),
+  //              std::back_inserter(checkpoint_files),
+  //              [&re](const std::string& s) { return std::regex_match(s, re); });
 
-  // Using string comparison of filenames, check that all the files we found
-  // are from older checkpoints, but not from future checkpoints
-  const bool found_older_checkpoints_only = std::all_of(
-      checkpoint_files.begin(), checkpoint_files.end(),
-      [&next_checkpoint](const std::string& s) { return s < next_checkpoint; });
-  if (not found_older_checkpoints_only) {
-    ERROR(
-        "Can't start run: found checkpoints that may be overwritten!\n"
-        "Dirs from "
-        << next_checkpoint << " onward must not exist.\n");
-  }
+  // // Using string comparison of filenames, check that all the files we found
+  // // are from older checkpoints, but not from future checkpoints
+  // const bool found_older_checkpoints_only = std::all_of(
+  //     checkpoint_files.begin(), checkpoint_files.end(),
+  //     [&next_checkpoint](const std::string& s) { return s < next_checkpoint; });
+  // if (not found_older_checkpoints_only) {
+  //   ERROR(
+  //       "Can't start run: found checkpoints that may be overwritten!\n"
+  //       "Dirs from "
+  //       << next_checkpoint << " onward must not exist.\n");
+  // }
 }
 
 }  // namespace Parallel
