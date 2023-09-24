@@ -716,7 +716,7 @@ void DistributedObject<
           std::move(arg.data()), std::make_index_sequence<Arg::pack_size()>{});
       performing_action_ = false;
     }
-    perform_algorithm();
+    // perform_algorithm();
   } catch (const std::exception& exception) {
     initiate_shutdown(exception);
   }
@@ -747,7 +747,7 @@ void DistributedObject<ParallelComponent,
           std::move(args), std::make_index_sequence<sizeof...(Args)>{});
       performing_action_ = false;
     }
-    perform_algorithm();
+    // perform_algorithm();
   } catch (const std::exception& exception) {
     initiate_shutdown(exception);
   }
@@ -779,7 +779,7 @@ void DistributedObject<
           static_cast<const array_index&>(array_index_));
       performing_action_ = false;
     }
-    perform_algorithm();
+    // perform_algorithm();
   } catch (const std::exception& exception) {
     initiate_shutdown(exception);
   }
@@ -836,7 +836,7 @@ void DistributedObject<ParallelComponent,
           make_not_null(&tuples::get<ReceiveTag>(inboxes_)), instance,
           std::forward<ReceiveDataType>(t));
     }
-    perform_algorithm();
+    // perform_algorithm();
   } catch (const std::exception& exception) {
     initiate_shutdown(exception);
   }
@@ -863,7 +863,7 @@ void DistributedObject<ParallelComponent,
       // Cannot use message after this call because a std::unique_ptr now owns
       // it. Doing so would result in undefined behavior
     }
-    perform_algorithm();
+    // perform_algorithm();
   } catch (const std::exception& exception) {
     initiate_shutdown(exception);
   }
@@ -930,7 +930,7 @@ void DistributedObject<ParallelComponent,
     if (restart_if_terminated) {
       set_terminate(false);
     }
-    perform_algorithm();
+    // perform_algorithm();
   } catch (const std::exception& exception) {
     initiate_shutdown(exception);
   }
@@ -969,7 +969,7 @@ void DistributedObject<ParallelComponent,
       algorithm_step_ = 0;
     }
     halt_algorithm_until_next_phase_ = false;
-    perform_algorithm();
+    // perform_algorithm();
   } catch (const std::exception& exception) {
     initiate_shutdown(exception);
   }
