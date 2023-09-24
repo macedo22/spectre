@@ -873,53 +873,53 @@ template <typename ParallelComponent, typename... PhaseDepActionListsPack>
 void DistributedObject<
     ParallelComponent,
     tmpl::list<PhaseDepActionListsPack...>>::perform_algorithm() {
-  try {
-    if (performing_action_ or get_terminate() or
-        halt_algorithm_until_next_phase_) {
-      return;
-    }
-#ifdef SPECTRE_CHARM_PROJECTIONS
-    non_action_time_start_ = sys::wall_time();
-#endif
-    {
-      std::optional<std::lock_guard<Parallel::NodeLock>> hold_lock{};
-      if constexpr (std::is_same_v<Parallel::NodeLock, decltype(node_lock_)>) {
-        hold_lock.emplace(node_lock_);
-      }
-      const auto invoke_for_phase = [this](auto phase_dep_v) {
-        using PhaseDep = decltype(phase_dep_v);
-        constexpr Parallel::Phase phase = PhaseDep::phase;
-        using actions_list = typename PhaseDep::action_list;
-        if (phase_ == phase) {
-          while (tmpl::size<actions_list>::value > 0 and not get_terminate() and
-                 not halt_algorithm_until_next_phase_ and
-                 iterate_over_actions<PhaseDep>(
-                     std::make_index_sequence<
-                         tmpl::size<actions_list>::value>{})) {
-          }
-          tmpl::for_each<actions_list>([this](auto action_v) {
-            using action = tmpl::type_from<decltype(action_v)>;
-            if (algorithm_step_ ==
-                tmpl::index_of<actions_list, action>::value) {
-              deadlock_analysis_next_iterable_action_ =
-                  pretty_type::name<action>();
-            }
-          });
-        }
-      };
-      // Loop over all phases, once the current phase is found we perform the
-      // algorithm in that phase until we are no longer able to because we are
-      // waiting on data to be sent or because the algorithm has been marked as
-      // terminated.
-      EXPAND_PACK_LEFT_TO_RIGHT(invoke_for_phase(PhaseDepActionListsPack{}));
-    }
-#ifdef SPECTRE_CHARM_PROJECTIONS
-    traceUserBracketEvent(SPECTRE_CHARM_NON_ACTION_WALLTIME_EVENT_ID,
-                          non_action_time_start_, sys::wall_time());
-#endif
-  } catch (const std::exception& exception) {
-    initiate_shutdown(exception);
-  }
+//   try {
+//     if (performing_action_ or get_terminate() or
+//         halt_algorithm_until_next_phase_) {
+//       return;
+//     }
+// #ifdef SPECTRE_CHARM_PROJECTIONS
+//     non_action_time_start_ = sys::wall_time();
+// #endif
+//     {
+//       std::optional<std::lock_guard<Parallel::NodeLock>> hold_lock{};
+//       if constexpr (std::is_same_v<Parallel::NodeLock, decltype(node_lock_)>) {
+//         hold_lock.emplace(node_lock_);
+//       }
+//       const auto invoke_for_phase = [this](auto phase_dep_v) {
+//         using PhaseDep = decltype(phase_dep_v);
+//         constexpr Parallel::Phase phase = PhaseDep::phase;
+//         using actions_list = typename PhaseDep::action_list;
+//         if (phase_ == phase) {
+//           while (tmpl::size<actions_list>::value > 0 and not get_terminate() and
+//                  not halt_algorithm_until_next_phase_ and
+//                  iterate_over_actions<PhaseDep>(
+//                      std::make_index_sequence<
+//                          tmpl::size<actions_list>::value>{})) {
+//           }
+//           tmpl::for_each<actions_list>([this](auto action_v) {
+//             using action = tmpl::type_from<decltype(action_v)>;
+//             if (algorithm_step_ ==
+//                 tmpl::index_of<actions_list, action>::value) {
+//               deadlock_analysis_next_iterable_action_ =
+//                   pretty_type::name<action>();
+//             }
+//           });
+//         }
+//       };
+//       // Loop over all phases, once the current phase is found we perform the
+//       // algorithm in that phase until we are no longer able to because we are
+//       // waiting on data to be sent or because the algorithm has been marked as
+//       // terminated.
+//       EXPAND_PACK_LEFT_TO_RIGHT(invoke_for_phase(PhaseDepActionListsPack{}));
+//     }
+// #ifdef SPECTRE_CHARM_PROJECTIONS
+//     traceUserBracketEvent(SPECTRE_CHARM_NON_ACTION_WALLTIME_EVENT_ID,
+//                           non_action_time_start_, sys::wall_time());
+// #endif
+//   } catch (const std::exception& exception) {
+//     initiate_shutdown(exception);
+//   }
 }
 
 template <typename ParallelComponent, typename... PhaseDepActionListsPack>
