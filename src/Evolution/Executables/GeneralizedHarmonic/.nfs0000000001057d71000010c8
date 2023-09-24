@@ -557,8 +557,8 @@ struct EvolutionMetavars {
   using gh_dg_element_array = DgElementArray<
       EvolutionMetavars,
       tmpl::flatten<tmpl::list<
-          Parallel::PhaseActions<Parallel::Phase::Initialization,
-                                 initialization_actions>,
+        //   Parallel::PhaseActions<Parallel::Phase::Initialization,
+        //                          initialization_actions>,
           Parallel::PhaseActions<
               Parallel::Phase::RegisterWithElementDataReader,
               tmpl::list<importers::Actions::RegisterWithElementDataReader,
@@ -615,28 +615,28 @@ struct EvolutionMetavars {
       control_system::control_components<EvolutionMetavars, control_systems>;
 
   static void run_deadlock_analysis_simple_actions(
-      Parallel::GlobalCache<metavariables>& /*cache*/,
-      const std::vector<std::string>& /*deadlocked_components*/) {
-    // const auto& functions_of_time =
-    //     Parallel::get<::domain::Tags::FunctionsOfTime>(cache);
+      Parallel::GlobalCache<metavariables>& cache,
+      const std::vector<std::string>& deadlocked_components) {
+    const auto& functions_of_time =
+        Parallel::get<::domain::Tags::FunctionsOfTime>(cache);
 
-    // const std::string time_bounds =
-    //     ::domain::FunctionsOfTime::ouput_time_bounds(functions_of_time);
+    const std::string time_bounds =
+        ::domain::FunctionsOfTime::ouput_time_bounds(functions_of_time);
 
-    // Parallel::printf("%s\n", time_bounds);
+    Parallel::printf("%s\n", time_bounds);
 
-    // if (alg::count(deadlocked_components,
-    //                pretty_type::name<gh_dg_element_array>()) == 1) {
-    //   tmpl::for_each<control_components>([&cache](auto component_v) {
-    //     using component = tmpl::type_from<decltype(component_v)>;
-    //     Parallel::simple_action<
-    //         control_system::Actions::PrintCurrentMeasurement>(
-    //         Parallel::get_parallel_component<component>(cache));
-    //   });
+    if (alg::count(deadlocked_components,
+                   pretty_type::name<gh_dg_element_array>()) == 1) {
+      tmpl::for_each<control_components>([&cache](auto component_v) {
+        using component = tmpl::type_from<decltype(component_v)>;
+        Parallel::simple_action<
+            control_system::Actions::PrintCurrentMeasurement>(
+            Parallel::get_parallel_component<component>(cache));
+      });
 
-    //   Parallel::simple_action<deadlock::PrintElementInfo>(
-    //       Parallel::get_parallel_component<gh_dg_element_array>(cache));
-    // }
+      Parallel::simple_action<deadlock::PrintElementInfo>(
+          Parallel::get_parallel_component<gh_dg_element_array>(cache));
+    }
   }
 
   using component_list = tmpl::flatten<tmpl::list<
