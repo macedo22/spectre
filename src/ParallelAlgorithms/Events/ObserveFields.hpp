@@ -184,21 +184,21 @@ class ObserveFields<VolumeDim, tmpl::list<Tensors...>,
 
   template <typename DataBoxType, typename ComputeTagsList,
             typename Metavariables, typename ParallelComponent>
-  void operator()(const ObservationBox<DataBoxType, ComputeTagsList>& box,
-                  const Mesh<VolumeDim>& mesh,
-                  Parallel::GlobalCache<Metavariables>& cache,
-                  const ElementId<VolumeDim>& array_index,
-                  const ParallelComponent* const component,
-                  const ObservationValue& observation_value) const {
-    // Skip observation on elements that are not part of a section
-    const std::optional<std::string> section_observation_key =
-        observers::get_section_observation_key<ArraySectionIdTag>(box);
-    if (not section_observation_key.has_value()) {
-      return;
-    }
-    call_operator_impl(subfile_path_ + *section_observation_key,
-                       variables_to_observe_, interpolation_mesh_, mesh, box,
-                       cache, array_index, component, observation_value);
+  void operator()(const ObservationBox<DataBoxType, ComputeTagsList>& /*box*/,
+                  const Mesh<VolumeDim>& /*mesh*/,
+                  Parallel::GlobalCache<Metavariables>& /*cache*/,
+                  const ElementId<VolumeDim>& /*array_index*/,
+                  const ParallelComponent* const /*component*/,
+                  const ObservationValue& /*observation_value*/) const {
+    // // Skip observation on elements that are not part of a section
+    // const std::optional<std::string> section_observation_key =
+    //     observers::get_section_observation_key<ArraySectionIdTag>(box);
+    // if (not section_observation_key.has_value()) {
+    //   return;
+    // }
+    // call_operator_impl(subfile_path_ + *section_observation_key,
+    //                    variables_to_observe_, interpolation_mesh_, mesh, box,
+    //                    cache, array_index, component, observation_value);
   }
 
   // We factor out the work into a static member function so it can  be shared
