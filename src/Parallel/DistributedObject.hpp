@@ -774,9 +774,9 @@ void DistributedObject<
             "we do not allow.");
       }
       performing_action_ = true;
-      Action::template apply<ParallelComponent>(
-          box_, *Parallel::local_branch(global_cache_proxy_),
-          static_cast<const array_index&>(array_index_));
+      // Action::template apply<ParallelComponent>(
+      //     box_, *Parallel::local_branch(global_cache_proxy_),
+      //     static_cast<const array_index&>(array_index_));
       performing_action_ = false;
     }
     perform_algorithm();
@@ -806,10 +806,10 @@ void DistributedObject<
     // NOLINTNEXTLINE(modernize-redundant-void-arg)
     (void)Parallel::charmxx::RegisterThreadedAction<ParallelComponent,
                                                     Action>::registrar;
-    Action::template apply<ParallelComponent>(
-        box_, *Parallel::local_branch(global_cache_proxy_),
-        static_cast<const array_index&>(array_index_),
-        make_not_null(&node_lock_));
+    // Action::template apply<ParallelComponent>(
+    //     box_, *Parallel::local_branch(global_cache_proxy_),
+    //     static_cast<const array_index&>(array_index_),
+    //     make_not_null(&node_lock_));
   } catch (const std::exception& exception) {
     initiate_shutdown(exception);
   }
@@ -1045,25 +1045,25 @@ template <typename ParallelComponent, typename... PhaseDepActionListsPack>
 template <typename Action, typename... Args, size_t... Is>
 void DistributedObject<ParallelComponent,
                        tmpl::list<PhaseDepActionListsPack...>>::
-    forward_tuple_to_action(std::tuple<Args...>&& args,
+    forward_tuple_to_action(std::tuple<Args...>&& /*args*/,
                             std::index_sequence<Is...> /*meta*/) {
-  Action::template apply<ParallelComponent>(
-      box_, *Parallel::local_branch(global_cache_proxy_),
-      static_cast<const array_index&>(array_index_),
-      std::forward<Args>(std::get<Is>(args))...);
+  // Action::template apply<ParallelComponent>(
+  //     box_, *Parallel::local_branch(global_cache_proxy_),
+  //     static_cast<const array_index&>(array_index_),
+  //     std::forward<Args>(std::get<Is>(args))...);
 }
 
 template <typename ParallelComponent, typename... PhaseDepActionListsPack>
 template <typename Action, typename... Args, size_t... Is>
 void DistributedObject<ParallelComponent,
                        tmpl::list<PhaseDepActionListsPack...>>::
-    forward_tuple_to_threaded_action(std::tuple<Args...>&& args,
+    forward_tuple_to_threaded_action(std::tuple<Args...>&& /*args*/,
                                      std::index_sequence<Is...> /*meta*/) {
-  const gsl::not_null<Parallel::NodeLock*> node_lock{&node_lock_};
-  Action::template apply<ParallelComponent>(
-      box_, *Parallel::local_branch(global_cache_proxy_),
-      static_cast<const array_index&>(array_index_), node_lock,
-      std::forward<Args>(std::get<Is>(args))...);
+  // const gsl::not_null<Parallel::NodeLock*> node_lock{&node_lock_};
+  // Action::template apply<ParallelComponent>(
+  //     box_, *Parallel::local_branch(global_cache_proxy_),
+  //     static_cast<const array_index&>(array_index_), node_lock,
+  //     std::forward<Args>(std::get<Is>(args))...);
 }
 
 template <typename ParallelComponent, typename... PhaseDepActionListsPack>
