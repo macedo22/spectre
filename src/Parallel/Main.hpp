@@ -686,118 +686,118 @@ void Main<Metavariables>::
 
 template <typename Metavariables>
 void Main<Metavariables>::execute_next_phase() {
-  if (not exception_messages_.empty()) {
-    // Print exceptions whether we errored during execution or cleanup
-    Parallel::printf(
-        "\n\n###############################\n"
-        "The following exceptions were reported during the phase: %s\n",
-        current_phase_);
-    for (const std::string& exception_message : exception_messages_) {
-      Parallel::printf("%s\n\n", exception_message);
-    }
-    exception_messages_.clear();
-    Parallel::printf(
-        "To determine where an exception is thrown, run gdb and do\n"
-        "catch throw EXCEPTION_TYPE\n"
-        "run\n"
-        "where EXCEPTION_TYPE is the Type of the exception above.\n"
-        "You may have to type `continue` to skip some option parser\n"
-        "exceptions until you get to the one you care about\n"
-        "You may also have to type `up` or `down` to go up and down\n"
-        "the function calls in order to find a useful line number.\n\n");
+  // if (not exception_messages_.empty()) {
+  //   // Print exceptions whether we errored during execution or cleanup
+  //   Parallel::printf(
+  //       "\n\n###############################\n"
+  //       "The following exceptions were reported during the phase: %s\n",
+  //       current_phase_);
+  //   for (const std::string& exception_message : exception_messages_) {
+  //     Parallel::printf("%s\n\n", exception_message);
+  //   }
+  //   exception_messages_.clear();
+  //   Parallel::printf(
+  //       "To determine where an exception is thrown, run gdb and do\n"
+  //       "catch throw EXCEPTION_TYPE\n"
+  //       "run\n"
+  //       "where EXCEPTION_TYPE is the Type of the exception above.\n"
+  //       "You may have to type `continue` to skip some option parser\n"
+  //       "exceptions until you get to the one you care about\n"
+  //       "You may also have to type `up` or `down` to go up and down\n"
+  //       "the function calls in order to find a useful line number.\n\n");
 
-    // Errored during cleanup. Can't have this, so just abort
-    if (current_phase_ == Parallel::Phase::PostFailureCleanup) {
-      Parallel::printf(
-          "Received termination while cleaning up a previous termination. This "
-          "is cyclic behavior and cannot be supported. Cleanup must exit "
-          "cleanly without errors.");
-      sys::abort("");
-    }
+  //   // Errored during cleanup. Can't have this, so just abort
+  //   if (current_phase_ == Parallel::Phase::PostFailureCleanup) {
+  //     Parallel::printf(
+  //         "Received termination while cleaning up a previous termination. This "
+  //         "is cyclic behavior and cannot be supported. Cleanup must exit "
+  //         "cleanly without errors.");
+  //     sys::abort("");
+  //   }
 
-    // Errored during execution. Go to cleanup
-    current_phase_ = Parallel::Phase::PostFailureCleanup;
-    Parallel::printf("Entering phase: %s at time %s\n", current_phase_,
-                     sys::pretty_wall_time());
-  } else {
-    if (Parallel::Phase::Exit == current_phase_) {
-      ERROR("Current phase is Exit, but program did not exit!");
-    }
+  //   // Errored during execution. Go to cleanup
+  //   current_phase_ = Parallel::Phase::PostFailureCleanup;
+  //   Parallel::printf("Entering phase: %s at time %s\n", current_phase_,
+  //                    sys::pretty_wall_time());
+  // } else {
+  //   if (Parallel::Phase::Exit == current_phase_) {
+  //     ERROR("Current phase is Exit, but program did not exit!");
+  //   }
 
-    if (current_phase_ == Parallel::Phase::PostFailureCleanup) {
-      Parallel::printf("PostFailureCleanup phase complete. Aborting.\n");
-      Informer::print_exit_info();
-      sys::abort("");
-    }
+  //   if (current_phase_ == Parallel::Phase::PostFailureCleanup) {
+  //     Parallel::printf("PostFailureCleanup phase complete. Aborting.\n");
+  //     Informer::print_exit_info();
+  //     sys::abort("");
+  //   }
 
-    const auto next_phase = PhaseControl::arbitrate_phase_change(
-        make_not_null(&phase_change_decision_data_), current_phase_,
-        *Parallel::local_branch(global_cache_proxy_));
-    if (next_phase.has_value()) {
-      // Only print info if there was an actual phase change.
-      if (current_phase_ != next_phase.value()) {
-        Parallel::printf("Entering phase from phase control: %s at time %s\n",
-                         next_phase.value(), sys::pretty_wall_time());
-        current_phase_ = next_phase.value();
-      }
-    } else {
-      const auto& default_order = Metavariables::default_phase_order;
-      auto it = alg::find(default_order, current_phase_);
-      using ::operator<<;
-      if (it == std::end(default_order)) {
-        ERROR("Cannot determine next phase as '"
-              << current_phase_
-              << "' is not in Metavariables::default_phase_order "
-              << default_order << "\n");
-      }
-      if (std::next(it) == std::end(default_order)) {
-        ERROR("Cannot determine next phase as '"
-              << current_phase_
-              << "' is last in Metavariables::default_phase_order "
-              << default_order << "\n");
-      }
-      current_phase_ = *std::next(it);
+  //   const auto next_phase = PhaseControl::arbitrate_phase_change(
+  //       make_not_null(&phase_change_decision_data_), current_phase_,
+  //       *Parallel::local_branch(global_cache_proxy_));
+  //   if (next_phase.has_value()) {
+  //     // Only print info if there was an actual phase change.
+  //     if (current_phase_ != next_phase.value()) {
+  //       Parallel::printf("Entering phase from phase control: %s at time %s\n",
+  //                        next_phase.value(), sys::pretty_wall_time());
+  //       current_phase_ = next_phase.value();
+  //     }
+  //   } else {
+  //     const auto& default_order = Metavariables::default_phase_order;
+  //     auto it = alg::find(default_order, current_phase_);
+  //     using ::operator<<;
+  //     if (it == std::end(default_order)) {
+  //       ERROR("Cannot determine next phase as '"
+  //             << current_phase_
+  //             << "' is not in Metavariables::default_phase_order "
+  //             << default_order << "\n");
+  //     }
+  //     if (std::next(it) == std::end(default_order)) {
+  //       ERROR("Cannot determine next phase as '"
+  //             << current_phase_
+  //             << "' is last in Metavariables::default_phase_order "
+  //             << default_order << "\n");
+  //     }
+  //     current_phase_ = *std::next(it);
 
-      Parallel::printf("Entering phase: %s at time %s\n", current_phase_,
-                       sys::pretty_wall_time());
-    }
-  }
+  //     Parallel::printf("Entering phase: %s at time %s\n", current_phase_,
+  //                      sys::pretty_wall_time());
+  //   }
+  // }
 
-  if (Parallel::Phase::Exit == current_phase_) {
-    check_if_component_terminated_correctly();
-    return;
-  }
-  tmpl::for_each<component_list>([this](auto parallel_component) {
-    tmpl::type_from<decltype(parallel_component)>::execute_next_phase(
-        current_phase_, global_cache_proxy_);
-  });
+  // if (Parallel::Phase::Exit == current_phase_) {
+  //   check_if_component_terminated_correctly();
+  //   return;
+  // }
+  // tmpl::for_each<component_list>([this](auto parallel_component) {
+  //   tmpl::type_from<decltype(parallel_component)>::execute_next_phase(
+  //       current_phase_, global_cache_proxy_);
+  // });
 
-  // Here we handle phases with direct Charm++ calls. By handling these phases
-  // after calling each component's execute_next_phase entry method, we ensure
-  // that each component knows what phase it is in. This is useful for pup
-  // functions that need special handling that depends on the phase.
-  //
-  // Note that in future versions of Charm++ it may become possible for pup
-  // functions to have knowledge of the migration type. At that point, it
-  // should no longer be necessary to wait until after
-  // component::execute_next_phase to make the direct charm calls. Instead, the
-  // load balance or checkpoint work could be initiated *before* the call to
-  // component::execute_next_phase and *without* the need for a quiescence
-  // detection. This may be a slight optimization.
-  if (current_phase_ == Parallel::Phase::LoadBalancing) {
-    CkStartQD(CkCallback(CkIndex_Main<Metavariables>::start_load_balance(),
-                         this->thisProxy));
-    return;
-  }
-  if (current_phase_ == Parallel::Phase::WriteCheckpoint) {
-    CkStartQD(CkCallback(CkIndex_Main<Metavariables>::start_write_checkpoint(),
-                         this->thisProxy));
-    return;
-  }
+  // // Here we handle phases with direct Charm++ calls. By handling these phases
+  // // after calling each component's execute_next_phase entry method, we ensure
+  // // that each component knows what phase it is in. This is useful for pup
+  // // functions that need special handling that depends on the phase.
+  // //
+  // // Note that in future versions of Charm++ it may become possible for pup
+  // // functions to have knowledge of the migration type. At that point, it
+  // // should no longer be necessary to wait until after
+  // // component::execute_next_phase to make the direct charm calls. Instead, the
+  // // load balance or checkpoint work could be initiated *before* the call to
+  // // component::execute_next_phase and *without* the need for a quiescence
+  // // detection. This may be a slight optimization.
+  // if (current_phase_ == Parallel::Phase::LoadBalancing) {
+  //   CkStartQD(CkCallback(CkIndex_Main<Metavariables>::start_load_balance(),
+  //                        this->thisProxy));
+  //   return;
+  // }
+  // if (current_phase_ == Parallel::Phase::WriteCheckpoint) {
+  //   CkStartQD(CkCallback(CkIndex_Main<Metavariables>::start_write_checkpoint(),
+  //                        this->thisProxy));
+  //   return;
+  // }
 
-  // The general case simply returns to execute_next_phase
-  CkStartQD(CkCallback(CkIndex_Main<Metavariables>::execute_next_phase(),
-                       this->thisProxy));
+  // // The general case simply returns to execute_next_phase
+  // CkStartQD(CkCallback(CkIndex_Main<Metavariables>::execute_next_phase(),
+  //                      this->thisProxy));
 }
 
 template <typename Metavariables>
@@ -991,4 +991,4 @@ void Main<Metavariables>::check_future_checkpoint_dirs_available() const {
 
 #define CK_TEMPLATES_ONLY
 #include "Parallel/Main.def.h"
-#undef CK_TEMPLATES_O
+#undef CK_TEMPLATES_ONLY
