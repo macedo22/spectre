@@ -93,27 +93,27 @@ class Event : public ::Event {
 
   template <typename DbType, typename ComputeTagsList, typename Metavariables,
             typename ArrayIndex, typename Component>
-  void operator()(const double time, const std::optional<double> previous_time,
-                  const ObservationBox<DbType, ComputeTagsList>& box,
-                  Parallel::GlobalCache<Metavariables>& cache,
-                  const ArrayIndex& array_index,
-                  const Component* const component,
+  void operator()(const double /*time*/, const std::optional<double> /*previous_time*/,
+                  const ObservationBox<DbType, ComputeTagsList>& /*box*/,
+                  Parallel::GlobalCache<Metavariables>& /*cache*/,
+                  const ArrayIndex& /*array_index*/,
+                  const Component* const /*component*/,
                   const ObservationValue& /*observation_value*/) const {
-    const LinkedMessageId<double> measurement_id{time, previous_time};
-    tmpl::for_each<typename measurement::submeasurements>(
-        [&array_index, &box, &cache, &component,
-         &measurement_id](auto submeasurement) {
-          using Submeasurement = tmpl::type_from<decltype(submeasurement)>;
-          apply(Submeasurement{}, box, measurement_id, cache, array_index,
-                component, ControlSystems{});
-          if (Parallel::get<Tags::Verbosity>(cache) >= ::Verbosity::Debug) {
-            Parallel::printf(
-                "%s, time = %s: Running control system events for measurement "
-                "'%s'.\n",
-                get_output(array_index), measurement_id,
-                pretty_type::name<Submeasurement>());
-          }
-        });
+    // const LinkedMessageId<double> measurement_id{time, previous_time};
+    // tmpl::for_each<typename measurement::submeasurements>(
+    //     [&array_index, &box, &cache, &component,
+    //      &measurement_id](auto submeasurement) {
+    //       using Submeasurement = tmpl::type_from<decltype(submeasurement)>;
+    //       apply(Submeasurement{}, box, measurement_id, cache, array_index,
+    //             component, ControlSystems{});
+    //       if (Parallel::get<Tags::Verbosity>(cache) >= ::Verbosity::Debug) {
+    //         Parallel::printf(
+    //             "%s, time = %s: Running control system events for measurement "
+    //             "'%s'.\n",
+    //             get_output(array_index), measurement_id,
+    //             pretty_type::name<Submeasurement>());
+    //       }
+    //     });
   }
 
   using is_ready_argument_tags = tmpl::list<::Tags::Time>;
