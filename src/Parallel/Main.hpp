@@ -69,8 +69,8 @@ class Main : public CBase_Main<Metavariables> {
   using mutable_global_cache_tags =
       get_mutable_global_cache_tags<Metavariables>;
 
-  using phase_change_tags_and_combines_list =
-      PhaseControl::get_phase_change_tags<Metavariables>;
+  using phase_change_tags_and_combines_list = tmpl::list<>;
+      // PhaseControl::get_phase_change_tags<Metavariables>;
   /// \cond HIDDEN_SYMBOLS
   /// The constructor used to register the class
   explicit Main(const Parallel::charmxx::
