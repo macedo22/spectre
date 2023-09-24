@@ -891,12 +891,12 @@ void DistributedObject<
         constexpr Parallel::Phase phase = PhaseDep::phase;
         using actions_list = typename PhaseDep::action_list;
         if (phase_ == phase) {
-          // while (tmpl::size<actions_list>::value > 0 and not get_terminate() and
-          //        not halt_algorithm_until_next_phase_ and
-          //        iterate_over_actions<PhaseDep>(
-          //            std::make_index_sequence<
-          //                tmpl::size<actions_list>::value>{})) {
-          // }
+          while (tmpl::size<actions_list>::value > 0 and not get_terminate() and
+                 not halt_algorithm_until_next_phase_ and
+                 iterate_over_actions<PhaseDep>(
+                     std::make_index_sequence<
+                         tmpl::size<actions_list>::value>{})) {
+          }
           tmpl::for_each<actions_list>([this](auto action_v) {
             using action = tmpl::type_from<decltype(action_v)>;
             if (algorithm_step_ ==
