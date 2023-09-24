@@ -47,9 +47,9 @@ struct RunEventsAndTriggers {
             typename ParallelComponent>
   static Parallel::iterable_action_return_t apply(
       db::DataBox<DbTags>& box, tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
-      Parallel::GlobalCache<Metavariables>& cache,
-      const ArrayIndex& array_index, const ActionList /*meta*/,
-      const ParallelComponent* const component) {
+      Parallel::GlobalCache<Metavariables>& /*cache*/,
+      const ArrayIndex& /*array_index*/, const ActionList /*meta*/,
+      const ParallelComponent* const /*component*/) {
     const auto time_step_id = db::get<::Tags::TimeStepId>(box);
     if (SelfStart::is_self_starting(time_step_id) or
         not time_step_id.step_time().is_at_slab_boundary()) {
@@ -57,23 +57,23 @@ struct RunEventsAndTriggers {
     }
 
     if (time_step_id.substep() == 0) {
-      Parallel::get<::Tags::EventsAndTriggers>(cache).run_events(
-          box, cache, array_index, component,
-          {db::tag_name<::Tags::Time>(), db::get<::Tags::Time>(box)});
+      // Parallel::get<::Tags::EventsAndTriggers>(cache).run_events(
+      //     box, cache, array_index, component,
+      //     {db::tag_name<::Tags::Time>(), db::get<::Tags::Time>(box)});
     } else {
-      const double substep_offset = 1.0e6;
-      const double observation_value = time_step_id.step_time().value() +
-                                       substep_offset * time_step_id.substep();
+      // const double substep_offset = 1.0e6;
+      // const double observation_value = time_step_id.step_time().value() +
+      //                                  substep_offset * time_step_id.substep();
 
-      Parallel::get<::Tags::EventsAndTriggers>(cache).run_events(
-          box, cache, array_index, component,
-          {db::tag_name<::Tags::Time>(), observation_value},
-          [&box](const Trigger& trigger) {
-            const auto* substep_trigger =
-                dynamic_cast<const ::Triggers::OnSubsteps*>(&trigger);
-            return substep_trigger != nullptr and
-                   substep_trigger->is_triggered(box);
-          });
+      // Parallel::get<::Tags::EventsAndTriggers>(cache).run_events(
+      //     box, cache, array_index, component,
+      //     {db::tag_name<::Tags::Time>(), observation_value},
+      //     [&box](const Trigger& trigger) {
+      //       const auto* substep_trigger =
+      //           dynamic_cast<const ::Triggers::OnSubsteps*>(&trigger);
+      //       return substep_trigger != nullptr and
+      //              substep_trigger->is_triggered(box);
+      //     });
     }
 
     return {Parallel::AlgorithmExecution::Continue, std::nullopt};
