@@ -268,320 +268,320 @@ void AtSyncIndicator<Metavariables>::ResumeFromSync() {
 // ================================================================
 
 template <typename Metavariables>
-Main<Metavariables>::Main(CkArgMsg* msg) {
-  Informer::print_startup_info(msg);
+Main<Metavariables>::Main(CkArgMsg* /*msg*/) {
+//   Informer::print_startup_info(msg);
 
-  /// \todo detail::register_events_to_trace();
+//   /// \todo detail::register_events_to_trace();
 
-  namespace bpo = boost::program_options;
-  try {
-    bpo::options_description command_line_options;
-    // disable clang-format because it combines the repeated call operator
-    // invocations making the code more difficult to parse.
-    // clang-format off
-    command_line_options.add_options()
-        ("help,h", "Describe program options")
-        ("check-options", "Check input file options")
-        ("dump-source-tree-as", bpo::value<std::string>(),
-         "If specified, then a gzip archive of the source tree is dumped "
-         "with the specified name. The archive can be expanded using "
-         "'tar -xzf ARCHIVE.tar.gz'")
-        ("dump-paths",
-         "Dump the PATH, CPATH, LD_LIBRARY_PATH, LIBRARY_PATH, and "
-         "CMAKE_PREFIX_PATH at compile time.")
-        ("dump-environment",
-         "Dump the result of printenv at compile time.")
-        ("dump-build-info",
-         "Dump the contents of SpECTRE's BuildInfo.txt")
-        ("dump-only",
-         "Exit after dumping requested information.")
-        ;
-    // clang-format on
+//   namespace bpo = boost::program_options;
+//   try {
+//     bpo::options_description command_line_options;
+//     // disable clang-format because it combines the repeated call operator
+//     // invocations making the code more difficult to parse.
+//     // clang-format off
+//     command_line_options.add_options()
+//         ("help,h", "Describe program options")
+//         ("check-options", "Check input file options")
+//         ("dump-source-tree-as", bpo::value<std::string>(),
+//          "If specified, then a gzip archive of the source tree is dumped "
+//          "with the specified name. The archive can be expanded using "
+//          "'tar -xzf ARCHIVE.tar.gz'")
+//         ("dump-paths",
+//          "Dump the PATH, CPATH, LD_LIBRARY_PATH, LIBRARY_PATH, and "
+//          "CMAKE_PREFIX_PATH at compile time.")
+//         ("dump-environment",
+//          "Dump the result of printenv at compile time.")
+//         ("dump-build-info",
+//          "Dump the contents of SpECTRE's BuildInfo.txt")
+//         ("dump-only",
+//          "Exit after dumping requested information.")
+//         ;
+//     // clang-format on
 
-    // False if there are no other options besides the explicitly added
-    // Parallel::OptionTags::ResourceInfo<Metavariables>,
-    constexpr bool has_options = tmpl::size<option_list>::value > 1;
-    // Add input-file option if it makes sense
-    Overloader{
-        [&command_line_options](std::true_type /*meta*/, auto mv,
-                                int /*gcc_bug*/)
-            -> std::void_t<decltype(
-                tmpl::type_from<decltype(mv)>::input_file)> {
-          // Metavariables has options and default input file name
-          command_line_options.add_options()(
-              "input-file",
-              bpo::value<std::string>()->default_value(
-                  tmpl::type_from<decltype(mv)>::input_file),
-              "Input file name");
-        },
-        [&command_line_options](std::true_type /*meta*/, auto /*mv*/,
-                                auto... /*unused*/) {
-          // Metavariables has options and no default input file name
-          command_line_options.add_options()(
-              "input-file", bpo::value<std::string>(), "Input file name");
-        },
-        [](std::false_type /*meta*/, auto mv, int /*gcc_bug*/)
-            -> std::void_t<decltype(
-                tmpl::type_from<decltype(mv)>::input_file)> {
-          // Metavariables has no options and default input file name
+//     // False if there are no other options besides the explicitly added
+//     // Parallel::OptionTags::ResourceInfo<Metavariables>,
+//     constexpr bool has_options = tmpl::size<option_list>::value > 1;
+//     // Add input-file option if it makes sense
+//     Overloader{
+//         [&command_line_options](std::true_type /*meta*/, auto mv,
+//                                 int /*gcc_bug*/)
+//             -> std::void_t<decltype(
+//                 tmpl::type_from<decltype(mv)>::input_file)> {
+//           // Metavariables has options and default input file name
+//           command_line_options.add_options()(
+//               "input-file",
+//               bpo::value<std::string>()->default_value(
+//                   tmpl::type_from<decltype(mv)>::input_file),
+//               "Input file name");
+//         },
+//         [&command_line_options](std::true_type /*meta*/, auto /*mv*/,
+//                                 auto... /*unused*/) {
+//           // Metavariables has options and no default input file name
+//           command_line_options.add_options()(
+//               "input-file", bpo::value<std::string>(), "Input file name");
+//         },
+//         [](std::false_type /*meta*/, auto mv, int /*gcc_bug*/)
+//             -> std::void_t<decltype(
+//                 tmpl::type_from<decltype(mv)>::input_file)> {
+//           // Metavariables has no options and default input file name
 
-          // always false, but must depend on mv
-          static_assert(std::is_same_v<decltype(mv), void>,
-                        "Metavariables supplies input file name, "
-                        "but there are no options");
-          ERROR("This should have failed at compile time");
-        },
-        [](std::false_type /*meta*/, auto... /*unused*/) {
-          // Metavariables has no options and no default input file name
-        }}(std::bool_constant<has_options>{}, tmpl::type_<Metavariables>{}, 0);
+//           // always false, but must depend on mv
+//           static_assert(std::is_same_v<decltype(mv), void>,
+//                         "Metavariables supplies input file name, "
+//                         "but there are no options");
+//           ERROR("This should have failed at compile time");
+//         },
+//         [](std::false_type /*meta*/, auto... /*unused*/) {
+//           // Metavariables has no options and no default input file name
+//         }}(std::bool_constant<has_options>{}, tmpl::type_<Metavariables>{}, 0);
 
-    bpo::command_line_parser command_line_parser(msg->argc, msg->argv);
-    command_line_parser.options(command_line_options);
+//     bpo::command_line_parser command_line_parser(msg->argc, msg->argv);
+//     command_line_parser.options(command_line_options);
 
-    const bool ignore_unrecognized_command_line_options = Overloader{
-        [](auto mv, int /*gcc_bug*/)
-            -> decltype(tmpl::type_from<decltype(
-                            mv)>::ignore_unrecognized_command_line_options) {
-          return tmpl::type_from<decltype(
-              mv)>::ignore_unrecognized_command_line_options;
-        },
-        [](auto /*mv*/, auto... /*meta*/) { return false; }}(
-        tmpl::type_<Metavariables>{}, 0);
-    if (ignore_unrecognized_command_line_options) {
-      // Allow unknown --options
-      command_line_parser.allow_unregistered();
-    } else {
-      // Forbid positional parameters
-      command_line_parser.positional({});
-    }
+//     const bool ignore_unrecognized_command_line_options = Overloader{
+//         [](auto mv, int /*gcc_bug*/)
+//             -> decltype(tmpl::type_from<decltype(
+//                             mv)>::ignore_unrecognized_command_line_options) {
+//           return tmpl::type_from<decltype(
+//               mv)>::ignore_unrecognized_command_line_options;
+//         },
+//         [](auto /*mv*/, auto... /*meta*/) { return false; }}(
+//         tmpl::type_<Metavariables>{}, 0);
+//     if (ignore_unrecognized_command_line_options) {
+//       // Allow unknown --options
+//       command_line_parser.allow_unregistered();
+//     } else {
+//       // Forbid positional parameters
+//       command_line_parser.positional({});
+//     }
 
-    bpo::variables_map parsed_command_line_options;
-    bpo::store(command_line_parser.run(), parsed_command_line_options);
-    bpo::notify(parsed_command_line_options);
+//     bpo::variables_map parsed_command_line_options;
+//     bpo::store(command_line_parser.run(), parsed_command_line_options);
+//     bpo::notify(parsed_command_line_options);
 
-    Options::Parser<tmpl::remove<option_list, Options::Tags::InputSource>>
-        options(Metavariables::help);
+//     Options::Parser<tmpl::remove<option_list, Options::Tags::InputSource>>
+//         options(Metavariables::help);
 
-    if (parsed_command_line_options.count("help") != 0) {
-      Parallel::printf("%s\n%s", command_line_options, options.help());
-      sys::exit();
-    }
+//     if (parsed_command_line_options.count("help") != 0) {
+//       Parallel::printf("%s\n%s", command_line_options, options.help());
+//       sys::exit();
+//     }
 
-    if (parsed_command_line_options.count("dump-source-tree-as") != 0) {
-      formaline::write_to_file(
-          parsed_command_line_options["dump-source-tree-as"].as<std::string>());
-      Parallel::printf("Dumping archive of source tree at link time.\n");
-    }
-    if (parsed_command_line_options.count("dump-paths") != 0) {
-      Parallel::printf("Paths at link time were:\n%s\n",
-                       formaline::get_paths());
-    }
-    if (parsed_command_line_options.count("dump-environment") != 0) {
-      Parallel::printf("Environment variables at link time were:\n%s\n",
-                       formaline::get_environment_variables());
-    }
-    if (parsed_command_line_options.count("dump-build-info") != 0) {
-      Parallel::printf("BuildInfo.txt at link time was:\n%s\n",
-                       formaline::get_build_info());
-    }
-    if (parsed_command_line_options.count("dump-only") != 0) {
-      sys::exit();
-    }
+//     if (parsed_command_line_options.count("dump-source-tree-as") != 0) {
+//       formaline::write_to_file(
+//           parsed_command_line_options["dump-source-tree-as"].as<std::string>());
+//       Parallel::printf("Dumping archive of source tree at link time.\n");
+//     }
+//     if (parsed_command_line_options.count("dump-paths") != 0) {
+//       Parallel::printf("Paths at link time were:\n%s\n",
+//                        formaline::get_paths());
+//     }
+//     if (parsed_command_line_options.count("dump-environment") != 0) {
+//       Parallel::printf("Environment variables at link time were:\n%s\n",
+//                        formaline::get_environment_variables());
+//     }
+//     if (parsed_command_line_options.count("dump-build-info") != 0) {
+//       Parallel::printf("BuildInfo.txt at link time was:\n%s\n",
+//                        formaline::get_build_info());
+//     }
+//     if (parsed_command_line_options.count("dump-only") != 0) {
+//       sys::exit();
+//     }
 
-    std::string input_file;
-    if (has_options) {
-      if (parsed_command_line_options.count("input-file") == 0) {
-        ERROR_NO_TRACE("No default input file name.  Pass --input-file.");
-      }
-      input_file = parsed_command_line_options["input-file"].as<std::string>();
-      options.parse_file(input_file);
-    } else {
-      if constexpr (tmpl::size<singleton_component_list>::value > 0) {
-        options.parse(
-            "ResourceInfo:\n"
-            "  AvoidGlobalProc0: false\n"
-            "  Singletons: Auto\n");
-      } else {
-        options.parse(
-            "ResourceInfo:\n"
-            "  AvoidGlobalProc0: false\n");
-      }
-    }
+//     std::string input_file;
+//     if (has_options) {
+//       if (parsed_command_line_options.count("input-file") == 0) {
+//         ERROR_NO_TRACE("No default input file name.  Pass --input-file.");
+//       }
+//       input_file = parsed_command_line_options["input-file"].as<std::string>();
+//       options.parse_file(input_file);
+//     } else {
+//       if constexpr (tmpl::size<singleton_component_list>::value > 0) {
+//         options.parse(
+//             "ResourceInfo:\n"
+//             "  AvoidGlobalProc0: false\n"
+//             "  Singletons: Auto\n");
+//       } else {
+//         options.parse(
+//             "ResourceInfo:\n"
+//             "  AvoidGlobalProc0: false\n");
+//       }
+//     }
 
-    if (parsed_command_line_options.count("check-options") != 0) {
-      // Force all the options to be created.
-      options.template apply<option_list, Metavariables>([](auto... args) {
-        (void)std::initializer_list<char>{((void)args, '0')...};
-      });
-      if (has_options) {
-        Parallel::printf("\n%s parsed successfully!\n", input_file);
-      } else {
-        // This is still considered successful, since it means the
-        // program would have started.
-        Parallel::printf("\nNo options to check!\n");
-      }
+//     if (parsed_command_line_options.count("check-options") != 0) {
+//       // Force all the options to be created.
+//       options.template apply<option_list, Metavariables>([](auto... args) {
+//         (void)std::initializer_list<char>{((void)args, '0')...};
+//       });
+//       if (has_options) {
+//         Parallel::printf("\n%s parsed successfully!\n", input_file);
+//       } else {
+//         // This is still considered successful, since it means the
+//         // program would have started.
+//         Parallel::printf("\nNo options to check!\n");
+//       }
 
-      // Include a check that the checkpoint dirs are available for writing as
-      // part of checking the option parsing. Doing these checks together helps
-      // catch more user errors before running the executable 'for real'.
-      //
-      // Note we don't do this check at the beginning of the Main chare
-      // constructor because we don't _always_ want to error if checkpoint dirs
-      // already exist. For example, running the executable with flags like
-      // `--help` or `--dump-source-tree-as` should succeed even if checkpoints
-      // were previously written.
-      check_future_checkpoint_dirs_available();
+//       // Include a check that the checkpoint dirs are available for writing as
+//       // part of checking the option parsing. Doing these checks together helps
+//       // catch more user errors before running the executable 'for real'.
+//       //
+//       // Note we don't do this check at the beginning of the Main chare
+//       // constructor because we don't _always_ want to error if checkpoint dirs
+//       // already exist. For example, running the executable with flags like
+//       // `--help` or `--dump-source-tree-as` should succeed even if checkpoints
+//       // were previously written.
+//       check_future_checkpoint_dirs_available();
 
-      sys::exit();
-    }
+//       sys::exit();
+//     }
 
-    options_ =
-        options.template apply<option_list, Metavariables>([](auto... args) {
-          return tuples::tagged_tuple_from_typelist<option_list>(
-              std::move(args)...);
-        });
+//     options_ =
+//         options.template apply<option_list, Metavariables>([](auto... args) {
+//           return tuples::tagged_tuple_from_typelist<option_list>(
+//               std::move(args)...);
+//         });
 
-    resource_info_ =
-        tuples::get<Parallel::OptionTags::ResourceInfo<Metavariables>>(
-            options_);
+//     resource_info_ =
+//         tuples::get<Parallel::OptionTags::ResourceInfo<Metavariables>>(
+//             options_);
 
-    Parallel::printf("\nOption parsing completed.\n");
-  } catch (const bpo::error& e) {
-    ERROR(e.what());
-  }
+//     Parallel::printf("\nOption parsing completed.\n");
+//   } catch (const bpo::error& e) {
+//     ERROR(e.what());
+//   }
 
-  check_future_checkpoint_dirs_available();
+//   check_future_checkpoint_dirs_available();
 
-  global_cache_proxy_ = CProxy_GlobalCache<Metavariables>::ckNew(
-      Parallel::create_from_options<Metavariables>(options_,
-                                                   const_global_cache_tags{}),
-      Parallel::create_from_options<Metavariables>(options_,
-                                                   mutable_global_cache_tags{}),
-      this->thisProxy);
+//   global_cache_proxy_ = CProxy_GlobalCache<Metavariables>::ckNew(
+//       Parallel::create_from_options<Metavariables>(options_,
+//                                                    const_global_cache_tags{}),
+//       Parallel::create_from_options<Metavariables>(options_,
+//                                                    mutable_global_cache_tags{}),
+//       this->thisProxy);
 
-  // Now that the GlobalCache has been built, create the singleton map which
-  // will be used to allocate all the singletons. We need to be careful here
-  // because the parallel components have not been set at this point, so if we
-  // try to Parallel::get_parallel_component here, an error will occur. This
-  // call is OK though because build_singleton_map() only uses the parallel info
-  // functions from the GlobalCache (like cache.number_of_procs()).
-  resource_info_.build_singleton_map(
-      *Parallel::local_branch(global_cache_proxy_));
+//   // Now that the GlobalCache has been built, create the singleton map which
+//   // will be used to allocate all the singletons. We need to be careful here
+//   // because the parallel components have not been set at this point, so if we
+//   // try to Parallel::get_parallel_component here, an error will occur. This
+//   // call is OK though because build_singleton_map() only uses the parallel info
+//   // functions from the GlobalCache (like cache.number_of_procs()).
+//   resource_info_.build_singleton_map(
+//       *Parallel::local_branch(global_cache_proxy_));
 
-  // Now that the singleton map has been built, set the resource info in the
-  // GlobalCache (if the tags exist). Since this info will be constant
-  // throughout a simulation, we opt for directly editing a const tag in the
-  // GlobalCache before we pass it to any other parallel component rather than
-  // having a mutable tag and using a mutate call to set it.
-  global_cache_proxy_.set_resource_info(resource_info_);
+//   // Now that the singleton map has been built, set the resource info in the
+//   // GlobalCache (if the tags exist). Since this info will be constant
+//   // throughout a simulation, we opt for directly editing a const tag in the
+//   // GlobalCache before we pass it to any other parallel component rather than
+//   // having a mutable tag and using a mutate call to set it.
+//   global_cache_proxy_.set_resource_info(resource_info_);
 
-  // Now that the singleton map has been built, we have to replace the
-  // ResourceInfo that was created from options with the one that has all the
-  // correct singleton assignments so simple tags can be created from options
-  // with a valid ResourceInfo.
-  get<Parallel::OptionTags::ResourceInfo<Metavariables>>(options_) =
-      resource_info_;
+//   // Now that the singleton map has been built, we have to replace the
+//   // ResourceInfo that was created from options with the one that has all the
+//   // correct singleton assignments so simple tags can be created from options
+//   // with a valid ResourceInfo.
+//   get<Parallel::OptionTags::ResourceInfo<Metavariables>>(options_) =
+//       resource_info_;
 
-  at_sync_indicator_proxy_ =
-      detail::CProxy_AtSyncIndicator<Metavariables>::ckNew();
-  at_sync_indicator_proxy_[0].insert(this->thisProxy, sys::my_proc());
-  at_sync_indicator_proxy_.doneInserting();
+//   at_sync_indicator_proxy_ =
+//       detail::CProxy_AtSyncIndicator<Metavariables>::ckNew();
+//   at_sync_indicator_proxy_[0].insert(this->thisProxy, sys::my_proc());
+//   at_sync_indicator_proxy_.doneInserting();
 
-  using parallel_component_tag_list = tmpl::transform<
-      component_list,
-      tmpl::bind<
-          tmpl::type_,
-          tmpl::bind<Parallel::proxy_from_parallel_component, tmpl::_1>>>;
-  tuples::tagged_tuple_from_typelist<parallel_component_tag_list>
-      the_parallel_components;
+//   using parallel_component_tag_list = tmpl::transform<
+//       component_list,
+//       tmpl::bind<
+//           tmpl::type_,
+//           tmpl::bind<Parallel::proxy_from_parallel_component, tmpl::_1>>>;
+//   tuples::tagged_tuple_from_typelist<parallel_component_tag_list>
+//       the_parallel_components;
 
-  // Print info on DataBox variants
-#ifdef SPECTRE_DEBUG
-  Parallel::printf("\nParallel components:\n");
-  tmpl::for_each<component_list>([](auto parallel_component_v) {
-    using parallel_component = tmpl::type_from<decltype(parallel_component_v)>;
-    using chare_type = typename parallel_component::chare_type;
-    using charm_type = Parallel::charm_types_with_parameters<
-        parallel_component, typename Parallel::get_array_index<
-                                chare_type>::template f<parallel_component>>;
-    Parallel::printf(
-        "  %s (%s) has a DataBox with %u items.\n",
-        pretty_type::name<parallel_component>(),
-        pretty_type::name<chare_type>(),
-        tmpl::size<
-            typename charm_type::algorithm::databox_type::tags_list>::value);
-  });
-  Parallel::printf("\n");
-#endif  // SPECTRE_DEBUG
+//   // Print info on DataBox variants
+// #ifdef SPECTRE_DEBUG
+//   Parallel::printf("\nParallel components:\n");
+//   tmpl::for_each<component_list>([](auto parallel_component_v) {
+//     using parallel_component = tmpl::type_from<decltype(parallel_component_v)>;
+//     using chare_type = typename parallel_component::chare_type;
+//     using charm_type = Parallel::charm_types_with_parameters<
+//         parallel_component, typename Parallel::get_array_index<
+//                                 chare_type>::template f<parallel_component>>;
+//     Parallel::printf(
+//         "  %s (%s) has a DataBox with %u items.\n",
+//         pretty_type::name<parallel_component>(),
+//         pretty_type::name<chare_type>(),
+//         tmpl::size<
+//             typename charm_type::algorithm::databox_type::tags_list>::value);
+//   });
+//   Parallel::printf("\n");
+// #endif  // SPECTRE_DEBUG
 
-  // Construct the group proxies with a dependency on the GlobalCache proxy
-  CkEntryOptions global_cache_dependency;
-  global_cache_dependency.setGroupDepID(global_cache_proxy_.ckGetGroupID());
+//   // Construct the group proxies with a dependency on the GlobalCache proxy
+//   CkEntryOptions global_cache_dependency;
+//   global_cache_dependency.setGroupDepID(global_cache_proxy_.ckGetGroupID());
 
-  tmpl::for_each<group_component_list>([this, &the_parallel_components,
-                                        &global_cache_dependency](
-                                           auto parallel_component_v) {
-    using parallel_component = tmpl::type_from<decltype(parallel_component_v)>;
-    using ParallelComponentProxy =
-        Parallel::proxy_from_parallel_component<parallel_component>;
-    tuples::get<tmpl::type_<ParallelComponentProxy>>(the_parallel_components) =
-        ParallelComponentProxy::ckNew(
-            global_cache_proxy_,
-            Parallel::create_from_options<Metavariables>(
-                options_,
-                typename parallel_component::simple_tags_from_options{}),
-            &global_cache_dependency);
-  });
+//   tmpl::for_each<group_component_list>([this, &the_parallel_components,
+//                                         &global_cache_dependency](
+//                                            auto parallel_component_v) {
+//     using parallel_component = tmpl::type_from<decltype(parallel_component_v)>;
+//     using ParallelComponentProxy =
+//         Parallel::proxy_from_parallel_component<parallel_component>;
+//     tuples::get<tmpl::type_<ParallelComponentProxy>>(the_parallel_components) =
+//         ParallelComponentProxy::ckNew(
+//             global_cache_proxy_,
+//             Parallel::create_from_options<Metavariables>(
+//                 options_,
+//                 typename parallel_component::simple_tags_from_options{}),
+//             &global_cache_dependency);
+//   });
 
-  // Create proxies for empty array chares (whose elements will be created by
-  // the allocate functions of the array components during
-  // execute_initialization_phase)
-  tmpl::for_each<non_bound_array_component_list>([&the_parallel_components](
-                                                     auto parallel_component) {
-    using ParallelComponentProxy = Parallel::proxy_from_parallel_component<
-        tmpl::type_from<decltype(parallel_component)>>;
-    tuples::get<tmpl::type_<ParallelComponentProxy>>(the_parallel_components) =
-        ParallelComponentProxy::ckNew();
-  });
+//   // Create proxies for empty array chares (whose elements will be created by
+//   // the allocate functions of the array components during
+//   // execute_initialization_phase)
+//   tmpl::for_each<non_bound_array_component_list>([&the_parallel_components](
+//                                                      auto parallel_component) {
+//     using ParallelComponentProxy = Parallel::proxy_from_parallel_component<
+//         tmpl::type_from<decltype(parallel_component)>>;
+//     tuples::get<tmpl::type_<ParallelComponentProxy>>(the_parallel_components) =
+//         ParallelComponentProxy::ckNew();
+//   });
 
-  // Create proxies for empty bound array chares
-  tmpl::for_each<bound_array_component_list>([&the_parallel_components](
-                                                 auto parallel_component) {
-    using ParallelComponentProxy = Parallel::proxy_from_parallel_component<
-        tmpl::type_from<decltype(parallel_component)>>;
-    CkArrayOptions opts;
-    opts.bindTo(
-        tuples::get<tmpl::type_<Parallel::proxy_from_parallel_component<
-            typename tmpl::type_from<decltype(parallel_component)>::bind_to>>>(
-            the_parallel_components));
-    tuples::get<tmpl::type_<ParallelComponentProxy>>(the_parallel_components) =
-        ParallelComponentProxy::ckNew(opts);
-  });
+//   // Create proxies for empty bound array chares
+//   tmpl::for_each<bound_array_component_list>([&the_parallel_components](
+//                                                  auto parallel_component) {
+//     using ParallelComponentProxy = Parallel::proxy_from_parallel_component<
+//         tmpl::type_from<decltype(parallel_component)>>;
+//     CkArrayOptions opts;
+//     opts.bindTo(
+//         tuples::get<tmpl::type_<Parallel::proxy_from_parallel_component<
+//             typename tmpl::type_from<decltype(parallel_component)>::bind_to>>>(
+//             the_parallel_components));
+//     tuples::get<tmpl::type_<ParallelComponentProxy>>(the_parallel_components) =
+//         ParallelComponentProxy::ckNew(opts);
+//   });
 
-  // Create proxies for singletons (which are single-element charm++ arrays)
-  tmpl::for_each<singleton_component_list>([&the_parallel_components](
-                                               auto parallel_component) {
-    using ParallelComponentProxy = Parallel::proxy_from_parallel_component<
-        tmpl::type_from<decltype(parallel_component)>>;
-    tuples::get<tmpl::type_<ParallelComponentProxy>>(the_parallel_components) =
-        ParallelComponentProxy::ckNew();
-  });
+//   // Create proxies for singletons (which are single-element charm++ arrays)
+//   tmpl::for_each<singleton_component_list>([&the_parallel_components](
+//                                                auto parallel_component) {
+//     using ParallelComponentProxy = Parallel::proxy_from_parallel_component<
+//         tmpl::type_from<decltype(parallel_component)>>;
+//     tuples::get<tmpl::type_<ParallelComponentProxy>>(the_parallel_components) =
+//         ParallelComponentProxy::ckNew();
+//   });
 
-  // Send the complete list of parallel_components to the GlobalCache on
-  // each Charm++ node.  After all nodes have finished, the callback is
-  // executed.
-  CkCallback callback(
-      CkIndex_Main<Metavariables>::
-          allocate_remaining_components_and_execute_initialization_phase(),
-      this->thisProxy);
-  global_cache_proxy_.set_parallel_components(the_parallel_components,
-                                              callback);
+//   // Send the complete list of parallel_components to the GlobalCache on
+//   // each Charm++ node.  After all nodes have finished, the callback is
+//   // executed.
+//   CkCallback callback(
+//       CkIndex_Main<Metavariables>::
+//           allocate_remaining_components_and_execute_initialization_phase(),
+//       this->thisProxy);
+//   global_cache_proxy_.set_parallel_components(the_parallel_components,
+//                                               callback);
 
-  get<Tags::ExitCode>(phase_change_decision_data_) =
-      Parallel::ExitCode::Complete;
-  PhaseControl::initialize_phase_change_decision_data(
-      make_not_null(&phase_change_decision_data_),
-      *Parallel::local_branch(global_cache_proxy_));
+//   get<Tags::ExitCode>(phase_change_decision_data_) =
+//       Parallel::ExitCode::Complete;
+//   PhaseControl::initialize_phase_change_decision_data(
+//       make_not_null(&phase_change_decision_data_),
+//       *Parallel::local_branch(global_cache_proxy_));
 }
 
 template <typename Metavariables>
