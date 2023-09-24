@@ -774,9 +774,9 @@ void DistributedObject<
             "we do not allow.");
       }
       performing_action_ = true;
-      // Action::template apply<ParallelComponent>(
-      //     box_, *Parallel::local_branch(global_cache_proxy_),
-      //     static_cast<const array_index&>(array_index_));
+      Action::template apply<ParallelComponent>(
+          box_, *Parallel::local_branch(global_cache_proxy_),
+          static_cast<const array_index&>(array_index_));
       performing_action_ = false;
     }
     perform_algorithm();
