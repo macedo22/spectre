@@ -287,7 +287,7 @@ struct RunEventsAndDenseTriggers {
           break;
       }
 
-      events_and_dense_triggers.run_events(box, cache, array_index, component);
+      // events_and_dense_triggers.run_events(box, cache, array_index, component);
       if (not events_and_dense_triggers.reschedule(box, cache, array_index,
                                                    component)) {
         return {Parallel::AlgorithmExecution::Retry, std::nullopt};
