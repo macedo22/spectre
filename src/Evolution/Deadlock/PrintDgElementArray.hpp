@@ -50,88 +50,88 @@ namespace deadlock {
 struct PrintElementInfo {
   template <typename ParallelComponent, typename DbTags, typename Metavariables,
             typename ArrayIndex>
-  static void apply(db::DataBox<DbTags>& box,
-                    const Parallel::GlobalCache<Metavariables>& cache,
-                    const ArrayIndex& array_index) {
-    auto& local_object =
-        *Parallel::local(Parallel::get_parallel_component<ParallelComponent>(
-            cache)[array_index]);
+  static void apply(db::DataBox<DbTags>& /*box*/,
+                    const Parallel::GlobalCache<Metavariables>& /*cache*/,
+                    const ArrayIndex& /*array_index*/) {
+    // auto& local_object =
+    //     *Parallel::local(Parallel::get_parallel_component<ParallelComponent>(
+    //         cache)[array_index]);
 
-    const bool terminated = local_object.get_terminate();
+    // const bool terminated = local_object.get_terminate();
 
-    std::stringstream ss{};
-    ss << std::scientific << std::setprecision(16);
-    ss << "Element " << array_index
-       << (terminated ? " terminated" : " did NOT terminate") << " at time "
-       << db::get<::Tags::Time>(box) << ".";
+    // std::stringstream ss{};
+    // ss << std::scientific << std::setprecision(16);
+    // ss << "Element " << array_index
+    //    << (terminated ? " terminated" : " did NOT terminate") << " at time "
+    //    << db::get<::Tags::Time>(box) << ".";
 
-    // Only print stuff if this element didn't terminate properly
-    if (not terminated) {
-      const std::string& next_action =
-          local_object.deadlock_analysis_next_iterable_action();
-      ss << " Next action: " << next_action << "\n";
+    // // Only print stuff if this element didn't terminate properly
+    // if (not terminated) {
+    //   const std::string& next_action =
+    //       local_object.deadlock_analysis_next_iterable_action();
+    //   ss << " Next action: " << next_action << "\n";
 
-      // Start with time step and next time
-      const auto& step = db::get<::Tags::TimeStep>(box);
-      // The time step only prints a slab (beginning/end) and a fraction so we
-      // also print the approx numerical value of the step for easier reading
-      ss << " Time step: " << step << ":" << step.value() << "\n";
-      ss << " Next time: "
-         << db::get<::Tags::Next<::Tags::TimeStepId>>(box).substep_time()
-         << "\n";
+    //   // Start with time step and next time
+    //   const auto& step = db::get<::Tags::TimeStep>(box);
+    //   // The time step only prints a slab (beginning/end) and a fraction so we
+    //   // also print the approx numerical value of the step for easier reading
+    //   ss << " Time step: " << step << ":" << step.value() << "\n";
+    //   ss << " Next time: "
+    //      << db::get<::Tags::Next<::Tags::TimeStepId>>(box).substep_time()
+    //      << "\n";
 
-      ss << " Inboxes:\n";
+    //   ss << " Inboxes:\n";
 
-      const auto& inboxes = local_object.get_inboxes();
+    //   const auto& inboxes = local_object.get_inboxes();
 
-      const std::string mortar_inbox = Parallel::output_inbox<
-          evolution::dg::Tags::BoundaryCorrectionAndGhostCellsInbox<3>>(inboxes,
-                                                                        2_st);
-      const std::string slab_size_inbox =
-          Parallel::output_inbox<ChangeSlabSize_detail::NewSlabSizeInbox>(
-              inboxes, 2_st);
-      ss << mortar_inbox;
-      ss << slab_size_inbox;
+    //   const std::string mortar_inbox = Parallel::output_inbox<
+    //       evolution::dg::Tags::BoundaryCorrectionAndGhostCellsInbox<3>>(inboxes,
+    //                                                                     2_st);
+    //   const std::string slab_size_inbox =
+    //       Parallel::output_inbox<ChangeSlabSize_detail::NewSlabSizeInbox>(
+    //           inboxes, 2_st);
+    //   ss << mortar_inbox;
+    //   ss << slab_size_inbox;
 
-      ss << " Mortars:\n";
+    //   ss << " Mortars:\n";
 
-      const auto& mortar_next_temporal_id =
-          db::get<evolution::dg::Tags::MortarNextTemporalId<3>>(box);
+    //   const auto& mortar_next_temporal_id =
+    //       db::get<evolution::dg::Tags::MortarNextTemporalId<3>>(box);
 
-      ss << "  MortarNextTemporalId\n";
-      for (const auto& [key, next_id] : mortar_next_temporal_id) {
-        ss << "    Key: " << key << ", next time: " << next_id.substep_time()
-           << "\n";
-      }
+    //   ss << "  MortarNextTemporalId\n";
+    //   for (const auto& [key, next_id] : mortar_next_temporal_id) {
+    //     ss << "    Key: " << key << ", next time: " << next_id.substep_time()
+    //        << "\n";
+    //   }
 
-      if constexpr (Metavariables::local_time_stepping) {
-        const auto& mortar_data_history =
-            db::get<evolution::dg::Tags::MortarDataHistory<
-                3, typename db::add_tag_prefix<
-                       ::Tags::dt,
-                       typename Metavariables::system::variables_tag>::type>>(
-                box);
-        ss << "  MortarDataHistory:\n";
+    //   if constexpr (Metavariables::local_time_stepping) {
+    //     const auto& mortar_data_history =
+    //         db::get<evolution::dg::Tags::MortarDataHistory<
+    //             3, typename db::add_tag_prefix<
+    //                    ::Tags::dt,
+    //                    typename Metavariables::system::variables_tag>::type>>(
+    //             box);
+    //     ss << "  MortarDataHistory:\n";
 
-        for (const auto& [key, history] : mortar_data_history) {
-          ss << "   Key: " << key << ", history:\n";
-          history.template print<false>(ss, 4_st);
-        }
-      } else {
-        const auto& mortar_data =
-            db::get<evolution::dg::Tags::MortarData<3>>(box);
-        ss << "  MortarData:\n";
+    //     for (const auto& [key, history] : mortar_data_history) {
+    //       ss << "   Key: " << key << ", history:\n";
+    //       history.template print<false>(ss, 4_st);
+    //     }
+    //   } else {
+    //     const auto& mortar_data =
+    //         db::get<evolution::dg::Tags::MortarData<3>>(box);
+    //     ss << "  MortarData:\n";
 
-        for (const auto& [key, single_mortar_data] : mortar_data) {
-          ss << "   Key: " << key << ", mortar data:\n";
-          ss << single_mortar_data.pretty_print_current_buffer_no_data(4_st);
-        }
-      }
-    } else {
-      ss << "\n";
-    }
+    //     for (const auto& [key, single_mortar_data] : mortar_data) {
+    //       ss << "   Key: " << key << ", mortar data:\n";
+    //       ss << single_mortar_data.pretty_print_current_buffer_no_data(4_st);
+    //     }
+    //   }
+    // } else {
+    //   ss << "\n";
+    // }
 
-    Parallel::printf("%s", ss.str());
+    // Parallel::printf("%s", ss.str());
   }
 };
 }  // namespace deadlock
