@@ -280,117 +280,117 @@ template <typename ComputeTagsList, typename DataBoxType,
           typename Metavariables, size_t VolumeDim, typename ParallelComponent>
 void ObserveAtExtremum<tmpl::list<ObservableTensorTags...>,
                        tmpl::list<NonTensorComputeTags...>, ArraySectionIdTag>::
-operator()(const ObservationBox<ComputeTagsList, DataBoxType>& /*box*/,
-           Parallel::GlobalCache<Metavariables>& /*cache*/,
-           const ElementId<VolumeDim>& /*array_index*/,
+operator()(const ObservationBox<ComputeTagsList, DataBoxType>& box,
+           Parallel::GlobalCache<Metavariables>& cache,
+           const ElementId<VolumeDim>& array_index,
            const ParallelComponent* const /*meta*/,
-           const ObservationValue& /*observation_value*/) const {
-  // // Skip observation on elements that are not part of a section
-  // const std::optional<std::string> section_observation_key =
-  //     observers::get_section_observation_key<ArraySectionIdTag>(box);
-  // if (not section_observation_key.has_value()) {
-  //   return;
-  // }
+           const ObservationValue& observation_value) const {
+  // Skip observation on elements that are not part of a section
+  const std::optional<std::string> section_observation_key =
+      observers::get_section_observation_key<ArraySectionIdTag>(box);
+  if (not section_observation_key.has_value()) {
+    return;
+  }
 
-  // using tensor_tags = tmpl::list<ObservableTensorTags...>;
+  using tensor_tags = tmpl::list<ObservableTensorTags...>;
 
-  // // Vector that will contain the local extremum, and the value
-  // // of other tensors at that extremum
-  // std::vector<double> data_to_reduce{};
-  // // Vector containing a description of the data to be reduced.
-  // std::vector<std::string> legend{observation_value.name};
-  // // Location of the local extremum
-  // size_t index_of_extremum = 0;
-  // // First, look for local extremum of desired scalar
-  // tmpl::for_each<tensor_tags>([this, &box, &data_to_reduce, &legend,
-  //                              &index_of_extremum](auto tag_v) {
-  //   using tag = tmpl::type_from<decltype(tag_v)>;
-  //   const std::string tensor_name = db::tag_name<tag>();
-  //   if (tensor_name == scalar_name_) {
-  //     if (UNLIKELY(not has_value(get<tag>(box)))) {
-  //       ERROR("Cannot observe a norm of '"
-  //             << tensor_name
-  //             << "' because it is a std::optional and wasn't able to be "
-  //                "computed. This can happen when you try to observe errors "
-  //                "without an analytic solution.");
-  //     }
-  //     const auto& scalar = value(get<tag>(box));
-  //     const auto components = get<1>(scalar.get_vector_of_data());
-  //     if (components.size() > 1) {
-  //       ERROR("Extremum should be taken on a scalar, yet we have "
-  //             << components.size() << " components in tensor " << tensor_name);
-  //     }
-  //     for (size_t i = 1; i < components[0].size(); i++) {
-  //       if ((extremum_type_ == "Max" and
-  //            (components[0][i] > components[0][index_of_extremum])) or
-  //           (extremum_type_ == "Min" and
-  //            (components[0][i] < components[0][index_of_extremum]))) {
-  //         index_of_extremum = i;
-  //       }
-  //     }
-  //     data_to_reduce.push_back(components[0][index_of_extremum]);
-  //     if (extremum_type_ == "Max") {
-  //       legend.push_back("Max(" + scalar_name_ + ")");
-  //     } else {
-  //       legend.push_back("Min(" + scalar_name_ + ")");
-  //     }
-  //   }
-  // });
-  // // Now get value of additional tensors at extremum
-  // tmpl::for_each<tensor_tags>([this, &box, &data_to_reduce, &legend,
-  //                              &index_of_extremum](auto tag_v) {
-  //   using tag = tmpl::type_from<decltype(tag_v)>;
-  //   const std::string tensor_name = db::tag_name<tag>();
-  //   for (size_t i = 0; i < additional_tensor_names_.size(); ++i)
-  //     if (tensor_name == additional_tensor_names_[i]) {
-  //       if (UNLIKELY(not has_value(get<tag>(box)))) {
-  //         ERROR("Cannot observe a norm of '"
-  //               << tensor_name
-  //               << "' because it is a std::optional and wasn't able to be "
-  //                  "computed. This can happen when you try to observe errors "
-  //                  "without an analytic solution.");
-  //       }
-  //       const auto& tensor = value(get<tag>(box));
-  //       const auto [component_names, components] = tensor.get_vector_of_data();
-  //       for (size_t j = 0; j < components.size(); j++) {
-  //         data_to_reduce.push_back(components[j][index_of_extremum]);
-  //         if (components.size() > 1) {
-  //           legend.push_back("At" + scalar_name_ + extremum_type_ + "(" +
-  //                            tensor_name + "_" + component_names[j] + ")");
-  //         } else {
-  //           legend.push_back("At" + scalar_name_ + extremum_type_ + "(" +
-  //                            tensor_name + ")");
-  //         }
-  //       }
-  //     }
-  // });
+  // Vector that will contain the local extremum, and the value
+  // of other tensors at that extremum
+  std::vector<double> data_to_reduce{};
+  // Vector containing a description of the data to be reduced.
+  std::vector<std::string> legend{observation_value.name};
+  // Location of the local extremum
+  size_t index_of_extremum = 0;
+  // First, look for local extremum of desired scalar
+  tmpl::for_each<tensor_tags>([this, &box, &data_to_reduce, &legend,
+                               &index_of_extremum](auto tag_v) {
+    using tag = tmpl::type_from<decltype(tag_v)>;
+    const std::string tensor_name = db::tag_name<tag>();
+    if (tensor_name == scalar_name_) {
+      if (UNLIKELY(not has_value(get<tag>(box)))) {
+        ERROR("Cannot observe a norm of '"
+              << tensor_name
+              << "' because it is a std::optional and wasn't able to be "
+                 "computed. This can happen when you try to observe errors "
+                 "without an analytic solution.");
+      }
+      const auto& scalar = value(get<tag>(box));
+      const auto components = get<1>(scalar.get_vector_of_data());
+      if (components.size() > 1) {
+        ERROR("Extremum should be taken on a scalar, yet we have "
+              << components.size() << " components in tensor " << tensor_name);
+      }
+      for (size_t i = 1; i < components[0].size(); i++) {
+        if ((extremum_type_ == "Max" and
+             (components[0][i] > components[0][index_of_extremum])) or
+            (extremum_type_ == "Min" and
+             (components[0][i] < components[0][index_of_extremum]))) {
+          index_of_extremum = i;
+        }
+      }
+      data_to_reduce.push_back(components[0][index_of_extremum]);
+      if (extremum_type_ == "Max") {
+        legend.push_back("Max(" + scalar_name_ + ")");
+      } else {
+        legend.push_back("Min(" + scalar_name_ + ")");
+      }
+    }
+  });
+  // Now get value of additional tensors at extremum
+  tmpl::for_each<tensor_tags>([this, &box, &data_to_reduce, &legend,
+                               &index_of_extremum](auto tag_v) {
+    using tag = tmpl::type_from<decltype(tag_v)>;
+    const std::string tensor_name = db::tag_name<tag>();
+    for (size_t i = 0; i < additional_tensor_names_.size(); ++i)
+      if (tensor_name == additional_tensor_names_[i]) {
+        if (UNLIKELY(not has_value(get<tag>(box)))) {
+          ERROR("Cannot observe a norm of '"
+                << tensor_name
+                << "' because it is a std::optional and wasn't able to be "
+                   "computed. This can happen when you try to observe errors "
+                   "without an analytic solution.");
+        }
+        const auto& tensor = value(get<tag>(box));
+        const auto [component_names, components] = tensor.get_vector_of_data();
+        for (size_t j = 0; j < components.size(); j++) {
+          data_to_reduce.push_back(components[j][index_of_extremum]);
+          if (components.size() > 1) {
+            legend.push_back("At" + scalar_name_ + extremum_type_ + "(" +
+                             tensor_name + "_" + component_names[j] + ")");
+          } else {
+            legend.push_back("At" + scalar_name_ + extremum_type_ + "(" +
+                             tensor_name + ")");
+          }
+        }
+      }
+  });
 
-  // // Send data to reduction observer
-  // auto& local_observer = *Parallel::local_branch(
-  //     Parallel::get_parallel_component<observers::Observer<Metavariables>>(
-  //         cache));
-  // const std::string subfile_path_with_suffix =
-  //     subfile_path_ + section_observation_key.value();
+  // Send data to reduction observer
+  auto& local_observer = *Parallel::local_branch(
+      Parallel::get_parallel_component<observers::Observer<Metavariables>>(
+          cache));
+  const std::string subfile_path_with_suffix =
+      subfile_path_ + section_observation_key.value();
 
-  // if (extremum_type_ == "Max") {
-  //   Parallel::simple_action<observers::Actions::ContributeReductionData>(
-  //       local_observer,
-  //       observers::ObservationId(observation_value.value,
-  //                                subfile_path_with_suffix + ".dat"),
-  //       Parallel::make_array_component_id<ParallelComponent>(array_index),
-  //       subfile_path_with_suffix, std::move(legend),
-  //       ReductionData<funcl::Max<>>{observation_value.value,
-  //                                   std::move(data_to_reduce)});
-  // } else {
-  //   Parallel::simple_action<observers::Actions::ContributeReductionData>(
-  //       local_observer,
-  //       observers::ObservationId(observation_value.value,
-  //                                subfile_path_with_suffix + ".dat"),
-  //       Parallel::make_array_component_id<ParallelComponent>(array_index),
-  //       subfile_path_with_suffix, std::move(legend),
-  //       ReductionData<funcl::Min<>>{observation_value.value,
-  //                                   std::move(data_to_reduce)});
-  // }
+  if (extremum_type_ == "Max") {
+    Parallel::simple_action<observers::Actions::ContributeReductionData>(
+        local_observer,
+        observers::ObservationId(observation_value.value,
+                                 subfile_path_with_suffix + ".dat"),
+        Parallel::make_array_component_id<ParallelComponent>(array_index),
+        subfile_path_with_suffix, std::move(legend),
+        ReductionData<funcl::Max<>>{observation_value.value,
+                                    std::move(data_to_reduce)});
+  } else {
+    Parallel::simple_action<observers::Actions::ContributeReductionData>(
+        local_observer,
+        observers::ObservationId(observation_value.value,
+                                 subfile_path_with_suffix + ".dat"),
+        Parallel::make_array_component_id<ParallelComponent>(array_index),
+        subfile_path_with_suffix, std::move(legend),
+        ReductionData<funcl::Min<>>{observation_value.value,
+                                    std::move(data_to_reduce)});
+  }
 }
 
 template <typename... ObservableTensorTags, typename... NonTensorComputeTags,
