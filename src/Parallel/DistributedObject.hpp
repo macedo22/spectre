@@ -1102,7 +1102,7 @@ bool DistributedObject<
   //     box_, inboxes_, *Parallel::local_branch(global_cache_proxy_),
   //     std::as_const(array_index_), actions_list{},
   //     std::add_pointer_t<ParallelComponent>{});
-  actions_list idk;
+  actions_list idk{};
   (void)idk;
 
   if (next_action_step.has_value()) {
