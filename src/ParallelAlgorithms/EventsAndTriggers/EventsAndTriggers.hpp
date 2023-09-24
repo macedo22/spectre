@@ -72,9 +72,9 @@ class EventsAndTriggers {
   template <typename DbTags, typename Metavariables, typename ArrayIndex,
             typename Component, typename CheckTrigger = std::nullptr_t>
   void run_events(const db::DataBox<DbTags>& box,
-                  Parallel::GlobalCache<Metavariables>& /*cache*/,
-                  const ArrayIndex& /*array_index*/, const Component* /*component*/,
-                  const Event::ObservationValue& /*observation_value*/,
+                  Parallel::GlobalCache<Metavariables>& cache,
+                  const ArrayIndex& array_index, const Component* component,
+                  const Event::ObservationValue& observation_value,
                   const CheckTrigger& check_trigger = nullptr) const {
     using compute_tags = tmpl::remove_duplicates<tmpl::filter<
         tmpl::flatten<tmpl::transform<
@@ -100,9 +100,8 @@ class EventsAndTriggers {
           observation_box = make_observation_box<compute_tags>(box);
         }
         for (const auto& event : events) {
-          (void)event;
-          // event->run(observation_box.value(), cache, array_index, component,
-          //            observation_value);
+          event->run(observation_box.value(), cache, array_index, component,
+                     observation_value);
         }
       }
     }

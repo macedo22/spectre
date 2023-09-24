@@ -227,8 +227,8 @@ EventsAndDenseTriggers::TriggeringState EventsAndDenseTriggers::is_ready(
 template <typename DbTags, typename Metavariables, typename ArrayIndex,
           typename ComponentPointer>
 void EventsAndDenseTriggers::run_events(
-    db::DataBox<DbTags>& box, Parallel::GlobalCache<Metavariables>& /*cache*/,
-    const ArrayIndex& /*array_index*/, const ComponentPointer /*component*/) {
+    db::DataBox<DbTags>& box, Parallel::GlobalCache<Metavariables>& cache,
+    const ArrayIndex& array_index, const ComponentPointer component) {
   ASSERT(initialized(), "Not initialized");
   ASSERT(not events_and_triggers_.empty(),
          "Should not be calling run_events with no triggers");
@@ -240,9 +240,7 @@ void EventsAndDenseTriggers::run_events(
       db::is_compute_tag<tmpl::_1>>>;
   const Event::ObservationValue observation_value{db::tag_name<::Tags::Time>(),
                                                   db::get<::Tags::Time>(box)};
-  (void)observation_value;
   const auto observation_box = make_observation_box<compute_tags>(box);
-  (void)observation_box;
 
   for (auto& trigger_entry : events_and_triggers_) {
     if (trigger_entry.is_triggered == std::optional{true}) {
@@ -254,9 +252,8 @@ void EventsAndDenseTriggers::run_events(
           },
           make_not_null(&box));
       for (const auto& event : trigger_entry.events) {
-        (void)event;
-        // event->run(observation_box, cache, array_index, component,
-        //            observation_value);
+        event->run(observation_box, cache, array_index, component,
+                   observation_value);
       }
       db::mutate<::evolution::Tags::PreviousTriggerTime>(
           [](const gsl::not_null<std::optional<double>*>
