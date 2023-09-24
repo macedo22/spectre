@@ -1098,10 +1098,12 @@ bool DistributedObject<
 
   AlgorithmExecution requested_execution{};
   std::optional<std::size_t> next_action_step{};
-  std::tie(requested_execution, next_action_step) = ThisAction::apply(
-      box_, inboxes_, *Parallel::local_branch(global_cache_proxy_),
-      std::as_const(array_index_), actions_list{},
-      std::add_pointer_t<ParallelComponent>{});
+  // std::tie(requested_execution, next_action_step) = ThisAction::apply(
+  //     box_, inboxes_, *Parallel::local_branch(global_cache_proxy_),
+  //     std::as_const(array_index_), actions_list{},
+  //     std::add_pointer_t<ParallelComponent>{});
+  actions_list idk;
+  (void)idk;
 
   if (next_action_step.has_value()) {
     ASSERT(
