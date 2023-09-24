@@ -640,48 +640,48 @@ void Main<Metavariables>::pup(PUP::er& p) {  // NOLINT
 template <typename Metavariables>
 void Main<Metavariables>::
     allocate_remaining_components_and_execute_initialization_phase() {
-  if (current_phase_ != Parallel::Phase::Initialization) {
-    ERROR("Must be in the Initialization phase.");
-  }
-  // Since singletons are actually single-element Charm++ arrays, we have to
-  // allocate them here along with the other Charm++ arrays.
-  tmpl::for_each<singleton_component_list>([this](auto singleton_component_v) {
-    using singleton_component =
-        tmpl::type_from<decltype(singleton_component_v)>;
-    auto& local_cache = *Parallel::local_branch(global_cache_proxy_);
-    auto& singleton_proxy =
-        Parallel::get_parallel_component<singleton_component>(local_cache);
-    auto options = Parallel::create_from_options<Metavariables>(
-        options_, typename singleton_component::simple_tags_from_options{});
+  // if (current_phase_ != Parallel::Phase::Initialization) {
+  //   ERROR("Must be in the Initialization phase.");
+  // }
+  // // Since singletons are actually single-element Charm++ arrays, we have to
+  // // allocate them here along with the other Charm++ arrays.
+  // tmpl::for_each<singleton_component_list>([this](auto singleton_component_v) {
+  //   using singleton_component =
+  //       tmpl::type_from<decltype(singleton_component_v)>;
+  //   auto& local_cache = *Parallel::local_branch(global_cache_proxy_);
+  //   auto& singleton_proxy =
+  //       Parallel::get_parallel_component<singleton_component>(local_cache);
+  //   auto options = Parallel::create_from_options<Metavariables>(
+  //       options_, typename singleton_component::simple_tags_from_options{});
 
-    const size_t proc = resource_info_.template proc_for<singleton_component>();
-    singleton_proxy[0].insert(global_cache_proxy_, std::move(options), proc);
-    singleton_proxy.doneInserting();
-  });
+  //   const size_t proc = resource_info_.template proc_for<singleton_component>();
+  //   singleton_proxy[0].insert(global_cache_proxy_, std::move(options), proc);
+  //   singleton_proxy.doneInserting();
+  // });
 
-  // These are Spectre array components built on Charm++ array chares. Each
-  // component is in charge of allocating and distributing its elements over the
-  // computing system.
-  tmpl::for_each<all_array_component_list>([this](auto parallel_component_v) {
-    using parallel_component = tmpl::type_from<decltype(parallel_component_v)>;
-    parallel_component::allocate_array(
-        global_cache_proxy_,
-        Parallel::create_from_options<Metavariables>(
-            options_, typename parallel_component::simple_tags_from_options{}),
-        resource_info_.procs_to_ignore());
-  });
+  // // These are Spectre array components built on Charm++ array chares. Each
+  // // component is in charge of allocating and distributing its elements over the
+  // // computing system.
+  // tmpl::for_each<all_array_component_list>([this](auto parallel_component_v) {
+  //   using parallel_component = tmpl::type_from<decltype(parallel_component_v)>;
+  //   parallel_component::allocate_array(
+  //       global_cache_proxy_,
+  //       Parallel::create_from_options<Metavariables>(
+  //           options_, typename parallel_component::simple_tags_from_options{}),
+  //       resource_info_.procs_to_ignore());
+  // });
 
-  // Free any resources from the initial option parsing.
-  options_ = decltype(options_){};
+  // // Free any resources from the initial option parsing.
+  // options_ = decltype(options_){};
 
-  tmpl::for_each<component_list>([this](auto parallel_component_v) {
-    using parallel_component = tmpl::type_from<decltype(parallel_component_v)>;
-    Parallel::get_parallel_component<parallel_component>(
-        *Parallel::local_branch(global_cache_proxy_))
-        .start_phase(current_phase_);
-  });
-  CkStartQD(CkCallback(CkIndex_Main<Metavariables>::execute_next_phase(),
-                       this->thisProxy));
+  // tmpl::for_each<component_list>([this](auto parallel_component_v) {
+  //   using parallel_component = tmpl::type_from<decltype(parallel_component_v)>;
+  //   Parallel::get_parallel_component<parallel_component>(
+  //       *Parallel::local_branch(global_cache_proxy_))
+  //       .start_phase(current_phase_);
+  // });
+  // CkStartQD(CkCallback(CkIndex_Main<Metavariables>::execute_next_phase(),
+  //                      this->thisProxy));
 }
 
 template <typename Metavariables>
