@@ -168,37 +168,37 @@ class ObserveTimeStep : public Event {
 
   template <typename ArrayIndex, typename ParallelComponent,
             typename Metavariables>
-  void operator()(const TimeDelta& time_step,
-                  const typename System::variables_tag::type& variables,
-                  Parallel::GlobalCache<Metavariables>& cache,
-                  const ArrayIndex& array_index,
+  void operator()(const TimeDelta& /*time_step*/,
+                  const typename System::variables_tag::type& /*variables*/,
+                  Parallel::GlobalCache<Metavariables>& /*cache*/,
+                  const ArrayIndex& /*array_index*/,
                   const ParallelComponent* const /*meta*/,
-                  const ObservationValue& observation_value) const {
-    const size_t number_of_grid_points = variables.number_of_grid_points();
-    const double slab_size = time_step.slab().duration().value();
-    const double step_size = abs(time_step.value());
-    const double wall_time = sys::wall_time();
+                  const ObservationValue& /*observation_value*/) const {
+    // const size_t number_of_grid_points = variables.number_of_grid_points();
+    // const double slab_size = time_step.slab().duration().value();
+    // const double step_size = abs(time_step.value());
+    // const double wall_time = sys::wall_time();
 
-    auto& local_observer = *Parallel::local_branch(
-        Parallel::get_parallel_component<observers::Observer<Metavariables>>(
-            cache));
-    auto formatter =
-        output_time_ ? std::make_optional(Events::detail::FormatTimeOutput{})
-                     : std::nullopt;
-    Parallel::simple_action<observers::Actions::ContributeReductionData>(
-        local_observer,
-        observers::ObservationId(observation_value.value,
-                                 subfile_path_ + ".dat"),
-        Parallel::make_array_component_id<ParallelComponent>(array_index),
-        subfile_path_,
-        std::vector<std::string>{observation_value.name, "NumberOfPoints",
-                                 "Slab size", "Minimum time step",
-                                 "Maximum time step", "Effective time step",
-                                 "Minimum Walltime", "Maximum Walltime"},
-        ReductionData{observation_value.value, number_of_grid_points, slab_size,
-                      step_size, step_size, number_of_grid_points / step_size,
-                      wall_time, wall_time},
-        std::move(formatter), observe_per_core_);
+    // auto& local_observer = *Parallel::local_branch(
+    //     Parallel::get_parallel_component<observers::Observer<Metavariables>>(
+    //         cache));
+    // auto formatter =
+    //     output_time_ ? std::make_optional(Events::detail::FormatTimeOutput{})
+    //                  : std::nullopt;
+    // Parallel::simple_action<observers::Actions::ContributeReductionData>(
+    //     local_observer,
+    //     observers::ObservationId(observation_value.value,
+    //                              subfile_path_ + ".dat"),
+    //     Parallel::make_array_component_id<ParallelComponent>(array_index),
+    //     subfile_path_,
+    //     std::vector<std::string>{observation_value.name, "NumberOfPoints",
+    //                              "Slab size", "Minimum time step",
+    //                              "Maximum time step", "Effective time step",
+    //                              "Minimum Walltime", "Maximum Walltime"},
+    //     ReductionData{observation_value.value, number_of_grid_points, slab_size,
+    //                   step_size, step_size, number_of_grid_points / step_size,
+    //                   wall_time, wall_time},
+    //     std::move(formatter), observe_per_core_);
   }
 
   using observation_registration_tags = tmpl::list<>;
