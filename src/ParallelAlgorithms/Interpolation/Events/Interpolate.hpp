@@ -76,19 +76,19 @@ class Interpolate<VolumeDim, InterpolationTargetTag,
 
   template <typename Metavariables, typename ParallelComponent>
   void operator()(
-      const typename InterpolationTargetTag::temporal_id::type& /*temporal_id*/,
-      const Mesh<VolumeDim>& /*mesh*/,
+      const typename InterpolationTargetTag::temporal_id::type& temporal_id,
+      const Mesh<VolumeDim>& mesh,
       const typename InterpolatorSourceVarTags::
-          type&... /*interpolator_source_vars*/,
-      Parallel::GlobalCache<Metavariables>& /*cache*/,
-      const ElementId<VolumeDim>& /*array_index*/,
+          type&... interpolator_source_vars,
+      Parallel::GlobalCache<Metavariables>& cache,
+      const ElementId<VolumeDim>& array_index,
       const ParallelComponent* const /*meta*/,
       const ObservationValue& /*observation_value*/) const {
-    // static_assert(
-    //     std::is_same_v<typename Metavariables::interpolator_source_vars,
-    //                    tmpl::list<InterpolatorSourceVarTags...>>);
-    // interpolate<InterpolationTargetTag>(temporal_id, mesh, cache, array_index,
-    //                                     interpolator_source_vars...);
+    static_assert(
+        std::is_same_v<typename Metavariables::interpolator_source_vars,
+                       tmpl::list<InterpolatorSourceVarTags...>>);
+    interpolate<InterpolationTargetTag>(temporal_id, mesh, cache, array_index,
+                                        interpolator_source_vars...);
   }
 
   using is_ready_argument_tags = tmpl::list<::Tags::Time>;
