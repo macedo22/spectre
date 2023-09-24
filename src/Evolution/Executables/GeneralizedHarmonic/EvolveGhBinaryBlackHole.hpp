@@ -626,11 +626,11 @@ struct EvolutionMetavars {
 
     if (alg::count(deadlocked_components,
                    pretty_type::name<gh_dg_element_array>()) == 1) {
-      tmpl::for_each<control_components>([/*&cache*/](auto /*component_v*/) {
-        // using component = tmpl::type_from<decltype(component_v)>;
-        // Parallel::simple_action<
-        //     control_system::Actions::PrintCurrentMeasurement>(
-        //     Parallel::get_parallel_component<component>(cache));
+      tmpl::for_each<control_components>([&cache](auto component_v) {
+        using component = tmpl::type_from<decltype(component_v)>;
+        Parallel::simple_action<
+            control_system::Actions::PrintCurrentMeasurement>(
+            Parallel::get_parallel_component<component>(cache));
       });
 
       Parallel::simple_action<deadlock::PrintElementInfo>(
