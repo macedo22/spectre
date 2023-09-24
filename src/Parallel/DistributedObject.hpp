@@ -475,78 +475,78 @@ template <typename ParallelComponent, typename... PhaseDepActionListsPack>
 template <class... InitializationTags>
 DistributedObject<ParallelComponent, tmpl::list<PhaseDepActionListsPack...>>::
     DistributedObject(
-        const Parallel::CProxy_GlobalCache<metavariables>& global_cache_proxy,
-        tuples::TaggedTuple<InitializationTags...> initialization_items)
+        const Parallel::CProxy_GlobalCache<metavariables>& /*global_cache_proxy*/,
+        tuples::TaggedTuple<InitializationTags...> /*initialization_items*/)
     : DistributedObject() {
-  try {
-    if (detail::is_zeroth_element(array_index_)) {
-      const auto check_for_phase = [](auto phase_dep_v) {
-        using PhaseDep = decltype(phase_dep_v);
-        constexpr Parallel::Phase phase = PhaseDep::phase;
-        // PostFailureCleanup is never in the default phase order, but is
-        // controlled by Main rather than PhaseControl
-        if (alg::count(metavariables::default_phase_order, phase) == 0 and
-            phase != Parallel::Phase::PostFailureCleanup) {
-          Parallel::printf(
-              "NOTE: Phase::%s is in the phase dependent action list of\n"
-              "component %s,\nbut not in the default_phase_order specified by "
-              "the metavariables.\nThis means that phase will not be executed "
-              "unless chosen by PhaseControl.\n\n",
-              phase, pretty_type::name<parallel_component>());
-        }
-      };
-      EXPAND_PACK_LEFT_TO_RIGHT(check_for_phase(PhaseDepActionListsPack{}));
-    }
-    (void)initialization_items;  // avoid potential compiler warnings if unused
-    // When we are using the LoadBalancing phase, we want the Main component to
-    // handle the synchronization, so the components do not participate in the
-    // charm++ `AtSync` barrier.
-    // The array parallel components are migratable so they get balanced
-    // appropriately when load balancing is triggered by the LoadBalancing phase
-    // in Main
-    if constexpr (std::is_same_v<typename ParallelComponent::chare_type,
-                                 Parallel::Algorithms::Array>) {
-      this->usesAtSync = false;
-      this->setMigratable(true);
-    }
-    global_cache_proxy_ = global_cache_proxy;
-    ::Initialization::mutate_assign<
-        tmpl::push_back<distributed_object_tags, InitializationTags...>>(
-        make_not_null(&box_), metavariables{}, array_index_,
-        global_cache_proxy_,
-        std::move(get<InitializationTags>(initialization_items))...);
-  } catch (const std::exception& exception) {
-    initiate_shutdown(exception);
-  }
+  // try {
+  //   if (detail::is_zeroth_element(array_index_)) {
+  //     const auto check_for_phase = [](auto phase_dep_v) {
+  //       using PhaseDep = decltype(phase_dep_v);
+  //       constexpr Parallel::Phase phase = PhaseDep::phase;
+  //       // PostFailureCleanup is never in the default phase order, but is
+  //       // controlled by Main rather than PhaseControl
+  //       if (alg::count(metavariables::default_phase_order, phase) == 0 and
+  //           phase != Parallel::Phase::PostFailureCleanup) {
+  //         Parallel::printf(
+  //             "NOTE: Phase::%s is in the phase dependent action list of\n"
+  //             "component %s,\nbut not in the default_phase_order specified by "
+  //             "the metavariables.\nThis means that phase will not be executed "
+  //             "unless chosen by PhaseControl.\n\n",
+  //             phase, pretty_type::name<parallel_component>());
+  //       }
+  //     };
+  //     EXPAND_PACK_LEFT_TO_RIGHT(check_for_phase(PhaseDepActionListsPack{}));
+  //   }
+  //   (void)initialization_items;  // avoid potential compiler warnings if unused
+  //   // When we are using the LoadBalancing phase, we want the Main component to
+  //   // handle the synchronization, so the components do not participate in the
+  //   // charm++ `AtSync` barrier.
+  //   // The array parallel components are migratable so they get balanced
+  //   // appropriately when load balancing is triggered by the LoadBalancing phase
+  //   // in Main
+  //   if constexpr (std::is_same_v<typename ParallelComponent::chare_type,
+  //                                Parallel::Algorithms::Array>) {
+  //     this->usesAtSync = false;
+  //     this->setMigratable(true);
+  //   }
+  //   global_cache_proxy_ = global_cache_proxy;
+  //   ::Initialization::mutate_assign<
+  //       tmpl::push_back<distributed_object_tags, InitializationTags...>>(
+  //       make_not_null(&box_), metavariables{}, array_index_,
+  //       global_cache_proxy_,
+  //       std::move(get<InitializationTags>(initialization_items))...);
+  // } catch (const std::exception& exception) {
+  //   initiate_shutdown(exception);
+  // }
 }
 
 template <typename ParallelComponent, typename... PhaseDepActionListsPack>
 DistributedObject<ParallelComponent, tmpl::list<PhaseDepActionListsPack...>>::
     DistributedObject(
-        const Parallel::CProxy_GlobalCache<metavariables>& global_cache_proxy,
-        Parallel::Phase current_phase,
-        const std::unique_ptr<Parallel::Callback>& callback)
+        const Parallel::CProxy_GlobalCache<metavariables>& /*global_cache_proxy*/,
+        Parallel::Phase /*current_phase*/,
+        const std::unique_ptr<Parallel::Callback>& /*callback*/)
     : DistributedObject() {
-  static_assert(Parallel::is_array_proxy<cproxy_type>::value,
-                "Can only dynamically add elements to an array component");
-  try {
-    // When we are using the LoadBalancing phase, we want the Main component to
-    // handle the synchronization, so the components do not participate in the
-    // charm++ `AtSync` barrier.
-    // The array parallel components are migratable so they get balanced
-    // appropriately when load balancing is triggered by the LoadBalancing phase
-    // in Main
-    this->usesAtSync = false;
-    this->setMigratable(true);
-    global_cache_proxy_ = global_cache_proxy;
-    phase_ = current_phase;
-    ::Initialization::mutate_assign<distributed_object_tags>(
-        make_not_null(&box_), metavariables{}, array_index_,
-        global_cache_proxy_);
-    callback->invoke();
-  } catch (const std::exception& exception) {
-    initiate_shutdown(exception);
-  }
+  // static_assert(Parallel::is_array_proxy<cproxy_type>::value,
+  //               "Can only dynamically add elements to an array component");
+  // try {
+  //   // When we are using the LoadBalancing phase, we want the Main component to
+  //   // handle the synchronization, so the components do not participate in the
+  //   // charm++ `AtSync` barrier.
+  //   // The array parallel components are migratable so they get balanced
+  //   // appropriately when load balancing is triggered by the LoadBalancing phase
+  //   // in Main
+  //   this->usesAtSync = false;
+  //   this->setMigratable(true);
+  //   global_cache_proxy_ = global_cache_proxy;
+  //   phase_ = current_phase;
+  //   ::Initialization::mutate_assign<distributed_object_tags>(
+  //       make_not_null(&box_), metavariables{}, array_index_,
+  //       global_cache_proxy_);
+  //   callback->invoke();
+  // } catch (const std::exception& exception) {
+  //   initiate_shutdown(exception);
+  // }
 }
 
 template <typename ParallelComponent, typename... PhaseDepActionListsPack>
