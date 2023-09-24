@@ -227,96 +227,96 @@ template <size_t Dim>
 template <typename Metavariables, typename ArrayIndex,
           typename ParallelComponent>
 void MonitorMemory<Dim>::operator()(
-    const ::Element<Dim>& element, Parallel::GlobalCache<Metavariables>& cache,
-    const ArrayIndex& array_index, const ParallelComponent* const /*meta*/,
-    const ObservationValue& observation_value) const {
-  using component_list = tmpl::push_back<typename Metavariables::component_list,
-                                         Parallel::GlobalCache<Metavariables>>;
+    const ::Element<Dim>& /*element*/, Parallel::GlobalCache<Metavariables>& /*cache*/,
+    const ArrayIndex& /*array_index*/, const ParallelComponent* const /*meta*/,
+    const ObservationValue& /*observation_value*/) const {
+  // using component_list = tmpl::push_back<typename Metavariables::component_list,
+  //                                        Parallel::GlobalCache<Metavariables>>;
 
-  tmpl::for_each<component_list>([this, &observation_value, &element, &cache,
-                                  &array_index](auto component_v) {
-    using component = tmpl::type_from<decltype(component_v)>;
+  // tmpl::for_each<component_list>([this, &observation_value, &element, &cache,
+  //                                 &array_index](auto component_v) {
+  //   using component = tmpl::type_from<decltype(component_v)>;
 
-    // If we aren't monitoring this parallel component, then just exit now
-    if (components_to_monitor_.count(pretty_type::name<component>()) != 1) {
-      return;
-    }
+  //   // If we aren't monitoring this parallel component, then just exit now
+  //   if (components_to_monitor_.count(pretty_type::name<component>()) != 1) {
+  //     return;
+  //   }
 
-    // Certain components only need to be triggered once, so we have a special
-    // element designated to be the one that triggers memory monitoring, the
-    // 0th element.
-    const auto& element_id = element.id();
-    // Avoid GCC-7 compiler warning about unused variable (in the Array if
-    // constexpr branch)
-    [[maybe_unused]] const bool designated_element =
-        is_zeroth_element(element_id);
+  //   // Certain components only need to be triggered once, so we have a special
+  //   // element designated to be the one that triggers memory monitoring, the
+  //   // 0th element.
+  //   const auto& element_id = element.id();
+  //   // Avoid GCC-7 compiler warning about unused variable (in the Array if
+  //   // constexpr branch)
+  //   [[maybe_unused]] const bool designated_element =
+  //       is_zeroth_element(element_id);
 
-    // If this is an array, this is run on every element. It has already
-    // been asserted in the constructor that the only Array the MemoryMonitor
-    // can monitor is the DgElementArray itself. If you want to monitor other
-    // Arrays, the implementation will need to be generalized.
-    if constexpr (Parallel::is_array_v<component>) {
-      auto& memory_monitor_proxy = Parallel::get_parallel_component<
-          mem_monitor::MemoryMonitor<Metavariables>>(cache);
-      auto array_element_proxy =
-          Parallel::get_parallel_component<component>(cache)[array_index];
-      const double size_in_bytes = static_cast<double>(
-          size_of_object_in_bytes(*Parallel::local(array_element_proxy)));
-      const double size_in_megabytes = size_in_bytes / 1.0e6;
+  //   // If this is an array, this is run on every element. It has already
+  //   // been asserted in the constructor that the only Array the MemoryMonitor
+  //   // can monitor is the DgElementArray itself. If you want to monitor other
+  //   // Arrays, the implementation will need to be generalized.
+  //   if constexpr (Parallel::is_array_v<component>) {
+  //     auto& memory_monitor_proxy = Parallel::get_parallel_component<
+  //         mem_monitor::MemoryMonitor<Metavariables>>(cache);
+  //     auto array_element_proxy =
+  //         Parallel::get_parallel_component<component>(cache)[array_index];
+  //     const double size_in_bytes = static_cast<double>(
+  //         size_of_object_in_bytes(*Parallel::local(array_element_proxy)));
+  //     const double size_in_megabytes = size_in_bytes / 1.0e6;
 
-      // vector the size of the number of nodes we are running on. Set the
-      // 'my_node'th element of the vector to the size of this Element. Then
-      // when we reduce, we will have a vector with 'num_nodes' elements, each
-      // of which represents the total memory usage of all Elements on that
-      // node.
-      const size_t num_nodes = Parallel::number_of_nodes<size_t>(
-          *Parallel::local(array_element_proxy));
-      const size_t my_node =
-          Parallel::my_node<size_t>(*Parallel::local(array_element_proxy));
-      std::vector<double> data(num_nodes, 0.0);
-      data[my_node] = size_in_megabytes;
+  //     // vector the size of the number of nodes we are running on. Set the
+  //     // 'my_node'th element of the vector to the size of this Element. Then
+  //     // when we reduce, we will have a vector with 'num_nodes' elements, each
+  //     // of which represents the total memory usage of all Elements on that
+  //     // node.
+  //     const size_t num_nodes = Parallel::number_of_nodes<size_t>(
+  //         *Parallel::local(array_element_proxy));
+  //     const size_t my_node =
+  //         Parallel::my_node<size_t>(*Parallel::local(array_element_proxy));
+  //     std::vector<double> data(num_nodes, 0.0);
+  //     data[my_node] = size_in_megabytes;
 
-      Parallel::contribute_to_reduction<
-          mem_monitor::ProcessArray<ParallelComponent>>(
-          ReductionData{observation_value.value, data}, array_element_proxy,
-          memory_monitor_proxy);
-    } else if constexpr (Parallel::is_singleton_v<component>) {
-      // If this is a singleton, we only run this once so use the designated
-      // element. Nothing to reduce with singletons so just call the simple
-      // action on the singleton
-      if (designated_element) {
-        auto& singleton_proxy =
-            Parallel::get_parallel_component<component>(cache);
+  //     Parallel::contribute_to_reduction<
+  //         mem_monitor::ProcessArray<ParallelComponent>>(
+  //         ReductionData{observation_value.value, data}, array_element_proxy,
+  //         memory_monitor_proxy);
+  //   } else if constexpr (Parallel::is_singleton_v<component>) {
+  //     // If this is a singleton, we only run this once so use the designated
+  //     // element. Nothing to reduce with singletons so just call the simple
+  //     // action on the singleton
+  //     if (designated_element) {
+  //       auto& singleton_proxy =
+  //           Parallel::get_parallel_component<component>(cache);
 
-        Parallel::simple_action<mem_monitor::ProcessSingleton>(
-            singleton_proxy, observation_value.value);
-      }
-    } else if constexpr (Parallel::is_nodegroup_v<component> or
-                         Parallel::is_group_v<component>) {
-      // If this is a (node)group, call a simple action on each branch if on
-      // the designated element
-      if (designated_element) {
-        // Can't run simple actions on the cache so broadcast a specific entry
-        // method that will calculate the size and send it to the memory
-        // monitor
-        if constexpr (std::is_same_v<component,
-                                     Parallel::GlobalCache<Metavariables>>) {
-          auto cache_proxy = cache.get_this_proxy();
+  //       Parallel::simple_action<mem_monitor::ProcessSingleton>(
+  //           singleton_proxy, observation_value.value);
+  //     }
+  //   } else if constexpr (Parallel::is_nodegroup_v<component> or
+  //                        Parallel::is_group_v<component>) {
+  //     // If this is a (node)group, call a simple action on each branch if on
+  //     // the designated element
+  //     if (designated_element) {
+  //       // Can't run simple actions on the cache so broadcast a specific entry
+  //       // method that will calculate the size and send it to the memory
+  //       // monitor
+  //       if constexpr (std::is_same_v<component,
+  //                                    Parallel::GlobalCache<Metavariables>>) {
+  //         auto cache_proxy = cache.get_this_proxy();
 
-          // This will be called on all branches of the GlobalCache
-          cache_proxy.compute_size_for_memory_monitor(observation_value.value);
-        } else {
-          // Groups and nodegroups share an action
-          auto& group_proxy =
-              Parallel::get_parallel_component<component>(cache);
+  //         // This will be called on all branches of the GlobalCache
+  //         cache_proxy.compute_size_for_memory_monitor(observation_value.value);
+  //       } else {
+  //         // Groups and nodegroups share an action
+  //         auto& group_proxy =
+  //             Parallel::get_parallel_component<component>(cache);
 
-          // This will be called on all branches of the (node)group
-          Parallel::simple_action<mem_monitor::ProcessGroups>(
-              group_proxy, observation_value.value);
-        }
-      }
-    }
-  });
+  //         // This will be called on all branches of the (node)group
+  //         Parallel::simple_action<mem_monitor::ProcessGroups>(
+  //             group_proxy, observation_value.value);
+  //       }
+  //     }
+  //   }
+  // });
 }
 
 template <size_t Dim>
