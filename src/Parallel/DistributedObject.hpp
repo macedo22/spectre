@@ -767,11 +767,11 @@ void DistributedObject<
         hold_lock.emplace(node_lock_);
       }
       if (performing_action_) {
-        ERROR(
-            "Already performing an Action and cannot execute additional "
-            "Actions from inside of an Action. This is only possible if the "
-            "simple_action function is not invoked via a proxy, which "
-            "we do not allow.");
+        // ERROR(
+        //     "Already performing an Action and cannot execute additional "
+        //     "Actions from inside of an Action. This is only possible if the "
+        //     "simple_action function is not invoked via a proxy, which "
+        //     "we do not allow.");
       }
       performing_action_ = true;
       // Action::template apply<ParallelComponent>(
