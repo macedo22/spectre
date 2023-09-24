@@ -57,9 +57,9 @@ struct RunEventsAndTriggers {
     }
 
     if (time_step_id.substep() == 0) {
-      // Parallel::get<::Tags::EventsAndTriggers>(cache).run_events(
-      //     box, cache, array_index, component,
-      //     {db::tag_name<::Tags::Time>(), db::get<::Tags::Time>(box)});
+      Parallel::get<::Tags::EventsAndTriggers>(cache).run_events(
+          box, cache, array_index, component,
+          {db::tag_name<::Tags::Time>(), db::get<::Tags::Time>(box)});
     } else {
       const double substep_offset = 1.0e6;
       const double observation_value = time_step_id.step_time().value() +
