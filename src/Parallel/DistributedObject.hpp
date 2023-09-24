@@ -726,31 +726,31 @@ template <typename ParallelComponent, typename... PhaseDepActionListsPack>
 template <typename Action, typename... Args>
 void DistributedObject<ParallelComponent,
                        tmpl::list<PhaseDepActionListsPack...>>::
-    simple_action(std::tuple<Args...> /*args*/) {
-  // try {
-  //   (void)Parallel::charmxx::RegisterSimpleAction<ParallelComponent, Action,
-  //                                                 Args...>::registrar;
-  //   {
-  //     std::optional<std::lock_guard<Parallel::NodeLock>> hold_lock{};
-  //     if constexpr (std::is_same_v<Parallel::NodeLock, decltype(node_lock_)>) {
-  //       hold_lock.emplace(node_lock_);
-  //     }
-  //     if (performing_action_) {
-  //       ERROR(
-  //           "Already performing an Action and cannot execute additional "
-  //           "Actions from inside of an Action. This is only possible if the "
-  //           "simple_action function is not invoked via a proxy, which "
-  //           "we do not allow.");
-  //     }
-  //     performing_action_ = true;
-  //     forward_tuple_to_action<Action>(
-  //         std::move(args), std::make_index_sequence<sizeof...(Args)>{});
-  //     performing_action_ = false;
-  //   }
-  //   perform_algorithm();
-  // } catch (const std::exception& exception) {
-  //   initiate_shutdown(exception);
-  // }
+    simple_action(std::tuple<Args...> args) {
+  try {
+    (void)Parallel::charmxx::RegisterSimpleAction<ParallelComponent, Action,
+                                                  Args...>::registrar;
+    {
+      std::optional<std::lock_guard<Parallel::NodeLock>> hold_lock{};
+      if constexpr (std::is_same_v<Parallel::NodeLock, decltype(node_lock_)>) {
+        hold_lock.emplace(node_lock_);
+      }
+      if (performing_action_) {
+        ERROR(
+            "Already performing an Action and cannot execute additional "
+            "Actions from inside of an Action. This is only possible if the "
+            "simple_action function is not invoked via a proxy, which "
+            "we do not allow.");
+      }
+      performing_action_ = true;
+      forward_tuple_to_action<Action>(
+          std::move(args), std::make_index_sequence<sizeof...(Args)>{});
+      performing_action_ = false;
+    }
+    perform_algorithm();
+  } catch (const std::exception& exception) {
+    initiate_shutdown(exception);
+  }
 }
 
 template <typename ParallelComponent, typename... PhaseDepActionListsPack>
