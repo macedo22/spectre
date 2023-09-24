@@ -163,7 +163,7 @@ auto make_observation_box(const DataBoxType& databox) {
 namespace observation_box_detail {
 template <typename DataBoxType, typename ComputeTagsList, typename... Args,
           typename F, typename... ArgumentTags>
-auto apply(F&& /*f*/, tmpl::list<ArgumentTags...> /*meta*/,
+auto apply(F&& f, tmpl::list<ArgumentTags...> /*meta*/,
            const ObservationBox<ComputeTagsList, DataBoxType>& observation_box,
            Args&&... args) {
   if constexpr (db::detail::is_apply_callable_v<
@@ -177,8 +177,8 @@ auto apply(F&& /*f*/, tmpl::list<ArgumentTags...> /*meta*/,
                  F,
                  std::decay_t<decltype(get<ArgumentTags>(observation_box))>...,
                  Args...>) {
-    // return std::forward<F>(f)(get<ArgumentTags>(observation_box)...,
-    //                           std::forward<Args>(args)...);
+    return std::forward<F>(f)(get<ArgumentTags>(observation_box)...,
+                              std::forward<Args>(args)...);
   } else {
     db::detail::error_function_not_callable<
         F, std::decay_t<decltype(get<ArgumentTags>(observation_box))>...,
