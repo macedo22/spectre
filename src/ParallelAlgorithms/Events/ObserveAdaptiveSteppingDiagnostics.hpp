@@ -103,28 +103,28 @@ class ObserveAdaptiveSteppingDiagnostics : public Event {
 
   template <typename ArrayIndex, typename ParallelComponent,
             typename Metavariables>
-  void operator()(const AdaptiveSteppingDiagnostics& /*diags*/,
-                  Parallel::GlobalCache<Metavariables>& /*cache*/,
-                  const ArrayIndex& /*array_index*/,
+  void operator()(const AdaptiveSteppingDiagnostics& diags,
+                  Parallel::GlobalCache<Metavariables>& cache,
+                  const ArrayIndex& array_index,
                   const ParallelComponent* const /*meta*/,
-                  const ObservationValue& /*observation_value*/) const {
-    // auto& local_observer = *Parallel::local_branch(
-    //     Parallel::get_parallel_component<observers::Observer<Metavariables>>(
-    //         cache));
-    // Parallel::simple_action<observers::Actions::ContributeReductionData>(
-    //     local_observer,
-    //     observers::ObservationId(observation_value.value,
-    //                              subfile_path_ + ".dat"),
-    //     Parallel::make_array_component_id<ParallelComponent>(array_index),
-    //     subfile_path_,
-    //     std::vector<std::string>{
-    //         observation_value.name, "Number of slabs",
-    //         "Number of slab size changes", "Total steps on all elements",
-    //         "Number of LTS step changes", "Number of step rejections"},
-    //     ReductionData{observation_value.value, diags.number_of_slabs,
-    //                   diags.number_of_slab_size_changes, diags.number_of_steps,
-    //                   diags.number_of_step_fraction_changes,
-    //                   diags.number_of_step_rejections});
+                  const ObservationValue& observation_value) const {
+    auto& local_observer = *Parallel::local_branch(
+        Parallel::get_parallel_component<observers::Observer<Metavariables>>(
+            cache));
+    Parallel::simple_action<observers::Actions::ContributeReductionData>(
+        local_observer,
+        observers::ObservationId(observation_value.value,
+                                 subfile_path_ + ".dat"),
+        Parallel::make_array_component_id<ParallelComponent>(array_index),
+        subfile_path_,
+        std::vector<std::string>{
+            observation_value.name, "Number of slabs",
+            "Number of slab size changes", "Total steps on all elements",
+            "Number of LTS step changes", "Number of step rejections"},
+        ReductionData{observation_value.value, diags.number_of_slabs,
+                      diags.number_of_slab_size_changes, diags.number_of_steps,
+                      diags.number_of_step_fraction_changes,
+                      diags.number_of_step_rejections});
   }
 
   using observation_registration_tags = tmpl::list<>;
