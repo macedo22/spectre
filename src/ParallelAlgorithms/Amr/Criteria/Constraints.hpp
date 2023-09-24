@@ -193,48 +193,48 @@ template <size_t Dim, typename TensorTags>
 template <typename ComputeTagsList, typename DataBoxType,
           typename Metavariables>
 std::array<Flag, Dim> Constraints<Dim, TensorTags>::operator()(
-    const ObservationBox<ComputeTagsList, DataBoxType>& box,
+    const ObservationBox<ComputeTagsList, DataBoxType>& /*box*/,
     Parallel::GlobalCache<Metavariables>& /*cache*/,
     const ElementId<Dim>& /*element_id*/) const {
   auto result = make_array<Dim>(Flag::Undefined);
-  const auto& jacobian =
-      get<Events::Tags::ObserverJacobian<Dim, Frame::ElementLogical,
-                                         Frame::Inertial>>(box);
-  // Set up memory buffers
-  const size_t num_points = jacobian.begin()->size();
-  TempBuffer<tmpl::list<::Tags::Tempi<0, Dim, Frame::ElementLogical>,
-                        ::Tags::Tempi<1, Dim, Frame::ElementLogical>,
-                        ::Tags::TempScalar<2>>>
-      buffer{num_points};
-  auto& normalization_factor_square =
-      get<::Tags::Tempi<0, Dim, Frame::ElementLogical>>(buffer);
-  auto& logical_constraints =
-      get<::Tags::Tempi<1, Dim, Frame::ElementLogical>>(buffer);
-  auto& scalar_buffer = get(get<::Tags::TempScalar<2>>(buffer));
-  Constraints_detail::normalization_factor_square(
-      make_not_null(&normalization_factor_square), jacobian);
-  // Check all constraints in turn
-  tmpl::for_each<TensorTags>([&result, &box, &jacobian,
-                              &normalization_factor_square,
-                              &logical_constraints, &scalar_buffer,
-                              this](const auto tag_v) {
-    // Stop if we have already decided to refine every dimension
-    if (result == make_array<Dim>(Flag::IncreaseResolution)) {
-      return;
-    }
-    using tag = tmpl::type_from<std::decay_t<decltype(tag_v)>>;
-    const std::string tag_name = db::tag_name<tag>();
-    // Skip if this tensor is not being monitored
-    if (not alg::found(vars_to_monitor_, tag_name)) {
-      return;
-    }
-    Constraints_detail::logical_constraints(
-        make_not_null(&logical_constraints), make_not_null(&scalar_buffer),
-        get<tag>(box), jacobian, normalization_factor_square);
-    Constraints_detail::max_over_components(make_not_null(&result),
-                                            logical_constraints, abs_target_,
-                                            coarsening_factor_);
-  });
+  // const auto& jacobian =
+  //     get<Events::Tags::ObserverJacobian<Dim, Frame::ElementLogical,
+  //                                        Frame::Inertial>>(box);
+  // // Set up memory buffers
+  // const size_t num_points = jacobian.begin()->size();
+  // TempBuffer<tmpl::list<::Tags::Tempi<0, Dim, Frame::ElementLogical>,
+  //                       ::Tags::Tempi<1, Dim, Frame::ElementLogical>,
+  //                       ::Tags::TempScalar<2>>>
+  //     buffer{num_points};
+  // auto& normalization_factor_square =
+  //     get<::Tags::Tempi<0, Dim, Frame::ElementLogical>>(buffer);
+  // auto& logical_constraints =
+  //     get<::Tags::Tempi<1, Dim, Frame::ElementLogical>>(buffer);
+  // auto& scalar_buffer = get(get<::Tags::TempScalar<2>>(buffer));
+  // Constraints_detail::normalization_factor_square(
+  //     make_not_null(&normalization_factor_square), jacobian);
+  // // Check all constraints in turn
+  // tmpl::for_each<TensorTags>([&result, &box, &jacobian,
+  //                             &normalization_factor_square,
+  //                             &logical_constraints, &scalar_buffer,
+  //                             this](const auto tag_v) {
+  //   // Stop if we have already decided to refine every dimension
+  //   if (result == make_array<Dim>(Flag::IncreaseResolution)) {
+  //     return;
+  //   }
+  //   using tag = tmpl::type_from<std::decay_t<decltype(tag_v)>>;
+  //   const std::string tag_name = db::tag_name<tag>();
+  //   // Skip if this tensor is not being monitored
+  //   if (not alg::found(vars_to_monitor_, tag_name)) {
+  //     return;
+  //   }
+  //   Constraints_detail::logical_constraints(
+  //       make_not_null(&logical_constraints), make_not_null(&scalar_buffer),
+  //       get<tag>(box), jacobian, normalization_factor_square);
+  //   Constraints_detail::max_over_components(make_not_null(&result),
+  //                                           logical_constraints, abs_target_,
+  //                                           coarsening_factor_);
+  // });
   return result;
 }
 
