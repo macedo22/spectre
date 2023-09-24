@@ -969,7 +969,7 @@ void DistributedObject<ParallelComponent,
       algorithm_step_ = 0;
     }
     halt_algorithm_until_next_phase_ = false;
-    perform_algorithm();
+    // perform_algorithm();
   } catch (const std::exception& exception) {
     initiate_shutdown(exception);
   }
