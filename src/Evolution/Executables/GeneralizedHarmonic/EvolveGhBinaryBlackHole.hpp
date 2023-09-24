@@ -234,9 +234,10 @@ struct EvolutionMetavars {
   using temporal_id = Tags::TimeStepId;
   static constexpr bool local_time_stepping = true;
 
-  using initialize_initial_data_dependent_quantities_actions = tmpl::list<
-      Actions::MutateApply<gh::gauges::SetPiAndPhiFromConstraints<volume_dim>>,
-      Parallel::Actions::TerminatePhase>;
+//   using initialize_initial_data_dependent_quantities_actions = tmpl::list<
+//       Actions::MutateApply<gh::gauges::SetPiAndPhiFromConstraints<volume_dim>>,
+//       Parallel::Actions::TerminatePhase>;
+using initialize_initial_data_dependent_quantities_actions = tmpl::list<>;
 
   // NOLINTNEXTLINE(google-runtime-references)
   void pup(PUP::er& /*p*/) {}
@@ -312,15 +313,16 @@ struct EvolutionMetavars {
   using ExcisionBoundaryA = ExcisionBoundary<::domain::ObjectLabel::A>;
   using ExcisionBoundaryB = ExcisionBoundary<::domain::ObjectLabel::B>;
   using both_horizons = control_system::measurements::BothHorizons;
-  using control_systems =
-      tmpl::list<control_system::Systems::Rotation<3, both_horizons>,
-                 control_system::Systems::Expansion<2, both_horizons>,
-                 control_system::Systems::Shape<::domain::ObjectLabel::A, 2,
-                                                both_horizons>,
-                 control_system::Systems::Shape<::domain::ObjectLabel::B, 2,
-                                                both_horizons>,
-                 control_system::Systems::Size<::domain::ObjectLabel::A, 2>,
-                 control_system::Systems::Size<::domain::ObjectLabel::B, 2>>;
+//   using control_systems =
+//       tmpl::list<control_system::Systems::Rotation<3, both_horizons>,
+//                  control_system::Systems::Expansion<2, both_horizons>,
+//                  control_system::Systems::Shape<::domain::ObjectLabel::A, 2,
+//                                                 both_horizons>,
+//                  control_system::Systems::Shape<::domain::ObjectLabel::B, 2,
+//                                                 both_horizons>,
+//                  control_system::Systems::Size<::domain::ObjectLabel::A, 2>,
+//                  control_system::Systems::Size<::domain::ObjectLabel::B, 2>>;
+using control_systems = tmpl::list<>;
 
   static constexpr bool use_control_systems =
       tmpl::size<control_systems>::value > 0;
@@ -410,17 +412,18 @@ struct EvolutionMetavars {
 //               gr::Tags::Psi4RealCompute<Frame::Inertial>>,
 //           tmpl::list<>>>;
   using observe_fields = tmpl::list<>;
-  using non_tensor_compute_tags = tmpl::list<
-      ::Events::Tags::ObserverMeshCompute<volume_dim>,
-      ::Events::Tags::ObserverCoordinatesCompute<volume_dim, Frame::Inertial>,
-      ::Events::Tags::ObserverInverseJacobianCompute<
-          volume_dim, Frame::ElementLogical, Frame::Inertial>,
-      ::Events::Tags::ObserverJacobianCompute<volume_dim, Frame::ElementLogical,
-                                              Frame::Inertial>,
-      ::Events::Tags::ObserverDetInvJacobianCompute<Frame::ElementLogical,
-                                                    Frame::Inertial>,
-      ::Events::Tags::ObserverMeshVelocityCompute<volume_dim, Frame::Inertial>,
-      gh::gauges::Tags::GaugeAndDerivativeCompute<volume_dim>>;
+//   using non_tensor_compute_tags = tmpl::list<
+//       ::Events::Tags::ObserverMeshCompute<volume_dim>,
+//       ::Events::Tags::ObserverCoordinatesCompute<volume_dim, Frame::Inertial>,
+//       ::Events::Tags::ObserverInverseJacobianCompute<
+//           volume_dim, Frame::ElementLogical, Frame::Inertial>,
+//       ::Events::Tags::ObserverJacobianCompute<volume_dim, Frame::ElementLogical,
+//                                               Frame::Inertial>,
+//       ::Events::Tags::ObserverDetInvJacobianCompute<Frame::ElementLogical,
+//                                                     Frame::Inertial>,
+//       ::Events::Tags::ObserverMeshVelocityCompute<volume_dim, Frame::Inertial>,
+//       gh::gauges::Tags::GaugeAndDerivativeCompute<volume_dim>>;
+using non_tensor_compute_tags = tmpl::list<>;
 
   struct factory_creation
       : tt::ConformsTo<Options::protocols::FactoryCreation> {
@@ -488,17 +491,17 @@ struct EvolutionMetavars {
   // A tmpl::list of tags to be added to the GlobalCache by the
   // metavariables
   using const_global_cache_tags =
-      tmpl::list<gh::gauges::Tags::GaugeCondition,
+      tmpl::list</*gh::gauges::Tags::GaugeCondition,
                  gh::ConstraintDamping::Tags::DampingFunctionGamma0<
                      volume_dim, Frame::Grid>,
                  gh::ConstraintDamping::Tags::DampingFunctionGamma1<
                      volume_dim, Frame::Grid>,
                  gh::ConstraintDamping::Tags::DampingFunctionGamma2<
-                     volume_dim, Frame::Grid>>;
+                     volume_dim, Frame::Grid>*/>;
 
   using dg_registration_list =
-      tmpl::list<observers::Actions::RegisterEventsWithObservers,
-                 intrp::Actions::RegisterElementWithInterpolator>;
+      tmpl::list</*observers::Actions::RegisterEventsWithObservers,
+                 intrp::Actions::RegisterElementWithInterpolator*/>;
 
   static constexpr std::array<Parallel::Phase, 8> default_phase_order{
       {Parallel::Phase::Initialization,
@@ -508,84 +511,86 @@ struct EvolutionMetavars {
        Parallel::Phase::Register, Parallel::Phase::InitializeTimeStepperHistory,
        Parallel::Phase::Evolve, Parallel::Phase::Exit}};
 
-  using step_actions = tmpl::list<
-      evolution::dg::Actions::ComputeTimeDerivative<
-          volume_dim, system, AllStepChoosers, local_time_stepping>,
-      tmpl::conditional_t<
-          local_time_stepping,
-          tmpl::list<evolution::Actions::RunEventsAndDenseTriggers<tmpl::list<
-                         ::domain::CheckFunctionsOfTimeAreReadyPostprocessor,
-                         evolution::dg::ApplyBoundaryCorrections<
-                             local_time_stepping, system, volume_dim, true>>>,
-                     evolution::dg::Actions::ApplyLtsBoundaryCorrections<
-                         system, volume_dim, false>>,
-          tmpl::list<
-              evolution::dg::Actions::ApplyBoundaryCorrectionsToTimeDerivative<
-                  system, volume_dim, false>,
-              Actions::RecordTimeStepperData<system>,
-              evolution::Actions::RunEventsAndDenseTriggers<tmpl::list<
-                  ::domain::CheckFunctionsOfTimeAreReadyPostprocessor>>,
-              Actions::UpdateU<system>>>,
-      dg::Actions::Filter<
-          Filters::Exponential<0>,
-          tmpl::list<gr::Tags::SpacetimeMetric<DataVector, volume_dim>,
-                     gh::Tags::Pi<DataVector, volume_dim>,
-                     gh::Tags::Phi<DataVector, volume_dim>>>>;
+//   using step_actions = tmpl::list<
+//       evolution::dg::Actions::ComputeTimeDerivative<
+//           volume_dim, system, AllStepChoosers, local_time_stepping>,
+//       tmpl::conditional_t<
+//           local_time_stepping,
+//           tmpl::list<evolution::Actions::RunEventsAndDenseTriggers<tmpl::list<
+//                          ::domain::CheckFunctionsOfTimeAreReadyPostprocessor,
+//                          evolution::dg::ApplyBoundaryCorrections<
+//                              local_time_stepping, system, volume_dim, true>>>,
+//                      evolution::dg::Actions::ApplyLtsBoundaryCorrections<
+//                          system, volume_dim, false>>,
+//           tmpl::list<
+//               evolution::dg::Actions::ApplyBoundaryCorrectionsToTimeDerivative<
+//                   system, volume_dim, false>,
+//               Actions::RecordTimeStepperData<system>,
+//               evolution::Actions::RunEventsAndDenseTriggers<tmpl::list<
+//                   ::domain::CheckFunctionsOfTimeAreReadyPostprocessor>>,
+//               Actions::UpdateU<system>>>,
+//       dg::Actions::Filter<
+//           Filters::Exponential<0>,
+//           tmpl::list<gr::Tags::SpacetimeMetric<DataVector, volume_dim>,
+//                      gh::Tags::Pi<DataVector, volume_dim>,
+//                      gh::Tags::Phi<DataVector, volume_dim>>>>;
+  using step_actions = tmpl::list<>;
 
-  using initialization_actions = tmpl::list<
-      Initialization::Actions::InitializeItems<
-          Initialization::TimeStepping<EvolutionMetavars, local_time_stepping>,
-          evolution::dg::Initialization::Domain<volume_dim,
-                                                use_control_systems>,
-          Initialization::TimeStepperHistory<EvolutionMetavars>>,
-      Initialization::Actions::NonconservativeSystem<system>,
-      Initialization::Actions::AddComputeTags<tmpl::list<::Tags::DerivCompute<
-          typename system::variables_tag,
-          ::domain::Tags::Mesh<volume_dim>,
-          ::domain::Tags::InverseJacobian<volume_dim, Frame::ElementLogical,
-                                          Frame::Inertial>,
-          typename system::gradient_variables>>>,
-      gh::Actions::InitializeGhAnd3Plus1Variables<volume_dim>,
-      Initialization::Actions::AddComputeTags<
-          tmpl::push_back<StepChoosers::step_chooser_compute_tags<
-              EvolutionMetavars, local_time_stepping>>>,
-      ::evolution::dg::Initialization::Mortars<volume_dim, system>,
-      intrp::Actions::ElementInitInterpPoints<
-          intrp::Tags::InterpPointInfo<EvolutionMetavars>>,
-      evolution::Actions::InitializeRunEventsAndDenseTriggers,
-      control_system::Actions::InitializeMeasurements<control_systems>,
-      Parallel::Actions::TerminatePhase>;
+//   using initialization_actions = tmpl::list<
+//       Initialization::Actions::InitializeItems<
+//           Initialization::TimeStepping<EvolutionMetavars, local_time_stepping>,
+//           evolution::dg::Initialization::Domain<volume_dim,
+//                                                 use_control_systems>,
+//           Initialization::TimeStepperHistory<EvolutionMetavars>>,
+//       Initialization::Actions::NonconservativeSystem<system>,
+//       Initialization::Actions::AddComputeTags<tmpl::list<::Tags::DerivCompute<
+//           typename system::variables_tag,
+//           ::domain::Tags::Mesh<volume_dim>,
+//           ::domain::Tags::InverseJacobian<volume_dim, Frame::ElementLogical,
+//                                           Frame::Inertial>,
+//           typename system::gradient_variables>>>,
+//       gh::Actions::InitializeGhAnd3Plus1Variables<volume_dim>,
+//       Initialization::Actions::AddComputeTags<
+//           tmpl::push_back<StepChoosers::step_chooser_compute_tags<
+//               EvolutionMetavars, local_time_stepping>>>,
+//       ::evolution::dg::Initialization::Mortars<volume_dim, system>,
+//       intrp::Actions::ElementInitInterpPoints<
+//           intrp::Tags::InterpPointInfo<EvolutionMetavars>>,
+//       evolution::Actions::InitializeRunEventsAndDenseTriggers,
+//       control_system::Actions::InitializeMeasurements<control_systems>,
+//       Parallel::Actions::TerminatePhase>;
+using initialization_actions = tmpl::list<>;
 
   using gh_dg_element_array = DgElementArray<
-      EvolutionMetavars,
-      tmpl::flatten<tmpl::list<
-          Parallel::PhaseActions<Parallel::Phase::Initialization,
-                                 initialization_actions>,
-          Parallel::PhaseActions<
-              Parallel::Phase::RegisterWithElementDataReader,
-              tmpl::list<importers::Actions::RegisterWithElementDataReader,
-                         Parallel::Actions::TerminatePhase>>,
-          Parallel::PhaseActions<
-              Parallel::Phase::ImportInitialData,
-              tmpl::list<gh::Actions::SetInitialData,
-                         gh::Actions::ReceiveNumericInitialData,
-                         Parallel::Actions::TerminatePhase>>,
-          Parallel::PhaseActions<
-              Parallel::Phase::InitializeInitialDataDependentQuantities,
-              initialize_initial_data_dependent_quantities_actions>,
-          Parallel::PhaseActions<Parallel::Phase::Register,
-                                 tmpl::list<dg_registration_list,
-                                            Parallel::Actions::TerminatePhase>>,
-          Parallel::PhaseActions<
-              Parallel::Phase::InitializeTimeStepperHistory,
-              SelfStart::self_start_procedure<step_actions, system>>,
-          Parallel::PhaseActions<
-              Parallel::Phase::Evolve,
-              tmpl::list<::domain::Actions::CheckFunctionsOfTimeAreReady,
-                         evolution::Actions::RunEventsAndTriggers,
-                         Actions::ChangeSlabSize, step_actions,
-                         Actions::AdvanceTime,
-                         PhaseControl::Actions::ExecutePhaseChange>>>>>;
+      EvolutionMetavars, tmpl::list<>>;
+    //   tmpl::flatten<tmpl::list<
+    //       Parallel::PhaseActions<Parallel::Phase::Initialization,
+    //                              initialization_actions>,
+    //       Parallel::PhaseActions<
+    //           Parallel::Phase::RegisterWithElementDataReader,
+    //           tmpl::list<importers::Actions::RegisterWithElementDataReader,
+    //                      Parallel::Actions::TerminatePhase>>,
+    //       Parallel::PhaseActions<
+    //           Parallel::Phase::ImportInitialData,
+    //           tmpl::list<gh::Actions::SetInitialData,
+    //                      gh::Actions::ReceiveNumericInitialData,
+    //                      Parallel::Actions::TerminatePhase>>,
+    //       Parallel::PhaseActions<
+    //           Parallel::Phase::InitializeInitialDataDependentQuantities,
+    //           initialize_initial_data_dependent_quantities_actions>,
+    //       Parallel::PhaseActions<Parallel::Phase::Register,
+    //                              tmpl::list<dg_registration_list,
+    //                                         Parallel::Actions::TerminatePhase>>,
+    //       Parallel::PhaseActions<
+    //           Parallel::Phase::InitializeTimeStepperHistory,
+    //           SelfStart::self_start_procedure<step_actions, system>>,
+    //       Parallel::PhaseActions<
+    //           Parallel::Phase::Evolve,
+    //           tmpl::list<::domain::Actions::CheckFunctionsOfTimeAreReady,
+    //                      evolution::Actions::RunEventsAndTriggers,
+    //                      Actions::ChangeSlabSize, step_actions,
+    //                      Actions::AdvanceTime,
+    //                      PhaseControl::Actions::ExecutePhaseChange>>>>>;
 
   struct BondiSachs : tt::ConformsTo<intrp::protocols::InterpolationTargetTag> {
     static std::string name() { return "BondiSachsInterpolation"; }
@@ -600,9 +605,10 @@ struct EvolutionMetavars {
     using interpolating_component = gh_dg_element_array;
   };
 
-  using interpolation_target_tags = tmpl::push_back<
-      control_system::metafunctions::interpolation_target_tags<control_systems>,
-      AhA, AhB, AhC, BondiSachs, ExcisionBoundaryA, ExcisionBoundaryB>;
+//   using interpolation_target_tags = tmpl::push_back<
+//       control_system::metafunctions::interpolation_target_tags<control_systems>,
+//       AhA, AhB, AhC, BondiSachs, ExcisionBoundaryA, ExcisionBoundaryB>;
+  using interpolation_target_tags = tmpl::list<>;
 
   using observed_reduction_data_tags = observers::collect_reduction_data_tags<
       tmpl::at<typename factory_creation::factory_classes, Event>>;
@@ -610,11 +616,11 @@ struct EvolutionMetavars {
   struct registration
       : tt::ConformsTo<Parallel::protocols::RegistrationMetavariables> {
     using element_registrars =
-        tmpl::map<tmpl::pair<gh_dg_element_array, dg_registration_list>>;
+        tmpl::map</*tmpl::pair<gh_dg_element_array, dg_registration_list>*/>;
   };
 
-  using control_components =
-      control_system::control_components<EvolutionMetavars, control_systems>;
+  using control_components = tmpl::list<>;
+    //   control_system::control_components<EvolutionMetavars, control_systems>;
 
   static void run_deadlock_analysis_simple_actions(
       Parallel::GlobalCache<metavariables>& /*cache*/,
@@ -641,17 +647,19 @@ struct EvolutionMetavars {
     // }
   }
 
-  using component_list = tmpl::flatten<tmpl::list<
-      observers::Observer<EvolutionMetavars>,
-      observers::ObserverWriter<EvolutionMetavars>,
-      importers::ElementDataReader<EvolutionMetavars>,
-      mem_monitor::MemoryMonitor<EvolutionMetavars>,
-      intrp::Interpolator<EvolutionMetavars>,
-      tmpl::transform<interpolation_target_tags,
-                      tmpl::bind<intrp::InterpolationTarget,
-                                 tmpl::pin<EvolutionMetavars>, tmpl::_1>>,
-      control_system::control_components<EvolutionMetavars, control_systems>,
-      gh_dg_element_array>>;
+//   using component_list = tmpl::flatten<tmpl::list<
+//       observers::Observer<EvolutionMetavars>,
+//       observers::ObserverWriter<EvolutionMetavars>,
+//       importers::ElementDataReader<EvolutionMetavars>,
+//       mem_monitor::MemoryMonitor<EvolutionMetavars>,
+//       intrp::Interpolator<EvolutionMetavars>,
+//       tmpl::transform<interpolation_target_tags,
+//                       tmpl::bind<intrp::InterpolationTarget,
+//                                  tmpl::pin<EvolutionMetavars>, tmpl::_1>>,
+//       control_system::control_components<EvolutionMetavars, control_systems>,
+//       gh_dg_element_array>>;
+
+  using component_list = tmpl::list<>;
 
   static constexpr Options::String help{
       "Evolve a binary black hole using the Generalized Harmonic "
