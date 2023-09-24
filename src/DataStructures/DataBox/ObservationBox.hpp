@@ -171,8 +171,8 @@ auto apply(F&& f, tmpl::list<ArgumentTags...> /*meta*/,
                     std::decay_t<decltype(
                         get<ArgumentTags>(observation_box))>...,
                     Args...>) {
-    // return std::decay_t<F>::apply(get<ArgumentTags>(observation_box)...,
-    //                 std::forward<Args>(args)...);
+    return std::decay_t<F>::apply(get<ArgumentTags>(observation_box)...,
+                    std::forward<Args>(args)...);
   } else if constexpr (::tt::is_callable_v<
                  F,
                  std::decay_t<decltype(get<ArgumentTags>(observation_box))>...,
