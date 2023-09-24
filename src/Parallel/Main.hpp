@@ -163,12 +163,13 @@ class Main : public CBase_Main<Metavariables> {
   template <typename ParallelComponent>
   using parallel_component_options = Parallel::get_option_tags<
       typename ParallelComponent::simple_tags_from_options, Metavariables>;
-  using option_list = tmpl::remove_duplicates<tmpl::flatten<tmpl::list<
-      Parallel::OptionTags::ResourceInfo<Metavariables>,
-      Parallel::get_option_tags<const_global_cache_tags, Metavariables>,
-      Parallel::get_option_tags<mutable_global_cache_tags, Metavariables>,
-      tmpl::transform<component_list,
-                      tmpl::bind<parallel_component_options, tmpl::_1>>>>>;
+  // using option_list = tmpl::remove_duplicates<tmpl::flatten<tmpl::list<
+  //     Parallel::OptionTags::ResourceInfo<Metavariables>,
+  //     Parallel::get_option_tags<const_global_cache_tags, Metavariables>,
+  //     Parallel::get_option_tags<mutable_global_cache_tags, Metavariables>,
+  //     tmpl::transform<component_list,
+  //                     tmpl::bind<parallel_component_options, tmpl::_1>>>>>;
+  using option_list = tmpl::list<>;
   // Lists of all parallel component types
   using group_component_list =
       tmpl::filter<component_list, tmpl::or_<Parallel::is_group<tmpl::_1>,
