@@ -300,10 +300,10 @@ class DataBox<tmpl::list<Tags...>> : private detail::Item<Tags>... {
   constexpr static bool tag_depends_on();
 
   // NOLINTNEXTLINE(google-runtime-references)
-  void pup(PUP::er& p) {
-    // We do not send subitems for both simple items and compute items since
-    // they can be reconstructed very cheaply.
-    pup_impl(p, mutable_item_creation_tags{}, immutable_item_creation_tags{});
+  void pup(PUP::er& /*p*/) {
+    // // We do not send subitems for both simple items and compute items since
+    // // they can be reconstructed very cheaply.
+    // pup_impl(p, mutable_item_creation_tags{}, immutable_item_creation_tags{});
   }
 
   template <typename... AddMutableItemTags, typename AddImmutableItemTagsList,
@@ -381,7 +381,7 @@ class DataBox<tmpl::list<Tags...>> : private detail::Item<Tags>... {
   // clang-tidy: no non-const references
   template <typename... MutableItemCreationTags,
             typename... ImmutableItemCreationTags>
-  void pup_impl(PUP::er& p,  // NOLINT
+  void pup_impl(PUP::er& /*p*/,  // NOLINT
                 tmpl::list<MutableItemCreationTags...> /*meta*/,
                 tmpl::list<ImmutableItemCreationTags...> /*meta*/);
 
@@ -603,20 +603,20 @@ template <typename... Tags>
 template <typename... MutableItemCreationTags,
           typename... ImmutableItemCreationTags>
 void DataBox<tmpl::list<Tags...>>::pup_impl(
-    PUP::er& p, tmpl::list<MutableItemCreationTags...> /*meta*/,
+    PUP::er& /*p*/, tmpl::list<MutableItemCreationTags...> /*meta*/,
     tmpl::list<ImmutableItemCreationTags...> /*meta*/) {
-  const auto pup_simple_item = [&p, this](auto current_tag) {
-    (void)this;  // Compiler bug warning this capture is not used
-    using tag = decltype(current_tag);
-    get_item<tag>().pup(p);
-    if (p.isUnpacking()) {
-      add_mutable_subitems_to_box<tag>(typename Subitems<tag>::type{});
-    }
-  };
-  (void)pup_simple_item;  // Silence GCC warning about unused variable
-  EXPAND_PACK_LEFT_TO_RIGHT(pup_simple_item(MutableItemCreationTags{}));
+  // const auto pup_simple_item = [&p, this](auto current_tag) {
+  //   (void)this;  // Compiler bug warning this capture is not used
+  //   using tag = decltype(current_tag);
+  //   get_item<tag>().pup(p);
+  //   if (p.isUnpacking()) {
+  //     add_mutable_subitems_to_box<tag>(typename Subitems<tag>::type{});
+  //   }
+  // };
+  // (void)pup_simple_item;  // Silence GCC warning about unused variable
+  // EXPAND_PACK_LEFT_TO_RIGHT(pup_simple_item(MutableItemCreationTags{}));
 
-  EXPAND_PACK_LEFT_TO_RIGHT(get_item<ImmutableItemCreationTags>().pup(p));
+  // EXPAND_PACK_LEFT_TO_RIGHT(get_item<ImmutableItemCreationTags>().pup(p));
 }
 
 ////////////////////////////////////////////////////////////////
