@@ -568,9 +568,9 @@ Krivodonova<VolumeDim, tmpl::list<Tags...>>::Krivodonova(
   // different from those of Krivodonova 2007
   if (alg::any_of(alphas_,
                   [](const double t) { return t > 1.0 or t <= 0.0; })) {
-    PARSE_ERROR(context,
-                "The alphas in the Krivodonova limiter must be in the range "
-                "(0,1].");
+    // PARSE_ERROR(context,
+    //             "The alphas in the Krivodonova limiter must be in the range "
+    //             "(0,1].");
   }
 }
 

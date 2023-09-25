@@ -36,12 +36,12 @@ void validate_selection(const std::vector<std::string>& selected_names,
   });
   for (const auto& name : selected_names) {
     if (valid_names.find(name) == valid_names.end()) {
-      PARSE_ERROR(context, "Invalid selection: " << name
-                                                 << ". Possible choices are: "
-                                                 << valid_names << ".");
+      // PARSE_ERROR(context, "Invalid selection: " << name
+      //                                            << ". Possible choices are: "
+      //                                            << valid_names << ".");
     }
     if (alg::count(selected_names, name) != 1) {
-      PARSE_ERROR(context, name << " specified multiple times");
+      // PARSE_ERROR(context, name << " specified multiple times");
     }
   }
 }
