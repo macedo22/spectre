@@ -107,21 +107,20 @@ std::unique_ptr<BaseClass> create(const Option& options) {
     id = node.as<std::string>();
   } else if (node.IsMap()) {
     if (node.size() != 1) {
-      std::ostringstream ss;
-      ss << "Expected a single class to create, got " << node.size() << ":\n"
-         << node;
-      PARSE_ERROR(derived_opts.context(), ss.str());
+      PARSE_ERROR(derived_opts.context(),
+                  "Expected a single class to create, got "
+                  << node.size() << ":\n" << node);
     }
     id = node.begin()->first.as<std::string>();
     derived_opts.set_node(node.begin()->second);
   } else if (node.IsNull()) {
-    const std::string s{"Expected a class to create:\n" +
-                        help_derived<creatable_classes>()};
-    PARSE_ERROR(derived_opts.context(), s);
+    PARSE_ERROR(derived_opts.context(),
+                "Expected a class to create:\n"
+                << help_derived<creatable_classes>());
   } else {
-    std::ostringstream ss;
-    ss << "Expected a class or a class with options, got:\n" << node;
-    PARSE_ERROR(derived_opts.context(), ss.str());
+    PARSE_ERROR(derived_opts.context(),
+                "Expected a class or a class with options, got:\n"
+                << node);
   }
 
   std::unique_ptr<BaseClass> result;
@@ -137,9 +136,9 @@ std::unique_ptr<BaseClass> create(const Option& options) {
   if (result != nullptr) {
     return result;
   }
-  const std::string s{"Unknown Id '" + id + "'\n" +
-                      help_derived<creatable_classes>()};
-  PARSE_ERROR(derived_opts.context(), s);
+  PARSE_ERROR(derived_opts.context(),
+              "Unknown Id '" << id << "'\n"
+              << help_derived<creatable_classes>());
 }
 }  // namespace Factory_detail
 
