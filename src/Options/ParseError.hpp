@@ -26,6 +26,10 @@ class propagate_context : public std::exception {
  private:
   std::string message_;
 };
+
+[[noreturn]] void propagate_context_function(std::string message) {
+  throw propagate_context(message);
+}
 }  // namespace detail
 /// \endcond
 
@@ -47,7 +51,7 @@ class propagate_context : public std::exception {
       std::ostringstream avoid_name_collisions_PARSE_ERROR;             \
       /* clang-tidy: macro arg in parentheses */                        \
       avoid_name_collisions_PARSE_ERROR << (context) << m; /* NOLINT */ \
-      throw ::Options::detail::propagate_context(                       \
+      ::Options::detail::propagate_context_function(                    \
           avoid_name_collisions_PARSE_ERROR.str());                     \
     }                                                                   \
   } while (false)
