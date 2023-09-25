@@ -104,6 +104,17 @@ template <typename ExceptionTypeToThrow, typename F>
  * \brief Same as ERROR but does not print a backtrace. Intended to be used for
  * user errors, such as incorrect values in an input file.
  */
+// #define ERROR_NO_TRACE(m)                                                    \
+//   do {                                                                       \
+//     if (__builtin_is_constant_evaluated()) {                                 \
+//       throw std::runtime_error("Failed");                                    \
+//     } else {                                                                 \
+//       const ScopedFpeState disable_fpes_ERROR(false);                        \
+//       abort_with_error_message_no_trace(                                     \
+//           __FILE__, __LINE__, static_cast<const char*>(__PRETTY_FUNCTION__), \
+//           MakeString{} << std::setprecision(18) << std::scientific << m);    \
+//     }                                                                        \
+//   } while (false)
 #define ERROR_NO_TRACE(m)                                                    \
   do {                                                                       \
     if (__builtin_is_constant_evaluated()) {                                 \
@@ -112,6 +123,6 @@ template <typename ExceptionTypeToThrow, typename F>
       const ScopedFpeState disable_fpes_ERROR(false);                        \
       abort_with_error_message_no_trace(                                     \
           __FILE__, __LINE__, static_cast<const char*>(__PRETTY_FUNCTION__), \
-          MakeString{} << std::setprecision(18) << std::scientific << m);    \
+          "");                                                               \
     }                                                                        \
   } while (false)
