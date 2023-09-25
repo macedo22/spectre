@@ -329,7 +329,7 @@ Main<Metavariables>::Main(CkArgMsg* msg) {
           static_assert(std::is_same_v<decltype(mv), void>,
                         "Metavariables supplies input file name, "
                         "but there are no options");
-          // ERROR("This should have failed at compile time");
+          ERROR("This should have failed at compile time");
         },
         [](std::false_type /*meta*/, auto... /*unused*/) {
           // Metavariables has no options and no default input file name
@@ -447,7 +447,7 @@ Main<Metavariables>::Main(CkArgMsg* msg) {
 
     Parallel::printf("\nOption parsing completed.\n");
   } catch (const bpo::error& e) {
-    // ERROR(e.what());
+    ERROR(e.what());
   }
 
   check_future_checkpoint_dirs_available();
@@ -619,15 +619,15 @@ void Main<Metavariables>::pup(PUP::er& p) {  // NOLINT
     p | previous_procs;
     if (previous_nodes != sys::number_of_nodes() or
         previous_procs != sys::number_of_procs()) {
-      // ERROR(
-      //     "Must restart on the same hardware configuration used when writing "
-      //     "the checkpoint.\n"
-      //     "Checkpoint written with "
-      //     << previous_nodes << " nodes, " << previous_procs
-      //     << " procs.\n"
-      //        "Restarted with "
-      //     << sys::number_of_nodes() << " nodes, " << sys::number_of_procs()
-      //     << " procs.");
+      ERROR(
+          "Must restart on the same hardware configuration used when writing "
+          "the checkpoint.\n"
+          "Checkpoint written with "
+          << previous_nodes << " nodes, " << previous_procs
+          << " procs.\n"
+             "Restarted with "
+          << sys::number_of_nodes() << " nodes, " << sys::number_of_procs()
+          << " procs.");
     }
   } else {
     int current_nodes = sys::number_of_nodes();
@@ -641,7 +641,7 @@ template <typename Metavariables>
 void Main<Metavariables>::
     allocate_remaining_components_and_execute_initialization_phase() {
   if (current_phase_ != Parallel::Phase::Initialization) {
-    // ERROR("Must be in the Initialization phase.");
+    ERROR("Must be in the Initialization phase.");
   }
   // Since singletons are actually single-element Charm++ arrays, we have to
   // allocate them here along with the other Charm++ arrays.
@@ -721,7 +721,7 @@ void Main<Metavariables>::execute_next_phase() {
                      sys::pretty_wall_time());
   } else {
     if (Parallel::Phase::Exit == current_phase_) {
-      // ERROR("Current phase is Exit, but program did not exit!");
+      ERROR("Current phase is Exit, but program did not exit!");
     }
 
     if (current_phase_ == Parallel::Phase::PostFailureCleanup) {
@@ -745,16 +745,16 @@ void Main<Metavariables>::execute_next_phase() {
       auto it = alg::find(default_order, current_phase_);
       using ::operator<<;
       if (it == std::end(default_order)) {
-        // ERROR("Cannot determine next phase as '"
-        //       << current_phase_
-        //       << "' is not in Metavariables::default_phase_order "
-        //       << default_order << "\n");
+        ERROR("Cannot determine next phase as '"
+              << current_phase_
+              << "' is not in Metavariables::default_phase_order "
+              << default_order << "\n");
       }
       if (std::next(it) == std::end(default_order)) {
-        // ERROR("Cannot determine next phase as '"
-        //       << current_phase_
-        //       << "' is last in Metavariables::default_phase_order "
-        //       << default_order << "\n");
+        ERROR("Cannot determine next phase as '"
+              << current_phase_
+              << "' is last in Metavariables::default_phase_order "
+              << default_order << "\n");
       }
       current_phase_ = *std::next(it);
 
@@ -953,7 +953,7 @@ std::string Main<Metavariables>::next_checkpoint_dir() const {
       std::string(pad - counter.size(), '0').append(counter);
   const std::string result = checkpoints_dir + "/" + prefix + padded_counter;
   if (file_system::check_if_dir_exists(result)) {
-    // ERROR("Can't write checkpoint: dir " + result + " already exists!");
+    ERROR("Can't write checkpoint: dir " + result + " already exists!");
   }
   return result;
 }
@@ -980,10 +980,10 @@ void Main<Metavariables>::check_future_checkpoint_dirs_available() const {
       checkpoint_files.begin(), checkpoint_files.end(),
       [&next_checkpoint](const std::string& s) { return s < next_checkpoint; });
   if (not found_older_checkpoints_only) {
-    // ERROR(
-    //     "Can't start run: found checkpoints that may be overwritten!\n"
-    //     "Dirs from "
-    //     << next_checkpoint << " onward must not exist.\n");
+    ERROR(
+        "Can't start run: found checkpoints that may be overwritten!\n"
+        "Dirs from "
+        << next_checkpoint << " onward must not exist.\n");
   }
 }
 

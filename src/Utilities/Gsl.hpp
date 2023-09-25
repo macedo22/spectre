@@ -104,13 +104,13 @@ template <class T, class U>
 SPECTRE_ALWAYS_INLINE T narrow(U u) {
   T t = narrow_cast<T>(u);
   if (static_cast<U>(t) != u) {
-    // ERROR("Failed to cast " << u << " of type " << pretty_type::get_name<U>()
-    //                         << " to type " << pretty_type::get_name<T>());
+    ERROR("Failed to cast " << u << " of type " << pretty_type::get_name<U>()
+                            << " to type " << pretty_type::get_name<T>());
   }
   if (not gsl_detail::is_same_signedness<T, U>::value and
       ((t < T{}) != (u < U{}))) {
-    // ERROR("Failed to cast " << u << " of type " << pretty_type::get_name<U>()
-    //                         << " to type " << pretty_type::get_name<T>());
+    ERROR("Failed to cast " << u << " of type " << pretty_type::get_name<U>()
+                            << " to type " << pretty_type::get_name<T>());
   }
   return t;
 }

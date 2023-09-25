@@ -127,7 +127,7 @@ struct ObserveWorldtubeSolution {
                     "dtPsizz"};
             break;
           default:
-            // ERROR("requested invalid expansion order");
+            ERROR("requested invalid expansion order");
         }
       }();
       const auto current_time = db::get<::Tags::Time>(box);

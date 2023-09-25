@@ -72,9 +72,9 @@ void update_one_variables(const gsl::not_null<db::DataBox<DbTags>*> box) {
           box, db::get<Tags::TimeStep>(*box),
           db::get<Tags::TimeStepper<>>(*box));
     } else {
-      // ERROR(
-      //     "Cannot update the stepper error measure -- "
-      //     "`::Tags::StepperError<VariablesTag>` is not present in the box.");
+      ERROR(
+          "Cannot update the stepper error measure -- "
+          "`::Tags::StepperError<VariablesTag>` is not present in the box.");
     }
   } else {
     db::mutate<VariablesTag, history_tag>(

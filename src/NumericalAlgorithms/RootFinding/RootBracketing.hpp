@@ -132,9 +132,9 @@ auto bracket_by_contracting(const std::vector<double>& x,
   std::vector<std::optional<double>> y_near_valid_point;
 
   if (first_valid_index == 0 and last_valid_index == y.size() - 1) {
-    // ERROR(
-    //     "bracket_while_contracting: found a case where all points are valid,"
-    //     "which should not happen under our assumptions.");
+    ERROR(
+        "bracket_while_contracting: found a case where all points are valid,"
+        "which should not happen under our assumptions.");
   }
 
   if (first_valid_index > 0) {
@@ -284,9 +284,9 @@ void bracket_possibly_undefined_function_in_interval(
       // assume that all invalid points are at the end of interval, so no
       // "o X o").
       if (y2_defined and y3_defined) {
-        // ERROR(
-        //     "bracket_possibly_undefined_function_in_interval: found "
-        //     "case that should not happen under our assumptions.");
+        ERROR(
+            "bracket_possibly_undefined_function_in_interval: found "
+            "case that should not happen under our assumptions.");
       }
       try {
         std::tie(x1, x2, y1, y2) = bracketing_detail::bracket_by_contracting(

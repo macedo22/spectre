@@ -84,23 +84,23 @@ struct ContributeVolumeData {
           const ObservationKey& key{observation_id.observation_key()};
           if (UNLIKELY(registered_array_component_ids.find(key) ==
                        registered_array_component_ids.end())) {
-            // ERROR("Receiving data from observation id "
-            //       << observation_id << " that was never registered.");
+            ERROR("Receiving data from observation id "
+                  << observation_id << " that was never registered.");
           }
           const auto& registered_ids = registered_array_component_ids.at(key);
           if (UNLIKELY(registered_ids.find(sender_array_id) ==
                        registered_ids.end())) {
-            // ERROR("Receiving volume data from array component id "
-            //       << sender_array_id << " that is not registered.");
+            ERROR("Receiving volume data from array component id "
+                  << sender_array_id << " that is not registered.");
           }
 
           auto& contributed_array_ids =
               (*contributed_volume_data_ids)[observation_id];
           if (UNLIKELY(contributed_array_ids.find(sender_array_id) !=
                        contributed_array_ids.end())) {
-            // ERROR("Already received volume data to observation id "
-            //       << observation_id << " from array component id "
-            //       << sender_array_id);
+            ERROR("Already received volume data to observation id "
+                  << observation_id << " from array component id "
+                  << sender_array_id);
           }
           contributed_array_ids.insert(sender_array_id);
 
@@ -113,11 +113,11 @@ struct ContributeVolumeData {
                 volume_data->at(observation_id).at(sender_array_id);
             if (UNLIKELY(not alg::equal(current_data.extents,
                                         received_volume_data.extents))) {
-              // ERROR(
-              //     "The extents from the same volume component at a specific "
-              //     "observation should always be the same. For example, the "
-              //     "extents of a dG element should be the same for all calls to "
-              //     "ContributeVolumeData that occur at the same time.");
+              ERROR(
+                  "The extents from the same volume component at a specific "
+                  "observation should always be the same. For example, the "
+                  "extents of a dG element should be the same for all calls to "
+                  "ContributeVolumeData that occur at the same time.");
             }
             current_data.tensor_components.insert(
                 current_data.tensor_components.end(),
@@ -248,10 +248,10 @@ struct ContributeVolumeDataToWriter {
             const auto& registered_group_ids = observations_registered.at(key);
             if (UNLIKELY(registered_group_ids.find(observer_group_id) ==
                          registered_group_ids.end())) {
-              // ERROR("The observer group id "
-              //       << observer_group_id
-              //       << " was not registered for the observation id "
-              //       << observation_id);
+              ERROR("The observer group id "
+                    << observer_group_id
+                    << " was not registered for the observation id "
+                    << observation_id);
             }
 
             all_volume_data = &*volume_data_ptr;
@@ -286,9 +286,9 @@ struct ContributeVolumeDataToWriter {
 
       if (UNLIKELY(contributed_group_ids.find(observer_group_id) !=
                    contributed_group_ids.end())) {
-        // ERROR("Already received reduction data to observation id "
-        //       << observation_id << " from array component id "
-        //       << observer_group_id);
+        ERROR("Already received reduction data to observation id "
+              << observation_id << " from array component id "
+              << observer_group_id);
       }
       contributed_group_ids.insert(observer_group_id);
 

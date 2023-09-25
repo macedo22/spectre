@@ -518,15 +518,15 @@ struct ApplyBoundaryCorrections {
             const auto& direction = mortar_id.first;
             if (UNLIKELY(mortar_id.second ==
                          ElementId<volume_dim>::external_boundary_id())) {
-            //   ERROR(
-            //       "Cannot impose boundary conditions on external boundary in "
-            //       "direction "
-            //       << direction
-            //       << " in the ApplyBoundaryCorrections action. Boundary "
-            //          "conditions are applied in the ComputeTimeDerivative "
-            //          "action "
-            //          "instead. You may have unintentionally added external "
-            //          "mortars in one of the initialization actions.");
+              ERROR(
+                  "Cannot impose boundary conditions on external boundary in "
+                  "direction "
+                  << direction
+                  << " in the ApplyBoundaryCorrections action. Boundary "
+                     "conditions are applied in the ComputeTimeDerivative "
+                     "action "
+                     "instead. You may have unintentionally added external "
+                     "mortars in one of the initialization actions.");
             }
 
             const Mesh<volume_dim - 1> face_mesh =

@@ -116,8 +116,8 @@ struct BoundaryComputeAndSendToEvolution<H5WorldtubeBoundary<Metavariables>,
         },
         make_not_null(&box));
     if (not successfully_populated) {
-    //   ERROR("Insufficient boundary data to proceed, exiting early at time " +
-    //         std::to_string(time.substep_time()));
+      ERROR("Insufficient boundary data to proceed, exiting early at time " +
+            std::to_string(time.substep_time()));
     }
     Parallel::receive_data<Cce::ReceiveTags::BoundaryData<
         typename Metavariables::cce_boundary_communication_tags>>(
@@ -169,8 +169,8 @@ struct BoundaryComputeAndSendToEvolution<
         make_not_null(&box));
 
     if (not successfully_populated) {
-    //   ERROR("Insufficient boundary data to proceed, exiting early at time "
-    //         << time.substep_time());
+      ERROR("Insufficient boundary data to proceed, exiting early at time "
+            << time.substep_time());
     }
     Parallel::receive_data<Cce::ReceiveTags::BoundaryData<
         typename Metavariables::cce_boundary_communication_tags>>(

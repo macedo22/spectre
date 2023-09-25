@@ -85,12 +85,12 @@ struct SetVariables {
                           is_analytic_solution_v<initial_data_subclass>) {
               impl<Metavariables>(make_not_null(&box), *data_or_solution);
             } else {
-              // ERROR(
-              //     "Trying to use "
-              //     "'evolution::Initialization::Actions::SetVariables' with a "
-              //     "class that's not marked as analytic solution or analytic "
-              //     "data. To support numeric initial data, add a "
-              //     "system-specific initialization routine to your executable.");
+              ERROR(
+                  "Trying to use "
+                  "'evolution::Initialization::Actions::SetVariables' with a "
+                  "class that's not marked as analytic solution or analytic "
+                  "data. To support numeric initial data, add a "
+                  "system-specific initialization routine to your executable.");
             }
           });
     } else if constexpr (db::tag_is_retrievable_v<
@@ -99,10 +99,10 @@ struct SetVariables {
       impl<Metavariables>(make_not_null(&box),
                           db::get<::Tags::AnalyticSolutionOrData>(box));
     } else {
-      // ERROR(
-      //     "Either ::Tags::AnalyticSolutionOrData or "
-      //     "evolution::initial_data::Tags::InitialData must be in the "
-      //     "DataBox.");
+      ERROR(
+          "Either ::Tags::AnalyticSolutionOrData or "
+          "evolution::initial_data::Tags::InitialData must be in the "
+          "DataBox.");
     }
     return {Parallel::AlgorithmExecution::Continue, std::nullopt};
   }

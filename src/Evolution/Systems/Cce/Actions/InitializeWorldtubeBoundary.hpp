@@ -68,11 +68,11 @@ struct InitializeWorldtubeBoundaryBase {
               &(db::get<Tags::AnalyticBoundaryDataManager>(box)
                     .get_generator())) != nullptr) {
         if(db::get<::Tags::TimeStepper<>>(box).number_of_substeps() != 1) {
-        //   ERROR(
-        //       "Do not use RobinsonTrautman analytic solution with a "
-        //       "substep-based timestepper. This is to prevent severe slowdowns "
-        //       "in the current RobinsonTrautman implementation. See the "
-        //       "documentation for the RobinsonTrautman solution for details.");
+          ERROR(
+              "Do not use RobinsonTrautman analytic solution with a "
+              "substep-based timestepper. This is to prevent severe slowdowns "
+              "in the current RobinsonTrautman implementation. See the "
+              "documentation for the RobinsonTrautman solution for details.");
         }
       }
     }

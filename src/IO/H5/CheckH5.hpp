@@ -19,5 +19,6 @@
  */
 #define CHECK_H5(h5_status, m)                        \
   if (h5_status < 0) {                     /*NOLINT*/ \
+    ERROR("Failed HDF5 operation: " << m); /*NOLINT*/ \
   } else                                              \
     static_cast<void>(0)

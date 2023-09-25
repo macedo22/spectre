@@ -373,10 +373,10 @@ struct ReceiveDataForReconstruction {
               mortar_next_time_step_id->at(mortar_id) =
                   std::get<4>(received_mortar_data.second);
             } catch (std::exception& e) {
-              // ERROR("Failed retrieving the MortarId: ("
-              //       << mortar_id.first << ',' << mortar_id.second
-              //       << ") from the mortar_next_time_step_id. Got exception: "
-              //       << e.what());
+              ERROR("Failed retrieving the MortarId: ("
+                    << mortar_id.first << ',' << mortar_id.second
+                    << ") from the mortar_next_time_step_id. Got exception: "
+                    << e.what());
             }
             if (std::get<3>(received_mortar_data.second).has_value()) {
               mortar_data->at(mortar_id).insert_neighbor_mortar_data(

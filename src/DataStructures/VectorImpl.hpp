@@ -310,9 +310,9 @@ class VectorImpl
       return;
     }
     if (owned_data_ == nullptr and set_size > StaticSize) {
-      // ERROR(
-      //     "VectorImpl::reset_pointer_vector cannot be called when owned_data_ "
-      //     "is nullptr.");
+      ERROR(
+          "VectorImpl::reset_pointer_vector cannot be called when owned_data_ "
+          "is nullptr.");
     }
 
     if (set_size <= StaticSize) {

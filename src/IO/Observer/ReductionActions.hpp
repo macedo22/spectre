@@ -155,9 +155,9 @@ struct ContributeReductionData {
               (*reduction_observers_contributed)[observation_id];
           if (UNLIKELY(contributed_array_ids.find(sender_array_id) !=
                        contributed_array_ids.end())) {
-            // ERROR("Already received reduction data to observation id "
-            //       << observation_id << " from array component id "
-            //       << sender_array_id);
+            ERROR("Already received reduction data to observation id "
+                  << observation_id << " from array component id "
+                  << sender_array_id);
           }
           contributed_array_ids.insert(sender_array_id);
 
@@ -169,10 +169,10 @@ struct ContributeReductionData {
             if (UNLIKELY(reduction_names_map->at(observation_id) !=
                          reduction_names)) {
               using ::operator<<;
-            //   ERROR("Reduction names differ at ObservationId "
-            //         << observation_id << " with the expected names being "
-            //         << reduction_names_map->at(observation_id)
-            //         << " and the received names being " << reduction_names);
+              ERROR("Reduction names differ at ObservationId "
+                    << observation_id << " with the expected names being "
+                    << reduction_names_map->at(observation_id)
+                    << " and the received names being " << reduction_names);
             }
             reduction_data_map->operator[](observation_id)
                 .combine(std::move(reduction_data));
@@ -238,11 +238,11 @@ void write_data(const std::string& subfile_name,
       append_to_reduction_data(&data_to_append, std::get<Is>(data)));
 
   if (legend.size() != data_to_append.size()) {
-    // ERROR(
-    //     "There must be one name provided for each piece of data. You provided "
-    //     << legend.size() << " names: '" << get_output(legend)
-    //     << "' but there are " << data_to_append.size()
-    //     << " pieces of data being reduced");
+    ERROR(
+        "There must be one name provided for each piece of data. You provided "
+        << legend.size() << " names: '" << get_output(legend)
+        << "' but there are " << data_to_append.size()
+        << " pieces of data being reduced");
   }
 
   h5::H5File<h5::AccessType::ReadWrite> h5file(file_prefix + ".h5", true,
@@ -327,10 +327,10 @@ struct CollectReductionDataOnNode {
             const auto& registered_group_ids = observations_registered.at(key);
             if (UNLIKELY(registered_group_ids.find(observer_group_id) ==
                          registered_group_ids.end())) {
-            //   ERROR("The observer group id "
-            //         << observer_group_id
-            //         << " was not registered for the observation id "
-            //         << observation_id);
+              ERROR("The observer group id "
+                    << observer_group_id
+                    << " was not registered for the observation id "
+                    << observation_id);
             }
             reduction_data = &*reduction_data_ptr;
             reduction_names_map = &*reduction_names_map_ptr;
@@ -360,9 +360,9 @@ struct CollectReductionDataOnNode {
 
       if (UNLIKELY(contributed_group_ids.find(observer_group_id) !=
                    contributed_group_ids.end())) {
-        // ERROR("Already received reduction data to observation id "
-        //       << observation_id << " from array component id "
-        //       << observer_group_id);
+        ERROR("Already received reduction data to observation id "
+              << observation_id << " from array component id "
+              << observer_group_id);
       }
       contributed_group_ids.insert(observer_group_id);
 
@@ -402,18 +402,18 @@ struct CollectReductionDataOnNode {
       }
 
       if (UNLIKELY(reduction_names.empty())) {
-        // ERROR(
-        //     "The reduction names, which is a std::vector of the names of "
-        //     "the columns in the file, must be non-empty.");
+        ERROR(
+            "The reduction names, which is a std::vector of the names of "
+            "the columns in the file, must be non-empty.");
       }
       if (auto current_names = reduction_names_map->find(observation_id);
           current_names == reduction_names_map->end()) {
         reduction_names_map->emplace(observation_id,
                                      std::move(reduction_names));
       } else if (UNLIKELY(current_names->second != reduction_names)) {
-        // ERROR(
-        //     "The reduction names passed in must match the currently "
-        //     "known reduction names.");
+        ERROR(
+            "The reduction names passed in must match the currently "
+            "known reduction names.");
       }
 
       // Check if we have received all reduction data from the Observer
@@ -533,9 +533,9 @@ struct WriteReductionData {
 
             if (UNLIKELY(registered_nodes.find(sender_node_number) ==
                          registered_nodes.end())) {
-            //   ERROR("Node " << sender_node_number
-            //                 << " was not registered for the observation id "
-            //                 << observation_id);
+              ERROR("Node " << sender_node_number
+                            << " was not registered for the observation id "
+                            << observation_id);
             }
 
             reduction_data = &*reduction_data_ptr;
@@ -564,15 +564,15 @@ struct WriteReductionData {
           (*nodes_contributed)[observation_id];
       if (nodes_contributed_to_observation.find(sender_node_number) !=
           nodes_contributed_to_observation.end()) {
-        // ERROR("Already received reduction data at observation id "
-        //       << observation_id << " from node " << sender_node_number);
+        ERROR("Already received reduction data at observation id "
+              << observation_id << " from node " << sender_node_number);
       }
       nodes_contributed_to_observation.insert(sender_node_number);
 
       if (UNLIKELY(reduction_names.empty())) {
-        // ERROR(
-        //     "The reduction names, which is a std::vector of the names of "
-        //     "the columns in the file, must be non-empty.");
+        ERROR(
+            "The reduction names, which is a std::vector of the names of "
+            "the columns in the file, must be non-empty.");
       }
       if (auto current_names = reduction_names_map->find(observation_id);
           current_names == reduction_names_map->end()) {
@@ -580,11 +580,11 @@ struct WriteReductionData {
                                      std::move(reduction_names));
       } else if (UNLIKELY(current_names->second != reduction_names)) {
         using ::operator<<;
-        // ERROR(
-        //     "The reduction names passed in must match the currently "
-        //     "known reduction names. Current ones are "
-        //     << current_names->second << " while the received are "
-        //     << reduction_names);
+        ERROR(
+            "The reduction names passed in must match the currently "
+            "known reduction names. Current ones are "
+            << current_names->second << " while the received are "
+            << reduction_names);
       }
 
       if (reduction_data->find(observation_id) == reduction_data->end()) {

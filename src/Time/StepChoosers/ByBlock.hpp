@@ -57,7 +57,7 @@ class ByBlock : public StepChooser<StepChooserUse> {
       const double /*last_step_magnitude*/) const {
     const size_t block = element.id().block_id();
     if (block >= sizes_.size()) {
-      // ERROR("Step size not specified for block " << block);
+      ERROR("Step size not specified for block " << block);
     }
     return std::make_pair(sizes_[block], true);
   }

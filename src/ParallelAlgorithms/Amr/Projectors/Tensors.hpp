@@ -62,7 +62,7 @@ struct ProjectTensors : tt::ConformsTo<amr::protocols::Projector> {
       const gsl::not_null<typename TensorTags::type*>... /*tensors*/,
       const Mesh<Dim>& /*new_mesh*/,
       const tuples::TaggedTuple<Tags...>& /*parent_items*/) {
-    // ERROR("h-refinement not implemented yet");
+    ERROR("h-refinement not implemented yet");
   }
 
   template <typename... Tags>
@@ -71,7 +71,7 @@ struct ProjectTensors : tt::ConformsTo<amr::protocols::Projector> {
       const Mesh<Dim>& /*new_mesh*/,
       const std::unordered_map<ElementId<Dim>, tuples::TaggedTuple<Tags...>>&
       /*children_items*/) {
-    // ERROR("h-refinement not implemented yet");
+    ERROR("h-refinement not implemented yet");
   }
 };
 

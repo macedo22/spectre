@@ -251,9 +251,9 @@ class ConstraintPreservingFreeOutflow final : public BoundaryCondition {
       /*magnetic_field*/,
       const gsl::not_null<Scalar<DataVector>*> /*divergence_cleaning_field*/,
       const Direction<3>& /*direction*/) {
-    // ERROR(
-    //     "Not implemented because it's not trivial to figure out what the right "
-    //     "way of handling this case is.");
+    ERROR(
+        "Not implemented because it's not trivial to figure out what the right "
+        "way of handling this case is.");
   }
 
  private:

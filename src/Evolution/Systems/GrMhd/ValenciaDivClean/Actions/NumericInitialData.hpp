@@ -268,9 +268,9 @@ class NumericInitialData : public evolution::initial_data::InitialData {
                   Scalar<double>(local_rest_mass_density),
                   Scalar<double>(get(*specific_internal_energy)[i])));
         } else {
-          // ERROR(
-          //     "Only 1d & 2d EOSes implemented for numerical initial data right "
-          //     "now");
+          ERROR(
+              "Only 1d & 2d EOSes implemented for numerical initial data right "
+              "now");
         }
         get(*specific_enthalpy)[i] = get(hydro::relativistic_specific_enthalpy(
             Scalar<double>(local_rest_mass_density),
@@ -289,11 +289,11 @@ class NumericInitialData : public evolution::initial_data::InitialData {
       const double constant_magnetic_field =
           std::get<double>(magnetic_field_selection);
       if (constant_magnetic_field != 0.) {
-        // ERROR(
-        //     "Choose a magnetic field dataset or set it to zero. "
-        //     "Nonzero uniform magnetic fields cannot currently be chosen "
-        //     "in the input file. Generate a dataset for the nonzero "
-        //     "uniform magnetic field if you need to.");
+        ERROR(
+            "Choose a magnetic field dataset or set it to zero. "
+            "Nonzero uniform magnetic fields cannot currently be chosen "
+            "in the input file. Generate a dataset for the nonzero "
+            "uniform magnetic field if you need to.");
       }
       set_number_of_grid_points(magnetic_field, num_points);
       std::fill(magnetic_field->begin(), magnetic_field->end(),

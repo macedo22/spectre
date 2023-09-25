@@ -63,9 +63,9 @@ struct SelectNumericalMethod {
           1;
       return {Parallel::AlgorithmExecution::Continue, subcell_index};
     }
-    // ERROR(
-    //     "Only know DG and subcell active grids for selecting the numerical "
-    //     "method.");
+    ERROR(
+        "Only know DG and subcell active grids for selecting the numerical "
+        "method.");
   }
 };
 }  // namespace evolution::dg::subcell::Actions

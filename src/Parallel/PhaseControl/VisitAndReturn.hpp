@@ -36,10 +36,10 @@ struct ReturnPhase {
     std::optional<Parallel::Phase> operator()(
         const std::optional<Parallel::Phase> /*first_phase*/,
         const std::optional<Parallel::Phase>& /*second_phase*/) {
-      // ERROR(
-      //     "The return phase should only be altered by the phase change "
-      //     "arbitration in the Main chare, so no reduction data should be "
-      //     "provided.");
+      ERROR(
+          "The return phase should only be altered by the phase change "
+          "arbitration in the Main chare, so no reduction data should be "
+          "provided.");
     }
   };
 

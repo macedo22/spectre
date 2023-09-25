@@ -113,7 +113,7 @@ struct SetInterpolators {
         // 3. Create interpolators
 
         if (not is_isotropic(neighbor_fd_mesh)) {
-          // ERROR("We assume an isotropic mesh but got " << neighbor_fd_mesh);
+          ERROR("We assume an isotropic mesh but got " << neighbor_fd_mesh);
         }
 
         const auto get_logical_coords = [&element, &neighbor_id, &direction](
@@ -129,17 +129,17 @@ struct SetInterpolators {
                 logical_coords.get(d)[i] = logical_coord.get(d);
               }
             } catch (const std::bad_optional_access& e) {
-              // ERROR(
-              //     "Failed to get logical coordinates for neighbor's "
-              //     "ghost zone grid coordinates. This could be because the "
-              //     "ghost zones are not in the nearest neighbor but instead in "
-              //     "the next-to-nearest neighbor. The code assumes all ghost "
-              //     "zones, even on curved meshes, are in the nearest neighbors. "
-              //     "The current element is "
-              //     << element.id() << " and the neighbor id is " << neighbor_id
-              //     << " in direction " << direction
-              //     << " The neighbor grid coordinates are \n"
-              //     << extract_point(grid_coords, i) << "\n");
+              ERROR(
+                  "Failed to get logical coordinates for neighbor's "
+                  "ghost zone grid coordinates. This could be because the "
+                  "ghost zones are not in the nearest neighbor but instead in "
+                  "the next-to-nearest neighbor. The code assumes all ghost "
+                  "zones, even on curved meshes, are in the nearest neighbors. "
+                  "The current element is "
+                  << element.id() << " and the neighbor id is " << neighbor_id
+                  << " in direction " << direction
+                  << " The neighbor grid coordinates are \n"
+                  << extract_point(grid_coords, i) << "\n");
             }
           }
           return logical_coords;

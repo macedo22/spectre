@@ -473,9 +473,9 @@ std::array<double, Dim> gsl_multiroot(
   } else if (method == Method::Hybrid) {
     solver_type = gsl_multiroot_fdfsolver_hybridj;
   } else {
-    // ERROR(
-    //     "Invalid method. Has to be one of Newton, Hybrids or "
-    //     "Hybrid.");
+    ERROR(
+        "Invalid method. Has to be one of Newton, Hybrids or "
+        "Hybrid.");
   }
   // Print initial parameters
   if (UNLIKELY(verbosity >= Verbosity::Verbose)) {
@@ -511,9 +511,9 @@ std::array<double, Dim> gsl_multiroot(
   } else if (method == Method::Hybrid) {
     solver_type = gsl_multiroot_fsolver_hybrid;
   } else {
-    // ERROR(
-    //     "Invalid method. Has to be one of Newton, Hybrids or "
-    //     "Hybrid.");
+    ERROR(
+        "Invalid method. Has to be one of Newton, Hybrids or "
+        "Hybrid.");
   }
   // Print initial parameters
   if (UNLIKELY(verbosity >= Verbosity::Verbose)) {

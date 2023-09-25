@@ -345,7 +345,7 @@ struct ProjectRunEventsAndDenseTriggers
           evolution::EventsAndDenseTriggers*> /*events_and_dense_triggers*/,
       const gsl::not_null<std::optional<double>*> /*previous_trigger_time*/,
       const tuples::TaggedTuple<Tags...>& /*parent_items*/) {
-    // ERROR("h-refinement not implemented yet");
+    ERROR("h-refinement not implemented yet");
   }
 
   template <size_t Dim, typename... Tags>
@@ -355,7 +355,7 @@ struct ProjectRunEventsAndDenseTriggers
       const gsl::not_null<std::optional<double>*> /*previous_trigger_time*/,
       const std::unordered_map<ElementId<Dim>, tuples::TaggedTuple<Tags...>>&
       /*children_items*/) {
-    // ERROR("h-refinement not implemented yet");
+    ERROR("h-refinement not implemented yet");
   }
 };
 }  // namespace evolution::Actions

@@ -344,7 +344,7 @@ struct ProjectTimeStepperHistory : tt::ConformsTo<amr::protocols::Projector> {
       const gsl::not_null<typename history_tag::type*> /*history*/,
       const Mesh<dim>& /*new_mesh*/, const ElementId<dim>& /*element_id*/,
       const tuples::TaggedTuple<Tags...>& /*parent_items*/) {
-    // ERROR("h-refinement not implemented yet");
+    ERROR("h-refinement not implemented yet");
   }
 
   template <typename... Tags>
@@ -354,7 +354,7 @@ struct ProjectTimeStepperHistory : tt::ConformsTo<amr::protocols::Projector> {
       const Mesh<dim>& /*new_mesh*/, const ElementId<dim>& /*element_id*/,
       const std::unordered_map<ElementId<dim>, tuples::TaggedTuple<Tags...>>&
       /*children_items*/) {
-    // ERROR("h-refinement not implemented yet");
+    ERROR("h-refinement not implemented yet");
   }
 };
 }  // namespace Initialization

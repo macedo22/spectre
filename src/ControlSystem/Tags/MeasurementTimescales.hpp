@@ -116,9 +116,9 @@ struct MeasurementTimescales : db::SimpleTag {
           // This check is intentionally inside the lambda so that it will not
           // trigger for domains without control systems.
           if (initial_time_step <= 0.0) {
-            // ERROR(
-            //     "Control systems can only be used in forward-in-time "
-            //     "evolutions.");
+            ERROR(
+                "Control systems can only be used in forward-in-time "
+                "evolutions.");
           }
 
           const std::string& control_system_name =

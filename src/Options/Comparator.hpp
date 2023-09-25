@@ -47,8 +47,8 @@ class Comparator {
         return t1 <= t2;
       case Comparison::GreaterThanOrEqualTo:
         return t1 >= t2;
-      // default:
-        // ERROR("Invalid comparison");
+      default:
+        ERROR("Invalid comparison");
     }
   }
 

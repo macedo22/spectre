@@ -71,9 +71,9 @@ struct Filter : db::SimpleTag {
       const auto& block_groups = domain_creator->block_groups();
 
       if (block_names.size() == 0) {
-        // ERROR(
-        //     "The domain chosen doesn't use block names, but the Filter tag has "
-        //     "specified block names to use.");
+        ERROR(
+            "The domain chosen doesn't use block names, but the Filter tag has "
+            "specified block names to use.");
       }
 
       // The name must either be a block or a block group
@@ -81,12 +81,12 @@ struct Filter : db::SimpleTag {
         const auto block_name_iter = alg::find(block_names, block_to_filter);
         if (block_name_iter == block_names.end() and
             block_groups.count(block_to_filter) == 0) {
-          // ERROR("Specified block (group) name '"
-          //       << block_to_filter
-          //       << "' is not a block name or a block "
-          //          "group. Existing blocks are:\n"
-          //       << block_names << "\nExisting block groups are:\n"
-          //       << keys_of(block_groups));
+          ERROR("Specified block (group) name '"
+                << block_to_filter
+                << "' is not a block name or a block "
+                   "group. Existing blocks are:\n"
+                << block_names << "\nExisting block groups are:\n"
+                << keys_of(block_groups));
         }
       }
     }

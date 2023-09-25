@@ -28,9 +28,9 @@ struct ErrorOnFailedApparentHorizon {
                     const Parallel::GlobalCache<Metavariables>& /*cache*/,
                     const TemporalId& /*temporal_id*/,
                     const FastFlow::Status failure_reason) {
-    // ERROR("Apparent horizon finder "
-    //       << pretty_type::name<InterpolationTargetTag>()
-    //       << " failed, reason = " << failure_reason);
+    ERROR("Apparent horizon finder "
+          << pretty_type::name<InterpolationTargetTag>()
+          << " failed, reason = " << failure_reason);
   }
 };
 

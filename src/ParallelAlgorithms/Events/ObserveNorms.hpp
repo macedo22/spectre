@@ -361,11 +361,11 @@ operator()(const ObservationBox<ComputeTagsList, DataBoxType>& box,
     for (size_t i = 0; i < tensor_names_.size(); ++i) {
       if (tensor_name == tensor_names_[i]) {
         if (UNLIKELY(not has_value(get<tag>(box)))) {
-          // ERROR("Cannot observe a norm of '"
-          //       << tensor_name
-          //       << "' because it is a std::optional and wasn't able to be "
-          //          "computed. This can happen when you try to observe errors "
-          //          "without an analytic solution.");
+          ERROR("Cannot observe a norm of '"
+                << tensor_name
+                << "' because it is a std::optional and wasn't able to be "
+                   "computed. This can happen when you try to observe errors "
+                   "without an analytic solution.");
         }
         const auto& tensor = value(get<tag>(box));
 
@@ -374,12 +374,12 @@ operator()(const ObservationBox<ComputeTagsList, DataBoxType>& box,
         const auto& component_names = names_and_components.first;
         const auto& components = names_and_components.second;
         if (components[0].size() != number_of_points) {
-          // ERROR("The number of grid points of the mesh is "
-          //       << number_of_points << " but the tensor '" << tensor_name
-          //       << "' has " << components[0].size()
-          //       << " points. This means you're computing norms of tensors over "
-          //          "different grids, which will give the wrong answer for "
-          //          "norms that use the grid points.");
+          ERROR("The number of grid points of the mesh is "
+                << number_of_points << " but the tensor '" << tensor_name
+                << "' has " << components[0].size()
+                << " points. This means you're computing norms of tensors over "
+                   "different grids, which will give the wrong answer for "
+                   "norms that use the grid points.");
         }
 
         if (tensor_components_[i] == "Individual") {

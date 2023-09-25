@@ -173,9 +173,9 @@ struct BoundaryCorrectionAndGhostCellsInbox {
       // We have not received ghost cells or fluxes at this time.
       if (not current_inbox.insert(std::forward<ReceiveDataType>(data))
                   .second) {
-        // ERROR("Failed to insert data to receive at instance '"
-        //       << time_step_id
-        //       << "' with tag 'BoundaryCorrectionAndGhostCellsInbox'.\n");
+        ERROR("Failed to insert data to receive at instance '"
+              << time_step_id
+              << "' with tag 'BoundaryCorrectionAndGhostCellsInbox'.\n");
       }
     }
   }
@@ -313,8 +313,8 @@ struct BoundaryMessageInbox {
                   .insert(std::pair{key, std::unique_ptr<BoundaryMessage<Dim>>(
                                              boundary_message)})
                   .second) {
-        // ERROR("Failed to insert data to receive at instance '"
-        //       << time_step_id << "' with tag 'BoundaryMessageInbox'.\n");
+        ERROR("Failed to insert data to receive at instance '"
+              << time_step_id << "' with tag 'BoundaryMessageInbox'.\n");
       }
     }
   }

@@ -308,17 +308,17 @@ operator()(const ObservationBox<ComputeTagsList, DataBoxType>& box,
     const std::string tensor_name = db::tag_name<tag>();
     if (tensor_name == scalar_name_) {
       if (UNLIKELY(not has_value(get<tag>(box)))) {
-        // ERROR("Cannot observe a norm of '"
-        //       << tensor_name
-        //       << "' because it is a std::optional and wasn't able to be "
-        //          "computed. This can happen when you try to observe errors "
-        //          "without an analytic solution.");
+        ERROR("Cannot observe a norm of '"
+              << tensor_name
+              << "' because it is a std::optional and wasn't able to be "
+                 "computed. This can happen when you try to observe errors "
+                 "without an analytic solution.");
       }
       const auto& scalar = value(get<tag>(box));
       const auto components = get<1>(scalar.get_vector_of_data());
       if (components.size() > 1) {
-        // ERROR("Extremum should be taken on a scalar, yet we have "
-        //       << components.size() << " components in tensor " << tensor_name);
+        ERROR("Extremum should be taken on a scalar, yet we have "
+              << components.size() << " components in tensor " << tensor_name);
       }
       for (size_t i = 1; i < components[0].size(); i++) {
         if ((extremum_type_ == "Max" and
@@ -344,11 +344,11 @@ operator()(const ObservationBox<ComputeTagsList, DataBoxType>& box,
     for (size_t i = 0; i < additional_tensor_names_.size(); ++i)
       if (tensor_name == additional_tensor_names_[i]) {
         if (UNLIKELY(not has_value(get<tag>(box)))) {
-          // ERROR("Cannot observe a norm of '"
-          //       << tensor_name
-          //       << "' because it is a std::optional and wasn't able to be "
-          //          "computed. This can happen when you try to observe errors "
-          //          "without an analytic solution.");
+          ERROR("Cannot observe a norm of '"
+                << tensor_name
+                << "' because it is a std::optional and wasn't able to be "
+                   "computed. This can happen when you try to observe errors "
+                   "without an analytic solution.");
         }
         const auto& tensor = value(get<tag>(box));
         const auto [component_names, components] = tensor.get_vector_of_data();

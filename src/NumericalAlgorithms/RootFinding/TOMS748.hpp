@@ -49,9 +49,9 @@ double toms748(const Function& f, const double lower_bound,
                const double relative_tolerance,
                const size_t max_iterations = 100) {
   if (f_at_lower_bound * f_at_upper_bound > 0.0) {
-    // ERROR("Root not bracketed: "
-    //       "f(" << lower_bound << ") = " << f_at_lower_bound << ", "
-    //       "f(" << upper_bound << ") = " << f_at_upper_bound);
+    ERROR("Root not bracketed: "
+          "f(" << lower_bound << ") = " << f_at_lower_bound << ", "
+          "f(" << upper_bound << ") = " << f_at_upper_bound);
   }
   ASSERT(relative_tolerance > std::numeric_limits<double>::epsilon(),
          "The relative tolerance is too small.");

@@ -612,24 +612,24 @@ bool Krivodonova<VolumeDim, tmpl::list<Tags...>>::operator()(
   }
   if (UNLIKELY(mesh != Mesh<VolumeDim>(mesh.extents()[0], mesh.basis()[0],
                                        mesh.quadrature()[0]))) {
-    // ERROR(
-    //     "The Krivodonova limiter does not yet support non-uniform number of "
-    //     "collocation points, bases, and quadrature in each direction. The "
-    //     "mesh is: "
-    //     << mesh);
+    ERROR(
+        "The Krivodonova limiter does not yet support non-uniform number of "
+        "collocation points, bases, and quadrature in each direction. The "
+        "mesh is: "
+        << mesh);
   }
   if (UNLIKELY(
           alg::any_of(element.neighbors(), [](const auto& direction_neighbors) {
             return direction_neighbors.second.size() != 1;
           }))) {
-    // ERROR("The Krivodonova limiter does not yet support h-refinement");
+    ERROR("The Krivodonova limiter does not yet support h-refinement");
   }
   alg::for_each(neighbor_data, [&mesh](const auto& id_packaged_data) {
     if (UNLIKELY(id_packaged_data.second.mesh != mesh)) {
-      // ERROR(
-      //     "The Krivodonova limiter does not yet support differing meshes "
-      //     "between neighbors. Self mesh is: "
-      //     << mesh << " neighbor mesh is: " << id_packaged_data.second.mesh);
+      ERROR(
+          "The Krivodonova limiter does not yet support differing meshes "
+          "between neighbors. Self mesh is: "
+          << mesh << " neighbor mesh is: " << id_packaged_data.second.mesh);
     }
   });
 

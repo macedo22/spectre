@@ -587,10 +587,10 @@ struct SubdomainOperator
                 }
               }
             }
-            // ERROR("The neighbor's neighbor "
-            //       << neighbors_neighbor_id
-            //       << " is part of the subdomain, but we didn't find its "
-            //          "overlap ID. This is a bug, so please file an issue.");
+            ERROR("The neighbor's neighbor "
+                  << neighbors_neighbor_id
+                  << " is part of the subdomain, but we didn't find its "
+                     "overlap ID. This is a bug, so please file an issue.");
           }();
           if (neighbors_neighbor_overlap_id.has_value()) {
             // The neighbor's neighbor is part of the subdomain so we copy the

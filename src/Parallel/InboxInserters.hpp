@@ -47,9 +47,9 @@ struct Map {
            "Receiving data from the 'same' source twice. The message id is: "
                << data.first);
     if (not current_inbox.insert(std::forward<ReceiveDataType>(data)).second) {
-      // ERROR("Failed to insert data to receive at instance '"
-      //       << temporal_id << "' with tag '"
-      //       << pretty_type::get_name<InboxTag>() << "'.\n");
+      ERROR("Failed to insert data to receive at instance '"
+            << temporal_id << "' with tag '"
+            << pretty_type::get_name<InboxTag>() << "'.\n");
     }
   }
 };

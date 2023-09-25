@@ -242,7 +242,7 @@ decltype(auto) find_record(History&& history, const TimeStepId& id) {
         return record;
       }
     }
-    // ERROR(id << " not present");
+    ERROR(id << " not present");
   } else {
     ASSERT(substep - 1 < history.substeps().size(), id << " not present");
     auto& record = history.substeps()[substep - 1];

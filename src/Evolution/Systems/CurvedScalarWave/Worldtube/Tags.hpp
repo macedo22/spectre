@@ -107,16 +107,16 @@ struct CheckInputFile : db::SimpleTag {
       const std::string& excision_sphere_name,
       const BackgroundType& kerr_schild_background) {
     if (not kerr_schild_background.zero_spin()) {
-      // ERROR(
-      //     "Black hole spin is not implemented yet but you requested non-zero "
-      //     "spin.");
+      ERROR(
+          "Black hole spin is not implemented yet but you requested non-zero "
+          "spin.");
     }
     if (not equal_within_roundoff(kerr_schild_background.center(),
                                   make_array(0., 0., 0.))) {
-      // ERROR("The central black hole must be centered at [0., 0., 0.].");
+      ERROR("The central black hole must be centered at [0., 0., 0.].");
     }
     if (not equal_within_roundoff(kerr_schild_background.mass(), 1.)) {
-      // ERROR("The central black hole must have mass 1.");
+      ERROR("The central black hole must have mass 1.");
     }
     const auto domain = domain_creator->create_domain();
     const auto& excision_spheres = domain.excision_spheres();
@@ -124,27 +124,27 @@ struct CheckInputFile : db::SimpleTag {
     const double orbital_radius = get<0>(excision_sphere.center());
     const auto& functions_of_time = domain_creator->functions_of_time();
     if (not functions_of_time.count("Rotation")) {
-      // ERROR("Expected functions of time to contain 'Rotation'.");
+      ERROR("Expected functions of time to contain 'Rotation'.");
     }
     // dynamic cast to access `angle_func_and_deriv` method
     const auto* rotation_function_of_time =
         dynamic_cast<domain::FunctionsOfTime::QuaternionFunctionOfTime<3>*>(
             &*functions_of_time.at("Rotation"));
     if (rotation_function_of_time == nullptr) {
-      // ERROR("Failed dynamic cast to QuaternionFunctionOfTime.");
+      ERROR("Failed dynamic cast to QuaternionFunctionOfTime.");
     }
     const auto angular_velocity =
         rotation_function_of_time->angle_func_and_deriv(0.).at(1);
     if (equal_within_roundoff(orbital_radius, 0.)) {
-      // ERROR("The orbital radius was set to 0.");
+      ERROR("The orbital radius was set to 0.");
     }
     if (not equal_within_roundoff(
             angular_velocity,
             DataVector{0.0, 0.0, pow(orbital_radius, -1.5)})) {
-      // ERROR(
-      //     "Only circular orbits are implemented at the moment so the "
-      //     "angular velocity should be [0., 0., orbital_radius^(-3/2)] = "
-      //     << "[0., 0., " << pow(orbital_radius, -1.5) << "]");
+      ERROR(
+          "Only circular orbits are implemented at the moment so the "
+          "angular velocity should be [0., 0., orbital_radius^(-3/2)] = "
+          << "[0., 0., " << pow(orbital_radius, -1.5) << "]");
     }
     return true;
   }
@@ -165,10 +165,10 @@ struct ExcisionSphere : db::SimpleTag {
     const auto domain = domain_creator->create_domain();
     const auto& excision_spheres = domain.excision_spheres();
     if (excision_spheres.count(excision_sphere) == 0) {
-      // ERROR("Specified excision sphere '"
-      //       << excision_sphere
-      //       << "' not available. Available excision spheres are: "
-      //       << keys_of(excision_spheres));
+      ERROR("Specified excision sphere '"
+            << excision_sphere
+            << "' not available. Available excision spheres are: "
+            << keys_of(excision_spheres));
     }
     return excision_spheres.at(excision_sphere);
   }

@@ -181,8 +181,8 @@ Convergence::HasConverged ExplicitInverse<LinearSolverRegistrars>::solve(
     try {
       blaze::invert(inverse_);
     } catch (const std::invalid_argument& e) {
-      // ERROR("Could not invert subdomain matrix (size " << size_
-      //                                                  << "): " << e.what());
+      ERROR("Could not invert subdomain matrix (size " << size_
+                                                       << "): " << e.what());
     }
   }
   // Copy source into contiguous workspace. In cases where the source and

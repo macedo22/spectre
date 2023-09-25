@@ -94,11 +94,11 @@ bool change_step_size(const gsl::not_null<db::DataBox<DbTags>*> box) {
   }
 
   if (abs(desired_step / current_step.slab().duration().value()) < 1.0e-9) {
-    // ERROR(
-    //     "Chosen step is extremely small; this can indicate a flaw in the a "
-    //     "step chooser, the grid, or a simualtion instability that an "
-    //     "error-based stepper is naively attempting to resolve. It is unlikely "
-    //     "that the simulation can proceed");
+    ERROR(
+        "Chosen step is extremely small; this can indicate a flaw in the a "
+        "step chooser, the grid, or a simualtion instability that an "
+        "error-based stepper is naively attempting to resolve. It is unlikely "
+        "that the simulation can proceed");
   }
 
   const auto new_step =

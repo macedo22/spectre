@@ -127,8 +127,8 @@ class ElementId {
         return {refinement_level_eta_, index_eta_};
       case 2:
         return {refinement_level_zeta_, index_zeta_};
-      // default:
-        // ERROR("Invalid dimension: " << dim);
+      default:
+        ERROR("Invalid dimension: " << dim);
     }
   }
 

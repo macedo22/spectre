@@ -208,9 +208,9 @@ class HalfSpaceMirror : public elliptic::analytic_data::AnalyticSolution {
       tmpl::list<RequestedTags...> /*meta*/) const {
     for (size_t i = 0; i < get_size(get<2>(x)); i++) {
       if (UNLIKELY(get_element(get<2>(x), i) < 0)) {
-        // ERROR(
-        //     "The HalfSpaceMirror solution is not defined for negative values "
-        //     "of z.");
+        ERROR(
+            "The HalfSpaceMirror solution is not defined for negative values "
+            "of z.");
       }
     }
     using VarsComputer = detail::HalfSpaceMirrorVariables<DataType>;

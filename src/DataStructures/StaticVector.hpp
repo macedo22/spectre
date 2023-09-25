@@ -72,7 +72,7 @@ struct SetNumberOfGridPointsImpls::SetNumberOfGridPointsImpl<
       const gsl::not_null<blaze::StaticVector<T, N, TF, AF, PF, Tag>*>
       /*result*/,
       const size_t size) {
-    // ERROR("Tried to resize a StaticVector to " << size);
+    ERROR("Tried to resize a StaticVector to " << size);
   }
 };
 

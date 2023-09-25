@@ -604,9 +604,9 @@ void GlobalCache<Metavariables>::compute_size_for_memory_monitor(
         mem_monitor_proxy, time, my_node, size_in_MB);
   } else {
     (void)time;
-    // ERROR(
-    //     "GlobalCache::compute_size_for_memory_monitor can only be called if "
-    //     "the MemoryMonitor is in the component list in the metavariables.\n");
+    ERROR(
+        "GlobalCache::compute_size_for_memory_monitor can only be called if "
+        "the MemoryMonitor is in the component list in the metavariables.\n");
   }
 }
 
@@ -843,9 +843,9 @@ void mutate(GlobalCache<Metavariables>& cache, Args&&... args) {
       cache.thisProxy.template mutate<GlobalCacheTag, Function>(
           std::make_tuple<Args...>(std::forward<Args>(args)...));
     } else {
-      // ERROR(
-      //     "Main proxy is set but global cache is being mocked. This is "
-      //     "currently not implemented.");
+      ERROR(
+          "Main proxy is set but global cache is being mocked. This is "
+          "currently not implemented.");
     }
   } else {
     cache.template mutate<GlobalCacheTag, Function>(
