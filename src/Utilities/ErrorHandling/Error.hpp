@@ -68,12 +68,6 @@ template <typename ExceptionTypeToThrow, typename F>
     if (__builtin_is_constant_evaluated()) {                                 \
       throw std::runtime_error("Failed");                                    \
     } else {                                                                 \
-      Error_detail::abort_without_fpes<SpectreError>(                        \
-          __FILE__, __LINE__, static_cast<const char*>(__PRETTY_FUNCTION__), \
-          [&]() -> std::string {                                             \
-            return MakeString{} << std::setprecision(18) << std::scientific  \
-                                << m;                                        \
-          });                                                                \
     }                                                                        \
   } while (false)
 
