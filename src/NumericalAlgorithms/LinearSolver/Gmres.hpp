@@ -320,9 +320,10 @@ Gmres<VarsType, Preconditioner, LinearSolverRegistrars>::Gmres(
       verbosity_(std::move(verbosity)),                        // NOLINT
       restart_(restart.value_or(convergence_criteria_.max_iterations)) {
   if (restart_ == 0) {
-    PARSE_ERROR(context,
-                "Can't restart every '0' iterations. Set to a nonzero "
-                "number, or to 'None' if you meant to disable restarting.");
+    const std::string s =
+        "Can't restart every '0' iterations. Set to a nonzero "
+        "number, or to 'None' if you meant to disable restarting.";
+    PARSE_ERROR(context, s);
   }
   initialize();
 }

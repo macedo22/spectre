@@ -238,10 +238,10 @@ ObserveAtExtremum<tmpl::list<ObservableTensorTags...>,
       extremum_type(std::move(in_extremum_type)),
       additional_data(std::move(in_additional_data)) {
   if (((scalar_name != db::tag_name<ObservableTensorTags>()) and ...)) {
-    PARSE_ERROR(
-        context, "Tensor '"
-                     << scalar_name << "' is not known. Known tensors are: "
-                     << ((db::tag_name<ObservableTensorTags>() + ",") + ...));
+    const std::string s = "Tensor '" + scalar_name +
+                          "' is not known. Known tensors are: " +
+                          ((db::tag_name<ObservableTensorTags>() + ",") + ...);
+    PARSE_ERROR(context, s);
   }
 
   tmpl::for_each<tmpl::list<ObservableTensorTags...>>(
@@ -251,25 +251,28 @@ ObserveAtExtremum<tmpl::list<ObservableTensorTags...>,
         if (tensor_name == scalar_name) {
           if constexpr (tt::is_a_v<std::optional, typename tag::type>) {
             if (tag::type::value_type::rank() != 0) {
-              PARSE_ERROR(context,
-                          "ObserveAtExtremum can only observe scalars!");
+              const std::string s =
+                  "ObserveAtExtremum can only observe scalars!";
+              PARSE_ERROR(context, s);
             }
           } else if (tag::type::rank() != 0) {
-            PARSE_ERROR(context, "ObserveAtExtremum can only observe scalars!");
+            const std::string s = "ObserveAtExtremum can only observe scalars!";
+            PARSE_ERROR(context, s);
           }
         }
       });
 
   if (extremum_type != "Max" and extremum_type != "Min") {
-    PARSE_ERROR(context, "Extremum type " << extremum_type
-                                          << " not recognized; use Max or Min");
+    const std::string s =
+        "Extremum type " + extremum_type + " not recognized; use Max or Min";
+    PARSE_ERROR(context, s);
   }
   for (const auto& tensor : additional_data) {
     if (((tensor != db::tag_name<ObservableTensorTags>()) and ...)) {
-      PARSE_ERROR(context,
-                  "Tensor '"
-                      << tensor << "' is not known. Known tensors are: "
-                      << ((db::tag_name<ObservableTensorTags>() + ",") + ...));
+      const std::string s = "Tensor '" + tensor +
+                            "' is not known. Known tensors are: " +
+                            ((db::tag_name<ObservableTensorTags>() + ",") + ...)
+                                PARSE_ERROR(context, s);
     }
   }
 }

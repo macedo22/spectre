@@ -380,7 +380,8 @@ class Binary : public elliptic::analytic_data::Background,
         linear_velocity_(linear_velocity),
         falloff_widths_(falloff_widths) {
     if (xcoords_[0] >= xcoords_[1]) {
-      PARSE_ERROR(context, "Specify 'XCoords' ascending from left to right.");
+      const std::string s = "Specify 'XCoords' ascending from left to right.";
+      PARSE_ERROR(context, s);
     }
   }
 

@@ -302,21 +302,23 @@ ObserveNorms<tmpl::list<ObservableTensorTags...>,
       norm_type(std::move(in_norm_type)),
       components(std::move(in_components)) {
   if (((tensor != db::tag_name<ObservableTensorTags>()) and ...)) {
-    PARSE_ERROR(
-        context, "Tensor '"
-                     << tensor << "' is not known. Known tensors are: "
-                     << ((db::tag_name<ObservableTensorTags>() + ",") + ...));
+    const std::string s = "Tensor '" + tensor +
+                          "' is not known. Known tensors are: " +
+                          ((db::tag_name<ObservableTensorTags>() + ",") + ...);
+    PARSE_ERROR(context, s);
   }
   if (norm_type != "Max" and norm_type != "Min" and norm_type != "L2Norm" and
       norm_type != "L2IntegralNorm" and norm_type != "VolumeIntegral") {
-    PARSE_ERROR(
-        context,
+    const std::string s =
         "NormType must be one of Max, Min, L2Norm, L2IntegralNorm, or "
-            "VolumeIntegral not " << norm_type);
+        "VolumeIntegral not " +
+        norm_type;
+    PARSE_ERROR(context, s);
   }
   if (components != "Individual" and components != "Sum") {
-    PARSE_ERROR(context,
-                "Components must be Individual or Sum, not " << components);
+    const std::string s =
+        "Components must be Individual or Sum, not " + components;
+    PARSE_ERROR(context, s);
   }
 }
 

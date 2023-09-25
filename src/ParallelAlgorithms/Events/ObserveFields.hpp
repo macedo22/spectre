@@ -354,11 +354,12 @@ ObserveFields<VolumeDim, tmpl::list<Tensors...>,
                              &variables_to_observe]() {
         if (floating_point_types.size() != 1 and
             floating_point_types.size() != variables_to_observe.size()) {
-          PARSE_ERROR(context, "The number of floating point types specified ("
-                                   << floating_point_types.size()
-                                   << ") must be 1 or the number of variables "
-                                      "specified for observing ("
-                                   << variables_to_observe.size() << ")");
+          const std::string s =
+              "The number of floating point types specified (" +
+              floating_point_types.size() +
+              ") must be 1 or the number of variables "
+              "specified for observing (" +
+              variables_to_observe.size() + ")" PARSE_ERROR(context, s);
         }
         std::unordered_map<std::string, FloatingPointType> result{};
         for (size_t i = 0; i < variables_to_observe.size(); ++i) {

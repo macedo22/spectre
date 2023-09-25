@@ -142,8 +142,9 @@ TruncationError<Dim, TensorTags>::TruncationError(
   db::validate_selection<TensorTags>(vars_to_monitor_, context);
   if (not target_abs_truncation_error.has_value() and
       not target_rel_truncation_error.has_value()) {
-    PARSE_ERROR(context,
-                "Must specify AbsoluteTarget, RelativeTarget, or both");
+    const std::string s =
+        "Must specify AbsoluteTarget, RelativeTarget, or both";
+    PARSE_ERROR(context, s);
   }
 }
 

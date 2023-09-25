@@ -210,9 +210,9 @@ Loehner<Dim, TensorTags>::Loehner(std::vector<std::string> vars_to_monitor,
       coarsening_factor_(coarsening_factor) {
   db::validate_selection<TensorTags>(vars_to_monitor_, context);
   if (relative_tolerance == 0. and absolute_tolerance == 0.) {
-    PARSE_ERROR(
-        context,
-        "Must specify non-zero RelativeTolerance, AbsoluteTolerance, or both.");
+    const std::string s =
+        "Must specify non-zero RelativeTolerance, AbsoluteTolerance, or both.";
+    PARSE_ERROR(context, s);
   }
 }
 
