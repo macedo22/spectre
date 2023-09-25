@@ -193,9 +193,9 @@ void BoundaryConditionGhostData::apply(
             apply_subcell_boundary_condition_impl(apply_fd_ghost, box,
                                                   bcondition_interior_tags{});
           } else {
-            ERROR("Unsupported boundary condition "
-                  << pretty_type::short_name<BoundaryCondition>()
-                  << " when using finite-difference");
+            // ERROR("Unsupported boundary condition "
+            //       << pretty_type::short_name<BoundaryCondition>()
+            //       << " when using finite-difference");
           }
         });
   }

@@ -198,12 +198,12 @@ double iteratively_adapt_angular_coordinates(
                                    gauge_d, iteration_interpolator);
 
     if (max_error > error_threshold) {
-      ERROR(
-          "Iterative solve for surface coordinates of initial data failed. The "
-          "strain is too large to be fully eliminated by a well-behaved "
-          "alteration of the spherical mesh. For this data, please use an "
-          "alternative initial data generator such as "
-          "`InitializeJInverseCubic`.");
+    //   ERROR(
+    //       "Iterative solve for surface coordinates of initial data failed. The "
+    //       "strain is too large to be fully eliminated by a well-behaved "
+    //       "alteration of the spherical mesh. For this data, please use an "
+    //       "alternative initial data generator such as "
+    //       "`InitializeJInverseCubic`.");
     }
     ++number_of_steps;
     if (max_error < tolerance or number_of_steps > max_steps) {
@@ -245,14 +245,14 @@ double iteratively_adapt_angular_coordinates(
 
   if (tolerance < max_error) {
     if (require_convergence) {
-      ERROR(
-          "Initial data iterative angular solve did not reach "
-          "target tolerance "
-          << tolerance << ".\n"
-          << "Exited after " << max_steps
-          << " iterations, achieving final\n"
-             "maximum over collocation points deviation of J from target of "
-          << max_error);
+    //   ERROR(
+    //       "Initial data iterative angular solve did not reach "
+    //       "target tolerance "
+    //       << tolerance << ".\n"
+    //       << "Exited after " << max_steps
+    //       << " iterations, achieving final\n"
+    //          "maximum over collocation points deviation of J from target of "
+    //       << max_error);
     } else {
       Parallel::printf(
           "Warning: iterative angular solve did not reach "

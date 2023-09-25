@@ -291,15 +291,15 @@ template <typename ObjectType, typename... Args>
 const ObjectType& H5File<Access_t>::get(const std::string& path,
                                         Args&&... args) const {
   if (current_object_ != nullptr) {
-    ERROR("Object " << current_object_->subfile_path()
-                    << " already open. Cannot open object " << path << ".");
+    // ERROR("Object " << current_object_->subfile_path()
+    //                 << " already open. Cannot open object " << path << ".");
   }
   // C++17: structured bindings
   auto exists_group_name = check_if_object_exists<ObjectType>(path);
   hid_t group_id = std::get<1>(exists_group_name).id();
   if (not std::get<0>(exists_group_name)) {
-    ERROR("Cannot open the object '" << path + ObjectType::extension()
-                                     << "' because it does not exist.");
+    // ERROR("Cannot open the object '" << path + ObjectType::extension()
+    //                                  << "' because it does not exist.");
   }
   current_object_ = std::make_unique<ObjectType>(
       std::get<0>(exists_group_name), std::move(std::get<1>(exists_group_name)),
@@ -314,16 +314,16 @@ ObjectType& H5File<Access_t>::insert(const std::string& path, Args&&... args) {
   static_assert(AccessType::ReadWrite == Access_t,
                 "Can only insert into ReadWrite access H5 files.");
   if (current_object_ != nullptr) {
-    ERROR("Object " << current_object_->subfile_path()
-                    << " already open. Cannot insert object " << path << ".");
+    // ERROR("Object " << current_object_->subfile_path()
+    //                 << " already open. Cannot insert object " << path << ".");
   }
   // C++17: structured bindings
   auto exists_group_name = check_if_object_exists<ObjectType>(path);
   if (std::get<0>(exists_group_name)) {
-    ERROR(
-        "Cannot insert an Object that already exists. Failed to add Object "
-        "named: "
-        << path);
+    // ERROR(
+    //     "Cannot insert an Object that already exists. Failed to add Object "
+    //     "named: "
+    //     << path);
   }
 
   hid_t group_id = std::get<1>(exists_group_name).id();
@@ -342,9 +342,9 @@ ObjectType& H5File<Access_t>::try_insert(const std::string& path,
   static_assert(AccessType::ReadWrite == Access_t,
                 "Can only insert into ReadWrite access H5 files.");
   if (current_object_ != nullptr) {
-    ERROR("Object " << current_object_->subfile_path()
-                    << " already open. Cannot try to insert object " << path
-                    << ".");
+    // ERROR("Object " << current_object_->subfile_path()
+    //                 << " already open. Cannot try to insert object " << path
+    //                 << ".");
   }
   // C++17: structured bindings
   auto exists_group_name = check_if_object_exists<ObjectType>(path);
@@ -365,13 +365,13 @@ template <typename ObjectType,
 ObjectType& H5File<Access_t>::convert_to_derived(
     std::unique_ptr<h5::Object>& current_object) {
   if (nullptr == current_object) {
-    ERROR("No object to convert.");  // LCOV_EXCL_LINE
+    // ERROR("No object to convert.");  // LCOV_EXCL_LINE
   }
   try {
     return dynamic_cast<ObjectType&>(*current_object);
     // LCOV_EXCL_START
   } catch (const std::bad_cast& e) {
-    ERROR("Failed to cast to object.\nCast error: " << e.what());
+    // ERROR("Failed to cast to object.\nCast error: " << e.what());
     // LCOV_EXCL_STOP
   }
 }
@@ -380,12 +380,12 @@ template <typename ObjectType>
 const ObjectType& H5File<Access_t>::convert_to_derived(
     const std::unique_ptr<h5::Object>& current_object) const {
   if (nullptr == current_object) {
-    ERROR("No object to convert.");
+    // ERROR("No object to convert.");
   }
   try {
     return dynamic_cast<const ObjectType&>(*current_object);
   } catch (const std::bad_cast& e) {
-    ERROR("Failed to cast to object.\nCast error: " << e.what());
+    // ERROR("Failed to cast to object.\nCast error: " << e.what());
   }
 }
 

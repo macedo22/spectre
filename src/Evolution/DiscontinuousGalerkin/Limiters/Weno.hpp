@@ -372,7 +372,7 @@ bool Weno<VolumeDim, tmpl::list<Tags...>>::operator()(
           alg::any_of(element.neighbors(), [](const auto& direction_neighbors) {
             return direction_neighbors.second.size() != 1;
           }))) {
-    ERROR("The Weno limiter does not yet support h-refinement");
+    // ERROR("The Weno limiter does not yet support h-refinement");
     // Removing this limitation will require:
     // - Generalizing the computation of the modified neighbor solutions.
     // - Generalizing the WENO weighted sum for multiple neighbors in each
@@ -380,7 +380,7 @@ bool Weno<VolumeDim, tmpl::list<Tags...>>::operator()(
   }
   alg::for_each(neighbor_data, [&mesh](const auto& neighbor_and_data) {
     if (UNLIKELY(neighbor_and_data.second.mesh != mesh)) {
-      ERROR("The Weno limiter does not yet support p-refinement");
+      // ERROR("The Weno limiter does not yet support p-refinement");
       // Removing this limitation will require generalizing the
       // computation of the modified neighbor solutions.
     }
@@ -471,7 +471,7 @@ bool Weno<VolumeDim, tmpl::list<Tags...>>::operator()(
     expand_pack(wrap_minmod_tci_and_simple_weno_impl(Tags{}, tensors)...);
     return some_component_was_limited;  // cell_is_troubled
   } else {
-    ERROR("WENO limiter not implemented for WenoType: " << weno_type_);
+    // ERROR("WENO limiter not implemented for WenoType: " << weno_type_);
   }
 
   return false;  // cell_is_troubled

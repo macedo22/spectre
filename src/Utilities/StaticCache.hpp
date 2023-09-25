@@ -125,9 +125,9 @@ class StaticCache {
                  std::get<0>(parameter0) >=
                      IndexOffset +
                          static_cast<decltype(IndexOffset)>(sizeof...(Is)))) {
-      ERROR("Index out of range: "
-            << IndexOffset << " <= " << std::get<0>(parameter0) << " < "
-            << IndexOffset + static_cast<decltype(IndexOffset)>(sizeof...(Is)));
+      // ERROR("Index out of range: "
+      //       << IndexOffset << " <= " << std::get<0>(parameter0) << " < "
+      //       << IndexOffset + static_cast<decltype(IndexOffset)>(sizeof...(Is)));
     }
     // note that the act of assigning to the specified function pointer type
     // fixes the template arguments that need to be inferred.
@@ -167,7 +167,7 @@ class StaticCache {
       }
     }
     if (UNLIKELY(array_location == std::numeric_limits<size_t>::max())) {
-      ERROR("Uncached enumeration value: " << std::get<0>(parameter0));
+      // ERROR("Uncached enumeration value: " << std::get<0>(parameter0));
     }
     // note that the act of assigning to the specified function pointer type
     // fixes the template arguments that need to be inferred.

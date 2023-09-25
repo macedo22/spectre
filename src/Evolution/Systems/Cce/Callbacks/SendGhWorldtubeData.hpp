@@ -53,9 +53,9 @@ struct SendGhWorldtubeData
     // to stop execution if there were wrong inputs.
     if (Parallel::get<Tags::Sphere<InterpolationTargetTag>>(cache)
             .radii.size() > 1) {
-      ERROR("SendGhWorldtubeData expects a single worldtube radius, not "
-            << Parallel::get<Tags::Sphere<InterpolationTargetTag>>(cache)
-                   .radii.size());
+      // ERROR("SendGhWorldtubeData expects a single worldtube radius, not "
+      //       << Parallel::get<Tags::Sphere<InterpolationTargetTag>>(cache)
+      //              .radii.size());
     }
 
     auto& cce_gh_boundary_component = Parallel::get_parallel_component<

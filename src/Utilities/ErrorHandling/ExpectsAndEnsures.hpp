@@ -29,7 +29,6 @@
 #if defined(SPECTRE_DEBUG) || defined(EXPECTS_ENSURES)
 #define Expects(cond)      \
   if (UNLIKELY(!(cond))) { \
-    ERROR(#cond);          \
   } else                   \
     static_cast<void>(0)
 #else

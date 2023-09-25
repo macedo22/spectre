@@ -374,8 +374,8 @@ void apply_boundary_condition_on_face(
             apply_bc, interior_face_fields, bcondition_interior_tags{},
             db::get<BoundaryConditionVolumeTags>(*box)...);
     if (error_message.has_value()) {
-      ERROR(*error_message << "\n\nIn element:" << element.id()
-                           << "\nIn direction: " << direction);
+    //   ERROR(*error_message << "\n\nIn element:" << element.id()
+    //                        << "\nIn direction: " << direction);
     }
     return;
   }
@@ -401,8 +401,8 @@ void apply_boundary_condition_on_face(
             apply_bc, interior_face_fields, bcondition_interior_tags{},
             db::get<BoundaryConditionVolumeTags>(*box)...);
     if (error_message.has_value()) {
-      ERROR(*error_message << "\n\nIn element:" << element.id()
-                           << "\nIn direction: " << direction);
+    //   ERROR(*error_message << "\n\nIn element:" << element.id()
+    //                        << "\nIn direction: " << direction);
     }
   } else {
     (void)dt_time_derivative_correction;
@@ -476,8 +476,8 @@ void apply_boundary_condition_on_face(
             apply_bc, interior_face_fields, bcondition_interior_tags{},
             db::get<BoundaryConditionVolumeTags>(*box)...);
     if (error_message.has_value()) {
-      ERROR(*error_message << "\n\nIn element:" << element.id()
-                           << "\nIn direction: " << direction);
+    //   ERROR(*error_message << "\n\nIn element:" << element.id()
+    //                        << "\nIn direction: " << direction);
     }
     // Subtract mesh velocity from the _exterior_ fluxes
     if (face_mesh_velocity.has_value()) {

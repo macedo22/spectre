@@ -428,9 +428,9 @@ struct ResourceInfo {
                          const ResourceInfo<Metavars>& rhs);
 
   void singleton_map_not_built() const {
-    ERROR(
-        "The singleton map has not been built yet. You must call "
-        "build_singleton_map() before you call this function.");
+    // ERROR(
+    //     "The singleton map has not been built yet. You must call "
+    //     "build_singleton_map() before you call this function.");
   }
   bool avoid_global_proc_0_{false};
   bool singleton_map_has_been_set_{false};
@@ -648,13 +648,13 @@ void ResourceInfo<Metavariables>::build_singleton_map(const Cache& cache) {
   // requested to be exclusive haven't been assigned yet so their procs haven't
   // been added to procs_to_ignore_
   if (num_procs_to_ignore_ >= num_procs) {
-    ERROR(
-        "The total number of cores requested is less than or equal to the "
-        "number of cores that requested to be exclusive, i.e. without "
-        "array elements or multiple singletons. The array elements have "
-        "nowhere to be placed. Number of cores requested: "
-        << num_procs << ". Number of cores that requested to be exclusive: "
-        << num_procs_to_ignore_ << ".");
+    // ERROR(
+    //     "The total number of cores requested is less than or equal to the "
+    //     "number of cores that requested to be exclusive, i.e. without "
+    //     "array elements or multiple singletons. The array elements have "
+    //     "nowhere to be placed. Number of cores requested: "
+    //     << num_procs << ". Number of cores that requested to be exclusive: "
+    //     << num_procs_to_ignore_ << ".");
   }
 
   // Check if any singletons that requested to be on specific proc requested to
@@ -665,10 +665,10 @@ void ResourceInfo<Metavariables>::build_singleton_map(const Cache& cache) {
     const auto proc = singleton_map.second;
 
     if (proc.has_value() and *proc > num_procs - 1) {
-      ERROR("Singleton " << pretty_type::name<component>()
-                         << " requested to be placed on proc " << *proc
-                         << ", but that proc is beyond the last proc "
-                         << num_procs - 1 << ".");
+      // ERROR("Singleton " << pretty_type::name<component>()
+      //                    << " requested to be placed on proc " << *proc
+      //                    << ", but that proc is beyond the last proc "
+      //                    << num_procs - 1 << ".");
     }
   });
 

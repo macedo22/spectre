@@ -637,7 +637,7 @@ void DistributedObject<
   p | non_action_time_start_;
 #endif
   if (performing_action_ and not p.isSizing()) {
-    ERROR("cannot serialize while performing action!");
+    // ERROR("cannot serialize while performing action!");
   }
   p | performing_action_;
   p | phase_;
@@ -704,11 +704,11 @@ void DistributedObject<
         hold_lock.emplace(node_lock_);
       }
       if (performing_action_) {
-        ERROR(
-            "Already performing an Action and cannot execute additional "
-            "Actions from inside of an Action. This is only possible if the "
-            "reduction_action function is not invoked via a proxy, which makes "
-            "no sense for a reduction.");
+        // ERROR(
+        //     "Already performing an Action and cannot execute additional "
+        //     "Actions from inside of an Action. This is only possible if the "
+        //     "reduction_action function is not invoked via a proxy, which makes "
+        //     "no sense for a reduction.");
       }
       performing_action_ = true;
       arg.finalize();
@@ -736,11 +736,11 @@ void DistributedObject<ParallelComponent,
         hold_lock.emplace(node_lock_);
       }
       if (performing_action_) {
-        ERROR(
-            "Already performing an Action and cannot execute additional "
-            "Actions from inside of an Action. This is only possible if the "
-            "simple_action function is not invoked via a proxy, which "
-            "we do not allow.");
+        // ERROR(
+        //     "Already performing an Action and cannot execute additional "
+        //     "Actions from inside of an Action. This is only possible if the "
+        //     "simple_action function is not invoked via a proxy, which "
+        //     "we do not allow.");
       }
       performing_action_ = true;
       forward_tuple_to_action<Action>(
@@ -767,11 +767,11 @@ void DistributedObject<
         hold_lock.emplace(node_lock_);
       }
       if (performing_action_) {
-        ERROR(
-            "Already performing an Action and cannot execute additional "
-            "Actions from inside of an Action. This is only possible if the "
-            "simple_action function is not invoked via a proxy, which "
-            "we do not allow.");
+        // ERROR(
+        //     "Already performing an Action and cannot execute additional "
+        //     "Actions from inside of an Action. This is only possible if the "
+        //     "simple_action function is not invoked via a proxy, which "
+        //     "we do not allow.");
       }
       performing_action_ = true;
       Action::template apply<ParallelComponent>(
@@ -943,13 +943,13 @@ void DistributedObject<ParallelComponent,
   try {
     // terminate should be true since we exited a phase previously.
     if (not get_terminate() and not halt_algorithm_until_next_phase_) {
-      ERROR(
-          "An algorithm must always be set to terminate at the beginning of a "
-          "phase. Since this is not the case the previous phase did not end "
-          "correctly. The previous phase is: "
-          << phase_ << " and the next phase is: " << next_phase
-          << ", The termination flag is: " << get_terminate()
-          << ", and the halt flag is: " << halt_algorithm_until_next_phase_);
+      // ERROR(
+      //     "An algorithm must always be set to terminate at the beginning of a "
+      //     "phase. Since this is not the case the previous phase did not end "
+      //     "correctly. The previous phase is: "
+      //     << phase_ << " and the next phase is: " << next_phase
+      //     << ", The termination flag is: " << get_terminate()
+      //     << ", and the halt flag is: " << halt_algorithm_until_next_phase_);
     }
     // set terminate to true if there are no actions in this PDAL
     set_terminate(number_of_actions_in_phase(next_phase) == 0);
@@ -1123,12 +1123,12 @@ bool DistributedObject<
       halt_algorithm_until_next_phase_ = true;
       terminate_ = true;
       return true;
-    default:  // LCOV_EXCL_LINE
+    // default:  // LCOV_EXCL_LINE
       // LCOV_EXCL_START
-      ERROR("No case for a Parallel::AlgorithmExecution with integral value "
-            << static_cast<std::underlying_type_t<AlgorithmExecution>>(
-                   requested_execution)
-            << "\n");
+      // ERROR("No case for a Parallel::AlgorithmExecution with integral value "
+      //       << static_cast<std::underlying_type_t<AlgorithmExecution>>(
+      //              requested_execution)
+      //       << "\n");
       // LCOV_EXCL_STOP
   }
 }

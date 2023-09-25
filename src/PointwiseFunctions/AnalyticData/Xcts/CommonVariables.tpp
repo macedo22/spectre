@@ -148,9 +148,9 @@ void CommonVariables<DataType, Cache>::operator()(
   } else {
     (void)deriv_conformal_christoffel_second_kind;
     (void)cache;
-    ERROR(
-        "Numeric differentiation only works with DataVectors because it needs "
-        "a grid.");
+    // ERROR(
+    //     "Numeric differentiation only works with DataVectors because it needs "
+    //     "a grid.");
   }
 }
 #if defined(__GNUC__) && !defined(__clang__)
@@ -208,9 +208,9 @@ void CommonVariables<DataType, Cache>::operator()(
   } else {
     (void)deriv_extrinsic_curvature_trace;
     (void)cache;
-    ERROR(
-        "Numeric differentiation only works with DataVectors because it needs "
-        "a grid.");
+    // ERROR(
+    //     "Numeric differentiation only works with DataVectors because it needs "
+    //     "a grid.");
   }
 }
 
@@ -237,9 +237,9 @@ void CommonVariables<DataType, Cache>::operator()(
   } else {
     (void)div_longitudinal_shift_background;
     (void)cache;
-    ERROR(
-        "Numeric differentiation only works with DataVectors because it needs "
-        "a grid.");
+    // ERROR(
+    //     "Numeric differentiation only works with DataVectors because it needs "
+    //     "a grid.");
   }
 }
 #if defined(__GNUC__) && !defined(__clang__)

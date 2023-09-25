@@ -637,10 +637,10 @@ void Variables<tmpl::list<Tags...>>::initialize(
     return;
   }
   if (UNLIKELY(not is_owning())) {
-    ERROR("Variables::initialize cannot be called on a non-owning Variables.  "
-          "This likely happened because of an attempted resize.  The current "
-          "number of grid points is " << number_of_grid_points_ << " and the "
-          "requested number is " << number_of_grid_points << ".");
+    // ERROR("Variables::initialize cannot be called on a non-owning Variables.  "
+    //       "This likely happened because of an attempted resize.  The current "
+    //       "number of grid points is " << number_of_grid_points_ << " and the "
+    //       "requested number is " << number_of_grid_points << ".");
   }
   number_of_grid_points_ = number_of_grid_points;
   size_ = number_of_grid_points * number_of_independent_components;

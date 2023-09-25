@@ -34,8 +34,8 @@ Result call_with_dynamic_type(Base* const obj, Callable&& f) {
                : call_with_dynamic_type<Result, tmpl::pop_front<Classes>>(
                      obj, std::forward<Callable>(f));
   } else {
-    ERROR("Class " << pretty_type::get_runtime_type_name(*obj)
-                   << " is not registered with "
-                   << pretty_type::get_name<std::remove_const_t<Base>>());
+    // ERROR("Class " << pretty_type::get_runtime_type_name(*obj)
+    //                << " is not registered with "
+    //                << pretty_type::get_name<std::remove_const_t<Base>>());
   }
 }

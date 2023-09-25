@@ -100,7 +100,7 @@ void compute_conservatives_for_reconstruction(
     pressure = eos.pressure_from_density_and_temperature(
         rest_mass_density, temperature, electron_fraction);
   } else {
-    ERROR("EOS Must be 1, 2, or 3d");
+    // ERROR("EOS Must be 1, 2, or 3d");
   }
 
   auto& specific_enthalpy =

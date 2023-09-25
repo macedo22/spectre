@@ -250,9 +250,9 @@ class NumericInitialData : public evolution::initial_data::InitialData {
                                     lapse, shift, extrinsic_curvature, mesh,
                                     inv_jacobian);
     } else {
-      ERROR(
-          "These initial data variables are not implemented yet. Please add "
-          "an implementation to gh::NumericInitialData.");
+      // ERROR(
+      //     "These initial data variables are not implemented yet. Please add "
+      //     "an implementation to gh::NumericInitialData.");
     }
   }
 

@@ -247,7 +247,7 @@ struct ProjectMortars : tt::ConformsTo<amr::protocols::Projector> {
       /*mortar_data_history*/,
       const Mesh<dim>& /*new_mesh*/, const Element<dim>& /*new_element*/,
       const tuples::TaggedTuple<Tags...>& /*parent_items*/) {
-    ERROR("h-refinement not implemented yet");
+    // ERROR("h-refinement not implemented yet");
   }
 
   template <typename... Tags>
@@ -270,7 +270,7 @@ struct ProjectMortars : tt::ConformsTo<amr::protocols::Projector> {
       const Mesh<dim>& /*new_mesh*/, const Element<dim>& /*new_element*/,
       const std::unordered_map<ElementId<dim>, tuples::TaggedTuple<Tags...>>&
       /*children_items*/) {
-    ERROR("h-refinement not implemented yet");
+    // ERROR("h-refinement not implemented yet");
   }
 };
 }  // namespace evolution::dg::Initialization

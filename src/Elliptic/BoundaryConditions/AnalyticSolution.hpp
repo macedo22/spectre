@@ -168,9 +168,9 @@ class AnalyticSolution<System, Dim, tmpl::list<FieldTags...>,
                             slice_index));
           break;
         default:
-          ERROR("Unsupported boundary condition type: "
-                << get<elliptic::Tags::BoundaryConditionType<field_tag>>(
-                       boundary_condition_types_));
+          // ERROR("Unsupported boundary condition type: "
+          //       << get<elliptic::Tags::BoundaryConditionType<field_tag>>(
+          //              boundary_condition_types_));
       }
     };
     EXPAND_PACK_LEFT_TO_RIGHT(impose_boundary_condition(FieldTags{}, FluxTags{},
@@ -200,9 +200,9 @@ class AnalyticSolution<System, Dim, tmpl::list<FieldTags...>,
           }
           break;
         default:
-          ERROR("Unsupported boundary condition type: "
-                << get<elliptic::Tags::BoundaryConditionType<field_tag>>(
-                       boundary_condition_types_));
+          // ERROR("Unsupported boundary condition type: "
+          //       << get<elliptic::Tags::BoundaryConditionType<field_tag>>(
+          //              boundary_condition_types_));
       }
     };
     EXPAND_PACK_LEFT_TO_RIGHT(

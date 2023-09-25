@@ -199,12 +199,12 @@ template <typename VectorTypeToInterpolate, typename Tag>
 std::pair<double, VectorTypeToInterpolate> ScriPlusInterpolationManager<
     VectorTypeToInterpolate, Tag>::interpolate_first_time() {
   if (target_times_.empty()) {
-    ERROR("There are no target times to interpolate.");
+    // ERROR("There are no target times to interpolate.");
   }
   if (to_interpolate_values_.size() < 2 * target_number_of_points_) {
-    ERROR("Insufficient data points to continue interpolation: have "
-          << to_interpolate_values_.size() << ", need at least"
-          << 2 * target_number_of_points_);
+    // ERROR("Insufficient data points to continue interpolation: have "
+    //       << to_interpolate_values_.size() << ", need at least"
+    //       << 2 * target_number_of_points_);
   }
 
   VectorTypeToInterpolate result{vector_size_};
@@ -573,14 +573,14 @@ std::pair<double, VectorTypeToInterpolate> ScriPlusInterpolationManager<
   const size_t target_number_of_points =
       argument_interpolation_manager_.target_number_of_points_;
   if (argument_interpolation_manager_.target_times_.empty()) {
-    ERROR("There are no target times to interpolate.");
+    // ERROR("There are no target times to interpolate.");
   }
   if (argument_interpolation_manager_.to_interpolate_values_.size() <
       2 * argument_interpolation_manager_.target_number_of_points_) {
-    ERROR("Insufficient data points to continue interpolation: have "
-          << argument_interpolation_manager_.to_interpolate_values_.size()
-          << ", need at least"
-          << 2 * argument_interpolation_manager_.target_number_of_points_);
+    // ERROR("Insufficient data points to continue interpolation: have "
+    //       << argument_interpolation_manager_.to_interpolate_values_.size()
+    //       << ", need at least"
+    //       << 2 * argument_interpolation_manager_.target_number_of_points_);
   }
   // note that because we demand at least a certain number before and at least
   // a certain number after, we are likely to have a surfeit of points for the

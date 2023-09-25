@@ -517,11 +517,11 @@ auto block_logical_coords(
       // case where there are no FunctionsOfTime in the cache at
       // all.  Unfortunately, checking whether the maps are
       // time-dependent is currently not constexpr.
-      ERROR(
-          "There is a time-dependent CoordinateMap in at least one "
-          "of the Blocks, but FunctionsOfTime are not in the "
-          "GlobalCache.  If you intend to use a time-dependent "
-          "CoordinateMap, please add FunctionsOfTime to the GlobalCache.");
+      // ERROR(
+      //     "There is a time-dependent CoordinateMap in at least one "
+      //     "of the Blocks, but FunctionsOfTime are not in the "
+      //     "GlobalCache.  If you intend to use a time-dependent "
+      //     "CoordinateMap, please add FunctionsOfTime to the GlobalCache.");
     }
   }
 

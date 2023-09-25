@@ -78,7 +78,7 @@ bool kxrcf_indicator(
           alg::any_of(element.neighbors(), [](const auto& direction_neighbors) {
             return direction_neighbors.second.size() != 1;
           }))) {
-    ERROR("The Kxrcf TCI does not yet support h-refinement");
+    // ERROR("The Kxrcf TCI does not yet support h-refinement");
     // Removing this limitation will require adapting the surface integrals to
     // correctly acount for,
     // - multiple (smaller) neighbors contributing to the integral
@@ -86,7 +86,7 @@ bool kxrcf_indicator(
   }
   alg::for_each(neighbor_data, [&mesh](const auto& neighbor_and_data) {
     if (UNLIKELY(neighbor_and_data.second.mesh != mesh)) {
-      ERROR("The Kxrcf TCI does not yet support p-refinement");
+    //   ERROR("The Kxrcf TCI does not yet support p-refinement");
       // Removing this limitation will require generalizing the surface
       // integrals to make sure the meshes are consistent.
     }

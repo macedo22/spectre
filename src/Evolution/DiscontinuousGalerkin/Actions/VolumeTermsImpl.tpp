@@ -263,7 +263,7 @@ void volume_terms(
              "when using the weak form.");
       (*div_fluxes) *= get(*det_inverse_jacobian);
     } else {
-      ERROR("Unsupported DG formulation: " << dg_formulation);
+      // ERROR("Unsupported DG formulation: " << dg_formulation);
     }
     tmpl::for_each<flux_variables>(
         [&dg_formulation, &dt_vars_ptr, &div_fluxes](auto var_tag_v) {

@@ -223,7 +223,7 @@ void BoundaryConditionGhostData::apply(
             const auto& volume_mesh_velocity =
                 db::get<domain::Tags::MeshVelocity<3, Frame::Inertial>>(*box);
             if (volume_mesh_velocity.has_value()) {
-              ERROR("Subcell currently does not support moving mesh");
+            //   ERROR("Subcell currently does not support moving mesh");
             }
 
             std::optional<tnsr::I<DataVector, 3>> face_mesh_velocity{};
@@ -261,9 +261,9 @@ void BoundaryConditionGhostData::apply(
 
             return;
           } else {
-            ERROR("Unsupported boundary condition "
-                  << pretty_type::short_name<BoundaryCondition>()
-                  << " when using finite-difference");
+            // ERROR("Unsupported boundary condition "
+            //       << pretty_type::short_name<BoundaryCondition>()
+            //       << " when using finite-difference");
           }
         });
   }

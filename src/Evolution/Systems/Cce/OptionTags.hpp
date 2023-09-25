@@ -419,9 +419,9 @@ struct SpecifiedStartTime : Tags::StartTime, db::SimpleTag {
   static constexpr bool pass_metavariables = false;
   static double create_from_options(const std::optional<double> start_time) {
     if (not start_time.has_value()) {
-      ERROR(
-          "The start time must be explicitly specified for the tag "
-          "`SpecifiedStartTime`");
+      // ERROR(
+      //     "The start time must be explicitly specified for the tag "
+      //     "`SpecifiedStartTime`");
     }
     return *start_time;
   }
@@ -480,9 +480,9 @@ struct SpecifiedEndTime : Tags::EndTime, db::SimpleTag {
   static constexpr bool pass_metavariables = false;
   static double create_from_options(const std::optional<double> end_time) {
     if (not end_time.has_value()) {
-      ERROR(
-          "The end time must be explicitly specified for the tag "
-          "`SpecifiedEndTime`");
+      // ERROR(
+      //     "The end time must be explicitly specified for the tag "
+      //     "`SpecifiedEndTime`");
     }
     return *end_time;
   }

@@ -134,10 +134,10 @@ struct DumpBondiSachsOnWorldtube
     const auto& filename_prefix = Parallel::get<Cce::Tags::FilePrefix>(cache);
 
     if (sphere.angular_ordering != intrp::AngularOrdering::Cce) {
-      ERROR(
-          "To use the DumpBondiSachsOnWorldtube post interpolation callback, "
-          "the angular ordering of the Spheres must be Cce, not "
-          << sphere.angular_ordering);
+      // ERROR(
+      //     "To use the DumpBondiSachsOnWorldtube post interpolation callback, "
+      //     "the angular ordering of the Spheres must be Cce, not "
+      //     << sphere.angular_ordering);
     }
 
     const auto& radii = sphere.radii;

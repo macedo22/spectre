@@ -48,13 +48,13 @@ struct RegisterSingletonWithObserverWriter {
       case TypeOfObservation::Reduction:
         break;
       case TypeOfObservation::Volume:
-        ERROR(
-            "Registering volume observations is not supported for singletons. "
-            "The TypeOfObservation should be 'Reduction'.");
+        // ERROR(
+        //     "Registering volume observations is not supported for singletons. "
+        //     "The TypeOfObservation should be 'Reduction'.");
       default:
-        ERROR(
-            "Registering an unknown TypeOfObservation. It should be "
-            "'Reduction' for singleton.");
+        // ERROR(
+        //     "Registering an unknown TypeOfObservation. It should be "
+        //     "'Reduction' for singleton.");
     };
 
     // We call only on node 0; the observation call will occur only

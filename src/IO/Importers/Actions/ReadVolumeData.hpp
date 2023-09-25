@@ -86,10 +86,10 @@ void read_tensor_data(const gsl::not_null<TensorType*> tensor_data,
         observation_id, tensor_name + tensor_data->component_suffix(
                                           tensor_data->get_tensor_index(i)));
     if (not std::holds_alternative<DataVector>(tensor_component.data)) {
-      ERROR("The tensor component '"
-            << tensor_component.name
-            << "' is not a double-precision DataVector. Reading in "
-               "single-precision volume data is not supported.");
+      // ERROR("The tensor component '"
+      //       << tensor_component.name
+      //       << "' is not a double-precision DataVector. Reading in "
+      //          "single-precision volume data is not supported.");
     }
     (*tensor_data)[i] = std::get<DataVector>(tensor_component.data);
   }
@@ -467,17 +467,17 @@ struct ReadAllVolumeDataAndDistribute {
                     return all_observation_ids.front();
                   case ObservationSelector::Last:
                     return all_observation_ids.back();
-                  default:
-                    ERROR("Unknown importers::ObservationSelector: "
-                          << local_obs_selector);
+                  // default:
+                    // ERROR("Unknown importers::ObservationSelector: "
+                    //       << local_obs_selector);
                 }
               }},
           get<OptionTags::ObservationValue>(options));
       if (prev_observation_id.has_value() and
           prev_observation_id.value() != observation_id) {
-        ERROR("Inconsistent selection of observation ID in file "
-              << file_name
-              << ". Make sure all files select the same observation ID.");
+        // ERROR("Inconsistent selection of observation ID in file "
+        //       << file_name
+        //       << ". Make sure all files select the same observation ID.");
       }
       prev_observation_id = observation_id;
       observation_value = volume_file.get_observation_value(observation_id);

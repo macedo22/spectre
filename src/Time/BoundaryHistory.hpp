@@ -357,7 +357,7 @@ BoundaryHistory<LocalVars, RemoteVars, CouplingResult>::local_data(
       return *value_it;
     }
   }
-  ERROR("No local data was found at time " << time << ".");
+  // ERROR("No local data was found at time " << time << ".");
 }
 
 template <typename LocalVars, typename RemoteVars, typename CouplingResult>

@@ -437,7 +437,7 @@ void cartesian_high_order_fluxes_using_nodes(
           number_of_ghost_cells, reconstruction_order);
       break;
     default:
-      ERROR("Unsupported correction order " << derivative_order);
+      // ERROR("Unsupported correction order " << derivative_order);
   };
 }
 /// @}

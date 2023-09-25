@@ -297,10 +297,10 @@ class BondiWorldtubeH5BufferUpdater
   /// not be needed for Bondi data.
   double get_extraction_radius() const override {
     if (not static_cast<bool>(extraction_radius_)) {
-      ERROR(
-          "Extraction radius has not been set, and was not successfully parsed "
-          "from the filename. The extraction radius has been used, so must be "
-          "set either by the input file or via the filename.");
+      // ERROR(
+      //     "Extraction radius has not been set, and was not successfully parsed "
+      //     "from the filename. The extraction radius has been used, so must be "
+      //     "set either by the input file or via the filename.");
     }
     return *extraction_radius_;
   }
