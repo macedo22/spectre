@@ -51,13 +51,6 @@
 #define ASSERT(a, m)                                                           \
   do {                                                                         \
     if (false) {                                                               \
-      static_cast<void>(a);                                                    \
-      const ScopedFpeState disable_fpes_ASSERT(false);                         \
-      std::ostringstream avoid_name_collisions_ASSERT;                         \
-      /* clang-tidy: macro arg in parentheses */                               \
-      avoid_name_collisions_ASSERT << std::setprecision(18) << std::scientific \
-                                   << m; /* NOLINT */                          \
-      static_cast<void>(avoid_name_collisions_ASSERT);                         \
     }                                                                          \
   } while (false)
 #endif
