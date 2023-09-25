@@ -431,11 +431,11 @@ ObserveFields::ObserveFields(
         std::unordered_set<std::string> result{};
         for (const auto& tensor : variables_to_observe) {
           if (result.count(tensor) != 0) {
-            // PARSE_ERROR(
-            //     context,
-            //     "Listed variable '"
-            //         << tensor
-            //         << "' more than once in list of variables to observe.");
+            PARSE_ERROR(
+                context,
+                "Listed variable '"
+                    << tensor
+                    << "' more than once in list of variables to observe.");
           }
           result.insert(tensor);
         }
@@ -449,10 +449,10 @@ ObserveFields::ObserveFields(
 
   for (const auto& name : variables_to_observe_) {
     if (valid_tensors.count(name) != 1) {
-      // PARSE_ERROR(
-      //     context,
-      //     name << " is not an available variable. Available variables:\n"
-      //          << valid_tensors);
+      PARSE_ERROR(
+          context,
+          name << " is not an available variable. Available variables:\n"
+               << valid_tensors);
     }
   }
 }

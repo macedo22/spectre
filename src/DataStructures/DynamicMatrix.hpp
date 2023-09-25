@@ -67,8 +67,8 @@ struct Options::create_from_yaml<blaze::DynamicMatrix<Type, SO, Alloc, Tag>> {
     for (size_t i = 0; i < num_rows; i++) {
       const auto& row = gsl::at(data, i);
       if (row.size() != num_cols) {
-        // PARSE_ERROR(options.context(),
-        //             "All matrix rows must have the same size.");
+        PARSE_ERROR(options.context(),
+                    "All matrix rows must have the same size.");
       }
       std::copy(row.begin(), row.end(), blaze::row(result, i).begin());
     }

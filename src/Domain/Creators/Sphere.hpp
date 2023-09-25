@@ -111,7 +111,7 @@ struct Options::create_from_yaml<domain::creators::detail::Excision> {
       if (options.parse_as<std::string>() == "Excise") {
         return domain::creators::detail::Excision{};
       } else {
-        // PARSE_ERROR(options.context(), "Parse error");
+        PARSE_ERROR(options.context(), "Parse error");
       }
     }
   }
