@@ -251,13 +251,13 @@ struct print_impl<Alternatives<FirstAlternative, OtherAlternatives...>,
                   OptionList> {
   static std::string apply(const std::string& indent) {
     std::ostringstream ss;
-    const auto print_alternatives = [/*&indent, &ss*/](const std::string& /*header*/,
-                                                   auto /*alternatives*/) {
-      // using AlternativeOptions = decltype(alternatives);
-      // ss << indent << header << "\n"
-      //    << tmpl::for_each<AlternativeOptions>(
-      //           print<AlternativeOptions>{indent + "  "})
-      //           .value;
+    const auto print_alternatives = [&indent, &ss](const std::string& header,
+                                                   auto alternatives) {
+      using AlternativeOptions = decltype(alternatives);
+      ss << indent << header << "\n"
+         << tmpl::for_each<AlternativeOptions>(
+                print<AlternativeOptions>{indent + "  "})
+                .value;
     };
 
     print_alternatives("EITHER", FirstAlternative{});
