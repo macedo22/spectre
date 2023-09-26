@@ -644,14 +644,14 @@ template <typename OptionList, typename Group>
 template <typename TagsAndSubgroups>
 std::string Parser<OptionList, Group>::help() const {
   std::ostringstream ss;
-  // ss << "\n==== Description of expected options:\n" << help_text_;
-  // if (tmpl::size<TagsAndSubgroups>::value > 0) {
-  //   ss << "\n\nOptions:\n"
-  //      << tmpl::for_each<TagsAndSubgroups>(Options_detail::print<OptionList>{})
-  //             .value;
-  // } else {
-  //   ss << "\n\n<No options>\n";
-  // }
+  ss << "\n==== Description of expected options:\n" << help_text_;
+  if (tmpl::size<TagsAndSubgroups>::value > 0) {
+    ss << "\n\nOptions:\n"
+       << tmpl::for_each<TagsAndSubgroups>(Options_detail::print<OptionList>{})
+              .value;
+  } else {
+    ss << "\n\n<No options>\n";
+  }
   return ss.str();
 }
 
@@ -932,16 +932,16 @@ inline void Parser<OptionList, Group>::check_upper_bound(
 template <typename OptionList, typename Group>
 template <typename TagsAndSubgroups>
 std::string Parser<OptionList, Group>::parsing_help(
-    const YAML::Node& /*options*/) const {
+    const YAML::Node& options) const {
   std::ostringstream os;
-  // // At top level this would dump the entire input file, which is very
-  // // verbose and not very informative.  At lower levels the result
-  // // should be much shorter and may actually give useful context for
-  // // what part of the file is being parsed.
-  // if (not context_.top_level) {
-  //   os << "\n==== Parsing the option string:\n" << options << "\n";
-  // }
-  // os << help<TagsAndSubgroups>();
+  // At top level this would dump the entire input file, which is very
+  // verbose and not very informative.  At lower levels the result
+  // should be much shorter and may actually give useful context for
+  // what part of the file is being parsed.
+  if (not context_.top_level) {
+    os << "\n==== Parsing the option string:\n" << options << "\n";
+  }
+  os << help<TagsAndSubgroups>();
   return os.str();
 }
 
