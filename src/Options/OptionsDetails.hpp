@@ -236,11 +236,10 @@ struct print_impl {
       ss << "\n" << wrap_text(Tag::help, 77, indent + "  ") << "\n\n";
       return ss.str();
     } else {
-      (void)indent;
       // A group
       std::ostringstream ss;
-      // ss << indent << pretty_type::name<Tag>() << ":\n"
-      //    << wrap_text(Tag::help, 77, indent + "  ") << "\n\n";
+      ss << indent << pretty_type::name<Tag>() << ":\n"
+         << wrap_text(Tag::help, 77, indent + "  ") << "\n\n";
       return ss.str();
     }
   }
