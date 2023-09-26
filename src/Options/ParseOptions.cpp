@@ -9,9 +9,16 @@
 #include <yaml-cpp/yaml.h>
 
 #include "Informer/InfoFromBuild.hpp"
+#include "Options/Options.hpp"
 #include "Utilities/FileSystem.hpp"
 
-namespace Options::detail {
+namespace Options {
+[[noreturn]] void parse_error(const Context& context,
+                              const std::string& message) {
+  PARSE_ERROR(context, message);
+}
+
+namespace detail {
 namespace {
 void check_metadata(const YAML::Node& metadata) {
   // Validate executable name
@@ -63,4 +70,5 @@ YAML::Node load_and_check_yaml(const std::string& options,
                              std::to_string(yaml_docs.size()) + ".");
   }
 }
-}  // namespace Options::detail
+}  // namespace detail
+}  // namespace Options

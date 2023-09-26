@@ -107,20 +107,21 @@ std::unique_ptr<BaseClass> create(const Option& options) {
     id = node.as<std::string>();
   } else if (node.IsMap()) {
     if (node.size() != 1) {
-      PARSE_ERROR(derived_opts.context(),
-                  "Expected a single class to create, got "
-                  << node.size() << ":\n" << node);
+      parse_error(derived_opts.context(),
+                  MakeString{} << "Expected a single class to create, got "
+                               << node.size() << ":\n"
+                               << node);
     }
     id = node.begin()->first.as<std::string>();
     derived_opts.set_node(node.begin()->second);
   } else if (node.IsNull()) {
-    PARSE_ERROR(derived_opts.context(),
-                "Expected a class to create:\n"
-                << help_derived<creatable_classes>());
+    parse_error(derived_opts.context(), "Expected a class to create:\n" +
+                                            help_derived<creatable_classes>());
   } else {
-    PARSE_ERROR(derived_opts.context(),
-                "Expected a class or a class with options, got:\n"
-                << node);
+    parse_error(derived_opts.context(),
+                MakeString{}
+                    << "Expected a class or a class with options, got:\n"
+                    << node);
   }
 
   std::unique_ptr<BaseClass> result;
@@ -136,9 +137,8 @@ std::unique_ptr<BaseClass> create(const Option& options) {
   if (result != nullptr) {
     return result;
   }
-  PARSE_ERROR(derived_opts.context(),
-              "Unknown Id '" << id << "'\n"
-              << help_derived<creatable_classes>());
+  parse_error(derived_opts.context(),
+              "Unknown Id '" + id + "'\n" + help_derived<creatable_classes>());
 }
 }  // namespace Factory_detail
 
