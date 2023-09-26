@@ -135,13 +135,13 @@ T Option::parse_as() const {
             "as a bracket enclosed list ([foo, bar]) or with each\nentry on a "
             "separate line, indented and preceeded by a dash (  - foo).";
     }
-    // PARSE_ERROR(error_context, ss.str());
+    PARSE_ERROR(error_context, ss.str());
   } catch (const Options::detail::propagate_context& e) {
     Context error_context = context();
     // Avoid line numbers in the middle of the trace
     error_context.line = -1;
     error_context.column = -1;
-    // PARSE_ERROR(error_context, e.message());
+    PARSE_ERROR(error_context, e.message());
   } catch (std::exception& e) {
     ERROR("Unexpected exception: " << e.what());
   }
