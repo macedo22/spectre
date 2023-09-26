@@ -708,13 +708,13 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
     // the order they are given in the help string.
     std::vector<std::string> result;
     result.reserve(tmpl::size<top_level_options_and_groups>{});
-    // tmpl::for_each<top_level_options_and_groups>([&result](auto opt) {
-    //   using Opt = tmpl::type_from<decltype(opt)>;
-    //   const std::string label = pretty_type::name<Opt>();
-    //   ASSERT(alg::find(result, label) == result.end(),
-    //          "Duplicate option name: " << label);
-    //   result.push_back(label);
-    // });
+    tmpl::for_each<top_level_options_and_groups>([&result](auto opt) {
+      using Opt = tmpl::type_from<decltype(opt)>;
+      const std::string label = pretty_type::name<Opt>();
+      ASSERT(alg::find(result, label) == result.end(),
+             "Duplicate option name: " << label);
+      result.push_back(label);
+    });
     return result;
   });
 
