@@ -212,9 +212,9 @@ struct print_impl {
           call_with_dynamic_type<
               void, typename Tag::type::element_type::creatable_classes>(
               Tag::suggested_value().get(),
-              [/*&new_line, &ss*/](const auto* /*derived*/) {
-                // ss << new_line << "suggested=" << std::boolalpha
-                //    << pretty_type::short_name<decltype(*derived)>();
+              [&new_line, &ss](const auto* derived) {
+                ss << new_line << "suggested=" << std::boolalpha
+                   << pretty_type::short_name<decltype(*derived)>();
               });
         } else {
           ss << new_line << "suggested="
