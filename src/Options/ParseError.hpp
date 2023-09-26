@@ -42,13 +42,7 @@ class propagate_context : public std::exception {
   do {                                                                  \
     if ((context).top_level) {                                          \
       /* clang-tidy: macro arg in parentheses */                        \
-      ERROR_NO_TRACE("\n" << (context) << m); /* NOLINT */              \
     } else {                                                            \
-      std::ostringstream avoid_name_collisions_PARSE_ERROR;             \
-      /* clang-tidy: macro arg in parentheses */                        \
-      avoid_name_collisions_PARSE_ERROR << (context) << m; /* NOLINT */ \
-      throw ::Options::detail::propagate_context(                       \
-          avoid_name_collisions_PARSE_ERROR.str());                     \
     }                                                                   \
   } while (false)
 }  // namespace Options
