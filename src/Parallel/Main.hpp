@@ -442,11 +442,11 @@ Main<Metavariables>::Main(CkArgMsg* /*msg*/) {
   //       sys::exit();
   //     }
 
-  // options_ =
-  //     options.template apply<option_list, Metavariables>([](auto... args) {
-  //       return tuples::tagged_tuple_from_typelist<option_list>(
-  //           std::move(args)...);
-  //     });
+  options_ =
+      options.template apply<option_list, Metavariables>([](auto... args) {
+        return tuples::tagged_tuple_from_typelist<option_list>(
+            std::move(args)...);
+      });
 
   //     resource_info_ =
   //         tuples::get<Parallel::OptionTags::ResourceInfo<Metavariables>>(
