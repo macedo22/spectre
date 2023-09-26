@@ -698,25 +698,7 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
                               << parsing_help(node));
   }
 
-  auto valid_names = call_with_chosen_alternatives([](auto option_list_v) {
-    using option_list = decltype(option_list_v);
-    using top_level_options_and_groups =
-        tmpl::remove_duplicates<tmpl::transform<
-            option_list,
-            Options_detail::find_subgroup<tmpl::_1, tmpl::pin<Group>>>>;
-    // Use an ordered container so the missing options are reported in
-    // the order they are given in the help string.
-    std::vector<std::string> result;
-    result.reserve(tmpl::size<top_level_options_and_groups>{});
-    tmpl::for_each<top_level_options_and_groups>([&result](auto opt) {
-      using Opt = tmpl::type_from<decltype(opt)>;
-      const std::string label = pretty_type::name<Opt>();
-      ASSERT(alg::find(result, label) == result.end(),
-             "Duplicate option name: " << label);
-      result.push_back(label);
-    });
-    return result;
-  });
+  std::vector<std::string> valid_names{};
 
   for (const auto& name_and_value : node) {
     const auto& name = name_and_value.first.as<std::string>();
