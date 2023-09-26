@@ -689,8 +689,8 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
     given_options.insert(name_and_value.first.as<std::string>());
   }
 
-  alternative_choices_ =
-      Options_detail::choose_alternatives<OptionList>(given_options).second;
+  // alternative_choices_ =
+  //     Options_detail::choose_alternatives<OptionList>(given_options).second;
   if (alg::any_of(alternative_choices_, [](const size_t x) {
         return x == std::numeric_limits<size_t>::max();
       })) {
