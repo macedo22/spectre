@@ -260,8 +260,8 @@ struct print_impl<Alternatives<FirstAlternative, OtherAlternatives...>,
                 .value;
     };
 
-    print_alternatives("EITHER", FirstAlternative{});
-    EXPAND_PACK_LEFT_TO_RIGHT(print_alternatives("OR", OtherAlternatives{}));
+    // print_alternatives("EITHER", FirstAlternative{});
+    // EXPAND_PACK_LEFT_TO_RIGHT(print_alternatives("OR", OtherAlternatives{}));
     return ss.str();
   }
 };
