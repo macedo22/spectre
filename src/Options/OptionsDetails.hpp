@@ -222,16 +222,16 @@ struct print_impl {
         }
       }
       if constexpr (has_lower_bound<Tag>::value) {
-        ss << new_line << "min=" << (MakeString{} << Tag::lower_bound());
+        // ss << new_line << "min=" << (MakeString{} << Tag::lower_bound());
       }
       if constexpr (has_upper_bound<Tag>::value) {
-        ss << new_line << "max=" << (MakeString{} << Tag::upper_bound());
+        // ss << new_line << "max=" << (MakeString{} << Tag::upper_bound());
       }
       if constexpr (has_lower_bound_on_size<Tag>::value) {
-        ss << new_line << "min size=" << Tag::lower_bound_on_size();
+        // ss << new_line << "min size=" << Tag::lower_bound_on_size();
       }
       if constexpr (has_upper_bound_on_size<Tag>::value) {
-        ss << new_line << "max size=" << Tag::upper_bound_on_size();
+        // ss << new_line << "max size=" << Tag::upper_bound_on_size();
       }
       ss << "\n" << wrap_text(Tag::help, 77, indent + "  ") << "\n\n";
       return ss.str();
