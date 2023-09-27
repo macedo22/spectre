@@ -269,7 +269,7 @@ struct print_impl<Alternatives<FirstAlternative, OtherAlternatives...>,
 template <typename OptionList>
 template <typename Tag>
 void print<OptionList>::operator()(tmpl::type_<Tag> /*meta*/) {
-  value += print_impl<Tag, OptionList>::apply(indent);
+  // value += print_impl<Tag, OptionList>::apply(indent);
 }
 
 template <typename T, typename Metavariables>
