@@ -205,8 +205,8 @@ struct print_impl {
     if constexpr (tmpl::list_contains_v<OptionList, Tag>) {
       const std::string new_line = "\n" + indent + "  ";
       std::ostringstream ss;
-      // ss << indent << pretty_type::name<Tag>() << ":" << new_line
-      //    << "type=" << yaml_type<typename Tag::type>::value();
+      ss << indent << pretty_type::name<Tag>() << ":" << new_line
+         << "type=" << yaml_type<typename Tag::type>::value();
       if constexpr (has_suggested<Tag>::value) {
         if constexpr (tt::is_a_v<std::unique_ptr, typename Tag::type>) {
           call_with_dynamic_type<
