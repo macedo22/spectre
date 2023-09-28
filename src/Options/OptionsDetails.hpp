@@ -233,7 +233,9 @@ struct print_impl {
       if constexpr (has_upper_bound_on_size<Tag>::value) {
         ss << new_line << "max size=" << Tag::upper_bound_on_size();
       }
-      ss << "\n" << wrap_text(Tag::help, 77, indent + "  ") << "\n\n";
+      const std::string wrap =
+          wrap_text(Tag::help, 77, indent + "  ");
+      ss << "\n" << wrap << "\n\n";
       return ss.str();
     } else {
       // A group
