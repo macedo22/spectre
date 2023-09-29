@@ -710,9 +710,7 @@ std::string short_name() {
 namespace detail {
 template <typename T, typename = std::void_t<>>
 struct name_helper {
-  static std::string name() {
-    return detail::extract_short_name(typeid(T).name());
-  }
+  static std::string name() { return pretty_type::short_name<T>(); }
 };
 
 template <typename T>
