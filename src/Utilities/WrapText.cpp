@@ -51,8 +51,3 @@ std::string wrap_text(std::string str, const size_t line_length,
   }
   return str;
 }
-
-std::string wrap_text_(std::string /*str*/, size_t /*line_length*/,
-                       const std::string /*indentation*/) {
-  return "";
-}
