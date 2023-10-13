@@ -450,7 +450,7 @@ struct EvolutionMetavars {
                     3, ExcisionBoundaryA, interpolator_source_vars>,
                 intrp::Events::InterpolateWithoutInterpComponent<
                     3, ExcisionBoundaryB, interpolator_source_vars>,
-                Events::MonitorMemory<3>, Events::Completion,
+                /*Events::MonitorMemory<3>,*/ Events::Completion,
                 dg::Events::field_observations<volume_dim, observe_fields,
                                                non_tensor_compute_tags>,
                 control_system::control_system_events<control_systems>,
