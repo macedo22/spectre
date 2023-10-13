@@ -578,7 +578,7 @@ struct EvolutionMetavars {
               SelfStart::self_start_procedure<step_actions, system>>,
           Parallel::PhaseActions<
               Parallel::Phase::Evolve,
-              tmpl::list</*::domain::Actions::CheckFunctionsOfTimeAreReady,*/
+              tmpl::list<::domain::Actions::CheckFunctionsOfTimeAreReady,
                          evolution::Actions::RunEventsAndTriggers,
                          Actions::ChangeSlabSize, step_actions,
                          Actions::AdvanceTime,
