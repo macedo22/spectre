@@ -558,10 +558,10 @@ struct EvolutionMetavars {
       tmpl::flatten<tmpl::list<
           Parallel::PhaseActions<Parallel::Phase::Initialization,
                                  initialization_actions>,
-          Parallel::PhaseActions<
-              Parallel::Phase::RegisterWithElementDataReader,
-              tmpl::list<importers::Actions::RegisterWithElementDataReader,
-                         Parallel::Actions::TerminatePhase>>,
+        //   Parallel::PhaseActions<
+        //       Parallel::Phase::RegisterWithElementDataReader,
+        //       tmpl::list<importers::Actions::RegisterWithElementDataReader,
+        //                  Parallel::Actions::TerminatePhase>>,
           Parallel::PhaseActions<
               Parallel::Phase::ImportInitialData,
               tmpl::list<gh::Actions::SetInitialData,
