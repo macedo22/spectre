@@ -322,9 +322,9 @@ class TaggedTuple : private tuples_detail::TaggedTupleLeaf<Tags>... {  // NOLINT
 
   // clang-tidy: runtime-references
   // NOLINTNEXTLINE(google-runtime-references)
-  void pup(PUP::er& p) {
-    static_cast<void>(std::initializer_list<char>{
-        (tuples_detail::TaggedTupleLeaf<Tags>::pup(p), '0')...});
+  void pup(PUP::er& /*p*/) {
+    // static_cast<void>(std::initializer_list<char>{
+    //     (tuples_detail::TaggedTupleLeaf<Tags>::pup(p), '0')...});
   }
 
   // C++17 Draft 23.5.3.1 Construction
