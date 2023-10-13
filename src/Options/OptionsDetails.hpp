@@ -199,6 +199,10 @@ struct print {
   value_type value{};
 };
 
+std::string print_impl_apply_second_line(std::ostringstream& ss,
+                                        const std::string& help,
+                                        const std::string& indent);
+
 template <typename Tag, typename OptionList>
 struct print_impl {
   static std::string apply(const std::string& indent) {
@@ -233,7 +237,8 @@ struct print_impl {
       if constexpr (has_upper_bound_on_size<Tag>::value) {
         ss << new_line << "max size=" << Tag::upper_bound_on_size();
       }
-      ss << "\n" << wrap_text(Tag::help, 77, indent + "  ") << "\n\n";
+      // ss << "\n" << wrap_text(Tag::help, 77, indent + "  ") << "\n\n";
+      print_impl_apply_second_line(ss, Tag::help, indent);
       return ss.str();
     } else {
       // A group
