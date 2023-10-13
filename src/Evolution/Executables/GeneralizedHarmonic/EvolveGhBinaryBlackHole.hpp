@@ -522,12 +522,12 @@ struct EvolutionMetavars {
               Actions::RecordTimeStepperData<system>,
               evolution::Actions::RunEventsAndDenseTriggers<tmpl::list<
                   ::domain::CheckFunctionsOfTimeAreReadyPostprocessor>>,
-              Actions::UpdateU<system>>>,
+              Actions::UpdateU<system>>>/*,
       dg::Actions::Filter<
           Filters::Exponential<0>,
           tmpl::list<gr::Tags::SpacetimeMetric<DataVector, volume_dim>,
                      gh::Tags::Pi<DataVector, volume_dim>,
-                     gh::Tags::Phi<DataVector, volume_dim>>>>;
+                     gh::Tags::Phi<DataVector, volume_dim>>>*/>;
 
   using initialization_actions = tmpl::list<
       Initialization::Actions::InitializeItems<
