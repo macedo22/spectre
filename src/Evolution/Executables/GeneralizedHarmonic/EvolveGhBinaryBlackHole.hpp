@@ -562,11 +562,11 @@ struct EvolutionMetavars {
               Parallel::Phase::RegisterWithElementDataReader,
               tmpl::list<importers::Actions::RegisterWithElementDataReader,
                          Parallel::Actions::TerminatePhase>>,
-          Parallel::PhaseActions<
-              Parallel::Phase::ImportInitialData,
-              tmpl::list<gh::Actions::SetInitialData,
-                         gh::Actions::ReceiveNumericInitialData,
-                         Parallel::Actions::TerminatePhase>>,
+        //   Parallel::PhaseActions<
+        //       Parallel::Phase::ImportInitialData,
+        //       tmpl::list<gh::Actions::SetInitialData,
+        //                  gh::Actions::ReceiveNumericInitialData,
+        //                  Parallel::Actions::TerminatePhase>>,
           Parallel::PhaseActions<
               Parallel::Phase::InitializeInitialDataDependentQuantities,
               initialize_initial_data_dependent_quantities_actions>,
