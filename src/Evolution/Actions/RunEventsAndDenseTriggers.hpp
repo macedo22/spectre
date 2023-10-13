@@ -305,12 +305,12 @@ struct InitializeRunEventsAndDenseTriggers {
             typename ArrayIndex, typename ActionList,
             typename ParallelComponent>
   static Parallel::iterable_action_return_t apply(
-      db::DataBox<DbTags>& /*box*/, tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
+      db::DataBox<DbTags>& box, tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
       Parallel::GlobalCache<Metavariables>& /*cache*/,
       const ArrayIndex& /*array_index*/, const ActionList /*meta*/,
       const ParallelComponent* const /*component*/) {
-    // ::Initialization::mutate_assign<simple_tags>(make_not_null(&box),
-    //                                            std::nullopt);
+    ::Initialization::mutate_assign<simple_tags>(make_not_null(&box),
+                                               std::nullopt);
     return {Parallel::AlgorithmExecution::Continue, std::nullopt};
   }
 };
