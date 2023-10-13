@@ -508,21 +508,21 @@ struct EvolutionMetavars {
   using step_actions = tmpl::list<
       evolution::dg::Actions::ComputeTimeDerivative<
           volume_dim, system, AllStepChoosers, local_time_stepping>,
-      tmpl::conditional_t<
-          local_time_stepping,
-          tmpl::list<evolution::Actions::RunEventsAndDenseTriggers<tmpl::list<
-                         ::domain::CheckFunctionsOfTimeAreReadyPostprocessor,
-                         evolution::dg::ApplyBoundaryCorrections<
-                             local_time_stepping, system, volume_dim, true>>>,
-                     evolution::dg::Actions::ApplyLtsBoundaryCorrections<
-                         system, volume_dim, false>>,
-          tmpl::list<
-              evolution::dg::Actions::ApplyBoundaryCorrectionsToTimeDerivative<
-                  system, volume_dim, false>,
-              Actions::RecordTimeStepperData<system>,
-              evolution::Actions::RunEventsAndDenseTriggers<tmpl::list<
-                  ::domain::CheckFunctionsOfTimeAreReadyPostprocessor>>,
-              Actions::UpdateU<system>>>,
+    //   tmpl::conditional_t<
+    //       local_time_stepping,
+    //       tmpl::list<evolution::Actions::RunEventsAndDenseTriggers<tmpl::list<
+    //                      ::domain::CheckFunctionsOfTimeAreReadyPostprocessor,
+    //                      evolution::dg::ApplyBoundaryCorrections<
+    //                          local_time_stepping, system, volume_dim, true>>>,
+    //                  evolution::dg::Actions::ApplyLtsBoundaryCorrections<
+    //                      system, volume_dim, false>>,
+    //       tmpl::list<
+    //           evolution::dg::Actions::ApplyBoundaryCorrectionsToTimeDerivative<
+    //               system, volume_dim, false>,
+    //           Actions::RecordTimeStepperData<system>,
+    //           evolution::Actions::RunEventsAndDenseTriggers<tmpl::list<
+    //               ::domain::CheckFunctionsOfTimeAreReadyPostprocessor>>,
+    //           Actions::UpdateU<system>>>,
       dg::Actions::Filter<
           Filters::Exponential<0>,
           tmpl::list<gr::Tags::SpacetimeMetric<DataVector, volume_dim>,
