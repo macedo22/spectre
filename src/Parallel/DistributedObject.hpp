@@ -632,62 +632,62 @@ std::string DistributedObject<
 template <typename ParallelComponent, typename... PhaseDepActionListsPack>
 void DistributedObject<
     ParallelComponent,
-    tmpl::list<PhaseDepActionListsPack...>>::pup(PUP::er& /*p*/) {  // NOLINT
-// #ifdef SPECTRE_CHARM_PROJECTIONS
-//   p | non_action_time_start_;
-// #endif
-//   if (performing_action_ and not p.isSizing()) {
-//     ERROR("cannot serialize while performing action!");
-//   }
-//   p | performing_action_;
-//   p | phase_;
-//   p | phase_bookmarks_;
-//   p | algorithm_step_;
-//   if constexpr (Parallel::is_node_group_proxy<cproxy_type>::value) {
-//     p | node_lock_;
-//   }
-//   p | terminate_;
-//   p | halt_algorithm_until_next_phase_;
-//   p | box_;
-//   // After unpacking the DataBox, we "touch" the GlobalCache proxy inside.
-//   // This forces the DataBox to recompute the GlobalCache* the next time it
-//   // is needed, but delays this process until after the pupper is called.
-//   // (This delay is important: updating the pointer requires calling
-//   // ckLocalBranch() on the Charm++ proxy, and in a restart from checkpoint
-//   // this call may not be well-defined until after components are finished
-//   // unpacking.)
-//   if (p.isUnpacking()) {
-//     db::mutate<Tags::GlobalCacheProxy<metavariables>>(
-//         [](const gsl::not_null<CProxy_GlobalCache<metavariables>*> proxy) {
-//           (void)proxy;
-//         },
-//         make_not_null(&box_));
-//   }
-//   p | inboxes_;
-//   p | array_index_;
-//   p | global_cache_proxy_;
-//   // Note that `perform_registration_or_deregistration` passes the `box_` by
-//   // const reference. If mutable access is required to the box, this function
-//   // call needs to be carefully considered with respect to the `p | box_` call
-//   // in both packing and unpacking scenarios.
-//   //
-//   // Note also that we don't perform (de)registrations when pup'ing for a
-//   // checkpoint/restart. This enables a simpler first-pass implementation of
-//   // checkpointing, though it means the restart must occur on the same
-//   // hardware configuration (same number of nodes and same procs per node)
-//   // used when writing the checkpoint.
-//   if (phase_ == Parallel::Phase::LoadBalancing) {
-//     // The deregistration and registration below does not actually insert
-//     // anything into the PUP::er stream, so nothing is done on a sizing pup.
-//     if (p.isPacking()) {
-//       deregister_element<ParallelComponent>(
-//           box_, *Parallel::local_branch(global_cache_proxy_), array_index_);
-//     }
-//     if (p.isUnpacking()) {
-//       register_element<ParallelComponent>(
-//           box_, *Parallel::local_branch(global_cache_proxy_), array_index_);
-//     }
-//   }
+    tmpl::list<PhaseDepActionListsPack...>>::pup(PUP::er& p) {  // NOLINT
+#ifdef SPECTRE_CHARM_PROJECTIONS
+  p | non_action_time_start_;
+#endif
+  if (performing_action_ and not p.isSizing()) {
+    ERROR("cannot serialize while performing action!");
+  }
+  p | performing_action_;
+  p | phase_;
+  p | phase_bookmarks_;
+  p | algorithm_step_;
+  if constexpr (Parallel::is_node_group_proxy<cproxy_type>::value) {
+    p | node_lock_;
+  }
+  p | terminate_;
+  p | halt_algorithm_until_next_phase_;
+  p | box_;
+  // After unpacking the DataBox, we "touch" the GlobalCache proxy inside.
+  // This forces the DataBox to recompute the GlobalCache* the next time it
+  // is needed, but delays this process until after the pupper is called.
+  // (This delay is important: updating the pointer requires calling
+  // ckLocalBranch() on the Charm++ proxy, and in a restart from checkpoint
+  // this call may not be well-defined until after components are finished
+  // unpacking.)
+  if (p.isUnpacking()) {
+    db::mutate<Tags::GlobalCacheProxy<metavariables>>(
+        [](const gsl::not_null<CProxy_GlobalCache<metavariables>*> proxy) {
+          (void)proxy;
+        },
+        make_not_null(&box_));
+  }
+  p | inboxes_;
+  p | array_index_;
+  p | global_cache_proxy_;
+  // Note that `perform_registration_or_deregistration` passes the `box_` by
+  // const reference. If mutable access is required to the box, this function
+  // call needs to be carefully considered with respect to the `p | box_` call
+  // in both packing and unpacking scenarios.
+  //
+  // Note also that we don't perform (de)registrations when pup'ing for a
+  // checkpoint/restart. This enables a simpler first-pass implementation of
+  // checkpointing, though it means the restart must occur on the same
+  // hardware configuration (same number of nodes and same procs per node)
+  // used when writing the checkpoint.
+  if (phase_ == Parallel::Phase::LoadBalancing) {
+    // The deregistration and registration below does not actually insert
+    // anything into the PUP::er stream, so nothing is done on a sizing pup.
+    if (p.isPacking()) {
+      deregister_element<ParallelComponent>(
+          box_, *Parallel::local_branch(global_cache_proxy_), array_index_);
+    }
+    if (p.isUnpacking()) {
+      register_element<ParallelComponent>(
+          box_, *Parallel::local_branch(global_cache_proxy_), array_index_);
+    }
+  }
 }
 
 template <typename ParallelComponent, typename... PhaseDepActionListsPack>
