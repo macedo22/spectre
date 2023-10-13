@@ -55,29 +55,29 @@ struct InitializeMeasurements {
             typename ArrayIndex, typename ActionList,
             typename ParallelComponent>
   static Parallel::iterable_action_return_t apply(
-      db::DataBox<DbTagsList>& /*box*/,
+      db::DataBox<DbTagsList>& box,
       const tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
       const Parallel::GlobalCache<Metavariables>& /*cache*/,
       const ArrayIndex& /*array_index*/, ActionList /*meta*/,
       const ParallelComponent* const /*meta*/) {
-    // db::mutate<evolution::Tags::EventsAndDenseTriggers>(
-    //     [](const gsl::not_null<evolution::EventsAndDenseTriggers*>
-    //            events_and_dense_triggers) {
-    //       tmpl::for_each<metafunctions::measurements_t<ControlSystems>>(
-    //           [&events_and_dense_triggers](auto measurement_v) {
-    //             using control_system_group =
-    //                 metafunctions::control_systems_with_measurement_t<
-    //                     ControlSystems,
-    //                     typename tmpl::type_from<decltype(measurement_v)>>;
-    //             events_and_dense_triggers->add_trigger_and_events(
-    //                 std::make_unique<
-    //                     control_system::Trigger<control_system_group>>(),
-    //                 make_vector<std::unique_ptr<::Event>>(
-    //                     std::make_unique<
-    //                         control_system::Event<control_system_group>>()));
-    //           });
-    //     },
-    //     make_not_null(&box));
+    db::mutate<evolution::Tags::EventsAndDenseTriggers>(
+        [](const gsl::not_null<evolution::EventsAndDenseTriggers*>
+               events_and_dense_triggers) {
+          tmpl::for_each<metafunctions::measurements_t<ControlSystems>>(
+              [&events_and_dense_triggers](auto measurement_v) {
+                using control_system_group =
+                    metafunctions::control_systems_with_measurement_t<
+                        ControlSystems,
+                        typename tmpl::type_from<decltype(measurement_v)>>;
+                events_and_dense_triggers->add_trigger_and_events(
+                    std::make_unique<
+                        control_system::Trigger<control_system_group>>(),
+                    make_vector<std::unique_ptr<::Event>>(
+                        std::make_unique<
+                            control_system::Event<control_system_group>>()));
+              });
+        },
+        make_not_null(&box));
     return {Parallel::AlgorithmExecution::Continue, std::nullopt};
   }
 };
