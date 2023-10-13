@@ -780,8 +780,8 @@ decltype(auto) mutate(Invokable&& invokable,
       EXPAND_PACK_LEFT_TO_RIGHT(
           box->template mutate_mutable_subitems<MutateTags>(
               typename Subitems<MutateTags>::type{}));
-      box->template reset_compute_items_after_mutate(
-          first_compute_items_to_reset{});
+      // box->template reset_compute_items_after_mutate(
+      //     first_compute_items_to_reset{});
     };
     box->mutate_locked_box_ = true;
     return invokable(
