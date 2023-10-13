@@ -441,15 +441,15 @@ struct EvolutionMetavars {
         tmpl::pair<
             Event,
             tmpl::flatten<tmpl::list<
-                // intrp::Events::Interpolate<3, AhA, interpolator_source_vars>,
-                // intrp::Events::Interpolate<3, AhB, interpolator_source_vars>,
-                // intrp::Events::Interpolate<3, AhC, interpolator_source_vars>,
-                // intrp::Events::InterpolateWithoutInterpComponent<
-                //     3, BondiSachs, source_vars_no_deriv>,
-                // intrp::Events::InterpolateWithoutInterpComponent<
-                //     3, ExcisionBoundaryA, interpolator_source_vars>,
-                // intrp::Events::InterpolateWithoutInterpComponent<
-                //     3, ExcisionBoundaryB, interpolator_source_vars>,
+                intrp::Events::Interpolate<3, AhA, interpolator_source_vars>,
+                intrp::Events::Interpolate<3, AhB, interpolator_source_vars>,
+                intrp::Events::Interpolate<3, AhC, interpolator_source_vars>,
+                intrp::Events::InterpolateWithoutInterpComponent<
+                    3, BondiSachs, source_vars_no_deriv>,
+                intrp::Events::InterpolateWithoutInterpComponent<
+                    3, ExcisionBoundaryA, interpolator_source_vars>,
+                intrp::Events::InterpolateWithoutInterpComponent<
+                    3, ExcisionBoundaryB, interpolator_source_vars>,
                 Events::MonitorMemory<3>, Events::Completion,
                 dg::Events::field_observations<volume_dim, observe_fields,
                                                non_tensor_compute_tags>,
