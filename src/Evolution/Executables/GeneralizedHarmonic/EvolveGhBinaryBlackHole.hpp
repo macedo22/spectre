@@ -453,7 +453,7 @@ struct EvolutionMetavars {
                 Events::MonitorMemory<3>, Events::Completion,
                 dg::Events::field_observations<volume_dim, observe_fields,
                                                non_tensor_compute_tags>,
-                control_system::control_system_events<control_systems>,
+                // control_system::control_system_events<control_systems>,
                 Events::time_events<system>>>>,
         tmpl::pair<
             gh::BoundaryConditions::BoundaryCondition<volume_dim>,
