@@ -199,14 +199,23 @@ struct print {
   value_type value{};
 };
 
+std::string print_impl_apply_first_line(std::ostringstream& ss,
+                                        const std::string& indent,
+                                        const std::string& pretty_type_name,
+                                        const std::string& new_line,
+                                        const std::string& yaml_type);
+
 template <typename Tag, typename OptionList>
 struct print_impl {
   static std::string apply(const std::string& indent) {
     if constexpr (tmpl::list_contains_v<OptionList, Tag>) {
       const std::string new_line = "\n" + indent + "  ";
       std::ostringstream ss;
-      ss << indent << pretty_type::name<Tag>() << ":" << new_line
-         << "type=" << yaml_type<typename Tag::type>::value();
+      // ss << indent << pretty_type::name<Tag>() << ":" << new_line
+      //    << "type=" << yaml_type<typename Tag::type>::value();
+      print_impl_apply_first_line(ss, indent, pretty_type::name<Tag>(),
+                                  new_line,
+                                  yaml_type<typename Tag::type>::value());
       if constexpr (has_suggested<Tag>::value) {
         if constexpr (tt::is_a_v<std::unique_ptr, typename Tag::type>) {
           call_with_dynamic_type<
