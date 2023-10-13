@@ -326,151 +326,151 @@ template <typename ComputeTagsList, typename DataBoxType,
           typename Metavariables, size_t VolumeDim, typename ParallelComponent>
 void ObserveNorms<tmpl::list<ObservableTensorTags...>,
                   tmpl::list<NonTensorComputeTags...>, ArraySectionIdTag>::
-operator()(const ObservationBox<ComputeTagsList, DataBoxType>& /*box*/,
-           Parallel::GlobalCache<Metavariables>& /*cache*/,
-           const ElementId<VolumeDim>& /*array_index*/,
+operator()(const ObservationBox<ComputeTagsList, DataBoxType>& box,
+           Parallel::GlobalCache<Metavariables>& cache,
+           const ElementId<VolumeDim>& array_index,
            const ParallelComponent* const /*meta*/,
-           const ObservationValue& /*observation_value*/) const {
-  // // Skip observation on elements that are not part of a section
-  // const std::optional<std::string> section_observation_key =
-  //     observers::get_section_observation_key<ArraySectionIdTag>(box);
-  // if (not section_observation_key.has_value()) {
-  //   return;
-  // }
+           const ObservationValue& observation_value) const {
+  // Skip observation on elements that are not part of a section
+  const std::optional<std::string> section_observation_key =
+      observers::get_section_observation_key<ArraySectionIdTag>(box);
+  if (not section_observation_key.has_value()) {
+    return;
+  }
 
-  // using tensor_tags = tmpl::list<ObservableTensorTags...>;
+  using tensor_tags = tmpl::list<ObservableTensorTags...>;
 
-  // std::unordered_map<std::string,
-  //                    std::pair<std::vector<double>, std::vector<std::string>>>
-  //     norm_values_and_names{};
-  // const auto& mesh = get<::Events::Tags::ObserverMesh<VolumeDim>>(box);
-  // const DataVector det_jacobian =
-  //   1. / get(get<::Events::Tags::ObserverDetInvJacobian
-  //                  <Frame::ElementLogical, Frame::Inertial>>(box));
-  // const size_t number_of_points = mesh.number_of_grid_points();
-  // const double local_volume = definite_integral(det_jacobian, mesh);
+  std::unordered_map<std::string,
+                     std::pair<std::vector<double>, std::vector<std::string>>>
+      norm_values_and_names{};
+  const auto& mesh = get<::Events::Tags::ObserverMesh<VolumeDim>>(box);
+  const DataVector det_jacobian =
+    1. / get(get<::Events::Tags::ObserverDetInvJacobian
+                   <Frame::ElementLogical, Frame::Inertial>>(box));
+  const size_t number_of_points = mesh.number_of_grid_points();
+  const double local_volume = definite_integral(det_jacobian, mesh);
 
-  // // Loop over ObservableTensorTags and see if it was requested to be observed.
-  // // This approach allows us to delay evaluating any compute tags until they're
-  // // actually needed for observing.
-  // tmpl::for_each<tensor_tags>([this, &box, &norm_values_and_names,
-  //                              &number_of_points, &mesh,
-  //                              &det_jacobian](auto tag_v) {
-  //   using tag = tmpl::type_from<decltype(tag_v)>;
-  //   const std::string tensor_name = db::tag_name<tag>();
-  //   for (size_t i = 0; i < tensor_names_.size(); ++i) {
-  //     if (tensor_name == tensor_names_[i]) {
-  //       if (UNLIKELY(not has_value(get<tag>(box)))) {
-  //         ERROR("Cannot observe a norm of '"
-  //               << tensor_name
-  //               << "' because it is a std::optional and wasn't able to be "
-  //                  "computed. This can happen when you try to observe errors "
-  //                  "without an analytic solution.");
-  //       }
-  //       const auto& tensor = value(get<tag>(box));
+  // Loop over ObservableTensorTags and see if it was requested to be observed.
+  // This approach allows us to delay evaluating any compute tags until they're
+  // actually needed for observing.
+  tmpl::for_each<tensor_tags>([this, &box, &norm_values_and_names,
+                               &number_of_points, &mesh,
+                               &det_jacobian](auto tag_v) {
+    using tag = tmpl::type_from<decltype(tag_v)>;
+    const std::string tensor_name = db::tag_name<tag>();
+    for (size_t i = 0; i < tensor_names_.size(); ++i) {
+      if (tensor_name == tensor_names_[i]) {
+        if (UNLIKELY(not has_value(get<tag>(box)))) {
+          ERROR("Cannot observe a norm of '"
+                << tensor_name
+                << "' because it is a std::optional and wasn't able to be "
+                   "computed. This can happen when you try to observe errors "
+                   "without an analytic solution.");
+        }
+        const auto& tensor = value(get<tag>(box));
 
-  //       auto& [values, names] = norm_values_and_names[tensor_norm_types_[i]];
-  //       const auto names_and_components = tensor.get_vector_of_data();
-  //       const auto& component_names = names_and_components.first;
-  //       const auto& components = names_and_components.second;
-  //       if (components[0].size() != number_of_points) {
-  //         ERROR("The number of grid points of the mesh is "
-  //               << number_of_points << " but the tensor '" << tensor_name
-  //               << "' has " << components[0].size()
-  //               << " points. This means you're computing norms of tensors over "
-  //                  "different grids, which will give the wrong answer for "
-  //                  "norms that use the grid points.");
-  //       }
+        auto& [values, names] = norm_values_and_names[tensor_norm_types_[i]];
+        const auto names_and_components = tensor.get_vector_of_data();
+        const auto& component_names = names_and_components.first;
+        const auto& components = names_and_components.second;
+        if (components[0].size() != number_of_points) {
+          ERROR("The number of grid points of the mesh is "
+                << number_of_points << " but the tensor '" << tensor_name
+                << "' has " << components[0].size()
+                << " points. This means you're computing norms of tensors over "
+                   "different grids, which will give the wrong answer for "
+                   "norms that use the grid points.");
+        }
 
-  //       if (tensor_components_[i] == "Individual") {
-  //         for (size_t storage_index = 0; storage_index < component_names.size();
-  //              ++storage_index) {
-  //           if (tensor_norm_types_[i] == "Max") {
-  //             values.push_back(max(components[storage_index]));
-  //           } else if (tensor_norm_types_[i] == "Min") {
-  //             values.push_back(min(components[storage_index]));
-  //           } else if (tensor_norm_types_[i] == "L2Norm") {
-  //             values.push_back(
-  //                 alg::accumulate(square(components[storage_index]), 0.0));
-  //           } else if (tensor_norm_types_[i] == "L2IntegralNorm") {
-  //             values.push_back(definite_integral(
-  //                 square(components[storage_index]) * det_jacobian, mesh));
-  //           } else if (tensor_norm_types_[i] == "VolumeIntegral") {
-  //             values.push_back(definite_integral(
-  //                        components[storage_index] * det_jacobian, mesh));
-  //           }
-  //           names.push_back(
-  //               tensor_norm_types_[i] + "(" +
-  //               (component_names.size() == 1
-  //                    ? tensor_name
-  //                    : (tensor_name + "_" + component_names[storage_index])) +
-  //               ")");
-  //         }
-  //       } else if (tensor_components_[i] == "Sum") {
-  //         double value = 0.0;
-  //         if (tensor_norm_types_[i] == "Max") {
-  //           value = std::numeric_limits<double>::min();
-  //         } else if (tensor_norm_types_[i] == "Min") {
-  //           value = std::numeric_limits<double>::max();
-  //         }
-  //         for (size_t storage_index = 0; storage_index < component_names.size();
-  //              ++storage_index) {
-  //           if (tensor_norm_types_[i] == "Max") {
-  //             value = std::max(value, max(components[storage_index]));
-  //           } else if (tensor_norm_types_[i] == "Min") {
-  //             value = std::min(value, min(components[storage_index]));
-  //           } else if (tensor_norm_types_[i] == "L2Norm") {
-  //             value += alg::accumulate(square(components[storage_index]), 0.0);
-  //           } else if (tensor_norm_types_[i] == "L2IntegralNorm") {
-  //             value += definite_integral(
-  //                 square(components[storage_index]) * det_jacobian, mesh);
-  //           } else if (tensor_norm_types_[i] == "VolumeIntegral") {
-  //             value += definite_integral(
-  //                 components[storage_index] * det_jacobian, mesh);
-  //           }
-  //         }
+        if (tensor_components_[i] == "Individual") {
+          for (size_t storage_index = 0; storage_index < component_names.size();
+               ++storage_index) {
+            if (tensor_norm_types_[i] == "Max") {
+              values.push_back(max(components[storage_index]));
+            } else if (tensor_norm_types_[i] == "Min") {
+              values.push_back(min(components[storage_index]));
+            } else if (tensor_norm_types_[i] == "L2Norm") {
+              values.push_back(
+                  alg::accumulate(square(components[storage_index]), 0.0));
+            } else if (tensor_norm_types_[i] == "L2IntegralNorm") {
+              values.push_back(definite_integral(
+                  square(components[storage_index]) * det_jacobian, mesh));
+            } else if (tensor_norm_types_[i] == "VolumeIntegral") {
+              values.push_back(definite_integral(
+                         components[storage_index] * det_jacobian, mesh));
+            }
+            names.push_back(
+                tensor_norm_types_[i] + "(" +
+                (component_names.size() == 1
+                     ? tensor_name
+                     : (tensor_name + "_" + component_names[storage_index])) +
+                ")");
+          }
+        } else if (tensor_components_[i] == "Sum") {
+          double value = 0.0;
+          if (tensor_norm_types_[i] == "Max") {
+            value = std::numeric_limits<double>::min();
+          } else if (tensor_norm_types_[i] == "Min") {
+            value = std::numeric_limits<double>::max();
+          }
+          for (size_t storage_index = 0; storage_index < component_names.size();
+               ++storage_index) {
+            if (tensor_norm_types_[i] == "Max") {
+              value = std::max(value, max(components[storage_index]));
+            } else if (tensor_norm_types_[i] == "Min") {
+              value = std::min(value, min(components[storage_index]));
+            } else if (tensor_norm_types_[i] == "L2Norm") {
+              value += alg::accumulate(square(components[storage_index]), 0.0);
+            } else if (tensor_norm_types_[i] == "L2IntegralNorm") {
+              value += definite_integral(
+                  square(components[storage_index]) * det_jacobian, mesh);
+            } else if (tensor_norm_types_[i] == "VolumeIntegral") {
+              value += definite_integral(
+                  components[storage_index] * det_jacobian, mesh);
+            }
+          }
 
-  //         names.push_back(tensor_norm_types_[i] + "(" + tensor_name + ")");
-  //         values.push_back(value);
-  //       }
-  //     }
-  //   }
-  // });
+          names.push_back(tensor_norm_types_[i] + "(" + tensor_name + ")");
+          values.push_back(value);
+        }
+      }
+    }
+  });
 
-  // // Concatenate the legend info together.
-  // std::vector<std::string> legend{observation_value.name, "NumberOfPoints",
-  //                                 "Volume"};
-  // legend.insert(legend.end(), norm_values_and_names["Max"].second.begin(),
-  //               norm_values_and_names["Max"].second.end());
-  // legend.insert(legend.end(), norm_values_and_names["Min"].second.begin(),
-  //               norm_values_and_names["Min"].second.end());
-  // legend.insert(legend.end(), norm_values_and_names["L2Norm"].second.begin(),
-  //               norm_values_and_names["L2Norm"].second.end());
-  // legend.insert(legend.end(),
-  //               norm_values_and_names["L2IntegralNorm"].second.begin(),
-  //               norm_values_and_names["L2IntegralNorm"].second.end());
-  // legend.insert(legend.end(),
-  //               norm_values_and_names["VolumeIntegral"].second.begin(),
-  //               norm_values_and_names["VolumeIntegral"].second.end());
+  // Concatenate the legend info together.
+  std::vector<std::string> legend{observation_value.name, "NumberOfPoints",
+                                  "Volume"};
+  legend.insert(legend.end(), norm_values_and_names["Max"].second.begin(),
+                norm_values_and_names["Max"].second.end());
+  legend.insert(legend.end(), norm_values_and_names["Min"].second.begin(),
+                norm_values_and_names["Min"].second.end());
+  legend.insert(legend.end(), norm_values_and_names["L2Norm"].second.begin(),
+                norm_values_and_names["L2Norm"].second.end());
+  legend.insert(legend.end(),
+                norm_values_and_names["L2IntegralNorm"].second.begin(),
+                norm_values_and_names["L2IntegralNorm"].second.end());
+  legend.insert(legend.end(),
+                norm_values_and_names["VolumeIntegral"].second.begin(),
+                norm_values_and_names["VolumeIntegral"].second.end());
 
-  // // Send data to reduction observer
-  // auto& local_observer = *Parallel::local_branch(
-  //     Parallel::get_parallel_component<observers::Observer<Metavariables>>(
-  //         cache));
-  // const std::string subfile_path_with_suffix =
-  //     subfile_path_ + section_observation_key.value();
-  // Parallel::simple_action<observers::Actions::ContributeReductionData>(
-  //     local_observer,
-  //     observers::ObservationId(observation_value.value,
-  //                              subfile_path_with_suffix + ".dat"),
-  //     Parallel::make_array_component_id<ParallelComponent>(array_index),
-  //     subfile_path_with_suffix, std::move(legend),
-  //     ReductionData{observation_value.value, number_of_points, local_volume,
-  //                   std::move(norm_values_and_names["Max"].first),
-  //                   std::move(norm_values_and_names["Min"].first),
-  //                   std::move(norm_values_and_names["L2Norm"].first),
-  //                   std::move(norm_values_and_names["L2IntegralNorm"].first),
-  //                   std::move(norm_values_and_names["VolumeIntegral"].first)});
+  // Send data to reduction observer
+  auto& local_observer = *Parallel::local_branch(
+      Parallel::get_parallel_component<observers::Observer<Metavariables>>(
+          cache));
+  const std::string subfile_path_with_suffix =
+      subfile_path_ + section_observation_key.value();
+  Parallel::simple_action<observers::Actions::ContributeReductionData>(
+      local_observer,
+      observers::ObservationId(observation_value.value,
+                               subfile_path_with_suffix + ".dat"),
+      Parallel::make_array_component_id<ParallelComponent>(array_index),
+      subfile_path_with_suffix, std::move(legend),
+      ReductionData{observation_value.value, number_of_points, local_volume,
+                    std::move(norm_values_and_names["Max"].first),
+                    std::move(norm_values_and_names["Min"].first),
+                    std::move(norm_values_and_names["L2Norm"].first),
+                    std::move(norm_values_and_names["L2IntegralNorm"].first),
+                    std::move(norm_values_and_names["VolumeIntegral"].first)});
 }
 
 template <typename... ObservableTensorTags, typename... NonTensorComputeTags,
