@@ -54,15 +54,15 @@ struct NonconservativeSystem {
             typename ArrayIndex, typename ActionList,
             typename ParallelComponent>
   static Parallel::iterable_action_return_t apply(
-      db::DataBox<DbTagsList>& /*box*/,
+      db::DataBox<DbTagsList>& box,
       const tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
       const Parallel::GlobalCache<Metavariables>& /*cache*/,
       const ArrayIndex& /*array_index*/, ActionList /*meta*/,
       const ParallelComponent* const /*meta*/) {
-    // using Vars = typename variables_tag::type;
-    // Initialization::mutate_assign<simple_tags>(
-    //     make_not_null(&box),
-    //     Vars{db::get<domain::Tags::Mesh<dim>>(box).number_of_grid_points()});
+    using Vars = typename variables_tag::type;
+    Initialization::mutate_assign<simple_tags>(
+        make_not_null(&box),
+        Vars{db::get<domain::Tags::Mesh<dim>>(box).number_of_grid_points()});
 
     return {Parallel::AlgorithmExecution::Continue, std::nullopt};
   }
