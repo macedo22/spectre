@@ -755,13 +755,14 @@ decltype(auto) mutate(Invokable&& invokable,
     // being mutated and if so add the parent to the list of tags
     // being mutated. Then, remove any tags that would be passed
     // multiple times.
-    using extra_mutated_tags = tmpl::list_difference<
-        tmpl::filter<TagList,
-                     tmpl::bind<tmpl::found, Subitems<tmpl::_1>,
-                                tmpl::pin<tmpl::bind<
-                                    tmpl::list_contains,
-                                    tmpl::pin<mutate_tags_list>, tmpl::_1>>>>,
-        mutate_tags_list>;
+    // using extra_mutated_tags = tmpl::list_difference<
+    //     tmpl::filter<TagList,
+    //                  tmpl::bind<tmpl::found, Subitems<tmpl::_1>,
+    //                             tmpl::pin<tmpl::bind<
+    //                                 tmpl::list_contains,
+    //                                 tmpl::pin<mutate_tags_list>, tmpl::_1>>>>,
+    //     mutate_tags_list>;
+    using extra_mutated_tags = tmpl::list<>;
     // Extract the subtags inside the MutateTags and reset compute items
     // depending on those too.
     using full_mutated_items =
