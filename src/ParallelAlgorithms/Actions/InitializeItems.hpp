@@ -56,12 +56,12 @@ struct InitializeItems {
             typename ArrayIndex, typename ActionList,
             typename ParallelComponent>
   static Parallel::iterable_action_return_t apply(
-      db::DataBox<DbTagsList>& /*box*/,
+      db::DataBox<DbTagsList>& box,
       const tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
       const Parallel::GlobalCache<Metavariables>& /*cache*/,
       const ArrayIndex& /*array_index*/, ActionList /*meta*/,
       const ParallelComponent* const /*meta*/) {
-    // EXPAND_PACK_LEFT_TO_RIGHT(db::mutate_apply<Mutators>(make_not_null(&box)));
+    EXPAND_PACK_LEFT_TO_RIGHT(db::mutate_apply<Mutators>(make_not_null(&box)));
     return {Parallel::AlgorithmExecution::Continue, std::nullopt};
   }
 };
