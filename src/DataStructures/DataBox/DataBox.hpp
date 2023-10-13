@@ -303,7 +303,7 @@ class DataBox<tmpl::list<Tags...>> : private detail::Item<Tags>... {
   void pup(PUP::er& p) {
     // We do not send subitems for both simple items and compute items since
     // they can be reconstructed very cheaply.
-    pup_impl(p, mutable_item_creation_tags{}, immutable_item_creation_tags{});
+    // pup_impl(p, mutable_item_creation_tags{}, immutable_item_creation_tags{});
   }
 
   template <typename... AddMutableItemTags, typename AddImmutableItemTagsList,
