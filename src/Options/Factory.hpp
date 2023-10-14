@@ -91,16 +91,6 @@ template <typename T>
 struct is_factory_creatable
     : std::bool_constant<get_factory_creatable_or_default_v<T, true>> {};
 
-void call_append_context(Option& derived_opts, const std::string& pretty_name);
-
-std::string get_id(Option& derived_opts, const YAML::Node& node,
-                   const std::string& help_derived_result);
-
-std::string duplicate_factory_id(const std::string& id);
-
-void unknown_id(const Option& derived_opts, const std::string& id,
-                const std::string& help_derived_result);
-
 template <typename BaseClass, typename Metavariables>
 std::unique_ptr<BaseClass> create(const Option& options) {
   using all_creatable_classes =
@@ -113,22 +103,35 @@ std::unique_ptr<BaseClass> create(const Option& options) {
 
   const auto& node = options.node();
   Option derived_opts(options.context());
-  const std::string& pretty_name = pretty_type::name<BaseClass>();
-  // derived_opts.append_context("While operating factory for " +
-  //                             pretty_type::name<BaseClass>());
-  call_append_context(derived_opts, pretty_name);
-
-  const std::string help_derived_result = help_derived<creatable_classes>();
-
-  const std::string id = get_id(derived_opts, node, help_derived_result);
+  derived_opts.append_context("While operating factory for " +
+                              pretty_type::name<BaseClass>());
+  std::string id;
+  if (node.IsScalar()) {
+    id = node.as<std::string>();
+  } else if (node.IsMap()) {
+    if (node.size() != 1) {
+      PARSE_ERROR(derived_opts.context(),
+                  "Expected a single class to create, got "
+                  << node.size() << ":\n" << node);
+    }
+    id = node.begin()->first.as<std::string>();
+    derived_opts.set_node(node.begin()->second);
+  } else if (node.IsNull()) {
+    PARSE_ERROR(derived_opts.context(),
+                "Expected a class to create:\n"
+                << help_derived<creatable_classes>());
+  } else {
+    PARSE_ERROR(derived_opts.context(),
+                "Expected a class or a class with options, got:\n"
+                << node);
+  }
 
   std::unique_ptr<BaseClass> result;
   tmpl::for_each<creatable_classes>(
       [&id, &derived_opts, &result](auto derived_v) {
         using Derived = tmpl::type_from<decltype(derived_v)>;
         if (pretty_type::name<Derived>() == id) {
-          // ASSERT(result == nullptr, "Duplicate factory id: " << id);
-          ASSERT(result == nullptr, duplicate_factory_id(id));
+          ASSERT(result == nullptr, "Duplicate factory id: " << id);
           result = std::make_unique<Derived>(
               derived_opts.parse_as<Derived, Metavariables>());
         }
@@ -136,10 +139,9 @@ std::unique_ptr<BaseClass> create(const Option& options) {
   if (result != nullptr) {
     return result;
   }
-  // PARSE_ERROR(derived_opts.context(),
-  //             "Unknown Id '" << id << "'\n"
-  //             << help_derived_result);
-  unknown_id(derived_opts, id, help_derived_result);
+  PARSE_ERROR(derived_opts.context(),
+              "Unknown Id '" << id << "'\n"
+              << help_derived<creatable_classes>());
 }
 }  // namespace Factory_detail
 
