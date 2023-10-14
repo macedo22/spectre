@@ -50,37 +50,37 @@ class er;
 
 class TimescaleTuner {
  public:
-  static constexpr Options::String help{};
+  Options::String help;
   struct InitialTimescales {
     using type = std::variant<double, std::vector<double>>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   struct MinTimescale {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   struct MaxTimescale {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   struct DecreaseThreshold {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   struct IncreaseThreshold {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   struct IncreaseFactor {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   struct DecreaseFactor {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   using options = tmpl::list<InitialTimescales, MaxTimescale, MinTimescale,

@@ -76,15 +76,15 @@ class MonotonicityPreserving5Prim : public Reconstructor {
 
   struct Alpha {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   struct Epsilon {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   using options = tmpl::list<Alpha, Epsilon>;
-  static constexpr Options::String help{};
+  Options::String help;
 
   MonotonicityPreserving5Prim() = default;
   MonotonicityPreserving5Prim(MonotonicityPreserving5Prim&&) = default;

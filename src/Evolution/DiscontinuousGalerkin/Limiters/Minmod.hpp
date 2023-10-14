@@ -158,7 +158,7 @@ class Minmod<VolumeDim, tmpl::list<Tags...>> {
   /// two points per dimension, the recommended type is `LambdaPiN`.
   struct Type {
     using type = MinmodType;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   /// \brief The TVB constant
   ///
@@ -167,7 +167,7 @@ class Minmod<VolumeDim, tmpl::list<Tags...>> {
   struct TvbConstant {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static constexpr Options::String help{};
+    Options::String help;
   };
   /// \brief Turn the limiter off
   ///
@@ -177,10 +177,10 @@ class Minmod<VolumeDim, tmpl::list<Tags...>> {
   struct DisableForDebugging {
     using type = bool;
     static type suggested_value() { return false; }
-    static constexpr Options::String help{};
+    Options::String help;
   };
   using options = tmpl::list<Type, TvbConstant, DisableForDebugging>;
-  static constexpr Options::String help{};
+  Options::String help;
 
   /// \brief Constuct a Minmod slope limiter
   ///

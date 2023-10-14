@@ -60,24 +60,24 @@ class SphericalTorus {
 
   struct RadialRange {
     using type = std::array<double, 2>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   struct MinPolarAngle {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 0.5 * M_PI; }
   };
 
   struct FractionOfTorus {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 1.0; }
   };
 
-  static constexpr Options::String help{};
+  Options::String help;
 
   using options = tmpl::list<RadialRange, MinPolarAngle, FractionOfTorus>;
 

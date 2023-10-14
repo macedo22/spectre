@@ -25,7 +25,7 @@ namespace intrp {
 class CubicSpanInterpolator : public SpanInterpolator {
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help{};
+  Options::String help;
 
   CubicSpanInterpolator() = default;
   CubicSpanInterpolator(const CubicSpanInterpolator&) = default;

@@ -19,7 +19,7 @@ namespace OptionTags {
 template <size_t Dim>
 struct ConstitutiveRelation : db::SimpleTag {
   static std::string name() { return "Material"; }
-  static constexpr Options::String help{};
+  Options::String help;
   using type =
       std::unique_ptr<ConstitutiveRelations::ConstitutiveRelation<Dim>>;
 };

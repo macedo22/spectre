@@ -57,22 +57,22 @@ namespace OptionHolders {
 struct Sphere {
   struct LMax {
     using type = size_t;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   struct Center {
     using type = std::array<double, 3>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   struct Radius {
     using type = std::variant<double, std::vector<double>>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   struct AngularOrdering {
     using type = intrp::AngularOrdering;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   using options = tmpl::list<LMax, Center, Radius, AngularOrdering>;
-  static constexpr Options::String help{};
+  Options::String help;
   Sphere(const size_t l_max_in, const std::array<double, 3> center_in,
          const typename Radius::type& radius_in,
          intrp::AngularOrdering angular_ordering_in,
@@ -98,7 +98,7 @@ namespace OptionTags {
 template <typename InterpolationTargetTag>
 struct Sphere {
   using type = OptionHolders::Sphere;
-  static constexpr Options::String help{};
+  Options::String help;
   static std::string name() {
     return pretty_type::name<InterpolationTargetTag>();
   }

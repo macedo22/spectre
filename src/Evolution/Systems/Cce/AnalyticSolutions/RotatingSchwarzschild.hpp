@@ -37,23 +37,23 @@ namespace Cce::Solutions {
 struct RotatingSchwarzschild : public SphericalMetricData {
   struct ExtractionRadius {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static type lower_bound() { return 0.0; }
   };
   struct Mass {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static type lower_bound() { return 0.0; }
   };
   struct Frequency {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static type lower_bound() { return 0.0; }
   };
 
   using options = tmpl::list<ExtractionRadius, Mass, Frequency>;
 
-  static constexpr Options::String help{};
+  Options::String help;
 
   WRAPPED_PUPable_decl_template(RotatingSchwarzschild);  // NOLINT
 

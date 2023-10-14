@@ -42,11 +42,11 @@ class Controller {
  public:
   struct UpdateFraction {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   using options = tmpl::list<UpdateFraction>;
-  static constexpr Options::String help{};
+  Options::String help;
 
   Controller(const double update_fraction)
       : update_fraction_(update_fraction) {}

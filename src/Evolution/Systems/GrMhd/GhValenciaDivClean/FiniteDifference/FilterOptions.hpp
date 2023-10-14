@@ -26,11 +26,11 @@ struct FilterOptions {
   /// Must be positive and less than 1.
   struct SpacetimeDissipation {
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   using options = tmpl::list<SpacetimeDissipation>;
 
-  static constexpr Options::String help{};
+  Options::String help;
 
   FilterOptions() = default;
   explicit FilterOptions(std::optional<double> in_spacetime_dissipation,

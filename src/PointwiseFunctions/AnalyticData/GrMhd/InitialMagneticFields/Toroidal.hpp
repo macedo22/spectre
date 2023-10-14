@@ -49,25 +49,25 @@ class Toroidal : public InitialMagneticField {
  public:
   struct PressureExponent {
     using type = size_t;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   struct CutoffPressure {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static type lower_bound() { return 0.0; }
   };
 
   struct VectorPotentialAmplitude {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static type lower_bound() { return 0.0; }
   };
 
   using options =
       tmpl::list<PressureExponent, CutoffPressure, VectorPotentialAmplitude>;
 
-  static constexpr Options::String help{};
+  Options::String help;
 
   Toroidal() = default;
   Toroidal(const Toroidal& /*rhs*/) = default;

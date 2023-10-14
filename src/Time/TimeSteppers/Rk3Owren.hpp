@@ -39,7 +39,7 @@ namespace TimeSteppers {
 class Rk3Owren : public RungeKutta {
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help{};
+  Options::String help;
 
   Rk3Owren() = default;
   Rk3Owren(const Rk3Owren&) = default;

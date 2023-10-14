@@ -69,14 +69,14 @@ class FixToAtmosphere {
   struct DensityOfAtmosphere {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static constexpr Options::String help{};
+    Options::String help;
   };
   /// \brief Rest mass density at which to impose the atmosphere. Should be
   /// greater than or equal to the density of the atmosphere.
   struct DensityCutoff {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static constexpr Options::String help{};
+    Options::String help;
   };
   /// \brief For densities between DensityOfAtmosphere and
   /// TransitionDensityCutoff the velocity is transitioned away from atmosphere
@@ -86,7 +86,7 @@ class FixToAtmosphere {
   struct TransitionDensityCutoff {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static constexpr Options::String help{};
+    Options::String help;
   };
   /// \brief The maximum magnitude of the velocity when the density is below
   /// `TransitionDensityCutoff`
@@ -94,13 +94,13 @@ class FixToAtmosphere {
     using type = double;
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 1.0; }
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   using options =
       tmpl::list<DensityOfAtmosphere, DensityCutoff, TransitionDensityCutoff,
                  MaxVelocityMagnitude>;
-  static constexpr Options::String help{};
+  Options::String help;
 
   FixToAtmosphere(double density_of_atmosphere, double density_cutoff,
                   double transition_density_cutoff,

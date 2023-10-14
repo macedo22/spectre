@@ -196,18 +196,18 @@ class MagnetizedTovStar : public virtual evolution::initial_data::InitialData,
  public:
   struct PressureExponent {
     using type = size_t;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   struct VectorPotentialAmplitude {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static type lower_bound() { return 0.0; }
   };
 
   struct CutoffPressureFraction {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 1.0; }
   };
@@ -216,7 +216,7 @@ class MagnetizedTovStar : public virtual evolution::initial_data::InitialData,
       tmpl::push_back<tov_star::options, PressureExponent,
                       CutoffPressureFraction, VectorPotentialAmplitude>;
 
-  static constexpr Options::String help{};
+  Options::String help;
 
   static constexpr size_t volume_dim = 3_st;
 

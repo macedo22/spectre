@@ -39,7 +39,7 @@ namespace TimeSteppers {
 class Rk3HesthavenSsp : public TimeStepper {
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help{};
+  Options::String help;
 
   Rk3HesthavenSsp() = default;
   Rk3HesthavenSsp(const Rk3HesthavenSsp&) = default;

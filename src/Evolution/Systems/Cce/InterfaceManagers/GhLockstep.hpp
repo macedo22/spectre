@@ -38,7 +38,7 @@ class GhLockstep : public GhInterfaceManager {
  public:
   using GhInterfaceManager::gh_variables;
 
-  static constexpr Options::String help{};
+  Options::String help;
 
   using options = tmpl::list<>;
 

@@ -41,17 +41,17 @@ class ConstantM1 : public MarkAsAnalyticSolution {
   /// The mean flow velocity.
   struct MeanVelocity {
     using type = std::array<double, 3>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   /// The radiation comoving energy density
   struct ComovingEnergyDensity {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   using options = tmpl::list<MeanVelocity, ComovingEnergyDensity>;
-  static constexpr Options::String help{};
+  Options::String help;
 
   ConstantM1() = default;
   ConstantM1(const ConstantM1& /*rhs*/) = delete;

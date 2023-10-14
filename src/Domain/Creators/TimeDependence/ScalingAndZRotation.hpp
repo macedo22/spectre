@@ -92,39 +92,39 @@ class ScalingAndZRotation final : public TimeDependence<MeshDim> {
   /// \brief The initial time of the function of time.
   struct InitialTime {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   /// \brief The \f$x\f$-, \f$y\f$-, and \f$z\f$-velocity.
   struct AngularVelocity {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   /// \brief The outer boundary or pivot point of the
   /// `domain::CoordinateMaps::TimeDependent::CubicScale` map
   struct OuterBoundary {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   /// \brief The initial values of the expansion factors.
   struct InitialExpansion {
     using type = std::array<double, 2>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   /// \brief The velocity of the expansion factors.
   struct Velocity {
     using type = std::array<double, 2>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   /// \brief The acceleration of the expansion factors.
   struct Acceleration {
     using type = std::array<double, 2>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   /// \brief Whether to use linear scaling or cubic scaling.
   struct UseLinearScaling {
     using type = bool;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   using GridToInertialMap = detail::generate_coordinate_map_t<
@@ -145,7 +145,7 @@ class ScalingAndZRotation final : public TimeDependence<MeshDim> {
       tmpl::list<InitialTime, AngularVelocity, OuterBoundary, UseLinearScaling,
                  InitialExpansion, Velocity, Acceleration>;
 
-  static constexpr Options::String help{};
+  Options::String help;
 
   ScalingAndZRotation() = default;
   ~ScalingAndZRotation() override = default;

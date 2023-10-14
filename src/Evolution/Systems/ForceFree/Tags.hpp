@@ -142,7 +142,7 @@ namespace OptionTags {
  */
 struct ForceFreeGroup {
   static std::string name() { return "ForceFree"; }
-  static constexpr Options::String help{};
+  Options::String help;
   using group = evolution::OptionTags::SystemGroup;
 };
 
@@ -152,7 +152,7 @@ struct ForceFreeGroup {
  */
 struct ConstraintDampingGroup {
   static std::string name() { return "ConstraintDamping"; }
-  static constexpr Options::String help{};
+  Options::String help;
   using group = ForceFreeGroup;
 };
 
@@ -163,7 +163,7 @@ struct ConstraintDampingGroup {
 struct KappaPsi {
   static std::string name() { return "KappaPsi"; }
   using type = double;
-  static constexpr Options::String help{};
+  Options::String help;
   using group = ConstraintDampingGroup;
 };
 
@@ -174,7 +174,7 @@ struct KappaPsi {
 struct KappaPhi {
   static std::string name() { return "KappaPhi"; }
   using type = double;
-  static constexpr Options::String help{};
+  Options::String help;
   using group = ConstraintDampingGroup;
 };
 
@@ -184,7 +184,7 @@ struct KappaPhi {
  */
 struct ForceFreeCurrentGroup {
   static std::string name() { return "ForceFreeCurrent"; }
-  static constexpr Options::String help{};
+  Options::String help;
   using group = ForceFreeGroup;
 };
 
@@ -196,7 +196,7 @@ struct ForceFreeCurrentGroup {
 struct ParallelConductivity {
   static std::string name() { return "ParallelConductivity"; }
   using type = double;
-  static constexpr Options::String help{};
+  Options::String help;
   using group = ForceFreeCurrentGroup;
 };
 

@@ -41,21 +41,21 @@ namespace Solutions {
 struct TeukolskyWave : public SphericalMetricData {
   struct ExtractionRadius {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static type lower_bound() { return 0.0; }
   };
   struct Amplitude {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static type lower_bound() { return 0.0; }
   };
   struct Duration {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static type lower_bound() { return 0.0; }
   };
 
-  static constexpr Options::String help{};
+  Options::String help;
 
   using options = tmpl::list<ExtractionRadius, Amplitude, Duration>;
 

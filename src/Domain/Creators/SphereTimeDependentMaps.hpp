@@ -37,17 +37,17 @@ struct KerrSchildFromBoyerLindquist {
   /// \brief The mass of the Kerr black hole.
   struct Mass {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   /// \brief The dimensionless spin of the Kerr black hole.
   struct Spin {
     using type = std::array<double, 3>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   using options = tmpl::list<Mass, Spin>;
 
-  static constexpr Options::String help{};
+  Options::String help;
 
   double mass{std::numeric_limits<double>::signaling_NaN()};
   std::array<double, 3> spin{std::numeric_limits<double>::signaling_NaN(),
@@ -95,29 +95,29 @@ struct TimeDependentMapOptions {
   /// \brief The initial time of the functions of time.
   struct InitialTime {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   struct SizeMap {
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   struct SizeMapInitialValues {
     static std::string name() { return "InitialValues"; }
     using type = Options::Auto<std::array<double, 3>>;
-    static constexpr Options::String help{};
+    Options::String help;
     using group = SizeMap;
   };
 
   struct ShapeMapOptions {
     static std::string name() { return "ShapeMap"; }
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   struct ShapeMapLMax {
     static std::string name() { return "LMax"; }
     using type = size_t;
-    static constexpr Options::String help{};
+    Options::String help;
     using group = ShapeMapOptions;
   };
 
@@ -125,13 +125,13 @@ struct TimeDependentMapOptions {
     static std::string name() { return "InitialValues"; }
     using type =
         Options::Auto<std::variant<KerrSchildFromBoyerLindquist>, Spherical>;
-    static constexpr Options::String help{};
+    Options::String help;
     using group = ShapeMapOptions;
   };
 
   using options = tmpl::list<InitialTime, SizeMapInitialValues, ShapeMapLMax,
                              ShapeMapInitialValues>;
-  static constexpr Options::String help{};
+  Options::String help;
 
   TimeDependentMapOptions() = default;
 

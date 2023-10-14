@@ -31,7 +31,7 @@ class PreventRapidIncrease : public StepChooser<StepChooserUse> {
   WRAPPED_PUPable_decl_template(PreventRapidIncrease);  // NOLINT
   /// \endcond
 
-  static constexpr Options::String help{};
+  Options::String help;
   using options = tmpl::list<>;
 
   using argument_tags = tmpl::list<::Tags::HistoryEvolvedVariables<>>;

@@ -70,24 +70,24 @@ class TruncationError : public Criterion {
  public:
   struct VariablesToMonitor {
     using type = std::vector<std::string>;
-    static constexpr Options::String help{};
+    Options::String help;
     static size_t lower_bound_on_size() { return 1; }
   };
   struct AbsoluteTargetTruncationError {
     static std::string name() { return "AbsoluteTarget"; }
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   struct RelativeTargetTruncationError {
     static std::string name() { return "RelativeTarget"; }
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   using options = tmpl::list<VariablesToMonitor, AbsoluteTargetTruncationError,
                              RelativeTargetTruncationError>;
 
-  static constexpr Options::String help{};
+  Options::String help;
 
   TruncationError() = default;
 

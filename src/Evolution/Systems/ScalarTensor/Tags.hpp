@@ -51,7 +51,7 @@ namespace OptionTags {
 struct ScalarMass {
   static std::string name() { return "ScalarMass"; }
   using type = double;
-  static constexpr Options::String help{};
+  Options::String help;
 };
 }  // namespace OptionTags
 

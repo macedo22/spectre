@@ -44,12 +44,12 @@ class ObserveTimeStep : public Event {
   /// The name of the subfile inside the HDF5 file
   struct SubfileName {
     using type = std::string;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   struct PrintTimeToTerminal {
     using type = bool;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   /// \cond
@@ -59,7 +59,7 @@ class ObserveTimeStep : public Event {
   /// \endcond
 
   using options = tmpl::list<SubfileName, PrintTimeToTerminal>;
-  static constexpr Options::String help{};
+  Options::String help;
 
   ObserveTimeStep() = default;
   explicit ObserveTimeStep(const std::string& subfile_name,

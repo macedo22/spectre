@@ -187,39 +187,39 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
 
   struct CenterA {
     using type = std::array<double, 3>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   struct CenterB {
     using type = std::array<double, 3>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   struct RadiusA {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   struct RadiusB {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   struct IncludeInnerSphereA {
     using type = bool;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   struct IncludeInnerSphereB {
     using type = bool;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   struct IncludeOuterSphere {
     using type = bool;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   struct OuterRadius {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   struct UseEquiangularMap {
     using type = bool;
-    static constexpr Options::String help{};
+    Options::String help;
     static bool suggested_value() { return false; }
   };
 
@@ -228,14 +228,14 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
         std::variant<size_t, std::array<size_t, 3>,
                      std::vector<std::array<size_t, 3>>,
                      std::unordered_map<std::string, std::array<size_t, 3>>>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   struct InitialGridPoints {
     using type =
         std::variant<size_t, std::array<size_t, 3>,
                      std::vector<std::array<size_t, 3>>,
                      std::unordered_map<std::string, std::array<size_t, 3>>>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   struct BoundaryConditions {
@@ -244,7 +244,7 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
   template <typename BoundaryConditionsBase>
   struct InnerBoundaryCondition {
     static std::string name() { return "InnerBoundary"; }
-    static constexpr Options::String help{};
+    Options::String help;
     using type = std::unique_ptr<BoundaryConditionsBase>;
     using group = BoundaryConditions;
   };
@@ -252,7 +252,7 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
   template <typename BoundaryConditionsBase>
   struct OuterBoundaryCondition {
     static std::string name() { return "OuterBoundary"; }
-    static constexpr Options::String help{};
+    Options::String help;
     using type = std::unique_ptr<BoundaryConditionsBase>;
     using group = BoundaryConditions;
   };
@@ -260,7 +260,7 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
   struct TimeDependentMaps {
     using type =
         Options::Auto<bco::TimeDependentMapOptions, Options::AutoLabel::None>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   using time_independent_options =
@@ -288,7 +288,7 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
                   typename Metavariables::system>>>,
       basic_options<Metavariables>>;
 
-  static constexpr Options::String help{};
+  Options::String help;
 
   CylindricalBinaryCompactObject(
       std::array<double, 3> center_A, std::array<double, 3> center_B,

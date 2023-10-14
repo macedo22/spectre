@@ -168,20 +168,20 @@ class Gmres final : public PreconditionedLinearSolver<Preconditioner,
 
   struct ConvergenceCriteria {
     using type = Convergence::Criteria;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   struct Restart {
     using type = Options::Auto<size_t, Options::AutoLabel::None>;
-    static constexpr Options::String help{};
+    Options::String help;
     static type suggested_value() { return {}; }
   };
   struct Verbosity {
     using type = ::Verbosity;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
  public:
-  static constexpr Options::String help{};
+  Options::String help;
   using options = tmpl::flatten<tmpl::list<
       ConvergenceCriteria, Verbosity, Restart,
       tmpl::conditional_t<std::is_same_v<Preconditioner, NoPreconditioner>,

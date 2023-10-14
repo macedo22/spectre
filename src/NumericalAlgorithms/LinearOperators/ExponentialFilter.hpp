@@ -63,7 +63,7 @@ class Exponential {
   /// rescaled by.
   struct Alpha {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static type lower_bound() { return 0.0; }
   };
 
@@ -76,24 +76,24 @@ class Exponential {
    */
   struct HalfPower {
     using type = unsigned;
-    static constexpr Options::String help{};
+    Options::String help;
     static type lower_bound() { return 1; }
   };
 
   /// \brief Turn the filter off
   struct Enable {
     using type = bool;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   struct BlocksToFilter {
     using type =
         Options::Auto<std::vector<std::string>, Options::AutoLabel::All>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   using options = tmpl::list<Alpha, HalfPower, Enable, BlocksToFilter>;
-  static constexpr Options::String help{};
+  Options::String help;
   static std::string name() {
     return "ExpFilter" + std::to_string(FilterIndex);
   }

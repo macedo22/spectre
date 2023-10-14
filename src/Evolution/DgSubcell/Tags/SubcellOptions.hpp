@@ -19,7 +19,7 @@ namespace OptionTags {
 struct SubcellOptions {
   static std::string name() { return "Subcell"; }
   using type = evolution::dg::subcell::SubcellOptions;
-  static constexpr Options::String help{};
+  Options::String help;
   using group = ::dg::OptionTags::DiscontinuousGalerkinGroup;
 };
 }  // namespace OptionTags

@@ -79,7 +79,7 @@ class NumericInitialData : public evolution::initial_data::InitialData {
     using tag = Tag;
     static std::string name() { return db::tag_name<Tag>(); }
     using type = std::string;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   // These are the sets of variables that we support loading from volume data
@@ -91,7 +91,7 @@ class NumericInitialData : public evolution::initial_data::InitialData {
                  gr::Tags::ExtrinsicCurvature<DataVector, 3>>;
   struct AdmVars : tuples::tagged_tuple_from_typelist<
                        db::wrap_tags_in<VarName, adm_vars>> {
-    static constexpr Options::String help{};
+    Options::String help;
     using options = tags_list;
     using TaggedTuple::TaggedTuple;
   };
@@ -101,7 +101,7 @@ class NumericInitialData : public evolution::initial_data::InitialData {
                              Tags::Pi<DataVector, 3>>;
   struct GhVars
       : tuples::tagged_tuple_from_typelist<db::wrap_tags_in<VarName, gh_vars>> {
-    static constexpr Options::String help{};
+    Options::String help;
     using options = tags_list;
     using TaggedTuple::TaggedTuple;
   };
@@ -116,7 +116,7 @@ class NumericInitialData : public evolution::initial_data::InitialData {
     // The user can supply any of these choices of variables in the input
     // file
     using type = std::variant<AdmVars, GhVars>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   using options =
@@ -125,7 +125,7 @@ class NumericInitialData : public evolution::initial_data::InitialData {
                  importers::OptionTags::ObservationValue,
                  importers::OptionTags::EnableInterpolation, Variables>;
 
-  static constexpr Options::String help{};
+  Options::String help;
 
   NumericInitialData() = default;
   NumericInitialData(const NumericInitialData& rhs) = default;

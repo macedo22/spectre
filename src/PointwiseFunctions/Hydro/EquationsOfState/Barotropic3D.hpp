@@ -50,13 +50,13 @@ class Barotropic3D : public EquationOfState<ColdEquilEos::is_relativistic, 3> {
   static std::string name() {
     return "Barotropic3D(" + pretty_type::name<ColdEquilEos>() + ")";
   }
-  static constexpr Options::String help{};
+  Options::String help;
   struct UnderlyingEos {
     using type = ColdEquilEos;
     static std::string name() {
       return pretty_type::short_name<ColdEquilEos>();
     }
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   using options = tmpl::list<UnderlyingEos>;

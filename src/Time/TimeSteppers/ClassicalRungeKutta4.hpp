@@ -49,7 +49,7 @@ namespace TimeSteppers {
 class ClassicalRungeKutta4 : public RungeKutta {
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help{};
+  Options::String help;
 
   ClassicalRungeKutta4() = default;
   ClassicalRungeKutta4(const ClassicalRungeKutta4&) = default;

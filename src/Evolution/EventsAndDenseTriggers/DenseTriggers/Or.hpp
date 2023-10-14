@@ -45,7 +45,7 @@ class Or : public DenseTrigger {
   WRAPPED_PUPable_decl_template(Or);  // NOLINT
   /// \endcond
 
-  static constexpr Options::String help{};
+  Options::String help;
 
   explicit Or(std::vector<std::unique_ptr<DenseTrigger>> triggers);
 

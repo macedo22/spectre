@@ -21,6 +21,6 @@ namespace SpatialDiscretization::OptionTags {
  */
 struct SpatialDiscretizationGroup {
   static std::string name() { return "SpatialDiscretization"; }
-  static constexpr Options::String help{};
+  Options::String help;
 };
 }  // namespace SpatialDiscretization::OptionTags

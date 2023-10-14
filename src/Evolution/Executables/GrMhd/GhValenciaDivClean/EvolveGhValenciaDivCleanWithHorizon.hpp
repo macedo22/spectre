@@ -78,7 +78,7 @@ struct EvolutionMetavars : public GhValenciaDivCleanTemplateBase<
   using initialize_initial_data_dependent_quantities_actions =
       typename defaults::initialize_initial_data_dependent_quantities_actions;
 
-  static constexpr Options::String help{};
+  Options::String help;
 
   struct AhA : tt::ConformsTo<intrp::protocols::InterpolationTargetTag> {
     using temporal_id = ::Tags::Time;

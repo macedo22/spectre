@@ -35,7 +35,7 @@ class Random : public Criterion {
   /// The fraction of the time random refinement does changes the grid
   struct ChangeRefinementFraction {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static double lower_bound() { return 0.0; }
     static double upper_bound() { return 1.0; }
   };
@@ -43,13 +43,13 @@ class Random : public Criterion {
   /// The maximum allowed refinement level
   struct MaximumRefinementLevel {
     using type = size_t;
-    static constexpr Options::String help{};
+    Options::String help;
     static size_t upper_bound() { return ElementId<3>::max_refinement_level; }
   };
 
   using options = tmpl::list<ChangeRefinementFraction, MaximumRefinementLevel>;
 
-  static constexpr Options::String help{};
+  Options::String help;
 
   Random() = default;
 

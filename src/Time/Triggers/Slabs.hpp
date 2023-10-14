@@ -36,7 +36,7 @@ class Slabs : public Trigger {
   WRAPPED_PUPable_decl_template(Slabs);  // NOLINT
   /// \endcond
 
-  static constexpr Options::String help{};
+  Options::String help;
 
   explicit Slabs(std::unique_ptr<TimeSequence<uint64_t>> slabs)
       : slabs_(std::move(slabs)) {}

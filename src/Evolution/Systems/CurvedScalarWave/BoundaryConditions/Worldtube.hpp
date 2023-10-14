@@ -56,7 +56,7 @@ template <size_t Dim>
 class Worldtube final : public BoundaryConditions::BoundaryCondition<Dim> {
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help{};
+  Options::String help;
 
   Worldtube() = default;
   explicit Worldtube(CkMigrateMessage* msg);

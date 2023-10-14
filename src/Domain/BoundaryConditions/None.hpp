@@ -48,7 +48,7 @@ template <typename SystemBoundaryConditionBaseClass>
 struct None final : public SystemBoundaryConditionBaseClass, public MarkAsNone {
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help{};
+  Options::String help;
   static std::string name() { return "None"; }
 
   None() = default;

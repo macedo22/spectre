@@ -22,7 +22,7 @@ namespace Punctures::Solutions {
 class Flatness : public elliptic::analytic_data::AnalyticSolution {
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help{};
+  Options::String help;
 
   Flatness() = default;
   Flatness(const Flatness&) = default;

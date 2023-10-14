@@ -119,25 +119,25 @@ class HalfSpaceMirror : public elliptic::analytic_data::AnalyticSolution {
 
   struct BeamWidth {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static type lower_bound() { return 0.0; }
   };
 
   struct Material {
     using type = constitutive_relation_type;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   struct IntegrationIntervals {
     using type = size_t;
-    static constexpr Options::String help{};
+    Options::String help;
     static type lower_bound() { return 1; }
     static type suggested_value() { return 350; }
   };
 
   struct AbsoluteTolerance {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static type lower_bound() { return 0.; }
     static type suggested_value() { return 1e-12; }
   };
@@ -153,7 +153,7 @@ class HalfSpaceMirror : public elliptic::analytic_data::AnalyticSolution {
 
   using options = tmpl::list<BeamWidth, Material, IntegrationIntervals,
                              AbsoluteTolerance, RelativeTolerance>;
-  static constexpr Options::String help{};
+  Options::String help;
 
   HalfSpaceMirror() = default;
   HalfSpaceMirror(const HalfSpaceMirror&) = default;

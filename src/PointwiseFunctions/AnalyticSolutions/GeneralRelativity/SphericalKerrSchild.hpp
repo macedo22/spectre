@@ -390,19 +390,19 @@ class SphericalKerrSchild : public AnalyticSolution<3_st>,
  public:
   struct Mass {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static type lower_bound() { return 0.; }
   };
   struct Spin {
     using type = std::array<double, volume_dim>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   struct Center {
     using type = std::array<double, volume_dim>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   using options = tmpl::list<Mass, Spin, Center>;
-  static constexpr Options::String help{};
+  Options::String help;
 
   template <typename DataType, typename Frame = Frame::Inertial>
   using tags = tmpl::flatten<tmpl::list<

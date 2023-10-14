@@ -60,28 +60,28 @@ class Spectral : public EquationOfState<true, 1> {
 
   struct ReferenceDensity {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static double lower_bound() { return 0.0; }
   };
 
   struct ReferencePressure {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static double lower_bound() { return 0.0; }
   };
 
   struct Coefficients {
     using type = std::vector<double>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   struct UpperDensity {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static double lower_bound() { return 0.0; }
   };
 
-  static constexpr Options::String help{};
+  Options::String help;
 
   using options = tmpl::list<ReferenceDensity, ReferencePressure, Coefficients,
                              UpperDensity>;

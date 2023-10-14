@@ -31,7 +31,7 @@ namespace OptionTags {
  * \brief Groups option tags for InterpolationTargets.
  */
 struct InterpolationTargets {
-  static constexpr Options::String help{};
+  Options::String help;
 };
 
 /*!
@@ -39,14 +39,14 @@ struct InterpolationTargets {
  * \brief Groups option tags for the Interpolator.
  */
 struct Interpolator {
-  static constexpr Options::String help{};
+  Options::String help;
 };
 
 /// Option tag that determines if volume data will be dumped from the
 /// Interpolator upon a failure.
 struct DumpVolumeDataOnFailure {
   using type = bool;
-  static constexpr Options::String help{};
+  Options::String help;
   using group = Interpolator;
 };
 }  // namespace OptionTags

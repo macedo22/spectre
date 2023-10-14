@@ -26,7 +26,7 @@ class HasConverged : public Trigger {
   /// \endcond
 
   using options = tmpl::list<>;
-  static constexpr Options::String help{};
+  Options::String help;
 
   using argument_tags = tmpl::list<Convergence::Tags::HasConverged<Label>>;
 

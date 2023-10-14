@@ -175,40 +175,40 @@ class BondiMichel : public virtual evolution::initial_data::InitialData,
   /// The mass of the black hole.
   struct Mass {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static type lower_bound() { return 0.0; }
   };
 
   /// The radius at which the fluid becomes supersonic.
   struct SonicRadius {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static type lower_bound() { return 0.0; }
   };
 
   /// The rest mass density of the fluid at the sonic radius.
   struct SonicDensity {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static type lower_bound() { return 0.0; }
   };
 
   /// The polytropic exponent for the polytropic fluid.
   struct PolytropicExponent {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static type lower_bound() { return 1.0; }
   };
 
   /// The strength of the radial magnetic field.
   struct MagFieldStrength {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   using options = tmpl::list<Mass, SonicRadius, SonicDensity,
                              PolytropicExponent, MagFieldStrength>;
-  static constexpr Options::String help{};
+  Options::String help;
 
   BondiMichel() = default;
   BondiMichel(const BondiMichel& /*rhs*/) = default;

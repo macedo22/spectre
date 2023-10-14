@@ -53,33 +53,33 @@ class Disk : public DomainCreator<2> {
 
   struct InnerRadius {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   struct OuterRadius {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   struct InitialRefinement {
     using type = size_t;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   struct InitialGridPoints {
     using type = std::array<size_t, 2>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   struct UseEquiangularMap {
     using type = bool;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
   template <typename BoundaryConditionsBase>
   struct BoundaryCondition {
     static std::string name() { return "BoundaryCondition"; }
-    static constexpr Options::String help{};
+    Options::String help;
     using type = std::unique_ptr<BoundaryConditionsBase>;
   };
 
@@ -97,7 +97,7 @@ class Disk : public DomainCreator<2> {
                   typename Metavariables::system>>>,
       basic_options>;
 
-  static constexpr Options::String help{};
+  Options::String help;
 
   Disk(typename InnerRadius::type inner_radius,
        typename OuterRadius::type outer_radius,

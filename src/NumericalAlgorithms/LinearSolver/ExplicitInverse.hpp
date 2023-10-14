@@ -74,7 +74,7 @@ class ExplicitInverse : public LinearSolver<LinearSolverRegistrars> {
 
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help{};
+  Options::String help;
 
   ExplicitInverse() = default;
   ExplicitInverse(const ExplicitInverse& /*rhs*/) = default;

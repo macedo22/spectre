@@ -27,7 +27,7 @@ class Constant : public StepChooser<StepChooserUse> {
   WRAPPED_PUPable_decl_template(Constant);  // NOLINT
   /// \endcond
 
-  static constexpr Options::String help{};
+  Options::String help;
 
   explicit Constant(const double value) : value_(value) {
     ASSERT(value_ > 0., "Requested step magnitude should be positive.");

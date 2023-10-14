@@ -208,22 +208,22 @@ class DampedHarmonic final : public GaugeCondition {
   /// gauge.
   struct SpatialDecayWidth {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   /// The amplitudes for the L1, L2, and S terms, respectively, for the damped
   /// harmonic gauge.
   struct Amplitudes {
     using type = std::array<double, 3>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
   /// The exponents for the L1, L2, and S terms, respectively, for the damped
   /// harmonic gauge.
   struct Exponents {
     using type = std::array<int, 3>;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
-  static constexpr Options::String help{};
+  Options::String help;
 
   using options = tmpl::list<SpatialDecayWidth, Amplitudes, Exponents>;
 

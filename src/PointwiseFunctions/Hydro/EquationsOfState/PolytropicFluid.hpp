@@ -44,17 +44,17 @@ class PolytropicFluid : public EquationOfState<IsRelativistic, 1> {
 
   struct PolytropicConstant {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static double lower_bound() { return 0.0; }
   };
 
   struct PolytropicExponent {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
     static double lower_bound() { return 1.0; }
   };
 
-  static constexpr Options::String help{};
+  Options::String help;
 
   using options = tmpl::list<PolytropicConstant, PolytropicExponent>;
 

@@ -52,10 +52,10 @@ class IdealFluid : public EquationOfState<IsRelativistic, 2> {
 
   struct AdiabaticIndex {
     using type = double;
-    static constexpr Options::String help{};
+    Options::String help;
   };
 
-  static constexpr Options::String help{};
+  Options::String help;
 
   using options = tmpl::list<AdiabaticIndex>;
 

@@ -20,7 +20,7 @@ template <size_t Dim>
 struct Reconstructor {
   using type = std::unique_ptr<fd::Reconstructor<Dim>>;
 
-  static constexpr Options::String help{};
+  Options::String help;
   using group = evolution::dg::subcell::OptionTags::SubcellSolverGroup;
 };
 }  // namespace OptionTags
