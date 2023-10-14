@@ -923,26 +923,6 @@ void Parser<OptionList, Group>::overlay(const YAML::Node& node) {
   });
 }
 
-[[noreturn]] void lower_bound_on_size_error(const Options::Context& context,
-                                            const size_t lower_bound,
-                                            const size_t size,
-                                            const std::string& help);
-
-[[noreturn]] void upper_bound_on_size_error(const Options::Context& context,
-                                            const size_t upper_bound,
-                                            const size_t size,
-                                            const std::string& help);
-
-[[noreturn]] void lower_bound_error(const Options::Context& context,
-                                    const std::string& lower_bound,
-                                    const std::string& t_str,
-                                    const std::string& help);
-
-[[noreturn]] void upper_bound_error(const Options::Context& context,
-                                    const std::string& upper_bound,
-                                    const std::string& t_str,
-                                    const std::string& help);
-
 template <typename OptionList, typename Group>
 template <typename T>
 void Parser<OptionList, Group>::check_lower_bound_on_size(
@@ -951,13 +931,10 @@ void Parser<OptionList, Group>::check_lower_bound_on_size(
     static_assert(std::is_same_v<decltype(T::lower_bound_on_size()), size_t>,
                   "lower_bound_on_size() is not a size_t.");
     if (t.size() < T::lower_bound_on_size()) {
-      // PARSE_ERROR(context, "Value must have at least "
-      //                          << T::lower_bound_on_size() << " entries, but
-      //                          "
-      //                          << t.size() << " were given.\n"
-      //                          << help());
-      lower_bound_on_size_error(context, T::lower_bound_on_size(), t.size(),
-                                help());
+      PARSE_ERROR(context, "Value must have at least "
+                               << T::lower_bound_on_size() << " entries, but "
+                               << t.size() << " were given.\n"
+                               << help());
     }
   }
 }
@@ -970,13 +947,10 @@ void Parser<OptionList, Group>::check_upper_bound_on_size(
     static_assert(std::is_same_v<decltype(T::upper_bound_on_size()), size_t>,
                   "upper_bound_on_size() is not a size_t.");
     if (t.size() > T::upper_bound_on_size()) {
-      // PARSE_ERROR(context, "Value must have at most "
-      //                          << T::upper_bound_on_size() << " entries, but
-      //                          "
-      //                          << t.size() << " were given.\n"
-      //                          << help());
-      upper_bound_on_size_error(context, T::upper_bound_on_size(), t.size(),
-                                help());
+      PARSE_ERROR(context, "Value must have at most "
+                               << T::upper_bound_on_size() << " entries, but "
+                               << t.size() << " were given.\n"
+                               << help());
     }
   }
 }
@@ -991,12 +965,10 @@ inline void Parser<OptionList, Group>::check_lower_bound(
     static_assert(not std::is_same_v<typename T::type, bool>,
                   "Cannot set a lower bound for a bool.");
     if (t < T::lower_bound()) {
-      // PARSE_ERROR(context, "Value " << (MakeString{} << t)
-      //                               << " is below the lower bound of "
-      //                               << (MakeString{} << T::lower_bound())
-      //                               << ".\n" << help());
-      lower_bound_error(context, std::to_string(T::lower_bound()),
-                        std::to_string(t), help());
+      PARSE_ERROR(context, "Value " << (MakeString{} << t)
+                                    << " is below the lower bound of "
+                                    << (MakeString{} << T::lower_bound())
+                                    << ".\n" << help());
     }
   }
 }
@@ -1011,12 +983,10 @@ inline void Parser<OptionList, Group>::check_upper_bound(
     static_assert(not std::is_same_v<typename T::type, bool>,
                   "Cannot set an upper bound for a bool.");
     if (t > T::upper_bound()) {
-      // PARSE_ERROR(context, "Value " << (MakeString{} << t)
-      //                               << " is above the upper bound of "
-      //                               << (MakeString{} << T::upper_bound())
-      //                               << ".\n" << help());
-      upper_bound_error(context, std::to_string(T::upper_bound()),
-                        std::to_string(t), help());
+      PARSE_ERROR(context, "Value " << (MakeString{} << t)
+                                    << " is above the upper bound of "
+                                    << (MakeString{} << T::upper_bound())
+                                    << ".\n" << help());
     }
   }
 }
