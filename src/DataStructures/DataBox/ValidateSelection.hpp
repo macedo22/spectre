@@ -16,6 +16,11 @@
 
 namespace db {
 
+void validate_selection_impl(
+    const Options::Context& context,
+    const std::vector<std::string>& selected_names,
+    const std::unordered_set<std::string>& valid_names);
+
 /*!
  * \brief Validate that the selected names are a subset of the given tags.
  *
@@ -34,16 +39,19 @@ void validate_selection(const std::vector<std::string>& selected_names,
     using tag = tmpl::type_from<std::decay_t<decltype(tag_v)>>;
     valid_names.insert(db::tag_name<tag>());
   });
-  for (const auto& name : selected_names) {
-    if (valid_names.find(name) == valid_names.end()) {
-      PARSE_ERROR(context, "Invalid selection: " << name
-                                                 << ". Possible choices are: "
-                                                 << valid_names << ".");
-    }
-    if (alg::count(selected_names, name) != 1) {
-      PARSE_ERROR(context, name << " specified multiple times");
-    }
-  }
+
+  validate_selection_impl(context, selected_names, valid_names);
+  // for (const auto& name : selected_names) {
+  //   if (valid_names.find(name) == valid_names.end()) {
+  //     PARSE_ERROR(context, "Invalid selection: " << name
+  //                                                << ". Possible choices are:
+  //                                                "
+  //                                                << valid_names << ".");
+  //   }
+  //   if (alg::count(selected_names, name) != 1) {
+  //     PARSE_ERROR(context, name << " specified multiple times");
+  //   }
+  // }
 }
 
 }  // namespace db
