@@ -677,35 +677,11 @@ void Parser<OptionList, Group>::pup(PUP::er& p) {
   }
 }
 
-void doesnt_look_like_options(const Options::Context& context,
-                              const YAML::Node& node, const std::string& help);
-
-void cannot_decide(const Options::Context& context,
-                   const std::string& parsing_help);
-
-void specified_twice(const Options::Context& context, const std::string& name,
-                     const std::string& parsing_help);
-
-std::string duplicate_option_name(const std::string& label);
-
-void option_unused(const Options::Context& context, const std::string& name,
-                   const std::string& parsing_help);
-
-void option_invalid(const Options::Context& context, const std::string& name,
-                    const std::string& parsing_help);
-
-void did_not_specify_option(const Options::Context& context,
-                            const std::vector<std::string>& valid_names,
-                            const std::string& parsing_help);
-
-std::string in_group(const std::string& name);
-
 template <typename OptionList, typename Group>
 void Parser<OptionList, Group>::parse(const YAML::Node& node) {
   if (not(node.IsMap() or node.IsNull())) {
-    // PARSE_ERROR(context_, "'" << node << "' does not look like options.\n"
-    //                           << help_result);
-    doesnt_look_like_options(context_, node, help());
+    PARSE_ERROR(context_, "'" << node << "' does not look like options.\n"
+                              << help());
   }
 
   std::unordered_set<std::string> given_options{};
@@ -713,16 +689,13 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
     given_options.insert(name_and_value.first.as<std::string>());
   }
 
-  const std::string parsing_help_result = parsing_help(node);
-
   alternative_choices_ =
       Options_detail::choose_alternatives<OptionList>(given_options).second;
   if (alg::any_of(alternative_choices_, [](const size_t x) {
         return x == std::numeric_limits<size_t>::max();
       })) {
-    // PARSE_ERROR(context_, "Cannot decide between alternative options.\n"
-    //                           << parsing_help_result);
-    cannot_decide(context_, parsing_help_result);
+    PARSE_ERROR(context_, "Cannot decide between alternative options.\n"
+                              << parsing_help(node));
   }
 
   auto valid_names = call_with_chosen_alternatives([](auto option_list_v) {
@@ -738,10 +711,8 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
     tmpl::for_each<top_level_options_and_groups>([&result](auto opt) {
       using Opt = tmpl::type_from<decltype(opt)>;
       const std::string label = pretty_type::name<Opt>();
-      // ASSERT(alg::find(result, label) == result.end(),
-      //        "Duplicate option name: " << label);
       ASSERT(alg::find(result, label) == result.end(),
-             duplicate_option_name(label));
+             "Duplicate option name: " << label);
       result.push_back(label);
     });
     return result;
@@ -756,30 +727,26 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
 
     // Check for duplicate key
     if (0 != parsed_options_.count(name)) {
-      // PARSE_ERROR(context, "Option '" << name << "' specified twice.\n"
-      //                                 << parsing_help_result);
-      specified_twice(context, name, parsing_help_result);
+      PARSE_ERROR(context, "Option '" << name << "' specified twice.\n"
+                                      << parsing_help(node));
     }
 
     // Check for invalid key
     const auto name_it = alg::find(valid_names, name);
     if (name_it == valid_names.end()) {
-      tmpl::for_each<all_possible_options>(
-          [this, &context, &name, &node, &parsing_help_result](auto tag) {
-            using Tag = tmpl::type_from<decltype(tag)>;
-            if (name == pretty_type::name<Tag>()) {
-              // PARSE_ERROR(context,
-              //             "Option '"
-              //                 << name
-              //                 << "' is unused because of other provided
-              //                 options.\n"
-              //                 << parsing_help_result);
-              option_unused(context, name, parsing_help_result);
-            }
-          });
-      // PARSE_ERROR(context, "Option '" << name << "' is not a valid option.\n"
-      //                                 << parsing_help_result);
-      option_invalid(context, name, parsing_help_result);
+      tmpl::for_each<all_possible_options>([this, &context, &name,
+                                            &node](auto tag) {
+        using Tag = tmpl::type_from<decltype(tag)>;
+        if (name == pretty_type::name<Tag>()) {
+          PARSE_ERROR(context,
+                      "Option '"
+                          << name
+                          << "' is unused because of other provided options.\n"
+                          << parsing_help(node));
+        }
+      });
+      PARSE_ERROR(context, "Option '" << name << "' is not a valid option.\n"
+                                      << parsing_help(node));
     }
 
     parsed_options_.emplace(name, value);
@@ -787,11 +754,9 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
   }
 
   if (not valid_names.empty()) {
-    // PARSE_ERROR(context_, "You did not specify the option"
-    //                           << (valid_names.size() == 1 ? " " : "s ")
-    //                           << (MakeString{} << valid_names) << "\n"
-    //                           << parsing_help_result);
-    did_not_specify_option(context_, valid_names, parsing_help_result);
+    PARSE_ERROR(context_, "You did not specify the option"
+                << (valid_names.size() == 1 ? " " : "s ")
+                << (MakeString{} << valid_names) << "\n" << parsing_help(node));
   }
 
   tmpl::for_each<subgroups>([this](auto subgroup_v) {
@@ -799,9 +764,8 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
     auto& subgroup_parser =
         tuples::get<SubgroupParser<subgroup>>(subgroup_parsers_);
     subgroup_parser.context_ = context_;
-    // subgroup_parser.context_.append("In group " +
-    //                                 pretty_type::name<subgroup>());
-    subgroup_parser.context_.append(in_group(pretty_type::name<subgroup>()));
+    subgroup_parser.context_.append("In group " +
+                                    pretty_type::name<subgroup>());
     subgroup_parser.parse(
         parsed_options_.find(pretty_type::name<subgroup>())->second);
   });
