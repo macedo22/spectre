@@ -826,6 +826,9 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
   }
 }
 
+void not_overlayable(const Options::Context& context, const std::string& name,
+                     const std::string& parsing_help);
+
 template <typename OptionList, typename Group>
 template <typename OverlayOptions>
 void Parser<OptionList, Group>::overlay(const YAML::Node& node) {
@@ -849,9 +852,15 @@ void Parser<OptionList, Group>::overlay(const YAML::Node& node) {
           OverlayOptions,
           Options_detail::find_subgroup<tmpl::_1, tmpl::pin<Group>>>>;
 
+  const std::string parsing_help_result =
+      parsing_help<overlayable_tags_and_subgroups_list>(node);
+
   if (not(node.IsMap() or node.IsNull())) {
-    PARSE_ERROR(context_, "'" << node << "' does not look like options.\n"
-                              << help<overlayable_tags_and_subgroups_list>());
+    // PARSE_ERROR(context_, "'" << node << "' does not look like options.\n"
+    //                           <<
+    //                           help<overlayable_tags_and_subgroups_list>());
+    doesnt_look_like_options(context_, node,
+                             help<overlayable_tags_and_subgroups_list>());
   }
 
   std::unordered_set<std::string> overlaid_options{};
@@ -869,9 +878,11 @@ void Parser<OptionList, Group>::overlay(const YAML::Node& node) {
               (name != pretty_type::name<tmpl::type_from<decltype(opts)>>()) and
               ...);
         })) {
-      PARSE_ERROR(context,
-                  "Option '" << name << "' is not a valid option.\n"
-                  << parsing_help<overlayable_tags_and_subgroups_list>(node));
+      // PARSE_ERROR(context,
+      //             "Option '" << name << "' is not a valid option.\n"
+      //             <<
+      //             parsing_help<overlayable_tags_and_subgroups_list>(node));
+      option_invalid(context, name, parsing_help_result);
     }
 
     if (tmpl::as_pack<overlayable_tags_and_subgroups_list>(
@@ -880,16 +891,20 @@ void Parser<OptionList, Group>::overlay(const YAML::Node& node) {
                        pretty_type::name<tmpl::type_from<decltype(opts)>>()) and
                       ...);
             })) {
-      PARSE_ERROR(context,
-                  "Option '" << name << "' is not overlayable.\n"
-                  << parsing_help<overlayable_tags_and_subgroups_list>(node));
+      // PARSE_ERROR(context,
+      //             "Option '" << name << "' is not overlayable.\n"
+      //             <<
+      //             parsing_help<overlayable_tags_and_subgroups_list>(node));
+      not_overlayable(context, name, parsing_help_result);
     }
 
     // Check for duplicate key
     if (0 != overlaid_options.count(name)) {
-      PARSE_ERROR(context,
-                  "Option '" << name << "' specified twice.\n"
-                  << parsing_help<overlayable_tags_and_subgroups_list>(node));
+      // PARSE_ERROR(context,
+      //             "Option '" << name << "' specified twice.\n"
+      //             <<
+      //             parsing_help<overlayable_tags_and_subgroups_list>(node));
+      specified_twice(context, name, parsing_help_result);
     }
 
     overlaid_options.insert(name);
