@@ -1007,6 +1007,8 @@ std::string Parser<OptionList, Group>::parsing_help(
   return os.str();
 }
 
+[[noreturn]] void parser_error_message(const Options::Context& context);
+
 template <typename OptionList, typename Group>
 [[noreturn]] void Parser<OptionList, Group>::parser_error(
     const YAML::Exception& e) const {
@@ -1016,14 +1018,16 @@ template <typename OptionList, typename Group>
   // Inline the top_level branch of PARSE_ERROR to avoid warning that
   // the other branch would call terminate.  (Parser errors can only
   // be generated at top level.)
-  ERROR(
-      "\n"
-      << context
-      << "Unable to correctly parse the input file because of a syntax error.\n"
-         "This is often due to placing a suboption on the same line as an "
-         "option, e.g.:\nDomainCreator: CreateInterval:\n  IsPeriodicIn: "
-         "[false]\n\nShould be:\nDomainCreator:\n  CreateInterval:\n    "
-         "IsPeriodicIn: [true]\n\nSee an example input file for help.");
+  // ERROR(
+  //     "\n"
+  //     << context
+  //     << "Unable to correctly parse the input file because of a syntax
+  //     error.\n"
+  //        "This is often due to placing a suboption on the same line as an "
+  //        "option, e.g.:\nDomainCreator: CreateInterval:\n  IsPeriodicIn: "
+  //        "[false]\n\nShould be:\nDomainCreator:\n  CreateInterval:\n    "
+  //        "IsPeriodicIn: [true]\n\nSee an example input file for help.");
+  parser_error_message(context);
 }
 
 template <typename OptionList, typename Group>
