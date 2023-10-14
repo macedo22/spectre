@@ -82,6 +82,9 @@ inline void Option::set_node(YAML::Node node) {
   context_.column = node_->Mark().column;
 }
 
+std::string catch_impl(const std::string& yaml_type, const YAML::Node& node,
+                       const bool is_vector_or_array);
+
 template <typename T, typename Metavariables>
 T Option::parse_as() const {
   try {
@@ -110,32 +113,40 @@ T Option::parse_as() const {
     Context error_context = context();
     error_context.line = e.mark.line;
     error_context.column = e.mark.column;
-    std::ostringstream ss;
-    ss << "Failed to convert value to type "
-       << Options_detail::yaml_type<T>::value() << ":";
 
-    const std::string value_text = YAML::Dump(node());
-    if (value_text.find('\n') == std::string::npos) {
-      ss << " " << value_text;
-    } else {
-      // Indent each line of the value by two spaces and start on a new line
-      ss << "\n  ";
-      for (char c : value_text) {
-        ss << c;
-        if (c == '\n') {
-          ss << "  ";
-        }
-      }
-    }
+    const std::string yaml_type = Options_detail::yaml_type<T>::value();
+    // std::ostringstream ss;
+    // ss << "Failed to convert value to type "
+    //    << Options_detail::yaml_type<T>::value() << ":";
 
-    if (tt::is_a_v<std::vector, T> or tt::is_std_array_v<T>) {
-      ss << "\n\nNote: For sequences this can happen because the length of the "
-            "sequence specified\nin the input file is not equal to the length "
-            "expected by the code. Sequences in\nfiles can be denoted either "
-            "as a bracket enclosed list ([foo, bar]) or with each\nentry on a "
-            "separate line, indented and preceeded by a dash (  - foo).";
-    }
-    PARSE_ERROR(error_context, ss.str());
+    // const std::string value_text = YAML::Dump(node());
+    // if (value_text.find('\n') == std::string::npos) {
+    //   ss << " " << value_text;
+    // } else {
+    //   // Indent each line of the value by two spaces and start on a new line
+    //   ss << "\n  ";
+    //   for (char c : value_text) {
+    //     ss << c;
+    //     if (c == '\n') {
+    //       ss << "  ";
+    //     }
+    //   }
+    // }
+
+    // if (tt::is_a_v<std::vector, T> or tt::is_std_array_v<T>) {
+    //   ss << "\n\nNote: For sequences this can happen because the length of
+    //   the "
+    //         "sequence specified\nin the input file is not equal to the length
+    //         " "expected by the code. Sequences in\nfiles can be denoted
+    //         either " "as a bracket enclosed list ([foo, bar]) or with
+    //         each\nentry on a " "separate line, indented and preceeded by a
+    //         dash (  - foo).";
+    // }
+
+    const std::string s = catch_impl(
+        yaml_type, node(), tt::is_a_v<std::vector, T> or tt::is_std_array_v<T>);
+
+    PARSE_ERROR(error_context, s);
   } catch (const Options::detail::propagate_context& e) {
     Context error_context = context();
     // Avoid line numbers in the middle of the trace
