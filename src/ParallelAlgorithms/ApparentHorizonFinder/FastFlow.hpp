@@ -65,83 +65,57 @@ class FastFlow {
 
   struct Flow {
     using type = FlowType;
-    static constexpr Options::String help = {
-        "Flow method: Jacobi, Curvature, or Fast"};
+    static constexpr Options::String help{};
     static type suggested_value() { return FlowType::Fast; }
   };
 
   struct Alpha {
     using type = double;
-    static constexpr Options::String help = {
-        "Alpha parameter in PRD 57, 863 (1998)"};
+    static constexpr Options::String help{};
     static type suggested_value() { return 1.0; }
   };
 
   struct Beta {
     using type = double;
-    static constexpr Options::String help = {
-        "Beta parameter in PRD 57, 863 (1998)"};
+    static constexpr Options::String help{};
     static type suggested_value() { return 0.5; }
   };
 
   struct AbsTol {
     using type = double;
-    static constexpr Options::String help = {
-        "Convergence found if R_{Y_lm} < AbsTol"};
+    static constexpr Options::String help{};
     static type suggested_value() { return 1.e-12; }
   };
 
   struct TruncationTol {
     using type = double;
-    static constexpr Options::String help = {
-        "Convergence found if R_{Y_lm} < TruncationTol*R_{mesh}"};
+    static constexpr Options::String help{};
     static type suggested_value() { return 1.e-2; }
   };
 
   struct DivergenceTol {
     using type = double;
-    static constexpr Options::String help = {
-        "Fraction that residual can increase before dying"};
+    static constexpr Options::String help{};
     static type suggested_value() { return 1.2; }
     static type lower_bound() { return 1.0; }
   };
 
   struct DivergenceIter {
     using type = size_t;
-    static constexpr Options::String help = {
-        "Num iterations residual can increase before dying"};
+    static constexpr Options::String help{};
     static type suggested_value() { return 5; }
   };
 
   struct MaxIts {
     using type = size_t;
-    static constexpr Options::String help = {"Maximum number of iterations."};
+    static constexpr Options::String help{};
     static type suggested_value() { return 100; }
   };
 
   using options = tmpl::list<Flow, Alpha, Beta, AbsTol, TruncationTol,
                              DivergenceTol, DivergenceIter, MaxIts>;
 
-  static constexpr Options::String help{
-      "Find a Strahlkorper using a 'fast flow' method.\n"
-      "Based on Gundlach, PRD 57, 863 (1998).\n"
-      "Expands the surface in terms of spherical harmonics Y_lm up to a given\n"
-      "l_surface, and varies the coefficients S_lm where 0<=l<=l_surface to\n"
-      "minimize the residual of the apparent horizon equation.  Also keeps\n"
-      "another representation of the surface that is expanded up to\n"
-      "l_mesh > l_surface.  Let R_{Y_lm} be the residual computed using the\n"
-      "surface represented up to l_surface; this residual can in principle be\n"
-      "lowered to machine roundoff by enough iterations. Let R_{mesh} be the\n"
-      "residual computed using the surface represented up to l_mesh; this\n"
-      "residual represents the truncation error, since l_mesh>l_surface and\n"
-      "since coefficients S_lm with l>l_surface are not modified in the\n"
-      "iteration.\n\n"
-      "Convergence is achieved if R_{Y_lm}< TruncationTol*R_{mesh}, or if\n"
-      "R_{Y_lm}<AbsTol, where TruncationTol and AbsTol are input parameters.\n"
-      "If instead |R_{mesh}|_i > DivergenceTol * min_{j}(|R_{mesh}|_j) where\n"
-      "i is the iteration index and j runs from 0 to i-DivergenceIter, then\n"
-      "FastFlow exits with Status::DivergenceError.  Here DivergenceIter and\n"
-      "DivergenceTol are input parameters."};
+  static constexpr Options::String help{};
 
   FastFlow(Flow::type flow, Alpha::type alpha, Beta::type beta,
            AbsTol::type abs_tol, TruncationTol::type trunc_tol,

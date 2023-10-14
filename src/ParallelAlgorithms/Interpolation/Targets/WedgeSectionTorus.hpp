@@ -69,60 +69,55 @@ namespace OptionHolders {
 struct WedgeSectionTorus {
   struct MinRadius {
     using type = double;
-    static constexpr Options::String help = {"Inner radius of torus"};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
   struct MaxRadius {
     using type = double;
-    static constexpr Options::String help = {"Outer radius of torus"};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
   struct MinTheta {
     using type = double;
-    static constexpr Options::String help = {"Angle of top of wedge (radians)"};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return M_PI; }
   };
   struct MaxTheta {
     using type = double;
-    static constexpr Options::String help = {
-        "Angle of bottom of wedge (radians)"};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return M_PI; }
   };
   struct NumberRadialPoints {
     using type = size_t;
-    static constexpr Options::String help = {
-        "Number of radial points, including endpoints"};
+    static constexpr Options::String help{};
     static type lower_bound() { return 2; }
   };
   struct NumberThetaPoints {
     using type = size_t;
-    static constexpr Options::String help = {
-        "Number of theta points, including endpoints"};
+    static constexpr Options::String help{};
     static type lower_bound() { return 2; }
   };
   struct NumberPhiPoints {
     using type = size_t;
-    static constexpr Options::String help = {"Number of phi points"};
+    static constexpr Options::String help{};
     static type lower_bound() { return 1; }
   };
   struct UniformRadialGrid {
     using type = bool;
-    static constexpr Options::String help = {"Use uniform radial grid"};
+    static constexpr Options::String help{};
   };
   struct UniformThetaGrid {
     using type = bool;
-    static constexpr Options::String help = {"Use uniform theta grid"};
+    static constexpr Options::String help{};
   };
 
   using options =
       tmpl::list<MinRadius, MaxRadius, MinTheta, MaxTheta, NumberRadialPoints,
                  NumberThetaPoints, NumberPhiPoints, UniformRadialGrid,
                  UniformThetaGrid>;
-  static constexpr Options::String help = {
-      "A torus extending from MinRadius to MaxRadius in r, MinTheta to MaxTheta"
-      " in theta, and 2pi in phi."};
+  static constexpr Options::String help{};
 
   WedgeSectionTorus(double min_radius_in, double max_radius_in,
                     double min_theta_in, double max_theta_in,
@@ -163,8 +158,7 @@ namespace OptionTags {
 template <typename InterpolationTargetTag>
 struct WedgeSectionTorus {
   using type = OptionHolders::WedgeSectionTorus;
-  static constexpr Options::String help{
-      "Options for interpolation onto Kerr horizon."};
+  static constexpr Options::String help{};
   static std::string name() {
     return pretty_type::name<InterpolationTargetTag>();
   }

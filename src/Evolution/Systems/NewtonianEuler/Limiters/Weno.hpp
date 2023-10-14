@@ -98,34 +98,29 @@ class Weno {
     static type suggested_value() {
       return NewtonianEuler::Limiters::VariablesToLimit::Characteristic;
     }
-    static constexpr Options::String help = {
-        "Variable representation on which to apply the limiter"};
+    static constexpr Options::String help{};
   };
   // Future design improvement: attach the TvbConstant/KxrcfConstant to the
   // limiter type, so that it isn't necessary to specify both (but with one
   // required to be 'None') in each input file.
   struct TvbConstant {
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    static constexpr Options::String help = {
-        "Constant in RHS of the TVB minmod TCI, used when Type = SimpleWeno"};
+    static constexpr Options::String help{};
   };
   struct KxrcfConstant {
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    static constexpr Options::String help = {
-        "Constant in RHS of KXRCF TCI, used when Type = Hweno"};
+    static constexpr Options::String help{};
   };
   struct ApplyFlattener {
     using type = bool;
-    static constexpr Options::String help = {
-        "Flatten after limiting to restore pointwise positivity"};
+    static constexpr Options::String help{};
   };
   using options =
       tmpl::list<typename ConservativeVarsWeno::Type, VariablesToLimit,
                  typename ConservativeVarsWeno::NeighborWeight, TvbConstant,
                  KxrcfConstant, ApplyFlattener,
                  typename ConservativeVarsWeno::DisableForDebugging>;
-  static constexpr Options::String help = {
-      "A WENO limiter specialized to the NewtonianEuler system"};
+  static constexpr Options::String help{};
   static std::string name() { return "NewtonianEulerWeno"; };
 
   Weno(::Limiters::WenoType weno_type,

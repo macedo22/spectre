@@ -65,8 +65,7 @@ class SmoothFlow : public evolution::initial_data::InitialData,
  public:
   using options = typename smooth_flow::options;
 
-  static constexpr Options::String help = {
-      "Smooth flow in Minkowski spacetime."};
+  static constexpr Options::String help{};
 
   SmoothFlow() = default;
   SmoothFlow(const SmoothFlow& /*rhs*/) = default;

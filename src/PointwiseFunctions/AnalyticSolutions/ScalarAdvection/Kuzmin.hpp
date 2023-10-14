@@ -58,8 +58,7 @@ class Kuzmin : public evolution::initial_data::InitialData,
                public MarkAsAnalyticSolution {
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help{
-      "A rotating 2D scalar advecting problem adopted from Kuzmin2014 paper"};
+  static constexpr Options::String help{};
 
   Kuzmin() = default;
   Kuzmin(const Kuzmin&) = default;

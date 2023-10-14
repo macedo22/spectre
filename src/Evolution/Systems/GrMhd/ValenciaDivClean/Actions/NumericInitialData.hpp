@@ -57,10 +57,7 @@ class NumericInitialData : public evolution::initial_data::InitialData {
     static std::string name() { return db::tag_name<Tag>(); }
     using type = std::conditional_t<is_required, std::string,
                                     std::variant<double, std::string>>;
-    static constexpr Options::String help =
-        "Name of the variable in the volume data file. For optional variables "
-        "you may instead specify a double that is used as a constant value "
-        "on the entire grid.";
+    static constexpr Options::String help{};
   };
 
   // These are the hydro variables that we support loading from volume
@@ -78,9 +75,7 @@ class NumericInitialData : public evolution::initial_data::InitialData {
                                     std::bool_constant<false>>>;
   struct PrimitiveVars
       : tuples::tagged_tuple_from_typelist<primitive_vars_option_tags> {
-    static constexpr Options::String help =
-        "Primitive hydro variables: 'RestMassDensity' and "
-        "'LowerSpatialFourVelocity' (which is u_i = W * gamma_ij v^j). ";
+    static constexpr Options::String help{};
     using options = tags_list;
     using TaggedTuple::TaggedTuple;
   };
@@ -91,21 +86,12 @@ class NumericInitialData : public evolution::initial_data::InitialData {
   // Input-file options
   struct Variables {
     using type = PrimitiveVars;
-    static constexpr Options::String help =
-        "Set of initial data variables from which the Valencia evolution "
-        "variables are computed.";
+    static constexpr Options::String help{};
   };
 
   struct DensityCutoff {
     using type = double;
-    static constexpr Options::String help =
-        "Where the density is below this cutoff the fluid variables are set to "
-        "vacuum (zero density, pressure, energy and velocity, unit Lorentz "
-        "factor and enthalpy). "
-        "During the evolution, atmosphere treatment will typically kick in and "
-        "fix the value of the fluid variables in these regions. Therefore, "
-        "it makes sense to set this density cutoff to the same value as the "
-        "atmosphere density cutoff.";
+    static constexpr Options::String help{};
     static constexpr double lower_bound() { return 0.; }
   };
 
@@ -114,8 +100,7 @@ class NumericInitialData : public evolution::initial_data::InitialData {
       importers::OptionTags::ObservationValue,
       importers::OptionTags::EnableInterpolation, Variables, DensityCutoff>;
 
-  static constexpr Options::String help =
-      "Numeric initial data loaded from volume data files";
+  static constexpr Options::String help{};
 
   NumericInitialData() = default;
   NumericInitialData(const NumericInitialData& rhs) = default;

@@ -77,9 +77,7 @@ struct Translation : tt::ConformsTo<protocols::ControlError> {
       domain::object_list<domain::ObjectLabel::A, domain::ObjectLabel::B>;
 
   using options = tmpl::list<>;
-  static constexpr Options::String help{
-      "Computes the control error for translation control. This should not "
-      "take any options."};
+  static constexpr Options::String help{};
 
   void pup(PUP::er& /*p*/) {}
 

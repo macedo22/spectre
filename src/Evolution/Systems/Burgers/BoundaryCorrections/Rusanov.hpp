@@ -56,9 +56,7 @@ class Rusanov final : public BoundaryCorrection {
 
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help = {
-      "Computes the Rusanov or local Lax-Friedrichs boundary correction term "
-      "for the Burgers system."};
+  static constexpr Options::String help{};
 
   Rusanov() = default;
   Rusanov(const Rusanov&) = default;

@@ -69,15 +69,14 @@ class FixToAtmosphere {
   struct DensityOfAtmosphere {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static constexpr Options::String help = {"Density of atmosphere"};
+    static constexpr Options::String help{};
   };
   /// \brief Rest mass density at which to impose the atmosphere. Should be
   /// greater than or equal to the density of the atmosphere.
   struct DensityCutoff {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static constexpr Options::String help = {
-        "Density to impose atmosphere at. Must be >= rho_atm"};
+    static constexpr Options::String help{};
   };
   /// \brief For densities between DensityOfAtmosphere and
   /// TransitionDensityCutoff the velocity is transitioned away from atmosphere
@@ -87,11 +86,7 @@ class FixToAtmosphere {
   struct TransitionDensityCutoff {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static constexpr Options::String help = {
-        "For densities between DensityOfAtmosphere and TransitionDensityCutoff "
-        "the velocity is transitioned away from atmosphere to avoid abrupt "
-        "cutoffs.\n\n"
-        "This value must not be larger than 10 * DensityOfAtmosphere."};
+    static constexpr Options::String help{};
   };
   /// \brief The maximum magnitude of the velocity when the density is below
   /// `TransitionDensityCutoff`
@@ -99,22 +94,13 @@ class FixToAtmosphere {
     using type = double;
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 1.0; }
-    static constexpr Options::String help = {
-        "The maximum sqrt(v^i v^j gamma_{ij}) allowed when the density is "
-        "below TransitionDensityCutoff."};
+    static constexpr Options::String help{};
   };
 
   using options =
       tmpl::list<DensityOfAtmosphere, DensityCutoff, TransitionDensityCutoff,
                  MaxVelocityMagnitude>;
-  static constexpr Options::String help = {
-      "If the rest mass density is below DensityCutoff, it is set\n"
-      "to DensityOfAtmosphere, and the pressure, specific internal energy\n"
-      "(for one-dimensional equations of state), and specific enthalpy are\n"
-      "adjusted to satisfy the equation of state. For a two-dimensional\n"
-      "equation of state, the specific internal energy is set to zero.\n"
-      "In addition, the spatial velocity is set to zero, and the Lorentz\n"
-      "factor is set to one.\n"};
+  static constexpr Options::String help{};
 
   FixToAtmosphere(double density_of_atmosphere, double density_cutoff,
                   double transition_density_cutoff,

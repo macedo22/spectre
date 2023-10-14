@@ -53,31 +53,22 @@ class Mesh {
 
   struct Extents {
     using type = size_t;
-    static constexpr Options::String help = {
-        "The number of collocation points per dimension"};
+    static constexpr Options::String help{};
   };
 
   struct Basis {
     using type = Spectral::Basis;
-    static constexpr Options::String help = {
-        "The choice of spectral basis to compute the collocation points"};
+    static constexpr Options::String help{};
   };
 
   struct Quadrature {
     using type = Spectral::Quadrature;
-    static constexpr Options::String help = {
-        "The choice of quadrature to compute the collocation points"};
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<Extents, Basis, Quadrature>;
 
-  static constexpr Options::String help =
-      "Holds the number of grid points, basis, and quadrature in each "
-      "direction of the computational grid. "
-      "A mesh encapsulates all information necessary to construct the "
-      "placement of grid points in the computational domain. It does so "
-      "through a choice of basis functions, quadrature and number of points "
-      "in each dimension.";
+  static constexpr Options::String help{};
 
   Mesh() = default;
 

@@ -66,52 +66,50 @@ class ShuOsherTube : public MarkAsAnalyticData {
   /// Initial postition of the discontinuity
   struct JumpPosition {
     using type = double;
-    static constexpr Options::String help = {
-        "The initial position of the discontinuity."};
+    static constexpr Options::String help{};
   };
 
   struct LeftMassDensity {
     using type = double;
-    static constexpr Options::String help = {"The left mass density."};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
 
   struct LeftVelocity {
     using type = double;
-    static constexpr Options::String help = {"The left velocity."};
+    static constexpr Options::String help{};
   };
 
   struct LeftPressure {
     using type = double;
-    static constexpr Options::String help = {"The left pressure."};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
 
   struct RightVelocity {
     using type = double;
-    static constexpr Options::String help = {"The right velocity."};
+    static constexpr Options::String help{};
   };
 
   struct RightPressure {
     using type = double;
-    static constexpr Options::String help = {"The right pressure."};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
 
   struct Epsilon {
     using type = double;
-    static constexpr Options::String help = {"Sinusoid amplitude."};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 1.0; }
   };
 
   struct Lambda {
     using type = double;
-    static constexpr Options::String help = {"Sinusoid wavelength."};
+    static constexpr Options::String help{};
   };
 
-  static constexpr Options::String help = {
-      "1D Shu-Osher oscillatory shock tube."};
+  static constexpr Options::String help{};
 
   using options =
       tmpl::list<JumpPosition, LeftMassDensity, LeftVelocity, LeftPressure,

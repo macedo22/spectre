@@ -25,26 +25,19 @@ class Strahlkorper {
  public:
   struct LMax {
     using type = size_t;
-    static constexpr Options::String help = {
-        "Strahlkorper is expanded in Ylms up to l=LMax"};
+    static constexpr Options::String help{};
   };
   struct Radius {
     using type = double;
-    static constexpr Options::String help = {
-        "Radius of spherical Strahlkorper"};
+    static constexpr Options::String help{};
   };
   struct Center {
     using type = std::array<double, 3>;
-    static constexpr Options::String help = {
-        "Center of spherical Strahlkorper"};
+    static constexpr Options::String help{};
   };
   using options = tmpl::list<LMax, Radius, Center>;
 
-  static constexpr Options::String help{
-      "A star-shaped surface expressed as an expansion in spherical "
-      "harmonics.\n"
-      "Currently only a spherical Strahlkorper can be constructed from\n"
-      "Options.  To do this, specify parameters Center, Radius, and LMax."};
+  static constexpr Options::String help{};
 
   // Pup needs default constructor
   Strahlkorper() = default;
@@ -174,7 +167,7 @@ namespace OptionTags {
 template <typename Frame>
 struct Strahlkorper {
   using type = ylm::Strahlkorper<Frame>;
-  static constexpr Options::String help{"A star-shaped surface"};
+  static constexpr Options::String help{};
 };
 } // namespace OptionTags
 

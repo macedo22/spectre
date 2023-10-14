@@ -57,23 +57,20 @@ template <typename Frame>
 struct ApparentHorizon {
   /// See Strahlkorper for suboptions.
   struct InitialGuess {
-    static constexpr Options::String help = {"Initial guess"};
+    static constexpr Options::String help{};
     using type = ylm::Strahlkorper<Frame>;
   };
   /// See ::FastFlow for suboptions.
   struct FastFlow {
-    static constexpr Options::String help = {"FastFlow options"};
+    static constexpr Options::String help{};
     using type = ::FastFlow;
   };
   struct Verbosity {
-    static constexpr Options::String help = {"Verbosity"};
+    static constexpr Options::String help{};
     using type = ::Verbosity;
   };
   using options = tmpl::list<InitialGuess, FastFlow, Verbosity>;
-  static constexpr Options::String help = {
-      "Provide an initial guess for the apparent horizon surface\n"
-      "(Strahlkorper) and apparent-horizon-finding-algorithm (FastFlow)\n"
-      "options."};
+  static constexpr Options::String help{};
 
   ApparentHorizon(ylm::Strahlkorper<Frame> initial_guess_in,
                   ::FastFlow fast_flow_in, ::Verbosity verbosity_in);
@@ -104,14 +101,13 @@ bool operator!=(const ApparentHorizon<Frame>& lhs,
 
 namespace OptionTags {
 struct ApparentHorizons {
-  static constexpr Options::String help{"Options for apparent horizon finders"};
+  static constexpr Options::String help{};
 };
 
 template <typename InterpolationTargetTag, typename Frame>
 struct ApparentHorizon {
   using type = OptionHolders::ApparentHorizon<Frame>;
-  static constexpr Options::String help{
-      "Options for interpolation onto apparent horizon."};
+  static constexpr Options::String help{};
   static std::string name() {
     return pretty_type::name<InterpolationTargetTag>();
   }

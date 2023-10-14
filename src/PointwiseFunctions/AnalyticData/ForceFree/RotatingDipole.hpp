@@ -85,43 +85,38 @@ class RotatingDipole : public evolution::initial_data::InitialData,
  public:
   struct VectorPotentialAmplitude {
     using type = double;
-    static constexpr Options::String help = {
-        "The vector potential amplitude A_0"};
+    static constexpr Options::String help{};
   };
 
   struct Varpi0 {
     using type = double;
-    static constexpr Options::String help = {"The length constant varpi_0"};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
 
   struct Delta {
     using type = double;
-    static constexpr Options::String help = {
-        "A small value used to regularize magnetic fields at r=0."};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
 
   struct AngularVelocity {
     using type = double;
-    static constexpr Options::String help = {
-        "Rotation angular velocity of the star."};
+    static constexpr Options::String help{};
     static type upper_bound() { return 1.0; }
     static type lower_bound() { return -1.0; }
   };
 
   struct TiltAngle {
     using type = double;
-    static constexpr Options::String help = {
-        "Angle between the rotation axis (z) and magnetic axis at t = 0."};
+    static constexpr Options::String help{};
     static type upper_bound() { return M_PI; }
     static type lower_bound() { return 0.0; }
   };
 
   using options = tmpl::list<VectorPotentialAmplitude, Varpi0, Delta,
                              AngularVelocity, TiltAngle>;
-  static constexpr Options::String help{
-      "Magnetosphere of an isolated rotating star with dipole magnetic field."};
+  static constexpr Options::String help{};
 
   RotatingDipole() = default;
   RotatingDipole(const RotatingDipole&) = default;

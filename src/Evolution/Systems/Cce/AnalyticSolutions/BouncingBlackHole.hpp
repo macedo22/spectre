@@ -36,36 +36,30 @@ namespace Cce::Solutions {
 struct BouncingBlackHole : public WorldtubeData {
   struct Amplitude {
     using type = double;
-    static constexpr Options::String help{
-        "The coordinate distance of the gauge oscillation"};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
     static type suggested_value() { return 2.0; }
   };
   struct ExtractionRadius {
     using type = double;
-    static constexpr Options::String help{
-        "The extraction radius of the spherical solution"};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
     static type suggested_value() { return 20.0; }
   };
   struct Mass {
     using type = double;
-    static constexpr Options::String help{
-        "The mass of the Schwarzschild black hole"};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
     static type suggested_value() { return 1.0; }
   };
   struct Period {
     using type = double;
-    static constexpr Options::String help{
-        "The period of the coordinate oscillation"};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
     static type suggested_value() { return 40.0; }
   };
 
-  static constexpr Options::String help{
-      "Analytic solution in which a static black hole is placed in an "
-      "oscillating coordinate system"};
+  static constexpr Options::String help{};
 
   using options = tmpl::list<Amplitude, ExtractionRadius, Mass, Period>;
 

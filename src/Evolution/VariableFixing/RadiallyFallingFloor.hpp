@@ -60,47 +60,41 @@ class RadiallyFallingFloor {
   /// \brief The minimum radius at which to begin applying the floors on the
   /// density and pressure.
   struct MinimumRadius {
-    static constexpr Options::String help =
-        "The radius at which to begin applying the lower bound.";
+    static constexpr Options::String help{};
     using type = double;
     static double lower_bound() { return 0.0; }
   };
 
   /// \brief The scale of the floor of the rest mass density.
   struct ScaleDensityFloor {
-    static constexpr Options::String help =
-        "The rest mass density floor at r = 1.";
+    static constexpr Options::String help{};
     using type = double;
     static double lower_bound() { return 0.0; }
   };
 
   /// \brief The power of the radius of the floor of the rest mass density.
   struct PowerDensityFloor {
-    static constexpr Options::String help =
-        "Radial power for the floor of the rest mass density.";
+    static constexpr Options::String help{};
     using type = double;
   };
 
   /// \brief The scale of the floor of the pressure.
   struct ScalePressureFloor {
-    static constexpr Options::String help = "The pressure floor at r = 1.";
+    static constexpr Options::String help{};
     using type = double;
     static double lower_bound() { return 0.0; }
   };
 
   /// \brief The power of the radius of the floor of the pressure.
   struct PowerPressureFloor {
-    static constexpr Options::String help =
-        "The radial power for the floor of the pressure.";
+    static constexpr Options::String help{};
     using type = double;
   };
 
   using options =
       tmpl::list<MinimumRadius, ScaleDensityFloor, PowerDensityFloor,
                  ScalePressureFloor, PowerPressureFloor>;
-  static constexpr Options::String help = {
-      "Applies a pressure and density floor dependent on the distance to the "
-      "origin."};
+  static constexpr Options::String help{};
 
   RadiallyFallingFloor(double minimum_radius_at_which_to_apply_floor,
                        double rest_mass_density_scale,

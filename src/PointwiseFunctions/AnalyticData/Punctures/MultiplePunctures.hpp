@@ -27,27 +27,23 @@ namespace Punctures::AnalyticData {
 struct Puncture {
   struct Position {
     using type = std::array<double, 3>;
-    static constexpr Options::String help{"The position C of the puncture"};
+    static constexpr Options::String help{};
   };
   struct Mass {
     using type = double;
-    static constexpr Options::String help{"The puncture mass (bare mass) M"};
+    static constexpr Options::String help{};
     static double lower_bound() { return 0.; }
   };
   struct Momentum {
     using type = std::array<double, 3>;
-    static constexpr Options::String help{
-        "The dimensionless linear momentum P / M, where M is the bare mass of "
-        "the puncture."};
+    static constexpr Options::String help{};
   };
   struct Spin {
     using type = std::array<double, 3>;
-    static constexpr Options::String help{
-        "The dimensionless angular momentum S / M^2, where M is the bare mass "
-        "of the puncture."};
+    static constexpr Options::String help{};
   };
   using options = tmpl::list<Position, Mass, Momentum, Spin>;
-  static constexpr Options::String help{"A puncture representing a black hole"};
+  static constexpr Options::String help{};
 
   std::array<double, 3> position{
       {std::numeric_limits<double>::signaling_NaN()}};
@@ -138,12 +134,11 @@ class MultiplePunctures : public elliptic::analytic_data::Background,
                           public elliptic::analytic_data::InitialGuess {
  public:
   struct Punctures {
-    static constexpr Options::String help =
-        "Parameters for each puncture, representing black holes";
+    static constexpr Options::String help{};
     using type = std::vector<Puncture>;
   };
   using options = tmpl::list<Punctures>;
-  static constexpr Options::String help = "Any number of black holes";
+  static constexpr Options::String help{};
 
   MultiplePunctures() = default;
   MultiplePunctures(const MultiplePunctures&) = default;

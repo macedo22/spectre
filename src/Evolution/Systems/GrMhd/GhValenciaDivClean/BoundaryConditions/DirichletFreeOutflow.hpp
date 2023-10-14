@@ -68,9 +68,7 @@ class DirichletFreeOutflow final : public BoundaryCondition {
 
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help{
-      "DirichletAnalytic boundary conditions using either analytic solution or "
-      "analytic data for GH variables and hydro free outflow for GRMHD."};
+  static constexpr Options::String help{};
 
   DirichletFreeOutflow() = default;
   DirichletFreeOutflow(DirichletFreeOutflow&&) = default;

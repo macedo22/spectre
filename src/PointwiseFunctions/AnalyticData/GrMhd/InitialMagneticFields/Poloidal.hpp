@@ -68,29 +68,25 @@ class Poloidal : public InitialMagneticField {
  public:
   struct PressureExponent {
     using type = size_t;
-    static constexpr Options::String help = {
-        "The exponent n_s controlling the smoothness of the field"};
+    static constexpr Options::String help{};
   };
 
   struct CutoffPressure {
     using type = double;
-    static constexpr Options::String help = {
-        "The pressure below which there is no magnetic field."};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
 
   struct VectorPotentialAmplitude {
     using type = double;
-    static constexpr Options::String help = {
-        "The amplitude A_b of the phi-component of the vector potential. This "
-        "controls the magnetic field strength."};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
 
   using options =
       tmpl::list<PressureExponent, CutoffPressure, VectorPotentialAmplitude>;
 
-  static constexpr Options::String help = {"Poloidal initial magnetic field"};
+  static constexpr Options::String help{};
 
   Poloidal() = default;
   Poloidal(const Poloidal& /*rhs*/) = default;

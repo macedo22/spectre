@@ -16,7 +16,7 @@ namespace OptionTags {
  */
 struct VariableFixingGroup {
   static std::string name() { return "VariableFixing"; }
-  static constexpr Options::String help = "Options for variable fixing";
+  static constexpr Options::String help{};
 };
 
 /*!
@@ -26,7 +26,7 @@ struct VariableFixingGroup {
  */
 template <typename VariableFixerType>
 struct VariableFixer {
-  static constexpr Options::String help = "Options for the variable fixer";
+  static constexpr Options::String help{};
   using type = VariableFixerType;
   static std::string name() { return pretty_type::name<VariableFixerType>(); }
   using group = VariableFixingGroup;

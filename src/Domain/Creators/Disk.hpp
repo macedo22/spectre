@@ -53,38 +53,33 @@ class Disk : public DomainCreator<2> {
 
   struct InnerRadius {
     using type = double;
-    static constexpr Options::String help = {
-        "Radius of the circle circumscribing the inner square."};
+    static constexpr Options::String help{};
   };
 
   struct OuterRadius {
     using type = double;
-    static constexpr Options::String help = {"Radius of the Disk."};
+    static constexpr Options::String help{};
   };
 
   struct InitialRefinement {
     using type = size_t;
-    static constexpr Options::String help = {
-        "Initial refinement level in each dimension."};
+    static constexpr Options::String help{};
   };
 
   struct InitialGridPoints {
     using type = std::array<size_t, 2>;
-    static constexpr Options::String help = {
-        "Initial number of grid points in [r,theta]."};
+    static constexpr Options::String help{};
   };
 
   struct UseEquiangularMap {
     using type = bool;
-    static constexpr Options::String help = {
-        "Use equiangular instead of equidistant coordinates."};
+    static constexpr Options::String help{};
   };
 
   template <typename BoundaryConditionsBase>
   struct BoundaryCondition {
     static std::string name() { return "BoundaryCondition"; }
-    static constexpr Options::String help =
-        "The boundary condition to impose on all sides.";
+    static constexpr Options::String help{};
     using type = std::unique_ptr<BoundaryConditionsBase>;
   };
 
@@ -102,15 +97,7 @@ class Disk : public DomainCreator<2> {
                   typename Metavariables::system>>>,
       basic_options>;
 
-  static constexpr Options::String help{
-      "Creates a 2D Disk with five Blocks.\n"
-      "Only one refinement level for both dimensions is currently supported.\n"
-      "The number of gridpoints in each dimension can be set independently.\n"
-      "The number of gridpoints along the dimensions of the square is equal\n"
-      "to the number of gridpoints along the angular dimension of the wedges.\n"
-      "Equiangular coordinates give better gridpoint spacings in the angular\n"
-      "direction, while equidistant coordinates give better gridpoint\n"
-      "spacings in the center block."};
+  static constexpr Options::String help{};
 
   Disk(typename InnerRadius::type inner_radius,
        typename OuterRadius::type outer_radius,

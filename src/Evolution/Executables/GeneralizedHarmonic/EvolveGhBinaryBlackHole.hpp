@@ -650,9 +650,7 @@ struct EvolutionMetavars {
       control_system::control_components<EvolutionMetavars, control_systems>,
       gh_dg_element_array>>;
 
-  static constexpr Options::String help{
-      "Evolve a binary black hole using the Generalized Harmonic "
-      "formulation\n"};
+  static constexpr Options::String help{};
 };
 
 static const std::vector<void (*)()> charm_init_node_funcs{

@@ -285,9 +285,7 @@ struct EvolutionMetavars {
                  observers::ObserverWriter<EvolutionMetavars>,
                  dg_element_array>;
 
-  static constexpr Options::String help{
-      "Evolve a Scalar Wave in Dim spatial dimension.\n\n"
-      "The numerical flux is:    UpwindFlux\n"};
+  static constexpr Options::String help{};
 
   static constexpr std::array<Parallel::Phase, 5> default_phase_order{
       {Parallel::Phase::Initialization,

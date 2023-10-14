@@ -94,8 +94,7 @@ class Hll final : public BoundaryCorrection {
   };
 
   using options = tmpl::list<>;
-  static constexpr Options::String help = {
-      "Computes the HLL boundary correction term for the GRMHD system."};
+  static constexpr Options::String help{};
 
   Hll() = default;
   Hll(const Hll&) = default;

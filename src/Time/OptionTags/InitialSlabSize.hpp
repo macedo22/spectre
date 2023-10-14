@@ -12,7 +12,7 @@ namespace OptionTags {
 /// \brief The initial slab size
 struct InitialSlabSize {
   using type = double;
-  static constexpr Options::String help = "The initial slab size";
+  static constexpr Options::String help{};
   static type lower_bound() { return 0.; }
   using group = evolution::OptionTags::Group;
 };

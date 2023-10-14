@@ -76,10 +76,7 @@ struct EvolutionMetavars : public GeneralizedHarmonicTemplateBase<VolumeDim> {
   using typename gh_base::initialize_initial_data_dependent_quantities_actions;
   using typename gh_base::system;
 
-  static constexpr Options::String help{
-      "Evolve the Einstein field equations using the Generalized Harmonic "
-      "formulation,\n"
-      "on a domain with a single horizon and corresponding excised region"};
+  static constexpr Options::String help{};
 
   struct ApparentHorizon
       : tt::ConformsTo<intrp::protocols::InterpolationTargetTag> {
