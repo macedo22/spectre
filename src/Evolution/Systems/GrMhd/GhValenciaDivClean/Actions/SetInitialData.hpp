@@ -76,7 +76,8 @@ class NumericInitialData : public evolution::initial_data::InitialData {
                  importers::OptionTags::EnableInterpolation, GhVariables,
                  HydroVariables, HydroNumericId::DensityCutoff>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help =
+      "Numeric initial data loaded from volume data files";
 
   NumericInitialData() = default;
   NumericInitialData(const NumericInitialData& rhs) = default;

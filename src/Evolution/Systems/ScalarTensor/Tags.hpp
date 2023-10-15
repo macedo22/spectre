@@ -51,7 +51,8 @@ namespace OptionTags {
 struct ScalarMass {
   static std::string name() { return "ScalarMass"; }
   using type = double;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{
+      "Mass of the scalar field in code units"};
 };
 }  // namespace OptionTags
 

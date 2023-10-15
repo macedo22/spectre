@@ -142,7 +142,8 @@ namespace OptionTags {
  */
 struct ForceFreeGroup {
   static std::string name() { return "ForceFree"; }
-  static constexpr Options::String help{};
+  static constexpr Options::String help{
+      "Options for the GRFFE evolution system"};
   using group = evolution::OptionTags::SystemGroup;
 };
 
@@ -152,7 +153,8 @@ struct ForceFreeGroup {
  */
 struct ConstraintDampingGroup {
   static std::string name() { return "ConstraintDamping"; }
-  static constexpr Options::String help{};
+  static constexpr Options::String help{
+      "Options related to constraint damping"};
   using group = ForceFreeGroup;
 };
 
@@ -163,7 +165,9 @@ struct ConstraintDampingGroup {
 struct KappaPsi {
   static std::string name() { return "KappaPsi"; }
   using type = double;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{
+      "Constraint damping parameter for divergence cleaning of electric "
+      "fields"};
   using group = ConstraintDampingGroup;
 };
 
@@ -174,7 +178,9 @@ struct KappaPsi {
 struct KappaPhi {
   static std::string name() { return "KappaPhi"; }
   using type = double;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{
+      "Constraint damping parameter for divergence cleaning of magnetic "
+      "fields"};
   using group = ConstraintDampingGroup;
 };
 
@@ -184,7 +190,8 @@ struct KappaPhi {
  */
 struct ForceFreeCurrentGroup {
   static std::string name() { return "ForceFreeCurrent"; }
-  static constexpr Options::String help{};
+  static constexpr Options::String help{
+      "Options related to specifying the force-free electric current"};
   using group = ForceFreeGroup;
 };
 
@@ -196,7 +203,9 @@ struct ForceFreeCurrentGroup {
 struct ParallelConductivity {
   static std::string name() { return "ParallelConductivity"; }
   using type = double;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{
+      "Damping parameter for J^i to impose the force-free conditions, which is "
+      "physically the conductivity parallel to B field"};
   using group = ForceFreeCurrentGroup;
 };
 

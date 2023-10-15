@@ -116,17 +116,22 @@ class Constraints : public Criterion {
  public:
   struct ConstraintsToMonitor {
     using type = std::vector<std::string>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {"The constraints to monitor."};
     static size_t lower_bound_on_size() { return 1; }
   };
   struct AbsoluteTarget {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "The absolute target constraint violation. If any constraint is above "
+        "this value, the element will be p-refined."};
     static double lower_bound() { return 0.; }
   };
   struct CoarseningFactor {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "If all constraints are below the 'AbsoluteTarget' times this factor, "
+        "the element will be p-coarsened. "
+        "A reasonable value is 0.1."};
     static double lower_bound() { return 0.; }
     static double upper_bound() { return 1.; }
   };
@@ -134,7 +139,8 @@ class Constraints : public Criterion {
   using options =
       tmpl::list<ConstraintsToMonitor, AbsoluteTarget, CoarseningFactor>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help = {
+      "Refine the grid towards the target constraint violation"};
 
   Constraints() = default;
 

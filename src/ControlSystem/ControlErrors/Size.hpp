@@ -171,23 +171,30 @@ struct Size : tt::ConformsTo<protocols::ControlError> {
   struct MaxNumTimesForZeroCrossingPredictor {
     // Int so we get proper bounds checking
     using type = int;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{
+        "The maximum number of times used to calculate the zero crossing of "
+        "the char speeds."};
     static int lower_bound() { return 3; }
   };
 
   struct SmoothAvgTimescaleFraction {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{
+        "Average timescale fraction for smoothing horizon measurements."};
   };
 
   struct SmootherTuner {
     using type = TimescaleTuner;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{
+        "TimescaleTuner for smoothing horizon measurements."};
   };
 
   using options = tmpl::list<MaxNumTimesForZeroCrossingPredictor,
                              SmoothAvgTimescaleFraction, SmootherTuner>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{
+      "Computes the control error for size control. Will also write a "
+      "diagnostics file if the control systems are allowed to write data to "
+      "disk."};
 
   Size() = default;
 

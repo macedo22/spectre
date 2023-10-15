@@ -38,7 +38,8 @@ struct ZeroNonSmooth : InitializeJ<false> {
   struct AngularCoordinateTolerance {
     using type = double;
     static std::string name() { return "AngularCoordTolerance"; }
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "Tolerance of initial angular coordinates for CCE"};
     static type lower_bound() { return 1.0e-14; }
     static type upper_bound() { return 1.0e-3; }
     static type suggested_value() { return 1.0e-10; }
@@ -46,7 +47,8 @@ struct ZeroNonSmooth : InitializeJ<false> {
 
   struct MaxIterations {
     using type = size_t;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "Number of linearized inversion iterations."};
     static type lower_bound() { return 10; }
     static type upper_bound() { return 1000; }
     static type suggested_value() { return 300; }
@@ -54,13 +56,16 @@ struct ZeroNonSmooth : InitializeJ<false> {
 
   struct RequireConvergence {
     using type = bool;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "If true, initialization will error if it hits MaxIterations"};
     static type suggested_value() { return true; }
   };
   using options =
       tmpl::list<AngularCoordinateTolerance, MaxIterations, RequireConvergence>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help = {
+      "Initialization process where J is set so Psi0 is vanishing\n"
+      "(roughly a no incoming radiation condition)"};
 
   WRAPPED_PUPable_decl_template(ZeroNonSmooth);  // NOLINT
   explicit ZeroNonSmooth(CkMigrateMessage* /*unused*/) {}

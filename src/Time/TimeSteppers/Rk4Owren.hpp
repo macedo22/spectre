@@ -39,7 +39,8 @@ namespace TimeSteppers {
 class Rk4Owren : public RungeKutta {
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help = {
+      "A 4th-order continuous extension Runge-Kutta time stepper."};
 
   Rk4Owren() = default;
   Rk4Owren(const Rk4Owren&) = default;

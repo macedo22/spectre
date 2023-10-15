@@ -118,11 +118,16 @@ struct CheckpointAndExitAfterWallclock : public PhaseChange {
 
   struct WallclockHours {
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "Time in hours after which to write the checkpoint and exit. "
+        "If 'None' is specified, no action will be taken."};
   };
 
   using options = tmpl::list<WallclockHours>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{
+      "Once the wallclock time has exceeded the specified amount, trigger "
+      "writing a checkpoint and then exit with the 'ContinueFromCheckpoint' "
+      "exit code."};
 
   using argument_tags = tmpl::list<>;
   using return_tags = tmpl::list<>;

@@ -52,10 +52,16 @@ class IdealFluid : public EquationOfState<IsRelativistic, 2> {
 
   struct AdiabaticIndex {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {"Adiabatic index gamma"};
   };
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help = {
+      "An ideal fluid equation of state.\n"
+      "The pressure is related to the rest mass density by p = rho * epsilon * "
+      "(gamma - 1), where p is the pressure, rho is the rest mass density, "
+      "epsilon is the specific internal energy, and gamma is the adiabatic "
+      "index.\n"
+      "The temperature T is defined as T=epsilon."};
 
   using options = tmpl::list<AdiabaticIndex>;
 

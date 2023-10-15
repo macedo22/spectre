@@ -160,15 +160,17 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
  public:
   struct Mass {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {"Mass of the black hole"};
     static type lower_bound() { return 0.; }
   };
   struct Center {
     using type = std::array<double, volume_dim>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "The [x,y,z] center of the black hole"};
   };
   using options = tmpl::list<Mass, Center>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{
+      "Schwarzschild black hole in Cartesian coordinates with harmonic gauge"};
 
   HarmonicSchwarzschild(double mass,
                         const std::array<double, volume_dim>& center,

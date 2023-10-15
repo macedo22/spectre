@@ -99,27 +99,30 @@ class AlfvenWave : public evolution::initial_data::InitialData,
   /// The wave number of the profile.
   struct WaveNumber {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {"The wave number of the profile."};
   };
 
   /// The constant pressure throughout the fluid.
   struct Pressure {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "The constant pressure throughout the fluid."};
     static type lower_bound() { return 0.0; }
   };
 
   /// The constant rest mass density throughout the fluid.
   struct RestMassDensity {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "The constant rest mass density throughout the fluid."};
     static type lower_bound() { return 0.0; }
   };
 
   /// The constant electron fraction throughout the fluid.
   struct ElectronFraction {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "The constant electron fraction throughout the fluid."};
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 1.0; }
   };
@@ -127,7 +130,8 @@ class AlfvenWave : public evolution::initial_data::InitialData,
   /// The adiabatic index for the ideal fluid.
   struct AdiabaticIndex {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "The adiabatic index for the ideal fluid."};
     static type lower_bound() { return 1.0; }
   };
 
@@ -135,7 +139,8 @@ class AlfvenWave : public evolution::initial_data::InitialData,
   struct BackgroundMagneticField {
     using type = std::array<double, 3>;
     static std::string name() { return "BkgdMagneticField"; }
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "The background magnetic field [B0^x, B0^y, B0^z]."};
   };
 
   /// The sinusoidal magnetic field vector associated with
@@ -143,13 +148,15 @@ class AlfvenWave : public evolution::initial_data::InitialData,
   /// magnetic field vector.
   struct WaveMagneticField {
     using type = std::array<double, 3>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "The wave magnetic field [B1^x, B1^y, B1^z]."};
   };
 
   using options =
       tmpl::list<WaveNumber, Pressure, RestMassDensity, ElectronFraction,
                  AdiabaticIndex, BackgroundMagneticField, WaveMagneticField>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help = {
+      "Circularly polarized Alfven wave in Minkowski spacetime."};
 
   AlfvenWave() = default;
   AlfvenWave(const AlfvenWave& /*rhs*/) = default;

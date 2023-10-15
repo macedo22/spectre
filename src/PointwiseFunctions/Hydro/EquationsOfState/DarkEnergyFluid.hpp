@@ -64,12 +64,18 @@ class DarkEnergyFluid : public EquationOfState<IsRelativistic, 2> {
 
   struct ParameterW {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {"Parameter w(z)"};
     static double lower_bound() { return 0.0; }
     static double upper_bound() { return 1.0; }
   };
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help = {
+      "A dark energy fluid equation of state.\n"
+      "The pressure is related to the rest mass density by "
+      "p = w(z) * rho * (1 + epsilon), where p is the pressure, rho is the "
+      "rest mass density, epsilon is the specific internal energy, and w(z) is "
+      "a parameter.\n"
+      "The temperature T is defined as T=w(z) epsilon."};
 
   using options = tmpl::list<ParameterW>;
 

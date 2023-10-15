@@ -57,7 +57,8 @@ class SmoothFlow : virtual public MarkAsAnalyticSolution,
  public:
   using options = typename smooth_flow::options;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help = {
+      "Smooth density wave advecting across a domain."};
 
   SmoothFlow() = default;
   SmoothFlow(const SmoothFlow& /*rhs*/) = default;

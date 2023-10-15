@@ -285,7 +285,12 @@ struct Metavariables {
 
   using const_global_cache_tags = tmpl::list<amr::Criteria::Tags::Criteria>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help{
+      "Export the inertial coordinates of the Domain specified in the input "
+      "file. The output can be used to compute initial data externally, for "
+      "instance. Also outputs the determinant of the inverse jacobian as a "
+      "diagnostic of Domain quality: values far from unity indicate "
+      "compression or expansion of the grid."};
 
   struct factory_creation
       : tt::ConformsTo<Options::protocols::FactoryCreation> {

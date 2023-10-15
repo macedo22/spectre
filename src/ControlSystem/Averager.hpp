@@ -44,16 +44,21 @@ class Averager {
  public:
   struct AverageTimescaleFraction {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "Time scale of exponential averaging"};
   };
 
   struct Average0thDeriv {
     using type = bool;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "Whether to average the 0th derivative"};
   };
 
   using options = tmpl::list<AverageTimescaleFraction, Average0thDeriv>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{
+      "Averager: Performs exponential averaging of the control signal at "
+      "multiple times in order to provide smoother derivatives of the control "
+      "signal."};
 
   /// `avg_timescale_frac` determines the exponential averaging timescale
   /// through \f$\tau_\mathrm{avg} = \f$`avg_timescale_frac`\f$\times \tau\f$,

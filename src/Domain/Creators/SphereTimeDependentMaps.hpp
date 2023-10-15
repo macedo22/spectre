@@ -37,17 +37,22 @@ struct KerrSchildFromBoyerLindquist {
   /// \brief The mass of the Kerr black hole.
   struct Mass {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {"The mass of the Kerr BH."};
   };
   /// \brief The dimensionless spin of the Kerr black hole.
   struct Spin {
     using type = std::array<double, 3>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "The dim'less spin of the Kerr BH."};
   };
 
   using options = tmpl::list<Mass, Spin>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help = {
+      "Conform to an ellipsoid of constant Boyer-Lindquist radius in "
+      "Kerr-Schild coordinates. This Boyer-Lindquist radius is chosen as the "
+      "value of the 'InnerRadius'. To conform to the outer Kerr horizon, "
+      "choose an 'InnerRadius' of r_+ = M + sqrt(M^2-a^2)."};
 
   double mass{std::numeric_limits<double>::signaling_NaN()};
   std::array<double, 3> spin{std::numeric_limits<double>::signaling_NaN(),
@@ -95,29 +100,37 @@ struct TimeDependentMapOptions {
   /// \brief The initial time of the functions of time.
   struct InitialTime {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "The initial time of the functions of time"};
   };
 
   struct SizeMap {
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "Options for a time-dependent size map in the inner-most shell of the "
+        "domain."};
   };
 
   struct SizeMapInitialValues {
     static std::string name() { return "InitialValues"; }
     using type = Options::Auto<std::array<double, 3>>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "Initial value and two derivatives of the size map. Specify 'Auto' to "
+        "use the l=0 coefficient calculated from the shape map Ylm "
+        "coefficients (derivs will be zero)."};
     using group = SizeMap;
   };
 
   struct ShapeMapOptions {
     static std::string name() { return "ShapeMap"; }
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "Options for a time-dependent size map in the inner-most shell of the "
+        "domain."};
   };
 
   struct ShapeMapLMax {
     static std::string name() { return "LMax"; }
     using type = size_t;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {"Initial LMax for the shape map."};
     using group = ShapeMapOptions;
   };
 
@@ -125,13 +138,17 @@ struct TimeDependentMapOptions {
     static std::string name() { return "InitialValues"; }
     using type =
         Options::Auto<std::variant<KerrSchildFromBoyerLindquist>, Spherical>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "Initial Ylm coefficients for the shape map. Specify 'Spherical' for "
+        "all coefficients to be initialized to zero."};
     using group = ShapeMapOptions;
   };
 
   using options = tmpl::list<InitialTime, SizeMapInitialValues, ShapeMapLMax,
                              ShapeMapInitialValues>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{
+      "The options for all the hard-coded time dependent maps in the Sphere "
+      "domain."};
 
   TimeDependentMapOptions() = default;
 

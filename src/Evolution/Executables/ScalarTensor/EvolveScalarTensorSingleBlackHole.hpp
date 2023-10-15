@@ -74,7 +74,10 @@ struct EvolutionMetavars : public ScalarTensorTemplateBase<EvolutionMetavars> {
 
   static constexpr size_t volume_dim = 3_st;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help{
+      "Evolve the Einstein field equations in GH gauge coupled to a scalar "
+      "field \n"
+      "on a domain with a single horizon and corresponding excised region"};
 
   struct AhA : tt::ConformsTo<intrp::protocols::InterpolationTargetTag> {
     using temporal_id = ::Tags::Time;

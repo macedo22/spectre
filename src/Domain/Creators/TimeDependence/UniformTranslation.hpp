@@ -81,12 +81,13 @@ class UniformTranslation final : public TimeDependence<MeshDim> {
   /// \brief The initial time of the functions of time.
   struct InitialTime {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "The initial time of the functions of time"};
   };
   /// \brief The \f$x\f$-, \f$y\f$-, and \f$z\f$-velocity.
   struct Velocity {
     using type = std::array<double, MeshDim>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {"The velocity of the map."};
   };
 
   using GridToInertialMapSimple =
@@ -106,7 +107,8 @@ class UniformTranslation final : public TimeDependence<MeshDim> {
 
   using options = tmpl::list<InitialTime, Velocity>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help = {
+      "A spatially uniform translation initialized with a constant velocity."};
 
   UniformTranslation() = default;
   ~UniformTranslation() override = default;

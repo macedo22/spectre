@@ -90,14 +90,17 @@ class AlfvenWave : public evolution::initial_data::InitialData,
   /// The wave speed
   struct WaveSpeed {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "The wave speed along x direction"};
     static type lower_bound() { return -1.0; }
     static type upper_bound() { return 1.0; }
   };
 
   using options = tmpl::list<WaveSpeed>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help{
+      "Alfven wave propagating along x direction in flat spacetime with the "
+      "wave speed mu"};
 
   AlfvenWave() = default;
   AlfvenWave(const AlfvenWave&) = default;

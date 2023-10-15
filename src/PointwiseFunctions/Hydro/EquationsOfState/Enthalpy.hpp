@@ -139,55 +139,71 @@ class Enthalpy : public EquationOfState<true, 1> {
 
   struct ReferenceDensity {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {"Reference density rho_0"};
     static double lower_bound() { return 0.0; }
   };
 
   struct MinimumDensity {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "Minimum valid density rho_min,"
+        " for this parametrization"};
     static double lower_bound() { return 0.0; }
   };
   struct MaximumDensity {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {"Maximum density for this EoS"};
     static double lower_bound() { return 0.0; }
   };
 
   struct PolynomialCoefficients {
     using type = std::vector<double>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {"Polynomial coefficients a_i"};
   };
 
   struct TrigScaling {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "Fundamental wavenumber of trig "
+        "functions, k"};
     static double lower_bound() { return 0.0; }
   };
 
   struct SinCoefficients {
     using type = std::vector<double>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {"Sine coefficients b_j"};
   };
   struct CosCoefficients {
     using type = std::vector<double>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {"Cosine coefficients c_j"};
   };
   struct StitchedLowDensityEoS {
     using type = LowDensityEoS;
     static std::string name() {
       return pretty_type::short_name<LowDensityEoS>();
     }
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "Low density EoS stitched at the MinimumDensity"};
   };
 
   struct TransitionDeltaEpsilon {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "the change in internal energy across the low-"
+        "to-high-density transition, generically 0.0"};
     static double lower_bound() { return 0.0; }
   };
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help = {
+      "An EoS with a parametrized value h(log(rho/rho_0)) with h the specific "
+      "enthalpy and rho the baryon rest mass density.  The enthalpy is "
+      "expanded as a sum of polynomial terms and trigonometric corrections. "
+      "let x = log(rho/rho_0) in"
+      "h(x) = \\sum_i a_ix^i + \\sum_j b_jsin(k * j * x) + c_jcos(k * j * x) "
+      "Note that rho(x)(1+epsilon(x)) = int_0^x e^x' h((x') dx' can be "
+      "computed "
+      "analytically, and therefore so can "
+      "P(x) = rho(x) * (h(x) - (1 + epsilon(x))) "};
 
   using options =
       tmpl::list<ReferenceDensity, MaximumDensity, MinimumDensity, TrigScaling,

@@ -273,7 +273,8 @@ struct EvolutionMetavars {
 
   using const_global_cache_tags = tmpl::list<initial_data_tag>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help{
+      "Evolve the M1Grey system (without coupling to hydro).\n\n"};
 
   static constexpr std::array<Parallel::Phase, 5> default_phase_order{
       {Parallel::Phase::Initialization,

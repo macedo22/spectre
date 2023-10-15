@@ -48,24 +48,27 @@ class BrillLindquist : public AnalyticDataBase<3>, public MarkAsAnalyticData {
  public:
   struct MassA {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {"Mass of the black hole A"};
     static type lower_bound() { return 0.; }
   };
   struct MassB {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {"Mass of the black hole B"};
     static type lower_bound() { return 0.; }
   };
   struct CenterA {
     using type = std::array<double, 3>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "The [x,y,z] center of the black hole A"};
   };
   struct CenterB {
     using type = std::array<double, 3>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "The [x,y,z] center of the black hole B"};
   };
   using options = tmpl::list<MassA, MassB, CenterA, CenterB>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{
+      "Brill-Lindquist data for two black holes"};
 
   BrillLindquist(double mass_a, double mass_b,
                  const std::array<double, 3>& center_a,

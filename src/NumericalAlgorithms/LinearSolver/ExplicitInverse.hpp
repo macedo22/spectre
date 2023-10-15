@@ -74,7 +74,10 @@ class ExplicitInverse : public LinearSolver<LinearSolverRegistrars> {
 
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help =
+      "Build a matrix representation of the linear operator and invert it "
+      "directly. This means that the first solve has a large initialization "
+      "cost, but all subsequent solves converge immediately.";
 
   ExplicitInverse() = default;
   ExplicitInverse(const ExplicitInverse& /*rhs*/) = default;

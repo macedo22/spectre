@@ -85,24 +85,38 @@ class PositivityPreservingAdaptiveOrderPrim : public Reconstructor {
 
   struct Alpha5 {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "The alpha parameter in the Persson convergence measurement. 4 is the "
+        "right value, but anything in the range of 3-5 is 'reasonable'. "
+        "Smaller values allow for more oscillations."};
   };
   struct Alpha7 {
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "The alpha parameter in the Persson convergence measurement. 4 is the "
+        "right value, but anything in the range of 3-5 is 'reasonable'. "
+        "Smaller values allow for more oscillations. If specified to None, "
+        "then 7th-order reconstruction is not used."};
   };
   struct Alpha9 {
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "The alpha parameter in the Persson convergence measurement. 4 is the "
+        "right value, but anything in the range of 3-5 is 'reasonable'. "
+        "Smaller values allow for more oscillations. If specified to None, "
+        "then 9th-order reconstruction is not used."};
   };
   struct LowOrderReconstructor {
     using type = FallbackReconstructorType;
-    static constexpr Options::String help{};
+    static constexpr Options::String help = {
+        "The 2nd/3rd-order reconstruction scheme to use if unlimited 5th-order "
+        "isn't okay."};
   };
 
   using options = tmpl::list<Alpha5, Alpha7, Alpha9, LowOrderReconstructor>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help{
+      "Positivity-preserving adaptive-order reconstruction."};
 
   PositivityPreservingAdaptiveOrderPrim() = default;
   PositivityPreservingAdaptiveOrderPrim(

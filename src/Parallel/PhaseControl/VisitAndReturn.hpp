@@ -100,7 +100,9 @@ struct VisitAndReturn : public PhaseChange {
     return MakeString{} << "VisitAndReturn(" << TargetPhase << ")";
   }
   using options = tmpl::list<>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{
+      "Temporarily jump to the phase given by `TargetPhase`, returning to the "
+      "previously executing phase when complete."};
 
   using argument_tags = tmpl::list<>;
   using return_tags = tmpl::list<>;

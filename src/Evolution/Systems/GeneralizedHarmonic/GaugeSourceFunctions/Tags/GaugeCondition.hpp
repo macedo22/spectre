@@ -33,7 +33,7 @@ namespace gh::gauges {
 namespace OptionTags {
 struct GaugeCondition {
   using type = std::unique_ptr<gauges::GaugeCondition>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{"The gauge condition to impose."};
   using group = gh::OptionTags::Group;
 };
 }  // namespace OptionTags
