@@ -42,7 +42,7 @@ class ConstraintPreservingFreeOutflow final : public BoundaryCondition {
  public:
   using options =
       typename gh::BoundaryConditions::ConstraintPreservingBjorhus<3>::options;
-  Options::String help;
+  static constexpr Options::String help{};
 
   ConstraintPreservingFreeOutflow() = default;
   explicit ConstraintPreservingFreeOutflow(

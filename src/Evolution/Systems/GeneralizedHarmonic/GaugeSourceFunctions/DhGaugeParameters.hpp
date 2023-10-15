@@ -35,39 +35,39 @@ struct DhGaugeParameters<true> {
   std::array<double, 3> amplitudes;
   std::array<int, 3> exponents;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   /// The rollon start time
   struct RollOnStartTime {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   /// The width of the Gaussian for the gauge rollon
   struct RollOnTimeWindow {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   /// The width of the Gaussian for the spatial decay of the damped harmonic
   /// gauge.
   struct SpatialDecayWidth {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   /// The amplitudes for the L1, L2, and S terms, respectively, for the damped
   /// harmonic gauge.
   struct Amplitudes {
     using type = std::array<double, 3>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   /// The exponents for the L1, L2, and S terms, respectively, for the damped
   /// harmonic gauge.
   struct Exponents {
     using type = std::array<int, 3>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<RollOnStartTime, RollOnTimeWindow,
@@ -89,27 +89,27 @@ struct DhGaugeParameters<false> {
   std::array<double, 3> amplitudes;
   std::array<int, 3> exponents;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   /// The width of the Gaussian for the spatial decay of the damped harmonic
   /// gauge.
   struct SpatialDecayWidth {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   /// The amplitudes for the L1, L2, and S terms, respectively, for the damped
   /// harmonic gauge.
   struct Amplitudes {
     using type = std::array<double, 3>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   /// The exponents for the L1, L2, and S terms, respectively, for the damped
   /// harmonic gauge.
   struct Exponents {
     using type = std::array<int, 3>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<SpatialDecayWidth, Amplitudes, Exponents>;

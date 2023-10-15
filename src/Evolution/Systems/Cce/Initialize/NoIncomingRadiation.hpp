@@ -36,7 +36,7 @@ struct NoIncomingRadiation : InitializeJ<false> {
   struct AngularCoordinateTolerance {
     using type = double;
     static std::string name() { return "AngularCoordTolerance"; }
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 1.0e-14; }
     static type upper_bound() { return 1.0e-3; }
     static type suggested_value() { return 1.0e-10; }
@@ -44,7 +44,7 @@ struct NoIncomingRadiation : InitializeJ<false> {
 
   struct MaxIterations {
     using type = size_t;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 10; }
     static type upper_bound() { return 1000; }
     static type suggested_value() { return 300; }
@@ -52,13 +52,13 @@ struct NoIncomingRadiation : InitializeJ<false> {
 
   struct RequireConvergence {
     using type = bool;
-    Options::String help;
+    static constexpr Options::String help{};
     static type suggested_value() { return true; }
   };
 
   using options =
       tmpl::list<AngularCoordinateTolerance, MaxIterations, RequireConvergence>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   WRAPPED_PUPable_decl_template(NoIncomingRadiation);  // NOLINT
   explicit NoIncomingRadiation(CkMigrateMessage* /*unused*/) {}

@@ -40,11 +40,11 @@ class Constant : public DampingFunction<VolumeDim, Fr> {
  public:
   struct Value {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   using options = tmpl::list<Value>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   /// \cond
   WRAPPED_PUPable_decl_base_template(SINGLE_ARG(DampingFunction<VolumeDim, Fr>),

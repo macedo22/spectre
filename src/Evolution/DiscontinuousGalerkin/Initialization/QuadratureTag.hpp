@@ -15,7 +15,7 @@ namespace OptionTags {
 struct Quadrature {
   using type = Spectral::Quadrature;
   using group = ::dg::OptionTags::DiscontinuousGalerkinGroup;
-  Options::String help;
+  static constexpr Options::String help{};
 };
 }  // namespace OptionTags
 

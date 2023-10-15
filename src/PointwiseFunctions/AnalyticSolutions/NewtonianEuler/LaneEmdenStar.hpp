@@ -52,20 +52,20 @@ class LaneEmdenStar : public MarkAsAnalyticSolution {
   /// The central mass density of the star.
   struct CentralMassDensity {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.; }
   };
 
   /// The polytropic constant of the polytropic fluid.
   struct PolytropicConstant {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.; }
   };
 
   using options = tmpl::list<CentralMassDensity, PolytropicConstant>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   LaneEmdenStar() = default;
   LaneEmdenStar(const LaneEmdenStar& /*rhs*/) = default;

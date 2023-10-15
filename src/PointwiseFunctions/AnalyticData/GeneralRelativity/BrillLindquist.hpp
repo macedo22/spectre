@@ -48,24 +48,24 @@ class BrillLindquist : public AnalyticDataBase<3>, public MarkAsAnalyticData {
  public:
   struct MassA {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.; }
   };
   struct MassB {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.; }
   };
   struct CenterA {
     using type = std::array<double, 3>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   struct CenterB {
     using type = std::array<double, 3>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   using options = tmpl::list<MassA, MassB, CenterA, CenterB>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   BrillLindquist(double mass_a, double mass_b,
                  const std::array<double, 3>& center_a,

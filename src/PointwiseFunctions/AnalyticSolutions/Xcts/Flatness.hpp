@@ -34,7 +34,7 @@ namespace Xcts::Solutions {
 class Flatness : public elliptic::analytic_data::AnalyticSolution {
  public:
   using options = tmpl::list<>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   Flatness() = default;
   Flatness(const Flatness&) = default;

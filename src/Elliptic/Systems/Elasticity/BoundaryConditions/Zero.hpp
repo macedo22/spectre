@@ -27,11 +27,11 @@ template <elliptic::BoundaryConditionType BoundaryConditionType>
 struct ZeroHelpString;
 template <>
 struct ZeroHelpString<elliptic::BoundaryConditionType::Dirichlet> {
-  Options::String help;
+  static constexpr Options::String help{};
 };
 template <>
 struct ZeroHelpString<elliptic::BoundaryConditionType::Neumann> {
-  Options::String help;
+  static constexpr Options::String help{};
 };
 
 }  // namespace detail
@@ -52,7 +52,7 @@ class Zero : public elliptic::BoundaryConditions::BoundaryCondition<Dim> {
  public:
   static std::string name();
   using options = tmpl::list<>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   Zero() = default;
   Zero(const Zero&) = default;

@@ -44,7 +44,7 @@ template <size_t Dim>
 class DirichletAnalytic final : public BoundaryCondition<Dim> {
  public:
   using options = tmpl::list<>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   DirichletAnalytic() = default;
   DirichletAnalytic(DirichletAnalytic&&) = default;

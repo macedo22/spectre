@@ -33,16 +33,16 @@ class TimeCompares : public Trigger {
 
   struct Comparison {
     using type = Options::Comparator;
-    Options::String help;
+    constexpr static Options::String help{};
   };
 
   struct Value {
     using type = double;
-    Options::String help;
+    constexpr static Options::String help{};
   };
 
   using options = tmpl::list<Comparison, Value>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   explicit TimeCompares(const Options::Comparator comparator, const double time)
       : comparator_(comparator), time_(time) {}

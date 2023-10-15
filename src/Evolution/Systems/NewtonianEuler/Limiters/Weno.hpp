@@ -98,29 +98,29 @@ class Weno {
     static type suggested_value() {
       return NewtonianEuler::Limiters::VariablesToLimit::Characteristic;
     }
-    Options::String help;
+    static constexpr Options::String help{};
   };
   // Future design improvement: attach the TvbConstant/KxrcfConstant to the
   // limiter type, so that it isn't necessary to specify both (but with one
   // required to be 'None') in each input file.
   struct TvbConstant {
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   struct KxrcfConstant {
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   struct ApplyFlattener {
     using type = bool;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   using options =
       tmpl::list<typename ConservativeVarsWeno::Type, VariablesToLimit,
                  typename ConservativeVarsWeno::NeighborWeight, TvbConstant,
                  KxrcfConstant, ApplyFlattener,
                  typename ConservativeVarsWeno::DisableForDebugging>;
-  Options::String help;
+  static constexpr Options::String help{};
   static std::string name() { return "NewtonianEulerWeno"; };
 
   Weno(::Limiters::WenoType weno_type,

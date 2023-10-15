@@ -86,7 +86,7 @@ struct EvolutionMetavars : public GeneralizedHarmonicTemplateBase<VolumeDim> {
                                importers::ElementDataReader<EvolutionMetavars>,
                                gh_dg_element_array>>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 };
 
 static const std::vector<void (*)()> charm_init_node_funcs{

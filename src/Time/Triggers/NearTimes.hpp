@@ -57,27 +57,27 @@ class NearTimes : public Trigger {
   struct OptionTags {
     struct Times {
       using type = std::unique_ptr<TimeSequence<double>>;
-      Options::String help;
+      static constexpr Options::String help{};
     };
 
     struct Range {
       using type = double;
       static type lower_bound() { return 0.0; }
-      Options::String help;
+      static constexpr Options::String help{};
     };
 
     struct Unit {
       using type = NearTimes::Unit;
-      Options::String help;
+      static constexpr Options::String help{};
     };
 
     struct Direction {
       using type = NearTimes::Direction;
-      Options::String help;
+      static constexpr Options::String help{};
     };
   };
 
-  Options::String help;
+  static constexpr Options::String help{};
   using options =
       tmpl::list<typename OptionTags::Times, typename OptionTags::Range,
                  typename OptionTags::Unit, typename OptionTags::Direction>;

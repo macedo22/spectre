@@ -54,7 +54,7 @@ class DirichletAnalytic<tmpl::list<NeutrinoSpecies...>> final
     : public BoundaryCondition<tmpl::list<NeutrinoSpecies...>> {
  public:
   using options = tmpl::list<>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   DirichletAnalytic() = default;
   DirichletAnalytic(DirichletAnalytic&&) = default;

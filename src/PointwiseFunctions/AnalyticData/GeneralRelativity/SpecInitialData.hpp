@@ -49,12 +49,12 @@ class SpecInitialData : public evolution::initial_data::InitialData,
 
   struct DataDirectory {
     using type = std::string;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<DataDirectory>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   SpecInitialData() = default;
   SpecInitialData(const SpecInitialData& rhs);

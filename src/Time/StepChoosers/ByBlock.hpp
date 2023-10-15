@@ -40,10 +40,10 @@ class ByBlock : public StepChooser<StepChooserUse> {
 
   struct Sizes {
     using type = std::vector<double>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
-  Options::String help;
+  static constexpr Options::String help{};
   using options = tmpl::list<Sizes>;
 
   explicit ByBlock(std::vector<double> sizes) : sizes_(std::move(sizes)) {}

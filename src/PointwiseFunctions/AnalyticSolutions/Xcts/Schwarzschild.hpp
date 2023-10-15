@@ -180,17 +180,17 @@ namespace detail {
 struct SchwarzschildImpl {
   struct Mass {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct CoordinateSystem {
     static std::string name() { return "Coordinates"; }
     using type = SchwarzschildCoordinates;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<Mass, CoordinateSystem>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   SchwarzschildImpl() = default;
   SchwarzschildImpl(const SchwarzschildImpl&) = default;

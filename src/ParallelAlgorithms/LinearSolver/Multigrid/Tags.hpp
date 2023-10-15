@@ -28,14 +28,14 @@ namespace OptionTags {
 template <typename OptionsGroup>
 struct MaxLevels {
   using type = Options::Auto<size_t>;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = OptionsGroup;
 };
 
 template <typename OptionsGroup>
 struct OutputVolumeData {
   using type = bool;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = OptionsGroup;
   static bool suggested_value() { return false; }
 };
@@ -44,7 +44,7 @@ template <typename OptionsGroup>
 struct EnablePreSmoothing {
   static std::string name() { return "PreSmoothing"; }
   using type = bool;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = OptionsGroup;
 };
 
@@ -52,7 +52,7 @@ template <typename OptionsGroup>
 struct EnablePostSmoothingAtBottom {
   static std::string name() { return "PostSmoothingAtBottom"; }
   using type = bool;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = OptionsGroup;
 };
 

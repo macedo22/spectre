@@ -188,7 +188,7 @@ class UpwindPenalty final : public BoundaryCorrection<Dim> {
 
  public:
   using options = tmpl::list<>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   UpwindPenalty() = default;
   UpwindPenalty(const UpwindPenalty&) = default;

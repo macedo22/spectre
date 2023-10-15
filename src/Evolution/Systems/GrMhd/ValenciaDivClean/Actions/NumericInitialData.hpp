@@ -57,7 +57,7 @@ class NumericInitialData : public evolution::initial_data::InitialData {
     static std::string name() { return db::tag_name<Tag>(); }
     using type = std::conditional_t<is_required, std::string,
                                     std::variant<double, std::string>>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   // These are the hydro variables that we support loading from volume
@@ -75,7 +75,7 @@ class NumericInitialData : public evolution::initial_data::InitialData {
                                     std::bool_constant<false>>>;
   struct PrimitiveVars
       : tuples::tagged_tuple_from_typelist<primitive_vars_option_tags> {
-    Options::String help;
+    static constexpr Options::String help{};
     using options = tags_list;
     using TaggedTuple::TaggedTuple;
   };
@@ -86,12 +86,12 @@ class NumericInitialData : public evolution::initial_data::InitialData {
   // Input-file options
   struct Variables {
     using type = PrimitiveVars;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct DensityCutoff {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static constexpr double lower_bound() { return 0.; }
   };
 
@@ -100,7 +100,7 @@ class NumericInitialData : public evolution::initial_data::InitialData {
       importers::OptionTags::ObservationValue,
       importers::OptionTags::EnableInterpolation, Variables, DensityCutoff>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   NumericInitialData() = default;
   NumericInitialData(const NumericInitialData& rhs) = default;

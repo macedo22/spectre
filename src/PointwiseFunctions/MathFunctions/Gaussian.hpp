@@ -36,22 +36,22 @@ class Gaussian<1, Fr> : public MathFunction<1, Fr> {
  public:
   struct Amplitude {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct Width {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.; }
   };
 
   struct Center {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   using options = tmpl::list<Amplitude, Width, Center>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   WRAPPED_PUPable_decl_base_template(SINGLE_ARG(MathFunction<1, Fr>),
                                      Gaussian);  // NOLINT
@@ -115,22 +115,22 @@ class Gaussian : public MathFunction<VolumeDim, Fr> {
  public:
   struct Amplitude {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct Width {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.; }
   };
 
   struct Center {
     using type = std::array<double, VolumeDim>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   using options = tmpl::list<Amplitude, Width, Center>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   WRAPPED_PUPable_decl_base_template(SINGLE_ARG(MathFunction<VolumeDim, Fr>),
                                      Gaussian);  // NOLINT

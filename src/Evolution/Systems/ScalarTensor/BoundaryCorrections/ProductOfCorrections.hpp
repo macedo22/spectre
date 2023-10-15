@@ -64,7 +64,7 @@ class ProductOfCorrections final : public BoundaryCorrection {
       // during option parsing
       return pretty_type::name<DerivedGhCorrection>() + "GH";
     }
-    Options::String help;
+    static constexpr Options::String help{};
   };
   struct ScalarCorrection {
     using type = DerivedScalarCorrection;
@@ -73,12 +73,12 @@ class ProductOfCorrections final : public BoundaryCorrection {
       // during option parsing
       return pretty_type::name<DerivedScalarCorrection>() + "Scalar";
     }
-    Options::String help;
+    static constexpr Options::String help{};
     };
 
   using options = tmpl::list<GhCorrection, ScalarCorrection>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   ProductOfCorrections() = default;
   ProductOfCorrections(DerivedGhCorrection gh_correction,

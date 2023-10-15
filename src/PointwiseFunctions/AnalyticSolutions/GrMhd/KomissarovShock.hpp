@@ -53,67 +53,67 @@ class KomissarovShock
 
   struct AdiabaticIndex {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 1.0; }
   };
   struct LeftRestMassDensity {
     using type = double;
     static std::string name() { return "LeftDensity"; };
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
   struct RightRestMassDensity {
     using type = double;
     static std::string name() { return "RightDensity"; };
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
 
   struct LeftElectronFraction {
     using type = double;
     static std::string name() { return "LeftElectronFraction"; };
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 1.0; }
   };
   struct RightElectronFraction {
     using type = double;
     static std::string name() { return "RightElectronFraction"; };
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 1.0; }
   };
   struct LeftPressure {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
   struct RightPressure {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
   struct LeftSpatialVelocity {
     using type = std::array<double, 3>;
     static std::string name() { return "LeftVelocity"; };
-    Options::String help;
+    static constexpr Options::String help{};
   };
   struct RightSpatialVelocity {
     using type = std::array<double, 3>;
     static std::string name() { return "RightVelocity"; };
-    Options::String help;
+    static constexpr Options::String help{};
   };
   struct LeftMagneticField {
     using type = std::array<double, 3>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   struct RightMagneticField {
     using type = std::array<double, 3>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   struct ShockSpeed {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options =
@@ -122,7 +122,7 @@ class KomissarovShock
                  RightPressure, LeftSpatialVelocity, RightSpatialVelocity,
                  LeftMagneticField, RightMagneticField, ShockSpeed>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   KomissarovShock() = default;
   KomissarovShock(const KomissarovShock& /*rhs*/) = default;

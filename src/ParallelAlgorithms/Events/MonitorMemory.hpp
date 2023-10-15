@@ -94,12 +94,12 @@ class MonitorMemory : public Event {
   struct ComponentsToMonitor {
     using type =
         Options::Auto<std::vector<std::string>, Options::AutoLabel::All>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<ComponentsToMonitor>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   MonitorMemory() = default;
 

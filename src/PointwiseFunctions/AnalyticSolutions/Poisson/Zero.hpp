@@ -25,7 +25,7 @@ template <size_t Dim>
 class Zero : public elliptic::analytic_data::AnalyticSolution {
  public:
   using options = tmpl::list<>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   Zero() = default;
   Zero(const Zero&) = default;

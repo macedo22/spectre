@@ -44,24 +44,24 @@ class PureSphericalHarmonic : public MarkAsAnalyticData {
  public:
   struct Radius {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
 
   struct Width {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
 
   struct Mode {
     using type = std::pair<size_t, int>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<Radius, Width, Mode>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   PureSphericalHarmonic() = default;
 

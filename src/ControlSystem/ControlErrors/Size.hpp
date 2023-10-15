@@ -171,23 +171,23 @@ struct Size : tt::ConformsTo<protocols::ControlError> {
   struct MaxNumTimesForZeroCrossingPredictor {
     // Int so we get proper bounds checking
     using type = int;
-    Options::String help;
+    static constexpr Options::String help{};
     static int lower_bound() { return 3; }
   };
 
   struct SmoothAvgTimescaleFraction {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct SmootherTuner {
     using type = TimescaleTuner;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<MaxNumTimesForZeroCrossingPredictor,
                              SmoothAvgTimescaleFraction, SmootherTuner>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   Size() = default;
 

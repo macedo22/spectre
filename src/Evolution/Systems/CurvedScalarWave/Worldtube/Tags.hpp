@@ -46,7 +46,7 @@ namespace OptionTags {
  * \brief Options for the worldtube
  */
 struct Worldtube {
-  Options::String help;
+  static constexpr Options::String help{};
 };
 
 /*!
@@ -54,7 +54,7 @@ struct Worldtube {
  */
 struct ExcisionSphere {
   using type = std::string;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = Worldtube;
 };
 
@@ -64,7 +64,7 @@ struct ExcisionSphere {
  */
 struct ObserveCoefficientsTrigger {
   using type = std::unique_ptr<Trigger>;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = Worldtube;
 };
 
@@ -73,7 +73,7 @@ struct ObserveCoefficientsTrigger {
  */
 struct ExpansionOrder {
   using type = size_t;
-  Options::String help;
+  static constexpr Options::String help{};
   static size_t upper_bound() { return 2; }
   using group = Worldtube;
 };

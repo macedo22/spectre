@@ -70,7 +70,7 @@ class Rusanov final : public BoundaryCorrection {
 
  public:
   using options = tmpl::list<>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   Rusanov() = default;
   Rusanov(const Rusanov&) = default;

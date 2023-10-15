@@ -26,11 +26,11 @@ struct TciOptions {
   struct UCutoff {
     using type = double;
     static type lower_bound() { return 0.0; }
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<UCutoff>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   // NOLINTNEXTLINE(google-runtime-references)
   void pup(PUP::er& /*p*/);
@@ -41,7 +41,7 @@ struct TciOptions {
 namespace OptionTags {
 struct TciOptions {
   using type = subcell::TciOptions;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = ::dg::OptionTags::DiscontinuousGalerkinGroup;
 };
 }  // namespace OptionTags

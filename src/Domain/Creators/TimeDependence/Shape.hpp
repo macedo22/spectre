@@ -110,45 +110,45 @@ class Shape final : public TimeDependence<3> {
   /// \brief The initial time of the function of time.
   struct InitialTime {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   /// \brief The max angular resolution `l` of the Shape.
   struct LMax {
     using type = size_t;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   /// \brief The mass of the Kerr black hole.
   struct Mass {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   /// \brief The dimensionless spin of the Kerr black hole.
   struct Spin {
     using type = std::array<double, 3>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   /// \brief Center for the Shape map
   struct Center {
     using type = std::array<double, 3>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   /// \brief The inner radius of the Shape map, the radius at which
   /// to begin applying the map.
   struct InnerRadius {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   /// \brief The outer radius of the Shape map, beyond which
   /// it is no longer applied.
   struct OuterRadius {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<InitialTime, LMax, Mass, Spin, Center, InnerRadius,
                              OuterRadius>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   Shape() = default;
   ~Shape() override = default;

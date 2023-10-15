@@ -63,17 +63,17 @@ class SpecInitialData : public evolution::initial_data::InitialData,
 
   struct DataDirectory {
     using type = std::string;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct DensityCutoff {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct ElectronFraction {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options =
@@ -81,7 +81,7 @@ class SpecInitialData : public evolution::initial_data::InitialData,
                  hydro::OptionTags::EquationOfState<true, ThermodynamicDim>,
                  DensityCutoff, ElectronFraction>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   SpecInitialData() = default;
   SpecInitialData(const SpecInitialData& rhs);

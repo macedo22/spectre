@@ -59,12 +59,12 @@ struct Excision {
 };
 
 struct ExcisionFromOptions : Excision {
-  Options::String help;
+  static constexpr Options::String help{};
   template <typename BoundaryConditionsBase>
   struct BoundaryCondition {
     static std::string name() { return "ExciseWithBoundaryCondition"; }
     using type = std::unique_ptr<BoundaryConditionsBase>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   template <typename Metavariables>
   using options = tmpl::list<BoundaryCondition<
@@ -75,11 +75,11 @@ struct ExcisionFromOptions : Excision {
 
 /// Options for filling the interior of the sphere with a cube
 struct InnerCube {
-  Options::String help;
+  static constexpr Options::String help{};
   struct Sphericity {
     static std::string name() { return "FillWithSphericity"; }
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static double lower_bound() { return 0.0; }
     static double upper_bound() { return 1.0; }
   };
@@ -189,12 +189,12 @@ class Sphere : public DomainCreator<3> {
 
   struct InnerRadius {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct OuterRadius {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using Excision = detail::Excision;
@@ -202,7 +202,7 @@ class Sphere : public DomainCreator<3> {
 
   struct Interior {
     using type = std::variant<Excision, InnerCube>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct InitialRefinement {
@@ -210,7 +210,7 @@ class Sphere : public DomainCreator<3> {
         std::variant<size_t, std::array<size_t, 3>,
                      std::vector<std::array<size_t, 3>>,
                      std::unordered_map<std::string, std::array<size_t, 3>>>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct InitialGridPoints {
@@ -218,25 +218,25 @@ class Sphere : public DomainCreator<3> {
         std::variant<size_t, std::array<size_t, 3>,
                      std::vector<std::array<size_t, 3>>,
                      std::unordered_map<std::string, std::array<size_t, 3>>>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct UseEquiangularMap {
     using type = bool;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   /// Options for the EquatorialCompression map
   struct EquatorialCompressionOptions {
-    Options::String help;
+    static constexpr Options::String help{};
     struct AspectRatio {
       using type = double;
-      Options::String help;
+      static constexpr Options::String help{};
       static double lower_bound() { return 0.0; }
     };
     struct IndexPolarAxis {
       using type = size_t;
-      Options::String help;
+      static constexpr Options::String help{};
       static size_t upper_bound() { return 2; }
     };
     using options = tmpl::list<AspectRatio, IndexPolarAxis>;
@@ -248,24 +248,24 @@ class Sphere : public DomainCreator<3> {
   struct EquatorialCompression {
     using type =
         Options::Auto<EquatorialCompressionOptions, Options::AutoLabel::None>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct RadialPartitioning {
     using type = std::vector<double>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct RadialDistribution {
     using type =
         std::variant<domain::CoordinateMaps::Distribution,
                      std::vector<domain::CoordinateMaps::Distribution>>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct WhichWedges {
     using type = ShellWedges;
-    Options::String help;
+    static constexpr Options::String help{};
     static constexpr type suggested_value() { return ShellWedges::All; }
   };
 
@@ -275,12 +275,12 @@ class Sphere : public DomainCreator<3> {
 
   struct TimeDependentMaps {
     using type = Options::Auto<TimeDepOptionType, Options::AutoLabel::None>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   template <typename BoundaryConditionsBase>
   struct OuterBoundaryCondition {
-    Options::String help;
+    static constexpr Options::String help{};
     using type = std::unique_ptr<BoundaryConditionsBase>;
   };
 
@@ -301,7 +301,7 @@ class Sphere : public DomainCreator<3> {
                   typename Metavariables::system>>>,
       basic_options>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   Sphere(
       double inner_radius, double outer_radius,

@@ -19,7 +19,7 @@ namespace evolution::dg::subcell::OptionTags {
  */
 struct SubcellSolverGroup {
   static std::string name() { return "SubcellSolver"; }
-  Options::String help;
+  static constexpr Options::String help{};
   using group = SpatialDiscretization::OptionTags::SpatialDiscretizationGroup;
 };
 }  // namespace evolution::dg::subcell::OptionTags

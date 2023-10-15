@@ -26,18 +26,18 @@ namespace OptionTags {
 
 /// %Option group
 struct Cce {
-  Options::String help;
+  static constexpr Options::String help{};
 };
 
 /// %Option group
 struct Filtering {
-  Options::String help;
+  static constexpr Options::String help{};
   using group = Cce;
 };
 
 /// %Option group for evolution-related quantities in the CCE system
 struct Evolution {
-  Options::String help;
+  static constexpr Options::String help{};
   using group = Cce;
 };
 
@@ -47,55 +47,55 @@ template <typename OptionTag>
 struct CceEvolutionPrefix {
   using type = typename OptionTag::type;
   static std::string name() { return pretty_type::name<OptionTag>(); }
-  Options::String help;
+  static constexpr Options::String help{};
   using group = Evolution;
 };
 
 struct BondiSachsOutputFilePrefix {
   using type = std::string;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = Cce;
 };
 
 struct LMax {
   using type = size_t;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = Cce;
 };
 
 struct FilterLMax {
   using type = size_t;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = Filtering;
 };
 
 struct RadialFilterAlpha {
   using type = double;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = Filtering;
 };
 
 struct RadialFilterHalfPower {
   using type = size_t;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = Filtering;
 };
 
 struct ObservationLMax {
   using type = size_t;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = Cce;
 };
 
 struct NumberOfRadialPoints {
   using type = size_t;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = Cce;
 };
 
 struct ExtractionRadius {
   using type = double;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = Cce;
 };
 
@@ -103,78 +103,78 @@ struct StandaloneExtractionRadius {
   static std::string name() { return "ExtractionRadius"; }
   using type = Options::Auto<double>;
 
-  Options::String help;
+  static constexpr Options::String help{};
   using group = Cce;
 };
 
 struct EndTime {
   using type = Options::Auto<double>;
-  Options::String help;
+  static constexpr Options::String help{};
   static type suggested_value() { return {}; }
   using group = Cce;
 };
 
 struct StartTime {
   using type = Options::Auto<double>;
-  Options::String help;
+  static constexpr Options::String help{};
   static type suggested_value() { return {}; }
   using group = Cce;
 };
 
 struct BoundaryDataFilename {
   using type = std::string;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = Cce;
 };
 
 struct H5LookaheadTimes {
   using type = size_t;
-  Options::String help;
+  static constexpr Options::String help{};
   static size_t suggested_value() { return 200; }
   using group = Cce;
 };
 
 struct H5Interpolator {
   using type = std::unique_ptr<intrp::SpanInterpolator>;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = Cce;
 };
 
 struct H5IsBondiData {
   using type = bool;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = Cce;
 };
 
 struct FixSpecNormalization {
   using type = bool;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = Cce;
 };
 
 struct AnalyticSolution {
   using type = std::unique_ptr<Solutions::WorldtubeData>;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = Cce;
 };
 
 struct GhInterfaceManager {
   using type = InterfaceManagers::GhLocalTimeStepping;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = Cce;
 };
 
 struct ScriInterpolationOrder {
   static std::string name() { return "ScriInterpOrder"; }
   using type = size_t;
-  Options::String help;
+  static constexpr Options::String help{};
   static size_t suggested_value() { return 5; }
   using group = Cce;
 };
 
 struct ScriOutputDensity {
   using type = size_t;
-  Options::String help;
+  static constexpr Options::String help{};
   static size_t suggested_value() { return 1; }
   using group = Cce;
 };
@@ -182,7 +182,7 @@ struct ScriOutputDensity {
 template <bool evolve_ccm>
 struct InitializeJ {
   using type = std::unique_ptr<::Cce::InitializeJ::InitializeJ<evolve_ccm>>;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = Cce;
 };
 }  // namespace OptionTags

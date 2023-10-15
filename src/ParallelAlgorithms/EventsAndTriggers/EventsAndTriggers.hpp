@@ -39,13 +39,13 @@ class EventsAndTriggers {
   struct TriggerAndEvents {
     struct Trigger {
       using type = std::unique_ptr<::Trigger>;
-      Options::String help;
+      static constexpr Options::String help{};
     };
     struct Events {
       using type = std::vector<std::unique_ptr<::Event>>;
-      Options::String help;
+      static constexpr Options::String help{};
     };
-    Options::String help;
+    static constexpr Options::String help{};
     using options = tmpl::list<Trigger, Events>;
     void pup(PUP::er& p) {
       p | trigger;

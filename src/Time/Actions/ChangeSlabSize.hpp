@@ -278,19 +278,19 @@ class ChangeSlabSize : public Event {
   /// \endcond
 
   struct StepChoosers {
-    Options::String help;
+    static constexpr Options::String help{};
     using type =
         std::vector<std::unique_ptr<StepChooser<StepChooserUse::Slab>>>;
     static size_t lower_bound_on_size() { return 1; }
   };
 
   struct DelayChange {
-    Options::String help;
+    static constexpr Options::String help{};
     using type = uint64_t;
   };
 
   using options = tmpl::list<StepChoosers, DelayChange>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   ChangeSlabSize() = default;
   ChangeSlabSize(std::vector<std::unique_ptr<StepChooser<StepChooserUse::Slab>>>

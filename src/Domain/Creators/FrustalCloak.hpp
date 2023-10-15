@@ -47,45 +47,45 @@ class FrustalCloak : public DomainCreator<3> {
 
   struct InitialRefinement {
     using type = size_t;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct InitialGridPoints {
     using type = std::array<size_t, 2>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct UseEquiangularMap {
     using type = bool;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct ProjectionFactor {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct LengthInnerCube {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static constexpr type lower_bound() { return 0.0; }
   };
 
   struct LengthOuterCube {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static constexpr type lower_bound() { return 0.0; }
   };
 
   struct OriginPreimage {
     using type = std::array<double, 3>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   template <typename BoundaryConditionsBase>
   struct BoundaryCondition {
     static std::string name() { return "BoundaryCondition"; }
-    Options::String help;
+    static constexpr Options::String help{};
     using type = std::unique_ptr<BoundaryConditionsBase>;
   };
 
@@ -105,7 +105,7 @@ class FrustalCloak : public DomainCreator<3> {
                   typename Metavariables::system>>>,
       basic_options>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   FrustalCloak(typename InitialRefinement::type initial_refinement_level,
                typename InitialGridPoints::type initial_number_of_grid_points,

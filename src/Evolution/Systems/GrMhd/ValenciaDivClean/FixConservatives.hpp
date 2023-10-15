@@ -96,44 +96,44 @@ class FixConservatives {
   struct MinimumValueOfD {
     using type = double;
     static type lower_bound() { return 0.0; }
-    Options::String help;
+    static constexpr Options::String help{};
   };
   /// \brief Cutoff below which \f$D = \rho W\f$ is set to MinimumValueOfD
   struct CutoffD {
     using type = double;
     static type lower_bound() { return 0.0; }
-    Options::String help;
+    static constexpr Options::String help{};
   };
   /// \brief Minimum value of electron fraction \f$Y_e\f$
   struct MinimumValueOfYe {
     using type = double;
     static type lower_bound() { return 0.0; }
-    Options::String help;
+    static constexpr Options::String help{};
   };
   /// \brief Cutoff below which \f$Y_e\f$ is set to MinimumValueOfYe
   struct CutoffYe {
     using type = double;
     static type lower_bound() { return 0.0; }
-    Options::String help;
+    static constexpr Options::String help{};
   };
   /// \brief Safety factor \f$\epsilon_B\f$.
   struct SafetyFactorForB {
     using type = double;
     static type lower_bound() { return 0.0; }
-    Options::String help;
+    static constexpr Options::String help{};
   };
   /// \brief Safety factor \f$\epsilon_S\f$.
   struct SafetyFactorForS {
     using type = double;
     static type lower_bound() { return 0.0; }
-    Options::String help;
+    static constexpr Options::String help{};
   };
   /// \brief Cutoff in \f$\rho_0 W\f$ below which we use a stricter safety
   /// factor for the magnitude of S.
   struct SafetyFactorForSCutoffD {
     using type = double;
     static type lower_bound() { return 0.0; }
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   /// \brief Below SafetyFactorForSCutoffD, reduce \f$\epsilon_S\f$ by
@@ -142,13 +142,13 @@ class FixConservatives {
   struct SafetyFactorForSSlope {
     using type = double;
     static type lower_bound() { return 0.0; }
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<MinimumValueOfD, CutoffD, MinimumValueOfYe,
                              CutoffYe, SafetyFactorForB, SafetyFactorForS,
                              SafetyFactorForSCutoffD, SafetyFactorForSSlope>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   FixConservatives(const double minimum_rest_mass_density_times_lorentz_factor,
                    const double rest_mass_density_times_lorentz_factor_cutoff,

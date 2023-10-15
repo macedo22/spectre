@@ -46,7 +46,7 @@ struct EvolutionMetavars : public GhValenciaDivCleanTemplateBase<
   using factory_creation = typename base::factory_creation;
   using registration = typename base::registration;
 
-  Options::String help;
+  static constexpr Options::String help{};
 };
 
 static const std::vector<void (*)()> charm_init_node_funcs{

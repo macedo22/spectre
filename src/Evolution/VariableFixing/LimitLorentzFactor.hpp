@@ -41,18 +41,18 @@ class LimitLorentzFactor {
   struct MaxDensityCutoff {
     using type = double;
     static type lower_bound() { return 0.0; }
-    Options::String help;
+    static constexpr Options::String help{};
   };
   /// Largest Lorentz factor allowed. If a larger one is found, normalize
   /// velocity to have the Lorentz factor be this value.
   struct LorentzFactorCap {
     using type = double;
     static type lower_bound() { return 1.0; }
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<MaxDensityCutoff, LorentzFactorCap>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   LimitLorentzFactor(double max_density_cutoff, double lorentz_factor_cap);
 

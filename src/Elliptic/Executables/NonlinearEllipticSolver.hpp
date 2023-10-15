@@ -50,30 +50,30 @@ namespace OptionTags {
 
 struct NonlinearSolverGroup {
   static std::string name() { return "NonlinearSolver"; }
-  Options::String help;
+  static constexpr Options::String help{};
 };
 struct NewtonRaphsonGroup {
   static std::string name() { return "NewtonRaphson"; }
-  Options::String help;
+  static constexpr Options::String help{};
   using group = NonlinearSolverGroup;
 };
 struct LinearSolverGroup {
   static std::string name() { return "LinearSolver"; }
-  Options::String help;
+  static constexpr Options::String help{};
 };
 struct GmresGroup {
   static std::string name() { return "Gmres"; }
-  Options::String help;
+  static constexpr Options::String help{};
   using group = LinearSolverGroup;
 };
 struct SchwarzSmootherGroup {
   static std::string name() { return "SchwarzSmoother"; }
-  Options::String help;
+  static constexpr Options::String help{};
   using group = LinearSolverGroup;
 };
 struct MultigridGroup {
   static std::string name() { return "Multigrid"; }
-  Options::String help;
+  static constexpr Options::String help{};
   using group = LinearSolverGroup;
 };
 

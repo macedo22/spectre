@@ -37,7 +37,7 @@ namespace Burgers::BoundaryConditions {
 class DemandOutgoingCharSpeeds final : public BoundaryCondition {
  public:
   using options = tmpl::list<>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   DemandOutgoingCharSpeeds() = default;
   DemandOutgoingCharSpeeds(DemandOutgoingCharSpeeds&&) = default;

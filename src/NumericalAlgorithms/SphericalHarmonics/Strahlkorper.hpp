@@ -25,19 +25,19 @@ class Strahlkorper {
  public:
   struct LMax {
     using type = size_t;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   struct Radius {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   struct Center {
     using type = std::array<double, 3>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   using options = tmpl::list<LMax, Radius, Center>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   // Pup needs default constructor
   Strahlkorper() = default;
@@ -167,7 +167,7 @@ namespace OptionTags {
 template <typename Frame>
 struct Strahlkorper {
   using type = ylm::Strahlkorper<Frame>;
-  Options::String help;
+  static constexpr Options::String help{};
 };
 } // namespace OptionTags
 

@@ -38,7 +38,7 @@ namespace OptionTags {
 /// \endcode
 struct EventsAndTriggers {
   using type = ::EventsAndTriggers;
-  Options::String help;
+  static constexpr Options::String help{};
   // When the template arguments to this struct are sufficiently
   // complicated, pretty_type::short_name() run on this struct returns
   // something that is neither pretty nor short, and leads to an
@@ -51,7 +51,7 @@ struct EventsAndTriggers {
 namespace EventsRunAtCleanup {
 struct Group {
   static std::string name() { return "EventsRunAtCleanup"; }
-  Options::String help;
+  static constexpr Options::String help{};
 };
 
 /// \brief A list of events to run at cleanup.
@@ -60,14 +60,14 @@ struct Group {
 struct Events {
   static std::string name() { return "Events"; }
   using type = std::vector<std::unique_ptr<::Event>>;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = Group;
 };
 
 /// \brief Observation value for Actions::RunEventsOnFailure.
 struct ObservationValue {
   using type = double;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = Group;
 };
 }  // namespace EventsRunAtCleanup

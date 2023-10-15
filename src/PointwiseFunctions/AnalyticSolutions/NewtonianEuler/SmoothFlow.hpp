@@ -57,7 +57,7 @@ class SmoothFlow : virtual public MarkAsAnalyticSolution,
  public:
   using options = typename smooth_flow::options;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   SmoothFlow() = default;
   SmoothFlow(const SmoothFlow& /*rhs*/) = default;

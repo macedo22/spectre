@@ -54,11 +54,11 @@ class MathFunction : public elliptic::analytic_data::AnalyticSolution {
  public:
   struct Function {
     using type = std::unique_ptr<::MathFunction<Dim, Frame::Inertial>>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<Function>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   MathFunction() = default;
   MathFunction(const MathFunction&) = delete;

@@ -19,7 +19,7 @@ template <typename Tag>
 struct BoundaryConditionType {
   static std::string name() { return db::tag_name<Tag>(); }
   using type = elliptic::BoundaryConditionType;
-  Options::String help;
+  static constexpr Options::String help{};
 };
 
 }  // namespace OptionTags

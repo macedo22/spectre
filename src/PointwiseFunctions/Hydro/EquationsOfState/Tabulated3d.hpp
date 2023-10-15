@@ -48,16 +48,16 @@ class Tabulated3D : public EquationOfState<IsRelativistic, 3> {
   static constexpr size_t thermodynamic_dim = 3;
   static constexpr bool is_relativistic = IsRelativistic;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   struct TableFilename {
     using type = std::string;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct TableSubFilename {
     using type = std::string;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<TableFilename, TableSubFilename>;

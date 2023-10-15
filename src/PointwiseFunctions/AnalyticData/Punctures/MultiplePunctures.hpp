@@ -27,23 +27,23 @@ namespace Punctures::AnalyticData {
 struct Puncture {
   struct Position {
     using type = std::array<double, 3>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   struct Mass {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static double lower_bound() { return 0.; }
   };
   struct Momentum {
     using type = std::array<double, 3>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   struct Spin {
     using type = std::array<double, 3>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   using options = tmpl::list<Position, Mass, Momentum, Spin>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   std::array<double, 3> position{
       {std::numeric_limits<double>::signaling_NaN()}};
@@ -134,11 +134,11 @@ class MultiplePunctures : public elliptic::analytic_data::Background,
                           public elliptic::analytic_data::InitialGuess {
  public:
   struct Punctures {
-    Options::String help;
+    static constexpr Options::String help{};
     using type = std::vector<Puncture>;
   };
   using options = tmpl::list<Punctures>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   MultiplePunctures() = default;
   MultiplePunctures(const MultiplePunctures&) = default;

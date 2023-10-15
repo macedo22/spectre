@@ -90,7 +90,7 @@ class Hll final : public BoundaryCorrection<Dim> {
   };
 
   using options = tmpl::list<>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   Hll() = default;
   Hll(const Hll&) = default;

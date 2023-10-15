@@ -95,17 +95,17 @@ class Minmod {
     static type suggested_value() {
       return NewtonianEuler::Limiters::VariablesToLimit::Characteristic;
     }
-    Options::String help;
+    static constexpr Options::String help{};
   };
   struct ApplyFlattener {
     using type = bool;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   using options =
       tmpl::list<typename ConservativeVarsMinmod::Type, VariablesToLimit,
                  typename ConservativeVarsMinmod::TvbConstant, ApplyFlattener,
                  typename ConservativeVarsMinmod::DisableForDebugging>;
-  Options::String help;
+  static constexpr Options::String help{};
   static std::string name() { return "NewtonianEulerMinmod"; };
 
   explicit Minmod(::Limiters::MinmodType minmod_type,

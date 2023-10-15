@@ -23,7 +23,7 @@ class Completion : public Event {
 
   using compute_tags_for_observation_box = tmpl::list<>;
   using options = tmpl::list<>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   Completion() = default;
 

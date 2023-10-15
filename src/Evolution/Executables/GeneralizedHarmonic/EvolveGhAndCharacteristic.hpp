@@ -235,7 +235,7 @@ struct EvolutionMetavars : public GeneralizedHarmonicTemplateBase<VolumeDim>,
                                  tmpl::pin<EvolutionMetavars>, tmpl::_1>>,
       cce_boundary_component, Cce::CharacteristicEvolution<EvolutionMetavars>>>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 };
 
 static const std::vector<void (*)()> charm_init_node_funcs{

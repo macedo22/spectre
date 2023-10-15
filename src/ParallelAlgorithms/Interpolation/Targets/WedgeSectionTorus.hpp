@@ -69,55 +69,55 @@ namespace OptionHolders {
 struct WedgeSectionTorus {
   struct MinRadius {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
   struct MaxRadius {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
   struct MinTheta {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return M_PI; }
   };
   struct MaxTheta {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return M_PI; }
   };
   struct NumberRadialPoints {
     using type = size_t;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 2; }
   };
   struct NumberThetaPoints {
     using type = size_t;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 2; }
   };
   struct NumberPhiPoints {
     using type = size_t;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 1; }
   };
   struct UniformRadialGrid {
     using type = bool;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   struct UniformThetaGrid {
     using type = bool;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options =
       tmpl::list<MinRadius, MaxRadius, MinTheta, MaxTheta, NumberRadialPoints,
                  NumberThetaPoints, NumberPhiPoints, UniformRadialGrid,
                  UniformThetaGrid>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   WedgeSectionTorus(double min_radius_in, double max_radius_in,
                     double min_theta_in, double max_theta_in,
@@ -158,7 +158,7 @@ namespace OptionTags {
 template <typename InterpolationTargetTag>
 struct WedgeSectionTorus {
   using type = OptionHolders::WedgeSectionTorus;
-  Options::String help;
+  static constexpr Options::String help{};
   static std::string name() {
     return pretty_type::name<InterpolationTargetTag>();
   }

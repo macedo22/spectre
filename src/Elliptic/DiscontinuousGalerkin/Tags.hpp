@@ -12,23 +12,23 @@ namespace elliptic::dg {
 namespace OptionTags {
 
 struct Discretization {
-  Options::String help;
+  static constexpr Options::String help{};
 };
 
 struct DiscontinuousGalerkin {
   using group = Discretization;
-  Options::String help;
+  static constexpr Options::String help{};
 };
 
 struct PenaltyParameter {
   using type = double;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = DiscontinuousGalerkin;
 };
 
 struct Massive {
   using type = bool;
-  Options::String help;
+  static constexpr Options::String help{};
   using group = DiscontinuousGalerkin;
 };
 

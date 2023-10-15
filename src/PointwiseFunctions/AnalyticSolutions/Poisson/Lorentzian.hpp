@@ -67,7 +67,7 @@ class Lorentzian : public elliptic::analytic_data::AnalyticSolution {
 
  public:
   using options = tmpl::list<>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   Lorentzian() = default;
   Lorentzian(const Lorentzian&) = default;

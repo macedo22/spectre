@@ -56,39 +56,39 @@ class KerrSphericalHarmonic
   /// The mass of the black hole.
   struct Mass {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
   /// The spin of the black hole
   struct Spin {
     using type = std::array<double, volume_dim>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   /// The amplitude of the scalar field
   struct Amplitude {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   /// The location of the scalar field
   struct Radius {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
   /// The width of the scalar field
   struct Width {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
   /// The spherical harmonic mode of the scalar field
   struct Mode {
     using type = std::pair<size_t, int>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<Mass, Spin, Amplitude, Radius, Width, Mode>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   KerrSphericalHarmonic() = default;
   KerrSphericalHarmonic(const KerrSphericalHarmonic& /*rhs*/) = default;

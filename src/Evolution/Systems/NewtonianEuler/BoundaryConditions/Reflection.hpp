@@ -58,7 +58,7 @@ template <size_t Dim>
 class Reflection final : public BoundaryCondition<Dim> {
  public:
   using options = tmpl::list<>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   Reflection() = default;
   Reflection(Reflection&&) = default;

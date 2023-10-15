@@ -104,26 +104,26 @@ class ApparentHorizon
   using Base = elliptic::BoundaryConditions::BoundaryCondition<3>;
 
  public:
-  Options::String help;
+  static constexpr Options::String help{};
 
   struct Center {
     using type = std::array<double, 3>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   struct Rotation {
     using type = std::array<double, 3>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   struct Lapse {
     using type = Options::Auto<
         std::unique_ptr<elliptic::analytic_data::AnalyticSolution>>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   struct NegativeExpansion {
     using type = Options::Auto<
         std::unique_ptr<elliptic::analytic_data::AnalyticSolution>,
         Options::AutoLabel::None>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<Center, Rotation, Lapse, NegativeExpansion>;

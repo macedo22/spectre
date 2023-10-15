@@ -45,11 +45,11 @@ class ElementSizeCfl : public StepChooser<StepChooserUse> {
 
   struct SafetyFactor {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
 
-  Options::String help;
+  static constexpr Options::String help{};
   using options = tmpl::list<SafetyFactor>;
 
   explicit ElementSizeCfl(const double safety_factor)

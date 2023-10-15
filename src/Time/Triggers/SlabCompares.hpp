@@ -34,16 +34,16 @@ class SlabCompares : public Trigger {
 
   struct Comparison {
     using type = Options::Comparator;
-    Options::String help;
+    constexpr static Options::String help{};
   };
 
   struct Value {
     using type = uint64_t;
-    Options::String help;
+    constexpr static Options::String help{};
   };
 
   using options = tmpl::list<Comparison, Value>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   explicit SlabCompares(const Options::Comparator comparator,
                         const uint64_t slab_number)

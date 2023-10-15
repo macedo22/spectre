@@ -134,36 +134,36 @@ class ErrorControl : public StepChooser<StepChooserUse>,
 
   struct AbsoluteTolerance {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
 
   struct RelativeTolerance {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
 
   struct MaxFactor {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 1.0; }
   };
 
   struct MinFactor {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 1.0; }
   };
 
   struct SafetyFactor {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
 
-  Options::String help;
+  static constexpr Options::String help{};
   using options = tmpl::list<AbsoluteTolerance, RelativeTolerance, MaxFactor,
                              MinFactor, SafetyFactor>;
 

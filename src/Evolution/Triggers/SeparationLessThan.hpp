@@ -66,11 +66,11 @@ class SeparationLessThan : public Trigger {
 
   struct Value {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<Value>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   explicit SeparationLessThan(double separation);
 

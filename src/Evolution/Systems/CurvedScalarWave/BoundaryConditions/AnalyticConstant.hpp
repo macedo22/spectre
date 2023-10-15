@@ -34,10 +34,10 @@ class AnalyticConstant final : public BoundaryCondition<Dim> {
  public:
   struct Amplitude {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   using options = tmpl::list<Amplitude>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   AnalyticConstant(double amplitude);
   AnalyticConstant() = default;

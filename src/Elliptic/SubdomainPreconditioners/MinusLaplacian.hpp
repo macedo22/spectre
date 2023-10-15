@@ -134,16 +134,16 @@ class MinusLaplacian
   struct SolverOptionTag {
     static std::string name() { return "Solver"; }
     using type = StoredSolverType;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct BoundaryConditions {
     using type = Options::Auto<elliptic::BoundaryConditionType>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<SolverOptionTag, BoundaryConditions>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   MinusLaplacian() = default;
   MinusLaplacian(MinusLaplacian&& /*rhs*/) = default;

@@ -18,13 +18,13 @@ namespace OptionTags {
 
 template <typename BackgroundType>
 struct Background {
-  Options::String help;
+  static constexpr Options::String help{};
   using type = std::unique_ptr<BackgroundType>;
 };
 
 template <typename InitialGuessType>
 struct InitialGuess {
-  Options::String help;
+  static constexpr Options::String help{};
   using type = std::unique_ptr<InitialGuessType>;
 };
 

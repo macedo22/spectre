@@ -18,7 +18,7 @@ namespace dg::OptionTags {
  */
 struct DiscontinuousGalerkinGroup {
   static std::string name() { return "DiscontinuousGalerkin"; }
-  Options::String help;
+  static constexpr Options::String help{};
   using group = SpatialDiscretization::OptionTags::SpatialDiscretizationGroup;
 };
 }  // namespace dg::OptionTags

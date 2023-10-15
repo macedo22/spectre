@@ -3,9 +3,7 @@
 
 #pragma once
 
-#include <string>
-
 namespace Options {
 /// The string used in option structs
-using String = std::string;
+using String = const char* const;
 }  // namespace Options

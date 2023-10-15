@@ -58,7 +58,7 @@ class FastWave : public evolution::initial_data::InitialData,
                  public MarkAsAnalyticSolution {
  public:
   using options = tmpl::list<>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   FastWave() = default;
   FastWave(const FastWave&) = default;

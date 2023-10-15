@@ -87,24 +87,24 @@ class PositivityPreservingAdaptiveOrderPrim : public Reconstructor {
 
   struct Alpha5 {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   struct Alpha7 {
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   struct Alpha9 {
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   struct LowOrderReconstructor {
     using type = FallbackReconstructorType;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<Alpha5, Alpha7, Alpha9, LowOrderReconstructor>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   PositivityPreservingAdaptiveOrderPrim() = default;
   PositivityPreservingAdaptiveOrderPrim(

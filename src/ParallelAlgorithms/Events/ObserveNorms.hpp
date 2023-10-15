@@ -103,19 +103,19 @@ class ObserveNorms<tmpl::list<ObservableTensorTags...>,
     : public Event {
  private:
   struct ObserveTensor {
-    Options::String help;
+    static constexpr Options::String help{};
 
     struct Name {
       using type = std::string;
-      Options::String help;
+      static constexpr Options::String help{};
     };
     struct NormType {
       using type = std::string;
-      Options::String help;
+      static constexpr Options::String help{};
     };
     struct Components {
       using type = std::string;
-      Options::String help;
+      static constexpr Options::String help{};
     };
 
     using options = tmpl::list<Name, NormType, Components>;
@@ -162,12 +162,12 @@ class ObserveNorms<tmpl::list<ObservableTensorTags...>,
   /// The name of the subfile inside the HDF5 file
   struct SubfileName {
     using type = std::string;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   /// The tensor to observe and how to do the reduction
   struct TensorsToObserve {
     using type = std::vector<ObserveTensor>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   explicit ObserveNorms(CkMigrateMessage* msg);
@@ -176,7 +176,7 @@ class ObserveNorms<tmpl::list<ObservableTensorTags...>,
 
   using options = tmpl::list<SubfileName, TensorsToObserve>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   ObserveNorms() = default;
 

@@ -57,11 +57,11 @@ class LaserBeam : public elliptic::BoundaryConditions::BoundaryCondition<3> {
  public:
   struct BeamWidth {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
 
-  Options::String help;
+  static constexpr Options::String help{};
   using options = tmpl::list<BeamWidth>;
 
   LaserBeam() = default;

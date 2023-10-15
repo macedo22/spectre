@@ -106,26 +106,26 @@ class BentBeam : public elliptic::analytic_data::AnalyticSolution {
 
   struct Length {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
   struct Height {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
   struct BendingMoment {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
   struct Material {
     using type = constitutive_relation_type;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<Length, Height, BendingMoment, Material>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   BentBeam() = default;
   BentBeam(const BentBeam&) = default;

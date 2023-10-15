@@ -40,7 +40,7 @@ namespace InitializeJ {
 template <>
 struct InverseCubic<true> : InitializeJ<true> {
   using options = tmpl::list<>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   WRAPPED_PUPable_decl_template(InverseCubic);  // NOLINT
   explicit InverseCubic(CkMigrateMessage* /*unused*/) {}
@@ -88,7 +88,7 @@ struct InverseCubic<true> : InitializeJ<true> {
 template <>
 struct InverseCubic<false> : InitializeJ<false> {
   using options = tmpl::list<>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   WRAPPED_PUPable_decl_template(InverseCubic);  // NOLINT
   explicit InverseCubic(CkMigrateMessage* /*unused*/) {}

@@ -69,28 +69,28 @@ class MagneticFieldLoop
   /// The pressure throughout the fluid.
   struct Pressure {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
 
   /// The rest mass density throughout the fluid.
   struct RestMassDensity {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
 
   /// The adiabatic index for the ideal fluid.
   struct AdiabaticIndex {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 1.0; }
   };
 
   /// The fluid velocity.
   struct AdvectionVelocity {
     using type = std::array<double, 3>;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return {{-1.0, -1.0, -1.0}}; }
     static type upper_bound() { return {{1.0, 1.0, 1.0}}; }
   };
@@ -98,28 +98,28 @@ class MagneticFieldLoop
   /// The strength of the magnetic field.
   struct MagFieldStrength {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
 
   /// The inner radius of the magnetic loop.
   struct InnerRadius {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
 
   /// The outer radius of the magnetic loop.
   struct OuterRadius {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
 
   using options =
       tmpl::list<Pressure, RestMassDensity, AdiabaticIndex, AdvectionVelocity,
                  MagFieldStrength, InnerRadius, OuterRadius>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   MagneticFieldLoop() = default;
   MagneticFieldLoop(const MagneticFieldLoop& /*rhs*/) = default;

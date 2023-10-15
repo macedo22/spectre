@@ -61,11 +61,11 @@ class ProductOfSinusoids : public elliptic::analytic_data::AnalyticSolution {
  public:
   struct WaveNumbers {
     using type = std::array<double, Dim>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<WaveNumbers>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   ProductOfSinusoids() = default;
   ProductOfSinusoids(const ProductOfSinusoids&) = default;

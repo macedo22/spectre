@@ -125,22 +125,22 @@ class Loehner : public Criterion {
  public:
   struct VariablesToMonitor {
     using type = std::vector<std::string>;
-    Options::String help;
+    static constexpr Options::String help{};
     static size_t lower_bound_on_size() { return 1; }
   };
   struct RelativeTolerance {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static double lower_bound() { return 0.; }
   };
   struct AbsoluteTolerance {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static double lower_bound() { return 0.; }
   };
   struct CoarseningFactor {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static double lower_bound() { return 0.; }
     static double upper_bound() { return 1.; }
   };
@@ -148,7 +148,7 @@ class Loehner : public Criterion {
   using options = tmpl::list<VariablesToMonitor, RelativeTolerance,
                              AbsoluteTolerance, CoarseningFactor>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   Loehner() = default;
 

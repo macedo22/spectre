@@ -43,17 +43,17 @@ class SemidiscretizedDg : public evolution::initial_data::InitialData,
 
   struct Harmonic {
     using type = int;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct Amplitudes {
     using type = std::array<double, 4>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<Harmonic, Amplitudes>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   SemidiscretizedDg(int harmonic, const std::array<double, 4>& amplitudes);
 

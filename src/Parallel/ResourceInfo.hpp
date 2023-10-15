@@ -63,16 +63,16 @@ template <typename Component>
 struct SingletonInfoHolder {
   struct Proc {
     using type = Options::Auto<int>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct Exclusive {
     using type = bool;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<Proc, Exclusive>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   SingletonInfoHolder(std::optional<int> input_proc, const bool input_exclusive,
                       const Options::Context& context = {})
@@ -166,12 +166,12 @@ struct SingletonPack<tmpl::list<ParallelComponents...>> {
   struct SingletonOption {
     using type = Options::Auto<SingletonInfoHolder<Component>>;
     static std::string name() { return pretty_type::name<Component>(); }
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options =
       tmpl::transform<component_list, tmpl::bind<SingletonOption, tmpl::_1>>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   SingletonPack(
       const std::optional<
@@ -331,12 +331,12 @@ struct ResourceInfo {
  public:
   struct Singletons {
     using type = Options::Auto<SingletonPack<singletons>>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct AvoidGlobalProc0 {
     using type = bool;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::push_front<
@@ -344,7 +344,7 @@ struct ResourceInfo {
                           tmpl::list<Singletons>, tmpl::list<>>,
       AvoidGlobalProc0>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   /// The main constructor. All other constructors that take options will call
   /// this one. This constructor holds all checks able to be done during option

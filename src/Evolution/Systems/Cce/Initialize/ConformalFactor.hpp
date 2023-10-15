@@ -75,35 +75,35 @@ struct ConformalFactor : InitializeJ<false> {
   struct AngularCoordinateTolerance {
     using type = double;
     static std::string name() { return "AngularCoordTolerance"; }
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 1.0e-14; }
     static type upper_bound() { return 1.0e-3; }
   };
   struct MaxIterations {
     using type = size_t;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 10; }
     static type upper_bound() { return 1000; }
     static type suggested_value() { return 300; }
   };
   struct RequireConvergence {
     using type = bool;
-    Options::String help;
+    static constexpr Options::String help{};
     static type suggested_value() { return true; }
   };
   struct OptimizeL0Mode {
     using type = bool;
-    Options::String help;
+    static constexpr Options::String help{};
     static type suggested_value() { return false; }
   };
   struct UseBetaIntegralEstimate {
     using type = bool;
-    Options::String help;
+    static constexpr Options::String help{};
     static type suggested_value() { return true; }
   };
   struct ConformalFactorIterationHeuristic {
     using type = ::Cce::InitializeJ::ConformalFactorIterationHeuristic;
-    Options::String help;
+    static constexpr Options::String help{};
     static type suggested_value() {
       return ::Cce::InitializeJ::ConformalFactorIterationHeuristic::
           SpinWeight1CoordPerturbation;
@@ -111,15 +111,15 @@ struct ConformalFactor : InitializeJ<false> {
   };
   struct UseInputModes {
     using type = bool;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   struct InputModesFromFile {
     using type = std::string;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   struct InputModes {
     using type = std::vector<std::complex<double>>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   using options =
@@ -128,7 +128,7 @@ struct ConformalFactor : InitializeJ<false> {
                  ConformalFactorIterationHeuristic, UseInputModes,
                  Options::Alternatives<tmpl::list<InputModesFromFile>,
                                        tmpl::list<InputModes>>>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   WRAPPED_PUPable_decl_template(ConformalFactor);  // NOLINT
   explicit ConformalFactor(CkMigrateMessage* msg);

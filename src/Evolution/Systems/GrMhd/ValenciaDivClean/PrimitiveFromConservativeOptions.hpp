@@ -27,21 +27,21 @@ class PrimitiveFromConservativeOptions {
  public:
   struct CutoffDForInversion {
     static std::string name() { return "CutoffDForInversion"; }
-    Options::String help;
+    static constexpr Options::String help{};
     using type = double;
     static type lower_bound() { return 0.0; }
   };
 
   struct DensityWhenSkippingInversion {
     static std::string name() { return "DensityWhenSkippingInversion"; }
-    Options::String help;
+    static constexpr Options::String help{};
     using type = double;
     static type lower_bound() { return 0.0; }
   };
 
   using options = tmpl::list<CutoffDForInversion, DensityWhenSkippingInversion>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   PrimitiveFromConservativeOptions() = default;
 

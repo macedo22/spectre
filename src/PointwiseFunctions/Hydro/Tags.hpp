@@ -25,7 +25,7 @@ template <bool IsRelativistic, size_t ThermoDim>
 struct EquationOfState {
   using type = std::unique_ptr<
       EquationsOfState::EquationOfState<IsRelativistic, ThermoDim>>;
-  Options::String help;
+  static constexpr Options::String help{};
 };
 }  // namespace OptionTags
 

@@ -64,12 +64,12 @@ class DarkEnergyFluid : public EquationOfState<IsRelativistic, 2> {
 
   struct ParameterW {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static double lower_bound() { return 0.0; }
     static double upper_bound() { return 1.0; }
   };
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   using options = tmpl::list<ParameterW>;
 

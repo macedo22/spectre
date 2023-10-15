@@ -88,7 +88,7 @@ class HydroFreeOutflow final : public BoundaryCondition {
 
  public:
   using options = tmpl::list<>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   HydroFreeOutflow() = default;
   HydroFreeOutflow(HydroFreeOutflow&&) = default;

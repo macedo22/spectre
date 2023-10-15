@@ -23,7 +23,7 @@ struct Metavariables {
   static constexpr std::array<Parallel::Phase, 2> default_phase_order{
       {Parallel::Phase::Initialization, Parallel::Phase::Exit}};
 
-  Options::String help;
+  static constexpr Options::String help{};
 };
 /// [metavariables_definition]
 

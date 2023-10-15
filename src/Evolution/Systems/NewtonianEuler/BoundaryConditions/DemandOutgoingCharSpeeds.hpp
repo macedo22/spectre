@@ -40,7 +40,7 @@ template <size_t Dim>
 class DemandOutgoingCharSpeeds final : public BoundaryCondition<Dim> {
  public:
   using options = tmpl::list<>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   DemandOutgoingCharSpeeds() = default;
   DemandOutgoingCharSpeeds(DemandOutgoingCharSpeeds&&) = default;

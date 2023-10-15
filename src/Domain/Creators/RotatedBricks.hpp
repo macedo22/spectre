@@ -105,38 +105,38 @@ class RotatedBricks : public DomainCreator<3> {
 
   struct LowerBound {
     using type = std::array<double, 3>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct Midpoint {
     using type = std::array<double, 3>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct UpperBound {
     using type = std::array<double, 3>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct IsPeriodicIn {
     using type = std::array<bool, 3>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct InitialRefinement {
     using type = std::array<size_t, 3>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct InitialGridPoints {
     using type = std::array<std::array<size_t, 2>, 3>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   template <typename BoundaryConditionsBase>
   struct BoundaryCondition {
     static std::string name() { return "BoundaryCondition"; }
-    Options::String help;
+    static constexpr Options::String help{};
     using type = std::unique_ptr<BoundaryConditionsBase>;
   };
 
@@ -155,7 +155,7 @@ class RotatedBricks : public DomainCreator<3> {
                   typename Metavariables::system>>>,
           options_periodic>>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   RotatedBricks(
       typename LowerBound::type lower_xyz, typename Midpoint::type midpoint_xyz,

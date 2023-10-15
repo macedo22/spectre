@@ -42,27 +42,27 @@ class GaussianPlusConstant : public DampingFunction<VolumeDim, Fr> {
  public:
   struct Constant {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct Amplitude {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
   };
 
   struct Width {
     using type = double;
-    Options::String help;
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.; }
   };
 
   struct Center {
     using type = std::array<double, VolumeDim>;
-    Options::String help;
+    static constexpr Options::String help{};
   };
   using options = tmpl::list<Constant, Amplitude, Width, Center>;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   /// \cond
   WRAPPED_PUPable_decl_base_template(SINGLE_ARG(DampingFunction<VolumeDim, Fr>),

@@ -62,7 +62,7 @@ struct RandomAmrMetavars {
   static constexpr size_t volume_dim = Dim;
   using system = DummySystem;
 
-  Options::String help;
+  static constexpr Options::String help{};
 
   struct factory_creation
       : tt::ConformsTo<Options::protocols::FactoryCreation> {

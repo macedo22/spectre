@@ -21,7 +21,7 @@ namespace OptionTags {
 struct Reconstructor {
   using type = std::unique_ptr<fd::Reconstructor>;
 
-  Options::String help;
+  static constexpr Options::String help{};
   using group = evolution::dg::subcell::OptionTags::SubcellSolverGroup;
 };
 
@@ -29,7 +29,7 @@ struct Reconstructor {
 struct FilterOptions {
   using type = fd::FilterOptions;
 
-  Options::String help;
+  static constexpr Options::String help{};
   using group = evolution::dg::subcell::OptionTags::SubcellSolverGroup;
 };
 }  // namespace OptionTags

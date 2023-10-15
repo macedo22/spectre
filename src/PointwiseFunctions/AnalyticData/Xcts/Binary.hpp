@@ -315,36 +315,36 @@ class Binary : public elliptic::analytic_data::Background,
                public elliptic::analytic_data::InitialGuess {
  public:
   struct XCoords {
-    Options::String help;
+    static constexpr Options::String help{};
     using type = std::array<double, 2>;
   };
   struct ObjectLeft {
-    Options::String help;
+    static constexpr Options::String help{};
     using type = std::unique_ptr<IsolatedObjectBase>;
   };
   struct ObjectRight {
-    Options::String help;
+    static constexpr Options::String help{};
     using type = std::unique_ptr<IsolatedObjectBase>;
   };
   struct AngularVelocity {
-    Options::String help;
+    static constexpr Options::String help{};
     using type = double;
   };
   struct Expansion {
-    Options::String help;
+    static constexpr Options::String help{};
     using type = double;
   };
   struct LinearVelocity {
-    Options::String help;
+    static constexpr Options::String help{};
     using type = std::array<double, 3>;
   };
   struct FalloffWidths {
-    Options::String help;
+    static constexpr Options::String help{};
     using type = Options::Auto<std::array<double, 2>, Options::AutoLabel::None>;
   };
   using options = tmpl::list<XCoords, ObjectLeft, ObjectRight, AngularVelocity,
                              Expansion, LinearVelocity, FalloffWidths>;
-  Options::String help;
+  static constexpr Options::String help{};
 
   Binary() = default;
   Binary(const Binary&) = delete;
