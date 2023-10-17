@@ -84,7 +84,7 @@ namespace gsl {
  * \brief Cast `u` to a type `T` where the cast may result in narrowing
  */
 template <class T, class U>
-SPECTRE_ALWAYS_INLINE constexpr T narrow_cast(U&& u) {
+constexpr T narrow_cast(U&& u) {
   return static_cast<T>(std::forward<U>(u));
 }
 
@@ -101,7 +101,7 @@ struct is_same_signedness
  * the value
  */
 template <class T, class U>
-SPECTRE_ALWAYS_INLINE T narrow(U u) {
+T narrow(U u) {
   T t = narrow_cast<T>(u);
   if (static_cast<U>(t) != u) {
     ERROR("Failed to cast " << u << " of type " << pretty_type::get_name<U>()
@@ -122,21 +122,19 @@ SPECTRE_ALWAYS_INLINE T narrow(U u) {
  * the index being retrieved is valid.
  */
 template <class T, std::size_t N, typename Size>
-SPECTRE_ALWAYS_INLINE constexpr T& at(std::array<T, N>& arr, Size index) {
+constexpr T& at(std::array<T, N>& arr, Size index) {
   Expects(index >= 0 and index < narrow_cast<Size>(N));
   return arr[static_cast<std::size_t>(index)];
 }
 
 template <class Cont, typename Size>
-SPECTRE_ALWAYS_INLINE constexpr const typename Cont::value_type& at(
-    const Cont& cont, Size index) {
+constexpr const typename Cont::value_type& at(const Cont& cont, Size index) {
   Expects(index >= 0 and index < narrow_cast<Size>(cont.size()));
   return cont[static_cast<typename Cont::size_type>(index)];
 }
 
 template <class T, typename Size>
-SPECTRE_ALWAYS_INLINE constexpr const T& at(std::initializer_list<T> cont,
-                                            Size index) {
+constexpr const T& at(std::initializer_list<T> cont, Size index) {
   Expects(index >= 0 and index < narrow_cast<Size>(cont.size()));
   return *(cont.begin() + index);
 }

@@ -373,8 +373,8 @@ struct MakeWithValueImpl<
       LinearSolver::Schwarz::ElementCenteredSubdomainData<Dim, TagsListIn>;
   using SubdomainDataOut =
       LinearSolver::Schwarz::ElementCenteredSubdomainData<Dim, TagsListOut>;
-  static SPECTRE_ALWAYS_INLINE SubdomainDataOut
-  apply(const SubdomainDataIn& input, const double value) {
+  static SubdomainDataOut apply(const SubdomainDataIn& input,
+                                const double value) {
     SubdomainDataOut output{};
     output.element_data =
         make_with_value<typename SubdomainDataOut::ElementData>(

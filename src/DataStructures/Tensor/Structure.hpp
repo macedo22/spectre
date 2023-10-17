@@ -357,11 +357,9 @@ struct Structure {
 
   using index_list = tmpl::list<Indices...>;
 
-  SPECTRE_ALWAYS_INLINE static constexpr size_t rank() {
-    return sizeof...(Indices);
-  }
+  static constexpr size_t rank() { return sizeof...(Indices); }
 
-  SPECTRE_ALWAYS_INLINE static constexpr size_t size() {
+  static constexpr size_t size() {
     constexpr auto number_of_independent_components =
         ::Tensor_detail::number_of_independent_components(
             make_array_from_list<
@@ -371,7 +369,7 @@ struct Structure {
     return number_of_independent_components;
   }
 
-  SPECTRE_ALWAYS_INLINE static constexpr size_t number_of_components() {
+  static constexpr size_t number_of_components() {
     constexpr auto number_of_components = ::Tensor_detail::number_of_components(
         make_array_from_list<tmpl::conditional_t<sizeof...(Indices) != 0,
                                                  index_list, size_t>>());
@@ -396,40 +394,35 @@ struct Structure {
 
   // Retrieves the dimensionality of the I'th index
   template <int I>
-  SPECTRE_ALWAYS_INLINE static constexpr size_t dim() {
+  static constexpr size_t dim() {
     static_assert(sizeof...(Indices),
                   "A scalar does not have any indices from which you can "
                   "retrieve the dimensionality.");
     return tmpl::at<index_list, tmpl::int32_t<I>>::value;
   }
 
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, sizeof...(Indices)>
-  dims() {
+  static constexpr std::array<size_t, sizeof...(Indices)> dims() {
     constexpr auto dims = make_array_from_list<
         tmpl::conditional_t<sizeof...(Indices) != 0, index_list, size_t>>();
     return dims;
   }
 
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<int, sizeof...(Indices)>
-  symmetries() {
+  static constexpr std::array<int, sizeof...(Indices)> symmetries() {
     return make_array_from_list<
         tmpl::conditional_t<0 != sizeof...(Indices), Symm, int>>();
   }
 
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<IndexType,
-                                                    sizeof...(Indices)>
-  index_types() {
+  static constexpr std::array<IndexType, sizeof...(Indices)> index_types() {
     return std::array<IndexType, sizeof...(Indices)>{{Indices::index_type...}};
   }
 
   /// Return array of the valence of each index
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<UpLo, sizeof...(Indices)>
-  index_valences() {
+  static constexpr std::array<UpLo, sizeof...(Indices)> index_valences() {
     return std::array<UpLo, sizeof...(Indices)>{{Indices::ul...}};
   }
 
   /// Return array of the frame of each index
-  SPECTRE_ALWAYS_INLINE static constexpr auto index_frames() {
+  static constexpr auto index_frames() {
     return std::tuple<typename Indices::Frame...>{};
   }
 
@@ -449,8 +442,8 @@ struct Structure {
   /// tensor_index
   /// \return the canonical tensor_index array of a storage_index
   template <size_t Rank = sizeof...(Indices)>
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, Rank>
-  get_canonical_tensor_index(const size_t storage_index) {
+  static constexpr std::array<size_t, Rank> get_canonical_tensor_index(
+      const size_t storage_index) {
     if constexpr (Rank != 0) {
       constexpr auto storage_to_tensor = storage_to_tensor_;
       return gsl::at(storage_to_tensor, storage_index);
@@ -472,8 +465,7 @@ struct Structure {
   /// storage_index
   /// \return the storage_index of a tensor_index
   template <typename... N>
-  SPECTRE_ALWAYS_INLINE static constexpr std::size_t get_storage_index(
-      const N... args) {
+  static constexpr std::size_t get_storage_index(const N... args) {
     static_assert(sizeof...(Indices) == sizeof...(N),
                   "the number arguments must be equal to rank_");
     constexpr auto collapsed_to_storage = collapsed_to_storage_;
@@ -502,7 +494,7 @@ struct Structure {
   /// \param tensor_index the tensor_index of which to get the storage_index
   /// \return the storage_index of a tensor_index
   template <typename I>
-  SPECTRE_ALWAYS_INLINE static constexpr std::size_t get_storage_index(
+  static constexpr std::size_t get_storage_index(
       const std::array<I, sizeof...(Indices)>& tensor_index) {
     constexpr auto collapsed_to_storage = collapsed_to_storage_;
     return gsl::at(collapsed_to_storage,
@@ -523,7 +515,7 @@ struct Structure {
   /// storage_index
   /// \return the storage_index of a tensor_index
   template <int... N, Requires<(sizeof...(N) > 0)> = nullptr>
-  SPECTRE_ALWAYS_INLINE static constexpr std::size_t get_storage_index() {
+  static constexpr std::size_t get_storage_index() {
     static_assert(sizeof...(Indices) == sizeof...(N),
                   "the number arguments must be equal to rank_");
     constexpr std::size_t storage_index =
@@ -535,29 +527,26 @@ struct Structure {
 
   /// Get the multiplicity of the storage_index
   /// \param storage_index the storage_index of which to get the multiplicity
-  SPECTRE_ALWAYS_INLINE static constexpr size_t multiplicity(
-      const size_t storage_index) {
+  static constexpr size_t multiplicity(const size_t storage_index) {
     constexpr auto multiplicity = multiplicity_;
     return gsl::at(multiplicity, storage_index);
   }
 
   /// Get the array of collapsed index to storage_index
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t,
-                                                    number_of_components()>
+  static constexpr std::array<size_t, number_of_components()>
   collapsed_to_storage() {
     constexpr auto collapsed_to_storage = collapsed_to_storage_;
     return collapsed_to_storage;
   }
 
   /// Get the storage_index for the specified collapsed index
-  SPECTRE_ALWAYS_INLINE static constexpr int collapsed_to_storage(
-      const size_t i) {
+  static constexpr int collapsed_to_storage(const size_t i) {
     constexpr auto collapsed_to_storage = collapsed_to_storage_;
     return gsl::at(collapsed_to_storage, i);
   }
 
   /// Get the array of tensor_index's corresponding to the storage_index's.
-  SPECTRE_ALWAYS_INLINE static constexpr const cpp20::array<
+  static constexpr const cpp20::array<
       cpp20::array<size_t, sizeof...(Indices) == 0 ? 1 : sizeof...(Indices)>,
       size()>
   storage_to_tensor_index() {
@@ -566,7 +555,7 @@ struct Structure {
   }
 
   template <typename T>
-  SPECTRE_ALWAYS_INLINE static std::string component_name(
+  static std::string component_name(
       const std::array<T, rank()>& tensor_index,
       const std::array<std::string, rank()>& axis_labels) {
     return ComponentNameImpl<sizeof...(Indices)>::template apply<Structure>(

@@ -52,16 +52,15 @@ void operator|(er& p, blaze::DynamicVector<T, TF, Tag>& t) {
 namespace MakeWithValueImpls {
 template <typename T, bool TF, typename Tag>
 struct NumberOfPoints<blaze::DynamicVector<T, TF, Tag>> {
-  static SPECTRE_ALWAYS_INLINE size_t
-  apply(const blaze::DynamicVector<T, TF, Tag>& input) {
+  static size_t apply(const blaze::DynamicVector<T, TF, Tag>& input) {
     return input.size();
   }
 };
 
 template <typename T, bool TF, typename Tag>
 struct MakeWithSize<blaze::DynamicVector<T, TF, Tag>> {
-  static SPECTRE_ALWAYS_INLINE blaze::DynamicVector<T, TF, Tag> apply(
-      const size_t size, const T& value) {
+  static blaze::DynamicVector<T, TF, Tag> apply(const size_t size,
+                                                const T& value) {
     return blaze::DynamicVector<T, TF, Tag>(size, value);
   }
 };
@@ -71,7 +70,7 @@ template <typename T, bool TF, typename Tag>
 struct SetNumberOfGridPointsImpls::SetNumberOfGridPointsImpl<
     blaze::DynamicVector<T, TF, Tag>> {
   static constexpr bool is_trivial = false;
-  static SPECTRE_ALWAYS_INLINE void apply(
+  static void apply(
       const gsl::not_null<blaze::DynamicVector<T, TF, Tag>*> result,
       const size_t size) {
     result->resize(size);

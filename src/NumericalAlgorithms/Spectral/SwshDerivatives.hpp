@@ -33,49 +33,46 @@ namespace detail {
 // Factors that appear in the modal representation of spin-weighted angular
 // derivatives, needed for compute_coefficients_of_derivative
 template <typename DerivativeKind>
-SPECTRE_ALWAYS_INLINE std::complex<double> derivative_factor(int l, int s);
+std::complex<double> derivative_factor(int l, int s);
 
 template <>
-SPECTRE_ALWAYS_INLINE std::complex<double> derivative_factor<Tags::Eth>(
-    const int l, const int s) {
+std::complex<double> derivative_factor<Tags::Eth>(const int l, const int s) {
   return sqrt(static_cast<std::complex<double>>((l - s) * (l + s + 1)));
 }
 
 template <>
-SPECTRE_ALWAYS_INLINE std::complex<double> derivative_factor<Tags::Ethbar>(
-    const int l, const int s) {
+std::complex<double> derivative_factor<Tags::Ethbar>(const int l, const int s) {
   return -sqrt(static_cast<std::complex<double>>((l + s) * (l - s + 1)));
 }
 
 template <>
-SPECTRE_ALWAYS_INLINE std::complex<double> derivative_factor<Tags::EthEth>(
-    const int l, const int s) {
+std::complex<double> derivative_factor<Tags::EthEth>(const int l, const int s) {
   return sqrt(static_cast<std::complex<double>>((l - s - 1) * (l + s + 2) *
                                                 (l - s) * (l + s + 1)));
 }
 
 template <>
-SPECTRE_ALWAYS_INLINE std::complex<double>
-derivative_factor<Tags::EthbarEthbar>(const int l, const int s) {
+std::complex<double> derivative_factor<Tags::EthbarEthbar>(const int l,
+                                                           const int s) {
   return sqrt(static_cast<std::complex<double>>((l + s - 1) * (l - s + 2) *
                                                 (l + s) * (l - s + 1)));
 }
 
 template <>
-SPECTRE_ALWAYS_INLINE std::complex<double> derivative_factor<Tags::EthbarEth>(
-    const int l, const int s) {
+std::complex<double> derivative_factor<Tags::EthbarEth>(const int l,
+                                                        const int s) {
   return static_cast<std::complex<double>>(-(l - s) * (l + s + 1));
 }
 
 template <>
-SPECTRE_ALWAYS_INLINE std::complex<double> derivative_factor<Tags::EthEthbar>(
-    const int l, const int s) {
+std::complex<double> derivative_factor<Tags::EthEthbar>(const int l,
+                                                        const int s) {
   return static_cast<std::complex<double>>(-(l + s) * (l - s + 1));
 }
 
 template <>
-SPECTRE_ALWAYS_INLINE std::complex<double> derivative_factor<Tags::InverseEth>(
-    const int l, const int s) {
+std::complex<double> derivative_factor<Tags::InverseEth>(const int l,
+                                                         const int s) {
   return (l - s + 1) * (l + s) == 0
              ? 0.0
              : 1.0 / sqrt(static_cast<std::complex<double>>((l - s + 1) *
@@ -83,8 +80,8 @@ SPECTRE_ALWAYS_INLINE std::complex<double> derivative_factor<Tags::InverseEth>(
 }
 
 template <>
-SPECTRE_ALWAYS_INLINE std::complex<double>
-derivative_factor<Tags::InverseEthbar>(const int l, const int s) {
+std::complex<double> derivative_factor<Tags::InverseEthbar>(const int l,
+                                                            const int s) {
   return (l + s + 1) * (l - s) == 0
              ? 0.0
              : 1.0 / -sqrt(static_cast<std::complex<double>>((l + s + 1) *

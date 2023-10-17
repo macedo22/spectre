@@ -335,9 +335,7 @@ struct TensorExpression<Derived, DataType, Symm, tmpl::list<Indices...>,
   ///
   /// \returns const TensorExpression<Derived, DataType, Symm, IndexList,
   /// ArgsList<Args...>>&
-  SPECTRE_ALWAYS_INLINE const auto& operator~() const {
-    return static_cast<const Derived&>(*this);
-  }
+  const auto& operator~() const { return static_cast<const Derived&>(*this); }
   /// @}
 };
 

@@ -52,8 +52,7 @@ struct OnDemandInputsForSwshJacobianImpl<
     std::bool_constant<not tt::is_a_v<::Tags::Multiplies, Tag> and
                        not tt::is_a_v<Tags::Dy, Tag>>> {
   template <typename DataBoxTagList>
-  SPECTRE_ALWAYS_INLINE decltype(auto) operator()(
-      const db::DataBox<DataBoxTagList>& box) {
+  decltype(auto) operator()(const db::DataBox<DataBoxTagList>& box) {
     return get(db::get<Tags::Dy<Tag>>(box)).data();
   }
 };
@@ -65,8 +64,7 @@ struct OnDemandInputsForSwshJacobianImpl<
     Tags::Dy<Tags::Dy<Tag>>, std::integral_constant<int, Tag::type::type::spin>,
     std::bool_constant<not tt::is_a_v<::Tags::Multiplies, Tag>>> {
   template <typename DataBoxTagList>
-  SPECTRE_ALWAYS_INLINE decltype(auto) operator()(
-      const db::DataBox<DataBoxTagList>& box) {
+  decltype(auto) operator()(const db::DataBox<DataBoxTagList>& box) {
     return get(db::get<Tags::Dy<Tags::Dy<Tag>>>(box)).data();
   }
 };
@@ -82,8 +80,7 @@ struct OnDemandInputsForSwshJacobianImpl<
                        not std::is_same_v<LhsTag, Tags::BondiUbar> and
                        not std::is_same_v<RhsTag, Tags::BondiJbar>>> {
   template <typename DataBoxTagList>
-  SPECTRE_ALWAYS_INLINE decltype(auto) operator()(
-      const db::DataBox<DataBoxTagList>& box) {
+  decltype(auto) operator()(const db::DataBox<DataBoxTagList>& box) {
     decltype(auto) lhs = get(db::get<LhsTag>(box)).data();
     decltype(auto) dy_lhs = get(db::get<Tags::Dy<LhsTag>>(box)).data();
     decltype(auto) rhs = get(db::get<RhsTag>(box)).data();
@@ -100,8 +97,7 @@ struct OnDemandInputsForSwshJacobianImpl<
     Tags::Dy<::Tags::Multiplies<LhsTag, Tags::BondiJbar>>,
     std::integral_constant<int, LhsTag::type::type::spin - 2>, std::true_type> {
   template <typename DataBoxTagList>
-  SPECTRE_ALWAYS_INLINE decltype(auto) operator()(
-      const db::DataBox<DataBoxTagList>& box) {
+  decltype(auto) operator()(const db::DataBox<DataBoxTagList>& box) {
     decltype(auto) lhs = get(get<LhsTag>(box)).data();
     decltype(auto) dy_lhs = get(get<Tags::Dy<LhsTag>>(box)).data();
     decltype(auto) jbar = conj(get(get<Tags::BondiJ>(box)).data());
@@ -118,8 +114,7 @@ struct OnDemandInputsForSwshJacobianImpl<
     Tags::Dy<::Tags::Multiplies<Tags::BondiJbar, RhsTag>>,
     std::integral_constant<int, RhsTag::type::type::spin - 2>, std::true_type> {
   template <typename DataBoxTagList>
-  SPECTRE_ALWAYS_INLINE decltype(auto) operator()(
-      const db::DataBox<DataBoxTagList>& box) {
+  decltype(auto) operator()(const db::DataBox<DataBoxTagList>& box) {
     decltype(auto) rhs = get(get<RhsTag>(box)).data();
     decltype(auto) dy_rhs = get(get<Tags::Dy<RhsTag>>(box)).data();
     decltype(auto) jbar = conj(get(get<Tags::BondiJ>(box)).data());
@@ -136,8 +131,7 @@ struct OnDemandInputsForSwshJacobianImpl<
     Tags::Dy<::Tags::Multiplies<Tags::BondiUbar, RhsTag>>,
     std::integral_constant<int, RhsTag::type::type::spin - 1>, std::true_type> {
   template <typename DataBoxTagList>
-  SPECTRE_ALWAYS_INLINE decltype(auto) operator()(
-      const db::DataBox<DataBoxTagList>& box) {
+  decltype(auto) operator()(const db::DataBox<DataBoxTagList>& box) {
     decltype(auto) ubar = conj(get(get<Tags::BondiU>(box)).data());
     decltype(auto) dy_ubar = conj(get(get<Tags::Dy<Tags::BondiU>>(box)).data());
     decltype(auto) rhs = get(get<RhsTag>(box)).data();
@@ -154,8 +148,7 @@ struct OnDemandInputsForSwshJacobianImpl<
     Tags::Dy<Tags::Dy<::Tags::Multiplies<LhsTag, Tags::BondiJbar>>>,
     std::integral_constant<int, LhsTag::type::type::spin - 2>, std::true_type> {
   template <typename DataBoxTagList>
-  SPECTRE_ALWAYS_INLINE decltype(auto) operator()(
-      const db::DataBox<DataBoxTagList>& box) {
+  decltype(auto) operator()(const db::DataBox<DataBoxTagList>& box) {
     decltype(auto) lhs = get(get<LhsTag>(box)).data();
     decltype(auto) dy_lhs = get(get<Tags::Dy<LhsTag>>(box)).data();
     decltype(auto) dy_dy_lhs = get(get<Tags::Dy<Tags::Dy<LhsTag>>>(box)).data();
@@ -176,8 +169,7 @@ struct OnDemandInputsForSwshJacobianImpl<
         int, Spectral::Swsh::Tags::Derivative<Tags::Dy<Tag>, DerivKind>::spin>,
     std::true_type> {
   template <typename DataBoxTagList>
-  SPECTRE_ALWAYS_INLINE decltype(auto) operator()(
-      const db::DataBox<DataBoxTagList>& box) {
+  decltype(auto) operator()(const db::DataBox<DataBoxTagList>& box) {
     return get(get<Spectral::Swsh::Tags::Derivative<Tags::Dy<Tag>, DerivKind>>(
                    box))
         .data();
@@ -192,8 +184,7 @@ struct OnDemandInputsForSwshJacobianImpl<Tags::Dy<Tags::JbarQMinus2EthBeta>,
                                          std::integral_constant<int, -1>,
                                          std::true_type> {
   template <typename DataBoxTagList>
-  SPECTRE_ALWAYS_INLINE decltype(auto) operator()(
-      const db::DataBox<DataBoxTagList>& box) {
+  decltype(auto) operator()(const db::DataBox<DataBoxTagList>& box) {
     decltype(auto) dy_beta = get(get<Tags::Dy<Tags::BondiBeta>>(box)).data();
     decltype(auto) dy_j = get(get<Tags::Dy<Tags::BondiJ>>(box)).data();
     decltype(auto) dy_q = get(get<Tags::Dy<Tags::BondiQ>>(box)).data();

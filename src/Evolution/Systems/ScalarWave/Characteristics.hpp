@@ -224,8 +224,7 @@ struct ComputeLargestCharacteristicSpeed : LargestCharacteristicSpeed,
   using argument_tags = tmpl::list<>;
   using return_type = double;
   using base = LargestCharacteristicSpeed;
-  SPECTRE_ALWAYS_INLINE static constexpr void function(
-      const gsl::not_null<double*> speed) {
+  static constexpr void function(const gsl::not_null<double*> speed) {
     *speed = 1.0;
   }
 };

@@ -398,11 +398,10 @@ class DataBox<tmpl::list<Tags...>> : private detail::Item<Tags>... {
   constexpr void reset_compute_item();
 
   template <typename... TagsOfImmutableItemsToReset>
-  SPECTRE_ALWAYS_INLINE constexpr void reset_compute_items_after_mutate(
+  constexpr void reset_compute_items_after_mutate(
       tmpl::list<TagsOfImmutableItemsToReset...> /*meta*/);
 
-  SPECTRE_ALWAYS_INLINE constexpr void reset_compute_items_after_mutate(
-      tmpl::list<> /*meta*/) {}
+  constexpr void reset_compute_items_after_mutate(tmpl::list<> /*meta*/) {}
   // End mutating items in the DataBox
 
   using edge_list =
@@ -480,7 +479,7 @@ constexpr char check_immutable_item_tag_dependency() {
 
 template <typename ImmutableItemTag, typename TagsList,
           typename... ArgumentsTags>
-SPECTRE_ALWAYS_INLINE constexpr void check_immutable_item_tag_dependencies_impl(
+constexpr void check_immutable_item_tag_dependencies_impl(
     tmpl::list<ArgumentsTags...> /*meta*/) {
   DEBUG_STATIC_ASSERT(
       tmpl2::flat_all_v<is_tag_v<ArgumentsTags>...>,
@@ -495,7 +494,7 @@ SPECTRE_ALWAYS_INLINE constexpr void check_immutable_item_tag_dependencies_impl(
 }
 
 template <typename ImmutableItemTag, typename TagsList>
-SPECTRE_ALWAYS_INLINE constexpr void check_immutable_item_tag_dependencies() {
+constexpr void check_immutable_item_tag_dependencies() {
   check_immutable_item_tag_dependencies_impl<ImmutableItemTag, TagsList>(
       tmpl::transform<typename ImmutableItemTag::argument_tags,
                       tmpl::bind<detail::first_matching_tag,
@@ -505,8 +504,7 @@ SPECTRE_ALWAYS_INLINE constexpr void check_immutable_item_tag_dependencies() {
 
 template <typename... Tags>
 template <typename ParentTag, typename... SubitemTags>
-SPECTRE_ALWAYS_INLINE constexpr void
-db::DataBox<tmpl::list<Tags...>>::add_mutable_subitems_to_box(
+constexpr void db::DataBox<tmpl::list<Tags...>>::add_mutable_subitems_to_box(
     tmpl::list<SubitemTags...> /*meta*/) {
   const auto add_mutable_subitem_to_box = [this](auto tag_v) {
     (void)this;  // Compiler bug warns this is unused
@@ -523,8 +521,7 @@ db::DataBox<tmpl::list<Tags...>>::add_mutable_subitems_to_box(
 
 template <typename... Tags>
 template <size_t ArgsIndex, typename MutableItemTag, typename... Ts>
-SPECTRE_ALWAYS_INLINE constexpr char
-db::DataBox<tmpl::list<Tags...>>::add_mutable_item_to_box(
+constexpr char db::DataBox<tmpl::list<Tags...>>::add_mutable_item_to_box(
     std::tuple<Ts...>& items) {
   if constexpr (sizeof...(Ts) > 0) {
     using ArgType = std::tuple_element_t<ArgsIndex, std::tuple<Ts...>>;
@@ -543,7 +540,7 @@ db::DataBox<tmpl::list<Tags...>>::add_mutable_item_to_box(
 template <typename... Tags>
 template <typename... Ts, typename... AddMutableItemTags,
           typename... AddImmutableItemTags, size_t... Is>
-SPECTRE_ALWAYS_INLINE void DataBox<tmpl::list<Tags...>>::add_items_to_box(
+void DataBox<tmpl::list<Tags...>>::add_items_to_box(
     std::tuple<Ts...>& items, tmpl::list<AddMutableItemTags...> /*meta*/,
     std::index_sequence<Is...> /*meta*/,
     tmpl::list<AddImmutableItemTags...> /*meta*/) {
@@ -625,8 +622,7 @@ void DataBox<tmpl::list<Tags...>>::pup_impl(
 
 template <typename... Tags>
 template <typename ImmutableItemTag>
-SPECTRE_ALWAYS_INLINE constexpr void
-DataBox<tmpl::list<Tags...>>::reset_compute_item() {
+constexpr void DataBox<tmpl::list<Tags...>>::reset_compute_item() {
   // reference items do not need to be reset
   if constexpr (db::is_compute_tag_v<ImmutableItemTag>) {
     get_item<ImmutableItemTag>().reset();
@@ -644,7 +640,7 @@ DataBox<tmpl::list<Tags...>>::reset_compute_item() {
 // (using the function overload inlined above in the definition of DataBox).
 template <typename... Tags>
 template <typename... TagsOfImmutableItemsToReset>
-SPECTRE_ALWAYS_INLINE constexpr void
+constexpr void
 db::DataBox<tmpl::list<Tags...>>::reset_compute_items_after_mutate(
     tmpl::list<TagsOfImmutableItemsToReset...> /*meta*/) {
   EXPAND_PACK_LEFT_TO_RIGHT(reset_compute_item<TagsOfImmutableItemsToReset>());
@@ -662,8 +658,7 @@ db::DataBox<tmpl::list<Tags...>>::reset_compute_items_after_mutate(
 
 template <typename... Tags>
 template <typename ParentTag, typename... Subtags>
-SPECTRE_ALWAYS_INLINE constexpr void
-db::DataBox<tmpl::list<Tags...>>::mutate_mutable_subitems(
+constexpr void db::DataBox<tmpl::list<Tags...>>::mutate_mutable_subitems(
     tmpl::list<Subtags...> /*meta*/) {
   const auto helper = [this](auto tag_v) {
     (void)this;  // Compiler bug warns about unused this capture
@@ -677,8 +672,7 @@ db::DataBox<tmpl::list<Tags...>>::mutate_mutable_subitems(
 }
 
 template <typename... Tags>
-SPECTRE_ALWAYS_INLINE constexpr void
-db::DataBox<tmpl::list<Tags...>>::reset_all_subitems() {
+constexpr void db::DataBox<tmpl::list<Tags...>>::reset_all_subitems() {
   tmpl::for_each<mutable_item_tags>([this](auto tag) {
     using Tag = tmpl::type_from<decltype(tag)>;
     this->mutate_mutable_subitems<Tag>(typename Subitems<Tag>::type{});
@@ -869,7 +863,7 @@ const auto& DataBox<tmpl::list<Tags...>>::get() const {
  * \return The object corresponding to the tag `Tag`
  */
 template <typename Tag, typename TagList>
-SPECTRE_ALWAYS_INLINE const auto& get(const DataBox<TagList>& box) {
+const auto& get(const DataBox<TagList>& box) {
   return box.template get<Tag>();
 }
 
@@ -879,7 +873,7 @@ SPECTRE_ALWAYS_INLINE const auto& get(const DataBox<TagList>& box) {
 /// \cond
 template <typename... Tags>
 template <typename Tag>
-SPECTRE_ALWAYS_INLINE auto DataBox<tmpl::list<Tags...>>::copy_item() const {
+auto DataBox<tmpl::list<Tags...>>::copy_item() const {
   using item_tag = detail::first_matching_tag<tags_list, Tag>;
   using item_type = typename item_tag::type;
   static_assert(tmpl::list_contains_v<mutable_item_creation_tags, item_tag>,
@@ -908,7 +902,7 @@ DataBox<tmpl::list<DbTags...>>::copy_items(
  * the mutable_item_creation_tags of the DataBox
  */
 template <typename CopiedItemsTagList, typename DbTagList>
-SPECTRE_ALWAYS_INLINE auto copy_items(const DataBox<DbTagList>& box) {
+auto copy_items(const DataBox<DbTagList>& box) {
   return box.copy_items(CopiedItemsTagList{});
 }
 
@@ -1007,8 +1001,7 @@ constexpr bool DataBox<tmpl::list<Tags...>>::tag_depends_on() {
  * internal inconsistencies.
  */
 template <typename Tag, typename TagList>
-SPECTRE_ALWAYS_INLINE auto& get_mutable_reference(
-    const gsl::not_null<DataBox<TagList>*> box) {
+auto& get_mutable_reference(const gsl::not_null<DataBox<TagList>*> box) {
   return box->template get_mutable_reference<Tag>();
 }
 
@@ -1088,7 +1081,7 @@ using compute_databox_type = typename detail::compute_dbox_type<TagList>::type;
  */
 template <typename AddMutableItemTags,
           typename AddImmutableItemTags = tmpl::list<>, typename... Args>
-SPECTRE_ALWAYS_INLINE constexpr auto create(Args&&... args) {
+constexpr auto create(Args&&... args) {
   static_assert(tt::is_a_v<tmpl::list, AddImmutableItemTags>,
                 "AddImmutableItemTags must be a tmpl::list");
   static_assert(tt::is_a_v<tmpl::list, AddMutableItemTags>,
@@ -1227,8 +1220,7 @@ static constexpr auto apply(F&& f, const DataBox<BoxTags>& box,
  * \tparam F The invokable to apply
  */
 template <typename ArgumentTags, typename F, typename BoxTags, typename... Args>
-SPECTRE_ALWAYS_INLINE constexpr auto apply(F&& f, const DataBox<BoxTags>& box,
-                                           Args&&... args) {
+constexpr auto apply(F&& f, const DataBox<BoxTags>& box, Args&&... args) {
   detail::check_tags_are_in_databox(
       BoxTags{}, tmpl::remove<ArgumentTags, ::Tags::DataBox>{});
   return detail::apply(std::forward<F>(f), box, ArgumentTags{},
@@ -1236,15 +1228,13 @@ SPECTRE_ALWAYS_INLINE constexpr auto apply(F&& f, const DataBox<BoxTags>& box,
 }
 
 template <typename F, typename BoxTags, typename... Args>
-SPECTRE_ALWAYS_INLINE constexpr auto apply(F&& f, const DataBox<BoxTags>& box,
-                                           Args&&... args) {
+constexpr auto apply(F&& f, const DataBox<BoxTags>& box, Args&&... args) {
   return apply<typename std::decay_t<F>::argument_tags>(
       std::forward<F>(f), box, std::forward<Args>(args)...);
 }
 
 template <typename F, typename BoxTags, typename... Args>
-SPECTRE_ALWAYS_INLINE constexpr auto apply(const DataBox<BoxTags>& box,
-                                           Args&&... args) {
+constexpr auto apply(const DataBox<BoxTags>& box, Args&&... args) {
   return apply(F{}, box, std::forward<Args>(args)...);
 }
 /// @}
@@ -1257,7 +1247,7 @@ using tag_return_type =
 
 template <typename... ReturnTags, typename... ArgumentTags, typename F,
           typename BoxTags, typename... Args>
-SPECTRE_ALWAYS_INLINE constexpr decltype(auto) mutate_apply(
+constexpr decltype(auto) mutate_apply(
     F&& f, const gsl::not_null<db::DataBox<BoxTags>*> box,
     tmpl::list<ReturnTags...> /*meta*/, tmpl::list<ArgumentTags...> /*meta*/,
     Args&&... args) {
@@ -1345,14 +1335,14 @@ SPECTRE_ALWAYS_INLINE constexpr decltype(auto) mutate_apply(
  */
 template <typename MutateTags, typename ArgumentTags, typename F,
           typename BoxTags, typename... Args>
-SPECTRE_ALWAYS_INLINE constexpr decltype(auto) mutate_apply(
+constexpr decltype(auto) mutate_apply(
     F&& f, const gsl::not_null<DataBox<BoxTags>*> box, Args&&... args) {
   return detail::mutate_apply(std::forward<F>(f), box, MutateTags{},
                               ArgumentTags{}, std::forward<Args>(args)...);
 }
 
 template <typename F, typename BoxTags, typename... Args>
-SPECTRE_ALWAYS_INLINE constexpr decltype(auto) mutate_apply(
+constexpr decltype(auto) mutate_apply(
     F&& f, const gsl::not_null<DataBox<BoxTags>*> box, Args&&... args) {
   return mutate_apply<typename std::decay_t<F>::return_tags,
                       typename std::decay_t<F>::argument_tags>(
@@ -1360,7 +1350,7 @@ SPECTRE_ALWAYS_INLINE constexpr decltype(auto) mutate_apply(
 }
 
 template <typename F, typename BoxTags, typename... Args>
-SPECTRE_ALWAYS_INLINE constexpr decltype(auto) mutate_apply(
+constexpr decltype(auto) mutate_apply(
     const gsl::not_null<DataBox<BoxTags>*> box, Args&&... args) {
   return mutate_apply(F{}, box, std::forward<Args>(args)...);
 }

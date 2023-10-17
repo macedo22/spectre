@@ -65,7 +65,7 @@ struct InnerProductImpl<Variables<LhsTagsList>, Variables<RhsTagsList>> {
  * reduction over all elements that sums their local `inner_product`s.
  */
 template <typename Lhs, typename Rhs>
-SPECTRE_ALWAYS_INLINE double inner_product(const Lhs& lhs, const Rhs& rhs) {
+double inner_product(const Lhs& lhs, const Rhs& rhs) {
   return InnerProductImpls::InnerProductImpl<Lhs, Rhs>::apply(lhs, rhs);
 }
 

@@ -70,7 +70,7 @@ VECTOR_BLAZE_TRAIT_SPECIALIZE_ALL_MAP_TRAITS(DataVector);
 BLAZE_TRAIT_SPECIALIZE_BINARY_TRAIT(DataVector, CrossTrait);
 }  // namespace blaze
 
-SPECTRE_ALWAYS_INLINE auto fabs(const DataVector& t) { return abs(*t); }
+auto fabs(const DataVector& t) { return abs(*t); }
 
 MAKE_STD_ARRAY_VECTOR_BINOPS(DataVector)
 

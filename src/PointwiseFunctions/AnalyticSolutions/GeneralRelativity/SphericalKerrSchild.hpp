@@ -446,12 +446,9 @@ class SphericalKerrSchild : public AnalyticSolution<3_st>,
   // NOLINTNEXTLINE(google-runtime-references)
   void pup(PUP::er& p);
 
-  SPECTRE_ALWAYS_INLINE double mass() const { return mass_; }
-  SPECTRE_ALWAYS_INLINE const std::array<double, volume_dim>& center() const {
-    return center_;
-  }
-  SPECTRE_ALWAYS_INLINE const std::array<double, volume_dim>&
-  dimensionless_spin() const {
+  double mass() const { return mass_; }
+  const std::array<double, volume_dim>& center() const { return center_; }
+  const std::array<double, volume_dim>& dimensionless_spin() const {
     return dimensionless_spin_;
   }
 

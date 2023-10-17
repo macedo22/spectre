@@ -264,9 +264,9 @@ struct InterfaceApplyImpl<DirectionsTag, tmpl::list<ArgumentTags...>,
 template <typename DirectionsTag, typename ArgumentTags, typename VolumeTags,
           typename InterfaceInvokable, typename DbTagsList,
           typename... ExtraArgs>
-SPECTRE_ALWAYS_INLINE constexpr auto interface_apply(
-    InterfaceInvokable&& interface_invokable,
-    const db::DataBox<DbTagsList>& box, ExtraArgs&&... extra_args) {
+constexpr auto interface_apply(InterfaceInvokable&& interface_invokable,
+                               const db::DataBox<DbTagsList>& box,
+                               ExtraArgs&&... extra_args) {
   return InterfaceHelpers_detail::
       InterfaceApplyImpl<DirectionsTag, ArgumentTags, VolumeTags>::apply(
           std::forward<InterfaceInvokable>(interface_invokable), box,
@@ -286,8 +286,8 @@ template <typename DirectionsTag, typename InterfaceInvokable,
           typename DataBoxType, typename... ExtraArgs,
           // Needed to disambiguate the overloads
           typename ArgumentTags = typename InterfaceInvokable::argument_tags>
-SPECTRE_ALWAYS_INLINE constexpr auto interface_apply(
-    const DataBoxType& box, ExtraArgs&&... extra_args) {
+constexpr auto interface_apply(const DataBoxType& box,
+                               ExtraArgs&&... extra_args) {
   return interface_apply<DirectionsTag, ArgumentTags,
                          get_volume_tags<InterfaceInvokable>>(
       InterfaceInvokable{}, box, std::forward<ExtraArgs>(extra_args)...);

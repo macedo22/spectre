@@ -569,15 +569,13 @@ class KerrSchild : public AnalyticSolution<3_st>,
   bool zero_spin_{};
 };
 
-SPECTRE_ALWAYS_INLINE bool operator==(const KerrSchild& lhs,
-                                      const KerrSchild& rhs) {
+bool operator==(const KerrSchild& lhs, const KerrSchild& rhs) {
   return lhs.mass() == rhs.mass() and
          lhs.dimensionless_spin() == rhs.dimensionless_spin() and
          lhs.center() == rhs.center();
 }
 
-SPECTRE_ALWAYS_INLINE bool operator!=(const KerrSchild& lhs,
-                                      const KerrSchild& rhs) {
+bool operator!=(const KerrSchild& lhs, const KerrSchild& rhs) {
   return not(lhs == rhs);
 }
 }  // namespace Solutions

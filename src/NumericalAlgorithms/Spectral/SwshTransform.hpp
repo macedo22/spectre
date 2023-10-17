@@ -55,7 +55,7 @@ void append_libsharp_collocation_pointers(
 // is used for undoing the conjugation described in the code comment for
 // `append_libsharp_collocation_pointers`
 template <int Spin, ComplexRepresentation Representation>
-SPECTRE_ALWAYS_INLINE void conjugate_views(
+void conjugate_views(
     gsl::not_null<std::vector<ComplexDataView<Representation>>*>
         collocation_views) {
   if (Spin < 0) {

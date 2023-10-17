@@ -12,7 +12,7 @@
 namespace Initialization {
 namespace detail {
 template <typename... MutateTags, typename BoxTags, typename... Args>
-SPECTRE_ALWAYS_INLINE constexpr void mutate_assign_impl(
+constexpr void mutate_assign_impl(
     // NOLINTNEXTLINE(readability-avoid-const-params-in-decls)
     const gsl::not_null<db::DataBox<BoxTags>*> box,
     tmpl::list<MutateTags...> /*meta*/, Args&&... args) {
@@ -34,7 +34,7 @@ SPECTRE_ALWAYS_INLINE constexpr void mutate_assign_impl(
  * `args` to the tags in `MutateTagList` in order.
  */
 template <typename MutateTagList, typename BoxTags, typename... Args>
-SPECTRE_ALWAYS_INLINE constexpr void mutate_assign(
+constexpr void mutate_assign(
     // NOLINTNEXTLINE(readability-avoid-const-params-in-decls)
     const gsl::not_null<db::DataBox<BoxTags>*> box, Args&&... args) {
   // The impl works for zero tags, but we can skip it to improve

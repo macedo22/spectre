@@ -236,14 +236,14 @@ class VectorImpl
 
   VectorImpl& operator=(const T& rhs);
 
-  decltype(auto) SPECTRE_ALWAYS_INLINE operator[](const size_t index) {
+  decltype(auto) operator[](const size_t index) {
     ASSERT(index < size(), "Out-of-range access to element "
                                << index << " of a size " << size()
                                << " Blaze vector.");
     return BaseType::operator[](index);
   }
 
-  decltype(auto) SPECTRE_ALWAYS_INLINE operator[](const size_t index) const {
+  decltype(auto) operator[](const size_t index) const {
     ASSERT(index < size(), "Out-of-range access to element "
                                << index << " of a size " << size()
                                << " Blaze vector.");
@@ -276,7 +276,7 @@ class VectorImpl
    *   This uses `UNLIKELY` to perform the check most quickly when the buffer
    *   needs no resizing, but will be slower when resizing is common.
    */
-  void SPECTRE_ALWAYS_INLINE destructive_resize(const size_t new_size) {
+  void destructive_resize(const size_t new_size) {
     if (UNLIKELY(size() != new_size)) {
       ASSERT(owning_,
              MakeString{}
@@ -305,7 +305,7 @@ class VectorImpl
 
   // This should only be called if we are owning. If we are not owning, then
   // neither owned_data_ or static_owned_data_ actually has the data we want.
-  SPECTRE_ALWAYS_INLINE void reset_pointer_vector(const size_t set_size) {
+  void reset_pointer_vector(const size_t set_size) {
     if (set_size == 0) {
       return;
     }
@@ -324,8 +324,7 @@ class VectorImpl
     }
   }
 
-  SPECTRE_ALWAYS_INLINE std::unique_ptr<value_type[]> heap_alloc_if_necessary(
-      const size_t set_size) {
+  std::unique_ptr<value_type[]> heap_alloc_if_necessary(const size_t set_size) {
     return set_size > StaticSize
                ? cpp20::make_unique_for_overwrite<value_type[]>(set_size)
                : nullptr;
@@ -644,14 +643,12 @@ std::ostream& operator<<(std::ostream& os,
   namespace MakeWithValueImpls {                                              \
   template <>                                                                 \
   struct NumberOfPoints<VECTOR_TYPE> {                                        \
-    static SPECTRE_ALWAYS_INLINE size_t apply(const VECTOR_TYPE& input) {     \
-      return input.size();                                                    \
-    }                                                                         \
+    static size_t apply(const VECTOR_TYPE& input) { return input.size(); }    \
   };                                                                          \
   template <>                                                                 \
   struct MakeWithSize<VECTOR_TYPE> {                                          \
-    static SPECTRE_ALWAYS_INLINE VECTOR_TYPE                                  \
-    apply(const size_t size, const VECTOR_TYPE::value_type value) {           \
+    static VECTOR_TYPE apply(const size_t size,                               \
+                             const VECTOR_TYPE::value_type value) {           \
       return VECTOR_TYPE(size, value);                                        \
     }                                                                         \
   };                                                                          \
@@ -659,8 +656,8 @@ std::ostream& operator<<(std::ostream& os,
   template <>                                                                 \
   struct SetNumberOfGridPointsImpls::SetNumberOfGridPointsImpl<VECTOR_TYPE> { \
     static constexpr bool is_trivial = false;                                 \
-    static SPECTRE_ALWAYS_INLINE void apply(                                  \
-        const gsl::not_null<VECTOR_TYPE*> result, const size_t size) {        \
+    static void apply(const gsl::not_null<VECTOR_TYPE*> result,               \
+                      const size_t size) {                                    \
       result->destructive_resize(size);                                       \
     }                                                                         \
   };

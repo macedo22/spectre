@@ -235,12 +235,12 @@ class Variables<tmpl::list<Tags...>> {
   }
   /// @}
 
-  constexpr SPECTRE_ALWAYS_INLINE size_t number_of_grid_points() const {
+  constexpr size_t number_of_grid_points() const {
     return number_of_grid_points_;
   }
 
   /// Number of grid points * number of independent components
-  constexpr SPECTRE_ALWAYS_INLINE size_type size() const { return size_; }
+  constexpr size_type size() const { return size_; }
 
   /// @{
   /// Access pointer to underlying data
@@ -395,8 +395,7 @@ class Variables<tmpl::list<Tags...>> {
             Requires<tmpl2::flat_all<std::is_same_v<
                 db::remove_all_prefixes<WrappedTags>,
                 db::remove_all_prefixes<Tags>>...>::value> = nullptr>
-  SPECTRE_ALWAYS_INLINE Variables& operator+=(
-      const Variables<tmpl::list<WrappedTags...>>& rhs) {
+  Variables& operator+=(const Variables<tmpl::list<WrappedTags...>>& rhs) {
     static_assert(
         (std::is_same_v<typename Tags::type, typename WrappedTags::type> and
          ...),
@@ -405,8 +404,7 @@ class Variables<tmpl::list<Tags...>> {
     return *this;
   }
   template <typename VT, bool VF>
-  SPECTRE_ALWAYS_INLINE Variables& operator+=(
-      const blaze::Vector<VT, VF>& rhs) {
+  Variables& operator+=(const blaze::Vector<VT, VF>& rhs) {
     variable_data_ += rhs;
     return *this;
   }
@@ -415,8 +413,7 @@ class Variables<tmpl::list<Tags...>> {
             Requires<tmpl2::flat_all<std::is_same_v<
                 db::remove_all_prefixes<WrappedTags>,
                 db::remove_all_prefixes<Tags>>...>::value> = nullptr>
-  SPECTRE_ALWAYS_INLINE Variables& operator-=(
-      const Variables<tmpl::list<WrappedTags...>>& rhs) {
+  Variables& operator-=(const Variables<tmpl::list<WrappedTags...>>& rhs) {
     static_assert(
         (std::is_same_v<typename Tags::type, typename WrappedTags::type> and
          ...),
@@ -425,18 +422,17 @@ class Variables<tmpl::list<Tags...>> {
     return *this;
   }
   template <typename VT, bool VF>
-  SPECTRE_ALWAYS_INLINE Variables& operator-=(
-      const blaze::Vector<VT, VF>& rhs) {
+  Variables& operator-=(const blaze::Vector<VT, VF>& rhs) {
     variable_data_ -= rhs;
     return *this;
   }
 
-  SPECTRE_ALWAYS_INLINE Variables& operator*=(const value_type& rhs) {
+  Variables& operator*=(const value_type& rhs) {
     variable_data_ *= rhs;
     return *this;
   }
 
-  SPECTRE_ALWAYS_INLINE Variables& operator/=(const value_type& rhs) {
+  Variables& operator/=(const value_type& rhs) {
     variable_data_ /= rhs;
     return *this;
   }
@@ -445,7 +441,7 @@ class Variables<tmpl::list<Tags...>> {
             Requires<tmpl2::flat_all<std::is_same_v<
                 db::remove_all_prefixes<WrappedTags>,
                 db::remove_all_prefixes<Tags>>...>::value> = nullptr>
-  friend SPECTRE_ALWAYS_INLINE decltype(auto) operator+(
+  friend decltype(auto) operator+(
       const Variables<tmpl::list<WrappedTags...>>& lhs, const Variables& rhs) {
     static_assert(
         (std::is_same_v<typename Tags::type, typename WrappedTags::type> and
@@ -454,13 +450,13 @@ class Variables<tmpl::list<Tags...>> {
     return lhs.get_variable_data() + rhs.variable_data_;
   }
   template <typename VT, bool VF>
-  friend SPECTRE_ALWAYS_INLINE decltype(auto) operator+(
-      const blaze::DenseVector<VT, VF>& lhs, const Variables& rhs) {
+  friend decltype(auto) operator+(const blaze::DenseVector<VT, VF>& lhs,
+                                  const Variables& rhs) {
     return *lhs + rhs.variable_data_;
   }
   template <typename VT, bool VF>
-  friend SPECTRE_ALWAYS_INLINE decltype(auto) operator+(
-      const Variables& lhs, const blaze::DenseVector<VT, VF>& rhs) {
+  friend decltype(auto) operator+(const Variables& lhs,
+                                  const blaze::DenseVector<VT, VF>& rhs) {
     return lhs.variable_data_ + *rhs;
   }
 
@@ -468,7 +464,7 @@ class Variables<tmpl::list<Tags...>> {
             Requires<tmpl2::flat_all<std::is_same_v<
                 db::remove_all_prefixes<WrappedTags>,
                 db::remove_all_prefixes<Tags>>...>::value> = nullptr>
-  friend SPECTRE_ALWAYS_INLINE decltype(auto) operator-(
+  friend decltype(auto) operator-(
       const Variables<tmpl::list<WrappedTags...>>& lhs, const Variables& rhs) {
     static_assert(
         (std::is_same_v<typename Tags::type, typename WrappedTags::type> and
@@ -477,34 +473,31 @@ class Variables<tmpl::list<Tags...>> {
     return lhs.get_variable_data() - rhs.variable_data_;
   }
   template <typename VT, bool VF>
-  friend SPECTRE_ALWAYS_INLINE decltype(auto) operator-(
-      const blaze::DenseVector<VT, VF>& lhs, const Variables& rhs) {
+  friend decltype(auto) operator-(const blaze::DenseVector<VT, VF>& lhs,
+                                  const Variables& rhs) {
     return *lhs - rhs.variable_data_;
   }
   template <typename VT, bool VF>
-  friend SPECTRE_ALWAYS_INLINE decltype(auto) operator-(
-      const Variables& lhs, const blaze::DenseVector<VT, VF>& rhs) {
+  friend decltype(auto) operator-(const Variables& lhs,
+                                  const blaze::DenseVector<VT, VF>& rhs) {
     return lhs.variable_data_ - *rhs;
   }
 
-  friend SPECTRE_ALWAYS_INLINE decltype(auto) operator*(const Variables& lhs,
-                                                        const value_type& rhs) {
+  friend decltype(auto) operator*(const Variables& lhs, const value_type& rhs) {
     return lhs.variable_data_ * rhs;
   }
-  friend SPECTRE_ALWAYS_INLINE decltype(auto) operator*(const value_type& lhs,
-                                                        const Variables& rhs) {
+  friend decltype(auto) operator*(const value_type& lhs, const Variables& rhs) {
     return lhs * rhs.variable_data_;
   }
 
-  friend SPECTRE_ALWAYS_INLINE decltype(auto) operator/(const Variables& lhs,
-                                                        const value_type& rhs) {
+  friend decltype(auto) operator/(const Variables& lhs, const value_type& rhs) {
     return lhs.variable_data_ / rhs;
   }
 
-  friend SPECTRE_ALWAYS_INLINE decltype(auto) operator-(const Variables& lhs) {
+  friend decltype(auto) operator-(const Variables& lhs) {
     return -lhs.variable_data_;
   }
-  friend SPECTRE_ALWAYS_INLINE decltype(auto) operator+(const Variables& lhs) {
+  friend decltype(auto) operator+(const Variables& lhs) {
     return lhs.variable_data_;
   }
 
@@ -521,10 +514,8 @@ class Variables<tmpl::list<Tags...>> {
    *
    *  \requires `i >= 0 and i < size()`
    */
-  SPECTRE_ALWAYS_INLINE value_type& operator[](const size_type i) {
-    return variable_data_[i];
-  }
-  SPECTRE_ALWAYS_INLINE const value_type& operator[](const size_type i) const {
+  value_type& operator[](const size_type i) { return variable_data_[i]; }
+  const value_type& operator[](const size_type i) const {
     return variable_data_[i];
   }
   /// @}
@@ -578,20 +569,19 @@ class Variables<tmpl::list<>> {
 // gcc8 screams when the empty Variables has pup as a member function, so we
 // declare pup as a free function here.
 // clang-tidy: runtime-references
-SPECTRE_ALWAYS_INLINE void pup(
-    PUP::er& /*p*/,                           // NOLINT
-    Variables<tmpl::list<>>& /* unused */) {  // NOLINT
+void pup(PUP::er& /*p*/,                           // NOLINT
+         Variables<tmpl::list<>>& /* unused */) {  // NOLINT
 }
-SPECTRE_ALWAYS_INLINE void operator|(
-    PUP::er& /*p*/, Variables<tmpl::list<>>& /* unused */) {  // NOLINT
+void operator|(PUP::er& /*p*/,
+               Variables<tmpl::list<>>& /* unused */) {  // NOLINT
 }
 
-SPECTRE_ALWAYS_INLINE bool operator==(const Variables<tmpl::list<>>& /*lhs*/,
-                                      const Variables<tmpl::list<>>& /*rhs*/) {
+bool operator==(const Variables<tmpl::list<>>& /*lhs*/,
+                const Variables<tmpl::list<>>& /*rhs*/) {
   return true;
 }
-SPECTRE_ALWAYS_INLINE bool operator!=(const Variables<tmpl::list<>>& /*lhs*/,
-                                      const Variables<tmpl::list<>>& /*rhs*/) {
+bool operator!=(const Variables<tmpl::list<>>& /*lhs*/,
+                const Variables<tmpl::list<>>& /*rhs*/) {
   return false;
 }
 
@@ -1061,7 +1051,7 @@ Variables<tmpl::list<Tags...>> variables_from_tagged_tuple(
 namespace MakeWithValueImpls {
 template <typename TagList>
 struct MakeWithSize<Variables<TagList>> {
-  static SPECTRE_ALWAYS_INLINE Variables<TagList> apply(
+  static Variables<TagList> apply(
       const size_t size, const typename Variables<TagList>::value_type value) {
     return Variables<TagList>(size, value);
   }
@@ -1069,7 +1059,7 @@ struct MakeWithSize<Variables<TagList>> {
 
 template <typename TagList>
 struct NumberOfPoints<Variables<TagList>> {
-  static SPECTRE_ALWAYS_INLINE size_t apply(const Variables<TagList>& input) {
+  static size_t apply(const Variables<TagList>& input) {
     return input.number_of_grid_points();
   }
 };
@@ -1079,8 +1069,8 @@ template <typename TagList>
 struct SetNumberOfGridPointsImpls::SetNumberOfGridPointsImpl<
     Variables<TagList>> {
   static constexpr bool is_trivial = false;
-  static SPECTRE_ALWAYS_INLINE void apply(
-      const gsl::not_null<Variables<TagList>*> result, const size_t size) {
+  static void apply(const gsl::not_null<Variables<TagList>*> result,
+                    const size_t size) {
     result->initialize(size);
   }
 };
@@ -1105,10 +1095,8 @@ struct EqualWithinRoundoffImpl<Variables<TagList>, Floating,
 template <typename TagList, typename Floating>
 struct EqualWithinRoundoffImpl<Floating, Variables<TagList>,
                                Requires<std::is_floating_point_v<Floating>>> {
-  static SPECTRE_ALWAYS_INLINE bool apply(const Floating& lhs,
-                                          const Variables<TagList>& rhs,
-                                          const double eps,
-                                          const double scale) {
+  static bool apply(const Floating& lhs, const Variables<TagList>& rhs,
+                    const double eps, const double scale) {
     return equal_within_roundoff(rhs, lhs, eps, scale);
   }
 };

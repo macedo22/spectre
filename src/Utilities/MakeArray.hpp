@@ -33,7 +33,7 @@ namespace MakeArray_detail {
 template <bool SizeZero>
 struct MakeArray {
   template <typename T, typename... Args, size_t... Is>
-  static SPECTRE_ALWAYS_INLINE constexpr std::array<T, sizeof...(Is) + 1> apply(
+  static constexpr std::array<T, sizeof...(Is) + 1> apply(
       std::index_sequence<Is...> /* unused */, Args&&... args) {
     return {{((void)Is, T(args...))..., T(std::forward<Args>(args)...)}};
   }
@@ -42,8 +42,8 @@ struct MakeArray {
 template <>
 struct MakeArray<true> {
   template <typename T, typename... Args>
-  static SPECTRE_ALWAYS_INLINE constexpr std::array<T, 0> apply(
-      std::index_sequence<> /* unused */, Args&&... args) {
+  static constexpr std::array<T, 0> apply(std::index_sequence<> /* unused */,
+                                          Args&&... args) {
 #ifndef HAVE_BROKEN_ARRAY0
     expand_pack(args...);  // Used in other preprocessor branch
     return std::array<T, 0>{{}};
@@ -62,7 +62,7 @@ struct MakeArray<true> {
  * \tparam T the type of the element in the array
  */
 template <size_t Size, typename T, typename... Args>
-SPECTRE_ALWAYS_INLINE constexpr std::array<T, Size> make_array(Args&&... args) {
+constexpr std::array<T, Size> make_array(Args&&... args) {
   return MakeArray_detail::MakeArray<Size == 0>::template apply<T>(
       std::make_index_sequence<(Size == 0 ? Size : Size - 1)>{},
       std::forward<Args>(args)...);
@@ -74,8 +74,7 @@ SPECTRE_ALWAYS_INLINE constexpr std::array<T, Size> make_array(Args&&... args) {
  * \tparam Size the size of the array
  */
 template <size_t Size, typename T>
-SPECTRE_ALWAYS_INLINE constexpr auto make_array(T&& t)
-    -> std::array<std::decay_t<T>, Size> {
+constexpr auto make_array(T&& t) -> std::array<std::decay_t<T>, Size> {
   return MakeArray_detail::MakeArray<Size == 0>::template apply<
       std::decay_t<T>>(
       std::make_index_sequence<(Size == 0 ? Size : Size - 1)>{},
@@ -88,7 +87,7 @@ SPECTRE_ALWAYS_INLINE constexpr auto make_array(T&& t)
  * arguments
  */
 template <typename T, typename... V, Requires<(sizeof...(V) > 0)> = nullptr>
-SPECTRE_ALWAYS_INLINE constexpr auto make_array(T&& t, V&&... values)
+constexpr auto make_array(T&& t, V&&... values)
     -> std::array<typename std::decay_t<T>, sizeof...(V) + 1> {
   static_assert(
       tmpl2::flat_all_v<std::is_same_v<std::decay_t<T>, std::decay_t<V>>...>,

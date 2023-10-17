@@ -30,8 +30,9 @@ namespace detail {
 // pointwise reconstruction routine for the original Wcns5z scheme
 template <size_t NonlinearWeightExponent>
 struct Wcns5zWork {
-  SPECTRE_ALWAYS_INLINE static std::array<double, 2> pointwise(
-      const double* const q, const int stride, const double epsilon) {
+  static std::array<double, 2> pointwise(const double* const q,
+                                         const int stride,
+                                         const double epsilon) {
     ASSERT(epsilon > 0.0,
            "epsilon must be greater than zero but is " << epsilon);
 
@@ -94,9 +95,9 @@ struct Wcns5zWork {
 
 template <size_t NonlinearWeightExponent, class FallbackReconstructor>
 struct Wcns5zReconstructor {
-  SPECTRE_ALWAYS_INLINE static std::array<double, 2> pointwise(
-      const double* const q, const int stride, const double epsilon,
-      const size_t max_number_of_extrema) {
+  static std::array<double, 2> pointwise(const double* const q,
+                                         const int stride, const double epsilon,
+                                         const size_t max_number_of_extrema) {
     // count the number of extrema in the given FD stencil
     size_t n_extrema{0};
     for (int i = -1; i < 2; ++i) {
@@ -118,17 +119,17 @@ struct Wcns5zReconstructor {
     }
   }
 
-  SPECTRE_ALWAYS_INLINE static constexpr size_t stencil_width() { return 5; }
+  static constexpr size_t stencil_width() { return 5; }
 };
 
 template <size_t NonlinearWeightExponent>
 struct Wcns5zReconstructor<NonlinearWeightExponent, void> {
-  SPECTRE_ALWAYS_INLINE static std::array<double, 2> pointwise(
+  static std::array<double, 2> pointwise(
       const double* const q, const int stride, const double epsilon,
       const size_t /*max_number_of_extrema*/) {
     return Wcns5zWork<NonlinearWeightExponent>::pointwise(q, stride, epsilon);
   }
-  SPECTRE_ALWAYS_INLINE static constexpr size_t stencil_width() { return 5; }
+  static constexpr size_t stencil_width() { return 5; }
 };
 
 }  // namespace detail

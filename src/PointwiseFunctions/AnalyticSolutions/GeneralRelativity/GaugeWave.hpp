@@ -172,8 +172,8 @@ class GaugeWave : public AnalyticSolution<Dim>, public MarkAsAnalyticSolution {
   // NOLINTNEXTLINE(google-runtime-references)
   void pup(PUP::er& p);
 
-  SPECTRE_ALWAYS_INLINE double amplitude() const { return amplitude_; }
-  SPECTRE_ALWAYS_INLINE double wavelength() const { return wavelength_; }
+  double amplitude() const { return amplitude_; }
+  double wavelength() const { return wavelength_; }
 
  private:
   template <typename DataType>

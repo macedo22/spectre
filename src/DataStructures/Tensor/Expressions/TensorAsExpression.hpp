@@ -62,7 +62,7 @@ template <
     size_t NumConcreteTimeIndices,
     Requires<(NumIndices >= 2 and (NumSpatialSpacetimeIndices != 0 or
                                    NumConcreteTimeIndices != 0))> = nullptr>
-SPECTRE_ALWAYS_INLINE constexpr std::array<std::int32_t, NumIndices>
+constexpr std::array<std::int32_t, NumIndices>
 get_transformed_spacetime_symmetry(
     const std::array<std::int32_t, NumIndices>& symmetry,
     const std::array<size_t, NumSpatialSpacetimeIndices>&
@@ -90,7 +90,7 @@ template <size_t NumIndices, size_t NumSpatialSpacetimeIndices,
           size_t NumConcreteTimeIndices,
           Requires<(NumIndices < 2 or (NumSpatialSpacetimeIndices == 0 and
                                        NumConcreteTimeIndices == 0))> = nullptr>
-SPECTRE_ALWAYS_INLINE constexpr std::array<std::int32_t, NumIndices>
+constexpr std::array<std::int32_t, NumIndices>
 get_transformed_spacetime_symmetry(
     const std::array<std::int32_t, NumIndices>& symmetry,
     const std::array<size_t, NumSpatialSpacetimeIndices>&
@@ -277,7 +277,7 @@ struct TensorAsExpression<Tensor<X, Symm<SymmValues...>, IndexList<Indices...>>,
   /// \brief Assert that the LHS tensor of the equation is not equal to the
   /// `Tensor` represented by this expression
   template <typename LhsTensor>
-  SPECTRE_ALWAYS_INLINE void assert_lhs_tensor_not_in_rhs_expression(
+  void assert_lhs_tensor_not_in_rhs_expression(
       const gsl::not_null<LhsTensor*> lhs_tensor) const {
     (void)lhs_tensor;
     ASSERT(static_cast<const void*>(&(*t_)) != &(*lhs_tensor),
@@ -292,7 +292,7 @@ struct TensorAsExpression<Tensor<X, Symm<SymmValues...>, IndexList<Indices...>>,
   /// result `Tensor` being computed
   /// \param lhs_tensor the LHS result `Tensor` being computed
   template <typename LhsTensorIndices, typename LhsTensor>
-  SPECTRE_ALWAYS_INLINE void assert_lhs_tensorindices_same_in_rhs(
+  void assert_lhs_tensorindices_same_in_rhs(
       const gsl::not_null<LhsTensor*> lhs_tensor) const {
     if (static_cast<const void*>(&(*t_)) == &(*lhs_tensor)) {
       ASSERT(
@@ -308,15 +308,13 @@ struct TensorAsExpression<Tensor<X, Symm<SymmValues...>, IndexList<Indices...>>,
   ///
   /// \return the size of a component from the `Tensor` contained by this
   /// expression
-  SPECTRE_ALWAYS_INLINE size_t get_rhs_tensor_component_size() const {
-    return get_size((*t_)[0]);
-  }
+  size_t get_rhs_tensor_component_size() const { return get_size((*t_)[0]); }
 
   /// \brief Returns the value of the contained tensor's multi-index
   ///
   /// \param multi_index the multi-index of the tensor component to retrieve
   /// \return the value of the component at `multi_index` in the tensor
-  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+  decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     return t_->get(multi_index);
   }
@@ -326,7 +324,7 @@ struct TensorAsExpression<Tensor<X, Symm<SymmValues...>, IndexList<Indices...>>,
   /// \param multi_index the multi-index of the tensor component to retrieve
   /// \return the value of the component at `multi_index` in the tensor
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
+  decltype(auto) get_primary(
       const ResultType& /*result_component*/,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     return t_->get(multi_index);
@@ -337,14 +335,12 @@ struct TensorAsExpression<Tensor<X, Symm<SymmValues...>, IndexList<Indices...>>,
   // `is_primary_start == false`. Therefore, this function should never be
   // called on this expression type.
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
+  void evaluate_primary_subtree(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>&) const = delete;
 
   /// Retrieve the i'th entry of the Tensor being held
-  SPECTRE_ALWAYS_INLINE type operator[](const size_t i) const {
-    return t_->operator[](i);
-  }
+  type operator[](const size_t i) const { return t_->operator[](i); }
 
  private:
   /// `Tensor` represented by this expression

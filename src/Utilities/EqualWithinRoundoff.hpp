@@ -45,7 +45,7 @@ struct EqualWithinRoundoffImpl;
  * both, are iterable, and compares the values point-wise.
  */
 template <typename Lhs, typename Rhs>
-constexpr SPECTRE_ALWAYS_INLINE bool equal_within_roundoff(
+constexpr bool equal_within_roundoff(
     const Lhs& lhs, const Rhs& rhs,
     const double eps = std::numeric_limits<double>::epsilon() * 100.0,
     const double scale = 1.0) {
@@ -61,10 +61,8 @@ namespace EqualWithinRoundoffImpls {
 template <typename Floating>
 struct EqualWithinRoundoffImpl<Floating, Floating,
                                Requires<std::is_floating_point_v<Floating>>> {
-  static constexpr SPECTRE_ALWAYS_INLINE bool apply(const Floating& lhs,
-                                                    const Floating& rhs,
-                                                    const double eps,
-                                                    const double scale) {
+  static constexpr bool apply(const Floating& lhs, const Floating& rhs,
+                              const double eps, const double scale) {
     return ce_fabs(lhs - rhs) <=
            (std::max(ce_fabs(lhs), ce_fabs(rhs)) + scale) * eps;
   }
@@ -75,9 +73,8 @@ struct EqualWithinRoundoffImpl<Floating, Floating,
 template <typename Floating>
 struct EqualWithinRoundoffImpl<std::complex<Floating>, Floating,
                                Requires<std::is_floating_point_v<Floating>>> {
-  static SPECTRE_ALWAYS_INLINE bool apply(const std::complex<Floating>& lhs,
-                                          const Floating& rhs, const double eps,
-                                          const double scale) {
+  static bool apply(const std::complex<Floating>& lhs, const Floating& rhs,
+                    const double eps, const double scale) {
     return equal_within_roundoff(lhs.real(), rhs, eps, scale) and
            equal_within_roundoff(lhs.imag(), 0., eps, scale);
   }
@@ -88,9 +85,8 @@ struct EqualWithinRoundoffImpl<std::complex<Floating>, Floating,
 template <typename Floating>
 struct EqualWithinRoundoffImpl<Floating, std::complex<Floating>,
                                Requires<std::is_floating_point_v<Floating>>> {
-  static SPECTRE_ALWAYS_INLINE bool apply(const std::complex<Floating>& lhs,
-                                          const Floating& rhs, const double eps,
-                                          const double scale) {
+  static bool apply(const std::complex<Floating>& lhs, const Floating& rhs,
+                    const double eps, const double scale) {
     return equal_within_roundoff(rhs, lhs, eps, scale);
   }
 };
@@ -99,10 +95,9 @@ struct EqualWithinRoundoffImpl<Floating, std::complex<Floating>,
 template <typename Floating>
 struct EqualWithinRoundoffImpl<std::complex<Floating>, std::complex<Floating>,
                                Requires<std::is_floating_point_v<Floating>>> {
-  static SPECTRE_ALWAYS_INLINE bool apply(const std::complex<Floating>& lhs,
-                                          const std::complex<Floating>& rhs,
-                                          const double eps,
-                                          const double scale) {
+  static bool apply(const std::complex<Floating>& lhs,
+                    const std::complex<Floating>& rhs, const double eps,
+                    const double scale) {
     return equal_within_roundoff(lhs.real(), rhs.real(), eps, scale) and
            equal_within_roundoff(lhs.imag(), rhs.imag(), eps, scale);
   }
@@ -114,9 +109,8 @@ struct EqualWithinRoundoffImpl<
     Lhs, Rhs,
     Requires<tt::is_iterable_v<Lhs> and not tt::is_maplike_v<Lhs> and
              std::is_floating_point_v<Rhs>>> {
-  static SPECTRE_ALWAYS_INLINE bool apply(const Lhs& lhs, const Rhs& rhs,
-                                          const double eps,
-                                          const double scale) {
+  static bool apply(const Lhs& lhs, const Rhs& rhs, const double eps,
+                    const double scale) {
     return alg::all_of(lhs, [&rhs, &eps, &scale](const auto& lhs_element) {
       return equal_within_roundoff(lhs_element, rhs, eps, scale);
     });
@@ -129,9 +123,8 @@ struct EqualWithinRoundoffImpl<
     Lhs, Rhs,
     Requires<tt::is_iterable_v<Rhs> and not tt::is_maplike_v<Rhs> and
              std::is_floating_point_v<Lhs>>> {
-  static SPECTRE_ALWAYS_INLINE bool apply(const Lhs& lhs, const Rhs& rhs,
-                                          const double eps,
-                                          const double scale) {
+  static bool apply(const Lhs& lhs, const Rhs& rhs, const double eps,
+                    const double scale) {
     return equal_within_roundoff(rhs, lhs, eps, scale);
   }
 };

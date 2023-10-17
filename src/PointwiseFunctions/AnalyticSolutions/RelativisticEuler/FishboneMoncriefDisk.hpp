@@ -257,12 +257,11 @@ class FishboneMoncriefDisk
   DataType potential(const DataType& r_sqrd,
                      const DataType& sin_theta_sqrd) const;
 
-  SPECTRE_ALWAYS_INLINE static size_t index_helper(
-      tmpl::no_such_type_ /*meta*/) {
+  static size_t index_helper(tmpl::no_such_type_ /*meta*/) {
     return std::numeric_limits<size_t>::max();
   }
   template <typename T>
-  SPECTRE_ALWAYS_INLINE static size_t index_helper(T /*meta*/) {
+  static size_t index_helper(T /*meta*/) {
     return T::value;
   }
 

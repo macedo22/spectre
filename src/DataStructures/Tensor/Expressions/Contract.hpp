@@ -564,7 +564,7 @@ struct TensorContract
   /// \brief Assert that the LHS tensor of the equation does not also appear in
   /// this expression's subtree
   template <typename LhsTensor>
-  SPECTRE_ALWAYS_INLINE void assert_lhs_tensor_not_in_rhs_expression(
+  void assert_lhs_tensor_not_in_rhs_expression(
       const gsl::not_null<LhsTensor*> lhs_tensor) const {
     if constexpr (not std::is_base_of_v<MarkAsNumberAsExpression, T>) {
       t_.assert_lhs_tensor_not_in_rhs_expression(lhs_tensor);
@@ -578,7 +578,7 @@ struct TensorContract
   /// result `Tensor` being computed
   /// \param lhs_tensor the LHS result `Tensor` being computed
   template <typename LhsTensorIndices, typename LhsTensor>
-  SPECTRE_ALWAYS_INLINE void assert_lhs_tensorindices_same_in_rhs(
+  void assert_lhs_tensorindices_same_in_rhs(
       const gsl::not_null<LhsTensor*> lhs_tensor) const {
     if constexpr (not std::is_base_of_v<MarkAsNumberAsExpression, T>) {
       t_.template assert_lhs_tensorindices_same_in_rhs<LhsTensorIndices>(
@@ -591,7 +591,7 @@ struct TensorContract
   ///
   /// \return the size of a component from a `Tensor` in this expression's
   /// subtree of the RHS `TensorExpression`
-  SPECTRE_ALWAYS_INLINE size_t get_rhs_tensor_component_size() const {
+  size_t get_rhs_tensor_component_size() const {
     return t_.get_rhs_tensor_component_size();
   }
 
@@ -612,8 +612,7 @@ struct TensorContract
   /// contracted expression
   /// \return the highest multi-index between the components being summed in
   /// the contraction
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<
-      size_t, num_uncontracted_tensor_indices>
+  static constexpr std::array<size_t, num_uncontracted_tensor_indices>
   get_highest_multi_index_to_sum(
       const std::array<size_t, num_tensor_indices>& contracted_multi_index) {
     // Initialize with placeholders for debugging
@@ -658,8 +657,7 @@ struct TensorContract
   /// contracted expression
   /// \return the lowest multi-index between the components being summed in
   /// the contraction
-  SPECTRE_ALWAYS_INLINE static constexpr std::array<
-      size_t, num_uncontracted_tensor_indices>
+  static constexpr std::array<size_t, num_uncontracted_tensor_indices>
   get_lowest_multi_index_to_sum(
       const std::array<size_t, num_tensor_indices>& contracted_multi_index) {
     // Initialize with placeholders for debugging
@@ -714,8 +712,7 @@ struct TensorContract
   /// of the uncontracted operand expression to sum
   /// \return the next highest multi-index between the components being summed
   /// in the contraction
-  SPECTRE_ALWAYS_INLINE static std::array<size_t,
-                                          num_uncontracted_tensor_indices>
+  static std::array<size_t, num_uncontracted_tensor_indices>
   get_next_highest_multi_index_to_sum(
       const std::array<size_t, num_uncontracted_tensor_indices>&
           uncontracted_multi_index) {
@@ -797,8 +794,7 @@ struct TensorContract
   /// of the uncontracted operand expression to sum
   /// \return the next lowest multi-index between the components being summed in
   /// the contraction
-  SPECTRE_ALWAYS_INLINE static std::array<size_t,
-                                          num_uncontracted_tensor_indices>
+  static std::array<size_t, num_uncontracted_tensor_indices>
   get_next_lowest_multi_index_to_sum(
       const std::array<size_t, num_uncontracted_tensor_indices>&
           uncontracted_multi_index) {
@@ -877,7 +873,7 @@ struct TensorContract
   /// component to retrieve
   /// \return the value of a component of the resulant contracted tensor
   template <size_t Iteration>
-  SPECTRE_ALWAYS_INLINE static decltype(auto) compute_contraction(
+  static decltype(auto) compute_contraction(
       const T& t, const std::array<size_t, num_uncontracted_tensor_indices>&
                       current_multi_index) {
     if constexpr (Iteration < num_terms_summed - 1) {
@@ -924,7 +920,7 @@ struct TensorContract
   /// multi-index to update to be the next leg's starting multi-index
   /// \return the result of summing up the terms in the given leg
   template <size_t Iteration>
-  SPECTRE_ALWAYS_INLINE static decltype(auto) compute_contraction_leg(
+  static decltype(auto) compute_contraction_leg(
       const T& t,
       const std::array<size_t, num_uncontracted_tensor_indices>&
           current_multi_index,
@@ -965,7 +961,7 @@ struct TensorContract
   /// component to retrieve
   /// \return the value of a component of the resulant contracted tensor
   template <size_t Iteration>
-  SPECTRE_ALWAYS_INLINE static decltype(auto) compute_contraction_primary(
+  static decltype(auto) compute_contraction_primary(
       const T& t, const type& result_component,
       const std::array<size_t, num_uncontracted_tensor_indices>&
           current_multi_index) {
@@ -1015,10 +1011,9 @@ struct TensorContract
   /// \return the value of the component at `contracted_multi_index` in the
   /// resultant contracted tensor
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
-      const ResultType& result_component,
-      const std::array<size_t, num_tensor_indices>& contracted_multi_index)
-      const {
+  decltype(auto) get_primary(const ResultType& result_component,
+                             const std::array<size_t, num_tensor_indices>&
+                                 contracted_multi_index) const {
     return compute_contraction_primary<0>(
         t_, result_component,
         get_highest_multi_index_to_sum(contracted_multi_index));
@@ -1038,7 +1033,7 @@ struct TensorContract
   /// contracted result tensor to evaluate
   /// \param lowest_multi_index the lowest multi-index between the components
   /// being summed in the contraction (see `get_lowest_multi_index_to_sum`)
-  SPECTRE_ALWAYS_INLINE void evaluate_primary_contraction(
+  void evaluate_primary_contraction(
       type& result_component,
       const std::array<size_t, num_tensor_indices>& contracted_multi_index,
       const std::array<size_t, num_uncontracted_tensor_indices>&
@@ -1135,10 +1130,9 @@ struct TensorContract
   /// \param contracted_multi_index the multi-index of the component of the
   /// contracted result tensor to evaluate
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
-      ResultType& result_component,
-      const std::array<size_t, num_tensor_indices>& contracted_multi_index)
-      const {
+  void evaluate_primary_subtree(ResultType& result_component,
+                                const std::array<size_t, num_tensor_indices>&
+                                    contracted_multi_index) const {
     const auto lowest_multi_index_to_sum =
         get_lowest_multi_index_to_sum(contracted_multi_index);
     if constexpr (primary_child_subtree_contains_primary_start) {
@@ -1165,7 +1159,7 @@ struct TensorContract
 
 template <typename T, typename X, typename Symm, typename IndexList,
           typename... TensorIndices>
-SPECTRE_ALWAYS_INLINE static constexpr auto contract(
+static constexpr auto contract(
     const TensorExpression<T, X, Symm, IndexList, tmpl::list<TensorIndices...>>&
         t) {
   // Number of indices in the tensor expression we're wanting to contract

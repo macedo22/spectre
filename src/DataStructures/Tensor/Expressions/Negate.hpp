@@ -110,7 +110,7 @@ struct Negate
   /// \brief Assert that the LHS tensor of the equation does not also appear in
   /// this expression's subtree
   template <typename LhsTensor>
-  SPECTRE_ALWAYS_INLINE void assert_lhs_tensor_not_in_rhs_expression(
+  void assert_lhs_tensor_not_in_rhs_expression(
       const gsl::not_null<LhsTensor*> lhs_tensor) const {
     if constexpr (not std::is_base_of_v<MarkAsNumberAsExpression, T>) {
       t_.assert_lhs_tensor_not_in_rhs_expression(lhs_tensor);
@@ -124,7 +124,7 @@ struct Negate
   /// result `Tensor` being computed
   /// \param lhs_tensor the LHS result `Tensor` being computed
   template <typename LhsTensorIndices, typename LhsTensor>
-  SPECTRE_ALWAYS_INLINE void assert_lhs_tensorindices_same_in_rhs(
+  void assert_lhs_tensorindices_same_in_rhs(
       const gsl::not_null<LhsTensor*> lhs_tensor) const {
     if constexpr (not std::is_base_of_v<MarkAsNumberAsExpression, T>) {
       t_.template assert_lhs_tensorindices_same_in_rhs<LhsTensorIndices>(
@@ -137,7 +137,7 @@ struct Negate
   ///
   /// \return the size of a component from a `Tensor` in this expression's
   /// subtree of the RHS `TensorExpression`
-  SPECTRE_ALWAYS_INLINE size_t get_rhs_tensor_component_size() const {
+  size_t get_rhs_tensor_component_size() const {
     return t_.get_rhs_tensor_component_size();
   }
 
@@ -148,7 +148,7 @@ struct Negate
   /// negated tensor expression
   /// \return the value of the component at `multi_index` in the negated tensor
   /// expression
-  SPECTRE_ALWAYS_INLINE decltype(auto) get(
+  decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     return -t_.get(multi_index);
   }
@@ -169,7 +169,7 @@ struct Negate
   /// \return the value of the component at `multi_index` in the negated tensor
   /// expression
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
+  decltype(auto) get_primary(
       const ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     if constexpr (is_primary_end) {
@@ -197,7 +197,7 @@ struct Negate
   /// \param multi_index the multi-index of the component of the result tensor
   /// to evaluate
   template <typename ResultType>
-  SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
+  void evaluate_primary_subtree(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     if constexpr (primary_child_subtree_contains_primary_start) {
@@ -224,7 +224,7 @@ struct Negate
 /// \param t the tensor expression
 /// \return the tensor expression representing the negation of `t`
 template <typename T>
-SPECTRE_ALWAYS_INLINE auto operator-(
+auto operator-(
     const TensorExpression<T, typename T::type, typename T::symmetry,
                            typename T::index_list, typename T::args_list>& t) {
   return tenex::Negate<T>(~t);

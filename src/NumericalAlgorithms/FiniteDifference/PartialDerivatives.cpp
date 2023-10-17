@@ -29,9 +29,8 @@ template <bool UnitStride>
 struct ComputeImpl<2, UnitStride> {
   static constexpr size_t fd_order = 2;
 
-  SPECTRE_ALWAYS_INLINE static double pointwise(
-      const double* const q, const int stride,
-      const std::array<double, 1>& weights) {
+  static double pointwise(const double* const q, const int stride,
+                          const std::array<double, 1>& weights) {
     if constexpr (UnitStride) {
       ASSERT(stride == 1, "UnitStride is true but got stride " << stride);
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
@@ -52,9 +51,8 @@ template <bool UnitStride>
 struct ComputeImpl<4, UnitStride> {
   static constexpr size_t fd_order = 4;
 
-  SPECTRE_ALWAYS_INLINE static double pointwise(
-      const double* const q, const int stride,
-      const std::array<double, 2>& weights) {
+  static double pointwise(const double* const q, const int stride,
+                          const std::array<double, 2>& weights) {
     if constexpr (UnitStride) {
       ASSERT(stride == 1, "UnitStride is true but got stride " << stride);
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
@@ -78,9 +76,8 @@ template <bool UnitStride>
 struct ComputeImpl<6, UnitStride> {
   static constexpr size_t fd_order = 6;
 
-  SPECTRE_ALWAYS_INLINE static double pointwise(
-      const double* const q, const int stride,
-      const std::array<double, 3>& weights) {
+  static double pointwise(const double* const q, const int stride,
+                          const std::array<double, 3>& weights) {
     if constexpr (UnitStride) {
       ASSERT(stride == 1, "UnitStride is true but got stride " << stride);
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
@@ -108,9 +105,8 @@ template <bool UnitStride>
 struct ComputeImpl<8, UnitStride> {
   static constexpr size_t fd_order = 8;
 
-  SPECTRE_ALWAYS_INLINE static double pointwise(
-      const double* const q, const int stride,
-      const std::array<double, 4>& weights) {
+  static double pointwise(const double* const q, const int stride,
+                          const std::array<double, 4>& weights) {
     if constexpr (UnitStride) {
       ASSERT(stride == 1, "UnitStride is true but got stride " << stride);
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)

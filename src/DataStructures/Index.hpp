@@ -142,14 +142,12 @@ void collapsed_index_check(const Index<Dim>& index, const Index<Dim>& extents) {
 // specializations to avoid having loops since this computation is very
 // straightforward.
 template <>
-SPECTRE_ALWAYS_INLINE size_t collapsed_index(const Index<0>& /*index*/,
-                                             const Index<0>& /*extents*/) {
+size_t collapsed_index(const Index<0>& /*index*/, const Index<0>& /*extents*/) {
   return 0;
 }
 
 template <>
-SPECTRE_ALWAYS_INLINE size_t collapsed_index(const Index<1>& index,
-                                             const Index<1>& extents) {
+size_t collapsed_index(const Index<1>& index, const Index<1>& extents) {
   (void)extents;
 #ifdef SPECTRE_DEBUG
   Index_detail::collapsed_index_check(index, extents);
@@ -158,8 +156,7 @@ SPECTRE_ALWAYS_INLINE size_t collapsed_index(const Index<1>& index,
 }
 
 template <>
-SPECTRE_ALWAYS_INLINE size_t collapsed_index(const Index<2>& index,
-                                             const Index<2>& extents) {
+size_t collapsed_index(const Index<2>& index, const Index<2>& extents) {
 #ifdef SPECTRE_DEBUG
   Index_detail::collapsed_index_check(index, extents);
 #endif
@@ -167,8 +164,7 @@ SPECTRE_ALWAYS_INLINE size_t collapsed_index(const Index<2>& index,
 }
 
 template <>
-SPECTRE_ALWAYS_INLINE size_t collapsed_index(const Index<3>& index,
-                                             const Index<3>& extents) {
+size_t collapsed_index(const Index<3>& index, const Index<3>& extents) {
 #ifdef SPECTRE_DEBUG
   Index_detail::collapsed_index_check(index, extents);
 #endif
@@ -176,8 +172,7 @@ SPECTRE_ALWAYS_INLINE size_t collapsed_index(const Index<3>& index,
 }
 
 template <>
-SPECTRE_ALWAYS_INLINE size_t collapsed_index(const Index<4>& index,
-                                             const Index<4>& extents) {
+size_t collapsed_index(const Index<4>& index, const Index<4>& extents) {
 #ifdef SPECTRE_DEBUG
   Index_detail::collapsed_index_check(index, extents);
 #endif

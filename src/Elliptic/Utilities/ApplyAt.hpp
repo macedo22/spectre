@@ -60,10 +60,10 @@ struct unmap_arg<false, FirstMapKey, MapKeys...> {
 template <typename... ArgumentTags, typename PassthroughArgumentTags,
           typename F, typename TaggedContainer, typename... MapKeys,
           typename... Args>
-SPECTRE_ALWAYS_INLINE decltype(auto) apply_at(
-    F&& f, const TaggedContainer& box, const std::tuple<MapKeys...>& map_keys,
-    tmpl::list<ArgumentTags...> /*meta*/, PassthroughArgumentTags /*meta*/,
-    Args&&... args) {
+decltype(auto) apply_at(F&& f, const TaggedContainer& box,
+                        const std::tuple<MapKeys...>& map_keys,
+                        tmpl::list<ArgumentTags...> /*meta*/,
+                        PassthroughArgumentTags /*meta*/, Args&&... args) {
   using ::db::apply;
   using ::tuples::apply;
   return apply<tmpl::list<ArgumentTags...>>(
@@ -103,9 +103,9 @@ SPECTRE_ALWAYS_INLINE decltype(auto) apply_at(
 template <typename ArgumentTags, typename PassthroughArgumentTags,
           typename... MapKeys, typename F, typename TaggedContainer,
           typename... Args>
-SPECTRE_ALWAYS_INLINE decltype(auto) apply_at(
-    F&& f, const TaggedContainer& box, const std::tuple<MapKeys...>& map_keys,
-    Args&&... args) {
+decltype(auto) apply_at(F&& f, const TaggedContainer& box,
+                        const std::tuple<MapKeys...>& map_keys,
+                        Args&&... args) {
   return detail::apply_at(std::forward<F>(f), box, map_keys, ArgumentTags{},
                           PassthroughArgumentTags{},
                           std::forward<Args>(args)...);
@@ -114,9 +114,8 @@ SPECTRE_ALWAYS_INLINE decltype(auto) apply_at(
 template <typename ArgumentTags, typename PassthroughArgumentTags,
           typename MapKey, typename F, typename TaggedContainer,
           typename... Args>
-SPECTRE_ALWAYS_INLINE decltype(auto) apply_at(F&& f, const TaggedContainer& box,
-                                              const MapKey& map_key,
-                                              Args&&... args) {
+decltype(auto) apply_at(F&& f, const TaggedContainer& box,
+                        const MapKey& map_key, Args&&... args) {
   return detail::apply_at(
       std::forward<F>(f), box, std::forward_as_tuple(map_key), ArgumentTags{},
       PassthroughArgumentTags{}, std::forward<Args>(args)...);
@@ -128,11 +127,11 @@ namespace detail {
 template <typename... ReturnTags, typename... ArgumentTags,
           typename PassthroughTags, typename F, typename TaggedContainer,
           typename... MapKeys, typename... Args>
-SPECTRE_ALWAYS_INLINE void mutate_apply_at(
-    F&& f, const gsl::not_null<TaggedContainer*> box,
-    const std::tuple<MapKeys...>& map_keys, tmpl::list<ReturnTags...> /*meta*/,
-    tmpl::list<ArgumentTags...> /*meta*/, PassthroughTags /*meta*/,
-    Args&&... args) {
+void mutate_apply_at(F&& f, const gsl::not_null<TaggedContainer*> box,
+                     const std::tuple<MapKeys...>& map_keys,
+                     tmpl::list<ReturnTags...> /*meta*/,
+                     tmpl::list<ArgumentTags...> /*meta*/,
+                     PassthroughTags /*meta*/, Args&&... args) {
   using ::db::apply;
   using ::db::mutate_apply;
   using ::tuples::apply;
@@ -183,9 +182,8 @@ SPECTRE_ALWAYS_INLINE void mutate_apply_at(
 template <typename MutateTags, typename ArgumentTags, typename PassthroughTags,
           typename F, typename TaggedContainer, typename... MapKeys,
           typename... Args>
-SPECTRE_ALWAYS_INLINE void mutate_apply_at(
-    F&& f, const gsl::not_null<TaggedContainer*> box,
-    const std::tuple<MapKeys...>& map_keys, Args&&... args) {
+void mutate_apply_at(F&& f, const gsl::not_null<TaggedContainer*> box,
+                     const std::tuple<MapKeys...>& map_keys, Args&&... args) {
   detail::mutate_apply_at(std::forward<F>(f), box, map_keys, MutateTags{},
                           ArgumentTags{}, PassthroughTags{},
                           std::forward<Args>(args)...);
@@ -194,9 +192,8 @@ SPECTRE_ALWAYS_INLINE void mutate_apply_at(
 template <typename MutateTags, typename ArgumentTags, typename PassthroughTags,
           typename F, typename TaggedContainer, typename MapKey,
           typename... Args>
-SPECTRE_ALWAYS_INLINE void mutate_apply_at(
-    F&& f, const gsl::not_null<TaggedContainer*> box, const MapKey& map_key,
-    Args&&... args) {
+void mutate_apply_at(F&& f, const gsl::not_null<TaggedContainer*> box,
+                     const MapKey& map_key, Args&&... args) {
   detail::mutate_apply_at(
       std::forward<F>(f), box, std::forward_as_tuple(map_key), MutateTags{},
       ArgumentTags{}, PassthroughTags{}, std::forward<Args>(args)...);

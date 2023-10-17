@@ -23,8 +23,7 @@ namespace Swsh {
 /// \brief Convenience function for determining the number of spin-weighted
 /// spherical harmonic collocation values that are stored for a given `l_max`
 /// for a libsharp-compatible set of collocation points.
-constexpr SPECTRE_ALWAYS_INLINE size_t
-number_of_swsh_collocation_points(const size_t l_max) {
+constexpr size_t number_of_swsh_collocation_points(const size_t l_max) {
   return (l_max + 1) * (2 * l_max + 1);
 }
 
@@ -36,8 +35,7 @@ number_of_swsh_collocation_points(const size_t l_max) {
 /// \details The full number of collocation points is the product of the number
 /// of \f$\theta\f$ points and the number of \f$\phi\f$ points (a 'rectangular'
 /// grid).
-constexpr SPECTRE_ALWAYS_INLINE size_t
-number_of_swsh_theta_collocation_points(const size_t l_max) {
+constexpr size_t number_of_swsh_theta_collocation_points(const size_t l_max) {
   return (l_max + 1);
 }
 
@@ -49,8 +47,7 @@ number_of_swsh_theta_collocation_points(const size_t l_max) {
 /// \details The full number of collocation points is the product of the number
 /// of \f$\theta\f$ points and the number of \f$\phi\f$ points (a 'rectangular'
 /// grid).
-constexpr SPECTRE_ALWAYS_INLINE size_t
-number_of_swsh_phi_collocation_points(const size_t l_max) {
+constexpr size_t number_of_swsh_phi_collocation_points(const size_t l_max) {
   return (2 * l_max + 1);
 }
 
@@ -61,7 +58,7 @@ number_of_swsh_phi_collocation_points(const size_t l_max) {
 /// angular collocation points should not be regarded as having a useful product
 /// representation for e.g. taking derivatives in just the theta direction.
 /// Instead, use spin-weighted utilities for all angular operations.
-SPECTRE_ALWAYS_INLINE Mesh<3> swsh_volume_mesh_for_radial_operations(
+Mesh<3> swsh_volume_mesh_for_radial_operations(
     const size_t l_max, const size_t number_of_radial_points) {
   return Mesh<3>{{{number_of_swsh_phi_collocation_points(l_max),
                    number_of_swsh_theta_collocation_points(l_max),
