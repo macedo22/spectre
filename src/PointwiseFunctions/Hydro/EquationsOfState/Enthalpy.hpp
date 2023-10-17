@@ -269,6 +269,7 @@ class Enthalpy : public EquationOfState<true, 1> {
  private:
   EQUATION_OF_STATE_FORWARD_DECLARE_MEMBER_IMPLS(1)
 
+  SPECTRE_ALWAYS_INLINE
   bool in_low_density_domain(const double rest_mass_density) const {
     return rest_mass_density < minimum_density_;
   }

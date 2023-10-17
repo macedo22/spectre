@@ -30,7 +30,7 @@ using std::real;  // NOLINT
  * \brief Returns the number of digits in an integer number
  */
 template <typename T>
-T number_of_digits(const T number) {
+SPECTRE_ALWAYS_INLINE T number_of_digits(const T number) {
   static_assert(tt::is_integer_v<std::decay_t<T>>,
                 "Must call number_of_digits with an integer number");
   return number == 0 ? 1

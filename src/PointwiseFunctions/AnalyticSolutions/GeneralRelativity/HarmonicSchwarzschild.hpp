@@ -213,11 +213,13 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
   /*!
    * \brief Return the mass of the black hole
    */
-  double mass() const { return mass_; }
+  SPECTRE_ALWAYS_INLINE double mass() const { return mass_; }
   /*!
    * \brief Return the center of the black hole
    */
-  const std::array<double, volume_dim>& center() const { return center_; }
+  SPECTRE_ALWAYS_INLINE const std::array<double, volume_dim>& center() const {
+    return center_;
+  }
 
   /*!
    * \brief Tags defined for intermediates specific to the harmonic
@@ -939,16 +941,16 @@ class HarmonicSchwarzschild : public AnalyticSolution<3_st>,
 /*!
  * \brief Return whether two harmonic Schwarzschild solutions are equivalent
  */
-bool operator==(const HarmonicSchwarzschild& lhs,
-                const HarmonicSchwarzschild& rhs) {
+SPECTRE_ALWAYS_INLINE bool operator==(const HarmonicSchwarzschild& lhs,
+                                      const HarmonicSchwarzschild& rhs) {
   return lhs.mass() == rhs.mass() and lhs.center() == rhs.center();
 }
 
 /*!
  * \brief Return whether two harmonic Schwarzschild solutions are not equivalent
  */
-bool operator!=(const HarmonicSchwarzschild& lhs,
-                const HarmonicSchwarzschild& rhs) {
+SPECTRE_ALWAYS_INLINE bool operator!=(const HarmonicSchwarzschild& lhs,
+                                      const HarmonicSchwarzschild& rhs) {
   return not(lhs == rhs);
 }
 }  // namespace Solutions

@@ -25,61 +25,61 @@ namespace h5 {
  * \note For strings, the returned type must be released with H5Tclose
  */
 template <typename T>
-hid_t h5_type();
+SPECTRE_ALWAYS_INLINE hid_t h5_type();
 /// \cond HIDDEN_SYMBOLS
 template <>
-hid_t h5_type<float>() {
+SPECTRE_ALWAYS_INLINE hid_t h5_type<float>() {
   return H5T_NATIVE_FLOAT;  // LCOV_EXCL_LINE
 }
 template <>
-hid_t h5_type<double>() {
+SPECTRE_ALWAYS_INLINE hid_t h5_type<double>() {
   return H5T_NATIVE_DOUBLE;  // LCOV_EXCL_LINE
 }
 template <>
-hid_t h5_type<short>() {
+SPECTRE_ALWAYS_INLINE hid_t h5_type<short>() {
   return H5T_NATIVE_SHORT;  // LCOV_EXCL_LINE
 }
 template <>
-hid_t h5_type<unsigned short>() {
+SPECTRE_ALWAYS_INLINE hid_t h5_type<unsigned short>() {
   return H5T_NATIVE_USHORT;  // LCOV_EXCL_LINE
 }
 template <>
-hid_t h5_type<int>() {
+SPECTRE_ALWAYS_INLINE hid_t h5_type<int>() {
   return H5T_NATIVE_INT;  // LCOV_EXCL_LINE
 }
 template <>
-hid_t h5_type<unsigned int>() {
+SPECTRE_ALWAYS_INLINE hid_t h5_type<unsigned int>() {
   return H5T_NATIVE_UINT;  // LCOV_EXCL_LINE
 }
 template <>
-hid_t h5_type<long>() {
+SPECTRE_ALWAYS_INLINE hid_t h5_type<long>() {
   return H5T_NATIVE_LONG;  // LCOV_EXCL_LINE
 }
 template <>
-hid_t h5_type<unsigned long>() {
+SPECTRE_ALWAYS_INLINE hid_t h5_type<unsigned long>() {
   return H5T_NATIVE_ULONG;  // LCOV_EXCL_LINE
 }
 template <>
-hid_t h5_type<long long>() {
+SPECTRE_ALWAYS_INLINE hid_t h5_type<long long>() {
   return H5T_NATIVE_LLONG;  // LCOV_EXCL_LINE
 }
 template <>
-hid_t h5_type<unsigned long long>() {
+SPECTRE_ALWAYS_INLINE hid_t h5_type<unsigned long long>() {
   return H5T_NATIVE_ULLONG;  // LCOV_EXCL_LINE
 }
 template <>
-hid_t h5_type<char>() {
+SPECTRE_ALWAYS_INLINE hid_t h5_type<char>() {
   // Work around issue https://github.com/sxs-collaboration/spectre/issues/5029
   // by always writing/reading signed chars. See issue for more suggestions for
   // more permanent solutions.
   return H5T_NATIVE_SCHAR;  // LCOV_EXCL_LINE
 }
 template <>
-hid_t h5_type<bool>() {
+SPECTRE_ALWAYS_INLINE hid_t h5_type<bool>() {
   return H5T_NATIVE_HBOOL;  // LCOV_EXCL_LINE
 }
 template <>
-hid_t h5_type<std::string>() {
+SPECTRE_ALWAYS_INLINE hid_t h5_type<std::string>() {
   hid_t datatype = H5Tcopy(H5T_C_S1);
   CHECK_H5(datatype, "Failed to allocate string.");
 #pragma GCC diagnostic push
@@ -95,7 +95,7 @@ hid_t h5_type<std::string>() {
  * \ingroup HDF5Group
  * \brief Create an H5 FORTRAN string.
  */
-hid_t fortran_string() {
+SPECTRE_ALWAYS_INLINE hid_t fortran_string() {
   hid_t datatype = H5Tcopy(H5T_FORTRAN_S1);
   CHECK_H5(datatype, "Failed to allocate string.");
 #pragma GCC diagnostic push

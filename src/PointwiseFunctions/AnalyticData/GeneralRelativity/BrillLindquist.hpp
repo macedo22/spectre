@@ -110,19 +110,23 @@ class BrillLindquist : public AnalyticDataBase<3>, public MarkAsAnalyticData {
   /*!
    * \brief Return the mass of black hole A
    */
-  double mass_a() const { return mass_a_; }
+  SPECTRE_ALWAYS_INLINE double mass_a() const { return mass_a_; }
   /*!
    * \brief Return the mass of black hole B
    */
-  double mass_b() const { return mass_b_; }
+  SPECTRE_ALWAYS_INLINE double mass_b() const { return mass_b_; }
   /*!
    * \brief Return the center of black hole A
    */
-  const std::array<double, 3>& center_a() const { return center_a_; }
+  SPECTRE_ALWAYS_INLINE const std::array<double, 3>& center_a() const {
+    return center_a_;
+  }
   /*!
    * \brief Return the center of black hole B
    */
-  const std::array<double, 3>& center_b() const { return center_b_; }
+  SPECTRE_ALWAYS_INLINE const std::array<double, 3>& center_b() const {
+    return center_b_;
+  }
 
   /*!
    * \brief Tags defined for intermediates specific to BrillLindquist data
@@ -428,10 +432,12 @@ class BrillLindquist : public AnalyticDataBase<3>, public MarkAsAnalyticData {
 /*!
  * \brief Return whether two BrillLindquist data are equivalent
  */
-bool operator==(const BrillLindquist& lhs, const BrillLindquist& rhs);
+SPECTRE_ALWAYS_INLINE bool operator==(const BrillLindquist& lhs,
+                                      const BrillLindquist& rhs);
 
 /*!
  * \brief Return whether two BrillLindquist data are not equivalent
  */
-bool operator!=(const BrillLindquist& lhs, const BrillLindquist& rhs);
+SPECTRE_ALWAYS_INLINE bool operator!=(const BrillLindquist& lhs,
+                                      const BrillLindquist& rhs);
 }  // namespace gr::AnalyticData

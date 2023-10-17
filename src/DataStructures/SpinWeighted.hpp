@@ -282,35 +282,36 @@ constexpr bool is_spin_weighted_of_same_type_v =
 // templates to ensure efficient math operations, necessitating the
 // `decltype(declval<T>() ...` syntax
 template <typename T1, typename T2, int Spin>
-
-SpinWeighted<decltype(std::declval<T1>() + std::declval<T2>()), Spin> operator+(
-    const SpinWeighted<T1, Spin>& lhs, const SpinWeighted<T2, Spin>& rhs) {
+SPECTRE_ALWAYS_INLINE
+    SpinWeighted<decltype(std::declval<T1>() + std::declval<T2>()), Spin>
+    operator+(const SpinWeighted<T1, Spin>& lhs,
+              const SpinWeighted<T2, Spin>& rhs) {
   return {lhs.data() + rhs.data()};
 }
 template <typename T>
-
-SpinWeighted<decltype(std::declval<T>() + std::declval<T>()), 0> operator+(
-    const SpinWeighted<T, 0>& lhs, const T& rhs) {
+SPECTRE_ALWAYS_INLINE
+    SpinWeighted<decltype(std::declval<T>() + std::declval<T>()), 0>
+    operator+(const SpinWeighted<T, 0>& lhs, const T& rhs) {
   return {lhs.data() + rhs};
 }
 template <typename T>
-SpinWeighted<decltype(std::declval<T>() +
-                      std::declval<get_vector_element_type_t<T>>()),
-             0>
+SPECTRE_ALWAYS_INLINE SpinWeighted<
+    decltype(std::declval<T>() + std::declval<get_vector_element_type_t<T>>()),
+    0>
 operator+(const SpinWeighted<T, 0>& lhs,
           const get_vector_element_type_t<T>& rhs) {
   return {lhs.data() + rhs};
 }
 template <typename T>
-
-SpinWeighted<decltype(std::declval<T>() + std::declval<T>()), 0> operator+(
-    const T& lhs, const SpinWeighted<T, 0>& rhs) {
+SPECTRE_ALWAYS_INLINE
+    SpinWeighted<decltype(std::declval<T>() + std::declval<T>()), 0>
+    operator+(const T& lhs, const SpinWeighted<T, 0>& rhs) {
   return {lhs + rhs.data()};
 }
 template <typename T>
-SpinWeighted<decltype(std::declval<get_vector_element_type_t<T>>() +
-                      std::declval<T>()),
-             0>
+SPECTRE_ALWAYS_INLINE SpinWeighted<
+    decltype(std::declval<get_vector_element_type_t<T>>() + std::declval<T>()),
+    0>
 operator+(const get_vector_element_type_t<T>& lhs,
           const SpinWeighted<T, 0>& rhs) {
   return {lhs + rhs.data()};
@@ -324,35 +325,36 @@ operator+(const get_vector_element_type_t<T>& lhs,
 // templates to ensure efficient math operations, necessitating the
 // `decltype(declval<T>() ...` syntax
 template <typename T1, typename T2, int Spin>
-
-SpinWeighted<decltype(std::declval<T1>() - std::declval<T2>()), Spin> operator-(
-    const SpinWeighted<T1, Spin>& lhs, const SpinWeighted<T2, Spin>& rhs) {
+SPECTRE_ALWAYS_INLINE
+    SpinWeighted<decltype(std::declval<T1>() - std::declval<T2>()), Spin>
+    operator-(const SpinWeighted<T1, Spin>& lhs,
+              const SpinWeighted<T2, Spin>& rhs) {
   return {lhs.data() - rhs.data()};
 }
 template <typename T>
-
-SpinWeighted<decltype(std::declval<T>() - std::declval<T>()), 0> operator-(
-    const SpinWeighted<T, 0>& lhs, const T& rhs) {
+SPECTRE_ALWAYS_INLINE
+    SpinWeighted<decltype(std::declval<T>() - std::declval<T>()), 0>
+    operator-(const SpinWeighted<T, 0>& lhs, const T& rhs) {
   return {lhs.data() - rhs};
 }
 template <typename T>
-SpinWeighted<decltype(std::declval<T>() -
-                      std::declval<get_vector_element_type_t<T>>()),
-             0>
+SPECTRE_ALWAYS_INLINE SpinWeighted<
+    decltype(std::declval<T>() - std::declval<get_vector_element_type_t<T>>()),
+    0>
 operator-(const SpinWeighted<T, 0>& lhs,
           const get_vector_element_type_t<T>& rhs) {
   return {lhs.data() - rhs};
 }
 template <typename T>
-
-SpinWeighted<decltype(std::declval<T>() - std::declval<T>()), 0> operator-(
-    const T& lhs, const SpinWeighted<T, 0>& rhs) {
+SPECTRE_ALWAYS_INLINE
+    SpinWeighted<decltype(std::declval<T>() - std::declval<T>()), 0>
+    operator-(const T& lhs, const SpinWeighted<T, 0>& rhs) {
   return {lhs - rhs.data()};
 }
 template <typename T>
-SpinWeighted<decltype(std::declval<get_vector_element_type_t<T>>() -
-                      std::declval<T>()),
-             0>
+SPECTRE_ALWAYS_INLINE SpinWeighted<
+    decltype(std::declval<get_vector_element_type_t<T>>() - std::declval<T>()),
+    0>
 operator-(const get_vector_element_type_t<T>& lhs,
           const SpinWeighted<T, 0>& rhs) {
   return {lhs - rhs.data()};
@@ -361,15 +363,15 @@ operator-(const get_vector_element_type_t<T>& lhs,
 
 /// Negation operator preserves spin
 template <typename T, int Spin>
-SpinWeighted<decltype(-std::declval<T>()), Spin> operator-(
-    const SpinWeighted<T, Spin>& operand) {
+SPECTRE_ALWAYS_INLINE SpinWeighted<decltype(-std::declval<T>()), Spin>
+operator-(const SpinWeighted<T, Spin>& operand) {
   return {-operand.data()};
 }
 
 /// Unary `+` operator preserves spin
 template <typename T, int Spin>
-SpinWeighted<decltype(+std::declval<T>()), Spin> operator+(
-    const SpinWeighted<T, Spin>& operand) {
+SPECTRE_ALWAYS_INLINE SpinWeighted<decltype(+std::declval<T>()), Spin>
+operator+(const SpinWeighted<T, Spin>& operand) {
   return {+operand.data()};
 }
 
@@ -380,35 +382,36 @@ SpinWeighted<decltype(+std::declval<T>()), Spin> operator+(
 // templates to ensure efficient math operations, necessitating the
 // `decltype(declval<T>() ...` syntax
 template <typename T1, typename T2, int Spin1, int Spin2>
-SpinWeighted<decltype(std::declval<T1>() * std::declval<T2>()), Spin1 + Spin2>
+SPECTRE_ALWAYS_INLINE SpinWeighted<
+    decltype(std::declval<T1>() * std::declval<T2>()), Spin1 + Spin2>
 operator*(const SpinWeighted<T1, Spin1>& lhs,
           const SpinWeighted<T2, Spin2>& rhs) {
   return {lhs.data() * rhs.data()};
 }
 template <typename T, int Spin>
-
-SpinWeighted<decltype(std::declval<T>() * std::declval<T>()), Spin> operator*(
-    const SpinWeighted<T, Spin>& lhs, const T& rhs) {
+SPECTRE_ALWAYS_INLINE
+    SpinWeighted<decltype(std::declval<T>() * std::declval<T>()), Spin>
+    operator*(const SpinWeighted<T, Spin>& lhs, const T& rhs) {
   return {lhs.data() * rhs};
 }
 template <typename T, int Spin>
-SpinWeighted<decltype(std::declval<T>() *
-                      std::declval<get_vector_element_type_t<T>>()),
-             Spin>
+SPECTRE_ALWAYS_INLINE SpinWeighted<
+    decltype(std::declval<T>() * std::declval<get_vector_element_type_t<T>>()),
+    Spin>
 operator*(const SpinWeighted<T, Spin>& lhs,
           const get_vector_element_type_t<T>& rhs) {
   return {lhs.data() * rhs};
 }
 template <typename T, int Spin>
-
-SpinWeighted<decltype(std::declval<T>() * std::declval<T>()), Spin> operator*(
-    const T& lhs, const SpinWeighted<T, Spin>& rhs) {
+SPECTRE_ALWAYS_INLINE
+    SpinWeighted<decltype(std::declval<T>() * std::declval<T>()), Spin>
+    operator*(const T& lhs, const SpinWeighted<T, Spin>& rhs) {
   return {lhs * rhs.data()};
 }
 template <typename T, int Spin>
-SpinWeighted<decltype(std::declval<get_vector_element_type_t<T>>() *
-                      std::declval<T>()),
-             Spin>
+SPECTRE_ALWAYS_INLINE SpinWeighted<
+    decltype(std::declval<get_vector_element_type_t<T>>() * std::declval<T>()),
+    Spin>
 operator*(const get_vector_element_type_t<T>& lhs,
           const SpinWeighted<T, Spin>& rhs) {
   return {lhs * rhs.data()};
@@ -422,35 +425,36 @@ operator*(const get_vector_element_type_t<T>& lhs,
 // templates to ensure efficient math operations, necessitating the
 // `decltype(declval<T>() ...` syntax
 template <typename T1, typename T2, int Spin1, int Spin2>
-SpinWeighted<decltype(std::declval<T1>() / std::declval<T2>()), Spin1 - Spin2>
+SPECTRE_ALWAYS_INLINE SpinWeighted<
+    decltype(std::declval<T1>() / std::declval<T2>()), Spin1 - Spin2>
 operator/(const SpinWeighted<T1, Spin1>& lhs,
           const SpinWeighted<T2, Spin2>& rhs) {
   return {lhs.data() / rhs.data()};
 }
 template <typename T, int Spin>
-
-SpinWeighted<decltype(std::declval<T>() / std::declval<T>()), Spin> operator/(
-    const SpinWeighted<T, Spin>& lhs, const T& rhs) {
+SPECTRE_ALWAYS_INLINE
+    SpinWeighted<decltype(std::declval<T>() / std::declval<T>()), Spin>
+    operator/(const SpinWeighted<T, Spin>& lhs, const T& rhs) {
   return {lhs.data() / rhs};
 }
 template <typename T, int Spin>
-SpinWeighted<decltype(std::declval<T>() /
-                      std::declval<get_vector_element_type_t<T>>()),
-             Spin>
+SPECTRE_ALWAYS_INLINE SpinWeighted<
+    decltype(std::declval<T>() / std::declval<get_vector_element_type_t<T>>()),
+    Spin>
 operator/(const SpinWeighted<T, Spin>& lhs,
           const get_vector_element_type_t<T>& rhs) {
   return {lhs.data() / rhs};
 }
 template <typename T, int Spin>
-
-SpinWeighted<decltype(std::declval<T>() / std::declval<T>()), -Spin> operator/(
-    const T& lhs, const SpinWeighted<T, Spin>& rhs) {
+SPECTRE_ALWAYS_INLINE
+    SpinWeighted<decltype(std::declval<T>() / std::declval<T>()), -Spin>
+    operator/(const T& lhs, const SpinWeighted<T, Spin>& rhs) {
   return {lhs / rhs.data()};
 }
 template <typename T, int Spin>
-SpinWeighted<decltype(std::declval<get_vector_element_type_t<T>>() /
-                      std::declval<T>()),
-             -Spin>
+SPECTRE_ALWAYS_INLINE SpinWeighted<
+    decltype(std::declval<get_vector_element_type_t<T>>() / std::declval<T>()),
+    -Spin>
 operator/(const get_vector_element_type_t<T>& lhs,
           const SpinWeighted<T, Spin>& rhs) {
   return {lhs / rhs.data()};
@@ -459,15 +463,15 @@ operator/(const get_vector_element_type_t<T>& lhs,
 
 /// conjugate the spin-weighted quantity, inverting the spin
 template <typename T, int Spin>
-SpinWeighted<decltype(conj(std::declval<T>())), -Spin> conj(
-    const SpinWeighted<T, Spin>& value) {
+SPECTRE_ALWAYS_INLINE SpinWeighted<decltype(conj(std::declval<T>())), -Spin>
+conj(const SpinWeighted<T, Spin>& value) {
   return {conj(value.data())};
 }
 
 /// Take the exponential of the spin-weighted quantity; only valid for
 /// spin-weight = 0
 template <typename T>
-SpinWeighted<decltype(exp(std::declval<T>())), 0> exp(
+SPECTRE_ALWAYS_INLINE SpinWeighted<decltype(exp(std::declval<T>())), 0> exp(
     const SpinWeighted<T, 0>& value) {
   return {exp(value.data())};
 }
@@ -475,7 +479,7 @@ SpinWeighted<decltype(exp(std::declval<T>())), 0> exp(
 /// Take the square-root of the spin-weighted quantity; only valid for
 /// spin-weight = 0
 template <typename T, int Spin>
-SpinWeighted<decltype(sqrt(std::declval<T>())), 0> sqrt(
+SPECTRE_ALWAYS_INLINE SpinWeighted<decltype(sqrt(std::declval<T>())), 0> sqrt(
     const SpinWeighted<T, Spin>& value) {
   return {sqrt(value.data())};
 }
@@ -485,16 +489,18 @@ SpinWeighted<decltype(sqrt(std::declval<T>())), 0> sqrt(
 /// compatible and spins are the same. Un-weighted quantities are assumed to
 /// be spin 0.
 template <typename T1, typename T2, int Spin>
-bool operator==(const SpinWeighted<T1, Spin>& lhs,
-                const SpinWeighted<T2, Spin>& rhs) {
+SPECTRE_ALWAYS_INLINE bool operator==(const SpinWeighted<T1, Spin>& lhs,
+                                      const SpinWeighted<T2, Spin>& rhs) {
   return lhs.data() == rhs.data();
 }
 template <typename T>
-bool operator==(const SpinWeighted<T, 0>& lhs, const T& rhs) {
+SPECTRE_ALWAYS_INLINE bool operator==(const SpinWeighted<T, 0>& lhs,
+                                      const T& rhs) {
   return lhs.data() == rhs;
 }
 template <typename T>
-bool operator==(const T& lhs, const SpinWeighted<T, 0>& rhs) {
+SPECTRE_ALWAYS_INLINE bool operator==(const T& lhs,
+                                      const SpinWeighted<T, 0>& rhs) {
   return lhs == rhs.data();
 }
 /// @}
@@ -504,16 +510,18 @@ bool operator==(const T& lhs, const SpinWeighted<T, 0>& rhs) {
 /// compatible and spins are the same. Un-weighted quantities are assumed to be
 /// spin 0.
 template <typename T1, typename T2, int Spin>
-bool operator!=(const SpinWeighted<T1, Spin>& lhs,
-                const SpinWeighted<T2, Spin>& rhs) {
+SPECTRE_ALWAYS_INLINE bool operator!=(const SpinWeighted<T1, Spin>& lhs,
+                                      const SpinWeighted<T2, Spin>& rhs) {
   return not(lhs == rhs);
 }
 template <typename T>
-bool operator!=(const SpinWeighted<T, 0>& lhs, const T& rhs) {
+SPECTRE_ALWAYS_INLINE bool operator!=(const SpinWeighted<T, 0>& lhs,
+                                      const T& rhs) {
   return not(lhs == rhs);
 }
 template <typename T>
-bool operator!=(const T& lhs, const SpinWeighted<T, 0>& rhs) {
+SPECTRE_ALWAYS_INLINE bool operator!=(const T& lhs,
+                                      const SpinWeighted<T, 0>& rhs) {
   return not(lhs == rhs);
 }
 /// @}
@@ -552,7 +560,8 @@ std::ostream& operator<<(std::ostream& os, const SpinWeighted<T, Spin>& d) {
 namespace MakeWithValueImpls {
 template <int Spin, typename SpinWeightedType>
 struct NumberOfPoints<SpinWeighted<SpinWeightedType, Spin>> {
-  static size_t apply(const SpinWeighted<SpinWeightedType, Spin>& input) {
+  static SPECTRE_ALWAYS_INLINE size_t
+  apply(const SpinWeighted<SpinWeightedType, Spin>& input) {
     return number_of_points(input.data());
   }
 };
@@ -560,8 +569,8 @@ struct NumberOfPoints<SpinWeighted<SpinWeightedType, Spin>> {
 template <int Spin, typename SpinWeightedType>
 struct MakeWithSize<SpinWeighted<SpinWeightedType, Spin>> {
   template <typename ValueType>
-  static SpinWeighted<SpinWeightedType, Spin> apply(const size_t size,
-                                                    const ValueType value) {
+  static SPECTRE_ALWAYS_INLINE SpinWeighted<SpinWeightedType, Spin> apply(
+      const size_t size, const ValueType value) {
     return SpinWeighted<SpinWeightedType, Spin>{
         make_with_value<SpinWeightedType>(size, value)};
   }
@@ -573,7 +582,7 @@ struct SetNumberOfGridPointsImpls::SetNumberOfGridPointsImpl<
     SpinWeighted<SpinWeightedType, Spin>> {
   static constexpr bool is_trivial =
       SetNumberOfGridPointsImpl<SpinWeightedType>::is_trivial;
-  static void apply(
+  static SPECTRE_ALWAYS_INLINE void apply(
       const gsl::not_null<SpinWeighted<SpinWeightedType, Spin>*> result,
       const size_t size) {
     set_number_of_grid_points(make_not_null(&result->data()), size);

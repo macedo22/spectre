@@ -22,9 +22,9 @@ namespace Error_detail {
 // You can't use ScopedFpeState (a non-literal type) in a constexpr
 // function, but you can call another function that uses it.
 template <typename ExceptionTypeToThrow, typename F>
-[[noreturn]] void abort_without_fpes(const char* file, const int line,
-                                     const char* const pretty_function,
-                                     F&& message) {
+[[noreturn]] SPECTRE_ALWAYS_INLINE void abort_without_fpes(
+    const char* file, const int line, const char* const pretty_function,
+    F&& message) {
   const ScopedFpeState disable_fpes(false);
   abort_with_error_message<ExceptionTypeToThrow>(file, line, pretty_function,
                                                  message());

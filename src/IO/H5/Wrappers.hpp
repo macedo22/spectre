@@ -10,7 +10,7 @@
 // H5F wrappers
 namespace h5 {
 /// \ingroup HDF5Group
-auto h5f_acc_rdonly() {
+SPECTRE_ALWAYS_INLINE auto h5f_acc_rdonly() {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
   return H5F_ACC_RDONLY;
@@ -18,14 +18,14 @@ auto h5f_acc_rdonly() {
 }
 
 /// \ingroup HDF5Group
-auto h5f_acc_rdwr() {
+SPECTRE_ALWAYS_INLINE auto h5f_acc_rdwr() {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
   return H5F_ACC_RDWR;
 #pragma GCC diagnostic pop
 }
 
-auto h5f_acc_trunc() {
+SPECTRE_ALWAYS_INLINE auto h5f_acc_trunc() {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
   return H5F_ACC_TRUNC;
@@ -36,7 +36,7 @@ auto h5f_acc_trunc() {
 // H5P wrappers
 namespace h5 {
 /// \ingroup HDF5Group
-auto h5p_default() {
+SPECTRE_ALWAYS_INLINE auto h5p_default() {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
   return H5P_DEFAULT;
@@ -47,7 +47,7 @@ auto h5p_default() {
 // H5S wrappers
 namespace h5 {
 /// \ingroup HDF5Group
-auto h5s_all() {
+SPECTRE_ALWAYS_INLINE auto h5s_all() {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
   return H5S_ALL;
@@ -55,7 +55,7 @@ auto h5s_all() {
 }
 
 /// \ingroup HDF5Group
-auto h5s_unlimited() {
+SPECTRE_ALWAYS_INLINE auto h5s_unlimited() {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
   return H5S_UNLIMITED;
@@ -63,7 +63,7 @@ auto h5s_unlimited() {
 }
 
 /// \ingroup HDF5Group
-auto h5s_scalar() {
+SPECTRE_ALWAYS_INLINE auto h5s_scalar() {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
   return H5S_SCALAR;

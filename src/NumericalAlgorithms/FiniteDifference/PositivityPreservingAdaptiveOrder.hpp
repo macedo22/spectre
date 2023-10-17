@@ -35,7 +35,7 @@ template <typename LowOrderReconstructor, bool PositivityPreserving,
           bool Use9thOrder, bool Use7thOrder>
 struct PositivityPreservingAdaptiveOrderReconstructor {
   using ReturnType = std::tuple<double, double, std::uint8_t>;
-  static ReturnType pointwise(
+  SPECTRE_ALWAYS_INLINE static ReturnType pointwise(
       const double* const u, const int stride, const double four_to_the_alpha_5,
       // GCC9 complains that six_to_the_alpha_7 and eight_to_the_alpha_9
       // are unused because if-constexpr
@@ -221,7 +221,7 @@ struct PositivityPreservingAdaptiveOrderReconstructor {
     return {u[0], u[0], 1};
   }
 
-  static constexpr size_t stencil_width() {
+  SPECTRE_ALWAYS_INLINE static constexpr size_t stencil_width() {
     return Use9thOrder ? 9 : (Use7thOrder ? 7 : 5);
   }
 };

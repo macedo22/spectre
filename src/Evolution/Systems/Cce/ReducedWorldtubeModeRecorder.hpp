@@ -23,55 +23,55 @@ template <typename Tag>
 std::string dataset_label_for_tag();
 
 template <>
-std::string
+SPECTRE_ALWAYS_INLINE std::string
 dataset_label_for_tag<Cce::Tags::BoundaryValue<Cce::Tags::BondiBeta>>() {
   return "Beta";
 }
 
 template <>
-std::string
+SPECTRE_ALWAYS_INLINE std::string
 dataset_label_for_tag<Cce::Tags::BoundaryValue<Cce::Tags::BondiU>>() {
   return "U";
 }
 
 template <>
-std::string
+SPECTRE_ALWAYS_INLINE std::string
 dataset_label_for_tag<Cce::Tags::BoundaryValue<Cce::Tags::BondiQ>>() {
   return "Q";
 }
 
 template <>
-std::string
+SPECTRE_ALWAYS_INLINE std::string
 dataset_label_for_tag<Cce::Tags::BoundaryValue<Cce::Tags::BondiW>>() {
   return "W";
 }
 
 template <>
-std::string
+SPECTRE_ALWAYS_INLINE std::string
 dataset_label_for_tag<Cce::Tags::BoundaryValue<Cce::Tags::BondiJ>>() {
   return "J";
 }
 
 template <>
-std::string dataset_label_for_tag<
+SPECTRE_ALWAYS_INLINE std::string dataset_label_for_tag<
     Cce::Tags::BoundaryValue<Cce::Tags::Dr<Cce::Tags::BondiJ>>>() {
   return "DrJ";
 }
 
 template <>
-std::string dataset_label_for_tag<
+SPECTRE_ALWAYS_INLINE std::string dataset_label_for_tag<
     Cce::Tags::BoundaryValue<Cce::Tags::Du<Cce::Tags::BondiJ>>>() {
   return "H";
 }
 
 template <>
-std::string
+SPECTRE_ALWAYS_INLINE std::string
 dataset_label_for_tag<Cce::Tags::BoundaryValue<Cce::Tags::BondiR>>() {
   return "R";
 }
 
 template <>
-std::string dataset_label_for_tag<
+SPECTRE_ALWAYS_INLINE std::string dataset_label_for_tag<
     Cce::Tags::BoundaryValue<Cce::Tags::Du<Cce::Tags::BondiR>>>() {
   return "DuR";
 }

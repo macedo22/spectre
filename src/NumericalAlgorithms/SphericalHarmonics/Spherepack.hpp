@@ -172,8 +172,8 @@ class Spherepack {
   /// collocation points and spectral coefficients for a given l_max
   /// and m_max.  Useful for allocating space without having to create
   /// a Spherepack.
-  static constexpr size_t physical_size(const size_t l_max,
-                                        const size_t m_max) {
+  SPECTRE_ALWAYS_INLINE static constexpr size_t physical_size(
+      const size_t l_max, const size_t m_max) {
     return (l_max + 1) * (2 * m_max + 1);
   }
   /// \note `spectral_size` is the size of the buffer that holds the
@@ -182,8 +182,8 @@ class Spherepack {
   /// To simplify its internal indexing, SPHEREPACK uses a buffer with
   /// more space than necessary. See SpherepackIterator for
   /// how to index the coefficients in the buffer.
-  static constexpr size_t spectral_size(const size_t l_max,
-                                        const size_t m_max) {
+  SPECTRE_ALWAYS_INLINE static constexpr size_t spectral_size(
+      const size_t l_max, const size_t m_max) {
     return 2 * (l_max + 1) * (m_max + 1);
   }
   /// @}
@@ -208,8 +208,12 @@ class Spherepack {
   ///
   /// The theta points are Gauss-Legendre in \f$\cos(\theta)\f$,
   /// so there are no points at the poles.
-  const std::vector<double>& theta_points() const { return storage_.theta; }
-  const std::vector<double>& phi_points() const { return storage_.phi; }
+  SPECTRE_ALWAYS_INLINE const std::vector<double>& theta_points() const {
+    return storage_.theta;
+  }
+  SPECTRE_ALWAYS_INLINE const std::vector<double>& phi_points() const {
+    return storage_.phi;
+  }
   std::array<DataVector, 2> theta_phi_points() const;
   /// @}
 
@@ -311,7 +315,7 @@ class Spherepack {
                             gsl::not_null<const double*> collocation_values,
                             size_t stride = 1) const;
 
-  void gradient_from_coefs_all_offsets(
+  SPECTRE_ALWAYS_INLINE void gradient_from_coefs_all_offsets(
       const std::array<double*, 2>& df,
       gsl::not_null<const double*> spectral_coefs, size_t stride = 1) const {
     gradient_from_coefs_impl(df, spectral_coefs, stride, 0, stride, 0, true);
@@ -388,9 +392,9 @@ class Spherepack {
       const DataVector& collocation_values) const;
 
   /// Computes the integral over the sphere.
-  double definite_integral(gsl::not_null<const double*> collocation_values,
-                           size_t physical_stride = 1,
-                           size_t physical_offset = 0) const {
+  SPECTRE_ALWAYS_INLINE double definite_integral(
+      gsl::not_null<const double*> collocation_values,
+      size_t physical_stride = 1, size_t physical_offset = 0) const {
     // clang-tidy: 'do not use pointer arithmetic'
     return ddot_(n_theta_ * n_phi_, storage_.quadrature_weights.data(), 1,
                  collocation_values.get() + physical_offset,  // NOLINT
@@ -400,21 +404,22 @@ class Spherepack {
   /// Returns weights \f$w_i\f$ such that \f$sum_i (c_i w_i)\f$
   /// is the definite integral, where \f$c_i\f$ are collocation values
   /// at point i.
-  const std::vector<double>& integration_weights() const {
+  SPECTRE_ALWAYS_INLINE const std::vector<double>& integration_weights() const {
     return storage_.quadrature_weights;
   }
 
   /// Adds a constant (i.e. \f$f(\theta,\phi)\f$ += \f$c\f$) to the function
   /// given by the spectral coefficients, by modifying the coefficients.
-  static void add_constant(const gsl::not_null<DataVector*> spectral_coefs,
-                           const double c) {
+  SPECTRE_ALWAYS_INLINE static void add_constant(
+      const gsl::not_null<DataVector*> spectral_coefs, const double c) {
     // The factor of sqrt(8) is because of the normalization of
     // SPHEREPACK's coefficients.
     (*spectral_coefs)[0] += sqrt(8.0) * c;
   }
 
   /// Returns the average of \f$f(\theta,\phi)\f$ over \f$(\theta,\phi)\f$.
-  static double average(const DataVector& spectral_coefs) {
+  SPECTRE_ALWAYS_INLINE static double average(
+      const DataVector& spectral_coefs) {
     // The factor of sqrt(8) is because of the normalization of
     // SPHEREPACK's coefficients.  All other coefficients average to zero.
     return spectral_coefs[0] / sqrt(8.0);

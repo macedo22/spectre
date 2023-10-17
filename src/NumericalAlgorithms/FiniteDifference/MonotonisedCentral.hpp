@@ -24,8 +24,8 @@ class Index;
 namespace fd::reconstruction {
 namespace detail {
 struct MonotonisedCentralReconstructor {
-  static std::array<double, 2> pointwise(const double* const q,
-                                         const int stride) {
+  SPECTRE_ALWAYS_INLINE static std::array<double, 2> pointwise(
+      const double* const q, const int stride) {
     using std::abs;
 
     const double a = q[stride] - q[0];
@@ -44,7 +44,7 @@ struct MonotonisedCentralReconstructor {
     }
   }
 
-  static constexpr size_t stencil_width() { return 3; }
+  SPECTRE_ALWAYS_INLINE static constexpr size_t stencil_width() { return 3; }
 };
 }  // namespace detail
 

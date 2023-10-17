@@ -54,8 +54,8 @@ struct NumberOfPoints<blaze::StaticVector<T, N, TF, AF, PF, Tag>> {
 template <typename T, size_t N, bool TF, blaze::AlignmentFlag AF,
           blaze::PaddingFlag PF, typename Tag>
 struct MakeWithSize<blaze::StaticVector<T, N, TF, AF, PF, Tag>> {
-  static blaze::StaticVector<T, N, TF, AF, PF, Tag> apply(const size_t size,
-                                                          const T& value) {
+  static SPECTRE_ALWAYS_INLINE blaze::StaticVector<T, N, TF, AF, PF, Tag> apply(
+      const size_t size, const T& value) {
     ASSERT(size == N, "Size mismatch for StaticVector: Expected "
                           << N << ", got " << size << ".");
     return blaze::StaticVector<T, N, TF, AF, PF, Tag>(value);
@@ -68,7 +68,7 @@ template <typename T, size_t N, bool TF, blaze::AlignmentFlag AF,
 struct SetNumberOfGridPointsImpls::SetNumberOfGridPointsImpl<
     blaze::StaticVector<T, N, TF, AF, PF, Tag>> {
   static constexpr bool is_trivial = false;
-  static void apply(
+  static SPECTRE_ALWAYS_INLINE void apply(
       const gsl::not_null<blaze::StaticVector<T, N, TF, AF, PF, Tag>*>
       /*result*/,
       const size_t size) {

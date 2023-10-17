@@ -13,9 +13,9 @@ namespace intrp {
 
 namespace {
 template <typename ValueType>
-ValueType interpolate_impl(const gsl::span<const double>& source_points,
-                           const gsl::span<const ValueType>& values,
-                           const double target_point) {
+SPECTRE_ALWAYS_INLINE ValueType interpolate_impl(
+    const gsl::span<const double>& source_points,
+    const gsl::span<const ValueType>& values, const double target_point) {
   return values[0] + (values[1] - values[0]) /
                          (source_points[1] - source_points[0]) *
                          (target_point - source_points[0]);

@@ -29,7 +29,8 @@ namespace Swsh {
 /// full size of the result of a libsharp swsh transform.
 ///
 /// \note Assumes the triangular libsharp representation is used.
-constexpr size_t size_of_libsharp_coefficient_vector(const size_t l_max) {
+constexpr SPECTRE_ALWAYS_INLINE size_t
+size_of_libsharp_coefficient_vector(const size_t l_max) {
   return (l_max + 1) * (l_max + 2);  // "triangular" representation
 }
 
@@ -56,9 +57,8 @@ constexpr size_t size_of_libsharp_coefficient_vector(const size_t l_max) {
  *
  * See \cite Goldberg1966uu
  */
-constexpr double sharp_swsh_sign_change(const int from_spin_weight,
-                                        const int to_spin_weight,
-                                        const bool real) {
+constexpr SPECTRE_ALWAYS_INLINE double sharp_swsh_sign_change(
+    const int from_spin_weight, const int to_spin_weight, const bool real) {
   if (real) {
     return (from_spin_weight == 0 ? -1.0 : 1.0) *
            (from_spin_weight >= 0 ? -1.0 : 1.0) *
@@ -108,8 +108,9 @@ constexpr double sharp_swsh_sign_change(const int from_spin_weight,
  * part of the spin-weighted collocation points, not real or imaginary parts of
  * the basis functions themselves.
  */
-constexpr double sharp_swsh_sign(const int spin_weight, const int m,
-                                 const bool real) {
+constexpr SPECTRE_ALWAYS_INLINE double sharp_swsh_sign(const int spin_weight,
+                                                       const int m,
+                                                       const bool real) {
   if (real) {
     if (m >= 0) {
       return (spin_weight > 0 ? -1.0 : 1.0) *
@@ -489,9 +490,9 @@ SpinWeighted<ComplexModalVector, Spin> goldberg_to_libsharp_modes(
  *
  * [(0, 0), (1, -1), (1, 0), (1, 1), (2, -2), ...]
  */
-constexpr size_t goldberg_mode_index(const size_t l_max, const size_t l,
-                                     const int m,
-                                     const size_t radial_offset = 0) {
+constexpr SPECTRE_ALWAYS_INLINE size_t
+goldberg_mode_index(const size_t l_max, const size_t l, const int m,
+                    const size_t radial_offset = 0) {
   return static_cast<size_t>(
       static_cast<int>(square(l_max + 1) * radial_offset + square(l) + l) + m);
 }

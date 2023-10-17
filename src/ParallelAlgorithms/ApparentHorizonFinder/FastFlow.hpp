@@ -180,7 +180,7 @@ class FastFlow {
   size_t current_l_mesh(const ylm::Strahlkorper<Frame>& strahlkorper) const;
 
   /// Resets the finder.
-  void reset_for_next_find() {
+  SPECTRE_ALWAYS_INLINE void reset_for_next_find() {
     current_iter_ = 0;
     previous_residual_mesh_norm_ = 0.0;
     min_residual_mesh_norm_ = std::numeric_limits<double>::max();
@@ -197,7 +197,7 @@ class FastFlow {
   size_t iter_at_min_residual_mesh_norm_;
 };
 
-bool converged(const FastFlow::Status& status) {
+SPECTRE_ALWAYS_INLINE bool converged(const FastFlow::Status& status) {
   return static_cast<int>(status) > 0;
 }
 
@@ -205,7 +205,8 @@ std::ostream& operator<<(std::ostream& os, const FastFlow::FlowType& flow_type);
 
 std::ostream& operator<<(std::ostream& os, const FastFlow::Status& status);
 
-bool operator!=(const FastFlow& lhs, const FastFlow& rhs) {
+SPECTRE_ALWAYS_INLINE bool operator!=(const FastFlow& lhs,
+                                      const FastFlow& rhs) {
   return not(lhs == rhs);
 }
 

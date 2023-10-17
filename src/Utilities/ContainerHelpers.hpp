@@ -16,7 +16,7 @@
 /// will cause a compiler error if no such function exists.
 struct GetContainerSize {
   template <typename T>
-  decltype(auto) operator()(const T& t) const {
+  SPECTRE_ALWAYS_INLINE decltype(auto) operator()(const T& t) const {
     return t.size();
   }
 };
@@ -25,7 +25,7 @@ struct GetContainerSize {
 /// \brief Callable struct for the subscript operator. Returns `t[i]`
 struct GetContainerElement {
   template <typename T>
-  decltype(auto) operator()(T& t, const size_t i) const {
+  SPECTRE_ALWAYS_INLINE decltype(auto) operator()(T& t, const size_t i) const {
     return t[i];
   }
 };
@@ -38,13 +38,14 @@ struct ContainerImpls;
 template <>
 struct ContainerImpls<true> {
   template <typename T, typename SubscriptFunction>
-  static decltype(auto) get_element(T& t, const size_t /*i*/,
-                                    const SubscriptFunction /*at*/) {
+  static SPECTRE_ALWAYS_INLINE decltype(auto) get_element(
+      T& t, const size_t /*i*/, const SubscriptFunction /*at*/) {
     return t;
   }
 
   template <typename T, typename SizeFunction>
-  static size_t get_size(const T& /*t*/, const SizeFunction /*size*/) {
+  static SPECTRE_ALWAYS_INLINE size_t get_size(const T& /*t*/,
+                                               const SizeFunction /*size*/) {
     return 1;
   }
 };
@@ -52,13 +53,14 @@ struct ContainerImpls<true> {
 template <>
 struct ContainerImpls<false> {
   template <typename T, typename SubscriptFunction>
-  static decltype(auto) get_element(T& t, const size_t i,
-                                    SubscriptFunction at) {
+  static SPECTRE_ALWAYS_INLINE decltype(auto) get_element(
+      T& t, const size_t i, SubscriptFunction at) {
     return at(t, i);
   }
 
   template <typename T, typename SizeFunction>
-  static decltype(auto) get_size(const T& t, SizeFunction size) {
+  static SPECTRE_ALWAYS_INLINE decltype(auto) get_size(const T& t,
+                                                       SizeFunction size) {
     return size(t);
   }
 };
@@ -85,8 +87,8 @@ struct ContainerImpls<false> {
  * fundamental types
  */
 template <typename T, typename SubscriptFunction = GetContainerElement>
-decltype(auto) get_element(T& t, const size_t i,
-                           SubscriptFunction at = GetContainerElement{}) {
+SPECTRE_ALWAYS_INLINE decltype(auto) get_element(
+    T& t, const size_t i, SubscriptFunction at = GetContainerElement{}) {
   return ContainerHelpers_detail::ContainerImpls<(
       tt::is_complex_of_fundamental_v<std::remove_cv_t<T>> or
       std::is_fundamental_v<std::remove_cv_t<T>>)>::get_element(t, i, at);
@@ -112,14 +114,15 @@ decltype(auto) get_element(T& t, const size_t i,
  * fundamental type
  */
 template <typename T, typename SizeFunction = GetContainerSize>
-decltype(auto) get_size(const T& t, SizeFunction size = GetContainerSize{}) {
+SPECTRE_ALWAYS_INLINE decltype(auto) get_size(
+    const T& t, SizeFunction size = GetContainerSize{}) {
   return ContainerHelpers_detail::ContainerImpls<(
       tt::is_complex_of_fundamental_v<std::remove_cv_t<T>> or
       std::is_fundamental_v<std::remove_cv_t<T>>)>::get_size(t, size);
 }
 
 /// Fall-back that allows using `min(x)` where `x` can be a vector or a double
-double min(const double val) { return val; }
+SPECTRE_ALWAYS_INLINE double min(const double val) { return val; }
 
 /// Fall-back that allows using `max(x)` where `x` can be a vector or a double
-double max(const double val) { return val; }
+SPECTRE_ALWAYS_INLINE double max(const double val) { return val; }

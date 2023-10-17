@@ -58,7 +58,7 @@ namespace fd {
  *   reconstruction.
  * - a
  *   \code
- *       static std::array<double, 2> pointwise(
+ *      SPECTRE_ALWAYS_INLINE static std::array<double, 2> pointwise(
  *            const double* const u, const int stride)
  *   \endcode
  *   function that optionally takes the additional arguments.

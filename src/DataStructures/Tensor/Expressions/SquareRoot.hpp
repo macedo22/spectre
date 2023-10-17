@@ -119,7 +119,7 @@ struct SquareRoot
   /// \brief Assert that the LHS tensor of the equation does not also appear in
   /// this expression's subtree
   template <typename LhsTensor>
-  void assert_lhs_tensor_not_in_rhs_expression(
+  SPECTRE_ALWAYS_INLINE void assert_lhs_tensor_not_in_rhs_expression(
       const gsl::not_null<LhsTensor*> lhs_tensor) const {
     if constexpr (not std::is_base_of_v<MarkAsNumberAsExpression, T>) {
       t_.assert_lhs_tensor_not_in_rhs_expression(lhs_tensor);
@@ -133,7 +133,7 @@ struct SquareRoot
   /// result `Tensor` being computed
   /// \param lhs_tensor the LHS result `Tensor` being computed
   template <typename LhsTensorIndices, typename LhsTensor>
-  void assert_lhs_tensorindices_same_in_rhs(
+  SPECTRE_ALWAYS_INLINE void assert_lhs_tensorindices_same_in_rhs(
       const gsl::not_null<LhsTensor*> lhs_tensor) const {
     if constexpr (not std::is_base_of_v<MarkAsNumberAsExpression, T>) {
       t_.template assert_lhs_tensorindices_same_in_rhs<LhsTensorIndices>(
@@ -146,7 +146,7 @@ struct SquareRoot
   ///
   /// \return the size of a component from a `Tensor` in this expression's
   /// subtree of the RHS `TensorExpression`
-  size_t get_rhs_tensor_component_size() const {
+  SPECTRE_ALWAYS_INLINE size_t get_rhs_tensor_component_size() const {
     return t_.get_rhs_tensor_component_size();
   }
 
@@ -161,7 +161,7 @@ struct SquareRoot
   /// square root
   /// \return the square root of the component of the tensor evaluated from the
   /// contained tensor expression
-  decltype(auto) get(
+  SPECTRE_ALWAYS_INLINE decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     return sqrt(t_.get(multi_index));
   }
@@ -185,7 +185,7 @@ struct SquareRoot
   /// \return the square root of the component of the tensor evaluated from the
   /// contained tensor expression
   template <typename ResultType>
-  decltype(auto) get_primary(
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
       const ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     if constexpr (is_primary_end) {
@@ -213,7 +213,7 @@ struct SquareRoot
   /// \param multi_index the multi-index of the component of the result tensor
   /// to evaluate
   template <typename ResultType>
-  void evaluate_primary_subtree(
+  SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& multi_index) const {
     if constexpr (primary_child_subtree_contains_primary_start) {
@@ -250,7 +250,7 @@ struct SquareRoot
 /// \param t the tensor expression of which to take the square root
 template <typename T, typename X, typename Symm, typename IndexList,
           typename... Args>
-auto sqrt(
+SPECTRE_ALWAYS_INLINE auto sqrt(
     const TensorExpression<T, X, Symm, IndexList, tmpl::list<Args...>>& t) {
   return tenex::SquareRoot<T, Args...>(~t);
 }

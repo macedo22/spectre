@@ -209,12 +209,12 @@ class Tensor<X, Symm, IndexList<Indices...>> {
   /// Then `get({{0, 2, 1}})` returns the \f$T_{0 2 1}\f$ component.
   /// \param tensor_index the index at which to get the data
   template <typename T>
-  constexpr reference get(
+  SPECTRE_ALWAYS_INLINE constexpr reference get(
       const std::array<T, sizeof...(Indices)>& tensor_index) {
     return gsl::at(data_, structure::get_storage_index(tensor_index));
   }
   template <typename T>
-  constexpr const_reference get(
+  SPECTRE_ALWAYS_INLINE constexpr const_reference get(
       const std::array<T, sizeof...(Indices)>& tensor_index) const {
     return gsl::at(data_, structure::get_storage_index(tensor_index));
   }
@@ -248,18 +248,20 @@ class Tensor<X, Symm, IndexList<Indices...>> {
   /// Retrieve the index `N...` by computing the storage index at compile time
   // clang-tidy: redundant declaration (bug in clang-tidy)
   template <int... N, typename... Args>
-  friend constexpr typename Tensor<Args...>::reference get(
-      Tensor<Args...>& t);  // NOLINT
+  friend SPECTRE_ALWAYS_INLINE constexpr typename Tensor<Args...>::reference
+  get(Tensor<Args...>& t);  // NOLINT
   // clang-tidy: redundant declaration (bug in clang-tidy)
   template <int... N, typename... Args>
-  friend constexpr typename Tensor<Args...>::const_reference get(
-      const Tensor<Args...>& t);  // NOLINT
-                                  /// @}
+  friend SPECTRE_ALWAYS_INLINE constexpr
+      typename Tensor<Args...>::const_reference
+      get(const Tensor<Args...>& t);  // NOLINT
+                                      /// @}
 
   /// @{
   /// Retrieve a TensorExpression object with the index structure passed in
   template <typename... TensorIndices>
-  constexpr auto operator()(TensorIndices... /*meta*/) const {
+  SPECTRE_ALWAYS_INLINE constexpr auto operator()(
+      TensorIndices... /*meta*/) const {
     static_assert((... and tt::is_tensor_index<TensorIndices>::value),
                   "The tensor expression must be created using TensorIndex "
                   "objects to represent generic indices, e.g. ti::a, ti::b, "
@@ -301,7 +303,9 @@ class Tensor<X, Symm, IndexList<Indices...>> {
   /// account symmetries. For example, let \f$T_{ab}\f$ be a n-dimensional
   /// rank-2 symmetric tensor, then the number of independent components is
   /// \f$n(n+1)/2\f$.
-  static constexpr size_t size() { return structure::size(); }
+  SPECTRE_ALWAYS_INLINE static constexpr size_t size() {
+    return structure::size();
+  }
 
   /// Returns the rank of the Tensor
   ///
@@ -309,18 +313,20 @@ class Tensor<X, Symm, IndexList<Indices...>> {
   /// The rank of a tensor is the number of indices it has. For example, the
   /// tensor \f$v^a\f$ is rank-1, the tensor \f$\phi\f$ is rank-0, and the
   /// tensor \f$T_{abc}\f$ is rank-3.
-  static constexpr size_t rank() { return sizeof...(Indices); }
+  SPECTRE_ALWAYS_INLINE static constexpr size_t rank() {
+    return sizeof...(Indices);
+  }
 
   /// @{
   /// Given an iterator or storage index, get the canonical tensor index.
   /// For scalars this is defined to be std::array<int, 1>{{0}}
-  constexpr std::array<size_t, sizeof...(Indices)> get_tensor_index(
-      const const_iterator& iter) const {
+  SPECTRE_ALWAYS_INLINE constexpr std::array<size_t, sizeof...(Indices)>
+  get_tensor_index(const const_iterator& iter) const {
     return structure::get_canonical_tensor_index(
         static_cast<size_t>(iter - begin()));
   }
-  static constexpr std::array<size_t, sizeof...(Indices)> get_tensor_index(
-      const size_t storage_index) {
+  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, sizeof...(Indices)>
+  get_tensor_index(const size_t storage_index) {
     return structure::get_canonical_tensor_index(storage_index);
   }
   /// @}
@@ -329,11 +335,12 @@ class Tensor<X, Symm, IndexList<Indices...>> {
   /// Get the storage index of the tensor index. Should only be used when
   /// optimizing code in which computing the storage index is a bottleneck.
   template <typename... N>
-  static constexpr size_t get_storage_index(const N... args) {
+  SPECTRE_ALWAYS_INLINE static constexpr size_t get_storage_index(
+      const N... args) {
     return structure::get_storage_index(args...);
   }
   template <typename I>
-  static constexpr size_t get_storage_index(
+  SPECTRE_ALWAYS_INLINE static constexpr size_t get_storage_index(
       const std::array<I, sizeof...(Indices)>& tensor_index) {
     return structure::get_storage_index(tensor_index);
   }
@@ -343,10 +350,12 @@ class Tensor<X, Symm, IndexList<Indices...>> {
   /// Given an iterator or storage index, get the multiplicity of an index
   ///
   /// \see TensorMetafunctions::compute_multiplicity
-  constexpr size_t multiplicity(const const_iterator& iter) const {
+  SPECTRE_ALWAYS_INLINE constexpr size_t multiplicity(
+      const const_iterator& iter) const {
     return structure::multiplicity(static_cast<size_t>(iter - begin()));
   }
-  static constexpr size_t multiplicity(const size_t storage_index) {
+  SPECTRE_ALWAYS_INLINE static constexpr size_t multiplicity(
+      const size_t storage_index) {
     return structure::multiplicity(storage_index);
   }
   /// @}
@@ -356,7 +365,7 @@ class Tensor<X, Symm, IndexList<Indices...>> {
   ///
   /// \snippet Test_Tensor.cpp index_dim
   /// \see ::index_dim
-  static constexpr size_t index_dim(const size_t i) {
+  SPECTRE_ALWAYS_INLINE static constexpr size_t index_dim(const size_t i) {
     static_assert(sizeof...(Indices),
                   "A scalar does not have any indices from which you can "
                   "retrieve the dimensionality.");
@@ -366,14 +375,17 @@ class Tensor<X, Symm, IndexList<Indices...>> {
 
   /// @{
   /// Return an array corresponding to the ::Symmetry of the Tensor
-  static constexpr std::array<int, sizeof...(Indices)> symmetries() {
+  SPECTRE_ALWAYS_INLINE static constexpr std::array<int, sizeof...(Indices)>
+  symmetries() {
     return structure::symmetries();
   }
   /// @}
 
   /// @{
   /// Return array of the ::IndexType's (spatial or spacetime)
-  static constexpr std::array<IndexType, sizeof...(Indices)> index_types() {
+  SPECTRE_ALWAYS_INLINE static constexpr std::array<IndexType,
+                                                    sizeof...(Indices)>
+  index_types() {
     return structure::index_types();
   }
   /// @}
@@ -383,21 +395,23 @@ class Tensor<X, Symm, IndexList<Indices...>> {
   ///
   /// \snippet Test_Tensor.cpp index_dim
   /// \see index_dim ::index_dim
-  static constexpr std::array<size_t, sizeof...(Indices)> index_dims() {
+  SPECTRE_ALWAYS_INLINE static constexpr std::array<size_t, sizeof...(Indices)>
+  index_dims() {
     return structure::dims();
   }
   /// @}
 
   /// @{
   /// Return array of the valence of each index (::UpLo)
-  static constexpr std::array<UpLo, sizeof...(Indices)> index_valences() {
+  SPECTRE_ALWAYS_INLINE static constexpr std::array<UpLo, sizeof...(Indices)>
+  index_valences() {
     return structure::index_valences();
   }
   /// @}
 
   /// @{
   /// Returns std::tuple of the ::Frame of each index
-  static constexpr auto index_frames() {
+  SPECTRE_ALWAYS_INLINE static constexpr auto index_frames() {
     return Tensor_detail::Structure<Symm, Indices...>::index_frames();
   }
   /// @}
@@ -466,7 +480,7 @@ class Tensor<X, Symm, IndexList<Indices...>> {
   // clang-tidy: redundant declaration
   /// \cond
   template <int I, class... Ts>
-  friend constexpr size_t index_dim(  // NOLINT
+  friend SPECTRE_ALWAYS_INLINE constexpr size_t index_dim(  // NOLINT
       const Tensor<Ts...>& /*t*/);
   /// \endcond
 
@@ -510,7 +524,8 @@ Tensor<X, Symm, IndexList<Indices...>>::get_vector_of_data() const {
 }
 
 template <int... N, typename... Args>
-constexpr typename Tensor<Args...>::reference get(Tensor<Args...>& t) {
+SPECTRE_ALWAYS_INLINE constexpr typename Tensor<Args...>::reference get(
+    Tensor<Args...>& t) {
   static_assert(Tensor<Args...>::rank() == sizeof...(N),
                 "the number of tensor indices specified must match the rank "
                 "of the tensor");
@@ -519,7 +534,7 @@ constexpr typename Tensor<Args...>::reference get(Tensor<Args...>& t) {
 }
 
 template <int... N, typename... Args>
-constexpr typename Tensor<Args...>::const_reference get(
+SPECTRE_ALWAYS_INLINE constexpr typename Tensor<Args...>::const_reference get(
     const Tensor<Args...>& t) {
   static_assert(Tensor<Args...>::rank() == sizeof...(N),
                 "the number of tensor indices specified must match the rank "
@@ -546,7 +561,7 @@ bool operator!=(const Tensor<X, Symm, IndexList<Indices...>>& lhs,
 ///
 /// \snippet Test_Tensor.cpp index_dim
 template <int I, class... Ts>
-constexpr size_t index_dim(const Tensor<Ts...>& /*t*/) {
+SPECTRE_ALWAYS_INLINE constexpr size_t index_dim(const Tensor<Ts...>& /*t*/) {
   return Tensor<Ts...>::structure::template dim<I>();
 }
 
@@ -570,7 +585,8 @@ std::ostream& operator<<(std::ostream& os,
 namespace MakeWithValueImpls {
 template <typename T, typename... Structure>
 struct NumberOfPoints<Tensor<T, Structure...>> {
-  static size_t apply(const Tensor<T, Structure...>& input) {
+  static SPECTRE_ALWAYS_INLINE size_t
+  apply(const Tensor<T, Structure...>& input) {
     return number_of_points(*input.begin());
   }
 };
@@ -578,22 +594,23 @@ struct NumberOfPoints<Tensor<T, Structure...>> {
 template <typename T, typename... Structure>
 struct MakeWithSize<Tensor<T, Structure...>> {
   template <typename U>
-  static Tensor<T, Structure...> apply(const size_t size, const U value) {
+  static SPECTRE_ALWAYS_INLINE Tensor<T, Structure...> apply(const size_t size,
+                                                             const U value) {
     return Tensor<T, Structure...>(make_with_value<T>(size, value));
   }
 };
 
 template <typename... Structure, typename T>
 struct MakeWithValueImpl<Tensor<double, Structure...>, T> {
-  static Tensor<double, Structure...> apply(const T& /*input*/,
-                                            const double value) {
+  static SPECTRE_ALWAYS_INLINE Tensor<double, Structure...> apply(
+      const T& /*input*/, const double value) {
     return Tensor<double, Structure...>(value);
   }
 };
 
 template <typename... Structure, typename T>
 struct MakeWithValueImpl<Tensor<std::complex<double>, Structure...>, T> {
-  static Tensor<std::complex<double>, Structure...> apply(
+  static SPECTRE_ALWAYS_INLINE Tensor<std::complex<double>, Structure...> apply(
       const T& /*input*/, const std::complex<double> value) {
     return Tensor<std::complex<double>, Structure...>(value);
   }
@@ -604,8 +621,8 @@ template <typename T, typename... Structure>
 struct SetNumberOfGridPointsImpls::SetNumberOfGridPointsImpl<
     Tensor<T, Structure...>> {
   static constexpr bool is_trivial = SetNumberOfGridPointsImpl<T>::is_trivial;
-  static void apply(const gsl::not_null<Tensor<T, Structure...>*> result,
-                    const size_t size) {
+  static SPECTRE_ALWAYS_INLINE void apply(
+      const gsl::not_null<Tensor<T, Structure...>*> result, const size_t size) {
     for (auto& component : *result) {
       set_number_of_grid_points(make_not_null(&component), size);
     }

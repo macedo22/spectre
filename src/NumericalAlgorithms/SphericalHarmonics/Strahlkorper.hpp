@@ -117,14 +117,20 @@ class Strahlkorper {
    *     \Im(F^{lm}) \quad \text{for} \quad m<0
    * \f}
    */
-  const DataVector& coefficients() const { return strahlkorper_coefs_; }
-  DataVector& coefficients() { return strahlkorper_coefs_; }
+  SPECTRE_ALWAYS_INLINE const DataVector& coefficients() const {
+    return strahlkorper_coefs_;
+  }
+  SPECTRE_ALWAYS_INLINE DataVector& coefficients() {
+    return strahlkorper_coefs_;
+  }
 
   /// Point about which the spectral basis of the Strahlkorper is expanded.
   /// The center is given in the frame in which the Strahlkorper is defined.
   /// This center must be somewhere inside the Strahlkorper, but in principle
   /// it can be anywhere.  See `physical_center()` for a different measure.
-  const std::array<double, 3>& expansion_center() const { return center_; }
+  SPECTRE_ALWAYS_INLINE const std::array<double, 3>& expansion_center() const {
+    return center_;
+  }
 
   /// Approximate physical center (determined by \f$l=1\f$ coefficients)
   /// Implementation of Eqs. (38)-(40) in \cite Hemberger2012jz
@@ -134,10 +140,10 @@ class Strahlkorper {
   double average_radius() const;
 
   /// Maximum \f$l\f$ in \f$Y_{lm}\f$ decomposition.
-  size_t l_max() const { return l_max_; }
+  SPECTRE_ALWAYS_INLINE size_t l_max() const { return l_max_; }
 
   /// Maximum \f$m\f$ in \f$Y_{lm}\f$ decomposition.
-  size_t m_max() const { return m_max_; }
+  SPECTRE_ALWAYS_INLINE size_t m_max() const { return m_max_; }
 
   /// Radius at a particular angle \f$(\theta,\phi)\f$.
   /// This is inefficient if done at multiple points many times.
@@ -150,7 +156,9 @@ class Strahlkorper {
   /// This is inefficient if done at multiple points many times.
   bool point_is_contained(const std::array<double, 3>& x) const;
 
-  const ylm::Spherepack& ylm_spherepack() const { return ylm_; }
+  SPECTRE_ALWAYS_INLINE const ylm::Spherepack& ylm_spherepack() const {
+    return ylm_;
+  }
 
  private:
   size_t l_max_{2}, m_max_{2};

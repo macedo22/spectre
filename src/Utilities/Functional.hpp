@@ -215,7 +215,7 @@ struct GetArgument : Functional<Arity> {
 /// The identity higher order function object
 struct Identity : Functional<1> {
   template <class T>
-  constexpr const T& operator()(const T& t) {
+  SPECTRE_ALWAYS_INLINE constexpr const T& operator()(const T& t) {
     return t;
   }
 };

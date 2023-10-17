@@ -33,7 +33,7 @@
 /// \return 2^n
 template <typename T,
           Requires<tt::is_integer_v<T> and std::is_unsigned_v<T>> = nullptr>
-constexpr T two_to_the(T n) {
+SPECTRE_ALWAYS_INLINE constexpr T two_to_the(T n) {
   return T(1) << n;
 }
 
@@ -43,7 +43,8 @@ constexpr T two_to_the(T n) {
 /// \param i the value to be acted on.
 /// \param N which place to extract the bit
 /// \return the value of the bit at that place.
-constexpr size_t get_nth_bit(const size_t i, const size_t N) {
+SPECTRE_ALWAYS_INLINE constexpr size_t get_nth_bit(const size_t i,
+                                                   const size_t N) {
   return (i >> N) % 2;
 }
 
@@ -51,14 +52,14 @@ constexpr size_t get_nth_bit(const size_t i, const size_t N) {
 /// \brief Compute the square of `x`
 template <typename T>
 // NOLINTNEXTLINE(readability-const-return-type)
-constexpr decltype(auto) square(const T& x) {
+SPECTRE_ALWAYS_INLINE constexpr decltype(auto) square(const T& x) {
   return x * x;
 }
 
 /// \ingroup ConstantExpressionsGroup
 /// \brief Compute the cube of `x`
 template <typename T>
-constexpr decltype(auto) cube(const T& x) {
+SPECTRE_ALWAYS_INLINE constexpr decltype(auto) cube(const T& x) {
   return x * x * x;
 }
 
@@ -98,7 +99,7 @@ namespace ConstantExpressions_detail {
 // base case power 0: Returns 1.0. This will need to be overloaded for types for
 // which the simple return is inappropriate.
 template <typename T>
-constexpr decltype(auto) pow_impl(
+SPECTRE_ALWAYS_INLINE constexpr decltype(auto) pow_impl(
     const T& /*t*/, std::integral_constant<int, 0> /*meta*/,
     std::bool_constant<true> /*exponent_was_positive*/) {
   return static_cast<tt::get_fundamental_type_t<T>>(1.0);
@@ -106,7 +107,7 @@ constexpr decltype(auto) pow_impl(
 
 // special case power 1: acts as a direct identity function for efficiency
 template <typename T>
-constexpr decltype(auto) pow_impl(
+SPECTRE_ALWAYS_INLINE constexpr decltype(auto) pow_impl(
     const T& t, std::integral_constant<int, 1> /*meta*/,
     std::bool_constant<true> /*exponent_was_positive*/) {
   return t;
@@ -115,7 +116,7 @@ constexpr decltype(auto) pow_impl(
 // general case for positive powers: return the power via recursive inline call,
 // which expands to a series of multiplication operations.
 template <int N, typename T>
-constexpr decltype(auto) pow_impl(
+SPECTRE_ALWAYS_INLINE constexpr decltype(auto) pow_impl(
     const T& t, std::integral_constant<int, N> /*meta*/,
     std::bool_constant<true> /*exponent_was_positive*/) {
   return t * pow_impl(t, std::integral_constant<int, N - 1>{},
@@ -128,7 +129,7 @@ constexpr decltype(auto) pow_impl(
 // tt::get_fundamental_type_t<T> and T. If not, this utility will need further
 // specialization.
 template <int N, typename T>
-constexpr decltype(auto) pow_impl(
+SPECTRE_ALWAYS_INLINE constexpr decltype(auto) pow_impl(
     const T& t, std::integral_constant<int, N> /*meta*/,
     std::bool_constant<false> /*exponent_was_positive*/) {
   return static_cast<tt::get_fundamental_type_t<T>>(1) /
@@ -155,7 +156,7 @@ constexpr decltype(auto) pow_impl(
 /// \param t the value being exponentiated
 /// \return value \f$t^N\f$ determined via repeated multiplication
 template <int N, typename T>
-constexpr decltype(auto) pow(const T& t) {
+SPECTRE_ALWAYS_INLINE constexpr decltype(auto) pow(const T& t) {
   return ConstantExpressions_detail::pow_impl(
       t, std::integral_constant<int, N>{}, std::bool_constant<(N >= 0)>{});
 }
@@ -166,27 +167,31 @@ constexpr decltype(auto) pow(const T& t) {
 /// The argument must be comparable to an int and must be negatable.
 template <typename T, Requires<tt::is_integer_v<T> or
                                std::is_floating_point_v<T>> = nullptr>
-constexpr T ce_abs(const T& x) {
+SPECTRE_ALWAYS_INLINE constexpr T ce_abs(const T& x) {
   return x < 0 ? -x : x;
 }
 
 /// \cond
 template <>
-constexpr double ce_abs(const double& x) {
+SPECTRE_ALWAYS_INLINE constexpr double ce_abs(const double& x) {
   return __builtin_fabs(x);
 }
 
 template <>
-constexpr float ce_abs(const float& x) {
+SPECTRE_ALWAYS_INLINE constexpr float ce_abs(const float& x) {
   return __builtin_fabsf(x);
 }
 /// \endcond
 
 /// \ingroup ConstantExpressionsGroup
 /// \brief Compute the absolute value of its argument
-constexpr double ce_fabs(const double x) { return __builtin_fabs(x); }
+constexpr SPECTRE_ALWAYS_INLINE double ce_fabs(const double x) {
+  return __builtin_fabs(x);
+}
 
-constexpr float ce_fabs(const float x) { return __builtin_fabsf(x); }
+constexpr SPECTRE_ALWAYS_INLINE float ce_fabs(const float x) {
+  return __builtin_fabsf(x);
+}
 
 namespace ConstantExpressions_detail {
 struct CompareByMagnitude {
@@ -326,14 +331,14 @@ inline constexpr auto make_array_from_list() {
 
 /// \ingroup ConstantExpressionsGroup
 /// \brief Compute the length of a const char* at compile time
-constexpr size_t cstring_length(const char* str) {
+SPECTRE_ALWAYS_INLINE constexpr size_t cstring_length(const char* str) {
   // clang-tidy: do not use pointer arithmetic
   return *str != 0 ? 1 + cstring_length(str + 1) : 0;  // NOLINT
 }
 
 /// \ingroup ConstantExpressionsGroup
 /// \brief Compute a hash of a const char* at compile time
-constexpr size_t cstring_hash(const char* str) {
+SPECTRE_ALWAYS_INLINE constexpr size_t cstring_hash(const char* str) {
   // clang-tidy: do not use pointer arithmetic
   return *str != 0
              ? (cstring_hash(str + 1) * 33) ^  // NOLINT

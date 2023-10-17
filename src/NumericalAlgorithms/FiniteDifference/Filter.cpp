@@ -29,8 +29,9 @@ template <bool UnitStride>
 struct KoDissipationImpl<2, UnitStride> {
   static constexpr size_t fd_order = 2;
 
-  static double pointwise(const double* const q, const int stride,
-                          const double epsilon) {
+  SPECTRE_ALWAYS_INLINE static double pointwise(const double* const q,
+                                                const int stride,
+                                                const double epsilon) {
     if constexpr (UnitStride) {
       ASSERT(stride == 1, "UnitStride is true but got stride " << stride);
       return epsilon *
@@ -47,8 +48,9 @@ template <bool UnitStride>
 struct KoDissipationImpl<4, UnitStride> {
   static constexpr size_t fd_order = 4;
 
-  static double pointwise(const double* const q, const int stride,
-                          const double epsilon) {
+  SPECTRE_ALWAYS_INLINE static double pointwise(const double* const q,
+                                                const int stride,
+                                                const double epsilon) {
     if constexpr (UnitStride) {
       ASSERT(stride == 1, "UnitStride is true but got stride " << stride);
       return -epsilon *
@@ -66,8 +68,9 @@ template <bool UnitStride>
 struct KoDissipationImpl<6, UnitStride> {
   static constexpr size_t fd_order = 6;
 
-  static double pointwise(const double* const q, const int stride,
-                          const double epsilon) {
+  SPECTRE_ALWAYS_INLINE static double pointwise(const double* const q,
+                                                const int stride,
+                                                const double epsilon) {
     if constexpr (UnitStride) {
       ASSERT(stride == 1, "UnitStride is true but got stride " << stride);
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
@@ -86,8 +89,9 @@ template <bool UnitStride>
 struct KoDissipationImpl<8, UnitStride> {
   static constexpr size_t fd_order = 8;
 
-  static double pointwise(const double* const q, const int stride,
-                          const double epsilon) {
+  SPECTRE_ALWAYS_INLINE static double pointwise(const double* const q,
+                                                const int stride,
+                                                const double epsilon) {
     if constexpr (UnitStride) {
       ASSERT(stride == 1, "UnitStride is true but got stride " << stride);
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
@@ -108,8 +112,9 @@ template <bool UnitStride>
 struct KoDissipationImpl<10, UnitStride> {
   static constexpr size_t fd_order = 10;
 
-  static double pointwise(const double* const q, const int stride,
-                          const double epsilon) {
+  SPECTRE_ALWAYS_INLINE static double pointwise(const double* const q,
+                                                const int stride,
+                                                const double epsilon) {
     if constexpr (UnitStride) {
       ASSERT(stride == 1, "UnitStride is true but got stride " << stride);
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
@@ -136,8 +141,9 @@ template <bool UnitStride>
 struct LowPassFilterImpl<2, UnitStride> {
   static constexpr size_t fd_order = 2;
 
-  static double pointwise(const double* const q, const int stride,
-                          const double epsilon) {
+  SPECTRE_ALWAYS_INLINE static double pointwise(const double* const q,
+                                                const int stride,
+                                                const double epsilon) {
     // 3/8 = 0.375
     // 3/4 = 0.75
     if constexpr (UnitStride) {
@@ -153,8 +159,9 @@ template <bool UnitStride>
 struct LowPassFilterImpl<4, UnitStride> {
   static constexpr size_t fd_order = 4;
 
-  static double pointwise(const double* const q, const int stride,
-                          const double epsilon) {
+  SPECTRE_ALWAYS_INLINE static double pointwise(const double* const q,
+                                                const int stride,
+                                                const double epsilon) {
     // 125/896 = 0.13950892857142858
     // 125/224 = 0.5580357142857143
     // 375/448 = 0.8370535714285714
@@ -176,8 +183,9 @@ template <bool UnitStride>
 struct LowPassFilterImpl<6, UnitStride> {
   static constexpr size_t fd_order = 6;
 
-  static double pointwise(const double* const q, const int stride,
-                          const double epsilon) {
+  SPECTRE_ALWAYS_INLINE static double pointwise(const double* const q,
+                                                const int stride,
+                                                const double epsilon) {
     // 16807/304128 = 0.05526291561447812
     // 16807/50688 = 0.3315774936868687
     // 84035/101376 = 0.8289437342171717
@@ -201,8 +209,9 @@ template <bool UnitStride>
 struct LowPassFilterImpl<8, UnitStride> {
   static constexpr size_t fd_order = 8;
 
-  static double pointwise(const double* const q, const int stride,
-                          const double epsilon) {
+  SPECTRE_ALWAYS_INLINE static double pointwise(const double* const q,
+                                                const int stride,
+                                                const double epsilon) {
     // 531441/6406400 * 35 / 128 = 0.022682926204654723
     // 531441/800800 * 35 / 128 = 0.18146340963723778
     // 531441/228800 * 35 / 128 = 0.6351219337303321
@@ -230,8 +239,9 @@ template <bool UnitStride>
 struct LowPassFilterImpl<10, UnitStride> {
   static constexpr size_t fd_order = 10;
 
-  static double pointwise(const double* const /*q*/, const int /*stride*/,
-                          const double /*epsilon*/) {
+  SPECTRE_ALWAYS_INLINE static double pointwise(const double* const /*q*/,
+                                                const int /*stride*/,
+                                                const double /*epsilon*/) {
     ERROR("Not implemented");
   }
 };

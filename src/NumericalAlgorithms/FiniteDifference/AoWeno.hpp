@@ -26,11 +26,9 @@ namespace fd::reconstruction {
 namespace detail {
 template <size_t NonlinearWeightExponent>
 struct AoWeno53Reconstructor {
-  static std::array<double, 2> pointwise(const double* const u,
-                                         const int stride,
-                                         const double gamma_hi,
-                                         const double gamma_lo,
-                                         const double epsilon) {
+  SPECTRE_ALWAYS_INLINE static std::array<double, 2> pointwise(
+      const double* const u, const int stride, const double gamma_hi,
+      const double gamma_lo, const double epsilon) {
     ASSERT(gamma_hi <= 1.0 and gamma_hi >= 0.0,
            "gamma_hi must be in [0.0, 1.0] but is " << gamma_hi);
     ASSERT(gamma_lo <= 1.0 and gamma_lo >= 0.0,
@@ -150,7 +148,7 @@ struct AoWeno53Reconstructor {
                  polys_at_plus_half[3] * moments[4]}};
   }
 
-  static constexpr size_t stencil_width() { return 5; }
+  SPECTRE_ALWAYS_INLINE static constexpr size_t stencil_width() { return 5; }
 };
 }  // namespace detail
 

@@ -206,7 +206,7 @@ class FixedHashMap {
 
   using storage_type = std::array<std::optional<value_type>, MaxSize>;
 
-  size_type hash(const key_type& key) const {
+  SPECTRE_ALWAYS_INLINE size_type hash(const key_type& key) const {
     if constexpr (hash_is_perfect) {
       return Hash{}(key);
     } else {
@@ -227,7 +227,8 @@ class FixedHashMap {
                     data_.end());
   }
 
-  static bool is_set(const std::optional<value_type>& opt) {
+  SPECTRE_ALWAYS_INLINE static bool is_set(
+      const std::optional<value_type>& opt) {
     return static_cast<bool>(opt);
   }
 
@@ -311,7 +312,7 @@ class FixedHashMapIterator {
       tmpl::conditional_t<std::is_const<ValueType>::value,
                           const map_optional_type, map_optional_type>;
 
-  static bool is_set(const optional_type& opt) {
+  SPECTRE_ALWAYS_INLINE static bool is_set(const optional_type& opt) {
     return static_cast<bool>(opt);
   }
 

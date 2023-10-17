@@ -125,8 +125,8 @@ struct NumberAsExpression
   /// \brief Returns the number represented by the expression
   ///
   /// \return the number represented by this expression
-  type get(
-      const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
+  SPECTRE_ALWAYS_INLINE type
+  get(const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
     return number_;
   }
 
@@ -134,7 +134,7 @@ struct NumberAsExpression
   ///
   /// \return the number represented by this expression
   template <typename ResultType>
-  type get_primary(
+  SPECTRE_ALWAYS_INLINE type get_primary(
       const ResultType& /*result_component*/,
       const std::array<size_t, num_tensor_indices>& /*multi_index*/) const {
     return number_;

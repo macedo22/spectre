@@ -161,7 +161,7 @@ struct Divide
   /// \brief Assert that the LHS tensor of the equation does not also appear in
   /// this expression's subtree
   template <typename LhsTensor>
-  void assert_lhs_tensor_not_in_rhs_expression(
+  SPECTRE_ALWAYS_INLINE void assert_lhs_tensor_not_in_rhs_expression(
       const gsl::not_null<LhsTensor*> lhs_tensor) const {
     if constexpr (not std::is_base_of_v<MarkAsNumberAsExpression, T1>) {
       t1_.assert_lhs_tensor_not_in_rhs_expression(lhs_tensor);
@@ -178,7 +178,7 @@ struct Divide
   /// result `Tensor` being computed
   /// \param lhs_tensor the LHS result `Tensor` being computed
   template <typename LhsTensorIndices, typename LhsTensor>
-  void assert_lhs_tensorindices_same_in_rhs(
+  SPECTRE_ALWAYS_INLINE void assert_lhs_tensorindices_same_in_rhs(
       const gsl::not_null<LhsTensor*> lhs_tensor) const {
     if constexpr (not std::is_base_of_v<MarkAsNumberAsExpression, T1>) {
       t1_.assert_lhs_tensorindices_same_in_rhs(lhs_tensor);
@@ -193,7 +193,7 @@ struct Divide
   ///
   /// \return the size of a component from a `Tensor` in this expression's
   /// subtree of the RHS `TensorExpression`
-  size_t get_rhs_tensor_component_size() const {
+  SPECTRE_ALWAYS_INLINE size_t get_rhs_tensor_component_size() const {
     if constexpr (T1::height_relative_to_closest_tensor_leaf_in_subtree <=
                   T2::height_relative_to_closest_tensor_leaf_in_subtree) {
       return t1_.get_rhs_tensor_component_size();
@@ -209,7 +209,7 @@ struct Divide
   //// tensor to retrieve
   /// \return the value of the component in the quotient tensor at
   /// `result_multi_index`
-  decltype(auto) get(
+  SPECTRE_ALWAYS_INLINE decltype(auto) get(
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     return t1_.get(result_multi_index) / t2_.get(op2_multi_index);
   }
@@ -230,7 +230,7 @@ struct Divide
   /// \return the value of the component in the quotient tensor at
   /// `result_multi_index`
   template <typename ResultType>
-  decltype(auto) get_primary(
+  SPECTRE_ALWAYS_INLINE decltype(auto) get_primary(
       const ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     if constexpr (is_primary_end) {
@@ -268,7 +268,7 @@ struct Divide
   /// \param result_multi_index the multi-index of the component of the result
   /// tensor to evaluate
   template <typename ResultType>
-  void evaluate_primary_children(
+  SPECTRE_ALWAYS_INLINE void evaluate_primary_children(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     if constexpr (is_primary_end) {
@@ -302,7 +302,7 @@ struct Divide
   /// \param result_multi_index the multi-index of the component of the result
   /// tensor to evaluate
   template <typename ResultType>
-  void evaluate_primary_subtree(
+  SPECTRE_ALWAYS_INLINE void evaluate_primary_subtree(
       ResultType& result_component,
       const std::array<size_t, num_tensor_indices>& result_multi_index) const {
     if constexpr (primary_child_subtree_contains_primary_start) {
@@ -347,7 +347,7 @@ struct Divide
 /// \param t1 the tensor expression numerator
 /// \param t2 the rank 0 tensor expression denominator
 template <typename T1, typename T2, typename... Args2>
-auto operator/(
+SPECTRE_ALWAYS_INLINE auto operator/(
     const TensorExpression<T1, typename T1::type, typename T1::symmetry,
                            typename T1::index_list, typename T1::args_list>& t1,
     const TensorExpression<T2, typename T2::type, typename T2::symmetry,
@@ -367,14 +367,14 @@ auto operator/(
 /// \return the tensor expression representing the quotient of the tensor
 /// expression over the number
 template <typename T, typename N, Requires<std::is_arithmetic_v<N>> = nullptr>
-auto operator/(
+SPECTRE_ALWAYS_INLINE auto operator/(
     const TensorExpression<T, typename T::type, typename T::symmetry,
                            typename T::index_list, typename T::args_list>& t,
     const N number) {
   return t * tenex::NumberAsExpression(1.0 / number);
 }
 template <typename T, typename N>
-auto operator/(
+SPECTRE_ALWAYS_INLINE auto operator/(
     const TensorExpression<T, typename T::type, typename T::symmetry,
                            typename T::index_list, typename T::args_list>& t,
     const std::complex<N>& number) {
@@ -392,14 +392,14 @@ auto operator/(
 /// \return the tensor expression representing the quotient of the number over
 /// the tensor expression
 template <typename T, typename N, Requires<std::is_arithmetic_v<N>> = nullptr>
-auto operator/(
+SPECTRE_ALWAYS_INLINE auto operator/(
     const N number,
     const TensorExpression<T, typename T::type, typename T::symmetry,
                            typename T::index_list, typename T::args_list>& t) {
   return tenex::NumberAsExpression(number) / t;
 }
 template <typename T, typename N>
-auto operator/(
+SPECTRE_ALWAYS_INLINE auto operator/(
     const std::complex<N>& number,
     const TensorExpression<T, typename T::type, typename T::symmetry,
                            typename T::index_list, typename T::args_list>& t) {

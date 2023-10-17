@@ -22,8 +22,8 @@ namespace detail {
 template <size_t Degree>
 struct UnlimitedReconstructor {
   static_assert(Degree == 2 or Degree == 4 or Degree == 6 or Degree == 8);
-  static std::array<double, 2> pointwise(const double* const q,
-                                         const int stride) {
+  SPECTRE_ALWAYS_INLINE static std::array<double, 2> pointwise(
+      const double* const q, const int stride) {
     if constexpr (Degree == 2) {
       // quadratic polynomial
       return {{0.375 * q[-stride] + 0.75 * q[0] - 0.125 * q[stride],
@@ -62,7 +62,9 @@ struct UnlimitedReconstructor {
     }
   }
 
-  static constexpr size_t stencil_width() { return Degree + 1; }
+  SPECTRE_ALWAYS_INLINE static constexpr size_t stencil_width() {
+    return Degree + 1;
+  }
 };
 }  // namespace detail
 

@@ -28,9 +28,9 @@ class Index;
 namespace fd::reconstruction {
 namespace detail {
 struct MonotonicityPreserving5Reconstructor {
-  static std::array<double, 2> pointwise(const double* const q,
-                                         const int stride, const double alpha,
-                                         const double epsilon) {
+  SPECTRE_ALWAYS_INLINE static std::array<double, 2> pointwise(
+      const double* const q, const int stride, const double alpha,
+      const double epsilon) {
     using std::abs;
     using std::max;
     using std::min;
@@ -102,7 +102,7 @@ struct MonotonicityPreserving5Reconstructor {
     return result;
   }
 
-  static constexpr size_t stencil_width() { return 5; }
+  SPECTRE_ALWAYS_INLINE static constexpr size_t stencil_width() { return 5; }
 };
 }  // namespace detail
 
