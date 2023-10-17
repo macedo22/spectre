@@ -627,10 +627,10 @@ template <typename... Tags>
 template <typename ImmutableItemTag>
 SPECTRE_ALWAYS_INLINE constexpr void
 DataBox<tmpl::list<Tags...>>::reset_compute_item() {
-  // // reference items do not need to be reset
-  // if constexpr (db::is_compute_tag_v<ImmutableItemTag>) {
-  //   get_item<ImmutableItemTag>().reset();
-  // }
+  // reference items do not need to be reset
+  if constexpr (db::is_compute_tag_v<ImmutableItemTag>) {
+    get_item<ImmutableItemTag>().reset();
+  }
 }
 
 // This function recursively calls itself to reset all compute items
