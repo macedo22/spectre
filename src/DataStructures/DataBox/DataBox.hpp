@@ -179,6 +179,23 @@ struct create_dependency_graph {
                                      tmpl::pin<TagsList>, tmpl::_1>>>;
   using type = immutable_item_argument_edges;
 };
+
+template <class edgeList>
+struct digraph;
+
+template <typename... edges>
+struct digraph<tmpl::list<edges...>> {
+ public:
+  using edge_list = tmpl::list<edges...>;
+  static_assert(tmpl::is_set<edge_list>::value,
+                "Cannot have repeated edges in a digraph");
+  using unique_vertex_list =
+      tmpl::fold<edge_list, tmpl::list<>,
+                 tmpl::add_unique_vertex<tmpl::_state, tmpl::_element>>;
+  using adjacency_list =
+      tmpl::compute_adjacency_list<unique_vertex_list, tmpl::has_source,
+                                   edges...>;
+};
 }  // namespace detail
 
 /*!
@@ -408,6 +425,7 @@ class DataBox<tmpl::list<Tags...>> : private detail::Item<Tags>... {
   using edge_list =
       typename detail::create_dependency_graph<tags_list,
                                                immutable_item_tags>::type;
+  using adjacency_list = typename detail::digraph<edge_list>::adjacency_list;
 
   bool mutate_locked_box_{false};
 };
