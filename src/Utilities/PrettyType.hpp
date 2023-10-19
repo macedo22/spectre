@@ -675,7 +675,9 @@ struct stl_templates {
  */
 template <typename T, typename Map = basics_map,
           typename KnownTemplates = stl_templates>
-std::string get_name();
+std::string get_name() {
+  return detail::construct_name<T, Map, KnownTemplates>::get();
+}
 
 /*!
  * \ingroup PrettyTypeGroup
@@ -687,7 +689,9 @@ std::string get_name();
  * when only given a base class reference, which get_type cannot do.
  */
 template <typename T>
-std::string get_runtime_type_name(const T& x);
+std::string get_runtime_type_name(const T& x) {
+  return boost::core::demangle(typeid(x).name());
+}
 
 namespace detail {
 std::string extract_short_name(const std::string& name);
@@ -699,7 +703,9 @@ std::string extract_short_name(const std::string& name);
  * without template parameters or scopes.
  */
 template <typename T>
-std::string short_name();
+std::string short_name() {
+  return detail::extract_short_name(typeid(T).name());
+}
 
 namespace detail {
 template <typename T, typename = std::void_t<>>
@@ -724,10 +730,14 @@ struct name_helper<T, std::void_t<decltype(T::name())>> {
  * member of the struct.
  */
 template <typename T>
-std::string name();
+std::string name() {
+  return detail::name_helper<T>::name();
+}
 
 template <typename T>
-std::string name(const T& /*unused*/);
+std::string name(const T& /*unused*/) {
+  return name<T>();
+}
 /// @}
 
 /*!
@@ -738,5 +748,24 @@ std::string name(const T& /*unused*/);
  * \note The `tmpl::list` must be flattened.
  */
 template <typename List>
-std::string list_of_names();
+std::string list_of_names() {
+  static_assert(tt::is_a_v<tmpl::list, List>);
+  std::stringstream ss{};
+  bool first_element = true;
+  tmpl::for_each<List>([&first_element, &ss](auto v) {
+    using type = tmpl::type_from<decltype(v)>;
+    static_assert(not tt::is_a_v<tmpl::list, type>,
+                  "The tmpl::list provided to pretty_type::list_of_names must "
+                  "be flattened.");
+    if (not first_element) {
+      ss << ", ";
+    } else {
+      first_element = false;
+    }
+
+    ss << pretty_type::name<type>();
+  });
+
+  return ss.str();
+}
 }  // namespace pretty_type
