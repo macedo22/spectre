@@ -179,40 +179,6 @@ struct create_dependency_graph {
                                      tmpl::pin<TagsList>, tmpl::_1>>>;
   using type = immutable_item_argument_edges;
 };
-
-template <typename State, typename Element, typename Iteration, typename Vertex>
-struct compute_adjacency_list_impl {
-  using type = typename std::conditional_t<
-      tmpl::has_source<Element, Vertex>::type,
-      tmpl::push_back<State, tmpl::integral_constant<size_t, Iteration::value>>,
-      State>;
-};
-
-template <class T, class... Es>
-struct compute_adjacency_list;
-template <template <class...> class VertexSeq, class... Vertices, class... Es>
-struct compute_adjacency_list<VertexSeq<Vertices...>, Es...> {
-  using type = tmpl::list<tmpl::enumerated_fold<
-      brigand::list<Es...>, tmpl::list<>,
-      compute_adjacency_list_impl<tmpl::_state, tmpl::_element, tmpl::_3,
-                                  tmpl::pin<Vertices>>,
-      tmpl::size_t<0>>...>;
-};
-
-template <class edgeList>
-struct digraph;
-
-template <typename... edges>
-struct digraph<tmpl::list<edges...>> {
- public:
-  using edge_list = tmpl::list<edges...>;
-  static_assert(tmpl::is_set<edge_list>::value,
-                "Cannot have repeated edges in a digraph");
-  using unique_vertex_list =
-      tmpl::fold<edge_list, tmpl::list<>,
-                 tmpl::add_unique_vertex<tmpl::_state, tmpl::_element>>;
-  using adjacency_list = compute_adjacency_list<unique_vertex_list, edges...>;
-};
 }  // namespace detail
 
 /*!
@@ -442,7 +408,6 @@ class DataBox<tmpl::list<Tags...>> : private detail::Item<Tags>... {
   using edge_list =
       typename detail::create_dependency_graph<tags_list,
                                                immutable_item_tags>::type;
-  using adjacency_list = typename detail::digraph<edge_list>::adjacency_list;
 
   bool mutate_locked_box_{false};
 };
