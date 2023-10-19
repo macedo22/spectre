@@ -397,8 +397,9 @@ class DataBox<tmpl::list<Tags...>> : private detail::Item<Tags>... {
   template <typename ImmutableItemTag>
   constexpr void reset_compute_item();
 
-  template <typename... TagsOfImmutableItemsToReset>
+  template <typename... RemainingEdges, typename... TagsOfImmutableItemsToReset>
   SPECTRE_ALWAYS_INLINE constexpr void reset_compute_items_after_mutate(
+      tmpl::list<RemainingEdges...> /*meta*/,
       tmpl::list<TagsOfImmutableItemsToReset...> /*meta*/);
 
   SPECTRE_ALWAYS_INLINE constexpr void reset_compute_items_after_mutate(
@@ -643,21 +644,25 @@ DataBox<tmpl::list<Tags...>>::reset_compute_item() {
 // recursion terminates when TagsOfImmutableItemsToReset becomes an empty list
 // (using the function overload inlined above in the definition of DataBox).
 template <typename... Tags>
-template <typename... TagsOfImmutableItemsToReset>
+template <typename... RemainingEdges, typename... TagsOfImmutableItemsToReset>
 SPECTRE_ALWAYS_INLINE constexpr void
 db::DataBox<tmpl::list<Tags...>>::reset_compute_items_after_mutate(
+    tmpl::list<RemainingEdges...> /*meta*/,
     tmpl::list<TagsOfImmutableItemsToReset...> /*meta*/) {
   EXPAND_PACK_LEFT_TO_RIGHT(reset_compute_item<TagsOfImmutableItemsToReset>());
+  using current_edges_left = tmpl::list<RemainingEdges...>;
   using current_tags_to_reset = tmpl::list<TagsOfImmutableItemsToReset...>;
+  using next_compute_edges_to_reset = tmpl::append<tmpl::filter<
+      current_edges_left, std::is_same<tmpl::pin<TagsOfImmutableItemsToReset>,
+                                       tmpl::get_source<tmpl::_1>>>...>;
   using next_compute_tags_to_reset = tmpl::list_difference<
-      tmpl::remove_duplicates<tmpl::transform<
-          tmpl::append<
-              tmpl::filter<typename DataBox<tmpl::list<Tags...>>::edge_list,
-                           std::is_same<tmpl::pin<TagsOfImmutableItemsToReset>,
-                                        tmpl::get_source<tmpl::_1>>>...>,
-          tmpl::get_destination<tmpl::_1>>>,
+      tmpl::remove_duplicates<tmpl::transform<next_compute_edges_to_reset,
+                                              tmpl::get_destination<tmpl::_1>>>,
       current_tags_to_reset>;
-  reset_compute_items_after_mutate(next_compute_tags_to_reset{});
+  using next_edges_left =
+      tmpl::list_difference<next_compute_edges_to_reset, current_edges_left>;
+  reset_compute_items_after_mutate(next_edges_left{},
+                                   next_compute_tags_to_reset{});
 }
 
 template <typename... Tags>
@@ -781,6 +786,7 @@ decltype(auto) mutate(Invokable&& invokable,
           box->template mutate_mutable_subitems<MutateTags>(
               typename Subitems<MutateTags>::type{}));
       box->template reset_compute_items_after_mutate(
+          typename DataBox<TagList>::edge_list{},
           first_compute_items_to_reset{});
     };
     box->mutate_locked_box_ = true;
