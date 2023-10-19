@@ -414,50 +414,48 @@ class DataBox<tmpl::list<Tags...>> : private detail::Item<Tags>... {
 
 template <typename... Tags>
 std::string DataBox<tmpl::list<Tags...>>::print_types() const {
-  // std::ostringstream os;
-  // os << "DataBox type aliases:\n";
-  // os << "using tags_list = " << pretty_type::get_name<tags_list>() << ";\n";
-  // os << "using immutable_item_tags = "
-  //    << pretty_type::get_name<immutable_item_tags>() << ";\n";
-  // os << "using immutable_item_creation_tags = "
-  //    << pretty_type::get_name<immutable_item_creation_tags>() << ";\n";
-  // os << "using mutable_item_tags = "
-  //    << pretty_type::get_name<mutable_item_tags>() << ";\n";
-  // os << "using mutable_subitem_tags = "
-  //    << pretty_type::get_name<mutable_subitem_tags>() << ";\n";
-  // os << "using compute_item_tags = "
-  //    << pretty_type::get_name<compute_item_tags>() << ";\n";
-  // os << "using reference_item_tags = "
-  //    << pretty_type::get_name<reference_item_tags>() << ";\n";
-  // os << "using edge_list = " << pretty_type::get_name<edge_list>() << ";\n";
-  // return os.str();
-  return "";
+  std::ostringstream os;
+  os << "DataBox type aliases:\n";
+  os << "using tags_list = " << pretty_type::get_name<tags_list>() << ";\n";
+  os << "using immutable_item_tags = "
+     << pretty_type::get_name<immutable_item_tags>() << ";\n";
+  os << "using immutable_item_creation_tags = "
+     << pretty_type::get_name<immutable_item_creation_tags>() << ";\n";
+  os << "using mutable_item_tags = "
+     << pretty_type::get_name<mutable_item_tags>() << ";\n";
+  os << "using mutable_subitem_tags = "
+     << pretty_type::get_name<mutable_subitem_tags>() << ";\n";
+  os << "using compute_item_tags = "
+     << pretty_type::get_name<compute_item_tags>() << ";\n";
+  os << "using reference_item_tags = "
+     << pretty_type::get_name<reference_item_tags>() << ";\n";
+  os << "using edge_list = " << pretty_type::get_name<edge_list>() << ";\n";
+  return os.str();
 }
 
 template <typename... Tags>
 template <bool PrintImmutableItems>
 std::string DataBox<tmpl::list<Tags...>>::print_items() const {
-  // std::ostringstream os;
-  // os << "Items:\n";
-  // const auto print_item = [this, &os](auto tag_v) {
-  //   (void)this;
-  //   using tag = tmpl::type_from<decltype(tag_v)>;
-  //   using type = typename tag::type;
-  //   os << "----------\n";
-  //   os << "Name:  " << pretty_type::get_name<tag>() << "\n";
-  //   os << "Type:  " << pretty_type::get_name<type>() << "\n";
-  //   if constexpr (tt::is_streamable_v<std::ostringstream, type>) {
-  //     os << "Value: " << this->get<tag>() << "\n";
-  //   } else {
-  //     os << "Value: UNSTREAMABLE\n";
-  //   }
-  // };
-  // tmpl::for_each<mutable_item_creation_tags>(print_item);
-  // if constexpr (PrintImmutableItems) {
-  //   tmpl::for_each<immutable_item_creation_tags>(print_item);
-  // }
-  // return os.str();
-  return "";
+  std::ostringstream os;
+  os << "Items:\n";
+  const auto print_item = [this, &os](auto tag_v) {
+    (void)this;
+    using tag = tmpl::type_from<decltype(tag_v)>;
+    using type = typename tag::type;
+    os << "----------\n";
+    os << "Name:  " << pretty_type::get_name<tag>() << "\n";
+    os << "Type:  " << pretty_type::get_name<type>() << "\n";
+    if constexpr (tt::is_streamable_v<std::ostringstream, type>) {
+      os << "Value: " << this->get<tag>() << "\n";
+    } else {
+      os << "Value: UNSTREAMABLE\n";
+    }
+  };
+  tmpl::for_each<mutable_item_creation_tags>(print_item);
+  if constexpr (PrintImmutableItems) {
+    tmpl::for_each<immutable_item_creation_tags>(print_item);
+  }
+  return os.str();
 }
 
 namespace detail {
