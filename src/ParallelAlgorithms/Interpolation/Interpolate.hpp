@@ -60,9 +60,10 @@ void interpolate(
   // Tell the interpolation target that it should interpolate.
   auto& target = Parallel::get_parallel_component<
       InterpolationTarget<Metavariables, InterpolationTargetTag>>(cache);
-  Parallel::simple_action<
-      Actions::AddTemporalIdsToInterpolationTarget<InterpolationTargetTag>>(
-      target, std::vector<typename InterpolationTargetTag::temporal_id::type>{
-                  temporal_id});
+  (void)target;
+//   Parallel::simple_action<
+//       Actions::AddTemporalIdsToInterpolationTarget<InterpolationTargetTag>>(
+//       target, std::vector<typename InterpolationTargetTag::temporal_id::type>{
+//                   temporal_id});
 }
 }  // namespace intrp
