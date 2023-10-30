@@ -66,7 +66,7 @@ namespace grmhd::GhValenciaDivClean::BoundaryConditions {
 class DirichletAnalytic final : public BoundaryCondition {
  public:
   using options = tmpl::list<>;
-  static Options::String help{
+  Options::String help{
       "DirichletAnalytic boundary conditions using either analytic solution or "
       "analytic data."};
 

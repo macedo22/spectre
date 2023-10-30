@@ -40,13 +40,13 @@ class EventsAndTriggers {
   struct TriggerAndEvents {
     struct Trigger {
       using type = std::unique_ptr<::Trigger>;
-      static Options::String help = "Determines when the Events run.";
+      Options::String help = "Determines when the Events run.";
     };
     struct Events {
       using type = std::vector<std::unique_ptr<::Event>>;
-      static Options::String help = "These events run when the Trigger fires.";
+      Options::String help = "These events run when the Trigger fires.";
     };
-    static Options::String help = "Events that run when the Trigger fires.";
+    Options::String help = "Events that run when the Trigger fires.";
     using options = tmpl::list<Trigger, Events>;
     void pup(PUP::er& p) {
       p | trigger;

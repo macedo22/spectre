@@ -220,20 +220,19 @@ class KerrSchild : public AnalyticSolution<3_st>,
  public:
   struct Mass {
     using type = double;
-    static Options::String help = {"Mass of the black hole"};
+    Options::String help = {"Mass of the black hole"};
     static type lower_bound() { return 0.; }
   };
   struct Spin {
     using type = std::array<double, volume_dim>;
-    static Options::String help = {
-        "The [x,y,z] dimensionless spin of the black hole"};
+    Options::String help = {"The [x,y,z] dimensionless spin of the black hole"};
   };
   struct Center {
     using type = std::array<double, volume_dim>;
-    static Options::String help = {"The [x,y,z] center of the black hole"};
+    Options::String help = {"The [x,y,z] center of the black hole"};
   };
   using options = tmpl::list<Mass, Spin, Center>;
-  static Options::String help{"Black hole in Kerr-Schild coordinates"};
+  Options::String help{"Black hole in Kerr-Schild coordinates"};
 
   KerrSchild(double mass, const std::array<double, 3>& dimensionless_spin,
              const std::array<double, 3>& center,

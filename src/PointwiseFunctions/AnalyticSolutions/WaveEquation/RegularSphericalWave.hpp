@@ -70,12 +70,12 @@ class RegularSphericalWave : public evolution::initial_data::InitialData,
   static constexpr size_t volume_dim = 3;
   struct Profile {
     using type = std::unique_ptr<MathFunction<1, Frame::Inertial>>;
-    static Options::String help = {"The radial profile of the spherical wave."};
+    Options::String help = {"The radial profile of the spherical wave."};
   };
 
   using options = tmpl::list<Profile>;
 
-  static Options::String help = {
+  Options::String help = {
       "A spherical wave solution of the Euclidean wave equation that is "
       "regular at the origin"};
 

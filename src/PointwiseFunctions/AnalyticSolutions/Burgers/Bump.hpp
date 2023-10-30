@@ -41,23 +41,23 @@ class Bump : public evolution::initial_data::InitialData,
  public:
   struct HalfWidth {
     using type = double;
-    static Options::String help{
+    Options::String help{
         "The distance from the center to the zero of the bump"};
     static type lower_bound() { return 0.; }
   };
 
   struct Height {
     using type = double;
-    static Options::String help{"The height of the bump"};
+    Options::String help{"The height of the bump"};
   };
 
   struct Center {
     using type = double;
-    static Options::String help{"The center of the bump"};
+    Options::String help{"The center of the bump"};
   };
 
   using options = tmpl::list<HalfWidth, Height, Center>;
-  static Options::String help{"A bump solution"};
+  Options::String help{"A bump solution"};
 
   Bump() = default;
   Bump(const Bump&) = default;

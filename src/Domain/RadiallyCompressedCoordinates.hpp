@@ -71,24 +71,24 @@ tnsr::I<DataType, Dim, CoordsFrame> radially_compressed_coordinates(
 ///
 /// \see radially_compressed_coordinates
 struct RadiallyCompressedCoordinatesOptions {
-  static Options::String help =
+  Options::String help =
       "Define radially compressed coordinates for visualizing large outer "
       "radii.";
   struct InnerRadius {
     using type = double;
-    static Options::String help =
+    Options::String help =
         "Radially compressed coordinates begin at this radius, and coincide "
         "with the original coordinates for smaller radii.";
   };
   struct OuterRadius {
     using type = double;
-    static Options::String help =
+    Options::String help =
         "Outer radius of the domain which will be compressed down to a "
         "comprehensible radius, namely to r_inner * log10(r_outer).";
   };
   struct Compression {
     using type = CoordinateMaps::Distribution;
-    static Options::String help =
+    Options::String help =
         "Compression mode: 'Logarithmic' or 'Inverse'. If you use the same "
         "mode that you used to distribute radial grid points then the "
         "grid points will be distributed linearly in the radially compressed "
@@ -106,7 +106,7 @@ namespace OptionTags {
 struct RadiallyCompressedCoordinates {
   using type = Options::Auto<domain::RadiallyCompressedCoordinatesOptions,
                              Options::AutoLabel::None>;
-  static Options::String help =
+  Options::String help =
       "Define radially compressed coordinates for visualizing large outer "
       "radii.";
 };

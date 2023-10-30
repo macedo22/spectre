@@ -179,13 +179,13 @@ class ConstraintPreservingSphericalRadiation final
   struct TypeOptionTag {
     using type = detail::ConstraintPreservingSphericalRadiationType;
     static std::string name() { return "Type"; }
-    static Options::String help{
+    Options::String help{
         "Whether to impose Sommerfeld, first-order Bayliss-Turkel, or "
         "second-order Bayliss-Turkel spherical radiation boundary conditions."};
   };
 
   using options = tmpl::list<TypeOptionTag>;
-  static Options::String help{
+  Options::String help{
       "Constraint-preserving spherical radiation boundary conditions setting "
       "the time derivatives of Psi, Phi, and Pi to avoid incoming constraint "
       "violations, and imposing radiation boundary conditions."};

@@ -58,7 +58,7 @@ class FastWave : public evolution::initial_data::InitialData,
                  public MarkAsAnalyticSolution {
  public:
   using options = tmpl::list<>;
-  static Options::String help{
+  Options::String help{
       "A fast mode wave propagating +x direction in flat spacetime"};
 
   FastWave() = default;

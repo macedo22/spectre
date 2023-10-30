@@ -169,45 +169,44 @@ class FishboneMoncriefDisk
   /// The mass of the black hole, \f$M\f$.
   struct BhMass {
     using type = double;
-    static Options::String help = {"The mass of the black hole."};
+    Options::String help = {"The mass of the black hole."};
     static type lower_bound() { return 0.0; }
   };
   /// The dimensionless black hole spin, \f$\chi = a/M\f$.
   struct BhDimlessSpin {
     using type = double;
-    static Options::String help = {"The dimensionless black hole spin."};
+    Options::String help = {"The dimensionless black hole spin."};
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 1.0; }
   };
   /// The radial coordinate of the inner edge of the disk, in units of \f$M\f$.
   struct InnerEdgeRadius {
     using type = double;
-    static Options::String help = {
+    Options::String help = {
         "The radial coordinate of the inner edge of the disk."};
   };
   /// The radial coordinate of the maximum pressure, in units of \f$M\f$.
   struct MaxPressureRadius {
     using type = double;
-    static Options::String help = {
-        "The radial coordinate of the maximum pressure."};
+    Options::String help = {"The radial coordinate of the maximum pressure."};
   };
   /// The polytropic constant of the fluid.
   struct PolytropicConstant {
     using type = double;
-    static Options::String help = {"The polytropic constant of the fluid."};
+    Options::String help = {"The polytropic constant of the fluid."};
     static type lower_bound() { return 0.; }
   };
   /// The polytropic exponent of the fluid.
   struct PolytropicExponent {
     using type = double;
-    static Options::String help = {"The polytropic exponent of the fluid."};
+    Options::String help = {"The polytropic exponent of the fluid."};
     static type lower_bound() { return 1.; }
   };
 
   using options =
       tmpl::list<BhMass, BhDimlessSpin, InnerEdgeRadius, MaxPressureRadius,
                  PolytropicConstant, PolytropicExponent>;
-  static Options::String help = {"Fluid disk orbiting a Kerr black hole."};
+  Options::String help = {"Fluid disk orbiting a Kerr black hole."};
 
   FishboneMoncriefDisk() = default;
   FishboneMoncriefDisk(const FishboneMoncriefDisk& /*rhs*/) = default;

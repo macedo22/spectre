@@ -44,17 +44,17 @@ class PolarMagnetizedFmDisk
  public:
   struct DiskParameters {
     using type = MagnetizedFmDisk;
-    static Options::String help = "Parameters for the disk.";
+    Options::String help = "Parameters for the disk.";
   };
 
   struct TorusParameters {
     using type = grmhd::AnalyticData::SphericalTorus;
-    static Options::String help = "Parameters for the evolution region.";
+    Options::String help = "Parameters for the evolution region.";
   };
 
   using options = tmpl::list<DiskParameters, TorusParameters>;
 
-  static Options::String help =
+  Options::String help =
       "Magnetized Fishbone-Moncrief disk in polar coordinates.";
 
   PolarMagnetizedFmDisk() = default;

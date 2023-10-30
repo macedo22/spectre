@@ -64,7 +64,7 @@ struct Rotation : tt::ConformsTo<protocols::ControlError> {
       domain::object_list<domain::ObjectLabel::A, domain::ObjectLabel::B>;
 
   using options = tmpl::list<>;
-  static Options::String help{
+  Options::String help{
       "Computes the control error for rotation control. This should not "
       "take any options."};
 

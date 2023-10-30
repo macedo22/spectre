@@ -72,7 +72,7 @@ class RadiallyFallingFloor {
   /// \brief The minimum radius at which to begin applying the floors on the
   /// density and pressure.
   struct MinimumRadius {
-    static Options::String help =
+    Options::String help =
         "The radius at which to begin applying the lower bound.";
     using type = double;
     static double lower_bound() { return 0.0; }
@@ -80,36 +80,35 @@ class RadiallyFallingFloor {
 
   /// \brief The scale of the floor of the rest mass density.
   struct ScaleDensityFloor {
-    static Options::String help = "The rest mass density floor at r = 1.";
+    Options::String help = "The rest mass density floor at r = 1.";
     using type = double;
     static double lower_bound() { return 0.0; }
   };
 
   /// \brief The power of the radius of the floor of the rest mass density.
   struct PowerDensityFloor {
-    static Options::String help =
+    Options::String help =
         "Radial power for the floor of the rest mass density.";
     using type = double;
   };
 
   /// \brief The scale of the floor of the pressure.
   struct ScalePressureFloor {
-    static Options::String help = "The pressure floor at r = 1.";
+    Options::String help = "The pressure floor at r = 1.";
     using type = double;
     static double lower_bound() { return 0.0; }
   };
 
   /// \brief The power of the radius of the floor of the pressure.
   struct PowerPressureFloor {
-    static Options::String help =
-        "The radial power for the floor of the pressure.";
+    Options::String help = "The radial power for the floor of the pressure.";
     using type = double;
   };
 
   using options =
       tmpl::list<MinimumRadius, ScaleDensityFloor, PowerDensityFloor,
                  ScalePressureFloor, PowerPressureFloor>;
-  static Options::String help = {
+  Options::String help = {
       "Applies a pressure and density floor dependent on the distance to the "
       "origin."};
 

@@ -71,7 +71,7 @@ class Hll final : public BoundaryCorrection {
 
  public:
   using options = tmpl::list<>;
-  static Options::String help = {
+  Options::String help = {
       "Computes the HLL boundary correction term for the Burgers system."};
 
   Hll() = default;

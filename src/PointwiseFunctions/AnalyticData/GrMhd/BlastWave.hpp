@@ -73,60 +73,56 @@ class BlastWave : public evolution::initial_data::InitialData,
   /// Inside InnerRadius, density is InnerDensity.
   struct InnerRadius {
     using type = double;
-    static Options::String help = {
-        "Inside InnerRadius, density is InnerDensity."};
+    Options::String help = {"Inside InnerRadius, density is InnerDensity."};
     static type lower_bound() { return 0.0; }
   };
   /// Outside OuterRadius, density is OuterDensity.
   struct OuterRadius {
     using type = double;
-    static Options::String help = {
-        "Outside OuterRadius, density is OuterDensity."};
+    Options::String help = {"Outside OuterRadius, density is OuterDensity."};
     static type lower_bound() { return 0.0; }
   };
   /// Density at radii less than InnerRadius.
   struct InnerDensity {
     using type = double;
-    static Options::String help = {"Density at radii less than InnerRadius."};
+    Options::String help = {"Density at radii less than InnerRadius."};
     static type lower_bound() { return 0.0; }
   };
   /// Density at radii greater than OuterRadius.
   struct OuterDensity {
     using type = double;
-    static Options::String help = {
-        "Density at radii greater than OuterRadius."};
+    Options::String help = {"Density at radii greater than OuterRadius."};
     static type lower_bound() { return 0.0; }
   };
   /// Pressure at radii less than InnerRadius.
   struct InnerPressure {
     using type = double;
-    static Options::String help = {"Pressure at radii less than InnerRadius."};
+    Options::String help = {"Pressure at radii less than InnerRadius."};
     static type lower_bound() { return 0.0; }
   };
   /// Pressure at radii greater than OuterRadius.
   struct OuterPressure {
     using type = double;
-    static Options::String help = {
-        "Pressure at radii greater than OuterRadius."};
+    Options::String help = {"Pressure at radii greater than OuterRadius."};
     static type lower_bound() { return 0.0; }
   };
   /// The x,y,z components of the uniform magnetic field threading the matter.
   struct MagneticField {
     using type = std::array<double, 3>;
-    static Options::String help = {
+    Options::String help = {
         "The x,y,z components of the uniform magnetic field."};
   };
   /// The adiabatic index of the ideal fluid.
   struct AdiabaticIndex {
     using type = double;
-    static Options::String help = {"The adiabatic index of the ideal fluid."};
+    Options::String help = {"The adiabatic index of the ideal fluid."};
     static type lower_bound() { return 1.0; }
   };
   /// The geometry of the blast wave, i.e. Cylindrical or Spherical.
   struct GeometryOption {
     static std::string name() { return "Geometry"; }
     using type = Geometry;
-    static Options::String help = {
+    Options::String help = {
         "The geometry of the blast wave, i.e. Cylindrical or Spherical."};
   };
 
@@ -134,7 +130,7 @@ class BlastWave : public evolution::initial_data::InitialData,
                              OuterDensity, InnerPressure, OuterPressure,
                              MagneticField, AdiabaticIndex, GeometryOption>;
 
-  static Options::String help = {
+  Options::String help = {
       "Cylindrical or spherical blast wave analytic initial data."};
 
   BlastWave() = default;

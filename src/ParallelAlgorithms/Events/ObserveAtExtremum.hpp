@@ -82,23 +82,22 @@ class ObserveAtExtremum<tmpl::list<ObservableTensorTags...>,
   /// the type of extremum, and the other tensors to observer at
   /// that extremum
   struct ObserveTensors {
-    static Options::String help = {
+    Options::String help = {
         "The tensor to extremize, and other tensors to observe."};
 
     struct Name {
       using type = std::string;
-      static Options::String help = {"The name of the scalar to extremize."};
+      Options::String help = {"The name of the scalar to extremize."};
     };
 
     struct ExtremumType {
       using type = std::string;
-      static Options::String help = {
-          "The type of extremum -- either Min or Max."};
+      Options::String help = {"The type of extremum -- either Min or Max."};
     };
 
     struct AdditionalData {
       using type = std::vector<std::string>;
-      static Options::String help = {
+      Options::String help = {
           "List of other tensors to observe at the extremum"};
     };
 
@@ -119,14 +118,14 @@ class ObserveAtExtremum<tmpl::list<ObservableTensorTags...>,
   /// The name of the subfile inside the HDF5 file
   struct SubfileName {
     using type = std::string;
-    static Options::String help = {
+    Options::String help = {
         "The name of the subfile inside the HDF5 file without an extension and "
         "without a preceding '/'."};
   };
   /// The scalar to extremize, and other tensors to observe at extremum
   struct TensorsToObserve {
     using type = ObserveTensors;
-    static Options::String help = {
+    Options::String help = {
         "Struct specifying the scalar to extremize, the type of extremum "
         "and other tensors to observe at that extremum."};
   };
@@ -137,7 +136,7 @@ class ObserveAtExtremum<tmpl::list<ObservableTensorTags...>,
 
   using options = tmpl::list<SubfileName, TensorsToObserve>;
 
-  static Options::String help =
+  Options::String help =
       "Observe extremum of a scalar in the DataBox.\n"
       "\n"
       "Writes reduction quantities:\n"

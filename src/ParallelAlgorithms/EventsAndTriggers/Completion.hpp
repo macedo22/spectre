@@ -23,8 +23,7 @@ class Completion : public Event {
 
   using compute_tags_for_observation_box = tmpl::list<>;
   using options = tmpl::list<>;
-  static Options::String help = {
-      "Sets the termination flag for the code to exit."};
+  Options::String help = {"Sets the termination flag for the code to exit."};
 
   Completion() = default;
 

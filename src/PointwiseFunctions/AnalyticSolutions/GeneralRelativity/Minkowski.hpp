@@ -39,7 +39,7 @@ template <size_t Dim>
 class Minkowski : public AnalyticSolution<Dim>, public MarkAsAnalyticSolution {
  public:
   using options = tmpl::list<>;
-  static Options::String help{"Minkowski solution to Einstein's Equations"};
+  Options::String help{"Minkowski solution to Einstein's Equations"};
 
   Minkowski() = default;
   Minkowski(const Minkowski& /*rhs*/) = default;

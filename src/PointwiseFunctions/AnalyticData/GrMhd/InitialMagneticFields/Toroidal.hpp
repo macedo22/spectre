@@ -58,20 +58,20 @@ class Toroidal : public InitialMagneticField {
  public:
   struct PressureExponent {
     using type = size_t;
-    static Options::String help = {
+    Options::String help = {
         "The exponent n_s controlling the smoothness of the field"};
   };
 
   struct CutoffPressure {
     using type = double;
-    static Options::String help = {
+    Options::String help = {
         "The pressure below which there is no magnetic field."};
     static type lower_bound() { return 0.0; }
   };
 
   struct VectorPotentialAmplitude {
     using type = double;
-    static Options::String help = {
+    Options::String help = {
         "The amplitude A_b of the vector potential. This controls the magnetic "
         "field strength."};
     static type lower_bound() { return 0.0; }
@@ -79,12 +79,12 @@ class Toroidal : public InitialMagneticField {
 
   struct Center {
     using type = std::array<double, 3>;
-    static Options::String help = {"The center of the magnetic field."};
+    Options::String help = {"The center of the magnetic field."};
   };
 
   struct MaxDistanceFromCenter {
     using type = double;
-    static Options::String help = {
+    Options::String help = {
         "The maximum distance from the center to compute the magnetic field. "
         "Everywhere outside the field is set to zero."};
     static type lower_bound() { return 0.0; }
@@ -94,7 +94,7 @@ class Toroidal : public InitialMagneticField {
       tmpl::list<PressureExponent, CutoffPressure, VectorPotentialAmplitude,
                  Center, MaxDistanceFromCenter>;
 
-  static Options::String help = {"Toroidal initial magnetic field"};
+  Options::String help = {"Toroidal initial magnetic field"};
 
   Toroidal() = default;
   Toroidal(const Toroidal& /*rhs*/) = default;

@@ -25,18 +25,18 @@ class BarycentricRationalSpanInterpolator : public SpanInterpolator {
  public:
   struct MinOrder {
     using type = size_t;
-    static Options::String help = {"Order of barycentric interpolation"};
+    Options::String help = {"Order of barycentric interpolation"};
     static type lower_bound() { return 1; }
   };
 
   struct MaxOrder {
     using type = size_t;
-    static Options::String help = {"Order of barycentric interpolation"};
+    Options::String help = {"Order of barycentric interpolation"};
     static type upper_bound() { return 10; }
   };
 
   using options = tmpl::list<MinOrder, MaxOrder>;
-  static Options::String help = {
+  Options::String help = {
       "Barycentric interpolator of option-defined maximum and minimum order."};
 
   explicit BarycentricRationalSpanInterpolator(CkMigrateMessage* /*unused*/) {}

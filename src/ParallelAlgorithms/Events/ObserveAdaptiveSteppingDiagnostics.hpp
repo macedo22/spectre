@@ -64,7 +64,7 @@ class ObserveAdaptiveSteppingDiagnostics : public Event {
   /// The name of the subfile inside the HDF5 file
   struct SubfileName {
     using type = std::string;
-    static Options::String help = {
+    Options::String help = {
         "The name of the subfile inside the HDF5 file without an extension and "
         "without a preceding '/'."};
   };
@@ -76,7 +76,7 @@ class ObserveAdaptiveSteppingDiagnostics : public Event {
   /// \endcond
 
   using options = tmpl::list<SubfileName>;
-  static Options::String help =
+  Options::String help =
       "Observe diagnostics about adaptive time-stepping\n"
       "\n"
       "Writes reduction quantities:\n"

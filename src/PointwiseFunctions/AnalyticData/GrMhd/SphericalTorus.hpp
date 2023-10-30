@@ -58,14 +58,14 @@ class SphericalTorus {
 
   struct RadialRange {
     using type = std::array<double, 2>;
-    static Options::String help =
+    Options::String help =
         "Radial extent of the torus, "
         "[min_radius, max_radius] ";
   };
 
   struct MinPolarAngle {
     using type = double;
-    static Options::String help =
+    Options::String help =
         "Half of the apex angle of excised polar cones. "
         "Polar angle (measured from +z axis) of torus has range "
         "[MinPolarAngle, pi - MinPolarAngle]";
@@ -75,14 +75,14 @@ class SphericalTorus {
 
   struct FractionOfTorus {
     using type = double;
-    static Options::String help =
+    Options::String help =
         "Fraction of (azimuthal) orbit covered. Azimuthal angle has range "
         "[- pi * FractionOfTorus, pi * FractionOfTorus].";
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 1.0; }
   };
 
-  static Options::String help =
+  Options::String help =
       "Torus made by removing polar cones from a spherical shell";
 
   using options = tmpl::list<RadialRange, MinPolarAngle, FractionOfTorus>;

@@ -103,22 +103,21 @@ class ObserveNorms<tmpl::list<ObservableTensorTags...>,
     : public Event {
  private:
   struct ObserveTensor {
-    static Options::String help = {
-        "The tensor to reduce, and how to reduce it."};
+    Options::String help = {"The tensor to reduce, and how to reduce it."};
 
     struct Name {
       using type = std::string;
-      static Options::String help = {"The name of the tensor to observe."};
+      Options::String help = {"The name of the tensor to observe."};
     };
     struct NormType {
       using type = std::string;
-      static Options::String help = {
+      Options::String help = {
           "The type of norm to use. Must be one of Max, Min, L2Norm, "
           "L2IntegralNorm, or VolumeIntegral."};
     };
     struct Components {
       using type = std::string;
-      static Options::String help = {
+      Options::String help = {
           "How to handle tensor components. Must be Individual or Sum."};
     };
 
@@ -166,14 +165,14 @@ class ObserveNorms<tmpl::list<ObservableTensorTags...>,
   /// The name of the subfile inside the HDF5 file
   struct SubfileName {
     using type = std::string;
-    static Options::String help = {
+    Options::String help = {
         "The name of the subfile inside the HDF5 file without an extension and "
         "without a preceding '/'."};
   };
   /// The tensor to observe and how to do the reduction
   struct TensorsToObserve {
     using type = std::vector<ObserveTensor>;
-    static Options::String help = {
+    Options::String help = {
         "List specifying each tensor to observe and how it is reduced."};
   };
 
@@ -183,7 +182,7 @@ class ObserveNorms<tmpl::list<ObservableTensorTags...>,
 
   using options = tmpl::list<SubfileName, TensorsToObserve>;
 
-  static Options::String help =
+  Options::String help =
       "Observe norms of tensors in the DataBox.\n"
       "\n"
       "You can choose the norm type for each observation. Note that the\n"

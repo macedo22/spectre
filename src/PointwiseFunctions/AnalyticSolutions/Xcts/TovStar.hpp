@@ -176,7 +176,7 @@ class TovStar : public elliptic::analytic_data::AnalyticSolution {
 
  public:
   using options = RelEulerTovStar::options;
-  static Options::String help = RelEulerTovStar::help;
+  Options::String help = RelEulerTovStar::help;
 
   TovStar() = default;
   TovStar(const TovStar&) = default;

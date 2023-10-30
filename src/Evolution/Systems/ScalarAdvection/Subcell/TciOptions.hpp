@@ -26,13 +26,13 @@ struct TciOptions {
   struct UCutoff {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static Options::String help = {
+    Options::String help = {
         "The cutoff of the absolute value of the scalar field U in an "
         "element to use Persson TCI."};
   };
 
   using options = tmpl::list<UCutoff>;
-  static Options::String help = {"Options for the troubled-cell indicator"};
+  Options::String help = {"Options for the troubled-cell indicator"};
 
   // NOLINTNEXTLINE(google-runtime-references)
   void pup(PUP::er& /*p*/);
@@ -43,7 +43,7 @@ struct TciOptions {
 namespace OptionTags {
 struct TciOptions {
   using type = subcell::TciOptions;
-  static Options::String help = "ScalarAdvection-specific options for the TCI";
+  Options::String help = "ScalarAdvection-specific options for the TCI";
   using group = ::dg::OptionTags::DiscontinuousGalerkinGroup;
 };
 }  // namespace OptionTags

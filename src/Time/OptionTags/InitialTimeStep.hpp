@@ -13,7 +13,7 @@ namespace OptionTags {
 /// overridden by an adaptive stepper
 struct InitialTimeStep {
   using type = double;
-  static Options::String help =
+  Options::String help =
       "The initial time step, before local stepping adjustment";
   using group = evolution::OptionTags::Group;
 };

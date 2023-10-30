@@ -69,57 +69,55 @@ namespace OptionHolders {
 struct WedgeSectionTorus {
   struct MinRadius {
     using type = double;
-    static Options::String help = {"Inner radius of torus"};
+    Options::String help = {"Inner radius of torus"};
     static type lower_bound() { return 0.0; }
   };
   struct MaxRadius {
     using type = double;
-    static Options::String help = {"Outer radius of torus"};
+    Options::String help = {"Outer radius of torus"};
     static type lower_bound() { return 0.0; }
   };
   struct MinTheta {
     using type = double;
-    static Options::String help = {"Angle of top of wedge (radians)"};
+    Options::String help = {"Angle of top of wedge (radians)"};
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return M_PI; }
   };
   struct MaxTheta {
     using type = double;
-    static Options::String help = {"Angle of bottom of wedge (radians)"};
+    Options::String help = {"Angle of bottom of wedge (radians)"};
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return M_PI; }
   };
   struct NumberRadialPoints {
     using type = size_t;
-    static Options::String help = {
-        "Number of radial points, including endpoints"};
+    Options::String help = {"Number of radial points, including endpoints"};
     static type lower_bound() { return 2; }
   };
   struct NumberThetaPoints {
     using type = size_t;
-    static Options::String help = {
-        "Number of theta points, including endpoints"};
+    Options::String help = {"Number of theta points, including endpoints"};
     static type lower_bound() { return 2; }
   };
   struct NumberPhiPoints {
     using type = size_t;
-    static Options::String help = {"Number of phi points"};
+    Options::String help = {"Number of phi points"};
     static type lower_bound() { return 1; }
   };
   struct UniformRadialGrid {
     using type = bool;
-    static Options::String help = {"Use uniform radial grid"};
+    Options::String help = {"Use uniform radial grid"};
   };
   struct UniformThetaGrid {
     using type = bool;
-    static Options::String help = {"Use uniform theta grid"};
+    Options::String help = {"Use uniform theta grid"};
   };
 
   using options =
       tmpl::list<MinRadius, MaxRadius, MinTheta, MaxTheta, NumberRadialPoints,
                  NumberThetaPoints, NumberPhiPoints, UniformRadialGrid,
                  UniformThetaGrid>;
-  static Options::String help = {
+  Options::String help = {
       "A torus extending from MinRadius to MaxRadius in r, MinTheta to MaxTheta"
       " in theta, and 2pi in phi."};
 
@@ -162,7 +160,7 @@ namespace OptionTags {
 template <typename InterpolationTargetTag>
 struct WedgeSectionTorus {
   using type = OptionHolders::WedgeSectionTorus;
-  static Options::String help{"Options for interpolation onto Kerr horizon."};
+  Options::String help{"Options for interpolation onto Kerr horizon."};
   static std::string name() {
     return pretty_type::name<InterpolationTargetTag>();
   }

@@ -44,20 +44,20 @@ class Step : public evolution::initial_data::InitialData,
   struct LeftValue {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static Options::String help{"The value of U, left of the shock"};
+    Options::String help{"The value of U, left of the shock"};
   };
   struct RightValue {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static Options::String help{"The value of U, right of the shock"};
+    Options::String help{"The value of U, right of the shock"};
   };
   struct InitialPosition {
     using type = double;
-    static Options::String help{"The shock's position at t==0"};
+    Options::String help{"The shock's position at t==0"};
   };
 
   using options = tmpl::list<LeftValue, RightValue, InitialPosition>;
-  static Options::String help{"A propagating shock solution"};
+  Options::String help{"A propagating shock solution"};
 
   Step(double left_value, double right_value, double initial_shock_position,
        const Options::Context& context = {});

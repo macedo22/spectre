@@ -46,13 +46,13 @@ class DirichletAnalytic final : public BoundaryCondition<Dim> {
  public:
   /// \brief What analytic solution/data to prescribe.
   struct AnalyticPrescription {
-    static Options::String help = "What analytic solution/data to prescribe.";
+    Options::String help = "What analytic solution/data to prescribe.";
     using type = std::unique_ptr<evolution::initial_data::InitialData>;
   };
 
   using options = tmpl::list<AnalyticPrescription>;
 
-  static Options::String help{
+  Options::String help{
       "DirichletAnalytic boundary conditions setting the value of the "
       "spacetime metric and its derivatives Phi and Pi to the analytic "
       "solution or analytic data."};

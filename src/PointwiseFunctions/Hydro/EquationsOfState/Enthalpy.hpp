@@ -139,31 +139,31 @@ class Enthalpy : public EquationOfState<true, 1> {
 
   struct ReferenceDensity {
     using type = double;
-    static Options::String help = {"Reference density rho_0"};
+    Options::String help = {"Reference density rho_0"};
     static double lower_bound() { return 0.0; }
   };
 
   struct MinimumDensity {
     using type = double;
-    static Options::String help = {
+    Options::String help = {
         "Minimum valid density rho_min,"
         " for this parametrization"};
     static double lower_bound() { return 0.0; }
   };
   struct MaximumDensity {
     using type = double;
-    static Options::String help = {"Maximum density for this EoS"};
+    Options::String help = {"Maximum density for this EoS"};
     static double lower_bound() { return 0.0; }
   };
 
   struct PolynomialCoefficients {
     using type = std::vector<double>;
-    static Options::String help = {"Polynomial coefficients a_i"};
+    Options::String help = {"Polynomial coefficients a_i"};
   };
 
   struct TrigScaling {
     using type = double;
-    static Options::String help = {
+    Options::String help = {
         "Fundamental wavenumber of trig "
         "functions, k"};
     static double lower_bound() { return 0.0; }
@@ -171,30 +171,29 @@ class Enthalpy : public EquationOfState<true, 1> {
 
   struct SinCoefficients {
     using type = std::vector<double>;
-    static Options::String help = {"Sine coefficients b_j"};
+    Options::String help = {"Sine coefficients b_j"};
   };
   struct CosCoefficients {
     using type = std::vector<double>;
-    static Options::String help = {"Cosine coefficients c_j"};
+    Options::String help = {"Cosine coefficients c_j"};
   };
   struct StitchedLowDensityEoS {
     using type = LowDensityEoS;
     static std::string name() {
       return pretty_type::short_name<LowDensityEoS>();
     }
-    static Options::String help = {
-        "Low density EoS stitched at the MinimumDensity"};
+    Options::String help = {"Low density EoS stitched at the MinimumDensity"};
   };
 
   struct TransitionDeltaEpsilon {
     using type = double;
-    static Options::String help = {
+    Options::String help = {
         "the change in internal energy across the low-"
         "to-high-density transition, generically 0.0"};
     static double lower_bound() { return 0.0; }
   };
 
-  static Options::String help = {
+  Options::String help = {
       "An EoS with a parametrized value h(log(rho/rho_0)) with h the specific "
       "enthalpy and rho the baryon rest mass density.  The enthalpy is "
       "expanded as a sum of polynomial terms and trigonometric corrections. "

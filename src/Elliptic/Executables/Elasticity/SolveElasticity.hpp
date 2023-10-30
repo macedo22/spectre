@@ -70,21 +70,21 @@ class er;
 namespace SolveElasticity::OptionTags {
 struct LinearSolverGroup {
   static std::string name() { return "LinearSolver"; }
-  static Options::String help = "The iterative Krylov-subspace linear solver";
+  Options::String help = "The iterative Krylov-subspace linear solver";
 };
 struct GmresGroup {
   static std::string name() { return "GMRES"; }
-  static Options::String help = "Options for the GMRES linear solver";
+  Options::String help = "Options for the GMRES linear solver";
   using group = LinearSolverGroup;
 };
 struct SchwarzSmootherGroup {
   static std::string name() { return "SchwarzSmoother"; }
-  static Options::String help = "Options for the Schwarz smoother";
+  Options::String help = "Options for the Schwarz smoother";
   using group = LinearSolverGroup;
 };
 struct MultigridGroup {
   static std::string name() { return "Multigrid"; }
-  static Options::String help = "Options for the multigrid";
+  Options::String help = "Options for the multigrid";
   using group = LinearSolverGroup;
 };
 }  // namespace SolveElasticity::OptionTags
@@ -100,8 +100,7 @@ struct Metavariables {
   using initial_guess_tag =
       elliptic::Tags::InitialGuess<elliptic::analytic_data::InitialGuess>;
 
-  static Options::String help{
-      "Find the solution to a linear elasticity problem."};
+  Options::String help{"Find the solution to a linear elasticity problem."};
 
   // These are the fields we solve for
   using fields_tag = ::Tags::Variables<typename system::primal_fields>;

@@ -52,10 +52,10 @@ class IdealFluid : public EquationOfState<IsRelativistic, 2> {
 
   struct AdiabaticIndex {
     using type = double;
-    static Options::String help = {"Adiabatic index gamma"};
+    Options::String help = {"Adiabatic index gamma"};
   };
 
-  static Options::String help = {
+  Options::String help = {
       "An ideal fluid equation of state.\n"
       "The pressure is related to the rest mass density by p = rho * epsilon * "
       "(gamma - 1), where p is the pressure, rho is the rest mass density, "

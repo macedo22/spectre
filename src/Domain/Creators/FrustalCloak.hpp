@@ -47,49 +47,46 @@ class FrustalCloak : public DomainCreator<3> {
 
   struct InitialRefinement {
     using type = size_t;
-    static Options::String help = {
-        "Initial refinement level in each dimension."};
+    Options::String help = {"Initial refinement level in each dimension."};
   };
 
   struct InitialGridPoints {
     using type = std::array<size_t, 2>;
-    static Options::String help = {
-        "Initial number of grid points in [r,angular]."};
+    Options::String help = {"Initial number of grid points in [r,angular]."};
   };
 
   struct UseEquiangularMap {
     using type = bool;
-    static Options::String help = {
+    Options::String help = {
         "Use equiangular instead of equidistant coordinates."};
   };
 
   struct ProjectionFactor {
     using type = double;
-    static Options::String help = {"Grid compression factor."};
+    Options::String help = {"Grid compression factor."};
   };
 
   struct LengthInnerCube {
     using type = double;
-    static Options::String help = {"Side length of each inner cube."};
+    Options::String help = {"Side length of each inner cube."};
     static constexpr type lower_bound() { return 0.0; }
   };
 
   struct LengthOuterCube {
     using type = double;
-    static Options::String help = {"Side length of the outer cube."};
+    Options::String help = {"Side length of the outer cube."};
     static constexpr type lower_bound() { return 0.0; }
   };
 
   struct OriginPreimage {
     using type = std::array<double, 3>;
-    static Options::String help = {"The origin preimage in [x,y,z]."};
+    Options::String help = {"The origin preimage in [x,y,z]."};
   };
 
   template <typename BoundaryConditionsBase>
   struct BoundaryCondition {
     static std::string name() { return "BoundaryCondition"; }
-    static Options::String help =
-        "The boundary condition to impose on all sides.";
+    Options::String help = "The boundary condition to impose on all sides.";
     using type = std::unique_ptr<BoundaryConditionsBase>;
   };
 
@@ -109,7 +106,7 @@ class FrustalCloak : public DomainCreator<3> {
                   typename Metavariables::system>>>,
       basic_options>;
 
-  static Options::String help{
+  Options::String help{
       "Creates a cubical domain with two equal-sized abutting excised cubes\n"
       "in the center. This is done by combining ten frusta. The parameter\n"
       "`UseEquiangularMap` can be used to apply a tangent mapping to the xi\n"

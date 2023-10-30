@@ -62,17 +62,17 @@ class EvenlySpaced : public TimeSequence<T> {
   /// \endcond
 
   struct Interval {
-    static Options::String help = "Spacing between times";
+    Options::String help = "Spacing between times";
     using type = T;
     static constexpr T lower_bound() { return 0; }
   };
 
   struct Offset {
-    static Options::String help = "Offset of sequence";
+    Options::String help = "Offset of sequence";
     using type = T;
   };
 
-  static Options::String help = "A sequence of evenly spaced times.";
+  Options::String help = "A sequence of evenly spaced times.";
   using options = tmpl::list<Interval, Offset>;
 
   explicit EvenlySpaced(T interval, T offset = 0,
@@ -111,11 +111,11 @@ class Specified : public TimeSequence<T> {
   /// \endcond
 
   struct Values {
-    static Options::String help = "The times in the sequence";
+    Options::String help = "The times in the sequence";
     using type = std::vector<T>;
   };
 
-  static Options::String help = "An explicitly specified sequence of times.";
+  Options::String help = "An explicitly specified sequence of times.";
   using options = tmpl::list<Values>;
 
   explicit Specified(std::vector<T> values);

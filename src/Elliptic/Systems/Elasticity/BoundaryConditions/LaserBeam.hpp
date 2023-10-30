@@ -57,13 +57,13 @@ class LaserBeam : public elliptic::BoundaryConditions::BoundaryCondition<3> {
  public:
   struct BeamWidth {
     using type = double;
-    static Options::String help =
+    Options::String help =
         "The width r_0 of the Gaussian beam profile, such that FWHM = 2 * "
         "sqrt(ln 2) * r_0";
     static type lower_bound() { return 0.0; }
   };
 
-  static Options::String help =
+  Options::String help =
       "A laser beam with Gaussian profile normally incident to the surface.";
   using options = tmpl::list<BeamWidth>;
 

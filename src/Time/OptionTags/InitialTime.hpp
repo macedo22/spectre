@@ -12,7 +12,7 @@ namespace OptionTags {
 /// \brief The time at which to start the simulation
 struct InitialTime {
   using type = double;
-  static Options::String help = {"The time at which the evolution is started."};
+  Options::String help = {"The time at which the evolution is started."};
   static type suggested_value() { return 0.0; }
   using group = evolution::OptionTags::Group;
 };

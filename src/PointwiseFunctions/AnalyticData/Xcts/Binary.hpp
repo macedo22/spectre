@@ -315,45 +315,45 @@ class Binary : public elliptic::analytic_data::Background,
                public elliptic::analytic_data::InitialGuess {
  public:
   struct XCoords {
-    static Options::String help =
+    Options::String help =
         "The coordinates on the x-axis where the two objects are placed";
     using type = std::array<double, 2>;
   };
   struct ObjectLeft {
-    static Options::String help = "The object placed on the negative x-axis";
+    Options::String help = "The object placed on the negative x-axis";
     using type = std::unique_ptr<IsolatedObjectBase>;
   };
   struct ObjectRight {
-    static Options::String help = "The object placed on the positive x-axis";
+    Options::String help = "The object placed on the positive x-axis";
     using type = std::unique_ptr<IsolatedObjectBase>;
   };
   struct AngularVelocity {
-    static Options::String help =
+    Options::String help =
         "Orbital angular velocity 'Omega0' about the z-axis. Added to the "
         "background shift as a term 'Omega0 x r'.";
     using type = double;
   };
   struct Expansion {
-    static Options::String help =
+    Options::String help =
         "The expansion parameter 'adot0', which is a radial velocity over "
         "radius. Added to the background shift as a term 'adot0 r^i'";
     using type = double;
   };
   struct LinearVelocity {
-    static Options::String help =
+    Options::String help =
         "Constant velocity 'v0' added to the background shift to control the "
         "linear momentum of the system.";
     using type = std::array<double, 3>;
   };
   struct FalloffWidths {
-    static Options::String help =
+    Options::String help =
         "The widths for the window functions around the two objects, or 'None' "
         "to disable the Gaussian falloff.";
     using type = Options::Auto<std::array<double, 2>, Options::AutoLabel::None>;
   };
   using options = tmpl::list<XCoords, ObjectLeft, ObjectRight, AngularVelocity,
                              Expansion, LinearVelocity, FalloffWidths>;
-  static Options::String help =
+  Options::String help =
       "Binary compact-object data in general relativity, constructed from "
       "superpositions of two isolated objects.";
 

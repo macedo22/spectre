@@ -52,20 +52,20 @@ class LaneEmdenStar : public MarkAsAnalyticSolution {
   /// The central mass density of the star.
   struct CentralMassDensity {
     using type = double;
-    static Options::String help = {"The central mass density of the star."};
+    Options::String help = {"The central mass density of the star."};
     static type lower_bound() { return 0.; }
   };
 
   /// The polytropic constant of the polytropic fluid.
   struct PolytropicConstant {
     using type = double;
-    static Options::String help = {"The polytropic constant of the fluid."};
+    Options::String help = {"The polytropic constant of the fluid."};
     static type lower_bound() { return 0.; }
   };
 
   using options = tmpl::list<CentralMassDensity, PolytropicConstant>;
 
-  static Options::String help = {
+  Options::String help = {
       "A static, spherically-symmetric star in Newtonian gravity, found by\n"
       "solving the Lane-Emden equations, with a given central density and\n"
       "polytropic fluid. The fluid has polytropic index 1, but the polytropic\n"

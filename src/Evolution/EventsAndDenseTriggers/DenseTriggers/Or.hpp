@@ -46,7 +46,7 @@ class Or : public DenseTrigger {
   WRAPPED_PUPable_decl_template(Or);  // NOLINT
   /// \endcond
 
-  static Options::String help =
+  Options::String help =
       "Trigger when any of a collection of triggers triggers.";
 
   explicit Or(std::vector<std::unique_ptr<DenseTrigger>> triggers);

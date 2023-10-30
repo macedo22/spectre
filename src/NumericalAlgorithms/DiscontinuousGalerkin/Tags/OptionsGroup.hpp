@@ -18,7 +18,7 @@ namespace dg::OptionTags {
  */
 struct DiscontinuousGalerkinGroup {
   static std::string name() { return "DiscontinuousGalerkin"; }
-  static Options::String help{
+  Options::String help{
       "Options controlling the discontinuous Galerkin spatial discretization "
       "of the PDE system.\n\n"
       "Contains options such as whether to use the strong or weak form, what "

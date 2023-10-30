@@ -17,7 +17,7 @@ namespace OptionTags {
  */
 struct Group {
   static std::string name() { return "Evolution"; }
-  static Options::String help{"Options for the time evolution"};
+  Options::String help{"Options for the time evolution"};
 };
 
 /*!
@@ -29,7 +29,7 @@ struct Group {
  */
 struct SystemGroup {
   static std::string name() { return "EvolutionSystem"; }
-  static Options::String help{"The system of hyperbolic PDEs"};
+  Options::String help{"The system of hyperbolic PDEs"};
 };
 
 }  // namespace OptionTags

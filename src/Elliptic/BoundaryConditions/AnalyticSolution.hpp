@@ -63,8 +63,7 @@ class AnalyticSolution<System, Dim, tmpl::list<FieldTags...>,
  public:
   using options =
       tmpl::list<elliptic::OptionTags::BoundaryConditionType<FieldTags>...>;
-  static Options::String help =
-      "Boundary conditions from the analytic solution";
+  Options::String help = "Boundary conditions from the analytic solution";
 
   AnalyticSolution() = default;
   AnalyticSolution(const AnalyticSolution&) = default;

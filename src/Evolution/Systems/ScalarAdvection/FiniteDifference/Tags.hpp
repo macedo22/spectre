@@ -22,7 +22,7 @@ template <size_t Dim>
 struct Reconstructor {
   using type = std::unique_ptr<fd::Reconstructor<Dim>>;
 
-  static Options::String help = {"The reconstruction scheme to use."};
+  Options::String help = {"The reconstruction scheme to use."};
   using group = evolution::dg::subcell::OptionTags::SubcellSolverGroup;
 };
 }  // namespace OptionTags
