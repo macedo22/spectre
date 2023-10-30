@@ -57,7 +57,7 @@ class NumericInitialData : public evolution::initial_data::InitialData {
     static std::string name() { return db::tag_name<Tag>(); }
     using type = std::conditional_t<is_required, std::string,
                                     std::variant<double, std::string>>;
-    static constexpr Options::String help =
+    static Options::String help =
         "Name of the variable in the volume data file. For optional variables "
         "you may instead specify a double that is used as a constant value "
         "on the entire grid.";
@@ -78,7 +78,7 @@ class NumericInitialData : public evolution::initial_data::InitialData {
                                     std::bool_constant<false>>>;
   struct PrimitiveVars
       : tuples::tagged_tuple_from_typelist<primitive_vars_option_tags> {
-    static constexpr Options::String help =
+    static Options::String help =
         "Primitive hydro variables: 'RestMassDensity' and "
         "'LowerSpatialFourVelocity' (which is u_i = W * gamma_ij v^j). ";
     using options = tags_list;
@@ -91,14 +91,14 @@ class NumericInitialData : public evolution::initial_data::InitialData {
   // Input-file options
   struct Variables {
     using type = PrimitiveVars;
-    static constexpr Options::String help =
+    static Options::String help =
         "Set of initial data variables from which the Valencia evolution "
         "variables are computed.";
   };
 
   struct DensityCutoff {
     using type = double;
-    static constexpr Options::String help =
+    static Options::String help =
         "Where the density is below this cutoff the fluid variables are set to "
         "vacuum (zero density, pressure, energy and velocity, unit Lorentz "
         "factor and enthalpy). "
@@ -114,7 +114,7 @@ class NumericInitialData : public evolution::initial_data::InitialData {
       importers::OptionTags::ObservationValue,
       importers::OptionTags::EnableInterpolation, Variables, DensityCutoff>;
 
-  static constexpr Options::String help =
+  static Options::String help =
       "Numeric initial data loaded from volume data files";
 
   NumericInitialData() = default;

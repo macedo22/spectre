@@ -47,20 +47,20 @@ struct RefinementRegion {
 
   struct LowerCornerIndex {
     using type = std::array<size_t, VolumeDim>;
-    static constexpr Options::String help = {"Lower bound of refined region."};
+    static Options::String help = {"Lower bound of refined region."};
   };
 
   struct UpperCornerIndex {
     using type = std::array<size_t, VolumeDim>;
-    static constexpr Options::String help = {"Upper bound of refined region."};
+    static Options::String help = {"Upper bound of refined region."};
   };
 
   struct Refinement {
     using type = std::array<size_t, VolumeDim>;
-    static constexpr Options::String help = {"Refinement inside region."};
+    static Options::String help = {"Refinement inside region."};
   };
 
-  static constexpr Options::String help = {
+  static Options::String help = {
       "A region to be refined differently from the default for the lattice.\n"
       "The region is a box between the block boundaries indexed by the\n"
       "Lower- and UpperCornerIndex options."};
@@ -110,50 +110,49 @@ class AlignedLattice : public DomainCreator<VolumeDim> {
 
   struct BlockBounds {
     using type = std::array<std::vector<double>, VolumeDim>;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Coordinates of block boundaries in each dimension."};
   };
 
   struct IsPeriodicIn {
     using type = std::array<bool, VolumeDim>;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Whether the domain is periodic in each dimension."};
   };
 
   struct InitialLevels {
     using type = std::array<size_t, VolumeDim>;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Initial refinement level in each dimension."};
   };
 
   struct InitialGridPoints {
     using type = std::array<size_t, VolumeDim>;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Initial number of grid points in each dimension."};
   };
 
   struct RefinedLevels {
     using type = std::vector<RefinementRegion<VolumeDim>>;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "h-refined regions.  Later entries take priority."};
   };
 
   struct RefinedGridPoints {
     using type = std::vector<RefinementRegion<VolumeDim>>;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "p-refined regions.  Later entries take priority."};
   };
 
   struct BlocksToExclude {
     using type = std::vector<std::array<size_t, VolumeDim>>;
-    static constexpr Options::String help = {
-        "List of Block indices to exclude, if any."};
+    static Options::String help = {"List of Block indices to exclude, if any."};
   };
 
   template <typename BoundaryConditionsBase>
   struct BoundaryCondition {
     static std::string name() { return "BoundaryCondition"; }
-    static constexpr Options::String help =
+    static Options::String help =
         "The boundary condition to impose on all sides.";
     using type = std::unique_ptr<BoundaryConditionsBase>;
   };
@@ -174,7 +173,7 @@ class AlignedLattice : public DomainCreator<VolumeDim> {
                   typename Metavariables::system>>>,
           options_periodic>>;
 
-  static constexpr Options::String help = {
+  static Options::String help = {
       "AlignedLattice creates a regular lattice of blocks whose corners are\n"
       "given by tensor products of the specified BlockBounds. Each Block in\n"
       "the lattice is identified by a VolumeDim-tuple of zero-based indices\n"

@@ -103,7 +103,7 @@ class ObserveFields<VolumeDim, tmpl::list<Tensors...>,
   /// The name of the subfile inside the HDF5 file
   struct SubfileName {
     using type = std::string;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "The name of the subfile inside the HDF5 file without an extension and "
         "without a preceding '/'."};
   };
@@ -115,14 +115,14 @@ class ObserveFields<VolumeDim, tmpl::list<Tensors...>,
   /// \endcond
 
   struct VariablesToObserve {
-    static constexpr Options::String help = "Subset of variables to observe";
+    static Options::String help = "Subset of variables to observe";
     using type = std::vector<std::string>;
     static size_t lower_bound_on_size() { return 1; }
   };
 
   struct InterpolateToMesh {
     using type = Options::Auto<Mesh<VolumeDim>, Options::AutoLabel::None>;
-    static constexpr Options::String help =
+    static Options::String help =
         "An optional mesh to which the variables are interpolated. This mesh "
         "specifies any number of collocation points, basis, and quadrature on "
         "which the observed quantities are evaluated. If no mesh is given, the "
@@ -137,7 +137,7 @@ class ObserveFields<VolumeDim, tmpl::list<Tensors...>,
   /// Must be specified once for all data or individually for each variable
   /// being observed.
   struct FloatingPointTypes {
-    static constexpr Options::String help =
+    static Options::String help =
         "The floating point type/precision with which to write the data to "
         "disk.\n\n"
         "Must be specified once for all data or individually  for each "
@@ -150,7 +150,7 @@ class ObserveFields<VolumeDim, tmpl::list<Tensors...>,
   /// The floating point type/precision with which to write the coordinates to
   /// disk.
   struct CoordinatesFloatingPointType {
-    static constexpr Options::String help =
+    static Options::String help =
         "The floating point type/precision with which to write the coordinates "
         "to disk.";
     using type = FloatingPointType;
@@ -160,7 +160,7 @@ class ObserveFields<VolumeDim, tmpl::list<Tensors...>,
       tmpl::list<SubfileName, CoordinatesFloatingPointType, FloatingPointTypes,
                  VariablesToObserve, InterpolateToMesh>;
 
-  static constexpr Options::String help =
+  static Options::String help =
       "Observe volume tensor fields.\n"
       "\n"
       "Writes volume quantities:\n"

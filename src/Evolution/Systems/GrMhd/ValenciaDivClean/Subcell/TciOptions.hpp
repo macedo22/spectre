@@ -35,7 +35,7 @@ struct TciOptions {
   struct MinimumValueOfD {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Minimum value of rest-mass density times Lorentz factor before we "
         "switch to subcell."};
   };
@@ -45,7 +45,7 @@ struct TciOptions {
   struct MinimumValueOfYe {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Minimum value of Y_e before we switch to subcell."};
   };
   /// \brief Minimum value of \f$\tilde{\tau}\f$ before we switch to subcell.
@@ -53,7 +53,7 @@ struct TciOptions {
   struct MinimumValueOfTildeTau {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Minimum value of tilde tau before we switch to subcell."};
   };
   /// \brief The density cutoff where if the maximum value of the density in the
@@ -62,7 +62,7 @@ struct TciOptions {
   struct AtmosphereDensity {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static constexpr Options::String help = {
+    static Options::String help = {
         "The density cutoff where if the maximum value of the density in the "
         "DG element is below this value we skip primitive recovery and treat "
         "the cell as atmosphere."};
@@ -74,14 +74,13 @@ struct TciOptions {
   struct SafetyFactorForB {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static constexpr Options::String help = {
-        "Safety factor for magnetic field bound."};
+    static Options::String help = {"Safety factor for magnetic field bound."};
   };
   /// \brief The cutoff where if the maximum of the magnetic field in an element
   /// is below this value we do not apply the Persson TCI to the magnetic field.
   struct MagneticFieldCutoff {
     using type = Options::Auto<double, DoNotCheckMagneticField>;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "The cutoff where if the maximum of the magnetic field in an element "
         "is below this value we do not apply the Persson TCI to the magnetic "
         "field. This is to avoid switching to subcell in regions where there's "
@@ -93,8 +92,7 @@ struct TciOptions {
   using options =
       tmpl::list<MinimumValueOfD, MinimumValueOfYe, MinimumValueOfTildeTau,
                  AtmosphereDensity, SafetyFactorForB, MagneticFieldCutoff>;
-  static constexpr Options::String help = {
-      "Options for the troubled-cell indicator."};
+  static Options::String help = {"Options for the troubled-cell indicator."};
 
   // NOLINTNEXTLINE(google-runtime-references)
   void pup(PUP::er& p);
@@ -116,7 +114,7 @@ struct TciOptions {
 namespace OptionTags {
 struct TciOptions {
   using type = subcell::TciOptions;
-  static constexpr Options::String help = "GRMHD-specific options for the TCI.";
+  static Options::String help = "GRMHD-specific options for the TCI.";
   using group = ::dg::OptionTags::DiscontinuousGalerkinGroup;
 };
 }  // namespace OptionTags

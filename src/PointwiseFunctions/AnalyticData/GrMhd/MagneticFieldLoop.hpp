@@ -69,7 +69,7 @@ class MagneticFieldLoop
   /// The pressure throughout the fluid.
   struct Pressure {
     using type = double;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "The constant pressure throughout the fluid."};
     static type lower_bound() { return 0.0; }
   };
@@ -77,7 +77,7 @@ class MagneticFieldLoop
   /// The rest mass density throughout the fluid.
   struct RestMassDensity {
     using type = double;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "The constant density throughout the fluid."};
     static type lower_bound() { return 0.0; }
   };
@@ -85,15 +85,14 @@ class MagneticFieldLoop
   /// The adiabatic index for the ideal fluid.
   struct AdiabaticIndex {
     using type = double;
-    static constexpr Options::String help = {
-        "The adiabatic index for the ideal fluid."};
+    static Options::String help = {"The adiabatic index for the ideal fluid."};
     static type lower_bound() { return 1.0; }
   };
 
   /// The fluid velocity.
   struct AdvectionVelocity {
     using type = std::array<double, 3>;
-    static constexpr Options::String help = {"The advection velocity."};
+    static Options::String help = {"The advection velocity."};
     static type lower_bound() { return {{-1.0, -1.0, -1.0}}; }
     static type upper_bound() { return {{1.0, 1.0, 1.0}}; }
   };
@@ -101,31 +100,28 @@ class MagneticFieldLoop
   /// The strength of the magnetic field.
   struct MagFieldStrength {
     using type = double;
-    static constexpr Options::String help = {
-        "The magnitude of the magnetic field."};
+    static Options::String help = {"The magnitude of the magnetic field."};
     static type lower_bound() { return 0.0; }
   };
 
   /// The inner radius of the magnetic loop.
   struct InnerRadius {
     using type = double;
-    static constexpr Options::String help = {
-        "The inner radius of the magnetic loop."};
+    static Options::String help = {"The inner radius of the magnetic loop."};
     static type lower_bound() { return 0.0; }
   };
 
   /// The outer radius of the magnetic loop.
   struct OuterRadius {
     using type = double;
-    static constexpr Options::String help = {
-        "The outer radius of the magnetic loop."};
+    static Options::String help = {"The outer radius of the magnetic loop."};
     static type lower_bound() { return 0.0; }
   };
 
   using options =
       tmpl::list<Pressure, RestMassDensity, AdiabaticIndex, AdvectionVelocity,
                  MagFieldStrength, InnerRadius, OuterRadius>;
-  static constexpr Options::String help = {
+  static Options::String help = {
       "Periodic advection of a magnetic field loop in Minkowski."};
 
   MagneticFieldLoop() = default;

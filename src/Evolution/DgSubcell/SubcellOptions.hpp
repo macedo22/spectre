@@ -32,7 +32,7 @@ namespace evolution::dg::subcell {
 class SubcellOptions {
  public:
   struct InitialData {
-    static constexpr Options::String help =
+    static Options::String help =
         "Parameters only used when setting up initial data.";
   };
 
@@ -40,7 +40,7 @@ class SubcellOptions {
   /// troubled-cell indicator when applied to the initial data
   struct InitialDataRdmpDelta0 {
     static std::string name() { return "RdmpDelta0"; }
-    static constexpr Options::String help{"Absolute jump tolerance parameter."};
+    static Options::String help{"Absolute jump tolerance parameter."};
     using type = double;
     static type lower_bound() { return 0.0; }
     using group = InitialData;
@@ -49,8 +49,7 @@ class SubcellOptions {
   /// troubled-cell indicator when applied to the initial data
   struct InitialDataRdmpEpsilon {
     static std::string name() { return "RdmpEpsilon"; }
-    static constexpr Options::String help{
-        "The jump-dependent relaxation constant."};
+    static Options::String help{"The jump-dependent relaxation constant."};
     using type = double;
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 1.0; }
@@ -60,7 +59,7 @@ class SubcellOptions {
   /// when applied to the initial data.
   struct InitialDataPerssonExponent {
     static std::string name() { return "PerssonExponent"; }
-    static constexpr Options::String help{
+    static Options::String help{
         "The exponent at which the error should decrease with N."};
     using type = double;
     static constexpr type lower_bound() { return 1.0; }
@@ -72,7 +71,7 @@ class SubcellOptions {
   /// troubled-cell indicator
   struct RdmpDelta0 {
     static std::string name() { return "RdmpDelta0"; }
-    static constexpr Options::String help{"Absolute jump tolerance parameter."};
+    static Options::String help{"Absolute jump tolerance parameter."};
     using type = double;
     static type lower_bound() { return 0.0; }
   };
@@ -80,8 +79,7 @@ class SubcellOptions {
   /// troubled-cell indicator
   struct RdmpEpsilon {
     static std::string name() { return "RdmpEpsilon"; }
-    static constexpr Options::String help{
-        "The jump-dependent relaxation constant."};
+    static Options::String help{"The jump-dependent relaxation constant."};
     using type = double;
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 1.0; }
@@ -89,7 +87,7 @@ class SubcellOptions {
   /// The exponent \f$\alpha\f$ passed to the Persson troubled-cell indicator
   struct PerssonExponent {
     static std::string name() { return "PerssonExponent"; }
-    static constexpr Options::String help{
+    static Options::String help{
         "The exponent at which the error should decrease with N."};
     using type = double;
     static constexpr type lower_bound() { return 1.0; }
@@ -97,7 +95,7 @@ class SubcellOptions {
   };
   /// If true, then we always use the subcell method, not DG.
   struct AlwaysUseSubcells {
-    static constexpr Options::String help{
+    static Options::String help{
         "If true, then always use the subcell method (e.g. finite-difference) "
         "instead of DG."};
     using type = bool;
@@ -105,7 +103,7 @@ class SubcellOptions {
   /// Method to use for reconstructing the DG solution from the subcell
   /// solution.
   struct SubcellToDgReconstructionMethod {
-    static constexpr Options::String help{
+    static Options::String help{
         "Method to use for reconstructing the DG solution from the subcell "
         "solution."};
     using type = fd::ReconstructionMethod;
@@ -120,7 +118,7 @@ class SubcellOptions {
   /// unlimited reconstruction, they can run into issues with Gibbs phenomenon.
   struct UseHalo {
     using type = bool;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Use a width-one halo of FD elements around any troubled element."
         "\n"
         "This provides a buffer of FD subcells so that as a discontinuity "
@@ -134,7 +132,7 @@ class SubcellOptions {
   struct OnlyDgBlocksAndGroups {
     using type =
         Options::Auto<std::vector<std::string>, Options::AutoLabel::None>;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "A list of block and group names on which to never do subcell.\n"
         "Set to 'None' to not restrict where FD can be used."};
   };
@@ -147,7 +145,7 @@ class SubcellOptions {
   /// would use 4th order derivatives.
   struct FiniteDifferenceDerivativeOrder {
     using type = ::fd::DerivativeOrder;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "The finite difference derivative order to use. If computed from the "
         "reconstruction, then the reconstruction method must support returning "
         "its reconstruction order."};
@@ -159,7 +157,7 @@ class SubcellOptions {
                  AlwaysUseSubcells, SubcellToDgReconstructionMethod, UseHalo,
                  OnlyDgBlocksAndGroups, FiniteDifferenceDerivativeOrder>;
 
-  static constexpr Options::String help{
+  static Options::String help{
       "System-agnostic options for the DG-subcell method."};
 
   SubcellOptions() = default;

@@ -323,7 +323,7 @@ struct EvolutionMetavars {
                                      tmpl::list<>>,
                  dg_element_array>>;
 
-  static constexpr Options::String help{
+  static Options::String help{
       "Evolve a scalar wave in Dim spatial dimension on a curved background "
       "spacetime."};
 

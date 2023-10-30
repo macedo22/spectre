@@ -390,21 +390,20 @@ class SphericalKerrSchild : public AnalyticSolution<3_st>,
  public:
   struct Mass {
     using type = double;
-    static constexpr Options::String help = {"Mass of the black hole"};
+    static Options::String help = {"Mass of the black hole"};
     static type lower_bound() { return 0.; }
   };
   struct Spin {
     using type = std::array<double, volume_dim>;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "The [x,y,z] dimensionless spin of the black hole"};
   };
   struct Center {
     using type = std::array<double, volume_dim>;
-    static constexpr Options::String help = {
-        "The [x,y,z] center of the black hole"};
+    static Options::String help = {"The [x,y,z] center of the black hole"};
   };
   using options = tmpl::list<Mass, Spin, Center>;
-  static constexpr Options::String help{
+  static Options::String help{
       "Black hole in Spherical Kerr-Schild coordinates"};
 
   template <typename DataType, typename Frame = Frame::Inertial>

@@ -19,7 +19,7 @@ namespace OptionTags {
 template <bool UseRollon>
 struct DhGaugeParameters {
   using type = gh::gauges::DhGaugeParameters<UseRollon>;
-  static constexpr Options::String help{
+  static Options::String help{
       "Parameters for initializing damped harmonic gauge."};
   using group = gh::OptionTags::Group;
 };

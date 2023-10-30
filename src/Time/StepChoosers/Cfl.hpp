@@ -41,11 +41,11 @@ class Cfl : public StepChooser<StepChooserUse> {
 
   struct SafetyFactor {
     using type = double;
-    static constexpr Options::String help{"Multiplier for computed step"};
+    static Options::String help{"Multiplier for computed step"};
     static type lower_bound() { return 0.0; }
   };
 
-  static constexpr Options::String help{
+  static Options::String help{
       "Suggests a step size based on the CFL stability criterion."};
   using options = tmpl::list<SafetyFactor>;
 

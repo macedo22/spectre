@@ -33,21 +33,21 @@ class Sinusoid<1, Fr> : public MathFunction<1, Fr> {
  public:
   struct Amplitude {
     using type = double;
-    static constexpr Options::String help = {"The amplitude."};
+    static Options::String help = {"The amplitude."};
   };
 
   struct Wavenumber {
     using type = double;
-    static constexpr Options::String help = {"The wavenumber."};
+    static Options::String help = {"The wavenumber."};
   };
 
   struct Phase {
     using type = double;
-    static constexpr Options::String help = {"The phase shift."};
+    static Options::String help = {"The phase shift."};
   };
   using options = tmpl::list<Amplitude, Wavenumber, Phase>;
 
-  static constexpr Options::String help = {
+  static Options::String help = {
       "Applies a Sinusoid function to the input value"};
 
   Sinusoid(double amplitude, double wavenumber, double phase);

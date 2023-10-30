@@ -36,8 +36,8 @@ class Slabs : public Trigger {
   WRAPPED_PUPable_decl_template(Slabs);  // NOLINT
   /// \endcond
 
-  static constexpr Options::String help{
-    "Trigger at specified numbers of slabs after the simulation start."};
+  static Options::String help{
+      "Trigger at specified numbers of slabs after the simulation start."};
 
   explicit Slabs(std::unique_ptr<TimeSequence<uint64_t>> slabs)
       : slabs_(std::move(slabs)) {}

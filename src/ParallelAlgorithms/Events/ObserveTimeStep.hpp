@@ -111,20 +111,19 @@ class ObserveTimeStep : public Event {
   /// The name of the subfile inside the HDF5 file
   struct SubfileName {
     using type = std::string;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "The name of the subfile inside the HDF5 file without an extension and "
         "without a preceding '/'."};
   };
 
   struct PrintTimeToTerminal {
     using type = bool;
-    static constexpr Options::String help = {
-        "Whether to print the time to screen."};
+    static Options::String help = {"Whether to print the time to screen."};
   };
 
   struct ObservePerCore {
     using type = bool;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Also write the data per-core in a file per-node."};
   };
 
@@ -135,7 +134,7 @@ class ObserveTimeStep : public Event {
   /// \endcond
 
   using options = tmpl::list<SubfileName, PrintTimeToTerminal, ObservePerCore>;
-  static constexpr Options::String help =
+  static Options::String help =
       "Observe the size of the time steps.\n"
       "\n"
       "Writes reduction quantities:\n"

@@ -36,7 +36,7 @@ struct OptionHolder {
   static constexpr size_t deriv_order = control_system::deriv_order;
   struct IsActive {
     using type = bool;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Whether the control system is actually active. If it isn't active, no "
         "measurements (horizon finds) will be done and the functions of time "
         "will never expire."};
@@ -44,35 +44,35 @@ struct OptionHolder {
 
   struct Averager {
     using type = ::Averager<deriv_order - 1>;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Averages the derivatives of the control error and possibly the "
         "control error itself."};
   };
 
   struct Controller {
     using type = ::Controller<deriv_order>;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Computes the control signal which will be used to reset the functions "
         "of time."};
   };
 
   struct TimescaleTuner {
     using type = ::TimescaleTuner<not is_size>;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Keeps track of the damping timescales for the control system upon "
         "which other timescales are based of off."};
   };
 
   struct ControlError {
     using type = typename ControlSystem::control_error;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Computes the control error for the control system based on quantities "
         "in the simulation."};
   };
 
   using options =
       tmpl::list<IsActive, Averager, Controller, TimescaleTuner, ControlError>;
-  static constexpr Options::String help = {"Options for a control system."};
+  static Options::String help = {"Options for a control system."};
 
   OptionHolder(const bool input_is_active,
                ::Averager<deriv_order - 1> input_averager,
@@ -118,7 +118,7 @@ namespace OptionTags {
 /// Options group for all control system options
 struct ControlSystemGroup {
   static std::string name() { return "ControlSystems"; }
-  static constexpr Options::String help = {
+  static Options::String help = {
       "Options for all control systems used in a simulation."};
 };
 
@@ -130,7 +130,7 @@ struct ControlSystemGroup {
 template <typename ControlSystem>
 struct ControlSystemInputs {
   using type = control_system::OptionHolder<ControlSystem>;
-  static constexpr Options::String help{"Options for a control system."};
+  static Options::String help{"Options for a control system."};
   static std::string name() { return ControlSystem::name(); }
   using group = ControlSystemGroup;
 };
@@ -140,7 +140,7 @@ struct ControlSystemInputs {
 /// Option tag on whether to write data to disk.
 struct WriteDataToDisk {
   using type = bool;
-  static constexpr Options::String help = {
+  static Options::String help = {
       "Whether control system data should be saved during an evolution."};
   using group = ControlSystemGroup;
 };
@@ -151,7 +151,7 @@ struct WriteDataToDisk {
 /// system update.
 struct MeasurementsPerUpdate {
   using type = int;
-  static constexpr Options::String help = {
+  static Options::String help = {
       "How many AH measurements are to be done between control system "
       "updates."};
   static int lower_bound() { return 1; }
@@ -164,7 +164,7 @@ struct MeasurementsPerUpdate {
 /// This does not control when data is written to disk.
 struct Verbosity {
   using type = ::Verbosity;
-  static constexpr Options::String help = {
+  static Options::String help = {
       "Verbosity of control system algorithm. Determines verbosity for all "
       "control systems."};
   using group = ControlSystemGroup;

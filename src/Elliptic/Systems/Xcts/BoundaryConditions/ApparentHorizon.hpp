@@ -104,18 +104,18 @@ class ApparentHorizon
   using Base = elliptic::BoundaryConditions::BoundaryCondition<3>;
 
  public:
-  static constexpr Options::String help =
+  static Options::String help =
       "Impose the boundary is a quasi-equilibrium apparent horizon.";
 
   struct Center {
     using type = std::array<double, 3>;
-    static constexpr Options::String help =
+    static Options::String help =
         "The center of the excision surface representing the apparent-horizon "
         "surface";
   };
   struct Rotation {
     using type = std::array<double, 3>;
-    static constexpr Options::String help =
+    static Options::String help =
         "The rotational parameters 'Omega' on the surface, which parametrize "
         "the spin of the black hole. The rotational parameters enter the "
         "Dirichlet boundary conditions for the shift in a term "
@@ -124,7 +124,7 @@ class ApparentHorizon
   struct Lapse {
     using type = Options::Auto<
         std::unique_ptr<elliptic::analytic_data::AnalyticSolution>>;
-    static constexpr Options::String help =
+    static Options::String help =
         "Specify an analytic solution to impose a Dirichlet condition on the "
         "lapse. The analytic solution will be evaluated at coordinates "
         "centered at the apparent horizon. "
@@ -137,7 +137,7 @@ class ApparentHorizon
     using type = Options::Auto<
         std::unique_ptr<elliptic::analytic_data::AnalyticSolution>,
         Options::AutoLabel::None>;
-    static constexpr Options::String help =
+    static Options::String help =
         "Specify an analytic solution to impose its expansion at the excision "
         "surface. The analytic solution will be evaluated at coordinates "
         "centered at the apparent horizon. "

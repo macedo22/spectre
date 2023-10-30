@@ -110,50 +110,46 @@ class Shape final : public TimeDependence<3> {
   /// \brief The initial time of the function of time.
   struct InitialTime {
     using type = double;
-    static constexpr Options::String help = {
-        "The initial time of the function of time"};
+    static Options::String help = {"The initial time of the function of time"};
   };
   /// \brief The max angular resolution `l` of the Shape.
   struct LMax {
     using type = size_t;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "The max l value of the Ylms used by the Shape map."};
   };
   /// \brief The mass of the Kerr black hole.
   struct Mass {
     using type = double;
-    static constexpr Options::String help = {"The mass of the Kerr BH."};
+    static Options::String help = {"The mass of the Kerr BH."};
   };
   /// \brief The dimensionless spin of the Kerr black hole.
   struct Spin {
     using type = std::array<double, 3>;
-    static constexpr Options::String help = {
-        "The dim'less spin of the Kerr BH."};
+    static Options::String help = {"The dim'less spin of the Kerr BH."};
   };
   /// \brief Center for the Shape map
   struct Center {
     using type = std::array<double, 3>;
-    static constexpr Options::String help = {"Center for the Shape map."};
+    static Options::String help = {"Center for the Shape map."};
   };
   /// \brief The inner radius of the Shape map, the radius at which
   /// to begin applying the map.
   struct InnerRadius {
     using type = double;
-    static constexpr Options::String help = {
-        "The inner radius of the Shape map."};
+    static Options::String help = {"The inner radius of the Shape map."};
   };
   /// \brief The outer radius of the Shape map, beyond which
   /// it is no longer applied.
   struct OuterRadius {
     using type = double;
-    static constexpr Options::String help = {
-        "The outer radius of the Shape map."};
+    static Options::String help = {"The outer radius of the Shape map."};
   };
 
   using options = tmpl::list<InitialTime, LMax, Mass, Spin, Center, InnerRadius,
                              OuterRadius>;
 
-  static constexpr Options::String help = {
+  static Options::String help = {
       "Creates a Shape that conforms to a Kerr horizon of given mass and "
       "spin."};
 

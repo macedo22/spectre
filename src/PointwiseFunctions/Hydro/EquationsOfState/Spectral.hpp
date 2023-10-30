@@ -60,28 +60,28 @@ class Spectral : public EquationOfState<true, 1> {
 
   struct ReferenceDensity {
     using type = double;
-    static constexpr Options::String help = {"Reference density rho_0"};
+    static Options::String help = {"Reference density rho_0"};
     static double lower_bound() { return 0.0; }
   };
 
   struct ReferencePressure {
     using type = double;
-    static constexpr Options::String help = {"Reference pressure p_0"};
+    static Options::String help = {"Reference pressure p_0"};
     static double lower_bound() { return 0.0; }
   };
 
   struct Coefficients {
     using type = std::vector<double>;
-    static constexpr Options::String help = {"Spectral coefficients gamma_i"};
+    static Options::String help = {"Spectral coefficients gamma_i"};
   };
 
   struct UpperDensity {
     using type = double;
-    static constexpr Options::String help = {"Upper density rho_u"};
+    static Options::String help = {"Upper density rho_u"};
     static double lower_bound() { return 0.0; }
   };
 
-  static constexpr Options::String help = {
+  static Options::String help = {
       "A spectral equation of state.  Defining x = log(rho/rho_0), Gamma(x) = "
       "Sum_i gamma_i x^i, then the pressure is determined from d(log P)/dx = "
       "Gamma(x) for x > 0.  For x < 0 the EOS is a polytrope with "

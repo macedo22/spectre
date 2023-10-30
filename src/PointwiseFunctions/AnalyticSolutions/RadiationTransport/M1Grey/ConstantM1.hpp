@@ -41,18 +41,17 @@ class ConstantM1 : public MarkAsAnalyticSolution {
   /// The mean flow velocity.
   struct MeanVelocity {
     using type = std::array<double, 3>;
-    static constexpr Options::String help = {"The mean flow velocity."};
+    static Options::String help = {"The mean flow velocity."};
   };
 
   /// The radiation comoving energy density
   struct ComovingEnergyDensity {
     using type = double;
-    static constexpr Options::String help = {
-        "Comoving energy density of radiation."};
+    static Options::String help = {"Comoving energy density of radiation."};
   };
 
   using options = tmpl::list<MeanVelocity, ComovingEnergyDensity>;
-  static constexpr Options::String help = {
+  static Options::String help = {
       "Constant radiation field in equilibrium with fluid, in Minkowski "
       "spacetime."};
 

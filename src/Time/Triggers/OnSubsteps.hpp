@@ -43,7 +43,7 @@ class OnSubsteps : public Trigger {
   WRAPPED_PUPable_decl_template(OnSubsteps);  // NOLINT
   /// \endcond
 
-  static constexpr Options::String help =
+  static Options::String help =
       "Check a trigger on substeps in addition to steps.";
 
   explicit OnSubsteps(std::unique_ptr<Trigger> trigger)

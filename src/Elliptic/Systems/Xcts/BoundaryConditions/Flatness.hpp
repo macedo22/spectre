@@ -43,8 +43,7 @@ class Flatness : public elliptic::BoundaryConditions::BoundaryCondition<3> {
 
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help =
-      "Impose flat spacetime at this boundary.";
+  static Options::String help = "Impose flat spacetime at this boundary.";
 
   Flatness() = default;
   Flatness(const Flatness&) = default;

@@ -196,13 +196,12 @@ class AdamsBashforth : public LtsTimeStepper {
 
   struct Order {
     using type = size_t;
-    static constexpr Options::String help = {"Convergence order"};
+    static Options::String help = {"Convergence order"};
     static type lower_bound() { return 1; }
     static type upper_bound() { return maximum_order; }
   };
   using options = tmpl::list<Order>;
-  static constexpr Options::String help = {
-      "An Adams-Bashforth Nth order time-stepper."};
+  static Options::String help = {"An Adams-Bashforth Nth order time-stepper."};
 
   AdamsBashforth() = default;
   explicit AdamsBashforth(size_t order);

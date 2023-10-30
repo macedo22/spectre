@@ -63,21 +63,20 @@ template <typename Component>
 struct SingletonInfoHolder {
   struct Proc {
     using type = Options::Auto<int>;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Proc to put singleton on. This can be determined automatically if "
         "desired by specifying 'Auto' (without quotes)."};
   };
 
   struct Exclusive {
     using type = bool;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Reserve this proc for this singleton. No array component elements or "
         "other singleton components will be placed on this proc."};
   };
 
   using options = tmpl::list<Proc, Exclusive>;
-  static constexpr Options::String help = {
-      "Resource options for a single singleton."};
+  static Options::String help = {"Resource options for a single singleton."};
 
   SingletonInfoHolder(std::optional<int> input_proc, const bool input_exclusive,
                       const Options::Context& context = {})
@@ -171,14 +170,13 @@ struct SingletonPack<tmpl::list<ParallelComponents...>> {
   struct SingletonOption {
     using type = Options::Auto<SingletonInfoHolder<Component>>;
     static std::string name() { return pretty_type::name<Component>(); }
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Resource options for a specific singleton."};
   };
 
   using options =
       tmpl::transform<component_list, tmpl::bind<SingletonOption, tmpl::_1>>;
-  static constexpr Options::String help = {
-      "Resource options for all singletons."};
+  static Options::String help = {"Resource options for all singletons."};
 
   SingletonPack(
       const std::optional<
@@ -338,13 +336,12 @@ struct ResourceInfo {
  public:
   struct Singletons {
     using type = Options::Auto<SingletonPack<singletons>>;
-    static constexpr Options::String help = {
-        "Resource options for all singletons."};
+    static Options::String help = {"Resource options for all singletons."};
   };
 
   struct AvoidGlobalProc0 {
     using type = bool;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Whether to avoid placing Array elements or singletons on global proc "
         "0."};
   };
@@ -354,7 +351,7 @@ struct ResourceInfo {
                           tmpl::list<Singletons>, tmpl::list<>>,
       AvoidGlobalProc0>;
 
-  static constexpr Options::String help = {
+  static Options::String help = {
       "Resource options for a simulation. This information will be used when "
       "placing Array and Singleton parallel components on the requested "
       "resources."};

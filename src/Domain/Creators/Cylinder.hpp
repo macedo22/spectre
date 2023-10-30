@@ -64,32 +64,30 @@ class Cylinder : public DomainCreator<3> {
 
   struct InnerRadius {
     using type = double;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Radius of the circle circumscribing the inner square."};
     static double lower_bound() { return 0.; }
   };
 
   struct OuterRadius {
     using type = double;
-    static constexpr Options::String help = {"Radius of the cylinder."};
+    static Options::String help = {"Radius of the cylinder."};
     static double lower_bound() { return 0.; }
   };
 
   struct LowerZBound {
     using type = double;
-    static constexpr Options::String help = {
-        "z-coordinate of the base of the cylinder."};
+    static Options::String help = {"z-coordinate of the base of the cylinder."};
   };
 
   struct UpperZBound {
     using type = double;
-    static constexpr Options::String help = {
-        "z-coordinate of the top of the cylinder."};
+    static Options::String help = {"z-coordinate of the top of the cylinder."};
   };
 
   struct IsPeriodicInZ {
     using type = bool;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "True if periodic in the cylindrical z direction."};
   };
 
@@ -98,7 +96,7 @@ class Cylinder : public DomainCreator<3> {
         std::variant<size_t, std::array<size_t, 3>,
                      std::vector<std::array<size_t, 3>>,
                      std::unordered_map<std::string, std::array<size_t, 3>>>;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Initial refinement level. Specify one of: a single number, a list "
         "representing [r, theta, z], or such a list for every block in the "
         "domain. The central cube always uses the value for 'theta' in both "
@@ -110,7 +108,7 @@ class Cylinder : public DomainCreator<3> {
         std::variant<size_t, std::array<size_t, 3>,
                      std::vector<std::array<size_t, 3>>,
                      std::unordered_map<std::string, std::array<size_t, 3>>>;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Initial number of grid points. Specify one of: a single number, a "
         "list representing [r, theta, z], or such a list for every block in "
         "the domain. The central cube always uses the value for 'theta' in "
@@ -119,27 +117,27 @@ class Cylinder : public DomainCreator<3> {
 
   struct UseEquiangularMap {
     using type = bool;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Use equiangular instead of equidistant coordinates."};
   };
 
   struct RadialPartitioning {
     using type = std::vector<double>;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Radial coordinates of the boundaries splitting the outer shell "
         "between InnerRadius and OuterRadius."};
   };
 
   struct PartitioningInZ {
     using type = std::vector<double>;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "z-coordinates of the boundaries splitting the domain into layers "
         "between LowerZBound and UpperZBound."};
   };
 
   struct RadialDistribution {
     using type = std::vector<domain::CoordinateMaps::Distribution>;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Select the radial distribution of grid points in each cylindrical "
         "shell. The innermost shell must have a 'Linear' distribution because "
         "it changes in circularity. The 'RadialPartitioning' determines the "
@@ -149,7 +147,7 @@ class Cylinder : public DomainCreator<3> {
 
   struct DistributionInZ {
     using type = std::vector<domain::CoordinateMaps::Distribution>;
-    static constexpr Options::String help = {
+    static Options::String help = {
         "Select the distribution of grid points along the z-axis in each "
         "layer. The lowermost layer must have a 'Linear' distribution, because "
         "both a 'Logarithmic' and 'Inverse' distribution places its "
@@ -159,15 +157,14 @@ class Cylinder : public DomainCreator<3> {
   };
 
   struct BoundaryConditions {
-    static constexpr Options::String help =
-        "Options for the boundary conditions";
+    static Options::String help = "Options for the boundary conditions";
   };
 
   template <typename BoundaryConditionsBase>
   struct LowerZBoundaryCondition {
     using group = BoundaryConditions;
     static std::string name() { return "LowerZ"; }
-    static constexpr Options::String help =
+    static Options::String help =
         "The boundary condition to be imposed on the lower base of the "
         "cylinder, i.e. at the `LowerZBound` in the z-direction.";
     using type = std::unique_ptr<BoundaryConditionsBase>;
@@ -177,7 +174,7 @@ class Cylinder : public DomainCreator<3> {
   struct UpperZBoundaryCondition {
     using group = BoundaryConditions;
     static std::string name() { return "UpperZ"; }
-    static constexpr Options::String help =
+    static Options::String help =
         "The boundary condition to be imposed on the upper base of the "
         "cylinder, i.e. at the `UpperZBound` in the z-direction.";
     using type = std::unique_ptr<BoundaryConditionsBase>;
@@ -187,7 +184,7 @@ class Cylinder : public DomainCreator<3> {
   struct MantleBoundaryCondition {
     using group = BoundaryConditions;
     static std::string name() { return "Mantle"; }
-    static constexpr Options::String help =
+    static Options::String help =
         "The boundary condition to be imposed on the mantle of the "
         "cylinder, i.e. at the `OuterRadius` in the radial direction.";
     using type = std::unique_ptr<BoundaryConditionsBase>;
@@ -214,7 +211,7 @@ class Cylinder : public DomainCreator<3> {
                  RadialPartitioning, PartitioningInZ, RadialDistribution,
                  DistributionInZ>>;
 
-  static constexpr Options::String help{
+  static Options::String help{
       "Creates a right circular Cylinder with a square prism surrounded by \n"
       "wedges. \n"
       "The cylinder can be partitioned radially into multiple cylindrical \n"

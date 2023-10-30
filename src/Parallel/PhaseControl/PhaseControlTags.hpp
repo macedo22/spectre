@@ -21,15 +21,15 @@ namespace PhaseControl {
 struct TriggerAndPhaseChanges {
   struct Trigger {
     using type = std::unique_ptr<::Trigger>;
-    static constexpr Options::String help =
+    static Options::String help =
         "Determines when the phase changes are evaluated.";
   };
   struct PhaseChanges {
     using type = std::vector<std::unique_ptr<::PhaseChange>>;
-    static constexpr Options::String help =
+    static Options::String help =
         "These phase changes are evaluated when the Trigger fires.";
   };
-  static constexpr Options::String help =
+  static Options::String help =
       "Phase changes that are evaluated when the Trigger fires.";
   using options = tmpl::list<Trigger, PhaseChanges>;
   void pup(PUP::er& p) {
@@ -52,7 +52,7 @@ namespace OptionTags {
 /// etc.). The order therefore determines the order of resolution of
 /// simultaneous requests.
 struct PhaseChangeAndTriggers {
-  static constexpr Options::String help{
+  static Options::String help{
       "A collection of pairs of triggers and collections of phase change "
       "objects to determine runtime phase control-flow decisions. The order of "
       "the phase change objects determines the order of the requests processed "
