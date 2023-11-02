@@ -29,6 +29,7 @@
 #include "Options/Options.hpp"
 #include "Options/OptionsDetails.hpp"
 #include "Options/ParseError.hpp"
+#include "Options/String.hpp"
 #include "Options/Tags.hpp"
 #include "Parallel/Printf.hpp"
 #include "Utilities/Algorithm.hpp"
@@ -46,6 +47,11 @@
 #include "Utilities/TypeTraits/IsStdArrayOfSize.hpp"
 
 namespace Options {
+template <typename T>
+Options::String empty_string() {
+  return "";
+}
+
 // Defining methods as inline in a different header from the class
 // definition is somewhat strange.  It is done here to minimize the
 // amount of code in the frequently-included Options.hpp file.  The
@@ -349,7 +355,7 @@ class Parser {
           tmpl::as_pack<subgroups>([this](auto... subgroup_tags) {
             (void)this;  // gcc wants this for subgroup_parsers_
             return decltype(subgroup_parsers_)(
-                tmpl::type_from<decltype(subgroup_tags)>::help()...);
+                empty_string<tmpl::type_from<decltype(subgroup_tags)>>()...);
           });
 
   // The choices made for option alternatives in a depth-first order.
@@ -1137,7 +1143,7 @@ Result parse_as_alternatives(const Options::Option& options,
           Alternatives, Metavariables>::type...>>;
   std::string help = ("" + ... +
                       (Options_detail::yaml_type<Alternatives>::value() + "\n" +
-                       wrap_text(Alternatives::help(), 77, "  ") + "\n\n"));
+                       wrap_text("", 77, "  ") + "\n\n"));
   help.resize(help.size() - 2);
   Options::Parser<options_list> parser(std::move(help));
   parser.parse(options);
