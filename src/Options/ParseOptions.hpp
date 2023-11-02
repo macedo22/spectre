@@ -372,7 +372,8 @@ Parser<OptionList, Group>::Parser(std::string help_text)
                               << " is too long for nice formatting, "
                                  "please shorten the name to "
                               << max_label_size_ << " characters or fewer");
-    ASSERT(T::help().size() > 0,
+    const std::string help_to_size = T::help();
+    ASSERT(help_to_size.size() > 0,
            "You must supply a help string of non-zero length for " << label);
   });
 }
@@ -1070,8 +1071,9 @@ struct ClassConstructor {
 template <typename T>
 template <typename Metavariables>
 T create_from_yaml<T>::create(const Option& options) {
+  const std::string help_to_pass = T::help();
   Parser<typename Options_detail::get_options_list<T, Metavariables>::type>
-      parser(T::help());
+      parser(help_to_pass);
   parser.parse(options);
   return parser.template apply_all<Metavariables>(
       Options_detail::ClassConstructor<T, Metavariables>{options.context()});
