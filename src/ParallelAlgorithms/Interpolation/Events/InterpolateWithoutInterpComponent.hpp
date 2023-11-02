@@ -95,7 +95,7 @@ class InterpolateWithoutInterpComponent<VolumeDim, InterpolationTargetTag,
   /// \endcond
 
   using options = tmpl::list<>;
-  static Options::String help() {
+  Options::String help() {
     return "Does interpolation using the given InterpolationTargetTag, "
            "without an Interpolator ParallelComponent.";
   }

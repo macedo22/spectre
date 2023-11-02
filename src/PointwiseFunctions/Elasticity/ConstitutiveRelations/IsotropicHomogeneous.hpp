@@ -99,7 +99,7 @@ class IsotropicHomogeneous : public ConstitutiveRelation<Dim> {
 
   struct BulkModulus {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "The incompressibility of the material";
     }
     static type lower_bound() { return 0.0; }
@@ -107,13 +107,13 @@ class IsotropicHomogeneous : public ConstitutiveRelation<Dim> {
 
   struct ShearModulus {
     using type = double;
-    static Options::String help() { return "The rigidity of the material"; }
+    Options::String help() { return "The rigidity of the material"; }
     static type lower_bound() { return 0.0; }
   };
 
   using options = tmpl::list<BulkModulus, ShearModulus>;
 
-  static Options::String help() {
+  Options::String help() {
     return "A constitutive relation that describes an isotropic, homogeneous "
            "material in terms of two elastic moduli. These bulk and shear "
            "moduli "

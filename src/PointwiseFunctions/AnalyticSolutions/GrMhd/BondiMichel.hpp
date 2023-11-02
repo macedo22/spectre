@@ -175,14 +175,14 @@ class BondiMichel : public virtual evolution::initial_data::InitialData,
   /// The mass of the black hole.
   struct Mass {
     using type = double;
-    static Options::String help() { return "Mass of the black hole."; }
+    Options::String help() { return "Mass of the black hole."; }
     static type lower_bound() { return 0.0; }
   };
 
   /// The radius at which the fluid becomes supersonic.
   struct SonicRadius {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "Schwarzschild radius where fluid becomes supersonic.";
     }
     static type lower_bound() { return 0.0; }
@@ -191,7 +191,7 @@ class BondiMichel : public virtual evolution::initial_data::InitialData,
   /// The rest mass density of the fluid at the sonic radius.
   struct SonicDensity {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "The density of the fluid at the sonic radius.";
     }
     static type lower_bound() { return 0.0; }
@@ -200,7 +200,7 @@ class BondiMichel : public virtual evolution::initial_data::InitialData,
   /// The polytropic exponent for the polytropic fluid.
   struct PolytropicExponent {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "The polytropic exponent for the polytropic fluid.";
     }
     static type lower_bound() { return 1.0; }
@@ -209,14 +209,14 @@ class BondiMichel : public virtual evolution::initial_data::InitialData,
   /// The strength of the radial magnetic field.
   struct MagFieldStrength {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "The strength of the radial magnetic field.";
     }
   };
 
   using options = tmpl::list<Mass, SonicRadius, SonicDensity,
                              PolytropicExponent, MagFieldStrength>;
-  static Options::String help() {
+  Options::String help() {
     return "Bondi-Michel solution with a radial magnetic field using \n"
            "the Schwarzschild coordinate system. Quantities prefixed with \n"
            "`sonic` refer to field quantities evaluated at the radius \n"

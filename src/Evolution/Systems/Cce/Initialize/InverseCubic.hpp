@@ -40,7 +40,7 @@ namespace InitializeJ {
 template <>
 struct InverseCubic<true> : InitializeJ<true> {
   using options = tmpl::list<>;
-  static Options::String help() {
+  Options::String help() {
     return "Initialization process where J is set to a simple Ansatz with a\n"
            " A/r + B/r^3 piece such that it is smooth with the Cauchy data at "
            "the \n"
@@ -93,7 +93,7 @@ struct InverseCubic<true> : InitializeJ<true> {
 template <>
 struct InverseCubic<false> : InitializeJ<false> {
   using options = tmpl::list<>;
-  static Options::String help() {
+  Options::String help() {
     return "Initialization process where J is set to a simple Ansatz with a\n"
            " A/r + B/r^3 piece such that it is smooth with the Cauchy data at "
            "the \n"

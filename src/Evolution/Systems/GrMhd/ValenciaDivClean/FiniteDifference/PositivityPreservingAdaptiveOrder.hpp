@@ -85,7 +85,7 @@ class PositivityPreservingAdaptiveOrderPrim : public Reconstructor {
 
   struct Alpha5 {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "The alpha parameter in the Persson convergence measurement. 4 is "
              "the "
              "right value, but anything in the range of 3-5 is 'reasonable'. "
@@ -94,7 +94,7 @@ class PositivityPreservingAdaptiveOrderPrim : public Reconstructor {
   };
   struct Alpha7 {
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    static Options::String help() {
+    Options::String help() {
       return "The alpha parameter in the Persson convergence measurement. 4 is "
              "the "
              "right value, but anything in the range of 3-5 is 'reasonable'. "
@@ -105,7 +105,7 @@ class PositivityPreservingAdaptiveOrderPrim : public Reconstructor {
   };
   struct Alpha9 {
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    static Options::String help() {
+    Options::String help() {
       return "The alpha parameter in the Persson convergence measurement. 4 is "
              "the "
              "right value, but anything in the range of 3-5 is 'reasonable'. "
@@ -116,7 +116,7 @@ class PositivityPreservingAdaptiveOrderPrim : public Reconstructor {
   };
   struct LowOrderReconstructor {
     using type = FallbackReconstructorType;
-    static Options::String help() {
+    Options::String help() {
       return "The 2nd/3rd-order reconstruction scheme to use if unlimited "
              "5th-order "
              "isn't okay.";
@@ -125,7 +125,7 @@ class PositivityPreservingAdaptiveOrderPrim : public Reconstructor {
 
   using options = tmpl::list<Alpha5, Alpha7, Alpha9, LowOrderReconstructor>;
 
-  static Options::String help() {
+  Options::String help() {
     return "Positivity-preserving adaptive-order reconstruction.";
   }
 

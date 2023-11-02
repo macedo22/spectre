@@ -28,7 +28,7 @@ namespace OptionTags {
 template <typename OptionsGroup>
 struct MaxLevels {
   using type = Options::Auto<size_t>;
-  static Options::String help() {
+  Options::String help() {
     return "Maximum number of levels in the multigrid hierarchy. Includes the "
            "finest grid, i.e. set to '1' to disable multigrids. Set to 'Auto' "
            "to "
@@ -40,7 +40,7 @@ struct MaxLevels {
 template <typename OptionsGroup>
 struct OutputVolumeData {
   using type = bool;
-  static Options::String help() {
+  Options::String help() {
     return "Record volume data for debugging purposes.";
   }
   using group = OptionsGroup;
@@ -51,7 +51,7 @@ template <typename OptionsGroup>
 struct EnablePreSmoothing {
   static std::string name() { return "PreSmoothing"; }
   using type = bool;
-  static Options::String help() {
+  Options::String help() {
     return "Set to 'False' to disable pre-smoothing altogether (\"cascading "
            "multigrid\"). Note that pre-smoothing can be necessary to remove "
            "high-frequency modes in the data that get restricted to coarser "
@@ -69,7 +69,7 @@ template <typename OptionsGroup>
 struct EnablePostSmoothingAtBottom {
   static std::string name() { return "PostSmoothingAtBottom"; }
   using type = bool;
-  static Options::String help() {
+  Options::String help() {
     return "Set to 'False' to skip post-smoothing on the coarsest grid. This "
            "means "
            "only pre-smoothing runs on the coarsest grid, so the coarsest grid "

@@ -79,7 +79,7 @@ class NumericInitialData : public evolution::initial_data::InitialData {
     using tag = Tag;
     static std::string name() { return db::tag_name<Tag>(); }
     using type = std::string;
-    static Options::String help() {
+    Options::String help() {
       return "Name of the variable in the volume data file";
     }
   };
@@ -93,7 +93,7 @@ class NumericInitialData : public evolution::initial_data::InitialData {
                  gr::Tags::ExtrinsicCurvature<DataVector, 3>>;
   struct AdmVars : tuples::tagged_tuple_from_typelist<
                        db::wrap_tags_in<VarName, adm_vars>> {
-    static Options::String help() {
+    Options::String help() {
       return "ADM variables: 'Lapse', 'Shift', 'SpatialMetric' and "
              "'ExtrinsicCurvature'. The initial GH variables will be computed "
              "from these numeric fields, as well as their numeric spatial "
@@ -108,7 +108,7 @@ class NumericInitialData : public evolution::initial_data::InitialData {
                              Tags::Pi<DataVector, 3>>;
   struct GhVars
       : tuples::tagged_tuple_from_typelist<db::wrap_tags_in<VarName, gh_vars>> {
-    static Options::String help() {
+    Options::String help() {
       return "GH variables: 'SpacetimeMetric' and 'Pi'. These variables are "
              "used to set the initial data directly; Phi is then set to the "
              "numerical derivative of SpacetimeMetric, to enforce the 3-index "
@@ -128,7 +128,7 @@ class NumericInitialData : public evolution::initial_data::InitialData {
     // The user can supply any of these choices of variables in the input
     // file
     using type = std::variant<AdmVars, GhVars>;
-    static Options::String help() {
+    Options::String help() {
       return "Set of initial data variables from which the generalized "
              "harmonic "
              "system variables are computed.";
@@ -141,7 +141,7 @@ class NumericInitialData : public evolution::initial_data::InitialData {
                  importers::OptionTags::ObservationValue,
                  importers::OptionTags::EnableInterpolation, Variables>;
 
-  static Options::String help() {
+  Options::String help() {
     return "Numeric initial data loaded from volume data files";
   }
 

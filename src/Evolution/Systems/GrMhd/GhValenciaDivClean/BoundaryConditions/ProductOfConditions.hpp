@@ -666,7 +666,7 @@ class ProductOfConditions final : public BoundaryCondition {
     static std::string name() {
       return "GeneralizedHarmonic" + pretty_type::name<DerivedGhCondition>();
     }
-    static Options::String help() {
+    Options::String help() {
       return "The Generalized Harmonic part of the product boundary condition";
     }
   };
@@ -675,14 +675,14 @@ class ProductOfConditions final : public BoundaryCondition {
     static std::string name() {
       return "Valencia" + pretty_type::name<DerivedValenciaCondition>();
     }
-    static Options::String help() {
+    Options::String help() {
       return "The Valencia part of the product boundary condition";
     }
   };
 
   using options = tmpl::list<GhCondition, ValenciaCondition>;
 
-  static Options::String help() {
+  Options::String help() {
     return "Direct product of a GH and ValenciaDivClean GRMHD boundary "
            "conditions. "
            "See the documentation for the two individual boundary conditions "

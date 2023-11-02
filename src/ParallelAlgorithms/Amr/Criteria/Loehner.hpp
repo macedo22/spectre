@@ -125,14 +125,14 @@ class Loehner : public Criterion {
  public:
   struct VariablesToMonitor {
     using type = std::vector<std::string>;
-    static Options::String help() {
+    Options::String help() {
       return "The tensors to monitor for h-refinement.";
     }
     static size_t lower_bound_on_size() { return 1; }
   };
   struct RelativeTolerance {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "If any tensor component has a second derivative magnitude above "
              "this "
              "value times the max of the absolute tensor component over the "
@@ -143,7 +143,7 @@ class Loehner : public Criterion {
   };
   struct AbsoluteTolerance {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "If any tensor component has a second derivative magnitude above "
              "this "
              "value, the element will be h-refined in that direction. "
@@ -153,7 +153,7 @@ class Loehner : public Criterion {
   };
   struct CoarseningFactor {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "Factor applied to both relative and absolute tolerance to "
              "trigger "
              "h-coarsening. Set to 0 to disable h-coarsening altogether. "
@@ -169,7 +169,7 @@ class Loehner : public Criterion {
   using options = tmpl::list<VariablesToMonitor, RelativeTolerance,
                              AbsoluteTolerance, CoarseningFactor>;
 
-  static Options::String help() {
+  Options::String help() {
     return "Refine the grid towards resolving an estimated error in the second "
            "derivative";
   }

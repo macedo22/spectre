@@ -69,7 +69,7 @@ class OrszagTangVortex
 
   using options = tmpl::list<>;
 
-  static Options::String help() {
+  Options::String help() {
     return "The relativistic Orszag-Tang vortex";
   }
 

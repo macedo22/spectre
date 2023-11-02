@@ -80,21 +80,21 @@ class Persson : public Criterion {
  public:
   struct VariablesToMonitor {
     using type = std::vector<std::string>;
-    static Options::String help() {
+    Options::String help() {
       return "The tensors to monitor for h-refinement.";
     }
     static size_t lower_bound_on_size() { return 1; }
   };
   struct NumHighestModes {
     using type = size_t;
-    static Options::String help() {
+    Options::String help() {
       return "Number of highest modes to monitor the power of.";
     }
     static size_t lower_bound() { return 1; }
   };
   struct Exponent {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "The exponent at which the modes should decrease. "
              "Corresponds to a \"relative tolerance\" of N^(-alpha), where N "
              "is the "
@@ -108,7 +108,7 @@ class Persson : public Criterion {
   };
   struct AbsoluteTolerance {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "If any tensor component has a power in the highest modes above "
              "this "
              "value, the element will be h-refined in that direction. "
@@ -118,7 +118,7 @@ class Persson : public Criterion {
   };
   struct CoarseningFactor {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "Factor applied to both relative and absolute tolerance to "
              "trigger "
              "h-coarsening. Set to 0 to disable h-coarsening altogether. "
@@ -134,7 +134,7 @@ class Persson : public Criterion {
   using options = tmpl::list<VariablesToMonitor, NumHighestModes, Exponent,
                              AbsoluteTolerance, CoarseningFactor>;
 
-  static Options::String help() {
+  Options::String help() {
     return "Refine the grid so the power in the highest modes stays below the "
            "tolerance";
   }

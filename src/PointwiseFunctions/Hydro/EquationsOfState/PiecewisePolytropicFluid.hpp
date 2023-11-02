@@ -53,7 +53,7 @@ class PiecewisePolytropicFluid : public EquationOfState<IsRelativistic, 1> {
   /// fluid.
   struct PiecewisePolytropicTransitionDensity {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "Density below (above) which, the matter is described by a low "
              "(high) "
              "density polytropic fluid.";
@@ -69,7 +69,7 @@ class PiecewisePolytropicFluid : public EquationOfState<IsRelativistic, 1> {
   /// as \f$K_{high} = K_{low} (\bar{\rho})^{\Gamma_{low} - \Gamma_{high}}\f$.
   struct PolytropicConstantLow {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "Polytropic constant K for lower"
              " density material";
     }
@@ -80,7 +80,7 @@ class PiecewisePolytropicFluid : public EquationOfState<IsRelativistic, 1> {
   /// \f$p=K\rho^{\Gamma}\f$.
   struct PolytropicExponentLow {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "Polytropic exponent for lower"
              " density material.";
     }
@@ -91,14 +91,14 @@ class PiecewisePolytropicFluid : public EquationOfState<IsRelativistic, 1> {
   /// \f$p=K\rho^{\Gamma}\f$.
   struct PolytropicExponentHigh {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "Polytropic exponent for higher"
              " density material.";
     }
     static double lower_bound() { return 1.0; }
   };
 
-  static Options::String help() {
+  Options::String help() {
     return "A piecewise polytropic fluid equation of state.\n"
            "The pressure is related to the rest mass density by p = K_i rho ^ "
            "Gamma_i, "

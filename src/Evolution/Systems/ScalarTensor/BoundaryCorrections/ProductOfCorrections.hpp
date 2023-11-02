@@ -64,7 +64,7 @@ class ProductOfCorrections final : public BoundaryCorrection {
       // during option parsing
       return pretty_type::name<DerivedGhCorrection>() + "GH";
     }
-    static Options::String help() {
+    Options::String help() {
       return "The Generalized Harmonic part of the product boundary condition";
     }
   };
@@ -75,14 +75,14 @@ class ProductOfCorrections final : public BoundaryCorrection {
       // during option parsing
       return pretty_type::name<DerivedScalarCorrection>() + "Scalar";
     }
-    static Options::String help() {
+    Options::String help() {
       return "The scalar part of the product boundary condition";
     }
     };
 
   using options = tmpl::list<GhCorrection, ScalarCorrection>;
 
-  static Options::String help() {
+  Options::String help() {
     return "Direct product of a GH and CurvedScalarWave boundary correction. "
            "See the documentation for the two individual boundary corrections "
            "for "

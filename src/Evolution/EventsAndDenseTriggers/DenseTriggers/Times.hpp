@@ -40,7 +40,7 @@ class Times : public DenseTrigger {
   WRAPPED_PUPable_decl_template(Times);  // NOLINT
   /// \endcond
 
-  static Options::String help() { return "Trigger at specified times."; }
+  Options::String help() { return "Trigger at specified times."; }
 
   explicit Times(std::unique_ptr<TimeSequence<double>> times);
 

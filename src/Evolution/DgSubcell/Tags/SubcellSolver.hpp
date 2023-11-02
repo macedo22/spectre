@@ -19,7 +19,7 @@ namespace evolution::dg::subcell::OptionTags {
  */
 struct SubcellSolverGroup {
   static std::string name() { return "SubcellSolver"; }
-  static Options::String help() {
+  Options::String help() {
     return "Options controlling the subcell solver spatial discretization "
            "of the PDE system.\n\n"
            "Contains options such as what reconstruction scheme to use or what "

@@ -40,12 +40,12 @@ class ByBlock : public StepChooser<StepChooserUse> {
 
   struct Sizes {
     using type = std::vector<double>;
-    static Options::String help() {
+    Options::String help() {
       return "Step sizes, indexed by block number";
     }
   };
 
-  static Options::String help() {
+  Options::String help() {
     return "Suggests specified step sizes in each block";
   }
   using options = tmpl::list<Sizes>;

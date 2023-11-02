@@ -85,20 +85,20 @@ class RotatingDipole : public evolution::initial_data::InitialData,
  public:
   struct VectorPotentialAmplitude {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "The vector potential amplitude A_0";
     }
   };
 
   struct Varpi0 {
     using type = double;
-    static Options::String help() { return "The length constant varpi_0"; }
+    Options::String help() { return "The length constant varpi_0"; }
     static type lower_bound() { return 0.0; }
   };
 
   struct Delta {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "A small value used to regularize magnetic fields at r=0.";
     }
     static type lower_bound() { return 0.0; }
@@ -106,7 +106,7 @@ class RotatingDipole : public evolution::initial_data::InitialData,
 
   struct AngularVelocity {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "Rotation angular velocity of the star.";
     }
     static type upper_bound() { return 1.0; }
@@ -115,7 +115,7 @@ class RotatingDipole : public evolution::initial_data::InitialData,
 
   struct TiltAngle {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "Angle between the rotation axis (z) and magnetic axis at t = 0.";
     }
     static type upper_bound() { return M_PI; }
@@ -124,7 +124,7 @@ class RotatingDipole : public evolution::initial_data::InitialData,
 
   using options = tmpl::list<VectorPotentialAmplitude, Varpi0, Delta,
                              AngularVelocity, TiltAngle>;
-  static Options::String help() {
+  Options::String help() {
     return "Magnetosphere of an isolated rotating star with dipole magnetic "
            "field.";
   }

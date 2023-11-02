@@ -275,7 +275,7 @@ struct Metavariables {
 
   using const_global_cache_tags = tmpl::list<amr::Criteria::Tags::Criteria>;
 
-  static Options::String help() {
+  Options::String help() {
     return "Export the inertial coordinates of the Domain specified in the "
            "input "
            "file. The output can be used to compute initial data externally, "

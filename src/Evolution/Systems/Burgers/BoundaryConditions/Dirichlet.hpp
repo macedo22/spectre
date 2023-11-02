@@ -43,11 +43,11 @@ class Dirichlet final : public BoundaryCondition {
  public:
   struct U {
     using type = double;
-    static Options::String help() { return "The value for U on the boundary"; }
+    Options::String help() { return "The value for U on the boundary"; }
   };
 
   using options = tmpl::list<U>;
-  static Options::String help() {
+  Options::String help() {
     return "Dirichlet boundary condition setting the value of U to "
            "a time-independent constant.";
   }

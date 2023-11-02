@@ -105,7 +105,7 @@ class IsentropicVortex : public MarkAsAnalyticSolution {
   /// The adiabatic index of the fluid.
   struct AdiabaticIndex {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "The adiabatic index of the fluid.";
     }
   };
@@ -113,7 +113,7 @@ class IsentropicVortex : public MarkAsAnalyticSolution {
   /// The position of the center of the vortex at \f$t = 0\f$
   struct Center {
     using type = std::array<double, Dim>;
-    static Options::String help() {
+    Options::String help() {
       return "The coordinates of the center of the vortex at t = 0.";
     }
   };
@@ -121,13 +121,13 @@ class IsentropicVortex : public MarkAsAnalyticSolution {
   /// The mean flow velocity.
   struct MeanVelocity {
     using type = std::array<double, Dim>;
-    static Options::String help() { return "The mean flow velocity."; }
+    Options::String help() { return "The mean flow velocity."; }
   };
 
   /// The amplitude of the perturbation generating a source term.
   struct PerturbAmplitude {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "The amplitude of the perturbation producing sources.";
     }
   };
@@ -135,7 +135,7 @@ class IsentropicVortex : public MarkAsAnalyticSolution {
   /// The strength of the vortex.
   struct Strength {
     using type = double;
-    static Options::String help() { return "The strength of the vortex."; }
+    Options::String help() { return "The strength of the vortex."; }
     static type lower_bound() { return 0.0; }
   };
 
@@ -145,7 +145,7 @@ class IsentropicVortex : public MarkAsAnalyticSolution {
                  PerturbAmplitude>,
       tmpl::list<AdiabaticIndex, Center, MeanVelocity, Strength>>;
 
-  static Options::String help() {
+  Options::String help() {
     return "Newtonian Isentropic Vortex. Works in 2 and 3 dimensions.";
   }
 

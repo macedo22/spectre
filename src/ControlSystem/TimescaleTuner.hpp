@@ -54,14 +54,14 @@ class er;
 template <bool AllowDecrease>
 class TimescaleTuner {
  public:
-  static Options::String help() {
+  Options::String help() {
     return "TimescaleTuner: stores and dynamically updates the timescales for "
            "each "
            "component of a particular control system.";
   }
   struct InitialTimescales {
     using type = std::variant<double, std::vector<double>>;
-    static Options::String help() {
+    Options::String help() {
       return "Initial timescales for each function of time. Can either be a "
              "single "
              "value which will be used for all components of a function of "
@@ -73,33 +73,33 @@ class TimescaleTuner {
 
   struct MinTimescale {
     using type = double;
-    static Options::String help() { return "Minimum timescale"; }
+    Options::String help() { return "Minimum timescale"; }
   };
 
   struct MaxTimescale {
     using type = double;
-    static Options::String help() { return "Maximum timescale"; }
+    Options::String help() { return "Maximum timescale"; }
   };
 
   struct DecreaseThreshold {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "Threshold for decrease of timescale";
     }
   };
   struct IncreaseThreshold {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "Threshold for increase of timescale";
     }
   };
   struct IncreaseFactor {
     using type = double;
-    static Options::String help() { return "Factor to increase timescale"; }
+    Options::String help() { return "Factor to increase timescale"; }
   };
   struct DecreaseFactor {
     using type = double;
-    static Options::String help() { return "Factor to decrease timescale"; }
+    Options::String help() { return "Factor to decrease timescale"; }
   };
 
   using options = tmpl::append<

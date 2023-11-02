@@ -28,7 +28,7 @@ class er;
 namespace OptionTags {
 struct Name {
   using type = std::string;
-  static Options::String help() { return "A name"; }
+  Options::String help() { return "A name"; }
 };
 }  // namespace OptionTags
 
@@ -90,7 +90,7 @@ void HelloWorld<Metavariables>::execute_next_phase(
 struct Metavars {
   using component_list = tmpl::list<HelloWorld<Metavars>>;
 
-  static Options::String help() {
+  Options::String help() {
     return "Say hello from a singleton parallel component.";
   }
 

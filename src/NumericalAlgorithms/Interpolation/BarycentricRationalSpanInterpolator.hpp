@@ -25,7 +25,7 @@ class BarycentricRationalSpanInterpolator : public SpanInterpolator {
  public:
   struct MinOrder {
     using type = size_t;
-    static Options::String help() {
+    Options::String help() {
       return "Order of barycentric interpolation";
     }
     static type lower_bound() { return 1; }
@@ -33,14 +33,14 @@ class BarycentricRationalSpanInterpolator : public SpanInterpolator {
 
   struct MaxOrder {
     using type = size_t;
-    static Options::String help() {
+    Options::String help() {
       return "Order of barycentric interpolation";
     }
     static type upper_bound() { return 10; }
   };
 
   using options = tmpl::list<MinOrder, MaxOrder>;
-  static Options::String help() {
+  Options::String help() {
     return "Barycentric interpolator of option-defined maximum and minimum "
            "order.";
   }

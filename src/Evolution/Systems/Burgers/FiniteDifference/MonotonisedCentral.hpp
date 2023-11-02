@@ -61,7 +61,7 @@ class MonotonisedCentral : public Reconstructor {
 
  public:
   using options = tmpl::list<>;
-  static Options::String help() {
+  Options::String help() {
     return "Monotonised central reconstruction scheme.";
   }
 

@@ -233,13 +233,13 @@ struct print_impl {
       if constexpr (has_upper_bound_on_size<Tag>::value) {
         ss << new_line << "max size=" << Tag::upper_bound_on_size();
       }
-      ss << "\n" << wrap_text(Tag::help(), 77, indent + "  ") << "\n\n";
+      ss << "\n" << wrap_text(Tag{}.help(), 77, indent + "  ") << "\n\n";
       return ss.str();
     } else {
       // A group
       std::ostringstream ss;
       ss << indent << pretty_type::name<Tag>() << ":\n"
-         << wrap_text(Tag::help(), 77, indent + "  ") << "\n\n";
+         << wrap_text(Tag{}.help(), 77, indent + "  ") << "\n\n";
       return ss.str();
     }
   }

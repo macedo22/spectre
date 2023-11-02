@@ -168,13 +168,13 @@ class Gmres final : public PreconditionedLinearSolver<Preconditioner,
 
   struct ConvergenceCriteria {
     using type = Convergence::Criteria;
-    static Options::String help() {
+    Options::String help() {
       return "Determine convergence of the algorithm";
     }
   };
   struct Restart {
     using type = Options::Auto<size_t, Options::AutoLabel::None>;
-    static Options::String help() {
+    Options::String help() {
       return "Iterations to run before restarting, or 'None' to disable "
              "restarting. "
              "Note that the solver is not guaranteed to converge anymore if "
@@ -185,11 +185,11 @@ class Gmres final : public PreconditionedLinearSolver<Preconditioner,
   };
   struct Verbosity {
     using type = ::Verbosity;
-    static Options::String help() { return "Logging verbosity"; }
+    Options::String help() { return "Logging verbosity"; }
   };
 
  public:
-  static Options::String help() {
+  Options::String help() {
     return "A serial GMRES iterative solver for nonsymmetric linear systems "
            "of\n"
            "equations Ax=b. It will converge to numerical precision in at most "

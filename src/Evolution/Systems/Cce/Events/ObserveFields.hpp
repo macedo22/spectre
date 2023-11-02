@@ -164,7 +164,7 @@ class ObserveFields : public Event {
   /// \endcond
 
   struct VariablesToObserve {
-    static Options::String help() {
+    Options::String help() {
       return "Subset of variables to observe";
       using type = std::vector<std::string>;
       static size_t lower_bound_on_size() { return 1; }
@@ -172,7 +172,7 @@ class ObserveFields : public Event {
 
   using options = tmpl::list<VariablesToObserve>;
 
-  static Options::String help() {
+  Options::String help() {
     return "Observe volume tensor fields on the characteristic grid. Writes "
            "volume "
            "quantities from the tensors listed in the 'VariablesToObserve' "

@@ -184,7 +184,7 @@ class CcsnCollapse : public virtual evolution::initial_data::InitialData,
   /// The massive star progenitor data file.
   struct ProgenitorFilename {
     using type = std::string;
-    static Options::String help() {
+    Options::String help() {
       return "The supernova progenitor data file.";
     }
   };
@@ -195,7 +195,7 @@ class CcsnCollapse : public virtual evolution::initial_data::InitialData,
   /// will be calculated based on this \f$K\f$ for \f$P=K\rho^{\Gamma}\f$.
   struct PolytropicConstant {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "The polytropic constant of the fluid.";
     }
     static type lower_bound() { return 0.; }
@@ -210,7 +210,7 @@ class CcsnCollapse : public virtual evolution::initial_data::InitialData,
   /// simplified CCSN models.
   struct AdiabaticIndex {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "The adiabatic index that will trigger collapse.";
     }
     static type lower_bound() { return 1.0; }
@@ -229,7 +229,7 @@ class CcsnCollapse : public virtual evolution::initial_data::InitialData,
   /// different values).
   struct CentralAngularVelocity {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "Central angular velocity of progenitor";
     }
 
@@ -241,7 +241,7 @@ class CcsnCollapse : public virtual evolution::initial_data::InitialData,
   /// rotation profile.
   struct DifferentialRotationParameter {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "Differential rotation parameter (large"
              " indicates solid body, small very differential)";
     }
@@ -258,7 +258,7 @@ class CcsnCollapse : public virtual evolution::initial_data::InitialData,
   /// and a safe value to use if unsure.
   struct MaxDensityRatioForLinearInterpolation {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "If the ratio between neighboring density points is greater"
              " than this parameter, fall back to linear interpolation"
              " onto the SpECTRE grid.";
@@ -270,7 +270,7 @@ class CcsnCollapse : public virtual evolution::initial_data::InitialData,
       tmpl::list<ProgenitorFilename, PolytropicConstant, AdiabaticIndex,
                  CentralAngularVelocity, DifferentialRotationParameter,
                  MaxDensityRatioForLinearInterpolation>;
-  static Options::String help() {
+  Options::String help() {
     return "Core collapse supernova initial data, read in from a profile "
            "containing"
            " hydrodynamic primitives and metric variables.  The data "

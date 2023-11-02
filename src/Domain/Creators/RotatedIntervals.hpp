@@ -48,39 +48,39 @@ class RotatedIntervals : public DomainCreator<1> {
 
   struct LowerBound {
     using type = std::array<double, 1>;
-    static Options::String help() {
+    Options::String help() {
       return "Sequence of [x], the lower bound in the target frame.";
     }
   };
 
   struct Midpoint {
     using type = std::array<double, 1>;
-    static Options::String help() {
+    Options::String help() {
       return "Sequence of [x], the midpoint in the target frame.";
     }
   };
 
   struct UpperBound {
     using type = std::array<double, 1>;
-    static Options::String help() {
+    Options::String help() {
       return "Sequence of [x], the upper bound in the target frame.";
     }
   };
 
   struct IsPeriodicIn {
     using type = std::array<bool, 1>;
-    static Options::String help() {
+    Options::String help() {
       return "Sequence for [x], true if periodic.";
     }
   };
   struct InitialRefinement {
     using type = std::array<size_t, 1>;
-    static Options::String help() { return "Initial refinement level in [x]."; }
+    Options::String help() { return "Initial refinement level in [x]."; }
   };
 
   struct InitialGridPoints {
     using type = std::array<std::array<size_t, 2>, 1>;
-    static Options::String help() {
+    Options::String help() {
       return "Initial number of grid points in [[x]].";
     }
   };
@@ -88,20 +88,20 @@ class RotatedIntervals : public DomainCreator<1> {
   struct TimeDependence {
     using type =
         std::unique_ptr<domain::creators::time_dependence::TimeDependence<1>>;
-    static Options::String help() {
+    Options::String help() {
       return "The time dependence of the moving mesh domain.";
     }
   };
 
   struct BoundaryConditions {
-    static Options::String help() {
+    Options::String help() {
       return "The boundary conditions to apply.";
     }
   };
   template <typename BoundaryConditionsBase>
   struct UpperBoundaryCondition {
     static std::string name() { return "UpperBoundary"; }
-    static Options::String help() {
+    Options::String help() {
       return "Options for the boundary condition applied at the upper "
              "boundary.";
     }
@@ -111,7 +111,7 @@ class RotatedIntervals : public DomainCreator<1> {
   template <typename BoundaryConditionsBase>
   struct LowerBoundaryCondition {
     static std::string name() { return "LowerBoundary"; }
-    static Options::String help() {
+    Options::String help() {
       return "Options for the boundary condition applied at the lower "
              "boundary.";
     }
@@ -139,7 +139,7 @@ class RotatedIntervals : public DomainCreator<1> {
           options_periodic>,
       tmpl::list<TimeDependence>>;
 
-  static Options::String help() {
+  Options::String help() {
     return "A DomainCreator useful for testing purposes.\n"
            "RotatedIntervals creates the interval [LowerX,UpperX] from two\n"
            "rotated Blocks. The outermost index to InitialGridPoints is the\n"

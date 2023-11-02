@@ -37,7 +37,7 @@ namespace Burgers::BoundaryConditions {
 class DemandOutgoingCharSpeeds final : public BoundaryCondition {
  public:
   using options = tmpl::list<>;
-  static Options::String help() {
+  Options::String help() {
     return "A boundary condition that only verifies the characteristic speeds "
            "are all directed out of the domain.";
   }

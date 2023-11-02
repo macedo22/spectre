@@ -19,7 +19,7 @@ template <typename Tag>
 struct BoundaryConditionType {
   static std::string name() { return db::tag_name<Tag>(); }
   using type = elliptic::BoundaryConditionType;
-  static Options::String help() {
+  Options::String help() {
     return "Type of boundary conditions to impose on this variable";
   }
 };

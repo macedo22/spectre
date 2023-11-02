@@ -47,48 +47,48 @@ class Rectangle : public DomainCreator<2> {
 
   struct LowerBound {
     using type = std::array<double, 2>;
-    static Options::String help() {
+    Options::String help() {
       return "Sequence of [x,y] for lower bounds.";
     }
   };
 
   struct UpperBound {
     using type = std::array<double, 2>;
-    static Options::String help() {
+    Options::String help() {
       return "Sequence of [x,y] for upper bounds.";
     }
   };
   struct IsPeriodicIn {
     using type = std::array<bool, 2>;
-    static Options::String help() {
+    Options::String help() {
       return "Sequence for [x,y], true if periodic.";
     }
   };
 
   struct InitialRefinement {
     using type = std::array<size_t, 2>;
-    static Options::String help() {
+    Options::String help() {
       return "Initial refinement level in [x,y].";
     }
   };
 
   struct InitialGridPoints {
     using type = std::array<size_t, 2>;
-    static Options::String help() {
+    Options::String help() {
       return "Initial number of grid points in [x,y].";
     }
   };
   struct TimeDependence {
     using type =
         std::unique_ptr<domain::creators::time_dependence::TimeDependence<2>>;
-    static Options::String help() {
+    Options::String help() {
       return "The time dependence of the moving mesh domain.";
     }
   };
   template <typename BoundaryConditionsBase>
   struct BoundaryCondition {
     static std::string name() { return "BoundaryCondition"; }
-    static Options::String help() {
+    Options::String help() {
       return "The boundary condition to impose on all sides.";
     }
     using type = std::unique_ptr<BoundaryConditionsBase>;
@@ -111,7 +111,7 @@ class Rectangle : public DomainCreator<2> {
           options_periodic>,
       tmpl::list<TimeDependence>>;
 
-  static Options::String help() { return "Creates a 2D rectangle."; }
+  Options::String help() { return "Creates a 2D rectangle."; }
 
   Rectangle(
       typename LowerBound::type lower_xy, typename UpperBound::type upper_xy,

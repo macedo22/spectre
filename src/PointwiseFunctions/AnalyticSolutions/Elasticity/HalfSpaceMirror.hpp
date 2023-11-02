@@ -119,7 +119,7 @@ class HalfSpaceMirror : public elliptic::analytic_data::AnalyticSolution {
 
   struct BeamWidth {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "The lasers beam width r_0 with FWHM = 2*sqrt(ln 2)*r_0";
     }
     static type lower_bound() { return 0.0; }
@@ -127,14 +127,14 @@ class HalfSpaceMirror : public elliptic::analytic_data::AnalyticSolution {
 
   struct Material {
     using type = constitutive_relation_type;
-    static Options::String help() {
+    Options::String help() {
       return "The material properties of the beam";
     }
   };
 
   struct IntegrationIntervals {
     using type = size_t;
-    static Options::String help() {
+    Options::String help() {
       return "Workspace size for numerical integrals. Increase if integrals "
              "fail to "
              "reach the prescribed tolerance at large distances relative to "
@@ -149,7 +149,7 @@ class HalfSpaceMirror : public elliptic::analytic_data::AnalyticSolution {
 
   struct AbsoluteTolerance {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "Absolute tolerance for numerical integrals";
     }
     static type lower_bound() { return 0.; }
@@ -158,7 +158,7 @@ class HalfSpaceMirror : public elliptic::analytic_data::AnalyticSolution {
 
   struct RelativeTolerance {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "Relative tolerance for numerical integrals";
     }
     static type lower_bound() { return 0.; }
@@ -168,7 +168,7 @@ class HalfSpaceMirror : public elliptic::analytic_data::AnalyticSolution {
 
   using options = tmpl::list<BeamWidth, Material, IntegrationIntervals,
                              AbsoluteTolerance, RelativeTolerance>;
-  static Options::String help() {
+  Options::String help() {
     return "A semi-infinite mirror on which a laser introduces stress "
            "perpendicular "
            "to the mirrors surface.";

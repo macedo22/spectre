@@ -443,7 +443,7 @@ class Krivodonova<VolumeDim, tmpl::list<Tags...>> {
   struct Alphas {
     using type = std::array<
         double, Spectral::maximum_number_of_points<Spectral::Basis::Legendre>>;
-    static Options::String help() {
+    Options::String help() {
       return "The alpha parameters of the Krivodonova limiter";
     }
   };
@@ -457,11 +457,11 @@ class Krivodonova<VolumeDim, tmpl::list<Tags...>> {
   struct DisableForDebugging {
     using type = bool;
     static type suggested_value() { return false; }
-    static Options::String help() { return "Disable the limiter"; }
+    Options::String help() { return "Disable the limiter"; }
   };
 
   using options = tmpl::list<Alphas, DisableForDebugging>;
-  static Options::String help() {
+  Options::String help() {
     return "The hierarchical limiter of Krivodonova.\n\n"
            "This limiter works by limiting the highest modal "
            "coefficients/derivatives using an aggressive minmod approach, "

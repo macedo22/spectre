@@ -36,7 +36,7 @@ class Slabs : public Trigger {
   WRAPPED_PUPable_decl_template(Slabs);  // NOLINT
   /// \endcond
 
-  static Options::String help() {
+  Options::String help() {
     return "Trigger at specified numbers of slabs after the simulation start.";
   }
 

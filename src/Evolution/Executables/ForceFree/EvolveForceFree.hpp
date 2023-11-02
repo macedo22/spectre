@@ -256,7 +256,7 @@ struct EvolutionMetavars {
                  observers::ObserverWriter<EvolutionMetavars>,
                  dg_element_array_component>;
 
-  static Options::String help() {
+  Options::String help() {
     return "Evolve the GRFFE system with divergence cleaning.\n";
   }
 

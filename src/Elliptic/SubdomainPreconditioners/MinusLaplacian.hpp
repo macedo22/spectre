@@ -134,7 +134,7 @@ class MinusLaplacian
   struct SolverOptionTag {
     static std::string name() { return "Solver"; }
     using type = StoredSolverType;
-    static Options::String help() {
+    Options::String help() {
       return "The linear solver used to invert the Laplace operator. The "
              "solver is "
              "shared between tensor components with the same type of boundary "
@@ -144,7 +144,7 @@ class MinusLaplacian
 
   struct BoundaryConditions {
     using type = Options::Auto<elliptic::BoundaryConditionType>;
-    static Options::String help() {
+    Options::String help() {
       return "The boundary conditions imposed by the Laplace operator. Specify "
              "'Auto' to choose between homogeneous Dirichlet or Neumann "
              "boundary "
@@ -155,7 +155,7 @@ class MinusLaplacian
   };
 
   using options = tmpl::list<SolverOptionTag, BoundaryConditions>;
-  static Options::String help() {
+  Options::String help() {
     return "Approximate the linear operator with a Laplace operator "
            "for every tensor component separately.";
   }

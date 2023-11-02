@@ -360,7 +360,7 @@ Main<Metavariables>::Main(CkArgMsg* msg) {
     bpo::notify(parsed_command_line_options);
 
     Options::Parser<tmpl::remove<option_list, Options::Tags::InputSource>>
-        options(Metavariables::help());
+        options(Metavariables{}.help());
 
     if (parsed_command_line_options.count("help") != 0) {
       Parallel::printf("%s\n%s", command_line_options, options.help());

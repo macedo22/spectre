@@ -99,7 +99,7 @@ class Rusanov<tmpl::list<NeutrinoSpecies...>> final
     : public BoundaryCorrection<tmpl::list<NeutrinoSpecies...>> {
  public:
   using options = tmpl::list<>;
-  static Options::String help() {
+  Options::String help() {
     return "Computes the Rusanov or local Lax-Friedrichs boundary correction "
            "term "
            "for the M1Grey radiation transport system.";

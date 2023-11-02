@@ -74,7 +74,7 @@ class MonotonisedCentral : public Reconstructor {
   static constexpr size_t dim = 3;
 
   using options = tmpl::list<>;
-  static Options::String help() {
+  Options::String help() {
     return "Monotonised central reconstruction scheme.";
   }
 

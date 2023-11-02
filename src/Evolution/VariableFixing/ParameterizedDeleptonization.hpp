@@ -50,7 +50,7 @@ class ParameterizedDeleptonization {
   //   struct DeleptonizationFormat {
   //     using type = double;
   //     static type lower_bound() { return 0.0; }
-  //     static Options::String help() {
+  //     Options::String help() {
   //       return "Choose an 'analytic' or 'tabulated' expression to express "
   //              "electron fraction as a function of rest mass density.";
   //     }
@@ -59,7 +59,7 @@ class ParameterizedDeleptonization {
   /// \brief Enable parameterized deleptonizations
   struct Enable {
     using type = bool;
-    static Options::String help() {
+    Options::String help() {
       return "Whether or not to activate parameterized deleptonization for "
              "supernovae.";
     }
@@ -72,7 +72,7 @@ class ParameterizedDeleptonization {
   struct HighDensityScale {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static Options::String help() {
+    Options::String help() {
       return "High end of density scale for parameterized deleptonization.";
     }
   };
@@ -83,7 +83,7 @@ class ParameterizedDeleptonization {
   struct LowDensityScale {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static Options::String help() {
+    Options::String help() {
       return "Low end of density scale for parameterized deleptonization.";
     }
   };
@@ -95,7 +95,7 @@ class ParameterizedDeleptonization {
     using type = double;
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 0.5; }
-    static Options::String help() {
+    Options::String help() {
       return "For densities above HighDensityScale, the electron fraction will "
              "take this value.";
     }
@@ -108,7 +108,7 @@ class ParameterizedDeleptonization {
     using type = double;
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 0.5; }
-    static Options::String help() {
+    Options::String help() {
       return "For densities below LowDensityScale, the electron fraction will "
              "take this value.";
     }
@@ -122,7 +122,7 @@ class ParameterizedDeleptonization {
   struct ElectronFractionCorrectionScale {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static Options::String help() {
+    Options::String help() {
       return "For densities between low and high limits, a higher value of "
              "ElectronFractionCorrectionScale will increase the value of Ye.";
     }
@@ -132,7 +132,7 @@ class ParameterizedDeleptonization {
       tmpl::list<Enable, HighDensityScale, LowDensityScale,
                  ElectronFractionAtHighDensity, ElectronFractionAtLowDensity,
                  ElectronFractionCorrectionScale>;
-  static Options::String help() {
+  Options::String help() {
     return "Set electron fraction based on rest mass density.  "
            "(Low/High)DensityScale sets the limits of the density, beyond "
            "which "

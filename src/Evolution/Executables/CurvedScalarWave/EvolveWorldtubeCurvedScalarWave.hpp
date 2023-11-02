@@ -334,7 +334,7 @@ struct EvolutionMetavars {
       CurvedScalarWave::Worldtube::WorldtubeSingleton<EvolutionMetavars>,
       dg_element_array>>;
 
-  static Options::String help() {
+  Options::String help() {
     return "Evolve a scalar point charge in circular orbit around a "
            "Schwarzschild "
            "black hole.";

@@ -43,7 +43,7 @@ struct print_derived {
       ss << "\n" << std::setw(help_col - 1) << "";
     }
 
-    std::string help_snippet(T::help());
+    std::string help_snippet(T{}.help());
     if (help_snippet.size() > end_col - help_col) {
       help_snippet.resize(end_col - help_col - 3);
       help_snippet += "...";

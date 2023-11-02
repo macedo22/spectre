@@ -96,7 +96,7 @@ class FixConservatives {
   struct MinimumValueOfD {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static Options::String help() {
+    Options::String help() {
       return "Minimum value of rest-mass density times lorentz factor";
     }
   };
@@ -104,7 +104,7 @@ class FixConservatives {
   struct CutoffD {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static Options::String help() {
+    Options::String help() {
       return "Cutoff below which D is set to MinimumValueOfD";
     }
   };
@@ -112,7 +112,7 @@ class FixConservatives {
   struct MinimumValueOfYe {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static Options::String help() {
+    Options::String help() {
       return "Minimum value of electron fraction";
     }
   };
@@ -120,7 +120,7 @@ class FixConservatives {
   struct CutoffYe {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static Options::String help() {
+    Options::String help() {
       return "Cutoff below which Y_e is set to MinimumValueOfYe";
     }
   };
@@ -128,7 +128,7 @@ class FixConservatives {
   struct SafetyFactorForB {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static Options::String help() {
+    Options::String help() {
       return "Safety factor for magnetic field bound.";
     }
   };
@@ -136,7 +136,7 @@ class FixConservatives {
   struct SafetyFactorForS {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static Options::String help() {
+    Options::String help() {
       return "Safety factor for momentum density bound above density cutoff.";
     }
   };
@@ -145,7 +145,7 @@ class FixConservatives {
   struct SafetyFactorForSCutoffD {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static Options::String help() {
+    Options::String help() {
       return "Below this value of rest mass density time Lorentz factor, limit "
              "S "
              "more agressively.";
@@ -158,7 +158,7 @@ class FixConservatives {
   struct SafetyFactorForSSlope {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static Options::String help() {
+    Options::String help() {
       return "Slope of safety factor for momentum density bound below "
              "SafetyFactorForSCutoffD, express as a function of log10(rho*W).";
     }
@@ -166,7 +166,7 @@ class FixConservatives {
   /// Whether or not the limiting is enabled
   struct Enable {
     using type = bool;
-    static Options::String help() {
+    Options::String help() {
       return "If true then the limiting is applied.";
     }
   };
@@ -175,7 +175,7 @@ class FixConservatives {
       tmpl::list<MinimumValueOfD, CutoffD, MinimumValueOfYe, CutoffYe,
                  SafetyFactorForB, SafetyFactorForS, SafetyFactorForSCutoffD,
                  SafetyFactorForSSlope, Enable>;
-  static Options::String help() {
+  Options::String help() {
     return "Variable fixing used in Foucart's thesis.\n";
   }
 

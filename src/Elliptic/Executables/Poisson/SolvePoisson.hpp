@@ -69,25 +69,25 @@ class er;
 namespace SolvePoisson::OptionTags {
 struct LinearSolverGroup {
   static std::string name() { return "LinearSolver"; }
-  static Options::String help() {
+  Options::String help() {
     return "The iterative Krylov-subspace linear solver";
   }
 };
 struct GmresGroup {
   static std::string name() { return "GMRES"; }
-  static Options::String help() {
+  Options::String help() {
     return "Options for the GMRES linear solver";
   }
   using group = LinearSolverGroup;
 };
 struct SchwarzSmootherGroup {
   static std::string name() { return "SchwarzSmoother"; }
-  static Options::String help() { return "Options for the Schwarz smoother"; }
+  Options::String help() { return "Options for the Schwarz smoother"; }
   using group = LinearSolverGroup;
 };
 struct MultigridGroup {
   static std::string name() { return "Multigrid"; }
-  static Options::String help() { return "Options for the multigrid"; }
+  Options::String help() { return "Options for the multigrid"; }
   using group = LinearSolverGroup;
 };
 }  // namespace SolvePoisson::OptionTags
@@ -104,7 +104,7 @@ struct Metavariables {
   using initial_guess_tag =
       elliptic::Tags::InitialGuess<elliptic::analytic_data::InitialGuess>;
 
-  static Options::String help(){
+  Options::String help(){
       return "Find the solution to a Poisson problem."};
 
   // These are the fields we solve for

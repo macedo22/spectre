@@ -12,7 +12,7 @@ namespace amr::OptionTags {
 
 struct AmrGroup {
   static std::string name() { return "Amr"; }
-  static Options::String help() {
+  Options::String help() {
     return "Options for adaptive mesh refinement (AMR)";
   }
 };

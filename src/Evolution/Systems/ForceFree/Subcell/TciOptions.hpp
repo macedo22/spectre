@@ -35,7 +35,7 @@ struct TciOptions {
    */
   struct TildeQCutoff {
     using type = Options::Auto<double, DoNotCheckTildeQ>;
-    static Options::String help() {
+    Options::String help() {
       return "If maximum absolute value of TildeQ in an element is below this "
              "value "
              "we do not apply the Persson TCI to TildeQ. To disable the check, "
@@ -46,7 +46,7 @@ struct TciOptions {
 
   using options = tmpl::list<TildeQCutoff>;
 
-  static Options::String help() {
+  Options::String help() {
     return "Options for the troubled-cell indicator";
   }
 
@@ -60,7 +60,7 @@ struct TciOptions {
 namespace OptionTags {
 struct TciOptions {
   using type = subcell::TciOptions;
-  static Options::String help() {
+  Options::String help() {
     return "TCI options for ForceFree system";
     using group = ::dg::OptionTags::DiscontinuousGalerkinGroup;
   };

@@ -46,7 +46,7 @@ namespace OptionTags {
  * \brief Options for the worldtube
  */
 struct Worldtube {
-  static Options::String help() { return "Options for the Worldtube"; }
+  Options::String help() { return "Options for the Worldtube"; }
 };
 
 /*!
@@ -54,7 +54,7 @@ struct Worldtube {
  */
 struct ExcisionSphere {
   using type = std::string;
-  static Options::String help() {
+  Options::String help() {
     return "The name of the excision sphere as returned by the domain.";
   }
   using group = Worldtube;
@@ -66,7 +66,7 @@ struct ExcisionSphere {
  */
 struct ObserveCoefficientsTrigger {
   using type = std::unique_ptr<Trigger>;
-  static Options::String help() {
+  Options::String help() {
     return "Specifies a non-dense trigger in which the coefficients of the "
            "internal "
            "regular field expansion are written to file.";
@@ -79,7 +79,7 @@ struct ObserveCoefficientsTrigger {
  */
 struct ExpansionOrder {
   using type = size_t;
-  static Options::String help() {
+  Options::String help() {
     return "The internal expansion order of the worldtube solution. Currently "
            "orders 0, 1 and 2 are implemented";
   }

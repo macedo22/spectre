@@ -75,24 +75,24 @@ class RotationAboutZAxis final : public TimeDependence<MeshDim> {
   /// \brief The initial time of the function of time.
   struct InitialTime {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "The initial time of the function of time";
     }
   };
   struct InitialAngle {
     using type = double;
-    static Options::String help() { return "The initial angle."; }
+    Options::String help() { return "The initial angle."; }
   };
   /// \brief The \f$x\f$-, \f$y\f$-, and \f$z\f$-velocity.
   struct InitialAngularVelocity {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "The initial angular velocity of the map.";
     }
   };
   struct InitialAngularAcceleration {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "The initial angular acceleration of the map.";
     }
   };
@@ -106,7 +106,7 @@ class RotationAboutZAxis final : public TimeDependence<MeshDim> {
   using options = tmpl::list<InitialTime, InitialAngle, InitialAngularVelocity,
                              InitialAngularAcceleration>;
 
-  static Options::String help() {
+  Options::String help() {
     return "A spatially uniform rotation about the z axis initialized with a "
            "constant angular velocity.";
   }

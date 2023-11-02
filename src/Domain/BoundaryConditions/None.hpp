@@ -48,7 +48,7 @@ template <typename SystemBoundaryConditionBaseClass>
 struct None final : public SystemBoundaryConditionBaseClass, public MarkAsNone {
  public:
   using options = tmpl::list<>;
-  static Options::String help() {
+  Options::String help() {
     return "None boundary condition. Used only during domain creation to "
            "ensure a "
            "consistent state to the domain.";

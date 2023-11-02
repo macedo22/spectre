@@ -42,7 +42,7 @@
 
 /// \cond
 struct Metavariables {
-  static Options::String help(){return "Solve for puncture initial data"};
+  Options::String help(){return "Solve for puncture initial data"};
 
   static constexpr size_t volume_dim = 3;
   using system = Punctures::FirstOrderSystem;

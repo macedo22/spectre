@@ -169,13 +169,13 @@ class FishboneMoncriefDisk
   /// The mass of the black hole, \f$M\f$.
   struct BhMass {
     using type = double;
-    static Options::String help() { return "The mass of the black hole."; }
+    Options::String help() { return "The mass of the black hole."; }
     static type lower_bound() { return 0.0; }
   };
   /// The dimensionless black hole spin, \f$\chi = a/M\f$.
   struct BhDimlessSpin {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "The dimensionless black hole spin.";
     }
     static type lower_bound() { return 0.0; }
@@ -184,21 +184,21 @@ class FishboneMoncriefDisk
   /// The radial coordinate of the inner edge of the disk, in units of \f$M\f$.
   struct InnerEdgeRadius {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "The radial coordinate of the inner edge of the disk.";
     }
   };
   /// The radial coordinate of the maximum pressure, in units of \f$M\f$.
   struct MaxPressureRadius {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "The radial coordinate of the maximum pressure.";
     }
   };
   /// The polytropic constant of the fluid.
   struct PolytropicConstant {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "The polytropic constant of the fluid.";
     }
     static type lower_bound() { return 0.; }
@@ -206,7 +206,7 @@ class FishboneMoncriefDisk
   /// The polytropic exponent of the fluid.
   struct PolytropicExponent {
     using type = double;
-    static Options::String help() {
+    Options::String help() {
       return "The polytropic exponent of the fluid.";
     }
     static type lower_bound() { return 1.; }
@@ -215,7 +215,7 @@ class FishboneMoncriefDisk
   using options =
       tmpl::list<BhMass, BhDimlessSpin, InnerEdgeRadius, MaxPressureRadius,
                  PolytropicConstant, PolytropicExponent>;
-  static Options::String help() {
+  Options::String help() {
     return "Fluid disk orbiting a Kerr black hole.";
   }
 

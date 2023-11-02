@@ -43,7 +43,7 @@ class OnSubsteps : public Trigger {
   WRAPPED_PUPable_decl_template(OnSubsteps);  // NOLINT
   /// \endcond
 
-  static Options::String help() {
+  Options::String help() {
     return "Check a trigger on substeps in addition to steps.";
   }
 
