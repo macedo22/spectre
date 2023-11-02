@@ -65,7 +65,7 @@ class FastFlow {
 
   struct Flow {
     using type = FlowType;
-    Options::String help() {
+    static Options::String help() {
       return "Flow method: Jacobi, Curvature, or Fast";
     }
     static type suggested_value() { return FlowType::Fast; }
@@ -73,7 +73,7 @@ class FastFlow {
 
   struct Alpha {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "Alpha parameter in PRD 57, 863 (1998)";
     }
     static type suggested_value() { return 1.0; }
@@ -81,7 +81,7 @@ class FastFlow {
 
   struct Beta {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "Beta parameter in PRD 57, 863 (1998)";
     }
     static type suggested_value() { return 0.5; }
@@ -89,7 +89,7 @@ class FastFlow {
 
   struct AbsTol {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "Convergence found if R_{Y_lm} < AbsTol";
     }
     static type suggested_value() { return 1.e-12; }
@@ -97,7 +97,7 @@ class FastFlow {
 
   struct TruncationTol {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "Convergence found if R_{Y_lm} < TruncationTol*R_{mesh}";
     }
     static type suggested_value() { return 1.e-2; }
@@ -105,7 +105,7 @@ class FastFlow {
 
   struct DivergenceTol {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "Fraction that residual can increase before dying";
     }
     static type suggested_value() { return 1.2; }
@@ -114,7 +114,7 @@ class FastFlow {
 
   struct DivergenceIter {
     using type = size_t;
-    Options::String help() {
+    static Options::String help() {
       return "Num iterations residual can increase before dying";
     }
     static type suggested_value() { return 5; }
@@ -122,14 +122,14 @@ class FastFlow {
 
   struct MaxIts {
     using type = size_t;
-    Options::String help() { return "Maximum number of iterations."; }
+    static Options::String help() { return "Maximum number of iterations."; }
     static type suggested_value() { return 100; }
   };
 
   using options = tmpl::list<Flow, Alpha, Beta, AbsTol, TruncationTol,
                              DivergenceTol, DivergenceIter, MaxIts>;
 
-  Options::String help() {
+  static Options::String help() {
     return "Find a Strahlkorper using a 'fast flow' method.\n"
            "Based on Gundlach, PRD 57, 863 (1998).\n"
            "Expands the surface in terms of spherical harmonics Y_lm up to a "

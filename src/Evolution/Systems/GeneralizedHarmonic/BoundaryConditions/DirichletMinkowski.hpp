@@ -40,7 +40,7 @@ template <size_t Dim>
 class DirichletMinkowski final : public BoundaryCondition<Dim> {
  public:
   using options = tmpl::list<>;
-  Options::String help() {
+  static Options::String help() {
     return "DirichletMinkowski boundary conditions setting the value of the "
            "spacetime metric and its derivatives Phi and Pi to Minkowski "
            "(i.e., "

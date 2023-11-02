@@ -65,7 +65,7 @@ struct EvolutionMetavars : public GeneralizedHarmonicTemplateBase<3> {
   using typename gh_base::initialize_initial_data_dependent_quantities_actions;
   using typename gh_base::system;
 
-  Options::String help() {
+  static Options::String help() {
     return "Evolve the Einstein field equations using the Generalized Harmonic "
            "formulation,\n"
            "on a domain with a single horizon and corresponding excised region";

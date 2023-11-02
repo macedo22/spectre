@@ -37,21 +37,21 @@ namespace Cce::Solutions {
 struct RotatingSchwarzschild : public SphericalMetricData {
   struct ExtractionRadius {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "The extraction radius of the spherical solution";
     }
     static type lower_bound() { return 0.0; }
   };
   struct Mass {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "The mass of the Schwarzschild black hole";
     }
     static type lower_bound() { return 0.0; }
   };
   struct Frequency {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "The frequency of the coordinate rotation.";
     }
     static type lower_bound() { return 0.0; }
@@ -59,7 +59,7 @@ struct RotatingSchwarzschild : public SphericalMetricData {
 
   using options = tmpl::list<ExtractionRadius, Mass, Frequency>;
 
-  Options::String help() {
+  static Options::String help() {
     return "Analytic solution representing a Schwarzschild black hole in a "
            "rotating "
            "frame";

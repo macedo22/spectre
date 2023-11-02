@@ -69,19 +69,19 @@ class SmoothFlow : virtual public MarkAsAnalyticSolution {
   /// The mean flow velocity.
   struct MeanVelocity {
     using type = std::array<double, Dim>;
-    Options::String help() { return "The mean flow velocity."; }
+    static Options::String help() { return "The mean flow velocity."; }
   };
 
   /// The wave vector of the profile.
   struct WaveVector {
     using type = std::array<double, Dim>;
-    Options::String help() { return "The wave vector of the profile."; }
+    static Options::String help() { return "The wave vector of the profile."; }
   };
 
   /// The constant pressure throughout the fluid.
   struct Pressure {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "The constant pressure throughout the fluid.";
     }
     static type lower_bound() { return 0.0; }
@@ -90,7 +90,7 @@ class SmoothFlow : virtual public MarkAsAnalyticSolution {
   /// The adiabatic index for the ideal fluid.
   struct AdiabaticIndex {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "The adiabatic index for the ideal fluid.";
     }
     static type lower_bound() { return 1.0; }
@@ -99,7 +99,7 @@ class SmoothFlow : virtual public MarkAsAnalyticSolution {
   /// The perturbation amplitude of the rest mass density of the fluid.
   struct PerturbationSize {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "The perturbation size of the rest mass density.";
     }
     static type lower_bound() { return -1.0; }

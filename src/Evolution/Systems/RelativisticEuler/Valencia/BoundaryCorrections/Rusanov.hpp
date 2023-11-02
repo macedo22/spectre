@@ -64,7 +64,7 @@ class Rusanov final : public BoundaryCorrection<Dim> {
 
  public:
   using options = tmpl::list<>;
-  Options::String help() {
+  static Options::String help() {
     return "Computes the Rusanov or local Lax-Friedrichs boundary correction "
            "term "
            "for the Valencia formulation of the relativistic "

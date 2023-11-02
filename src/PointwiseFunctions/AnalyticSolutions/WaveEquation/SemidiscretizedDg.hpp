@@ -43,21 +43,21 @@ class SemidiscretizedDg : public evolution::initial_data::InitialData,
 
   struct Harmonic {
     using type = int;
-    Options::String help() {
+    static Options::String help() {
       return "Number of wave periods across the domain";
     }
   };
 
   struct Amplitudes {
     using type = std::array<double, 4>;
-    Options::String help() {
+    static Options::String help() {
       return "Amplitudes of the independent modes of the harmonic";
     }
   };
 
   using options = tmpl::list<Harmonic, Amplitudes>;
 
-  Options::String help() {
+  static Options::String help() {
     return "A solution of the semidiscretized DG system on linear elements\n"
            "with spatial period 2 pi.";
   }

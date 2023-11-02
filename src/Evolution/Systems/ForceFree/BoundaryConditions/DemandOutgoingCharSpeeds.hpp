@@ -33,7 +33,7 @@ namespace ForceFree::BoundaryConditions {
 class DemandOutgoingCharSpeeds final : public BoundaryCondition {
  public:
   using options = tmpl::list<>;
-  Options::String help() {
+  static Options::String help() {
     return "DemandOutgoingCharSpeeds boundary condition that only verifies the "
            "characteristic speeds are all directed out of the domain.";
   }

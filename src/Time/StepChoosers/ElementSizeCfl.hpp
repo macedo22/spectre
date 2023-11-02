@@ -45,11 +45,11 @@ class ElementSizeCfl : public StepChooser<StepChooserUse> {
 
   struct SafetyFactor {
     using type = double;
-    Options::String help() { return "Multiplier for computed step"; }
+    static Options::String help() { return "Multiplier for computed step"; }
     static type lower_bound() { return 0.0; }
   };
 
-  Options::String help() {
+  static Options::String help() {
     return "Suggests a step size based on the CFL stability criterion, but in "
            "which "
            "the entire size of the element is used as the spacing in the "

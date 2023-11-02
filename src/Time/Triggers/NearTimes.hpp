@@ -57,33 +57,33 @@ class NearTimes : public Trigger {
   struct OptionTags {
     struct Times {
       using type = std::unique_ptr<TimeSequence<double>>;
-      Options::String help() { return "Times to trigger at"; }
+      static Options::String help() { return "Times to trigger at"; }
     };
 
     struct Range {
       using type = double;
       static type lower_bound() { return 0.0; }
-      Options::String help() {
+      static Options::String help() {
         return "Maximum time difference to trigger at";
       }
     };
 
     struct Unit {
       using type = NearTimes::Unit;
-      Options::String help() {
+      static Options::String help() {
         return "Interpret Range as 'Time', 'Step's, or 'Slab's";
       }
     };
 
     struct Direction {
       using type = NearTimes::Direction;
-      Options::String help() {
+      static Options::String help() {
         return "Trigger 'Before', 'After', or 'Both' from the times";
       }
     };
   };
 
-  Options::String help() {
+  static Options::String help() {
     return "Trigger in intervals surrounding particular times.";
   }
   using options =

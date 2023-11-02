@@ -14,7 +14,7 @@ namespace CurvedScalarWave {
 namespace OptionTags {
 
 struct BackgroundSpacetimeGroup {
-  Options::String help() {
+  static Options::String help() {
     return "The background spacetime on which the scalar wave "
            "propagates.";
   }
@@ -23,7 +23,7 @@ struct BackgroundSpacetimeGroup {
 
 template <typename BackgroundType>
 struct BackgroundSpacetime {
-  Options::String help() {
+  static Options::String help() {
     return "Options for the background spacetime on which the scalar wave "
            "propagates.";
   }

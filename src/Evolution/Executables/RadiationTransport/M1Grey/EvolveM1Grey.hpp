@@ -263,7 +263,7 @@ struct EvolutionMetavars {
 
   using const_global_cache_tags = tmpl::list<initial_data_tag>;
 
-  Options::String help() {
+  static Options::String help() {
     return "Evolve the M1Grey system (without coupling to hydro).\n\n";
   }
 

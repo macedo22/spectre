@@ -103,7 +103,7 @@ class ObserveFields<VolumeDim, tmpl::list<Tensors...>,
   /// The name of the subfile inside the HDF5 file
   struct SubfileName {
     using type = std::string;
-    Options::String help() {
+    static Options::String help() {
       return "The name of the subfile inside the HDF5 file without an "
              "extension and "
              "without a preceding '/'.";
@@ -117,14 +117,14 @@ class ObserveFields<VolumeDim, tmpl::list<Tensors...>,
   /// \endcond
 
   struct VariablesToObserve {
-    Options::String help() { return "Subset of variables to observe"; }
+    static Options::String help() { return "Subset of variables to observe"; }
     using type = std::vector<std::string>;
     static size_t lower_bound_on_size() { return 1; }
   };
 
   struct InterpolateToMesh {
     using type = Options::Auto<Mesh<VolumeDim>, Options::AutoLabel::None>;
-    Options::String help() {
+    static Options::String help() {
       return "An optional mesh to which the variables are interpolated. This "
              "mesh "
              "specifies any number of collocation points, basis, and "
@@ -146,7 +146,7 @@ class ObserveFields<VolumeDim, tmpl::list<Tensors...>,
   /// Must be specified once for all data or individually for each variable
   /// being observed.
   struct FloatingPointTypes {
-    Options::String help() {
+    static Options::String help() {
       return "The floating point type/precision with which to write the data "
              "to "
              "disk.\n\n"
@@ -161,7 +161,7 @@ class ObserveFields<VolumeDim, tmpl::list<Tensors...>,
   /// The floating point type/precision with which to write the coordinates to
   /// disk.
   struct CoordinatesFloatingPointType {
-    Options::String help() {
+    static Options::String help() {
       return "The floating point type/precision with which to write the "
              "coordinates "
              "to disk.";
@@ -173,7 +173,7 @@ class ObserveFields<VolumeDim, tmpl::list<Tensors...>,
       tmpl::list<SubfileName, CoordinatesFloatingPointType, FloatingPointTypes,
                  VariablesToObserve, InterpolateToMesh>;
 
-  Options::String help() {
+  static Options::String help() {
     return "Observe volume tensor fields.\n"
            "\n"
            "Writes volume quantities:\n"

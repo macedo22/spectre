@@ -64,7 +64,7 @@ class Cylinder : public DomainCreator<3> {
 
   struct InnerRadius {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "Radius of the circle circumscribing the inner square.";
     }
     static double lower_bound() { return 0.; }
@@ -72,27 +72,27 @@ class Cylinder : public DomainCreator<3> {
 
   struct OuterRadius {
     using type = double;
-    Options::String help() { return "Radius of the cylinder."; }
+    static Options::String help() { return "Radius of the cylinder."; }
     static double lower_bound() { return 0.; }
   };
 
   struct LowerZBound {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "z-coordinate of the base of the cylinder.";
     }
   };
 
   struct UpperZBound {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "z-coordinate of the top of the cylinder.";
     }
   };
 
   struct IsPeriodicInZ {
     using type = bool;
-    Options::String help() {
+    static Options::String help() {
       return "True if periodic in the cylindrical z direction.";
     }
   };
@@ -102,7 +102,7 @@ class Cylinder : public DomainCreator<3> {
         std::variant<size_t, std::array<size_t, 3>,
                      std::vector<std::array<size_t, 3>>,
                      std::unordered_map<std::string, std::array<size_t, 3>>>;
-    Options::String help() {
+    static Options::String help() {
       return "Initial refinement level. Specify one of: a single number, a "
              "list "
              "representing [r, theta, z], or such a list for every block in "
@@ -118,7 +118,7 @@ class Cylinder : public DomainCreator<3> {
         std::variant<size_t, std::array<size_t, 3>,
                      std::vector<std::array<size_t, 3>>,
                      std::unordered_map<std::string, std::array<size_t, 3>>>;
-    Options::String help() {
+    static Options::String help() {
       return "Initial number of grid points. Specify one of: a single number, "
              "a "
              "list representing [r, theta, z], or such a list for every block "
@@ -131,14 +131,14 @@ class Cylinder : public DomainCreator<3> {
 
   struct UseEquiangularMap {
     using type = bool;
-    Options::String help() {
+    static Options::String help() {
       return "Use equiangular instead of equidistant coordinates.";
     }
   };
 
   struct RadialPartitioning {
     using type = std::vector<double>;
-    Options::String help() {
+    static Options::String help() {
       return "Radial coordinates of the boundaries splitting the outer shell "
              "between InnerRadius and OuterRadius.";
     }
@@ -146,7 +146,7 @@ class Cylinder : public DomainCreator<3> {
 
   struct PartitioningInZ {
     using type = std::vector<double>;
-    Options::String help() {
+    static Options::String help() {
       return "z-coordinates of the boundaries splitting the domain into layers "
              "between LowerZBound and UpperZBound.";
     }
@@ -154,7 +154,7 @@ class Cylinder : public DomainCreator<3> {
 
   struct RadialDistribution {
     using type = std::vector<domain::CoordinateMaps::Distribution>;
-    Options::String help() {
+    static Options::String help() {
       return "Select the radial distribution of grid points in each "
              "cylindrical "
              "shell. The innermost shell must have a 'Linear' distribution "
@@ -168,7 +168,7 @@ class Cylinder : public DomainCreator<3> {
 
   struct DistributionInZ {
     using type = std::vector<domain::CoordinateMaps::Distribution>;
-    Options::String help() {
+    static Options::String help() {
       return "Select the distribution of grid points along the z-axis in each "
              "layer. The lowermost layer must have a 'Linear' distribution, "
              "because "
@@ -181,7 +181,7 @@ class Cylinder : public DomainCreator<3> {
   };
 
   struct BoundaryConditions {
-    Options::String help() {
+    static Options::String help() {
       return "Options for the boundary conditions";
     }
   };
@@ -190,7 +190,7 @@ class Cylinder : public DomainCreator<3> {
   struct LowerZBoundaryCondition {
     using group = BoundaryConditions;
     static std::string name() { return "LowerZ"; }
-    Options::String help() {
+    static Options::String help() {
       return "The boundary condition to be imposed on the lower base of the "
              "cylinder, i.e. at the `LowerZBound` in the z-direction.";
     }
@@ -201,7 +201,7 @@ class Cylinder : public DomainCreator<3> {
   struct UpperZBoundaryCondition {
     using group = BoundaryConditions;
     static std::string name() { return "UpperZ"; }
-    Options::String help() {
+    static Options::String help() {
       return "The boundary condition to be imposed on the upper base of the "
              "cylinder, i.e. at the `UpperZBound` in the z-direction.";
     }
@@ -212,7 +212,7 @@ class Cylinder : public DomainCreator<3> {
   struct MantleBoundaryCondition {
     using group = BoundaryConditions;
     static std::string name() { return "Mantle"; }
-    Options::String help() {
+    static Options::String help() {
       return "The boundary condition to be imposed on the mantle of the "
              "cylinder, i.e. at the `OuterRadius` in the radial direction.";
     }
@@ -240,7 +240,7 @@ class Cylinder : public DomainCreator<3> {
                  RadialPartitioning, PartitioningInZ, RadialDistribution,
                  DistributionInZ>>;
 
-  Options::String help() {
+  static Options::String help() {
     return "Creates a right circular Cylinder with a square prism surrounded "
            "by \n"
            "wedges. \n"

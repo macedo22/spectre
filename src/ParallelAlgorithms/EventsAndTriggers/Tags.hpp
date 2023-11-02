@@ -38,7 +38,7 @@ namespace OptionTags {
 /// \endcode
 struct EventsAndTriggers {
   using type = ::EventsAndTriggers;
-  Options::String help() { return "Events to run at triggers"; }
+  static Options::String help() { return "Events to run at triggers"; }
   // When the template arguments to this struct are sufficiently
   // complicated, pretty_type::short_name() run on this struct returns
   // something that is neither pretty nor short, and leads to an
@@ -51,7 +51,7 @@ struct EventsAndTriggers {
 namespace EventsRunAtCleanup {
 struct Group {
   static std::string name() { return "EventsRunAtCleanup"; }
-  Options::String help() {
+  static Options::String help() {
     return "Options related to running events on failure.  This is generally "
            "intended for dumping volume data to diagnose failure reasons.";
   }
@@ -63,7 +63,7 @@ struct Group {
 struct Events {
   static std::string name() { return "Events"; }
   using type = std::vector<std::unique_ptr<::Event>>;
-  Options::String help() {
+  static Options::String help() {
     return "Events to run during the cleanup phase.";
   }
   using group = Group;
@@ -72,7 +72,7 @@ struct Events {
 /// \brief Observation value for Actions::RunEventsOnFailure.
 struct ObservationValue {
   using type = double;
-  Options::String help() {
+  static Options::String help() {
     return "Observation value for events run during the cleanup phase.";
   }
   using group = Group;

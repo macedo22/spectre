@@ -19,7 +19,7 @@ namespace OptionTags {
 template <typename OptionsGroup>
 struct Criteria {
   static std::string name() { return "ConvergenceCriteria"; }
-  Options::String help() {
+  static Options::String help() {
     return "Determine convergence of the algorithm";
   }
   using type = Convergence::Criteria;
@@ -28,7 +28,7 @@ struct Criteria {
 
 template <typename OptionsGroup>
 struct Iterations {
-  Options::String help() {
+  static Options::String help() {
     return "Number of iterations to run the algorithm";
   }
   using type = size_t;

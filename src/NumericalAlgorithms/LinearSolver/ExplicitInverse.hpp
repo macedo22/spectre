@@ -82,7 +82,7 @@ class ExplicitInverse : public LinearSolver<LinearSolverRegistrars> {
  public:
   struct WriteMatrixToFile {
     using type = Options::Auto<std::string, Options::AutoLabel::None>;
-    Options::String help() {
+    static Options::String help() {
       return "Write the matrix representation of the linear operator to a "
              "space-delimited CSV file with this name. A '.txt' extension will "
              "be "
@@ -94,7 +94,7 @@ class ExplicitInverse : public LinearSolver<LinearSolverRegistrars> {
   };
 
   using options = tmpl::list<WriteMatrixToFile>;
-  Options::String help() {
+  static Options::String help() {
     return "Build a matrix representation of the linear operator and invert it "
            "directly. This means that the first solve has a large "
            "initialization "

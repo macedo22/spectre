@@ -27,11 +27,11 @@ class Increase : public StepChooser<StepChooserUse> {
 
   struct Factor {
     using type = double;
-    Options::String help() { return "Factor to increase by"; }
+    static Options::String help() { return "Factor to increase by"; }
     static type lower_bound() { return 1.0; }
   };
 
-  Options::String help() {
+  static Options::String help() {
     return "Suggests a constant factor increase.";
   }
   using options = tmpl::list<Factor>;

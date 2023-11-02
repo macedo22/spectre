@@ -25,7 +25,7 @@ class Always : public Trigger {
   /// \endcond
 
   using options = tmpl::list<>;
-  Options::String help() { return "Always trigger."; }
+  static Options::String help() { return "Always trigger."; }
 
   Always() = default;
 
@@ -45,7 +45,7 @@ class Not : public Trigger {
   WRAPPED_PUPable_decl_template(Not);  // NOLINT
   /// \endcond
 
-  Options::String help() { return "Negates another trigger."; }
+  static Options::String help() { return "Negates another trigger."; }
 
   explicit Not(std::unique_ptr<Trigger> negated_trigger)
       : negated_trigger_(std::move(negated_trigger)) {}
@@ -75,7 +75,7 @@ class And : public Trigger {
   WRAPPED_PUPable_decl_template(And);  // NOLINT
   /// \endcond
 
-  Options::String help() {
+  static Options::String help() {
     return "Short-circuiting logical AND of other triggers.";
   }
 
@@ -112,7 +112,7 @@ class Or : public Trigger {
   WRAPPED_PUPable_decl_template(Or);  // NOLINT
   /// \endcond
 
-  Options::String help() {
+  static Options::String help() {
     return "Short-circuiting logical OR of other triggers.";
   }
 

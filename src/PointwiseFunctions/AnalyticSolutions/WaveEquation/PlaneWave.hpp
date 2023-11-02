@@ -59,26 +59,26 @@ class PlaneWave : public evolution::initial_data::InitialData,
   static constexpr size_t volume_dim = Dim;
   struct WaveVector {
     using type = std::array<double, Dim>;
-    Options::String help() {
+    static Options::String help() {
       return "The direction of propagation of the wave.";
     }
   };
 
   struct Center {
     using type = std::array<double, Dim>;
-    Options::String help() {
+    static Options::String help() {
       return "The initial center of the profile of the wave.";
     }
   };
 
   struct Profile {
     using type = std::unique_ptr<MathFunction<1, Frame::Inertial>>;
-    Options::String help() { return "The profile of the wave."; }
+    static Options::String help() { return "The profile of the wave."; }
   };
 
   using options = tmpl::list<WaveVector, Center, Profile>;
 
-  Options::String help() {
+  static Options::String help() {
     return "A plane wave solution of the Euclidean wave equation";
   }
   using tags =

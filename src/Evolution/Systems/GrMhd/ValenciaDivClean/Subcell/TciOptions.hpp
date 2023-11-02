@@ -35,7 +35,7 @@ struct TciOptions {
   struct MinimumValueOfD {
     using type = double;
     static type lower_bound() { return 0.0; }
-    Options::String help() {
+    static Options::String help() {
       return "Minimum value of rest-mass density times Lorentz factor before "
              "we "
              "switch to subcell.";
@@ -47,7 +47,7 @@ struct TciOptions {
   struct MinimumValueOfYe {
     using type = double;
     static type lower_bound() { return 0.0; }
-    Options::String help() {
+    static Options::String help() {
       return "Minimum value of Y_e before we switch to subcell.";
     }
   };
@@ -56,7 +56,7 @@ struct TciOptions {
   struct MinimumValueOfTildeTau {
     using type = double;
     static type lower_bound() { return 0.0; }
-    Options::String help() {
+    static Options::String help() {
       return "Minimum value of tilde tau before we switch to subcell.";
     }
   };
@@ -66,7 +66,7 @@ struct TciOptions {
   struct AtmosphereDensity {
     using type = double;
     static type lower_bound() { return 0.0; }
-    Options::String help() {
+    static Options::String help() {
       return "The density cutoff where if the maximum value of the density in "
              "the "
              "DG element is below this value we skip primitive recovery and "
@@ -81,7 +81,7 @@ struct TciOptions {
   struct SafetyFactorForB {
     using type = double;
     static type lower_bound() { return 0.0; }
-    Options::String help() {
+    static Options::String help() {
       return "Safety factor for magnetic field bound.";
     }
   };
@@ -89,7 +89,7 @@ struct TciOptions {
   /// is below this value we do not apply the Persson TCI to the magnetic field.
   struct MagneticFieldCutoff {
     using type = Options::Auto<double, DoNotCheckMagneticField>;
-    Options::String help() {
+    static Options::String help() {
       return "The cutoff where if the maximum of the magnetic field in an "
              "element "
              "is below this value we do not apply the Persson TCI to the "
@@ -105,7 +105,7 @@ struct TciOptions {
   using options =
       tmpl::list<MinimumValueOfD, MinimumValueOfYe, MinimumValueOfTildeTau,
                  AtmosphereDensity, SafetyFactorForB, MagneticFieldCutoff>;
-  Options::String help() {
+  static Options::String help() {
     return "Options for the troubled-cell indicator.";
   }
 
@@ -129,7 +129,7 @@ struct TciOptions {
 namespace OptionTags {
 struct TciOptions {
   using type = subcell::TciOptions;
-  Options::String help() {
+  static Options::String help() {
     return "GRMHD-specific options for the TCI.";
     using group = ::dg::OptionTags::DiscontinuousGalerkinGroup;
   };

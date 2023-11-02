@@ -19,7 +19,7 @@ namespace OptionTags {
 struct SubcellOptions {
   static std::string name() { return "Subcell"; }
   using type = evolution::dg::subcell::SubcellOptions;
-  Options::String help() {
+  static Options::String help() {
     return "System-agnostic options for DG-subcell";
   }
   using group = ::dg::OptionTags::DiscontinuousGalerkinGroup;

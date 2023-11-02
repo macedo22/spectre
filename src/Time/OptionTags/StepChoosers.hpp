@@ -15,7 +15,7 @@ namespace OptionTags {
 /// \ingroup OptionTagsGroup
 /// \ingroup TimeGroup
 struct StepChoosers {
-  Options::String help() { return "Limits on LTS step size"; }
+  static Options::String help() { return "Limits on LTS step size"; }
   using type =
       std::vector<std::unique_ptr<::StepChooser<StepChooserUse::LtsStep>>>;
   static size_t lower_bound_on_size() { return 1; }

@@ -185,7 +185,7 @@ class Hllc final : public BoundaryCorrection<Dim> {
   };
 
   using options = tmpl::list<>;
-  Options::String help() {
+  static Options::String help() {
     return "Computes the HLLC boundary correction term for the "
            "Newtonian Euler/hydrodynamics system.";
   }

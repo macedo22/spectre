@@ -57,7 +57,7 @@ class NumericInitialData : public evolution::initial_data::InitialData {
     static std::string name() { return db::tag_name<Tag>(); }
     using type = std::conditional_t<is_required, std::string,
                                     std::variant<double, std::string>>;
-    Options::String help() {
+    static Options::String help() {
       return "Name of the variable in the volume data file. For optional "
              "variables "
              "you may instead specify a double that is used as a constant "
@@ -80,7 +80,7 @@ class NumericInitialData : public evolution::initial_data::InitialData {
                                     std::bool_constant<false>>>;
   struct PrimitiveVars
       : tuples::tagged_tuple_from_typelist<primitive_vars_option_tags> {
-    Options::String help() {
+    static Options::String help() {
       return "Primitive hydro variables: 'RestMassDensity' and "
              "'LowerSpatialFourVelocity' (which is u_i = W * gamma_ij v^j). ";
       using options = tags_list;
@@ -93,14 +93,14 @@ class NumericInitialData : public evolution::initial_data::InitialData {
   // Input-file options
   struct Variables {
     using type = PrimitiveVars;
-    Options::String help() {
+    static Options::String help() {
       return "Set of initial data variables from which the Valencia evolution "
              "variables are computed.";
     };
 
   struct DensityCutoff {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "Where the density is below this cutoff the fluid variables are "
              "set to "
              "vacuum (zero density, pressure, energy and velocity, unit "
@@ -121,7 +121,7 @@ class NumericInitialData : public evolution::initial_data::InitialData {
       importers::OptionTags::ObservationValue,
       importers::OptionTags::EnableInterpolation, Variables, DensityCutoff>;
 
-  Options::String help() {
+  static Options::String help() {
     return "Numeric initial data loaded from volume data files";
 
     NumericInitialData() = default;

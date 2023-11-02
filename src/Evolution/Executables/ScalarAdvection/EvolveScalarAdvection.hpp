@@ -367,7 +367,7 @@ struct EvolutionMetavars {
                  observers::ObserverWriter<EvolutionMetavars>,
                  dg_element_array>;
 
-  Options::String help() {
+  static Options::String help() {
     return "Evolve the scalar advection equation.\n\n";
   }
 

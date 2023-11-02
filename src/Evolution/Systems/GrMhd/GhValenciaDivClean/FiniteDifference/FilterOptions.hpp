@@ -26,7 +26,7 @@ struct FilterOptions {
   /// Must be positive and less than 1.
   struct SpacetimeDissipation {
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    Options::String help() {
+    static Options::String help() {
       return "The amount of Kreiss-Oliger filter dissipation to apply. Must be "
              "positive and less than 1. If 'None' then no dissipation is "
              "applied.";
@@ -34,7 +34,7 @@ struct FilterOptions {
   };
   using options = tmpl::list<SpacetimeDissipation>;
 
-  Options::String help() {
+  static Options::String help() {
     return "Parameters for controlling filter on the FD grid.";
   }
 

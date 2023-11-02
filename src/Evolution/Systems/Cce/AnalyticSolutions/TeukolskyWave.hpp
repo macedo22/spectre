@@ -41,27 +41,27 @@ namespace Solutions {
 struct TeukolskyWave : public SphericalMetricData {
   struct ExtractionRadius {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "The extraction radius of the spherical solution";
     }
     static type lower_bound() { return 0.0; }
   };
   struct Amplitude {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "The amplitude of the Teukolsky wave.";
     }
     static type lower_bound() { return 0.0; }
   };
   struct Duration {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "The characteristic duration of the Gaussian envelope.";
     }
     static type lower_bound() { return 0.0; }
   };
 
-  Options::String help() {
+  static Options::String help() {
     return "An analytic solution derived from the linearized Teukolsky "
            "equation";
   }

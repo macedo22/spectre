@@ -44,10 +44,10 @@ template <size_t VolumeDim>
 struct SpecifiedPoints {
   struct Points {
     using type = std::vector<std::array<double, VolumeDim>>;
-    Options::String help() { return "Coordinates of each point"; }
+    static Options::String help() { return "Coordinates of each point"; }
   };
   using options = tmpl::list<Points>;
-  Options::String help() { return "A list of specified points"; }
+  static Options::String help() { return "A list of specified points"; }
 
   explicit SpecifiedPoints(
       std::vector<std::array<double, VolumeDim>> points_in);
@@ -78,7 +78,7 @@ namespace OptionTags {
 template <typename InterpolationTargetTag, size_t VolumeDim>
 struct SpecifiedPoints {
   using type = OptionHolders::SpecifiedPoints<VolumeDim>;
-  Options::String help() {
+  static Options::String help() {
     return "Options for interpolation onto a specified list of points.";
   }
   static std::string name() {

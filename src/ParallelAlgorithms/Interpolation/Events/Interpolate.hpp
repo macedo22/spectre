@@ -57,7 +57,7 @@ class Interpolate<VolumeDim, InterpolationTargetTag,
   /// \endcond
 
   using options = tmpl::list<>;
-  Options::String help() {
+  static Options::String help() {
     return "Starts interpolation onto the given InterpolationTargetTag.";
   }
 

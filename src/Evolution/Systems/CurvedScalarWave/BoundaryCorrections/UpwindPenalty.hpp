@@ -90,7 +90,7 @@ class UpwindPenalty final : public BoundaryCorrection<Dim> {
 
  public:
   using options = tmpl::list<>;
-  Options::String help() {
+  static Options::String help() {
     return "Computes the UpwindPenalty boundary correction term for the scalar "
            "wave "
            "system in curved spacetime.";

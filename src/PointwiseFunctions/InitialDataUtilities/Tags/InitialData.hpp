@@ -21,7 +21,7 @@ namespace OptionTags {
  * \brief Class holding options for initial data of evolution system.
  */
 struct InitialData {
-  Options::String help() {
+  static Options::String help() {
     return "Options for initial data of evolution system";
   }
   using type = std::unique_ptr<evolution::initial_data::InitialData>;

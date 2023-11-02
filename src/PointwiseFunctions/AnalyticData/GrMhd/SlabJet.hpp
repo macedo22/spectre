@@ -66,14 +66,14 @@ class SlabJet : public evolution::initial_data::InitialData,
 
   struct AdiabaticIndex {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "The adiabatic index of the ideal fluid";
     }
     static double lower_bound() { return 1.; }
   };
   struct AmbientDensity {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "Fluid rest mass density outside the jet";
     }
     static double lower_bound() { return 0.; }
@@ -81,13 +81,13 @@ class SlabJet : public evolution::initial_data::InitialData,
   };
   struct AmbientPressure {
     using type = double;
-    Options::String help() { return "Fluid pressure outside the jet"; }
+    static Options::String help() { return "Fluid pressure outside the jet"; }
     static double lower_bound() { return 0.; }
     static double suggested_value() { return 0.01; }
   };
   struct AmbientElectronFraction {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "Electron fraction outside the jet";
     }
     static double lower_bound() { return 0.; }
@@ -95,7 +95,7 @@ class SlabJet : public evolution::initial_data::InitialData,
   };
   struct JetDensity {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "Fluid rest mass density of the jet inlet";
     }
     static double lower_bound() { return 0.; }
@@ -103,13 +103,13 @@ class SlabJet : public evolution::initial_data::InitialData,
   };
   struct JetPressure {
     using type = double;
-    Options::String help() { return "Fluid pressure of the jet inlet"; }
+    static Options::String help() { return "Fluid pressure of the jet inlet"; }
     static double lower_bound() { return 0.; }
     static double suggested_value() { return 0.01; }
   };
   struct JetElectronFraction {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "Electron fraction of the jet inlet";
     }
     static double lower_bound() { return 0.; }
@@ -117,13 +117,13 @@ class SlabJet : public evolution::initial_data::InitialData,
   };
   struct JetVelocity {
     using type = std::array<double, 3>;
-    Options::String help() {
+    static Options::String help() {
       return "Fluid spatial velocity of the jet inlet";
     }
   };
   struct InletRadius {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "Radius of the jet inlet around y=0";
     }
     static double lower_bound() { return 0.; }
@@ -131,7 +131,7 @@ class SlabJet : public evolution::initial_data::InitialData,
   };
   struct MagneticField {
     using type = std::array<double, 3>;
-    Options::String help() { return "Initially uniform magnetic field"; }
+    static Options::String help() { return "Initially uniform magnetic field"; }
     static std::array<double, 3> suggested_value() { return {{1., 0., 0.}}; }
   };
 
@@ -140,7 +140,7 @@ class SlabJet : public evolution::initial_data::InitialData,
                  AmbientElectronFraction, JetDensity, JetPressure,
                  JetElectronFraction, JetVelocity, InletRadius, MagneticField>;
 
-  Options::String help() {
+  static Options::String help() {
     return "Analytic initial data for a jet test.";
   }
 

@@ -35,7 +35,7 @@ class Random : public Criterion {
   /// The fraction of the time random refinement does changes the grid
   struct ChangeRefinementFraction {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "The fraction of the time that random refinement will change the "
              "grid.";
     }
@@ -46,7 +46,7 @@ class Random : public Criterion {
   /// The maximum allowed refinement level
   struct MaximumRefinementLevel {
     using type = size_t;
-    Options::String help() {
+    static Options::String help() {
       return "The maximum allowed refinement level.";
     }
     static size_t upper_bound() { return ElementId<3>::max_refinement_level; }
@@ -54,7 +54,7 @@ class Random : public Criterion {
 
   using options = tmpl::list<ChangeRefinementFraction, MaximumRefinementLevel>;
 
-  Options::String help() {
+  static Options::String help() {
     return "Randomly h-refine (or coarsen) the grid";
   }
 

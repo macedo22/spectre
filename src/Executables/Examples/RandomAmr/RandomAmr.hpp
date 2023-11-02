@@ -56,7 +56,7 @@ struct RandomAmrMetavars {
   static constexpr size_t volume_dim = Dim;
   using system = DummySystem;
 
-  Options::String help() {
+  static Options::String help() {
     return "Test anisotropic refinement by randomly refining a grid.\n";
   }
 

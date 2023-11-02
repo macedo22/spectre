@@ -416,7 +416,7 @@ struct EvolutionMetavars {
       initial_data_tag, equation_of_state_tag,
       tmpl::conditional_t<has_source_terms, source_term_tag, tmpl::list<>>>;
 
-  Options::String help() {
+  static Options::String help() {
     return "Evolve the Newtonian Euler system in conservative form.\n\n";
   }
 

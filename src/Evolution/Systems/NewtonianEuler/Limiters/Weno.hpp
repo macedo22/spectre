@@ -98,7 +98,7 @@ class Weno {
     static type suggested_value() {
       return NewtonianEuler::Limiters::VariablesToLimit::Characteristic;
     }
-    Options::String help() {
+    static Options::String help() {
       return "Variable representation on which to apply the limiter";
     }
   };
@@ -107,20 +107,20 @@ class Weno {
   // required to be 'None') in each input file.
   struct TvbConstant {
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    Options::String help() {
+    static Options::String help() {
       return "Constant in RHS of the TVB minmod TCI, used when Type = "
              "SimpleWeno";
     }
   };
   struct KxrcfConstant {
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    Options::String help() {
+    static Options::String help() {
       return "Constant in RHS of KXRCF TCI, used when Type = Hweno";
     }
   };
   struct ApplyFlattener {
     using type = bool;
-    Options::String help() {
+    static Options::String help() {
       return "Flatten after limiting to restore pointwise positivity";
     }
   };
@@ -129,7 +129,7 @@ class Weno {
                  typename ConservativeVarsWeno::NeighborWeight, TvbConstant,
                  KxrcfConstant, ApplyFlattener,
                  typename ConservativeVarsWeno::DisableForDebugging>;
-  Options::String help() {
+  static Options::String help() {
     return "A WENO limiter specialized to the NewtonianEuler system";
   }
   static std::string name() { return "NewtonianEulerWeno"; };

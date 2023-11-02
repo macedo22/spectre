@@ -67,7 +67,7 @@ namespace FindHorizons {
 namespace OptionTags {
 struct VolumeDataGroup {
   static std::string name() { return "Importers"; }
-  Options::String help() {
+  static Options::String help() {
     return "Volume data to load and find horizons in";
   }
 };
@@ -223,7 +223,7 @@ template <size_t Dim, bool TwoHorizons>
 struct Metavariables {
   static constexpr size_t volume_dim = Dim;
 
-  Options::String help() {
+  static Options::String help() {
     return "Find apparent horizons in volume data.";
   }
 

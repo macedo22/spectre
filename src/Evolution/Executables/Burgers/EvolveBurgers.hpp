@@ -340,7 +340,7 @@ struct EvolutionMetavars {
                  observers::ObserverWriter<EvolutionMetavars>,
                  dg_element_array>;
 
-  Options::String help() {
+  static Options::String help() {
     return "Evolve the Burgers equation.\n\n"
            "The analytic solution is: Linear\n"
            "The numerical flux is:    LocalLaxFriedrichs\n";

@@ -57,7 +57,7 @@ class FixConservatives {
   /// \f$D\f$
   struct MinimumValueOfD {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "Minimum value of rest-mass density times Lorentz factor";
     }
     static type lower_bound() { return 0.0; }
@@ -66,7 +66,7 @@ class FixConservatives {
   /// The cutoff below which \f$D\f$ is set to `MinimumValueOfD`
   struct CutoffD {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "Cutoff below which D is set to MinimumValueOfD";
     }
     static type lower_bound() { return 0.0; }
@@ -75,7 +75,7 @@ class FixConservatives {
   /// The safety factor to fix \f$\tilde S_i\f$
   struct SafetyFactorForS {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "Safety factor for momentum density bound.";
     }
     static type lower_bound() { return std::numeric_limits<double>::epsilon(); }
@@ -83,7 +83,7 @@ class FixConservatives {
   };
 
   using options = tmpl::list<MinimumValueOfD, CutoffD, SafetyFactorForS>;
-  Options::String help() {
+  static Options::String help() {
     return "Variable fixing used in Foucart's thesis.";
   }
 

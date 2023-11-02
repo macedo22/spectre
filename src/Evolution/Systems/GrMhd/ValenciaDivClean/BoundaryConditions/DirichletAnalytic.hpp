@@ -65,7 +65,7 @@ class DirichletAnalytic final : public BoundaryCondition {
 
  public:
   using options = tmpl::list<>;
-  Options::String help() {
+  static Options::String help() {
     return "DirichletAnalytic boundary conditions using either analytic "
            "solution or "
            "analytic data.";

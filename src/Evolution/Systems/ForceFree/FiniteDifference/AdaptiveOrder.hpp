@@ -83,7 +83,7 @@ class AdaptiveOrder : public Reconstructor {
 
   struct Alpha5 {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "The alpha parameter in the Persson convergence measurement. 4 is "
              "the "
              "right value, but anything in the range of 3-5 is 'reasonable'. "
@@ -92,7 +92,7 @@ class AdaptiveOrder : public Reconstructor {
   };
   struct Alpha7 {
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    Options::String help() {
+    static Options::String help() {
       return "The alpha parameter in the Persson convergence measurement. 4 is "
              "the "
              "right value, but anything in the range of 3-5 is 'reasonable'. "
@@ -103,7 +103,7 @@ class AdaptiveOrder : public Reconstructor {
   };
   struct Alpha9 {
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    Options::String help() {
+    static Options::String help() {
       return "The alpha parameter in the Persson convergence measurement. 4 is "
              "the "
              "right value, but anything in the range of 3-5 is 'reasonable'. "
@@ -114,7 +114,7 @@ class AdaptiveOrder : public Reconstructor {
   };
   struct LowOrderReconstructor {
     using type = FallbackReconstructorType;
-    Options::String help() {
+    static Options::String help() {
       return "The 2nd/3rd-order reconstruction scheme to use if unlimited "
              "5th-order "
              "isn't okay.";
@@ -123,7 +123,7 @@ class AdaptiveOrder : public Reconstructor {
 
   using options = tmpl::list<Alpha5, Alpha7, Alpha9, LowOrderReconstructor>;
 
-  Options::String help() { return "Adaptive-order reconstruction."; }
+  static Options::String help() { return "Adaptive-order reconstruction."; }
   AdaptiveOrder() = default;
   AdaptiveOrder(AdaptiveOrder&&) = default;
   AdaptiveOrder& operator=(AdaptiveOrder&&) = default;

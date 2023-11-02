@@ -20,7 +20,7 @@ namespace OptionTags {
 /// \ingroup OptionTagsGroup
 /// Options for AMR criteria
 struct Criteria {
-  Options::String help() { return "Options for AMR criteria"; }
+  static Options::String help() { return "Options for AMR criteria"; }
   using type = std::vector<std::unique_ptr<amr::Criterion>>;
   using group = amr::OptionTags::AmrGroup;
 };

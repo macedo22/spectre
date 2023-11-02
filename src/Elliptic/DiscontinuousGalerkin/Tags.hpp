@@ -12,21 +12,21 @@ namespace elliptic::dg {
 namespace OptionTags {
 
 struct Discretization {
-  Options::String help() {
+  static Options::String help() {
     return "Options for the discretization of the elliptic equations";
   }
 };
 
 struct DiscontinuousGalerkin {
   using group = Discretization;
-  Options::String help() {
+  static Options::String help() {
     return "Options for the discontinuous Galerkin discretization";
   }
 };
 
 struct PenaltyParameter {
   using type = double;
-  Options::String help() {
+  static Options::String help() {
     return "The prefactor to the penalty term of the numerical flux. Values "
            "closer "
            "to one lead to better-conditioned problems, but on curved meshes "
@@ -39,7 +39,7 @@ struct PenaltyParameter {
 
 struct Massive {
   using type = bool;
-  Options::String help() {
+  static Options::String help() {
     return "Whether or not to multiply the DG operator with the mass matrix. "
            "Massive DG operators can be easier to solve because they are "
            "symmetric, "

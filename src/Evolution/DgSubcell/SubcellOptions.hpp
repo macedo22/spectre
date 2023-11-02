@@ -32,7 +32,7 @@ namespace evolution::dg::subcell {
 class SubcellOptions {
  public:
   struct InitialData {
-    Options::String help() {
+    static Options::String help() {
       return "Parameters only used when setting up initial data.";
     }
   };
@@ -41,7 +41,7 @@ class SubcellOptions {
   /// troubled-cell indicator when applied to the initial data
   struct InitialDataRdmpDelta0 {
     static std::string name() { return "RdmpDelta0"; }
-    Options::String help() {
+    static Options::String help() {
       return "Absolute jump tolerance parameter.";
     }
     using type = double;
@@ -52,7 +52,7 @@ class SubcellOptions {
   /// troubled-cell indicator when applied to the initial data
   struct InitialDataRdmpEpsilon {
     static std::string name() { return "RdmpEpsilon"; }
-    Options::String help() {
+    static Options::String help() {
       return "The jump-dependent relaxation constant.";
     }
     using type = double;
@@ -64,7 +64,7 @@ class SubcellOptions {
   /// when applied to the initial data.
   struct InitialDataPerssonExponent {
     static std::string name() { return "PerssonExponent"; }
-    Options::String help() {
+    static Options::String help() {
       return "The exponent at which the error should decrease with N.";
     }
     using type = double;
@@ -77,7 +77,7 @@ class SubcellOptions {
   /// troubled-cell indicator
   struct RdmpDelta0 {
     static std::string name() { return "RdmpDelta0"; }
-    Options::String help() {
+    static Options::String help() {
       return "Absolute jump tolerance parameter.";
     }
     using type = double;
@@ -87,7 +87,7 @@ class SubcellOptions {
   /// troubled-cell indicator
   struct RdmpEpsilon {
     static std::string name() { return "RdmpEpsilon"; }
-    Options::String help() {
+    static Options::String help() {
       return "The jump-dependent relaxation constant.";
     }
     using type = double;
@@ -97,7 +97,7 @@ class SubcellOptions {
   /// The exponent \f$\alpha\f$ passed to the Persson troubled-cell indicator
   struct PerssonExponent {
     static std::string name() { return "PerssonExponent"; }
-    Options::String help() {
+    static Options::String help() {
       return "The exponent at which the error should decrease with N.";
     }
     using type = double;
@@ -106,7 +106,7 @@ class SubcellOptions {
   };
   /// If true, then we always use the subcell method, not DG.
   struct AlwaysUseSubcells {
-    Options::String help() {
+    static Options::String help() {
       return "If true, then always use the subcell method (e.g. "
              "finite-difference) "
              "instead of DG.";
@@ -116,7 +116,7 @@ class SubcellOptions {
   /// Method to use for reconstructing the DG solution from the subcell
   /// solution.
   struct SubcellToDgReconstructionMethod {
-    Options::String help() {
+    static Options::String help() {
       return "Method to use for reconstructing the DG solution from the "
              "subcell "
              "solution.";
@@ -133,7 +133,7 @@ class SubcellOptions {
   /// unlimited reconstruction, they can run into issues with Gibbs phenomenon.
   struct UseHalo {
     using type = bool;
-    Options::String help() {
+    static Options::String help() {
       return "Use a width-one halo of FD elements around any troubled element."
              "\n"
              "This provides a buffer of FD subcells so that as a discontinuity "
@@ -148,7 +148,7 @@ class SubcellOptions {
   struct OnlyDgBlocksAndGroups {
     using type =
         Options::Auto<std::vector<std::string>, Options::AutoLabel::None>;
-    Options::String help() {
+    static Options::String help() {
       return "A list of block and group names on which to never do subcell.\n"
              "Set to 'None' to not restrict where FD can be used.";
     }
@@ -162,7 +162,7 @@ class SubcellOptions {
   /// would use 4th order derivatives.
   struct FiniteDifferenceDerivativeOrder {
     using type = ::fd::DerivativeOrder;
-    Options::String help() {
+    static Options::String help() {
       return "The finite difference derivative order to use. If computed from "
              "the "
              "reconstruction, then the reconstruction method must support "
@@ -177,7 +177,7 @@ class SubcellOptions {
                  AlwaysUseSubcells, SubcellToDgReconstructionMethod, UseHalo,
                  OnlyDgBlocksAndGroups, FiniteDifferenceDerivativeOrder>;
 
-  Options::String help() {
+  static Options::String help() {
     return "System-agnostic options for the DG-subcell method.";
   }
 

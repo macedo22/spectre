@@ -81,12 +81,12 @@ class AdamsMoultonPc : public TimeStepper {
 
   struct Order {
     using type = size_t;
-    Options::String help() { return "Convergence order"; }
+    static Options::String help() { return "Convergence order"; }
     static type lower_bound() { return minimum_order; }
     static type upper_bound() { return maximum_order; }
   };
   using options = tmpl::list<Order>;
-  Options::String help() {
+  static Options::String help() {
     return "An Adams-Moulton predictor-corrector time-stepper.";
   }
 

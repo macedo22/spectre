@@ -57,27 +57,27 @@ namespace OptionHolders {
 struct Sphere {
   struct LMax {
     using type = size_t;
-    Options::String help() {
+    static Options::String help() {
       return "The number of collocation points on each sphere will be equal to "
              "`(l_max + 1) * (2 * l_max + 1)`";
     }
   };
   struct Center {
     using type = std::array<double, 3>;
-    Options::String help() { return "Center of every sphere"; }
+    static Options::String help() { return "Center of every sphere"; }
   };
   struct Radius {
     using type = std::variant<double, std::vector<double>>;
-    Options::String help() { return "Radius of the sphere(s)"; }
+    static Options::String help() { return "Radius of the sphere(s)"; }
   };
   struct AngularOrdering {
     using type = intrp::AngularOrdering;
-    Options::String help() {
+    static Options::String help() {
       return "Chooses theta,phi ordering in 2d array";
     }
   };
   using options = tmpl::list<LMax, Center, Radius, AngularOrdering>;
-  Options::String help() {
+  static Options::String help() {
     return "An arbitrary number of spherical surface.";
   }
   Sphere(const size_t l_max_in, const std::array<double, 3> center_in,
@@ -105,7 +105,7 @@ namespace OptionTags {
 template <typename InterpolationTargetTag>
 struct Sphere {
   using type = OptionHolders::Sphere;
-  Options::String help() {
+  static Options::String help() {
     return "Options for interpolation onto a sphere(s).";
   }
   static std::string name() {

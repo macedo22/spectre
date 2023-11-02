@@ -37,7 +37,7 @@ struct EvolutionMetavars : public GhValenciaDivCleanTemplateBase<
   using factory_creation = typename base::factory_creation;
   using registration = typename base::registration;
 
-  Options::String help() {
+  static Options::String help() {
     return "Evolve the Valencia formulation of the GRMHD system with "
            "divergence "
            "cleaning, coupled to a dynamic spacetime evolved with the "

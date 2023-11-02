@@ -67,7 +67,7 @@ class Lorentzian : public elliptic::analytic_data::AnalyticSolution {
 
  public:
   using options = tmpl::list<>;
-  Options::String help() {
+  static Options::String help() {
     return "A Lorentzian solution to the Poisson equation.";
   }
 

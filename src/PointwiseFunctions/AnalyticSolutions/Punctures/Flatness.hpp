@@ -22,7 +22,7 @@ namespace Punctures::Solutions {
 class Flatness : public elliptic::analytic_data::AnalyticSolution {
  public:
   using options = tmpl::list<>;
-  Options::String help() {
+  static Options::String help() {
     return "Flat spacetime, useful as initial guess.";
   }
 

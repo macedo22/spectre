@@ -23,7 +23,7 @@ namespace TimeSteppers {
 class Rk5Tsitouras : public RungeKutta {
  public:
   using options = tmpl::list<>;
-  Options::String help() {
+  static Options::String help() {
     return "An efficient 5th-order Runge-Kutta time stepper.";
   }
 

@@ -37,7 +37,7 @@ class Sinusoid : public evolution::initial_data::InitialData,
                  public MarkAsAnalyticSolution {
  public:
   using options = tmpl::list<>;
-  Options::String help() {
+  static Options::String help() {
     return "An advecting 1D sine wave u(x,t) = sin(pi(x-t)), periodic over the "
            "interval [-1, 1]";
   }

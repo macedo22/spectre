@@ -32,7 +32,7 @@ namespace OptionTags {
  */
 struct FileGlob {
   using type = std::string;
-  Options::String help() { return "Path to the data file"; }
+  static Options::String help() { return "Path to the data file"; }
 };
 
 /*!
@@ -42,7 +42,7 @@ struct FileGlob {
  */
 struct Subgroup {
   using type = std::string;
-  Options::String help() {
+  static Options::String help() {
     return "The subgroup within the file, excluding extensions";
   }
 };
@@ -52,7 +52,7 @@ struct Subgroup {
  */
 struct ObservationValue {
   using type = std::variant<double, ObservationSelector>;
-  Options::String help() {
+  static Options::String help() {
     return "The observation value at which to read data";
   }
 };
@@ -63,7 +63,7 @@ struct ObservationValue {
 struct EnableInterpolation {
   static std::string name() { return "Interpolate"; }
   using type = bool;
-  Options::String help() {
+  static Options::String help() {
     return "Enable to interpolate the volume data to the target domain. "
            "Disable to "
            "load volume data directly into elements with the same name. "
@@ -86,7 +86,7 @@ struct ImporterOptions
                           OptionTags::ObservationValue,
                           OptionTags::EnableInterpolation> {
   using options = tags_list;
-  Options::String help() { return "The volume data to load."; }
+  static Options::String help() { return "The volume data to load."; }
   using TaggedTuple::TaggedTuple;
 };
 
@@ -99,7 +99,7 @@ template <typename OptionsGroup>
 struct ImporterOptions : db::SimpleTag {
   static std::string name() { return "VolumeData"; }
   using type = importers::ImporterOptions;
-  Options::String help() { return importers::ImporterOptions{}.help(); }
+  static Options::String help() { return importers::ImporterOptions::help(); }
   using group = OptionsGroup;
   using option_tags = tmpl::list<ImporterOptions>;
   static constexpr bool pass_metavariables = false;

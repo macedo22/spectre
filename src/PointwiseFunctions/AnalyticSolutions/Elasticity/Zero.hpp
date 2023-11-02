@@ -26,7 +26,7 @@ template <size_t Dim>
 class Zero : public elliptic::analytic_data::AnalyticSolution {
  public:
   using options = tmpl::list<>;
-  Options::String help() {
+  static Options::String help() {
     return "The trivial solution, useful as initial guess.";
   }
 

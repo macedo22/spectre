@@ -42,7 +42,7 @@ class ConstraintPreservingFreeOutflow final : public BoundaryCondition {
  public:
   using options =
       typename gh::BoundaryConditions::ConstraintPreservingBjorhus<3>::options;
-  Options::String help() {
+  static Options::String help() {
     return "ConstraintPreservingAnalytic boundary conditions  for GH variables "
            "and "
            "hydro free outflow for GRMHD.";

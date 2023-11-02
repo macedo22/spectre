@@ -36,22 +36,22 @@ class Gaussian<1, Fr> : public MathFunction<1, Fr> {
  public:
   struct Amplitude {
     using type = double;
-    Options::String help() { return "The amplitude."; }
+    static Options::String help() { return "The amplitude."; }
   };
 
   struct Width {
     using type = double;
-    Options::String help() { return "The width."; }
+    static Options::String help() { return "The width."; }
     static type lower_bound() { return 0.; }
   };
 
   struct Center {
     using type = double;
-    Options::String help() { return "The center."; }
+    static Options::String help() { return "The center."; }
   };
   using options = tmpl::list<Amplitude, Width, Center>;
 
-  Options::String help() {
+  static Options::String help() {
     return "Computes a Gaussian about an arbitrary coordinate center with "
            "given "
            "width and amplitude";
@@ -119,22 +119,22 @@ class Gaussian : public MathFunction<VolumeDim, Fr> {
  public:
   struct Amplitude {
     using type = double;
-    Options::String help() { return "The amplitude."; }
+    static Options::String help() { return "The amplitude."; }
   };
 
   struct Width {
     using type = double;
-    Options::String help() { return "The width."; }
+    static Options::String help() { return "The width."; }
     static type lower_bound() { return 0.; }
   };
 
   struct Center {
     using type = std::array<double, VolumeDim>;
-    Options::String help() { return "The center."; }
+    static Options::String help() { return "The center."; }
   };
   using options = tmpl::list<Amplitude, Width, Center>;
 
-  Options::String help() {
+  static Options::String help() {
     return "Computes a Gaussian about an arbitrary coordinate center with "
            "given "
            "width and amplitude";

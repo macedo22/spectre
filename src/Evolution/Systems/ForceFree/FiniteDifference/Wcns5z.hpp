@@ -78,13 +78,13 @@ class Wcns5z : public Reconstructor {
 
   struct NonlinearWeightExponent {
     using type = size_t;
-    Options::String help() {
+    static Options::String help() {
       return "The exponent q to which the oscillation indicator term is raised";
     }
   };
   struct Epsilon {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "The parameter added to the oscillation indicators to avoid "
              "division "
              "by zero";
@@ -92,7 +92,7 @@ class Wcns5z : public Reconstructor {
   };
   struct FallbackReconstructor {
     using type = FallbackReconstructorType;
-    Options::String help() {
+    static Options::String help() {
       return "A reconstruction scheme to fallback to adaptively. Finite "
              "difference "
              "will switch to this reconstruction scheme if there are more "
@@ -104,7 +104,7 @@ class Wcns5z : public Reconstructor {
   };
   struct MaxNumberOfExtrema {
     using type = size_t;
-    Options::String help() {
+    static Options::String help() {
       return "The maximum allowed number of extrema in FD stencil for using "
              "Wcns5z "
              "reconstruction before switching to a low-order reconstruction. "
@@ -116,7 +116,7 @@ class Wcns5z : public Reconstructor {
   using options = tmpl::list<NonlinearWeightExponent, Epsilon,
                              FallbackReconstructor, MaxNumberOfExtrema>;
 
-  Options::String help() { return "WCNS 5Z reconstruction scheme."; }
+  static Options::String help() { return "WCNS 5Z reconstruction scheme."; }
 
   Wcns5z() = default;
   Wcns5z(Wcns5z&&) = default;

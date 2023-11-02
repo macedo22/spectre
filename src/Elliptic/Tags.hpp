@@ -18,7 +18,7 @@ namespace OptionTags {
 
 template <typename BackgroundType>
 struct Background {
-  Options::String help() {
+  static Options::String help() {
     return "The variable-independent part of the equations that define the "
            "problem "
            "to solve (along with the boundary conditions).";
@@ -28,7 +28,7 @@ struct Background {
 
 template <typename InitialGuessType>
 struct InitialGuess {
-  Options::String help() {
+  static Options::String help() {
     return "The initial guess for the elliptic solve. The solve converges "
            "faster if "
            "the initial guess is close to the solution and may not converge at "

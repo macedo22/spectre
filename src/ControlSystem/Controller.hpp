@@ -42,7 +42,7 @@ class Controller {
  public:
   struct UpdateFraction {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "Fraction of damping timescale used to determine how often to "
              "update "
              "functions of time.";
@@ -50,7 +50,7 @@ class Controller {
   };
 
   using options = tmpl::list<UpdateFraction>;
-  Options::String help() {
+  static Options::String help() {
     return "Computes control signal used to reset highest derivative of a "
            "function "
            "of time. Also determines when a function of time needs to be "

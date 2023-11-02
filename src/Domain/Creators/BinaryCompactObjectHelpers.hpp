@@ -69,14 +69,14 @@ template <domain::ObjectLabel Object>
 struct ShapeMapOptions {
   using type = Options::Auto<ShapeMapOptions, Options::AutoLabel::None>;
   static std::string name() { return "ShapeMap" + get_output(Object); }
-  Options::String help() {
+  static Options::String help() {
     return "Options for a time-dependent distortion (shape) map about the "
            "specified object. Specify 'None' to not use this map.";
   }
 
   struct LMax {
     using type = size_t;
-    Options::String help() {
+    static Options::String help() {
       return "LMax used for the number of spherical harmonic coefficients of "
              "the "
              "distortion map. Currently, all coefficients are initialized to "
@@ -86,7 +86,7 @@ struct ShapeMapOptions {
 
   struct SizeInitialValues {
     using type = std::array<double, 3>;
-    Options::String help() {
+    static Options::String help() {
       return "Initial value and two derivatives of the size map.";
     }
   };
@@ -188,7 +188,7 @@ struct TimeDependentMapOptions {
   /// \brief The initial time of the functions of time.
   struct InitialTime {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "The initial time of the functions of time";
     }
   };
@@ -200,25 +200,25 @@ struct TimeDependentMapOptions {
   struct ExpansionMapOptions {
     using type = Options::Auto<ExpansionMapOptions, Options::AutoLabel::None>;
     static std::string name() { return "ExpansionMap"; }
-    Options::String help() {
+    static Options::String help() {
       return "Options for the expansion map. Specify 'None' to not use this "
              "map.";
     }
     struct InitialValues {
       using type = std::array<double, 2>;
-      Options::String help() {
+      static Options::String help() {
         return "Initial value and deriv of expansion.";
       }
     };
     struct AsymptoticVelocityOuterBoundary {
       using type = double;
-      Options::String help() {
+      static Options::String help() {
         return "The asymptotic velocity of the outer boundary.";
       }
     };
     struct DecayTimescaleOuterBoundaryVelocity {
       using type = double;
-      Options::String help() {
+      static Options::String help() {
         return "The timescale for how fast the outer boundary velocity "
                "approaches "
                "its asymptotic value.";
@@ -239,7 +239,7 @@ struct TimeDependentMapOptions {
   struct RotationMapOptions {
     using type = Options::Auto<RotationMapOptions, Options::AutoLabel::None>;
     static std::string name() { return "RotationMap"; }
-    Options::String help() {
+    static Options::String help() {
       return "Options for a time-dependent rotation map about an arbitrary "
              "axis. "
              "Specify 'None' to not use this map.";
@@ -247,7 +247,7 @@ struct TimeDependentMapOptions {
 
     struct InitialAngularVelocity {
       using type = std::array<double, 3>;
-      Options::String help() { return "The initial angular velocity."; }
+      static Options::String help() { return "The initial angular velocity."; }
     };
 
     using options = tmpl::list<InitialAngularVelocity>;
@@ -270,7 +270,7 @@ struct TimeDependentMapOptions {
       tmpl::list<InitialTime, ExpansionMapOptions, RotationMapOptions,
                  ShapeMapOptions<domain::ObjectLabel::A>,
                  ShapeMapOptions<domain::ObjectLabel::B>>;
-  Options::String help() {
+  static Options::String help() {
     return "The options for all time dependent maps in a binary compact object "
            "domain. Specify 'None' to not use any time dependent maps.";
   }

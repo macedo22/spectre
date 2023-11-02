@@ -57,7 +57,7 @@ class CubicScale final : public TimeDependence<MeshDim> {
   /// \brief The initial time of the functions of time.
   struct InitialTime {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "The initial time of the functions of time";
     }
   };
@@ -65,31 +65,31 @@ class CubicScale final : public TimeDependence<MeshDim> {
   /// `domain::CoordinateMaps::TimeDependent::CubicScale` map
   struct OuterBoundary {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "Outer boundary or pivot point of the map";
     }
   };
   /// \brief The initial values of the expansion factors.
   struct InitialExpansion {
     using type = std::array<double, 2>;
-    Options::String help() {
+    static Options::String help() {
       return "Expansion values at initial time.";
     }
   };
   /// \brief The velocity of the expansion factors.
   struct Velocity {
     using type = std::array<double, 2>;
-    Options::String help() { return "The rate of expansion."; }
+    static Options::String help() { return "The rate of expansion."; }
   };
   /// \brief The acceleration of the expansion factors.
   struct Acceleration {
     using type = std::array<double, 2>;
-    Options::String help() { return "The acceleration of expansion."; }
+    static Options::String help() { return "The acceleration of expansion."; }
   };
   /// \brief Whether to use linear scaling or cubic scaling.
   struct UseLinearScaling {
     using type = bool;
-    Options::String help() {
+    static Options::String help() {
       return "Whether or not to turn on cubic scaling.";
     }
   };
@@ -97,7 +97,7 @@ class CubicScale final : public TimeDependence<MeshDim> {
   using options = tmpl::list<InitialTime, OuterBoundary, UseLinearScaling,
                              InitialExpansion, Velocity, Acceleration>;
 
-  Options::String help() {
+  static Options::String help() {
     return "A spatial radial scaling either based on a cubic scaling or a "
            "simple\n"
            "linear scaling.\n"

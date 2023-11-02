@@ -36,7 +36,7 @@ namespace Cce::Solutions {
 struct BouncingBlackHole : public WorldtubeData {
   struct Amplitude {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "The coordinate distance of the gauge oscillation";
     }
     static type lower_bound() { return 0.0; }
@@ -44,7 +44,7 @@ struct BouncingBlackHole : public WorldtubeData {
   };
   struct ExtractionRadius {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "The extraction radius of the spherical solution";
     }
     static type lower_bound() { return 0.0; }
@@ -52,7 +52,7 @@ struct BouncingBlackHole : public WorldtubeData {
   };
   struct Mass {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "The mass of the Schwarzschild black hole";
     }
     static type lower_bound() { return 0.0; }
@@ -60,14 +60,14 @@ struct BouncingBlackHole : public WorldtubeData {
   };
   struct Period {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "The period of the coordinate oscillation";
     }
     static type lower_bound() { return 0.0; }
     static type suggested_value() { return 40.0; }
   };
 
-  Options::String help() {
+  static Options::String help() {
     return "Analytic solution in which a static black hole is placed in an "
            "oscillating coordinate system";
   }

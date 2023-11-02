@@ -75,7 +75,7 @@ class MonotonisedCentralPrim : public Reconstructor {
   static constexpr size_t dim = 3;
 
   using options = tmpl::list<>;
-  Options::String help() {
+  static Options::String help() {
     return "Monotonised central reconstruction scheme using primitive "
            "variables and "
            "the metric variables.";

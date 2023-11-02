@@ -141,7 +141,7 @@ class RiemannProblem : public MarkAsAnalyticSolution {
   /// The adiabatic index of the fluid.
   struct AdiabaticIndex {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "The adiabatic index of the fluid.";
     }
   };
@@ -149,7 +149,7 @@ class RiemannProblem : public MarkAsAnalyticSolution {
   /// Initial position of the discontinuity
   struct InitialPosition {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "The initial position of the discontinuity.";
     }
   };
@@ -157,43 +157,43 @@ class RiemannProblem : public MarkAsAnalyticSolution {
   /// The mass density on the left of the initial discontinuity
   struct LeftMassDensity {
     using type = double;
-    Options::String help() { return "The left mass density."; }
+    static Options::String help() { return "The left mass density."; }
   };
 
   /// The velocity on the left of the initial discontinuity
   struct LeftVelocity {
     using type = std::array<double, Dim>;
-    Options::String help() { return "The left velocity."; }
+    static Options::String help() { return "The left velocity."; }
   };
 
   /// The pressure on the left of the initial discontinuity
   struct LeftPressure {
     using type = double;
-    Options::String help() { return "The left pressure."; }
+    static Options::String help() { return "The left pressure."; }
   };
 
   /// The mass density on the right of the initial discontinuity
   struct RightMassDensity {
     using type = double;
-    Options::String help() { return "The right mass density."; }
+    static Options::String help() { return "The right mass density."; }
   };
 
   /// The velocity on the right of the initial discontinuity
   struct RightVelocity {
     using type = std::array<double, Dim>;
-    Options::String help() { return "The right velocity."; }
+    static Options::String help() { return "The right velocity."; }
   };
 
   /// The pressure on the right of the initial discontinuity
   struct RightPressure {
     using type = double;
-    Options::String help() { return "The right pressure."; }
+    static Options::String help() { return "The right pressure."; }
   };
 
   /// The tolerance for solving for \f$p_*\f$.
   struct PressureStarTol {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "The tolerance for the numerical solution for p star";
     }
     static type suggested_value() { return 1.e-9; }
@@ -239,7 +239,7 @@ class RiemannProblem : public MarkAsAnalyticSolution {
                              LeftVelocity, LeftPressure, RightMassDensity,
                              RightVelocity, RightPressure, PressureStarTol>;
 
-  Options::String help() {
+  static Options::String help() {
     return "Riemann Problem in 1, 2 or 3D along any coordinate axis.";
   }
 

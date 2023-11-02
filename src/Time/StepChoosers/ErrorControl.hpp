@@ -134,19 +134,19 @@ class ErrorControl : public StepChooser<StepChooserUse>,
 
   struct AbsoluteTolerance {
     using type = double;
-    Options::String help() { return "Target absolute tolerance"; }
+    static Options::String help() { return "Target absolute tolerance"; }
     static type lower_bound() { return 0.0; }
   };
 
   struct RelativeTolerance {
     using type = double;
-    Options::String help() { return "Target relative tolerance"; }
+    static Options::String help() { return "Target relative tolerance"; }
     static type lower_bound() { return 0.0; }
   };
 
   struct MaxFactor {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "Maximum factor to increase the step by";
     }
     static type lower_bound() { return 1.0; }
@@ -154,7 +154,7 @@ class ErrorControl : public StepChooser<StepChooserUse>,
 
   struct MinFactor {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "Minimum factor to increase the step by";
     }
     static type lower_bound() { return 0.0; }
@@ -163,7 +163,7 @@ class ErrorControl : public StepChooser<StepChooserUse>,
 
   struct SafetyFactor {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "Extra factor to apply to step estimate; can be used to decrease "
              "step "
              "size to improve step acceptance rate.";
@@ -171,7 +171,7 @@ class ErrorControl : public StepChooser<StepChooserUse>,
     static type lower_bound() { return 0.0; }
   };
 
-  Options::String help() {
+  static Options::String help() {
     return "Chooses a step based on a target relative and absolute error "
            "tolerance";
   }

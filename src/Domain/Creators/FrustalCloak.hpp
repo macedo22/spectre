@@ -47,51 +47,51 @@ class FrustalCloak : public DomainCreator<3> {
 
   struct InitialRefinement {
     using type = size_t;
-    Options::String help() {
+    static Options::String help() {
       return "Initial refinement level in each dimension.";
     }
   };
 
   struct InitialGridPoints {
     using type = std::array<size_t, 2>;
-    Options::String help() {
+    static Options::String help() {
       return "Initial number of grid points in [r,angular].";
     }
   };
 
   struct UseEquiangularMap {
     using type = bool;
-    Options::String help() {
+    static Options::String help() {
       return "Use equiangular instead of equidistant coordinates.";
     }
   };
 
   struct ProjectionFactor {
     using type = double;
-    Options::String help() { return "Grid compression factor."; }
+    static Options::String help() { return "Grid compression factor."; }
   };
 
   struct LengthInnerCube {
     using type = double;
-    Options::String help() { return "Side length of each inner cube."; }
+    static Options::String help() { return "Side length of each inner cube."; }
     static constexpr type lower_bound() { return 0.0; }
   };
 
   struct LengthOuterCube {
     using type = double;
-    Options::String help() { return "Side length of the outer cube."; }
+    static Options::String help() { return "Side length of the outer cube."; }
     static constexpr type lower_bound() { return 0.0; }
   };
 
   struct OriginPreimage {
     using type = std::array<double, 3>;
-    Options::String help() { return "The origin preimage in [x,y,z]."; }
+    static Options::String help() { return "The origin preimage in [x,y,z]."; }
   };
 
   template <typename BoundaryConditionsBase>
   struct BoundaryCondition {
     static std::string name() { return "BoundaryCondition"; }
-    Options::String help() {
+    static Options::String help() {
       return "The boundary condition to impose on all sides.";
     }
     using type = std::unique_ptr<BoundaryConditionsBase>;
@@ -113,7 +113,7 @@ class FrustalCloak : public DomainCreator<3> {
                   typename Metavariables::system>>>,
       basic_options>;
 
-  Options::String help() {
+  static Options::String help() {
     return "Creates a cubical domain with two equal-sized abutting excised "
            "cubes\n"
            "in the center. This is done by combining ten frusta. The "

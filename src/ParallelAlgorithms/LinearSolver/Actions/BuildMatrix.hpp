@@ -42,7 +42,7 @@ namespace OptionTags {
 
 struct BuildMatrixOptionsGroup {
   static std::string name() { return "BuildMatrix"; }
-  Options::String help() {
+  static Options::String help() {
     return "Options for building the explicit matrix representation of the "
            "linear "
            "operator. This is done by applying the linear operator to unit "
@@ -55,7 +55,7 @@ struct BuildMatrixOptionsGroup {
 struct MatrixSubfileName {
   using type = std::string;
   using group = BuildMatrixOptionsGroup;
-  Options::String help() {
+  static Options::String help() {
     return "Subfile name in the volume data H5 files where the matrix will be "
            "stored. Each observation in the subfile is a column of the matrix. "
            "The "

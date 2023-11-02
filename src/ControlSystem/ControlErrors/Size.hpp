@@ -172,7 +172,7 @@ struct Size : tt::ConformsTo<protocols::ControlError> {
   struct MaxNumTimesForZeroCrossingPredictor {
     // Int so we get proper bounds checking
     using type = int;
-    Options::String help() {
+    static Options::String help() {
       return "The maximum number of times used to calculate the zero crossing "
              "of "
              "the char speeds.";
@@ -182,14 +182,14 @@ struct Size : tt::ConformsTo<protocols::ControlError> {
 
   struct SmoothAvgTimescaleFraction {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "Average timescale fraction for smoothing horizon measurements.";
     }
   };
 
   struct SmootherTuner {
     using type = TimescaleTuner<true>;
-    Options::String help() {
+    static Options::String help() {
       return "TimescaleTuner for smoothing horizon measurements.";
     }
   };
@@ -197,28 +197,28 @@ struct Size : tt::ConformsTo<protocols::ControlError> {
   struct DeltaRDriftOutwardOptions {
     using type =
         Options::Auto<DeltaRDriftOutwardOptions, Options::AutoLabel::None>;
-    Options::String help() {
+    static Options::String help() {
       return "Options for State DeltaRDriftOutward. Specify 'None' to disable "
              "State "
              "DeltaRDriftOutward.";
     }
     struct MaxAllowedRadialDistance {
       using type = double;
-      Options::String help() {
+      static Options::String help() {
         return "Drift excision boundary outward if distance from horizon to "
                "excision exceeds this.";
       }
     };
     struct OutwardDriftVelocity {
       using type = double;
-      Options::String help() {
+      static Options::String help() {
         return "Constant drift velocity term, if triggered by "
                "MaxAllowedRadialDistance.";
       }
     };
     struct OutwardDriftTimescale {
       using type = double;
-      Options::String help() {
+      static Options::String help() {
         return "Denominator in non-constant drift velocity term, if triggered "
                "by "
                "MaxAllowedRadialDistance.";
@@ -240,7 +240,7 @@ struct Size : tt::ConformsTo<protocols::ControlError> {
   using options = tmpl::list<MaxNumTimesForZeroCrossingPredictor,
                              SmoothAvgTimescaleFraction, SmootherTuner,
                              DeltaRDriftOutwardOptions>;
-  Options::String help() {
+  static Options::String help() {
     return "Computes the control error for size control. Will also write a "
            "diagnostics file if the control systems are allowed to write data "
            "to "

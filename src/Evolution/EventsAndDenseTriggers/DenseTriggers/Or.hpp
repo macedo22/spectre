@@ -46,7 +46,7 @@ class Or : public DenseTrigger {
   WRAPPED_PUPable_decl_template(Or);  // NOLINT
   /// \endcond
 
-  Options::String help() {
+  static Options::String help() {
     return "Trigger when any of a collection of triggers triggers.";
   }
 

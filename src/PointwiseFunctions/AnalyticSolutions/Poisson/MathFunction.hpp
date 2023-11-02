@@ -54,11 +54,11 @@ class MathFunction : public elliptic::analytic_data::AnalyticSolution {
  public:
   struct Function {
     using type = std::unique_ptr<::MathFunction<Dim, Frame::Inertial>>;
-    Options::String help() { return "The solution function"; }
+    static Options::String help() { return "The solution function"; }
   };
 
   using options = tmpl::list<Function>;
-  Options::String help() {
+  static Options::String help() {
     return "Any solution to the Poisson equation given by a MathFunction "
            "implementation, such as a Gaussian.";
   }

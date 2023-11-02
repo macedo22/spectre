@@ -59,7 +59,7 @@ class HybridEos
 
   struct ColdEos {
     using type = ColdEquationOfState;
-    Options::String help() { return "Cold equation of state"; }
+    static Options::String help() { return "Cold equation of state"; }
     static std::string name() {
       return pretty_type::short_name<ColdEquationOfState>();
     }
@@ -67,10 +67,10 @@ class HybridEos
 
   struct ThermalAdiabaticIndex {
     using type = double;
-    Options::String help() { return "Adiabatic index Gamma_th"; }
+    static Options::String help() { return "Adiabatic index Gamma_th"; }
   };
 
-  Options::String help() {
+  static Options::String help() {
     return "A hybrid equation of state combining a cold EOS with a simple "
            "thermal "
            "part.  The pressure is related to the rest mass density by "

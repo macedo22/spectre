@@ -53,33 +53,33 @@ class Disk : public DomainCreator<2> {
 
   struct InnerRadius {
     using type = double;
-    Options::String help() {
+    static Options::String help() {
       return "Radius of the circle circumscribing the inner square.";
     }
   };
 
   struct OuterRadius {
     using type = double;
-    Options::String help() { return "Radius of the Disk."; }
+    static Options::String help() { return "Radius of the Disk."; }
   };
 
   struct InitialRefinement {
     using type = size_t;
-    Options::String help() {
+    static Options::String help() {
       return "Initial refinement level in each dimension.";
     }
   };
 
   struct InitialGridPoints {
     using type = std::array<size_t, 2>;
-    Options::String help() {
+    static Options::String help() {
       return "Initial number of grid points in [r,theta].";
     }
   };
 
   struct UseEquiangularMap {
     using type = bool;
-    Options::String help() {
+    static Options::String help() {
       return "Use equiangular instead of equidistant coordinates.";
     }
   };
@@ -87,7 +87,7 @@ class Disk : public DomainCreator<2> {
   template <typename BoundaryConditionsBase>
   struct BoundaryCondition {
     static std::string name() { return "BoundaryCondition"; }
-    Options::String help() {
+    static Options::String help() {
       return "The boundary condition to impose on all sides.";
     }
     using type = std::unique_ptr<BoundaryConditionsBase>;
@@ -107,7 +107,7 @@ class Disk : public DomainCreator<2> {
                   typename Metavariables::system>>>,
       basic_options>;
 
-  Options::String help() {
+  static Options::String help() {
     return "Creates a 2D Disk with five Blocks.\n"
            "Only one refinement level for both dimensions is currently "
            "supported.\n"

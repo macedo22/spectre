@@ -44,17 +44,17 @@ class PolytropicFluid : public EquationOfState<IsRelativistic, 1> {
 
   struct PolytropicConstant {
     using type = double;
-    Options::String help() { return "Polytropic constant K"; }
+    static Options::String help() { return "Polytropic constant K"; }
     static double lower_bound() { return 0.0; }
   };
 
   struct PolytropicExponent {
     using type = double;
-    Options::String help() { return "Polytropic exponent Gamma"; }
+    static Options::String help() { return "Polytropic exponent Gamma"; }
     static double lower_bound() { return 1.0; }
   };
 
-  Options::String help() {
+  static Options::String help() {
     return "A polytropic fluid equation of state.\n"
            "The pressure is related to the rest mass density by p = K rho ^ "
            "Gamma, "

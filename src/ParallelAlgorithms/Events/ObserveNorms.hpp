@@ -103,26 +103,26 @@ class ObserveNorms<tmpl::list<ObservableTensorTags...>,
     : public Event {
  private:
   struct ObserveTensor {
-    Options::String help() {
+    static Options::String help() {
       return "The tensor to reduce, and how to reduce it.";
     }
 
     struct Name {
       using type = std::string;
-      Options::String help() {
+      static Options::String help() {
         return "The name of the tensor to observe.";
       }
     };
     struct NormType {
       using type = std::string;
-      Options::String help() {
+      static Options::String help() {
         return "The type of norm to use. Must be one of Max, Min, L2Norm, "
                "L2IntegralNorm, or VolumeIntegral.";
       }
     };
     struct Components {
       using type = std::string;
-      Options::String help() {
+      static Options::String help() {
         return "How to handle tensor components. Must be Individual or Sum.";
       }
     };
@@ -171,7 +171,7 @@ class ObserveNorms<tmpl::list<ObservableTensorTags...>,
   /// The name of the subfile inside the HDF5 file
   struct SubfileName {
     using type = std::string;
-    Options::String help() {
+    static Options::String help() {
       return "The name of the subfile inside the HDF5 file without an "
              "extension and "
              "without a preceding '/'.";
@@ -180,7 +180,7 @@ class ObserveNorms<tmpl::list<ObservableTensorTags...>,
   /// The tensor to observe and how to do the reduction
   struct TensorsToObserve {
     using type = std::vector<ObserveTensor>;
-    Options::String help() {
+    static Options::String help() {
       return "List specifying each tensor to observe and how it is reduced.";
     }
   };
@@ -191,7 +191,7 @@ class ObserveNorms<tmpl::list<ObservableTensorTags...>,
 
   using options = tmpl::list<SubfileName, TensorsToObserve>;
 
-  Options::String help() {
+  static Options::String help() {
     return "Observe norms of tensors in the DataBox.\n"
            "\n"
            "You can choose the norm type for each observation. Note that the\n"

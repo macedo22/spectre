@@ -315,39 +315,39 @@ class Binary : public elliptic::analytic_data::Background,
                public elliptic::analytic_data::InitialGuess {
  public:
   struct XCoords {
-    Options::String help() {
+    static Options::String help() {
       return "The coordinates on the x-axis where the two objects are placed";
     }
     using type = std::array<double, 2>;
   };
   struct ObjectLeft {
-    Options::String help() {
+    static Options::String help() {
       return "The object placed on the negative x-axis";
     }
     using type = std::unique_ptr<IsolatedObjectBase>;
   };
   struct ObjectRight {
-    Options::String help() {
+    static Options::String help() {
       return "The object placed on the positive x-axis";
     }
     using type = std::unique_ptr<IsolatedObjectBase>;
   };
   struct AngularVelocity {
-    Options::String help() {
+    static Options::String help() {
       return "Orbital angular velocity 'Omega0' about the z-axis. Added to the "
              "background shift as a term 'Omega0 x r'.";
     }
     using type = double;
   };
   struct Expansion {
-    Options::String help() {
+    static Options::String help() {
       return "The expansion parameter 'adot0', which is a radial velocity over "
              "radius. Added to the background shift as a term 'adot0 r^i'";
     }
     using type = double;
   };
   struct LinearVelocity {
-    Options::String help() {
+    static Options::String help() {
       return "Constant velocity 'v0' added to the background shift to control "
              "the "
              "linear momentum of the system.";
@@ -355,7 +355,7 @@ class Binary : public elliptic::analytic_data::Background,
     using type = std::array<double, 3>;
   };
   struct FalloffWidths {
-    Options::String help() {
+    static Options::String help() {
       return "The widths for the window functions around the two objects, or "
              "'None' "
              "to disable the Gaussian falloff.";
@@ -364,7 +364,7 @@ class Binary : public elliptic::analytic_data::Background,
   };
   using options = tmpl::list<XCoords, ObjectLeft, ObjectRight, AngularVelocity,
                              Expansion, LinearVelocity, FalloffWidths>;
-  Options::String help() {
+  static Options::String help() {
     return "Binary compact-object data in general relativity, constructed from "
            "superpositions of two isolated objects.";
   }
