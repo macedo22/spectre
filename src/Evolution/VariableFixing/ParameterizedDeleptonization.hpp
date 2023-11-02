@@ -50,17 +50,19 @@ class ParameterizedDeleptonization {
   //   struct DeleptonizationFormat {
   //     using type = double;
   //     static type lower_bound() { return 0.0; }
-  //     static Options::String help = {"Choose an 'analytic' or
-  //     'tabulated' expression to express electron fraction as a function of
-  //     rest mass density."};
+  //     static Options::String help() {
+  //       return "Choose an 'analytic' or 'tabulated' expression to express "
+  //              "electron fraction as a function of rest mass density.";
+  //     }
   //   };
 
   /// \brief Enable parameterized deleptonizations
   struct Enable {
     using type = bool;
-    static Options::String help = {
-        "Whether or not to activate parameterized deleptonization for "
-        "supernovae."};
+    static Options::String help() {
+      return "Whether or not to activate parameterized deleptonization for "
+             "supernovae.";
+    }
   };
 
   /// \brief Density near the center of the supernova at bounce, above which
@@ -70,8 +72,9 @@ class ParameterizedDeleptonization {
   struct HighDensityScale {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static Options::String help = {
-        "High end of density scale for parameterized deleptonization."};
+    static Options::String help() {
+      return "High end of density scale for parameterized deleptonization.";
+    }
   };
   /// \brief Density near the Silicon-Oxygen interface, below which the lower
   /// Ye is assumed
@@ -80,8 +83,9 @@ class ParameterizedDeleptonization {
   struct LowDensityScale {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static Options::String help = {
-        "Low end of density scale for parameterized deleptonization."};
+    static Options::String help() {
+      return "Low end of density scale for parameterized deleptonization.";
+    }
   };
   /// \brief Electron fraction of material when the rest mass density is above
   /// HighDensityScale
@@ -91,9 +95,10 @@ class ParameterizedDeleptonization {
     using type = double;
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 0.5; }
-    static Options::String help = {
-        "For densities above HighDensityScale, the electron fraction will "
-        "take this value."};
+    static Options::String help() {
+      return "For densities above HighDensityScale, the electron fraction will "
+             "take this value.";
+    }
   };
   /// \brief Electron fraction of material when the rest mass density is below
   /// LowDensityScale
@@ -103,9 +108,10 @@ class ParameterizedDeleptonization {
     using type = double;
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 0.5; }
-    static Options::String help = {
-        "For densities below LowDensityScale, the electron fraction will "
-        "take this value."};
+    static Options::String help() {
+      return "For densities below LowDensityScale, the electron fraction will "
+             "take this value.";
+    }
   };
 
   /// \brief Electron fraction correction term.  The larger this value, the
@@ -116,21 +122,26 @@ class ParameterizedDeleptonization {
   struct ElectronFractionCorrectionScale {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static Options::String help = {
-        "For densities between low and high limits, a higher value of "
-        "ElectronFractionCorrectionScale will increase the value of Ye."};
+    static Options::String help() {
+      return "For densities between low and high limits, a higher value of "
+             "ElectronFractionCorrectionScale will increase the value of Ye.";
+    }
   };
 
   using options =
       tmpl::list<Enable, HighDensityScale, LowDensityScale,
                  ElectronFractionAtHighDensity, ElectronFractionAtLowDensity,
                  ElectronFractionCorrectionScale>;
-  static Options::String help = {
-      "Set electron fraction based on rest mass density.  "
-      "(Low/High)DensityScale sets the limits of the density, beyond which "
-      "the ElectronFractionAt(Low/High)Density is assumed.  At intermediate "
-      "densities, the higher the ElectronFractionCorrectionScale, the higher "
-      "the Ye."};
+  static Options::String help() {
+    return "Set electron fraction based on rest mass density.  "
+           "(Low/High)DensityScale sets the limits of the density, beyond "
+           "which "
+           "the ElectronFractionAt(Low/High)Density is assumed.  At "
+           "intermediate "
+           "densities, the higher the ElectronFractionCorrectionScale, the "
+           "higher "
+           "the Ye.";
+  }
 
   ParameterizedDeleptonization(bool enable, double high_density_scale,
                                double low_density_scale,

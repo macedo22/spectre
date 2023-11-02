@@ -19,11 +19,12 @@ namespace evolution::dg::subcell::OptionTags {
  */
 struct SubcellSolverGroup {
   static std::string name() { return "SubcellSolver"; }
-  static Options::String help{
-      "Options controlling the subcell solver spatial discretization "
-      "of the PDE system.\n\n"
-      "Contains options such as what reconstruction scheme to use or what "
-      "order of finite difference derivatives to apply."};
+  static Options::String help() {
+    return "Options controlling the subcell solver spatial discretization "
+           "of the PDE system.\n\n"
+           "Contains options such as what reconstruction scheme to use or what "
+           "order of finite difference derivatives to apply.";
+  }
   using group = SpatialDiscretization::OptionTags::SpatialDiscretizationGroup;
 };
 }  // namespace evolution::dg::subcell::OptionTags

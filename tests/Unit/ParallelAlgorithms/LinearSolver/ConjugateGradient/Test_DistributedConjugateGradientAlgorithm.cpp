@@ -10,6 +10,7 @@
 #include "Helpers/ParallelAlgorithms/LinearSolver/DistributedLinearSolverAlgorithmTestHelpers.hpp"
 #include "Helpers/ParallelAlgorithms/LinearSolver/LinearSolverAlgorithmTestHelpers.hpp"
 #include "Options/Protocols/FactoryCreation.hpp"
+#include "Options/String.hpp"
 #include "Parallel/CharmMain.tpp"
 #include "ParallelAlgorithms/LinearSolver/ConjugateGradient/ConjugateGradient.hpp"
 #include "Utilities/ProtocolHelpers.hpp"
@@ -25,14 +26,15 @@ namespace helpers_distributed = DistributedLinearSolverAlgorithmTestHelpers;
 namespace {
 
 struct ParallelCg {
-  static constexpr Options::String help =
-      "Options for the iterative linear solver";
+  static Options::String help() {
+    return "Options for the iterative linear solver";
+  }
 };
 
 struct Metavariables {
-  static constexpr const char* const help{
-      "Test the conjugate gradient linear solver algorithm on multiple "
-      "elements"};
+  static Options::String help(){
+      return "Test the conjugate gradient linear solver algorithm on multiple "
+             "elements"};
   static constexpr size_t volume_dim = 1;
   using system =
       TestHelpers::domain::BoundaryConditions::SystemWithoutBoundaryConditions<

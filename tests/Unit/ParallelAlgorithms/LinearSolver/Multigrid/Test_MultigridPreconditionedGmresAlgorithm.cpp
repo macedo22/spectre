@@ -12,6 +12,7 @@
 #include "Helpers/ParallelAlgorithms/LinearSolver/Multigrid/Helpers.hpp"
 #include "IO/Observer/ObserverComponent.hpp"
 #include "Options/Protocols/FactoryCreation.hpp"
+#include "Options/String.hpp"
 #include "Parallel/CharmMain.tpp"
 #include "Parallel/Phase.hpp"
 #include "ParallelAlgorithms/Actions/Goto.hpp"
@@ -37,29 +38,33 @@ namespace helpers_mg = TestHelpers::LinearSolver::multigrid;
 namespace {
 
 struct NewtonRaphsonSolver {
-  static constexpr Options::String help =
-      "Options for the iterative non-linear solver";
+  static Options::String help() {
+    return "Options for the iterative non-linear solver";
+  }
 };
 
 struct KrylovSolver {
-  static constexpr Options::String help =
-      "Options for the iterative linear solver";
+  static Options::String help() {
+    return "Options for the iterative linear solver";
+  }
 };
 
 struct MultigridSolver {
-  static constexpr Options::String help =
-      "Options for the iterative linear solver";
+  static Options::String help() {
+    return "Options for the iterative linear solver";
+  }
 };
 
 struct RichardsonSmoother {
-  static constexpr Options::String help =
-      "Options for the iterative linear solver";
+  static Options::String help() {
+    return "Options for the iterative linear solver";
+  }
 };
 
 struct Metavariables {
-  static constexpr const char* const help{
-      "Test the Multigrid solver used as a preconditioner for a "
-      "Krylov-subspace solver"};
+  static Options::String help(){
+      return "Test the Multigrid solver used as a preconditioner for a "
+             "Krylov-subspace solver"};
 
   static constexpr size_t volume_dim = 1;
   using system =

@@ -64,7 +64,7 @@ class TestEvent : public Event {
   }
 
   using options = tmpl::list<>;
-  static constexpr Options::String help = "help";
+  static Options::String help() { return "help"; }
 
   TestEvent() = default;
 

@@ -63,7 +63,7 @@ struct TestEvent : public Event {
 
   using compute_tags_for_observation_box = tmpl::list<Tags::ObservationCompute>;
   using options = tmpl::list<>;
-  static constexpr Options::String help = "";
+  static Options::String help() { return ""; }
 
   TestEvent() = default;
 

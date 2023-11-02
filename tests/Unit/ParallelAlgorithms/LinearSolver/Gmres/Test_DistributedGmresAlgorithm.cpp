@@ -10,6 +10,7 @@
 #include "Helpers/ParallelAlgorithms/LinearSolver/DistributedLinearSolverAlgorithmTestHelpers.hpp"
 #include "Helpers/ParallelAlgorithms/LinearSolver/LinearSolverAlgorithmTestHelpers.hpp"
 #include "Options/Protocols/FactoryCreation.hpp"
+#include "Options/String.hpp"
 #include "Parallel/CharmMain.tpp"
 #include "ParallelAlgorithms/LinearSolver/Gmres/Gmres.hpp"
 #include "Utilities/ProtocolHelpers.hpp"
@@ -25,13 +26,14 @@ namespace helpers_distributed = DistributedLinearSolverAlgorithmTestHelpers;
 namespace {
 
 struct ParallelGmres {
-  static constexpr Options::String help =
-      "Options for the iterative linear solver";
+  static Options::String help() {
+    return "Options for the iterative linear solver";
+  }
 };
 
 struct Metavariables {
-  static constexpr const char* const help{
-      "Test the GMRES linear solver algorithm on multiple elements"};
+  static Options::String help(){
+      return "Test the GMRES linear solver algorithm on multiple elements"};
   static constexpr size_t volume_dim = 1;
   using system =
       TestHelpers::domain::BoundaryConditions::SystemWithoutBoundaryConditions<

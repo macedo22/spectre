@@ -180,18 +180,21 @@ namespace detail {
 struct SchwarzschildImpl {
   struct Mass {
     using type = double;
-    static Options::String help = "Mass parameter M";
+    static Options::String help() { return "Mass parameter M"; }
   };
 
   struct CoordinateSystem {
     static std::string name() { return "Coordinates"; }
     using type = SchwarzschildCoordinates;
-    static Options::String help =
-        "The coordinate system used to describe the solution";
+    static Options::String help() {
+      return "The coordinate system used to describe the solution";
+    }
   };
 
   using options = tmpl::list<Mass, CoordinateSystem>;
-  static Options::String help{"Schwarzschild spacetime in general relativity"};
+  static Options::String help() {
+    return "Schwarzschild spacetime in general relativity";
+  }
 
   SchwarzschildImpl() = default;
   SchwarzschildImpl(const SchwarzschildImpl&) = default;

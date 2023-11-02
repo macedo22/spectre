@@ -61,13 +61,16 @@ class ProductOfSinusoids : public elliptic::analytic_data::AnalyticSolution {
  public:
   struct WaveNumbers {
     using type = std::array<double, Dim>;
-    static Options::String help{"The wave numbers of the sinusoids"};
+    static Options::String help() {
+      return "The wave numbers of the sinusoids";
+    }
   };
 
   using options = tmpl::list<WaveNumbers>;
-  static Options::String help{
-      "A product of sinusoids that are taken of a wave number times the "
-      "coordinate in each dimension."};
+  static Options::String help() {
+    return "A product of sinusoids that are taken of a wave number times the "
+           "coordinate in each dimension.";
+  }
 
   ProductOfSinusoids() = default;
   ProductOfSinusoids(const ProductOfSinusoids&) = default;

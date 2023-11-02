@@ -78,35 +78,45 @@ class Wcns5z : public Reconstructor {
 
   struct NonlinearWeightExponent {
     using type = size_t;
-    static Options::String help = {
-        "The exponent q to which the oscillation indicator term is raised"};
+    static Options::String help() {
+      return "The exponent q to which the oscillation indicator term is raised";
+    }
   };
   struct Epsilon {
     using type = double;
-    static Options::String help = {
-        "The parameter added to the oscillation indicators to avoid division "
-        "by zero"};
+    static Options::String help() {
+      return "The parameter added to the oscillation indicators to avoid "
+             "division "
+             "by zero";
+    }
   };
   struct FallbackReconstructor {
     using type = FallbackReconstructorType;
-    static Options::String help = {
-        "A reconstruction scheme to fallback to adaptively. Finite difference "
-        "will switch to this reconstruction scheme if there are more extrema "
-        "in a FD stencil than a specified number. See also the option "
-        "'MaxNumberOfExtrema' below. Adaptive fallback is disabled if 'None'."};
+    static Options::String help() {
+      return "A reconstruction scheme to fallback to adaptively. Finite "
+             "difference "
+             "will switch to this reconstruction scheme if there are more "
+             "extrema "
+             "in a FD stencil than a specified number. See also the option "
+             "'MaxNumberOfExtrema' below. Adaptive fallback is disabled if "
+             "'None'.";
+    }
   };
   struct MaxNumberOfExtrema {
     using type = size_t;
-    static Options::String help = {
-        "The maximum allowed number of extrema in FD stencil for using Wcns5z "
-        "reconstruction before switching to a low-order reconstruction. If "
-        "FallbackReconstructor=None, this option is ignored"};
+    static Options::String help() {
+      return "The maximum allowed number of extrema in FD stencil for using "
+             "Wcns5z "
+             "reconstruction before switching to a low-order reconstruction. "
+             "If "
+             "FallbackReconstructor=None, this option is ignored";
+    }
   };
 
   using options = tmpl::list<NonlinearWeightExponent, Epsilon,
                              FallbackReconstructor, MaxNumberOfExtrema>;
 
-  static Options::String help{"WCNS 5Z reconstruction scheme."};
+  static Options::String help() { return "WCNS 5Z reconstruction scheme."; }
 
   Wcns5z() = default;
   Wcns5z(Wcns5z&&) = default;

@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "Helpers/ParallelAlgorithms/LinearSolver/LinearSolverAlgorithmTestHelpers.hpp"
+#include "Options/String.hpp"
 #include "Parallel/CharmMain.tpp"
 #include "ParallelAlgorithms/LinearSolver/ConjugateGradient/ConjugateGradient.hpp"
 #include "Utilities/TMPL.hpp"
@@ -17,13 +18,14 @@ namespace helpers = LinearSolverAlgorithmTestHelpers;
 namespace {
 
 struct SerialCg {
-  static constexpr Options::String help =
-      "Options for the iterative linear solver";
+  static Options::String help() {
+    return "Options for the iterative linear solver";
+  }
 };
 
 struct Metavariables {
-  static constexpr const char* const help{
-      "Test the conjugate gradient linear solver algorithm"};
+  static Options::String help(){
+      return "Test the conjugate gradient linear solver algorithm"};
 
   using linear_solver =
       LinearSolver::cg::ConjugateGradient<Metavariables, helpers::fields_tag,

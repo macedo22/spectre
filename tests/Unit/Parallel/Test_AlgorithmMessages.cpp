@@ -19,6 +19,7 @@
 #include "Evolution/DiscontinuousGalerkin/Messages/BoundaryMessage.hpp"
 #include "Helpers/Parallel/RoundRobinArrayElements.hpp"
 #include "NumericalAlgorithms/Spectral/Mesh.hpp"
+#include "Options/String.hpp"
 #include "Parallel/AlgorithmExecution.hpp"
 #include "Parallel/Algorithms/AlgorithmArray.hpp"
 #include "Parallel/CharmMain.tpp"
@@ -413,8 +414,9 @@ struct ArrayParallelComponent {
 struct TestMetavariables {
   using component_list = tmpl::list<ArrayParallelComponent<TestMetavariables>>;
 
-  static constexpr const char* const help{
-      "Test the receive_data entry method that uses Charm++ messages"};
+  static Options::String help() {
+    return "Test the receive_data entry method that uses Charm++ messages";
+  }
   static constexpr bool ignore_unrecognized_command_line_options = false;
 
   static constexpr std::array<Parallel::Phase, 5> default_phase_order{

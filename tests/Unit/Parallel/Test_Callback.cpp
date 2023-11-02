@@ -228,8 +228,9 @@ struct TestMetavariables {
   using component_list = tmpl::list<TestSingleton<TestMetavariables>,
                                     TestArray<TestMetavariables>>;
 
-  static constexpr Options::String help =
-      "An executable for testing Paralell::Callbacks";
+  static Options::String help() {
+    return "An executable for testing Paralell::Callbacks";
+  }
 
   static constexpr std::array<Parallel::Phase, 4> default_phase_order{
       {Parallel::Phase::Initialization, Parallel::Phase::Execute,

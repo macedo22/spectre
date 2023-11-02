@@ -50,31 +50,36 @@ namespace OptionTags {
 
 struct NonlinearSolverGroup {
   static std::string name() { return "NonlinearSolver"; }
-  static Options::String help = "The iterative nonlinear solver";
+  static Options::String help() { return "The iterative nonlinear solver"; }
 };
 struct NewtonRaphsonGroup {
   static std::string name() { return "NewtonRaphson"; }
-  static Options::String help =
-      "Options for the Newton-Raphson nonlinear solver";
+  static Options::String help() {
+    return "Options for the Newton-Raphson nonlinear solver";
+  }
   using group = NonlinearSolverGroup;
 };
 struct LinearSolverGroup {
   static std::string name() { return "LinearSolver"; }
-  static Options::String help = "The iterative Krylov-subspace linear solver";
+  static Options::String help() {
+    return "The iterative Krylov-subspace linear solver";
+  }
 };
 struct GmresGroup {
   static std::string name() { return "Gmres"; }
-  static Options::String help = "Options for the GMRES linear solver";
+  static Options::String help() {
+    return "Options for the GMRES linear solver";
+  }
   using group = LinearSolverGroup;
 };
 struct SchwarzSmootherGroup {
   static std::string name() { return "SchwarzSmoother"; }
-  static Options::String help = "Options for the Schwarz smoother";
+  static Options::String help() { return "Options for the Schwarz smoother"; }
   using group = LinearSolverGroup;
 };
 struct MultigridGroup {
   static std::string name() { return "Multigrid"; }
-  static Options::String help = "Options for the multigrid";
+  static Options::String help() { return "Options for the multigrid"; }
   using group = LinearSolverGroup;
 };
 

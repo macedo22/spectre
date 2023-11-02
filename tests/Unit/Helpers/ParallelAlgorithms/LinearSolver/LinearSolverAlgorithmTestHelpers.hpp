@@ -51,24 +51,28 @@ namespace LinearSolverAlgorithmTestHelpers {
 
 namespace OptionTags {
 struct LinearOperator {
-  static constexpr Options::String help = "The linear operator A to invert.";
+  static Options::String help() { return "The linear operator A to invert."; }
   using type = blaze::DynamicMatrix<double>;
 };
 struct Source {
-  static constexpr Options::String help = "The source b in the equation Ax=b.";
+  static Options::String help() { return "The source b in the equation Ax=b."; }
   using type = blaze::DynamicVector<double>;
 };
 struct InitialGuess {
-  static constexpr Options::String help = "The initial guess for the vector x.";
+  static Options::String help() {
+    return "The initial guess for the vector x.";
+  }
   using type = blaze::DynamicVector<double>;
 };
 struct ExpectedResult {
-  static constexpr Options::String help = "The solution x in the equation Ax=b";
+  static Options::String help() {
+    return "The solution x in the equation Ax=b";
+  }
   using type = blaze::DynamicVector<double>;
 };
 struct ExpectedConvergenceReason {
   static std::string name() { return "ConvergenceReason"; }
-  static constexpr Options::String help = "The expected convergence reason";
+  static Options::String help() { return "The expected convergence reason"; }
   using type = Convergence::Reason;
 };
 }  // namespace OptionTags

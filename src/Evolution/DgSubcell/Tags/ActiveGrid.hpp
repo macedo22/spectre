@@ -13,8 +13,9 @@ namespace evolution::dg::subcell {
 namespace OptionTags {
 struct ActiveGrid {
   using type = evolution::dg::subcell::ActiveGrid;
-  static Options::String help = {
-      "The type of the active grid. Either 'Dg' or 'Subcell'."};
+  static Options::String help() {
+    return "The type of the active grid. Either 'Dg' or 'Subcell'.";
+  }
   using group = SpatialDiscretization::OptionTags::SpatialDiscretizationGroup;
 };
 }  // namespace OptionTags

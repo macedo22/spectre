@@ -137,8 +137,9 @@ class ProductOfConditions final : public BoundaryCondition {
     static std::string name() {
       return "GeneralizedHarmonic" + pretty_type::name<DerivedGhCondition>();
     }
-    static Options::String help{
-        "The Generalized Harmonic part of the product boundary condition"};
+    static Options::String help() {
+      return "The Generalized Harmonic part of the product boundary condition";
+    }
   };
 
   struct ScalarCondition {
@@ -146,16 +147,19 @@ class ProductOfConditions final : public BoundaryCondition {
     static std::string name() {
       return "Scalar" + pretty_type::name<DerivedScalarCondition>();
     }
-    static Options::String help{
-        "The Scalar part of the product boundary condition"};
+    static Options::String help() {
+      return "The Scalar part of the product boundary condition";
+    }
   };
 
   using options = tmpl::list<GhCondition, ScalarCondition>;
 
-  static Options::String help = {
-      "Direct product of a GH and CurvedScalarWave boundary conditions. "
-      "See the documentation for the two individual boundary conditions for "
-      "further details."};
+  static Options::String help() {
+    return "Direct product of a GH and CurvedScalarWave boundary conditions. "
+           "See the documentation for the two individual boundary conditions "
+           "for "
+           "further details.";
+  }
 
   ProductOfConditions() = default;
   ProductOfConditions(DerivedGhCondition gh_condition,

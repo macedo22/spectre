@@ -75,8 +75,8 @@ struct TestResult {
 };
 
 struct Metavariables {
-  static constexpr Options::String help{
-      "Test building an explicit matrix representation of the linear operator"};
+  static Options::String help(){return "Test building an explicit matrix "
+                                       "representation of the linear operator"};
   static constexpr size_t volume_dim = 1;
   using system =
       TestHelpers::domain::BoundaryConditions::SystemWithoutBoundaryConditions<

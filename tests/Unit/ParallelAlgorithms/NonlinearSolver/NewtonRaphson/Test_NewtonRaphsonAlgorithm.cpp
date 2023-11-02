@@ -22,12 +22,12 @@ namespace {
 
 struct LinearSolverGroup {
   static std::string name() { return "LinearSolver"; }
-  static constexpr Options::String help = "Options for the linear solver";
+  static Options::String help() { return "Options for the linear solver"; }
 };
 
 struct NonlinearSolverGroup {
   static std::string name() { return "NewtonRaphson"; }
-  static constexpr Options::String help = "Options for the nonlinear solver";
+  static Options::String help() { return "Options for the nonlinear solver"; }
 };
 
 template <typename OperandTag>
@@ -67,8 +67,8 @@ struct ApplyLinearizedOperator {
 };
 
 struct Metavariables {
-  static constexpr Options::String help{
-      "Test the Newton-Raphson nonlinear solver algorithm"};
+  static Options::String help(){
+      return "Test the Newton-Raphson nonlinear solver algorithm"};
 
   using nonlinear_solver = NonlinearSolver::newton_raphson::NewtonRaphson<
       Metavariables, helpers::fields_tag, NonlinearSolverGroup>;

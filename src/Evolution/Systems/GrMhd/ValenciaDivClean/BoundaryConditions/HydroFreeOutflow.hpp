@@ -90,9 +90,10 @@ class HydroFreeOutflow final : public BoundaryCondition {
 
  public:
   using options = tmpl::list<>;
-  static Options::String help{
-      "Free outflow & no inflow boundary condition on GRMHD primitive "
-      "variables"};
+  static Options::String help() {
+    return "Free outflow & no inflow boundary condition on GRMHD primitive "
+           "variables";
+  }
 
   HydroFreeOutflow() = default;
   HydroFreeOutflow(HydroFreeOutflow&&) = default;

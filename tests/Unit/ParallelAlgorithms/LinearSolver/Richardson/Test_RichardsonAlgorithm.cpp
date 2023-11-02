@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "Helpers/ParallelAlgorithms/LinearSolver/LinearSolverAlgorithmTestHelpers.hpp"
+#include "Options/String.hpp"
 #include "Parallel/CharmMain.tpp"
 #include "ParallelAlgorithms/LinearSolver/Richardson/Richardson.hpp"
 #include "Utilities/TMPL.hpp"
@@ -17,13 +18,14 @@ namespace helpers = LinearSolverAlgorithmTestHelpers;
 namespace {
 
 struct SerialRichardson {
-  static constexpr Options::String help =
-      "Options for the iterative linear solver";
+  static Options::String help() {
+    return "Options for the iterative linear solver";
+  }
 };
 
 struct Metavariables {
-  static constexpr const char* const help{
-      "Test the Richardson linear solver algorithm"};
+  static Options::String help(){
+      return "Test the Richardson linear solver algorithm"};
 
   using linear_solver =
       LinearSolver::Richardson::Richardson<helpers::fields_tag,

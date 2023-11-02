@@ -76,94 +76,94 @@ class NumericInitialData : public evolution::initial_data::InitialData {
                  importers::OptionTags::EnableInterpolation, GhVariables,
                  HydroVariables, HydroNumericId::DensityCutoff>;
 
-  static Options::String help =
-      "Numeric initial data loaded from volume data files";
+  static Options::String help() {
+    return "Numeric initial data loaded from volume data files";
 
-  NumericInitialData() = default;
-  NumericInitialData(const NumericInitialData& rhs) = default;
-  NumericInitialData& operator=(const NumericInitialData& rhs) = default;
-  NumericInitialData(NumericInitialData&& /*rhs*/) = default;
-  NumericInitialData& operator=(NumericInitialData&& /*rhs*/) = default;
-  ~NumericInitialData() = default;
+    NumericInitialData() = default;
+    NumericInitialData(const NumericInitialData& rhs) = default;
+    NumericInitialData& operator=(const NumericInitialData& rhs) = default;
+    NumericInitialData(NumericInitialData && /*rhs*/) = default;
+    NumericInitialData& operator=(NumericInitialData&& /*rhs*/) = default;
+    ~NumericInitialData() = default;
 
-  /// \cond
-  explicit NumericInitialData(CkMigrateMessage* msg);
-  using PUP::able::register_constructor;
-  WRAPPED_PUPable_decl_template(NumericInitialData);
-  /// \endcond
+    /// \cond
+    explicit NumericInitialData(CkMigrateMessage * msg);
+    using PUP::able::register_constructor;
+    WRAPPED_PUPable_decl_template(NumericInitialData);
+    /// \endcond
 
-  std::unique_ptr<evolution::initial_data::InitialData> get_clone()
-      const override {
-    return std::make_unique<NumericInitialData>(*this);
-  }
+    std::unique_ptr<evolution::initial_data::InitialData> get_clone()
+        const override {
+      return std::make_unique<NumericInitialData>(*this);
+    }
 
-  NumericInitialData(
-      std::string file_glob, std::string subfile_name,
-      std::variant<double, importers::ObservationSelector> observation_value,
-      bool enable_interpolation,
-      typename GhNumericId::Variables::type gh_selected_variables,
-      typename HydroNumericId::Variables::type hydro_selected_variables,
-      double density_cutoff);
+    NumericInitialData(
+        std::string file_glob, std::string subfile_name,
+        std::variant<double, importers::ObservationSelector> observation_value,
+        bool enable_interpolation,
+        typename GhNumericId::Variables::type gh_selected_variables,
+        typename HydroNumericId::Variables::type hydro_selected_variables,
+        double density_cutoff);
 
-  const importers::ImporterOptions& importer_options() const {
-    return gh_numeric_id_.importer_options();
-  }
+    const importers::ImporterOptions& importer_options() const {
+      return gh_numeric_id_.importer_options();
+    }
 
-  const GhNumericId& gh_numeric_id() const { return gh_numeric_id_; }
+    const GhNumericId& gh_numeric_id() const { return gh_numeric_id_; }
 
-  const HydroNumericId& hydro_numeric_id() const { return hydro_numeric_id_; }
+    const HydroNumericId& hydro_numeric_id() const { return hydro_numeric_id_; }
 
-  size_t volume_data_id() const;
+    size_t volume_data_id() const;
 
-  template <typename... AllTags>
-  void select_for_import(
-      const gsl::not_null<tuples::TaggedTuple<AllTags...>*> fields) const {
-    gh_numeric_id_.select_for_import(fields);
-    hydro_numeric_id_.select_for_import(fields);
-  }
+    template <typename... AllTags>
+    void select_for_import(
+        const gsl::not_null<tuples::TaggedTuple<AllTags...>*> fields) const {
+      gh_numeric_id_.select_for_import(fields);
+      hydro_numeric_id_.select_for_import(fields);
+    }
 
-  template <typename... AllTags, size_t ThermodynamicDim>
-  void set_initial_data(
-      const gsl::not_null<tnsr::aa<DataVector, 3>*> spacetime_metric,
-      const gsl::not_null<tnsr::aa<DataVector, 3>*> pi,
-      const gsl::not_null<tnsr::iaa<DataVector, 3>*> phi,
-      const gsl::not_null<Scalar<DataVector>*> rest_mass_density,
-      const gsl::not_null<Scalar<DataVector>*> electron_fraction,
-      const gsl::not_null<Scalar<DataVector>*> specific_internal_energy,
-      const gsl::not_null<tnsr::I<DataVector, 3>*> spatial_velocity,
-      const gsl::not_null<tnsr::I<DataVector, 3>*> magnetic_field,
-      const gsl::not_null<Scalar<DataVector>*> div_cleaning_field,
-      const gsl::not_null<Scalar<DataVector>*> lorentz_factor,
-      const gsl::not_null<Scalar<DataVector>*> pressure,
-      const gsl::not_null<Scalar<DataVector>*> specific_enthalpy,
-      const gsl::not_null<Scalar<DataVector>*> temperature,
-      const gsl::not_null<tuples::TaggedTuple<AllTags...>*> numeric_data,
-      const Mesh<3>& mesh,
-      const InverseJacobian<DataVector, 3, Frame::ElementLogical,
-                            Frame::Inertial>& inv_jacobian,
-      const EquationsOfState::EquationOfState<true, ThermodynamicDim>&
-          equation_of_state) const {
-    gh_numeric_id_.set_initial_data(spacetime_metric, pi, phi, numeric_data,
-                                    mesh, inv_jacobian);
-    const auto spatial_metric = gr::spatial_metric(*spacetime_metric);
-    const auto inv_spatial_metric =
-        determinant_and_inverse(spatial_metric).second;
-    hydro_numeric_id_.set_initial_data(
-        rest_mass_density, electron_fraction, specific_internal_energy,
-        spatial_velocity, magnetic_field, div_cleaning_field, lorentz_factor,
-        pressure, specific_enthalpy, temperature, numeric_data,
-        inv_spatial_metric, equation_of_state);
-  }
+    template <typename... AllTags, size_t ThermodynamicDim>
+    void set_initial_data(
+        const gsl::not_null<tnsr::aa<DataVector, 3>*> spacetime_metric,
+        const gsl::not_null<tnsr::aa<DataVector, 3>*> pi,
+        const gsl::not_null<tnsr::iaa<DataVector, 3>*> phi,
+        const gsl::not_null<Scalar<DataVector>*> rest_mass_density,
+        const gsl::not_null<Scalar<DataVector>*> electron_fraction,
+        const gsl::not_null<Scalar<DataVector>*> specific_internal_energy,
+        const gsl::not_null<tnsr::I<DataVector, 3>*> spatial_velocity,
+        const gsl::not_null<tnsr::I<DataVector, 3>*> magnetic_field,
+        const gsl::not_null<Scalar<DataVector>*> div_cleaning_field,
+        const gsl::not_null<Scalar<DataVector>*> lorentz_factor,
+        const gsl::not_null<Scalar<DataVector>*> pressure,
+        const gsl::not_null<Scalar<DataVector>*> specific_enthalpy,
+        const gsl::not_null<Scalar<DataVector>*> temperature,
+        const gsl::not_null<tuples::TaggedTuple<AllTags...>*> numeric_data,
+        const Mesh<3>& mesh,
+        const InverseJacobian<DataVector, 3, Frame::ElementLogical,
+                              Frame::Inertial>& inv_jacobian,
+        const EquationsOfState::EquationOfState<true, ThermodynamicDim>&
+            equation_of_state) const {
+      gh_numeric_id_.set_initial_data(spacetime_metric, pi, phi, numeric_data,
+                                      mesh, inv_jacobian);
+      const auto spatial_metric = gr::spatial_metric(*spacetime_metric);
+      const auto inv_spatial_metric =
+          determinant_and_inverse(spatial_metric).second;
+      hydro_numeric_id_.set_initial_data(
+          rest_mass_density, electron_fraction, specific_internal_energy,
+          spatial_velocity, magnetic_field, div_cleaning_field, lorentz_factor,
+          pressure, specific_enthalpy, temperature, numeric_data,
+          inv_spatial_metric, equation_of_state);
+    }
 
-  void pup(PUP::er& p) override;
+    void pup(PUP::er & p) override;
 
-  friend bool operator==(const NumericInitialData& lhs,
-                         const NumericInitialData& rhs);
+    friend bool operator==(const NumericInitialData& lhs,
+                           const NumericInitialData& rhs);
 
- private:
-  GhNumericId gh_numeric_id_{};
-  HydroNumericId hydro_numeric_id_{};
-};
+   private:
+    GhNumericId gh_numeric_id_{};
+    HydroNumericId hydro_numeric_id_{};
+  };
 
 namespace Actions {
 

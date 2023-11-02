@@ -51,13 +51,17 @@ class CriterionOne : public amr::Criterion {
  public:
   struct CriticalValue {
     using type = double;
-    static constexpr Options::String help = {
-        "The critical value of field one ."};
+    static Options::String help() {
+      return "The critical value of field one .";
+    }
+  }
   };
   using options = tmpl::list<CriticalValue>;
 
-  static constexpr Options::String help = {
-      "h-refine the grid if field one is above a critical value"};
+  static Options::String help() {
+    return "h-refine the grid if field one is above a critical value";
+  }
+  }
 
   CriterionOne() = default;
   explicit CriterionOne(const double critical_value)
@@ -92,14 +96,19 @@ class CriterionTwo : public amr::Criterion {
  public:
   struct TargetValue {
     using type = double;
-    static constexpr Options::String help = {"The target value."};
+    static Options::String help() { return "The target value."; }
+  }
   };
   using options = tmpl::list<TargetValue>;
 
-  static constexpr Options::String help = {
-      "h-refine if the absolute value of the constraint is above the target "
-      "value.  h-coarsen if the constraint is an order of magnitude below the "
-      "target value"};
+  static Options::String help() {
+    return "h-refine if the absolute value of the constraint is above the "
+           "target "
+           "value.  h-coarsen if the constraint is an order of magnitude below "
+           "the "
+           "target value";
+  }
+  }
 
   CriterionTwo() = default;
   explicit CriterionTwo(const double target_value)

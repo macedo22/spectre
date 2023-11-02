@@ -66,30 +66,36 @@ class AoWeno53 : public Reconstructor<Dim> {
  public:
   struct GammaHi {
     using type = double;
-    static Options::String help = {
-        "The linear weight for the 5th-order stencil."};
+    static Options::String help() {
+      return "The linear weight for the 5th-order stencil.";
+    }
   };
   struct GammaLo {
     using type = double;
-    static Options::String help = {
-        "The linear weight for the central 3rd-order stencil."};
+    static Options::String help() {
+      return "The linear weight for the central 3rd-order stencil.";
+    }
   };
   struct Epsilon {
     using type = double;
-    static Options::String help = {
-        "The parameter added to the oscillation indicators to avoid division "
-        "by zero"};
+    static Options::String help() {
+      return "The parameter added to the oscillation indicators to avoid "
+             "division "
+             "by zero";
+    }
   };
   struct NonlinearWeightExponent {
     using type = size_t;
-    static Options::String help = {
-        "The exponent q to which the oscillation indicators are raised"};
+    static Options::String help() {
+      return "The exponent q to which the oscillation indicators are raised";
+    }
   };
 
   using options =
       tmpl::list<GammaHi, GammaLo, Epsilon, NonlinearWeightExponent>;
-  static Options::String help{
-      "Adaptive-order WENO reconstruction hybridizing orders 5 and 3."};
+  static Options::String help() {
+    return "Adaptive-order WENO reconstruction hybridizing orders 5 and 3.";
+  }
 
   AoWeno53() = default;
   AoWeno53(AoWeno53&&) = default;

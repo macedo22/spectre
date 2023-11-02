@@ -163,9 +163,10 @@ class ConstraintPreservingSphericalRadiation final
     : public BoundaryCondition<Dim> {
  public:
   using options = tmpl::list<>;
-  static Options::String help{
-      "Constraint-preserving boundary conditions with a second order "
-      "Bayliss-Turkel radiation boundary condition."};
+  static Options::String help() {
+    return "Constraint-preserving boundary conditions with a second order "
+           "Bayliss-Turkel radiation boundary condition.";
+  }
   ConstraintPreservingSphericalRadiation() = default;
   ConstraintPreservingSphericalRadiation(
       ConstraintPreservingSphericalRadiation&&) = default;

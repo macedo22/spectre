@@ -188,9 +188,11 @@ class UpwindPenalty final : public BoundaryCorrection<Dim> {
 
  public:
   using options = tmpl::list<>;
-  static Options::String help = {
-      "Computes the UpwindPenalty boundary correction term for the scalar wave "
-      "system."};
+  static Options::String help() {
+    return "Computes the UpwindPenalty boundary correction term for the scalar "
+           "wave "
+           "system.";
+  }
 
   UpwindPenalty() = default;
   UpwindPenalty(const UpwindPenalty&) = default;

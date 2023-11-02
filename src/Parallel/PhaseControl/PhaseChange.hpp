@@ -74,7 +74,7 @@ enum ArbitrationStrategy {
  *    `phase_change_decision_data` for which they are responsible.
  *
  * In addition to the `options` type alias and `static Options::String
- * help` variable needed to be option-creatable, a derived class of
+ * help()` function needed to be option-creatable, a derived class of
  * `PhaseChange` must specify the type aliases:
  * - `argument_tags`: A `tmpl::list` of tags from the
  *   \ref DataBoxGroup "DataBox" to be passed to `contribute_phase_data_impl` as

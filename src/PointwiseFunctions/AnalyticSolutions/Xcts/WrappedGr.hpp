@@ -260,116 +260,119 @@ class WrappedGr<GrSolution, HasMhd, tmpl::list<GrSolutionOptions...>>
   static constexpr size_t Dim = 3;
 
   using options = typename GrSolution::options;
-  static Options::String help = GrSolution::help;
-  static std::string name() { return pretty_type::name<GrSolution>(); }
+  static Options::String help() {
+    return GrSolution::help;
+    static std::string name() { return pretty_type::name<GrSolution>(); }
 
-  WrappedGr() = default;
-  WrappedGr(const WrappedGr&) = default;
-  WrappedGr& operator=(const WrappedGr&) = default;
-  WrappedGr(WrappedGr&&) = default;
-  WrappedGr& operator=(WrappedGr&&) = default;
-  ~WrappedGr() = default;
+    WrappedGr() = default;
+    WrappedGr(const WrappedGr&) = default;
+    WrappedGr& operator=(const WrappedGr&) = default;
+    WrappedGr(WrappedGr &&) = default;
+    WrappedGr& operator=(WrappedGr&&) = default;
+    ~WrappedGr() = default;
 
-  WrappedGr(typename GrSolutionOptions::type... gr_solution_options)
-      : gr_solution_(std::move(gr_solution_options)...) {}
+    WrappedGr(typename GrSolutionOptions::type... gr_solution_options)
+        : gr_solution_(std::move(gr_solution_options)...) {}
 
-  const GrSolution& gr_solution() const { return gr_solution_; }
+    const GrSolution& gr_solution() const { return gr_solution_; }
 
-  /// \cond
-  explicit WrappedGr(CkMigrateMessage* m)
-      : elliptic::analytic_data::AnalyticSolution(m) {}
-  using PUP::able::register_constructor;
-  WRAPPED_PUPable_decl_template(WrappedGr);
-  std::unique_ptr<elliptic::analytic_data::AnalyticSolution> get_clone()
-      const override {
-    return std::make_unique<WrappedGr>(*this);
-  }
-  /// \endcond
+    /// \cond
+    explicit WrappedGr(CkMigrateMessage * m)
+        : elliptic::analytic_data::AnalyticSolution(m) {}
+    using PUP::able::register_constructor;
+    WRAPPED_PUPable_decl_template(WrappedGr);
+    std::unique_ptr<elliptic::analytic_data::AnalyticSolution> get_clone()
+        const override {
+      return std::make_unique<WrappedGr>(*this);
+    }
+    /// \endcond
 
-  template <typename DataType, typename... RequestedTags>
-  tuples::TaggedTuple<RequestedTags...> variables(
-      const tnsr::I<DataType, 3, Frame::Inertial>& x,
-      tmpl::list<RequestedTags...> /*meta*/) const {
-    return variables_impl<DataType>(x, std::nullopt, std::nullopt,
-                                    tmpl::list<RequestedTags...>{});
-  }
-
-  template <typename DataType, typename... RequestedTags>
-  tuples::TaggedTuple<RequestedTags...> variables(
-      const tnsr::I<DataType, 3, Frame::Inertial>& x, const Mesh<3>& mesh,
-      const InverseJacobian<DataVector, 3, Frame::ElementLogical,
-                            Frame::Inertial>& inv_jacobian,
-      tmpl::list<RequestedTags...> /*meta*/) const {
-    return variables_impl<DataVector>(x, mesh, inv_jacobian,
+    template <typename DataType, typename... RequestedTags>
+    tuples::TaggedTuple<RequestedTags...> variables(
+        const tnsr::I<DataType, 3, Frame::Inertial>& x,
+        tmpl::list<RequestedTags...> /*meta*/) const {
+      return variables_impl<DataType>(x, std::nullopt, std::nullopt,
                                       tmpl::list<RequestedTags...>{});
-  }
-
-  void pup(PUP::er& p) override {
-    elliptic::analytic_data::AnalyticSolution::pup(p);
-    p | gr_solution_;
-  }
-
- private:
-  template <typename DataType, typename... RequestedTags>
-  tuples::TaggedTuple<RequestedTags...> variables_impl(
-      const tnsr::I<DataType, 3, Frame::Inertial>& x,
-      std::optional<std::reference_wrapper<const Mesh<3>>> mesh,
-      std::optional<std::reference_wrapper<const InverseJacobian<
-          DataType, 3, Frame::ElementLogical, Frame::Inertial>>>
-          inv_jacobian,
-      tmpl::list<RequestedTags...> /*meta*/) const {
-    tuples::tagged_tuple_from_typelist<detail::gr_solution_vars<DataType, Dim>>
-        gr_solution;
-    if constexpr (is_analytic_solution_v<GrSolution>) {
-      gr_solution = gr_solution_.variables(
-          x, std::numeric_limits<double>::signaling_NaN(),
-          detail::gr_solution_vars<DataType, Dim>{});
-    } else {
-      gr_solution =
-          gr_solution_.variables(x, detail::gr_solution_vars<DataType, Dim>{});
     }
-    tuples::tagged_tuple_from_typelist<hydro_tags<DataType>> hydro_solution;
-    if constexpr (HasMhd) {
+
+    template <typename DataType, typename... RequestedTags>
+    tuples::TaggedTuple<RequestedTags...> variables(
+        const tnsr::I<DataType, 3, Frame::Inertial>& x, const Mesh<3>& mesh,
+        const InverseJacobian<DataVector, 3, Frame::ElementLogical,
+                              Frame::Inertial>& inv_jacobian,
+        tmpl::list<RequestedTags...> /*meta*/) const {
+      return variables_impl<DataVector>(x, mesh, inv_jacobian,
+                                        tmpl::list<RequestedTags...>{});
+    }
+
+    void pup(PUP::er & p) override {
+      elliptic::analytic_data::AnalyticSolution::pup(p);
+      p | gr_solution_;
+    }
+
+   private:
+    template <typename DataType, typename... RequestedTags>
+    tuples::TaggedTuple<RequestedTags...> variables_impl(
+        const tnsr::I<DataType, 3, Frame::Inertial>& x,
+        std::optional<std::reference_wrapper<const Mesh<3>>> mesh,
+        std::optional<std::reference_wrapper<const InverseJacobian<
+            DataType, 3, Frame::ElementLogical, Frame::Inertial>>>
+            inv_jacobian,
+        tmpl::list<RequestedTags...> /*meta*/) const {
+      tuples::tagged_tuple_from_typelist<
+          detail::gr_solution_vars<DataType, Dim>>
+          gr_solution;
       if constexpr (is_analytic_solution_v<GrSolution>) {
-        hydro_solution = gr_solution_.variables(
+        gr_solution = gr_solution_.variables(
             x, std::numeric_limits<double>::signaling_NaN(),
-            hydro_tags<DataType>{});
+            detail::gr_solution_vars<DataType, Dim>{});
       } else {
-        hydro_solution = gr_solution_.variables(x, hydro_tags<DataType>{});
+        gr_solution = gr_solution_.variables(
+            x, detail::gr_solution_vars<DataType, Dim>{});
       }
-    }
-    using VarsComputer = detail::WrappedGrVariables<DataType, HasMhd>;
-    const size_t num_points = get_size(*x.begin());
-    typename VarsComputer::Cache cache{num_points};
-    VarsComputer computer{mesh, inv_jacobian, x, gr_solution, hydro_solution};
-    const auto get_var = [&cache, &computer, &hydro_solution, &x](auto tag_v) {
-      using tag = std::decay_t<decltype(tag_v)>;
-      if constexpr (tmpl::list_contains_v<hydro_tags<DataType>, tag>) {
-        (void)cache;
-        (void)computer;
-        if constexpr (HasMhd) {
-          (void)x;
-          return get<tag>(hydro_solution);
+      tuples::tagged_tuple_from_typelist<hydro_tags<DataType>> hydro_solution;
+      if constexpr (HasMhd) {
+        if constexpr (is_analytic_solution_v<GrSolution>) {
+          hydro_solution = gr_solution_.variables(
+              x, std::numeric_limits<double>::signaling_NaN(),
+              hydro_tags<DataType>{});
+        } else {
+          hydro_solution = gr_solution_.variables(x, hydro_tags<DataType>{});
+        }
+      }
+      using VarsComputer = detail::WrappedGrVariables<DataType, HasMhd>;
+      const size_t num_points = get_size(*x.begin());
+      typename VarsComputer::Cache cache{num_points};
+      VarsComputer computer{mesh, inv_jacobian, x, gr_solution, hydro_solution};
+      const auto get_var = [&cache, &computer, &hydro_solution,
+                            &x](auto tag_v) {
+        using tag = std::decay_t<decltype(tag_v)>;
+        if constexpr (tmpl::list_contains_v<hydro_tags<DataType>, tag>) {
+          (void)cache;
+          (void)computer;
+          if constexpr (HasMhd) {
+            (void)x;
+            return get<tag>(hydro_solution);
+          } else {
+            (void)hydro_solution;
+            return get<tag>(Flatness{}.variables(x, tmpl::list<tag>{}));
+          }
         } else {
           (void)hydro_solution;
-          return get<tag>(Flatness{}.variables(x, tmpl::list<tag>{}));
+          (void)x;
+          return cache.get_var(computer, tag{});
         }
-      } else {
-        (void)hydro_solution;
-        (void)x;
-        return cache.get_var(computer, tag{});
-      }
-    };
-    return {get_var(RequestedTags{})...};
-  }
+      };
+      return {get_var(RequestedTags{})...};
+    }
 
-  friend bool operator==(const WrappedGr<GrSolution, HasMhd>& lhs,
-                         const WrappedGr<GrSolution, HasMhd>& rhs) {
-    return lhs.gr_solution_ == rhs.gr_solution_;
-  }
+    friend bool operator==(const WrappedGr<GrSolution, HasMhd>& lhs,
+                           const WrappedGr<GrSolution, HasMhd>& rhs) {
+      return lhs.gr_solution_ == rhs.gr_solution_;
+    }
 
-  GrSolution gr_solution_;
-};
+    GrSolution gr_solution_;
+  };
 
 template <typename GrSolution, bool HasMhd>
 inline bool operator!=(const WrappedGr<GrSolution, HasMhd>& lhs,

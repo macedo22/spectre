@@ -120,7 +120,7 @@ struct DomainCreator {
     return MakeString{} << WhichDomain << "DomainCreator";
   }
   using type = std::unique_ptr<::DomainCreator<Dim>>;
-  static constexpr Options::String help = {"Choose a domain."};
+  static Options::String help() { return "Choose a domain."; }
 };
 }  // namespace OptionTags
 
@@ -174,7 +174,7 @@ struct InitialRefinementLevels : db::SimpleTag {
 /// [option_group]
 struct OptionsGroup {
   static std::string name() { return "Importers"; }
-  static constexpr Options::String help = "Numeric volume data";
+  static Options::String help() { return "Numeric volume data"; }
 };
 /// [option_group]
 
@@ -469,7 +469,9 @@ struct Metavariables {
                  TestDataWriter<Dim, Metavariables>,
                  importers::ElementDataReader<Metavariables>>;
 
-  static constexpr const char* const help{"Test the volume data reader"};
+  static constexpr const char* const help() {
+    return "Test the volume data reader";
+  }
   static constexpr bool ignore_unrecognized_command_line_options = false;
 
   static constexpr std::array<Parallel::Phase, 5> default_phase_order{

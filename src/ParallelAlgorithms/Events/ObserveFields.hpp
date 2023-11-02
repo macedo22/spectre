@@ -103,9 +103,11 @@ class ObserveFields<VolumeDim, tmpl::list<Tensors...>,
   /// The name of the subfile inside the HDF5 file
   struct SubfileName {
     using type = std::string;
-    static Options::String help = {
-        "The name of the subfile inside the HDF5 file without an extension and "
-        "without a preceding '/'."};
+    static Options::String help() {
+      return "The name of the subfile inside the HDF5 file without an "
+             "extension and "
+             "without a preceding '/'.";
+    }
   };
 
   /// \cond
@@ -115,21 +117,28 @@ class ObserveFields<VolumeDim, tmpl::list<Tensors...>,
   /// \endcond
 
   struct VariablesToObserve {
-    static Options::String help = "Subset of variables to observe";
+    static Options::String help() { return "Subset of variables to observe"; }
     using type = std::vector<std::string>;
     static size_t lower_bound_on_size() { return 1; }
   };
 
   struct InterpolateToMesh {
     using type = Options::Auto<Mesh<VolumeDim>, Options::AutoLabel::None>;
-    static Options::String help =
-        "An optional mesh to which the variables are interpolated. This mesh "
-        "specifies any number of collocation points, basis, and quadrature on "
-        "which the observed quantities are evaluated. If no mesh is given, the "
-        "results will be evaluated on the mesh the simulation runs on. The "
-        "user may add several ObserveField Events e.g. with and without an "
-        "interpolating mesh to output the data both on the original mesh and "
-        "on a new mesh.";
+    static Options::String help() {
+      return "An optional mesh to which the variables are interpolated. This "
+             "mesh "
+             "specifies any number of collocation points, basis, and "
+             "quadrature on "
+             "which the observed quantities are evaluated. If no mesh is "
+             "given, the "
+             "results will be evaluated on the mesh the simulation runs on. "
+             "The "
+             "user may add several ObserveField Events e.g. with and without "
+             "an "
+             "interpolating mesh to output the data both on the original mesh "
+             "and "
+             "on a new mesh.";
+    }
   };
 
   /// The floating point type/precision with which to write the data to disk.
@@ -137,11 +146,13 @@ class ObserveFields<VolumeDim, tmpl::list<Tensors...>,
   /// Must be specified once for all data or individually for each variable
   /// being observed.
   struct FloatingPointTypes {
-    static Options::String help =
-        "The floating point type/precision with which to write the data to "
-        "disk.\n\n"
-        "Must be specified once for all data or individually  for each "
-        "variable being observed.";
+    static Options::String help() {
+      return "The floating point type/precision with which to write the data "
+             "to "
+             "disk.\n\n"
+             "Must be specified once for all data or individually  for each "
+             "variable being observed.";
+    }
     using type = std::vector<FloatingPointType>;
     static size_t upper_bound_on_size() { return sizeof...(Tensors); }
     static size_t lower_bound_on_size() { return 1; }
@@ -150,9 +161,11 @@ class ObserveFields<VolumeDim, tmpl::list<Tensors...>,
   /// The floating point type/precision with which to write the coordinates to
   /// disk.
   struct CoordinatesFloatingPointType {
-    static Options::String help =
-        "The floating point type/precision with which to write the coordinates "
-        "to disk.";
+    static Options::String help() {
+      return "The floating point type/precision with which to write the "
+             "coordinates "
+             "to disk.";
+    }
     using type = FloatingPointType;
   };
 
@@ -160,12 +173,13 @@ class ObserveFields<VolumeDim, tmpl::list<Tensors...>,
       tmpl::list<SubfileName, CoordinatesFloatingPointType, FloatingPointTypes,
                  VariablesToObserve, InterpolateToMesh>;
 
-  static Options::String help =
-      "Observe volume tensor fields.\n"
-      "\n"
-      "Writes volume quantities:\n"
-      " * InertialCoordinates\n"
-      " * Tensors listed in the 'VariablesToObserve' option\n";
+  static Options::String help() {
+    return "Observe volume tensor fields.\n"
+           "\n"
+           "Writes volume quantities:\n"
+           " * InertialCoordinates\n"
+           " * Tensors listed in the 'VariablesToObserve' option\n";
+  }
 
   ObserveFields() = default;
 

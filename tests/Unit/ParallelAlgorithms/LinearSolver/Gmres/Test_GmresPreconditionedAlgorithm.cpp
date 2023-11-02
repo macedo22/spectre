@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "Helpers/ParallelAlgorithms/LinearSolver/LinearSolverAlgorithmTestHelpers.hpp"
+#include "Options/String.hpp"
 #include "Parallel/CharmMain.tpp"
 #include "ParallelAlgorithms/LinearSolver/Gmres/Gmres.hpp"
 #include "ParallelAlgorithms/LinearSolver/Richardson/Richardson.hpp"
@@ -18,17 +19,18 @@ namespace helpers = LinearSolverAlgorithmTestHelpers;
 namespace {
 
 struct SerialGmres {
-  static constexpr Options::String help =
-      "Options for the iterative linear solver";
+  static Options::String help() {
+    return "Options for the iterative linear solver";
+  }
 };
 
 struct Preconditioner {
-  static constexpr Options::String help = "Options for the preconditioner";
+  static Options::String help() { return "Options for the preconditioner"; }
 };
 
 struct Metavariables {
-  static constexpr const char* const help{
-      "Test the preconditioned GMRES linear solver algorithm"};
+  static Options::String help(){
+      return "Test the preconditioned GMRES linear solver algorithm"};
 
   using linear_solver =
       LinearSolver::gmres::Gmres<Metavariables, helpers::fields_tag,

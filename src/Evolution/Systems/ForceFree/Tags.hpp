@@ -142,7 +142,9 @@ namespace OptionTags {
  */
 struct ForceFreeGroup {
   static std::string name() { return "ForceFree"; }
-  static Options::String help{"Options for the GRFFE evolution system"};
+  static Options::String help() {
+    return "Options for the GRFFE evolution system";
+  }
   using group = evolution::OptionTags::SystemGroup;
 };
 
@@ -152,7 +154,9 @@ struct ForceFreeGroup {
  */
 struct ConstraintDampingGroup {
   static std::string name() { return "ConstraintDamping"; }
-  static Options::String help{"Options related to constraint damping"};
+  static Options::String help() {
+    return "Options related to constraint damping";
+  }
   using group = ForceFreeGroup;
 };
 
@@ -163,9 +167,10 @@ struct ConstraintDampingGroup {
 struct KappaPsi {
   static std::string name() { return "KappaPsi"; }
   using type = double;
-  static Options::String help{
-      "Constraint damping parameter for divergence cleaning of electric "
-      "fields"};
+  static Options::String help() {
+    return "Constraint damping parameter for divergence cleaning of electric "
+           "fields";
+  }
   using group = ConstraintDampingGroup;
 };
 
@@ -176,9 +181,10 @@ struct KappaPsi {
 struct KappaPhi {
   static std::string name() { return "KappaPhi"; }
   using type = double;
-  static Options::String help{
-      "Constraint damping parameter for divergence cleaning of magnetic "
-      "fields"};
+  static Options::String help() {
+    return "Constraint damping parameter for divergence cleaning of magnetic "
+           "fields";
+  }
   using group = ConstraintDampingGroup;
 };
 
@@ -188,8 +194,9 @@ struct KappaPhi {
  */
 struct ForceFreeCurrentGroup {
   static std::string name() { return "ForceFreeCurrent"; }
-  static Options::String help{
-      "Options related to specifying the force-free electric current"};
+  static Options::String help() {
+    return "Options related to specifying the force-free electric current";
+  }
   using group = ForceFreeGroup;
 };
 
@@ -201,9 +208,11 @@ struct ForceFreeCurrentGroup {
 struct ParallelConductivity {
   static std::string name() { return "ParallelConductivity"; }
   using type = double;
-  static Options::String help{
-      "Damping parameter for J^i to impose the force-free conditions, which is "
-      "physically the conductivity parallel to B field"};
+  static Options::String help() {
+    return "Damping parameter for J^i to impose the force-free conditions, "
+           "which is "
+           "physically the conductivity parallel to B field";
+  }
   using group = ForceFreeCurrentGroup;
 };
 

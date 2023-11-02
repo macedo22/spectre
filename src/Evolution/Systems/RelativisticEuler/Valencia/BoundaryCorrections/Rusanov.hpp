@@ -64,10 +64,13 @@ class Rusanov final : public BoundaryCorrection<Dim> {
 
  public:
   using options = tmpl::list<>;
-  static Options::String help = {
-      "Computes the Rusanov or local Lax-Friedrichs boundary correction term "
-      "for the Valencia formulation of the relativistic Euler/hydrodynamics "
-      "system."};
+  static Options::String help() {
+    return "Computes the Rusanov or local Lax-Friedrichs boundary correction "
+           "term "
+           "for the Valencia formulation of the relativistic "
+           "Euler/hydrodynamics "
+           "system.";
+  }
 
   Rusanov() = default;
   Rusanov(const Rusanov&) = default;

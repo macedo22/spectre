@@ -12,6 +12,7 @@
 #include "Framework/TestCreation.hpp"
 #include "Options/Options.hpp"
 #include "Options/ParseOptions.hpp"
+#include "Options/String.hpp"
 #include "Utilities/NoSuchType.hpp"
 #include "Utilities/TMPL.hpp"
 
@@ -48,11 +49,11 @@ namespace {
 struct ClassWithoutMetavariables {
   struct SizeT {
     using type = size_t;
-    static constexpr Options::String help = {"SizeT help"};
+    static Options::String help() { return "SizeT help"; }
   };
 
   using options = tmpl::list<SizeT>;
-  static constexpr Options::String help = {"Help"};
+  static Options::String help() { return "Help"; }
 
   explicit ClassWithoutMetavariables(const size_t in_value) : value(in_value) {}
 
@@ -65,11 +66,11 @@ struct ClassWithoutMetavariables {
 struct ClassWithMetavariables {
   struct SizeT {
     using type = size_t;
-    static constexpr Options::String help = {"SizeT help"};
+    static Options::String help() { return "SizeT help"; }
   };
 
   using options = tmpl::list<SizeT>;
-  static constexpr Options::String help = {"Help"};
+  static Options::String help() { return "Help"; }
 
   template <typename Metavariables>
   // NOLINTNEXTLINE(readability-avoid-const-params-in-decls)
@@ -90,31 +91,31 @@ struct ClassWithMetavariables {
 };
 
 struct OptionGroup1 {
-  static constexpr Options::String help = {"OptionGroup1 help"};
+  static Options::String help() { return "OptionGroup1 help"; }
 };
 
 struct OptionGroup2 {
-  static constexpr Options::String help = {"OptionGroup2 help"};
+  static Options::String help() { return "OptionGroup2 help"; }
   using group = OptionGroup1;
 };
 
 template <typename T>
 struct NoGroup {
   using type = T;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 
 template <typename T>
 struct OneGroup {
   using type = T;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
   using group = OptionGroup1;
 };
 
 template <typename T>
 struct TwoGroup {
   using type = T;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
   using group = OptionGroup2;
 };
 
@@ -126,7 +127,7 @@ struct Metavars {
 // [class_without_metavariables_tag]
 struct ExampleTag {
   using type = ClassWithoutMetavariables;
-  static constexpr Options::String help = {"help"};
+  static Options::String help() { return "help"; }
   using group = OptionGroup1;
 };
 // [class_without_metavariables_tag]
@@ -145,11 +146,11 @@ struct BaseClass {
 struct DerivedClass : BaseClass {
   struct SizeT {
     using type = size_t;
-    static constexpr Options::String help = {"SizeT help"};
+    static Options::String help() { return "SizeT help"; }
   };
 
   using options = tmpl::list<SizeT>;
-  static constexpr Options::String help = {"Help"};
+  static Options::String help() { return "Help"; }
 
   explicit DerivedClass(const size_t in_value) : value(in_value) {}
 
@@ -235,7 +236,7 @@ void test_test_creation() {
 // [test_option_tag_factory_creation_tag]
 namespace OptionTags {
 struct BaseClass {
-  static constexpr Options::String help = "Halp";
+  static Options::String help() { return "Halp"; }
   using type = std::unique_ptr<::BaseClass>;
 };
 }  // namespace OptionTags

@@ -50,62 +50,80 @@ class Interval : public DomainCreator<1> {
 
   struct LowerBound {
     using type = std::array<double, 1>;
-    static Options::String help = {"Sequence of [x] for lower bounds."};
+    static Options::String help() {
+      return "Sequence of [x] for lower bounds.";
+    }
   };
   struct UpperBound {
     using type = std::array<double, 1>;
-    static Options::String help = {"Sequence of [x] for upper bounds."};
+    static Options::String help() {
+      return "Sequence of [x] for upper bounds.";
+    }
   };
   struct Distribution {
     using type = CoordinateMaps::Distribution;
-    static Options::String help = {"Distribution of grid points"};
+    static Options::String help() { return "Distribution of grid points"; }
   };
   struct Singularity {
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    static Options::String help = {
-        "Position of coordinate singularity. Must be outside the domain. "
-        "Required for 'Logarithmic' and 'Inverse' grid point distributions. "
-        "Set to 'None' otherwise. "
-        "A singularity position close to the lower or upper bound of the "
-        "interval leads to very small grid spacing near that end, and "
-        "placing the singularity further away from the domain increases the "
-        "grid spacing. See the documentation of "
-        "'domain::CoordinateMap::Distribution' for details."};
+    static Options::String help() {
+      return "Position of coordinate singularity. Must be outside the domain. "
+             "Required for 'Logarithmic' and 'Inverse' grid point "
+             "distributions. "
+             "Set to 'None' otherwise. "
+             "A singularity position close to the lower or upper bound of the "
+             "interval leads to very small grid spacing near that end, and "
+             "placing the singularity further away from the domain increases "
+             "the "
+             "grid spacing. See the documentation of "
+             "'domain::CoordinateMap::Distribution' for details.";
+    }
   };
   struct IsPeriodicIn {
     using type = std::array<bool, 1>;
-    static Options::String help = {"Sequence for [x], true if periodic."};
+    static Options::String help() {
+      return "Sequence for [x], true if periodic.";
+    }
   };
   struct InitialRefinement {
     using type = std::array<size_t, 1>;
-    static Options::String help = {"Initial refinement level in [x]."};
+    static Options::String help() { return "Initial refinement level in [x]."; }
   };
   struct InitialGridPoints {
     using type = std::array<size_t, 1>;
-    static Options::String help = {"Initial number of grid points in [x]."};
+    static Options::String help() {
+      return "Initial number of grid points in [x].";
+    }
   };
   struct TimeDependence {
     using type =
         std::unique_ptr<domain::creators::time_dependence::TimeDependence<1>>;
-    static Options::String help = {
-        "The time dependence of the moving mesh domain."};
+    static Options::String help() {
+      return "The time dependence of the moving mesh domain.";
+    }
   };
   struct BoundaryConditions {
-    static Options::String help = "The boundary conditions to apply.";
+    static Options::String help() {
+      return "The boundary conditions to apply.";
+    }
   };
   template <typename BoundaryConditionsBase>
   struct UpperBoundaryCondition {
     static std::string name() { return "UpperBoundary"; }
-    static Options::String help =
-        "Options for the boundary condition applied at the upper boundary.";
+    static Options::String help() {
+      return "Options for the boundary condition applied at the upper "
+             "boundary.";
+    }
     using type = std::unique_ptr<BoundaryConditionsBase>;
     using group = BoundaryConditions;
   };
   template <typename BoundaryConditionsBase>
   struct LowerBoundaryCondition {
     static std::string name() { return "LowerBoundary"; }
-    static Options::String help =
-        "Options for the boundary condition applied at the lower boundary.";
+    static Options::String help() {
+      return "Options for the boundary condition applied at the lower "
+             "boundary.";
+    }
     using type = std::unique_ptr<BoundaryConditionsBase>;
     using group = BoundaryConditions;
   };
@@ -131,7 +149,7 @@ class Interval : public DomainCreator<1> {
           options_periodic>,
       tmpl::list<Distribution, Singularity, TimeDependence>>;
 
-  static Options::String help = {"Creates a 1D interval."};
+  static Options::String help() { return "Creates a 1D interval."; }
 
   Interval(std::array<double, 1> lower_x, std::array<double, 1> upper_x,
            std::array<size_t, 1> initial_refinement_level_x,

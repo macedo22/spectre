@@ -14,6 +14,7 @@
 #include "DataStructures/DataBox/DataBox.hpp"
 #include "DataStructures/DataBox/Tag.hpp"
 #include "Helpers/Parallel/RoundRobinArrayElements.hpp"
+#include "Options/String.hpp"
 #include "Parallel/Algorithms/AlgorithmArray.hpp"
 #include "Parallel/Algorithms/AlgorithmNodegroup.hpp"
 #include "Parallel/CharmMain.tpp"
@@ -308,7 +309,7 @@ struct TestMetavariables {
       tmpl::list<ArrayParallelComponent<TestMetavariables>,
                  NodegroupParallelComponent<TestMetavariables>>;
 
-  static constexpr const char* const help{"Test nodelocks in Algorithm"};
+  static Options::String help() { return "Test nodelocks in Algorithm"; }
   static constexpr bool ignore_unrecognized_command_line_options = false;
 
   static constexpr std::array<Parallel::Phase, 6> default_phase_order{

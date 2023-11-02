@@ -59,14 +59,16 @@ struct Excision {
 };
 
 struct ExcisionFromOptions : Excision {
-  static Options::String help = {
-      "Excise the interior of the sphere, leaving a spherical shell."};
+  static Options::String help() {
+    return "Excise the interior of the sphere, leaving a spherical shell.";
+  }
   template <typename BoundaryConditionsBase>
   struct BoundaryCondition {
     static std::string name() { return "ExciseWithBoundaryCondition"; }
     using type = std::unique_ptr<BoundaryConditionsBase>;
-    static Options::String help = {
-        "The boundary condition to impose on the excision surface."};
+    static Options::String help() {
+      return "The boundary condition to impose on the excision surface.";
+    }
   };
   template <typename Metavariables>
   using options = tmpl::list<BoundaryCondition<
@@ -77,16 +79,18 @@ struct ExcisionFromOptions : Excision {
 
 /// Options for filling the interior of the sphere with a cube
 struct InnerCube {
-  static Options::String help = {
-      "Fill the interior of the sphere with a cube."};
+  static Options::String help() {
+    return "Fill the interior of the sphere with a cube.";
+  }
   struct Sphericity {
     static std::string name() { return "FillWithSphericity"; }
     using type = double;
-    static Options::String help = {
-        "Sphericity of the inner cube. A sphericity of 0 uses a product "
-        "of 1D maps as the map in the center. A sphericity > 0 uses a "
-        "BulgedCube. A sphericity of exactly 1 is not allowed. See "
-        "BulgedCube docs for why."};
+    static Options::String help() {
+      return "Sphericity of the inner cube. A sphericity of 0 uses a product "
+             "of 1D maps as the map in the center. A sphericity > 0 uses a "
+             "BulgedCube. A sphericity of exactly 1 is not allowed. See "
+             "BulgedCube docs for why.";
+    }
     static double lower_bound() { return 0.0; }
     static double upper_bound() { return 1.0; }
   };
@@ -196,13 +200,14 @@ class Sphere : public DomainCreator<3> {
 
   struct InnerRadius {
     using type = double;
-    static Options::String help = {
-        "Radius circumscribing the inner cube or the excision."};
+    static Options::String help() {
+      return "Radius circumscribing the inner cube or the excision.";
+    }
   };
 
   struct OuterRadius {
     using type = double;
-    static Options::String help = {"Radius of the sphere."};
+    static Options::String help() { return "Radius of the sphere."; }
   };
 
   using Excision = detail::Excision;
@@ -210,11 +215,13 @@ class Sphere : public DomainCreator<3> {
 
   struct Interior {
     using type = std::variant<Excision, InnerCube>;
-    static Options::String help = {
-        "Specify 'ExciseWithBoundaryCondition' and a boundary condition to "
-        "excise the interior of the sphere, leaving a spherical shell "
-        "(or just 'Excise' if boundary conditions are disabled). "
-        "Or specify 'CubeWithSphericity' to fill the interior."};
+    static Options::String help() {
+      return "Specify 'ExciseWithBoundaryCondition' and a boundary condition "
+             "to "
+             "excise the interior of the sphere, leaving a spherical shell "
+             "(or just 'Excise' if boundary conditions are disabled). "
+             "Or specify 'CubeWithSphericity' to fill the interior.";
+    }
   };
 
   struct InitialRefinement {
@@ -222,11 +229,14 @@ class Sphere : public DomainCreator<3> {
         std::variant<size_t, std::array<size_t, 3>,
                      std::vector<std::array<size_t, 3>>,
                      std::unordered_map<std::string, std::array<size_t, 3>>>;
-    static Options::String help = {
-        "Initial refinement level. Specify one of: a single number, a "
-        "list representing [phi, theta, r], or such a list for every block "
-        "in the domain. The central cube always uses the value for 'theta' "
-        "in both y- and z-direction."};
+    static Options::String help() {
+      return "Initial refinement level. Specify one of: a single number, a "
+             "list representing [phi, theta, r], or such a list for every "
+             "block "
+             "in the domain. The central cube always uses the value for "
+             "'theta' "
+             "in both y- and z-direction.";
+    }
   };
 
   struct InitialGridPoints {
@@ -234,39 +244,47 @@ class Sphere : public DomainCreator<3> {
         std::variant<size_t, std::array<size_t, 3>,
                      std::vector<std::array<size_t, 3>>,
                      std::unordered_map<std::string, std::array<size_t, 3>>>;
-    static Options::String help = {
-        "Initial number of grid points. Specify one of: a single number, a "
-        "list representing [phi, theta, r], or such a list for every block "
-        "in the domain. The central cube always uses the value for 'theta' "
-        "in both y- and z-direction."};
+    static Options::String help() {
+      return "Initial number of grid points. Specify one of: a single number, "
+             "a "
+             "list representing [phi, theta, r], or such a list for every "
+             "block "
+             "in the domain. The central cube always uses the value for "
+             "'theta' "
+             "in both y- and z-direction.";
+    }
   };
 
   struct UseEquiangularMap {
     using type = bool;
-    static Options::String help = {
-        "Use equiangular instead of equidistant coordinates. Equiangular "
-        "coordinates give better gridpoint spacings in the angular "
-        "directions, while equidistant coordinates give better gridpoint "
-        "spacings in the inner cube."};
+    static Options::String help() {
+      return "Use equiangular instead of equidistant coordinates. Equiangular "
+             "coordinates give better gridpoint spacings in the angular "
+             "directions, while equidistant coordinates give better gridpoint "
+             "spacings in the inner cube.";
+    }
   };
 
   /// Options for the EquatorialCompression map
   struct EquatorialCompressionOptions {
-    static Options::String help = {
-        "Options for the EquatorialCompression map."};
+    static Options::String help() {
+      return "Options for the EquatorialCompression map.";
+    }
     struct AspectRatio {
       using type = double;
-      static Options::String help = {
-          "An aspect ratio greater than 1 moves grid points toward the "
-          "equator, and an aspect ratio smaller than 1 moves grid points "
-          "toward the poles."};
+      static Options::String help() {
+        return "An aspect ratio greater than 1 moves grid points toward the "
+               "equator, and an aspect ratio smaller than 1 moves grid points "
+               "toward the poles.";
+      }
       static double lower_bound() { return 0.0; }
     };
     struct IndexPolarAxis {
       using type = size_t;
-      static Options::String help = {
-          "The index (0, 1, or 2) of the axis along which equatorial "
-          "compression is applied, where 0 is x, 1 is y, and 2 is z."};
+      static Options::String help() {
+        return "The index (0, 1, or 2) of the axis along which equatorial "
+               "compression is applied, where 0 is x, 1 is y, and 2 is z.";
+      }
       static size_t upper_bound() { return 2; }
     };
     using options = tmpl::list<AspectRatio, IndexPolarAxis>;
@@ -278,40 +296,55 @@ class Sphere : public DomainCreator<3> {
   struct EquatorialCompression {
     using type =
         Options::Auto<EquatorialCompressionOptions, Options::AutoLabel::None>;
-    static Options::String help = {
-        "Apply an equatorial compression map to focus resolution on the "
-        "equator or on the poles. The equatorial compression is an angular "
-        "redistribution of grid points and will preserve the spherical shape "
-        "of the inner and outer boundaries."};
+    static Options::String help() {
+      return "Apply an equatorial compression map to focus resolution on the "
+             "equator or on the poles. The equatorial compression is an "
+             "angular "
+             "redistribution of grid points and will preserve the spherical "
+             "shape "
+             "of the inner and outer boundaries.";
+    }
   };
 
   struct RadialPartitioning {
     using type = std::vector<double>;
-    static Options::String help = {
-        "Radial coordinates of the boundaries splitting the spherical shell "
-        "between InnerRadius and OuterRadius. They must be given in ascending "
-        "order. This should be used if boundaries need to be set at specific "
-        "radii. If the number but not the specific locations of the boundaries "
-        "are important, use InitialRefinement instead."};
+    static Options::String help() {
+      return "Radial coordinates of the boundaries splitting the spherical "
+             "shell "
+             "between InnerRadius and OuterRadius. They must be given in "
+             "ascending "
+             "order. This should be used if boundaries need to be set at "
+             "specific "
+             "radii. If the number but not the specific locations of the "
+             "boundaries "
+             "are important, use InitialRefinement instead.";
+    }
   };
 
   struct RadialDistribution {
     using type =
         std::variant<domain::CoordinateMaps::Distribution,
                      std::vector<domain::CoordinateMaps::Distribution>>;
-    static Options::String help = {
-        "Select the radial distribution of grid points in each spherical "
-        "shell. There must be N+1 radial distributions specified for N radial "
-        "partitions. If the interior of the sphere is filled with a cube, the "
-        "innermost shell must have a 'Linear' distribution because it changes "
-        "in sphericity. You can also specify just a single radial distribution "
-        "(not in a vector) which will use the same distribution for all "
-        "partitions."};
+    static Options::String help() {
+      return "Select the radial distribution of grid points in each spherical "
+             "shell. There must be N+1 radial distributions specified for N "
+             "radial "
+             "partitions. If the interior of the sphere is filled with a cube, "
+             "the "
+             "innermost shell must have a 'Linear' distribution because it "
+             "changes "
+             "in sphericity. You can also specify just a single radial "
+             "distribution "
+             "(not in a vector) which will use the same distribution for all "
+             "partitions.";
+    }
   };
 
   struct WhichWedges {
     using type = ShellWedges;
-    static Options::String help = {"Which wedges to include in the shell."};
+    static Options::String help() {
+      return "Which wedges to include in the shell.";
+    }
     static constexpr type suggested_value() { return ShellWedges::All; }
   };
 
@@ -321,16 +354,19 @@ class Sphere : public DomainCreator<3> {
 
   struct TimeDependentMaps {
     using type = Options::Auto<TimeDepOptionType, Options::AutoLabel::None>;
-    static Options::String help = {
-        "The options for time dependent maps. This can either be a "
-        "TimeDependence or hard coded time dependent options. Specify `None` "
-        "for no time dependent maps."};
+    static Options::String help() {
+      return "The options for time dependent maps. This can either be a "
+             "TimeDependence or hard coded time dependent options. Specify "
+             "`None` "
+             "for no time dependent maps.";
+    }
   };
 
   template <typename BoundaryConditionsBase>
   struct OuterBoundaryCondition {
-    static Options::String help =
-        "Options for the boundary conditions at the outer radius.";
+    static Options::String help() {
+      return "Options for the boundary conditions at the outer radius.";
+    }
     using type = std::unique_ptr<BoundaryConditionsBase>;
   };
 
@@ -351,12 +387,17 @@ class Sphere : public DomainCreator<3> {
                   typename Metavariables::system>>>,
       basic_options>;
 
-  static Options::String help{
-      "A 3D cubed sphere. Six wedges surround an interior region, which is "
-      "either excised or filled in with a seventh block. The interior region "
-      "is a (possibly deformed) sphere when excised, or a (possibly deformed) "
-      "cube when filled in. Additional spherical shells, each composed of six "
-      "wedges, can be added with the 'RadialPartitioning' option."};
+  static Options::String help() {
+    return "A 3D cubed sphere. Six wedges surround an interior region, which "
+           "is "
+           "either excised or filled in with a seventh block. The interior "
+           "region "
+           "is a (possibly deformed) sphere when excised, or a (possibly "
+           "deformed) "
+           "cube when filled in. Additional spherical shells, each composed of "
+           "six "
+           "wedges, can be added with the 'RadialPartitioning' option.";
+  }
 
   Sphere(
       double inner_radius, double outer_radius,

@@ -15,7 +15,7 @@
 namespace {
 
 struct TestGroup {
-  static constexpr Options::String help = "halp";
+  static Options::String help() { return "halp"; }
 };
 
 void test_construct_from_options() {

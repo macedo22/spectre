@@ -39,14 +39,15 @@ class StepToTimes : public StepChooser<StepChooserUse::Slab> {
 
   struct Times {
     using type = std::unique_ptr<TimeSequence<double>>;
-    static Options::String help{"Times to force steps at"};
+    static Options::String help() { return "Times to force steps at"; }
   };
 
-  static Options::String help =
-      "Suggests step sizes to place steps at specific times.\n"
-      "\n"
-      "The suggestion provided depends on the current time, so it should\n"
-      "be applied immediately, rather than delayed several slabs.";
+  static Options::String help() {
+    return "Suggests step sizes to place steps at specific times.\n"
+           "\n"
+           "The suggestion provided depends on the current time, so it should\n"
+           "be applied immediately, rather than delayed several slabs.";
+  }
   using options = tmpl::list<Times>;
 
   explicit StepToTimes(std::unique_ptr<TimeSequence<double>> times)

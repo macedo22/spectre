@@ -40,9 +40,11 @@ template <size_t Dim>
 class DemandOutgoingCharSpeeds final : public BoundaryCondition<Dim> {
  public:
   using options = tmpl::list<>;
-  static Options::String help{
-      "A boundary condition that only verifies the characteristic speeds are "
-      "all directed out of the domain."};
+  static Options::String help() {
+    return "A boundary condition that only verifies the characteristic speeds "
+           "are "
+           "all directed out of the domain.";
+  }
 
   DemandOutgoingCharSpeeds() = default;
   DemandOutgoingCharSpeeds(DemandOutgoingCharSpeeds&&) = default;

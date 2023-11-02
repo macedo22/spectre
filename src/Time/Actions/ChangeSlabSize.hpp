@@ -278,22 +278,23 @@ class ChangeSlabSize : public Event {
   /// \endcond
 
   struct StepChoosers {
-    static Options::String help = "Limits on slab size";
+    static Options::String help() { return "Limits on slab size"; }
     using type =
         std::vector<std::unique_ptr<StepChooser<StepChooserUse::Slab>>>;
     static size_t lower_bound_on_size() { return 1; }
   };
 
   struct DelayChange {
-    static Options::String help = "Slabs to wait before changing";
+    static Options::String help() { return "Slabs to wait before changing"; }
     using type = uint64_t;
   };
 
   using options = tmpl::list<StepChoosers, DelayChange>;
-  static Options::String help =
-      "Trigger a slab size change chosen by the provided step choosers.\n"
-      "The actual changing of the slab size can be delayed until a later\n"
-      "slab to improve parallelization.";
+  static Options::String help() {
+    return "Trigger a slab size change chosen by the provided step choosers.\n"
+           "The actual changing of the slab size can be delayed until a later\n"
+           "slab to improve parallelization.";
+  }
 
   ChangeSlabSize() = default;
   ChangeSlabSize(std::vector<std::unique_ptr<StepChooser<StepChooserUse::Slab>>>

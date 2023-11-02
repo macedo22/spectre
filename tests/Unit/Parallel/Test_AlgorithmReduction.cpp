@@ -15,6 +15,7 @@
 
 #include "DataStructures/DataBox/DataBox.hpp"  // IWYU pragma: keep
 #include "Helpers/Parallel/RoundRobinArrayElements.hpp"
+#include "Options/String.hpp"
 #include "Parallel/Algorithms/AlgorithmArray.hpp"
 #include "Parallel/Algorithms/AlgorithmSingleton.hpp"
 #include "Parallel/CharmMain.tpp"
@@ -261,7 +262,7 @@ struct TestMetavariables {
       tmpl::list<SingletonParallelComponent<TestMetavariables>,
                  ArrayParallelComponent<TestMetavariables>>;
 
-  static constexpr const char* const help{"Test reductions using Algorithm"};
+  static Options::String help() { return "Test reductions using Algorithm"; }
   static constexpr bool ignore_unrecognized_command_line_options = false;
 
   static constexpr std::array<Parallel::Phase, 3> default_phase_order{

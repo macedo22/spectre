@@ -176,115 +176,118 @@ class TovStar : public elliptic::analytic_data::AnalyticSolution {
 
  public:
   using options = RelEulerTovStar::options;
-  static Options::String help = RelEulerTovStar::help;
+  static Options::String help() {
+    return RelEulerTovStar::help;
 
-  TovStar() = default;
-  TovStar(const TovStar&) = default;
-  TovStar& operator=(const TovStar&) = default;
-  TovStar(TovStar&&) = default;
-  TovStar& operator=(TovStar&&) = default;
-  ~TovStar() = default;
+    TovStar() = default;
+    TovStar(const TovStar&) = default;
+    TovStar& operator=(const TovStar&) = default;
+    TovStar(TovStar &&) = default;
+    TovStar& operator=(TovStar&&) = default;
+    ~TovStar() = default;
 
-  TovStar(double central_rest_mass_density,
-          std::unique_ptr<EquationsOfState::EquationOfState<true, 1>>
-              equation_of_state,
-          const RelativisticEuler::Solutions::TovCoordinates coordinate_system)
-      : tov_star(central_rest_mass_density, std::move(equation_of_state),
-                 coordinate_system) {}
+    TovStar(
+        double central_rest_mass_density,
+        std::unique_ptr<EquationsOfState::EquationOfState<true, 1>>
+            equation_of_state,
+        const RelativisticEuler::Solutions::TovCoordinates coordinate_system)
+        : tov_star(central_rest_mass_density, std::move(equation_of_state),
+                   coordinate_system) {}
 
-  const EquationsOfState::EquationOfState<true, 1>& equation_of_state() const {
-    return tov_star.equation_of_state();
-  }
-
-  const RelativisticEuler::Solutions::TovSolution& radial_solution() const {
-    return tov_star.radial_solution();
-  }
-
-  /// \cond
-  explicit TovStar(CkMigrateMessage* m)
-      : elliptic::analytic_data::AnalyticSolution(m) {}
-  using PUP::able::register_constructor;
-  WRAPPED_PUPable_decl_template(TovStar);
-  std::unique_ptr<elliptic::analytic_data::AnalyticSolution> get_clone()
-      const override {
-    return std::make_unique<TovStar>(*this);
-  }
-  /// \endcond
-
-  template <typename DataType>
-  using tags = typename tov_detail::TovVariablesCache<DataType>::tags_list;
-
-  template <typename DataType, typename... RequestedTags>
-  tuples::TaggedTuple<RequestedTags...> variables(
-      const tnsr::I<DataType, 3, Frame::Inertial>& x,
-      tmpl::list<RequestedTags...> /*meta*/) const {
-    return variables_impl<DataType>(x, std::nullopt, std::nullopt,
-                                    tmpl::list<RequestedTags...>{});
-  }
-
-  template <typename... RequestedTags>
-  tuples::TaggedTuple<RequestedTags...> variables(
-      const tnsr::I<DataVector, 3, Frame::Inertial>& x, const Mesh<3>& mesh,
-      const InverseJacobian<DataVector, 3, Frame::ElementLogical,
-                            Frame::Inertial>& inv_jacobian,
-      tmpl::list<RequestedTags...> /*meta*/) const {
-    return variables_impl<DataVector>(x, mesh, inv_jacobian,
-                                      tmpl::list<RequestedTags...>{});
-  }
-
-  // NOLINTNEXTLINE(google-runtime-references)
-  void pup(PUP::er& p) override {
-    elliptic::analytic_data::AnalyticSolution::pup(p);
-    p | tov_star;
-  }
-
- private:
-  template <typename DataType, typename... RequestedTags>
-  tuples::TaggedTuple<RequestedTags...> variables_impl(
-      const tnsr::I<DataType, 3, Frame::Inertial>& x,
-      std::optional<std::reference_wrapper<const Mesh<3>>> mesh,
-      std::optional<std::reference_wrapper<const InverseJacobian<
-          DataType, 3, Frame::ElementLogical, Frame::Inertial>>>
-          inv_jacobian,
-      tmpl::list<RequestedTags...> /*meta*/) const {
-    using VarsComputer = tov_detail::TovVariables<DataType>;
-    typename VarsComputer::Cache cache{get_size(*x.begin())};
-    const DataType radius = get(magnitude(x));
-    const VarsComputer computer{std::move(mesh), std::move(inv_jacobian), x,
-                                radius, tov_star};
-    using unrequested_hydro_tags =
-        tmpl::list_difference<hydro_tags<DataType>,
-                              tmpl::list<RequestedTags...>>;
-    using requested_hydro_tags =
-        tmpl::list_difference<hydro_tags<DataType>, unrequested_hydro_tags>;
-    tuples::tagged_tuple_from_typelist<requested_hydro_tags> hydro_vars;
-    if constexpr (not std::is_same_v<requested_hydro_tags, tmpl::list<>>) {
-      hydro_vars =
-          tov_star.variables(x, std::numeric_limits<double>::signaling_NaN(),
-                             requested_hydro_tags{});
+    const EquationsOfState::EquationOfState<true, 1>& equation_of_state()
+        const {
+      return tov_star.equation_of_state();
     }
-    const auto get_var = [&cache, &computer, &hydro_vars](auto tag_v) {
-      using tag = std::decay_t<decltype(tag_v)>;
-      if constexpr (tmpl::list_contains_v<hydro_tags<DataType>, tag>) {
-        (void)cache;
-        (void)computer;
-        return get<tag>(hydro_vars);
-      } else {
-        (void)hydro_vars;
-        return cache.get_var(computer, tag{});
+
+    const RelativisticEuler::Solutions::TovSolution& radial_solution() const {
+      return tov_star.radial_solution();
+    }
+
+    /// \cond
+    explicit TovStar(CkMigrateMessage * m)
+        : elliptic::analytic_data::AnalyticSolution(m) {}
+    using PUP::able::register_constructor;
+    WRAPPED_PUPable_decl_template(TovStar);
+    std::unique_ptr<elliptic::analytic_data::AnalyticSolution> get_clone()
+        const override {
+      return std::make_unique<TovStar>(*this);
+    }
+    /// \endcond
+
+    template <typename DataType>
+    using tags = typename tov_detail::TovVariablesCache<DataType>::tags_list;
+
+    template <typename DataType, typename... RequestedTags>
+    tuples::TaggedTuple<RequestedTags...> variables(
+        const tnsr::I<DataType, 3, Frame::Inertial>& x,
+        tmpl::list<RequestedTags...> /*meta*/) const {
+      return variables_impl<DataType>(x, std::nullopt, std::nullopt,
+                                      tmpl::list<RequestedTags...>{});
+    }
+
+    template <typename... RequestedTags>
+    tuples::TaggedTuple<RequestedTags...> variables(
+        const tnsr::I<DataVector, 3, Frame::Inertial>& x, const Mesh<3>& mesh,
+        const InverseJacobian<DataVector, 3, Frame::ElementLogical,
+                              Frame::Inertial>& inv_jacobian,
+        tmpl::list<RequestedTags...> /*meta*/) const {
+      return variables_impl<DataVector>(x, mesh, inv_jacobian,
+                                        tmpl::list<RequestedTags...>{});
+    }
+
+    // NOLINTNEXTLINE(google-runtime-references)
+    void pup(PUP::er & p) override {
+      elliptic::analytic_data::AnalyticSolution::pup(p);
+      p | tov_star;
+    }
+
+   private:
+    template <typename DataType, typename... RequestedTags>
+    tuples::TaggedTuple<RequestedTags...> variables_impl(
+        const tnsr::I<DataType, 3, Frame::Inertial>& x,
+        std::optional<std::reference_wrapper<const Mesh<3>>> mesh,
+        std::optional<std::reference_wrapper<const InverseJacobian<
+            DataType, 3, Frame::ElementLogical, Frame::Inertial>>>
+            inv_jacobian,
+        tmpl::list<RequestedTags...> /*meta*/) const {
+      using VarsComputer = tov_detail::TovVariables<DataType>;
+      typename VarsComputer::Cache cache{get_size(*x.begin())};
+      const DataType radius = get(magnitude(x));
+      const VarsComputer computer{std::move(mesh), std::move(inv_jacobian), x,
+                                  radius, tov_star};
+      using unrequested_hydro_tags =
+          tmpl::list_difference<hydro_tags<DataType>,
+                                tmpl::list<RequestedTags...>>;
+      using requested_hydro_tags =
+          tmpl::list_difference<hydro_tags<DataType>, unrequested_hydro_tags>;
+      tuples::tagged_tuple_from_typelist<requested_hydro_tags> hydro_vars;
+      if constexpr (not std::is_same_v<requested_hydro_tags, tmpl::list<>>) {
+        hydro_vars =
+            tov_star.variables(x, std::numeric_limits<double>::signaling_NaN(),
+                               requested_hydro_tags{});
       }
-    };
-    return {get_var(RequestedTags{})...};
-  }
+      const auto get_var = [&cache, &computer, &hydro_vars](auto tag_v) {
+        using tag = std::decay_t<decltype(tag_v)>;
+        if constexpr (tmpl::list_contains_v<hydro_tags<DataType>, tag>) {
+          (void)cache;
+          (void)computer;
+          return get<tag>(hydro_vars);
+        } else {
+          (void)hydro_vars;
+          return cache.get_var(computer, tag{});
+        }
+      };
+      return {get_var(RequestedTags{})...};
+    }
 
-  friend bool operator==(const TovStar& lhs, const TovStar& rhs) {
-    return lhs.tov_star == rhs.tov_star;
-  }
+    friend bool operator==(const TovStar& lhs, const TovStar& rhs) {
+      return lhs.tov_star == rhs.tov_star;
+    }
 
-  // Instead of inheriting from the RelEuler::TovStar we use an aggregate
-  // pattern to avoid multiple-inheritance issues.
-  RelativisticEuler::Solutions::TovStar tov_star{};
-};
+    // Instead of inheriting from the RelEuler::TovStar we use an aggregate
+    // pattern to avoid multiple-inheritance issues.
+    RelativisticEuler::Solutions::TovStar tov_star{};
+  };
 
 inline bool operator!=(const TovStar& lhs, const TovStar& rhs) {
   return not(lhs == rhs);

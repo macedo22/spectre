@@ -42,7 +42,7 @@ class Times : public Trigger {
   WRAPPED_PUPable_decl_template(Times);  // NOLINT
   /// \endcond
 
-  static Options::String help{"Trigger at particular times."};
+  static Options::String help() { return "Trigger at particular times."; }
 
   explicit Times(std::unique_ptr<TimeSequence<double>> times)
       : times_(std::move(times)) {}

@@ -54,43 +54,52 @@ class er;
 template <bool AllowDecrease>
 class TimescaleTuner {
  public:
-  static Options::String help{
-      "TimescaleTuner: stores and dynamically updates the timescales for each "
-      "component of a particular control system."};
+  static Options::String help() {
+    return "TimescaleTuner: stores and dynamically updates the timescales for "
+           "each "
+           "component of a particular control system.";
+  }
   struct InitialTimescales {
     using type = std::variant<double, std::vector<double>>;
-    static Options::String help = {
-        "Initial timescales for each function of time. Can either be a single "
-        "value which will be used for all components of a function of time, or "
-        "a vector of values. The vector must have the same number of "
-        "components as the function of time."};
+    static Options::String help() {
+      return "Initial timescales for each function of time. Can either be a "
+             "single "
+             "value which will be used for all components of a function of "
+             "time, or "
+             "a vector of values. The vector must have the same number of "
+             "components as the function of time.";
+    }
   };
 
   struct MinTimescale {
     using type = double;
-    static Options::String help = {"Minimum timescale"};
+    static Options::String help() { return "Minimum timescale"; }
   };
 
   struct MaxTimescale {
     using type = double;
-    static Options::String help = {"Maximum timescale"};
+    static Options::String help() { return "Maximum timescale"; }
   };
 
   struct DecreaseThreshold {
     using type = double;
-    static Options::String help = {"Threshold for decrease of timescale"};
+    static Options::String help() {
+      return "Threshold for decrease of timescale";
+    }
   };
   struct IncreaseThreshold {
     using type = double;
-    static Options::String help = {"Threshold for increase of timescale"};
+    static Options::String help() {
+      return "Threshold for increase of timescale";
+    }
   };
   struct IncreaseFactor {
     using type = double;
-    static Options::String help = {"Factor to increase timescale"};
+    static Options::String help() { return "Factor to increase timescale"; }
   };
   struct DecreaseFactor {
     using type = double;
-    static Options::String help = {"Factor to decrease timescale"};
+    static Options::String help() { return "Factor to decrease timescale"; }
   };
 
   using options = tmpl::append<

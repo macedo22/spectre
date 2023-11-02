@@ -64,18 +64,19 @@ void test_options_syntax_error() {
 
 struct Simple {
   using type = int;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 struct NamedSimple {
   using type = int;
   static std::string name() { return "SomeName"; }
-  static constexpr Options::String help = {
-      "halp halp halp halp halp halp halp halp halp halp halp halp\n"
-      "halp halp halp halp halp halp halp halp halp halp halp halp"
-      "halp halp halp halp halp halp halp halp halp halp halp halp"
-      "halp halp halp halp halp halp halp halp halp halp halp halp"
-      "halp halp halp halp halp halp halp halp halp halp halp halp"
-      "halp halp halp halp halp halp halp halp halp halp halp halp"};
+  static Options::String help() {
+    return "halp halp halp halp halp halp halp halp halp halp halp halp\n"
+           "halp halp halp halp halp halp halp halp halp halp halp halp"
+           "halp halp halp halp halp halp halp halp halp halp halp halp"
+           "halp halp halp halp halp halp halp halp halp halp halp halp"
+           "halp halp halp halp halp halp halp halp halp halp halp halp"
+           "halp halp halp halp halp halp halp halp halp halp halp halp";
+  }
 };
 
 void test_options_simple() {
@@ -197,45 +198,45 @@ Options:
 
 // [options_example_group]
 struct Group {
-  static constexpr Options::String help = {"Group halp"};
+  static Options::String help() { return "Group halp"; }
 };
 
 struct GroupedTag {
   using type = int;
-  static constexpr Options::String help = {"Tag halp"};
+  static Options::String help() { return "Tag halp"; }
   using group = Group;
 };
 // [options_example_group]
 
 struct OuterGroup {
-  static constexpr Options::String help = {"Outer group halp"};
+  static Options::String help() { return "Outer group halp"; }
 };
 
 struct InnerGroup {
-  static constexpr Options::String help = {"Inner group halp"};
+  static Options::String help() { return "Inner group halp"; }
   using group = OuterGroup;
 };
 
 struct InnerGroupedTag {
   using type = int;
-  static constexpr Options::String help = {"Inner tag halp"};
+  static Options::String help() { return "Inner tag halp"; }
   using group = InnerGroup;
 };
 
 struct OuterGroupedTag {
   using type = int;
-  static constexpr Options::String help = {"Outer tag halp"};
+  static Options::String help() { return "Outer tag halp"; }
   using group = OuterGroup;
 };
 
 template <typename>
 struct TemplatedGroup {
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 
 struct TagWithTemplatedGroup {
   using type = int;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
   using group = TemplatedGroup<int>;
 };
 
@@ -295,8 +296,9 @@ void test_options_grouped() {
 // [options_example_scalar_struct]
 struct Bounded {
   using type = int;
-  static constexpr Options::String help = {
-      "Option with bounds and a suggested value"};
+  static Options::String help() {
+    return "Option with bounds and a suggested value";
+  }
   // These are optional
   static type suggested_value() { return 3; }
   static type lower_bound() { return 2; }
@@ -306,14 +308,14 @@ struct Bounded {
 
 struct BadSuggestion {
   using type = int;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
   static type suggested_value() { return 3; }
   static type lower_bound() { return 4; }
 };
 struct NamedBadSuggestion {
   using type = int;
   static std::string name() { return "SomeName"; }
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
   static type suggested_value() { return 3; }
   static type lower_bound() { return 4; }
 };
@@ -399,7 +401,7 @@ void test_options_bounded() {
 // [options_example_vector_struct]
 struct VectorOption {
   using type = std::vector<int>;
-  static constexpr Options::String help = {"A vector with length limits"};
+  static Options::String help() { return "A vector with length limits"; }
   // These are optional
   static std::string name() {
     return "Vector";  // defaults to "VectorOption"
@@ -455,12 +457,12 @@ void test_options_bounded_vector() {
 
 struct Array {
   using type = std::array<int, 3>;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 
 struct ZeroArray {
   using type = std::array<int, 0>;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 
 void test_options_array() {
@@ -524,7 +526,7 @@ void test_options_array() {
 
 struct Map {
   using type = std::map<std::string, int>;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 
 void test_options_map() {
@@ -571,7 +573,7 @@ void test_options_map() {
 
 struct UnorderedMap {
   using type = std::unordered_map<std::string, int>;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 
 void test_options_unordered_map() {
@@ -589,14 +591,14 @@ void test_options_unordered_map() {
 template <typename... T>
 struct VariantTag {
   using type = std::variant<T...>;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 
 struct VariantOption1 {
-  static constexpr Options::String help = {"VariantOption1 halp"};
+  static Options::String help() { return "VariantOption1 halp"; }
   struct Opt1 {
     using type = int;
-    static constexpr Options::String help = {"halp"};
+    static Options::String help() { return "halp"; }
   };
   using options = tmpl::list<Opt1>;
   VariantOption1() = default;
@@ -604,10 +606,10 @@ struct VariantOption1 {
 };
 
 struct VariantOption2 {
-  static constexpr Options::String help = {"VariantOption2 halp"};
+  static Options::String help() { return "VariantOption2 halp"; }
   struct Opt2 {
     using type = int;
-    static constexpr Options::String help = {"halp"};
+    static Options::String help() { return "halp"; }
   };
   template <typename Metavariables>
   using options =
@@ -621,13 +623,13 @@ struct VariantOption2Metavars {
 };
 
 struct VariantOptionWithGroup {
-  static constexpr Options::String help = {"VariantOptionWithGroup halp"};
+  static Options::String help() { return "VariantOptionWithGroup halp"; }
   struct Group {
-    static constexpr Options::String help = {"halp"};
+    static Options::String help() { return "halp"; }
   };
   struct Opt3 {
     using type = int;
-    static constexpr Options::String help = {"halp"};
+    static Options::String help() { return "halp"; }
     using group = Group;
   };
   using options = tmpl::list<Opt3>;
@@ -869,27 +871,27 @@ struct Options::create_from_yaml<Wrapped<T>> {
 namespace {
 struct WrapMap {
   using type = std::map<Wrapped<int>, Wrapped<std::string>>;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 struct WrapVector {
   using type = std::vector<Wrapped<int>>;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 struct WrapList {
   using type = std::list<Wrapped<int>>;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 struct WrapArray {
   using type = std::array<Wrapped<int>, 2>;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 struct WrapPair {
   using type = std::pair<Wrapped<int>, Wrapped<std::string>>;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 struct WrapUnorderedMap {
   using type = std::unordered_map<Wrapped<int>, Wrapped<std::string>>;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 
 void test_options_complex_containers() {
@@ -918,18 +920,18 @@ void test_options_complex_containers() {
 #ifdef SPECTRE_DEBUG
 struct Duplicate {
   using type = int;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 struct NamedDuplicate {
   using type = int;
   static std::string name() { return "Duplicate"; }
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 
 struct
     ToooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooLong {
   using type = int;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 using short_alias_for_too_long =
     ToooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooLong;
@@ -939,16 +941,16 @@ struct NamedTooLong {
     return "Toooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"
            "oLong";
   }
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 struct NoHelp {
   using type = int;
-  static constexpr Options::String help = {""};
+  static Options::String help() { return ""; }
 };
 struct NamedNoHelp {
   using type = int;
   static std::string name() { return "NoHelp"; }
-  static constexpr Options::String help = {""};
+  static Options::String help() { return ""; }
 };
 #endif
 
@@ -990,15 +992,15 @@ void test_options_invalid_calls() {
 
 struct Apply1 {
   using type = int;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 struct Apply2 {
   using type = std::string;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 struct Apply3 {
   using type = std::vector<int>;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 
 void test_options_apply() {
@@ -1027,41 +1029,41 @@ template <typename T>
 using In = std::array<T, 0>;
 struct FormatMap {
   using type = std::map<In<int>, In<double>>;
-  static constexpr Options::String help = {"halp"};
-  static constexpr const char* const expected = "{[int x0]: [double x0]}";
+  static Options::String help() { return "halp"; }
+  static Options::String expected() { return "{[int x0]: [double x0]}"; }
 };
 struct FormatVector {
   using type = std::vector<In<int>>;
-  static constexpr Options::String help = {"halp"};
-  static constexpr const char* const expected = "[[int x0], ...]";
+  static Options::String help() { return "halp"; }
+  static Options::String expected() { return "[[int x0], ...]"; }
 };
 struct FormatList {
   using type = std::list<In<int>>;
-  static constexpr Options::String help = {"halp"};
-  static constexpr const char* const expected = "[[int x0], ...]";
+  static Options::String help() { return "halp"; }
+  static Options::String expected() { return "[[int x0], ...]"; }
 };
 struct FormatArray {
   using type = std::array<In<int>, 3>;
-  static constexpr Options::String help = {"halp"};
-  static constexpr const char* const expected = "[[int x0] x3]";
+  static Options::String help() { return "halp"; }
+  static Options::String expected() { return "[[int x0] x3]"; }
 };
 struct FormatPair {
   using type = std::pair<In<int>, In<double>>;
-  static constexpr Options::String help = {"halp"};
-  static constexpr const char* const expected = "[[int x0], [double x0]]";
+  static Options::String help() { return "halp"; }
+  static Options::String expected() { return "[[int x0], [double x0]]"; }
 };
 struct ArrayHash {
   size_t operator()(const std::array<int, 0>& /*unused*/) const { return 0; }
 };
 struct FormatUnorderedMap {
   using type = std::unordered_map<In<int>, In<double>, ArrayHash>;
-  static constexpr Options::String help = {"halp"};
-  static constexpr const char* const expected = "{[int x0]: [double x0]}";
+  static Options::String help() { return "halp"; }
+  static Options::String expected() { return "{[int x0]: [double x0]}"; }
 };
 
 struct ScalarWithLimits {
   using type = int;
-  static constexpr Options::String help = "ScalarHelp";
+  static Options::String help() { return "ScalarHelp"; }
   static type suggested_value() { return 7; }
   static type lower_bound() { return 2; }
   static type upper_bound() { return 8; }
@@ -1069,7 +1071,7 @@ struct ScalarWithLimits {
 
 struct VectorWithLimits {
   using type = std::vector<int>;
-  static constexpr Options::String help = "VectorHelp";
+  static Options::String help() { return "VectorHelp"; }
   static size_t lower_bound_on_size() { return 5; }
   static size_t upper_bound_on_size() { return 9; }
 };
@@ -1077,7 +1079,7 @@ struct VectorWithLimits {
 struct SuggestedBool {
   using type = bool;
   static type suggested_value() { return false; }
-  constexpr static Options::String help = "halp";
+  constexpr static Options::String help() { return "halp"; }
 };
 
 void test_options_format() {
@@ -1087,9 +1089,9 @@ void test_options_format() {
       Options::Parser<tmpl::list<Opt>> opts("");
       INFO("Help string:\n"
            << opts.help() << "\n\nExpected to find:\n"
-           << "  type="s + Opt::expected + "\n");
+           << "  type="s + Opt::expected() + "\n");
       // Add whitespace to check that we've got the entire type
-      CHECK(opts.help().find("type="s + Opt::expected + "\n"s) !=
+      CHECK(opts.help().find("type="s + Opt::expected() + "\n"s) !=
             std::string::npos);
     };
     check(FormatMap{});
@@ -1148,7 +1150,7 @@ struct ExplicitObject {
 
 struct ExplicitObjectTag {
   using type = ExplicitObject;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 }  // namespace
 
@@ -1198,35 +1200,35 @@ void check_for_lines(const std::string& text,
 struct Alternatives {
   struct A {
     using type = double;
-    static constexpr Options::String help = "halp";
+    static Options::String help() { return "halp"; }
   };
 
   struct B {
     using type = int;
-    static constexpr Options::String help = "halp";
+    static Options::String help() { return "halp"; }
   };
 
   struct C {
     using type = int;
-    static constexpr Options::String help = "halp";
+    static Options::String help() { return "halp"; }
   };
 
   struct D {
     using type = std::vector<int>;
-    static constexpr Options::String help = "halp";
+    static Options::String help() { return "halp"; }
   };
 
   struct E {
     using type = bool;
-    static constexpr Options::String help = "halp";
+    static Options::String help() { return "halp"; }
   };
 
   struct F {
     using type = std::string;
-    static constexpr Options::String help = "halp";
+    static Options::String help() { return "halp"; }
   };
 
-  static constexpr Options::String help = "halp";
+  static Options::String help() { return "halp"; }
   Alternatives() = default;
 
   // [alternatives]
@@ -1251,36 +1253,36 @@ struct Alternatives {
 
 struct AlternativesTag {
   using type = Alternatives;
-  static constexpr Options::String help = "halp";
+  static Options::String help() { return "halp"; }
 };
 
 struct NestedAlternatives {
   struct A {
     using type = int;
-    static constexpr Options::String help = "halp";
+    static Options::String help() { return "halp"; }
   };
 
   struct B {
     using type = double;
-    static constexpr Options::String help = "halp";
+    static Options::String help() { return "halp"; }
   };
 
   struct C {
     using type = std::string;
-    static constexpr Options::String help = "halp";
+    static Options::String help() { return "halp"; }
   };
 
   struct D {
     using type = std::vector<int>;
-    static constexpr Options::String help = "halp";
+    static Options::String help() { return "halp"; }
   };
 
   struct E {
     using type = bool;
-    static constexpr Options::String help = "halp";
+    static Options::String help() { return "halp"; }
   };
 
-  static constexpr Options::String help = "halp";
+  static Options::String help() { return "halp"; }
   using options = tmpl::list<Options::Alternatives<
       tmpl::list<A, Options::Alternatives<tmpl::list<B>, tmpl::list<C>>>,
       tmpl::list<D, E>>>;
@@ -1299,7 +1301,7 @@ struct NestedAlternatives {
 
 struct NestedAlternativesTag {
   using type = NestedAlternatives;
-  static constexpr Options::String help = "halp";
+  static Options::String help() { return "halp"; }
 };
 
 void test_options_alternatives() {

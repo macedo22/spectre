@@ -52,14 +52,20 @@ struct RandomizeVariables {
   struct RandomParameters {
     struct Amplitude {
       using type = double;
-      static Options::String help = "Amplitude of the uniform noise.";
+      static Options::String help() {
+        return "Amplitude of the uniform noise.";
+      }
     };
     struct Seed {
       using type = Options::Auto<size_t>;
-      static Options::String help = "Random seed for the noise generator.";
+      static Options::String help() {
+        return "Random seed for the noise generator.";
+      }
     };
     using options = tmpl::list<Amplitude, Seed>;
-    static Options::String help = "Parameters for the uniform noise.";
+    static Options::String help() {
+      return "Parameters for the uniform noise.";
+    }
     void pup(PUP::er& p) {
       p | amplitude;
       p | seed;
@@ -71,7 +77,9 @@ struct RandomizeVariables {
   struct RandomParametersOptionTag {
     static std::string name() { return pretty_type::name<Label>(); }
     using type = Options::Auto<RandomParameters, Options::AutoLabel::None>;
-    static Options::String help = "Add uniform random noise to variables.";
+    static Options::String help() {
+      return "Add uniform random noise to variables.";
+    }
   };
 
   struct RandomParametersTag : db::SimpleTag {

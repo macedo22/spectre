@@ -68,7 +68,7 @@ struct TestMetavariables {
       {Parallel::Phase::Initialization, Parallel::Phase::Execute,
        Parallel::Phase::Exit}};
 
-  static constexpr Options::String help = "Executable for testing";
+  static Options::String help() { return "Executable for testing"; }
 
   // NOLINTNEXTLINE(google-runtime-references)
   void pup(PUP::er& /*p*/) {}

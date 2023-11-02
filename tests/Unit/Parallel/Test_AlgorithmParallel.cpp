@@ -14,6 +14,7 @@
 #include "DataStructures/DataBox/DataBox.hpp"
 #include "DataStructures/DataBox/Tag.hpp"
 #include "Helpers/Parallel/RoundRobinArrayElements.hpp"
+#include "Options/String.hpp"
 #include "Parallel/AlgorithmExecution.hpp"
 #include "Parallel/Algorithms/AlgorithmArray.hpp"
 #include "Parallel/Algorithms/AlgorithmGroup.hpp"
@@ -600,7 +601,7 @@ struct TestMetavariables {
                  GroupParallelComponent<TestMetavariables>,
                  NodegroupParallelComponent<TestMetavariables>>;
 
-  static constexpr const char* const help{"Test Algorithm in parallel"};
+  static Options::String help() { return "Test Algorithm in parallel"; }
   static constexpr bool ignore_unrecognized_command_line_options = false;
 
   static constexpr std::array<Parallel::Phase, 5> default_phase_order{

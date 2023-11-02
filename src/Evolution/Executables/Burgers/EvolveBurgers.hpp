@@ -340,10 +340,11 @@ struct EvolutionMetavars {
                  observers::ObserverWriter<EvolutionMetavars>,
                  dg_element_array>;
 
-  static Options::String help{
-      "Evolve the Burgers equation.\n\n"
-      "The analytic solution is: Linear\n"
-      "The numerical flux is:    LocalLaxFriedrichs\n"};
+  static Options::String help() {
+    return "Evolve the Burgers equation.\n\n"
+           "The analytic solution is: Linear\n"
+           "The numerical flux is:    LocalLaxFriedrichs\n";
+  }
 
   static constexpr std::array<Parallel::Phase, 5> default_phase_order{
       {Parallel::Phase::Initialization,

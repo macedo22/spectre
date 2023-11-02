@@ -219,7 +219,7 @@ struct TestMetavariables {
                  CheckpointTest::NodegroupComponent<TestMetavariables>,
                  CheckpointTest::SingletonComponent<TestMetavariables>>;
 
-  static constexpr Options::String help = "";
+  static Options::String help() { return ""; }
 
   static constexpr std::array<Parallel::Phase, 5> default_phase_order{
       {Parallel::Phase::Initialization, Parallel::Phase::Execute,

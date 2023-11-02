@@ -48,7 +48,7 @@ class TestBoundaryCondition : public BoundaryCondition<1> {
 
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help = "halp";
+  static Options::String help() { return "halp"; }
 
   TestBoundaryCondition() = default;
   TestBoundaryCondition(const TestBoundaryCondition&) = default;

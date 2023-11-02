@@ -27,7 +27,9 @@ class Harmonic final : public GaugeCondition {
  public:
   using options = tmpl::list<>;
 
-  static Options::String help{"Apply the Harmonic gauge condition H_a=0."};
+  static Options::String help() {
+    return "Apply the Harmonic gauge condition H_a=0.";
+  }
 
   Harmonic() = default;
   Harmonic(const Harmonic&) = default;

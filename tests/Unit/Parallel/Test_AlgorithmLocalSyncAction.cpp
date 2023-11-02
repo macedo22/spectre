@@ -235,7 +235,7 @@ struct TestMetavariables {
       tmpl::list<LocalSyncActionTest::ArrayComponent<TestMetavariables>,
                  LocalSyncActionTest::NodegroupComponent<TestMetavariables>>;
 
-  static constexpr Options::String help = "";
+  static Options::String help() { return ""; }
 
   static constexpr std::array<Parallel::Phase, 3> default_phase_order{
       {Parallel::Phase::Initialization, Parallel::Phase::Evolve,

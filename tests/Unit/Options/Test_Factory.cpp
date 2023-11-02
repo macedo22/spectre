@@ -35,13 +35,13 @@ class OptionTest {
 
 struct OptionType {
   using type = std::unique_ptr<OptionTest>;
-  static constexpr Options::String help = {"The type of OptionTest"};
+  static Options::String help() { return "The type of OptionTest"; }
 };
 
 class Test1 : public OptionTest {
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help = {"A derived class"};
+  static Options::String help() { return "A derived class"; }
   Test1() = default;
 
   std::string derived_name() const override { return "Test1"; }
@@ -50,7 +50,7 @@ class Test1 : public OptionTest {
 class Test2 : public OptionTest {
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help = {""};
+  static Options::String help() { return ""; }
   Test2() = default;
 
   std::string derived_name() const override { return "Test2"; }
@@ -60,10 +60,10 @@ class TestWithArg : public OptionTest {
  public:
   struct Arg {
     using type = std::string;
-    static constexpr Options::String help = {"halp"};
+    static Options::String help() { return "halp"; }
   };
   using options = tmpl::list<Arg>;
-  static constexpr Options::String help = {""};
+  static Options::String help() { return ""; }
   TestWithArg() = default;
   explicit TestWithArg(std::string arg) : arg_(std::move(arg)) {}
 
@@ -84,10 +84,10 @@ class TestWithArg2 : public OptionTest {
   static std::string name() { return "ThisIsArg"; }
   struct Arg {
     using type = std::string;
-    static constexpr Options::String help = {"halp"};
+    static Options::String help() { return "halp"; }
   };
   using options = tmpl::list<Arg>;
-  static constexpr Options::String help = {""};
+  static Options::String help() { return ""; }
   TestWithArg2() = default;
   explicit TestWithArg2(std::string arg) : arg_(std::move(arg)) {}
 
@@ -102,10 +102,10 @@ class TestWithArg2 : public OptionTest {
 struct TestWithMetavars : OptionTest {
   struct Arg {
     using type = std::string;
-    static constexpr Options::String help = {"halp"};
+    static Options::String help() { return "halp"; }
   };
   using options = tmpl::list<Arg>;
-  static constexpr Options::String help = {""};
+  static Options::String help() { return ""; }
 
   TestWithMetavars() = default;
   template <typename Metavariables>
@@ -137,23 +137,23 @@ class OtherBase {
 
 struct OtherTag {
   using type = std::unique_ptr<OtherBase>;
-  static constexpr Options::String help = {"An OtherBase"};
+  static Options::String help() { return "An OtherBase"; }
 };
 
 class OtherDerived : public OtherBase {
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help = {""};
+  static Options::String help() { return ""; }
 };
 
 struct Vector {
   using type = std::vector<std::unique_ptr<OptionTest>>;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 
 struct Map {
   using type = std::map<std::string, std::unique_ptr<OptionTest>>;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 
 template <bool Valid>
@@ -287,7 +287,7 @@ template <bool FactoryCreatable>
 class MaybeCreatable : public IsCreatableBase {
  public:
   static constexpr bool factory_creatable = FactoryCreatable;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
   using options = tmpl::list<>;
 };
 
@@ -313,7 +313,7 @@ struct Options::create_from_yaml<IsCreatableMessageHack> {
 namespace {
 struct IsCreatableTag {
   using type = IsCreatableMessageHack;
-  static constexpr Options::String help = {"halp"};
+  static Options::String help() { return "halp"; }
 };
 
 template <bool MaybeCreatableCreatable>

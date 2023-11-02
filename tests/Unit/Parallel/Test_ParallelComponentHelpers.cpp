@@ -156,19 +156,19 @@ static_assert(std::is_same_v<ComponentInitAndExecute::simple_tags_from_options,
 namespace OptionTags {
 struct Yards {
   using type = double;
-  static constexpr Options::String help = {"halp_yards"};
+  static Options::String help() { return "halp_yards"; }
 };
 struct Dim {
   using type = size_t;
-  static constexpr Options::String help = {"halp_size"};
+  static Options::String help() { return "halp_size"; }
 };
 struct Greeting {
   using type = std::string;
-  static constexpr Options::String help = {"halp_greeting"};
+  static Options::String help() { return "halp_greeting"; }
 };
 struct Name {
   using type = std::string;
-  static constexpr Options::String help = {"halp_name"};
+  static Options::String help() { return "halp_name"; }
 };
 }  // namespace OptionTags
 

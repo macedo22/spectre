@@ -68,9 +68,10 @@ struct Expansion : tt::ConformsTo<protocols::ControlError> {
       domain::object_list<domain::ObjectLabel::A, domain::ObjectLabel::B>;
 
   using options = tmpl::list<>;
-  static Options::String help{
-      "Computes the control error for expansion control. This should not "
-      "take any options."};
+  static Options::String help() {
+    return "Computes the control error for expansion control. This should not "
+           "take any options.";
+  }
 
   void pup(PUP::er& /*p*/) {}
 

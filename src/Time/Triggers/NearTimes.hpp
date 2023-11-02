@@ -57,30 +57,35 @@ class NearTimes : public Trigger {
   struct OptionTags {
     struct Times {
       using type = std::unique_ptr<TimeSequence<double>>;
-      static Options::String help = "Times to trigger at";
+      static Options::String help() { return "Times to trigger at"; }
     };
 
     struct Range {
       using type = double;
       static type lower_bound() { return 0.0; }
-      static Options::String help = "Maximum time difference to trigger at";
+      static Options::String help() {
+        return "Maximum time difference to trigger at";
+      }
     };
 
     struct Unit {
       using type = NearTimes::Unit;
-      static Options::String help =
-          "Interpret Range as 'Time', 'Step's, or 'Slab's";
+      static Options::String help() {
+        return "Interpret Range as 'Time', 'Step's, or 'Slab's";
+      }
     };
 
     struct Direction {
       using type = NearTimes::Direction;
-      static Options::String help =
-          "Trigger 'Before', 'After', or 'Both' from the times";
+      static Options::String help() {
+        return "Trigger 'Before', 'After', or 'Both' from the times";
+      }
     };
   };
 
-  static Options::String help =
-      "Trigger in intervals surrounding particular times.";
+  static Options::String help() {
+    return "Trigger in intervals surrounding particular times.";
+  }
   using options =
       tmpl::list<typename OptionTags::Times, typename OptionTags::Range,
                  typename OptionTags::Unit, typename OptionTags::Direction>;

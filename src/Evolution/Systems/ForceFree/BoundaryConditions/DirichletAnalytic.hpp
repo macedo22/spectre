@@ -33,14 +33,17 @@ class DirichletAnalytic final : public BoundaryCondition {
  public:
   /// \brief What analytic solution/data to prescribe.
   struct AnalyticPrescription {
-    static Options::String help = "What analytic solution/data to prescribe.";
-    using type = std::unique_ptr<evolution::initial_data::InitialData>;
-  };
+    static Options::String help() {
+      return "What analytic solution/data to prescribe.";
+      using type = std::unique_ptr<evolution::initial_data::InitialData>;
+    };
 
   using options = tmpl::list<AnalyticPrescription>;
-  static Options::String help{
-      "DirichletAnalytic boundary conditions using either analytic solution or "
-      "analytic data."};
+  static Options::String help() {
+    return "DirichletAnalytic boundary conditions using either analytic "
+           "solution or "
+           "analytic data.";
+  }
 
   DirichletAnalytic() = default;
   DirichletAnalytic(DirichletAnalytic&&) = default;

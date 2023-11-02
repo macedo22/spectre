@@ -44,15 +44,19 @@ class ObserveTimeStep : public Event {
   /// The name of the subfile inside the HDF5 file
   struct SubfileName {
     using type = std::string;
-    static Options::String help = {
-        "The name of the subfile inside the HDF5 file without an extension and "
-        "without a preceding '/'. The subfile will be written into the "
-        "subgroup '/Cce'."};
+    static Options::String help() {
+      return "The name of the subfile inside the HDF5 file without an "
+             "extension and "
+             "without a preceding '/'. The subfile will be written into the "
+             "subgroup '/Cce'.";
+    }
   };
 
   struct PrintTimeToTerminal {
     using type = bool;
-    static Options::String help = {"Whether to print the time to screen."};
+    static Options::String help() {
+      return "Whether to print the time to screen.";
+    }
   };
 
   /// \cond
@@ -62,76 +66,77 @@ class ObserveTimeStep : public Event {
   /// \endcond
 
   using options = tmpl::list<SubfileName, PrintTimeToTerminal>;
-  static Options::String help =
-      "Observe the size of the time step for the characteristic evolution.\n"
-      "\n"
-      "Writes quantities:\n"
-      "- Time\n"
-      "- Time Step\n"
-      "\n"
-      "The subfile will be written into the subgroup '/Cce'.";
+  static Options::String help() {
+    return "Observe the size of the time step for the characteristic "
+           "evolution.\n"
+           "\n"
+           "Writes quantities:\n"
+           "- Time\n"
+           "- Time Step\n"
+           "\n"
+           "The subfile will be written into the subgroup '/Cce'.";
 
-  ObserveTimeStep() = default;
-  explicit ObserveTimeStep(const std::string& subfile_name,
-                           const bool output_time);
+    ObserveTimeStep() = default;
+    explicit ObserveTimeStep(const std::string& subfile_name,
+                             const bool output_time);
 
-  using observed_reduction_data_tags = tmpl::list<>;
+    using observed_reduction_data_tags = tmpl::list<>;
 
-  using compute_tags_for_observation_box = tmpl::list<>;
+    using compute_tags_for_observation_box = tmpl::list<>;
 
-  using return_tags = tmpl::list<>;
-  using argument_tags = tmpl::list<::Tags::TimeStep>;
+    using return_tags = tmpl::list<>;
+    using argument_tags = tmpl::list<::Tags::TimeStep>;
 
-  template <typename ArrayIndex, typename ParallelComponent,
-            typename Metavariables>
-  void operator()(const TimeDelta& time_step,
-                  Parallel::GlobalCache<Metavariables>& cache,
-                  const ArrayIndex& /*array_index*/,
-                  const ParallelComponent* const /*meta*/,
-                  const ObservationValue& observation_value) const {
-    std::vector<double> data_to_write{observation_value.value,
-                                      time_step.value()};
+    template <typename ArrayIndex, typename ParallelComponent,
+              typename Metavariables>
+    void operator()(const TimeDelta& time_step,
+                    Parallel::GlobalCache<Metavariables>& cache,
+                    const ArrayIndex& /*array_index*/,
+                    const ParallelComponent* const /*meta*/,
+                    const ObservationValue& observation_value) const {
+      std::vector<double> data_to_write{observation_value.value,
+                                        time_step.value()};
 
-    auto& writer = Parallel::get_parallel_component<
-        observers::ObserverWriter<Metavariables>>(cache);
+      auto& writer = Parallel::get_parallel_component<
+          observers::ObserverWriter<Metavariables>>(cache);
 
-    Parallel::threaded_action<
-        observers::ThreadedActions::WriteReductionDataRow>(
-        writer[0], subfile_path_, legend_,
-        std::make_tuple(std::move(data_to_write)));
+      Parallel::threaded_action<
+          observers::ThreadedActions::WriteReductionDataRow>(
+          writer[0], subfile_path_, legend_,
+          std::make_tuple(std::move(data_to_write)));
 
-    if (output_time_) {
-      Parallel::printf(
-          "Simulation time: %s\n"
-          "  Wall time: %s\n",
-          std::to_string(observation_value.value), sys::pretty_wall_time());
+      if (output_time_) {
+        Parallel::printf(
+            "Simulation time: %s\n"
+            "  Wall time: %s\n",
+            std::to_string(observation_value.value), sys::pretty_wall_time());
+      }
     }
-  }
 
-  using is_ready_argument_tags = tmpl::list<>;
+    using is_ready_argument_tags = tmpl::list<>;
 
-  template <typename Metavariables, typename ArrayIndex, typename Component>
-  bool is_ready(Parallel::GlobalCache<Metavariables>& /*cache*/,
-                const ArrayIndex& /*array_index*/,
-                const Component* const /*meta*/) const {
-    return true;
-  }
+    template <typename Metavariables, typename ArrayIndex, typename Component>
+    bool is_ready(Parallel::GlobalCache<Metavariables>& /*cache*/,
+                  const ArrayIndex& /*array_index*/,
+                  const Component* const /*meta*/) const {
+      return true;
+    }
 
-  bool needs_evolved_variables() const override { return false; }
+    bool needs_evolved_variables() const override { return false; }
 
-  // NOLINTNEXTLINE(google-runtime-references)
-  void pup(PUP::er& p) override {
-    Event::pup(p);
-    p | subfile_path_;
-    p | output_time_;
-    p | legend_;
-  }
+    // NOLINTNEXTLINE(google-runtime-references)
+    void pup(PUP::er & p) override {
+      Event::pup(p);
+      p | subfile_path_;
+      p | output_time_;
+      p | legend_;
+    }
 
- private:
-  std::string subfile_path_;
-  bool output_time_;
-  std::vector<std::string> legend_;
-};
+   private:
+    std::string subfile_path_;
+    bool output_time_;
+    std::vector<std::string> legend_;
+  };
 
 ObserveTimeStep::ObserveTimeStep(const std::string& subfile_name,
                                  const bool output_time)

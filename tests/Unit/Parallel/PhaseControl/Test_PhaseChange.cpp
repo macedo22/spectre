@@ -77,11 +77,11 @@ struct TestPhaseChange : public PhaseChange {
 
   struct Factor {
     using type = int;
-    static constexpr Options::String help {"Multiplier to apply"};
+    static Options::String help() { return "Multiplier to apply"; }
   };
 
   using options = tmpl::list<Factor>;
-  static constexpr Options::String help{"Phase change tester"};
+  static Options::String help() { return "Phase change tester"; }
 
   using argument_tags = tmpl::list<Tags::InputValue>;
   using return_tags = tmpl::list<Tags::MutatedValue>;

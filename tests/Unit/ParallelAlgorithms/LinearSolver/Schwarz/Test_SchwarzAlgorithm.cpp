@@ -22,6 +22,7 @@
 #include "NumericalAlgorithms/Spectral/Mesh.hpp"
 #include "NumericalAlgorithms/Spectral/Quadrature.hpp"
 #include "Options/Protocols/FactoryCreation.hpp"
+#include "Options/String.hpp"
 #include "Parallel/CharmMain.tpp"
 #include "Parallel/GlobalCache.hpp"
 #include "ParallelAlgorithms/LinearSolver/Schwarz/ElementCenteredSubdomainData.hpp"
@@ -42,8 +43,9 @@ namespace helpers_distributed = DistributedLinearSolverAlgorithmTestHelpers;
 namespace {
 
 struct SchwarzSmoother {
-  static constexpr Options::String help =
-      "Options for the iterative Schwarz smoother";
+  static Options::String help() {
+    return "Options for the iterative Schwarz smoother";
+  }
 };
 
 blaze::DynamicMatrix<double> combine_matrix_slices(
@@ -175,8 +177,8 @@ struct SubdomainOperator : LinearSolver::Schwarz::SubdomainOperator<1> {
 // [subdomain_operator]
 
 struct Metavariables {
-  static constexpr const char* const help{
-      "Test the Schwarz linear solver algorithm"};
+  static Options::String help(){
+      return "Test the Schwarz linear solver algorithm"};
   static constexpr size_t volume_dim = 1;
   using system =
       TestHelpers::domain::BoundaryConditions::SystemWithoutBoundaryConditions<

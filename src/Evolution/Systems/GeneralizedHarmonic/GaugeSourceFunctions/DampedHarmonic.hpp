@@ -208,26 +208,32 @@ class DampedHarmonic final : public GaugeCondition {
   /// gauge.
   struct SpatialDecayWidth {
     using type = double;
-    static Options::String help{
-        "Spatial width (sigma_r) of weight function (W(x^i)) used in the "
-        "damped harmonic gauge."};
+    static Options::String help() {
+      return "Spatial width (sigma_r) of weight function (W(x^i)) used in the "
+             "damped harmonic gauge.";
+    }
   };
   /// The amplitudes for the L1, L2, and S terms, respectively, for the damped
   /// harmonic gauge.
   struct Amplitudes {
     using type = std::array<double, 3>;
-    static Options::String help{
-        "Amplitudes [A_{L1}, A_{L2}, A_{S}] for the damped harmonic gauge."};
+    static Options::String help() {
+      return "Amplitudes [A_{L1}, A_{L2}, A_{S}] for the damped harmonic "
+             "gauge.";
+    }
   };
   /// The exponents for the L1, L2, and S terms, respectively, for the damped
   /// harmonic gauge.
   struct Exponents {
     using type = std::array<int, 3>;
-    static Options::String help{
-        "Exponents [e_{L1}, e_{L2}, e_{S}] for the damped harmonic gauge."};
+    static Options::String help() {
+      return "Exponents [e_{L1}, e_{L2}, e_{S}] for the damped harmonic gauge.";
+    }
   };
 
-  static Options::String help{"Apply damped harmonic/damped wave gauge."};
+  static Options::String help() {
+    return "Apply damped harmonic/damped wave gauge.";
+  }
 
   using options = tmpl::list<SpatialDecayWidth, Amplitudes, Exponents>;
 

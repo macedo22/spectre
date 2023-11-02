@@ -14,9 +14,11 @@ namespace OptionTags {
 struct Formulation {
   using type = dg::Formulation;
   using group = DiscontinuousGalerkinGroup;
-  static Options::String help =
-      "Discontinuous Galerkin formulation to use, e.g. StrongInertial for the "
-      "strong form.";
+  static Options::String help() {
+    return "Discontinuous Galerkin formulation to use, e.g. StrongInertial for "
+           "the "
+           "strong form.";
+  }
 };
 }  // namespace OptionTags
 

@@ -38,8 +38,9 @@ namespace TimeSteppers {
 class Heun2 : public RungeKutta {
  public:
   using options = tmpl::list<>;
-  static Options::String help = {
-      "Heun's method, a 2nd order Runge-Kutta method."};
+  static Options::String help() {
+    return "Heun's method, a 2nd order Runge-Kutta method.";
+  }
 
   Heun2() = default;
   Heun2(const Heun2&) = default;

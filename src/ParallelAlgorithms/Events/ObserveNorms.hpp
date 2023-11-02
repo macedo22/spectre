@@ -103,23 +103,28 @@ class ObserveNorms<tmpl::list<ObservableTensorTags...>,
     : public Event {
  private:
   struct ObserveTensor {
-    static Options::String help = {
-        "The tensor to reduce, and how to reduce it."};
+    static Options::String help() {
+      return "The tensor to reduce, and how to reduce it.";
+    }
 
     struct Name {
       using type = std::string;
-      static Options::String help = {"The name of the tensor to observe."};
+      static Options::String help() {
+        return "The name of the tensor to observe.";
+      }
     };
     struct NormType {
       using type = std::string;
-      static Options::String help = {
-          "The type of norm to use. Must be one of Max, Min, L2Norm, "
-          "L2IntegralNorm, or VolumeIntegral."};
+      static Options::String help() {
+        return "The type of norm to use. Must be one of Max, Min, L2Norm, "
+               "L2IntegralNorm, or VolumeIntegral.";
+      }
     };
     struct Components {
       using type = std::string;
-      static Options::String help = {
-          "How to handle tensor components. Must be Individual or Sum."};
+      static Options::String help() {
+        return "How to handle tensor components. Must be Individual or Sum.";
+      }
     };
 
     using options = tmpl::list<Name, NormType, Components>;
@@ -166,15 +171,18 @@ class ObserveNorms<tmpl::list<ObservableTensorTags...>,
   /// The name of the subfile inside the HDF5 file
   struct SubfileName {
     using type = std::string;
-    static Options::String help = {
-        "The name of the subfile inside the HDF5 file without an extension and "
-        "without a preceding '/'."};
+    static Options::String help() {
+      return "The name of the subfile inside the HDF5 file without an "
+             "extension and "
+             "without a preceding '/'.";
+    }
   };
   /// The tensor to observe and how to do the reduction
   struct TensorsToObserve {
     using type = std::vector<ObserveTensor>;
-    static Options::String help = {
-        "List specifying each tensor to observe and how it is reduced."};
+    static Options::String help() {
+      return "List specifying each tensor to observe and how it is reduced.";
+    }
   };
 
   explicit ObserveNorms(CkMigrateMessage* msg);
@@ -183,24 +191,27 @@ class ObserveNorms<tmpl::list<ObservableTensorTags...>,
 
   using options = tmpl::list<SubfileName, TensorsToObserve>;
 
-  static Options::String help =
-      "Observe norms of tensors in the DataBox.\n"
-      "\n"
-      "You can choose the norm type for each observation. Note that the\n"
-      "'L2Norm' (root mean square) emphasizes regions of the domain with many\n"
-      "grid points, whereas the 'L2IntegralNorm' emphasizes regions of the\n"
-      "domain with large volume. Choose wisely! When in doubt, try the\n"
-      "'L2Norm' first.\n"
-      "\n"
-      "Writes reduction quantities:\n"
-      " * Observation value (e.g. Time or IterationId)\n"
-      " * NumberOfPoints = total number of points in the domain\n"
-      " * Volume = total volume of the domain in inertial coordinates\n"
-      " * Max values\n"
-      " * Min values\n"
-      " * L2-norm values\n"
-      " * L2 integral norm values\n"
-      " * Volume integral values\n";
+  static Options::String help() {
+    return "Observe norms of tensors in the DataBox.\n"
+           "\n"
+           "You can choose the norm type for each observation. Note that the\n"
+           "'L2Norm' (root mean square) emphasizes regions of the domain with "
+           "many\n"
+           "grid points, whereas the 'L2IntegralNorm' emphasizes regions of "
+           "the\n"
+           "domain with large volume. Choose wisely! When in doubt, try the\n"
+           "'L2Norm' first.\n"
+           "\n"
+           "Writes reduction quantities:\n"
+           " * Observation value (e.g. Time or IterationId)\n"
+           " * NumberOfPoints = total number of points in the domain\n"
+           " * Volume = total volume of the domain in inertial coordinates\n"
+           " * Max values\n"
+           " * Min values\n"
+           " * L2-norm values\n"
+           " * L2 integral norm values\n"
+           " * Volume integral values\n";
+  }
 
   ObserveNorms() = default;
 
