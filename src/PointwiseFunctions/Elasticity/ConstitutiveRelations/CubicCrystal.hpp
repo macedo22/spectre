@@ -76,36 +76,25 @@ class CubicCrystal : public ConstitutiveRelation<3> {
 
   struct C_11 {
     using type = double;
-    static Options::String help() {
-      return "c_11 parameter for a cubic crystal";
-    }
+    static Options::String help();
     static type lower_bound() { return 0.0; }
   };
 
   struct C_12 {
     using type = double;
-    static Options::String help() {
-      return "c_12 parameter for a cubic crystal";
-    }
+    static Options::String help();
     static type lower_bound() { return 0.0; }
   };
 
   struct C_44 {
     using type = double;
-    static Options::String help() {
-      return "c_44 parameter for a cubic crystal";
-    }
+    static Options::String help();
     static type lower_bound() { return 0.0; }
   };
 
   using options = tmpl::list<C_11, C_12, C_44>;
 
-  static Options::String help() {
-    return "A constitutive relation that describes a cubic, crystalline "
-           "material in "
-           "terms of the three independent group paremeters. The parameters "
-           "are measured in units of stress, typically Pascals.";
-  }
+  static Options::String help();
 
   CubicCrystal() = default;
   CubicCrystal(const CubicCrystal&) = default;

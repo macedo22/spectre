@@ -102,18 +102,18 @@ class GaugeWave : public AnalyticSolution<Dim>, public MarkAsAnalyticSolution {
   static constexpr size_t volume_dim = Dim;
   struct Amplitude {
     using type = double;
-    static Options::String help() { return "Amplitude of the gauge wave"; }
+    static Options::String help();
     static type upper_bound() { return 1.; }
     static type lower_bound() { return -1.; }
   };
   struct Wavelength {
     using type = double;
-    static Options::String help() { return "Wavelength of the gauge wave"; }
+    static Options::String help();
     static type lower_bound() { return 0.; }
   };
 
   using options = tmpl::list<Amplitude, Wavelength>;
-  static Options::String help() { return "Gauge wave in flat spacetime"; }
+  static Options::String help();
 
   GaugeWave(double amplitude, double wavelength,
             const Options::Context& context = {});

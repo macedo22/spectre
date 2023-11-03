@@ -185,9 +185,7 @@ namespace OptionTags {
  */
 struct Group {
   static std::string name() { return "GeneralizedHarmonic"; }
-  static Options::String help() {
-    return "Options for the GH evolution system";
-  }
+  static Options::String help();
   using group = evolution::OptionTags::SystemGroup;
 };
 }  // namespace OptionTags

@@ -34,10 +34,7 @@ template <size_t Dim>
 class DemandOutgoingCharSpeeds final : public BoundaryCondition<Dim> {
  public:
   using options = tmpl::list<>;
-  static Options::String help() {
-    return "Boundary conditions which check that all characteristic "
-           "fields are outflowing.";
-  }
+  static Options::String help();
   DemandOutgoingCharSpeeds() = default;
   /// \cond
   DemandOutgoingCharSpeeds(DemandOutgoingCharSpeeds&&) = default;

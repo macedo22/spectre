@@ -25,7 +25,7 @@ namespace OptionTags {
  */
 struct FilteringGroup {
   static std::string name() { return "Filtering"; }
-  static Options::String help() { return "Options for filtering"; }
+  static Options::String help();
 };
 
 /*!
@@ -36,7 +36,7 @@ struct FilteringGroup {
 template <typename FilterType>
 struct Filter {
   static std::string name() { return pretty_type::name<FilterType>(); }
-  static Options::String help() { return "Options for the filter"; }
+  static Options::String help();
   using type = FilterType;
   using group = FilteringGroup;
 };

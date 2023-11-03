@@ -69,9 +69,7 @@ class OrszagTangVortex
 
   using options = tmpl::list<>;
 
-  static Options::String help() {
-    return "The relativistic Orszag-Tang vortex";
-  }
+  static Options::String help();
 
   OrszagTangVortex();
   OrszagTangVortex(const OrszagTangVortex& /*rhs*/) = default;

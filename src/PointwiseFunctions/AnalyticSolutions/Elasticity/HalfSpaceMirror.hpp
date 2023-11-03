@@ -119,48 +119,32 @@ class HalfSpaceMirror : public elliptic::analytic_data::AnalyticSolution {
 
   struct BeamWidth {
     using type = double;
-    static Options::String help() {
-      return "The lasers beam width r_0 with FWHM = 2*sqrt(ln 2)*r_0";
-    }
+    static Options::String help();
     static type lower_bound() { return 0.0; }
   };
 
   struct Material {
     using type = constitutive_relation_type;
-    static Options::String help() {
-      return "The material properties of the beam";
-    }
+    static Options::String help();
   };
 
   struct IntegrationIntervals {
     using type = size_t;
-    static Options::String help() {
-      return "Workspace size for numerical integrals. Increase if integrals "
-             "fail to "
-             "reach the prescribed tolerance at large distances relative to "
-             "the "
-             "beam width. The suggested values for workspace size and "
-             "tolerances "
-             "should accommodate distances of up to ~100 beam widths.";
-    }
+    static Options::String help();
     static type lower_bound() { return 1; }
     static type suggested_value() { return 350; }
   };
 
   struct AbsoluteTolerance {
     using type = double;
-    static Options::String help() {
-      return "Absolute tolerance for numerical integrals";
-    }
+    static Options::String help();
     static type lower_bound() { return 0.; }
     static type suggested_value() { return 1e-12; }
   };
 
   struct RelativeTolerance {
     using type = double;
-    static Options::String help() {
-      return "Relative tolerance for numerical integrals";
-    }
+    static Options::String help();
     static type lower_bound() { return 0.; }
     static type upper_bound() { return 1.; }
     static type suggested_value() { return 1e-10; }
@@ -168,11 +152,7 @@ class HalfSpaceMirror : public elliptic::analytic_data::AnalyticSolution {
 
   using options = tmpl::list<BeamWidth, Material, IntegrationIntervals,
                              AbsoluteTolerance, RelativeTolerance>;
-  static Options::String help() {
-    return "A semi-infinite mirror on which a laser introduces stress "
-           "perpendicular "
-           "to the mirrors surface.";
-  }
+  static Options::String help();
 
   HalfSpaceMirror() = default;
   HalfSpaceMirror(const HalfSpaceMirror&) = default;

@@ -134,47 +134,36 @@ class ErrorControl : public StepChooser<StepChooserUse>,
 
   struct AbsoluteTolerance {
     using type = double;
-    static Options::String help() { return "Target absolute tolerance"; }
+    static Options::String help();
     static type lower_bound() { return 0.0; }
   };
 
   struct RelativeTolerance {
     using type = double;
-    static Options::String help() { return "Target relative tolerance"; }
+    static Options::String help();
     static type lower_bound() { return 0.0; }
   };
 
   struct MaxFactor {
     using type = double;
-    static Options::String help() {
-      return "Maximum factor to increase the step by";
-    }
+    static Options::String help();
     static type lower_bound() { return 1.0; }
   };
 
   struct MinFactor {
     using type = double;
-    static Options::String help() {
-      return "Minimum factor to increase the step by";
-    }
+    static Options::String help();
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 1.0; }
   };
 
   struct SafetyFactor {
     using type = double;
-    static Options::String help() {
-      return "Extra factor to apply to step estimate; can be used to decrease "
-             "step "
-             "size to improve step acceptance rate.";
-    }
+    static Options::String help();
     static type lower_bound() { return 0.0; }
   };
 
-  static Options::String help() {
-    return "Chooses a step based on a target relative and absolute error "
-           "tolerance";
-  }
+  static Options::String help();
   using options = tmpl::list<AbsoluteTolerance, RelativeTolerance, MaxFactor,
                              MinFactor, SafetyFactor>;
 

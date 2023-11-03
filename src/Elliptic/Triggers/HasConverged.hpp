@@ -26,9 +26,7 @@ class HasConverged : public Trigger {
   /// \endcond
 
   using options = tmpl::list<>;
-  static Options::String help() {
-    return "Trigger when the solver has converged.";
-  }
+  static Options::String help();
 
   using argument_tags = tmpl::list<Convergence::Tags::HasConverged<Label>>;
 

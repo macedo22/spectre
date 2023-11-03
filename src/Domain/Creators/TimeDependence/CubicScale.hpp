@@ -57,55 +57,39 @@ class CubicScale final : public TimeDependence<MeshDim> {
   /// \brief The initial time of the functions of time.
   struct InitialTime {
     using type = double;
-    static Options::String help() {
-      return "The initial time of the functions of time";
-    }
+    static Options::String help();
   };
   /// \brief The outer boundary or pivot point of the
   /// `domain::CoordinateMaps::TimeDependent::CubicScale` map
   struct OuterBoundary {
     using type = double;
-    static Options::String help() {
-      return "Outer boundary or pivot point of the map";
-    }
+    static Options::String help();
   };
   /// \brief The initial values of the expansion factors.
   struct InitialExpansion {
     using type = std::array<double, 2>;
-    static Options::String help() {
-      return "Expansion values at initial time.";
-    }
+    static Options::String help();
   };
   /// \brief The velocity of the expansion factors.
   struct Velocity {
     using type = std::array<double, 2>;
-    static Options::String help() { return "The rate of expansion."; }
+    static Options::String help();
   };
   /// \brief The acceleration of the expansion factors.
   struct Acceleration {
     using type = std::array<double, 2>;
-    static Options::String help() { return "The acceleration of expansion."; }
+    static Options::String help();
   };
   /// \brief Whether to use linear scaling or cubic scaling.
   struct UseLinearScaling {
     using type = bool;
-    static Options::String help() {
-      return "Whether or not to turn on cubic scaling.";
-    }
+    static Options::String help();
   };
 
   using options = tmpl::list<InitialTime, OuterBoundary, UseLinearScaling,
                              InitialExpansion, Velocity, Acceleration>;
 
-  static Options::String help() {
-    return "A spatial radial scaling either based on a cubic scaling or a "
-           "simple\n"
-           "linear scaling.\n"
-           "\n"
-           "If the two functions of time have the same name then the scaling "
-           "is a\n"
-           "linear radial scaling.";
-  }
+  static Options::String help();
 
   using GridToInertialMap =
       domain::CoordinateMap<Frame::Grid, Frame::Inertial, CubicScaleMap>;

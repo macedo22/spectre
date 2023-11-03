@@ -37,25 +37,17 @@ struct KerrSchildFromBoyerLindquist {
   /// \brief The mass of the Kerr black hole.
   struct Mass {
     using type = double;
-    static Options::String help() { return "The mass of the Kerr BH."; }
+    static Options::String help();
   };
   /// \brief The dimensionless spin of the Kerr black hole.
   struct Spin {
     using type = std::array<double, 3>;
-    static Options::String help() {
-      return "The dim'less spin of the Kerr BH.";
-    }
+    static Options::String help();
   };
 
   using options = tmpl::list<Mass, Spin>;
 
-  static Options::String help() {
-    return "Conform to an ellipsoid of constant Boyer-Lindquist radius in "
-           "Kerr-Schild coordinates. This Boyer-Lindquist radius is chosen as "
-           "the "
-           "value of the 'InnerRadius'. To conform to the outer Kerr horizon, "
-           "choose an 'InnerRadius' of r_+ = M + sqrt(M^2-a^2).";
-  }
+  static Options::String help();
 
   double mass{std::numeric_limits<double>::signaling_NaN()};
   std::array<double, 3> spin{std::numeric_limits<double>::signaling_NaN(),
@@ -103,35 +95,23 @@ struct TimeDependentMapOptions {
   /// \brief The initial time of the functions of time.
   struct InitialTime {
     using type = double;
-    static Options::String help() {
-      return "The initial time of the functions of time";
-    }
+    static Options::String help();
   };
 
   struct ShapeMapOptions {
     using type = ShapeMapOptions;
     static std::string name() { return "ShapeMap"; }
-    static Options::String help() {
-      return "Options for a time-dependent shape map in the inner-most shell "
-             "of the "
-             "domain.";
-    }
+    static Options::String help();
 
     struct LMax {
       using type = size_t;
-      static Options::String help() {
-        return "Initial LMax for the shape map.";
-      }
+      static Options::String help();
     };
 
     struct InitialValues {
       using type =
           Options::Auto<std::variant<KerrSchildFromBoyerLindquist>, Spherical>;
-      static Options::String help() {
-        return "Initial Ylm coefficients for the shape map. Specify "
-               "'Spherical' for "
-               "all coefficients to be initialized to zero.";
-      }
+      static Options::String help();
     };
 
     using options = tmpl::list<LMax, InitialValues>;
@@ -141,11 +121,7 @@ struct TimeDependentMapOptions {
   };
 
   using options = tmpl::list<InitialTime, ShapeMapOptions>;
-  static Options::String help() {
-    return "The options for all the hard-coded time dependent maps in the "
-           "Sphere "
-           "domain.";
-  }
+  static Options::String help();
 
   TimeDependentMapOptions() = default;
 

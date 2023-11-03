@@ -45,18 +45,11 @@ class ElementSizeCfl : public StepChooser<StepChooserUse> {
 
   struct SafetyFactor {
     using type = double;
-    static Options::String help() { return "Multiplier for computed step"; }
+    static Options::String help();
     static type lower_bound() { return 0.0; }
   };
 
-  static Options::String help() {
-    return "Suggests a step size based on the CFL stability criterion, but in "
-           "which "
-           "the entire size of the element is used as the spacing in the "
-           "computation. This is useful primarily for placing a ceiling on "
-           "another "
-           "dynamically-adjusted step chooser";
-  }
+  static Options::String help();
   using options = tmpl::list<SafetyFactor>;
 
   explicit ElementSizeCfl(const double safety_factor)

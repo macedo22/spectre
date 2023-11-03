@@ -97,21 +97,17 @@ class ConstantDensityStar : public elliptic::analytic_data::AnalyticSolution {
  public:
   struct Density {
     using type = double;
-    static Options::String help() {
-      return "The constant density within the star";
-    }
+    static Options::String help();
     static double lower_bound() { return 0.; }
   };
   struct Radius {
     using type = double;
-    static Options::String help() { return "The conformal radius of the star"; }
+    static Options::String help();
     static double lower_bound() { return 0.; }
   };
 
   using options = tmpl::list<Density, Radius>;
-  static Options::String help() {
-    return "A constant density star in general relativity";
-  }
+  static Options::String help();
 
   ConstantDensityStar() = default;
   ConstantDensityStar(const ConstantDensityStar&) = default;

@@ -327,10 +327,7 @@ struct EvolutionMetavars {
                  observers::ObserverWriter<EvolutionMetavars>,
                  dg_element_array>;
 
-  static Options::String help() {
-    return "Evolve a Scalar Wave in Dim spatial dimension.\n\n"
-           "The numerical flux is:    UpwindFlux\n";
-  }
+  static Options::String help();
 
   static constexpr auto default_phase_order =
       std::array{Parallel::Phase::Initialization,

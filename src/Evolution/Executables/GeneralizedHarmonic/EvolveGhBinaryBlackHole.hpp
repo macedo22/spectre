@@ -639,8 +639,5 @@ struct EvolutionMetavars {
       control_system::control_components<EvolutionMetavars, control_systems>,
       gh_dg_element_array>>;
 
-  static Options::String help() {
-    return "Evolve a binary black hole using the Generalized Harmonic "
-           "formulation\n";
-  }
+  static Options::String help();
 };

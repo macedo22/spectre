@@ -33,31 +33,23 @@ namespace Convergence {
  * - MaxIterations: Matches if the number of iterations exceeds this limit.
  */
 struct Criteria {
-  static Options::String help() {
-    return "The algorithm terminates when any of these criteria is matched.";
-  }
+  static Options::String help();
 
   struct MaxIterations {
     using type = size_t;
-    static Options::String help() {
-      return "The number of iterations exceeds this limit.";
-    }
+    static Options::String help();
     static type lower_bound() { return 0; }
   };
 
   struct AbsoluteResidual {
     using type = double;
-    static Options::String help() {
-      return "The residual has reached this magnitude.";
-    }
+    static Options::String help();
     static type lower_bound() { return 0.; }
   };
 
   struct RelativeResidual {
     using type = double;
-    static Options::String help() {
-      return "The residual has decreased by this factor.";
-    }
+    static Options::String help();
     static type lower_bound() { return 0.; }
     static type upper_bound() { return 1.; }
   };

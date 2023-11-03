@@ -44,24 +44,17 @@ class PolytropicFluid : public EquationOfState<IsRelativistic, 1> {
 
   struct PolytropicConstant {
     using type = double;
-    static Options::String help() { return "Polytropic constant K"; }
+    static Options::String help();
     static double lower_bound() { return 0.0; }
   };
 
   struct PolytropicExponent {
     using type = double;
-    static Options::String help() { return "Polytropic exponent Gamma"; }
+    static Options::String help();
     static double lower_bound() { return 1.0; }
   };
 
-  static Options::String help() {
-    return "A polytropic fluid equation of state.\n"
-           "The pressure is related to the rest mass density by p = K rho ^ "
-           "Gamma, "
-           "where p is the pressure, rho is the rest mass density, K is the "
-           "polytropic constant, and Gamma is the polytropic exponent. The "
-           "polytropic index N is defined as Gamma = 1 + 1 / N.";
-  }
+  static Options::String help();
 
   using options = tmpl::list<PolytropicConstant, PolytropicExponent>;
 

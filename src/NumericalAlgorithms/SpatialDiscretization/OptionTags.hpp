@@ -21,14 +21,6 @@ namespace SpatialDiscretization::OptionTags {
  */
 struct SpatialDiscretizationGroup {
   static std::string name() { return "SpatialDiscretization"; }
-  static Options::String help() {
-    return "Options controlling the spatial discretization of the PDE "
-           "system.\n\n"
-           "In a DG-subcell hybrid scheme subgroups would hold options for the "
-           "DG "
-           "and FD/FV method used. For example, the choice of basis functions "
-           "for "
-           "the DG scheme would be specified.";
-  }
+  static Options::String help();
 };
 }  // namespace SpatialDiscretization::OptionTags

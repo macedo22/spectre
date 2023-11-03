@@ -72,13 +72,7 @@ template <size_t Dim>
 class Moustache : public elliptic::analytic_data::AnalyticSolution {
  public:
   using options = tmpl::list<>;
-  static Options::String help() {
-    return "A solution with a discontinuous first derivative of its source at "
-           "1/2 "
-           "that also happens to look like a moustache. It vanishes at zero "
-           "and one "
-           "in each dimension";
-  }
+  static Options::String help();
 
   Moustache() = default;
   Moustache(const Moustache&) = default;

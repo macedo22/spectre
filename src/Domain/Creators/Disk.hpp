@@ -53,43 +53,33 @@ class Disk : public DomainCreator<2> {
 
   struct InnerRadius {
     using type = double;
-    static Options::String help() {
-      return "Radius of the circle circumscribing the inner square.";
-    }
+    static Options::String help();
   };
 
   struct OuterRadius {
     using type = double;
-    static Options::String help() { return "Radius of the Disk."; }
+    static Options::String help();
   };
 
   struct InitialRefinement {
     using type = size_t;
-    static Options::String help() {
-      return "Initial refinement level in each dimension.";
-    }
+    static Options::String help();
   };
 
   struct InitialGridPoints {
     using type = std::array<size_t, 2>;
-    static Options::String help() {
-      return "Initial number of grid points in [r,theta].";
-    }
+    static Options::String help();
   };
 
   struct UseEquiangularMap {
     using type = bool;
-    static Options::String help() {
-      return "Use equiangular instead of equidistant coordinates.";
-    }
+    static Options::String help();
   };
 
   template <typename BoundaryConditionsBase>
   struct BoundaryCondition {
     static std::string name() { return "BoundaryCondition"; }
-    static Options::String help() {
-      return "The boundary condition to impose on all sides.";
-    }
+    static Options::String help();
     using type = std::unique_ptr<BoundaryConditionsBase>;
   };
 
@@ -107,21 +97,7 @@ class Disk : public DomainCreator<2> {
                   typename Metavariables::system>>>,
       basic_options>;
 
-  static Options::String help() {
-    return "Creates a 2D Disk with five Blocks.\n"
-           "Only one refinement level for both dimensions is currently "
-           "supported.\n"
-           "The number of gridpoints in each dimension can be set "
-           "independently.\n"
-           "The number of gridpoints along the dimensions of the square is "
-           "equal\n"
-           "to the number of gridpoints along the angular dimension of the "
-           "wedges.\n"
-           "Equiangular coordinates give better gridpoint spacings in the "
-           "angular\n"
-           "direction, while equidistant coordinates give better gridpoint\n"
-           "spacings in the center block.";
-  }
+  static Options::String help();
 
   Disk(typename InnerRadius::type inner_radius,
        typename OuterRadius::type outer_radius,

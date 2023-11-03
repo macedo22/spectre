@@ -104,63 +104,26 @@ class ApparentHorizon
   using Base = elliptic::BoundaryConditions::BoundaryCondition<3>;
 
  public:
-  static Options::String help() {
-    return "Impose the boundary is a quasi-equilibrium apparent horizon.";
-  }
+  static Options::String help();
 
   struct Center {
     using type = std::array<double, 3>;
-    static Options::String help() {
-      return "The center of the excision surface representing the "
-             "apparent-horizon "
-             "surface";
-    }
+    static Options::String help();
   };
   struct Rotation {
     using type = std::array<double, 3>;
-    static Options::String help() {
-      return "The rotational parameters 'Omega' on the surface, which "
-             "parametrize "
-             "the spin of the black hole. The rotational parameters enter the "
-             "Dirichlet boundary conditions for the shift in a term "
-             "'Omega x (r - Center)', where 'r' are the coordinates on the "
-             "surface.";
-    }
+    static Options::String help();
   };
   struct Lapse {
     using type = Options::Auto<
         std::unique_ptr<elliptic::analytic_data::AnalyticSolution>>;
-    static Options::String help() {
-      return "Specify an analytic solution to impose a Dirichlet condition on "
-             "the "
-             "lapse. The analytic solution will be evaluated at coordinates "
-             "centered at the apparent horizon. "
-             "Alternatively, set this option to 'None' "
-             "to impose a zero von-Neumann boundary condition on the lapse. "
-             "Note "
-             "that the latter will not result in the standard Kerr-Schild "
-             "slicing "
-             "for a single black hole.";
-    }
+    static Options::String help();
   };
   struct NegativeExpansion {
     using type = Options::Auto<
         std::unique_ptr<elliptic::analytic_data::AnalyticSolution>,
         Options::AutoLabel::None>;
-    static Options::String help() {
-      return "Specify an analytic solution to impose its expansion at the "
-             "excision "
-             "surface. The analytic solution will be evaluated at coordinates "
-             "centered at the apparent horizon. "
-             "If the excision surface lies within the solution's "
-             "apparent horizon, the imposed expansion will be negative and "
-             "thus the "
-             "excision surface will lie within an apparent horizon. "
-             "Alternatively, "
-             "set this option to 'None' to impose the expansion is zero at the "
-             "excision surface, meaning the excision surface _is_ an apparent "
-             "horizon.";
-    }
+    static Options::String help();
   };
 
   using options = tmpl::list<Center, Rotation, Lapse, NegativeExpansion>;

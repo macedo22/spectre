@@ -56,12 +56,7 @@ template <size_t Dim>
 class Worldtube final : public BoundaryConditions::BoundaryCondition<Dim> {
  public:
   using options = tmpl::list<>;
-  static Options::String help() {
-    return "Boundary conditions set by the worldtube. w^- will be set by the "
-           "internal worldtube solution, w^psi and w^0_i are fixed by "
-           "constraint "
-           "preserving boundary conditions on the time derivative.";
-  }
+  static Options::String help();
 
   Worldtube() = default;
   explicit Worldtube(CkMigrateMessage* msg);

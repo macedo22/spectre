@@ -180,29 +180,19 @@ class ProductOfCorrections final : public BoundaryCorrection {
     static std::string name() {
       return pretty_type::name<DerivedGhCorrection>();
     }
-    static Options::String help() {
-      return "The Generalized Harmonic part of the product boundary condition";
-    }
+    static Options::String help();
   };
   struct ValenciaCorrection {
     using type = DerivedValenciaCorrection;
     static std::string name() {
       return pretty_type::name<DerivedValenciaCorrection>();
     }
-    static Options::String help() {
-      return "The Valencia part of the product boundary condition";
-    }
+    static Options::String help();
   };
 
   using options = tmpl::list<GhCorrection, ValenciaCorrection>;
 
-  static Options::String help() {
-    return "Direct product of a GH and ValenciaDivClean GRMHD boundary "
-           "correction. "
-           "See the documentation for the two individual boundary corrections "
-           "for "
-           "further details.";
-  }
+  static Options::String help();
 
   ProductOfCorrections() = default;
   ProductOfCorrections(DerivedGhCorrection gh_correction,

@@ -15,7 +15,7 @@ namespace OptionTags {
 template <typename StepperType>
 struct TimeStepper {
   static std::string name() { return "TimeStepper"; }
-  static Options::String help() { return "The time stepper"; }
+  static Options::String help();
   using type = std::unique_ptr<StepperType>;
   using group = evolution::OptionTags::Group;
 };

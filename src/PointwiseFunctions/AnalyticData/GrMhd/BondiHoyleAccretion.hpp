@@ -87,54 +87,42 @@ class BondiHoyleAccretion : public virtual evolution::initial_data::InitialData,
   /// The mass of the black hole, \f$M\f$.
   struct BhMass {
     using type = double;
-    static Options::String help() { return "The mass of the black hole."; }
+    static Options::String help();
     static type lower_bound() { return 0.0; }
   };
   /// The dimensionless black hole spin, \f$a_* = a/M\f$.
   struct BhDimlessSpin {
     using type = double;
-    static Options::String help() {
-      return "The dimensionless black hole spin.";
-    }
+    static Options::String help();
     static type lower_bound() { return -1.0; }
     static type upper_bound() { return 1.0; }
   };
   /// The rest mass density of the fluid far from the black hole.
   struct RestMassDensity {
     using type = double;
-    static Options::String help() {
-      return "The asymptotic rest mass density.";
-    }
+    static Options::String help();
     static type lower_bound() { return 0.0; }
   };
   /// The magnitude of the spatial velocity far from the black hole.
   struct FlowSpeed {
     using type = double;
-    static Options::String help() {
-      return "The magnitude of the asymptotic flow velocity.";
-    }
+    static Options::String help();
   };
   /// The strength of the magnetic field.
   struct MagFieldStrength {
     using type = double;
-    static Options::String help() {
-      return "The strength of the magnetic field.";
-    }
+    static Options::String help();
   };
   /// The polytropic constant of the fluid.
   struct PolytropicConstant {
     using type = double;
-    static Options::String help() {
-      return "The polytropic constant of the fluid.";
-    }
+    static Options::String help();
     static type lower_bound() { return 0.0; }
   };
   /// The polytropic exponent of the fluid.
   struct PolytropicExponent {
     using type = double;
-    static Options::String help() {
-      return "The polytropic exponent of the fluid.";
-    }
+    static Options::String help();
     static type lower_bound() { return 1.0; }
   };
 
@@ -142,9 +130,7 @@ class BondiHoyleAccretion : public virtual evolution::initial_data::InitialData,
       tmpl::list<BhMass, BhDimlessSpin, RestMassDensity, FlowSpeed,
                  MagFieldStrength, PolytropicConstant, PolytropicExponent>;
 
-  static Options::String help() {
-    return "Axially symmetric accretion on to a Kerr black hole.";
-  }
+  static Options::String help();
 
   BondiHoyleAccretion() = default;
   BondiHoyleAccretion(const BondiHoyleAccretion& /*rhs*/) = default;

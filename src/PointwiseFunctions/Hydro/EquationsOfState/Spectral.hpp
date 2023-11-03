@@ -60,42 +60,28 @@ class Spectral : public EquationOfState<true, 1> {
 
   struct ReferenceDensity {
     using type = double;
-    static Options::String help() { return "Reference density rho_0"; }
+    static Options::String help();
     static double lower_bound() { return 0.0; }
   };
 
   struct ReferencePressure {
     using type = double;
-    static Options::String help() { return "Reference pressure p_0"; }
+    static Options::String help();
     static double lower_bound() { return 0.0; }
   };
 
   struct Coefficients {
     using type = std::vector<double>;
-    static Options::String help() { return "Spectral coefficients gamma_i"; }
+    static Options::String help();
   };
 
   struct UpperDensity {
     using type = double;
-    static Options::String help() { return "Upper density rho_u"; }
+    static Options::String help();
     static double lower_bound() { return 0.0; }
   };
 
-  static Options::String help() {
-    return "A spectral equation of state.  Defining x = log(rho/rho_0), "
-           "Gamma(x) = "
-           "Sum_i gamma_i x^i, then the pressure is determined from d(log "
-           "P)/dx = "
-           "Gamma(x) for x > 0.  For x < 0 the EOS is a polytrope with "
-           "Gamma(x)=Gamma(0).  For x > x_u = log(rho_u/rho_0), Gamma(x) = "
-           "Gamma(x_u).\n"
-           "To get smooth equations of state, it is recommended that the "
-           "second "
-           "and third supplied coefficient should be 0. It is up to the user "
-           "to "
-           "choose coefficients that are physically reasonable, e.g. that "
-           "satisfy causality.";
-  }
+  static Options::String help();
 
   using options = tmpl::list<ReferenceDensity, ReferencePressure, Coefficients,
                              UpperDensity>;

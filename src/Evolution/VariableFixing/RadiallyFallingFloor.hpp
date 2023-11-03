@@ -72,53 +72,41 @@ class RadiallyFallingFloor {
   /// \brief The minimum radius at which to begin applying the floors on the
   /// density and pressure.
   struct MinimumRadius {
-    static Options::String help() {
-      return "The radius at which to begin applying the lower bound.";
-    }
+    static Options::String help();
     using type = double;
     static double lower_bound() { return 0.0; }
   };
 
   /// \brief The scale of the floor of the rest mass density.
   struct ScaleDensityFloor {
-    static Options::String help() {
-      return "The rest mass density floor at r = 1.";
-    }
+    static Options::String help();
     using type = double;
     static double lower_bound() { return 0.0; }
   };
 
   /// \brief The power of the radius of the floor of the rest mass density.
   struct PowerDensityFloor {
-    static Options::String help() {
-      return "Radial power for the floor of the rest mass density.";
-    }
+    static Options::String help();
     using type = double;
   };
 
   /// \brief The scale of the floor of the pressure.
   struct ScalePressureFloor {
-    static Options::String help() { return "The pressure floor at r = 1."; }
+    static Options::String help();
     using type = double;
     static double lower_bound() { return 0.0; }
   };
 
   /// \brief The power of the radius of the floor of the pressure.
   struct PowerPressureFloor {
-    static Options::String help() {
-      return "The radial power for the floor of the pressure.";
-    }
+    static Options::String help();
     using type = double;
   };
 
   using options =
       tmpl::list<MinimumRadius, ScaleDensityFloor, PowerDensityFloor,
                  ScalePressureFloor, PowerPressureFloor>;
-  static Options::String help() {
-    return "Applies a pressure and density floor dependent on the distance to "
-           "the "
-           "origin.";
-  }
+  static Options::String help();
 
   RadiallyFallingFloor(double minimum_radius_at_which_to_apply_floor,
                        double rest_mass_density_scale,

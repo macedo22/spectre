@@ -56,35 +56,27 @@ namespace OptionHolders {
 struct KerrHorizon {
   struct LMax {
     using type = size_t;
-    static Options::String help() {
-      return "KerrHorizon is expanded in Ylms up to l=LMax";
-    }
+    static Options::String help();
   };
   struct Center {
     using type = std::array<double, 3>;
-    static Options::String help() { return "Center of black hole"; }
+    static Options::String help();
   };
   struct Mass {
     using type = double;
-    static Options::String help() { return "Mass of black hole"; }
+    static Options::String help();
   };
   struct DimensionlessSpin {
     using type = std::array<double, 3>;
-    static Options::String help() { return "Dimensionless spin of black hole"; }
+    static Options::String help();
   };
   struct AngularOrdering {
     using type = intrp::AngularOrdering;
-    static Options::String help() {
-      return "Chooses theta,phi ordering in 2d array";
-    }
+    static Options::String help();
   };
   using options =
       tmpl::list<LMax, Center, Mass, DimensionlessSpin, AngularOrdering>;
-  static Options::String help() {
-    return "A Strahlkorper conforming to the horizon (in Kerr-Schild "
-           "coordinates)"
-           " of a Kerr black hole with a specified center, mass, and spin.";
-  }
+  static Options::String help();
 
   KerrHorizon(size_t l_max_in, std::array<double, 3> center_in, double mass_in,
               std::array<double, 3> dimensionless_spin_in,
@@ -117,9 +109,7 @@ namespace OptionTags {
 template <typename InterpolationTargetTag>
 struct KerrHorizon {
   using type = OptionHolders::KerrHorizon;
-  static Options::String help() {
-    return "Options for interpolation onto Kerr horizon.";
-  }
+  static Options::String help();
   static std::string name() {
     return pretty_type::name<InterpolationTargetTag>();
   }

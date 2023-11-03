@@ -64,9 +64,7 @@ class ProductOfCorrections final : public BoundaryCorrection {
       // during option parsing
       return pretty_type::name<DerivedGhCorrection>() + "GH";
     }
-    static Options::String help() {
-      return "The Generalized Harmonic part of the product boundary condition";
-    }
+    static Options::String help();
   };
   struct ScalarCorrection {
     using type = DerivedScalarCorrection;
@@ -75,19 +73,12 @@ class ProductOfCorrections final : public BoundaryCorrection {
       // during option parsing
       return pretty_type::name<DerivedScalarCorrection>() + "Scalar";
     }
-    static Options::String help() {
-      return "The scalar part of the product boundary condition";
-    }
+    static Options::String help();
     };
 
   using options = tmpl::list<GhCorrection, ScalarCorrection>;
 
-  static Options::String help() {
-    return "Direct product of a GH and CurvedScalarWave boundary correction. "
-           "See the documentation for the two individual boundary corrections "
-           "for "
-           "further details.";
-  }
+  static Options::String help();
 
   ProductOfCorrections() = default;
   ProductOfCorrections(DerivedGhCorrection gh_correction,
