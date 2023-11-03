@@ -74,11 +74,7 @@ class Rusanov final : public BoundaryCorrection {
 
  public:
   using options = tmpl::list<>;
-  static Options::String help() {
-    return "Computes the Rusanov or local Lax-Friedrichs boundary correction "
-           "term "
-           "for the GRMHD system.";
-  }
+  static Options::String help;
 
   Rusanov() = default;
   Rusanov(const Rusanov&) = default;

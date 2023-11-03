@@ -32,7 +32,7 @@ namespace OptionTags {
  */
 struct FileGlob {
   using type = std::string;
-  static Options::String help() { return "Path to the data file"; }
+  static Options::String help;
 };
 
 /*!
@@ -42,9 +42,7 @@ struct FileGlob {
  */
 struct Subgroup {
   using type = std::string;
-  static Options::String help() {
-    return "The subgroup within the file, excluding extensions";
-  }
+  static Options::String help;
 };
 
 /*!
@@ -52,9 +50,7 @@ struct Subgroup {
  */
 struct ObservationValue {
   using type = std::variant<double, ObservationSelector>;
-  static Options::String help() {
-    return "The observation value at which to read data";
-  }
+  static Options::String help;
 };
 
 /*!
@@ -63,19 +59,7 @@ struct ObservationValue {
 struct EnableInterpolation {
   static std::string name() { return "Interpolate"; }
   using type = bool;
-  static Options::String help() {
-    return "Enable to interpolate the volume data to the target domain. "
-           "Disable to "
-           "load volume data directly into elements with the same name. "
-           "For example, you can disable interpolation if you have generated "
-           "data "
-           "on the target points, or if you have already interpolated your "
-           "data. "
-           "When interpolation is disabled, datasets "
-           "'InertialCoordinates(_x,_y,_z)' must exist in the files. They "
-           "are used "
-           "to verify that the target points indeed match the source data.";
-  }
+  static Options::String help;
 };
 }  // namespace OptionTags
 
@@ -86,7 +70,7 @@ struct ImporterOptions
                           OptionTags::ObservationValue,
                           OptionTags::EnableInterpolation> {
   using options = tags_list;
-  static Options::String help() { return "The volume data to load."; }
+  static Options::String help;
   using TaggedTuple::TaggedTuple;
 };
 
@@ -99,7 +83,7 @@ template <typename OptionsGroup>
 struct ImporterOptions : db::SimpleTag {
   static std::string name() { return "VolumeData"; }
   using type = importers::ImporterOptions;
-  static Options::String help() { return importers::ImporterOptions::help(); }
+  static Options::String help;
   using group = OptionsGroup;
   using option_tags = tmpl::list<ImporterOptions>;
   static constexpr bool pass_metavariables = false;

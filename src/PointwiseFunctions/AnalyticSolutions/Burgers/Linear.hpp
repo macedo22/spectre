@@ -32,11 +32,11 @@ class Linear : public evolution::initial_data::InitialData,
  public:
   struct ShockTime {
     using type = double;
-    static Options::String help() { return "The time at which a shock forms"; }
+    static Options::String help;
   };
 
   using options = tmpl::list<ShockTime>;
-  static Options::String help() { return "A spatially linear solution"; }
+  static Options::String help;
 
   Linear() = default;
   Linear(const Linear&) = default;

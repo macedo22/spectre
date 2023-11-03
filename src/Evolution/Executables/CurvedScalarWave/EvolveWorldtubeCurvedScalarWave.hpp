@@ -334,11 +334,7 @@ struct EvolutionMetavars {
       CurvedScalarWave::Worldtube::WorldtubeSingleton<EvolutionMetavars>,
       dg_element_array>>;
 
-  static Options::String help() {
-    return "Evolve a scalar point charge in circular orbit around a "
-           "Schwarzschild "
-           "black hole.";
-  }
+  static Options::String help;
 
   static constexpr std::array<Parallel::Phase, 5> default_phase_order{
       {Parallel::Phase::Initialization,

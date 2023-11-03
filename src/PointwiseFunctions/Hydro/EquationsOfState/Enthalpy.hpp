@@ -139,79 +139,55 @@ class Enthalpy : public EquationOfState<true, 1> {
 
   struct ReferenceDensity {
     using type = double;
-    static Options::String help() { return "Reference density rho_0"; }
+    static Options::String help;
     static double lower_bound() { return 0.0; }
   };
 
   struct MinimumDensity {
     using type = double;
-    static Options::String help() {
-      return "Minimum valid density rho_min,"
-             " for this parametrization";
-    }
+    static Options::String help;
     static double lower_bound() { return 0.0; }
   };
   struct MaximumDensity {
     using type = double;
-    static Options::String help() { return "Maximum density for this EoS"; }
+    static Options::String help;
     static double lower_bound() { return 0.0; }
   };
 
   struct PolynomialCoefficients {
     using type = std::vector<double>;
-    static Options::String help() { return "Polynomial coefficients a_i"; }
+    static Options::String help;
   };
 
   struct TrigScaling {
     using type = double;
-    static Options::String help() {
-      return "Fundamental wavenumber of trig "
-             "functions, k";
-    }
+    static Options::String help;
     static double lower_bound() { return 0.0; }
   };
 
   struct SinCoefficients {
     using type = std::vector<double>;
-    static Options::String help() { return "Sine coefficients b_j"; }
+    static Options::String help;
   };
   struct CosCoefficients {
     using type = std::vector<double>;
-    static Options::String help() { return "Cosine coefficients c_j"; }
+    static Options::String help;
   };
   struct StitchedLowDensityEoS {
     using type = LowDensityEoS;
     static std::string name() {
       return pretty_type::short_name<LowDensityEoS>();
     }
-    static Options::String help() {
-      return "Low density EoS stitched at the MinimumDensity";
-    }
+    static Options::String help;
   };
 
   struct TransitionDeltaEpsilon {
     using type = double;
-    static Options::String help() {
-      return "the change in internal energy across the low-"
-             "to-high-density transition, generically 0.0";
-    }
+    static Options::String help;
     static double lower_bound() { return 0.0; }
   };
 
-  static Options::String help() {
-    return "An EoS with a parametrized value h(log(rho/rho_0)) with h the "
-           "specific "
-           "enthalpy and rho the baryon rest mass density.  The enthalpy is "
-           "expanded as a sum of polynomial terms and trigonometric "
-           "corrections. "
-           "let x = log(rho/rho_0) in"
-           "h(x) = \\sum_i a_ix^i + \\sum_j b_jsin(k * j * x) + c_jcos(k * j * "
-           "x) "
-           "Note that rho(x)(1+epsilon(x)) = int_0^x e^x' h((x') dx' can be "
-           "computed "
-           "analytically, and therefore so can "
-           "P(x) = rho(x) * (h(x) - (1 + epsilon(x))) ";
-  }
+  static Options::String help;
 
   using options =
       tmpl::list<ReferenceDensity, MaximumDensity, MinimumDensity, TrigScaling,

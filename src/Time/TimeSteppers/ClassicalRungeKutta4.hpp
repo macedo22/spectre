@@ -49,9 +49,7 @@ namespace TimeSteppers {
 class ClassicalRungeKutta4 : public RungeKutta {
  public:
   using options = tmpl::list<>;
-  static Options::String help() {
-    return "The standard fourth-order Runge-Kutta time-stepper.";
-  }
+  static Options::String help;
 
   ClassicalRungeKutta4() = default;
   ClassicalRungeKutta4(const ClassicalRungeKutta4&) = default;

@@ -124,14 +124,12 @@ class MagnetizedTovStar : public virtual evolution::initial_data::InitialData,
   struct MagneticFields {
     using type = std::vector<std::unique_ptr<
         grmhd::AnalyticData::InitialMagneticFields::InitialMagneticField>>;
-    static Options::String help() {
-      return "Magnetic fields to superpose on the TOV solution.";
-    }
+    static Options::String help;
   };
 
   using options = tmpl::push_back<tov_star::options, MagneticFields>;
 
-  static Options::String help() { return "Magnetized TOV star."; }
+  static Options::String help;
 
   static constexpr size_t volume_dim = 3_st;
 

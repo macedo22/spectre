@@ -18,7 +18,7 @@ namespace OptionTags {
  */
 struct EventsAndDenseTriggers {
   using type = evolution::EventsAndDenseTriggers;
-  static Options::String help() { return "Events to run at arbitrary times"; }
+  static Options::String help;
 };
 }  // namespace OptionTags
 

@@ -66,17 +66,11 @@ class SeparationLessThan : public Trigger {
 
   struct Value {
     using type = double;
-    static Options::String help() {
-      return "Separation of the two horizons to compare against.";
-    }
+    static Options::String help;
   };
 
   using options = tmpl::list<Value>;
-  static Options::String help() {
-    return "Trigger when the separation between the two horizons is less than "
-           "a "
-           "certain distance.";
-  }
+  static Options::String help;
 
   explicit SeparationLessThan(double separation);
 

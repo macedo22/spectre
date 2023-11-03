@@ -81,26 +81,20 @@ class MagnetizedFmDisk : public virtual evolution::initial_data::InitialData,
   /// disk) below which the matter in the disk is initially unmagetized.
   struct ThresholdDensity {
     using type = double;
-    static Options::String help() {
-      return "Frac. rest mass density below which B-field vanishes.";
-    }
+    static Options::String help;
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 1.0; }
   };
   /// The maximum-magnetic-pressure-to-maximum-fluid-pressure ratio.
   struct InversePlasmaBeta {
     using type = double;
-    static Options::String help() {
-      return "Ratio of max magnetic pressure to max fluid pressure.";
-    }
+    static Options::String help;
     static type lower_bound() { return 0.0; }
   };
   /// Grid resolution used in magnetic field normalization.
   struct BFieldNormGridRes {
     using type = size_t;
-    static Options::String help() {
-      return "Grid Resolution for b-field normalization.";
-    }
+    static Options::String help;
     static type suggested_value() { return 255; }
     static type lower_bound() { return 4; }
   };
@@ -126,7 +120,7 @@ class MagnetizedFmDisk : public virtual evolution::initial_data::InitialData,
   using options = tmpl::push_back<FmDisk::options, ThresholdDensity,
                                   InversePlasmaBeta, BFieldNormGridRes>;
 
-  static Options::String help() { return "Magnetized Fishbone-Moncrief disk."; }
+  static Options::String help;
 
   MagnetizedFmDisk() = default;
   MagnetizedFmDisk(const MagnetizedFmDisk& /*rhs*/) = default;

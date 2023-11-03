@@ -13,9 +13,7 @@ namespace OptionTags {
 /// Holds the `OptionTags::AnalyticData` option in the input file
 struct AnalyticDataGroup {
   static std::string name() { return "AnalyticData"; }
-  static Options::String help() {
-    return "Analytic data used for the initial data";
-  }
+  static Options::String help;
 };
 
 /// \ingroup OptionTagsGroup
@@ -24,7 +22,7 @@ struct AnalyticDataGroup {
 template <typename DataType>
 struct AnalyticData {
   static std::string name() { return pretty_type::name<DataType>(); }
-  static Options::String help() { return "Options for the analytic data"; }
+  static Options::String help;
   using type = DataType;
   using group = AnalyticDataGroup;
 };

@@ -66,54 +66,50 @@ class ShuOsherTube : public MarkAsAnalyticData {
   /// Initial postition of the discontinuity
   struct JumpPosition {
     using type = double;
-    static Options::String help() {
-      return "The initial position of the discontinuity.";
-    }
+    static Options::String help;
   };
 
   struct LeftMassDensity {
     using type = double;
-    static Options::String help() { return "The left mass density."; }
+    static Options::String help;
     static type lower_bound() { return 0.0; }
   };
 
   struct LeftVelocity {
     using type = double;
-    static Options::String help() { return "The left velocity."; }
+    static Options::String help;
   };
 
   struct LeftPressure {
     using type = double;
-    static Options::String help() { return "The left pressure."; }
+    static Options::String help;
     static type lower_bound() { return 0.0; }
   };
 
   struct RightVelocity {
     using type = double;
-    static Options::String help() { return "The right velocity."; }
+    static Options::String help;
   };
 
   struct RightPressure {
     using type = double;
-    static Options::String help() { return "The right pressure."; }
+    static Options::String help;
     static type lower_bound() { return 0.0; }
   };
 
   struct Epsilon {
     using type = double;
-    static Options::String help() { return "Sinusoid amplitude."; }
+    static Options::String help;
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 1.0; }
   };
 
   struct Lambda {
     using type = double;
-    static Options::String help() { return "Sinusoid wavelength."; }
+    static Options::String help;
   };
 
-  static Options::String help() {
-    return "1D Shu-Osher oscillatory shock tube.";
-  }
+  static Options::String help;
 
   using options =
       tmpl::list<JumpPosition, LeftMassDensity, LeftVelocity, LeftPressure,

@@ -92,47 +92,39 @@ class ScalingAndZRotation final : public TimeDependence<MeshDim> {
   /// \brief The initial time of the function of time.
   struct InitialTime {
     using type = double;
-    static Options::String help() {
-      return "The initial time of the function of time";
-    }
+    static Options::String help;
   };
   /// \brief The \f$x\f$-, \f$y\f$-, and \f$z\f$-velocity.
   struct AngularVelocity {
     using type = double;
-    static Options::String help() { return "The angular velocity of the map."; }
+    static Options::String help;
   };
 
   /// \brief The outer boundary or pivot point of the
   /// `domain::CoordinateMaps::TimeDependent::CubicScale` map
   struct OuterBoundary {
     using type = double;
-    static Options::String help() {
-      return "Outer boundary or pivot point of the map";
-    }
+    static Options::String help;
   };
   /// \brief The initial values of the expansion factors.
   struct InitialExpansion {
     using type = std::array<double, 2>;
-    static Options::String help() {
-      return "Expansion values at initial time.";
-    }
+    static Options::String help;
   };
   /// \brief The velocity of the expansion factors.
   struct Velocity {
     using type = std::array<double, 2>;
-    static Options::String help() { return "The rate of expansion."; }
+    static Options::String help;
   };
   /// \brief The acceleration of the expansion factors.
   struct Acceleration {
     using type = std::array<double, 2>;
-    static Options::String help() { return "The acceleration of expansion."; }
+    static Options::String help;
   };
   /// \brief Whether to use linear scaling or cubic scaling.
   struct UseLinearScaling {
     using type = bool;
-    static Options::String help() {
-      return "Whether or not to turn on cubic scaling.";
-    }
+    static Options::String help;
   };
 
   using GridToInertialMap = detail::generate_coordinate_map_t<
@@ -153,16 +145,7 @@ class ScalingAndZRotation final : public TimeDependence<MeshDim> {
       tmpl::list<InitialTime, AngularVelocity, OuterBoundary, UseLinearScaling,
                  InitialExpansion, Velocity, Acceleration>;
 
-  static Options::String help() {
-    return "A spatial radial scaling followed by a rotation about the z-axis.\n"
-           "The spatial radial scaling is either based on a cubic scaling or "
-           "a\n"
-           "simple linear scaling. If the two expansion functions of time "
-           "have\n"
-           "the same name then the scaling is a linear radial scaling.\n"
-           "The spatially uniform rotation about is initialized with a\n"
-           "constant angular velocity.";
-  }
+  static Options::String help;
 
   ScalingAndZRotation() = default;
   ~ScalingAndZRotation() override = default;

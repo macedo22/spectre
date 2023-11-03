@@ -53,89 +53,67 @@ class KomissarovShock
 
   struct AdiabaticIndex {
     using type = double;
-    static Options::String help() {
-      return "The adiabatic index of the ideal fluid";
-    }
+    static Options::String help;
     static type lower_bound() { return 1.0; }
   };
   struct LeftRestMassDensity {
     using type = double;
     static std::string name() { return "LeftDensity"; };
-    static Options::String help() {
-      return "Fluid rest mass density in the left half-domain";
-    }
+    static Options::String help;
     static type lower_bound() { return 0.0; }
   };
   struct RightRestMassDensity {
     using type = double;
     static std::string name() { return "RightDensity"; };
-    static Options::String help() {
-      return "Fluid rest mass density in the right half-domain";
-    }
+    static Options::String help;
     static type lower_bound() { return 0.0; }
   };
 
   struct LeftElectronFraction {
     using type = double;
     static std::string name() { return "LeftElectronFraction"; };
-    static Options::String help() {
-      return "Fluid electron fraction in the left half-domain";
-    }
+    static Options::String help;
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 1.0; }
   };
   struct RightElectronFraction {
     using type = double;
     static std::string name() { return "RightElectronFraction"; };
-    static Options::String help() {
-      return "Fluid electron fraction in the right half-domain";
-    }
+    static Options::String help;
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 1.0; }
   };
   struct LeftPressure {
     using type = double;
-    static Options::String help() {
-      return "Fluid pressure in the left half-domain";
-    }
+    static Options::String help;
     static type lower_bound() { return 0.0; }
   };
   struct RightPressure {
     using type = double;
-    static Options::String help() {
-      return "Fluid pressure in the right half-domain";
-    }
+    static Options::String help;
     static type lower_bound() { return 0.0; }
   };
   struct LeftSpatialVelocity {
     using type = std::array<double, 3>;
     static std::string name() { return "LeftVelocity"; };
-    static Options::String help() {
-      return "Fluid spatial velocity in the left half-domain";
-    }
+    static Options::String help;
   };
   struct RightSpatialVelocity {
     using type = std::array<double, 3>;
     static std::string name() { return "RightVelocity"; };
-    static Options::String help() {
-      return "Fluid spatial velocity in the right half-domain";
-    }
+    static Options::String help;
   };
   struct LeftMagneticField {
     using type = std::array<double, 3>;
-    static Options::String help() {
-      return "Magnetic field in the left half-domain";
-    }
+    static Options::String help;
   };
   struct RightMagneticField {
     using type = std::array<double, 3>;
-    static Options::String help() {
-      return "Magnetic field in the right half-domain";
-    }
+    static Options::String help;
   };
   struct ShockSpeed {
     using type = double;
-    static Options::String help() { return "Propagation speed of the shock"; }
+    static Options::String help;
   };
 
   using options =
@@ -144,13 +122,7 @@ class KomissarovShock
                  RightPressure, LeftSpatialVelocity, RightSpatialVelocity,
                  LeftMagneticField, RightMagneticField, ShockSpeed>;
 
-  static Options::String help() {
-    return "Analytic initial data for a Komissarov shock test. The fluid "
-           "variables "
-           "are set homogeneously on either half of the domain left and right "
-           "of "
-           "x=0.";
-  }
+  static Options::String help;
 
   KomissarovShock() = default;
   KomissarovShock(const KomissarovShock& /*rhs*/) = default;

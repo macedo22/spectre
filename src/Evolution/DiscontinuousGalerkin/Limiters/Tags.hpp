@@ -16,9 +16,7 @@ namespace OptionTags {
  */
 struct LimiterGroup {
   static std::string name() { return "Limiter"; }
-  static Options::String help() {
-    return "Options for limiting troubled cells";
-  }
+  static Options::String help;
 };
 
 /*!
@@ -29,7 +27,7 @@ struct LimiterGroup {
 template <typename LimiterType>
 struct Limiter {
   static std::string name() { return pretty_type::name<LimiterType>(); }
-  static Options::String help() { return "Options for the limiter"; }
+  static Options::String help;
   using type = LimiterType;
   using group = LimiterGroup;
 };

@@ -192,11 +192,7 @@ class UpwindPenalty final : public BoundaryCorrection<Dim> {
 
  public:
   using options = tmpl::list<>;
-  static Options::String help() {
-    return "Computes the UpwindPenalty boundary correction term for the "
-           "generalized "
-           "harmonic system.";
-  }
+  static Options::String help;
 
   UpwindPenalty() = default;
   UpwindPenalty(const UpwindPenalty&) = default;

@@ -105,31 +105,22 @@ void dump_barotropic_eos(
 namespace OptionTags {
 struct NumberOfPoints {
   using type = size_t;
-  static Options::String help() {
-    return "Number of points at which to dump the EoS";
-  }
+  static Options::String help;
 };
 
 struct OutputFileName {
   using type = std::string;
-  static Options::String help() {
-    return "Name of the output file to dump the EoS to, including file "
-           "extension.";
-  }
+  static Options::String help;
 };
 
 struct LowerBoundRestMassDensityCgs {
   using type = double;
-  static Options::String help() {
-    return "Lower bound of rest mass density in CGS units.";
-  }
+  static Options::String help;
 };
 
 struct UpperBoundRestMassDensityCgs {
   using type = double;
-  static Options::String help() {
-    return "Upper bound of rest mass density in CGS units.";
-  }
+  static Options::String help;
 };
 }  // namespace OptionTags
 }  // namespace

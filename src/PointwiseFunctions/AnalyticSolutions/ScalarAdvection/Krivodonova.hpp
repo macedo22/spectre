@@ -61,11 +61,7 @@ class Krivodonova : public evolution::initial_data::InitialData,
                     public MarkAsAnalyticSolution {
  public:
   using options = tmpl::list<>;
-  static Options::String help() {
-    return "An advecting 1D profile adopted from Krivodonova2007 paper, "
-           "periodic "
-           "over the interval [-1, 1]";
-  }
+  static Options::String help;
 
   Krivodonova() = default;
   Krivodonova(const Krivodonova&) = default;

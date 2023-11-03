@@ -57,9 +57,7 @@ class Interpolate<VolumeDim, InterpolationTargetTag,
   /// \endcond
 
   using options = tmpl::list<>;
-  static Options::String help() {
-    return "Starts interpolation onto the given InterpolationTargetTag.";
-  }
+  static Options::String help;
 
   static std::string name() {
     return pretty_type::name<InterpolationTargetTag>();

@@ -18,16 +18,7 @@ namespace dg::OptionTags {
  */
 struct DiscontinuousGalerkinGroup {
   static std::string name() { return "DiscontinuousGalerkin"; }
-  static Options::String help() {
-    return "Options controlling the discontinuous Galerkin spatial "
-           "discretization "
-           "of the PDE system.\n\n"
-           "Contains options such as whether to use the strong or weak form, "
-           "what "
-           "boundary correction/numerical flud to use, and which quadrature "
-           "rule to "
-           "use.";
-  }
+  static Options::String help;
   using group = SpatialDiscretization::OptionTags::SpatialDiscretizationGroup;
 };
 }  // namespace dg::OptionTags

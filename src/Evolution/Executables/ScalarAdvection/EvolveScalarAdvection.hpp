@@ -367,9 +367,7 @@ struct EvolutionMetavars {
                  observers::ObserverWriter<EvolutionMetavars>,
                  dg_element_array>;
 
-  static Options::String help() {
-    return "Evolve the scalar advection equation.\n\n";
-  }
+  static Options::String help;
 
   static constexpr std::array<Parallel::Phase, 5> default_phase_order{
       {Parallel::Phase::Initialization,

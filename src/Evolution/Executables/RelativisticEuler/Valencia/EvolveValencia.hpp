@@ -286,9 +286,7 @@ struct EvolutionMetavars {
   using const_global_cache_tags =
       tmpl::list<initial_data_tag, equation_of_state_tag>;
 
-  static Options::String help() {
-    return "Evolve the Valencia formulation of RelativisticEuler system.\n\n";
-  }
+  static Options::String help;
 
   static constexpr std::array<Parallel::Phase, 5> default_phase_order{
       {Parallel::Phase::Initialization,

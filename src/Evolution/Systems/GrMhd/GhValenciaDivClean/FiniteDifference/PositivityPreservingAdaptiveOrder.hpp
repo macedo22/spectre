@@ -87,49 +87,24 @@ class PositivityPreservingAdaptiveOrderPrim : public Reconstructor {
 
   struct Alpha5 {
     using type = double;
-    static Options::String help() {
-      return "The alpha parameter in the Persson convergence measurement. 4 is "
-             "the "
-             "right value, but anything in the range of 3-5 is 'reasonable'. "
-             "Smaller values allow for more oscillations.";
-    }
+    static Options::String help;
   };
   struct Alpha7 {
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    static Options::String help() {
-      return "The alpha parameter in the Persson convergence measurement. 4 is "
-             "the "
-             "right value, but anything in the range of 3-5 is 'reasonable'. "
-             "Smaller values allow for more oscillations. If not specified "
-             "then "
-             "7th-order reconstruction is not used.";
-    }
+    static Options::String help;
   };
   struct Alpha9 {
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    static Options::String help() {
-      return "The alpha parameter in the Persson convergence measurement. 4 is "
-             "the "
-             "right value, but anything in the range of 3-5 is 'reasonable'. "
-             "Smaller values allow for more oscillations. If not specified "
-             "then "
-             "9th-order reconstruction is not used.";
-    }
+    static Options::String help;
   };
   struct LowOrderReconstructor {
     using type = FallbackReconstructorType;
-    static Options::String help() {
-      return "The 2nd/3rd-order reconstruction scheme to use if unlimited "
-             "5th-order "
-             "isn't okay.";
-    }
+    static Options::String help;
   };
 
   using options = tmpl::list<Alpha5, Alpha7, Alpha9, LowOrderReconstructor>;
 
-  static Options::String help() {
-    return "Positivity-preserving adaptive-order reconstruction.";
-  }
+  static Options::String help;
 
   PositivityPreservingAdaptiveOrderPrim() = default;
   PositivityPreservingAdaptiveOrderPrim(

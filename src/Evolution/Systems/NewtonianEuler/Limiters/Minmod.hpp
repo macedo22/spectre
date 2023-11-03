@@ -95,23 +95,17 @@ class Minmod {
     static type suggested_value() {
       return NewtonianEuler::Limiters::VariablesToLimit::Characteristic;
     }
-    static Options::String help() {
-      return "Variable representation on which to apply the limiter";
-    }
+    static Options::String help;
   };
   struct ApplyFlattener {
     using type = bool;
-    static Options::String help() {
-      return "Flatten after limiting to restore pointwise positivity";
-    }
+    static Options::String help;
   };
   using options =
       tmpl::list<typename ConservativeVarsMinmod::Type, VariablesToLimit,
                  typename ConservativeVarsMinmod::TvbConstant, ApplyFlattener,
                  typename ConservativeVarsMinmod::DisableForDebugging>;
-  static Options::String help() {
-    return "A Minmod limiter specialized to the NewtonianEuler system";
-  }
+  static Options::String help;
   static std::string name() { return "NewtonianEulerMinmod"; };
 
   explicit Minmod(::Limiters::MinmodType minmod_type,

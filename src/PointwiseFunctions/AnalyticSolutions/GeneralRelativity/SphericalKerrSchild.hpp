@@ -390,25 +390,19 @@ class SphericalKerrSchild : public AnalyticSolution<3_st>,
  public:
   struct Mass {
     using type = double;
-    static Options::String help() { return "Mass of the black hole"; }
+    static Options::String help;
     static type lower_bound() { return 0.; }
   };
   struct Spin {
     using type = std::array<double, volume_dim>;
-    static Options::String help() {
-      return "The [x,y,z] dimensionless spin of the black hole";
-    }
+    static Options::String help;
   };
   struct Center {
     using type = std::array<double, volume_dim>;
-    static Options::String help() {
-      return "The [x,y,z] center of the black hole";
-    }
+    static Options::String help;
   };
   using options = tmpl::list<Mass, Spin, Center>;
-  static Options::String help() {
-    return "Black hole in Spherical Kerr-Schild coordinates";
-  }
+  static Options::String help;
 
   template <typename DataType, typename Frame = Frame::Inertial>
   using tags = tmpl::flatten<tmpl::list<

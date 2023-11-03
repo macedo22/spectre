@@ -47,25 +47,20 @@ struct RefinementRegion {
 
   struct LowerCornerIndex {
     using type = std::array<size_t, VolumeDim>;
-    static Options::String help() { return "Lower bound of refined region."; }
+    static Options::String help;
   };
 
   struct UpperCornerIndex {
     using type = std::array<size_t, VolumeDim>;
-    static Options::String help() { return "Upper bound of refined region."; }
+    static Options::String help;
   };
 
   struct Refinement {
     using type = std::array<size_t, VolumeDim>;
-    static Options::String help() { return "Refinement inside region."; }
+    static Options::String help;
   };
 
-  static Options::String help() {
-    return "A region to be refined differently from the default for the "
-           "lattice.\n"
-           "The region is a box between the block boundaries indexed by the\n"
-           "Lower- and UpperCornerIndex options.";
-  }
+  static Options::String help;
   using options = tmpl::list<LowerCornerIndex, UpperCornerIndex, Refinement>;
   RefinementRegion(const std::array<size_t, VolumeDim>& lower_corner_index_in,
                    const std::array<size_t, VolumeDim>& upper_corner_index_in,
@@ -112,59 +107,43 @@ class AlignedLattice : public DomainCreator<VolumeDim> {
 
   struct BlockBounds {
     using type = std::array<std::vector<double>, VolumeDim>;
-    static Options::String help() {
-      return "Coordinates of block boundaries in each dimension.";
-    }
+    static Options::String help;
   };
 
   struct IsPeriodicIn {
     using type = std::array<bool, VolumeDim>;
-    static Options::String help() {
-      return "Whether the domain is periodic in each dimension.";
-    }
+    static Options::String help;
   };
 
   struct InitialLevels {
     using type = std::array<size_t, VolumeDim>;
-    static Options::String help() {
-      return "Initial refinement level in each dimension.";
-    }
+    static Options::String help;
   };
 
   struct InitialGridPoints {
     using type = std::array<size_t, VolumeDim>;
-    static Options::String help() {
-      return "Initial number of grid points in each dimension.";
-    }
+    static Options::String help;
   };
 
   struct RefinedLevels {
     using type = std::vector<RefinementRegion<VolumeDim>>;
-    static Options::String help() {
-      return "h-refined regions.  Later entries take priority.";
-    }
+    static Options::String help;
   };
 
   struct RefinedGridPoints {
     using type = std::vector<RefinementRegion<VolumeDim>>;
-    static Options::String help() {
-      return "p-refined regions.  Later entries take priority.";
-    }
+    static Options::String help;
   };
 
   struct BlocksToExclude {
     using type = std::vector<std::array<size_t, VolumeDim>>;
-    static Options::String help() {
-      return "List of Block indices to exclude, if any.";
-    }
+    static Options::String help;
   };
 
   template <typename BoundaryConditionsBase>
   struct BoundaryCondition {
     static std::string name() { return "BoundaryCondition"; }
-    static Options::String help() {
-      return "The boundary condition to impose on all sides.";
-    }
+    static Options::String help;
     using type = std::unique_ptr<BoundaryConditionsBase>;
   };
 
@@ -184,25 +163,7 @@ class AlignedLattice : public DomainCreator<VolumeDim> {
                   typename Metavariables::system>>>,
           options_periodic>>;
 
-  static Options::String help() {
-    return "AlignedLattice creates a regular lattice of blocks whose corners "
-           "are\n"
-           "given by tensor products of the specified BlockBounds. Each Block "
-           "in\n"
-           "the lattice is identified by a VolumeDim-tuple of zero-based "
-           "indices\n"
-           "Supplying a list of these tuples to BlocksToExclude will result "
-           "in\n"
-           "the domain having the corresponding Blocks excluded. See the "
-           "Domain\n"
-           "Creation tutorial in the documentation for more information on "
-           "Block\n"
-           "numberings in rectilinear domains. Note that if any Blocks are\n"
-           "excluded, setting the option IsPeriodicIn to `true` in any "
-           "dimension\n"
-           "will trigger an error, as periodic boundary\n"
-           "conditions for this domain with holes is not supported.";
-  }
+  static Options::String help;
 
   AlignedLattice(typename BlockBounds::type block_bounds,
                  typename InitialLevels::type initial_refinement_levels,

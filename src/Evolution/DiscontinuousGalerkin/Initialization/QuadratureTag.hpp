@@ -15,9 +15,7 @@ namespace OptionTags {
 struct Quadrature {
   using type = Spectral::Quadrature;
   using group = ::dg::OptionTags::DiscontinuousGalerkinGroup;
-  static Options::String help() {
-    return "The point distribution/quadrature rule used.";
-  }
+  static Options::String help;
 };
 }  // namespace OptionTags
 

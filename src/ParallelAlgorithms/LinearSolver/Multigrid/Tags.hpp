@@ -28,21 +28,14 @@ namespace OptionTags {
 template <typename OptionsGroup>
 struct MaxLevels {
   using type = Options::Auto<size_t>;
-  static Options::String help() {
-    return "Maximum number of levels in the multigrid hierarchy. Includes the "
-           "finest grid, i.e. set to '1' to disable multigrids. Set to 'Auto' "
-           "to "
-           "coarsen all the way up to single-element blocks.";
-  }
+  static Options::String help;
   using group = OptionsGroup;
 };
 
 template <typename OptionsGroup>
 struct OutputVolumeData {
   using type = bool;
-  static Options::String help() {
-    return "Record volume data for debugging purposes.";
-  }
+  static Options::String help;
   using group = OptionsGroup;
   static bool suggested_value() { return false; }
 };
@@ -51,17 +44,7 @@ template <typename OptionsGroup>
 struct EnablePreSmoothing {
   static std::string name() { return "PreSmoothing"; }
   using type = bool;
-  static Options::String help() {
-    return "Set to 'False' to disable pre-smoothing altogether (\"cascading "
-           "multigrid\"). Note that pre-smoothing can be necessary to remove "
-           "high-frequency modes in the data that get restricted to coarser "
-           "grids, "
-           "since such high-frequency modes can introduce aliasing. However, "
-           "when "
-           "running only a single V-cycle as preconditioner, the initial field "
-           "is "
-           "typically zero, so pre-smoothing may not be worthwile.";
-  }
+  static Options::String help;
   using group = OptionsGroup;
 };
 
@@ -69,16 +52,7 @@ template <typename OptionsGroup>
 struct EnablePostSmoothingAtBottom {
   static std::string name() { return "PostSmoothingAtBottom"; }
   using type = bool;
-  static Options::String help() {
-    return "Set to 'False' to skip post-smoothing on the coarsest grid. This "
-           "means "
-           "only pre-smoothing runs on the coarsest grid, so the coarsest grid "
-           "experiences less smoothing altogether. This is typically only "
-           "desirable if the coarsest grid covers the domain with a single "
-           "element, or very few, so pre-smoothing is already exceptionally "
-           "effective and hence post-smoothing is unnecessary on the coarsest "
-           "grid.";
-  }
+  static Options::String help;
   using group = OptionsGroup;
 };
 

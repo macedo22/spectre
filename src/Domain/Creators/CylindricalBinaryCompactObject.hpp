@@ -187,58 +187,39 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
 
   struct CenterA {
     using type = std::array<double, 3>;
-    static Options::String help() {
-      return "Grid coordinates of center for Object A, which is at x>0.";
-    }
+    static Options::String help;
   };
   struct CenterB {
     using type = std::array<double, 3>;
-    static Options::String help() {
-      return "Grid coordinates of center for Object B, which is at x<0.";
-    }
+    static Options::String help;
   };
   struct RadiusA {
     using type = double;
-    static Options::String help() {
-      return "Grid-coordinate radius of grid boundary around Object A.";
-    }
+    static Options::String help;
   };
   struct RadiusB {
     using type = double;
-    static Options::String help() {
-      return "Grid-coordinate radius of grid boundary around Object B.";
-    }
+    static Options::String help;
   };
   struct IncludeInnerSphereA {
     using type = bool;
-    static Options::String help() {
-      return "Add an extra spherical layer of Blocks around Object A.";
-    }
+    static Options::String help;
   };
   struct IncludeInnerSphereB {
     using type = bool;
-    static Options::String help() {
-      return "Add an extra spherical layer of Blocks around Object B.";
-    }
+    static Options::String help;
   };
   struct IncludeOuterSphere {
     using type = bool;
-    static Options::String help() {
-      return "Add an extra spherical layer of Blocks inside the outer "
-             "boundary.";
-    }
+    static Options::String help;
   };
   struct OuterRadius {
     using type = double;
-    static Options::String help() {
-      return "Grid-coordinate radius of outer boundary.";
-    }
+    static Options::String help;
   };
   struct UseEquiangularMap {
     using type = bool;
-    static Options::String help() {
-      return "Distribute grid points equiangularly in 2d wedges.";
-    }
+    static Options::String help;
     static bool suggested_value() { return false; }
   };
 
@@ -247,46 +228,23 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
         std::variant<size_t, std::array<size_t, 3>,
                      std::vector<std::array<size_t, 3>>,
                      std::unordered_map<std::string, std::array<size_t, 3>>>;
-    static Options::String help() {
-      return "Initial refinement level. Specify one of: a single number, a "
-             "list "
-             "representing [r, theta, perp], or such a list for every block in "
-             "the "
-             "domain. Here 'r' is the radial direction normal to the inner and "
-             "outer boundaries, 'theta' is the periodic direction, and 'perp' "
-             "is "
-             "the third direction.";
-    }
+    static Options::String help;
   };
   struct InitialGridPoints {
     using type =
         std::variant<size_t, std::array<size_t, 3>,
                      std::vector<std::array<size_t, 3>>,
                      std::unordered_map<std::string, std::array<size_t, 3>>>;
-    static Options::String help() {
-      return "Initial number of grid points. Specify one of: a single number, "
-             "a "
-             "list representing [r, theta, perp], or such a list for every "
-             "block in "
-             "the domain. Here 'r' is the radial direction normal to the inner "
-             "and "
-             "outer boundaries, 'theta' is the periodic direction, and 'perp' "
-             "is "
-             "the third direction.";
-    }
+    static Options::String help;
   };
 
   struct BoundaryConditions {
-    static Options::String help() {
-      return "The boundary conditions to apply.";
-    }
+    static Options::String help;
   };
   template <typename BoundaryConditionsBase>
   struct InnerBoundaryCondition {
     static std::string name() { return "InnerBoundary"; }
-    static Options::String help() {
-      return "Options for the inner boundary conditions.";
-    }
+    static Options::String help;
     using type = std::unique_ptr<BoundaryConditionsBase>;
     using group = BoundaryConditions;
   };
@@ -294,9 +252,7 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
   template <typename BoundaryConditionsBase>
   struct OuterBoundaryCondition {
     static std::string name() { return "OuterBoundary"; }
-    static Options::String help() {
-      return "Options for the outer boundary conditions.";
-    }
+    static Options::String help;
     using type = std::unique_ptr<BoundaryConditionsBase>;
     using group = BoundaryConditions;
   };
@@ -304,9 +260,7 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
   struct TimeDependentMaps {
     using type =
         Options::Auto<bco::TimeDependentMapOptions, Options::AutoLabel::None>;
-    static Options::String help() {
-      return bco::TimeDependentMapOptions::help();
-    }
+    static Options::String help;
   };
 
   using time_independent_options =
@@ -334,13 +288,7 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
                   typename Metavariables::system>>>,
       basic_options<Metavariables>>;
 
-  static Options::String help() {
-    return "The CylindricalBinaryCompactObject domain is a general domain for "
-           "two compact objects. The user must provide the (grid-frame) "
-           "centers and radii of the spherical inner edge of the grid "
-           "surrounding "
-           "each of the two compact objects A and B.";
-  }
+  static Options::String help;
 
   CylindricalBinaryCompactObject(
       std::array<double, 3> center_A, std::array<double, 3> center_B,

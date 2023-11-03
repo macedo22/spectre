@@ -56,59 +56,39 @@ class KerrSphericalHarmonic
   /// The mass of the black hole.
   struct Mass {
     using type = double;
-    static Options::String help() { return "Mass of the black hole."; }
+    static Options::String help;
     static type lower_bound() { return 0.0; }
   };
   /// The spin of the black hole
   struct Spin {
     using type = std::array<double, volume_dim>;
-    static Options::String help() {
-      return "The [x,y,z] dimensionless spin of the black hole";
-    }
+    static Options::String help;
   };
   /// The amplitude of the scalar field
   struct Amplitude {
     using type = double;
-    static Options::String help() {
-      return "Amplitude of the constant scalar field";
-    }
+    static Options::String help;
   };
   /// The location of the scalar field
   struct Radius {
     using type = double;
-    static Options::String help() {
-      return "The radius of the spherical harmonic profile";
-    }
+    static Options::String help;
     static type lower_bound() { return 0.0; }
   };
   /// The width of the scalar field
   struct Width {
     using type = double;
-    static Options::String help() {
-      return "The width of the spherical harmonic profile. The width must be "
-             "greater than 0.";
-    }
+    static Options::String help;
     static type lower_bound() { return 0.0; }
   };
   /// The spherical harmonic mode of the scalar field
   struct Mode {
     using type = std::pair<size_t, int>;
-    static Options::String help() {
-      return "The l-mode and m-mode of the spherical harmonic Ylm. The "
-             "absolute "
-             "value of the m_mode must be less than or equal to the "
-             "l-mode.";
-    }
+    static Options::String help;
   };
 
   using options = tmpl::list<Mass, Spin, Amplitude, Radius, Width, Mode>;
-  static Options::String help() {
-    return "Initial data for a pure spherical harmonic mode truncated by a "
-           "circular "
-           "Gaussian window funtion. The expression is taken from "
-           "Scheel(2003), "
-           "equations 4.1-4.3.";
-  }
+  static Options::String help;
 
   KerrSphericalHarmonic() = default;
   KerrSphericalHarmonic(const KerrSphericalHarmonic& /*rhs*/) = default;

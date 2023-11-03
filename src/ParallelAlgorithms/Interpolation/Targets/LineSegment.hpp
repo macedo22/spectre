@@ -46,25 +46,19 @@ template <size_t VolumeDim>
 struct LineSegment {
   struct Begin {
     using type = std::array<double, VolumeDim>;
-    static Options::String help() { return "Beginning endpoint"; }
+    static Options::String help;
   };
   struct End {
     using type = std::array<double, VolumeDim>;
-    static Options::String help() { return "Ending endpoint"; }
+    static Options::String help;
   };
   struct NumberOfPoints {
     using type = size_t;
-    static Options::String help() {
-      return "Number of points including endpoints";
-    }
+    static Options::String help;
     static type lower_bound() { return 2; }
   };
   using options = tmpl::list<Begin, End, NumberOfPoints>;
-  static Options::String help() {
-    return "A line segment extending from Begin to End, containing "
-           "NumberOfPoints"
-           " uniformly-spaced points including the endpoints.";
-  }
+  static Options::String help;
 
   LineSegment(std::array<double, VolumeDim> begin_in,
               std::array<double, VolumeDim> end_in, size_t number_of_points_in);
@@ -92,9 +86,7 @@ namespace OptionTags {
 template <typename InterpolationTargetTag, size_t VolumeDim>
 struct LineSegment {
   using type = OptionHolders::LineSegment<VolumeDim>;
-  static Options::String help() {
-    return "Options for interpolation onto line segment.";
-  }
+  static Options::String help;
   static std::string name() {
     return pretty_type::name<InterpolationTargetTag>();
   }

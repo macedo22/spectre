@@ -70,11 +70,7 @@ class Rusanov final : public BoundaryCorrection<Dim> {
 
  public:
   using options = tmpl::list<>;
-  static Options::String help() {
-    return "Computes the Rusanov or local Lax-Friedrichs boundary correction "
-           "term "
-           "for the Newtonian Euler/hydrodynamics system.";
-  }
+  static Options::String help;
 
   Rusanov() = default;
   Rusanov(const Rusanov&) = default;

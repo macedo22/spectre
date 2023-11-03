@@ -82,20 +82,11 @@ class SphericalRadiation final : public BoundaryCondition<Dim> {
   struct TypeOptionTag {
     using type = detail::SphericalRadiationType;
     static std::string name() { return "Type"; }
-    static Options::String help() {
-      return "Whether to impose Sommerfeld or first-order Bayliss-Turkel "
-             "spherical "
-             "radiation boundary conditions.";
-    }
+    static Options::String help;
   };
 
   using options = tmpl::list<TypeOptionTag>;
-  static Options::String help() {
-    return "Spherical radiation boundary conditions setting the value of Psi, "
-           "Phi, "
-           "and Pi either using the Sommerfeld or first-order Bayliss-Turkel "
-           "method.";
-  }
+  static Options::String help;
 
   SphericalRadiation() = default;
   SphericalRadiation(detail::SphericalRadiationType type);

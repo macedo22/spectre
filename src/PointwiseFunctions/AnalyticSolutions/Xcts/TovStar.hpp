@@ -176,28 +176,11 @@ class TovStar : public elliptic::analytic_data::AnalyticSolution {
 
  public:
   using options = RelEulerTovStar::options;
-  static Options::String help() {
-    return RelEulerTovStar::help;
+  static Options::String help;
 
-    TovStar() = default;
-    TovStar(const TovStar&) = default;
-    TovStar& operator=(const TovStar&) = default;
-    TovStar(TovStar &&) = default;
-    TovStar& operator=(TovStar&&) = default;
-    ~TovStar() = default;
-
-    TovStar(
-        double central_rest_mass_density,
-        std::unique_ptr<EquationsOfState::EquationOfState<true, 1>>
-            equation_of_state,
-        const RelativisticEuler::Solutions::TovCoordinates coordinate_system)
-        : tov_star(central_rest_mass_density, std::move(equation_of_state),
-                   coordinate_system) {}
-
-    const EquationsOfState::EquationOfState<true, 1>& equation_of_state()
-        const {
-      return tov_star.equation_of_state();
-    }
+  const EquationsOfState::EquationOfState<true, 1>& equation_of_state() const {
+    return tov_star.equation_of_state();
+  }
 
     const RelativisticEuler::Solutions::TovSolution& radial_solution() const {
       return tov_star.radial_solution();
