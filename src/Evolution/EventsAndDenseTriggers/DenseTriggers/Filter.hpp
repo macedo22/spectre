@@ -47,17 +47,19 @@ class Filter : public DenseTrigger {
   struct TriggerOption {
     static std::string name() { return "Trigger"; }
     using type = std::unique_ptr<DenseTrigger>;
-    static Options::String help();
+    static Options::String help() { return "Dense trigger to filter"; }
   };
 
   struct FilterOption {
     static std::string name() { return "Filter"; }
     using type = std::unique_ptr<Trigger>;
-    static Options::String help();
+    static Options::String help() { return "Non-dense trigger to filter with"; }
   };
 
   using options = tmpl::list<TriggerOption, FilterOption>;
-  static Options::String help();
+  static Options::String help() {
+    return "Filter activations of a dense trigger using a non-dense trigger.";
+  }
 
   explicit Filter(std::unique_ptr<DenseTrigger> trigger,
                   std::unique_ptr<Trigger> filter);

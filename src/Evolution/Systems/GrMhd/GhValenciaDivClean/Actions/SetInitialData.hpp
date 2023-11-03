@@ -76,18 +76,37 @@ class NumericInitialData : public evolution::initial_data::InitialData {
                  importers::OptionTags::EnableInterpolation, GhVariables,
                  HydroVariables, HydroNumericId::DensityCutoff>;
 
-  static Options::String help();
+  static Options::String help() {
+    return "Numeric initial data loaded from volume data files";
 
-  NumericInitialData(
-      std::string file_glob, std::string subfile_name,
-      std::variant<double, importers::ObservationSelector> observation_value,
-      bool enable_interpolation,
-      typename GhNumericId::Variables::type gh_selected_variables,
-      typename HydroNumericId::Variables::type hydro_selected_variables,
-      double density_cutoff);
+    NumericInitialData() = default;
+    NumericInitialData(const NumericInitialData& rhs) = default;
+    NumericInitialData& operator=(const NumericInitialData& rhs) = default;
+    NumericInitialData(NumericInitialData && /*rhs*/) = default;
+    NumericInitialData& operator=(NumericInitialData&& /*rhs*/) = default;
+    ~NumericInitialData() = default;
 
-  const importers::ImporterOptions& importer_options() const {
-    return gh_numeric_id_.importer_options();
+    /// \cond
+    explicit NumericInitialData(CkMigrateMessage * msg);
+    using PUP::able::register_constructor;
+    WRAPPED_PUPable_decl_template(NumericInitialData);
+    /// \endcond
+
+    std::unique_ptr<evolution::initial_data::InitialData> get_clone()
+        const override {
+      return std::make_unique<NumericInitialData>(*this);
+    }
+
+    NumericInitialData(
+        std::string file_glob, std::string subfile_name,
+        std::variant<double, importers::ObservationSelector> observation_value,
+        bool enable_interpolation,
+        typename GhNumericId::Variables::type gh_selected_variables,
+        typename HydroNumericId::Variables::type hydro_selected_variables,
+        double density_cutoff);
+
+    const importers::ImporterOptions& importer_options() const {
+      return gh_numeric_id_.importer_options();
     }
 
     const GhNumericId& gh_numeric_id() const { return gh_numeric_id_; }

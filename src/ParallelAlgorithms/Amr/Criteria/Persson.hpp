@@ -80,27 +80,53 @@ class Persson : public Criterion {
  public:
   struct VariablesToMonitor {
     using type = std::vector<std::string>;
-    static Options::String help();
+    static Options::String help() {
+      return "The tensors to monitor for h-refinement.";
+    }
     static size_t lower_bound_on_size() { return 1; }
   };
   struct NumHighestModes {
     using type = size_t;
-    static Options::String help();
+    static Options::String help() {
+      return "Number of highest modes to monitor the power of.";
+    }
     static size_t lower_bound() { return 1; }
   };
   struct Exponent {
     using type = double;
-    static Options::String help();
+    static Options::String help() {
+      return "The exponent at which the modes should decrease. "
+             "Corresponds to a \"relative tolerance\" of N^(-alpha), where N "
+             "is the "
+             "number of grid points minus 'NumHighestModes'. "
+             "If any tensor component has power in the highest modes above "
+             "this "
+             "value times the max of the absolute tensor component over the "
+             "element, the element will be h-refined in that direction.";
+    }
     static double lower_bound() { return 0.; }
   };
   struct AbsoluteTolerance {
     using type = double;
-    static Options::String help();
+    static Options::String help() {
+      return "If any tensor component has a power in the highest modes above "
+             "this "
+             "value, the element will be h-refined in that direction. "
+             "Set to 0 to disable.";
+    }
     static double lower_bound() { return 0.; }
   };
   struct CoarseningFactor {
     using type = double;
-    static Options::String help();
+    static Options::String help() {
+      return "Factor applied to both relative and absolute tolerance to "
+             "trigger "
+             "h-coarsening. Set to 0 to disable h-coarsening altogether. "
+             "Set closer to 1 to trigger h-coarsening more aggressively. "
+             "Values too close to 1 risk that coarsened elements will "
+             "immediately "
+             "trigger h-refinement again. A reasonable value is 0.1.";
+    }
     static double lower_bound() { return 0.; }
     static double upper_bound() { return 1.; }
   };
@@ -108,7 +134,10 @@ class Persson : public Criterion {
   using options = tmpl::list<VariablesToMonitor, NumHighestModes, Exponent,
                              AbsoluteTolerance, CoarseningFactor>;
 
-  static Options::String help();
+  static Options::String help() {
+    return "Refine the grid so the power in the highest modes stays below the "
+           "tolerance";
+  }
 
   Persson() = default;
 

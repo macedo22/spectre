@@ -50,32 +50,44 @@ class Brick : public DomainCreator<3> {
 
   struct LowerBound {
     using type = std::array<double, 3>;
-    static Options::String help();
+    static Options::String help() {
+      return "Sequence of [x,y,z] for lower bounds.";
+    }
   };
 
   struct UpperBound {
     using type = std::array<double, 3>;
-    static Options::String help();
+    static Options::String help() {
+      return "Sequence of [x,y,z] for upper bounds.";
+    }
   };
   struct IsPeriodicIn {
     using type = std::array<bool, 3>;
-    static Options::String help();
+    static Options::String help() {
+      return "Sequence for [x,y,z], true if periodic.";
+    }
   };
 
   struct InitialRefinement {
     using type = std::array<size_t, 3>;
-    static Options::String help();
+    static Options::String help() {
+      return "Initial refinement level in [x,y,z].";
+    }
   };
 
   struct InitialGridPoints {
     using type = std::array<size_t, 3>;
-    static Options::String help();
+    static Options::String help() {
+      return "Initial number of grid points in [x,y,z].";
+    }
   };
 
   struct TimeDependence {
     using type =
         std::unique_ptr<domain::creators::time_dependence::TimeDependence<3>>;
-    static Options::String help();
+    static Options::String help() {
+      return "The time dependence of the moving mesh domain.";
+    }
   };
 
   template <typename BoundaryConditionsBase, size_t Dim>
@@ -84,7 +96,9 @@ class Brick : public DomainCreator<3> {
       return "BoundaryConditionIn" +
              std::string{Dim == 0 ? 'X' : (Dim == 1 ? 'Y' : 'Z')};
     }
-    static Options::String help();
+    static Options::String help() {
+      return "The boundary condition to impose on all sides.";
+    }
     using type = std::unique_ptr<BoundaryConditionsBase>;
   };
 
@@ -114,7 +128,7 @@ class Brick : public DomainCreator<3> {
           options_periodic>,
       tmpl::list<TimeDependence>>;
 
-  static Options::String help();
+  static Options::String help() { return "Creates a 3D brick."; }
 
   Brick(typename LowerBound::type lower_xyz,
         typename UpperBound::type upper_xyz,

@@ -18,7 +18,9 @@ template <typename OptionsGroup>
 struct RelaxationParameter {
   using type = double;
   using group = OptionsGroup;
-  static Options::String help();
+  static Options::String help() {
+    return "The weight for the residual in the scheme";
+  }
 };
 
 }  // namespace OptionTags

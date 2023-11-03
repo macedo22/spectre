@@ -37,7 +37,11 @@ class DemandOutgoingCharSpeeds final : public BoundaryCondition {
 
  public:
   using options = tmpl::list<>;
-  static Options::String help();
+  static Options::String help() {
+    return "DemandOutgoingCharSpeeds boundary condition that only verifies the "
+           "characteristic speeds "
+           "are all directed out of the domain.";
+  }
 
   DemandOutgoingCharSpeeds() = default;
   DemandOutgoingCharSpeeds(DemandOutgoingCharSpeeds&&) = default;

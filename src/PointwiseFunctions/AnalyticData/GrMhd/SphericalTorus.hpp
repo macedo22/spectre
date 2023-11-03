@@ -58,24 +58,36 @@ class SphericalTorus {
 
   struct RadialRange {
     using type = std::array<double, 2>;
-    static Options::String help();
+    static Options::String help() {
+      return "Radial extent of the torus, "
+             "[min_radius, max_radius] ";
+    }
   };
 
   struct MinPolarAngle {
     using type = double;
-    static Options::String help();
+    static Options::String help() {
+      return "Half of the apex angle of excised polar cones. "
+             "Polar angle (measured from +z axis) of torus has range "
+             "[MinPolarAngle, pi - MinPolarAngle]";
+    }
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 0.5 * M_PI; }
   };
 
   struct FractionOfTorus {
     using type = double;
-    static Options::String help();
+    static Options::String help() {
+      return "Fraction of (azimuthal) orbit covered. Azimuthal angle has range "
+             "[- pi * FractionOfTorus, pi * FractionOfTorus].";
+    }
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 1.0; }
   };
 
-  static Options::String help();
+  static Options::String help() {
+    return "Torus made by removing polar cones from a spherical shell";
+  }
 
   using options = tmpl::list<RadialRange, MinPolarAngle, FractionOfTorus>;
 

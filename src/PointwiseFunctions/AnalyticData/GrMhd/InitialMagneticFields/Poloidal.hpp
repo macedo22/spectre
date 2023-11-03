@@ -84,29 +84,43 @@ class Poloidal : public InitialMagneticField {
  public:
   struct PressureExponent {
     using type = size_t;
-    static Options::String help();
+    static Options::String help() {
+      return "The exponent n_s controlling the smoothness of the field";
+    }
   };
 
   struct CutoffPressure {
     using type = double;
-    static Options::String help();
+    static Options::String help() {
+      return "The pressure below which there is no magnetic field.";
+    }
     static type lower_bound() { return 0.0; }
   };
 
   struct VectorPotentialAmplitude {
     using type = double;
-    static Options::String help();
+    static Options::String help() {
+      return "The amplitude A_b of the phi-component of the vector potential. "
+             "This "
+             "controls the magnetic field strength.";
+    }
     static type lower_bound() { return 0.0; }
   };
 
   struct Center {
     using type = std::array<double, 3>;
-    static Options::String help();
+    static Options::String help() {
+      return "The center of the magnetic field.";
+    }
   };
 
   struct MaxDistanceFromCenter {
     using type = double;
-    static Options::String help();
+    static Options::String help() {
+      return "The maximum distance from the center to compute the magnetic "
+             "field. "
+             "Everywhere outside the field is set to zero.";
+    }
     static type lower_bound() { return 0.0; }
   };
 
@@ -114,7 +128,7 @@ class Poloidal : public InitialMagneticField {
       tmpl::list<PressureExponent, CutoffPressure, VectorPotentialAmplitude,
                  Center, MaxDistanceFromCenter>;
 
-  static Options::String help();
+  static Options::String help() { return "Poloidal initial magnetic field"; }
 
   Poloidal() = default;
   Poloidal(const Poloidal& /*rhs*/) = default;

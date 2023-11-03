@@ -31,11 +31,15 @@ class PowX<1, Fr> : public MathFunction<1, Fr> {
  public:
   struct Power {
     using type = int;
-    static Options::String help();
+    static Options::String help() {
+      return "The power that the double is raised to.";
+    }
   };
   using options = tmpl::list<Power>;
 
-  static Options::String help();
+  static Options::String help() {
+    return "Raises the input value to a given power";
+  }
   PowX() = default;
 
   WRAPPED_PUPable_decl_base_template(SINGLE_ARG(MathFunction<1, Fr>),

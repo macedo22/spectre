@@ -37,13 +37,19 @@ class AnalyticChristoffel final : public GaugeCondition {
  public:
   /// \brief What analytic solution/data to prescribe.
   struct AnalyticPrescription {
-    static Options::String help();
+    static Options::String help() {
+      return "What analytic solution/data to prescribe.";
+    }
     using type = std::unique_ptr<evolution::initial_data::InitialData>;
   };
 
   using options = tmpl::list<AnalyticPrescription>;
 
-  static Options::String help();
+  static Options::String help() {
+    return "Apply the analytic gauge condition H_a = Gamma_a, where Gamma_a "
+           "comes "
+           "from the AnalyticPrescription.";
+  }
 
   AnalyticChristoffel() = default;
   AnalyticChristoffel(const AnalyticChristoffel&);

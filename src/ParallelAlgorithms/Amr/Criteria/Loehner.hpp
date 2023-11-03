@@ -125,22 +125,43 @@ class Loehner : public Criterion {
  public:
   struct VariablesToMonitor {
     using type = std::vector<std::string>;
-    static Options::String help();
+    static Options::String help() {
+      return "The tensors to monitor for h-refinement.";
+    }
     static size_t lower_bound_on_size() { return 1; }
   };
   struct RelativeTolerance {
     using type = double;
-    static Options::String help();
+    static Options::String help() {
+      return "If any tensor component has a second derivative magnitude above "
+             "this "
+             "value times the max of the absolute tensor component over the "
+             "element, the element will be h-refined in that direction. "
+             "Set to 0 to disable.";
+    }
     static double lower_bound() { return 0.; }
   };
   struct AbsoluteTolerance {
     using type = double;
-    static Options::String help();
+    static Options::String help() {
+      return "If any tensor component has a second derivative magnitude above "
+             "this "
+             "value, the element will be h-refined in that direction. "
+             "Set to 0 to disable.";
+    }
     static double lower_bound() { return 0.; }
   };
   struct CoarseningFactor {
     using type = double;
-    static Options::String help();
+    static Options::String help() {
+      return "Factor applied to both relative and absolute tolerance to "
+             "trigger "
+             "h-coarsening. Set to 0 to disable h-coarsening altogether. "
+             "Set closer to 1 to trigger h-coarsening more aggressively. "
+             "Values too close to 1 risk that coarsened elements will "
+             "immediately "
+             "trigger h-refinement again. A reasonable value is 1/3.";
+    }
     static double lower_bound() { return 0.; }
     static double upper_bound() { return 1.; }
   };
@@ -148,7 +169,10 @@ class Loehner : public Criterion {
   using options = tmpl::list<VariablesToMonitor, RelativeTolerance,
                              AbsoluteTolerance, CoarseningFactor>;
 
-  static Options::String help();
+  static Options::String help() {
+    return "Refine the grid towards resolving an estimated error in the second "
+           "derivative";
+  }
 
   Loehner() = default;
 

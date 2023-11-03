@@ -55,28 +55,32 @@ class TimeDependentTripleGaussian : public DampingFunction<3, Frame::Grid> {
  public:
   template <size_t GaussianNumber>
   struct Gaussian {
-    static Options::String help();
+    static Options::String help() {
+      return "Parameters for one of the Gaussians.";
+    }
     static std::string name() {
       return "Gaussian" + std::to_string(GaussianNumber);
     };
   };
   struct Constant {
     using type = double;
-    static Options::String help();
+    static Options::String help() { return "The constant."; }
   };
 
   template <typename Group>
   struct Amplitude {
     using group = Group;
     using type = double;
-    static Options::String help();
+    static Options::String help() { return "The amplitude of the Gaussian."; }
   };
 
   template <typename Group>
   struct Width {
     using group = Group;
     using type = double;
-    static Options::String help();
+    static Options::String help() {
+      return "The unscaled width of the Gaussian.";
+    }
     static type lower_bound() { return 0.; }
   };
 
@@ -84,7 +88,7 @@ class TimeDependentTripleGaussian : public DampingFunction<3, Frame::Grid> {
   struct Center {
     using group = Group;
     using type = std::array<double, 3>;
-    static Options::String help();
+    static Options::String help() { return "The center of the Gaussian."; }
   };
 
   using options = tmpl::list<
@@ -92,7 +96,11 @@ class TimeDependentTripleGaussian : public DampingFunction<3, Frame::Grid> {
       Amplitude<Gaussian<2>>, Width<Gaussian<2>>, Center<Gaussian<2>>,
       Amplitude<Gaussian<3>>, Width<Gaussian<3>>, Center<Gaussian<3>>>;
 
-  static Options::String help();
+  static Options::String help() {
+    return "Computes a sum of a constant and 3 Gaussians (each with its own "
+           "amplitude, width, and coordinate center), with the Gaussian widths "
+           "scaled by the inverse of a FunctionOfTime.";
+  }
 
   /// \cond
   WRAPPED_PUPable_decl_base_template(

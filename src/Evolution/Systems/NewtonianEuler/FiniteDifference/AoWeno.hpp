@@ -55,24 +55,38 @@ class AoWeno53Prim : public Reconstructor<Dim> {
  public:
   struct GammaHi {
     using type = double;
-    static Options::String help();
+    static Options::String help() {
+      return "The linear weight for the 5th-order stencil.";
+    }
   };
   struct GammaLo {
     using type = double;
-    static Options::String help();
+    static Options::String help() {
+      return "The linear weight for the central 3rd-order stencil.";
+    }
   };
   struct Epsilon {
     using type = double;
-    static Options::String help();
+    static Options::String help() {
+      return "The parameter added to the oscillation indicators to avoid "
+             "division "
+             "by zero";
+    }
   };
   struct NonlinearWeightExponent {
     using type = size_t;
-    static Options::String help();
+    static Options::String help() {
+      return "The exponent q to which the oscillation indicators are raised";
+    }
   };
 
   using options =
       tmpl::list<GammaHi, GammaLo, Epsilon, NonlinearWeightExponent>;
-  static Options::String help();
+  static Options::String help() {
+    return "Adaptive-order WENO reconstruction hybridizing orders 5 and 3 "
+           "using "
+           "primitive variables.";
+  }
 
   AoWeno53Prim() = default;
   AoWeno53Prim(AoWeno53Prim&&) = default;

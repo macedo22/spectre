@@ -18,13 +18,23 @@ namespace OptionTags {
 
 template <typename BackgroundType>
 struct Background {
-  static Options::String help();
+  static Options::String help() {
+    return "The variable-independent part of the equations that define the "
+           "problem "
+           "to solve (along with the boundary conditions).";
+  }
   using type = std::unique_ptr<BackgroundType>;
 };
 
 template <typename InitialGuessType>
 struct InitialGuess {
-  static Options::String help();
+  static Options::String help() {
+    return "The initial guess for the elliptic solve. The solve converges "
+           "faster if "
+           "the initial guess is close to the solution and may not converge at "
+           "all "
+           "if the initial guess is too far away.";
+  }
   using type = std::unique_ptr<InitialGuessType>;
 };
 

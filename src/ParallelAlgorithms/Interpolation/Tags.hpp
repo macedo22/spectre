@@ -31,7 +31,7 @@ namespace OptionTags {
  * \brief Groups option tags for InterpolationTargets.
  */
 struct InterpolationTargets {
-  static Options::String help();
+  static Options::String help() { return "Options for interpolation targets"; }
 };
 
 /*!
@@ -39,14 +39,21 @@ struct InterpolationTargets {
  * \brief Groups option tags for the Interpolator.
  */
 struct Interpolator {
-  static Options::String help();
+  static Options::String help() {
+    return "Options related to the Interpolator parallel component";
+  }
 };
 
 /// Option tag that determines if volume data will be dumped from the
 /// Interpolator upon a failure.
 struct DumpVolumeDataOnFailure {
   using type = bool;
-  static Options::String help();
+  static Options::String help() {
+    return "Whether or not to dump all volume data currently stored by the "
+           "interpolator. Volume data is written to the file corresponding to "
+           "the "
+           "node it was collected on.";
+  }
   using group = Interpolator;
 };
 }  // namespace OptionTags

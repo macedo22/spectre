@@ -58,7 +58,9 @@ template <size_t Dim>
 class Reflection final : public BoundaryCondition<Dim> {
  public:
   using options = tmpl::list<>;
-  static Options::String help();
+  static Options::String help() {
+    return "Reflecting boundary conditions for Newtonian hydrodynamics.";
+  }
 
   Reflection() = default;
   Reflection(Reflection&&) = default;

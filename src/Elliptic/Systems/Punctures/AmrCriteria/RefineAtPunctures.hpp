@@ -33,8 +33,9 @@ class RefineAtPunctures : public amr::Criterion {
  public:
   using options = tmpl::list<>;
 
-  static Options::String help();
-  ;
+  static Options::String help(){
+      "h-refine (split) elements containing a puncture, and p-refine "
+      "everywhere else."};
 
   RefineAtPunctures() = default;
 

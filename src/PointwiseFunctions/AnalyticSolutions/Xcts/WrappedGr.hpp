@@ -260,28 +260,30 @@ class WrappedGr<GrSolution, HasMhd, tmpl::list<GrSolutionOptions...>>
   static constexpr size_t Dim = 3;
 
   using options = typename GrSolution::options;
-  static Options::String help();
+  static Options::String help() {
+    return GrSolution::help;
+    static std::string name() { return pretty_type::name<GrSolution>(); }
 
-  WrappedGr() = default;
-  WrappedGr(const WrappedGr&) = default;
-  WrappedGr& operator=(const WrappedGr&) = default;
-  WrappedGr(WrappedGr&&) = default;
-  WrappedGr& operator=(WrappedGr&&) = default;
-  ~WrappedGr() = default;
+    WrappedGr() = default;
+    WrappedGr(const WrappedGr&) = default;
+    WrappedGr& operator=(const WrappedGr&) = default;
+    WrappedGr(WrappedGr &&) = default;
+    WrappedGr& operator=(WrappedGr&&) = default;
+    ~WrappedGr() = default;
 
-  WrappedGr(typename GrSolutionOptions::type... gr_solution_options)
-      : gr_solution_(std::move(gr_solution_options)...) {}
+    WrappedGr(typename GrSolutionOptions::type... gr_solution_options)
+        : gr_solution_(std::move(gr_solution_options)...) {}
 
-  const GrSolution& gr_solution() const { return gr_solution_; }
+    const GrSolution& gr_solution() const { return gr_solution_; }
 
-  /// \cond
-  explicit WrappedGr(CkMigrateMessage* m)
-      : elliptic::analytic_data::AnalyticSolution(m) {}
-  using PUP::able::register_constructor;
-  WRAPPED_PUPable_decl_template(WrappedGr);
-  std::unique_ptr<elliptic::analytic_data::AnalyticSolution> get_clone()
-      const override {
-    return std::make_unique<WrappedGr>(*this);
+    /// \cond
+    explicit WrappedGr(CkMigrateMessage * m)
+        : elliptic::analytic_data::AnalyticSolution(m) {}
+    using PUP::able::register_constructor;
+    WRAPPED_PUPable_decl_template(WrappedGr);
+    std::unique_ptr<elliptic::analytic_data::AnalyticSolution> get_clone()
+        const override {
+      return std::make_unique<WrappedGr>(*this);
     }
     /// \endcond
 

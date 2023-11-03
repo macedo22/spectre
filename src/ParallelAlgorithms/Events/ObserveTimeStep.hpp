@@ -111,17 +111,25 @@ class ObserveTimeStep : public Event {
   /// The name of the subfile inside the HDF5 file
   struct SubfileName {
     using type = std::string;
-    static Options::String help();
+    static Options::String help() {
+      return "The name of the subfile inside the HDF5 file without an "
+             "extension and "
+             "without a preceding '/'.";
+    }
   };
 
   struct PrintTimeToTerminal {
     using type = bool;
-    static Options::String help();
+    static Options::String help() {
+      return "Whether to print the time to screen.";
+    }
   };
 
   struct ObservePerCore {
     using type = bool;
-    static Options::String help();
+    static Options::String help() {
+      return "Also write the data per-core in a file per-node.";
+    }
   };
 
   /// \cond
@@ -131,7 +139,24 @@ class ObserveTimeStep : public Event {
   /// \endcond
 
   using options = tmpl::list<SubfileName, PrintTimeToTerminal, ObservePerCore>;
-  static Options::String help();
+  static Options::String help() {
+    return "Observe the size of the time steps.\n"
+           "\n"
+           "Writes reduction quantities:\n"
+           "- Time\n"
+           "- NumberOfPoints\n"
+           "- Slab size\n"
+           "- Minimum time step\n"
+           "- Maximum time step\n"
+           "- Effective time step\n"
+           "\n"
+           "The effective time step is the step size of a "
+           "global-time-stepping\n"
+           "method that would perform a similar amount of work.\n"
+           "\n"
+           "All values are reported as positive numbers, even for backwards\n"
+           "evolutions.";
+  }
 
   ObserveTimeStep() = default;
   explicit ObserveTimeStep(const std::string& subfile_name,

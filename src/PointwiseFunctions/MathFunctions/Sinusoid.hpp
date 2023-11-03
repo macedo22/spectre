@@ -33,21 +33,23 @@ class Sinusoid<1, Fr> : public MathFunction<1, Fr> {
  public:
   struct Amplitude {
     using type = double;
-    static Options::String help();
+    static Options::String help() { return "The amplitude."; }
   };
 
   struct Wavenumber {
     using type = double;
-    static Options::String help();
+    static Options::String help() { return "The wavenumber."; }
   };
 
   struct Phase {
     using type = double;
-    static Options::String help();
+    static Options::String help() { return "The phase shift."; }
   };
   using options = tmpl::list<Amplitude, Wavenumber, Phase>;
 
-  static Options::String help();
+  static Options::String help() {
+    return "Applies a Sinusoid function to the input value";
+  }
 
   Sinusoid(double amplitude, double wavenumber, double phase);
   Sinusoid() = default;

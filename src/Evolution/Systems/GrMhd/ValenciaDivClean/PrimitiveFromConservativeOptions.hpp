@@ -27,20 +27,30 @@ class PrimitiveFromConservativeOptions {
  public:
   struct CutoffDForInversion {
     static std::string name() { return "CutoffDForInversion"; }
-    static Options::String help();
+    static Options::String help() {
+      return "Value of density times Lorentz factor below which we skip "
+             "conservative to primitive inversion.";
+    }
     using type = double;
     static type lower_bound() { return 0.0; }
   };
 
   struct DensityWhenSkippingInversion {
     static std::string name() { return "DensityWhenSkippingInversion"; }
-    static Options::String help();
+    static Options::String help() {
+      return "Value of density when we skip conservative to primitive "
+             "inversion.";
+    }
     using type = double;
     static type lower_bound() { return 0.0; }
   };
 
   struct KastaunMaxLorentzFactor {
-    static Options::String help();
+    static Options::String help() {
+      return "The maximum Lorentz allowed during primitive recovery when using "
+             "the "
+             "Kastaun schemes.";
+    }
     using type = double;
     static type lower_bound() { return 1.0; }
   };
@@ -48,7 +58,9 @@ class PrimitiveFromConservativeOptions {
   using options = tmpl::list<CutoffDForInversion, DensityWhenSkippingInversion,
                              KastaunMaxLorentzFactor>;
 
-  static Options::String help();
+  static Options::String help() {
+    return "Options given to conservative to primitive inversion.";
+  }
 
   PrimitiveFromConservativeOptions() = default;
 

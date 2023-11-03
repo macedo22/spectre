@@ -42,13 +42,30 @@ namespace OptionTags {
 
 struct BuildMatrixOptionsGroup {
   static std::string name() { return "BuildMatrix"; }
-  static Options::String help();
+  static Options::String help() {
+    return "Options for building the explicit matrix representation of the "
+           "linear "
+           "operator. This is done by applying the linear operator to unit "
+           "vectors and is useful for debugging and analysis only, not to "
+           "actually "
+           "solve the elliptic problem (that should happen iteratively).";
+  }
 };
 
 struct MatrixSubfileName {
   using type = std::string;
   using group = BuildMatrixOptionsGroup;
-  static Options::String help();
+  static Options::String help() {
+    return "Subfile name in the volume data H5 files where the matrix will be "
+           "stored. Each observation in the subfile is a column of the matrix. "
+           "The "
+           "row index is the order of elements defined by the ElementId in the "
+           "volume data, by the order of tensor components encoded in the name "
+           "of "
+           "the components, and by the contiguous ordering of grid points for "
+           "each "
+           "component.";
+  }
 };
 
 }  // namespace OptionTags

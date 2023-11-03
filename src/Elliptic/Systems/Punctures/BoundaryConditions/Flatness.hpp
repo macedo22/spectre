@@ -27,7 +27,7 @@ class Flatness : public elliptic::BoundaryConditions::BoundaryCondition<3> {
   using Base = elliptic::BoundaryConditions::BoundaryCondition<3>;
 
  public:
-  static Options::String help();
+  static Options::String help() { return "Asymptotic flatness d_r(ru)=0"; }
   using options = tmpl::list<>;
 
   Flatness() = default;

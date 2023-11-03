@@ -95,7 +95,10 @@ class InterpolateWithoutInterpComponent<VolumeDim, InterpolationTargetTag,
   /// \endcond
 
   using options = tmpl::list<>;
-  static Options::String help();
+  static Options::String help() {
+    return "Does interpolation using the given InterpolationTargetTag, "
+           "without an Interpolator ParallelComponent.";
+  }
 
   static std::string name() {
     return pretty_type::name<InterpolationTargetTag>();

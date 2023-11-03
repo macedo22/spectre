@@ -53,7 +53,11 @@ class PiecewisePolytropicFluid : public EquationOfState<IsRelativistic, 1> {
   /// fluid.
   struct PiecewisePolytropicTransitionDensity {
     using type = double;
-    static Options::String help();
+    static Options::String help() {
+      return "Density below (above) which, the matter is described by a low "
+             "(high) "
+             "density polytropic fluid.";
+    }
     static double lower_bound() { return 0.0; }
   };
 
@@ -65,7 +69,10 @@ class PiecewisePolytropicFluid : public EquationOfState<IsRelativistic, 1> {
   /// as \f$K_{high} = K_{low} (\bar{\rho})^{\Gamma_{low} - \Gamma_{high}}\f$.
   struct PolytropicConstantLow {
     using type = double;
-    static Options::String help();
+    static Options::String help() {
+      return "Polytropic constant K for lower"
+             " density material";
+    }
     static double lower_bound() { return 0.0; }
   };
 
@@ -73,7 +80,10 @@ class PiecewisePolytropicFluid : public EquationOfState<IsRelativistic, 1> {
   /// \f$p=K\rho^{\Gamma}\f$.
   struct PolytropicExponentLow {
     using type = double;
-    static Options::String help();
+    static Options::String help() {
+      return "Polytropic exponent for lower"
+             " density material.";
+    }
     static double lower_bound() { return 1.0; }
   };
 
@@ -81,11 +91,27 @@ class PiecewisePolytropicFluid : public EquationOfState<IsRelativistic, 1> {
   /// \f$p=K\rho^{\Gamma}\f$.
   struct PolytropicExponentHigh {
     using type = double;
-    static Options::String help();
+    static Options::String help() {
+      return "Polytropic exponent for higher"
+             " density material.";
+    }
     static double lower_bound() { return 1.0; }
   };
 
-  static Options::String help();
+  static Options::String help() {
+    return "A piecewise polytropic fluid equation of state.\n"
+           "The pressure is related to the rest mass density by p = K_i rho ^ "
+           "Gamma_i, "
+           "where p is the pressure, rho is the rest mass density, K_i is the "
+           "polytropic constant either describing the low or high density "
+           "material, "
+           "and Gamma_i is the polytropic exponent for the low or high density "
+           "material. The polytropic index N_i is defined as Gamma_i = 1 + 1 / "
+           "N_i."
+           "  The subscript `i' refers to different pairs of Gamma and K that "
+           "can"
+           " describe either low or high density material.";
+  }
 
   using options =
       tmpl::list<PiecewisePolytropicTransitionDensity, PolytropicConstantLow,

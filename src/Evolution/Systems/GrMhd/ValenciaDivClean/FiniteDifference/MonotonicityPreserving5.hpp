@@ -76,15 +76,31 @@ class MonotonicityPreserving5Prim : public Reconstructor {
 
   struct Alpha {
     using type = double;
-    static Options::String help();
+    static Options::String help() {
+      return "The parameter used in an intermediate reconstruction step to "
+             "impose "
+             "monotonicity; typically Alpha=4.0 is used. Note that in "
+             "principle the "
+             "CFL number must be not bigger than 1/(1+Alpha). See the original "
+             "text "
+             "Suresh & Huynh (1997) for the details";
+    }
   };
   struct Epsilon {
     using type = double;
-    static Options::String help();
+    static Options::String help() {
+      return "A small tolerance value by which limiting process is turned on "
+             "and "
+             "off. Suresh & Huynh (1997) suggests 1e-10, but for hydro "
+             "simulations "
+             "with atmosphere treatment setting Epsilon=0.0 would be safe.";
+    }
   };
 
   using options = tmpl::list<Alpha, Epsilon>;
-  static Options::String help();
+  static Options::String help() {
+    return "MP5 reconstruction scheme using primitive variables.";
+  }
 
   MonotonicityPreserving5Prim() = default;
   MonotonicityPreserving5Prim(MonotonicityPreserving5Prim&&) = default;

@@ -80,7 +80,10 @@ struct EvolutionMetavars : CharacteristicExtractDefaults<false> {
 
   using observed_reduction_data_tags = tmpl::list<>;
 
-  static Options::String help();
+  static Options::String help() {
+    return "Perform Cauchy Characteristic Extraction using .h5 input data.\n"
+           "Uses regularity-preserving formulation.";
+  }
 
   static constexpr std::array<Parallel::Phase, 4> default_phase_order{
       {Parallel::Phase::Initialization,
