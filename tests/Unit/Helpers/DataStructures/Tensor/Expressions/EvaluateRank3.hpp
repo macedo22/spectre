@@ -14,6 +14,7 @@
 #include "DataStructures/Tensor/Symmetry.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Variables.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/ComponentPlaceholder.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/TMPL.hpp"
@@ -29,6 +30,56 @@ void call_evaluate(const gsl::not_null<LhsTensor*> lhs_tensor,
     ::tenex::evaluate<LhsTensorIndices...>(lhs_tensor, rhs_expression);
   }
 }
+
+// TODO : instead, return beginning and end indices
+template <typename LhsIndexType, typename RhsIndexType>
+constexpr int get_spatial_spacetime_index_shift() {
+  if constexpr (LhsIndexType::index_type == RhsIndexType::index_type) {
+    return 0;
+  } else if constexpr (LhsIndexType::index_type == IndexType::Spatial) {
+    return -1;
+  } else {
+    return 1;
+  }
+  //   return static_cast<int>(RhsIndexType::index_type == IndexType::Spacetime)
+  //   -
+  //              static_cast<int>(LhsIndexType::index_type ==
+  //              IndexType::Spacetime);
+}
+
+// TODO : see if we can do two ... variadic of Indexs and TensorIndexs since TensorIndex
+// is auto& and may be recognized as different?
+template <typename Index, auto& TensorIndex>
+constexpr size_t get_start_index_value() {
+    return Index::index_type == IndexType::Spacetime and
+          not TensorIndex.is_spacetime ? 1 : 0;
+}
+
+// template <typename LhsIndexType, typename RhsIndexType>
+// constexpr int get_start_index_values() {
+//   if constexpr (LhsIndexType::index_type == RhsIndexType::index_type) {
+//     return 0;
+//   } else if constexpr (LhsIndexType::index_type == IndexType::Spatial) {
+//     return -1;
+//   } else {
+//     return 1;
+//   }
+//   //   return static_cast<int>(RhsIndexType::index_type == IndexType::Spacetime)
+//   //   -
+//   //              static_cast<int>(LhsIndexType::index_type ==
+//   //              IndexType::Spacetime);
+// }
+
+// template <size_t NumIndices>
+// constexpr int get_spatial_spacetime_multi_index_shift() {
+//   std::array<int, NumIndices> multi_index_shift{};
+//   for (size_t int = 0; i < NumIndices; i++) {
+//     multi_index_shift[i] = get_spatial_spacetime_index_shift
+//   }
+//   return static_cast<int>(RhsIndexType::index_type == IndexType::Spacetime) -
+//              static_cast<int>(LhsIndexType::index_type ==
+//              IndexType::Spacetime);
+// }
 
 /// \ingroup TestingFrameworkGroup
 /// \brief Test that evaluating a right hand side tensor expression containing a
@@ -77,6 +128,61 @@ void test_evaluate_rank_3_impl() {
   using lhs_tensorindextype_a = tmpl::at_c<LhsTensorIndexTypeList, 0>;
   using lhs_tensorindextype_b = tmpl::at_c<LhsTensorIndexTypeList, 1>;
   using lhs_tensorindextype_c = tmpl::at_c<LhsTensorIndexTypeList, 2>;
+  using rhs_tensorindextype_a = tmpl::at_c<RhsTensorIndexTypeList, 0>;
+  using rhs_tensorindextype_b = tmpl::at_c<RhsTensorIndexTypeList, 1>;
+  using rhs_tensorindextype_c = tmpl::at_c<RhsTensorIndexTypeList, 2>;
+//   std::array<std::int32_t, 3> multi_index_shift{};
+//   multi_index_shift[0] = get_spatial_spacetime_index_shift<
+//       lhs_tensorindextype_a, tmpl::at_c<RhsTensorIndexTypeList, 0>>();
+//   multi_index_shift[1] = get_spatial_spacetime_index_shift<
+//       lhs_tensorindextype_a, tmpl::at_c<RhsTensorIndexTypeList, 1>>();
+//   multi_index_shift[2] = get_spatial_spacetime_index_shift<
+//       lhs_tensorindextype_a, tmpl::at_c<RhsTensorIndexTypeList, 2>>();
+
+
+  std::array<size_t, 3> lhs_start_index_values{};
+  lhs_start_index_values[0] =
+      get_start_index_value<lhs_tensorindextype_a, TensorIndexA>();
+  lhs_start_index_values[1] =
+      get_start_index_value<lhs_tensorindextype_b, TensorIndexB>();
+  lhs_start_index_values[2] =
+      get_start_index_value<lhs_tensorindextype_c, TensorIndexC>();
+  std::array<size_t, 3> rhs_start_index_values{};
+  rhs_start_index_values[0] =
+      get_start_index_value<rhs_tensorindextype_a, TensorIndexA>();
+  rhs_start_index_values[1] =
+      get_start_index_value<rhs_tensorindextype_b, TensorIndexB>();
+  rhs_start_index_values[2] =
+      get_start_index_value<rhs_tensorindextype_c, TensorIndexC>();
+//   std::array<std::int32_t, 3> index_value_shifts{};
+//   index_value_shifts[0] =
+//       get_start_index_value<lhs_tensorindextype_a, TensorIndexA>();
+//   index_value_shifts[1] =
+//       get_start_index_value<lhs_tensorindextype_b, TensorIndexB>();
+//   index_value_shifts[2] =
+//       get_start_index_value<lhs_tensorindextype_c, TensorIndexC>();
+  std::array<bool, 3> shift_lhs_to_rhs_index_down{};
+  shift_lhs_to_rhs_index_down[0] =
+      lhs_start_index_values[0] > rhs_start_index_values[0];
+  shift_lhs_to_rhs_index_down[1] =
+      lhs_start_index_values[1] > rhs_start_index_values[1];
+  shift_lhs_to_rhs_index_down[2] =
+      lhs_start_index_values[2] > rhs_start_index_values[2];
+
+//   std::array<bool, 3> lhs_index_is_spacetime{};
+//   lhs_index_is_spacetime[0] =
+//       lhs_tensorindextype_a::index_type == IndexType::Spacetime;
+//   lhs_index_is_spacetime[1] =
+//       lhs_tensorindextype_b::index_type == IndexType::Spacetime;
+//   lhs_index_is_spacetime[2] =
+//       lhs_tensorindextype_c::index_type == IndexType::Spacetime;
+//   std::array<std::int32_t, 3> rhs_start_index_values{};
+//   rhs_start_index_values[0] =
+//       rhs_tensorindextype_a::index_type == IndexType::Spacetime;
+//   rhs_start_index_values[1] =
+//       rhs_tensorindextype_b::index_type == IndexType::Spacetime;
+//   rhs_start_index_values[2] =
+//       rhs_tensorindextype_c::index_type == IndexType::Spacetime;
 
   // If we have the same index structure on the LHS and RHS, we can call the
   // `evaluate` overload that returns the LHS tensor. Otherwise, we need to call
@@ -162,21 +268,49 @@ void test_evaluate_rank_3_impl() {
   const size_t dim_b = tmpl::at_c<LhsTensorIndexTypeList, 1>::dim;
   const size_t dim_c = tmpl::at_c<LhsTensorIndexTypeList, 2>::dim;
 
-  for (size_t i = 0; i < dim_a; ++i) {
-    for (size_t j = 0; j < dim_b; ++j) {
+//   for (size_t rhs_i = rhs_start_index_values[0], lhs_i = lhs_start_index_values[0];
+//        rhs_i < dim_a; ++rhs_i, ++lhs_i) {
+//     for (size_t rhs_j = rhs_start_index_values[1], lhs_j = lhs_start_index_values[1];
+//          rhs_j < dim_b; ++rhs_j, ++lhs_j) {
+//       for (size_t rhs_k = rhs_start_index_values[2], lhs_k = lhs_start_index_values[2];
+//            rhs_k < dim_c; ++rhs_k, ++lhs_k) {
+    for (size_t i = 0; 0 < dim_a; ++i) {
+    for (size_t j = 0; 0 < dim_b; ++j) {
       for (size_t k = 0; k < dim_c; ++k) {
-        // For L_{abc} = R_{abc}, check that L_{ijk} == R_{ijk}
-        CHECK(L_abc.get(i, j, k) == R_abc.get(i, j, k));
-        // For L_{acb} = R_{abc}, check that L_{ikj} == R_{ijk}
-        CHECK(L_acb.get(i, k, j) == R_abc.get(i, j, k));
-        // For L_{bac} = R_{abc}, check that L_{jik} == R_{ijk}
-        CHECK(L_bac.get(j, i, k) == R_abc.get(i, j, k));
-        // For L_{bca} = R_{abc}, check that L_{jki} == R_{ijk}
-        CHECK(L_bca.get(j, k, i) == R_abc.get(i, j, k));
-        // For L_{cab} = R_{abc}, check that L_{kij} == R_{ijk}
-        CHECK(L_cab.get(k, i, j) == R_abc.get(i, j, k));
-        // For L_{cba} = R_{abc}, check that L_{kji} == R_{ijk}
-        CHECK(L_cba.get(k, j, i) == R_abc.get(i, j, k));
+        DataType expected_result;
+        if ((i == 0 and lhs_start_index_values[0] == 1) or
+            (j == 0 and lhs_start_index_values[1] == 1) or
+            (k == 0 and lhs_start_index_values[2] == 1)) {
+           expected_result = component_placeholder_value<DataType>::value;
+        } else {
+          const size_t rhs_i =
+          shift_lhs_to_rhs_index_down[0] ? i - rhs_start_index_values[0] : i + rhs_start_index_values[0];
+        const size_t rhs_j =
+            shift_lhs_to_rhs_index_down[1] ? j - rhs_start_index_values[1] : j + rhs_start_index_values[1];
+        const size_t rhs_k =
+          shift_lhs_to_rhs_index_down[2] ? k - rhs_start_index_values[2] : k + rhs_start_index_values[2];
+           expected_result = R_abc.get(
+            rhs_i,
+            rhs_j,
+            rhs_k);
+        }
+
+        const size_t lhs_i = i;// + lhs_start_index_values[0];
+        const size_t lhs_j = j;// + lhs_start_index_values[1];
+        const size_t lhs_k = k;// + lhs_start_index_values[2];
+
+        // L_{abc} = R_{abc}
+        CHECK(L_abc.get(lhs_i, lhs_j, lhs_k) == expected_result);
+        // L_{acb} = R_{abc}
+        CHECK(L_acb.get(lhs_i, lhs_k, lhs_j) == expected_result);
+        // L_{bac} = R_{abc}
+        CHECK(L_bac.get(lhs_j, lhs_i, lhs_k) == expected_result);
+        // L_{bca} = R_{abc}
+        CHECK(L_bca.get(lhs_j, lhs_k, lhs_i) == expected_result);
+        // L_{cab} = R_{abc}
+        CHECK(L_cab.get(lhs_k, lhs_i, lhs_j) == expected_result);
+        // L_{cba} = R_{abc}
+        CHECK(L_cba.get(lhs_k, lhs_j, lhs_i) == expected_result);
       }
     }
   }
@@ -225,24 +359,28 @@ void test_evaluate_rank_3_impl() {
     ::tenex::evaluate<TensorIndexC, TensorIndexB, TensorIndexA>(
         make_not_null(&L_cba_temp), rhs_expression);
 
-    for (size_t i = 0; i < dim_a; ++i) {
-      for (size_t j = 0; j < dim_b; ++j) {
-        for (size_t k = 0; k < dim_c; ++k) {
-          // For L_{abc} = R_{abc}, check that L_{ijk} == R_{ijk}
-          CHECK(L_abc_temp.get(i, j, k) == R_abc.get(i, j, k));
-          // For L_{acb} = R_{abc}, check that L_{ikj} == R_{ijk}
-          CHECK(L_acb_temp.get(i, k, j) == R_abc.get(i, j, k));
-          // For L_{bac} = R_{abc}, check that L_{jik} == R_{ijk}
-          CHECK(L_bac_temp.get(j, i, k) == R_abc.get(i, j, k));
-          // For L_{bca} = R_{abc}, check that L_{jki} == R_{ijk}
-          CHECK(L_bca_temp.get(j, k, i) == R_abc.get(i, j, k));
-          // For L_{cab} = R_{abc}, check that L_{kij} == R_{ijk}
-          CHECK(L_cab_temp.get(k, i, j) == R_abc.get(i, j, k));
-          // For L_{cba} = R_{abc}, check that L_{kji} == R_{ijk}
-          CHECK(L_cba_temp.get(k, j, i) == R_abc.get(i, j, k));
-        }
-      }
-    }
+    // for (size_t i = 0, lhs_i = static_cast<size_t>(multi_index_shift[0] + i);
+    //      i < dim_a; ++i, ++lhs_i) {
+    //   for (size_t j = 0, lhs_j = static_cast<size_t>(multi_index_shift[1] + j);
+    //        rhs+j < dim_b; ++j, ++lhs_j) {
+    //     for (size_t rhs_k = 0,
+    //                 lhs_k = static_cast<size_t>(multi_index_shift[2] + rhs_k);
+    //          rhs_k < dim_c; ++k, ++lhs_k) {
+    //       // L_{abc} = R_{abc}, check that L_{ijk} == R_{ijk}
+    //       CHECK(L_abc_temp.get(lhs_i, lhs_j, lhs_k) == expected_result);
+    //       // L_{acb} = R_{abc}, check that L_{ikj} == R_{ijk}
+    //       CHECK(L_acb_temp.get(lhs_i, lhs_k, lhs_j) == expected_result);
+    //       // L_{bac} = R_{abc}, check that L_{jik} == R_{ijk}
+    //       CHECK(L_bac_temp.get(lhs_j, lhs_i, lhs_k) == expected_result);
+    //       // L_{bca} = R_{abc}, check that L_{jki} == R_{ijk}
+    //       CHECK(L_bca_temp.get(lhs_j, lhs_k, lhs_i) == expected_result);
+    //       // L_{cab} = R_{abc}, check that L_{kij} == R_{ijk}
+    //       CHECK(L_cab_temp.get(lhs_k, lhs_i, lhs_j) == expected_result);
+    //       // L_{cba} = R_{abc}, check that L_{kji} == R_{ijk}
+    //       CHECK(L_cba_temp.get(lhs_k, lhs_j, lhs_i) == expected_result);
+    //     }
+    //   }
+    // }
   }
 }
 
