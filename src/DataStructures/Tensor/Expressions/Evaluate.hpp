@@ -603,8 +603,8 @@ void evaluate_impl(
 
   const std::array<size_t, num_lhs_indices>
       runtime_reordered_tensorindex_values =
-          runtime_get_reordered_tensorindex_values<
-              num_lhs_indices, std::decay_t<decltype(LhsTensorIndices)>...>(
+          runtime_get_reordered_tensorindex_values<num_lhs_indices,
+                                                   LhsTensorIndices...>(
               {{tmpl::at_c<LhsSymmetry, LhsInts>::value...}});
   std::cout << "runtime_reordered_tensorindex_values : "
             << runtime_reordered_tensorindex_values << std::endl;
