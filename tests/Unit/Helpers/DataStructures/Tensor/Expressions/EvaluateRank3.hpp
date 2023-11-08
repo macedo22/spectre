@@ -217,7 +217,7 @@ void test_evaluate_rank_3_impl() {
             lhs_j < lhs_index_value_ranges[1].first or
             lhs_j > lhs_index_value_ranges[1].second or
             lhs_k < lhs_index_value_ranges[2].first or
-            lhs_k > lhs_index_value_ranges[0].second) {
+            lhs_k > lhs_index_value_ranges[2].second) {
           expected_result = component_placeholder;
         } else {
           const size_t rhs_i = shift_lhs_to_rhs_index_down[0]
@@ -301,7 +301,7 @@ void test_evaluate_rank_3_impl() {
               lhs_j < lhs_index_value_ranges[1].first or
               lhs_j > lhs_index_value_ranges[1].second or
               lhs_k < lhs_index_value_ranges[2].first or
-              lhs_k > lhs_index_value_ranges[0].second) {
+              lhs_k > lhs_index_value_ranges[2].second) {
             expected_result = component_placeholder;
           } else {
             const size_t rhs_i = shift_lhs_to_rhs_index_down[0]
