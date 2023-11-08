@@ -91,9 +91,9 @@ void test_evaluate_rank_3_impl() {
 
   // Used for enforcing the ordering of the symmetry and TensorIndexTypes of the
   // LHS Tensor returned by `evaluate`
-  const std::int32_t lhs_symmetry_element_a = tmpl::at_c<RhsSymmetry, 0>::value;
-  const std::int32_t lhs_symmetry_element_b = tmpl::at_c<RhsSymmetry, 1>::value;
-  const std::int32_t lhs_symmetry_element_c = tmpl::at_c<RhsSymmetry, 2>::value;
+  const std::int32_t lhs_symmetry_element_a = tmpl::at_c<LhsSymmetry, 0>::value;
+  const std::int32_t lhs_symmetry_element_b = tmpl::at_c<LhsSymmetry, 1>::value;
+  const std::int32_t lhs_symmetry_element_c = tmpl::at_c<LhsSymmetry, 2>::value;
   using lhs_tensorindextype_a = tmpl::at_c<LhsTensorIndexTypeList, 0>;
   using lhs_tensorindextype_b = tmpl::at_c<LhsTensorIndexTypeList, 1>;
   using lhs_tensorindextype_c = tmpl::at_c<LhsTensorIndexTypeList, 2>;
