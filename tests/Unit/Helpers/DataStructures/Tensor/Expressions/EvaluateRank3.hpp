@@ -32,9 +32,20 @@ void call_evaluate(const gsl::not_null<LhsTensor*> lhs_tensor,
 }
 
 template <typename Index, auto& TensorIndex>
-constexpr size_t get_start_index_value() {
-    return Index::index_type == IndexType::Spacetime and
-          not TensorIndex.is_spacetime ? 1 : 0;
+constexpr std::pair<size_t, size_t> get_index_value_range() {
+  constexpr bool tensorindex_is_time =
+      ::tenex::detail::is_time_index_value(TensorIndex.value);
+  static_assert(
+      not(Index::index_type == IndexType::Spatial and tensorindex_is_time),
+      "Cannot use a concrete time TensorIndex with a SpatialIndex.");
+
+  std::pair<size_t, size_t> range{};
+  range.first =
+      Index::index_type == IndexType::Spacetime and not TensorIndex.is_spacetime
+          ? 1
+          : 0;
+  range.second = tensorindex_is_time ? 0 : Index::dim - 1;
+  return range;
 }
 
 /// \ingroup TestingFrameworkGroup
@@ -73,7 +84,9 @@ template <typename DataType, typename RhsSymmetry,
 void test_evaluate_rank_3_impl() {
   const size_t used_for_size = 3;
   Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> R_abc(used_for_size);
-  std::iota(R_abc.begin(), R_abc.end(), 0.0);
+  std::iota(R_abc.begin(), R_abc.end(),
+            component_placeholder_value<DataType>::value);
+  const DataType component_placeholder = R_abc[0];
   const auto rhs_expression = R_abc(TensorIndexA, TensorIndexB, TensorIndexC);
 
   // Used for enforcing the ordering of the symmetry and TensorIndexTypes of the
@@ -88,27 +101,27 @@ void test_evaluate_rank_3_impl() {
   using rhs_tensorindextype_b = tmpl::at_c<RhsTensorIndexTypeList, 1>;
   using rhs_tensorindextype_c = tmpl::at_c<RhsTensorIndexTypeList, 2>;
 
-  std::array<size_t, 3> lhs_start_index_values{};
-  lhs_start_index_values[0] =
-      get_start_index_value<lhs_tensorindextype_a, TensorIndexA>();
-  lhs_start_index_values[1] =
-      get_start_index_value<lhs_tensorindextype_b, TensorIndexB>();
-  lhs_start_index_values[2] =
-      get_start_index_value<lhs_tensorindextype_c, TensorIndexC>();
-  std::array<size_t, 3> rhs_start_index_values{};
-  rhs_start_index_values[0] =
-      get_start_index_value<rhs_tensorindextype_a, TensorIndexA>();
-  rhs_start_index_values[1] =
-      get_start_index_value<rhs_tensorindextype_b, TensorIndexB>();
-  rhs_start_index_values[2] =
-      get_start_index_value<rhs_tensorindextype_c, TensorIndexC>();
+  std::array<std::pair<size_t, size_t>, 3> lhs_index_value_ranges{};
+  lhs_index_value_ranges[0] =
+      get_index_value_range<lhs_tensorindextype_a, TensorIndexA>();
+  lhs_index_value_ranges[1] =
+      get_index_value_range<lhs_tensorindextype_b, TensorIndexB>();
+  lhs_index_value_ranges[2] =
+      get_index_value_range<lhs_tensorindextype_c, TensorIndexC>();
+  std::array<std::pair<size_t, size_t>, 3> rhs_index_value_ranges{};
+  rhs_index_value_ranges[0] =
+      get_index_value_range<rhs_tensorindextype_a, TensorIndexA>();
+  rhs_index_value_ranges[1] =
+      get_index_value_range<rhs_tensorindextype_b, TensorIndexB>();
+  rhs_index_value_ranges[2] =
+      get_index_value_range<rhs_tensorindextype_c, TensorIndexC>();
   std::array<bool, 3> shift_lhs_to_rhs_index_down{};
   shift_lhs_to_rhs_index_down[0] =
-      lhs_start_index_values[0] > rhs_start_index_values[0];
+      lhs_index_value_ranges[0].first > lhs_index_value_ranges[0].first;
   shift_lhs_to_rhs_index_down[1] =
-      lhs_start_index_values[1] > rhs_start_index_values[1];
+      lhs_index_value_ranges[1].first > lhs_index_value_ranges[1].first;
   shift_lhs_to_rhs_index_down[2] =
-      lhs_start_index_values[2] > rhs_start_index_values[2];
+      lhs_index_value_ranges[2].first > lhs_index_value_ranges[2].first;
 
   // If we have the same index structure on the LHS and RHS, we can call the
   // `evaluate` overload that returns the LHS tensor. Otherwise, we need to call
@@ -198,20 +211,23 @@ void test_evaluate_rank_3_impl() {
     for (size_t lhs_j = 0; lhs_j < dim_b; ++lhs_j) {
       for (size_t lhs_k = 0; lhs_k < dim_c; ++lhs_k) {
         DataType expected_result;
-        if ((lhs_i == 0 and lhs_start_index_values[0] == 1) or
-            (lhs_j == 0 and lhs_start_index_values[1] == 1) or
-            (lhs_k == 0 and lhs_start_index_values[2] == 1)) {
-          expected_result = component_placeholder_value<DataType>::value;
+        if (lhs_i < lhs_index_value_ranges[0].first or
+            lhs_i > lhs_index_value_ranges[0].second or
+            lhs_j < lhs_index_value_ranges[1].first or
+            lhs_j > lhs_index_value_ranges[1].second or
+            lhs_k < lhs_index_value_ranges[2].first or
+            lhs_k > lhs_index_value_ranges[0].second) {
+          expected_result = component_placeholder;
         } else {
           const size_t rhs_i = shift_lhs_to_rhs_index_down[0]
-                                   ? lhs_i - rhs_start_index_values[0]
-                                   : lhs_i + rhs_start_index_values[0];
+                                   ? lhs_i - rhs_index_value_ranges[0].first
+                                   : lhs_i + rhs_index_value_ranges[0].first;
           const size_t rhs_j = shift_lhs_to_rhs_index_down[1]
-                                   ? lhs_j - rhs_start_index_values[1]
-                                   : lhs_j + rhs_start_index_values[1];
+                                   ? lhs_j - rhs_index_value_ranges[1].first
+                                   : lhs_j + rhs_index_value_ranges[1].first;
           const size_t rhs_k = shift_lhs_to_rhs_index_down[2]
-                                   ? lhs_k - rhs_start_index_values[2]
-                                   : lhs_k + rhs_start_index_values[2];
+                                   ? lhs_k - rhs_index_value_ranges[2].first
+                                   : lhs_k + rhs_index_value_ranges[2].first;
           expected_result = R_abc.get(rhs_i, rhs_j, rhs_k);
         }
 
@@ -279,20 +295,23 @@ void test_evaluate_rank_3_impl() {
       for (size_t lhs_j = 0; lhs_j < dim_b; ++lhs_j) {
         for (size_t lhs_k = 0; lhs_k < dim_c; ++lhs_k) {
           DataType expected_result;
-          if ((lhs_i == 0 and lhs_start_index_values[0] == 1) or
-              (lhs_j == 0 and lhs_start_index_values[1] == 1) or
-              (lhs_k == 0 and lhs_start_index_values[2] == 1)) {
-            expected_result = component_placeholder_value<DataType>::value;
+          if (lhs_i < lhs_index_value_ranges[0].first or
+              lhs_i > lhs_index_value_ranges[0].second or
+              lhs_j < lhs_index_value_ranges[1].first or
+              lhs_j > lhs_index_value_ranges[1].second or
+              lhs_k < lhs_index_value_ranges[2].first or
+              lhs_k > lhs_index_value_ranges[0].second) {
+            expected_result = component_placeholder;
           } else {
             const size_t rhs_i = shift_lhs_to_rhs_index_down[0]
-                                     ? lhs_i - rhs_start_index_values[0]
-                                     : lhs_i + rhs_start_index_values[0];
+                                     ? lhs_i - rhs_index_value_ranges[0].first
+                                     : lhs_i + rhs_index_value_ranges[0].first;
             const size_t rhs_j = shift_lhs_to_rhs_index_down[1]
-                                     ? lhs_j - rhs_start_index_values[1]
-                                     : lhs_j + rhs_start_index_values[1];
+                                     ? lhs_j - rhs_index_value_ranges[1].first
+                                     : lhs_j + rhs_index_value_ranges[1].first;
             const size_t rhs_k = shift_lhs_to_rhs_index_down[2]
-                                     ? lhs_k - rhs_start_index_values[2]
-                                     : lhs_k + rhs_start_index_values[2];
+                                     ? lhs_k - rhs_index_value_ranges[2].first
+                                     : lhs_k + rhs_index_value_ranges[2].first;
             expected_result = R_abc.get(rhs_i, rhs_j, rhs_k);
           }
 
