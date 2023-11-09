@@ -87,42 +87,42 @@ class BondiHoyleAccretion : public virtual evolution::initial_data::InitialData,
   /// The mass of the black hole, \f$M\f$.
   struct BhMass {
     using type = double;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
     static type lower_bound() { return 0.0; }
   };
   /// The dimensionless black hole spin, \f$a_* = a/M\f$.
   struct BhDimlessSpin {
     using type = double;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
     static type lower_bound() { return -1.0; }
     static type upper_bound() { return 1.0; }
   };
   /// The rest mass density of the fluid far from the black hole.
   struct RestMassDensity {
     using type = double;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
     static type lower_bound() { return 0.0; }
   };
   /// The magnitude of the spatial velocity far from the black hole.
   struct FlowSpeed {
     using type = double;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   };
   /// The strength of the magnetic field.
   struct MagFieldStrength {
     using type = double;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   };
   /// The polytropic constant of the fluid.
   struct PolytropicConstant {
     using type = double;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
     static type lower_bound() { return 0.0; }
   };
   /// The polytropic exponent of the fluid.
   struct PolytropicExponent {
     using type = double;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
     static type lower_bound() { return 1.0; }
   };
 
@@ -130,7 +130,7 @@ class BondiHoyleAccretion : public virtual evolution::initial_data::InitialData,
       tmpl::list<BhMass, BhDimlessSpin, RestMassDensity, FlowSpeed,
                  MagFieldStrength, PolytropicConstant, PolytropicExponent>;
 
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 
   BondiHoyleAccretion() = default;
   BondiHoyleAccretion(const BondiHoyleAccretion& /*rhs*/) = default;

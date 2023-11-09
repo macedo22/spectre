@@ -77,7 +77,7 @@ struct Translation : tt::ConformsTo<protocols::ControlError> {
       domain::object_list<domain::ObjectLabel::A, domain::ObjectLabel::B>;
 
   using options = tmpl::list<>;
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 
   void pup(PUP::er& /*p*/) {}
 

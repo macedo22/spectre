@@ -99,19 +99,19 @@ class IsotropicHomogeneous : public ConstitutiveRelation<Dim> {
 
   struct BulkModulus {
     using type = double;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
     static type lower_bound() { return 0.0; }
   };
 
   struct ShearModulus {
     using type = double;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
     static type lower_bound() { return 0.0; }
   };
 
   using options = tmpl::list<BulkModulus, ShearModulus>;
 
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 
   IsotropicHomogeneous() = default;
   IsotropicHomogeneous(const IsotropicHomogeneous&) = default;

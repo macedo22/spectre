@@ -76,7 +76,7 @@ namespace OptionTags {
 /// Groups option tags related to the ValenciaDivClean evolution system.
 struct ValenciaDivCleanGroup {
   static std::string name() { return "ValenciaDivClean"; }
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   using group = evolution::OptionTags::SystemGroup;
 };
 
@@ -84,14 +84,14 @@ struct ValenciaDivCleanGroup {
 struct DampingParameter {
   static std::string name() { return "DampingParameter"; }
   using type = double;
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   using group = ValenciaDivCleanGroup;
 };
 
 struct PrimitiveFromConservativeOptions {
   static std::string name() { return "PrimitiveFromConservative"; }
   using type = grmhd::ValenciaDivClean::PrimitiveFromConservativeOptions;
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 };
 
 }  // namespace OptionTags

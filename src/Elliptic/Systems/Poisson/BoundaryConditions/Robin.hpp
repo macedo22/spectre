@@ -32,21 +32,21 @@ class Robin : public elliptic::BoundaryConditions::BoundaryCondition<Dim> {
   using Base = elliptic::BoundaryConditions::BoundaryCondition<Dim>;
 
  public:
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 
   struct DirichletWeight {
     using type = double;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   };
 
   struct NeumannWeight {
     using type = double;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   };
 
   struct Constant {
     using type = double;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   };
 
   using options = tmpl::list<DirichletWeight, NeumannWeight, Constant>;

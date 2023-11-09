@@ -94,7 +94,7 @@ class Hll final : public BoundaryCorrection {
   };
 
   using options = tmpl::list<>;
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 
   Hll() = default;
   Hll(const Hll&) = default;

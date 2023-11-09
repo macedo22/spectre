@@ -27,7 +27,7 @@ class Flatness : public elliptic::BoundaryConditions::BoundaryCondition<3> {
   using Base = elliptic::BoundaryConditions::BoundaryCondition<3>;
 
  public:
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   using options = tmpl::list<>;
 
   Flatness() = default;

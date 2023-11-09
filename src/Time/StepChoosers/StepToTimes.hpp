@@ -39,10 +39,10 @@ class StepToTimes : public StepChooser<StepChooserUse::Slab> {
 
   struct Times {
     using type = std::unique_ptr<TimeSequence<double>>;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   };
 
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   using options = tmpl::list<Times>;
 
   explicit StepToTimes(std::unique_ptr<TimeSequence<double>> times)

@@ -48,7 +48,7 @@ struct Periodic final : public SystemBoundaryConditionBaseClass,
                         public MarkAsPeriodic {
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   static std::string name() { return "Periodic"; }
 
   Periodic() = default;

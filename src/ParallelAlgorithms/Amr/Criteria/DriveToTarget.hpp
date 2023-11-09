@@ -39,26 +39,26 @@ class DriveToTarget : public Criterion {
   /// The target number of grid point in each dimension
   struct TargetNumberOfGridPoints {
     using type = std::array<size_t, Dim>;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   };
 
   /// The target refinement level in each dimension
   struct TargetRefinementLevels {
     using type = std::array<size_t, Dim>;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   };
 
   /// The AMR flags chosen when the target number of grid points and refinement
   /// levels are reached
   struct OscillationAtTarget {
     using type = std::array<Flag, Dim>;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   };
 
   using options = tmpl::list<TargetNumberOfGridPoints, TargetRefinementLevels,
                              OscillationAtTarget>;
 
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 
   DriveToTarget() = default;
 

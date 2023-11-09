@@ -82,11 +82,11 @@ class ExplicitInverse : public LinearSolver<LinearSolverRegistrars> {
  public:
   struct WriteMatrixToFile {
     using type = Options::Auto<std::string, Options::AutoLabel::None>;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   };
 
   using options = tmpl::list<WriteMatrixToFile>;
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 
   ExplicitInverse(const ExplicitInverse& /*rhs*/) = default;
   ExplicitInverse& operator=(const ExplicitInverse& /*rhs*/) = default;

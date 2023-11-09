@@ -22,7 +22,7 @@ template <typename System>
 struct BoundaryCorrection {
   using type = std::unique_ptr<typename System::boundary_correction_base>;
   using group = SpatialDiscretization::OptionTags::SpatialDiscretizationGroup;
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 };
 }  // namespace OptionTags
 

@@ -29,14 +29,14 @@ template <typename OptionsGroup>
 struct MaxOverlap {
   using type = size_t;
   using group = OptionsGroup;
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 };
 
 template <typename SolverType, typename OptionsGroup>
 struct SubdomainSolver {
   using type = SolverType;
   using group = OptionsGroup;
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 };
 
 template <typename OptionsGroup>
@@ -44,14 +44,14 @@ struct SkipSubdomainSolverResets {
   static std::string name() { return "SkipResets"; }
   using type = bool;
   using group = OptionsGroup;
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 };
 
 template <typename OptionsGroup>
 struct ObservePerCoreReductions {
   using type = bool;
   using group = OptionsGroup;
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 };
 
 }  // namespace OptionTags

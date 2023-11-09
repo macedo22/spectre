@@ -275,7 +275,7 @@ struct Metavariables {
 
   using const_global_cache_tags = tmpl::list<amr::Criteria::Tags::Criteria>;
 
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 
   struct factory_creation
       : tt::ConformsTo<Options::protocols::FactoryCreation> {

@@ -360,7 +360,7 @@ class RotatingStar : public virtual evolution::initial_data::InitialData,
   /// The path to the RotNS data file.
   struct RotNsFilename {
     using type = std::string;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   };
 
   /// The polytropic constant of the fluid.
@@ -368,12 +368,12 @@ class RotatingStar : public virtual evolution::initial_data::InitialData,
   /// The data in the RotNS file will be rescaled.
   struct PolytropicConstant {
     using type = double;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
     static type lower_bound() { return 0.; }
   };
 
   using options = tmpl::list<RotNsFilename, PolytropicConstant>;
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 
   RotatingStar() = default;
   RotatingStar(const RotatingStar& /*rhs*/) = default;

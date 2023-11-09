@@ -49,12 +49,12 @@ class Equilibrium3D : public EquationOfState<EquilEos::is_relativistic, 3> {
   static std::string name() {
     return "Equilibrium3D(" + pretty_type::name<EquilEos>() + ")";
   }
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 
   struct UnderlyingEos {
     using type = EquilEos;
     static std::string name() { return pretty_type::short_name<EquilEos>(); }
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   };
 
   using options = tmpl::list<UnderlyingEos>;

@@ -40,7 +40,7 @@ template <size_t Dim>
 class DirichletMinkowski final : public BoundaryCondition<Dim> {
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 
   DirichletMinkowski() = default;
   DirichletMinkowski(DirichletMinkowski&&) = default;

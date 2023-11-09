@@ -666,19 +666,19 @@ class ProductOfConditions final : public BoundaryCondition {
     static std::string name() {
       return "GeneralizedHarmonic" + pretty_type::name<DerivedGhCondition>();
     }
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   };
   struct ValenciaCondition {
     using type = DerivedValenciaCondition;
     static std::string name() {
       return "Valencia" + pretty_type::name<DerivedValenciaCondition>();
     }
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   };
 
   using options = tmpl::list<GhCondition, ValenciaCondition>;
 
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 
   ProductOfConditions() = default;
   ProductOfConditions(DerivedGhCondition gh_condition,

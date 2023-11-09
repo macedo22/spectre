@@ -52,14 +52,14 @@ struct RandomizeVariables {
   struct RandomParameters {
     struct Amplitude {
       using type = double;
-      static constexpr Options::String help{""};
+      static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
     };
     struct Seed {
       using type = Options::Auto<size_t>;
-      static constexpr Options::String help{""};
+      static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
     };
     using options = tmpl::list<Amplitude, Seed>;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
     void pup(PUP::er& p) {
       p | amplitude;
       p | seed;
@@ -71,7 +71,7 @@ struct RandomizeVariables {
   struct RandomParametersOptionTag {
     static std::string name() { return pretty_type::name<Label>(); }
     using type = Options::Auto<RandomParameters, Options::AutoLabel::None>;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   };
 
   struct RandomParametersTag : db::SimpleTag {

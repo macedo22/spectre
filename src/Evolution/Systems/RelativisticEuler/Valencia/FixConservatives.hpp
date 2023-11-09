@@ -57,27 +57,27 @@ class FixConservatives {
   /// \f$D\f$
   struct MinimumValueOfD {
     using type = double;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
     static type lower_bound() { return 0.0; }
   };
 
   /// The cutoff below which \f$D\f$ is set to `MinimumValueOfD`
   struct CutoffD {
     using type = double;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
     static type lower_bound() { return 0.0; }
   };
 
   /// The safety factor to fix \f$\tilde S_i\f$
   struct SafetyFactorForS {
     using type = double;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
     static type lower_bound() { return std::numeric_limits<double>::epsilon(); }
     static type upper_bound() { return 1.0; }
   };
 
   using options = tmpl::list<MinimumValueOfD, CutoffD, SafetyFactorForS>;
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 
   FixConservatives() = default;
   FixConservatives(const FixConservatives& /*rhs*/) = default;

@@ -180,19 +180,19 @@ class ProductOfCorrections final : public BoundaryCorrection {
     static std::string name() {
       return pretty_type::name<DerivedGhCorrection>();
     }
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   };
   struct ValenciaCorrection {
     using type = DerivedValenciaCorrection;
     static std::string name() {
       return pretty_type::name<DerivedValenciaCorrection>();
     }
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   };
 
   using options = tmpl::list<GhCorrection, ValenciaCorrection>;
 
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 
   ProductOfCorrections() = default;
   ProductOfCorrections(DerivedGhCorrection gh_correction,

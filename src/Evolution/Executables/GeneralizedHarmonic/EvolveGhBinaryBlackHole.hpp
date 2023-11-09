@@ -639,5 +639,5 @@ struct EvolutionMetavars {
       control_system::control_components<EvolutionMetavars, control_systems>,
       gh_dg_element_array>>;
 
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 };

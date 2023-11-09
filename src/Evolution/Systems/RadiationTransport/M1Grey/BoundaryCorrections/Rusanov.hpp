@@ -99,7 +99,7 @@ class Rusanov<tmpl::list<NeutrinoSpecies...>> final
     : public BoundaryCorrection<tmpl::list<NeutrinoSpecies...>> {
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 
   Rusanov() = default;
   Rusanov(const Rusanov&) = default;

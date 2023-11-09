@@ -13,7 +13,7 @@ namespace evolution::dg::subcell {
 namespace OptionTags {
 struct ActiveGrid {
   using type = evolution::dg::subcell::ActiveGrid;
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   using group = SpatialDiscretization::OptionTags::SpatialDiscretizationGroup;
 };
 }  // namespace OptionTags

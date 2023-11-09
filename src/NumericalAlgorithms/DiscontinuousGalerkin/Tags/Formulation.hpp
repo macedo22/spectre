@@ -14,7 +14,7 @@ namespace OptionTags {
 struct Formulation {
   using type = dg::Formulation;
   using group = DiscontinuousGalerkinGroup;
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 };
 }  // namespace OptionTags
 

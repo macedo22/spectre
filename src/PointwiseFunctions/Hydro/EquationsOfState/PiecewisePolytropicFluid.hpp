@@ -53,7 +53,7 @@ class PiecewisePolytropicFluid : public EquationOfState<IsRelativistic, 1> {
   /// fluid.
   struct PiecewisePolytropicTransitionDensity {
     using type = double;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
     static double lower_bound() { return 0.0; }
   };
 
@@ -65,7 +65,7 @@ class PiecewisePolytropicFluid : public EquationOfState<IsRelativistic, 1> {
   /// as \f$K_{high} = K_{low} (\bar{\rho})^{\Gamma_{low} - \Gamma_{high}}\f$.
   struct PolytropicConstantLow {
     using type = double;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
     static double lower_bound() { return 0.0; }
   };
 
@@ -73,7 +73,7 @@ class PiecewisePolytropicFluid : public EquationOfState<IsRelativistic, 1> {
   /// \f$p=K\rho^{\Gamma}\f$.
   struct PolytropicExponentLow {
     using type = double;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
     static double lower_bound() { return 1.0; }
   };
 
@@ -81,11 +81,11 @@ class PiecewisePolytropicFluid : public EquationOfState<IsRelativistic, 1> {
   /// \f$p=K\rho^{\Gamma}\f$.
   struct PolytropicExponentHigh {
     using type = double;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
     static double lower_bound() { return 1.0; }
   };
 
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 
   using options =
       tmpl::list<PiecewisePolytropicTransitionDensity, PolytropicConstantLow,

@@ -179,11 +179,11 @@ class ConstraintPreservingSphericalRadiation final
   struct TypeOptionTag {
     using type = detail::ConstraintPreservingSphericalRadiationType;
     static std::string name() { return "Type"; }
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   };
 
   using options = tmpl::list<TypeOptionTag>;
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 
   ConstraintPreservingSphericalRadiation(
       detail::ConstraintPreservingSphericalRadiationType type);

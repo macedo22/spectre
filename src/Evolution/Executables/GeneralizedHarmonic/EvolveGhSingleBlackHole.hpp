@@ -65,7 +65,7 @@ struct EvolutionMetavars : public GeneralizedHarmonicTemplateBase<3> {
   using typename gh_base::initialize_initial_data_dependent_quantities_actions;
   using typename gh_base::system;
 
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 
   struct ApparentHorizon
       : tt::ConformsTo<intrp::protocols::InterpolationTargetTag> {

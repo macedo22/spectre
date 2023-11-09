@@ -37,5 +37,5 @@ struct EvolutionMetavars : public GhValenciaDivCleanTemplateBase<
   using factory_creation = typename base::factory_creation;
   using registration = typename base::registration;
 
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 };

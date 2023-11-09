@@ -60,21 +60,21 @@ class Flattener {
   /// the simulation.
   struct RequirePositiveMeanTildeD {
     using type = bool;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   };
 
   /// \brief Require that the mean of TildeYe is positive, otherwise terminate
   /// the simulation.
   struct RequirePositiveMeanTildeYe {
     using type = bool;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   };
 
   /// \brief Require that the mean of TildeTau is physical, otherwise terminate
   /// the simulation.
   struct RequirePhysicalMeanTildeTau {
     using type = bool;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   };
 
   /// \brief If true, then the primitive variables are updated at the end of the
@@ -84,13 +84,13 @@ class Flattener {
   /// treating the case that the means do not satisfy the bounds as an error.
   struct RecoverPrimitives {
     using type = bool;
-    static constexpr Options::String help{""};
+    static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   };
 
   using options =
       tmpl::list<RequirePositiveMeanTildeD, RequirePositiveMeanTildeYe,
                  RequirePhysicalMeanTildeTau, RecoverPrimitives>;
-  static constexpr Options::String help{""};
+  static constexpr Options::String help{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 
   Flattener(bool require_positive_mean_tilde_d,
             bool require_positive_mean_tilde_ye,
