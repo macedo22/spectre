@@ -677,6 +677,45 @@ void Parser<OptionList, Group>::pup(PUP::er& p) {
   }
 }
 
+void duplicate_option_name_error_check(std::vector<std::string>& result,
+                                       const std::string& label);
+
+template <typename TopLevelOptionsAndGroups>
+struct duplicate_option_name_error_helper;
+
+template <typename... TopLevelOptionsAndGroups>
+struct duplicate_option_name_error_helper<
+    tmpl::list<TopLevelOptionsAndGroups...>> {
+  static void apply(std::vector<std::string>& result) {
+    (duplicate_option_name_error_check(
+         result, pretty_type::name<TopLevelOptionsAndGroups>()),
+     ...);
+  }
+};
+
+[[noreturn]] void unused_key_error_message(const Context& context,
+                                           const std::string& name,
+                                           const std::string& parsing_help);
+
+template <typename Tag>
+void unused_key_error(const Context& context, const std::string& name,
+                      const std::string& parsing_help) {
+  if (name == pretty_type::name<Tag>()) {
+    unused_key_error_message(context, name, parsing_help);
+  }
+}
+
+template <typename AllPossibleOptions>
+struct unused_key_error_helper;
+
+template <typename... AllPossibleOptions>
+struct unused_key_error_helper<tmpl::list<AllPossibleOptions...>> {
+  static void apply(const Context& context, const std::string& name,
+                    const std::string& parsing_help) {
+    (unused_key_error<AllPossibleOptions>(context, name, parsing_help), ...);
+  }
+};
+
 template <typename OptionList, typename Group>
 void Parser<OptionList, Group>::parse(const YAML::Node& node) {
   if (not(node.IsMap() or node.IsNull())) {
@@ -708,13 +747,8 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
     // the order they are given in the help string.
     std::vector<std::string> result;
     result.reserve(tmpl::size<top_level_options_and_groups>{});
-    tmpl::for_each<top_level_options_and_groups>([&result](auto opt) {
-      using Opt = tmpl::type_from<decltype(opt)>;
-      const std::string label = pretty_type::name<Opt>();
-      ASSERT(alg::find(result, label) == result.end(),
-             "Duplicate option name: " << label);
-      result.push_back(label);
-    });
+    duplicate_option_name_error_helper<top_level_options_and_groups>::apply(
+        result);
     return result;
   });
 
@@ -734,17 +768,8 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
     // Check for invalid key
     const auto name_it = alg::find(valid_names, name);
     if (name_it == valid_names.end()) {
-      tmpl::for_each<all_possible_options>([this, &context, &name,
-                                            &node](auto tag) {
-        using Tag = tmpl::type_from<decltype(tag)>;
-        if (name == pretty_type::name<Tag>()) {
-          PARSE_ERROR(context,
-                      "Option '"
-                          << name
-                          << "' is unused because of other provided options.\n"
-                          << parsing_help(node));
-        }
-      });
+      unused_key_error_helper<all_possible_options>::apply(context, name,
+                                                           parsing_help(node));
       PARSE_ERROR(context, "Option '" << name << "' is not a valid option.\n"
                                       << parsing_help(node));
     }
