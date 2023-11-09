@@ -677,17 +677,9 @@ void Parser<OptionList, Group>::pup(PUP::er& p) {
   }
 }
 
-void doesnt_look_like_options(const Options::Context& context,
-                              const YAML::Node& node, const std::string& help);
-
-std::unordered_set<std::string> get_given_options(const YAML::Node& node);
-
 void cannot_decide(const std::vector<size_t>& alternative_choices,
                    const Options::Context& context,
                    const std::string& parsing_help);
-
-void specified_twice(const Options::Context& context, const std::string& name,
-                     const std::string& parsing_help);
 
 void duplicate_option_name_error_check(std::vector<std::string>& result,
                                        const std::string& label);
@@ -728,23 +720,17 @@ struct unused_key_error_helper<tmpl::list<AllPossibleOptions...>> {
   }
 };
 
-void option_invalid(const Options::Context& context, const std::string& name,
-                    const std::string& parsing_help);
-
-void did_not_specify_option(const Options::Context& context,
-                            const std::vector<std::string>& valid_names,
-                            const std::string& parsing_help);
-
-std::string in_group(const std::string& name);
-
-void options_differ(bool is_top_level);
-
 template <typename OptionList, typename Group>
 void Parser<OptionList, Group>::parse(const YAML::Node& node) {
-  doesnt_look_like_options(context_, node, help());
+  if (not(node.IsMap() or node.IsNull())) {
+    PARSE_ERROR(context_, "'" << node << "' does not look like options.\n"
+                              << help());
+  }
 
-  std::unordered_set<std::string> given_options = get_given_options(node);
-  ;
+  std::unordered_set<std::string> given_options{};
+  for (const auto& name_and_value : node) {
+    given_options.insert(name_and_value.first.as<std::string>());
+  }
 
   alternative_choices_ =
       Options_detail::choose_alternatives<OptionList>(given_options).second;
@@ -774,7 +760,8 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
 
     // Check for duplicate key
     if (0 != parsed_options_.count(name)) {
-      specified_twice(context, name, parsing_help(node));
+      PARSE_ERROR(context, "Option '" << name << "' specified twice.\n"
+                                      << parsing_help(node));
     }
 
     // Check for invalid key
@@ -782,7 +769,8 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
     if (name_it == valid_names.end()) {
       unused_key_error_helper<all_possible_options>::apply(context, name,
                                                            parsing_help(node));
-      option_invalid(context, name, parsing_help(node));
+      PARSE_ERROR(context, "Option '" << name << "' is not a valid option.\n"
+                                      << parsing_help(node));
     }
 
     parsed_options_.emplace(name, value);
@@ -790,7 +778,9 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
   }
 
   if (not valid_names.empty()) {
-    did_not_specify_option(context_, valid_names, parsing_help(node));
+    PARSE_ERROR(context_, "You did not specify the option"
+                << (valid_names.size() == 1 ? " " : "s ")
+                << (MakeString{} << valid_names) << "\n" << parsing_help(node));
   }
 
   tmpl::for_each<subgroups>([this](auto subgroup_v) {
@@ -798,7 +788,8 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
     auto& subgroup_parser =
         tuples::get<SubgroupParser<subgroup>>(subgroup_parsers_);
     subgroup_parser.context_ = context_;
-    subgroup_parser.context_.append(in_group(pretty_type::name<subgroup>()));
+    subgroup_parser.context_.append("In group " +
+                                    pretty_type::name<subgroup>());
     subgroup_parser.parse(
         parsed_options_.find(pretty_type::name<subgroup>())->second);
   });
@@ -806,8 +797,9 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
   // Any actual warnings will be printed by later calls to get or
   // apply, but it is not clear how to determine in those functions
   // whether this message should be printed.
-  if constexpr (std::is_same_v<Group, NoSuchType>) {
-    options_differ(context_.top_level);
+  if (std::is_same_v<Group, NoSuchType> and context_.top_level) {
+    Parallel::printf_error(
+        "The following options differ from their suggested values:\n");
   }
 }
 
