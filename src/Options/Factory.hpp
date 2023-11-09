@@ -57,7 +57,10 @@ struct print_derived {
 
 template <typename CreatableClasses>
 std::string help_derived() {
-  return "";
+  return "Known Ids:\n" +
+         tmpl::for_each<CreatableClasses>(
+             Factory_detail::print_derived{})
+             .value;
 }
 
 // This is for handling legacy code that still uses creatable_classes.
