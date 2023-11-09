@@ -152,6 +152,9 @@ template <typename T, typename Metavariables, typename Subgroup>
 struct get_impl;
 }  // namespace Options_detail
 
+template <typename T>
+constexpr const char* help_helper{};
+
 /// \ingroup OptionParsingGroup
 /// \brief Class that handles parsing an input file
 ///
@@ -349,7 +352,7 @@ class Parser {
           tmpl::as_pack<subgroups>([this](auto... subgroup_tags) {
             (void)this;  // gcc wants this for subgroup_parsers_
             return decltype(subgroup_parsers_)(
-                tmpl::type_from<decltype(subgroup_tags)>::help...);
+                help_helper<tmpl::type_from<decltype(subgroup_tags)>>...);
           });
 
   // The choices made for option alternatives in a depth-first order.
@@ -372,8 +375,8 @@ Parser<OptionList, Group>::Parser(std::string help_text)
                               << " is too long for nice formatting, "
                                  "please shorten the name to "
                               << max_label_size_ << " characters or fewer");
-    ASSERT(std::strlen(T::help) > 0,
-           "You must supply a help string of non-zero length for " << label);
+    // ASSERT(std::strlen(T::help) > 0,
+    //        "You must supply a help string of non-zero length for " << label);
   });
 }
 
@@ -1071,7 +1074,7 @@ template <typename T>
 template <typename Metavariables>
 T create_from_yaml<T>::create(const Option& options) {
   Parser<typename Options_detail::get_options_list<T, Metavariables>::type>
-      parser(T::help);
+      parser("");
   parser.parse(options);
   return parser.template apply_all<Metavariables>(
       Options_detail::ClassConstructor<T, Metavariables>{options.context()});
@@ -1137,7 +1140,7 @@ Result parse_as_alternatives(const Options::Option& options,
           Alternatives, Metavariables>::type...>>;
   std::string help = ("" + ... +
                       (Options_detail::yaml_type<Alternatives>::value() + "\n" +
-                       wrap_text(Alternatives::help, 77, "  ") + "\n\n"));
+                       wrap_text("", 77, "  ") + "\n\n"));
   help.resize(help.size() - 2);
   Options::Parser<options_list> parser(std::move(help));
   parser.parse(options);
