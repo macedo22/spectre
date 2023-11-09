@@ -109,8 +109,8 @@ class Item<Tag, ItemType::Compute> {
   void reset() { evaluated_ = false; }
 
   template <typename... Args>
-  void evaluate(const Args&... /*args*/) const {
-    // Tag::function(make_not_null(&value_), args...);
+  void evaluate(const Args&... args) const {
+    Tag::function(make_not_null(&value_), args...);
     evaluated_ = true;
   }
 
