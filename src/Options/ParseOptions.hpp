@@ -698,13 +698,10 @@ struct duplicate_option_name_error_helper;
 template <typename... TopLevelOptionsAndGroups>
 struct duplicate_option_name_error_helper<
     tmpl::list<TopLevelOptionsAndGroups...>> {
-  static std::vector<std::string> apply() {
-    std::vector<std::string> result;
-    result.reserve(tmpl::size<tmpl::list<TopLevelOptionsAndGroups...>>{});
+  static void apply(std::vector<std::string>& result) {
     (duplicate_option_name_error_check(
          result, pretty_type::name<TopLevelOptionsAndGroups>()),
      ...);
-    return result;
   }
 };
 
@@ -753,9 +750,7 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
       Options_detail::choose_alternatives<OptionList>(given_options).second;
   cannot_decide(alternative_choices_, context_, parsing_help(node));
 
-  auto valid_names = call_with_chosen_alternatives([](auto option_list_v)
-                                                       -> std::vector<
-                                                           std::string> {
+  auto valid_names = call_with_chosen_alternatives([](auto option_list_v) {
     using option_list = decltype(option_list_v);
     using top_level_options_and_groups =
         tmpl::remove_duplicates<tmpl::transform<
@@ -763,8 +758,11 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
             Options_detail::find_subgroup<tmpl::_1, tmpl::pin<Group>>>>;
     // Use an ordered container so the missing options are reported in
     // the order they are given in the help string.
-    return duplicate_option_name_error_helper<
-        top_level_options_and_groups>::apply();
+    std::vector<std::string> result;
+    result.reserve(tmpl::size<top_level_options_and_groups>{});
+    duplicate_option_name_error_helper<top_level_options_and_groups>::apply(
+        result);
+    return result;
   });
 
   for (const auto& name_and_value : node) {
