@@ -689,15 +689,13 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
     given_options.insert(name_and_value.first.as<std::string>());
   }
 
-  const auto parsing_help_result = parsing_help(node);
-
   alternative_choices_ =
       Options_detail::choose_alternatives<OptionList>(given_options).second;
   if (alg::any_of(alternative_choices_, [](const size_t x) {
         return x == std::numeric_limits<size_t>::max();
       })) {
     PARSE_ERROR(context_, "Cannot decide between alternative options.\n"
-                              << parsing_help_result);
+                              << parsing_help(node));
   }
 
   auto valid_names = call_with_chosen_alternatives([](auto option_list_v) {
@@ -730,25 +728,25 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
     // Check for duplicate key
     if (0 != parsed_options_.count(name)) {
       PARSE_ERROR(context, "Option '" << name << "' specified twice.\n"
-                                      << parsing_help_result);
+                                      << parsing_help(node));
     }
 
     // Check for invalid key
     const auto name_it = alg::find(valid_names, name);
     if (name_it == valid_names.end()) {
-      tmpl::for_each<all_possible_options>([&context, &name,
-                                            &parsing_help_result](auto tag) {
+      tmpl::for_each<all_possible_options>([this, &context, &name,
+                                            &node](auto tag) {
         using Tag = tmpl::type_from<decltype(tag)>;
         if (name == pretty_type::name<Tag>()) {
           PARSE_ERROR(context,
                       "Option '"
                           << name
                           << "' is unused because of other provided options.\n"
-                          << parsing_help_result);
+                          << parsing_help(node));
         }
       });
       PARSE_ERROR(context, "Option '" << name << "' is not a valid option.\n"
-                                      << parsing_help_result);
+                                      << parsing_help(node));
     }
 
     parsed_options_.emplace(name, value);
@@ -758,7 +756,7 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
   if (not valid_names.empty()) {
     PARSE_ERROR(context_, "You did not specify the option"
                 << (valid_names.size() == 1 ? " " : "s ")
-                << (MakeString{} << valid_names) << "\n" << parsing_help_result);
+                << (MakeString{} << valid_names) << "\n" << parsing_help(node));
   }
 
   tmpl::for_each<subgroups>([this](auto subgroup_v) {
@@ -1259,4 +1257,3 @@ struct YAML::convert<Options::Options_detail::CreateWrapper<T, Metavariables>> {
 /// \endcond
 
 #include "Options/Factory.hpp"
-       
