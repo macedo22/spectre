@@ -76,7 +76,7 @@ namespace OptionTags {
 /// Groups option tags related to the ValenciaDivClean evolution system.
 struct ValenciaDivCleanGroup {
   static std::string name() { return "ValenciaDivClean"; }
-  static constexpr Options::String help{"Options for the evolution system"};
+  static constexpr Options::String help{};
   using group = evolution::OptionTags::SystemGroup;
 };
 
@@ -84,17 +84,14 @@ struct ValenciaDivCleanGroup {
 struct DampingParameter {
   static std::string name() { return "DampingParameter"; }
   using type = double;
-  static constexpr Options::String help{
-      "Constraint damping parameter for divergence cleaning"};
+  static constexpr Options::String help{};
   using group = ValenciaDivCleanGroup;
 };
 
 struct PrimitiveFromConservativeOptions {
   static std::string name() { return "PrimitiveFromConservative"; }
   using type = grmhd::ValenciaDivClean::PrimitiveFromConservativeOptions;
-  static constexpr Options::String help{
-      "Value of density times Lorentz factor below which we skip conservative "
-      "to primitive inversion."};
+  static constexpr Options::String help{};
 };
 
 }  // namespace OptionTags

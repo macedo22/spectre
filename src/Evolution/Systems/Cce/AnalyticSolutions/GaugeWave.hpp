@@ -47,47 +47,39 @@ namespace Solutions {
 struct GaugeWave : public SphericalMetricData {
   struct ExtractionRadius {
     using type = double;
-    static constexpr Options::String help{
-        "The extraction radius of the spherical solution"};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
   struct Mass {
     using type = double;
-    static constexpr Options::String help{
-        "The mass of the Schwarzschild solution."};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
   struct Frequency {
     using type = double;
-    static constexpr Options::String help{
-        "The frequency of the oscillation of the gauge wave."};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
   struct Amplitude {
     using type = double;
-    static constexpr Options::String help{
-      "The amplitude of the gauge wave."};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
   struct PeakTime {
     using type = double;
-    static constexpr Options::String help{
-        "The time of the peak of the Gaussian envelope."};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
   struct Duration {
     using type = double;
-    static constexpr Options::String help{
-        "The characteristic duration of the Gaussian envelope."};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
 
   using options = tmpl::list<ExtractionRadius, Mass, Frequency, Amplitude,
                              PeakTime, Duration>;
 
-  static constexpr Options::String help = {
-      "Analytic solution representing worldtube data for a pure-gauge "
-      "perturbation near a Schwarzschild metric in spherical coordinates"};
+  static constexpr Options::String help{};
 
   WRAPPED_PUPable_decl_template(GaugeWave);  // NOLINT
 

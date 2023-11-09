@@ -32,7 +32,7 @@ namespace OptionTags {
  */
 struct FileGlob {
   using type = std::string;
-  static constexpr Options::String help = "Path to the data file";
+  static constexpr Options::String help{};
 };
 
 /*!
@@ -42,8 +42,7 @@ struct FileGlob {
  */
 struct Subgroup {
   using type = std::string;
-  static constexpr Options::String help =
-      "The subgroup within the file, excluding extensions";
+  static constexpr Options::String help{};
 };
 
 /*!
@@ -51,8 +50,7 @@ struct Subgroup {
  */
 struct ObservationValue {
   using type = std::variant<double, ObservationSelector>;
-  static constexpr Options::String help =
-      "The observation value at which to read data";
+  static constexpr Options::String help{};
 };
 
 /*!
@@ -61,14 +59,7 @@ struct ObservationValue {
 struct EnableInterpolation {
   static std::string name() { return "Interpolate"; }
   using type = bool;
-  static constexpr Options::String help =
-      "Enable to interpolate the volume data to the target domain. Disable to "
-      "load volume data directly into elements with the same name. "
-      "For example, you can disable interpolation if you have generated data "
-      "on the target points, or if you have already interpolated your data. "
-      "When interpolation is disabled, datasets "
-      "'InertialCoordinates(_x,_y,_z)' must exist in the files. They are used "
-      "to verify that the target points indeed match the source data.";
+  static constexpr Options::String help{};
 };
 }  // namespace OptionTags
 
@@ -79,7 +70,7 @@ struct ImporterOptions
                           OptionTags::ObservationValue,
                           OptionTags::EnableInterpolation> {
   using options = tags_list;
-  static constexpr Options::String help = "The volume data to load.";
+  static constexpr Options::String help{};
   using TaggedTuple::TaggedTuple;
 };
 
@@ -92,7 +83,7 @@ template <typename OptionsGroup>
 struct ImporterOptions : db::SimpleTag {
   static std::string name() { return "VolumeData"; }
   using type = importers::ImporterOptions;
-  static constexpr Options::String help = importers::ImporterOptions::help;
+  static constexpr Options::String help{};
   using group = OptionsGroup;
   using option_tags = tmpl::list<ImporterOptions>;
   static constexpr bool pass_metavariables = false;

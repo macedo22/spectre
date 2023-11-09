@@ -14,17 +14,13 @@ namespace CurvedScalarWave {
 namespace OptionTags {
 
 struct BackgroundSpacetimeGroup {
-  static constexpr Options::String help = {
-      "The background spacetime on which the scalar wave "
-      "propagates."};
+  static constexpr Options::String help{};
   static std::string name() { return "BackgroundSpacetime"; }
 };
 
 template <typename BackgroundType>
 struct BackgroundSpacetime {
-  static constexpr Options::String help = {
-      "Options for the background spacetime on which the scalar wave "
-      "propagates."};
+  static constexpr Options::String help{};
   static std::string name() {
     return pretty_type::short_name<BackgroundType>();
   }

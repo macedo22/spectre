@@ -74,9 +74,7 @@ class MonotonisedCentral : public Reconstructor {
   static constexpr size_t dim = 3;
 
   using options = tmpl::list<>;
-  static constexpr Options::String help{
-      "Monotonised central reconstruction scheme."};
-
+  static constexpr Options::String help {}
   MonotonisedCentral() = default;
   MonotonisedCentral(MonotonisedCentral&&) = default;
   MonotonisedCentral& operator=(MonotonisedCentral&&) = default;

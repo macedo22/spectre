@@ -18,7 +18,7 @@ namespace OptionTags {
  */
 struct EventsAndDenseTriggers {
   using type = evolution::EventsAndDenseTriggers;
-  static constexpr Options::String help = "Events to run at arbitrary times";
+  static constexpr Options::String help{};
 };
 }  // namespace OptionTags
 

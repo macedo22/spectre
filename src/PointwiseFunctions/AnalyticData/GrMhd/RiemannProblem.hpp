@@ -128,68 +128,57 @@ class RiemannProblem : public evolution::initial_data::InitialData,
 
   struct AdiabaticIndex {
     using type = double;
-    static constexpr Options::String help = {
-        "The adiabatic index of the ideal fluid"};
+    static constexpr Options::String help{};
     static type lower_bound() { return 1.0; }
   };
   struct LeftRestMassDensity {
     using type = double;
     static std::string name() { return "LeftDensity"; };
-    static constexpr Options::String help = {
-        "Fluid rest mass density in the left half-domain"};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
   struct RightRestMassDensity {
     using type = double;
     static std::string name() { return "RightDensity"; };
-    static constexpr Options::String help = {
-        "Fluid rest mass density in the right half-domain"};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
   struct LeftPressure {
     using type = double;
-    static constexpr Options::String help = {
-        "Fluid pressure in the left half-domain"};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
   struct RightPressure {
     using type = double;
-    static constexpr Options::String help = {
-        "Fluid pressure in the right half-domain"};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
   struct LeftSpatialVelocity {
     using type = std::array<double, 3>;
     static std::string name() { return "LeftVelocity"; };
-    static constexpr Options::String help = {
-        "Fluid spatial velocity in the left half-domain"};
+    static constexpr Options::String help{};
   };
   struct RightSpatialVelocity {
     using type = std::array<double, 3>;
     static std::string name() { return "RightVelocity"; };
-    static constexpr Options::String help = {
-        "Fluid spatial velocity in the right half-domain"};
+    static constexpr Options::String help{};
   };
   struct LeftMagneticField {
     using type = std::array<double, 3>;
-    static constexpr Options::String help = {
-        "Magnetic field in the left half-domain"};
+    static constexpr Options::String help{};
   };
   struct RightMagneticField {
     using type = std::array<double, 3>;
-    static constexpr Options::String help = {
-        "Magnetic field in the right half-domain"};
+    static constexpr Options::String help{};
   };
   struct Lapse {
     using type = double;
-    static constexpr Options::String help = {
-        "The value of the lapse. Standard is 1."};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
   };
   struct ShiftX {
     using type = double;
-    static constexpr Options::String help = {
-        "The value of the x-component of the shift, beta^x. Standard is 0."};
+    static constexpr Options::String help{};
   };
 
   using options =
@@ -198,10 +187,7 @@ class RiemannProblem : public evolution::initial_data::InitialData,
                  RightSpatialVelocity, LeftMagneticField, RightMagneticField,
                  Lapse, ShiftX>;
 
-  static constexpr Options::String help = {
-      "Analytic initial data for a GRMHD Riemann problem. The fluid variables "
-      "are set homogeneously on either half of the domain left and right of "
-      "x=0."};
+  static constexpr Options::String help{};
 
   RiemannProblem() = default;
   RiemannProblem(const RiemannProblem& /*rhs*/) = default;

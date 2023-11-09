@@ -327,16 +327,14 @@ class TovStar : public virtual evolution::initial_data::InitialData,
   /// The central density of the star.
   struct CentralDensity {
     using type = double;
-    static constexpr Options::String help = {
-        "The central density of the star."};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.; }
   };
 
   /// Areal (Schwarzschild) or isotropic coordinates
   struct Coordinates {
     using type = RelativisticEuler::Solutions::TovCoordinates;
-    static constexpr Options::String help = {
-        "Areal ('Schwarzschild') or 'Isotropic' coordinates."};
+    static constexpr Options::String help{};
   };
 
   static constexpr size_t volume_dim = 3_st;
@@ -345,10 +343,7 @@ class TovStar : public virtual evolution::initial_data::InitialData,
       tmpl::list<CentralDensity, hydro::OptionTags::EquationOfState<true, 1>,
                  Coordinates>;
 
-  static constexpr Options::String help = {
-      "A static, spherically-symmetric star found by solving the \n"
-      "Tolman-Oppenheimer-Volkoff (TOV) equations, with a given central \n"
-      "density and equation of state."};
+  static constexpr Options::String help{};
 
   TovStar() = default;
   TovStar(const TovStar& /*rhs*/);

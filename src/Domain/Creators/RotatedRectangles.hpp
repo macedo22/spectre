@@ -65,45 +65,38 @@ class RotatedRectangles : public DomainCreator<2> {
 
   struct LowerBound {
     using type = std::array<double, 2>;
-    static constexpr Options::String help = {
-        "Sequence of [x,y] for lower bounds in the target frame."};
+    static constexpr Options::String help{};
   };
 
   struct Midpoint {
     using type = std::array<double, 2>;
-    static constexpr Options::String help = {
-        "Sequence of [x,y] for midpoints in the target frame."};
+    static constexpr Options::String help{};
   };
 
   struct UpperBound {
     using type = std::array<double, 2>;
-    static constexpr Options::String help = {
-        "Sequence of [x,y] for upper bounds in the target frame."};
+    static constexpr Options::String help{};
   };
 
   struct IsPeriodicIn {
     using type = std::array<bool, 2>;
-    static constexpr Options::String help = {
-        "Sequence for [x], true if periodic."};
+    static constexpr Options::String help{};
   };
 
   struct InitialRefinement {
     using type = std::array<size_t, 2>;
-    static constexpr Options::String help = {
-        "Initial refinement level in [x, y]."};
+    static constexpr Options::String help{};
   };
 
   struct InitialGridPoints {
     using type = std::array<std::array<size_t, 2>, 2>;
-    static constexpr Options::String help = {
-        "Initial number of grid points in [[x], [y]]."};
+    static constexpr Options::String help{};
   };
 
   template <typename BoundaryConditionsBase>
   struct BoundaryCondition {
     static std::string name() { return "BoundaryCondition"; }
-    static constexpr Options::String help =
-        "The boundary condition to impose on all sides.";
+    static constexpr Options::String help{};
     using type = std::unique_ptr<BoundaryConditionsBase>;
   };
 
@@ -122,12 +115,7 @@ class RotatedRectangles : public DomainCreator<2> {
                   typename Metavariables::system>>>,
           options_periodic>>;
 
-  static constexpr Options::String help = {
-      "A DomainCreator useful for testing purposes.\n"
-      "RotatedRectangles uses four rotated Blocks to create the rectangle\n"
-      "[LowerX,UpperX] x [LowerY,UpperY]. The outermost index to\n"
-      "InitialGridPoints is the dimension index, and the innermost index is\n"
-      "the block index along that dimension."};
+  static constexpr Options::String help{};
 
   RotatedRectangles(
       typename LowerBound::type lower_xy, typename Midpoint::type midpoint_xy,

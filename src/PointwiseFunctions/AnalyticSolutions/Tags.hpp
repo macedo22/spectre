@@ -22,8 +22,7 @@ namespace OptionTags {
 /// Holds the `OptionTags::AnalyticSolution` option in the input file
 struct AnalyticSolutionGroup {
   static std::string name() { return "AnalyticSolution"; }
-  static constexpr Options::String help =
-      "Analytic solution used for the initial data and errors";
+  static constexpr Options::String help{};
 };
 
 /// \ingroup OptionTagsGroup
@@ -32,7 +31,7 @@ struct AnalyticSolutionGroup {
 template <typename SolutionType>
 struct AnalyticSolution {
   static std::string name() { return pretty_type::name<SolutionType>(); }
-  static constexpr Options::String help = "Options for the analytic solution";
+  static constexpr Options::String help{};
   using type = SolutionType;
   using group = AnalyticSolutionGroup;
 };

@@ -82,19 +82,11 @@ class ExplicitInverse : public LinearSolver<LinearSolverRegistrars> {
  public:
   struct WriteMatrixToFile {
     using type = Options::Auto<std::string, Options::AutoLabel::None>;
-    static constexpr Options::String help =
-        "Write the matrix representation of the linear operator to a "
-        "space-delimited CSV file with this name. A '.txt' extension will be "
-        "added. Also a suffix with the element ID will be added if this linear "
-        "solver runs on an array element, so one file per element will be "
-        "written.";
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<WriteMatrixToFile>;
-  static constexpr Options::String help =
-      "Build a matrix representation of the linear operator and invert it "
-      "directly. This means that the first solve has a large initialization "
-      "cost, but all subsequent solves converge immediately.";
+  static constexpr Options::String help{};
 
   ExplicitInverse(const ExplicitInverse& /*rhs*/) = default;
   ExplicitInverse& operator=(const ExplicitInverse& /*rhs*/) = default;

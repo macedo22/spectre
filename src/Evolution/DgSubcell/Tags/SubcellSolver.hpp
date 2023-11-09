@@ -19,11 +19,7 @@ namespace evolution::dg::subcell::OptionTags {
  */
 struct SubcellSolverGroup {
   static std::string name() { return "SubcellSolver"; }
-  static constexpr Options::String help{
-      "Options controlling the subcell solver spatial discretization "
-      "of the PDE system.\n\n"
-      "Contains options such as what reconstruction scheme to use or what "
-      "order of finite difference derivatives to apply."};
+  static constexpr Options::String help{};
   using group = SpatialDiscretization::OptionTags::SpatialDiscretizationGroup;
 };
 }  // namespace evolution::dg::subcell::OptionTags

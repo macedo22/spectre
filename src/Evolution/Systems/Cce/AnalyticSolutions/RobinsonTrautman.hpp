@@ -58,40 +58,28 @@ namespace Solutions {
 struct RobinsonTrautman : public SphericalMetricData {
   struct InitialModes {
     using type = std::vector<std::complex<double>>;
-    static constexpr Options::String help{
-        "The initial modes of the Robinson-Trautman scalar, denoted W in "
-        "[Derry 1970] and omega_RT in the rendered documentation. "
-        "These are taken in ascending l and m order, m varies fastest. Note "
-        "that the modes are treated as perturbations to the leading-order "
-        "solution of 1.0 for omega_RT and only the real part of the field is "
-        "used."};
+    static constexpr Options::String help{};
   };
   struct ExtractionRadius {
     using type = double;
-    static constexpr Options::String help{
-        "The extraction radius of the spherical solution"};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
     static type suggested_value() { return 20.0; }
   };
   struct LMax {
     using type = size_t;
-    static constexpr Options::String help{
-        "The maximum l value for the internal computation of the analytic "
-        "solution"};
+    static constexpr Options::String help{};
     static type lower_bound() { return 4; }
   };
   struct Tolerance {
     using type = double;
-    static constexpr Options::String help{
-        "The tolerance for the time evolution part of the calculation of the "
-        "semi-analytic Robinson-Trautman solution"};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
     static type suggested_value() { return 1.0e-11; }
   };
   struct StartTime {
     using type = double;
-    static constexpr Options::String help{
-        "The starting time for the Robinson-Trautman evolution"};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.0; }
     static type suggested_value() { return 0.0; }
   };
@@ -99,10 +87,7 @@ struct RobinsonTrautman : public SphericalMetricData {
   using options =
       tmpl::list<InitialModes, ExtractionRadius, LMax, Tolerance, StartTime>;
 
-  static constexpr Options::String help = {
-      "Analytic solution representing worldtube data for the nonlinear "
-      "semi-analytic Robinson-Trautman metric, which requires a single "
-      "scalar on the boundary to be evolved to determine the metric"};
+  static constexpr Options::String help{};
 
   WRAPPED_PUPable_decl_template(RobinsonTrautman);  // NOLINT
 

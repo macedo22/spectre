@@ -64,15 +64,13 @@ class EventsAndDenseTriggers {
   struct TriggerAndEvents {
     struct Trigger {
       using type = std::unique_ptr<::DenseTrigger>;
-      static constexpr Options::String help = "Determines when the Events run.";
+      static constexpr Options::String help{};
     };
     struct Events {
       using type = std::vector<std::unique_ptr<::Event>>;
-      static constexpr Options::String help =
-          "These events run when the Trigger fires.";
+      static constexpr Options::String help{};
     };
-    static constexpr Options::String help =
-        "Events that run when the Trigger fires.";
+    static constexpr Options::String help{};
     using options = tmpl::list<Trigger, Events>;
     void pup(PUP::er& p) {
       p | trigger;

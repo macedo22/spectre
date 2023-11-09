@@ -35,16 +35,12 @@ struct TciOptions {
    */
   struct TildeQCutoff {
     using type = Options::Auto<double, DoNotCheckTildeQ>;
-    static constexpr Options::String help = {
-        "If maximum absolute value of TildeQ in an element is below this value "
-        "we do not apply the Persson TCI to TildeQ. To disable the check, set "
-        "this option to 'DoNotCheckTildeQ'."};
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<TildeQCutoff>;
 
-  static constexpr Options::String help = {
-      "Options for the troubled-cell indicator"};
+  static constexpr Options::String help{};
 
   // NOLINTNEXTLINE(google-runtime-references)
   void pup(PUP::er& /*p*/);
@@ -56,7 +52,7 @@ struct TciOptions {
 namespace OptionTags {
 struct TciOptions {
   using type = subcell::TciOptions;
-  static constexpr Options::String help = "TCI options for ForceFree system";
+  static constexpr Options::String help{};
   using group = ::dg::OptionTags::DiscontinuousGalerkinGroup;
 };
 }  // namespace OptionTags

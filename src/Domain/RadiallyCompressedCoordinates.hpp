@@ -71,28 +71,18 @@ tnsr::I<DataType, Dim, CoordsFrame> radially_compressed_coordinates(
 ///
 /// \see radially_compressed_coordinates
 struct RadiallyCompressedCoordinatesOptions {
-  static constexpr Options::String help =
-      "Define radially compressed coordinates for visualizing large outer "
-      "radii.";
+  static constexpr Options::String help{};
   struct InnerRadius {
     using type = double;
-    static constexpr Options::String help =
-        "Radially compressed coordinates begin at this radius, and coincide "
-        "with the original coordinates for smaller radii.";
+    static constexpr Options::String help{};
   };
   struct OuterRadius {
     using type = double;
-    static constexpr Options::String help =
-        "Outer radius of the domain which will be compressed down to a "
-        "comprehensible radius, namely to r_inner * log10(r_outer).";
+    static constexpr Options::String help{};
   };
   struct Compression {
     using type = CoordinateMaps::Distribution;
-    static constexpr Options::String help =
-        "Compression mode: 'Logarithmic' or 'Inverse'. If you use the same "
-        "mode that you used to distribute radial grid points then the "
-        "grid points will be distributed linearly in the radially compressed "
-        "coordinates.";
+    static constexpr Options::String help{};
   };
   using options = tmpl::list<InnerRadius, OuterRadius, Compression>;
   void pup(PUP::er& p);
@@ -106,9 +96,7 @@ namespace OptionTags {
 struct RadiallyCompressedCoordinates {
   using type = Options::Auto<domain::RadiallyCompressedCoordinatesOptions,
                              Options::AutoLabel::None>;
-  static constexpr Options::String help =
-      "Define radially compressed coordinates for visualizing large outer "
-      "radii.";
+  static constexpr Options::String help{};
 };
 
 }  // namespace OptionTags

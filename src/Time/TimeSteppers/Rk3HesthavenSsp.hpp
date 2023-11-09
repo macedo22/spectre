@@ -39,8 +39,7 @@ namespace TimeSteppers {
 class Rk3HesthavenSsp : public TimeStepper {
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help = {
-      "A third-order strong stability-preserving Runge-Kutta time-stepper."};
+  static constexpr Options::String help{};
 
   Rk3HesthavenSsp() = default;
   Rk3HesthavenSsp(const Rk3HesthavenSsp&) = default;

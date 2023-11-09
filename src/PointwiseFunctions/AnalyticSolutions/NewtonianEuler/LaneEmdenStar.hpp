@@ -52,26 +52,20 @@ class LaneEmdenStar : public MarkAsAnalyticSolution {
   /// The central mass density of the star.
   struct CentralMassDensity {
     using type = double;
-    static constexpr Options::String help = {
-        "The central mass density of the star."};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.; }
   };
 
   /// The polytropic constant of the polytropic fluid.
   struct PolytropicConstant {
     using type = double;
-    static constexpr Options::String help = {
-        "The polytropic constant of the fluid."};
+    static constexpr Options::String help{};
     static type lower_bound() { return 0.; }
   };
 
   using options = tmpl::list<CentralMassDensity, PolytropicConstant>;
 
-  static constexpr Options::String help = {
-      "A static, spherically-symmetric star in Newtonian gravity, found by\n"
-      "solving the Lane-Emden equations, with a given central density and\n"
-      "polytropic fluid. The fluid has polytropic index 1, but the polytropic\n"
-      "constant is specifiable"};
+  static constexpr Options::String help{};
 
   LaneEmdenStar() = default;
   LaneEmdenStar(const LaneEmdenStar& /*rhs*/) = default;

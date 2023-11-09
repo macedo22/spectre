@@ -67,11 +67,7 @@ struct EvolutionMetavars : public GhValenciaDivCleanTemplateBase<
   using initialize_initial_data_dependent_quantities_actions =
       typename defaults::initialize_initial_data_dependent_quantities_actions;
 
-  static constexpr Options::String help{
-      "Evolve the Valencia formulation of the GRMHD system with divergence "
-      "cleaning, coupled to a dynamic spacetime evolved with the Generalized "
-      "Harmonic formulation\n"
-      "on a domain with a single horizon and corresponding excised region"};
+  static constexpr Options::String help{};
 
   struct AhA : tt::ConformsTo<intrp::protocols::InterpolationTargetTag> {
     using temporal_id = ::Tags::Time;

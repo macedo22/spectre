@@ -72,46 +72,39 @@ class SphericalCompression final : public TimeDependence<3> {
   /// \brief The initial time of the function of time.
   struct InitialTime {
     using type = double;
-    static constexpr Options::String help = {
-        "The initial time of the function of time"};
+    static constexpr Options::String help{};
   };
   /// \brief Minimum radius for the SphericalCompression map
   struct MinRadius {
     using type = double;
-    static constexpr Options::String help = {
-        "Min radius for SphericalCompression map."};
+    static constexpr Options::String help{};
   };
   /// \brief Maximum radius for the SphericalCompression map
   struct MaxRadius {
     using type = double;
-    static constexpr Options::String help = {
-        "Max radius for SphericalCompression map."};
+    static constexpr Options::String help{};
   };
   /// \brief Center for the SphericalCompression map
   struct Center {
     using type = std::array<double, 3>;
-    static constexpr Options::String help = {
-        "Center for the SphericalCompression map."};
+    static constexpr Options::String help{};
   };
   /// \brief Initial value for function of time for the spherical compression
   struct InitialValue {
     using type = double;
-    static constexpr Options::String help = {
-        "Spherical compression value at initial time."};
+    static constexpr Options::String help{};
   };
   /// \brief Initial radial velocity for the function of time for the spherical
   /// compression
   struct InitialVelocity {
     using type = double;
-    static constexpr Options::String help = {
-        "Spherical compression initial radial velocity."};
+    static constexpr Options::String help{};
   };
   /// \brief Initial radial acceleration for the function of time for the
   /// spherical compression
   struct InitialAcceleration {
     using type = double;
-    static constexpr Options::String help = {
-        "Spherical compression initial radial acceleration."};
+    static constexpr Options::String help{};
   };
 
   using GridToInertialMap =
@@ -122,7 +115,7 @@ class SphericalCompression final : public TimeDependence<3> {
       tmpl::list<InitialTime, MinRadius, MaxRadius, Center, InitialValue,
                  InitialVelocity, InitialAcceleration>;
 
-  static constexpr Options::String help = {"A spherical compression."};
+  static constexpr Options::String help{};
 
   SphericalCompression() = default;
   ~SphericalCompression() override = default;

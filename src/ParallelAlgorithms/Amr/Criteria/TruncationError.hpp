@@ -70,32 +70,24 @@ class TruncationError : public Criterion {
  public:
   struct VariablesToMonitor {
     using type = std::vector<std::string>;
-    static constexpr Options::String help = {
-        "The tensors to monitor the truncation error of."};
+    static constexpr Options::String help{};
     static size_t lower_bound_on_size() { return 1; }
   };
   struct AbsoluteTargetTruncationError {
     static std::string name() { return "AbsoluteTarget"; }
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    static constexpr Options::String help = {
-        "The absolute target truncation error. If any tensor component "
-        "has a truncation error above this value, the element will be "
-        "p-refined."};
+    static constexpr Options::String help{};
   };
   struct RelativeTargetTruncationError {
     static std::string name() { return "RelativeTarget"; }
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    static constexpr Options::String help = {
-        "The relative target truncation error. If any tensor component "
-        "has a truncation error above this value, the element will be "
-        "p-refined."};
+    static constexpr Options::String help{};
   };
 
   using options = tmpl::list<VariablesToMonitor, AbsoluteTargetTruncationError,
                              RelativeTargetTruncationError>;
 
-  static constexpr Options::String help = {
-      "Refine the grid towards the target truncation error"};
+  static constexpr Options::String help{};
 
   TruncationError() = default;
 

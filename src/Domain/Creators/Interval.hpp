@@ -50,67 +50,51 @@ class Interval : public DomainCreator<1> {
 
   struct LowerBound {
     using type = std::array<double, 1>;
-    static constexpr Options::String help = {
-        "Sequence of [x] for lower bounds."};
+    static constexpr Options::String help{};
   };
   struct UpperBound {
     using type = std::array<double, 1>;
-    static constexpr Options::String help = {
-        "Sequence of [x] for upper bounds."};
+    static constexpr Options::String help{};
   };
   struct Distribution {
     using type = CoordinateMaps::Distribution;
-    static constexpr Options::String help = {"Distribution of grid points"};
+    static constexpr Options::String help{};
   };
   struct Singularity {
     using type = Options::Auto<double, Options::AutoLabel::None>;
-    static constexpr Options::String help = {
-        "Position of coordinate singularity. Must be outside the domain. "
-        "Required for 'Logarithmic' and 'Inverse' grid point distributions. "
-        "Set to 'None' otherwise. "
-        "A singularity position close to the lower or upper bound of the "
-        "interval leads to very small grid spacing near that end, and "
-        "placing the singularity further away from the domain increases the "
-        "grid spacing. See the documentation of "
-        "'domain::CoordinateMap::Distribution' for details."};
+    static constexpr Options::String help{};
   };
   struct IsPeriodicIn {
     using type = std::array<bool, 1>;
-    static constexpr Options::String help = {
-        "Sequence for [x], true if periodic."};
+    static constexpr Options::String help{};
   };
   struct InitialRefinement {
     using type = std::array<size_t, 1>;
-    static constexpr Options::String help = {
-        "Initial refinement level in [x]."};
+    static constexpr Options::String help{};
   };
   struct InitialGridPoints {
     using type = std::array<size_t, 1>;
-    static constexpr Options::String help = {
-        "Initial number of grid points in [x]."};
+    static constexpr Options::String help{};
   };
   struct TimeDependence {
     using type =
         std::unique_ptr<domain::creators::time_dependence::TimeDependence<1>>;
-    static constexpr Options::String help = {
-        "The time dependence of the moving mesh domain."};
+    static constexpr Options::String help{};
   };
   struct BoundaryConditions {
-    static constexpr Options::String help = "The boundary conditions to apply.";
+    static constexpr Options::String help{};
   };
   template <typename BoundaryConditionsBase>
   struct UpperBoundaryCondition {
     static std::string name() { return "UpperBoundary"; }
-    static constexpr Options::String help =
-        "Options for the boundary condition applied at the upper boundary.";
+    static constexpr Options::String help{};
     using type = std::unique_ptr<BoundaryConditionsBase>;
     using group = BoundaryConditions;
   };
   template <typename BoundaryConditionsBase>
   struct LowerBoundaryCondition {
     static std::string name() { return "LowerBoundary"; }
-    static constexpr Options::String help =
-        "Options for the boundary condition applied at the lower boundary.";
+    static constexpr Options::String help{};
     using type = std::unique_ptr<BoundaryConditionsBase>;
     using group = BoundaryConditions;
   };
@@ -136,7 +120,7 @@ class Interval : public DomainCreator<1> {
           options_periodic>,
       tmpl::list<Distribution, Singularity, TimeDependence>>;
 
-  static constexpr Options::String help = {"Creates a 1D interval."};
+  static constexpr Options::String help{};
 
   Interval(std::array<double, 1> lower_x, std::array<double, 1> upper_x,
            std::array<size_t, 1> initial_refinement_level_x,
