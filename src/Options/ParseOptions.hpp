@@ -677,29 +677,6 @@ void Parser<OptionList, Group>::pup(PUP::er& p) {
   }
 }
 
-[[noreturn]] void unused_key_error_message(const Context& context,
-                                           const std::string& name,
-                                           const std::string& parsing_help);
-
-template <typename Tag>
-void unused_key_error(const Context& context, const std::string& name,
-                      const std::string& parsing_help) {
-  if (name == pretty_type::name<Tag>()) {
-    unused_key_error_message(context, name, parsing_help);
-  }
-}
-
-template <typename All_PossibleOptions>
-struct unused_key_error_helper;
-
-template <typename... All_PossibleOptions>
-struct unused_key_error_helper<tmpl::list<All_PossibleOptions...>> {
-  static void apply(const Context& context, const std::string& name,
-                    const std::string& parsing_help) {
-    (unused_key_error<All_PossibleOptions>(context, name, parsing_help), ...);
-  }
-};
-
 template <typename OptionList, typename Group>
 void Parser<OptionList, Group>::parse(const YAML::Node& node) {
   if (not(node.IsMap() or node.IsNull())) {
@@ -757,8 +734,17 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
     // Check for invalid key
     const auto name_it = alg::find(valid_names, name);
     if (name_it == valid_names.end()) {
-      unused_key_error_helper<all_possible_options>::apply(context, name,
-                                                           parsing_help(node));
+      tmpl::for_each<all_possible_options>([this, &context, &name,
+                                            &node](auto tag) {
+        using Tag = tmpl::type_from<decltype(tag)>;
+        if (name == pretty_type::name<Tag>()) {
+          PARSE_ERROR(context,
+                      "Option '"
+                          << name
+                          << "' is unused because of other provided options.\n"
+                          << parsing_help(node));
+        }
+      });
       PARSE_ERROR(context, "Option '" << name << "' is not a valid option.\n"
                                       << parsing_help(node));
     }
