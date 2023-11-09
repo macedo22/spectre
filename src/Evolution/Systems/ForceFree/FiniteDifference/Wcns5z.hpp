@@ -78,25 +78,25 @@ class Wcns5z : public Reconstructor {
 
   struct NonlinearWeightExponent {
     using type = size_t;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   struct Epsilon {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   struct FallbackReconstructor {
     using type = FallbackReconstructorType;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   struct MaxNumberOfExtrema {
     using type = size_t;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   using options = tmpl::list<NonlinearWeightExponent, Epsilon,
                              FallbackReconstructor, MaxNumberOfExtrema>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   Wcns5z() = default;
   Wcns5z(Wcns5z&&) = default;

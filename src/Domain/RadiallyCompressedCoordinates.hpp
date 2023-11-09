@@ -71,18 +71,18 @@ tnsr::I<DataType, Dim, CoordsFrame> radially_compressed_coordinates(
 ///
 /// \see radially_compressed_coordinates
 struct RadiallyCompressedCoordinatesOptions {
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
   struct InnerRadius {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   struct OuterRadius {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   struct Compression {
     using type = CoordinateMaps::Distribution;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   using options = tmpl::list<InnerRadius, OuterRadius, Compression>;
   void pup(PUP::er& p);
@@ -96,7 +96,7 @@ namespace OptionTags {
 struct RadiallyCompressedCoordinates {
   using type = Options::Auto<domain::RadiallyCompressedCoordinatesOptions,
                              Options::AutoLabel::None>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 };
 
 }  // namespace OptionTags

@@ -17,7 +17,7 @@ namespace OptionTags {
  */
 struct Group {
   static std::string name() { return "Evolution"; }
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 };
 
 /*!
@@ -29,7 +29,7 @@ struct Group {
  */
 struct SystemGroup {
   static std::string name() { return "EvolutionSystem"; }
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 };
 
 }  // namespace OptionTags

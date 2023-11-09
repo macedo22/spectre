@@ -611,7 +611,7 @@ struct EvolutionMetavars<InitialData, tmpl::list<InterpolationTargetTags...>> {
       initial_data_tag, equation_of_state_tag,
       grmhd::ValenciaDivClean::Tags::ConstraintDampingParameter>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   static constexpr std::array<Parallel::Phase, 5> default_phase_order{
       {Parallel::Phase::Initialization,

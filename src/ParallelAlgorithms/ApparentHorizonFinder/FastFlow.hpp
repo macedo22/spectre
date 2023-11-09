@@ -65,57 +65,57 @@ class FastFlow {
 
   struct Flow {
     using type = FlowType;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static type suggested_value() { return FlowType::Fast; }
   };
 
   struct Alpha {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static type suggested_value() { return 1.0; }
   };
 
   struct Beta {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static type suggested_value() { return 0.5; }
   };
 
   struct AbsTol {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static type suggested_value() { return 1.e-12; }
   };
 
   struct TruncationTol {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static type suggested_value() { return 1.e-2; }
   };
 
   struct DivergenceTol {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static type suggested_value() { return 1.2; }
     static type lower_bound() { return 1.0; }
   };
 
   struct DivergenceIter {
     using type = size_t;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static type suggested_value() { return 5; }
   };
 
   struct MaxIts {
     using type = size_t;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static type suggested_value() { return 100; }
   };
 
   using options = tmpl::list<Flow, Alpha, Beta, AbsTol, TruncationTol,
                              DivergenceTol, DivergenceIter, MaxIts>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   FastFlow(Flow::type flow, Alpha::type alpha, Beta::type beta,
            AbsTol::type abs_tol, TruncationTol::type trunc_tol,

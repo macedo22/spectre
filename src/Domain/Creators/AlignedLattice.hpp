@@ -47,17 +47,17 @@ struct RefinementRegion {
 
   struct LowerCornerIndex {
     using type = std::array<size_t, VolumeDim>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct UpperCornerIndex {
     using type = std::array<size_t, VolumeDim>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct Refinement {
     using type = std::array<size_t, VolumeDim>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   static constexpr Options::String help = {
@@ -110,43 +110,43 @@ class AlignedLattice : public DomainCreator<VolumeDim> {
 
   struct BlockBounds {
     using type = std::array<std::vector<double>, VolumeDim>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct IsPeriodicIn {
     using type = std::array<bool, VolumeDim>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct InitialLevels {
     using type = std::array<size_t, VolumeDim>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct InitialGridPoints {
     using type = std::array<size_t, VolumeDim>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct RefinedLevels {
     using type = std::vector<RefinementRegion<VolumeDim>>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct RefinedGridPoints {
     using type = std::vector<RefinementRegion<VolumeDim>>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct BlocksToExclude {
     using type = std::vector<std::array<size_t, VolumeDim>>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   template <typename BoundaryConditionsBase>
   struct BoundaryCondition {
     static std::string name() { return "BoundaryCondition"; }
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     using type = std::unique_ptr<BoundaryConditionsBase>;
   };
 
@@ -166,7 +166,7 @@ class AlignedLattice : public DomainCreator<VolumeDim> {
                   typename Metavariables::system>>>,
           options_periodic>>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   AlignedLattice(typename BlockBounds::type block_bounds,
                  typename InitialLevels::type initial_refinement_levels,

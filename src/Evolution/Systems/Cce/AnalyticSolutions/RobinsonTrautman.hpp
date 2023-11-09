@@ -58,28 +58,28 @@ namespace Solutions {
 struct RobinsonTrautman : public SphericalMetricData {
   struct InitialModes {
     using type = std::vector<std::complex<double>>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   struct ExtractionRadius {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static type lower_bound() { return 0.0; }
     static type suggested_value() { return 20.0; }
   };
   struct LMax {
     using type = size_t;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static type lower_bound() { return 4; }
   };
   struct Tolerance {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static type lower_bound() { return 0.0; }
     static type suggested_value() { return 1.0e-11; }
   };
   struct StartTime {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static type lower_bound() { return 0.0; }
     static type suggested_value() { return 0.0; }
   };
@@ -87,7 +87,7 @@ struct RobinsonTrautman : public SphericalMetricData {
   using options =
       tmpl::list<InitialModes, ExtractionRadius, LMax, Tolerance, StartTime>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   WRAPPED_PUPable_decl_template(RobinsonTrautman);  // NOLINT
 

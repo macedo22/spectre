@@ -65,38 +65,38 @@ class RotatedRectangles : public DomainCreator<2> {
 
   struct LowerBound {
     using type = std::array<double, 2>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct Midpoint {
     using type = std::array<double, 2>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct UpperBound {
     using type = std::array<double, 2>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct IsPeriodicIn {
     using type = std::array<bool, 2>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct InitialRefinement {
     using type = std::array<size_t, 2>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct InitialGridPoints {
     using type = std::array<std::array<size_t, 2>, 2>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   template <typename BoundaryConditionsBase>
   struct BoundaryCondition {
     static std::string name() { return "BoundaryCondition"; }
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     using type = std::unique_ptr<BoundaryConditionsBase>;
   };
 
@@ -115,7 +115,7 @@ class RotatedRectangles : public DomainCreator<2> {
                   typename Metavariables::system>>>,
           options_periodic>>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   RotatedRectangles(
       typename LowerBound::type lower_xy, typename Midpoint::type midpoint_xy,

@@ -69,16 +69,16 @@ template <domain::ObjectLabel Object>
 struct ShapeMapOptions {
   using type = Options::Auto<ShapeMapOptions, Options::AutoLabel::None>;
   static std::string name() { return "ShapeMap" + get_output(Object); }
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   struct LMax {
     using type = size_t;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct SizeInitialValues {
     using type = std::array<double, 3>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   using options = tmpl::list<LMax, SizeInitialValues>;
@@ -178,7 +178,7 @@ struct TimeDependentMapOptions {
   /// \brief The initial time of the functions of time.
   struct InitialTime {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   /// \brief Options for the expansion map.
@@ -188,18 +188,18 @@ struct TimeDependentMapOptions {
   struct ExpansionMapOptions {
     using type = Options::Auto<ExpansionMapOptions, Options::AutoLabel::None>;
     static std::string name() { return "ExpansionMap"; }
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     struct InitialValues {
       using type = std::array<double, 2>;
-      static constexpr Options::String help{};
+      static constexpr Options::String help{""};
     };
     struct AsymptoticVelocityOuterBoundary {
       using type = double;
-      static constexpr Options::String help{};
+      static constexpr Options::String help{""};
     };
     struct DecayTimescaleOuterBoundaryVelocity {
       using type = double;
-      static constexpr Options::String help{};
+      static constexpr Options::String help{""};
     };
     using options = tmpl::list<InitialValues, AsymptoticVelocityOuterBoundary,
                                DecayTimescaleOuterBoundaryVelocity>;
@@ -216,11 +216,11 @@ struct TimeDependentMapOptions {
   struct RotationMapOptions {
     using type = Options::Auto<RotationMapOptions, Options::AutoLabel::None>;
     static std::string name() { return "RotationMap"; }
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
 
     struct InitialAngularVelocity {
       using type = std::array<double, 3>;
-      static constexpr Options::String help{};
+      static constexpr Options::String help{""};
     };
 
     using options = tmpl::list<InitialAngularVelocity>;
@@ -243,7 +243,7 @@ struct TimeDependentMapOptions {
       tmpl::list<InitialTime, ExpansionMapOptions, RotationMapOptions,
                  ShapeMapOptions<domain::ObjectLabel::A>,
                  ShapeMapOptions<domain::ObjectLabel::B>>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   TimeDependentMapOptions() = default;
 

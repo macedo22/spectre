@@ -18,7 +18,7 @@ template <typename OptionsGroup>
 struct RelaxationParameter {
   using type = double;
   using group = OptionsGroup;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 };
 
 }  // namespace OptionTags

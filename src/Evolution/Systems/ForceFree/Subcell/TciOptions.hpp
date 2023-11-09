@@ -35,12 +35,12 @@ struct TciOptions {
    */
   struct TildeQCutoff {
     using type = Options::Auto<double, DoNotCheckTildeQ>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   using options = tmpl::list<TildeQCutoff>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   // NOLINTNEXTLINE(google-runtime-references)
   void pup(PUP::er& /*p*/);
@@ -52,7 +52,7 @@ struct TciOptions {
 namespace OptionTags {
 struct TciOptions {
   using type = subcell::TciOptions;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
   using group = ::dg::OptionTags::DiscontinuousGalerkinGroup;
 };
 }  // namespace OptionTags

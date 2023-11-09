@@ -75,20 +75,20 @@ class RotationAboutZAxis final : public TimeDependence<MeshDim> {
   /// \brief The initial time of the function of time.
   struct InitialTime {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   struct InitialAngle {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   /// \brief The \f$x\f$-, \f$y\f$-, and \f$z\f$-velocity.
   struct InitialAngularVelocity {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   struct InitialAngularAcceleration {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   using GridToInertialMap = detail::generate_coordinate_map_t<
@@ -100,7 +100,7 @@ class RotationAboutZAxis final : public TimeDependence<MeshDim> {
   using options = tmpl::list<InitialTime, InitialAngle, InitialAngularVelocity,
                              InitialAngularAcceleration>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   RotationAboutZAxis() = default;
   ~RotationAboutZAxis() override = default;

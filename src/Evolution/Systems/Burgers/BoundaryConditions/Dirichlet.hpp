@@ -43,11 +43,11 @@ class Dirichlet final : public BoundaryCondition {
  public:
   struct U {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   using options = tmpl::list<U>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   Dirichlet(double u_value);
 

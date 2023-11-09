@@ -167,7 +167,7 @@ class Weno<VolumeDim, tmpl::list<Tags...>> {
   /// documentation for details.
   struct Type {
     using type = WenoType;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   /// \brief The linear weight given to each neighbor
   ///
@@ -180,7 +180,7 @@ class Weno<VolumeDim, tmpl::list<Tags...>> {
     using type = double;
     static type lower_bound() { return 1e-6; }
     static type upper_bound() { return 0.1; }
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   /// \brief The TVB constant for the minmod TCI
   ///
@@ -188,7 +188,7 @@ class Weno<VolumeDim, tmpl::list<Tags...>> {
   struct TvbConstant {
     using type = double;
     static type lower_bound() { return 0.0; }
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   /// \brief Turn the limiter off
   ///
@@ -198,11 +198,11 @@ class Weno<VolumeDim, tmpl::list<Tags...>> {
   struct DisableForDebugging {
     using type = bool;
     static type suggested_value() { return false; }
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   using options =
       tmpl::list<Type, NeighborWeight, TvbConstant, DisableForDebugging>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   Weno(WenoType weno_type, double neighbor_linear_weight, double tvb_constant,
        bool disable_for_debugging = false);

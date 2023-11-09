@@ -57,7 +57,7 @@ class Interpolate<VolumeDim, InterpolationTargetTag,
   /// \endcond
 
   using options = tmpl::list<>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   static std::string name() {
     return pretty_type::name<InterpolationTargetTag>();

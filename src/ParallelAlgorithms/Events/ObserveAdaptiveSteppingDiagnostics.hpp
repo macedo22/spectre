@@ -64,7 +64,7 @@ class ObserveAdaptiveSteppingDiagnostics : public Event {
   /// The name of the subfile inside the HDF5 file
   struct SubfileName {
     using type = std::string;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   /// \cond
@@ -74,7 +74,7 @@ class ObserveAdaptiveSteppingDiagnostics : public Event {
   /// \endcond
 
   using options = tmpl::list<SubfileName>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   ObserveAdaptiveSteppingDiagnostics() = default;
   explicit ObserveAdaptiveSteppingDiagnostics(const std::string& subfile_name)

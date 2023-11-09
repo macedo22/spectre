@@ -77,5 +77,5 @@ struct EvolutionMetavars : public GeneralizedHarmonicTemplateBase<VolumeDim> {
                                importers::ElementDataReader<EvolutionMetavars>,
                                gh_dg_element_array>>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 };

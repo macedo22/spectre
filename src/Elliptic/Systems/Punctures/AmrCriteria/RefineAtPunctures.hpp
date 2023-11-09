@@ -33,7 +33,7 @@ class RefineAtPunctures : public amr::Criterion {
  public:
   using options = tmpl::list<>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   RefineAtPunctures() = default;
 

@@ -163,7 +163,7 @@ class ConstraintPreservingSphericalRadiation final
     : public BoundaryCondition<Dim> {
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
   ConstraintPreservingSphericalRadiation() = default;
   ConstraintPreservingSphericalRadiation(
       ConstraintPreservingSphericalRadiation&&) = default;

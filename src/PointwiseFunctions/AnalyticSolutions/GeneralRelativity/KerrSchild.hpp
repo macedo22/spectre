@@ -220,19 +220,19 @@ class KerrSchild : public AnalyticSolution<3_st>,
  public:
   struct Mass {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static type lower_bound() { return 0.; }
   };
   struct Spin {
     using type = std::array<double, volume_dim>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   struct Center {
     using type = std::array<double, volume_dim>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   using options = tmpl::list<Mass, Spin, Center>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   KerrSchild(double mass, const std::array<double, 3>& dimensionless_spin,
              const std::array<double, 3>& center,

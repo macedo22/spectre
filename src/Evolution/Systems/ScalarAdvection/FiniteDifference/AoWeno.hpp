@@ -66,24 +66,24 @@ class AoWeno53 : public Reconstructor<Dim> {
  public:
   struct GammaHi {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   struct GammaLo {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   struct Epsilon {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   struct NonlinearWeightExponent {
     using type = size_t;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   using options =
       tmpl::list<GammaHi, GammaLo, Epsilon, NonlinearWeightExponent>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   AoWeno53() = default;
   AoWeno53(AoWeno53&&) = default;

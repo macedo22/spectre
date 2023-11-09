@@ -22,7 +22,7 @@ template <size_t VolumeDim, typename Fr>
 struct DampingFunctionGamma0 {
   using type =
       std::unique_ptr<::gh::ConstraintDamping::DampingFunction<VolumeDim, Fr>>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
   using group = gh::OptionTags::Group;
 };
 
@@ -30,7 +30,7 @@ template <size_t VolumeDim, typename Fr>
 struct DampingFunctionGamma1 {
   using type =
       std::unique_ptr<::gh::ConstraintDamping::DampingFunction<VolumeDim, Fr>>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
   using group = gh::OptionTags::Group;
 };
 
@@ -38,7 +38,7 @@ template <size_t VolumeDim, typename Fr>
 struct DampingFunctionGamma2 {
   using type =
       std::unique_ptr<::gh::ConstraintDamping::DampingFunction<VolumeDim, Fr>>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
   using group = gh::OptionTags::Group;
 };
 }  // namespace OptionTags

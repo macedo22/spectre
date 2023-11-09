@@ -103,7 +103,7 @@ class ObserveFields<VolumeDim, tmpl::list<Tensors...>,
   /// The name of the subfile inside the HDF5 file
   struct SubfileName {
     using type = std::string;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   /// \cond
@@ -113,14 +113,14 @@ class ObserveFields<VolumeDim, tmpl::list<Tensors...>,
   /// \endcond
 
   struct VariablesToObserve {
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     using type = std::vector<std::string>;
     static size_t lower_bound_on_size() { return 1; }
   };
 
   struct InterpolateToMesh {
     using type = Options::Auto<Mesh<VolumeDim>, Options::AutoLabel::None>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   /// The floating point type/precision with which to write the data to disk.
@@ -128,7 +128,7 @@ class ObserveFields<VolumeDim, tmpl::list<Tensors...>,
   /// Must be specified once for all data or individually for each variable
   /// being observed.
   struct FloatingPointTypes {
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     using type = std::vector<FloatingPointType>;
     static size_t upper_bound_on_size() { return sizeof...(Tensors); }
     static size_t lower_bound_on_size() { return 1; }
@@ -137,7 +137,7 @@ class ObserveFields<VolumeDim, tmpl::list<Tensors...>,
   /// The floating point type/precision with which to write the coordinates to
   /// disk.
   struct CoordinatesFloatingPointType {
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     using type = FloatingPointType;
   };
 
@@ -145,7 +145,7 @@ class ObserveFields<VolumeDim, tmpl::list<Tensors...>,
       tmpl::list<SubfileName, CoordinatesFloatingPointType, FloatingPointTypes,
                  VariablesToObserve, InterpolateToMesh>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   ObserveFields() = default;
 

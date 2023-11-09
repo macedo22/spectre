@@ -66,58 +66,58 @@ class SlabJet : public evolution::initial_data::InitialData,
 
   struct AdiabaticIndex {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static double lower_bound() { return 1.; }
   };
   struct AmbientDensity {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static double lower_bound() { return 0.; }
     static double suggested_value() { return 10.; }
   };
   struct AmbientPressure {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static double lower_bound() { return 0.; }
     static double suggested_value() { return 0.01; }
   };
   struct AmbientElectronFraction {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static double lower_bound() { return 0.; }
     static double upper_bound() { return 1.; }
   };
   struct JetDensity {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static double lower_bound() { return 0.; }
     static double suggested_value() { return 0.1; }
   };
   struct JetPressure {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static double lower_bound() { return 0.; }
     static double suggested_value() { return 0.01; }
   };
   struct JetElectronFraction {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static double lower_bound() { return 0.; }
     static double upper_bound() { return 1.; }
   };
   struct JetVelocity {
     using type = std::array<double, 3>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   struct InletRadius {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static double lower_bound() { return 0.; }
     static double suggested_value() { return 1.; }
   };
   struct MagneticField {
     using type = std::array<double, 3>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static std::array<double, 3> suggested_value() { return {{1., 0., 0.}}; }
   };
 
@@ -126,7 +126,7 @@ class SlabJet : public evolution::initial_data::InitialData,
                  AmbientElectronFraction, JetDensity, JetPressure,
                  JetElectronFraction, JetVelocity, InletRadius, MagneticField>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   SlabJet() = default;
   SlabJet(const SlabJet& /*rhs*/) = default;

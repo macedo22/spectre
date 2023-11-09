@@ -53,22 +53,22 @@ class Mesh {
 
   struct Extents {
     using type = size_t;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct Basis {
     using type = Spectral::Basis;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct Quadrature {
     using type = Spectral::Quadrature;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   using options = tmpl::list<Extents, Basis, Quadrature>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   Mesh() = default;
 

@@ -141,55 +141,55 @@ class RiemannProblem : public MarkAsAnalyticSolution {
   /// The adiabatic index of the fluid.
   struct AdiabaticIndex {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   /// Initial position of the discontinuity
   struct InitialPosition {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   /// The mass density on the left of the initial discontinuity
   struct LeftMassDensity {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   /// The velocity on the left of the initial discontinuity
   struct LeftVelocity {
     using type = std::array<double, Dim>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   /// The pressure on the left of the initial discontinuity
   struct LeftPressure {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   /// The mass density on the right of the initial discontinuity
   struct RightMassDensity {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   /// The velocity on the right of the initial discontinuity
   struct RightVelocity {
     using type = std::array<double, Dim>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   /// The pressure on the right of the initial discontinuity
   struct RightPressure {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   /// The tolerance for solving for \f$p_*\f$.
   struct PressureStarTol {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static type suggested_value() { return 1.e-9; }
   };
 

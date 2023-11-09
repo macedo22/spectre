@@ -128,57 +128,57 @@ class RiemannProblem : public evolution::initial_data::InitialData,
 
   struct AdiabaticIndex {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static type lower_bound() { return 1.0; }
   };
   struct LeftRestMassDensity {
     using type = double;
     static std::string name() { return "LeftDensity"; };
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static type lower_bound() { return 0.0; }
   };
   struct RightRestMassDensity {
     using type = double;
     static std::string name() { return "RightDensity"; };
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static type lower_bound() { return 0.0; }
   };
   struct LeftPressure {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static type lower_bound() { return 0.0; }
   };
   struct RightPressure {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static type lower_bound() { return 0.0; }
   };
   struct LeftSpatialVelocity {
     using type = std::array<double, 3>;
     static std::string name() { return "LeftVelocity"; };
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   struct RightSpatialVelocity {
     using type = std::array<double, 3>;
     static std::string name() { return "RightVelocity"; };
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   struct LeftMagneticField {
     using type = std::array<double, 3>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   struct RightMagneticField {
     using type = std::array<double, 3>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   struct Lapse {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static type lower_bound() { return 0.0; }
   };
   struct ShiftX {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   using options =
@@ -187,7 +187,7 @@ class RiemannProblem : public evolution::initial_data::InitialData,
                  RightSpatialVelocity, LeftMagneticField, RightMagneticField,
                  Lapse, ShiftX>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   RiemannProblem() = default;
   RiemannProblem(const RiemannProblem& /*rhs*/) = default;

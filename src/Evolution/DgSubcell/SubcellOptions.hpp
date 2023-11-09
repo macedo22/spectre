@@ -32,14 +32,14 @@ namespace evolution::dg::subcell {
 class SubcellOptions {
  public:
   struct InitialData {
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   /// The \f$\delta_0\f$ parameter in the relaxed discrete maximum principle
   /// troubled-cell indicator when applied to the initial data
   struct InitialDataRdmpDelta0 {
     static std::string name() { return "RdmpDelta0"; }
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     using type = double;
     static type lower_bound() { return 0.0; }
     using group = InitialData;
@@ -48,7 +48,7 @@ class SubcellOptions {
   /// troubled-cell indicator when applied to the initial data
   struct InitialDataRdmpEpsilon {
     static std::string name() { return "RdmpEpsilon"; }
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     using type = double;
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 1.0; }
@@ -58,7 +58,7 @@ class SubcellOptions {
   /// when applied to the initial data.
   struct InitialDataPerssonExponent {
     static std::string name() { return "PerssonExponent"; }
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     using type = double;
     static constexpr type lower_bound() { return 1.0; }
     static constexpr type upper_bound() { return 10.0; }
@@ -69,7 +69,7 @@ class SubcellOptions {
   /// troubled-cell indicator
   struct RdmpDelta0 {
     static std::string name() { return "RdmpDelta0"; }
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     using type = double;
     static type lower_bound() { return 0.0; }
   };
@@ -77,7 +77,7 @@ class SubcellOptions {
   /// troubled-cell indicator
   struct RdmpEpsilon {
     static std::string name() { return "RdmpEpsilon"; }
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     using type = double;
     static type lower_bound() { return 0.0; }
     static type upper_bound() { return 1.0; }
@@ -85,20 +85,20 @@ class SubcellOptions {
   /// The exponent \f$\alpha\f$ passed to the Persson troubled-cell indicator
   struct PerssonExponent {
     static std::string name() { return "PerssonExponent"; }
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     using type = double;
     static constexpr type lower_bound() { return 1.0; }
     static constexpr type upper_bound() { return 10.0; }
   };
   /// If true, then we always use the subcell method, not DG.
   struct AlwaysUseSubcells {
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     using type = bool;
   };
   /// Method to use for reconstructing the DG solution from the subcell
   /// solution.
   struct SubcellToDgReconstructionMethod {
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     using type = fd::ReconstructionMethod;
   };
   /// \brief Use a width-one halo of FD elements around any troubled element.
@@ -111,7 +111,7 @@ class SubcellOptions {
   /// unlimited reconstruction, they can run into issues with Gibbs phenomenon.
   struct UseHalo {
     using type = bool;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   /// \brief A list of block names on which to never do subcell.
@@ -120,7 +120,7 @@ class SubcellOptions {
   struct OnlyDgBlocksAndGroups {
     using type =
         Options::Auto<std::vector<std::string>, Options::AutoLabel::None>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   /// \brief The order of the FD derivative used.
@@ -131,7 +131,7 @@ class SubcellOptions {
   /// would use 4th order derivatives.
   struct FiniteDifferenceDerivativeOrder {
     using type = ::fd::DerivativeOrder;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   using options =
@@ -140,7 +140,7 @@ class SubcellOptions {
                  AlwaysUseSubcells, SubcellToDgReconstructionMethod, UseHalo,
                  OnlyDgBlocksAndGroups, FiniteDifferenceDerivativeOrder>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   SubcellOptions() = default;
   SubcellOptions(

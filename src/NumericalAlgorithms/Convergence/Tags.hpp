@@ -19,14 +19,14 @@ namespace OptionTags {
 template <typename OptionsGroup>
 struct Criteria {
   static std::string name() { return "ConvergenceCriteria"; }
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
   using type = Convergence::Criteria;
   using group = OptionsGroup;
 };
 
 template <typename OptionsGroup>
 struct Iterations {
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
   using type = size_t;
   using group = OptionsGroup;
 };

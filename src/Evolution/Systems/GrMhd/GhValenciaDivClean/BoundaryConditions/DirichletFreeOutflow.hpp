@@ -68,7 +68,7 @@ class DirichletFreeOutflow final : public BoundaryCondition {
 
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   DirichletFreeOutflow() = default;
   DirichletFreeOutflow(DirichletFreeOutflow&&) = default;

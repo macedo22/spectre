@@ -64,29 +64,29 @@ class Cylinder : public DomainCreator<3> {
 
   struct InnerRadius {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static double lower_bound() { return 0.; }
   };
 
   struct OuterRadius {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static double lower_bound() { return 0.; }
   };
 
   struct LowerZBound {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct UpperZBound {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct IsPeriodicInZ {
     using type = bool;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct InitialRefinement {
@@ -94,7 +94,7 @@ class Cylinder : public DomainCreator<3> {
         std::variant<size_t, std::array<size_t, 3>,
                      std::vector<std::array<size_t, 3>>,
                      std::unordered_map<std::string, std::array<size_t, 3>>>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct InitialGridPoints {
@@ -102,45 +102,45 @@ class Cylinder : public DomainCreator<3> {
         std::variant<size_t, std::array<size_t, 3>,
                      std::vector<std::array<size_t, 3>>,
                      std::unordered_map<std::string, std::array<size_t, 3>>>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct UseEquiangularMap {
     using type = bool;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct RadialPartitioning {
     using type = std::vector<double>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct PartitioningInZ {
     using type = std::vector<double>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct RadialDistribution {
     using type = std::vector<domain::CoordinateMaps::Distribution>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static size_t lower_bound_on_size() { return 1; }
   };
 
   struct DistributionInZ {
     using type = std::vector<domain::CoordinateMaps::Distribution>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static size_t lower_bound_on_size() { return 1; }
   };
 
   struct BoundaryConditions {
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   template <typename BoundaryConditionsBase>
   struct LowerZBoundaryCondition {
     using group = BoundaryConditions;
     static std::string name() { return "LowerZ"; }
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     using type = std::unique_ptr<BoundaryConditionsBase>;
   };
 
@@ -148,7 +148,7 @@ class Cylinder : public DomainCreator<3> {
   struct UpperZBoundaryCondition {
     using group = BoundaryConditions;
     static std::string name() { return "UpperZ"; }
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     using type = std::unique_ptr<BoundaryConditionsBase>;
   };
 
@@ -156,7 +156,7 @@ class Cylinder : public DomainCreator<3> {
   struct MantleBoundaryCondition {
     using group = BoundaryConditions;
     static std::string name() { return "Mantle"; }
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     using type = std::unique_ptr<BoundaryConditionsBase>;
   };
 
@@ -181,7 +181,7 @@ class Cylinder : public DomainCreator<3> {
                  RadialPartitioning, PartitioningInZ, RadialDistribution,
                  DistributionInZ>>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   Cylinder(
       double inner_radius, double outer_radius, double lower_z_bound,

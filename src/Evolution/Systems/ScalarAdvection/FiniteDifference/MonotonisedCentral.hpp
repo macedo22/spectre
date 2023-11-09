@@ -59,7 +59,7 @@ class MonotonisedCentral : public Reconstructor<Dim> {
 
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   MonotonisedCentral() = default;
   MonotonisedCentral(MonotonisedCentral&&) = default;

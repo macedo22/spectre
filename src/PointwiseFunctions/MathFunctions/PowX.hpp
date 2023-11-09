@@ -31,11 +31,11 @@ class PowX<1, Fr> : public MathFunction<1, Fr> {
  public:
   struct Power {
     using type = int;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   using options = tmpl::list<Power>;
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
   PowX() = default;
 
   WRAPPED_PUPable_decl_base_template(SINGLE_ARG(MathFunction<1, Fr>),

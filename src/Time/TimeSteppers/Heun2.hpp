@@ -38,7 +38,7 @@ namespace TimeSteppers {
 class Heun2 : public RungeKutta {
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   Heun2() = default;
   Heun2(const Heun2&) = default;

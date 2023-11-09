@@ -139,55 +139,55 @@ class Enthalpy : public EquationOfState<true, 1> {
 
   struct ReferenceDensity {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static double lower_bound() { return 0.0; }
   };
 
   struct MinimumDensity {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static double lower_bound() { return 0.0; }
   };
   struct MaximumDensity {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static double lower_bound() { return 0.0; }
   };
 
   struct PolynomialCoefficients {
     using type = std::vector<double>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct TrigScaling {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static double lower_bound() { return 0.0; }
   };
 
   struct SinCoefficients {
     using type = std::vector<double>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   struct CosCoefficients {
     using type = std::vector<double>;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
   struct StitchedLowDensityEoS {
     using type = LowDensityEoS;
     static std::string name() {
       return pretty_type::short_name<LowDensityEoS>();
     }
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   struct TransitionDeltaEpsilon {
     using type = double;
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
     static double lower_bound() { return 0.0; }
   };
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   using options =
       tmpl::list<ReferenceDensity, MaximumDensity, MinimumDensity, TrigScaling,

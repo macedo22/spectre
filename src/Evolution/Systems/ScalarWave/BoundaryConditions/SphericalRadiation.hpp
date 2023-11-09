@@ -82,11 +82,11 @@ class SphericalRadiation final : public BoundaryCondition<Dim> {
   struct TypeOptionTag {
     using type = detail::SphericalRadiationType;
     static std::string name() { return "Type"; }
-    static constexpr Options::String help{};
+    static constexpr Options::String help{""};
   };
 
   using options = tmpl::list<TypeOptionTag>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   SphericalRadiation() = default;
   SphericalRadiation(detail::SphericalRadiationType type);

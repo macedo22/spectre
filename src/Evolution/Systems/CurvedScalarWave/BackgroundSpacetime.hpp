@@ -14,13 +14,13 @@ namespace CurvedScalarWave {
 namespace OptionTags {
 
 struct BackgroundSpacetimeGroup {
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
   static std::string name() { return "BackgroundSpacetime"; }
 };
 
 template <typename BackgroundType>
 struct BackgroundSpacetime {
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
   static std::string name() {
     return pretty_type::short_name<BackgroundType>();
   }

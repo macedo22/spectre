@@ -92,7 +92,7 @@ class Sinusoid : public evolution::initial_data::InitialData,
                  public MarkAsAnalyticData {
  public:
   using options = tmpl::list<>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   Sinusoid() = default;
   Sinusoid(const Sinusoid&) = default;

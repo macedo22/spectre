@@ -42,7 +42,7 @@ class Times : public Trigger {
   WRAPPED_PUPable_decl_template(Times);  // NOLINT
   /// \endcond
 
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   explicit Times(std::unique_ptr<TimeSequence<double>> times)
       : times_(std::move(times)) {}

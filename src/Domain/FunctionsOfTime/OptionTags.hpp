@@ -15,7 +15,7 @@ namespace domain::FunctionsOfTime::OptionTags {
  * \brief Groups options for reading in FunctionOfTime data from SpEC
  */
 struct CubicFunctionOfTimeOverride {
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 };
 
 /*!
@@ -23,7 +23,7 @@ struct CubicFunctionOfTimeOverride {
  */
 struct FunctionOfTimeFile {
   using type = Options::Auto<std::string, Options::AutoLabel::None>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
   using group = CubicFunctionOfTimeOverride;
 };
 
@@ -32,7 +32,7 @@ struct FunctionOfTimeFile {
  */
 struct FunctionOfTimeNameMap {
   using type = std::map<std::string, std::string>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
   using group = CubicFunctionOfTimeOverride;
 };
 }  // namespace domain::FunctionsOfTime::OptionTags

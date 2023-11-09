@@ -454,11 +454,11 @@ class Krivodonova<VolumeDim, tmpl::list<Tags...>> {
     struct DisableForDebugging {
       using type = bool;
       static type suggested_value() { return false; }
-      static constexpr Options::String help{};
+      static constexpr Options::String help{""};
     };
 
   using options = tmpl::list<Alphas, DisableForDebugging>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 
   explicit Krivodonova(
       std::array<double,

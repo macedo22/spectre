@@ -19,7 +19,7 @@ namespace OptionTags {
 template <typename Metavariables>
 struct ResourceInfo {
   using type = Parallel::ResourceInfo<Metavariables>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 };
 }  // namespace OptionTags
 

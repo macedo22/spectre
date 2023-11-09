@@ -32,7 +32,7 @@ namespace OptionTags {
  */
 struct FileGlob {
   using type = std::string;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 };
 
 /*!
@@ -42,7 +42,7 @@ struct FileGlob {
  */
 struct Subgroup {
   using type = std::string;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 };
 
 /*!
@@ -50,7 +50,7 @@ struct Subgroup {
  */
 struct ObservationValue {
   using type = std::variant<double, ObservationSelector>;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 };
 
 /*!
@@ -59,7 +59,7 @@ struct ObservationValue {
 struct EnableInterpolation {
   static std::string name() { return "Interpolate"; }
   using type = bool;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
 };
 }  // namespace OptionTags
 
@@ -70,7 +70,7 @@ struct ImporterOptions
                           OptionTags::ObservationValue,
                           OptionTags::EnableInterpolation> {
   using options = tags_list;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
   using TaggedTuple::TaggedTuple;
 };
 
@@ -83,7 +83,7 @@ template <typename OptionsGroup>
 struct ImporterOptions : db::SimpleTag {
   static std::string name() { return "VolumeData"; }
   using type = importers::ImporterOptions;
-  static constexpr Options::String help{};
+  static constexpr Options::String help{""};
   using group = OptionsGroup;
   using option_tags = tmpl::list<ImporterOptions>;
   static constexpr bool pass_metavariables = false;
