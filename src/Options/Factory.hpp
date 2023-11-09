@@ -31,27 +31,27 @@ struct print_derived {
   std::string value;
   template <typename T>
   void operator()(tmpl::type_<T> /*meta*/) {
-    // // These are zero-based
-    // const size_t name_col = 2;
-    // const size_t help_col = 22;
-    // const size_t end_col = 80;
+    // These are zero-based
+    const size_t name_col = 2;
+    const size_t help_col = 22;
+    const size_t end_col = 80;
 
-    // std::ostringstream ss;
-    // ss << std::left << std::setw(name_col) << ""
-    //    << std::setw(help_col - name_col - 1) << pretty_type::name<T>();
-    // if (ss.str().size() >= help_col) {
-    //   ss << "\n" << std::setw(help_col - 1) << "";
-    // }
+    std::ostringstream ss;
+    ss << std::left << std::setw(name_col) << ""
+       << std::setw(help_col - name_col - 1) << pretty_type::name<T>();
+    if (ss.str().size() >= help_col) {
+      ss << "\n" << std::setw(help_col - 1) << "";
+    }
 
-    // std::string help_snippet(T::help);
-    // if (help_snippet.size() > end_col - help_col) {
-    //   help_snippet.resize(end_col - help_col - 3);
-    //   help_snippet += "...";
-    // }
-    // std::replace(help_snippet.begin(), help_snippet.end(), '\n', ' ');
-    // ss << " " << help_snippet << "\n";
+    std::string help_snippet(T::help);
+    if (help_snippet.size() > end_col - help_col) {
+      help_snippet.resize(end_col - help_col - 3);
+      help_snippet += "...";
+    }
+    std::replace(help_snippet.begin(), help_snippet.end(), '\n', ' ');
+    ss << " " << help_snippet << "\n";
 
-    // value += ss.str();
+    value += ss.str();
   }
 };
 
