@@ -69,25 +69,25 @@ struct ReceivePoints {
       std::vector<std::optional<
           IdPair<domain::BlockId,
                  tnsr::I<double, VolumeDim, typename ::Frame::BlockLogical>>>>&&
-          block_logical_coords) {
-    db::mutate<intrp::Tags::InterpolatedVarsHolders<Metavariables>>(
-        [&temporal_id, &block_logical_coords](
-            const gsl::not_null<typename intrp::Tags::InterpolatedVarsHolders<
-                Metavariables>::type*>
-                vars_holders) {
-          auto& vars_infos =
-              get<intrp::Vars::HolderTag<InterpolationTargetTag,
-                                         Metavariables>>(*vars_holders)
-                  .infos;
+          /*block_logical_coords*/) {
+    // db::mutate<intrp::Tags::InterpolatedVarsHolders<Metavariables>>(
+    //     [&temporal_id, &block_logical_coords](
+    //         const gsl::not_null<typename intrp::Tags::InterpolatedVarsHolders<
+    //             Metavariables>::type*>
+    //             vars_holders) {
+    //       auto& vars_infos =
+    //           get<intrp::Vars::HolderTag<InterpolationTargetTag,
+    //                                      Metavariables>>(*vars_holders)
+    //               .infos;
 
-          // Add the target interpolation points at this temporal_id.
-          vars_infos.emplace(std::make_pair(
-              temporal_id,
-              intrp::Vars::Info<VolumeDim, typename InterpolationTargetTag::
-                                               vars_to_interpolate_to_target>{
-                  std::move(block_logical_coords)}));
-        },
-        make_not_null(&box));
+    //       // Add the target interpolation points at this temporal_id.
+    //       vars_infos.emplace(std::make_pair(
+    //           temporal_id,
+    //           intrp::Vars::Info<VolumeDim, typename InterpolationTargetTag::
+    //                                            vars_to_interpolate_to_target>{
+    //               std::move(block_logical_coords)}));
+    //     },
+    //     make_not_null(&box));
 
     try_to_interpolate<InterpolationTargetTag>(
         make_not_null(&box), make_not_null(&cache), temporal_id);
