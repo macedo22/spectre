@@ -34,7 +34,7 @@ template <typename InterpolationTargetTag, size_t VolumeDim,
 void interpolate(
     const typename InterpolationTargetTag::temporal_id::type& temporal_id,
     const Mesh<VolumeDim>& mesh, Parallel::GlobalCache<Metavariables>& cache,
-    const ElementId<VolumeDim>& array_index,
+    const ElementId<VolumeDim>& /*array_index*/,
     const InterpolatorSourceVars&... interpolator_source_vars_input) {
   Variables<typename Metavariables::interpolator_source_vars>
       interpolator_source_vars(mesh.number_of_grid_points());
@@ -53,9 +53,10 @@ void interpolate(
   // Send volume data to the Interpolator, to trigger interpolation.
   auto& interpolator = *Parallel::local_branch(
       ::Parallel::get_parallel_component<Interpolator<Metavariables>>(cache));
-  Parallel::simple_action<Actions::InterpolatorReceiveVolumeData<
-      typename InterpolationTargetTag::temporal_id>>(
-      interpolator, temporal_id, array_index, mesh, interpolator_source_vars);
+  (void)interpolator;
+//   Parallel::simple_action<Actions::InterpolatorReceiveVolumeData<
+//       typename InterpolationTargetTag::temporal_id>>(
+//       interpolator, temporal_id, array_index, mesh, interpolator_source_vars);
 
   // Tell the interpolation target that it should interpolate.
   auto& target = Parallel::get_parallel_component<
