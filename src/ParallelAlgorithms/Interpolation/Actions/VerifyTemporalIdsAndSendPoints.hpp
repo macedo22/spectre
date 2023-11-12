@@ -270,44 +270,44 @@ template <typename InterpolationTargetTag>
 struct VerifyTemporalIdsAndSendPoints {
   template <typename ParallelComponent, typename DbTags, typename Metavariables,
             typename ArrayIndex>
-  static void apply(db::DataBox<DbTags>& /*box*/,
-                    Parallel::GlobalCache<Metavariables>& /*cache*/,
-                    const ArrayIndex& /*array_index*/) {
-    // if constexpr (std::is_same_v<typename InterpolationTargetTag::
-    //                                  compute_target_points::frame,
-    //                              ::Frame::Grid>) {
-    //   detail::verify_temporal_ids_and_send_points_time_independent<
-    //       InterpolationTargetTag, ParallelComponent>(make_not_null(&box),
-    //                                                  cache);
-    // } else {
-    //   const auto& domain =
-    //       get<domain::Tags::Domain<Metavariables::volume_dim>>(cache);
-    //   if (domain.is_time_dependent()) {
-    //     if constexpr (Parallel::is_in_mutable_global_cache<
-    //                       Metavariables, domain::Tags::FunctionsOfTime>) {
-    //       detail::verify_temporal_ids_and_send_points_time_dependent<
-    //           InterpolationTargetTag, ParallelComponent>(make_not_null(&box),
-    //                                                      cache, array_index);
-    //     } else {
-    //       // We error here because the maps are time-dependent, yet
-    //       // the cache does not contain FunctionsOfTime.  It would be
-    //       // nice to make this a compile-time error; however, we want
-    //       // the code to compile for the completely time-independent
-    //       // case where there are no FunctionsOfTime in the cache at
-    //       // all.  Unfortunately, checking whether the maps are
-    //       // time-dependent is currently not constexpr.
-    //       ERROR(
-    //           "There is a time-dependent CoordinateMap in at least one "
-    //           "of the Blocks, but FunctionsOfTime are not in the "
-    //           "GlobalCache.  If you intend to use a time-dependent "
-    //           "CoordinateMap, please add FunctionsOfTime to the GlobalCache.");
-    //     }
-    //   } else {
-    //     detail::verify_temporal_ids_and_send_points_time_independent<
-    //         InterpolationTargetTag, ParallelComponent>(make_not_null(&box),
-    //                                                    cache);
-    //   }
-    // }
+  static void apply(db::DataBox<DbTags>& box,
+                    Parallel::GlobalCache<Metavariables>& cache,
+                    const ArrayIndex& array_index) {
+    if constexpr (std::is_same_v<typename InterpolationTargetTag::
+                                     compute_target_points::frame,
+                                 ::Frame::Grid>) {
+      detail::verify_temporal_ids_and_send_points_time_independent<
+          InterpolationTargetTag, ParallelComponent>(make_not_null(&box),
+                                                     cache);
+    } else {
+      const auto& domain =
+          get<domain::Tags::Domain<Metavariables::volume_dim>>(cache);
+      if (domain.is_time_dependent()) {
+        if constexpr (Parallel::is_in_mutable_global_cache<
+                          Metavariables, domain::Tags::FunctionsOfTime>) {
+          detail::verify_temporal_ids_and_send_points_time_dependent<
+              InterpolationTargetTag, ParallelComponent>(make_not_null(&box),
+                                                         cache, array_index);
+        } else {
+          // We error here because the maps are time-dependent, yet
+          // the cache does not contain FunctionsOfTime.  It would be
+          // nice to make this a compile-time error; however, we want
+          // the code to compile for the completely time-independent
+          // case where there are no FunctionsOfTime in the cache at
+          // all.  Unfortunately, checking whether the maps are
+          // time-dependent is currently not constexpr.
+          ERROR(
+              "There is a time-dependent CoordinateMap in at least one "
+              "of the Blocks, but FunctionsOfTime are not in the "
+              "GlobalCache.  If you intend to use a time-dependent "
+              "CoordinateMap, please add FunctionsOfTime to the GlobalCache.");
+        }
+      } else {
+        detail::verify_temporal_ids_and_send_points_time_independent<
+            InterpolationTargetTag, ParallelComponent>(make_not_null(&box),
+                                                       cache);
+      }
+    }
   }
 };
 }  // namespace intrp::Actions
