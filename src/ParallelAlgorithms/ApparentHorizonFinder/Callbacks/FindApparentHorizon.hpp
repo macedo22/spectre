@@ -394,9 +394,9 @@ struct FindApparentHorizon
       // Finally call callbacks
       tmpl::for_each<
           typename InterpolationTargetTag::post_horizon_find_callbacks>(
-          [&box, &cache, &temporal_id](auto callback_v) {
+          [/*&box, &cache, &temporal_id*/](auto callback_v) {
             using callback = tmpl::type_from<decltype(callback_v)>;
-            callback::apply(*box, *cache, temporal_id);
+            // callback::apply(*box, *cache, temporal_id);
           });
     }
 
