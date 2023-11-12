@@ -136,9 +136,10 @@ struct InterpolationTargetReceiveVars {
         auto& interpolator_proxy =
             Parallel::get_parallel_component<Interpolator<Metavariables>>(
                 cache);
-        Parallel::simple_action<
-            Actions::CleanUpInterpolator<InterpolationTargetTag>>(
-            interpolator_proxy, temporal_id);
+        (void)interpolator_proxy;
+        // Parallel::simple_action<
+        //     Actions::CleanUpInterpolator<InterpolationTargetTag>>(
+        //     interpolator_proxy, temporal_id);
 
         // If we have a sequential target, and there are further
         // temporal_ids, begin interpolation for the next one.
