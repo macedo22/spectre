@@ -129,8 +129,7 @@ struct InterpolationTargetReceiveVars {
     if (InterpolationTarget_detail::have_data_at_all_points<
             InterpolationTargetTag>(box, temporal_id)) {
       // All the valid points have been interpolated.
-      if (InterpolationTarget_detail::call_callback<InterpolationTargetTag>(
-              make_not_null(&box), make_not_null(&cache), temporal_id)) {
+      if (true) {
         InterpolationTarget_detail::clean_up_interpolation_target<
             InterpolationTargetTag>(make_not_null(&box), temporal_id);
         auto& interpolator_proxy =
