@@ -391,13 +391,13 @@ struct FindApparentHorizon
           },
           box);
 
-      // Finally call callbacks
-      tmpl::for_each<
-          typename InterpolationTargetTag::post_horizon_find_callbacks>(
-          [&box, &cache, &temporal_id](auto callback_v) {
-            using callback = tmpl::type_from<decltype(callback_v)>;
-            callback::apply(*box, *cache, temporal_id);
-          });
+    //   // Finally call callbacks
+    //   tmpl::for_each<
+    //       typename InterpolationTargetTag::post_horizon_find_callbacks>(
+    //       [&box, &cache, &temporal_id](auto callback_v) {
+    //         using callback = tmpl::type_from<decltype(callback_v)>;
+    //         callback::apply(*box, *cache, temporal_id);
+    //       });
     }
 
     // Prepare for finding horizon at a new time. Regardless of if we failed or
