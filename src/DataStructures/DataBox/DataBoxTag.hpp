@@ -31,33 +31,68 @@ struct DataBox {
 namespace db {
 
 namespace detail {
-template <typename TagList, typename Tag>
-using list_of_matching_tags = tmpl::conditional_t<
-    std::is_same_v<Tag, ::Tags::DataBox>, tmpl::list<::Tags::DataBox>,
-    tmpl::filter<TagList, std::is_base_of<tmpl::pin<Tag>, tmpl::_1>>>;
+// template <typename TagList, typename Tag>
+// using list_of_matching_tags = tmpl::conditional_t<
+//     std::is_same_v<Tag, ::Tags::DataBox>, tmpl::list<::Tags::DataBox>,
+//     tmpl::filter<TagList, std::is_base_of<tmpl::pin<Tag>, tmpl::_1>>>;
 
-template <typename Tag, typename TagList,
-          typename MatchingTagsList = list_of_matching_tags<TagList, Tag>>
-struct first_matching_tag_impl {
-  using type = tmpl::front<MatchingTagsList>;
-};
+// template <typename Tag, typename TagList,
+//           typename MatchingTagsList = list_of_matching_tags<TagList, Tag>>
+// struct first_matching_tag_impl {
+//   using type = tmpl::front<MatchingTagsList>;
+// };
+
+// template <typename Tag, typename TagList>
+// struct first_matching_tag_impl<Tag, TagList, tmpl::list<>> {
+//   static_assert(std::is_same<Tag, NoSuchType>::value,
+//                 "Could not find the DataBox tag in the list of DataBox tags.
+//                 " "The first template parameter of 'first_matching_tag_impl'
+//                 is " "the tag that cannot be found and the second is the list
+//                 of " "tags being searched.");
+//   using type = NoSuchType;
+// };
 
 template <typename Tag, typename TagList>
-struct first_matching_tag_impl<Tag, TagList, tmpl::list<>> {
-  static_assert(std::is_same<Tag, NoSuchType>::value,
-                "Could not find the DataBox tag in the list of DataBox tags. "
-                "The first template parameter of 'first_matching_tag_impl' is "
-                "the tag that cannot be found and the second is the list of "
-                "tags being searched.");
-  using type = NoSuchType;
+struct first_matching_tag_impl {
+  using type = typename tmpl::front<
+      tmpl::find<TagList, std::is_base_of<tmpl::pin<Tag>, tmpl::_1>>>;
+};
+
+template <typename TagList>
+struct first_matching_tag_impl<::Tags::DataBox, TagList> {
+  using type = ::Tags::DataBox;
 };
 
 template <typename TagList, typename Tag>
 using first_matching_tag = typename first_matching_tag_impl<Tag, TagList>::type;
 
+// template <typename TagList, typename Tag>
+// constexpr auto number_of_matching_tags =
+//     tmpl::size<list_of_matching_tags<TagList, Tag>>::value;
+
+// template <typename Tag, typename TagList>
+// struct number_of_matching_tags_core<::Tags::DataBox, TagList> {
+//   using type =
+//       tmpl::count_if<tmpl::find<TagList, std::is_base_of<tmpl::pin<Tag>,
+//       tmpl::_1>>,
+//                   std::is_base_of<tmpl::pin<Tag>, tmpl::_1>>;
+// };
+
+template <typename Tag, typename TagList>
+struct number_of_matching_tags_impl {
+  static constexpr size_t value = tmpl::count_if<
+      tmpl::find<TagList, std::is_base_of<tmpl::pin<Tag>, tmpl::_1>>,
+      std::is_base_of<tmpl::pin<Tag>, tmpl::_1>>::value;
+};
+
+template <typename TagList>
+struct number_of_matching_tags_impl<::Tags::DataBox, TagList> {
+  static constexpr size_t value = 1;
+};
+
 template <typename TagList, typename Tag>
 constexpr auto number_of_matching_tags =
-    tmpl::size<list_of_matching_tags<TagList, Tag>>::value;
+    number_of_matching_tags_impl<Tag, TagList>::value;
 
 template <typename TagList, typename Tag>
 struct has_unique_matching_tag
