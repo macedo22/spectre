@@ -296,108 +296,108 @@ struct FindApparentHorizon
           },
           box, db::get<ylm::Tags::PreviousStrahlkorpers<Frame>>(*box));
     } else {
-      // The interpolated variables
-      // Tags::Variables<InterpolationTargetTag::vars_to_interpolate_to_target>
-      // have been interpolated from the volume to the points on the
-      // prolonged_strahlkorper, not to the points on the actual
-      // strahlkorper.  So here we do a restriction of these
-      // quantities onto the actual strahlkorper.
+    //   // The interpolated variables
+    //   // Tags::Variables<InterpolationTargetTag::vars_to_interpolate_to_target>
+    //   // have been interpolated from the volume to the points on the
+    //   // prolonged_strahlkorper, not to the points on the actual
+    //   // strahlkorper.  So here we do a restriction of these
+    //   // quantities onto the actual strahlkorper.
 
-      // Type alias to make code more understandable.
-      using vars_tags =
-          typename InterpolationTargetTag::vars_to_interpolate_to_target;
-      db::mutate_apply<
-          tmpl::list<::Tags::Variables<vars_tags>>,
-          tmpl::list<ylm::Tags::Strahlkorper<Frame>, ::ah::Tags::FastFlow>>(
-          [](const gsl::not_null<Variables<vars_tags>*> vars,
-             const ylm::Strahlkorper<Frame>& strahlkorper,
-             const FastFlow& fast_flow) {
-            const size_t L_mesh = fast_flow.current_l_mesh(strahlkorper);
-            const auto prolonged_strahlkorper =
-                ylm::Strahlkorper<Frame>(L_mesh, L_mesh, strahlkorper);
-            auto new_vars = ::Variables<vars_tags>(
-                strahlkorper.ylm_spherepack().physical_size());
+    //   // Type alias to make code more understandable.
+    //   using vars_tags =
+    //       typename InterpolationTargetTag::vars_to_interpolate_to_target;
+    //   db::mutate_apply<
+    //       tmpl::list<::Tags::Variables<vars_tags>>,
+    //       tmpl::list<ylm::Tags::Strahlkorper<Frame>, ::ah::Tags::FastFlow>>(
+    //       [](const gsl::not_null<Variables<vars_tags>*> vars,
+    //          const ylm::Strahlkorper<Frame>& strahlkorper,
+    //          const FastFlow& fast_flow) {
+    //         const size_t L_mesh = fast_flow.current_l_mesh(strahlkorper);
+    //         const auto prolonged_strahlkorper =
+    //             ylm::Strahlkorper<Frame>(L_mesh, L_mesh, strahlkorper);
+    //         auto new_vars = ::Variables<vars_tags>(
+    //             strahlkorper.ylm_spherepack().physical_size());
 
-            tmpl::for_each<vars_tags>([&strahlkorper, &prolonged_strahlkorper,
-                                       &vars, &new_vars](auto tag_v) {
-              using tag = typename decltype(tag_v)::type;
-              const auto& old_var = get<tag>(*vars);
-              auto& new_var = get<tag>(new_vars);
-              auto old_iter = old_var.begin();
-              auto new_iter = new_var.begin();
-              for (; old_iter != old_var.end() and new_iter != new_var.end();
-                   ++old_iter, ++new_iter) {
-                *new_iter = strahlkorper.ylm_spherepack().spec_to_phys(
-                    prolonged_strahlkorper.ylm_spherepack().prolong_or_restrict(
-                        prolonged_strahlkorper.ylm_spherepack().phys_to_spec(
-                            *old_iter),
-                        strahlkorper.ylm_spherepack()));
-              }
-            });
-            *vars = std::move(new_vars);
-          },
-          box);
+    //         tmpl::for_each<vars_tags>([&strahlkorper, &prolonged_strahlkorper,
+    //                                    &vars, &new_vars](auto tag_v) {
+    //           using tag = typename decltype(tag_v)::type;
+    //           const auto& old_var = get<tag>(*vars);
+    //           auto& new_var = get<tag>(new_vars);
+    //           auto old_iter = old_var.begin();
+    //           auto new_iter = new_var.begin();
+    //           for (; old_iter != old_var.end() and new_iter != new_var.end();
+    //                ++old_iter, ++new_iter) {
+    //             *new_iter = strahlkorper.ylm_spherepack().spec_to_phys(
+    //                 prolonged_strahlkorper.ylm_spherepack().prolong_or_restrict(
+    //                     prolonged_strahlkorper.ylm_spherepack().phys_to_spec(
+    //                         *old_iter),
+    //                     strahlkorper.ylm_spherepack()));
+    //           }
+    //         });
+    //         *vars = std::move(new_vars);
+    //       },
+    //       box);
 
-      // Compute Strahlkorper Cartesian coordinates in Inertial frame
-      // if the current frame is not inertial.
-      if constexpr (not std::is_same_v<Frame, ::Frame::Inertial>) {
-        db::mutate_apply<
-            tmpl::list<ylm::Tags::CartesianCoords<::Frame::Inertial>>,
-            tmpl::list<ylm::Tags::Strahlkorper<Frame>,
-                       domain::Tags::Domain<Metavariables::volume_dim>>>(
-            [&cache, &temporal_id](
-                const gsl::not_null<tnsr::I<DataVector, 3, ::Frame::Inertial>*>
-                    inertial_strahlkorper_coords,
-                const ylm::Strahlkorper<Frame>& strahlkorper,
-                const Domain<Metavariables::volume_dim>& domain) {
-              // Note that functions_of_time must already be up to
-              // date at temporal_id because they were used in the AH
-              // search above.
-              const auto& functions_of_time =
-                  get<domain::Tags::FunctionsOfTime>(*cache);
-              strahlkorper_coords_in_different_frame(
-                  inertial_strahlkorper_coords, strahlkorper, domain,
-                  functions_of_time,
-                  InterpolationTarget_detail::get_temporal_id_value(
-                      temporal_id));
-            },
-            box);
-      }
+    //   // Compute Strahlkorper Cartesian coordinates in Inertial frame
+    //   // if the current frame is not inertial.
+    //   if constexpr (not std::is_same_v<Frame, ::Frame::Inertial>) {
+    //     db::mutate_apply<
+    //         tmpl::list<ylm::Tags::CartesianCoords<::Frame::Inertial>>,
+    //         tmpl::list<ylm::Tags::Strahlkorper<Frame>,
+    //                    domain::Tags::Domain<Metavariables::volume_dim>>>(
+    //         [&cache, &temporal_id](
+    //             const gsl::not_null<tnsr::I<DataVector, 3, ::Frame::Inertial>*>
+    //                 inertial_strahlkorper_coords,
+    //             const ylm::Strahlkorper<Frame>& strahlkorper,
+    //             const Domain<Metavariables::volume_dim>& domain) {
+    //           // Note that functions_of_time must already be up to
+    //           // date at temporal_id because they were used in the AH
+    //           // search above.
+    //           const auto& functions_of_time =
+    //               get<domain::Tags::FunctionsOfTime>(*cache);
+    //           strahlkorper_coords_in_different_frame(
+    //               inertial_strahlkorper_coords, strahlkorper, domain,
+    //               functions_of_time,
+    //               InterpolationTarget_detail::get_temporal_id_value(
+    //                   temporal_id));
+    //         },
+    //         box);
+    //   }
 
-      // Update the previous strahlkorpers. We do this before the callbacks
-      // in case any of the callbacks need the previous strahlkorpers with the
-      // current strahlkorper already in it.
-      db::mutate<ylm::Tags::Strahlkorper<Frame>,
-                 ylm::Tags::PreviousStrahlkorpers<Frame>>(
-          [&temporal_id](
-              const gsl::not_null<ylm::Strahlkorper<Frame>*> strahlkorper,
-              const gsl::not_null<
-                  std::deque<std::pair<double, ylm::Strahlkorper<Frame>>>*>
-                  previous_strahlkorpers) {
-            // This is the number of previous strahlkorpers that we
-            // keep around.
-            const size_t num_previous_strahlkorpers = 3;
+    //   // Update the previous strahlkorpers. We do this before the callbacks
+    //   // in case any of the callbacks need the previous strahlkorpers with the
+    //   // current strahlkorper already in it.
+    //   db::mutate<ylm::Tags::Strahlkorper<Frame>,
+    //              ylm::Tags::PreviousStrahlkorpers<Frame>>(
+    //       [&temporal_id](
+    //           const gsl::not_null<ylm::Strahlkorper<Frame>*> strahlkorper,
+    //           const gsl::not_null<
+    //               std::deque<std::pair<double, ylm::Strahlkorper<Frame>>>*>
+    //               previous_strahlkorpers) {
+    //         // This is the number of previous strahlkorpers that we
+    //         // keep around.
+    //         const size_t num_previous_strahlkorpers = 3;
 
-            // Save a new previous_strahlkorper.
-            previous_strahlkorpers->emplace_front(
-                InterpolationTarget_detail::get_temporal_id_value(temporal_id),
-                *strahlkorper);
+    //         // Save a new previous_strahlkorper.
+    //         previous_strahlkorpers->emplace_front(
+    //             InterpolationTarget_detail::get_temporal_id_value(temporal_id),
+    //             *strahlkorper);
 
-            // Remove old previous_strahlkorpers that are no longer relevant.
-            while (previous_strahlkorpers->size() >
-                   num_previous_strahlkorpers) {
-              previous_strahlkorpers->pop_back();
-            }
-          },
-          box);
+    //         // Remove old previous_strahlkorpers that are no longer relevant.
+    //         while (previous_strahlkorpers->size() >
+    //                num_previous_strahlkorpers) {
+    //           previous_strahlkorpers->pop_back();
+    //         }
+    //       },
+    //       box);
 
-      // Finally call callbacks
-      tmpl::for_each<
-          typename InterpolationTargetTag::post_horizon_find_callbacks>(
-          [&box, &cache, &temporal_id](auto callback_v) {
-            using callback = tmpl::type_from<decltype(callback_v)>;
-            callback::apply(*box, *cache, temporal_id);
-          });
+    //   // Finally call callbacks
+    //   tmpl::for_each<
+    //       typename InterpolationTargetTag::post_horizon_find_callbacks>(
+    //       [&box, &cache, &temporal_id](auto callback_v) {
+    //         using callback = tmpl::type_from<decltype(callback_v)>;
+    //         callback::apply(*box, *cache, temporal_id);
+    //       });
     }
 
     // Prepare for finding horizon at a new time. Regardless of if we failed or
