@@ -225,17 +225,11 @@ void append_to_reduction_data(
     const gsl::not_null<std::vector<double>*> all_reduction_data,
     const std::vector<double>& t);
 
-void write_data_impl(const std::string& file_prefix,
-                     const std::string& subfile_name,
-                     const std::string& input_source, bool some_bool,
-                     const std::vector<double>& data_to_append,
-                     std::vector<std::string> legend);
-
 template <typename... Ts, size_t... Is>
 void write_data(const std::string& subfile_name,
                 const std::string& input_source,
-                const std::vector<std::string>& legend,
-                const std::tuple<Ts...>& data, const std::string& file_prefix,
+                std::vector<std::string> legend, const std::tuple<Ts...>& data,
+                const std::string& file_prefix,
                 std::index_sequence<Is...> /*meta*/) {
   static_assert(sizeof...(Ts) > 0,
                 "Must be reducing at least one piece of data");
@@ -243,8 +237,20 @@ void write_data(const std::string& subfile_name,
   EXPAND_PACK_LEFT_TO_RIGHT(
       append_to_reduction_data(&data_to_append, std::get<Is>(data)));
 
-  write_data_impl(file_prefix, subfile_name, input_source, true, data_to_append,
-                  legend);
+  if (legend.size() != data_to_append.size()) {
+    ERROR(
+        "There must be one name provided for each piece of data. You provided "
+        << legend.size() << " names: '" << get_output(legend)
+        << "' but there are " << data_to_append.size()
+        << " pieces of data being reduced");
+  }
+
+  h5::H5File<h5::AccessType::ReadWrite> h5file(file_prefix + ".h5", true,
+                                               input_source);
+  constexpr size_t version_number = 0;
+  auto& time_series_file = h5file.try_insert<h5::Dat>(
+      subfile_name, std::move(legend), version_number);
+  time_series_file.append(data_to_append);
 }
 }  // namespace ReductionActions_detail
 
