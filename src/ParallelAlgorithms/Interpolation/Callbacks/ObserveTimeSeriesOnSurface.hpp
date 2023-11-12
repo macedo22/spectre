@@ -73,22 +73,22 @@ struct ObserveTimeSeriesOnSurface
       std::numeric_limits<double>::quiet_NaN();
 
   template <typename DbTags, typename Metavariables, typename TemporalId>
-  static void apply(const db::DataBox<DbTags>& /*box*/,
-                    Parallel::GlobalCache<Metavariables>& /*cache*/,
-                    const TemporalId& /*temporal_id*/) {
-    // auto& proxy = Parallel::get_parallel_component<
-    //     observers::ObserverWriter<Metavariables>>(cache);
+  static void apply(const db::DataBox<DbTags>& box,
+                    Parallel::GlobalCache<Metavariables>& cache,
+                    const TemporalId& temporal_id) {
+    auto& proxy = Parallel::get_parallel_component<
+        observers::ObserverWriter<Metavariables>>(cache);
 
-    // // We call this on proxy[0] because the 0th element of a NodeGroup is
-    // // always guaranteed to be present.
-    // Parallel::threaded_action<
-    //     observers::ThreadedActions::WriteReductionDataRow>(
-    //     proxy[0],
-    //     std::string{"/" + pretty_type::name<InterpolationTargetTag>()},
-    //     detail::make_legend(TagsToObserve{}),
-    //     detail::make_reduction_data(
-    //         box, InterpolationTarget_detail::get_temporal_id_value(temporal_id),
-    //         TagsToObserve{}));
+    // We call this on proxy[0] because the 0th element of a NodeGroup is
+    // always guaranteed to be present.
+    Parallel::threaded_action<
+        observers::ThreadedActions::WriteReductionDataRow>(
+        proxy[0],
+        std::string{"/" + pretty_type::name<InterpolationTargetTag>()},
+        detail::make_legend(TagsToObserve{}),
+        detail::make_reduction_data(
+            box, InterpolationTarget_detail::get_temporal_id_value(temporal_id),
+            TagsToObserve{}));
   }
 };
 }  // namespace callbacks
