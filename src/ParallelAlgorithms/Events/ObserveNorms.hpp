@@ -4,7 +4,6 @@
 #pragma once
 
 #include <cstddef>
-#include <limits>
 #include <optional>
 #include <pup.h>
 #include <string>
@@ -38,7 +37,6 @@
 #include "Utilities/ErrorHandling/Assert.hpp"
 #include "Utilities/ErrorHandling/Error.hpp"
 #include "Utilities/Functional.hpp"
-#include "Utilities/Numeric.hpp"
 #include "Utilities/OptionalHelpers.hpp"
 #include "Utilities/Serialization/CharmPupable.hpp"
 #include "Utilities/TMPL.hpp"
@@ -320,6 +318,17 @@ ObserveNorms<tmpl::list<ObservableTensorTags...>,
   }
 }
 
+template <size_t Dim>
+void fill_norm_values_and_names(
+    const gsl::not_null<std::unordered_map<
+        std::string, std::pair<std::vector<double>, std::vector<std::string>>>*>
+        norm_values_and_names,
+    const std::pair<std::vector<std::string>, std::vector<DataVector>>&
+        names_and_components,
+    const Mesh<Dim>& mesh, const DataVector& det_jacobian,
+    const std::string& tensor_name, const std::string& tensor_norm_type,
+    const std::string& tensor_component, size_t number_of_points);
+
 template <typename... ObservableTensorTags, typename... NonTensorComputeTags,
           typename ArraySectionIdTag>
 template <typename ComputeTagsList, typename DataBoxType,
@@ -367,72 +376,12 @@ operator()(const ObservationBox<ComputeTagsList, DataBoxType>& box,
                    "computed. This can happen when you try to observe errors "
                    "without an analytic solution.");
         }
-        const auto& tensor = value(get<tag>(box));
 
-        auto& [values, names] = norm_values_and_names[tensor_norm_types_[i]];
-        const auto names_and_components = tensor.get_vector_of_data();
-        const auto& component_names = names_and_components.first;
-        const auto& components = names_and_components.second;
-        if (components[0].size() != number_of_points) {
-          ERROR("The number of grid points of the mesh is "
-                << number_of_points << " but the tensor '" << tensor_name
-                << "' has " << components[0].size()
-                << " points. This means you're computing norms of tensors over "
-                   "different grids, which will give the wrong answer for "
-                   "norms that use the grid points.");
-        }
-
-        if (tensor_components_[i] == "Individual") {
-          for (size_t storage_index = 0; storage_index < component_names.size();
-               ++storage_index) {
-            if (tensor_norm_types_[i] == "Max") {
-              values.push_back(max(components[storage_index]));
-            } else if (tensor_norm_types_[i] == "Min") {
-              values.push_back(min(components[storage_index]));
-            } else if (tensor_norm_types_[i] == "L2Norm") {
-              values.push_back(
-                  alg::accumulate(square(components[storage_index]), 0.0));
-            } else if (tensor_norm_types_[i] == "L2IntegralNorm") {
-              values.push_back(definite_integral(
-                  square(components[storage_index]) * det_jacobian, mesh));
-            } else if (tensor_norm_types_[i] == "VolumeIntegral") {
-              values.push_back(definite_integral(
-                         components[storage_index] * det_jacobian, mesh));
-            }
-            names.push_back(
-                tensor_norm_types_[i] + "(" +
-                (component_names.size() == 1
-                     ? tensor_name
-                     : (tensor_name + "_" + component_names[storage_index])) +
-                ")");
-          }
-        } else if (tensor_components_[i] == "Sum") {
-          double value = 0.0;
-          if (tensor_norm_types_[i] == "Max") {
-            value = std::numeric_limits<double>::min();
-          } else if (tensor_norm_types_[i] == "Min") {
-            value = std::numeric_limits<double>::max();
-          }
-          for (size_t storage_index = 0; storage_index < component_names.size();
-               ++storage_index) {
-            if (tensor_norm_types_[i] == "Max") {
-              value = std::max(value, max(components[storage_index]));
-            } else if (tensor_norm_types_[i] == "Min") {
-              value = std::min(value, min(components[storage_index]));
-            } else if (tensor_norm_types_[i] == "L2Norm") {
-              value += alg::accumulate(square(components[storage_index]), 0.0);
-            } else if (tensor_norm_types_[i] == "L2IntegralNorm") {
-              value += definite_integral(
-                  square(components[storage_index]) * det_jacobian, mesh);
-            } else if (tensor_norm_types_[i] == "VolumeIntegral") {
-              value += definite_integral(
-                  components[storage_index] * det_jacobian, mesh);
-            }
-          }
-
-          names.push_back(tensor_norm_types_[i] + "(" + tensor_name + ")");
-          values.push_back(value);
-        }
+        fill_norm_values_and_names(make_not_null(&norm_values_and_names),
+                                   value(get<tag>(box)).get_vector_of_data(),
+                                   mesh, det_jacobian, tensor_names_[i],
+                                   tensor_norm_types_[i], tensor_components_[i],
+                                   number_of_points);
       }
     }
   });
