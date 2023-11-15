@@ -9,6 +9,7 @@ spectre_target_sources(
   ${LIBRARY}
   PRIVATE
   ObserveAdaptiveSteppingDiagnostics.cpp
+  ObserveNorms.cpp
   )
 
 spectre_target_headers(
