@@ -18,14 +18,6 @@
 #include "Utilities/Numeric.hpp"
 
 namespace Events {
-[[noreturn]] void cannot_observe_error(const std::string& tensor_name) {
-  ERROR("Cannot observe a norm of '"
-        << tensor_name
-        << "' because it is a std::optional and wasn't able to be "
-           "computed. This can happen when you try to observe errors "
-           "without an analytic solution.");
-}
-
 template <size_t Dim>
 void fill_norm_values_and_names(
     const gsl::not_null<std::unordered_map<

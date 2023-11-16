@@ -42,8 +42,6 @@
 #include "Utilities/TMPL.hpp"
 
 namespace Events {
-[[noreturn]] void cannot_observe_error(const std::string& tensor_name);
-
 /// @{
 /*!
  * \brief Compute norms of tensors in the DataBox and write them to disk.
@@ -372,7 +370,11 @@ operator()(const ObservationBox<ComputeTagsList, DataBoxType>& box,
     for (size_t i = 0; i < tensor_names_.size(); ++i) {
       if (tensor_name == tensor_names_[i]) {
         if (UNLIKELY(not has_value(get<tag>(box)))) {
-          cannot_observe_error(tensor_name);
+          ERROR("Cannot observe a norm of '"
+                << tensor_name
+                << "' because it is a std::optional and wasn't able to be "
+                   "computed. This can happen when you try to observe errors "
+                   "without an analytic solution.");
         }
 
         fill_norm_values_and_names(make_not_null(&norm_values_and_names),
