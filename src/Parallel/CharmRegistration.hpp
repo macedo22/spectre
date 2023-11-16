@@ -677,6 +677,9 @@ bool register_func_with_charm() {
     charm_register_list_capacity += 10;
   }
   charm_register_list_size++;
+  // clang-tidy: do not use pointer arithmetic
+  charm_register_list[charm_register_list_size - 1] =  // NOLINT
+      std::make_unique<Derived>();
 #endif  // SPECTRE_CHARM_HAS_MAIN
   return true;
 }
