@@ -1133,34 +1133,6 @@ bool DistributedObject<
   }
 }
 
-template <typename ParallelComponent, typename... PhaseDepActionListsPack>
-void DistributedObject<ParallelComponent,
-                       tmpl::list<PhaseDepActionListsPack...>>::
-    contribute_termination_status_to_main() {
-  auto* global_cache = Parallel::local_branch(global_cache_proxy_);
-  if (UNLIKELY(global_cache == nullptr)) {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
-    CkError(
-        "Global cache pointer is null. This is an internal inconsistency "
-        "error. Please file an issue.");
-    sys::abort("");
-  }
-  auto main_proxy = global_cache->get_main_proxy();
-  if (UNLIKELY(not main_proxy.has_value())) {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
-    CkError(
-        "The main proxy has not been set in the global cache when "
-        "checking that all components have terminated. This is an internal "
-        "inconsistency error. Please file an issue.");
-    sys::abort("");
-  }
-  CkCallback cb(
-      CkReductionTarget(Main<metavariables>, did_all_elements_terminate),
-      main_proxy.value());
-  this->contribute(sizeof(bool), &terminate_, CkReduction::logical_and_bool,
-                   cb);
-}
-
 [[noreturn]] void global_cache_pointer_null_error();
 
 [[noreturn]] void main_proxy_not_set_error();
@@ -1170,6 +1142,25 @@ std::string get_exception_message(const std::string& parallel_component_name,
                                   const Phase phase,
                                   const size_t algorithm_step,
                                   const std::exception& exception);
+
+template <typename ParallelComponent, typename... PhaseDepActionListsPack>
+void DistributedObject<ParallelComponent,
+                       tmpl::list<PhaseDepActionListsPack...>>::
+    contribute_termination_status_to_main() {
+  auto* global_cache = Parallel::local_branch(global_cache_proxy_);
+  if (UNLIKELY(global_cache == nullptr)) {
+    global_cache_pointer_null_error();
+  }
+  auto main_proxy = global_cache->get_main_proxy();
+  if (UNLIKELY(not main_proxy.has_value())) {
+    main_proxy_not_set_error();
+  }
+  CkCallback cb(
+      CkReductionTarget(Main<metavariables>, did_all_elements_terminate),
+      main_proxy.value());
+  this->contribute(sizeof(bool), &terminate_, CkReduction::logical_and_bool,
+                   cb);
+}
 
 template <typename ParallelComponent, typename... PhaseDepActionListsPack>
 void DistributedObject<ParallelComponent,
