@@ -103,29 +103,6 @@ void fill_norm_values_and_names(
     values.push_back(value);
   }
 }
-
-std::vector<std::string> build_legend(
-    const std::unordered_map<
-        std::string, std::pair<std::vector<double>, std::vector<std::string>>>&
-        norm_values_and_names,
-    const std::string& observation_value_name) {
-  std::vector<std::string> legend{observation_value_name, "NumberOfPoints",
-                                  "Volume"};
-  legend.insert(legend.end(), norm_values_and_names.at("Max").second.begin(),
-                norm_values_and_names.at("Max").second.end());
-  legend.insert(legend.end(), norm_values_and_names.at("Min").second.begin(),
-                norm_values_and_names.at("Min").second.end());
-  legend.insert(legend.end(), norm_values_and_names.at("L2Norm").second.begin(),
-                norm_values_and_names.at("L2Norm").second.end());
-  legend.insert(legend.end(),
-                norm_values_and_names.at("L2IntegralNorm").second.begin(),
-                norm_values_and_names.at("L2IntegralNorm").second.end());
-  legend.insert(legend.end(),
-                norm_values_and_names.at("VolumeIntegral").second.begin(),
-                norm_values_and_names.at("VolumeIntegral").second.end());
-
-  return legend;
-}
 }  // namespace Events
 
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)

@@ -45,12 +45,6 @@ namespace Events {
 void check_cannot_observe_error(const std::string& tensor_name,
                                 bool tag_has_value);
 
-std::vector<std::string> build_legend(
-    const std::unordered_map<
-        std::string, std::pair<std::vector<double>, std::vector<std::string>>>&
-        norm_values_and_names,
-    const std::string& observation_value_name);
-
 /// @{
 /*!
  * \brief Compute norms of tensors in the DataBox and write them to disk.
@@ -389,8 +383,20 @@ operator()(const ObservationBox<ComputeTagsList, DataBoxType>& box,
   });
 
   // Concatenate the legend info together.
-  std::vector<std::string> legend =
-      build_legend(norm_values_and_names, observation_value.name);
+  std::vector<std::string> legend{observation_value.name, "NumberOfPoints",
+                                  "Volume"};
+  legend.insert(legend.end(), norm_values_and_names["Max"].second.begin(),
+                norm_values_and_names["Max"].second.end());
+  legend.insert(legend.end(), norm_values_and_names["Min"].second.begin(),
+                norm_values_and_names["Min"].second.end());
+  legend.insert(legend.end(), norm_values_and_names["L2Norm"].second.begin(),
+                norm_values_and_names["L2Norm"].second.end());
+  legend.insert(legend.end(),
+                norm_values_and_names["L2IntegralNorm"].second.begin(),
+                norm_values_and_names["L2IntegralNorm"].second.end());
+  legend.insert(legend.end(),
+                norm_values_and_names["VolumeIntegral"].second.begin(),
+                norm_values_and_names["VolumeIntegral"].second.end());
 
   // Send data to reduction observer
   auto& local_observer = *Parallel::local_branch(
