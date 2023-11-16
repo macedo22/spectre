@@ -12,6 +12,7 @@ spectre_target_sources(
   ${LIBRARY}
   PRIVATE
   ArrayComponentId.cpp
+  DistributedObject.cpp
   InitializationFunctions.cpp
   NodeLock.cpp
   Phase.cpp
