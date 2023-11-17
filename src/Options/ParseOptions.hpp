@@ -640,15 +640,19 @@ decltype(auto) Parser<OptionList, Group>::apply_all(F&& func) const {
 }
 /// \endcond
 
+template <typename OptionList, typename TagsAndSubgroups>
+std::string help_impl() {
+  return tmpl::for_each<TagsAndSubgroups>(Options_detail::print<OptionList>{})
+      .value;
+}
+
 template <typename OptionList, typename Group>
 template <typename TagsAndSubgroups>
 std::string Parser<OptionList, Group>::help() const {
   std::ostringstream ss;
   ss << "\n==== Description of expected options:\n" << help_text_;
   if (tmpl::size<TagsAndSubgroups>::value > 0) {
-    ss << "\n\nOptions:\n"
-       << tmpl::for_each<TagsAndSubgroups>(Options_detail::print<OptionList>{})
-              .value;
+    ss << "\n\nOptions:\n" << help_impl<OptionList, TagsAndSubgroups>();
   } else {
     ss << "\n\n<No options>\n";
   }
