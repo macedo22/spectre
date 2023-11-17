@@ -276,6 +276,63 @@ void print<OptionList>::operator()(tmpl::type_<Tag> /*meta*/) {
   value += print_impl<Tag, OptionList>::apply(indent);
 }
 
+// template <typename Tag, typename OptionList>
+// std::string my_print_impl(const std::string& indent) {
+//   if constexpr (tmpl::list_contains_v<OptionList, Tag>) {
+//       return print_core<Tag>(indent);
+//     } else {
+//       // A group
+//       std::ostringstream ss;
+//       ss << indent << pretty_type::name<Tag>() << ":\n"
+//          << wrap_text(Tag::help, 77, indent + "  ") << "\n\n";
+//       return ss.str();
+//     }
+// }
+
+template <typename OptionList, typename TagsAndSubgroups>
+struct my_print;
+
+template <typename Tag, typename OptionList>
+struct my_print_impl {
+  static std::string apply(const std::string& indent) {
+    if constexpr (tmpl::list_contains_v<OptionList, Tag>) {
+      return print_core<Tag>(indent);
+    } else {
+      // A group
+      std::ostringstream ss;
+      ss << indent << pretty_type::name<Tag>() << ":\n"
+         << wrap_text(Tag::help, 77, indent + "  ") << "\n\n";
+      return ss.str();
+    }
+  }
+};
+
+template <typename... Alternatives>
+std::string print_alternatives(const std::string& header,
+                               const std::string& indent) {
+  return (indent + header + "\n" + ... +
+          (my_print<tmpl::list<Alternatives...>, Alternatives>::apply(indent +
+                                                                      "  ")));
+};
+
+template <typename FirstAlternative, typename... OtherAlternatives,
+          typename OptionList>
+struct my_print_impl<Alternatives<FirstAlternative, OtherAlternatives...>,
+                     OptionList> {
+  static std::string apply(const std::string& indent) {
+    return print_alternatives<FirstAlternative>("EITHER", indent) +
+           print_alternatives<OtherAlternatives...>("OR", indent);
+  }
+};
+
+template <typename OptionList, typename... TagsAndSubgroups>
+struct my_print<OptionList, tmpl::list<TagsAndSubgroups...>> {
+  static std::string apply(const std::string& indent) {
+    return ("" + ... +
+            (my_print_impl<TagsAndSubgroups, OptionList>::apply(indent)));
+  }
+};
+
 template <typename T, typename Metavariables>
 struct CreateWrapper {
   using metavariables = Metavariables;

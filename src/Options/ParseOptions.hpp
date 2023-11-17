@@ -647,8 +647,9 @@ std::string Parser<OptionList, Group>::help() const {
   ss << "\n==== Description of expected options:\n" << help_text_;
   if (tmpl::size<TagsAndSubgroups>::value > 0) {
     ss << "\n\nOptions:\n"
-       << tmpl::for_each<TagsAndSubgroups>(Options_detail::print<OptionList>{})
-              .value;
+       << Options_detail::my_print<OptionList, TagsAndSubgroups>::apply("  ");
+    //  << tmpl::for_each<TagsAndSubgroups>(Options_detail::print<OptionList>{})
+    //         .value;
   } else {
     ss << "\n\n<No options>\n";
   }
