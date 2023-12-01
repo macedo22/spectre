@@ -1173,15 +1173,6 @@ void DistributedObject<ParallelComponent,
                    cb);
 }
 
-[[noreturn]] void global_cache_pointer_null_error();
-
-[[noreturn]] void main_proxy_not_set_error();
-
-std::string get_main_proxy_exception_message(
-    const std::string& parallel_component_name, const std::string& array_index,
-    const Phase phase, const size_t algorithm_step,
-    const std::exception& exception);
-
 template <typename ParallelComponent, typename... PhaseDepActionListsPack>
 void DistributedObject<ParallelComponent,
                        tmpl::list<PhaseDepActionListsPack...>>::
@@ -1193,15 +1184,29 @@ void DistributedObject<ParallelComponent,
   // Send message to `Main` that we received an exception and set termination.
   auto* global_cache = Parallel::local_branch(global_cache_proxy_);
   if (UNLIKELY(global_cache == nullptr)) {
-    global_cache_pointer_null_error();
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
+    CkError(
+        "Global cache pointer is null. This is an internal inconsistency "
+        "error. Please file an issue.");
+    sys::abort("");
   }
   auto main_proxy = global_cache->get_main_proxy();
   if (UNLIKELY(not main_proxy.has_value())) {
-    main_proxy_not_set_error();
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
+    CkError(
+        "The main proxy has not been set in the global cache when terminating "
+        "the component. This is an internal inconsistency error. Please file "
+        "an issue.");
+    sys::abort("");
   }
-  main_proxy.value().add_exception_message(get_main_proxy_exception_message(
-      pretty_type::name<parallel_component>(), MakeString{} << array_index_,
-      phase_, algorithm_step_, exception));
+  const std::string message =
+      MakeString{} << "Component: " << pretty_type::name<parallel_component>()
+                   << "\nArray Index: " << array_index_ << "\n"
+                   << "Phase: " << phase_ << "\n"
+                   << "Algorithm Step: " << algorithm_step_ << "\n"
+                   << "Message: " << exception.what() << "\nType: "
+                   << pretty_type::get_runtime_type_name(exception);
+  main_proxy.value().add_exception_message(message);
   set_terminate(true);
 }
 /// \endcond
