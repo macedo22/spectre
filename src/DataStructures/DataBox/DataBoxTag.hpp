@@ -57,9 +57,8 @@ using first_matching_tag = typename first_matching_tag_impl<Tag, TagList>::type;
 template <typename Tag, typename TagList>
 struct number_of_matching_tags_impl {
   // find first match, then search for matches from there to the end of TagList
-  static constexpr size_t value = tmpl::count_if<
-      typename first_matching_tag_impl<Tag, TagList>::find_result,
-      std::is_base_of<tmpl::pin<Tag>, tmpl::_1>>::value;
+  static constexpr size_t value =
+      tmpl::count_if<TagList, std::is_base_of<tmpl::pin<Tag>, tmpl::_1>>::value;
 };
 
 template <typename TagList>
