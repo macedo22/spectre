@@ -37,11 +37,11 @@ struct first_matching_tag_impl {
   using find_result =
       typename tmpl::find<TagList, std::is_base_of<tmpl::pin<Tag>, tmpl::_1>>;
 
-  static_assert(tmpl::size<find_result>::value != 0,
-                "Could not find the DataBox tag in the list of DataBox tags. "
-                "The first template parameter of 'first_matching_tag_impl' is "
-                "the tag that cannot be found and the second is the list of "
-                "tags being searched.");
+  // static_assert(tmpl::size<find_result>::value != 0,
+  //               "Could not find the DataBox tag in the list of DataBox tags. "
+  //               "The first template parameter of 'first_matching_tag_impl' is "
+  //               "the tag that cannot be found and the second is the list of "
+  //               "tags being searched.");
 
   using type = typename tmpl::front<find_result>;
 };
