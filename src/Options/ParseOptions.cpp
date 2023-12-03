@@ -4,11 +4,15 @@
 #include "Options/ParseOptions.hpp"
 
 #include <exception>
+#include <sstream>
 #include <string>
 #include <vector>
 #include <yaml-cpp/yaml.h>
 
 #include "Informer/InfoFromBuild.hpp"
+#include "Options/Context.hpp"
+#include "Options/Options.hpp"
+#include "Options/ParseError.hpp"
 #include "Utilities/FileSystem.hpp"
 
 namespace Options::detail {
@@ -34,6 +38,36 @@ void check_metadata(const YAML::Node& metadata) {
   }
 }
 }  // namespace
+
+[[noreturn]] void bad_conversion_error_impl(
+    const YAML::Node& node, const Options::Context& error_context,
+    const std::string& yaml_type, const bool is_vector_or_array) {
+  std::ostringstream ss;
+  ss << "Failed to convert value to type " << yaml_type << ":";
+
+  const std::string value_text = YAML::Dump(node);
+  if (value_text.find('\n') == std::string::npos) {
+    ss << " " << value_text;
+  } else {
+    // Indent each line of the value by two spaces and start on a new line
+    ss << "\n  ";
+    for (char c : value_text) {
+      ss << c;
+      if (c == '\n') {
+        ss << "  ";
+      }
+    }
+  }
+
+  if (is_vector_or_array) {
+    ss << "\n\nNote: For sequences this can happen because the length of the "
+          "sequence specified\nin the input file is not equal to the length "
+          "expected by the code. Sequences in\nfiles can be denoted either "
+          "as a bracket enclosed list ([foo, bar]) or with each\nentry on a "
+          "separate line, indented and preceeded by a dash (  - foo).";
+  }
+  PARSE_ERROR(error_context, ss.str());
+}
 
 YAML::Node load_and_check_yaml(const std::string& options,
                                const bool require_metadata) {
