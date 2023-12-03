@@ -162,6 +162,7 @@
 #include "Utilities/GetOutput.hpp"
 #include "Utilities/NoSuchType.hpp"
 #include "Utilities/ProtocolHelpers.hpp"
+#include "Utilities/Requires.hpp"
 #include "Utilities/TMPL.hpp"
 
 // Check if SpEC is linked and therefore we can load SpEC initial data
@@ -502,25 +503,39 @@ struct EvolutionMetavars {
        Parallel::Phase::Register, Parallel::Phase::InitializeTimeStepperHistory,
        Parallel::Phase::Evolve, Parallel::Phase::Exit}};
 
+  // to reduce compilation time and memory, only one case compiled
+  template <bool LocalTimeStepping, typename = std::nullptr_t>
+  struct step_actions_dependent_on_local_time_stepping;
+
+  template <bool LocalTimeStepping>
+  struct step_actions_dependent_on_local_time_stepping<
+      LocalTimeStepping, Requires<LocalTimeStepping>> {
+    using type = tmpl::list<
+        evolution::Actions::RunEventsAndDenseTriggers<
+            tmpl::list<::domain::CheckFunctionsOfTimeAreReadyPostprocessor,
+                       evolution::dg::ApplyBoundaryCorrections<
+                           local_time_stepping, system, volume_dim, true>>>,
+        evolution::dg::Actions::ApplyLtsBoundaryCorrections<system, volume_dim,
+                                                            false>>;
+  };
+
+  template <bool LocalTimeStepping>
+  struct step_actions_dependent_on_local_time_stepping<
+      LocalTimeStepping, Requires<not LocalTimeStepping>> {
+    using type = tmpl::list<
+        evolution::dg::Actions::ApplyBoundaryCorrectionsToTimeDerivative<
+            system, volume_dim, false>,
+        Actions::RecordTimeStepperData<system>,
+        evolution::Actions::RunEventsAndDenseTriggers<
+            tmpl::list<::domain::CheckFunctionsOfTimeAreReadyPostprocessor>>,
+        control_system::Actions::LimitTimeStep<control_systems>,
+        Actions::UpdateU<system>>;
+  };
+
   using step_actions = tmpl::list<
       evolution::dg::Actions::ComputeTimeDerivative<
           volume_dim, system, AllStepChoosers, local_time_stepping>,
-      tmpl::conditional_t<
-          local_time_stepping,
-          tmpl::list<evolution::Actions::RunEventsAndDenseTriggers<tmpl::list<
-                         ::domain::CheckFunctionsOfTimeAreReadyPostprocessor,
-                         evolution::dg::ApplyBoundaryCorrections<
-                             local_time_stepping, system, volume_dim, true>>>,
-                     evolution::dg::Actions::ApplyLtsBoundaryCorrections<
-                         system, volume_dim, false>>,
-          tmpl::list<
-              evolution::dg::Actions::ApplyBoundaryCorrectionsToTimeDerivative<
-                  system, volume_dim, false>,
-              Actions::RecordTimeStepperData<system>,
-              evolution::Actions::RunEventsAndDenseTriggers<tmpl::list<
-                  ::domain::CheckFunctionsOfTimeAreReadyPostprocessor>>,
-              control_system::Actions::LimitTimeStep<control_systems>,
-              Actions::UpdateU<system>>>,
+      step_actions_dependent_on_local_time_stepping<local_time_stepping>::type,
       dg::Actions::Filter<
           Filters::Exponential<0>,
           tmpl::list<gr::Tags::SpacetimeMetric<DataVector, volume_dim>,
