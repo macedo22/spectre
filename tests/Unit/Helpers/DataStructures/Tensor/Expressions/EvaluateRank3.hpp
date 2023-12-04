@@ -80,7 +80,8 @@ template <typename DataType, typename RhsSymmetry,
           typename RhsTensorIndexTypeList, auto& LhsTensorIndexA,
           auto& LhsTensorIndexB, auto& LhsTensorIndexC,
           typename LhsSymmetry = RhsSymmetry,
-          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
+          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList,
+          auto&... RhsTensorIndices>
 void test_evaluate_rank_3_impl() {
   const size_t used_for_size = 3;
   Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> R_abc(used_for_size);
