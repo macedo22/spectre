@@ -940,11 +940,13 @@ void Variables<tmpl::list<Tags...>>::add_reference_variable_data() {
   tmpl::for_each<tags_list>([this, &variable_offset](auto tag_v) {
     using Tag = tmpl::type_from<decltype(tag_v)>;
     auto& var = tuples::get<Tag>(reference_variable_data_);
-    for (size_t i = 0; i < Tag::type::size(); ++i) {
-      var[i].set_data_ref(
-          &variable_data_[variable_offset++ * number_of_grid_points_],
-          number_of_grid_points_);
-    }
+    (void)var;
+    (void)variable_offset;
+    // for (size_t i = 0; i < Tag::type::size(); ++i) {
+    //   var[i].set_data_ref(
+    //       &variable_data_[variable_offset++ * number_of_grid_points_],
+    //       number_of_grid_points_);
+    // }
   });
 }
 /// \endcond
