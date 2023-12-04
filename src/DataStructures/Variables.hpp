@@ -936,16 +936,16 @@ void Variables<tmpl::list<Tags...>>::add_reference_variable_data() {
              << number_of_grid_points_ * number_of_independent_components
              << "\nThis is an internal inconsistency bug in Variables. Please "
                 "file an issue.");
-  // size_t variable_offset = 0;
-  // tmpl::for_each<tags_list>([this, &variable_offset](auto tag_v) {
-  //   using Tag = tmpl::type_from<decltype(tag_v)>;
-  //   auto& var = tuples::get<Tag>(reference_variable_data_);
-  //   for (size_t i = 0; i < Tag::type::size(); ++i) {
-  //     var[i].set_data_ref(
-  //         &variable_data_[variable_offset++ * number_of_grid_points_],
-  //         number_of_grid_points_);
-  //   }
-  // });
+  size_t variable_offset = 0;
+  tmpl::for_each<tags_list>([this, &variable_offset](auto tag_v) {
+    using Tag = tmpl::type_from<decltype(tag_v)>;
+    auto& var = tuples::get<Tag>(reference_variable_data_);
+    for (size_t i = 0; i < Tag::type::size(); ++i) {
+      var[i].set_data_ref(
+          &variable_data_[variable_offset++ * number_of_grid_points_],
+          number_of_grid_points_);
+    }
+  });
 }
 /// \endcond
 
