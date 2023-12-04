@@ -249,7 +249,7 @@ std::string print_alternatives(const std::string& header,
   return (
       indent + header + "\n" + ... +
       (print<tmpl::list<Alternatives...>, Alternatives>::apply(indent + "  ")));
-};
+}
 
 template <typename FirstAlternative, typename... OtherAlternatives,
           typename OptionList>
