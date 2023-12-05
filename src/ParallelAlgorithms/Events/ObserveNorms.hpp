@@ -215,17 +215,6 @@ class ObserveNorms<tmpl::list<ObservableTensorTags...>,
   using return_tags = tmpl::list<>;
   using argument_tags = tmpl::list<::Tags::ObservationBox>;
 
-  template <typename TensorToObserveTag, typename ComputeTagsList,
-            typename DataBoxType, size_t Dim>
-  void observe_norms_impl(
-      gsl::not_null<
-          std::unordered_map<std::string, std::pair<std::vector<double>,
-                                                    std::vector<std::string>>>*>
-          norm_values_and_names,
-      const ObservationBox<ComputeTagsList, DataBoxType>& box,
-      const Mesh<Dim>& mesh, const DataVector& det_jacobian,
-      size_t number_of_points) const;
-
   template <typename ComputeTagsList, typename DataBoxType,
             typename Metavariables, size_t VolumeDim,
             typename ParallelComponent>
@@ -350,37 +339,6 @@ void fill_norm_values_and_names(
 
 template <typename... ObservableTensorTags, typename... NonTensorComputeTags,
           typename ArraySectionIdTag>
-template <typename TensorToObserveTag, typename ComputeTagsList,
-          typename DataBoxType, size_t Dim>
-void ObserveNorms<tmpl::list<ObservableTensorTags...>,
-                  tmpl::list<NonTensorComputeTags...>, ArraySectionIdTag>::
-    observe_norms_impl(
-        const gsl::not_null<std::unordered_map<
-            std::string,
-            std::pair<std::vector<double>, std::vector<std::string>>>*>
-            norm_values_and_names,
-        const ObservationBox<ComputeTagsList, DataBoxType>& box,
-        const Mesh<Dim>& mesh, const DataVector& det_jacobian,
-        const size_t number_of_points) const {
-  const std::string tensor_name = db::tag_name<TensorToObserveTag>();
-  // Loop over ObservableTensorTags and see if it was requested to be observed.
-  // This approach allows us to delay evaluating any compute tags until they're
-  // actually needed for observing.
-  for (size_t i = 0; i < tensor_names_.size(); ++i) {
-    if (tensor_name == tensor_names_[i]) {
-      ObserveNorms_impl::check_norm_is_observable(
-          tensor_name, has_value(get<TensorToObserveTag>(box)));
-      ObserveNorms_impl::fill_norm_values_and_names(
-          norm_values_and_names,
-          value(get<TensorToObserveTag>(box)).get_vector_of_data(), mesh,
-          det_jacobian, tensor_name, tensor_norm_types_[i],
-          tensor_components_[i], number_of_points);
-    }
-  }
-}
-
-template <typename... ObservableTensorTags, typename... NonTensorComputeTags,
-          typename ArraySectionIdTag>
 template <typename ComputeTagsList, typename DataBoxType,
           typename Metavariables, size_t VolumeDim, typename ParallelComponent>
 void ObserveNorms<tmpl::list<ObservableTensorTags...>,
@@ -404,13 +362,30 @@ operator()(const ObservationBox<ComputeTagsList, DataBoxType>& box,
   const size_t number_of_points = mesh.number_of_grid_points();
   const double local_volume = definite_integral(det_jacobian, mesh);
 
+  using tensor_tags = tmpl::list<ObservableTensorTags...>;
   std::unordered_map<std::string,
                      std::pair<std::vector<double>, std::vector<std::string>>>
       norm_values_and_names{};
-  (observe_norms_impl<ObservableTensorTags>(
-       make_not_null(&norm_values_and_names), box, mesh, det_jacobian,
-       number_of_points),
-   ...);
+  // Loop over ObservableTensorTags and see if it was requested to be observed.
+  // This approach allows us to delay evaluating any compute tags until they're
+  // actually needed for observing.
+  tmpl::for_each<tensor_tags>([this, &box, &norm_values_and_names,
+                               &number_of_points, &mesh,
+                               &det_jacobian](auto tag_v) {
+    using tag = tmpl::type_from<decltype(tag_v)>;
+    const std::string tensor_name = db::tag_name<tag>();
+    for (size_t i = 0; i < tensor_names_.size(); ++i) {
+      if (tensor_name == tensor_names_[i]) {
+        ObserveNorms_impl::check_norm_is_observable(tensor_name,
+                                                    has_value(get<tag>(box)));
+        ObserveNorms_impl::fill_norm_values_and_names(
+            make_not_null(&norm_values_and_names),
+            value(get<tag>(box)).get_vector_of_data(), mesh, det_jacobian,
+            tensor_name, tensor_norm_types_[i], tensor_components_[i],
+            number_of_points);
+      }
+    }
+  });
 
   // Concatenate the legend info together.
   std::vector<std::string> legend{observation_value.name, "NumberOfPoints",
