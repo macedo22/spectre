@@ -652,9 +652,9 @@ db::DataBox<tmpl::list<Tags...>>::reset_compute_items_after_mutate(
       tmpl::remove_duplicates<tmpl::transform<
           tmpl::filter<
               typename DataBox<tmpl::list<Tags...>>::edge_list,
-              tmpl::bind<tmpl::list_contains,
-                         tmpl::pin<tmpl::list<TagsOfImmutableItemsToReset...>>,
-                         tmpl::get_source<tmpl::_1>>>,
+              tmpl::lazy::list_contains<
+                  tmpl::pin<tmpl::list<TagsOfImmutableItemsToReset...>>,
+                  tmpl::get_source<tmpl::_1>>>,
           tmpl::get_destination<tmpl::_1>>>,
       current_tags_to_reset>;
   reset_compute_items_after_mutate(next_compute_tags_to_reset{});
