@@ -149,9 +149,11 @@ std::string add_group_prefix_to_name(const std::string& name) {
   return "In group " + name;
 }
 
-void print_top_level_error_message() {
-  Parallel::printf_error(
-      "The following options differ from their suggested values:\n");
+void print_top_level_message_if_top(const bool is_top_level) {
+  if (is_top_level) {
+    Parallel::printf_error(
+        "The following options differ from their suggested values:\n");
+  }
 }
 }  // namespace parse_detail
 }  // namespace Options

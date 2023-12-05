@@ -749,7 +749,7 @@ void check_for_missing_option(const std::vector<std::string>& valid_names,
 
 std::string add_group_prefix_to_name(const std::string& name);
 
-void print_top_level_error_message();
+void print_top_level_message_if_top(bool is_top_level);
 }  // namespace parse_detail
 
 template <typename OptionList, typename Group>
@@ -816,9 +816,7 @@ void Parser<OptionList, Group>::parse(const YAML::Node& node) {
   // apply, but it is not clear how to determine in those functions
   // whether this message should be printed.
   if constexpr (std::is_same_v<Group, NoSuchType>) {
-    if (context_.top_level) {
-      parse_detail::print_top_level_error_message();
-    }
+    parse_detail::print_top_level_message_if_top(context_.top_level);
   }
 }
 
