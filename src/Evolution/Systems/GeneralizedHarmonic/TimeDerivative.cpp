@@ -25,6 +25,7 @@
 #include "PointwiseFunctions/GeneralRelativity/SpatialMetric.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/Gsl.hpp"
+#include "Utilities/MakeWithValue.hpp"  // TODO : remove if not used
 
 namespace gh {
 template <size_t Dim>
@@ -50,7 +51,7 @@ void TimeDerivative<Dim>::apply(
         mesh_velocity_dot_three_index_constraint,
     const gsl::not_null<tnsr::ia<DataVector, Dim>*> phi_one_normal,
     const gsl::not_null<tnsr::aB<DataVector, Dim>*> pi_2_up,
-    const gsl::not_null<tnsr::iaa<DataVector, Dim>*> three_index_constraint,
+    const gsl::not_null<tnsr::iaa<DataVector, Dim>*> /*three_index_constraint*/,
     const gsl::not_null<tnsr::Iaa<DataVector, Dim>*> phi_1_up,
     const gsl::not_null<tnsr::iaB<DataVector, Dim>*> phi_3_up,
     const gsl::not_null<tnsr::abC<DataVector, Dim>*>
@@ -65,9 +66,10 @@ void TimeDerivative<Dim>::apply(
     const gsl::not_null<tnsr::Abb<DataVector, Dim>*> christoffel_second_kind,
     const gsl::not_null<tnsr::a<DataVector, Dim>*> trace_christoffel,
     const gsl::not_null<tnsr::A<DataVector, Dim>*> normal_spacetime_vector,
-    const tnsr::iaa<DataVector, Dim>& d_spacetime_metric,
-    const tnsr::iaa<DataVector, Dim>& d_pi,
-    const tnsr::ijaa<DataVector, Dim>& d_phi,
+    // TODO : add frame Frame::ElementLogical
+    const tnsr::iaa<DataVector, Dim>& /*d_spacetime_metric*/,
+    const tnsr::iaa<DataVector, Dim>& /*d_pi*/,
+    const tnsr::ijaa<DataVector, Dim>& /*d_phi*/,
     const tnsr::aa<DataVector, Dim>& spacetime_metric,
     const tnsr::aa<DataVector, Dim>& pi, const tnsr::iaa<DataVector, Dim>& phi,
     const Scalar<DataVector>& gamma0, const Scalar<DataVector>& gamma1,
@@ -97,15 +99,149 @@ void TimeDerivative<Dim>::apply(
   gr::lapse(lapse, *shift, spacetime_metric);
   gr::inverse_spacetime_metric(inverse_spacetime_metric, *lapse, *shift,
                                *inverse_spatial_metric);
+
+  // BEGIN new stuff
+  // TODO : move temporaries into arguments
+
+  // logical partial deriv types
+  using logical_d_spacetime_metric_t =
+      Tensor<DataVector, Symmetry<2, 1, 1>,
+             index_list<SpatialIndex<Dim, UpLo::Lo, Frame::ElementLogical>,
+                        SpacetimeIndex<Dim, UpLo::Lo, Frame::Inertial>,
+                        SpacetimeIndex<Dim, UpLo::Lo, Frame::Inertial>>>;
+  using logical_d_pi_t = logical_d_spacetime_metric_t;
+  using logical_d_phi_t =
+      Tensor<DataVector, Symmetry<3, 2, 1, 1>,
+             index_list<SpatialIndex<Dim, UpLo::Lo, Frame::ElementLogical>,
+                        SpatialIndex<Dim, UpLo::Lo, Frame::Inertial>,
+                        SpacetimeIndex<Dim, UpLo::Lo, Frame::Inertial>,
+                        SpacetimeIndex<Dim, UpLo::Lo, Frame::Inertial>>>;
+  using logical_inverse_spatial_metric_t =
+      Tensor<DataVector, Symmetry<2, 1>,
+             index_list<SpatialIndex<Dim, UpLo::Up, Frame::ElementLogical>,
+                        SpatialIndex<Dim, UpLo::Up, Frame::Inertial>>>;
+
+  // logical partial derivs
+  const auto logical_d_spacetime_metric =
+      make_with_value<logical_d_spacetime_metric_t>(gamma1, 0.0);
+  const auto logical_d_pi = make_with_value<logical_d_pi_t>(gamma1, 0.0);
+  const auto logical_d_phi = make_with_value<logical_d_phi_t>(gamma1, 0.0);
+  // note : won't work because need jacobian instead?
+  // const logical_d_spacetime_metric_t logical_d_spacetime_metric =
+  //     tenex::evaluate<ti::j, ti::a, ti::b>(
+  //         d_spacetime_metric(ti::i, ti::a, ti::b) *
+  //         inverse_jacobian(ti::I, ti::j));
+  // const logical_d_pi_t logical_d_pi = tenex::evaluate<ti::j, ti::a, ti::b>(
+  //     d_pi(ti::i, ti::a, ti::b) * inverse_jacobian(ti::I, ti::j));
+  // const logical_d_phi_t logical_d_phi =
+  //     tenex::evaluate<ti::k, ti::i, ti::a, ti::b>(
+  //         d_phi(ti::j, ti::i, ti::a, ti::b) * inverse_jacobian(ti::J,
+  //         ti::k));
+
+  // other vars with logical first index
+  const tnsr::I<DataVector, Dim, Frame::ElementLogical> logical_shift =
+      tenex::evaluate<ti::I>((*shift)(ti::J)*inverse_jacobian(ti::I, ti::j));
+  const logical_inverse_spatial_metric_t logical_inverse_spatial_metric =
+      tenex::evaluate<ti::J, ti::I>((*inverse_spatial_metric)(ti::K, ti::I) *
+                                    inverse_jacobian(ti::J, ti::k));
+  tnsr::I<DataVector, Dim, Frame::ElementLogical> logical_mesh_velocity{};
+  if (mesh_velocity.has_value()) {
+    tenex::evaluate<ti::J>(
+        make_not_null(&logical_mesh_velocity),
+        (*mesh_velocity)(ti::I)*inverse_jacobian(ti::J, ti::i));
+  }
+  // const tnsr::I<DataVector, Dim, Frame::ElementLogical> logical_mesh_velocity
+  // =
+  //     tenex::evaluate<ti::I>(mesh_velocity(ti::J) *
+  //                            inverse_jacobian(ti::I, ti::j));
+  // const std::optional da_spacetime_metric{tnsr::abb<DataVector, Dim>{}};
+  // const std::optional logical_mesh_velocity{tnsr::I<DataVector, Dim,
+  // Frame::ElementLogical>{}}; for (size_t a = 0; a < Dim + 1; ++a) {
+  //   for (size_t b = a; b < Dim + 1; ++b) {
+  //     make_const_view(make_not_null(&da_spacetime_metric.value().get(0, a,
+  //     b)),
+  //                     dt_spacetime_metric->get(a, b), 0, number_of_points);
+  //     for (size_t i = 0; i < Dim; ++i) {
+  //       make_const_view(
+  //           make_not_null(&da_spacetime_metric.value().get(i + 1, a, b)),
+  //           phi.get(i, a, b), 0, number_of_points);
+  //     }
+  //   }
+  // }
+
+  // for (size_t mu = 0; mu < Dim + 1; ++mu) {
+  //   gauge_constraint->get(mu) = trace_christoffel->get(mu);
+  //   // for (size_t nu = mu; nu < Dim + 1; ++nu) {
+  //   //   shift_dot_three_index_constraint->get(mu, nu) =
+  //   //       get<0>(*shift) * three_index_constraint->get(0, mu, nu);
+  //   //   if (mesh_velocity.has_value()) {
+  //   //     mesh_velocity_dot_three_index_constraint->get(mu, nu) =
+  //   //         get<0>(*mesh_velocity) * three_index_constraint->get(0, mu,
+  //   nu);
+  //   //   }
+  //   //   for (size_t m = 1; m < Dim; ++m) {
+  //   //     shift_dot_three_index_constraint->get(mu, nu) +=
+  //   //         shift->get(m) * three_index_constraint->get(m, mu, nu);
+  //   //     if (mesh_velocity.has_value()) {
+  //   //       mesh_velocity_dot_three_index_constraint->get(mu, nu) +=
+  //   //           mesh_velocity->get(m) * three_index_constraint->get(m, mu,
+  //   nu);
+  //   //     }
+  //   //   }
+  //   // }
+  // }
+
+  // shift dot deriv
+  const tnsr::aa<DataVector, Dim> shift_dot_d_spacetime_metric =
+      tenex::evaluate<ti::a, ti::b>(
+          logical_shift(ti::I) *
+          logical_d_spacetime_metric(ti::i, ti::a, ti::b));
+  const tnsr::aa<DataVector, Dim> shift_dot_d_pi =
+      tenex::evaluate<ti::a, ti::b>(logical_shift(ti::I) *
+                                    logical_d_pi(ti::i, ti::a, ti::b));
+  const tnsr::iaa<DataVector, Dim> shift_dot_d_phi =
+      tenex::evaluate<ti::j, ti::a, ti::b>(
+          logical_shift(ti::I) * logical_d_phi(ti::i, ti::j, ti::a, ti::b));
+
+  // shift and mesh_velocity dot d_spacetime_metric and d_phi
+  const tnsr::aa<DataVector, Dim> shift_dot_phi =
+      tenex::evaluate<ti::a, ti::b>((*shift)(ti::I)*phi(ti::i, ti::a, ti::b));
+  tnsr::aa<DataVector, Dim> mesh_velocity_dot_phi{};
+  tnsr::aa<DataVector, Dim> mesh_velocity_dot_d_spacetime_metric{};
+  if (mesh_velocity.has_value()) {
+    tenex::evaluate<ti::a, ti::b>(
+        make_not_null(&mesh_velocity_dot_phi),
+        (*mesh_velocity)(ti::I)*phi(ti::i, ti::a, ti::b));
+    tenex::evaluate<ti::a, ti::b>(
+        make_not_null(&mesh_velocity_dot_d_spacetime_metric),
+        logical_mesh_velocity(ti::I) *
+            logical_d_spacetime_metric(ti::i, ti::a, ti::b));
+  }
+
+  // // (B^i + v^i{}_g)(\mathcal{C}_{iab}) =
+  // // (B^i + v^i{}_g)(\partial_i g_{ab} - \Phi_{iab})
+  // const tnsr::aa<DataVector, Dim>
+  // shift_plus_mesh_velocity_dot_three_index_constraint =
+  //     tenex::evaluate<ti::a, ti::b>(
+  //       shift_dot_d_spacetime_metric(ti::a, ti::b) -
+  //       shift_dot_phi(ti::a, ti::b) +
+  //       mesh_velocity_dot_d_spacetime_metric(ti::a, ti::b) -
+  //       mesh_velocity_dot_phi(ti::a, ti::b));
+  // END new stuff
+
   // Compute the part of the dt_spacetime_metric equation that doesn't involve
   // constraints so we can use it for da_spacetime_metric to compute Christoffel
   // symbols.
   for (size_t mu = 0; mu < Dim + 1; ++mu) {
     for (size_t nu = mu; nu < Dim + 1; ++nu) {
-      dt_spacetime_metric->get(mu, nu) = -get(*lapse) * pi.get(mu, nu);
-      for (size_t m = 0; m < Dim; ++m) {
-        dt_spacetime_metric->get(mu, nu) += shift->get(m) * phi.get(m, mu, nu);
-      }
+      // dt_spacetime_metric->get(mu, nu) = -get(*lapse) * pi.get(mu, nu);
+      // for (size_t m = 0; m < Dim; ++m) {
+      //   dt_spacetime_metric->get(mu, nu) += shift->get(m) * phi.get(m, mu,
+      //   nu);
+      // }
+
+      dt_spacetime_metric->get(mu, nu) =
+          -get(*lapse) * pi.get(mu, nu) + shift_dot_phi.get(mu, nu);
     }
   }
 
@@ -220,36 +356,36 @@ void TimeDerivative<Dim>::apply(
     half_phi_two_normals->get(n) *= 0.5;
   }
 
-  for (size_t n = 0; n < Dim; ++n) {
-    for (size_t mu = 0; mu < Dim + 1; ++mu) {
-      for (size_t nu = mu; nu < Dim + 1; ++nu) {
-        three_index_constraint->get(n, mu, nu) =
-            d_spacetime_metric.get(n, mu, nu) - phi.get(n, mu, nu);
-      }
-    }
-  }
+  // for (size_t n = 0; n < Dim; ++n) {
+  //   for (size_t mu = 0; mu < Dim + 1; ++mu) {
+  //     for (size_t nu = mu; nu < Dim + 1; ++nu) {
+  //       three_index_constraint->get(n, mu, nu) =
+  //           d_spacetime_metric.get(n, mu, nu) - phi.get(n, mu, nu);
+  //     }
+  //   }
+  // }
 
   get(*gamma1_plus_1) = 1.0 + gamma1.get();
   const DataVector& gamma1p1 = get(*gamma1_plus_1);
 
   for (size_t mu = 0; mu < Dim + 1; ++mu) {
     gauge_constraint->get(mu) = trace_christoffel->get(mu);
-    for (size_t nu = mu; nu < Dim + 1; ++nu) {
-      shift_dot_three_index_constraint->get(mu, nu) =
-          get<0>(*shift) * three_index_constraint->get(0, mu, nu);
-      if (mesh_velocity.has_value()) {
-        mesh_velocity_dot_three_index_constraint->get(mu, nu) =
-            get<0>(*mesh_velocity) * three_index_constraint->get(0, mu, nu);
-      }
-      for (size_t m = 1; m < Dim; ++m) {
-        shift_dot_three_index_constraint->get(mu, nu) +=
-            shift->get(m) * three_index_constraint->get(m, mu, nu);
-        if (mesh_velocity.has_value()) {
-          mesh_velocity_dot_three_index_constraint->get(mu, nu) +=
-              mesh_velocity->get(m) * three_index_constraint->get(m, mu, nu);
-        }
-      }
-    }
+    // for (size_t nu = mu; nu < Dim + 1; ++nu) {
+    //   shift_dot_three_index_constraint->get(mu, nu) =
+    //       get<0>(*shift) * three_index_constraint->get(0, mu, nu);
+    //   if (mesh_velocity.has_value()) {
+    //     mesh_velocity_dot_three_index_constraint->get(mu, nu) =
+    //         get<0>(*mesh_velocity) * three_index_constraint->get(0, mu, nu);
+    //   }
+    //   for (size_t m = 1; m < Dim; ++m) {
+    //     shift_dot_three_index_constraint->get(mu, nu) +=
+    //         shift->get(m) * three_index_constraint->get(m, mu, nu);
+    //     if (mesh_velocity.has_value()) {
+    //       mesh_velocity_dot_three_index_constraint->get(mu, nu) +=
+    //           mesh_velocity->get(m) * three_index_constraint->get(m, mu, nu);
+    //     }
+    //   }
+    // }
   }
 
   const bool using_harmonic_gauge = gauge_condition.is_harmonic();
@@ -278,6 +414,16 @@ void TimeDerivative<Dim>::apply(
     get(*normal_dot_gauge_constraint) +=
         normal_spacetime_vector->get(mu) * gauge_constraint->get(mu);
   }
+
+  // const tnsr::aa<DataVector, Dim> inv_spatial_metric_dot_d_phi =
+  //     tenex::evaluate<ti::a, ti::b>(logical_inverse_spatial_metric(ti::K,
+  //     ti::I) *
+  //                            logical_d_phi(ti::k, ti::i, ti::a, ti::b));
+
+  const auto logical_d_pi_minus_gamma2_logical_d_spacetime_metric =
+      tenex::evaluate<ti::i, ti::a, ti::b>(
+          logical_d_pi(ti::i, ti::a, ti::b) -
+          gamma2() * logical_d_spacetime_metric(ti::i, ti::a, ti::b));
 
   // Invalidate da_spacetime_metric since we will be modifying some of the
   // data it points to.
@@ -363,8 +509,10 @@ void TimeDerivative<Dim>::apply(
             pi_one_normal->get(m + 1) * phi_1_up->get(m, mu, nu);
 
         for (size_t n = 0; n < Dim; ++n) {
-          dt_pi->get(mu, nu) -=
-              inverse_spatial_metric->get(m, n) * d_phi.get(m, n, mu, nu);
+          // dt_pi->get(mu, nu) -=
+          //     inverse_spatial_metric->get(m, n) * d_phi.get(m, n, mu, nu);
+          dt_pi->get(mu, nu) -= logical_inverse_spatial_metric.get(m, n) *
+                                logical_d_phi.get(m, n, mu, nu);
         }
       }
 
@@ -377,30 +525,39 @@ void TimeDerivative<Dim>::apply(
             gamma12 * mesh_velocity_dot_three_index_constraint->get(mu, nu);
       }
 
-      for (size_t m = 0; m < Dim; ++m) {
-        // DualFrame term
-        dt_pi->get(mu, nu) += shift->get(m) * d_pi.get(m, mu, nu);
-      }
+      // for (size_t m = 0; m < Dim; ++m) {
+      //   // DualFrame term
+      //   dt_pi->get(mu, nu) += shift->get(m) * d_pi.get(m, mu, nu);
+      // }
+      dt_pi->get(mu, nu) += shift_dot_d_pi.get(mu, nu);
     }
   }
 
   // Equation for dt_phi
+  tenex::evaluate<ti::i, ti::a, ti::b>(
+      dt_phi, logical_d_pi_minus_gamma2_logical_d_spacetime_metric(ti::j, ti::a,
+                                                                   ti::b) *
+                  inverse_jacobian(ti::J, ti::i));
   for (size_t i = 0; i < Dim; ++i) {
     for (size_t mu = 0; mu < Dim + 1; ++mu) {
       for (size_t nu = mu; nu < Dim + 1; ++nu) {
-        dt_phi->get(i, mu, nu) =
+        // dt_phi->get(i, mu, nu) =
+        //     pi.get(mu, nu) * half_phi_two_normals->get(i) -
+        //     d_pi.get(i, mu, nu) +
+        //     get(gamma2) * three_index_constraint->get(i, mu, nu);
+        dt_phi->get(i, mu, nu) +=
             pi.get(mu, nu) * half_phi_two_normals->get(i) -
-            d_pi.get(i, mu, nu) +
-            get(gamma2) * three_index_constraint->get(i, mu, nu);
+            get(gamma2) * phi.get(i, mu, nu);
         for (size_t n = 0; n < Dim; ++n) {
           dt_phi->get(i, mu, nu) +=
               phi_one_normal->get(i, n + 1) * phi_1_up->get(n, mu, nu);
         }
 
         dt_phi->get(i, mu, nu) *= get(*lapse);
-        for (size_t m = 0; m < Dim; ++m) {
-          dt_phi->get(i, mu, nu) += shift->get(m) * d_phi.get(m, i, mu, nu);
-        }
+        // for (size_t m = 0; m < Dim; ++m) {
+        //   dt_phi->get(i, mu, nu) += shift->get(m) * d_phi.get(m, i, mu, nu);
+        // }
+        dt_phi->get(i, mu, nu) += shift_dot_d_phi.get(i, mu, nu);
       }
     }
   }
