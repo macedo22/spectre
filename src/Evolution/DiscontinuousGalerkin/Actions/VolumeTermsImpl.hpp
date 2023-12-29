@@ -91,4 +91,37 @@ void volume_terms(
         mesh_velocity,
     const std::optional<Scalar<DataVector>>& div_mesh_velocity,
     const TimeDerivativeArguments&... time_derivative_args);
+
+template <typename ComputeVolumeTimeDerivativeTerms, size_t Dim,
+          typename... TimeDerivativeArguments, typename... VariablesTags,
+          typename... PartialDerivTags, typename... FluxVariablesTags,
+          typename... TemporaryTags>
+void volume_terms(
+    const gsl::not_null<Variables<tmpl::list<::Tags::dt<VariablesTags>...>>*>
+        dt_vars_ptr,
+    [[maybe_unused]] const gsl::not_null<Variables<tmpl::list<::Tags::Flux<
+        FluxVariablesTags, tmpl::size_t<Dim>, Frame::Inertial>...>>*>
+        volume_fluxes,
+    [[maybe_unused]] const gsl::not_null<
+        std::array<Variables<tmpl::list<PartialDerivTags...>>, Dim>*>
+        logical_partial_derivs,
+    [[maybe_unused]] const gsl::not_null<
+        Variables<tmpl::list<TemporaryTags...>>*>
+        temporaries,
+    [[maybe_unused]] const gsl::not_null<
+        Variables<tmpl::list<::Tags::div<::Tags::Flux<
+            FluxVariablesTags, tmpl::size_t<Dim>, Frame::Inertial>>...>>*>
+        div_fluxes,
+    const Variables<tmpl::list<VariablesTags...>>& evolved_vars,
+    const ::dg::Formulation dg_formulation, const Mesh<Dim>& mesh,
+    [[maybe_unused]] const tnsr::I<DataVector, Dim, Frame::Inertial>&
+        inertial_coordinates,
+    const InverseJacobian<DataVector, Dim, Frame::ElementLogical,
+                          Frame::Inertial>&
+        logical_to_inertial_inverse_jacobian,
+    [[maybe_unused]] const Scalar<DataVector>* const det_inverse_jacobian,
+    const std::optional<tnsr::I<DataVector, Dim, Frame::Inertial>>&
+        mesh_velocity,
+    const std::optional<Scalar<DataVector>>& div_mesh_velocity,
+    const TimeDerivativeArguments&... time_derivative_args);
 }  // namespace evolution::dg::Actions::detail

@@ -19,9 +19,14 @@ if("${GoogleBenchmark_FOUND}" AND NOT "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
     ${executable}
     PRIVATE
     CoordinateMaps
+    DataStructuresHelpers
     Domain
+    GeneralizedHarmonic
+    GeneralRelativityHelpers
+    GeneralRelativity
     Informer
     GoogleBenchmark
     Spectral
+    Utilities
     )
 endif()

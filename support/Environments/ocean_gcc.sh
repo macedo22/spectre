@@ -95,6 +95,7 @@ spectre_run_cmake() {
           -D MACHINE=Ocean \
           -D BOOTSTRAP_PY_DEPS=ON \
           -D DEBUG_SYMBOLS=OFF \
+          -DGOOGLE_BENCHMARK_ROOT=$GOOGLE_BENCHMARK_BUILD \
           "$@" \
           $SPECTRE_HOME
 }

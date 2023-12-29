@@ -74,9 +74,12 @@ void partial_derivatives_impl(
     }
   }
 
+  // for each independent component index of Variables<DerivativeTags>
   for (size_t component_index = 0;
        component_index < number_of_independent_components; ++component_index) {
+    // for each partial derivative index (i.e. in inertial frame)
     for (size_t deriv_index = 0; deriv_index < Dim; ++deriv_index) {
+      // refers to current component of result partial derivative
       lhs.set_data_ref(pdu, num_grid_points);
       // clang-tidy: const cast is fine since we won't modify the data and we
       // need it to easily hook into the expression templates.
@@ -87,15 +90,22 @@ void partial_derivatives_impl(
           num_grid_points);
       lhs = (*(inverse_jacobian.begin() + gsl::at(indices[0], deriv_index))) *
             logical_du;
+      // for each logical deriv index
       for (size_t logical_deriv_index = 1; logical_deriv_index < Dim;
            ++logical_deriv_index) {
         // clang-tidy: const cast is fine since we won't modify the data and we
         // need it to easily hook into the expression templates.
+        //
+        // logical_du now refers to the component at component_index in
+        // logical_partial_derivatives_of_u[logical_deriv_index]
         logical_du.set_data_ref(const_cast<double*>(  // NOLINT
                                     gsl::at(logical_partial_derivatives_of_u,
                                             logical_deriv_index)) +  // NOLINT
                                     component_index * num_grid_points,
                                 num_grid_points);
+        // resulting partial derivative component +=
+        //     inverse_jacobian[logical_deriv_index][deriv_index] *
+        //     logical_partial_derivatives_of_u[logical_deriv_index][?]
         lhs +=
             (*(inverse_jacobian.begin() +
                gsl::at(gsl::at(indices, logical_deriv_index), deriv_index))) *

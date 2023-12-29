@@ -43,6 +43,7 @@ set(LIBRARY_SOURCES
   Test_TempBuffer.cpp
   Test_Transpose.cpp
   Test_Variables.cpp
+  Test_VariablesTensorArray.cpp
   Test_VectorImpl.cpp
   Test_VectorImplTestHelper.cpp
   )
