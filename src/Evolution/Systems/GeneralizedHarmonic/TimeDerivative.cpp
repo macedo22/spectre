@@ -4,6 +4,7 @@
 #include "Evolution/Systems/GeneralizedHarmonic/TimeDerivative.hpp"
 
 #include <cstddef>
+// #include <iostream>
 
 #include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/EagerMath/RaiseOrLowerIndex.hpp"
@@ -67,9 +68,9 @@ void TimeDerivative<Dim>::apply(
     const gsl::not_null<tnsr::a<DataVector, Dim>*> trace_christoffel,
     const gsl::not_null<tnsr::A<DataVector, Dim>*> normal_spacetime_vector,
     // TODO : add frame Frame::ElementLogical
-    const tnsr::iaa<DataVector, Dim>& /*d_spacetime_metric*/,
-    const tnsr::iaa<DataVector, Dim>& /*d_pi*/,
-    const tnsr::ijaa<DataVector, Dim>& /*d_phi*/,
+    const tnsr::iaa<DataVector, Dim>& d_spacetime_metric,
+    const tnsr::iaa<DataVector, Dim>& d_pi,
+    const tnsr::ijaa<DataVector, Dim>& d_phi,
     const tnsr::aa<DataVector, Dim>& spacetime_metric,
     const tnsr::aa<DataVector, Dim>& pi, const tnsr::iaa<DataVector, Dim>& phi,
     const Scalar<DataVector>& gamma0, const Scalar<DataVector>& gamma1,
@@ -103,6 +104,9 @@ void TimeDerivative<Dim>::apply(
   // BEGIN new stuff
   // TODO : move temporaries into arguments
 
+  const Jacobian<DataVector, Dim, Frame::ElementLogical, Frame::Inertial>
+      jacobian = determinant_and_inverse(inverse_jacobian).second;
+
   // logical partial deriv types
   using logical_d_spacetime_metric_t =
       Tensor<DataVector, Symmetry<2, 1, 1>,
@@ -122,21 +126,19 @@ void TimeDerivative<Dim>::apply(
                         SpatialIndex<Dim, UpLo::Up, Frame::Inertial>>>;
 
   // logical partial derivs
-  const auto logical_d_spacetime_metric =
-      make_with_value<logical_d_spacetime_metric_t>(gamma1, 0.0);
-  const auto logical_d_pi = make_with_value<logical_d_pi_t>(gamma1, 0.0);
-  const auto logical_d_phi = make_with_value<logical_d_phi_t>(gamma1, 0.0);
-  // note : won't work because need jacobian instead?
-  // const logical_d_spacetime_metric_t logical_d_spacetime_metric =
-  //     tenex::evaluate<ti::j, ti::a, ti::b>(
-  //         d_spacetime_metric(ti::i, ti::a, ti::b) *
-  //         inverse_jacobian(ti::I, ti::j));
-  // const logical_d_pi_t logical_d_pi = tenex::evaluate<ti::j, ti::a, ti::b>(
-  //     d_pi(ti::i, ti::a, ti::b) * inverse_jacobian(ti::I, ti::j));
-  // const logical_d_phi_t logical_d_phi =
-  //     tenex::evaluate<ti::k, ti::i, ti::a, ti::b>(
-  //         d_phi(ti::j, ti::i, ti::a, ti::b) * inverse_jacobian(ti::J,
-  //         ti::k));
+  // const auto logical_d_spacetime_metric =
+  //     make_with_value<logical_d_spacetime_metric_t>(gamma1, 0.0);
+  // const auto logical_d_pi = make_with_value<logical_d_pi_t>(gamma1, 0.0);
+  // const auto logical_d_phi = make_with_value<logical_d_phi_t>(gamma1, 0.0);
+  // // note : won't work because need jacobian instead?
+  const logical_d_spacetime_metric_t logical_d_spacetime_metric =
+      tenex::evaluate<ti::j, ti::a, ti::b>(
+          d_spacetime_metric(ti::i, ti::a, ti::b) * jacobian(ti::I, ti::j));
+  const logical_d_pi_t logical_d_pi = tenex::evaluate<ti::j, ti::a, ti::b>(
+      d_pi(ti::i, ti::a, ti::b) * jacobian(ti::I, ti::j));
+  const logical_d_phi_t logical_d_phi =
+      tenex::evaluate<ti::k, ti::i, ti::a, ti::b>(
+          d_phi(ti::j, ti::i, ti::a, ti::b) * jacobian(ti::J, ti::k));
 
   // other vars with logical first index
   const tnsr::I<DataVector, Dim, Frame::ElementLogical> logical_shift =
@@ -388,6 +390,25 @@ void TimeDerivative<Dim>::apply(
     // }
   }
 
+  // std::cout << "before shift_dot_three_index_constraint calculation"
+  //           << std::endl;
+  tenex::evaluate<ti::a, ti::b>(
+      shift_dot_three_index_constraint,
+      shift_dot_d_spacetime_metric(ti::a, ti::b) - shift_dot_phi(ti::a, ti::b));
+  if (mesh_velocity.has_value()) {
+    // std::cout << "before mesh_velocity_dot_three_index_constraint
+    // calculation"
+    //           << std::endl;
+    tenex::evaluate<ti::a, ti::b>(
+        mesh_velocity_dot_three_index_constraint,
+        mesh_velocity_dot_d_spacetime_metric(ti::a, ti::b) -
+            mesh_velocity_dot_phi(ti::a, ti::b));
+    // std::cout << "after mesh_velocity_dot_three_index_constraint calculation"
+    //           << std::endl;
+  } else {
+    // std::cout << "no mesh velocity value" << std::endl;
+  }
+
   const bool using_harmonic_gauge = gauge_condition.is_harmonic();
   if (not using_harmonic_gauge) {
     // Compute gauge condition.
@@ -420,10 +441,16 @@ void TimeDerivative<Dim>::apply(
   //     ti::I) *
   //                            logical_d_phi(ti::k, ti::i, ti::a, ti::b));
 
+  // std::cout << "before logical_d_pi_minus_gamma2_logical_d_spacetime_metric "
+  //              "calculation"
+  //           << std::endl;
   const auto logical_d_pi_minus_gamma2_logical_d_spacetime_metric =
       tenex::evaluate<ti::i, ti::a, ti::b>(
           logical_d_pi(ti::i, ti::a, ti::b) -
           gamma2() * logical_d_spacetime_metric(ti::i, ti::a, ti::b));
+  // std::cout << "after logical_d_pi_minus_gamma2_logical_d_spacetime_metric "
+  //              "calculation"
+  //           << std::endl;
 
   // Invalidate da_spacetime_metric since we will be modifying some of the
   // data it points to.
@@ -533,10 +560,11 @@ void TimeDerivative<Dim>::apply(
     }
   }
 
+  // TODO : don't negate this, we don't need the extra op? does this cost an op?
   // Equation for dt_phi
   tenex::evaluate<ti::i, ti::a, ti::b>(
-      dt_phi, logical_d_pi_minus_gamma2_logical_d_spacetime_metric(ti::j, ti::a,
-                                                                   ti::b) *
+      dt_phi, -logical_d_pi_minus_gamma2_logical_d_spacetime_metric(
+                  ti::j, ti::a, ti::b) *
                   inverse_jacobian(ti::J, ti::i));
   for (size_t i = 0; i < Dim; ++i) {
     for (size_t mu = 0; mu < Dim + 1; ++mu) {
