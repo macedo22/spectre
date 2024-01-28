@@ -9,6 +9,7 @@
 #include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/EagerMath/RaiseOrLowerIndex.hpp"
 #include "DataStructures/Tensor/EagerMath/Trace.hpp"
+#include "DataStructures/Tensor/Metafunctions.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Evolution/Systems/GeneralizedHarmonic/ConstraintDamping/Tags.hpp"
 #include "Evolution/Systems/GeneralizedHarmonic/DuDtTempTags.hpp"
@@ -67,10 +68,15 @@ void TimeDerivative<Dim>::apply(
     const gsl::not_null<tnsr::Abb<DataVector, Dim>*> christoffel_second_kind,
     const gsl::not_null<tnsr::a<DataVector, Dim>*> trace_christoffel,
     const gsl::not_null<tnsr::A<DataVector, Dim>*> normal_spacetime_vector,
-    // TODO : add frame Frame::ElementLogical
-    const tnsr::iaa<DataVector, Dim>& d_spacetime_metric,
-    const tnsr::iaa<DataVector, Dim>& d_pi,
-    const tnsr::ijaa<DataVector, Dim>& d_phi,
+    const TensorMetafunctions::prepend_spatial_index<
+        tnsr::aa<DataVector, Dim>, Dim, UpLo::Lo, Frame::ElementLogical>&
+        logical_d_spacetime_metric,
+    const TensorMetafunctions::prepend_spatial_index<
+        tnsr::aa<DataVector, Dim>, Dim, UpLo::Lo, Frame::ElementLogical>&
+        logical_d_pi,
+    const TensorMetafunctions::prepend_spatial_index<
+        tnsr::iaa<DataVector, Dim>, Dim, UpLo::Lo, Frame::ElementLogical>&
+        logical_d_phi,
     const tnsr::aa<DataVector, Dim>& spacetime_metric,
     const tnsr::aa<DataVector, Dim>& pi, const tnsr::iaa<DataVector, Dim>& phi,
     const Scalar<DataVector>& gamma0, const Scalar<DataVector>& gamma1,
@@ -101,43 +107,15 @@ void TimeDerivative<Dim>::apply(
   gr::inverse_spacetime_metric(inverse_spacetime_metric, *lapse, *shift,
                                *inverse_spatial_metric);
 
-  const Jacobian<DataVector, Dim, Frame::ElementLogical, Frame::Inertial>
-      jacobian = determinant_and_inverse(inverse_jacobian).second;
-
-  // logical partial deriv types
-  using logical_d_spacetime_metric_t =
-      Tensor<DataVector, Symmetry<2, 1, 1>,
-             index_list<SpatialIndex<Dim, UpLo::Lo, Frame::ElementLogical>,
-                        SpacetimeIndex<Dim, UpLo::Lo, Frame::Inertial>,
-                        SpacetimeIndex<Dim, UpLo::Lo, Frame::Inertial>>>;
-  using logical_d_pi_t = logical_d_spacetime_metric_t;
-  using logical_d_phi_t =
-      Tensor<DataVector, Symmetry<3, 2, 1, 1>,
-             index_list<SpatialIndex<Dim, UpLo::Lo, Frame::ElementLogical>,
-                        SpatialIndex<Dim, UpLo::Lo, Frame::Inertial>,
-                        SpacetimeIndex<Dim, UpLo::Lo, Frame::Inertial>,
-                        SpacetimeIndex<Dim, UpLo::Lo, Frame::Inertial>>>;
-  using logical_inverse_spatial_metric_t =
-      Tensor<DataVector, Symmetry<2, 1>,
-             index_list<SpatialIndex<Dim, UpLo::Up, Frame::ElementLogical>,
-                        SpatialIndex<Dim, UpLo::Up, Frame::Inertial>>>;
-
-  // logical partial derivs
-  const logical_d_spacetime_metric_t logical_d_spacetime_metric =
-      tenex::evaluate<ti::j, ti::a, ti::b>(
-          d_spacetime_metric(ti::i, ti::a, ti::b) * jacobian(ti::I, ti::j));
-  const logical_d_pi_t logical_d_pi = tenex::evaluate<ti::j, ti::a, ti::b>(
-      d_pi(ti::i, ti::a, ti::b) * jacobian(ti::I, ti::j));
-  const logical_d_phi_t logical_d_phi =
-      tenex::evaluate<ti::k, ti::i, ti::a, ti::b>(
-          d_phi(ti::j, ti::i, ti::a, ti::b) * jacobian(ti::J, ti::k));
-
   // other vars with logical first index
   const tnsr::I<DataVector, Dim, Frame::ElementLogical> logical_shift =
       tenex::evaluate<ti::I>((*shift)(ti::J)*inverse_jacobian(ti::I, ti::j));
-  const logical_inverse_spatial_metric_t logical_inverse_spatial_metric =
-      tenex::evaluate<ti::J, ti::I>((*inverse_spatial_metric)(ti::K, ti::I) *
-                                    inverse_jacobian(ti::J, ti::k));
+  const Tensor<DataVector, Symmetry<2, 1>,
+               index_list<SpatialIndex<Dim, UpLo::Up, Frame::ElementLogical>,
+                          SpatialIndex<Dim, UpLo::Up, Frame::Inertial>>>
+      logical_inverse_spatial_metric = tenex::evaluate<ti::J, ti::I>(
+          (*inverse_spatial_metric)(ti::K, ti::I) *
+          inverse_jacobian(ti::J, ti::k));
   tnsr::I<DataVector, Dim, Frame::ElementLogical> logical_mesh_velocity{};
   if (mesh_velocity.has_value()) {
     tenex::evaluate<ti::J>(

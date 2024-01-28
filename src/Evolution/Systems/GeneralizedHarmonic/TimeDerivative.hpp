@@ -176,9 +176,15 @@ struct TimeDerivative {
       gsl::not_null<tnsr::Abb<DataVector, Dim>*> christoffel_second_kind,
       gsl::not_null<tnsr::a<DataVector, Dim>*> trace_christoffel,
       gsl::not_null<tnsr::A<DataVector, Dim>*> normal_spacetime_vector,
-      const tnsr::iaa<DataVector, Dim>& d_spacetime_metric,
-      const tnsr::iaa<DataVector, Dim>& d_pi,
-      const tnsr::ijaa<DataVector, Dim>& d_phi,
+      const TensorMetafunctions::prepend_spatial_index<
+          tnsr::aa<DataVector, Dim>, Dim, UpLo::Lo, Frame::ElementLogical>&
+          logical_d_spacetime_metric,
+      const TensorMetafunctions::prepend_spatial_index<
+          tnsr::aa<DataVector, Dim>, Dim, UpLo::Lo, Frame::ElementLogical>&
+          logical_d_pi,
+      const TensorMetafunctions::prepend_spatial_index<
+          tnsr::iaa<DataVector, Dim>, Dim, UpLo::Lo, Frame::ElementLogical>&
+          logical_d_phi,
       const tnsr::aa<DataVector, Dim>& spacetime_metric,
       const tnsr::aa<DataVector, Dim>& pi,
       const tnsr::iaa<DataVector, Dim>& phi, const Scalar<DataVector>& gamma0,
