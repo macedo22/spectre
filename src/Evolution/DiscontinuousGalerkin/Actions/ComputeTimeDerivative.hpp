@@ -478,13 +478,9 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
   using VarsFluxes =
       Variables<db::wrap_tags_in<::Tags::Flux, flux_variables,
                                  tmpl::size_t<Dim>, Frame::Inertial>>;
-  using partial_deriv_frame =
-      std::conditonal_t<std::is_same_v<EvolutionSystem, gh::System>,
-                        Frame::ElementLogical, Frame::Inertial>;
   using VarsPartialDerivatives =
       Variables<db::wrap_tags_in<::Tags::deriv, partial_derivative_tags,
-                                 tmpl::size_t<Dim>, partial_deriv_frame>>;
-  ;
+                                 tmpl::size_t<Dim>, Frame::Inertial>>;
   using VarsDivFluxes = Variables<db::wrap_tags_in<
       ::Tags::div, db::wrap_tags_in<::Tags::Flux, flux_variables,
                                     tmpl::size_t<Dim>, Frame::Inertial>>>;

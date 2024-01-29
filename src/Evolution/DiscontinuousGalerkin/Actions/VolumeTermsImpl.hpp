@@ -60,9 +60,9 @@ namespace evolution::dg::Actions::detail {
  *    from the fluxes.
  */
 template <typename ComputeVolumeTimeDerivativeTerms, size_t Dim,
-          typename PartialDerivFrame, typename... TimeDerivativeArguments,
-          typename... VariablesTags, typename... PartialDerivTags,
-          typename... FluxVariablesTags, typename... TemporaryTags>
+          typename... TimeDerivativeArguments, typename... VariablesTags,
+          typename... PartialDerivTags, typename... FluxVariablesTags,
+          typename... TemporaryTags>
 void volume_terms(
     const gsl::not_null<Variables<tmpl::list<::Tags::dt<VariablesTags>...>>*>
         dt_vars_ptr,
@@ -70,7 +70,7 @@ void volume_terms(
         FluxVariablesTags, tmpl::size_t<Dim>, Frame::Inertial>...>>*>
         volume_fluxes,
     [[maybe_unused]] const gsl::not_null<Variables<tmpl::list<::Tags::deriv<
-        PartialDerivTags, tmpl::size_t<Dim>, PartialDerivFrame>...>>*>
+        PartialDerivTags, tmpl::size_t<Dim>, Frame::Inertial>...>>*>
         partial_derivs,
     [[maybe_unused]] const gsl::not_null<
         Variables<tmpl::list<TemporaryTags...>>*>

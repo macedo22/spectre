@@ -25,7 +25,7 @@ namespace evolution::dg::Actions::detail {
           volume_fluxes,                                                       \
       const gsl::not_null<Variables<db::wrap_tags_in<                          \
           ::Tags::deriv, typename ::gh::System<DIM(data)>::gradient_variables, \
-          tmpl::size_t<DIM(data)>, Frame::ElementLogical>>*>                   \
+          tmpl::size_t<DIM(data)>, Frame::Inertial>>*>                         \
           partial_derivs,                                                      \
       const gsl::not_null<Variables<typename ::gh::System<DIM(                 \
           data)>::compute_volume_time_derivative_terms::temporary_tags>*>      \

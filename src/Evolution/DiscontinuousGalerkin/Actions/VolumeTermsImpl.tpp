@@ -69,8 +69,7 @@ namespace evolution::dg::Actions::detail {
  *    time derivative must be done *after* the mesh velocity is subtracted
  *    from the fluxes.
  */
-template <typename ComputeVolumeTimeDerivativeTerms,
-          typename PartialDerivFrame, size_t Dim,
+template <typename ComputeVolumeTimeDerivativeTerms, size_t Dim,
           typename... TimeDerivativeArguments, typename... VariablesTags,
           typename... PartialDerivTags, typename... FluxVariablesTags,
           typename... TemporaryTags>
@@ -81,7 +80,7 @@ void volume_terms(
         FluxVariablesTags, tmpl::size_t<Dim>, Frame::Inertial>...>>*>
         volume_fluxes,
     [[maybe_unused]] const gsl::not_null<Variables<tmpl::list<::Tags::deriv<
-        PartialDerivTags, tmpl::size_t<Dim>, PartialDerivFrame>...>>*>
+        PartialDerivTags, tmpl::size_t<Dim>, Frame::Inertial>...>>*>
         partial_derivs,
     [[maybe_unused]] const gsl::not_null<
         Variables<tmpl::list<TemporaryTags...>>*>
@@ -118,12 +117,8 @@ void volume_terms(
 
   // Compute d_i u_\alpha for nonconservative products
   if constexpr (has_partial_derivs) {
-    if constexpr (std::is_same_v<PartialDerivFrame, Frame::ElementLogical>) {
-      logical_partial_derivatives(partial_derivs, evolved_vars, mesh);
-    } else {
-      partial_derivatives(partial_derivs, evolved_vars, mesh,
+    partial_derivatives(partial_derivs, evolved_vars, mesh,
                         logical_to_inertial_inverse_jacobian);
-    }
   }
 
   // For now just zero dt_vars. If this is a performance bottle neck we
@@ -137,13 +132,13 @@ void volume_terms(
       ComputeVolumeTimeDerivativeTerms::apply(
           dt_vars_ptr, volume_fluxes, temporaries,
           get<::Tags::deriv<PartialDerivTags, tmpl::size_t<Dim>,
-                            PartialDerivFrame>>(*partial_derivs)...,
+                            Frame::Inertial>>(*partial_derivs)...,
           time_derivative_args...);
     } else {
       ComputeVolumeTimeDerivativeTerms::apply(
           dt_vars_ptr, temporaries,
           get<::Tags::deriv<PartialDerivTags, tmpl::size_t<Dim>,
-                            PartialDerivFrame>>(*partial_derivs)...,
+                            Frame::Inertial>>(*partial_derivs)...,
           time_derivative_args...);
     }
   } else {
@@ -153,7 +148,7 @@ void volume_terms(
                                         Frame::Inertial>>(*volume_fluxes))...,
         make_not_null(&get<TemporaryTags>(*temporaries))...,
         get<::Tags::deriv<PartialDerivTags, tmpl::size_t<Dim>,
-                          PartialDerivFrame>>(*partial_derivs)...,
+                          Frame::Inertial>>(*partial_derivs)...,
         time_derivative_args...);
   }
 
@@ -213,7 +208,7 @@ void volume_terms(
       using var_tag = typename decltype(var_tag_v)::type;
       using dt_var_tag = ::Tags::dt<var_tag>;
       using deriv_var_tag =
-          ::Tags::deriv<var_tag, tmpl::size_t<Dim>, PartialDerivFrame>;
+          ::Tags::deriv<var_tag, tmpl::size_t<Dim>, Frame::Inertial>;
 
       const auto& deriv_var = get<deriv_var_tag>(*partial_derivs);
       auto& dt_var = get<dt_var_tag>(*dt_vars_ptr);
