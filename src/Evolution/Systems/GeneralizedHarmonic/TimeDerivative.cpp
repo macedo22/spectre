@@ -243,6 +243,7 @@ void TimeDerivative<Dim>::apply(
   for (size_t mu = 0; mu < Dim + 1; ++mu) {
     for (size_t nu = 0; nu < Dim + 1; ++nu) {
       for (size_t alpha = 0; alpha < Dim + 1; ++alpha) {
+        // 64 sums = 64 * (3 + 2) = 320 ops (christoffel)
         christoffel_first_kind_3_up->get(mu, nu, alpha) =
             inverse_spacetime_metric->get(alpha, 0) *
             christoffel_first_kind->get(mu, nu, 0);
@@ -251,7 +252,7 @@ void TimeDerivative<Dim>::apply(
               inverse_spacetime_metric->get(alpha, beta) *
               christoffel_first_kind->get(mu, nu, beta);
         }
-        // + 64 mults = +64 ops (unrelated changes)
+        // + 64 mults = +64 ops (unrelated changes) (christoffel)
         christoffel_first_kind_3_up->get(mu, nu, alpha) *= M_SQRT2;
       }
     }
@@ -442,6 +443,7 @@ void TimeDerivative<Dim>::apply(
         for (size_t alpha = 0; alpha < Dim + 1; ++alpha) {
           dt_pi->get(mu, nu) -=
               // -160 mults = -160 ops (unrelated changes)
+              // 10 sums of 4 sums = 10 * 4 * (4 + 4) = 320 ops (christoffel)
               christoffel_first_kind_3_up->get(mu, alpha, delta) *
               christoffel_first_kind_3_up->get(nu, delta, alpha);
         }
