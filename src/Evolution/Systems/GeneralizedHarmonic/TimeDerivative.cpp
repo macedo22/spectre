@@ -323,12 +323,6 @@ void TimeDerivative<Dim>::apply(
         mesh_velocity_dot_three_index_constraint,
         mesh_velocity_dot_d_spacetime_metric(ti::a, ti::b) -
             mesh_velocity_dot_phi(ti::a, ti::b));
-
-    // + 10 adds = +10 ops
-    tenex::evaluate<ti::a, ti::b>(
-        shift_plus_mesh_velocity_dot_three_index_constraint,
-        shift_dot_three_index_constraint(ti::a, ti::b) +
-            mesh_velocity_dot_three_index_constraint(ti::a, ti::b));
   }
 
   const bool using_harmonic_gauge = gauge_condition.is_harmonic();
@@ -375,20 +369,11 @@ void TimeDerivative<Dim>::apply(
   // Equation for dt_spacetime_metric
   for (size_t mu = 0; mu < Dim + 1; ++mu) {
     for (size_t nu = mu; nu < Dim + 1; ++nu) {
+      dt_spacetime_metric->get(mu, nu) +=
+          gamma1p1 * shift_dot_three_index_constraint->get(mu, nu);
       if (mesh_velocity.has_value()) {
-        // -10 add plus mult = 10 * 2 = -20 ops
-        // +10 adds = +10 ops
-        // net -10 ops
         dt_spacetime_metric->get(mu, nu) +=
-            get(gamma1) *
-            shift_plus_mesh_velocity_dot_three_index_constraint->get(mu, nu) +
-            shift_dot_three_index_constraint->get(mu, nu);
-      } else {
-        // -10 add plus mult = 10 * 2 = -20 ops
-        // +10 add plus mult = 10 * 2 = +20 ops
-        // net 0
-        dt_spacetime_metric->get(mu, nu) +=
-            gamma1p1 * shift_dot_three_index_constraint->get(mu, nu);
+            get(gamma1) * mesh_velocity_dot_three_index_constraint->get(mu, nu);
       }
     }
   }
@@ -464,18 +449,11 @@ void TimeDerivative<Dim>::apply(
 
       dt_pi->get(mu, nu) *= get(*lapse);
 
-      if (mesh_velocity.has_value()) {
-        // -10 add plus mult = 10 * 2 = -20 ops
-        // +0 ops
-        // net -20 ops
-        dt_pi->get(mu, nu) +=
-            gamma12 * shift_plus_mesh_velocity_dot_three_index_constraint->get(mu, nu);
-      } else {
-        // -10 add plus mult = 10 * 2 = -20 ops
-        // +10 add plus mult = 10 * 2 = +20 ops
-        // net 0 ops
-        dt_pi->get(mu, nu) +=
+      dt_pi->get(mu, nu) +=
           gamma12 * shift_dot_three_index_constraint->get(mu, nu);
+      if (mesh_velocity.has_value()) {
+        dt_pi->get(mu, nu) +=
+            gamma12 * mesh_velocity_dot_three_index_constraint->get(mu, nu);
       }
 
       for (size_t m = 0; m < Dim; ++m) {
@@ -515,10 +493,7 @@ void TimeDerivative<Dim>::apply(
       }
     }
   }
-  // 15a6ea4 TOTAL : -385 ops (385 ops saved out of 750 ops from inv jacobian)
-  // new total with constraint changes saves 10 additional ops when
-  // mesh_velocity has a value and no net change when not, so it's a small
-  // improvement
+  // TOTAL : -385 ops (385 ops saved out of 750 ops from inv jacobian)
 }
 }  // namespace gh
 
