@@ -3,6 +3,7 @@
 
 #include "Evolution/Systems/GeneralizedHarmonic/TimeDerivative.hpp"
 
+#include <cmath>
 #include <cstddef>
 // #include <iostream>
 
@@ -220,6 +221,8 @@ void TimeDerivative<Dim>::apply(
           phi_3_up->get(m, nu, alpha) +=
               inverse_spacetime_metric->get(alpha, beta) * phi.get(m, nu, beta);
         }
+        // + 64 mults = +64 ops (unrelated changes)
+        phi_3_up->get(m, nu, alpha) *= 2.0;
       }
     }
   }
@@ -232,6 +235,8 @@ void TimeDerivative<Dim>::apply(
         pi_2_up->get(nu, alpha) +=
             inverse_spacetime_metric->get(alpha, beta) * pi.get(nu, beta);
       }
+      // + 16 mults = +16 ops (unrelated changes)
+      pi_2_up->get(nu, alpha) *= 2.0;
     }
   }
 
@@ -246,6 +251,8 @@ void TimeDerivative<Dim>::apply(
               inverse_spacetime_metric->get(alpha, beta) *
               christoffel_first_kind->get(mu, nu, beta);
         }
+        // + 64 mults = +64 ops (unrelated changes)
+        christoffel_first_kind_3_up->get(mu, nu, alpha) *= M_SQRT2;
       }
     }
   }
@@ -419,20 +426,23 @@ void TimeDerivative<Dim>::apply(
                               spacetime_deriv_gauge_function->get(nu, mu);
       }
       for (size_t delta = 0; delta < Dim + 1; ++delta) {
-        dt_pi->get(mu, nu) -= 2 * pi.get(mu, delta) * pi_2_up->get(nu, delta);
+        // -40 mults = -40 ops (unrelated changes)
+        dt_pi->get(mu, nu) -= pi.get(mu, delta) * pi_2_up->get(nu, delta);
         if (not using_harmonic_gauge) {
           dt_pi->get(mu, nu) += 2 *
                                 christoffel_second_kind->get(delta, mu, nu) *
                                 gauge_function->get(delta);
         }
         for (size_t n = 0; n < Dim; ++n) {
+          // -120 mults = -120 ops (unrelated changes)
           dt_pi->get(mu, nu) +=
-              2 * phi_1_up->get(n, mu, delta) * phi_3_up->get(n, nu, delta);
+              phi_1_up->get(n, mu, delta) * phi_3_up->get(n, nu, delta);
         }
 
         for (size_t alpha = 0; alpha < Dim + 1; ++alpha) {
           dt_pi->get(mu, nu) -=
-              2. * christoffel_first_kind_3_up->get(mu, alpha, delta) *
+              // -160 mults = -160 ops (unrelated changes)
+              christoffel_first_kind_3_up->get(mu, alpha, delta) *
               christoffel_first_kind_3_up->get(nu, delta, alpha);
         }
       }
@@ -493,7 +503,9 @@ void TimeDerivative<Dim>::apply(
       }
     }
   }
-  // TOTAL : -385 ops (385 ops saved out of 750 ops from inv jacobian)
+  // 1be4039 (jacobian changes) : -385 ops (of 750 saved from no inertial deriv)
+  // (unrelated changes) : -192 ops
+  // TOTAL : -577 ops (385 ops saved out of 750 ops from inv jacobian)
 }
 }  // namespace gh
 
