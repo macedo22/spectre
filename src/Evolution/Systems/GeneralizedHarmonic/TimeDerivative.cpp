@@ -473,7 +473,8 @@ void TimeDerivative<Dim>::apply(
         // note: switching this back to being here in the for loop instead of
         // computing a temporary breaks even on # of ops (-60 + 60) but we may
         // as well not have a temporary we don't need
-        dt_pi->get(mu, nu) += shift->get(m) * d_pi.get(m, mu, nu);
+        dt_pi->get(mu, nu) +=
+            logical_shift.get(m) * logical_d_pi.get(m, mu, nu);
       }
     }
   }
@@ -500,7 +501,8 @@ void TimeDerivative<Dim>::apply(
         // computing a temporary breaks even on # of ops (-180 + 180) but we may
         // as well not have a temporary we don't need
         for (size_t m = 0; m < Dim; ++m) {
-          dt_phi->get(i, mu, nu) += shift->get(m) * d_phi.get(m, i, mu, nu);
+          dt_phi->get(i, mu, nu) +=
+              logical_shift.get(m) * logical_d_phi.get(m, i, mu, nu);
         }
       }
     }
