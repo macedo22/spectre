@@ -230,6 +230,11 @@ void volume_terms(
         const size_t deriv_index = gsl::at(deriv_var_tensor_index, 0);
         dt_var.get(dt_var_tensor_index) += mesh_velocity->get(deriv_index) *
                                            deriv_var[deriv_var_storage_index];
+        // TODO :
+        // later we will remove the above X ops and add the below Y ops for
+        // a total of Z (Z how many ops saved)
+        dt_var.get(dt_var_tensor_index) += mesh_velocity->get(deriv_index) *
+                                           deriv_var[deriv_var_storage_index];
       }
     });
   }

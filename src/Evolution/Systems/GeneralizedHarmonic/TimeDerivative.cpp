@@ -65,7 +65,8 @@ void TimeDerivative<Dim>::apply(
     const gsl::not_null<Scalar<DataVector>*> sqrt_det_spatial_metric,
     const gsl::not_null<tnsr::AA<DataVector, Dim>*> inverse_spacetime_metric,
     const gsl::not_null<tnsr::abb<DataVector, Dim>*> christoffel_first_kind,
-    const gsl::not_null<tnsr::Abb<DataVector, Dim>*> christoffel_second_kind,
+    const gsl::not_null<
+        tnsr::Abb<DataVector, Dim>*> /*christoffel_second_kind*/,
     const gsl::not_null<tnsr::a<DataVector, Dim>*> trace_christoffel,
     const gsl::not_null<tnsr::A<DataVector, Dim>*> normal_spacetime_vector,
     // TODO : add frame Frame::ElementLogical
@@ -243,7 +244,7 @@ void TimeDerivative<Dim>::apply(
   for (size_t mu = 0; mu < Dim + 1; ++mu) {
     for (size_t nu = 0; nu < Dim + 1; ++nu) {
       for (size_t alpha = 0; alpha < Dim + 1; ++alpha) {
-        // 64 sums = 64 * (3 + 2) = 320 ops (christoffel)
+        // 64 sums = 64 * (4 + 3) = 448 ops (christoffel)
         christoffel_first_kind_3_up->get(mu, nu, alpha) =
             inverse_spacetime_metric->get(alpha, 0) *
             christoffel_first_kind->get(mu, nu, 0);
@@ -337,19 +338,24 @@ void TimeDerivative<Dim>::apply(
   if (not using_harmonic_gauge) {
     // Compute gauge condition.
     get(*sqrt_det_spatial_metric) = sqrt(get(*det_spatial_metric));
-    raise_or_lower_first_index(christoffel_second_kind, *christoffel_first_kind,
-                               *inverse_spacetime_metric);
   }
   gauges::dispatch<Dim>(
       gauge_function, spacetime_deriv_gauge_function, *lapse, *shift,
       *sqrt_det_spatial_metric, *inverse_spatial_metric, *da_spacetime_metric,
       *half_pi_two_normals, *half_phi_two_normals, spacetime_metric, phi, mesh,
       time, inertial_coords, inverse_jacobian, gauge_condition);
+  tnsr::A<DataVector, Dim> upper_gauge_function{};
   if (not using_harmonic_gauge) {
+    // - 40 sums = 40 * (4 + 3) = -280 ops (unrelated changes)
+    // + 4 sums = 4 * (4 + 3) = +28 ops (unrelated changes)
+    raise_or_lower_index(make_not_null(&upper_gauge_function), *gauge_function,
+                         *inverse_spacetime_metric);
     // Compute source function last so that we don't need to recompute any of
     // the other temporary tags.
     for (size_t nu = 0; nu < Dim + 1; ++nu) {
       gauge_constraint->get(nu) += gauge_function->get(nu);
+      // +4 mults = +4 ops (unrelated changes)
+      upper_gauge_function.get(nu) *= 2.0;
     }
   }
 
@@ -430,9 +436,9 @@ void TimeDerivative<Dim>::apply(
         // -40 mults = -40 ops (unrelated changes)
         dt_pi->get(mu, nu) -= pi.get(mu, delta) * pi_2_up->get(nu, delta);
         if (not using_harmonic_gauge) {
-          dt_pi->get(mu, nu) += 2 *
-                                christoffel_second_kind->get(delta, mu, nu) *
-                                gauge_function->get(delta);
+          // -40 mults = -40 ops (unrelated changes)
+          dt_pi->get(mu, nu) += christoffel_first_kind->get(delta, mu, nu) *
+                                upper_gauge_function.get(delta);
         }
         for (size_t n = 0; n < Dim; ++n) {
           // -120 mults = -120 ops (unrelated changes)
@@ -508,8 +514,8 @@ void TimeDerivative<Dim>::apply(
     }
   }
   // 1be4039 (jacobian changes) : -385 ops (of 750 saved from no inertial deriv)
-  // (unrelated changes) : -192 ops
-  // TOTAL : -577 ops (385 ops saved out of 750 ops from inv jacobian)
+  // (unrelated changes) : -480 ops
+  // TOTAL : -865 ops
 }
 }  // namespace gh
 
