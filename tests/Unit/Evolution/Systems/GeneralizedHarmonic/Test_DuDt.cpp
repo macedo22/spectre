@@ -610,17 +610,17 @@ void test_compute_dudt(const gsl::not_null<Generator*> generator) {
       gh::ConstraintDamping::Tags::ConstraintGamma2,
       gh::Tags::GaugeH<DataVector, Dim>,
       gh::Tags::SpacetimeDerivGaugeH<DataVector, Dim>,
-      gh::Tags::UpperGaugeH<DataVector, Dim>, gh::Tags::Gamma1Gamma2,
+      gh::Tags::TwoUpperGaugeH<Dim>, gh::Tags::Gamma1Gamma2,
       gh::Tags::HalfPiTwoNormals, gh::Tags::NormalDotOneIndexConstraint,
       gh::Tags::Gamma1Plus1, gh::Tags::PiOneNormal<Dim>,
       gh::Tags::GaugeConstraint<DataVector, Dim>,
       gh::Tags::HalfPhiTwoNormals<Dim>,
       gh::Tags::ShiftDotThreeIndexConstraint<Dim>,
       gh::Tags::MeshVelocityDotThreeIndexConstraint<Dim>,
-      gh::Tags::PhiOneNormal<Dim>, gh::Tags::PiSecondIndexUp<Dim>,
+      gh::Tags::PhiOneNormal<Dim>, gh::Tags::TwoPiSecondIndexUp<Dim>,
       gh::Tags::ThreeIndexConstraint<DataVector, Dim>,
-      gh::Tags::PhiFirstIndexUp<Dim>, gh::Tags::PhiThirdIndexUp<Dim>,
-      gh::Tags::SpacetimeChristoffelFirstKindThirdIndexUp<Dim>,
+      gh::Tags::PhiFirstIndexUp<Dim>, gh::Tags::TwoPhiThirdIndexUp<Dim>,
+      gh::Tags::SqrtTwoSpacetimeChristoffelFirstKindThirdIndexUp<Dim>,
       gr::Tags::Lapse<DataVector>, gr::Tags::Shift<DataVector, Dim>,
       gr::Tags::InverseSpatialMetric<DataVector, Dim>,
       gr::Tags::DetSpatialMetric<DataVector>,
@@ -641,7 +641,7 @@ void test_compute_dudt(const gsl::not_null<Generator*> generator) {
       make_not_null(&get<gh::Tags::GaugeH<DataVector, Dim>>(buffer)),
       make_not_null(
           &get<gh::Tags::SpacetimeDerivGaugeH<DataVector, Dim>>(buffer)),
-      make_not_null(&get<gh::Tags::UpperGaugeH<DataVector, Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::TwoUpperGaugeH<Dim>>(buffer)),
       make_not_null(&get<gh::Tags::Gamma1Gamma2>(buffer)),
       make_not_null(&get<gh::Tags::HalfPiTwoNormals>(buffer)),
       make_not_null(&get<gh::Tags::NormalDotOneIndexConstraint>(buffer)),
@@ -653,13 +653,13 @@ void test_compute_dudt(const gsl::not_null<Generator*> generator) {
       make_not_null(
           &get<gh::Tags::MeshVelocityDotThreeIndexConstraint<Dim>>(buffer)),
       make_not_null(&get<gh::Tags::PhiOneNormal<Dim>>(buffer)),
-      make_not_null(&get<gh::Tags::PiSecondIndexUp<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::TwoPiSecondIndexUp<Dim>>(buffer)),
       make_not_null(
           &get<gh::Tags::ThreeIndexConstraint<DataVector, Dim>>(buffer)),
       make_not_null(&get<gh::Tags::PhiFirstIndexUp<Dim>>(buffer)),
-      make_not_null(&get<gh::Tags::PhiThirdIndexUp<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::TwoPhiThirdIndexUp<Dim>>(buffer)),
       make_not_null(
-          &get<gh::Tags::SpacetimeChristoffelFirstKindThirdIndexUp<Dim>>(
+          &get<gh::Tags::SqrtTwoSpacetimeChristoffelFirstKindThirdIndexUp<Dim>>(
               buffer)),
       make_not_null(&get<gr::Tags::Lapse<DataVector>>(buffer)),
       make_not_null(&get<gr::Tags::Shift<DataVector, Dim>>(buffer)),
@@ -741,7 +741,7 @@ void test_compute_dudt(const gsl::not_null<Generator*> generator) {
       make_not_null(&get<gh::Tags::GaugeH<DataVector, Dim>>(buffer)),
       make_not_null(
           &get<gh::Tags::SpacetimeDerivGaugeH<DataVector, Dim>>(buffer)),
-      make_not_null(&get<gh::Tags::UpperGaugeH<DataVector, Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::TwoUpperGaugeH<Dim>>(buffer)),
       make_not_null(&get<gh::Tags::Gamma1Gamma2>(buffer)),
       make_not_null(&get<gh::Tags::HalfPiTwoNormals>(buffer)),
       make_not_null(&get<gh::Tags::NormalDotOneIndexConstraint>(buffer)),
@@ -752,13 +752,13 @@ void test_compute_dudt(const gsl::not_null<Generator*> generator) {
       make_not_null(&shift_dot_three_index_constraint),
       make_not_null(&mesh_velocity_dot_three_index_constraint),
       make_not_null(&get<gh::Tags::PhiOneNormal<Dim>>(buffer)),
-      make_not_null(&get<gh::Tags::PiSecondIndexUp<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::TwoPiSecondIndexUp<Dim>>(buffer)),
       make_not_null(
           &get<gh::Tags::ThreeIndexConstraint<DataVector, Dim>>(buffer)),
       make_not_null(&get<gh::Tags::PhiFirstIndexUp<Dim>>(buffer)),
-      make_not_null(&get<gh::Tags::PhiThirdIndexUp<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::TwoPhiThirdIndexUp<Dim>>(buffer)),
       make_not_null(
-          &get<gh::Tags::SpacetimeChristoffelFirstKindThirdIndexUp<Dim>>(
+          &get<gh::Tags::SqrtTwoSpacetimeChristoffelFirstKindThirdIndexUp<Dim>>(
               buffer)),
       make_not_null(&get<gr::Tags::Lapse<DataVector>>(buffer)),
       make_not_null(&get<gr::Tags::Shift<DataVector, Dim>>(buffer)),
@@ -796,7 +796,7 @@ void test_compute_dudt(const gsl::not_null<Generator*> generator) {
       make_not_null(&get<gh::Tags::GaugeH<DataVector, Dim>>(buffer)),
       make_not_null(
           &get<gh::Tags::SpacetimeDerivGaugeH<DataVector, Dim>>(buffer)),
-      make_not_null(&get<gh::Tags::UpperGaugeH<DataVector, Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::TwoUpperGaugeH<Dim>>(buffer)),
       make_not_null(&get<gh::Tags::Gamma1Gamma2>(buffer)),
       make_not_null(&get<gh::Tags::HalfPiTwoNormals>(buffer)),
       make_not_null(&get<gh::Tags::NormalDotOneIndexConstraint>(buffer)),
@@ -807,13 +807,13 @@ void test_compute_dudt(const gsl::not_null<Generator*> generator) {
       make_not_null(&shift_dot_three_index_constraint),
       make_not_null(&mesh_velocity_dot_three_index_constraint),
       make_not_null(&get<gh::Tags::PhiOneNormal<Dim>>(buffer)),
-      make_not_null(&get<gh::Tags::PiSecondIndexUp<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::TwoPiSecondIndexUp<Dim>>(buffer)),
       make_not_null(
           &get<gh::Tags::ThreeIndexConstraint<DataVector, Dim>>(buffer)),
       make_not_null(&get<gh::Tags::PhiFirstIndexUp<Dim>>(buffer)),
-      make_not_null(&get<gh::Tags::PhiThirdIndexUp<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::TwoPhiThirdIndexUp<Dim>>(buffer)),
       make_not_null(
-          &get<gh::Tags::SpacetimeChristoffelFirstKindThirdIndexUp<Dim>>(
+          &get<gh::Tags::SqrtTwoSpacetimeChristoffelFirstKindThirdIndexUp<Dim>>(
               buffer)),
       make_not_null(&get<gr::Tags::Lapse<DataVector>>(buffer)),
       make_not_null(&get<gr::Tags::Shift<DataVector, Dim>>(buffer)),

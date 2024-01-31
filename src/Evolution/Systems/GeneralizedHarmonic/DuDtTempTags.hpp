@@ -12,6 +12,13 @@ class DataVector;
 
 namespace gh {
 namespace Tags {
+/// \f$2 H^b = 2 g^{ab} H_a\f$ where \f$H_a\f$ is the gauge function defined by
+/// `GaugeH`
+template <size_t Dim>
+struct TwoUpperGaugeH : db::SimpleTag {
+  using type = tnsr::A<DataVector, Dim, Frame::Inertial>;
+};
+
 /// \f$\gamma_1 \gamma_2\f$ constraint damping product
 struct Gamma1Gamma2 : db::SimpleTag {
   using type = Scalar<DataVector>;
@@ -62,9 +69,9 @@ struct PhiOneNormal : db::SimpleTag {
   using type = tnsr::ia<DataVector, Dim, Frame::Inertial>;
 };
 
-/// \f$\Pi_a{}^b\f$
+/// \f$2 \Pi_a{}^b\f$
 template <size_t Dim>
-struct PiSecondIndexUp : db::SimpleTag {
+struct TwoPiSecondIndexUp : db::SimpleTag {
   using type = tnsr::aB<DataVector, Dim, Frame::Inertial>;
 };
 
@@ -74,15 +81,15 @@ struct PhiFirstIndexUp : db::SimpleTag {
   using type = tnsr::Iaa<DataVector, Dim, Frame::Inertial>;
 };
 
-/// \f$\Phi_{ia}{}^b\f$
+/// \f$2 \Phi_{ia}{}^b\f$
 template <size_t Dim>
-struct PhiThirdIndexUp : db::SimpleTag {
+struct TwoPhiThirdIndexUp : db::SimpleTag {
   using type = tnsr::iaB<DataVector, Dim, Frame::Inertial>;
 };
 
-/// \f$\Gamma_{ab}{}^c\f$
+/// \f$\sqrt2 \Gamma_{ab}{}^c\f$
 template <size_t Dim>
-struct SpacetimeChristoffelFirstKindThirdIndexUp : db::SimpleTag {
+struct SqrtTwoSpacetimeChristoffelFirstKindThirdIndexUp : db::SimpleTag {
   using type = tnsr::abC<DataVector, Dim, Frame::Inertial>;
 };
 }  // namespace Tags
