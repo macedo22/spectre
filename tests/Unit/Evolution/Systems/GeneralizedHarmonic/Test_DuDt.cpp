@@ -609,7 +609,8 @@ void test_compute_dudt(const gsl::not_null<Generator*> generator) {
       gh::ConstraintDamping::Tags::ConstraintGamma1,
       gh::ConstraintDamping::Tags::ConstraintGamma2,
       gh::Tags::GaugeH<DataVector, Dim>,
-      gh::Tags::SpacetimeDerivGaugeH<DataVector, Dim>, gh::Tags::Gamma1Gamma2,
+      gh::Tags::SpacetimeDerivGaugeH<DataVector, Dim>,
+      gh::Tags::UpperGaugeH<DataVector, Dim>, gh::Tags::Gamma1Gamma2,
       gh::Tags::HalfPiTwoNormals, gh::Tags::NormalDotOneIndexConstraint,
       gh::Tags::Gamma1Plus1, gh::Tags::PiOneNormal<Dim>,
       gh::Tags::GaugeConstraint<DataVector, Dim>,
@@ -626,7 +627,6 @@ void test_compute_dudt(const gsl::not_null<Generator*> generator) {
       gr::Tags::SqrtDetSpatialMetric<DataVector>,
       gr::Tags::InverseSpacetimeMetric<DataVector, Dim>,
       gr::Tags::SpacetimeChristoffelFirstKind<DataVector, Dim>,
-      gr::Tags::SpacetimeChristoffelSecondKind<DataVector, Dim>,
       gr::Tags::TraceSpacetimeChristoffelFirstKind<DataVector, Dim>,
       gr::Tags::SpacetimeNormalVector<DataVector, Dim>>>
       buffer(mesh.number_of_grid_points());
@@ -641,6 +641,7 @@ void test_compute_dudt(const gsl::not_null<Generator*> generator) {
       make_not_null(&get<gh::Tags::GaugeH<DataVector, Dim>>(buffer)),
       make_not_null(
           &get<gh::Tags::SpacetimeDerivGaugeH<DataVector, Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::UpperGaugeH<DataVector, Dim>>(buffer)),
       make_not_null(&get<gh::Tags::Gamma1Gamma2>(buffer)),
       make_not_null(&get<gh::Tags::HalfPiTwoNormals>(buffer)),
       make_not_null(&get<gh::Tags::NormalDotOneIndexConstraint>(buffer)),
@@ -670,9 +671,6 @@ void test_compute_dudt(const gsl::not_null<Generator*> generator) {
           &get<gr::Tags::InverseSpacetimeMetric<DataVector, Dim>>(buffer)),
       make_not_null(
           &get<gr::Tags::SpacetimeChristoffelFirstKind<DataVector, Dim>>(
-              buffer)),
-      make_not_null(
-          &get<gr::Tags::SpacetimeChristoffelSecondKind<DataVector, Dim>>(
               buffer)),
       make_not_null(
           &get<gr::Tags::TraceSpacetimeChristoffelFirstKind<DataVector, Dim>>(
@@ -743,6 +741,7 @@ void test_compute_dudt(const gsl::not_null<Generator*> generator) {
       make_not_null(&get<gh::Tags::GaugeH<DataVector, Dim>>(buffer)),
       make_not_null(
           &get<gh::Tags::SpacetimeDerivGaugeH<DataVector, Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::UpperGaugeH<DataVector, Dim>>(buffer)),
       make_not_null(&get<gh::Tags::Gamma1Gamma2>(buffer)),
       make_not_null(&get<gh::Tags::HalfPiTwoNormals>(buffer)),
       make_not_null(&get<gh::Tags::NormalDotOneIndexConstraint>(buffer)),
@@ -771,9 +770,6 @@ void test_compute_dudt(const gsl::not_null<Generator*> generator) {
           &get<gr::Tags::InverseSpacetimeMetric<DataVector, Dim>>(buffer)),
       make_not_null(
           &get<gr::Tags::SpacetimeChristoffelFirstKind<DataVector, Dim>>(
-              buffer)),
-      make_not_null(
-          &get<gr::Tags::SpacetimeChristoffelSecondKind<DataVector, Dim>>(
               buffer)),
       make_not_null(
           &get<gr::Tags::TraceSpacetimeChristoffelFirstKind<DataVector, Dim>>(
@@ -800,6 +796,7 @@ void test_compute_dudt(const gsl::not_null<Generator*> generator) {
       make_not_null(&get<gh::Tags::GaugeH<DataVector, Dim>>(buffer)),
       make_not_null(
           &get<gh::Tags::SpacetimeDerivGaugeH<DataVector, Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::UpperGaugeH<DataVector, Dim>>(buffer)),
       make_not_null(&get<gh::Tags::Gamma1Gamma2>(buffer)),
       make_not_null(&get<gh::Tags::HalfPiTwoNormals>(buffer)),
       make_not_null(&get<gh::Tags::NormalDotOneIndexConstraint>(buffer)),
@@ -828,9 +825,6 @@ void test_compute_dudt(const gsl::not_null<Generator*> generator) {
           &get<gr::Tags::InverseSpacetimeMetric<DataVector, Dim>>(buffer)),
       make_not_null(
           &get<gr::Tags::SpacetimeChristoffelFirstKind<DataVector, Dim>>(
-              buffer)),
-      make_not_null(
-          &get<gr::Tags::SpacetimeChristoffelSecondKind<DataVector, Dim>>(
               buffer)),
       make_not_null(
           &get<gr::Tags::TraceSpacetimeChristoffelFirstKind<DataVector, Dim>>(

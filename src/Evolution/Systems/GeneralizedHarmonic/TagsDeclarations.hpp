@@ -23,6 +23,8 @@ struct SpacetimeDerivInitialGaugeH;
 template <typename DataType, size_t Dim, typename Frame = Frame::Inertial>
 struct GaugeH;
 template <typename DataType, size_t Dim, typename Frame = Frame::Inertial>
+struct UpperGaugeH;
+template <typename DataType, size_t Dim, typename Frame = Frame::Inertial>
 struct SpacetimeDerivGaugeH;
 
 template <typename DataType, size_t Dim, typename Frame = Frame::Inertial>

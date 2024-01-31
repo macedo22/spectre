@@ -53,6 +53,17 @@ struct GaugeH : db::SimpleTag {
 };
 
 /*!
+ * \brief The inverse gauge source function for the generalized harmonic system.
+ *
+ * \details Defined as \f$ H^b = g^{ab} H_a\f$ where \f$ H_a\f$ is defined by
+ * `GaugeH`.
+ */
+template <typename DataType, size_t Dim, typename Frame>
+struct UpperGaugeH : db::SimpleTag {
+  using type = tnsr::A<DataType, Dim, Frame>;
+};
+
+/*!
  * \brief Spacetime derivatives of the gauge source function for the
  * generalized harmonic system.
  *

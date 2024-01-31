@@ -3,6 +3,7 @@
 
 #include "Evolution/Systems/GeneralizedHarmonic/TimeDerivative.hpp"
 
+#include <cmath>
 #include <cstddef>
 
 #include "DataStructures/DataVector.hpp"
@@ -37,6 +38,7 @@ void TimeDerivative<Dim>::apply(
     const gsl::not_null<tnsr::a<DataVector, Dim>*> gauge_function,
     const gsl::not_null<tnsr::ab<DataVector, Dim>*>
         spacetime_deriv_gauge_function,
+    const gsl::not_null<tnsr::A<DataVector, Dim>*> upper_gauge_function,
     const gsl::not_null<Scalar<DataVector>*> gamma1gamma2,
     const gsl::not_null<Scalar<DataVector>*> half_pi_two_normals,
     const gsl::not_null<Scalar<DataVector>*> normal_dot_gauge_constraint,
@@ -62,7 +64,6 @@ void TimeDerivative<Dim>::apply(
     const gsl::not_null<Scalar<DataVector>*> sqrt_det_spatial_metric,
     const gsl::not_null<tnsr::AA<DataVector, Dim>*> inverse_spacetime_metric,
     const gsl::not_null<tnsr::abb<DataVector, Dim>*> christoffel_first_kind,
-    const gsl::not_null<tnsr::Abb<DataVector, Dim>*> christoffel_second_kind,
     const gsl::not_null<tnsr::a<DataVector, Dim>*> trace_christoffel,
     const gsl::not_null<tnsr::A<DataVector, Dim>*> normal_spacetime_vector,
     const tnsr::iaa<DataVector, Dim>& d_spacetime_metric,
@@ -153,6 +154,7 @@ void TimeDerivative<Dim>::apply(
           phi_3_up->get(m, nu, alpha) +=
               inverse_spacetime_metric->get(alpha, beta) * phi.get(m, nu, beta);
         }
+        phi_3_up->get(m, nu, alpha) *= 2.0;
       }
     }
   }
@@ -165,6 +167,7 @@ void TimeDerivative<Dim>::apply(
         pi_2_up->get(nu, alpha) +=
             inverse_spacetime_metric->get(alpha, beta) * pi.get(nu, beta);
       }
+      pi_2_up->get(nu, alpha) *= 2.0;
     }
   }
 
@@ -179,6 +182,7 @@ void TimeDerivative<Dim>::apply(
               inverse_spacetime_metric->get(alpha, beta) *
               christoffel_first_kind->get(mu, nu, beta);
         }
+        christoffel_first_kind_3_up->get(mu, nu, alpha) *= M_SQRT2;
       }
     }
   }
@@ -256,8 +260,6 @@ void TimeDerivative<Dim>::apply(
   if (not using_harmonic_gauge) {
     // Compute gauge condition.
     get(*sqrt_det_spatial_metric) = sqrt(get(*det_spatial_metric));
-    raise_or_lower_first_index(christoffel_second_kind, *christoffel_first_kind,
-                               *inverse_spacetime_metric);
   }
   gauges::dispatch<Dim>(
       gauge_function, spacetime_deriv_gauge_function, *lapse, *shift,
@@ -265,9 +267,13 @@ void TimeDerivative<Dim>::apply(
       *half_pi_two_normals, *half_phi_two_normals, spacetime_metric, phi, mesh,
       time, inertial_coords, inverse_jacobian, gauge_condition);
   if (not using_harmonic_gauge) {
-    // Compute source function last so that we don't need to recompute any of
-    // the other temporary tags.
+    raise_or_lower_index(upper_gauge_function, *gauge_function,
+                         *inverse_spacetime_metric);
     for (size_t nu = 0; nu < Dim + 1; ++nu) {
+      upper_gauge_function->get(nu) *= 2.0;
+
+      // Compute source function last so that we don't need to recompute any of
+      // the other temporary tags.
       gauge_constraint->get(nu) += gauge_function->get(nu);
     }
   }
@@ -340,20 +346,19 @@ void TimeDerivative<Dim>::apply(
                               spacetime_deriv_gauge_function->get(nu, mu);
       }
       for (size_t delta = 0; delta < Dim + 1; ++delta) {
-        dt_pi->get(mu, nu) -= 2 * pi.get(mu, delta) * pi_2_up->get(nu, delta);
+        dt_pi->get(mu, nu) -= pi.get(mu, delta) * pi_2_up->get(nu, delta);
         if (not using_harmonic_gauge) {
-          dt_pi->get(mu, nu) += 2 *
-                                christoffel_second_kind->get(delta, mu, nu) *
-                                gauge_function->get(delta);
+          dt_pi->get(mu, nu) += christoffel_first_kind->get(delta, mu, nu) *
+                                upper_gauge_function->get(delta);
         }
         for (size_t n = 0; n < Dim; ++n) {
           dt_pi->get(mu, nu) +=
-              2 * phi_1_up->get(n, mu, delta) * phi_3_up->get(n, nu, delta);
+              phi_1_up->get(n, mu, delta) * phi_3_up->get(n, nu, delta);
         }
 
         for (size_t alpha = 0; alpha < Dim + 1; ++alpha) {
           dt_pi->get(mu, nu) -=
-              2. * christoffel_first_kind_3_up->get(mu, alpha, delta) *
+              christoffel_first_kind_3_up->get(mu, alpha, delta) *
               christoffel_first_kind_3_up->get(nu, delta, alpha);
         }
       }

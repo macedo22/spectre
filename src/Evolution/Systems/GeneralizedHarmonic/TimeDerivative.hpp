@@ -110,7 +110,8 @@ struct TimeDerivative {
       ::gh::ConstraintDamping::Tags::ConstraintGamma1,
       ::gh::ConstraintDamping::Tags::ConstraintGamma2,
       Tags::GaugeH<DataVector, Dim>,
-      Tags::SpacetimeDerivGaugeH<DataVector, Dim>, Tags::Gamma1Gamma2,
+      Tags::SpacetimeDerivGaugeH<DataVector, Dim>,
+      Tags::UpperGaugeH<DataVector, Dim>, Tags::Gamma1Gamma2,
       Tags::HalfPiTwoNormals, Tags::NormalDotOneIndexConstraint,
       Tags::Gamma1Plus1, Tags::PiOneNormal<Dim>,
       Tags::GaugeConstraint<DataVector, Dim>, Tags::HalfPhiTwoNormals<Dim>,
@@ -125,7 +126,6 @@ struct TimeDerivative {
       gr::Tags::SqrtDetSpatialMetric<DataVector>,
       gr::Tags::InverseSpacetimeMetric<DataVector, Dim>,
       gr::Tags::SpacetimeChristoffelFirstKind<DataVector, Dim>,
-      gr::Tags::SpacetimeChristoffelSecondKind<DataVector, Dim>,
       gr::Tags::TraceSpacetimeChristoffelFirstKind<DataVector, Dim>,
       gr::Tags::SpacetimeNormalVector<DataVector, Dim>>;
   using argument_tags =
@@ -149,6 +149,7 @@ struct TimeDerivative {
       gsl::not_null<tnsr::a<DataVector, Dim>*> temp_gauge_function,
       gsl::not_null<tnsr::ab<DataVector, Dim>*>
           temp_spacetime_deriv_gauge_function,
+      gsl::not_null<tnsr::A<DataVector, Dim>*> upper_gauge_function,
       gsl::not_null<Scalar<DataVector>*> gamma1gamma2,
       gsl::not_null<Scalar<DataVector>*> half_half_pi_two_normals,
       gsl::not_null<Scalar<DataVector>*> normal_dot_gauge_constraint,
@@ -173,7 +174,6 @@ struct TimeDerivative {
       gsl::not_null<Scalar<DataVector>*> sqrt_det_spatial_metric,
       gsl::not_null<tnsr::AA<DataVector, Dim>*> inverse_spacetime_metric,
       gsl::not_null<tnsr::abb<DataVector, Dim>*> christoffel_first_kind,
-      gsl::not_null<tnsr::Abb<DataVector, Dim>*> christoffel_second_kind,
       gsl::not_null<tnsr::a<DataVector, Dim>*> trace_christoffel,
       gsl::not_null<tnsr::A<DataVector, Dim>*> normal_spacetime_vector,
       const tnsr::iaa<DataVector, Dim>& d_spacetime_metric,
