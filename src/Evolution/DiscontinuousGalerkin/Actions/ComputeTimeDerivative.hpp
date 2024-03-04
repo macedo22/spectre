@@ -387,8 +387,6 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
           const ParallelComponent* const /*meta*/) {  // NOLINT const
   using variables_tag = typename EvolutionSystem::variables_tag;
   using dt_variables_tag = db::add_tag_prefix<::Tags::dt, variables_tag>;
-  using logical_partial_derivative_tags =
-          typename EvolutionSystem::gradient_variables;
   using partial_derivative_tags = typename EvolutionSystem::gradient_variables;
   using flux_variables = typename EvolutionSystem::flux_variables;
   using compute_volume_time_derivative_terms =
@@ -480,9 +478,6 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
   using VarsFluxes =
       Variables<db::wrap_tags_in<::Tags::Flux, flux_variables,
                                  tmpl::size_t<Dim>, Frame::Inertial>>;
-  using VarsLogicalPartialDerivatives =
-      Variables<db::wrap_tags_in<::Tags::deriv, logical_partial_derivative_tags,
-                                 tmpl::size_t<Dim>, Frame::Logical>>;
   using VarsPartialDerivatives =
       Variables<db::wrap_tags_in<::Tags::deriv, partial_derivative_tags,
                                  tmpl::size_t<Dim>, Frame::Inertial>>;
@@ -495,7 +490,6 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
   const size_t buffer_size =
       (VarsTemporaries::number_of_independent_components +
        VarsFluxes::number_of_independent_components +
-       VarsLogicalPartialDerivatives::number_of_independent_components +
        VarsPartialDerivatives::number_of_independent_components +
        VarsDivFluxes::number_of_independent_components) *
           number_of_grid_points +
@@ -516,23 +510,15 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
       &buffer[VarsTemporaries::number_of_independent_components *
               number_of_grid_points],
       VarsFluxes::number_of_independent_components * number_of_grid_points};
-  VarsLogicalPartialDerivatives logical_partial_derivatives{
-      &buffer[(VarsTemporaries::number_of_independent_components +
-               VarsFluxes::number_of_independent_components) *
-              number_of_grid_points],
-      VarsLogicalPartialDerivatives::number_of_independent_components *
-          number_of_grid_points};
   VarsPartialDerivatives partial_derivs{
       &buffer[(VarsTemporaries::number_of_independent_components +
-               VarsFluxes::number_of_independent_components +
-               VarsLogicalPartialDerivatives::number_of_independent_components) *
+               VarsFluxes::number_of_independent_components) *
               number_of_grid_points],
       VarsPartialDerivatives::number_of_independent_components *
           number_of_grid_points};
   VarsDivFluxes div_fluxes{
       &buffer[(VarsTemporaries::number_of_independent_components +
-               VarsFluxes::number_of_independent_components  +
-               VarsLogicalPartialDerivatives::number_of_independent_components+
+               VarsFluxes::number_of_independent_components +
                VarsPartialDerivatives::number_of_independent_components) *
               number_of_grid_points],
       VarsDivFluxes::number_of_independent_components * number_of_grid_points};
@@ -540,8 +526,7 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
   // templates to internal_mortar_data.
   gsl::span<double> face_temporaries = gsl::make_span<double>(
       &buffer[(VarsTemporaries::number_of_independent_components +
-               VarsFluxes::number_of_independent_components  +
-               VarsLogicalPartialDerivatives::number_of_independent_components +
+               VarsFluxes::number_of_independent_components +
                VarsPartialDerivatives::number_of_independent_components +
                VarsDivFluxes::number_of_independent_components) *
               number_of_grid_points],
@@ -551,8 +536,7 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
           num_face_temporary_grid_points);
   gsl::span<double> packaged_data_buffer = gsl::make_span<double>(
       &buffer[(VarsTemporaries::number_of_independent_components +
-               VarsFluxes::number_of_independent_components  +
-               VarsLogicalPartialDerivatives::number_of_independent_components +
+               VarsFluxes::number_of_independent_components +
                VarsPartialDerivatives::number_of_independent_components +
                VarsDivFluxes::number_of_independent_components) *
                   number_of_grid_points +
@@ -583,7 +567,6 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
            db::get<::domain::Tags::InverseJacobian<Dim, Frame::ElementLogical,
                                                    Frame::Inertial>>(box),
        &mesh, &mesh_velocity = db::get<::domain::Tags::MeshVelocity<Dim>>(box),
-       &logical_partial_derivs
        &partial_derivs, &temporaries, &volume_fluxes](
           const gsl::not_null<Variables<
               db::wrap_tags_in<::Tags::dt, typename variables_tag::tags_list>>*>
@@ -591,7 +574,6 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
           const auto&... time_derivative_args) {
         detail::volume_terms<compute_volume_time_derivative_terms>(
             dt_vars_ptr, make_not_null(&volume_fluxes),
-            make_not_null(&logical_partial_derivs),
             make_not_null(&partial_derivs), make_not_null(&temporaries),
             make_not_null(&div_fluxes), evolved_variables, dg_formulation, mesh,
             inertial_coordinates, logical_to_inertial_inv_jacobian,
