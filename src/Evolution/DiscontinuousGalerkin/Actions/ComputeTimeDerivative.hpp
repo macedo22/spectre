@@ -491,6 +491,7 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
                                     tmpl::size_t<Dim>, Frame::Inertial>>>;
   using VarsFaceTemporaries = Variables<all_face_temporary_tags>;
   using DgPackagedDataVarsOnFace = Variables<all_mortar_tags>;
+  using EvolvedVars = std::decay_t<decltype(db::get<variables_tag>(box))>;
   const size_t number_of_grid_points = mesh.number_of_grid_points();
   const size_t buffer_size =
       (VarsTemporaries::number_of_independent_components +
@@ -516,12 +517,23 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
       &buffer[VarsTemporaries::number_of_independent_components *
               number_of_grid_points],
       VarsFluxes::number_of_independent_components * number_of_grid_points};
-  VarsLogicalPartialDerivatives logical_partial_derivatives{
+  VarsLogicalPartialDerivatives logical_partial_derivs{
       &buffer[(VarsTemporaries::number_of_independent_components +
                VarsFluxes::number_of_independent_components) *
               number_of_grid_points],
       VarsLogicalPartialDerivatives::number_of_independent_components *
           number_of_grid_points};
+//   std::array<EvolvedVars, Dim> logical_partial_derivs{};
+//   for (size_t i = 0; i < Dim; i++) {
+//     gsl::at(logical_partial_derivs, i).set_data_ref(
+//         &buffer[(VarsTemporaries::number_of_independent_components +
+//                VarsFluxes::number_of_independent_components +
+//                EvolvedVars::number_of_independent_components * i) *
+//               number_of_grid_points],
+//               EvolvedVars::number_of_independent_components *
+//           number_of_grid_points
+//     );
+//   }
   VarsPartialDerivatives partial_derivs{
       &buffer[(VarsTemporaries::number_of_independent_components +
                VarsFluxes::number_of_independent_components +
@@ -532,7 +544,7 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
   VarsDivFluxes div_fluxes{
       &buffer[(VarsTemporaries::number_of_independent_components +
                VarsFluxes::number_of_independent_components  +
-               VarsLogicalPartialDerivatives::number_of_independent_components+
+               VarsLogicalPartialDerivatives::number_of_independent_components +
                VarsPartialDerivatives::number_of_independent_components) *
               number_of_grid_points],
       VarsDivFluxes::number_of_independent_components * number_of_grid_points};
