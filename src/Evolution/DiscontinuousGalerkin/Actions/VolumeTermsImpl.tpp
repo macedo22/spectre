@@ -233,8 +233,8 @@ void volume_terms(
         // TODO :
         // later we will remove the above X ops and add the below Y ops for
         // a total of Z (Z how many ops saved)
-        dt_var.get(dt_var_tensor_index) += mesh_velocity->get(deriv_index) *
-                                           deriv_var[deriv_var_storage_index];
+        // dt_var.get(dt_var_tensor_index) += mesh_velocity->get(deriv_index) *
+        //                                    deriv_var[deriv_var_storage_index];
       }
     });
   }
