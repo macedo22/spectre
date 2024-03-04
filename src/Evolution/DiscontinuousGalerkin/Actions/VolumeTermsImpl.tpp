@@ -72,7 +72,7 @@ namespace evolution::dg::Actions::detail {
 template <typename ComputeVolumeTimeDerivativeTerms, size_t Dim,
           typename... TimeDerivativeArguments, typename... VariablesTags,
           typename... PartialDerivTags, typename... FluxVariablesTags,
-          typename... TemporaryTags, typename PartialDerivFrame>
+          typename... TemporaryTags>
 void volume_terms(
     const gsl::not_null<Variables<tmpl::list<::Tags::dt<VariablesTags>...>>*>
         dt_vars_ptr,
@@ -80,7 +80,7 @@ void volume_terms(
         FluxVariablesTags, tmpl::size_t<Dim>, Frame::Inertial>...>>*>
         volume_fluxes,
     [[maybe_unused]] const gsl::not_null<Variables<tmpl::list<::Tags::deriv<
-        PartialDerivTags, tmpl::size_t<Dim>, PartialDerivFrame>...>>*>
+        PartialDerivTags, tmpl::size_t<Dim>, Frame::Inertial>...>>*>
         partial_derivs,
     [[maybe_unused]] const gsl::not_null<
         Variables<tmpl::list<TemporaryTags...>>*>
@@ -93,7 +93,7 @@ void volume_terms(
     const ::dg::Formulation dg_formulation, const Mesh<Dim>& mesh,
     [[maybe_unused]] const tnsr::I<DataVector, Dim, Frame::Inertial>&
         inertial_coordinates,
-    [[maybe_unused]] const InverseJacobian<DataVector, Dim, Frame::ElementLogical,
+    const InverseJacobian<DataVector, Dim, Frame::ElementLogical,
                           Frame::Inertial>&
         logical_to_inertial_inverse_jacobian,
     [[maybe_unused]] const Scalar<DataVector>* const det_inverse_jacobian,
@@ -117,14 +117,8 @@ void volume_terms(
 
   // Compute d_i u_\alpha for nonconservative products
   if constexpr (has_partial_derivs) {
-    if constexpr (std::is_same_v<PartialDerivFrame, Frame::ElementLogical>) {
-logical_partial_derivatives(partial_derivs, evolved_vars, mesh);
-    } else if constexpr (PartialDerivFrame, Frame::Inertial) {
-      partial_derivatives(partial_derivs, evolved_vars, mesh,
+    partial_derivatives(partial_derivs, evolved_vars, mesh,
                         logical_to_inertial_inverse_jacobian);
-    } else {
-      // TODO: static assert?
-    }
   }
 
   // For now just zero dt_vars. If this is a performance bottle neck we
