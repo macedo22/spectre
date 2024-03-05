@@ -95,4 +95,8 @@ SPECTRE_TEST_CASE("Unit.DataStructures.VariablesTensorArray",
                VarsPartialDerivatives::number_of_independent_components) *
               number_of_grid_points],
       VarsOther::number_of_independent_components * number_of_grid_points};
+
+  // TODO : try assigning both to refer to the buffer:
+  // - std::array<Variables>
+  // - Tensors for each logical deriv
 }
