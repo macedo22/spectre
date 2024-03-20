@@ -112,8 +112,7 @@ void volume_terms(
       "are defined, and that at least one of them is a non-empty list of "
       "tags.");
 
-  using flux_variables =
-      tmpl::list<FluxVariablesTags...>;
+  using flux_variables = tmpl::list<FluxVariablesTags...>;
 
   // Compute d_i u_\alpha for nonconservative products
   if constexpr (has_partial_derivs) {
@@ -289,7 +288,7 @@ void volume_terms(
   }
 }
 
-// TODO : use ffor logical partial derivatives
+// TODO : use for logical partial derivatives
 template <typename ComputeVolumeTimeDerivativeTerms, size_t Dim,
           typename... TimeDerivativeArguments, typename... VariablesTags,
           typename... PartialDerivTags, typename... FluxVariablesTags,
@@ -301,14 +300,7 @@ void volume_terms(
         FluxVariablesTags, tmpl::size_t<Dim>, Frame::Inertial>...>>*>
         volume_fluxes,
     [[maybe_unused]] const gsl::not_null<
-        std::array<
-          Variables<
-            tmpl::list<
-                PartialDerivTags...
-            >
-          >,
-        Dim>*
-    >
+        std::array<Variables<tmpl::list<PartialDerivTags...>>, Dim>*>
         logical_partial_derivs,
     [[maybe_unused]] const gsl::not_null<
         Variables<tmpl::list<TemporaryTags...>>*>
@@ -342,8 +334,7 @@ void volume_terms(
       "are defined, and that at least one of them is a non-empty list of "
       "tags.");
 
-  using flux_variables =
-      tmpl::list<FluxVariablesTags...>;
+  using flux_variables = tmpl::list<FluxVariablesTags...>;
 
   // Compute d_i u_\alpha for nonconservative products
   if constexpr (has_partial_derivs) {
@@ -359,14 +350,12 @@ void volume_terms(
                                   ComputeVolumeTimeDerivativeTerms>) {
     if constexpr (sizeof...(FluxVariablesTags) != 0) {
       ComputeVolumeTimeDerivativeTerms::apply(
-          dt_vars_ptr, volume_fluxes, temporaries,
-          *logical_partial_derivs,
+          dt_vars_ptr, volume_fluxes, temporaries, *logical_partial_derivs,
           time_derivative_args...);
     } else {
-      ComputeVolumeTimeDerivativeTerms::apply(
-          dt_vars_ptr, temporaries,
-          *logical_partial_derivs,
-          time_derivative_args...);
+      ComputeVolumeTimeDerivativeTerms::apply(dt_vars_ptr, temporaries,
+                                              *logical_partial_derivs,
+                                              time_derivative_args...);
     }
   } else {
     ComputeVolumeTimeDerivativeTerms::apply(
@@ -374,8 +363,7 @@ void volume_terms(
         make_not_null(&get<::Tags::Flux<FluxVariablesTags, tmpl::size_t<Dim>,
                                         Frame::Inertial>>(*volume_fluxes))...,
         make_not_null(&get<TemporaryTags>(*temporaries))...,
-        *logical_partial_derivs,
-        time_derivative_args...);
+        *logical_partial_derivs, time_derivative_args...);
   }
 
   // Add volume terms for moving meshes
@@ -439,24 +427,21 @@ void volume_terms(
       // const auto& deriv_var = get<deriv_var_tag>(*partial_derivs);
       auto& dt_var = get<dt_var_tag>(*dt_vars_ptr);
 
-      using var_tensor_type = std::decay_t<decltype(
-        get<var_tag>(gsl::at(*logical_partial_derivs, 0))
-      )>;
+      using var_tensor_type = std::decay_t<decltype(get<var_tag>(
+          gsl::at(*logical_partial_derivs, 0)))>;
 
       // Loop over all independent components of the derivative of the
       // variable
       for (size_t i = 0; i < Dim; i++) {
-        const auto& var = get<var_tag>(
-          gsl::at(*logical_partial_derivs, i));
+        const auto& var = get<var_tag>(gsl::at(*logical_partial_derivs, i));
         for (size_t var_storage_index = 0;
-           var_storage_index < var_tensor_type::size();
-           ++var_storage_index) {
-        // We grab the `var_tensor_index`, which would be e.g.
-        // `(a, b)`, so `(2, 3)`
-        const auto var_tensor_index =
-            var_tensor_type::get_tensor_index(var_storage_index);
-        dt_var.get(var_tensor_index) += logical_mesh_velocity->get(i) *
-                                           var[var_storage_index];
+             var_storage_index < var_tensor_type::size(); ++var_storage_index) {
+          // We grab the `var_tensor_index`, which would be e.g.
+          // `(a, b)`, so `(2, 3)`
+          const auto var_tensor_index =
+              var_tensor_type::get_tensor_index(var_storage_index);
+          dt_var.get(var_tensor_index) +=
+              logical_mesh_velocity->get(i) * var[var_storage_index];
         }
       }
     });
