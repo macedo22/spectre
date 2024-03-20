@@ -320,8 +320,6 @@ void volume_terms(
     const std::optional<tnsr::I<DataVector, Dim, Frame::Inertial>>&
         mesh_velocity,
     const std::optional<Scalar<DataVector>>& div_mesh_velocity,
-    const std::optional<tnsr::I<DataVector, Dim, Frame::ElementLogical>>&
-        logical_mesh_velocity,
     const TimeDerivativeArguments&... time_derivative_args) {
   static constexpr bool has_partial_derivs = sizeof...(PartialDerivTags) != 0;
   static constexpr bool has_fluxes = sizeof...(FluxVariablesTags) != 0;
@@ -417,6 +415,20 @@ void volume_terms(
     using non_flux_tags =
         tmpl::list_difference<tmpl::list<VariablesTags...>, flux_variables>;
 
+    // compute logical mesh velocity
+    const size_t mesh_velocity_size =
+        mesh.number_of_grid_points() * mesh_velocity->size();
+    const auto logical_mesh_velocity_data =
+        cpp20::make_unique_for_overwrite<double[]>(mesh_velocity_size);
+    Variables<tmpl::list<tnsr::I<DataVector, Dim, Frame::ElementLogical>>>
+        logical_mesh_velocity{};
+    logical_mesh_velocity.set_data_ref(&logical_mesh_velocity_data,
+                                       mesh_velocity_size);
+    tenex::evaluate<ti::I>(
+        make_not_null(&logical_mesh_velocity),
+        (*mesh_velocity)(ti::J)*logical_to_inertial_inverse_jacobian(ti::I,
+                                                                     ti::j));
+
     tmpl::for_each<non_flux_tags>([&dt_vars_ptr, &logical_mesh_velocity,
                                    &logical_partial_derivs](auto var_tag_v) {
       using var_tag = typename decltype(var_tag_v)::type;
@@ -441,7 +453,7 @@ void volume_terms(
           const auto var_tensor_index =
               var_tensor_type::get_tensor_index(var_storage_index);
           dt_var.get(var_tensor_index) +=
-              logical_mesh_velocity->get(i) * var[var_storage_index];
+              logical_mesh_velocity.get(i) * var[var_storage_index];
         }
       }
     });
