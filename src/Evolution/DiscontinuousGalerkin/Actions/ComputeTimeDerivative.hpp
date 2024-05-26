@@ -36,6 +36,7 @@
 #include "Evolution/DiscontinuousGalerkin/MortarTags.hpp"
 #include "Evolution/DiscontinuousGalerkin/NormalVectorTags.hpp"
 #include "Evolution/DiscontinuousGalerkin/UsingSubcell.hpp"
+#include "Evolution/Systems/GeneralizedHarmonic/System.hpp"
 #include "NumericalAlgorithms/DiscontinuousGalerkin/Formulation.hpp"
 #include "NumericalAlgorithms/DiscontinuousGalerkin/MortarHelpers.hpp"
 #include "NumericalAlgorithms/DiscontinuousGalerkin/Tags.hpp"
@@ -478,7 +479,8 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
   using VarsFluxes =
       Variables<db::wrap_tags_in<::Tags::Flux, flux_variables,
                                  tmpl::size_t<Dim>, Frame::Inertial>>;
-  using VarsPartialDerivatives =
+  using VarsDerivativeTags = Variables<partial_derivative_tags>;
+  using VarsInertialPartialDerivatives =
       Variables<db::wrap_tags_in<::Tags::deriv, partial_derivative_tags,
                                  tmpl::size_t<Dim>, Frame::Inertial>>;
   using VarsDivFluxes = Variables<db::wrap_tags_in<
@@ -490,7 +492,8 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
   const size_t buffer_size =
       (VarsTemporaries::number_of_independent_components +
        VarsFluxes::number_of_independent_components +
-       VarsPartialDerivatives::number_of_independent_components +
+       // multiplication by 2 for both logical and inertial derivatives
+       2 * VarsInertialPartialDerivatives::number_of_independent_components +
        VarsDivFluxes::number_of_independent_components) *
           number_of_grid_points +
       // Different number of grid points. See explanation above where
@@ -510,16 +513,35 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
       &buffer[VarsTemporaries::number_of_independent_components *
               number_of_grid_points],
       VarsFluxes::number_of_independent_components * number_of_grid_points};
-  VarsPartialDerivatives partial_derivs{
-      &buffer[(VarsTemporaries::number_of_independent_components +
-               VarsFluxes::number_of_independent_components) *
-              number_of_grid_points],
-      VarsPartialDerivatives::number_of_independent_components *
+
+  std::array<VarsDerivativeTags, Dim> logical_partial_derivs{};
+  if constexpr (VarsDerivativeTags::number_of_independent_components != 0) {
+    for (size_t i = 0; i < Dim; i++) {
+      gsl::at(logical_partial_derivs, i)
+          .set_data_ref(
+              &buffer[(VarsTemporaries::number_of_independent_components +
+                       VarsFluxes::number_of_independent_components +
+                       VarsDerivativeTags::number_of_independent_components *
+                           i) *
+                      number_of_grid_points],
+              VarsDerivativeTags::number_of_independent_components *
+                  number_of_grid_points);
+    }
+  }
+
+  VarsInertialPartialDerivatives inertial_partial_derivs{
+      &buffer
+          [(VarsTemporaries::number_of_independent_components +
+            VarsFluxes::number_of_independent_components +
+            VarsInertialPartialDerivatives::number_of_independent_components) *
+           number_of_grid_points],
+      VarsInertialPartialDerivatives::number_of_independent_components *
           number_of_grid_points};
   VarsDivFluxes div_fluxes{
       &buffer[(VarsTemporaries::number_of_independent_components +
                VarsFluxes::number_of_independent_components +
-               VarsPartialDerivatives::number_of_independent_components) *
+               2 * VarsInertialPartialDerivatives::
+                       number_of_independent_components) *
               number_of_grid_points],
       VarsDivFluxes::number_of_independent_components * number_of_grid_points};
   // Lighter weight data structure than a Variables to avoid passing even more
@@ -527,7 +549,8 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
   gsl::span<double> face_temporaries = gsl::make_span<double>(
       &buffer[(VarsTemporaries::number_of_independent_components +
                VarsFluxes::number_of_independent_components +
-               VarsPartialDerivatives::number_of_independent_components +
+               2 * VarsInertialPartialDerivatives::
+                       number_of_independent_components +
                VarsDivFluxes::number_of_independent_components) *
               number_of_grid_points],
       // Different number of grid points. See explanation above where
@@ -537,7 +560,8 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
   gsl::span<double> packaged_data_buffer = gsl::make_span<double>(
       &buffer[(VarsTemporaries::number_of_independent_components +
                VarsFluxes::number_of_independent_components +
-               VarsPartialDerivatives::number_of_independent_components +
+               2 * VarsInertialPartialDerivatives::
+                       number_of_independent_components +
                VarsDivFluxes::number_of_independent_components) *
                   number_of_grid_points +
               VarsFaceTemporaries::number_of_independent_components *
@@ -555,32 +579,72 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
           box);
     }
   }
-  db::mutate_apply<
-      tmpl::list<dt_variables_tag>,
-      typename compute_volume_time_derivative_terms::argument_tags>(
-      [&dg_formulation, &div_fluxes, &det_inverse_jacobian,
-       &div_mesh_velocity = db::get<::domain::Tags::DivMeshVelocity>(box),
-       &evolved_variables = db::get<variables_tag>(box),
-       &inertial_coordinates =
-           db::get<domain::Tags::Coordinates<Dim, Frame::Inertial>>(box),
-       &logical_to_inertial_inv_jacobian =
-           db::get<::domain::Tags::InverseJacobian<Dim, Frame::ElementLogical,
-                                                   Frame::Inertial>>(box),
-       &mesh, &mesh_velocity = db::get<::domain::Tags::MeshVelocity<Dim>>(box),
-       &partial_derivs, &temporaries, &volume_fluxes](
-          const gsl::not_null<Variables<
-              db::wrap_tags_in<::Tags::dt, typename variables_tag::tags_list>>*>
-              dt_vars_ptr,
-          const auto&... time_derivative_args) {
-        detail::volume_terms<compute_volume_time_derivative_terms>(
-            dt_vars_ptr, make_not_null(&volume_fluxes),
-            make_not_null(&partial_derivs), make_not_null(&temporaries),
-            make_not_null(&div_fluxes), evolved_variables, dg_formulation, mesh,
-            inertial_coordinates, logical_to_inertial_inv_jacobian,
-            det_inverse_jacobian, mesh_velocity, div_mesh_velocity,
-            time_derivative_args...);
-      },
-      make_not_null(&box));
+
+  if constexpr (std::is_same_v<EvolutionSystem, ::gh::System<Dim>>) {
+    db::mutate_apply<
+        tmpl::list<dt_variables_tag>,
+        typename compute_volume_time_derivative_terms::argument_tags>(
+        [&dg_formulation, &div_fluxes, &det_inverse_jacobian,
+         &div_mesh_velocity = db::get<::domain::Tags::DivMeshVelocity>(box),
+         &evolved_variables = db::get<variables_tag>(box),
+         &inertial_coordinates =
+             db::get<domain::Tags::Coordinates<Dim, Frame::Inertial>>(box),
+         &logical_to_inertial_inv_jacobian =
+             db::get<::domain::Tags::InverseJacobian<Dim, Frame::ElementLogical,
+                                                     Frame::Inertial>>(box),
+         &mesh,
+         &mesh_velocity = db::get<::domain::Tags::MeshVelocity<Dim>>(box),
+         &logical_partial_derivs, &partial_derivs, &temporaries,
+         &volume_fluxes](const gsl::not_null<Variables<db::wrap_tags_in<
+                             ::Tags::dt, typename variables_tag::tags_list>>*>
+                             dt_vars_ptr,
+                         const auto&... time_derivative_args) {
+          detail::volume_terms<compute_volume_time_derivative_terms>(
+              dt_vars_ptr, make_not_null(&volume_fluxes),
+              make_not_null(&logical_partial_derivs),
+              make_not_null(&temporaries), make_not_null(&div_fluxes),
+              evolved_variables, dg_formulation, mesh, inertial_coordinates,
+              logical_to_inertial_inv_jacobian, det_inverse_jacobian,
+              mesh_velocity, div_mesh_velocity, time_derivative_args...);
+          // TODO : need to compute partial derivatives after this (temporarily
+          // compute all to make sure it works, and then afterward can worry
+          // about only selectively computing for elements with external faces)
+          //
+          // attempt in progress:
+          partial_derivatives(make_not_null(&partial_derivatives),
+                              logical_partial_derivs,
+                              logical_to_inertial_inverse_jacobian);
+        },
+        make_not_null(&box));
+  } else {
+    db::mutate_apply<
+        tmpl::list<dt_variables_tag>,
+        typename compute_volume_time_derivative_terms::argument_tags>(
+        [&dg_formulation, &div_fluxes, &det_inverse_jacobian,
+         &div_mesh_velocity = db::get<::domain::Tags::DivMeshVelocity>(box),
+         &evolved_variables = db::get<variables_tag>(box),
+         &inertial_coordinates =
+             db::get<domain::Tags::Coordinates<Dim, Frame::Inertial>>(box),
+         &logical_to_inertial_inv_jacobian =
+             db::get<::domain::Tags::InverseJacobian<Dim, Frame::ElementLogical,
+                                                     Frame::Inertial>>(box),
+         &mesh,
+         &mesh_velocity = db::get<::domain::Tags::MeshVelocity<Dim>>(box),
+         &inertial_partial_derivs, &temporaries,
+         &volume_fluxes](const gsl::not_null<Variables<db::wrap_tags_in<
+                             ::Tags::dt, typename variables_tag::tags_list>>*>
+                             dt_vars_ptr,
+                         const auto&... time_derivative_args) {
+          detail::volume_terms<compute_volume_time_derivative_terms>(
+              dt_vars_ptr, make_not_null(&volume_fluxes),
+              make_not_null(&inertial_partial_derivs),
+              make_not_null(&temporaries), make_not_null(&div_fluxes),
+              evolved_variables, dg_formulation, mesh, inertial_coordinates,
+              logical_to_inertial_inv_jacobian, det_inverse_jacobian,
+              mesh_velocity, div_mesh_velocity, time_derivative_args...);
+        },
+        make_not_null(&box));
+  }
 
   const Variables<detail::get_primitive_vars_tags_from_system<EvolutionSystem>>*
       primitive_vars{nullptr};
@@ -594,7 +658,7 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
       "All createable classes for boundary corrections must be marked "
       "final.");
   tmpl::for_each<derived_boundary_corrections>(
-      [&boundary_correction, &box, &partial_derivs, &primitive_vars,
+      [&boundary_correction, &box, &inertial_partial_derivs, &primitive_vars,
        &temporaries, &volume_fluxes, &packaged_data_buffer,
        &face_temporaries](auto derived_correction_v) {
         using DerivedCorrection =
@@ -618,7 +682,8 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
               EvolutionSystem, Dim>(
               make_not_null(&box),
               dynamic_cast<const DerivedCorrection&>(boundary_correction),
-              temporaries, volume_fluxes, partial_derivs, primitive_vars);
+              temporaries, volume_fluxes, inertial_partial_derivs,
+              primitive_vars);
         }
       });
 

@@ -288,7 +288,7 @@ void volume_terms(
   }
 }
 
-// TODO : use for logical partial derivatives
+// used for logical partial derivatives
 template <typename ComputeVolumeTimeDerivativeTerms, size_t Dim,
           typename... TimeDerivativeArguments, typename... VariablesTags,
           typename... PartialDerivTags, typename... FluxVariablesTags,

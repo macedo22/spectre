@@ -70,9 +70,11 @@ void TimeDerivative<Dim>::apply(
     const gsl::not_null<tnsr::a<DataVector, Dim>*> trace_christoffel,
     const gsl::not_null<tnsr::A<DataVector, Dim>*> normal_spacetime_vector,
     // TODO : add frame Frame::ElementLogical
-    const tnsr::iaa<DataVector, Dim>& d_spacetime_metric,
-    const tnsr::iaa<DataVector, Dim>& d_pi,
-    const tnsr::ijaa<DataVector, Dim>& d_phi,
+    const std::array<
+        Variables<
+            tmpl::list<gr::Tags::SpacetimeMetric<DataVector, Dim>,
+                       Tags::Pi<DataVector, Dim>, Tags::Phi<DataVector, Dim>>>,
+        Dim>& logical_partial_derivs,
     const tnsr::aa<DataVector, Dim>& spacetime_metric,
     const tnsr::aa<DataVector, Dim>& pi, const tnsr::iaa<DataVector, Dim>& phi,
     const Scalar<DataVector>& gamma0, const Scalar<DataVector>& gamma1,
@@ -103,66 +105,49 @@ void TimeDerivative<Dim>::apply(
   gr::inverse_spacetime_metric(inverse_spacetime_metric, *lapse, *shift,
                                *inverse_spatial_metric);
 
-  const Jacobian<DataVector, Dim, Frame::ElementLogical, Frame::Inertial>
-      jacobian = determinant_and_inverse(inverse_jacobian).second;
+  // const Jacobian<DataVector, Dim, Frame::ElementLogical, Frame::Inertial>
+  //     jacobian = determinant_and_inverse(inverse_jacobian).second;
 
-  // using evolved_terms =
-  //     tmpl::list<gr::Tags::SpacetimeMetric<DataVector, Dim>,
-  //                gh::Tags::Pi<DataVector, Dim>, gh::Tags::Phi<DataVector,
-  //                Dim>>;
+  // using DerivativeTags = typename System<Dim>::gradients_tags;
 
-  using DerivativeTags = typename System<Dim>::gradients_tags;
-
-  // logical partial deriv types
-  using logical_d_spacetime_metric_t =
-      Tensor<DataVector, Symmetry<2, 1, 1>,
-             index_list<SpatialIndex<Dim, UpLo::Lo, Frame::ElementLogical>,
-                        SpacetimeIndex<Dim, UpLo::Lo, Frame::Inertial>,
-                        SpacetimeIndex<Dim, UpLo::Lo, Frame::Inertial>>>;
-  using logical_d_pi_t = logical_d_spacetime_metric_t;
-  using logical_d_phi_t =
-      Tensor<DataVector, Symmetry<3, 2, 1, 1>,
-             index_list<SpatialIndex<Dim, UpLo::Lo, Frame::ElementLogical>,
-                        SpatialIndex<Dim, UpLo::Lo, Frame::Inertial>,
-                        SpacetimeIndex<Dim, UpLo::Lo, Frame::Inertial>,
-                        SpacetimeIndex<Dim, UpLo::Lo, Frame::Inertial>>>;
   using logical_inverse_spatial_metric_t =
       Tensor<DataVector, Symmetry<2, 1>,
              index_list<SpatialIndex<Dim, UpLo::Up, Frame::ElementLogical>,
                         SpatialIndex<Dim, UpLo::Up, Frame::Inertial>>>;
 
-  // logical partial derivs
-  // - 30 sums = 30 * (3 + 2) = -150 ops
-  const logical_d_spacetime_metric_t logical_d_spacetime_metric =
-      tenex::evaluate<ti::j, ti::a, ti::b>(
-          d_spacetime_metric(ti::i, ti::a, ti::b) * jacobian(ti::I, ti::j));
-  // - 30 sums = 10 * (3 + 2) = -150 ops
-  const logical_d_pi_t logical_d_pi = tenex::evaluate<ti::j, ti::a, ti::b>(
-      d_pi(ti::i, ti::a, ti::b) * jacobian(ti::I, ti::j));
-  // - 90 sums = 90 * (3 + 2) = -450 ops
-  const logical_d_phi_t logical_d_phi =
-      tenex::evaluate<ti::k, ti::i, ti::a, ti::b>(
-          d_phi(ti::j, ti::i, ti::a, ti::b) * jacobian(ti::J, ti::k));
+  // // logical partial derivs
+  // // - 30 sums = 30 * (3 + 2) = -150 ops
+  // const logical_d_spacetime_metric_t logical_d_spacetime_metric =
+  //     tenex::evaluate<ti::j, ti::a, ti::b>(
+  //         d_spacetime_metric(ti::i, ti::a, ti::b) * jacobian(ti::I, ti::j));
+  // // - 30 sums = 10 * (3 + 2) = -150 ops
+  // const logical_d_pi_t logical_d_pi = tenex::evaluate<ti::j, ti::a, ti::b>(
+  //     d_pi(ti::i, ti::a, ti::b) * jacobian(ti::I, ti::j));
+  // // - 90 sums = 90 * (3 + 2) = -450 ops
+  // const logical_d_phi_t logical_d_phi =
+  //     tenex::evaluate<ti::k, ti::i, ti::a, ti::b>(
+  //         d_phi(ti::j, ti::i, ti::a, ti::b) * jacobian(ti::J, ti::k));
 
-  auto logical_partial_derivs =
-      make_array<Dim>(Variables<DerivativeTags>(number_of_points));
+  // auto logical_partial_derivs =
+  //     make_array<Dim>(Variables<DerivativeTags>(number_of_points));
 
-  for (size_t i = 0; i < Dim; i++) {
-    for (size_t a = 0; a < Dim + 1; a++) {
-      for (size_t b = a; b < Dim + 1; b++) {
-        get<gr::Tags::SpacetimeMetric<DataVector, Dim>>(
-            gsl::at(logical_partial_derivs, i))
-            .get(a, b) = logical_d_spacetime_metric.get(i, a, b);
-        get<gh::Tags::Pi<DataVector, Dim>>(gsl::at(logical_partial_derivs, i))
-            .get(a, b) = logical_d_pi.get(i, a, b);
-        for (size_t j = 0; j < Dim; j++) {
-          get<gh::Tags::Phi<DataVector, Dim>>(
-              gsl::at(logical_partial_derivs, i))
-              .get(j, a, b) = logical_d_phi.get(i, j, a, b);
-        }
-      }
-    }
-  }
+  // for (size_t i = 0; i < Dim; i++) {
+  //   for (size_t a = 0; a < Dim + 1; a++) {
+  //     for (size_t b = a; b < Dim + 1; b++) {
+  //       get<gr::Tags::SpacetimeMetric<DataVector, Dim>>(
+  //           gsl::at(logical_partial_derivs, i))
+  //           .get(a, b) = logical_d_spacetime_metric.get(i, a, b);
+  //       get<gh::Tags::Pi<DataVector, Dim>>(gsl::at(logical_partial_derivs,
+  //       i))
+  //           .get(a, b) = logical_d_pi.get(i, a, b);
+  //       for (size_t j = 0; j < Dim; j++) {
+  //         get<gh::Tags::Phi<DataVector, Dim>>(
+  //             gsl::at(logical_partial_derivs, i))
+  //             .get(j, a, b) = logical_d_phi.get(i, j, a, b);
+  //       }
+  //     }
+  //   }
+  // }
 
   // other vars with logical first index
   // + 3 sums = 3 * (3 + 2) = +15 ops
