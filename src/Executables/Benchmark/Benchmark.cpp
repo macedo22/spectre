@@ -72,7 +72,7 @@ namespace {
 // In this anonymous namespace is an example of microbenchmarking the
 // all_gradient routine for the GH system
 
-using DerivativeFrame = Frame::Inertial;
+using DerivativeFrame = Frame::Grid;
 
 template <size_t Dim>
 struct Kappa : db::SimpleTag {
@@ -94,17 +94,23 @@ void bench_partial_derivatives_3D_size_10(benchmark::State& state) {  // NOLINT
       domain::CoordinateMaps::ProductOf3Maps<domain::CoordinateMaps::Affine,
                                              domain::CoordinateMaps::Affine,
                                              domain::CoordinateMaps::Affine>;
-  domain::CoordinateMap<Frame::ElementLogical, Frame::Grid, Map3d> map(
+  domain::CoordinateMap<Frame::ElementLogical, DerivativeFrame, Map3d> map(
       Map3d{map1d, map1d, map1d});
 
   using VarTags = tmpl::list<Kappa<Dim>, Psi<Dim>>;
-  const InverseJacobian<DataVector, Dim, Frame::ElementLogical, Frame::Grid>
+  const InverseJacobian<DataVector, Dim, Frame::ElementLogical, DerivativeFrame>
       inv_jac = map.inv_jacobian(logical_coordinates(mesh));
   const auto grid_coords = map(logical_coordinates(mesh));
   Variables<VarTags> vars(mesh.number_of_grid_points(), 0.0);
+  Variables<db::wrap_tags_in<Tags::deriv, VarTags, tmpl::size_t<Dim>,
+                             DerivativeFrame>>
+      result(mesh.number_of_grid_points());
 
   while (state.KeepRunning()) {
-    benchmark::DoNotOptimize(partial_derivatives<VarTags>(vars, mesh, inv_jac));
+    // benchmark::DoNotOptimize(
+    //     partial_derivatives(make_not_null(&result), vars, mesh, inv_jac));
+    partial_derivatives(make_not_null(&result), vars, mesh, inv_jac);
+    benchmark::ClobberMemory();
   }
 }
 
@@ -119,18 +125,24 @@ void bench_partial_derivatives_unroll_3D_size_10(
       domain::CoordinateMaps::ProductOf3Maps<domain::CoordinateMaps::Affine,
                                              domain::CoordinateMaps::Affine,
                                              domain::CoordinateMaps::Affine>;
-  domain::CoordinateMap<Frame::ElementLogical, Frame::Grid, Map3d> map(
+  domain::CoordinateMap<Frame::ElementLogical, DerivativeFrame, Map3d> map(
       Map3d{map1d, map1d, map1d});
 
   using VarTags = tmpl::list<Kappa<Dim>, Psi<Dim>>;
-  const InverseJacobian<DataVector, Dim, Frame::ElementLogical, Frame::Grid>
+  const InverseJacobian<DataVector, Dim, Frame::ElementLogical, DerivativeFrame>
       inv_jac = map.inv_jacobian(logical_coordinates(mesh));
   const auto grid_coords = map(logical_coordinates(mesh));
   Variables<VarTags> vars(mesh.number_of_grid_points(), 0.0);
+  Variables<db::wrap_tags_in<Tags::deriv, VarTags, tmpl::size_t<Dim>,
+                             DerivativeFrame>>
+      result(mesh.number_of_grid_points());
 
   while (state.KeepRunning()) {
-    benchmark::DoNotOptimize(
-        partial_derivatives_unroll<VarTags>(vars, mesh, inv_jac));
+    // benchmark::DoNotOptimize(partial_derivatives_unroll(make_not_null(&result),
+    //                                                     vars, mesh,
+    //                                                     inv_jac));
+    partial_derivatives_unroll(make_not_null(&result), vars, mesh, inv_jac);
+    benchmark::ClobberMemory();
   }
 }
 
