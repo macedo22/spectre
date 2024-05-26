@@ -183,6 +183,22 @@ void partial_derivatives(
     const InverseJacobian<DataVector, Dim, Frame::ElementLogical,
                           DerivativeFrame>& inverse_jacobian);
 
+template <typename ResultTags, typename DerivativeTags,
+          typename DerivativeFrame>
+void partial_derivatives_unroll(
+    gsl::not_null<Variables<ResultTags>*> du,
+    const std::array<Variables<DerivativeTags>, 3>&
+        logical_partial_derivatives_of_u,
+    const InverseJacobian<DataVector, 3, Frame::ElementLogical,
+                          DerivativeFrame>& inverse_jacobian);
+
+template <typename ResultTags, typename VariableTags, typename DerivativeFrame>
+void partial_derivatives_unroll(
+    gsl::not_null<Variables<ResultTags>*> du, const Variables<VariableTags>& u,
+    const Mesh<3>& mesh,
+    const InverseJacobian<DataVector, 3, Frame::ElementLogical,
+                          DerivativeFrame>& inverse_jacobian);
+
 template <typename DerivativeTags, typename VariableTags, size_t Dim,
           typename DerivativeFrame>
 auto partial_derivatives(

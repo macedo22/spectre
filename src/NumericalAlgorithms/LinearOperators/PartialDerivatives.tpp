@@ -106,6 +106,104 @@ void partial_derivatives_impl(
     }
   }
 }
+
+template <typename Structure>
+constexpr std::array<std::array<size_t , 3>, 3> get_indices() {
+    std::array<std::array<size_t, 3>, 3> indices{{
+    gsl::at(gsl::at(indices, 0), 0) =
+          Structure::get_storage_index(0, 0),
+    gsl::at(gsl::at(indices, 1), 0) =
+          Structure::get_storage_index(1, 0),
+    gsl::at(gsl::at(indices, 2), 0) =
+          Structure::get_storage_index(2, 0),
+    gsl::at(gsl::at(indices, 0), 1) =
+          Structure::get_storage_index(0, 1),
+    gsl::at(gsl::at(indices, 1), 1) =
+          Structure::get_storage_index(1, 1),
+    gsl::at(gsl::at(indices, 2), 1) =
+          Structure::get_storage_index(2, 1),
+    gsl::at(gsl::at(indices, 0), 2) =
+          Structure::get_storage_index(0, 2),
+    gsl::at(gsl::at(indices, 1), 2) =
+          Structure::get_storage_index(1, 2),
+    gsl::at(gsl::at(indices, 2), 2) =
+          Structure::get_storage_index(2, 2)
+  }};
+
+  return indices;
+}
+
+template <typename ResultTags, typename DerivativeFrame>
+void partial_derivatives_impl_unroll(
+    const gsl::not_null<Variables<ResultTags>*> du,
+    const std::array<const double*, 3>& logical_partial_derivatives_of_u,
+    const size_t number_of_independent_components,
+    const InverseJacobian<DataVector, 3, Frame::ElementLogical,
+                          DerivativeFrame>& inverse_jacobian) {
+  double* pdu = du->data();
+  const size_t num_grid_points = du->number_of_grid_points();
+  DataVector lhs{};
+  DataVector logical_du_0{};
+  DataVector logical_du_1{};
+  DataVector logical_du_2{};
+
+  constexpr std::array<std::array<size_t, 3>, 3> indices =
+      get_indices<InverseJacobian<DataVector, 3, Frame::ElementLogical,
+                          DerivativeFrame>>();
+
+  for (size_t component_index = 0;
+       component_index < number_of_independent_components; ++component_index) {
+    // for (size_t deriv_index = 0; deriv_index < 3; ++deriv_index) {
+    //   lhs.set_data_ref(pdu, num_grid_points);
+      lhs.set_data_ref(pdu, num_grid_points);
+      // clang-tidy: const cast is fine since we won't modify the data and we
+      // need it to easily hook into the expression templates.
+      logical_du_0.set_data_ref(
+          const_cast<double*>(  // NOLINT
+              gsl::at(logical_partial_derivatives_of_u, 0)) +  // NOLINT
+              component_index * num_grid_points,
+          num_grid_points);
+      logical_du_1.set_data_ref(
+          const_cast<double*>(  // NOLINT
+              gsl::at(logical_partial_derivatives_of_u, 1)) +  // NOLINT
+              component_index * num_grid_points,
+          num_grid_points);
+      logical_du_2.set_data_ref(
+          const_cast<double*>(  // NOLINT
+              gsl::at(logical_partial_derivatives_of_u, 2)) +  // NOLINT
+              component_index * num_grid_points,
+          num_grid_points);
+      lhs = (*(inverse_jacobian.begin() + gsl::at(indices[0], 0))) *
+            logical_du_0 +
+            (*(inverse_jacobian.begin() + gsl::at(indices[1], 0))) *
+            logical_du_1 +
+            (*(inverse_jacobian.begin() + gsl::at(indices[2], 0))) *
+            logical_du_2;
+      // clang-tidy: no pointer arithmetic
+      pdu += num_grid_points;  // NOLINT
+
+      lhs.set_data_ref(pdu, num_grid_points);
+
+      lhs = (*(inverse_jacobian.begin() + gsl::at(indices[0], 1))) *
+            logical_du_0 +
+            (*(inverse_jacobian.begin() + gsl::at(indices[1], 1))) *
+            logical_du_1 +
+            (*(inverse_jacobian.begin() + gsl::at(indices[2], 1))) *
+            logical_du_2;
+      // clang-tidy: no pointer arithmetic
+      pdu += num_grid_points;  // NOLINT
+
+      lhs.set_data_ref(pdu, num_grid_points);
+
+      lhs = (*(inverse_jacobian.begin() + gsl::at(indices[0], 2))) *
+            logical_du_0 +
+            (*(inverse_jacobian.begin() + gsl::at(indices[1], 2))) *
+            logical_du_1 +
+            (*(inverse_jacobian.begin() + gsl::at(indices[2], 2))) *
+            logical_du_2;
+    // }
+  }
+}
 }  // namespace partial_derivatives_detail
 
 template <typename DerivativeTags, typename VariableTags, size_t Dim>
@@ -184,6 +282,33 @@ void partial_derivatives(
       inverse_jacobian);
 }
 
+template <typename ResultTags, typename DerivativeTags, size_t Dim,
+          typename DerivativeFrame>
+void partial_derivatives_unroll(
+    const gsl::not_null<Variables<ResultTags>*> du,
+    const std::array<Variables<DerivativeTags>, Dim>&
+        logical_partial_derivatives_of_u,
+    const InverseJacobian<DataVector, Dim, Frame::ElementLogical,
+                          DerivativeFrame>& inverse_jacobian) {
+  auto& partial_derivatives_of_u = *du;
+  // For mutating compute items we must set the size.
+  if (UNLIKELY(partial_derivatives_of_u.number_of_grid_points() !=
+               logical_partial_derivatives_of_u[0].number_of_grid_points())) {
+    partial_derivatives_of_u.initialize(
+        logical_partial_derivatives_of_u[0].number_of_grid_points());
+  }
+
+  std::array<const double*, Dim> logical_derivs{};
+  for (size_t i = 0; i < Dim; ++i) {
+    gsl::at(logical_derivs, i) =
+        gsl::at(logical_partial_derivatives_of_u, i).data();
+  }
+  partial_derivatives_detail::partial_derivatives_impl_unroll(
+      make_not_null(&partial_derivatives_of_u), logical_derivs,
+      Variables<DerivativeTags>::number_of_independent_components,
+      inverse_jacobian);
+}
+
 template <typename ResultTags, typename VariableTags, size_t Dim,
           typename DerivativeFrame>
 void partial_derivatives(
@@ -234,6 +359,56 @@ void partial_derivatives(
       inverse_jacobian);
 }
 
+template <typename ResultTags, typename VariableTags,
+          typename DerivativeFrame>
+void partial_derivatives_unroll(
+    const gsl::not_null<Variables<ResultTags>*> du,
+    const Variables<VariableTags>& u, const Mesh<3>& mesh,
+    const InverseJacobian<DataVector, 3, Frame::ElementLogical,
+                          DerivativeFrame>& inverse_jacobian) {
+  using DerivativeTags =
+      tmpl::front<tmpl::split_at<VariableTags, tmpl::size<ResultTags>>>;
+  static_assert(
+      std::is_same_v<
+          tmpl::transform<ResultTags, tmpl::bind<tmpl::type_from, tmpl::_1>>,
+          tmpl::transform<db::wrap_tags_in<Tags::deriv, DerivativeTags,
+                                           tmpl::size_t<3>, DerivativeFrame>,
+                          tmpl::bind<tmpl::type_from, tmpl::_1>>>);
+  auto& partial_derivatives_of_u = *du;
+  // For mutating compute items we must set the size.
+  if (UNLIKELY(partial_derivatives_of_u.number_of_grid_points() !=
+               mesh.number_of_grid_points())) {
+    partial_derivatives_of_u.initialize(mesh.number_of_grid_points());
+  }
+
+  const size_t vars_size =
+      u.number_of_grid_points() *
+      Variables<DerivativeTags>::number_of_independent_components;
+  const auto logical_derivs_data = cpp20::make_unique_for_overwrite<double[]>(
+      (3 > 1 ? (3 + 1) : 3) * vars_size);
+  std::array<double*, 3> logical_derivs{};
+  for (size_t i = 0; i < 3; ++i) {
+    gsl::at(logical_derivs, i) = &(logical_derivs_data[i * vars_size]);
+  }
+  Variables<DerivativeTags> temp{};
+  if constexpr (3 > 1) {
+    temp.set_data_ref(&logical_derivs_data[3 * vars_size], vars_size);
+  }
+  partial_derivatives_detail::LogicalImpl<
+      3, VariableTags, DerivativeTags>::apply(make_not_null(&logical_derivs),
+                                                &partial_derivatives_of_u,
+                                                &temp, u, mesh);
+
+  std::array<const double*, 3> const_logical_derivs{};
+  for (size_t i = 0; i < 3; ++i) {
+    gsl::at(const_logical_derivs, i) = gsl::at(logical_derivs, i);
+  }
+  partial_derivatives_detail::partial_derivatives_impl_unroll(
+      make_not_null(&partial_derivatives_of_u), const_logical_derivs,
+      Variables<DerivativeTags>::number_of_independent_components,
+      inverse_jacobian);
+}
+
 template <typename DerivativeTags, typename VariableTags, size_t Dim,
           typename DerivativeFrame>
 Variables<db::wrap_tags_in<Tags::deriv, DerivativeTags, tmpl::size_t<Dim>,
@@ -246,6 +421,22 @@ partial_derivatives(
                              DerivativeFrame>>
       partial_derivatives_of_u(u.number_of_grid_points());
   partial_derivatives(make_not_null(&partial_derivatives_of_u),
+                                      u, mesh, inverse_jacobian);
+  return partial_derivatives_of_u;
+}
+
+template <typename DerivativeTags, typename VariableTags, size_t Dim,
+          typename DerivativeFrame>
+Variables<db::wrap_tags_in<Tags::deriv, DerivativeTags, tmpl::size_t<Dim>,
+                           DerivativeFrame>>
+partial_derivatives_unroll(
+    const Variables<VariableTags>& u, const Mesh<Dim>& mesh,
+    const InverseJacobian<DataVector, Dim, Frame::ElementLogical,
+                          DerivativeFrame>& inverse_jacobian) {
+  Variables<db::wrap_tags_in<Tags::deriv, DerivativeTags, tmpl::size_t<Dim>,
+                             DerivativeFrame>>
+      partial_derivatives_of_u(u.number_of_grid_points());
+  partial_derivatives_unroll(make_not_null(&partial_derivatives_of_u),
                                       u, mesh, inverse_jacobian);
   return partial_derivatives_of_u;
 }

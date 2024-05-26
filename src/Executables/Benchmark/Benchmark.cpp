@@ -72,6 +72,8 @@ namespace {
 // In this anonymous namespace is an example of microbenchmarking the
 // all_gradient routine for the GH system
 
+using DerivativeFrame = Frame::Inertial;
+
 template <size_t Dim>
 struct Kappa : db::SimpleTag {
   using type = tnsr::abb<DataVector, Dim, Frame::Grid>;
@@ -82,8 +84,8 @@ struct Psi : db::SimpleTag {
 };
 
 // clang-tidy: don't pass be non-const reference
-void bench_all_gradient(benchmark::State& state) {  // NOLINT
-  constexpr const size_t pts_1d = 4;
+void bench_partial_derivatives_3D_size_10(benchmark::State& state) {  // NOLINT
+  constexpr const size_t pts_1d = 10;
   constexpr const size_t Dim = 3;
   const Mesh<Dim> mesh{pts_1d, Spectral::Basis::Legendre,
                        Spectral::Quadrature::GaussLobatto};
@@ -105,7 +107,35 @@ void bench_all_gradient(benchmark::State& state) {  // NOLINT
     benchmark::DoNotOptimize(partial_derivatives<VarTags>(vars, mesh, inv_jac));
   }
 }
-BENCHMARK(bench_all_gradient);  // NOLINT
+
+void bench_partial_derivatives_unroll_3D_size_10(
+    benchmark::State& state) {  // NOLINT
+  constexpr const size_t pts_1d = 10;
+  constexpr const size_t Dim = 3;
+  const Mesh<Dim> mesh{pts_1d, Spectral::Basis::Legendre,
+                       Spectral::Quadrature::GaussLobatto};
+  domain::CoordinateMaps::Affine map1d(-1.0, 1.0, -1.0, 1.0);
+  using Map3d =
+      domain::CoordinateMaps::ProductOf3Maps<domain::CoordinateMaps::Affine,
+                                             domain::CoordinateMaps::Affine,
+                                             domain::CoordinateMaps::Affine>;
+  domain::CoordinateMap<Frame::ElementLogical, Frame::Grid, Map3d> map(
+      Map3d{map1d, map1d, map1d});
+
+  using VarTags = tmpl::list<Kappa<Dim>, Psi<Dim>>;
+  const InverseJacobian<DataVector, Dim, Frame::ElementLogical, Frame::Grid>
+      inv_jac = map.inv_jacobian(logical_coordinates(mesh));
+  const auto grid_coords = map(logical_coordinates(mesh));
+  Variables<VarTags> vars(mesh.number_of_grid_points(), 0.0);
+
+  while (state.KeepRunning()) {
+    benchmark::DoNotOptimize(
+        partial_derivatives_unroll<VarTags>(vars, mesh, inv_jac));
+  }
+}
+
+BENCHMARK(bench_partial_derivatives_3D_size_10);         // NOLINT
+BENCHMARK(bench_partial_derivatives_unroll_3D_size_10);  // NOLINT
 }  // namespace
 
 // Ignore the warning about an extra ';' because some versions of benchmark
