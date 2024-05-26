@@ -334,8 +334,9 @@ void partial_derivatives(
   const size_t vars_size =
       u.number_of_grid_points() *
       Variables<DerivativeTags>::number_of_independent_components;
+  const size_t num_doubles = (Dim > 1 ? (Dim + 1) : Dim) * vars_size;
   const auto logical_derivs_data = cpp20::make_unique_for_overwrite<double[]>(
-      (Dim > 1 ? (Dim + 1) : Dim) * vars_size);
+      num_doubles);
   std::array<double*, Dim> logical_derivs{};
   for (size_t i = 0; i < Dim; ++i) {
     gsl::at(logical_derivs, i) = &(logical_derivs_data[i * vars_size]);
@@ -344,10 +345,16 @@ void partial_derivatives(
   if constexpr (Dim > 1) {
     temp.set_data_ref(&logical_derivs_data[Dim * vars_size], vars_size);
   }
-  partial_derivatives_detail::LogicalImpl<
-      Dim, VariableTags, DerivativeTags>::apply(make_not_null(&logical_derivs),
-                                                &partial_derivatives_of_u,
-                                                &temp, u, mesh);
+
+double value = 1.0;
+for (size_t i = 0; i < num_doubles; i++) {
+  logical_derivs_data[i] = value;
+  value*=1.1;
+}
+//   partial_derivatives_detail::LogicalImpl<
+//       Dim, VariableTags, DerivativeTags>::apply(make_not_null(&logical_derivs),
+//                                                 &partial_derivatives_of_u,
+//                                                 &temp, u, mesh);
 
   std::array<const double*, Dim> const_logical_derivs{};
   for (size_t i = 0; i < Dim; ++i) {
