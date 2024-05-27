@@ -140,7 +140,7 @@ void partial_derivatives_impl_unroll(
     const size_t number_of_independent_components,
     const InverseJacobian<DataVector, 3, Frame::ElementLogical,
                           DerivativeFrame>& inverse_jacobian) {
-  double* pdu = du->data();
+//   double* pdu = du->data();
   const size_t num_grid_points = du->number_of_grid_points();
   DataVector lhs{};
 // DataVector lhs_0{};
@@ -366,10 +366,16 @@ void partial_derivatives_impl_unroll(
 //     }
 //   }
 
-   for (size_t component_index = 0;
-       component_index < number_of_independent_components; ++component_index) {
-    for (size_t logical_deriv_index = 0; logical_deriv_index < 3;
+//    for (size_t component_index = 0;
+//        component_index < number_of_independent_components; ++component_index) {
+  for (size_t logical_deriv_index = 0; logical_deriv_index < 3;
            ++logical_deriv_index) {
+    // for (size_t logical_deriv_index = 0; logical_deriv_index < 3;
+    //        ++logical_deriv_index) {
+    // lhs.set_data_ref(du->data() + logical_deriv_index, num_grid_points);
+    double* pdu = du->data() + logical_deriv_index * num_grid_points;
+    for (size_t component_index = 0;
+       component_index < number_of_independent_components; ++component_index) {
       lhs.set_data_ref(pdu, num_grid_points);
       // clang-tidy: const cast is fine since we won't modify the data and we
       // need it to easily hook into the expression templates.
@@ -384,7 +390,7 @@ void partial_derivatives_impl_unroll(
     (*(inverse_jacobian.begin() + gsl::at(gsl::at(indices, logical_deriv_index), 2)))) *
             logical_du;
       // clang-tidy: no pointer arithmetic
-      pdu += num_grid_points;  // NOLINT
+      pdu += 3 * num_grid_points;  // NOLINT
     }
   }
 }
