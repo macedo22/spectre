@@ -220,11 +220,9 @@ void TimeDerivative<Dim>::apply(
     half_phi_two_normals->get(n) *= 0.5;
   }
 
-  // for (size_t n = 0; n < Dim; ++n) {
-  for (size_t nu = 0; nu < Dim + 1; ++nu) {
-    for (size_t mu = nu; mu < Dim + 1; ++mu) {
-      // for (size_t nu = mu; nu < Dim + 1; ++nu) {
-      for (size_t n = 0; n < Dim; ++n) {
+  for (size_t n = 0; n < Dim; ++n) {
+    for (size_t mu = 0; mu < Dim + 1; ++mu) {
+      for (size_t nu = mu; nu < Dim + 1; ++nu) {
         three_index_constraint->get(n, mu, nu) =
             d_spacetime_metric.get(n, mu, nu) - phi.get(n, mu, nu);
       }
