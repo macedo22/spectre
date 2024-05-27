@@ -201,10 +201,10 @@ void bench_datavector_mult_2_double_size_10(
   }
 }
 
-// BENCHMARK(bench_partial_derivatives_3D_size_10);         // NOLINT
-// BENCHMARK(bench_partial_derivatives_unroll_3D_size_10);  // NOLINT
-BENCHMARK(bench_datavector_mult_2_int_size_10);     // NOLINT
-BENCHMARK(bench_datavector_mult_2_double_size_10);  // NOLINT
+BENCHMARK(bench_partial_derivatives_3D_size_10);         // NOLINT
+BENCHMARK(bench_partial_derivatives_unroll_3D_size_10);  // NOLINT
+// BENCHMARK(bench_datavector_mult_2_int_size_10);     // NOLINT
+// BENCHMARK(bench_datavector_mult_2_double_size_10);  // NOLINT
 }  // namespace
 
 // Ignore the warning about an extra ';' because some versions of benchmark
