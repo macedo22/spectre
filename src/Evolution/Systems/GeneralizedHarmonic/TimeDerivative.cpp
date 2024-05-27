@@ -398,11 +398,20 @@ void TimeDerivative<Dim>::apply(
 
       dt_pi->get(mu, nu) *= get(*lapse);
 
-      dt_pi->get(mu, nu) +=
-          gamma12 * shift_dot_three_index_constraint->get(mu, nu);
+      // dt_pi->get(mu, nu) +=
+      //     gamma12 * shift_dot_three_index_constraint->get(mu, nu);
+      // if (mesh_velocity.has_value()) {
+      //   dt_pi->get(mu, nu) +=
+      //       gamma12 * mesh_velocity_dot_three_index_constraint->get(mu, nu);
+      // }
+
       if (mesh_velocity.has_value()) {
         dt_pi->get(mu, nu) +=
-            gamma12 * mesh_velocity_dot_three_index_constraint->get(mu, nu);
+            gamma12 * (shift_dot_three_index_constraint->get(mu, nu) +
+                       mesh_velocity_dot_three_index_constraint->get(mu, nu));
+      } else {
+        dt_pi->get(mu, nu) +=
+            gamma12 * shift_dot_three_index_constraint->get(mu, nu);
       }
 
       for (size_t m = 0; m < Dim; ++m) {
