@@ -150,7 +150,7 @@ struct TimeDerivative {
       gsl::not_null<tnsr::ab<DataVector, Dim>*>
           temp_spacetime_deriv_gauge_function,
       gsl::not_null<Scalar<DataVector>*> gamma1gamma2,
-      gsl::not_null<Scalar<DataVector>*> half_half_pi_two_normals,
+      gsl::not_null<Scalar<DataVector>*> half_pi_two_normals,
       gsl::not_null<Scalar<DataVector>*> normal_dot_gauge_constraint,
       gsl::not_null<Scalar<DataVector>*> gamma1_plus_1,
       gsl::not_null<tnsr::a<DataVector, Dim>*> pi_one_normal,
