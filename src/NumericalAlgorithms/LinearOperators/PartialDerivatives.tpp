@@ -325,9 +325,9 @@ void partial_derivatives_impl_unroll(
   for (size_t component_index = 0;
        component_index < number_of_independent_components; ++component_index) {
     // for (size_t deriv_index = 0; deriv_index < 3; ++deriv_index) {
-    for (size_t logical_deriv_index = 0; logical_deriv_index < 3;
-           ++logical_deriv_index) {
-      lhs.set_data_ref(pdu, num_grid_points);
+    // for (size_t logical_deriv_index = 0; logical_deriv_index < 3;
+    //        ++logical_deriv_index) {
+    //   lhs.set_data_ref(pdu, num_grid_points);
       // clang-tidy: const cast is fine since we won't modify the data and we
       // need it to easily hook into the expression templates.
     //   logical_du.set_data_ref(
@@ -335,11 +335,11 @@ void partial_derivatives_impl_unroll(
     //           gsl::at(logical_partial_derivatives_of_u, 0)) +  // NOLINT
     //           component_index * num_grid_points,
     //       num_grid_points);
-    logical_du.set_data_ref(
-          const_cast<double*>(  // NOLINT
-              gsl::at(logical_partial_derivatives_of_u, logical_deriv_index)) +  // NOLINT
-              component_index * num_grid_points,
-          num_grid_points);
+    // logical_du.set_data_ref(
+    //       const_cast<double*>(  // NOLINT
+    //           gsl::at(logical_partial_derivatives_of_u, logical_deriv_index)) +  // NOLINT
+    //           component_index * num_grid_points,
+    //       num_grid_points);
     //   lhs = (*(inverse_jacobian.begin() + gsl::at(gsl::at(indices, logical_deriv_index), 0))) *
     //         logical_du;
     // //   for (size_t logical_deriv_index = 1; logical_deriv_index < 3;
@@ -357,13 +357,52 @@ void partial_derivatives_impl_unroll(
     //            gsl::at(gsl::at(indices, logical_deriv_index), deriv_index))) *
     //         logical_du;
     //   }
-    lhs = ((*(inverse_jacobian.begin() + gsl::at(gsl::at(indices, logical_deriv_index), 0))) +
-    (*(inverse_jacobian.begin() + gsl::at(gsl::at(indices, logical_deriv_index), 1))) +
-    (*(inverse_jacobian.begin() + gsl::at(gsl::at(indices, logical_deriv_index), 2)))) *
+    // lhs = ((*(inverse_jacobian.begin() + gsl::at(gsl::at(indices, logical_deriv_index), 0))) +
+    // (*(inverse_jacobian.begin() + gsl::at(gsl::at(indices, logical_deriv_index), 1))) +
+    // (*(inverse_jacobian.begin() + gsl::at(gsl::at(indices, logical_deriv_index), 2)))) *
+    //         logical_du;
+    //   // clang-tidy: no pointer arithmetic
+    //   pdu += num_grid_points;  // NOLINT
+
+      lhs.set_data_ref(pdu, num_grid_points);
+      logical_du.set_data_ref(
+          const_cast<double*>(  // NOLINT
+              gsl::at(logical_partial_derivatives_of_u, 0)) +  // NOLINT
+              component_index * num_grid_points,
+          num_grid_points);
+      lhs = ((*(inverse_jacobian.begin() + gsl::at(gsl::at(indices, 0), 0))) +
+    (*(inverse_jacobian.begin() + gsl::at(gsl::at(indices, 0), 1))) +
+    (*(inverse_jacobian.begin() + gsl::at(gsl::at(indices, 0), 2)))) *
             logical_du;
       // clang-tidy: no pointer arithmetic
       pdu += num_grid_points;  // NOLINT
-    }
+
+      lhs.set_data_ref(pdu, num_grid_points);
+      logical_du.set_data_ref(
+          const_cast<double*>(  // NOLINT
+              gsl::at(logical_partial_derivatives_of_u, 1)) +  // NOLINT
+              component_index * num_grid_points,
+          num_grid_points);
+      lhs = ((*(inverse_jacobian.begin() + gsl::at(gsl::at(indices, 1), 0))) +
+    (*(inverse_jacobian.begin() + gsl::at(gsl::at(indices, 1), 1))) +
+    (*(inverse_jacobian.begin() + gsl::at(gsl::at(indices, 1), 2)))) *
+            logical_du;
+      // clang-tidy: no pointer arithmetic
+      pdu += num_grid_points;  // NOLINT
+
+      lhs.set_data_ref(pdu, num_grid_points);
+      logical_du.set_data_ref(
+          const_cast<double*>(  // NOLINT
+              gsl::at(logical_partial_derivatives_of_u, 2)) +  // NOLINT
+              component_index * num_grid_points,
+          num_grid_points);
+      lhs = ((*(inverse_jacobian.begin() + gsl::at(gsl::at(indices, 2), 0))) +
+    (*(inverse_jacobian.begin() + gsl::at(gsl::at(indices, 2), 1))) +
+    (*(inverse_jacobian.begin() + gsl::at(gsl::at(indices, 2), 2)))) *
+            logical_du;
+      // clang-tidy: no pointer arithmetic
+      pdu += num_grid_points;  // NOLINT
+    // }
   }
 }
 }  // namespace partial_derivatives_detail
