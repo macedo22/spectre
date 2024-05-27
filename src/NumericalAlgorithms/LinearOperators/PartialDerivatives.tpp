@@ -184,50 +184,80 @@ DataVector lhs_2{};
           num_grid_points);
     
     lhs_0.set_data_ref(pdu, num_grid_points);
-    // lhs_1.set_data_ref(pdu + num_grid_points, num_grid_points);
-    // lhs_2.set_data_ref(pdu + 2 * num_grid_points, num_grid_points);
-    
-      lhs_0 = (*(inverse_jacobian.begin() +
+    lhs_1.set_data_ref(pdu + num_grid_points, num_grid_points);
+    lhs_2.set_data_ref(pdu + 2 * num_grid_points, num_grid_points);
+
+     lhs_0 = (*(inverse_jacobian.begin() +
                indices[0][0])) *
-            logical_du_0 +
-            (*(inverse_jacobian.begin() +
+            logical_du_0;
+     lhs_1 = (*(inverse_jacobian.begin() +
+               indices[0][1])) *
+            logical_du_0;
+     lhs_2 = (*(inverse_jacobian.begin() +
+               indices[0][2])) *
+            logical_du_0;
+    
+     lhs_0 += (*(inverse_jacobian.begin() +
                indices[1][0])) *
-            logical_du_1 +
-            (*(inverse_jacobian.begin() +
+            logical_du_1;
+     lhs_1 += (*(inverse_jacobian.begin() +
+               indices[1][1])) *
+            logical_du_1;
+     lhs_2 += (*(inverse_jacobian.begin() +
+               indices[1][2])) *
+            logical_du_1;
+    
+     lhs_0 += (*(inverse_jacobian.begin() +
                indices[2][0])) *
             logical_du_2;
+     lhs_1 += (*(inverse_jacobian.begin() +
+               indices[2][1])) *
+            logical_du_2;
+     lhs_2 += (*(inverse_jacobian.begin() +
+               indices[2][2])) *
+            logical_du_2;
+    
+    //   lhs_0 = (*(inverse_jacobian.begin() +
+    //            indices[0][0])) *
+    //         logical_du_0 +
+    //         (*(inverse_jacobian.begin() +
+    //            indices[1][0])) *
+    //         logical_du_1 +
+    //         (*(inverse_jacobian.begin() +
+    //            indices[2][0])) *
+    //         logical_du_2;
 
       // clang-tidy: no pointer arithmetic
     //   pdu += num_grid_points;  // NOLINT
     
     // lhs.set_data_ref(pdu, num_grid_points);
-    lhs_1.set_data_ref(pdu + num_grid_points, num_grid_points);
+    // lhs_1.set_data_ref(pdu + num_grid_points, num_grid_points);
     
-      lhs_1 = (*(inverse_jacobian.begin() +
-               indices[0][1])) *
-            logical_du_0 +
-            (*(inverse_jacobian.begin() +
-               indices[1][1])) *
-            logical_du_1 +
-            (*(inverse_jacobian.begin() +
-               indices[2][1])) *
-            logical_du_2;
+    //   lhs_1 = (*(inverse_jacobian.begin() +
+    //            indices[0][1])) *
+    //         logical_du_0 +
+    //         (*(inverse_jacobian.begin() +
+    //            indices[1][1])) *
+    //         logical_du_1 +
+    //         (*(inverse_jacobian.begin() +
+    //            indices[2][1])) *
+    //         logical_du_2;
 
     //   // clang-tidy: no pointer arithmetic
     //   pdu += num_grid_points;  // NOLINT
     
     // lhs.set_data_ref(pdu, num_grid_points);
-    lhs_2.set_data_ref(pdu + 2 * num_grid_points, num_grid_points);
+    // lhs_2.set_data_ref(pdu + 2 * num_grid_points, num_grid_points);
     
-      lhs_2 = (*(inverse_jacobian.begin() +
-               indices[0][2])) *
-            logical_du_0 +
-            (*(inverse_jacobian.begin() +
-               indices[1][2])) *
-            logical_du_1 +
-            (*(inverse_jacobian.begin() +
-               indices[2][2])) *
-            logical_du_2;
+    //   lhs_2 = (*(inverse_jacobian.begin() +
+    //            indices[0][2])) *
+    //         logical_du_0 +
+    //         (*(inverse_jacobian.begin() +
+    //            indices[1][2])) *
+    //         logical_du_1 +
+    //         (*(inverse_jacobian.begin() +
+    //            indices[2][2])) *
+    //         logical_du_2;
 
     //   // clang-tidy: no pointer arithmetic
     //   pdu += num_grid_points;  // NOLINT
