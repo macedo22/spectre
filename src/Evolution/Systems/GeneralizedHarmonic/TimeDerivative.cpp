@@ -344,21 +344,45 @@ void TimeDerivative<Dim>::apply(
                               spacetime_deriv_gauge_function->get(nu, mu);
       }
       for (size_t delta = 0; delta < Dim + 1; ++delta) {
-        dt_pi->get(mu, nu) -= 2 * pi.get(mu, delta) * pi_2_up->get(nu, delta);
+        // dt_pi->get(mu, nu) -= 2 * pi.get(mu, delta) * pi_2_up->get(nu,
+        // delta); if (not using_harmonic_gauge) {
+        //   dt_pi->get(mu, nu) += 2 *
+        //                         christoffel_second_kind->get(delta, mu, nu) *
+        //                         gauge_function->get(delta);
+        // }
+
         if (not using_harmonic_gauge) {
-          dt_pi->get(mu, nu) += 2 *
-                                christoffel_second_kind->get(delta, mu, nu) *
-                                gauge_function->get(delta);
-        }
-        for (size_t n = 0; n < Dim; ++n) {
           dt_pi->get(mu, nu) +=
-              2 * phi_1_up->get(n, mu, delta) * phi_3_up->get(n, nu, delta);
+              2 * (christoffel_second_kind->get(delta, mu, nu) *
+                       gauge_function->get(delta) -
+                   pi.get(mu, delta) * pi_2_up->get(nu, delta));
+        } else {
+          dt_pi->get(mu, nu) -= 2 * pi.get(mu, delta) * pi_2_up->get(nu, delta);
         }
 
-        for (size_t alpha = 0; alpha < Dim + 1; ++alpha) {
-          dt_pi->get(mu, nu) -=
-              2. * christoffel_first_kind_3_up->get(mu, alpha, delta) *
-              christoffel_first_kind_3_up->get(nu, delta, alpha);
+        // for (size_t n = 0; n < Dim; ++n) {
+        //   dt_pi->get(mu, nu) +=
+        //       2 * phi_1_up->get(n, mu, delta) * phi_3_up->get(n, nu, delta);
+        // }
+
+        // for (size_t alpha = 0; alpha < Dim + 1; ++alpha) {
+        //   dt_pi->get(mu, nu) -=
+        //       2. * christoffel_first_kind_3_up->get(mu, alpha, delta) *
+        //       christoffel_first_kind_3_up->get(nu, delta, alpha);
+        // }
+
+        dt_pi->get(mu, nu) -=
+            2 * (christoffel_first_kind_3_up->get(mu, 0, delta) *
+                     christoffel_first_kind_3_up->get(nu, delta, 0) +
+                 christoffel_first_kind_3_up->get(mu, 1, delta) *
+                     christoffel_first_kind_3_up->get(nu, delta, 1) -
+                 phi_1_up->get(0, mu, delta) * phi_3_up->get(0, nu, delta));
+
+        for (size_t n = 1; n < Dim; ++n) {
+          dt_pi->get(mu, nu) +=
+              2 * (phi_1_up->get(n, mu, delta) * phi_3_up->get(n, nu, delta) -
+                   christoffel_first_kind_3_up->get(mu, n + 1, delta) *
+                       christoffel_first_kind_3_up->get(nu, delta, n + 1));
         }
       }
 
