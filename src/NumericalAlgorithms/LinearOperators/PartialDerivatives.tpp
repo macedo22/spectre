@@ -385,10 +385,10 @@ void partial_derivatives_impl_unroll(
               component_index * num_grid_points,
           num_grid_points);
 
-    lhs = ((*(inverse_jacobian.begin() + gsl::at(gsl::at(indices, logical_deriv_index), 0))) +
-    (*(inverse_jacobian.begin() + gsl::at(gsl::at(indices, logical_deriv_index), 1))) +
-    (*(inverse_jacobian.begin() + gsl::at(gsl::at(indices, logical_deriv_index), 2)))) *
-            logical_du;
+    lhs = (*(inverse_jacobian.begin() + gsl::at(gsl::at(indices, logical_deriv_index), 0)));
+    lhs += (*(inverse_jacobian.begin() + gsl::at(gsl::at(indices, logical_deriv_index), 1)));
+    lhs += (*(inverse_jacobian.begin() + gsl::at(gsl::at(indices, logical_deriv_index), 2)));
+    lhs *= logical_du;
       // clang-tidy: no pointer arithmetic
       pdu += 3 * num_grid_points;  // NOLINT
     }
