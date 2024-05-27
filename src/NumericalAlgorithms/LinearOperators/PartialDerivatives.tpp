@@ -351,10 +351,10 @@ void partial_derivatives(
 //   logical_derivs_data[i] = value;
 //   value*=1.1;
 // }
-//   partial_derivatives_detail::LogicalImpl<
-//       Dim, VariableTags, DerivativeTags>::apply(make_not_null(&logical_derivs),
-//                                                 &partial_derivatives_of_u,
-//                                                 &temp, u, mesh);
+  partial_derivatives_detail::LogicalImpl<
+      Dim, VariableTags, DerivativeTags>::apply(make_not_null(&logical_derivs),
+                                                &partial_derivatives_of_u,
+                                                &temp, u, mesh);
 
 //   std::array<const double*, Dim> const_logical_derivs{};
 //   for (size_t i = 0; i < Dim; ++i) {
