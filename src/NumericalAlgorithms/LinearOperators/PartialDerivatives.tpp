@@ -142,7 +142,10 @@ void partial_derivatives_impl_unroll(
                           DerivativeFrame>& inverse_jacobian) {
   double* pdu = du->data();
   const size_t num_grid_points = du->number_of_grid_points();
-  DataVector lhs{};
+//   DataVector lhs{};
+DataVector lhs_0{};
+DataVector lhs_1{};
+DataVector lhs_2{};
 //   DataVector logical_du{};
   DataVector logical_du_0{};
   DataVector logical_du_1{};
@@ -180,9 +183,11 @@ void partial_derivatives_impl_unroll(
               component_index * num_grid_points,
           num_grid_points);
     
-    lhs.set_data_ref(pdu, num_grid_points);
+    lhs_0.set_data_ref(pdu, num_grid_points);
+    // lhs_1.set_data_ref(pdu + num_grid_points, num_grid_points);
+    // lhs_2.set_data_ref(pdu + 2 * num_grid_points, num_grid_points);
     
-      lhs = (*(inverse_jacobian.begin() +
+      lhs_0 = (*(inverse_jacobian.begin() +
                indices[0][0])) *
             logical_du_0 +
             (*(inverse_jacobian.begin() +
@@ -193,11 +198,12 @@ void partial_derivatives_impl_unroll(
             logical_du_2;
 
       // clang-tidy: no pointer arithmetic
-      pdu += num_grid_points;  // NOLINT
+    //   pdu += num_grid_points;  // NOLINT
     
-    lhs.set_data_ref(pdu, num_grid_points);
+    // lhs.set_data_ref(pdu, num_grid_points);
+    lhs_1.set_data_ref(pdu + num_grid_points, num_grid_points);
     
-      lhs = (*(inverse_jacobian.begin() +
+      lhs_1 = (*(inverse_jacobian.begin() +
                indices[0][1])) *
             logical_du_0 +
             (*(inverse_jacobian.begin() +
@@ -207,12 +213,13 @@ void partial_derivatives_impl_unroll(
                indices[2][1])) *
             logical_du_2;
 
-      // clang-tidy: no pointer arithmetic
-      pdu += num_grid_points;  // NOLINT
+    //   // clang-tidy: no pointer arithmetic
+    //   pdu += num_grid_points;  // NOLINT
     
-    lhs.set_data_ref(pdu, num_grid_points);
+    // lhs.set_data_ref(pdu, num_grid_points);
+    lhs_2.set_data_ref(pdu + 2 * num_grid_points, num_grid_points);
     
-      lhs = (*(inverse_jacobian.begin() +
+      lhs_2 = (*(inverse_jacobian.begin() +
                indices[0][2])) *
             logical_du_0 +
             (*(inverse_jacobian.begin() +
@@ -222,8 +229,10 @@ void partial_derivatives_impl_unroll(
                indices[2][2])) *
             logical_du_2;
 
+    //   // clang-tidy: no pointer arithmetic
+    //   pdu += num_grid_points;  // NOLINT
       // clang-tidy: no pointer arithmetic
-      pdu += num_grid_points;  // NOLINT
+      pdu += 3 * num_grid_points;  // NOLINT
   }
 }
 }  // namespace partial_derivatives_detail
