@@ -146,8 +146,65 @@ void bench_partial_derivatives_unroll_3D_size_10(
   }
 }
 
-BENCHMARK(bench_partial_derivatives_3D_size_10);         // NOLINT
-BENCHMARK(bench_partial_derivatives_unroll_3D_size_10);  // NOLINT
+void bench_datavector_mult_2_int_size_10(benchmark::State& state) {  // NOLINT
+  // constexpr const size_t pts_1d = 10;
+  constexpr const size_t num_points = 1000;
+  DataVector dv_1{num_points, 0.0};
+  DataVector dv_2{num_points, 0.0};
+  // DataVector dv_3{num_points, 0.0};
+  DataVector result{num_points, 0.0};
+
+  double value = 1.0;
+  for (size_t i = 0; i < num_points; i++) {
+    dv_1[i] = value;
+    dv_2[i] = 0.8 * value;
+    ;
+    // dv_3[i] = dv_1[i] + dv_2[i];
+    result[i] = 1.1 * value - 0.2;
+  }
+
+  while (state.KeepRunning()) {
+    // benchmark::DoNotOptimize(partial_derivatives_unroll(make_not_null(&result),
+    //                                                     vars, mesh,
+    //                                                     inv_jac));
+
+    result += 2 * (dv_1 + dv_2);
+    benchmark::ClobberMemory();
+  }
+}
+
+void bench_datavector_mult_2_double_size_10(
+    benchmark::State& state) {  // NOLINT
+  // constexpr const size_t pts_1d = 10;
+  constexpr const size_t num_points = 1000;
+  DataVector dv_1{num_points, 0.0};
+  DataVector dv_2{num_points, 0.0};
+  // DataVector dv_3{num_points, 0.0};
+  DataVector result{num_points, 0.0};
+
+  double value = 1.0;
+  for (size_t i = 0; i < num_points; i++) {
+    dv_1[i] = value;
+    dv_2[i] = 0.8 * value;
+    ;
+    // dv_3[i] = dv_1[i] + dv_2[i];
+    result[i] = 1.1 * value - 0.2;
+  }
+
+  while (state.KeepRunning()) {
+    // benchmark::DoNotOptimize(partial_derivatives_unroll(make_not_null(&result),
+    //                                                     vars, mesh,
+    //                                                     inv_jac));
+
+    result += 2.0 * (dv_1 + dv_2);
+    benchmark::ClobberMemory();
+  }
+}
+
+// BENCHMARK(bench_partial_derivatives_3D_size_10);         // NOLINT
+// BENCHMARK(bench_partial_derivatives_unroll_3D_size_10);  // NOLINT
+BENCHMARK(bench_datavector_mult_2_int_size_10);     // NOLINT
+BENCHMARK(bench_datavector_mult_2_double_size_10);  // NOLINT
 }  // namespace
 
 // Ignore the warning about an extra ';' because some versions of benchmark
