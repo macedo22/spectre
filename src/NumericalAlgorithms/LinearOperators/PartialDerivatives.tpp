@@ -356,14 +356,14 @@ void partial_derivatives(
                                                 &partial_derivatives_of_u,
                                                 &temp, u, mesh);
 
-//   std::array<const double*, Dim> const_logical_derivs{};
-//   for (size_t i = 0; i < Dim; ++i) {
-//     gsl::at(const_logical_derivs, i) = gsl::at(logical_derivs, i);
-//   }
-//   partial_derivatives_detail::partial_derivatives_impl(
-//       make_not_null(&partial_derivatives_of_u), const_logical_derivs,
-//       Variables<DerivativeTags>::number_of_independent_components,
-//       inverse_jacobian);
+  std::array<const double*, Dim> const_logical_derivs{};
+  for (size_t i = 0; i < Dim; ++i) {
+    gsl::at(const_logical_derivs, i) = gsl::at(logical_derivs, i);
+  }
+  partial_derivatives_detail::partial_derivatives_impl(
+      make_not_null(&partial_derivatives_of_u), const_logical_derivs,
+      Variables<DerivativeTags>::number_of_independent_components,
+      inverse_jacobian);
 }
 
 template <typename ResultTags, typename VariableTags,
