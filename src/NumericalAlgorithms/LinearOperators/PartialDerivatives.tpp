@@ -346,20 +346,20 @@ void partial_derivatives(
     temp.set_data_ref(&logical_derivs_data[Dim * vars_size], vars_size);
   }
 
-double value = 1.0;
-for (size_t i = 0; i < num_doubles; i++) {
-  logical_derivs_data[i] = value;
-  value*=1.1;
-}
+// double value = 1.0;
+// for (size_t i = 0; i < num_doubles; i++) {
+//   logical_derivs_data[i] = value;
+//   value*=1.1;
+// }
 //   partial_derivatives_detail::LogicalImpl<
 //       Dim, VariableTags, DerivativeTags>::apply(make_not_null(&logical_derivs),
 //                                                 &partial_derivatives_of_u,
 //                                                 &temp, u, mesh);
 
-  std::array<const double*, Dim> const_logical_derivs{};
-  for (size_t i = 0; i < Dim; ++i) {
-    gsl::at(const_logical_derivs, i) = gsl::at(logical_derivs, i);
-  }
+//   std::array<const double*, Dim> const_logical_derivs{};
+//   for (size_t i = 0; i < Dim; ++i) {
+//     gsl::at(const_logical_derivs, i) = gsl::at(logical_derivs, i);
+//   }
 //   partial_derivatives_detail::partial_derivatives_impl(
 //       make_not_null(&partial_derivatives_of_u), const_logical_derivs,
 //       Variables<DerivativeTags>::number_of_independent_components,
