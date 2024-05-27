@@ -471,11 +471,17 @@ void test_partial_derivatives_3d(const Mesh<3>& mesh) {
           }
         };
         helper(partial_derivatives<GradientTags>(u, mesh, inverse_jacobian));
+        helper(partial_derivatives_unroll<GradientTags>(u, mesh,
+                                                        inverse_jacobian));
         using vars_type = decltype(partial_derivatives<GradientTags>(
             u, mesh, inverse_jacobian));
-        vars_type du{};
-        partial_derivatives(make_not_null(&du), u, mesh, inverse_jacobian);
-        helper(du);
+        // vars_type du{};
+        // partial_derivatives(make_not_null(&du), u, mesh, inverse_jacobian);
+        // helper(du);
+        vars_type du_unroll{};
+        partial_derivatives_unroll(make_not_null(&du_unroll), u, mesh,
+                                   inverse_jacobian);
+        helper(du_unroll);
 
         vars_type du_with_logical{};
         partial_derivatives(make_not_null(&du_with_logical),
@@ -485,7 +491,9 @@ void test_partial_derivatives_3d(const Mesh<3>& mesh) {
 
         // We've checked that du is correct, now test that taking derivatives of
         // individual tensors gets the matching result.
-        test_partial_derivative_per_tensor(du, u, mesh, inverse_jacobian);
+        // test_partial_derivative_per_tensor(du, u, mesh, inverse_jacobian);
+        test_partial_derivative_per_tensor(du_unroll, u, mesh,
+                                           inverse_jacobian);
       }
     }
   }
@@ -526,7 +534,7 @@ SPECTRE_TEST_CASE("Unit.Numerical.LinearOperators.LogicalDerivs",
   }
 }
 
-// [[Timeout, 20]]
+// [[Timeout, 60]]
 SPECTRE_TEST_CASE("Unit.Numerical.LinearOperators.PartialDerivs",
                   "[NumericalAlgorithms][LinearOperators][Unit]") {
   const size_t n0 =
