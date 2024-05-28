@@ -606,11 +606,6 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
               evolved_variables, dg_formulation, mesh, inertial_coordinates,
               logical_to_inertial_inv_jacobian, det_inverse_jacobian,
               mesh_velocity, div_mesh_velocity, time_derivative_args...);
-          // TODO : need to have this only be called on elements with external
-          // faces
-          partial_derivatives(make_not_null(&inertial_partial_derivs),
-                              logical_partial_derivs,
-                              logical_to_inertial_inv_jacobian);
         },
         make_not_null(&box));
   } else {
@@ -655,9 +650,14 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
       "All createable classes for boundary corrections must be marked "
       "final.");
   tmpl::for_each<derived_boundary_corrections>(
-      [&boundary_correction, &box, &inertial_partial_derivs, &primitive_vars,
-       &temporaries, &volume_fluxes, &packaged_data_buffer,
-       &face_temporaries](auto derived_correction_v) {
+      [&boundary_correction, &box, &inertial_partial_derivs,
+       &logical_partial_derivs,
+       &logical_to_inertial_inv_jacobian =
+           db::get<::domain::Tags::InverseJacobian<Dim, Frame::ElementLogical,
+                                                   Frame::Inertial>>(box),
+       &primitive_vars, &temporaries, &volume_fluxes, &packaged_data_buffer,
+       &face_temporaries, &element = db::get<domain::Tags::Element<Dim>>(box)](
+          auto derived_correction_v) {
         using DerivedCorrection =
             tmpl::type_from<decltype(derived_correction_v)>;
         if (typeid(boundary_correction) == typeid(DerivedCorrection)) {
@@ -675,12 +675,19 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
               primitive_vars,
               typename DerivedCorrection::dg_package_data_volume_tags{});
 
-          detail::apply_boundary_conditions_on_all_external_faces<
-              EvolutionSystem, Dim>(
-              make_not_null(&box),
-              dynamic_cast<const DerivedCorrection&>(boundary_correction),
-              temporaries, volume_fluxes, inertial_partial_derivs,
-              primitive_vars);
+          if (element.external_boundaries().size() > 0) {
+            if constexpr (std::is_same_v<EvolutionSystem, ::gh::System<Dim>>) {
+              partial_derivatives(make_not_null(&inertial_partial_derivs),
+                                  logical_partial_derivs,
+                                  logical_to_inertial_inv_jacobian);
+            }
+            detail::apply_boundary_conditions_on_all_external_faces<
+                EvolutionSystem, Dim>(
+                make_not_null(&box),
+                dynamic_cast<const DerivedCorrection&>(boundary_correction),
+                temporaries, volume_fluxes, inertial_partial_derivs,
+                primitive_vars);
+          }
         }
       });
 
