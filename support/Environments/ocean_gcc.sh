@@ -93,6 +93,7 @@ spectre_run_cmake() {
           -D USE_PCH=ON \
           -D BUILD_PYTHON_BINDINGS=ON \
           -D BOOTSTRAP_PY_DEPS=ON \
+          -DGOOGLE_BENCHMARK_ROOT=$GOOGLE_BENCHMARK_BUILD \
           "$@" \
           $SPECTRE_HOME
 }

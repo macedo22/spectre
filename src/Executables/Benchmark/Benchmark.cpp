@@ -3,9 +3,11 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wredundant-decls"
-#include <benchmark/benchmark.h>
+#include <array>
+#include <benchmark.h>
 #pragma GCC diagnostic pop
 #include <charm++.h>
+#include <cmath>
 #include <string>
 #include <vector>
 
@@ -82,10 +84,11 @@ struct Psi : db::SimpleTag {
 };
 
 // clang-tidy: don't pass be non-const reference
-void bench_all_gradient(benchmark::State& state) {  // NOLINT
-  constexpr const size_t pts_1d = 4;
-  constexpr const size_t Dim = 3;
-  const Mesh<Dim> mesh{pts_1d, Spectral::Basis::Legendre,
+void bench_partial_derivatives(benchmark::State& state) {  // NOLINT
+  const size_t num_1d_grid_points = static_cast<size_t>(state.range(0));
+  constexpr size_t Dim = 3;
+  // const size_t num_grid_points = pow(num_1d_grid_points, Dim);
+  const Mesh<Dim> mesh{num_1d_grid_points, Spectral::Basis::Legendre,
                        Spectral::Quadrature::GaussLobatto};
   domain::CoordinateMaps::Affine map1d(-1.0, 1.0, -1.0, 1.0);
   using Map3d =
@@ -103,14 +106,41 @@ void bench_all_gradient(benchmark::State& state) {  // NOLINT
 
   while (state.KeepRunning()) {
     benchmark::DoNotOptimize(partial_derivatives<VarTags>(vars, mesh, inv_jac));
+    benchmark::ClobberMemory();
   }
 }
-BENCHMARK(bench_all_gradient);  // NOLINT
+
+// Each DataVector case is run with each number of grid points
+constexpr std::array<long int, 6> num_1d_grid_point_values = {2,  5,  8,
+                                                              10, 15, 20};
+
+void run_benchmarks() {
+  const std::string benchmark_name = "partial_derivatives/3D";
+  BENCHMARK(bench_partial_derivatives)
+      ->Name(benchmark_name)
+      ->Arg(num_1d_grid_point_values[0])
+      ->Arg(num_1d_grid_point_values[1])
+      ->Arg(num_1d_grid_point_values[2])
+      ->Arg(num_1d_grid_point_values[3])
+      ->Arg(num_1d_grid_point_values[4])
+      ->Arg(num_1d_grid_point_values[5]);
+}
+// BENCHMARK(bench_all_gradient);  // NOLINT
 }  // namespace
 
+// // Ignore the warning about an extra ';' because some versions of benchmark
+// // require it
+// #pragma GCC diagnostic push
+// #pragma GCC diagnostic ignored "-Wpedantic"
+// BENCHMARK_MAIN();
+// #pragma GCC diagnostic pop
 // Ignore the warning about an extra ';' because some versions of benchmark
 // require it
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
-BENCHMARK_MAIN();
+int main(int argc, char** argv) {
+  run_benchmarks();
+  ::benchmark::Initialize(&argc, argv);
+  ::benchmark::RunSpecifiedBenchmarks();
+}
 #pragma GCC diagnostic pop
