@@ -60,7 +60,6 @@ void partial_derivatives_impl(
     const size_t number_of_independent_components,
     const InverseJacobian<DataVector, Dim, Frame::ElementLogical,
                           DerivativeFrame>& inverse_jacobian) {
-  double* pdu = du->data();
   const size_t num_grid_points = du->number_of_grid_points();
   DataVector lhs{};
   DataVector logical_du{};
@@ -74,35 +73,32 @@ void partial_derivatives_impl(
     }
   }
 
-  for (size_t component_index = 0;
-       component_index < number_of_independent_components; ++component_index) {
-    for (size_t deriv_index = 0; deriv_index < Dim; ++deriv_index) {
+  for (size_t logical_deriv_index = 0; logical_deriv_index < Dim;
+       ++logical_deriv_index) {
+    double* pdu = du->data() + logical_deriv_index * num_grid_points;
+    for (size_t component_index = 0;
+         component_index < number_of_independent_components;
+         ++component_index) {
       lhs.set_data_ref(pdu, num_grid_points);
       // clang-tidy: const cast is fine since we won't modify the data and we
       // need it to easily hook into the expression templates.
-      logical_du.set_data_ref(
-          const_cast<double*>(  // NOLINT
-              gsl::at(logical_partial_derivatives_of_u, 0)) +  // NOLINT
-              component_index * num_grid_points,
-          num_grid_points);
-      lhs = (*(inverse_jacobian.begin() + gsl::at(indices[0], deriv_index))) *
+      logical_du.set_data_ref(const_cast<double*>(  // NOLINT
+                                  gsl::at(logical_partial_derivatives_of_u,
+                                          logical_deriv_index)) +  // NOLINT
+                                  component_index * num_grid_points,
+                              num_grid_points);
+
+      lhs = (*(inverse_jacobian.begin() +
+               gsl::at(gsl::at(indices, logical_deriv_index), 0))) *
             logical_du;
-      for (size_t logical_deriv_index = 1; logical_deriv_index < Dim;
-           ++logical_deriv_index) {
-        // clang-tidy: const cast is fine since we won't modify the data and we
-        // need it to easily hook into the expression templates.
-        logical_du.set_data_ref(const_cast<double*>(  // NOLINT
-                                    gsl::at(logical_partial_derivatives_of_u,
-                                            logical_deriv_index)) +  // NOLINT
-                                    component_index * num_grid_points,
-                                num_grid_points);
+      for (size_t deriv_index = 1; deriv_index < Dim; ++deriv_index) {
         lhs +=
             (*(inverse_jacobian.begin() +
                gsl::at(gsl::at(indices, logical_deriv_index), deriv_index))) *
             logical_du;
       }
       // clang-tidy: no pointer arithmetic
-      pdu += num_grid_points;  // NOLINT
+      pdu += Dim * num_grid_points;  // NOLINT
     }
   }
 }
@@ -245,8 +241,8 @@ partial_derivatives(
   Variables<db::wrap_tags_in<Tags::deriv, DerivativeTags, tmpl::size_t<Dim>,
                              DerivativeFrame>>
       partial_derivatives_of_u(u.number_of_grid_points());
-  partial_derivatives(make_not_null(&partial_derivatives_of_u),
-                                      u, mesh, inverse_jacobian);
+  partial_derivatives(make_not_null(&partial_derivatives_of_u), u, mesh,
+                      inverse_jacobian);
   return partial_derivatives_of_u;
 }
 
