@@ -131,24 +131,19 @@ void TimeDerivative<Dim>::apply(
   get(*gamma1gamma2) = get(gamma1) * get(gamma2);
   const DataVector& gamma12 = get(*gamma1gamma2);
 
-  // use TE
-  // for (size_t m = 0; m < Dim; ++m) {
-  //   for (size_t mu = 0; mu < Dim + 1; ++mu) {
-  //     for (size_t nu = mu; nu < Dim + 1; ++nu) {
-  //       phi_1_up->get(m, mu, nu) =
-  //           inverse_spatial_metric->get(m, 0) * phi.get(0, mu, nu);
-  //       for (size_t n = 1; n < Dim; ++n) {
-  //         phi_1_up->get(m, mu, nu) +=
-  //             inverse_spatial_metric->get(m, n) * phi.get(n, mu, nu);
-  //       }
-  //     }
-  //   }
-  // }
-  tenex::evaluate<ti::M, ti::c, ti::d>(
-      phi_1_up,
-      (*inverse_spatial_metric)(ti::M, ti::N) * phi(ti::n, ti::c, ti::d));
+  for (size_t m = 0; m < Dim; ++m) {
+    for (size_t mu = 0; mu < Dim + 1; ++mu) {
+      for (size_t nu = mu; nu < Dim + 1; ++nu) {
+        phi_1_up->get(m, mu, nu) =
+            inverse_spatial_metric->get(m, 0) * phi.get(0, mu, nu);
+        for (size_t n = 1; n < Dim; ++n) {
+          phi_1_up->get(m, mu, nu) +=
+              inverse_spatial_metric->get(m, n) * phi.get(n, mu, nu);
+        }
+      }
+    }
+  }
 
-  // use TE?
   for (size_t m = 0; m < Dim; ++m) {
     for (size_t nu = 0; nu < Dim + 1; ++nu) {
       for (size_t alpha = 0; alpha < Dim + 1; ++alpha) {
@@ -161,11 +156,7 @@ void TimeDerivative<Dim>::apply(
       }
     }
   }
-  // tenex::evaluate<ti::m, ti::d, ti::A>(
-  //   phi_3_up, (*inverse_spatial_metric)(ti::A, ti::B) * phi(ti::m, ti::d,
-  //   ti::b));
 
-  // use TE?
   for (size_t nu = 0; nu < Dim + 1; ++nu) {
     for (size_t alpha = 0; alpha < Dim + 1; ++alpha) {
       pi_2_up->get(nu, alpha) =
@@ -176,10 +167,7 @@ void TimeDerivative<Dim>::apply(
       }
     }
   }
-  // tenex::evaluate<ti::d, ti::A>(
-  //   pi_2_up, (*inverse_spatial_metric)(ti::A, ti::B) * pi(ti::d, ti::b));
 
-  // use TE?
   for (size_t mu = 0; mu < Dim + 1; ++mu) {
     for (size_t nu = 0; nu < Dim + 1; ++nu) {
       for (size_t alpha = 0; alpha < Dim + 1; ++alpha) {
@@ -194,23 +182,15 @@ void TimeDerivative<Dim>::apply(
       }
     }
   }
-  // tenex::evaluate<ti::c, ti::d, ti::A>(
-  //   christoffel_first_kind_3_up,
-  //   (*inverse_spatial_metric)(ti::A, ti::B) * christoffel_first_kind(ti::c,
-  //   ti::d, ti::b));
 
-  // use TE
-  // for (size_t mu = 0; mu < Dim + 1; ++mu) {
-  //   pi_one_normal->get(mu) = get<0>(*normal_spacetime_vector) * pi.get(0,
-  //   mu); for (size_t nu = 1; nu < Dim + 1; ++nu) {
-  //     pi_one_normal->get(mu) +=
-  //         normal_spacetime_vector->get(nu) * pi.get(nu, mu);
-  //   }
-  // }
-  tenex::evaluate<ti::c>(pi_one_normal,
-                         (*normal_spacetime_vector)(ti::D)*pi(ti::d, ti::c));
+  for (size_t mu = 0; mu < Dim + 1; ++mu) {
+    pi_one_normal->get(mu) = get<0>(*normal_spacetime_vector) * pi.get(0, mu);
+    for (size_t nu = 1; nu < Dim + 1; ++nu) {
+      pi_one_normal->get(mu) +=
+          normal_spacetime_vector->get(nu) * pi.get(nu, mu);
+    }
+  }
 
-  // use TE ?
   get(*half_pi_two_normals) =
       get<0>(*normal_spacetime_vector) * get<0>(*pi_one_normal);
   for (size_t mu = 1; mu < Dim + 1; ++mu) {
@@ -219,7 +199,6 @@ void TimeDerivative<Dim>::apply(
   }
   get(*half_pi_two_normals) *= 0.5;
 
-  // use TE ?
   for (size_t n = 0; n < Dim; ++n) {
     for (size_t nu = 0; nu < Dim + 1; ++nu) {
       phi_one_normal->get(n, nu) =
@@ -231,7 +210,6 @@ void TimeDerivative<Dim>::apply(
     }
   }
 
-  // use TE?
   for (size_t n = 0; n < Dim; ++n) {
     half_phi_two_normals->get(n) =
         get<0>(*normal_spacetime_vector) * phi_one_normal->get(n, 0);
@@ -258,7 +236,6 @@ void TimeDerivative<Dim>::apply(
   get(*gamma1_plus_1) = 1.0 + gamma1.get();
   const DataVector& gamma1p1 = get(*gamma1_plus_1);
 
-  // use TE?
   for (size_t mu = 0; mu < Dim + 1; ++mu) {
     gauge_constraint->get(mu) = trace_christoffel->get(mu);
     for (size_t nu = mu; nu < Dim + 1; ++nu) {
@@ -299,16 +276,12 @@ void TimeDerivative<Dim>::apply(
     }
   }
 
-  // use TE
-  // get(*normal_dot_gauge_constraint) =
-  //     get<0>(*normal_spacetime_vector) * get<0>(*gauge_constraint);
-  // for (size_t mu = 1; mu < Dim + 1; ++mu) {
-  //   get(*normal_dot_gauge_constraint) +=
-  //       normal_spacetime_vector->get(mu) * gauge_constraint->get(mu);
-  // }
-  tenex::evaluate(
-      normal_dot_gauge_constraint,
-      (*normal_spacetime_vector)(ti::C) * (*gauge_constraint)(ti::c));
+  get(*normal_dot_gauge_constraint) =
+      get<0>(*normal_spacetime_vector) * get<0>(*gauge_constraint);
+  for (size_t mu = 1; mu < Dim + 1; ++mu) {
+    get(*normal_dot_gauge_constraint) +=
+        normal_spacetime_vector->get(mu) * gauge_constraint->get(mu);
+  }
 
   // Invalidate da_spacetime_metric since we will be modifying some of the
   // data it points to.
@@ -318,7 +291,6 @@ void TimeDerivative<Dim>::apply(
 
   // Here are the actual equations
 
-  // use TE (? not sure because now the mesh_velocity part has been added)
   // Equation for dt_spacetime_metric
   for (size_t mu = 0; mu < Dim + 1; ++mu) {
     for (size_t nu = mu; nu < Dim + 1; ++nu) {
@@ -449,35 +421,26 @@ void TimeDerivative<Dim>::apply(
     }
   }
 
-  // use TE
   // Equation for dt_phi
-  // for (size_t i = 0; i < Dim; ++i) {
-  //   for (size_t mu = 0; mu < Dim + 1; ++mu) {
-  //     for (size_t nu = mu; nu < Dim + 1; ++nu) {
-  //       dt_phi->get(i, mu, nu) =
-  //           pi.get(mu, nu) * half_phi_two_normals->get(i) -
-  //           d_pi.get(i, mu, nu) +
-  //           get(gamma2) * three_index_constraint->get(i, mu, nu);
-  //       for (size_t n = 0; n < Dim; ++n) {
-  //         dt_phi->get(i, mu, nu) +=
-  //             phi_one_normal->get(i, n + 1) * phi_1_up->get(n, mu, nu);
-  //       }
+  for (size_t i = 0; i < Dim; ++i) {
+    for (size_t mu = 0; mu < Dim + 1; ++mu) {
+      for (size_t nu = mu; nu < Dim + 1; ++nu) {
+        dt_phi->get(i, mu, nu) =
+            pi.get(mu, nu) * half_phi_two_normals->get(i) -
+            d_pi.get(i, mu, nu) +
+            get(gamma2) * three_index_constraint->get(i, mu, nu);
+        for (size_t n = 0; n < Dim; ++n) {
+          dt_phi->get(i, mu, nu) +=
+              phi_one_normal->get(i, n + 1) * phi_1_up->get(n, mu, nu);
+        }
 
-  //       dt_phi->get(i, mu, nu) *= get(*lapse);
-  //       for (size_t m = 0; m < Dim; ++m) {
-  //         dt_phi->get(i, mu, nu) += shift->get(m) * d_phi.get(m, i, mu, nu);
-  //       }
-  //     }
-  //   }
-  // }
-  tenex::evaluate<ti::i, ti::a, ti::b>(
-      dt_phi,
-      (pi(ti::a, ti::b) *
-           (*half_phi_two_normals)(ti::i)-d_pi(ti::i, ti::a, ti::b) +
-       gamma2() * (*three_index_constraint)(ti::i, ti::a, ti::b) +
-       (*phi_one_normal)(ti::i, ti::j) * (*phi_1_up)(ti::J, ti::a, ti::b)) *
-              (*lapse)() +
-          (*shift)(ti::K)*d_phi(ti::k, ti::i, ti::a, ti::b));
+        dt_phi->get(i, mu, nu) *= get(*lapse);
+        for (size_t m = 0; m < Dim; ++m) {
+          dt_phi->get(i, mu, nu) += shift->get(m) * d_phi.get(m, i, mu, nu);
+        }
+      }
+    }
+  }
 }
 }  // namespace gh
 
