@@ -14,6 +14,7 @@
 #include "DataStructures/Tensor/EagerMath/DeterminantAndInverse.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Variables.hpp"
+#include "Domain/TagsTimeDependent.hpp"
 #include "Evolution/PassVariables.hpp"
 #include "NumericalAlgorithms/DiscontinuousGalerkin/Formulation.hpp"
 #include "NumericalAlgorithms/DiscontinuousGalerkin/MetricIdentityJacobian.hpp"
@@ -420,10 +421,14 @@ void volume_terms(
         mesh.number_of_grid_points() * mesh_velocity->size();
     const auto logical_mesh_velocity_data =
         cpp20::make_unique_for_overwrite<double[]>(mesh_velocity_size);
-    Variables<tmpl::list<tnsr::I<DataVector, Dim, Frame::ElementLogical>>>
-        logical_mesh_velocity{};
-    logical_mesh_velocity.set_data_ref(&logical_mesh_velocity_data,
-                                       mesh_velocity_size);
+    using logical_mesh_velocity_tag =
+        domain::Tags::MeshVelocityWithValue<Dim, Frame::ElementLogical>;
+    Variables<tmpl::list<logical_mesh_velocity_tag>>
+        logical_mesh_velocity_var{};
+    logical_mesh_velocity_var.set_data_ref(&(logical_mesh_velocity_data[0]),
+                                           mesh_velocity_size);
+    auto& logical_mesh_velocity =
+        get<logical_mesh_velocity_tag>(logical_mesh_velocity_var);
     tenex::evaluate<ti::I>(
         make_not_null(&logical_mesh_velocity),
         (*mesh_velocity)(ti::J)*logical_to_inertial_inverse_jacobian(ti::I,

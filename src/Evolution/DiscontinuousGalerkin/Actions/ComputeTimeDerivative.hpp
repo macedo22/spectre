@@ -594,7 +594,7 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
                                                      Frame::Inertial>>(box),
          &mesh,
          &mesh_velocity = db::get<::domain::Tags::MeshVelocity<Dim>>(box),
-         &logical_partial_derivs, &partial_derivs, &temporaries,
+         &logical_partial_derivs, &inertial_partial_derivs, &temporaries,
          &volume_fluxes](const gsl::not_null<Variables<db::wrap_tags_in<
                              ::Tags::dt, typename variables_tag::tags_list>>*>
                              dt_vars_ptr,
@@ -606,14 +606,11 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
               evolved_variables, dg_formulation, mesh, inertial_coordinates,
               logical_to_inertial_inv_jacobian, det_inverse_jacobian,
               mesh_velocity, div_mesh_velocity, time_derivative_args...);
-          // TODO : need to compute partial derivatives after this (temporarily
-          // compute all to make sure it works, and then afterward can worry
-          // about only selectively computing for elements with external faces)
-          //
-          // attempt in progress:
-          partial_derivatives(make_not_null(&partial_derivatives),
+          // TODO : need to have this only be called on elements with external
+          // faces
+          partial_derivatives(make_not_null(&inertial_partial_derivs),
                               logical_partial_derivs,
-                              logical_to_inertial_inverse_jacobian);
+                              logical_to_inertial_inv_jacobian);
         },
         make_not_null(&box));
   } else {

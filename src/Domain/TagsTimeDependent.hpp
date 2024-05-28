@@ -169,6 +169,12 @@ struct MeshVelocity : db::SimpleTag {
   using type = std::optional<tnsr::I<DataVector, Dim, Frame>>;
 };
 
+// TODO : document
+template <size_t Dim, typename Frame = ::Frame::Inertial>
+struct MeshVelocityWithValue : db::SimpleTag {
+  using type = tnsr::I<DataVector, Dim, Frame>;
+};
+
 /// Computes the Inertial mesh velocity from `CoordinatesVelocityAndJacobians`
 ///
 /// The type is a `std::optional`, which when it is not set indicates that the
