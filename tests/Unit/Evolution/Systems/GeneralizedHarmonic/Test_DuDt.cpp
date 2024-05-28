@@ -605,6 +605,9 @@ void test_compute_dudt(const gsl::not_null<Generator*> generator) {
   tnsr::iaa<DataVector, Dim, Frame::Inertial> dt_phi(
       mesh.number_of_grid_points());
 
+  const auto logical_partial_derivs =
+      logical_partial_derivatives<gh_tags_list>(evolved_vars, mesh);
+
   Variables<tmpl::list<
       gh::ConstraintDamping::Tags::ConstraintGamma1,
       gh::ConstraintDamping::Tags::ConstraintGamma2,
@@ -679,9 +682,8 @@ void test_compute_dudt(const gsl::not_null<Generator*> generator) {
               buffer)),
       make_not_null(
           &get<gr::Tags::SpacetimeNormalVector<DataVector, Dim>>(buffer)),
-      d_spacetime_metric, d_pi, d_phi, spacetime_metric, pi, phi, gamma0,
-      gamma1, gamma2, gauge_condition, mesh, time, inertial_coords, inv_jac,
-      {});
+      logical_partial_derivs, spacetime_metric, pi, phi, gamma0, gamma1, gamma2,
+      gauge_condition, mesh, time, inertial_coords, inv_jac, {});
 
   CHECK_ITERABLE_APPROX(
       get<gh::ConstraintDamping::Tags::ConstraintGamma1>(buffer), gamma1);
@@ -780,9 +782,8 @@ void test_compute_dudt(const gsl::not_null<Generator*> generator) {
               buffer)),
       make_not_null(
           &get<gr::Tags::SpacetimeNormalVector<DataVector, Dim>>(buffer)),
-      d_spacetime_metric, d_pi, d_phi, spacetime_metric, pi, phi, gamma0,
-      gamma1, gamma2, gauge_condition, mesh, time, inertial_coords, inv_jac,
-      {});
+      logical_partial_derivs, spacetime_metric, pi, phi, gamma0, gamma1, gamma2,
+      gauge_condition, mesh, time, inertial_coords, inv_jac, {});
 
   tnsr::aa<DataVector, Dim, Frame::Inertial> dt_spacetime_metric_moving_mesh(
       mesh.number_of_grid_points());
@@ -837,8 +838,8 @@ void test_compute_dudt(const gsl::not_null<Generator*> generator) {
               buffer)),
       make_not_null(
           &get<gr::Tags::SpacetimeNormalVector<DataVector, Dim>>(buffer)),
-      d_spacetime_metric, d_pi, d_phi, spacetime_metric, pi, phi, gamma0,
-      gamma1, gamma2, gauge_condition, mesh, time, inertial_coords, inv_jac,
+      logical_partial_derivs, spacetime_metric, pi, phi, gamma0, gamma1, gamma2,
+      gauge_condition, mesh, time, inertial_coords, inv_jac,
       std::optional{mesh_velocity});
 
   for (size_t a = 0; a < Dim + 1; ++a) {
