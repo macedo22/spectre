@@ -89,14 +89,13 @@ void partial_derivatives_impl(
                               num_grid_points);
 
       lhs = (*(inverse_jacobian.begin() +
-               gsl::at(gsl::at(indices, logical_deriv_index), 0))) *
-            logical_du;
+               gsl::at(gsl::at(indices, logical_deriv_index), 0)));
       for (size_t deriv_index = 1; deriv_index < Dim; ++deriv_index) {
         lhs +=
             (*(inverse_jacobian.begin() +
-               gsl::at(gsl::at(indices, logical_deriv_index), deriv_index))) *
-            logical_du;
+               gsl::at(gsl::at(indices, logical_deriv_index), deriv_index)));
       }
+      lhs *= logical_du;
       // clang-tidy: no pointer arithmetic
       pdu += Dim * num_grid_points;  // NOLINT
     }
