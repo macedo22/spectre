@@ -9,7 +9,6 @@
 #include "DataStructures/DataBox/Prefixes.hpp"
 #include "DataStructures/DataVector.hpp"
 #include "DataStructures/Matrix.hpp"
-#include "DataStructures/Tensor/Structure.hpp"
 #include "DataStructures/Transpose.hpp"
 #include "DataStructures/Variables.hpp"
 #include "NumericalAlgorithms/Spectral/Mesh.hpp"
@@ -25,18 +24,6 @@
 namespace partial_derivatives_detail {
 template <size_t Dim, typename VariableTags, typename DerivativeTags>
 struct LogicalImpl;
-
-template <size_t Dim, typename Structure>
-constexpr std::array<std::array<size_t, Dim>, Dim> get_indices() {
-  std::array<std::array<size_t, Dim>, Dim> indices{};
-  for (size_t i = 0; i < Dim; i++) {
-    for (size_t j = 0; j < Dim; j++) {
-      gsl::at(gsl::at(indices, i), j) = Structure::get_storage_index(i, j);
-    }
-  }
-
-  return indices;
-}
 
 // This routine has been optimized to perform really well. The following
 // describes what optimizations were made.
@@ -77,9 +64,14 @@ void partial_derivatives_impl(
   DataVector lhs{};
   DataVector logical_du{};
 
-  constexpr std::array<std::array<size_t, Dim>, Dim> indices = get_indices<
-      Dim, typename InverseJacobian<DataVector, Dim, Frame::ElementLogical,
-                                    DerivativeFrame>::structure>();
+  std::array<std::array<size_t, Dim>, Dim> indices{};
+  for (size_t deriv_index = 0; deriv_index < Dim; ++deriv_index) {
+    for (size_t d = 0; d < Dim; ++d) {
+      gsl::at(gsl::at(indices, d), deriv_index) =
+          InverseJacobian<DataVector, Dim, Frame::ElementLogical,
+                          DerivativeFrame>::get_storage_index(d, deriv_index);
+    }
+  }
 
   for (size_t logical_deriv_index = 0; logical_deriv_index < Dim;
        ++logical_deriv_index) {
