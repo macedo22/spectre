@@ -110,14 +110,43 @@ void bench_partial_derivatives(benchmark::State& state) {  // NOLINT
   }
 }
 
+// clang-tidy: don't pass be non-const reference
+void bench_logical_partial_derivatives(benchmark::State& state) {  // NOLINT
+  const size_t num_1d_grid_points = static_cast<size_t>(state.range(0));
+  constexpr size_t Dim = 3;
+  // const size_t num_grid_points = pow(num_1d_grid_points, Dim);
+  const Mesh<Dim> mesh{num_1d_grid_points, Spectral::Basis::Legendre,
+                       Spectral::Quadrature::GaussLobatto};
+
+  using VarTags = tmpl::list<Kappa<Dim>, Psi<Dim>>;
+  Variables<VarTags> vars(mesh.number_of_grid_points(), 0.0);
+
+  while (state.KeepRunning()) {
+    benchmark::DoNotOptimize(logical_partial_derivatives<VarTags>(vars, mesh));
+    benchmark::ClobberMemory();
+  }
+}
+
 // Each DataVector case is run with each number of grid points
 constexpr std::array<long int, 6> num_1d_grid_point_values = {2,  5,  8,
                                                               10, 15, 20};
 
 void run_benchmarks() {
-  const std::string benchmark_name = "partial_derivatives/3D";
+  const std::string partial_derivatives_benchmark_name =
+      "partial_derivatives/3D";
   BENCHMARK(bench_partial_derivatives)
-      ->Name(benchmark_name)
+      ->Name(partial_derivatives_benchmark_name)
+      ->Arg(num_1d_grid_point_values[0])
+      ->Arg(num_1d_grid_point_values[1])
+      ->Arg(num_1d_grid_point_values[2])
+      ->Arg(num_1d_grid_point_values[3])
+      ->Arg(num_1d_grid_point_values[4])
+      ->Arg(num_1d_grid_point_values[5]);
+
+  const std::string logical_partial_derivatives_benchmark_name =
+      "logical_partial_derivatives/3D";
+  BENCHMARK(bench_logical_partial_derivatives)
+      ->Name(logical_partial_derivatives_benchmark_name)
       ->Arg(num_1d_grid_point_values[0])
       ->Arg(num_1d_grid_point_values[1])
       ->Arg(num_1d_grid_point_values[2])
