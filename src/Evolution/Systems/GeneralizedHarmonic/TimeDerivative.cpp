@@ -618,16 +618,26 @@ using derivative_tags = typename gh::System<Dim>::gradients_tags;
 template <size_t Dim>
 using variables_tags = typename gh::System<Dim>::variables_tag::tags_list;
 
+template <size_t Dim>
+using results_tags = db::wrap_tags_in<::Tags::deriv, derivative_tags<Dim>,
+                                      tmpl::size_t<Dim>, derivative_frame>;
+
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define INSTANTIATE(_, data)                                                 \
   template struct gh::TimeDerivative<DIM(data)>;                             \
-  template Variables<                                                        \
-      db::wrap_tags_in<::Tags::deriv, derivative_tags<DIM(data)>,            \
-                       tmpl::size_t<DIM(data)>, derivative_frame>>           \
+  template Variables<results_tags<DIM(data)>>                                \
   partial_derivatives<derivative_tags<DIM(data)>, variables_tags<DIM(data)>, \
                       DIM(data), derivative_frame>(                          \
       const Variables<variables_tags<DIM(data)>>& u,                         \
       const Mesh<DIM(data)>& mesh,                                           \
+      const InverseJacobian<DataVector, DIM(data), Frame::ElementLogical,    \
+                            derivative_frame>& inverse_jacobian);            \
+  template void                                                              \
+  partial_derivatives<results_tags<DIM(data)>, derivative_tags<DIM(data)>,   \
+                      DIM(data), derivative_frame>(                          \
+      const gsl::not_null<Variables<results_tags<DIM(data)>>*> du,           \
+      const std::array<Variables<derivative_tags<DIM(data)>>, DIM(data)>&    \
+          logical_partial_derivatives_of_u,                                  \
       const InverseJacobian<DataVector, DIM(data), Frame::ElementLogical,    \
                             derivative_frame>& inverse_jacobian);            \
   template Variables<db::wrap_tags_in<                                       \
