@@ -271,8 +271,6 @@ void TimeDerivative<Dim>::apply(
           phi_3_up->get(m, nu, alpha) +=
               inverse_spacetime_metric->get(alpha, beta) * phi.get(m, nu, beta);
         }
-        // + 64 mults = +64 ops (unrelated changes)
-        phi_3_up->get(m, nu, alpha) *= 2.0;
       }
     }
   }
@@ -285,8 +283,6 @@ void TimeDerivative<Dim>::apply(
         pi_2_up->get(nu, alpha) +=
             inverse_spacetime_metric->get(alpha, beta) * pi.get(nu, beta);
       }
-      // + 16 mults = +16 ops (unrelated changes)
-      pi_2_up->get(nu, alpha) *= 2.0;
     }
   }
 
@@ -302,8 +298,6 @@ void TimeDerivative<Dim>::apply(
               inverse_spacetime_metric->get(alpha, beta) *
               christoffel_first_kind->get(mu, nu, beta);
         }
-        // + 64 mults = +64 ops (unrelated changes) (christoffel)
-        christoffel_first_kind_3_up->get(mu, nu, alpha) *= M_SQRT2;
       }
     }
   }
@@ -416,8 +410,6 @@ void TimeDerivative<Dim>::apply(
     // the other temporary tags.
     for (size_t nu = 0; nu < Dim + 1; ++nu) {
       gauge_constraint->get(nu) += gauge_function->get(nu);
-      // +4 mults = +4 ops (unrelated changes)
-      upper_gauge_function->get(nu) *= 2.0;
     }
   }
 
@@ -509,24 +501,21 @@ void TimeDerivative<Dim>::apply(
                               spacetime_deriv_gauge_function->get(nu, mu);
       }
       for (size_t delta = 0; delta < Dim + 1; ++delta) {
-        // -40 mults = -40 ops (unrelated changes)
-        dt_pi->get(mu, nu) -= pi.get(mu, delta) * pi_2_up->get(nu, delta);
+        dt_pi->get(mu, nu) -= 2 * pi.get(mu, delta) * pi_2_up->get(nu, delta);
         if (not using_harmonic_gauge) {
-          // -40 mults = -40 ops (unrelated changes)
-          dt_pi->get(mu, nu) += christoffel_first_kind->get(delta, mu, nu) *
+          dt_pi->get(mu, nu) += 2 * christoffel_first_kind->get(delta, mu, nu) *
                                 upper_gauge_function->get(delta);
         }
         for (size_t n = 0; n < Dim; ++n) {
-          // -120 mults = -120 ops (unrelated changes)
           dt_pi->get(mu, nu) +=
-              phi_1_up->get(n, mu, delta) * phi_3_up->get(n, nu, delta);
+              2 * phi_1_up->get(n, mu, delta) * phi_3_up->get(n, nu, delta);
         }
 
         for (size_t alpha = 0; alpha < Dim + 1; ++alpha) {
+          // 10 sums of 4 sums = 10 * 4 * (4 + 4) = 320 ops (christoffel)
+          // another 160 mults for the 2 *
           dt_pi->get(mu, nu) -=
-              // -160 mults = -160 ops (unrelated changes)
-              // 10 sums of 4 sums = 10 * 4 * (4 + 4) = 320 ops (christoffel)
-              christoffel_first_kind_3_up->get(mu, alpha, delta) *
+              2. * christoffel_first_kind_3_up->get(mu, alpha, delta) *
               christoffel_first_kind_3_up->get(nu, delta, alpha);
         }
       }
@@ -602,8 +591,8 @@ void TimeDerivative<Dim>::apply(
     }
   }
   // 1be4039 (jacobian changes) : -385 ops (of 750 saved from no inertial deriv)
-  // (unrelated changes) : -480 ops
-  // TOTAL : -865 ops
+  // (unrelated changes) : -268 ops
+  // TOTAL : -653 ops
 }
 
 template <size_t Dim>
