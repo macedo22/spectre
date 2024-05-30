@@ -631,7 +631,15 @@ void test_compute_dudt(const gsl::not_null<Generator*> generator) {
       gr::Tags::SpacetimeChristoffelFirstKind<DataVector, Dim>,
       gr::Tags::SpacetimeChristoffelSecondKind<DataVector, Dim>,
       gr::Tags::TraceSpacetimeChristoffelFirstKind<DataVector, Dim>,
-      gr::Tags::SpacetimeNormalVector<DataVector, Dim>>>
+      gr::Tags::SpacetimeNormalVector<DataVector, Dim>,
+      gr::Tags::Shift<DataVector, Dim, Frame::ElementLogical>,
+      gh::Tags::InverseSpatialMetricLogical1<Dim>,
+      domain::Tags::MeshVelocityWithValue<Dim, Frame::ElementLogical>,
+      gh::Tags::ShiftDotDSpacetimeMetric<Dim>, gh::Tags::ShiftDotPhi<Dim>,
+      gh::Tags::MeshVelocityDotPhi<Dim>,
+      gh::Tags::MeshVelocityDotDSpacetimeMetric<Dim>,
+      gh::Tags::UpperGaugeH<Dim>,
+      gh::Tags::Gamma2LogicalDSpacetimeMetricMinusLogicalDPi<Dim>>>
       buffer(mesh.number_of_grid_points());
 
   gh::TimeDerivative<Dim>::apply(
@@ -682,6 +690,22 @@ void test_compute_dudt(const gsl::not_null<Generator*> generator) {
               buffer)),
       make_not_null(
           &get<gr::Tags::SpacetimeNormalVector<DataVector, Dim>>(buffer)),
+      make_not_null(
+          &get<gr::Tags::Shift<DataVector, Dim, Frame::ElementLogical>>(
+              buffer)),
+      make_not_null(&get<gh::Tags::InverseSpatialMetricLogical1<Dim>>(buffer)),
+      make_not_null(
+          &get<domain::Tags::MeshVelocityWithValue<Dim, Frame::ElementLogical>>(
+              buffer)),
+      make_not_null(&get<gh::Tags::ShiftDotDSpacetimeMetric<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::ShiftDotPhi<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::MeshVelocityDotPhi<Dim>>(buffer)),
+      make_not_null(
+          &get<gh::Tags::MeshVelocityDotDSpacetimeMetric<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::UpperGaugeH<Dim>>(buffer)),
+      make_not_null(
+          &get<gh::Tags::Gamma2LogicalDSpacetimeMetricMinusLogicalDPi<Dim>>(
+              buffer)),
       logical_partial_derivs, spacetime_metric, pi, phi, gamma0, gamma1, gamma2,
       gauge_condition, mesh, time, inertial_coords, inv_jac, {});
 
@@ -782,6 +806,22 @@ void test_compute_dudt(const gsl::not_null<Generator*> generator) {
               buffer)),
       make_not_null(
           &get<gr::Tags::SpacetimeNormalVector<DataVector, Dim>>(buffer)),
+      make_not_null(
+          &get<gr::Tags::Shift<DataVector, Dim, Frame::ElementLogical>>(
+              buffer)),
+      make_not_null(&get<gh::Tags::InverseSpatialMetricLogical1<Dim>>(buffer)),
+      make_not_null(
+          &get<domain::Tags::MeshVelocityWithValue<Dim, Frame::ElementLogical>>(
+              buffer)),
+      make_not_null(&get<gh::Tags::ShiftDotDSpacetimeMetric<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::ShiftDotPhi<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::MeshVelocityDotPhi<Dim>>(buffer)),
+      make_not_null(
+          &get<gh::Tags::MeshVelocityDotDSpacetimeMetric<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::UpperGaugeH<Dim>>(buffer)),
+      make_not_null(
+          &get<gh::Tags::Gamma2LogicalDSpacetimeMetricMinusLogicalDPi<Dim>>(
+              buffer)),
       logical_partial_derivs, spacetime_metric, pi, phi, gamma0, gamma1, gamma2,
       gauge_condition, mesh, time, inertial_coords, inv_jac, {});
 
@@ -838,6 +878,22 @@ void test_compute_dudt(const gsl::not_null<Generator*> generator) {
               buffer)),
       make_not_null(
           &get<gr::Tags::SpacetimeNormalVector<DataVector, Dim>>(buffer)),
+      make_not_null(
+          &get<gr::Tags::Shift<DataVector, Dim, Frame::ElementLogical>>(
+              buffer)),
+      make_not_null(&get<gh::Tags::InverseSpatialMetricLogical1<Dim>>(buffer)),
+      make_not_null(
+          &get<domain::Tags::MeshVelocityWithValue<Dim, Frame::ElementLogical>>(
+              buffer)),
+      make_not_null(&get<gh::Tags::ShiftDotDSpacetimeMetric<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::ShiftDotPhi<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::MeshVelocityDotPhi<Dim>>(buffer)),
+      make_not_null(
+          &get<gh::Tags::MeshVelocityDotDSpacetimeMetric<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::UpperGaugeH<Dim>>(buffer)),
+      make_not_null(
+          &get<gh::Tags::Gamma2LogicalDSpacetimeMetricMinusLogicalDPi<Dim>>(
+              buffer)),
       logical_partial_derivs, spacetime_metric, pi, phi, gamma0, gamma1, gamma2,
       gauge_condition, mesh, time, inertial_coords, inv_jac,
       std::optional{mesh_velocity});

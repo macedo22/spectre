@@ -128,7 +128,14 @@ struct TimeDerivative {
       gr::Tags::SpacetimeChristoffelFirstKind<DataVector, Dim>,
       gr::Tags::SpacetimeChristoffelSecondKind<DataVector, Dim>,
       gr::Tags::TraceSpacetimeChristoffelFirstKind<DataVector, Dim>,
-      gr::Tags::SpacetimeNormalVector<DataVector, Dim>>;
+      gr::Tags::SpacetimeNormalVector<DataVector, Dim>,
+      gr::Tags::Shift<DataVector, Dim, Frame::ElementLogical>,
+      Tags::InverseSpatialMetricLogical1<Dim>,
+      domain::Tags::MeshVelocityWithValue<Dim, Frame::ElementLogical>,
+      Tags::ShiftDotDSpacetimeMetric<Dim>, Tags::ShiftDotPhi<Dim>,
+      Tags::MeshVelocityDotPhi<Dim>, Tags::MeshVelocityDotDSpacetimeMetric<Dim>,
+      Tags::UpperGaugeH<Dim>,
+      Tags::Gamma2LogicalDSpacetimeMetricMinusLogicalDPi<Dim>>;
   using argument_tags =
       tmpl::list<gr::Tags::SpacetimeMetric<DataVector, Dim>,
                  Tags::Pi<DataVector, Dim>, Tags::Phi<DataVector, Dim>,
@@ -177,6 +184,27 @@ struct TimeDerivative {
       gsl::not_null<tnsr::Abb<DataVector, Dim>*> christoffel_second_kind,
       gsl::not_null<tnsr::a<DataVector, Dim>*> trace_christoffel,
       gsl::not_null<tnsr::A<DataVector, Dim>*> normal_spacetime_vector,
+      gsl::not_null<tnsr::I<DataVector, Dim, Frame::ElementLogical>*>
+          logical_shift,
+      gsl::not_null<
+          Tensor<DataVector, Symmetry<2, 1>,
+                 index_list<SpatialIndex<Dim, UpLo::Up, Frame::ElementLogical>,
+                            SpatialIndex<Dim, UpLo::Up, Frame::Inertial>>>*>
+          inverse_spatial_metric_logical_1,
+      gsl::not_null<tnsr::I<DataVector, Dim, Frame::ElementLogical>*>
+          logical_mesh_velocity,
+      gsl::not_null<tnsr::aa<DataVector, Dim>*> shift_dot_d_spacetime_metric,
+      gsl::not_null<tnsr::aa<DataVector, Dim>*> shift_dot_phi,
+      gsl::not_null<tnsr::aa<DataVector, Dim>*> mesh_velocity_dot_phi,
+      gsl::not_null<tnsr::aa<DataVector, Dim>*>
+          mesh_velocity_dot_d_spacetime_metric,
+      gsl::not_null<tnsr::A<DataVector, Dim>*> upper_gauge_function,
+      gsl::not_null<
+          Tensor<DataVector, Symmetry<2, 1, 1>,
+                 index_list<SpatialIndex<Dim, UpLo::Lo, Frame::ElementLogical>,
+                            SpacetimeIndex<Dim, UpLo::Lo, Frame::Inertial>,
+                            SpacetimeIndex<Dim, UpLo::Lo, Frame::Inertial>>>*>
+          gamma2_logical_d_spacetime_metric_minus_logical_d_pi,
       const std::array<
           Variables<tmpl::list<gr::Tags::SpacetimeMetric<DataVector, Dim>,
                                Tags::Pi<DataVector, Dim>,

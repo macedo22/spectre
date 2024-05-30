@@ -416,23 +416,9 @@ void volume_terms(
     using non_flux_tags =
         tmpl::list_difference<tmpl::list<VariablesTags...>, flux_variables>;
 
-    // compute logical mesh velocity
-    const size_t mesh_velocity_size =
-        mesh.number_of_grid_points() * mesh_velocity->size();
-    const auto logical_mesh_velocity_data =
-        cpp20::make_unique_for_overwrite<double[]>(mesh_velocity_size);
-    using logical_mesh_velocity_tag =
-        domain::Tags::MeshVelocityWithValue<Dim, Frame::ElementLogical>;
-    Variables<tmpl::list<logical_mesh_velocity_tag>>
-        logical_mesh_velocity_var{};
-    logical_mesh_velocity_var.set_data_ref(&(logical_mesh_velocity_data[0]),
-                                           mesh_velocity_size);
-    auto& logical_mesh_velocity =
-        get<logical_mesh_velocity_tag>(logical_mesh_velocity_var);
-    tenex::evaluate<ti::I>(
-        make_not_null(&logical_mesh_velocity),
-        (*mesh_velocity)(ti::J)*logical_to_inertial_inverse_jacobian(ti::I,
-                                                                     ti::j));
+    const auto& logical_mesh_velocity =
+        get<domain::Tags::MeshVelocityWithValue<Dim, Frame::ElementLogical>>(
+            *temporaries);
 
     tmpl::for_each<non_flux_tags>([&dt_vars_ptr, &logical_mesh_velocity,
                                    &logical_partial_derivs](auto var_tag_v) {

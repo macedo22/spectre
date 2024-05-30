@@ -85,5 +85,54 @@ template <size_t Dim>
 struct SpacetimeChristoffelFirstKindThirdIndexUp : db::SimpleTag {
   using type = tnsr::abC<DataVector, Dim, Frame::Inertial>;
 };
+
+template <size_t Dim>
+struct InverseSpatialMetricLogical1 : db::SimpleTag {
+  using type =
+      Tensor<DataVector, Symmetry<2, 1>,
+             index_list<SpatialIndex<Dim, UpLo::Up, Frame::ElementLogical>,
+                        SpatialIndex<Dim, UpLo::Up, Frame::Inertial>>>;
+};
+
+template <size_t Dim>
+struct ShiftDotDSpacetimeMetric : db::SimpleTag {
+  using type = tnsr::aa<DataVector, Dim>;
+};
+
+template <size_t Dim>
+struct ShiftDotPhi : db::SimpleTag {
+  using type = tnsr::aa<DataVector, Dim>;
+};
+
+template <size_t Dim>
+struct MeshVelocityDotPhi : db::SimpleTag {
+  using type = tnsr::aa<DataVector, Dim>;
+};
+
+template <size_t Dim>
+struct MeshVelocityDotDSpacetimeMetric : db::SimpleTag {
+  using type = tnsr::aa<DataVector, Dim>;
+};
+
+/*!
+ * \brief The inverse gauge source function for the generalized harmonic system.
+ *
+ * \details Defined as \f$ H^b = g^{ab} H_a\f$ where \f$ H_a\f$ is defined by
+ * `GaugeH`.
+ */
+template <size_t Dim>
+struct UpperGaugeH : db::SimpleTag {
+  using type = tnsr::A<DataVector, Dim, Frame::Inertial>;
+};
+
+template <size_t Dim>
+struct Gamma2LogicalDSpacetimeMetricMinusLogicalDPi : db::SimpleTag {
+  using type =
+      Tensor<DataVector, Symmetry<2, 1, 1>,
+             index_list<SpatialIndex<Dim, UpLo::Lo, Frame::ElementLogical>,
+                        SpacetimeIndex<Dim, UpLo::Lo, Frame::Inertial>,
+                        SpacetimeIndex<Dim, UpLo::Lo, Frame::Inertial>>>;
+};
+
 }  // namespace Tags
 }  // namespace gh

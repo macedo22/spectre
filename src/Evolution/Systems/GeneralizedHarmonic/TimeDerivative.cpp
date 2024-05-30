@@ -69,6 +69,28 @@ void TimeDerivative<Dim>::apply(
         tnsr::Abb<DataVector, Dim>*> /*christoffel_second_kind*/,
     const gsl::not_null<tnsr::a<DataVector, Dim>*> trace_christoffel,
     const gsl::not_null<tnsr::A<DataVector, Dim>*> normal_spacetime_vector,
+    const gsl::not_null<tnsr::I<DataVector, Dim, Frame::ElementLogical>*>
+        logical_shift,
+    const gsl::not_null<
+        Tensor<DataVector, Symmetry<2, 1>,
+               index_list<SpatialIndex<Dim, UpLo::Up, Frame::ElementLogical>,
+                          SpatialIndex<Dim, UpLo::Up, Frame::Inertial>>>*>
+        inverse_spatial_metric_logical_1,
+    const gsl::not_null<tnsr::I<DataVector, Dim, Frame::ElementLogical>*>
+        logical_mesh_velocity,
+    const gsl::not_null<tnsr::aa<DataVector, Dim>*>
+        shift_dot_d_spacetime_metric,
+    const gsl::not_null<tnsr::aa<DataVector, Dim>*> shift_dot_phi,
+    const gsl::not_null<tnsr::aa<DataVector, Dim>*> mesh_velocity_dot_phi,
+    const gsl::not_null<tnsr::aa<DataVector, Dim>*>
+        mesh_velocity_dot_d_spacetime_metric,
+    const gsl::not_null<tnsr::A<DataVector, Dim>*> upper_gauge_function,
+    const gsl::not_null<
+        Tensor<DataVector, Symmetry<2, 1, 1>,
+               index_list<SpatialIndex<Dim, UpLo::Lo, Frame::ElementLogical>,
+                          SpacetimeIndex<Dim, UpLo::Lo, Frame::Inertial>,
+                          SpacetimeIndex<Dim, UpLo::Lo, Frame::Inertial>>>*>
+        gamma2_logical_d_spacetime_metric_minus_logical_d_pi,
     // TODO : add frame Frame::ElementLogical
     const std::array<
         Variables<
@@ -110,10 +132,10 @@ void TimeDerivative<Dim>::apply(
 
   // using DerivativeTags = typename System<Dim>::gradients_tags;
 
-  using logical_inverse_spatial_metric_t =
-      Tensor<DataVector, Symmetry<2, 1>,
-             index_list<SpatialIndex<Dim, UpLo::Up, Frame::ElementLogical>,
-                        SpatialIndex<Dim, UpLo::Up, Frame::Inertial>>>;
+  // using inverse_spatial_metric_logical_1_t =
+  //     Tensor<DataVector, Symmetry<2, 1>,
+  //            index_list<SpatialIndex<Dim, UpLo::Up, Frame::ElementLogical>,
+  //                       SpatialIndex<Dim, UpLo::Up, Frame::Inertial>>>;
 
   // // logical partial derivs
   // // - 30 sums = 30 * (3 + 2) = -150 ops
@@ -151,17 +173,16 @@ void TimeDerivative<Dim>::apply(
 
   // other vars with logical first index
   // + 3 sums = 3 * (3 + 2) = +15 ops
-  const tnsr::I<DataVector, Dim, Frame::ElementLogical> logical_shift =
-      tenex::evaluate<ti::I>((*shift)(ti::J)*inverse_jacobian(ti::I, ti::j));
+  tenex::evaluate<ti::I>(logical_shift,
+                         (*shift)(ti::J)*inverse_jacobian(ti::I, ti::j));
   // + 9 sums = 9 * (3 + 2) = +45 ops
-  const logical_inverse_spatial_metric_t logical_inverse_spatial_metric =
-      tenex::evaluate<ti::J, ti::I>((*inverse_spatial_metric)(ti::K, ti::I) *
-                                    inverse_jacobian(ti::J, ti::k));
-  tnsr::I<DataVector, Dim, Frame::ElementLogical> logical_mesh_velocity{};
+  tenex::evaluate<ti::J, ti::I>(
+      inverse_spatial_metric_logical_1,
+      (*inverse_spatial_metric)(ti::K, ti::I) * inverse_jacobian(ti::J, ti::k));
   if (mesh_velocity.has_value()) {
     // + 3 sums = 3 * (3 + 2) = +15 ops
     tenex::evaluate<ti::J>(
-        make_not_null(&logical_mesh_velocity),
+        logical_mesh_velocity,
         (*mesh_velocity)(ti::I)*inverse_jacobian(ti::J, ti::i));
   }
 
@@ -171,17 +192,16 @@ void TimeDerivative<Dim>::apply(
   //     tenex::evaluate<ti::a, ti::b>(
   //         logical_shift(ti::I) *
   //         logical_d_spacetime_metric(ti::i, ti::a, ti::b));
-  tnsr::aa<DataVector, Dim> shift_dot_d_spacetime_metric{};
   for (size_t a = 0; a < Dim + 1; a++) {
     for (size_t b = a; b < Dim + 1; b++) {
-      shift_dot_d_spacetime_metric.get(a, b) =
-          logical_shift.get(0) *
+      shift_dot_d_spacetime_metric->get(a, b) =
+          get<0>(*logical_shift) *
           get<gr::Tags::SpacetimeMetric<DataVector, Dim>>(
               gsl::at(logical_partial_derivs, 0))
               .get(a, b);
       for (size_t i = 1; i < Dim; i++) {
-        shift_dot_d_spacetime_metric.get(a, b) +=
-            logical_shift.get(i) *
+        shift_dot_d_spacetime_metric->get(a, b) +=
+            logical_shift->get(i) *
             get<gr::Tags::SpacetimeMetric<DataVector, Dim>>(
                 gsl::at(logical_partial_derivs, i))
                 .get(a, b);
@@ -191,8 +211,8 @@ void TimeDerivative<Dim>::apply(
 
   // shift and mesh_velocity dot d_spacetime_metric and d_phi
   // + 10 sums = 10 * (3 + 2) = +50 ops
-  const tnsr::aa<DataVector, Dim> shift_dot_phi =
-      tenex::evaluate<ti::a, ti::b>((*shift)(ti::I)*phi(ti::i, ti::a, ti::b));
+  tenex::evaluate<ti::a, ti::b>(shift_dot_phi,
+                                (*shift)(ti::I)*phi(ti::i, ti::a, ti::b));
 
   // Compute the part of the dt_spacetime_metric equation that doesn't involve
   // constraints so we can use it for da_spacetime_metric to compute Christoffel
@@ -203,7 +223,7 @@ void TimeDerivative<Dim>::apply(
       // - 10 sums = 10 * (3 + 3) = -60 ops
       // + 10 add + mults = 10 * 2 = +20 ops
       dt_spacetime_metric->get(mu, nu) =
-          -get(*lapse) * pi.get(mu, nu) + shift_dot_phi.get(mu, nu);
+          -get(*lapse) * pi.get(mu, nu) + shift_dot_phi->get(mu, nu);
     }
   }
 
@@ -339,16 +359,14 @@ void TimeDerivative<Dim>::apply(
   // ops
 
   // + 10 subs = +10 ops
-  tenex::evaluate<ti::a, ti::b>(
-      shift_dot_three_index_constraint,
-      shift_dot_d_spacetime_metric(ti::a, ti::b) - shift_dot_phi(ti::a, ti::b));
+  tenex::evaluate<ti::a, ti::b>(shift_dot_three_index_constraint,
+                                (*shift_dot_d_spacetime_metric)(ti::a, ti::b) -
+                                    (*shift_dot_phi)(ti::a, ti::b));
   if (mesh_velocity.has_value()) {
-    tnsr::aa<DataVector, Dim> mesh_velocity_dot_phi{};
-    tnsr::aa<DataVector, Dim> mesh_velocity_dot_d_spacetime_metric{};
     if (mesh_velocity.has_value()) {
       // + 10 sums = 10 * (3 + 2) = +50 ops
       tenex::evaluate<ti::a, ti::b>(
-          make_not_null(&mesh_velocity_dot_phi),
+          mesh_velocity_dot_phi,
           (*mesh_velocity)(ti::I)*phi(ti::i, ti::a, ti::b));
       // + 10 sums = 10 * (3 + 2) = +50 ops
       // tenex::evaluate<ti::a, ti::b>(
@@ -357,14 +375,14 @@ void TimeDerivative<Dim>::apply(
       //         logical_d_spacetime_metric(ti::i, ti::a, ti::b));
       for (size_t a = 0; a < Dim + 1; a++) {
         for (size_t b = a; b < Dim + 1; b++) {
-          mesh_velocity_dot_d_spacetime_metric.get(a, b) =
-              logical_mesh_velocity.get(0) *
+          mesh_velocity_dot_d_spacetime_metric->get(a, b) =
+              get<0>(*logical_mesh_velocity) *
               get<gr::Tags::SpacetimeMetric<DataVector, Dim>>(
                   gsl::at(logical_partial_derivs, 0))
                   .get(a, b);
           for (size_t i = 1; i < Dim; i++) {
-            mesh_velocity_dot_d_spacetime_metric.get(a, b) +=
-                logical_mesh_velocity.get(i) *
+            mesh_velocity_dot_d_spacetime_metric->get(a, b) +=
+                logical_mesh_velocity->get(i) *
                 get<gr::Tags::SpacetimeMetric<DataVector, Dim>>(
                     gsl::at(logical_partial_derivs, i))
                     .get(a, b);
@@ -375,8 +393,8 @@ void TimeDerivative<Dim>::apply(
     // + 10 subs = +10 ops
     tenex::evaluate<ti::a, ti::b>(
         mesh_velocity_dot_three_index_constraint,
-        mesh_velocity_dot_d_spacetime_metric(ti::a, ti::b) -
-            mesh_velocity_dot_phi(ti::a, ti::b));
+        (*mesh_velocity_dot_d_spacetime_metric)(ti::a, ti::b) -
+            (*mesh_velocity_dot_phi)(ti::a, ti::b));
   }
 
   const bool using_harmonic_gauge = gauge_condition.is_harmonic();
@@ -389,18 +407,17 @@ void TimeDerivative<Dim>::apply(
       *sqrt_det_spatial_metric, *inverse_spatial_metric, *da_spacetime_metric,
       *half_pi_two_normals, *half_phi_two_normals, spacetime_metric, phi, mesh,
       time, inertial_coords, inverse_jacobian, gauge_condition);
-  tnsr::A<DataVector, Dim> upper_gauge_function{};
   if (not using_harmonic_gauge) {
     // - 40 sums = 40 * (4 + 3) = -280 ops (unrelated changes)
     // + 4 sums = 4 * (4 + 3) = +28 ops (unrelated changes)
-    raise_or_lower_index(make_not_null(&upper_gauge_function), *gauge_function,
+    raise_or_lower_index(upper_gauge_function, *gauge_function,
                          *inverse_spacetime_metric);
     // Compute source function last so that we don't need to recompute any of
     // the other temporary tags.
     for (size_t nu = 0; nu < Dim + 1; ++nu) {
       gauge_constraint->get(nu) += gauge_function->get(nu);
       // +4 mults = +4 ops (unrelated changes)
-      upper_gauge_function.get(nu) *= 2.0;
+      upper_gauge_function->get(nu) *= 2.0;
     }
   }
 
@@ -417,16 +434,10 @@ void TimeDerivative<Dim>::apply(
   //       gamma2() * logical_d_spacetime_metric(ti::i, ti::a, ti::b) -
   //         logical_d_pi(ti::i, ti::a, ti::b));
 
-  Tensor<DataVector, Symmetry<2, 1, 1>,
-         index_list<SpatialIndex<Dim, UpLo::Lo, Frame::ElementLogical>,
-                    SpacetimeIndex<Dim, UpLo::Lo, Frame::Inertial>,
-                    SpacetimeIndex<Dim, UpLo::Lo, Frame::Inertial>>>
-      gamma2_logical_d_spacetime_metric_minus_logical_d_pi{};
-
   for (size_t a = 0; a < Dim + 1; a++) {
     for (size_t b = a; b < Dim + 1; b++) {
       for (size_t i = 0; i < Dim; i++) {
-        gamma2_logical_d_spacetime_metric_minus_logical_d_pi.get(i, a, b) =
+        gamma2_logical_d_spacetime_metric_minus_logical_d_pi->get(i, a, b) =
             get(gamma2) * get<gr::Tags::SpacetimeMetric<DataVector, Dim>>(
                               gsl::at(logical_partial_derivs, i))
                               .get(a, b) -
@@ -503,7 +514,7 @@ void TimeDerivative<Dim>::apply(
         if (not using_harmonic_gauge) {
           // -40 mults = -40 ops (unrelated changes)
           dt_pi->get(mu, nu) += christoffel_first_kind->get(delta, mu, nu) *
-                                upper_gauge_function.get(delta);
+                                upper_gauge_function->get(delta);
         }
         for (size_t n = 0; n < Dim; ++n) {
           // -120 mults = -120 ops (unrelated changes)
@@ -525,9 +536,9 @@ void TimeDerivative<Dim>::apply(
             pi_one_normal->get(m + 1) * phi_1_up->get(m, mu, nu);
 
         for (size_t n = 0; n < Dim; ++n) {
-          // dt_pi->get(mu, nu) -= logical_inverse_spatial_metric.get(m, n) *
+          // dt_pi->get(mu, nu) -= inverse_spatial_metric_logical_1.get(m, n) *
           //                       logical_d_phi.get(m, n, mu, nu);
-          dt_pi->get(mu, nu) -= logical_inverse_spatial_metric.get(m, n) *
+          dt_pi->get(mu, nu) -= inverse_spatial_metric_logical_1->get(m, n) *
                                 get<gh::Tags::Phi<DataVector, Dim>>(
                                     gsl::at(logical_partial_derivs, m))
                                     .get(n, mu, nu);
@@ -551,9 +562,9 @@ void TimeDerivative<Dim>::apply(
         // dt_pi->get(mu, nu) +=
         //     logical_shift.get(m) * logical_d_pi.get(m, mu, nu);
         dt_pi->get(mu, nu) +=
-            logical_shift.get(m) * get<gh::Tags::Pi<DataVector, Dim>>(
-                                       gsl::at(logical_partial_derivs, m))
-                                       .get(mu, nu);
+            logical_shift->get(m) * get<gh::Tags::Pi<DataVector, Dim>>(
+                                        gsl::at(logical_partial_derivs, m))
+                                        .get(mu, nu);
       }
     }
   }
@@ -561,7 +572,7 @@ void TimeDerivative<Dim>::apply(
   // Equation for dt_phi
   // + 30 sums = 30 * (3 + 2) = +150 ops
   tenex::evaluate<ti::i, ti::a, ti::b>(
-      dt_phi, gamma2_logical_d_spacetime_metric_minus_logical_d_pi(
+      dt_phi, (*gamma2_logical_d_spacetime_metric_minus_logical_d_pi)(
                   ti::j, ti::a, ti::b) *
                   inverse_jacobian(ti::J, ti::i));
   for (size_t i = 0; i < Dim; ++i) {
@@ -583,9 +594,9 @@ void TimeDerivative<Dim>::apply(
           // dt_phi->get(i, mu, nu) +=
           //     logical_shift.get(m) * logical_d_phi.get(m, i, mu, nu);
           dt_phi->get(i, mu, nu) +=
-              logical_shift.get(m) * get<gh::Tags::Phi<DataVector, Dim>>(
-                                         gsl::at(logical_partial_derivs, m))
-                                         .get(i, mu, nu);
+              logical_shift->get(m) * get<gh::Tags::Phi<DataVector, Dim>>(
+                                          gsl::at(logical_partial_derivs, m))
+                                          .get(i, mu, nu);
         }
       }
     }
