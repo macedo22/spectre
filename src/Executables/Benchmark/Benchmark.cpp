@@ -21,6 +21,7 @@
 #include "Domain/CoordinateMaps/ProductMaps.hpp"
 #include "Domain/CoordinateMaps/ProductMaps.tpp"
 #include "Domain/Structure/Element.hpp"
+#include "Evolution/Systems/GeneralizedHarmonic/System.hpp"
 #include "NumericalAlgorithms/LinearOperators/PartialDerivatives.tpp"
 #include "NumericalAlgorithms/Spectral/LogicalCoordinates.hpp"
 #include "NumericalAlgorithms/Spectral/Mesh.hpp"
@@ -83,6 +84,10 @@ struct Psi : db::SimpleTag {
   using type = tnsr::aa<DataVector, Dim, Frame::Grid>;
 };
 
+template <size_t Dim>
+using gh_evolution_vars_tags =
+    typename gh::System<Dim>::variables_tag::tags_list;
+
 // clang-tidy: don't pass be non-const reference
 void bench_partial_derivatives(benchmark::State& state) {  // NOLINT
   const size_t num_1d_grid_points = static_cast<size_t>(state.range(0));
@@ -98,7 +103,7 @@ void bench_partial_derivatives(benchmark::State& state) {  // NOLINT
   domain::CoordinateMap<Frame::ElementLogical, Frame::Grid, Map3d> map(
       Map3d{map1d, map1d, map1d});
 
-  using VarTags = tmpl::list<Kappa<Dim>, Psi<Dim>>;
+  using VarTags = gh_evolution_vars_tags<Dim>;
   const InverseJacobian<DataVector, Dim, Frame::ElementLogical, Frame::Grid>
       inv_jac = map.inv_jacobian(logical_coordinates(mesh));
   const auto grid_coords = map(logical_coordinates(mesh));
@@ -118,7 +123,7 @@ void bench_logical_partial_derivatives(benchmark::State& state) {  // NOLINT
   const Mesh<Dim> mesh{num_1d_grid_points, Spectral::Basis::Legendre,
                        Spectral::Quadrature::GaussLobatto};
 
-  using VarTags = tmpl::list<Kappa<Dim>, Psi<Dim>>;
+  using VarTags = gh_evolution_vars_tags<Dim>;
   Variables<VarTags> vars(mesh.number_of_grid_points(), 0.0);
 
   while (state.KeepRunning()) {
