@@ -920,6 +920,405 @@ void test_compute_dudt(const gsl::not_null<Generator*> generator) {
                                mesh_velocity_dot_three_index_constraint,
                                custom_approx_mesh_constraint);
 }
+
+template <size_t Dim, typename Generator>
+void test_og_compute_dudt(const gsl::not_null<Generator*> generator) {
+  std::uniform_real_distribution<> distribution(0.1, 1.0);
+  using gh_tags_list =
+      tmpl::list<gr::Tags::SpacetimeMetric<DataVector, Dim>,
+                 gh::Tags::Pi<DataVector, Dim>, gh::Tags::Phi<DataVector, Dim>>;
+
+  const double time = 1.3;
+  const gh::gauges::DampedHarmonic gauge_condition{
+      100., std::array{1.2, 1.5, 1.7}, std::array{2, 4, 6}};
+  const size_t num_grid_points_1d = 3;
+  const Mesh<Dim> mesh(num_grid_points_1d, Spectral::Basis::Legendre,
+                       Spectral::Quadrature::GaussLobatto);
+  const DataVector used_for_size(mesh.number_of_grid_points());
+
+  Variables<gh_tags_list> evolved_vars(mesh.number_of_grid_points());
+  fill_with_random_values(make_not_null(&evolved_vars), generator,
+                          make_not_null(&distribution));
+  // In order to satisfy the physical requirements on the spacetime metric we
+  // compute it from the helper functions that generate a physical lapse, shift,
+  // and spatial metric.
+  gr::spacetime_metric(
+      make_not_null(
+          &get<gr::Tags::SpacetimeMetric<DataVector, Dim>>(evolved_vars)),
+      TestHelpers::gr::random_lapse(generator, used_for_size),
+      TestHelpers::gr::random_shift<Dim>(generator, used_for_size),
+      TestHelpers::gr::random_spatial_metric<Dim>(generator, used_for_size));
+
+  const auto logical_coords = logical_coordinates(mesh);
+  tnsr::I<DataVector, Dim, Frame::Inertial> inertial_coords{};
+  for (size_t i = 0; i < Dim; ++i) {
+    inertial_coords.get(i) = logical_coords.get(i);
+  }
+
+  InverseJacobian<DataVector, Dim, Frame::ElementLogical, Frame::Inertial>
+      inv_jac{};
+  for (size_t i = 0; i < Dim; ++i) {
+    for (size_t j = 0; j < Dim; ++j) {
+      if (i == j) {
+        inv_jac.get(i, j) = DataVector(mesh.number_of_grid_points(), 1.0);
+      } else {
+        inv_jac.get(i, j) = DataVector(mesh.number_of_grid_points(), 0.0);
+      }
+    }
+  }
+
+  const auto partial_derivs =
+      partial_derivatives<gh_tags_list>(evolved_vars, mesh, inv_jac);
+
+  const auto& spacetime_metric =
+      get<gr::Tags::SpacetimeMetric<DataVector, Dim>>(evolved_vars);
+  const auto& phi = get<gh::Tags::Phi<DataVector, Dim>>(evolved_vars);
+  const auto& pi = get<gh::Tags::Pi<DataVector, Dim>>(evolved_vars);
+  const auto& d_spacetime_metric =
+      get<Tags::deriv<gr::Tags::SpacetimeMetric<DataVector, Dim>,
+                      tmpl::size_t<Dim>, Frame::Inertial>>(partial_derivs);
+  const auto& d_phi =
+      get<Tags::deriv<gh::Tags::Phi<DataVector, Dim>, tmpl::size_t<Dim>,
+                      Frame::Inertial>>(partial_derivs);
+  const auto& d_pi =
+      get<Tags::deriv<gh::Tags::Pi<DataVector, Dim>, tmpl::size_t<Dim>,
+                      Frame::Inertial>>(partial_derivs);
+
+  const auto gamma0 = make_with_random_values<Scalar<DataVector>>(
+      generator, make_not_null(&distribution), used_for_size);
+  const auto gamma1 = make_with_random_values<Scalar<DataVector>>(
+      generator, make_not_null(&distribution), used_for_size);
+  const auto gamma2 = make_with_random_values<Scalar<DataVector>>(
+      generator, make_not_null(&distribution), used_for_size);
+
+  // Quantities as input for reference RHS
+  const auto spatial_metric = gr::spatial_metric(spacetime_metric);
+  const auto [det_spatial_metric, inverse_spatial_metric] =
+      determinant_and_inverse<gr::Tags::DetSpatialMetric<DataVector>,
+                              gr::Tags::InverseSpatialMetric<DataVector, Dim>>(
+          spatial_metric);
+  const auto shift = gr::shift(spacetime_metric, inverse_spatial_metric);
+  const auto lapse = gr::lapse(shift, spacetime_metric);
+  const auto inverse_spacetime_metric =
+      gr::inverse_spacetime_metric(lapse, shift, inverse_spatial_metric);
+  tnsr::abb<DataVector, Dim> da_spacetime_metric;
+  gh::spacetime_derivative_of_spacetime_metric(
+      make_not_null(&da_spacetime_metric), lapse, shift, pi, phi);
+  const auto christoffel_first_kind =
+      gr::christoffel_first_kind(da_spacetime_metric);
+  const auto christoffel_second_kind = raise_or_lower_first_index(
+      christoffel_first_kind, inverse_spacetime_metric);
+  const auto trace_christoffel_first_kind =
+      trace_last_indices(christoffel_first_kind, inverse_spacetime_metric);
+  const auto normal_vector = gr::spacetime_normal_vector(lapse, shift);
+  const auto normal_one_form =
+      gr::spacetime_normal_one_form<DataVector, Dim, Frame::Inertial>(lapse);
+  const Scalar<DataVector> sqrt_det_spatial_metric{
+      sqrt(get(det_spatial_metric))};
+
+  Scalar<DataVector> half_pi_two_normals{get(lapse).size(), 0.0};
+  tnsr::i<DataVector, Dim, Frame::Inertial> half_phi_two_normals{
+      get(lapse).size(), 0.0};
+  for (size_t a = 0; a < Dim + 1; ++a) {
+    get(half_pi_two_normals) +=
+        normal_vector.get(a) * normal_vector.get(a) * pi.get(a, a);
+    for (size_t i = 0; i < Dim; ++i) {
+      half_phi_two_normals.get(i) +=
+          0.5 * normal_vector.get(a) * normal_vector.get(a) * phi.get(i, a, a);
+    }
+    for (size_t b = a + 1; b < Dim + 1; ++b) {
+      get(half_pi_two_normals) +=
+          2.0 * normal_vector.get(a) * normal_vector.get(b) * pi.get(a, b);
+      for (size_t i = 0; i < Dim; ++i) {
+        half_phi_two_normals.get(i) +=
+            normal_vector.get(a) * normal_vector.get(b) * phi.get(i, a, b);
+      }
+    }
+  }
+  get(half_pi_two_normals) *= 0.5;
+
+  tnsr::a<DataVector, Dim> gauge_h{mesh.number_of_grid_points()};
+  tnsr::ab<DataVector, Dim> d4_gauge_h{mesh.number_of_grid_points()};
+
+  gh::gauges::dispatch(
+      make_not_null(&gauge_h), make_not_null(&d4_gauge_h), lapse, shift,
+      sqrt_det_spatial_metric, inverse_spatial_metric, da_spacetime_metric,
+      half_pi_two_normals, half_phi_two_normals, spacetime_metric, phi, mesh,
+      time, inertial_coords, inv_jac, gauge_condition);
+
+  const auto [expected_dt_spacetime_metric, expected_dt_pi, expected_dt_phi] =
+      gh_rhs_reference_impl(
+          spacetime_metric, pi, phi, d_spacetime_metric, d_pi, d_phi, gamma0,
+          gamma1, gamma2, gauge_h, d4_gauge_h, lapse, shift,
+          inverse_spatial_metric, inverse_spacetime_metric,
+          trace_christoffel_first_kind, christoffel_first_kind,
+          christoffel_second_kind, normal_vector, normal_one_form);
+
+  tnsr::aa<DataVector, Dim, Frame::Inertial> dt_spacetime_metric(
+      mesh.number_of_grid_points());
+  tnsr::aa<DataVector, Dim, Frame::Inertial> dt_pi(
+      mesh.number_of_grid_points());
+  tnsr::iaa<DataVector, Dim, Frame::Inertial> dt_phi(
+      mesh.number_of_grid_points());
+
+  Variables<tmpl::list<
+      gh::ConstraintDamping::Tags::ConstraintGamma1,
+      gh::ConstraintDamping::Tags::ConstraintGamma2,
+      gh::Tags::GaugeH<DataVector, Dim>,
+      gh::Tags::SpacetimeDerivGaugeH<DataVector, Dim>, gh::Tags::Gamma1Gamma2,
+      gh::Tags::HalfPiTwoNormals, gh::Tags::NormalDotOneIndexConstraint,
+      gh::Tags::Gamma1Plus1, gh::Tags::PiOneNormal<Dim>,
+      gh::Tags::GaugeConstraint<DataVector, Dim>,
+      gh::Tags::HalfPhiTwoNormals<Dim>,
+      gh::Tags::ShiftDotThreeIndexConstraint<Dim>,
+      gh::Tags::MeshVelocityDotThreeIndexConstraint<Dim>,
+      gh::Tags::PhiOneNormal<Dim>, gh::Tags::PiSecondIndexUp<Dim>,
+      gh::Tags::ThreeIndexConstraint<DataVector, Dim>,
+      gh::Tags::PhiFirstIndexUp<Dim>, gh::Tags::PhiThirdIndexUp<Dim>,
+      gh::Tags::SpacetimeChristoffelFirstKindThirdIndexUp<Dim>,
+      gr::Tags::Lapse<DataVector>, gr::Tags::Shift<DataVector, Dim>,
+      gr::Tags::InverseSpatialMetric<DataVector, Dim>,
+      gr::Tags::DetSpatialMetric<DataVector>,
+      gr::Tags::SqrtDetSpatialMetric<DataVector>,
+      gr::Tags::InverseSpacetimeMetric<DataVector, Dim>,
+      gr::Tags::SpacetimeChristoffelFirstKind<DataVector, Dim>,
+      gr::Tags::SpacetimeChristoffelSecondKind<DataVector, Dim>,
+      gr::Tags::TraceSpacetimeChristoffelFirstKind<DataVector, Dim>,
+      gr::Tags::SpacetimeNormalVector<DataVector, Dim>>>
+      buffer(mesh.number_of_grid_points());
+
+  gh::OgTimeDerivative<Dim>::apply(
+      make_not_null(&dt_spacetime_metric), make_not_null(&dt_pi),
+      make_not_null(&dt_phi),
+      make_not_null(
+          &get<gh::ConstraintDamping::Tags::ConstraintGamma1>(buffer)),
+      make_not_null(
+          &get<gh::ConstraintDamping::Tags::ConstraintGamma2>(buffer)),
+      make_not_null(&get<gh::Tags::GaugeH<DataVector, Dim>>(buffer)),
+      make_not_null(
+          &get<gh::Tags::SpacetimeDerivGaugeH<DataVector, Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::Gamma1Gamma2>(buffer)),
+      make_not_null(&get<gh::Tags::HalfPiTwoNormals>(buffer)),
+      make_not_null(&get<gh::Tags::NormalDotOneIndexConstraint>(buffer)),
+      make_not_null(&get<gh::Tags::Gamma1Plus1>(buffer)),
+      make_not_null(&get<gh::Tags::PiOneNormal<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::GaugeConstraint<DataVector, Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::HalfPhiTwoNormals<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::ShiftDotThreeIndexConstraint<Dim>>(buffer)),
+      make_not_null(
+          &get<gh::Tags::MeshVelocityDotThreeIndexConstraint<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::PhiOneNormal<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::PiSecondIndexUp<Dim>>(buffer)),
+      make_not_null(
+          &get<gh::Tags::ThreeIndexConstraint<DataVector, Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::PhiFirstIndexUp<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::PhiThirdIndexUp<Dim>>(buffer)),
+      make_not_null(
+          &get<gh::Tags::SpacetimeChristoffelFirstKindThirdIndexUp<Dim>>(
+              buffer)),
+      make_not_null(&get<gr::Tags::Lapse<DataVector>>(buffer)),
+      make_not_null(&get<gr::Tags::Shift<DataVector, Dim>>(buffer)),
+      make_not_null(
+          &get<gr::Tags::InverseSpatialMetric<DataVector, Dim>>(buffer)),
+      make_not_null(&get<gr::Tags::DetSpatialMetric<DataVector>>(buffer)),
+      make_not_null(&get<gr::Tags::SqrtDetSpatialMetric<DataVector>>(buffer)),
+      make_not_null(
+          &get<gr::Tags::InverseSpacetimeMetric<DataVector, Dim>>(buffer)),
+      make_not_null(
+          &get<gr::Tags::SpacetimeChristoffelFirstKind<DataVector, Dim>>(
+              buffer)),
+      make_not_null(
+          &get<gr::Tags::SpacetimeChristoffelSecondKind<DataVector, Dim>>(
+              buffer)),
+      make_not_null(
+          &get<gr::Tags::TraceSpacetimeChristoffelFirstKind<DataVector, Dim>>(
+              buffer)),
+      make_not_null(
+          &get<gr::Tags::SpacetimeNormalVector<DataVector, Dim>>(buffer)),
+      d_spacetime_metric, d_pi, d_phi, spacetime_metric, pi, phi, gamma0,
+      gamma1, gamma2, gauge_condition, mesh, time, inertial_coords, inv_jac,
+      {});
+
+  CHECK_ITERABLE_APPROX(
+      get<gh::ConstraintDamping::Tags::ConstraintGamma1>(buffer), gamma1);
+  CHECK_ITERABLE_APPROX(
+      get<gh::ConstraintDamping::Tags::ConstraintGamma2>(buffer), gamma2);
+  CHECK_ITERABLE_APPROX((get<gh::Tags::GaugeH<DataVector, Dim>>(buffer)),
+                        gauge_h);
+  Approx custom_approx = Approx::custom().epsilon(1.e-10);
+  CHECK_ITERABLE_CUSTOM_APPROX(
+      (get<gh::Tags::SpacetimeDerivGaugeH<DataVector, Dim>>(buffer)),
+      d4_gauge_h, custom_approx);
+
+  CHECK_ITERABLE_CUSTOM_APPROX(expected_dt_spacetime_metric,
+                               dt_spacetime_metric, custom_approx);
+  CHECK_ITERABLE_CUSTOM_APPROX(expected_dt_pi, dt_pi, custom_approx);
+  CHECK_ITERABLE_CUSTOM_APPROX(expected_dt_phi, dt_phi, custom_approx);
+
+  // Test the moving mesh damping terms:
+  // 1. Compute 3-index constraint from existing d_spacetime_metric, phi
+  // 2. Generate random mesh velocity
+  // 3. Compute dot product of shift with 3-index constraint and
+  //    mesh velocity with 3-index constraint
+  // 4. Recompute the time derivatives without moving mesh, using the value of
+  //    the dot product of the shift with the 3-index constraint computed above
+  // 5. Compute the same time derivatives as in step 4, except include the
+  //    moving mesh terms.
+  // 6. Compute the difference of the result from step 5
+  //    - the result from step 4.
+  // 7. Check that the differences are the expected mesh-velocity damping terms.
+  const tnsr::iaa<DataVector, Dim, Frame::Inertial>& three_index_con =
+      ::gh::three_index_constraint(d_spacetime_metric, phi);
+  tnsr::I<DataVector, Dim, Frame::Inertial> mesh_velocity =
+      TestHelpers::gr::random_shift<Dim>(generator, used_for_size);
+  auto shift_dot_three_index_constraint =
+      make_with_value<tnsr::aa<DataVector, Dim, Frame::Inertial>>(used_for_size,
+                                                                  0.0);
+  auto mesh_velocity_dot_three_index_constraint =
+      make_with_value<tnsr::aa<DataVector, Dim, Frame::Inertial>>(used_for_size,
+                                                                  0.0);
+
+  for (size_t a = 0; a < Dim + 1; ++a) {
+    for (size_t b = a; b < Dim + 1; ++b) {
+      for (size_t i = 0; i < Dim; ++i) {
+        shift_dot_three_index_constraint.get(a, b) +=
+            shift.get(i) * three_index_con.get(i, a, b);
+        mesh_velocity_dot_three_index_constraint.get(a, b) +=
+            mesh_velocity.get(i) * three_index_con.get(i, a, b);
+      }
+    }
+  }
+
+  gh::OgTimeDerivative<Dim>::apply(
+      make_not_null(&dt_spacetime_metric), make_not_null(&dt_pi),
+      make_not_null(&dt_phi),
+      make_not_null(
+          &get<gh::ConstraintDamping::Tags::ConstraintGamma1>(buffer)),
+      make_not_null(
+          &get<gh::ConstraintDamping::Tags::ConstraintGamma2>(buffer)),
+      make_not_null(&get<gh::Tags::GaugeH<DataVector, Dim>>(buffer)),
+      make_not_null(
+          &get<gh::Tags::SpacetimeDerivGaugeH<DataVector, Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::Gamma1Gamma2>(buffer)),
+      make_not_null(&get<gh::Tags::HalfPiTwoNormals>(buffer)),
+      make_not_null(&get<gh::Tags::NormalDotOneIndexConstraint>(buffer)),
+      make_not_null(&get<gh::Tags::Gamma1Plus1>(buffer)),
+      make_not_null(&get<gh::Tags::PiOneNormal<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::GaugeConstraint<DataVector, Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::HalfPhiTwoNormals<Dim>>(buffer)),
+      make_not_null(&shift_dot_three_index_constraint),
+      make_not_null(&mesh_velocity_dot_three_index_constraint),
+      make_not_null(&get<gh::Tags::PhiOneNormal<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::PiSecondIndexUp<Dim>>(buffer)),
+      make_not_null(
+          &get<gh::Tags::ThreeIndexConstraint<DataVector, Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::PhiFirstIndexUp<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::PhiThirdIndexUp<Dim>>(buffer)),
+      make_not_null(
+          &get<gh::Tags::SpacetimeChristoffelFirstKindThirdIndexUp<Dim>>(
+              buffer)),
+      make_not_null(&get<gr::Tags::Lapse<DataVector>>(buffer)),
+      make_not_null(&get<gr::Tags::Shift<DataVector, Dim>>(buffer)),
+      make_not_null(
+          &get<gr::Tags::InverseSpatialMetric<DataVector, Dim>>(buffer)),
+      make_not_null(&get<gr::Tags::DetSpatialMetric<DataVector>>(buffer)),
+      make_not_null(&get<gr::Tags::SqrtDetSpatialMetric<DataVector>>(buffer)),
+      make_not_null(
+          &get<gr::Tags::InverseSpacetimeMetric<DataVector, Dim>>(buffer)),
+      make_not_null(
+          &get<gr::Tags::SpacetimeChristoffelFirstKind<DataVector, Dim>>(
+              buffer)),
+      make_not_null(
+          &get<gr::Tags::SpacetimeChristoffelSecondKind<DataVector, Dim>>(
+              buffer)),
+      make_not_null(
+          &get<gr::Tags::TraceSpacetimeChristoffelFirstKind<DataVector, Dim>>(
+              buffer)),
+      make_not_null(
+          &get<gr::Tags::SpacetimeNormalVector<DataVector, Dim>>(buffer)),
+      d_spacetime_metric, d_pi, d_phi, spacetime_metric, pi, phi, gamma0,
+      gamma1, gamma2, gauge_condition, mesh, time, inertial_coords, inv_jac,
+      {});
+
+  tnsr::aa<DataVector, Dim, Frame::Inertial> dt_spacetime_metric_moving_mesh(
+      mesh.number_of_grid_points());
+  tnsr::aa<DataVector, Dim, Frame::Inertial> dt_pi_moving_mesh(
+      mesh.number_of_grid_points());
+  tnsr::iaa<DataVector, Dim, Frame::Inertial> dt_phi_moving_mesh(
+      mesh.number_of_grid_points());
+  gh::OgTimeDerivative<Dim>::apply(
+      make_not_null(&dt_spacetime_metric_moving_mesh),
+      make_not_null(&dt_pi_moving_mesh), make_not_null(&dt_phi_moving_mesh),
+      make_not_null(
+          &get<gh::ConstraintDamping::Tags::ConstraintGamma1>(buffer)),
+      make_not_null(
+          &get<gh::ConstraintDamping::Tags::ConstraintGamma2>(buffer)),
+      make_not_null(&get<gh::Tags::GaugeH<DataVector, Dim>>(buffer)),
+      make_not_null(
+          &get<gh::Tags::SpacetimeDerivGaugeH<DataVector, Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::Gamma1Gamma2>(buffer)),
+      make_not_null(&get<gh::Tags::HalfPiTwoNormals>(buffer)),
+      make_not_null(&get<gh::Tags::NormalDotOneIndexConstraint>(buffer)),
+      make_not_null(&get<gh::Tags::Gamma1Plus1>(buffer)),
+      make_not_null(&get<gh::Tags::PiOneNormal<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::GaugeConstraint<DataVector, Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::HalfPhiTwoNormals<Dim>>(buffer)),
+      make_not_null(&shift_dot_three_index_constraint),
+      make_not_null(&mesh_velocity_dot_three_index_constraint),
+      make_not_null(&get<gh::Tags::PhiOneNormal<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::PiSecondIndexUp<Dim>>(buffer)),
+      make_not_null(
+          &get<gh::Tags::ThreeIndexConstraint<DataVector, Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::PhiFirstIndexUp<Dim>>(buffer)),
+      make_not_null(&get<gh::Tags::PhiThirdIndexUp<Dim>>(buffer)),
+      make_not_null(
+          &get<gh::Tags::SpacetimeChristoffelFirstKindThirdIndexUp<Dim>>(
+              buffer)),
+      make_not_null(&get<gr::Tags::Lapse<DataVector>>(buffer)),
+      make_not_null(&get<gr::Tags::Shift<DataVector, Dim>>(buffer)),
+      make_not_null(
+          &get<gr::Tags::InverseSpatialMetric<DataVector, Dim>>(buffer)),
+      make_not_null(&get<gr::Tags::DetSpatialMetric<DataVector>>(buffer)),
+      make_not_null(&get<gr::Tags::SqrtDetSpatialMetric<DataVector>>(buffer)),
+      make_not_null(
+          &get<gr::Tags::InverseSpacetimeMetric<DataVector, Dim>>(buffer)),
+      make_not_null(
+          &get<gr::Tags::SpacetimeChristoffelFirstKind<DataVector, Dim>>(
+              buffer)),
+      make_not_null(
+          &get<gr::Tags::SpacetimeChristoffelSecondKind<DataVector, Dim>>(
+              buffer)),
+      make_not_null(
+          &get<gr::Tags::TraceSpacetimeChristoffelFirstKind<DataVector, Dim>>(
+              buffer)),
+      make_not_null(
+          &get<gr::Tags::SpacetimeNormalVector<DataVector, Dim>>(buffer)),
+      d_spacetime_metric, d_pi, d_phi, spacetime_metric, pi, phi, gamma0,
+      gamma1, gamma2, gauge_condition, mesh, time, inertial_coords, inv_jac,
+      std::optional{mesh_velocity});
+
+  for (size_t a = 0; a < Dim + 1; ++a) {
+    for (size_t b = a; b < Dim + 1; ++b) {
+      dt_spacetime_metric_moving_mesh.get(a, b) -=
+          dt_spacetime_metric.get(a, b);
+      dt_pi_moving_mesh.get(a, b) -= dt_pi.get(a, b);
+      mesh_velocity_dot_three_index_constraint.get(a, b) *= get(gamma1);
+    }
+  }
+  Approx custom_approx_mesh_constraint =
+      Approx::custom().epsilon(1.e-9).scale(1.0);
+  CHECK_ITERABLE_CUSTOM_APPROX(dt_spacetime_metric_moving_mesh,
+                               mesh_velocity_dot_three_index_constraint,
+                               custom_approx_mesh_constraint);
+  for (size_t a = 0; a < Dim + 1; ++a) {
+    for (size_t b = a; b < Dim + 1; ++b) {
+      mesh_velocity_dot_three_index_constraint.get(a, b) *= get(gamma2);
+    }
+  }
+  CHECK_ITERABLE_CUSTOM_APPROX(dt_pi_moving_mesh,
+                               mesh_velocity_dot_three_index_constraint,
+                               custom_approx_mesh_constraint);
+}
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.Evolution.Systems.GeneralizedHarmonic.DuDt",
@@ -930,4 +1329,8 @@ SPECTRE_TEST_CASE("Unit.Evolution.Systems.GeneralizedHarmonic.DuDt",
   test_compute_dudt<1>(make_not_null(&generator));
   test_compute_dudt<2>(make_not_null(&generator));
   test_compute_dudt<3>(make_not_null(&generator));
+
+  test_og_compute_dudt<1>(make_not_null(&generator));
+  test_og_compute_dudt<2>(make_not_null(&generator));
+  test_og_compute_dudt<3>(make_not_null(&generator));
 }
