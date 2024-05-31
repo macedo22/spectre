@@ -217,14 +217,11 @@ void TimeDerivative<Dim>::apply(
   // Compute the part of the dt_spacetime_metric equation that doesn't involve
   // constraints so we can use it for da_spacetime_metric to compute Christoffel
   // symbols.
-  for (size_t mu = 0; mu < Dim + 1; ++mu) {
-    for (size_t nu = mu; nu < Dim + 1; ++nu) {
-      // - 10 mults = -10 ops
-      // - 10 sums = 10 * (3 + 3) = -60 ops
-      // + 10 add + mults = 10 * 2 = +20 ops
-      dt_spacetime_metric->get(mu, nu) =
-          -get(*lapse) * pi.get(mu, nu) + shift_dot_phi->get(mu, nu);
-    }
+  // - 10 mults = -10 ops
+  // - 10 sums = 10 * (3 + 3) = -60 ops
+  // + 10 add + mults = 10 * 2 = +20 ops
+  for (size_t i = 0; i < dt_spacetime_metric->size(); i++) {
+    (*dt_spacetime_metric)[i] = -get(*lapse) * pi[i] + (*shift_dot_phi)[i];
   }
 
   const std::optional da_spacetime_metric{tnsr::abb<DataVector, Dim>{}};
@@ -357,7 +354,6 @@ void TimeDerivative<Dim>::apply(
                                 (*shift_dot_d_spacetime_metric)(ti::a, ti::b) -
                                     (*shift_dot_phi)(ti::a, ti::b));
   if (mesh_velocity.has_value()) {
-    if (mesh_velocity.has_value()) {
       // + 10 sums = 10 * (3 + 2) = +50 ops
       tenex::evaluate<ti::a, ti::b>(
           mesh_velocity_dot_phi,
@@ -382,7 +378,6 @@ void TimeDerivative<Dim>::apply(
                     .get(a, b);
           }
         }
-      }
     }
     // + 10 subs = +10 ops
     tenex::evaluate<ti::a, ti::b>(
@@ -425,10 +420,9 @@ void TimeDerivative<Dim>::apply(
   //     tenex::evaluate<ti::i, ti::a, ti::b>(
   //       gamma2() * logical_d_spacetime_metric(ti::i, ti::a, ti::b) -
   //         logical_d_pi(ti::i, ti::a, ti::b));
-
-  for (size_t a = 0; a < Dim + 1; a++) {
-    for (size_t b = a; b < Dim + 1; b++) {
-      for (size_t i = 0; i < Dim; i++) {
+  for (size_t i = 0; i < Dim; i++) {
+    for (size_t a = 0; a < Dim + 1; a++) {
+      for (size_t b = a; b < Dim + 1; b++) {
         gamma2_logical_d_spacetime_metric_minus_logical_d_pi->get(i, a, b) =
             get(gamma2) * get<gr::Tags::SpacetimeMetric<DataVector, Dim>>(
                               gsl::at(logical_partial_derivs, i))
