@@ -956,8 +956,8 @@ void bench_time_derivative(benchmark::State& state) {  // NOLINT
 }
 
 // Each DataVector case is run with each number of grid points
-constexpr std::array<long int, 8> num_1d_grid_point_values = {2, 4,  5,  8,
-                                                              9, 10, 15, 20};
+constexpr std::array<long int, 19> num_1d_grid_point_values = {
+    2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
 
 void run_benchmarks() {
   const std::string partial_derivatives_benchmark_name =
@@ -971,7 +971,18 @@ void run_benchmarks() {
       ->Arg(num_1d_grid_point_values[4])
       ->Arg(num_1d_grid_point_values[5])
       ->Arg(num_1d_grid_point_values[6])
-      ->Arg(num_1d_grid_point_values[7]);
+      ->Arg(num_1d_grid_point_values[7])
+      ->Arg(num_1d_grid_point_values[8])
+      ->Arg(num_1d_grid_point_values[9])
+      ->Arg(num_1d_grid_point_values[10])
+      ->Arg(num_1d_grid_point_values[11])
+      ->Arg(num_1d_grid_point_values[12])
+      ->Arg(num_1d_grid_point_values[13])
+      ->Arg(num_1d_grid_point_values[14])
+      ->Arg(num_1d_grid_point_values[15])
+      ->Arg(num_1d_grid_point_values[16])
+      ->Arg(num_1d_grid_point_values[17])
+      ->Arg(num_1d_grid_point_values[18]);
 
   const std::string logical_partial_derivatives_benchmark_name =
       "logical_partial_derivatives/3D";
@@ -984,7 +995,18 @@ void run_benchmarks() {
       ->Arg(num_1d_grid_point_values[4])
       ->Arg(num_1d_grid_point_values[5])
       ->Arg(num_1d_grid_point_values[6])
-      ->Arg(num_1d_grid_point_values[7]);
+      ->Arg(num_1d_grid_point_values[7])
+      ->Arg(num_1d_grid_point_values[8])
+      ->Arg(num_1d_grid_point_values[9])
+      ->Arg(num_1d_grid_point_values[10])
+      ->Arg(num_1d_grid_point_values[11])
+      ->Arg(num_1d_grid_point_values[12])
+      ->Arg(num_1d_grid_point_values[13])
+      ->Arg(num_1d_grid_point_values[14])
+      ->Arg(num_1d_grid_point_values[15])
+      ->Arg(num_1d_grid_point_values[16])
+      ->Arg(num_1d_grid_point_values[17])
+      ->Arg(num_1d_grid_point_values[18]);
 
   const std::string og_time_derivative_benchmark_name = "og_time_derivative/3D";
   BENCHMARK(bench_og_time_derivative)
@@ -996,7 +1018,18 @@ void run_benchmarks() {
       ->Arg(num_1d_grid_point_values[4])
       ->Arg(num_1d_grid_point_values[5])
       ->Arg(num_1d_grid_point_values[6])
-      ->Arg(num_1d_grid_point_values[7]);
+      ->Arg(num_1d_grid_point_values[7])
+      ->Arg(num_1d_grid_point_values[8])
+      ->Arg(num_1d_grid_point_values[9])
+      ->Arg(num_1d_grid_point_values[10])
+      ->Arg(num_1d_grid_point_values[11])
+      ->Arg(num_1d_grid_point_values[12])
+      ->Arg(num_1d_grid_point_values[13])
+      ->Arg(num_1d_grid_point_values[14])
+      ->Arg(num_1d_grid_point_values[15])
+      ->Arg(num_1d_grid_point_values[16])
+      ->Arg(num_1d_grid_point_values[17])
+      ->Arg(num_1d_grid_point_values[18]);
 
   const std::string time_derivative_benchmark_name = "time_derivative/3D";
   BENCHMARK(bench_time_derivative)
@@ -1008,7 +1041,18 @@ void run_benchmarks() {
       ->Arg(num_1d_grid_point_values[4])
       ->Arg(num_1d_grid_point_values[5])
       ->Arg(num_1d_grid_point_values[6])
-      ->Arg(num_1d_grid_point_values[7]);
+      ->Arg(num_1d_grid_point_values[7])
+      ->Arg(num_1d_grid_point_values[8])
+      ->Arg(num_1d_grid_point_values[9])
+      ->Arg(num_1d_grid_point_values[10])
+      ->Arg(num_1d_grid_point_values[11])
+      ->Arg(num_1d_grid_point_values[12])
+      ->Arg(num_1d_grid_point_values[13])
+      ->Arg(num_1d_grid_point_values[14])
+      ->Arg(num_1d_grid_point_values[15])
+      ->Arg(num_1d_grid_point_values[16])
+      ->Arg(num_1d_grid_point_values[17])
+      ->Arg(num_1d_grid_point_values[18]);
 }
 // BENCHMARK(bench_all_gradient);  // NOLINT
 }  // namespace
