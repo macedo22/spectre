@@ -995,7 +995,7 @@ constexpr std::array<std::array<size_t, 3>, num_cases> extents{{
     {{16, 8, 8}},    // 1024
     {{16, 16, 8}},   // 2048
     {{16, 16, 16}},  // 4096
-    {{32, 16, 16}}   // 8192
+    {{20, 20, 20}}   // 8000
 }};
 
 constexpr std::array<long int, num_cases> num_3d_grid_point_values{{
@@ -1009,7 +1009,7 @@ constexpr std::array<long int, num_cases> num_3d_grid_point_values{{
     extents[7][0] * extents[7][1] * extents[7][2],    // 1024
     extents[8][0] * extents[8][1] * extents[8][2],    // 2048
     extents[9][0] * extents[9][1] * extents[9][2],    // 4096
-    extents[10][0] * extents[10][1] * extents[10][2]  // 8192
+    extents[10][0] * extents[10][1] * extents[10][2]  // 8000
 }};
 
 void run_benchmarks() {
