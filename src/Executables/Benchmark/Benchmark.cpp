@@ -5,6 +5,7 @@
 #pragma GCC diagnostic ignored "-Wredundant-decls"
 #include <array>
 #include <benchmark.h>
+#include <cassert>
 #pragma GCC diagnostic pop
 #include <charm++.h>
 #include <cmath>
@@ -93,6 +94,8 @@ namespace {
 }  // namespace
 
 namespace {
+#define assertm(exp, msg) assert(((void)msg, exp))
+
 // In this anonymous namespace is an example of microbenchmarking the
 // all_gradient routine for the GH system
 using DataType = DataVector;
@@ -171,7 +174,7 @@ struct BenchmarkImpl {
   using gamma1_type = Scalar<DataType>;
   using gamma2_type = Scalar<DataType>;
   using gauge_condition_type = gh::gauges::DampedHarmonic;
-  using mesh_type = Mesh<Dim>;
+  //   using mesh_type = Mesh<Dim>;
   using inertial_coords_type = tnsr::I<DataVector, Dim, Frame::Inertial>;
   using inverse_jacobian_type =
       InverseJacobian<DataVector, Dim, Frame::ElementLogical, Frame::Inertial>;
@@ -200,10 +203,15 @@ struct BenchmarkImpl {
 
 // clang-tidy: don't pass be non-const reference
 void bench_partial_derivatives(benchmark::State& state) {  // NOLINT
-  const size_t num_1d_grid_points = static_cast<size_t>(state.range(0));
   constexpr size_t Dim = 3;
-  // const size_t num_grid_points = pow(num_1d_grid_points, Dim);
-  const Mesh<Dim> mesh{num_1d_grid_points, Spectral::Basis::Legendre,
+  const std::array<size_t, Dim> extents = {
+      {static_cast<size_t>(state.range(1)), static_cast<size_t>(state.range(2)),
+       static_cast<size_t>(state.range(3))}};
+  const size_t num_3d_points = static_cast<size_t>(state.range(0));
+  assertm(num_3d_points == extents[0] * extents[1] * extents[2],
+          "Num 3D points does not match the product of the three 1D points");
+  (void)num_3d_points;
+  const Mesh<Dim> mesh{extents, Spectral::Basis::Legendre,
                        Spectral::Quadrature::GaussLobatto};
   domain::CoordinateMaps::Affine map1d(-1.0, 1.0, -1.0, 1.0);
   using Map3d =
@@ -227,10 +235,15 @@ void bench_partial_derivatives(benchmark::State& state) {  // NOLINT
 
 // clang-tidy: don't pass be non-const reference
 void bench_logical_partial_derivatives(benchmark::State& state) {  // NOLINT
-  const size_t num_1d_grid_points = static_cast<size_t>(state.range(0));
   constexpr size_t Dim = 3;
-  // const size_t num_grid_points = pow(num_1d_grid_points, Dim);
-  const Mesh<Dim> mesh{num_1d_grid_points, Spectral::Basis::Legendre,
+  const std::array<size_t, Dim> extents = {
+      {static_cast<size_t>(state.range(1)), static_cast<size_t>(state.range(2)),
+       static_cast<size_t>(state.range(3))}};
+  const size_t num_3d_points = static_cast<size_t>(state.range(0));
+  assertm(num_3d_points == extents[0] * extents[1] * extents[2],
+          "Num 3D points does not match the product of the three 1D points");
+  (void)num_3d_points;
+  const Mesh<Dim> mesh{extents, Spectral::Basis::Legendre,
                        Spectral::Quadrature::GaussLobatto};
 
   using VarTags = gh_evolution_vars_tags<Dim>;
@@ -305,14 +318,21 @@ void bench_og_time_derivative(benchmark::State& state) {  // NOLINT
   using gamma1_type = typename BenchmarkImpl::gamma1_type;
   using gamma2_type = typename BenchmarkImpl::gamma2_type;
   using gauge_condition_type = typename BenchmarkImpl::gauge_condition_type;
-  using mesh_type = typename BenchmarkImpl::mesh_type;
+  //   using mesh_type = typename BenchmarkImpl::mesh_type;
   using inertial_coords_type = typename BenchmarkImpl::inertial_coords_type;
   using inverse_jacobian_type = typename BenchmarkImpl::inverse_jacobian_type;
   using mesh_velocity_type = typename BenchmarkImpl::mesh_velocity_type;
 
-  const size_t num_1d_grid_points = static_cast<size_t>(state.range(0));
-  const mesh_type mesh{num_1d_grid_points, basis, quadrature};
-  const size_t num_grid_points = pow(num_1d_grid_points, 3);
+  const std::array<size_t, Dim> extents = {
+      {static_cast<size_t>(state.range(1)), static_cast<size_t>(state.range(2)),
+       static_cast<size_t>(state.range(3))}};
+  const size_t num_3d_points = static_cast<size_t>(state.range(0));
+  assertm(num_3d_points == extents[0] * extents[1] * extents[2],
+          "Num 3D points does not match the product of the three 1D points");
+  (void)num_3d_points;
+  const Mesh<Dim> mesh{extents, Spectral::Basis::Legendre,
+                       Spectral::Quadrature::GaussLobatto};
+  const size_t num_grid_points = mesh.number_of_grid_points();
   const DataType used_for_size = DataVector(num_grid_points, 0.0);
   std::uniform_real_distribution<> distribution(0.1, 1.0);
   const gauge_condition_type gauge_condition{};
@@ -645,14 +665,21 @@ void bench_time_derivative(benchmark::State& state) {  // NOLINT
   using gamma1_type = typename BenchmarkImpl::gamma1_type;
   using gamma2_type = typename BenchmarkImpl::gamma2_type;
   using gauge_condition_type = typename BenchmarkImpl::gauge_condition_type;
-  using mesh_type = typename BenchmarkImpl::mesh_type;
+  //   using mesh_type = typename BenchmarkImpl::mesh_type;
   using inertial_coords_type = typename BenchmarkImpl::inertial_coords_type;
   using inverse_jacobian_type = typename BenchmarkImpl::inverse_jacobian_type;
   using mesh_velocity_type = typename BenchmarkImpl::mesh_velocity_type;
 
-  const size_t num_1d_grid_points = static_cast<size_t>(state.range(0));
-  const mesh_type mesh{num_1d_grid_points, basis, quadrature};
-  const size_t num_grid_points = pow(num_1d_grid_points, 3);
+  const std::array<size_t, Dim> extents = {
+      {static_cast<size_t>(state.range(1)), static_cast<size_t>(state.range(2)),
+       static_cast<size_t>(state.range(3))}};
+  const size_t num_3d_points = static_cast<size_t>(state.range(0));
+  assertm(num_3d_points == extents[0] * extents[1] * extents[2],
+          "Num 3D points does not match the product of the three 1D points");
+  (void)num_3d_points;
+  const Mesh<Dim> mesh{extents, Spectral::Basis::Legendre,
+                       Spectral::Quadrature::GaussLobatto};
+  const size_t num_grid_points = mesh.number_of_grid_points();
   const DataType used_for_size = DataVector(num_grid_points, 0.0);
   std::uniform_real_distribution<> distribution(0.1, 1.0);
   const gauge_condition_type gauge_condition{};
@@ -956,103 +983,163 @@ void bench_time_derivative(benchmark::State& state) {  // NOLINT
 }
 
 // Each DataVector case is run with each number of grid points
-constexpr std::array<long int, 19> num_1d_grid_point_values = {
-    2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
+constexpr size_t num_cases = 13;
+constexpr std::array<std::array<size_t, 3>, num_cases> extents{{
+    {{2, 1, 1}},     // 2
+    {{2, 2, 1}},     // 4
+    {{2, 2, 2}},     // 8
+    {{4, 2, 2}},     // 16
+    {{4, 4, 2}},     // 32
+    {{4, 4, 4}},     // 64
+    {{8, 4, 4}},     // 128
+    {{8, 8, 4}},     // 256
+    {{8, 8, 8}},     // 512
+    {{16, 8, 8}},    // 1024
+    {{16, 16, 8}},   // 2048
+    {{16, 16, 16}},  // 4096
+    {{32, 16, 16}}   // 8192
+}};
+
+constexpr std::array<long int, num_cases> num_3d_grid_point_values{{
+    extents[0][0] * extents[0][1] * extents[0][2],     // 2
+    extents[1][0] * extents[1][1] * extents[1][2],     // 4
+    extents[2][0] * extents[2][1] * extents[2][2],     // 8
+    extents[3][0] * extents[3][1] * extents[3][2],     // 16
+    extents[4][0] * extents[4][1] * extents[4][2],     // 32
+    extents[5][0] * extents[5][1] * extents[5][2],     // 64
+    extents[6][0] * extents[6][1] * extents[6][2],     // 128
+    extents[7][0] * extents[7][1] * extents[7][2],     // 256
+    extents[8][0] * extents[8][1] * extents[8][2],     // 512
+    extents[9][0] * extents[9][1] * extents[9][2],     // 1024
+    extents[10][0] * extents[10][1] * extents[10][2],  // 2048
+    extents[11][0] * extents[11][1] * extents[11][2],  // 4096
+    extents[12][0] * extents[12][1] * extents[12][2]   // 8192
+}};
 
 void run_benchmarks() {
   const std::string partial_derivatives_benchmark_name =
-      "partial_derivatives/3D";
+      "partial_derivatives/3D/num_3d_points";
   BENCHMARK(bench_partial_derivatives)
       ->Name(partial_derivatives_benchmark_name)
-      ->Arg(num_1d_grid_point_values[0])
-      ->Arg(num_1d_grid_point_values[1])
-      ->Arg(num_1d_grid_point_values[2])
-      ->Arg(num_1d_grid_point_values[3])
-      ->Arg(num_1d_grid_point_values[4])
-      ->Arg(num_1d_grid_point_values[5])
-      ->Arg(num_1d_grid_point_values[6])
-      ->Arg(num_1d_grid_point_values[7])
-      ->Arg(num_1d_grid_point_values[8])
-      ->Arg(num_1d_grid_point_values[9])
-      ->Arg(num_1d_grid_point_values[10])
-      ->Arg(num_1d_grid_point_values[11])
-      ->Arg(num_1d_grid_point_values[12])
-      ->Arg(num_1d_grid_point_values[13])
-      ->Arg(num_1d_grid_point_values[14])
-      ->Arg(num_1d_grid_point_values[15])
-      ->Arg(num_1d_grid_point_values[16])
-      ->Arg(num_1d_grid_point_values[17])
-      ->Arg(num_1d_grid_point_values[18]);
+      ->Args({num_3d_grid_point_values[0], extents[0][0], extents[0][1],
+              extents[0][2]})
+      ->Args({num_3d_grid_point_values[1], extents[1][0], extents[1][1],
+              extents[1][2]})
+      ->Args({num_3d_grid_point_values[2], extents[2][0], extents[2][1],
+              extents[2][2]})
+      ->Args({num_3d_grid_point_values[3], extents[3][0], extents[3][1],
+              extents[3][2]})
+      ->Args({num_3d_grid_point_values[4], extents[4][0], extents[4][1],
+              extents[4][2]})
+      ->Args({num_3d_grid_point_values[5], extents[5][0], extents[5][1],
+              extents[5][2]})
+      ->Args({num_3d_grid_point_values[6], extents[6][0], extents[6][1],
+              extents[6][2]})
+      ->Args({num_3d_grid_point_values[7], extents[7][0], extents[7][1],
+              extents[7][2]})
+      ->Args({num_3d_grid_point_values[8], extents[8][0], extents[8][1],
+              extents[8][2]})
+      ->Args({num_3d_grid_point_values[9], extents[9][0], extents[9][1],
+              extents[9][2]})
+      ->Args({num_3d_grid_point_values[10], extents[10][0], extents[10][1],
+              extents[10][2]})
+      ->Args({num_3d_grid_point_values[11], extents[11][0], extents[11][1],
+              extents[11][2]})
+      ->Args({num_3d_grid_point_values[12], extents[12][0], extents[12][1],
+              extents[12][2]});
 
   const std::string logical_partial_derivatives_benchmark_name =
-      "logical_partial_derivatives/3D";
+      "logical_partial_derivatives/3D/num_3d_points";
   BENCHMARK(bench_logical_partial_derivatives)
       ->Name(logical_partial_derivatives_benchmark_name)
-      ->Arg(num_1d_grid_point_values[0])
-      ->Arg(num_1d_grid_point_values[1])
-      ->Arg(num_1d_grid_point_values[2])
-      ->Arg(num_1d_grid_point_values[3])
-      ->Arg(num_1d_grid_point_values[4])
-      ->Arg(num_1d_grid_point_values[5])
-      ->Arg(num_1d_grid_point_values[6])
-      ->Arg(num_1d_grid_point_values[7])
-      ->Arg(num_1d_grid_point_values[8])
-      ->Arg(num_1d_grid_point_values[9])
-      ->Arg(num_1d_grid_point_values[10])
-      ->Arg(num_1d_grid_point_values[11])
-      ->Arg(num_1d_grid_point_values[12])
-      ->Arg(num_1d_grid_point_values[13])
-      ->Arg(num_1d_grid_point_values[14])
-      ->Arg(num_1d_grid_point_values[15])
-      ->Arg(num_1d_grid_point_values[16])
-      ->Arg(num_1d_grid_point_values[17])
-      ->Arg(num_1d_grid_point_values[18]);
+      ->Args({num_3d_grid_point_values[0], extents[0][0], extents[0][1],
+              extents[0][2]})
+      ->Args({num_3d_grid_point_values[1], extents[1][0], extents[1][1],
+              extents[1][2]})
+      ->Args({num_3d_grid_point_values[2], extents[2][0], extents[2][1],
+              extents[2][2]})
+      ->Args({num_3d_grid_point_values[3], extents[3][0], extents[3][1],
+              extents[3][2]})
+      ->Args({num_3d_grid_point_values[4], extents[4][0], extents[4][1],
+              extents[4][2]})
+      ->Args({num_3d_grid_point_values[5], extents[5][0], extents[5][1],
+              extents[5][2]})
+      ->Args({num_3d_grid_point_values[6], extents[6][0], extents[6][1],
+              extents[6][2]})
+      ->Args({num_3d_grid_point_values[7], extents[7][0], extents[7][1],
+              extents[7][2]})
+      ->Args({num_3d_grid_point_values[8], extents[8][0], extents[8][1],
+              extents[8][2]})
+      ->Args({num_3d_grid_point_values[9], extents[9][0], extents[9][1],
+              extents[9][2]})
+      ->Args({num_3d_grid_point_values[10], extents[10][0], extents[10][1],
+              extents[10][2]})
+      ->Args({num_3d_grid_point_values[11], extents[11][0], extents[11][1],
+              extents[11][2]})
+      ->Args({num_3d_grid_point_values[12], extents[12][0], extents[12][1],
+              extents[12][2]});
 
-  const std::string og_time_derivative_benchmark_name = "og_time_derivative/3D";
+  const std::string og_time_derivative_benchmark_name =
+      "og_time_derivative/3D/num_3d_points";
   BENCHMARK(bench_og_time_derivative)
       ->Name(og_time_derivative_benchmark_name)
-      ->Arg(num_1d_grid_point_values[0])
-      ->Arg(num_1d_grid_point_values[1])
-      ->Arg(num_1d_grid_point_values[2])
-      ->Arg(num_1d_grid_point_values[3])
-      ->Arg(num_1d_grid_point_values[4])
-      ->Arg(num_1d_grid_point_values[5])
-      ->Arg(num_1d_grid_point_values[6])
-      ->Arg(num_1d_grid_point_values[7])
-      ->Arg(num_1d_grid_point_values[8])
-      ->Arg(num_1d_grid_point_values[9])
-      ->Arg(num_1d_grid_point_values[10])
-      ->Arg(num_1d_grid_point_values[11])
-      ->Arg(num_1d_grid_point_values[12])
-      ->Arg(num_1d_grid_point_values[13])
-      ->Arg(num_1d_grid_point_values[14])
-      ->Arg(num_1d_grid_point_values[15])
-      ->Arg(num_1d_grid_point_values[16])
-      ->Arg(num_1d_grid_point_values[17])
-      ->Arg(num_1d_grid_point_values[18]);
+      ->Args({num_3d_grid_point_values[0], extents[0][0], extents[0][1],
+              extents[0][2]})
+      ->Args({num_3d_grid_point_values[1], extents[1][0], extents[1][1],
+              extents[1][2]})
+      ->Args({num_3d_grid_point_values[2], extents[2][0], extents[2][1],
+              extents[2][2]})
+      ->Args({num_3d_grid_point_values[3], extents[3][0], extents[3][1],
+              extents[3][2]})
+      ->Args({num_3d_grid_point_values[4], extents[4][0], extents[4][1],
+              extents[4][2]})
+      ->Args({num_3d_grid_point_values[5], extents[5][0], extents[5][1],
+              extents[5][2]})
+      ->Args({num_3d_grid_point_values[6], extents[6][0], extents[6][1],
+              extents[6][2]})
+      ->Args({num_3d_grid_point_values[7], extents[7][0], extents[7][1],
+              extents[7][2]})
+      ->Args({num_3d_grid_point_values[8], extents[8][0], extents[8][1],
+              extents[8][2]})
+      ->Args({num_3d_grid_point_values[9], extents[9][0], extents[9][1],
+              extents[9][2]})
+      ->Args({num_3d_grid_point_values[10], extents[10][0], extents[10][1],
+              extents[10][2]})
+      ->Args({num_3d_grid_point_values[11], extents[11][0], extents[11][1],
+              extents[11][2]})
+      ->Args({num_3d_grid_point_values[12], extents[12][0], extents[12][1],
+              extents[12][2]});
 
-  const std::string time_derivative_benchmark_name = "time_derivative/3D";
+  const std::string time_derivative_benchmark_name =
+      "time_derivative/3D/num_3d_points";
   BENCHMARK(bench_time_derivative)
       ->Name(time_derivative_benchmark_name)
-      ->Arg(num_1d_grid_point_values[0])
-      ->Arg(num_1d_grid_point_values[1])
-      ->Arg(num_1d_grid_point_values[2])
-      ->Arg(num_1d_grid_point_values[3])
-      ->Arg(num_1d_grid_point_values[4])
-      ->Arg(num_1d_grid_point_values[5])
-      ->Arg(num_1d_grid_point_values[6])
-      ->Arg(num_1d_grid_point_values[7])
-      ->Arg(num_1d_grid_point_values[8])
-      ->Arg(num_1d_grid_point_values[9])
-      ->Arg(num_1d_grid_point_values[10])
-      ->Arg(num_1d_grid_point_values[11])
-      ->Arg(num_1d_grid_point_values[12])
-      ->Arg(num_1d_grid_point_values[13])
-      ->Arg(num_1d_grid_point_values[14])
-      ->Arg(num_1d_grid_point_values[15])
-      ->Arg(num_1d_grid_point_values[16])
-      ->Arg(num_1d_grid_point_values[17])
-      ->Arg(num_1d_grid_point_values[18]);
+      ->Args({num_3d_grid_point_values[0], extents[0][0], extents[0][1],
+              extents[0][2]})
+      ->Args({num_3d_grid_point_values[1], extents[1][0], extents[1][1],
+              extents[1][2]})
+      ->Args({num_3d_grid_point_values[2], extents[2][0], extents[2][1],
+              extents[2][2]})
+      ->Args({num_3d_grid_point_values[3], extents[3][0], extents[3][1],
+              extents[3][2]})
+      ->Args({num_3d_grid_point_values[4], extents[4][0], extents[4][1],
+              extents[4][2]})
+      ->Args({num_3d_grid_point_values[5], extents[5][0], extents[5][1],
+              extents[5][2]})
+      ->Args({num_3d_grid_point_values[6], extents[6][0], extents[6][1],
+              extents[6][2]})
+      ->Args({num_3d_grid_point_values[7], extents[7][0], extents[7][1],
+              extents[7][2]})
+      ->Args({num_3d_grid_point_values[8], extents[8][0], extents[8][1],
+              extents[8][2]})
+      ->Args({num_3d_grid_point_values[9], extents[9][0], extents[9][1],
+              extents[9][2]})
+      ->Args({num_3d_grid_point_values[10], extents[10][0], extents[10][1],
+              extents[10][2]})
+      ->Args({num_3d_grid_point_values[11], extents[11][0], extents[11][1],
+              extents[11][2]})
+      ->Args({num_3d_grid_point_values[12], extents[12][0], extents[12][1],
+              extents[12][2]});
 }
 // BENCHMARK(bench_all_gradient);  // NOLINT
 }  // namespace
