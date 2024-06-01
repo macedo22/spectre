@@ -5,8 +5,6 @@
 
 #include "NumericalAlgorithms/LinearOperators/PartialDerivatives.hpp"
 
-#include <iostream>
-
 #include "DataStructures/DataBox/PrefixHelpers.hpp"
 #include "DataStructures/DataBox/Prefixes.hpp"
 #include "DataStructures/DataVector.hpp"
@@ -26,8 +24,6 @@
 namespace partial_derivatives_detail {
 template <size_t Dim, typename VariableTags, typename DerivativeTags>
 struct LogicalImpl;
-
-static constexpr size_t partial_derivatives_vector_chunk_size = 64;
 
 // This routine has been optimized to perform really well. The following
 // describes what optimizations were made.
@@ -65,28 +61,9 @@ void partial_derivatives_impl(
     const InverseJacobian<DataVector, Dim, Frame::ElementLogical,
                           DerivativeFrame>& inverse_jacobian) {
   double* pdu = du->data();
-//   std::cout << "starting pdu : " << pdu << std::endl;
   const size_t num_grid_points = du->number_of_grid_points();
-    // std::cout << "num_grid_points : " << num_grid_points << std::endl;
-  const size_t number_of_whole_slices =
-      num_grid_points < (2 * partial_derivatives_vector_chunk_size)
-          ? 0
-          : num_grid_points / partial_derivatives_vector_chunk_size - 1;
-    // std::cout << "number_of_whole_slices : " << number_of_whole_slices
-    //           << std::endl;
-  const size_t num_points_remainder_chunk =
-      num_grid_points -
-      number_of_whole_slices * partial_derivatives_vector_chunk_size;
-    // std::cout << "num_points_remainder_chunk : " <<
-    // num_points_remainder_chunk
-    //           << std::endl;
-  const size_t index_of_first_remainder_point =
-      num_grid_points - num_points_remainder_chunk;
-    // std::cout << "index_of_first_remainder_point : "
-    //           << index_of_first_remainder_point << std::endl;
   DataVector lhs{};
   DataVector logical_du{};
-  DataVector jacobian{};
 
   std::array<std::array<size_t, Dim>, Dim> indices{};
   for (size_t deriv_index = 0; deriv_index < Dim; ++deriv_index) {
@@ -100,196 +77,42 @@ void partial_derivatives_impl(
   // for each independent component index of Variables<DerivativeTags>
   for (size_t component_index = 0;
        component_index < number_of_independent_components; ++component_index) {
-    // std::cout << "component_index : " << component_index << std::endl;
     // for each partial derivative index (i.e. in inertial frame)
     for (size_t deriv_index = 0; deriv_index < Dim; ++deriv_index) {
-    //   std::cout << "deriv_index : " << deriv_index << std::endl;
-      // // refers to current component of result partial derivative
-      // lhs.set_data_ref(pdu, num_grid_points);
-      // // clang-tidy: const cast is fine since we won't modify the data and
-      // we
-      // // need it to easily hook into the expression templates.
-      // logical_du.set_data_ref(
-      //     const_cast<double*>(                                 // NOLINT
-      //         gsl::at(logical_partial_derivatives_of_u, 0)) +  // NOLINT
-      //         component_index * num_grid_points,
-      //     num_grid_points);
-      // lhs = (*(inverse_jacobian.begin() + gsl::at(indices[0],
-      // deriv_index))) *
-      //       logical_du;
-      // // for each logical deriv index
-      // for (size_t logical_deriv_index = 1; logical_deriv_index < Dim;
-      //      ++logical_deriv_index) {
-      //   // clang-tidy: const cast is fine since we won't modify the data
-      //   and we
-      //   // need it to easily hook into the expression templates.
-      //   //
-      //   // logical_du now refers to the component at component_index in
-      //   // logical_partial_derivatives_of_u[logical_deriv_index]
-      //   logical_du.set_data_ref(const_cast<double*>(  // NOLINT
-      //                               gsl::at(logical_partial_derivatives_of_u,
-      //                                       logical_deriv_index)) +  //
-      //                                       NOLINT
-      //                               component_index * num_grid_points,
-      //                           num_grid_points);
-      //   // resulting partial derivative component +=
-      //   //     inverse_jacobian[logical_deriv_index][deriv_index] *
-      //   //     logical_partial_derivatives_of_u[logical_deriv_index][?]
-      //   lhs +=
-      //       (*(inverse_jacobian.begin() +
-      //          gsl::at(gsl::at(indices, logical_deriv_index),
-      //          deriv_index))) *
-      //       logical_du;
-      // }
-      // // clang-tidy: no pointer arithmetic
-      // pdu += num_grid_points;  // NOLINT
-
-    //   std::cout << "\n===== ENTERING WHOLE SLICES =====\n" << std::endl;
-
-      for (size_t i = 0; i < number_of_whole_slices; i++) {
-        // std::cout << "i : " << i << std::endl;
-        // std::cout << "pdu : " << pdu << std::endl;
-        // refers to current component of result partial derivative
-        // std::cout << "component_index : " << component_index << std::endl;
-        // std::cout << "deriv_index : " << deriv_index << std::endl;
-        // std::cout << "i : " << i << std::endl;
-        lhs.set_data_ref(pdu + i * partial_derivatives_vector_chunk_size,
-                         partial_derivatives_vector_chunk_size);
-        // std::cout << "lhs set to pdu + : " << i * partial_derivatives_vector_chunk_size << std::endl;
-        // clang-tidy: const cast is fine since we won't modify the data and we
-        // need it to easily hook into the expression templates.
-        logical_du.set_data_ref(
-            const_cast<double*>(                                 // NOLINT
-                gsl::at(logical_partial_derivatives_of_u, 0)) +  // NOLINT
-                component_index * num_grid_points +
-                i * partial_derivatives_vector_chunk_size,
-            partial_derivatives_vector_chunk_size);
-        // std::cout << "logical_du set to gsl::at(logical_partial_derivatives_of_u, 0) + : " << component_index * num_grid_points + i * partial_derivatives_vector_chunk_size << std::endl;
-        // clang-tidy: const cast is fine since we won't modify the data and we
-        // need it to easily hook into the expression templates.
-        jacobian.set_data_ref(
-            const_cast<double*>(  // NOLINT
-                &((*(inverse_jacobian.begin() +
-                     gsl::at(indices[0],
-                             deriv_index)))[i * partial_derivatives_vector_chunk_size])),
-            partial_derivatives_vector_chunk_size);
-        // std::cout <<
-        //     "jacobian set to inverse_jacobian[" << indices[0]<< "]["
-        //     << deriv_index << "] + : " << i * partial_derivatives_vector_chunk_size << std::endl;
-        lhs = jacobian * logical_du;
-
-        // for each logical deriv index
-        for (size_t logical_deriv_index = 1; logical_deriv_index < Dim;
-             ++logical_deriv_index) {
-        //   std::cout << "logical_deriv_index : " << logical_deriv_index << std::endl;
-          //   std::cout << "logical_deriv_index in whole_chunk : "
-          //             << logical_deriv_index << std::endl;
-          // clang-tidy: const cast is fine since we won't modify the data and
-          // we need it to easily hook into the expression templates.
-          //
-          // logical_du now refers to the component at component_index in
-          // logical_partial_derivatives_of_u[logical_deriv_index]
-          logical_du.set_data_ref(const_cast<double*>(  // NOLINT
-                                      gsl::at(logical_partial_derivatives_of_u,
-                                              logical_deriv_index)) +  // NOLINT
-                                      component_index * num_grid_points +
-                                      i * partial_derivatives_vector_chunk_size,
-                                  partial_derivatives_vector_chunk_size);
-        //   std::cout << "logical_du set to gsl::at(logical_partial_derivatives_of_u, "
-        //       << logical_deriv_index << ") + : " << component_index * num_grid_points + i * partial_derivatives_vector_chunk_size << std::endl;
-          // clang-tidy: const cast is fine since we won't modify the data and
-          // we need it to easily hook into the expression templates.
-          jacobian.set_data_ref(
-              const_cast<double*>(  // NOLINT
-                  &((*(inverse_jacobian.begin() +
-                       gsl::at(indices[logical_deriv_index],
-                               deriv_index)))[i * partial_derivatives_vector_chunk_size])),
-              partial_derivatives_vector_chunk_size);
-        //   std::cout <<
-        //     "jacobian set to inverse_jacobian[" << indices[logical_deriv_index] << "]["
-        //     << deriv_index << "] + : " << i * partial_derivatives_vector_chunk_size << std::endl;
-          // resulting partial derivative component +=
-          //     inverse_jacobian[logical_deriv_index][deriv_index] *
-          //     logical_partial_derivatives_of_u[logical_deriv_index][?]
-          lhs += jacobian * logical_du;
-        }
-      }
-    
-      // clang-tidy: no pointer arithmetic
-      //   pdu += num_grid_points;  // NOLINT
-
-    //   std::cout << "\n===== ENTERING REMAINDER SLICE =====\n" << std::endl;
-    //   std::cout << "pdu : " << pdu << std::endl;
-
-      // index_of_first_remainder_point
-      // num_points_remainder_chunk
-
-      //   for (size_t i = 0; i < number_of_whole_slices; i++) {
       // refers to current component of result partial derivative
-      lhs.set_data_ref(pdu + index_of_first_remainder_point, num_points_remainder_chunk);
-    //   std::cout << "lhs set to pdu + : " << index_of_first_remainder_point << std::endl;
+      lhs.set_data_ref(pdu, num_grid_points);
       // clang-tidy: const cast is fine since we won't modify the data and we
       // need it to easily hook into the expression templates.
       logical_du.set_data_ref(
-          const_cast<double*>(                                 // NOLINT
-              gsl::at(logical_partial_derivatives_of_u, 0)) +  // NOLINT
-              component_index * num_grid_points +
-              index_of_first_remainder_point,
-          num_points_remainder_chunk);
-    //   std::cout << "logical_du set to gsl::at(logical_partial_derivatives_of_u, 0) + : "
-    //           << component_index * num_grid_points +  index_of_first_remainder_point << std::endl;
-      // clang-tidy: const cast is fine since we won't modify the data and we
-      // need it to easily hook into the expression templates.
-      jacobian.set_data_ref(
           const_cast<double*>(  // NOLINT
-              &((*(inverse_jacobian.begin() +
-                   gsl::at(indices[0],
-                           deriv_index)))[index_of_first_remainder_point])),
-          num_points_remainder_chunk);
-    //   std::cout <<
-    //         "jacobian set to inverse_jacobian[" << indices[0] << "]["
-    //         << deriv_index << "] + : " << index_of_first_remainder_point << std::endl;
-      lhs = jacobian * logical_du;
-
+              gsl::at(logical_partial_derivatives_of_u, 0)) +  // NOLINT
+              component_index * num_grid_points,
+          num_grid_points);
+      lhs = (*(inverse_jacobian.begin() + gsl::at(indices[0], deriv_index))) *
+            logical_du;
       // for each logical deriv index
       for (size_t logical_deriv_index = 1; logical_deriv_index < Dim;
            ++logical_deriv_index) {
-        // std::cout << "logical_deriv_index : " << logical_deriv_index << std::endl;
-        // std::cout << "logical_deriv_index in remainder chunk : "
-        //           << logical_deriv_index << std::endl;
-        // clang-tidy: const cast is fine since we won't modify the data and
-        // we need it to easily hook into the expression templates.
+        // clang-tidy: const cast is fine since we won't modify the data and we
+        // need it to easily hook into the expression templates.
         //
         // logical_du now refers to the component at component_index in
         // logical_partial_derivatives_of_u[logical_deriv_index]
         logical_du.set_data_ref(const_cast<double*>(  // NOLINT
                                     gsl::at(logical_partial_derivatives_of_u,
                                             logical_deriv_index)) +  // NOLINT
-                                    component_index * num_grid_points +
-                                    index_of_first_remainder_point,
-                                num_points_remainder_chunk);
-        // std::cout << "logical_du set to gsl::at(logical_partial_derivatives_of_u, "
-        //       << logical_deriv_index << ") + : " << component_index * num_grid_points +  index_of_first_remainder_point << std::endl;
-        // clang-tidy: const cast is fine since we won't modify the data and we
-        // need it to easily hook into the expression templates.
-        jacobian.set_data_ref(
-            const_cast<double*>(  // NOLINT
-                &((*(inverse_jacobian.begin() +
-                     gsl::at(indices[logical_deriv_index],
-                             deriv_index)))[index_of_first_remainder_point])),
-            num_points_remainder_chunk);
-        // std::cout <<
-        //     "jacobian set to inverse_jacobian[" << indices[logical_deriv_index] << "]["
-        //     << deriv_index << "] + : " << index_of_first_remainder_point << std::endl;
+                                    component_index * num_grid_points,
+                                num_grid_points);
         // resulting partial derivative component +=
         //     inverse_jacobian[logical_deriv_index][deriv_index] *
         //     logical_partial_derivatives_of_u[logical_deriv_index][?]
-        lhs += jacobian * logical_du;
+        lhs +=
+            (*(inverse_jacobian.begin() +
+               gsl::at(gsl::at(indices, logical_deriv_index), deriv_index))) *
+            logical_du;
       }
-      //   }
       // clang-tidy: no pointer arithmetic
       pdu += num_grid_points;  // NOLINT
-    //   std::cout << "pdu after incrementing: " << pdu << std::endl;
     }
   }
 }
@@ -426,8 +249,8 @@ partial_derivatives(
   Variables<db::wrap_tags_in<Tags::deriv, DerivativeTags, tmpl::size_t<Dim>,
                              DerivativeFrame>>
       partial_derivatives_of_u(u.number_of_grid_points());
-  partial_derivatives(make_not_null(&partial_derivatives_of_u), u, mesh,
-                      inverse_jacobian);
+  partial_derivatives(make_not_null(&partial_derivatives_of_u),
+                                      u, mesh, inverse_jacobian);
   return partial_derivatives_of_u;
 }
 
