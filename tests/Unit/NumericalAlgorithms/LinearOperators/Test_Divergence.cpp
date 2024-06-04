@@ -307,8 +307,8 @@
 // }
 // }  // namespace
 
-// SPECTRE_TEST_CASE("Unit.Numerical.LinearOperators.Divergence",
-//                   "[NumericalAlgorithms][LinearOperators][Unit]") {
+SPECTRE_TEST_CASE("Unit.Numerical.LinearOperators.Divergence",
+                  "[NumericalAlgorithms][LinearOperators][Unit]") {
 //   test_divergence();
 //   test_divergence_compute();
-// }
+}

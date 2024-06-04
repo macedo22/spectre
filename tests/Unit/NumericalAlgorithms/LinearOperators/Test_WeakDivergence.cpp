@@ -347,8 +347,8 @@
 // }
 // }  // namespace
 
-// SPECTRE_TEST_CASE("Unit.Numerical.LinearOperators.WeakDivergence",
-//                   "[NumericalAlgorithms][LinearOperators][Unit]") {
+SPECTRE_TEST_CASE("Unit.Numerical.LinearOperators.WeakDivergence",
+                  "[NumericalAlgorithms][LinearOperators][Unit]") {
 //   // We already have tests that verify that the matrix used in the weak
 //   // divergence is correct. What we need to test is that the function
 //   // weak_divergence behaves correctly. This is pretty tricky, unfortunately.
@@ -382,4 +382,4 @@
 //   test<1>();
 //   test<2>();
 //   test<3>();
-// }
+}
