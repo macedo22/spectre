@@ -269,6 +269,31 @@ struct LogicalImpl<1, VariableTags, DerivativeTags> {
         u.number_of_grid_points();
     const Matrix& differentiation_matrix_xi =
         Spectral::differentiation_matrix(mesh.slice_through(0));
+    // C_mN := alpha*op( A )*op( B ) + beta*C
+    // A is A_mk , B is B_kn
+    // 
+    // 'N' : use A = A
+    // 'N' : use B = B
+    // m : mesh.extents(0) = num grid points ? = rows of A
+    // n : deriv_size / mesh.extents(0)
+    //   = Variables<DerivativeTags>::number_of_independent_components = columns of B
+    // k : mesh.extents(0) = num grid points ? = columns of A and rows of B
+    // alpha : 1.0
+    // A : differentiation_matrix_xi.data(), dim (LDA, k)
+    // LDA : differentiation_matrix_xi.spacing() >= m = number of rows of A?
+    // B : u.data(), dim (LDB, n)
+    // LDB : mesh.extents(0) >= k = rows in B?
+    // BETA : 0.0
+    // C : , logical_partial_derivatives_of_u[0], dim (LDC, N) -> N is just columns of C?
+    // LDC :  mesh.extents(0) >= m = rows of A?
+    //
+    // A is (grid points, grid points) and B is (grid points, number of components)
+    // and C is (grid points, number of components)
+    //
+    // \partial_a f(x)|_j =  \sum{D^{(a)}{}_{jk} f_k}
+    // A : D^{(a)}{}_{jk} (differentiation matrix)
+    // B : u = f_k (evolution vars)
+    // C : \partial_a f(x)|_j (logical partial derivatives)
     dgemm_<true>('N', 'N', mesh.extents(0), deriv_size / mesh.extents(0),
                  mesh.extents(0), 1.0, differentiation_matrix_xi.data(),
                  differentiation_matrix_xi.spacing(), u.data(), mesh.extents(0),
@@ -295,11 +320,38 @@ struct LogicalImpl<2, VariableTags, DerivativeTags> {
     const Matrix& differentiation_matrix_xi =
         Spectral::differentiation_matrix(mesh.slice_through(0));
     const size_t num_components_times_xi_slices = deriv_size / mesh.extents(0);
+    // C_mN := alpha*op( A )*op( B ) + beta*C
+    // A is A_mk , B is B_kn
+    // 
+    // 'N' : use A = A
+    // 'N' : use B = B
+    // m : mesh.extents(0) = num grid points for xi ? = rows of A
+    // n : num_components_times_xi_slices = deriv_size / mesh.extents(0)
+    //     = columns of B
+    // k : mesh.extents(0) = num grid points for xi ? = columns of A and rows of B
+    // alpha : 1.0
+    // A : differentiation_matrix_xi.data(), dim (LDA, k)
+    // LDA : differentiation_matrix_xi.spacing() >= m = number of rows of A?
+    // B : u.data(), dim (LDB, n)
+    // LDB : mesh.extents(0) >= k = rows in B?
+    // BETA : 0.0
+    // C : , logical_partial_derivatives_of_u[0], dim (LDC, N) -> N is just columns of C?
+    // LDC :  mesh.extents(0) >= m = rows of A?
+    //
+    // A is (grid points for xi, grid points for xi) and B is (grid points for xi, number of components)
+    // and C is (grid points for xi, number of components)
+    //
+    // \partial_a f(x)|_j =  \sum{D^{(a)}{}_{jk} f_k}
+    // A : D^{(a)}{}_{jk} (differentiation matrix)
+    // B : u = f_k (evolution vars)
+    // C : \partial_a f(x)|_j (logical partial derivatives)
     dgemm_<true>('N', 'N', mesh.extents(0), num_components_times_xi_slices,
                  mesh.extents(0), 1.0, differentiation_matrix_xi.data(),
                  differentiation_matrix_xi.spacing(), u.data(), mesh.extents(0),
                  0.0, logical_partial_derivatives_of_u[0], mesh.extents(0));
 
+    // https://spectre-code.org/group__NumericalAlgorithmsGroup.html#ga9d755157e0d42f3fdae8dace311c1588
+    // reorders u from coord order (xi, eta) -> (eta, xi) ?
     transpose<Variables<VariableTags>, Variables<DerivativeTags>>(
         make_not_null(u_eta_fastest), u, mesh.extents(0),
         num_components_times_xi_slices);
@@ -311,6 +363,8 @@ struct LogicalImpl<2, VariableTags, DerivativeTags> {
                  differentiation_matrix_eta.spacing(), u_eta_fastest->data(),
                  mesh.extents(1), 0.0, partial_u_wrt_eta->data(),
                  mesh.extents(1));
+    // reorders partial_u_wrt_eta from coord order
+    // (eta, xi) -> (xi, eta) ?
     raw_transpose(make_not_null(logical_partial_derivatives_of_u[1]),
                   partial_u_wrt_eta->data(), num_components_times_xi_slices,
                   mesh.extents(0));
