@@ -96,7 +96,7 @@ BinaryCompactObject::BinaryCompactObject(
   // Determination of parameters for domain construction:
   const double tan_half_opening_angle = tan(0.5 * opening_angle_);
   translation_ = 0.5 * (x_coord_a_ + x_coord_b_);
-  length_inner_cube_ = abs(x_coord_a_ - x_coord_b_);
+  length_inner_cube_ = 1.5 * abs(x_coord_a_ - x_coord_b_);
   length_outer_cube_ =
       2.0 * envelope_radius_ / sqrt(2.0 + square(tan_half_opening_angle));
 
@@ -341,9 +341,13 @@ Domain<3> BinaryCompactObject::create_domain() const {
 
   // ObjectA/B is on the right/left, respectively.
   const Translation translation_A{
-      Affine{-1.0, 1.0, -1.0 + x_coord_a_, 1.0 + x_coord_a_}, Identity2D{}};
+      Affine{-1.0, 1.0, -1.0 + length_inner_cube_ / 2.0,
+             1.0 + length_inner_cube_ / 2.0},
+      Identity2D{}};
   const Translation translation_B{
-      Affine{-1.0, 1.0, -1.0 + x_coord_b_, 1.0 + x_coord_b_}, Identity2D{}};
+      Affine{-1.0, 1.0, -1.0 - length_inner_cube_ / 2.0,
+             1.0 - length_inner_cube_ / 2.0},
+      Identity2D{}};
 
   // Two blocks covering the compact objects and their immediate neighborhood
   if (use_single_block_a_) {
@@ -367,15 +371,17 @@ Domain<3> BinaryCompactObject::create_domain() const {
                                                 Frame::Inertial, 3>(
             sph_wedge_coordinate_maps(object_a.inner_radius,
                                       object_a.outer_radius, inner_sphericity_A,
-                                      1.0, use_equiangular_map_, false, {},
-                                      object_A_radial_distribution),
+                                      1.0, length_inner_cube_ / 2.0,
+                                      {{-4.0, 2.0, 0.0}}, use_equiangular_map_,
+                                      false, {}, object_A_radial_distribution),
             translation_A);
     Maps maps_cube_A =
         domain::make_vector_coordinate_map_base<Frame::BlockLogical,
                                                 Frame::Inertial, 3>(
             sph_wedge_coordinate_maps(object_a.outer_radius,
                                       sqrt(3.0) * 0.5 * length_inner_cube_, 1.0,
-                                      0.0, use_equiangular_map_),
+                                      0.0, length_inner_cube_ / 2.0,
+                                      {{-4.0, 2.0, 0.0}}, use_equiangular_map_),
             translation_A);
     std::move(maps_center_A.begin(), maps_center_A.end(),
               std::back_inserter(maps));
@@ -401,15 +407,17 @@ Domain<3> BinaryCompactObject::create_domain() const {
                                                 Frame::Inertial, 3>(
             sph_wedge_coordinate_maps(object_b.inner_radius,
                                       object_b.outer_radius, inner_sphericity_B,
-                                      1.0, use_equiangular_map_, false, {},
-                                      object_B_radial_distribution),
+                                      1.0, length_inner_cube_ / 2.0,
+                                      {{4.0, -2.0, 0.0}}, use_equiangular_map_,
+                                      false, {}, object_B_radial_distribution),
             translation_B);
     Maps maps_cube_B =
         domain::make_vector_coordinate_map_base<Frame::BlockLogical,
                                                 Frame::Inertial, 3>(
             sph_wedge_coordinate_maps(object_b.outer_radius,
                                       sqrt(3.0) * 0.5 * length_inner_cube_, 1.0,
-                                      0.0, use_equiangular_map_),
+                                      0.0, length_inner_cube_ / 2.0,
+                                      {{4.0, -2.0, 0.0}}, use_equiangular_map_),
             translation_B);
     std::move(maps_center_B.begin(), maps_center_B.end(),
               std::back_inserter(maps));
@@ -438,7 +446,8 @@ Domain<3> BinaryCompactObject::create_domain() const {
   // --- Outer spherical shell (10 blocks) ---
   Maps maps_outer_shell = domain::make_vector_coordinate_map_base<
       Frame::BlockLogical, Frame::Inertial, 3>(sph_wedge_coordinate_maps(
-      envelope_radius_, outer_radius_, 1.0, 1.0, use_equiangular_map_, true, {},
+      envelope_radius_, outer_radius_, 1.0, 1.0, length_inner_cube_ / 2.0,
+      {{0.0, 0.0, 0.0}}, use_equiangular_map_, true, {},
       {radial_distribution_outer_shell_}, ShellWedges::All, opening_angle_));
   std::move(maps_outer_shell.begin(), maps_outer_shell.end(),
             std::back_inserter(maps));
