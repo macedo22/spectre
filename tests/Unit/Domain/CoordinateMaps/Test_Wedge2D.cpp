@@ -134,6 +134,11 @@ void test_wedge2d_all_orientations(const bool with_equiangular_map) {
     if (get(determinant(discrete_rotation_jacobian(*map_i))) < 0.0) {
       continue;
     }
+    // first slot is where +0 got map and second slot is +1 got mapped
+    // so +0 +1 is default
+    // ++map_i; // TODO : remove
+    // ++map_i; // TODO : remove
+    // ++map_i; // TODO : remove
     const auto& orientation = map_i();
     CAPTURE(orientation);
     for (const auto& halves : possible_halves) {
@@ -160,6 +165,7 @@ void test_wedge2d_all_orientations(const bool with_equiangular_map) {
                     radial_distribution});
       }
     }
+    // break; // TODO : remove
   }
 }
 

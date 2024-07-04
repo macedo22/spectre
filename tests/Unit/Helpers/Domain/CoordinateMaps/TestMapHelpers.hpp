@@ -12,6 +12,7 @@
 #include <array>
 #include <cmath>
 #include <functional>
+#include <iostream>
 #include <limits>
 #include <memory>
 #include <numeric>
@@ -20,6 +21,7 @@
 #include <unordered_map>
 
 #include "DataStructures/DataVector.hpp"
+#include "DataStructures/Tensor/EagerMath/DeterminantAndInverse.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Domain/CoordinateMaps/CoordinateMap.hpp"
 #include "Domain/CoordinateMaps/CoordinateMap.tpp"
@@ -224,6 +226,13 @@ void test_inv_jacobian(const Map& map,
   const auto jacobian = map.jacobian(test_point);
   const auto inv_jacobian = map.inv_jacobian(test_point);
 
+  // std::cout << "test_point : " << test_point << std::endl;
+  // std::cout << "jacobian : " << jacobian << std::endl;
+  // std::cout << "inv_jacobian : " << inv_jacobian << std::endl;
+  const auto numerical_inv_jacobian = determinant_and_inverse(jacobian).second;
+  // std::cout << "numerical_inv_jacobian : " << numerical_inv_jacobian
+  //           << std::endl;
+
   const auto expected_identity = [&jacobian, &inv_jacobian]() {
     std::array<std::array<double, Map::dim>, Map::dim> identity{};
     for (size_t i = 0; i < Map::dim; ++i) {
@@ -240,6 +249,7 @@ void test_inv_jacobian(const Map& map,
 
   for (size_t i = 0; i < Map::dim; ++i) {
     for (size_t j = 0; j < Map::dim; ++j) {
+      // std::cout << "(i, j) : (" << i << ", " << j << ")" << std::endl;
       CHECK(gsl::at(gsl::at(expected_identity, i), j) ==
             approx(i == j ? 1. : 0.));
     }
@@ -289,6 +299,12 @@ void test_inv_jacobian(const Map& map,
   CAPTURE(test_point);
   const auto jacobian = map.jacobian(test_point);
   const auto inv_jacobian = map.inv_jacobian(test_point);
+  // std::cout << "test_point : " << test_point << std::endl;
+  // std::cout << "jacobian : " << jacobian << std::endl;
+  // std::cout << "inv_jacobian : " << inv_jacobian << std::endl;
+  const auto numerical_inv_jacobian = determinant_and_inverse(jacobian).second;
+  // std::cout << "numerical_inv_jacobian : " << numerical_inv_jacobian
+  //           << std::endl;
 
   const auto expected_identity = [&jacobian, &inv_jacobian]() {
     auto identity =
@@ -298,6 +314,8 @@ void test_inv_jacobian(const Map& map,
       for (size_t j = 0; j < Map::dim; ++j) {
         for (size_t l = 0; l < jacobian.get(0, 0).size(); l++) {
           for (size_t k = 0; k < Map::dim; ++k) {
+            // std::cout << "(i, j, k, l) : (" << i << ", " << j << ", " << k
+            //           << ", " << l << ")" << std::endl;
             identity.get(i, j)[k] += gsl::at(jacobian.get(i, k), l) *
                                      gsl::at(inv_jacobian.get(k, j), l);
           }
@@ -585,17 +603,17 @@ void test_suite_for_map_on_unit_cube(const Map& map) {
     test_coordinate_map_argument_types(map_to_test, origin);
 
     test_jacobian(map_to_test, origin);
-    // test_inv_jacobian(map_to_test, origin);
+    test_inv_jacobian(map_to_test, origin);
     test_inverse_map(map_to_test, origin);
 
     for (VolumeCornerIterator<Map::dim> vci{}; vci; ++vci) {
       test_jacobian(map_to_test, vci.coords_of_corner());
-      // test_inv_jacobian(map_to_test, vci.coords_of_corner());
+      test_inv_jacobian(map_to_test, vci.coords_of_corner());
       test_inverse_map(map_to_test, vci.coords_of_corner());
     }
 
     test_jacobian(map_to_test, random_point);
-    // test_inv_jacobian(map_to_test, random_point);
+    test_inv_jacobian(map_to_test, random_point);
     test_inverse_map(map_to_test, random_point);
   };
   test_helper(map);
