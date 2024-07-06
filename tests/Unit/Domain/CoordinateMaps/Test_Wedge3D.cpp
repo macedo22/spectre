@@ -59,8 +59,8 @@ void test_wedge3d_all_directions() {
                halves_array, all_wedge_directions(), make_array(true, false),
                make_array(CoordinateMaps::Distribution::Linear,
                CoordinateMaps::Distribution::Linear,
-               CoordinateMaps::Distribution::Linear/*,
-                          CoordinateMaps::Distribution::Logarithmic,
+               CoordinateMaps::Distribution::Linear,
+                          CoordinateMaps::Distribution::Logarithmic/*,
                           CoordinateMaps::Distribution::Inverse*/)),
            make_not_null(&gen))) {
     // [cartesian_product_loop]
@@ -100,8 +100,8 @@ void test_wedge3d_alignment() {
   for (const auto& with_equiangular_map : {true, false}) {
     CAPTURE(with_equiangular_map);
     for (const auto radial_distribution :
-         {CoordinateMaps::Distribution::Linear/*,
-          CoordinateMaps::Distribution::Logarithmic,
+         {CoordinateMaps::Distribution::Linear,
+          CoordinateMaps::Distribution::Logarithmic/*,
           CoordinateMaps::Distribution::Inverse*/}) {
       CAPTURE(radial_distribution);
       const double inner_sphericity =
@@ -245,8 +245,8 @@ void test_wedge3d_random_radii() {
   for (const auto& with_equiangular_map : {true, false}) {
     CAPTURE(with_equiangular_map);
     for (const auto radial_distribution :
-         {CoordinateMaps::Distribution::Linear/*,
-          CoordinateMaps::Distribution::Logarithmic,
+         {CoordinateMaps::Distribution::Linear,
+          CoordinateMaps::Distribution::Logarithmic/*,
           CoordinateMaps::Distribution::Inverse*/}) {
       CAPTURE(radial_distribution);
       const double inner_sphericity =

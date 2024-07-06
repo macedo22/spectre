@@ -11,6 +11,7 @@
 
 #include "DataStructures/Tensor/EagerMath/Determinant.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
+#include "DataStructures/VectorImpl.hpp"
 #include "Domain/Structure/OrientationMap.hpp"
 #include "Utilities/ConstantExpressions.hpp"
 #include "Utilities/DereferenceWrapper.hpp"
@@ -87,12 +88,17 @@ Wedge<Dim>::Wedge(const double radius_inner, const double radius_outer,
                             (1.0 - sphericity_inner) * radius_inner);
     sphere_rate_ = 0.5 * (sphericity_outer_ * radius_outer -
                           sphericity_inner * radius_inner);
+    // TODO : change to an if else, don't want to recompute these
     if (not equal_within_roundoff(magnitude(focal_offset_), 0.0)) {
       scaled_frustum_zero_ =
           0.5 * cube_half_length_ *
+          // TODO : turn into ternary expression so we don't mislead that
+          // sphericity can be anything between 0 and 1 because it can't
           ((1.0 - sphericity_outer_) + (1.0 - sphericity_inner));
       scaled_frustum_rate_ =
           0.5 * cube_half_length_ *
+          // TODO : turn into ternary expression so we don't mislead that
+          // sphericity can be anything between 0 and 1 because it can't
           ((1.0 - sphericity_outer_) - (1.0 - sphericity_inner));
     }
   } else if (radial_distribution_ == Distribution::Logarithmic) {
@@ -416,6 +422,42 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
     }
   }();
 
+  const ReturnType s_factor_deriv = [this, &zeta, &s_factor]() -> ReturnType {
+    if (radial_distribution_ == Distribution::Linear) {
+      // return sphere_rate_;
+      return make_with_value<ReturnType>(zeta, sphere_rate_);
+    } else if (radial_distribution_ == Distribution::Logarithmic) {
+      // return 0.5 *
+      //        ((1.0 + zeta) * pow(radius_outer_, (1.0 - zeta)) +
+      //         (1.0 - zeta) * pow(radius_inner_, (1.0 + zeta))) /
+      //        s_factor;
+      // // TODO : do something better than this:
+      // ReturnType radius_outer_factor = make_with_value<ReturnType>(zeta,
+      // 0.0); ReturnType radius_inner_factor =
+      // make_with_value<ReturnType>(zeta, 0.0); if constexpr
+      // (is_derived_of_vector_impl_v<ReturnType>) {
+      //   for (size_t i = 0; i < zeta.size(); i++) {
+      //     radius_outer_factor[i] = pow(radius_outer_, (1.0 - zeta[i]));
+      //     radius_inner_factor[i] = pow(radius_inner_, (1.0 + zeta[i]));
+      //   }
+      // } else {
+      //   radius_outer_factor = pow(radius_outer_, (1.0 - zeta));
+      //   radius_inner_factor = pow(radius_inner_, (1.0 + zeta));
+      // }
+      // return 0.5 *
+      //        ((1.0 + zeta) * radius_outer_factor +
+      //         (1.0 - zeta) * radius_inner_factor) /
+      //        s_factor;
+      return 0.5 * s_factor * log(radius_outer_ / radius_inner_);
+    } else {
+      return 2.0 *
+             (radius_outer_ * square(radius_inner_) -
+              (square(radius_outer_) * radius_inner_)) /
+             square(radius_outer_ + radius_inner_ +
+                    zeta * (radius_outer_ - radius_inner_));
+    }
+  }();
+
   // std::cout << "s_factor: " << s_factor << std::endl;
 
   const ReturnType one_over_rho_cubed = pow<3>(one_over_rho);
@@ -433,13 +475,32 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
   std::array<ReturnType, Dim> d_lifting_factor_lambda{};
   d_lifting_factor_lambda[polar_coord] =
       -s_factor_over_rho_cubed * cap_deriv[0] * gamma[polar_coord];
-  d_lifting_factor_lambda[radial_coord] =
-      sphere_rate_ * one_over_rho + scaled_frustum_rate_;
+  if (radial_distribution_ == Distribution::Linear) {
+    // TODO : make S' function that returns something different for each
+    // distribution, where for linear it's just sphere_rate_, or make a
+    // function for computing this d_lifting_factor_lambda
+    d_lifting_factor_lambda[radial_coord] =
+        sphere_rate_ * one_over_rho + scaled_frustum_rate_;
+  } else if (radial_distribution_ == Distribution::Logarithmic) {
+    // TODO : need to implement this case? not equal to Linear case above?
+    //
+    // d_lifting_factor_lambda[radial_coord] = S' * one_over_rho;
+    d_lifting_factor_lambda[radial_coord] = s_factor_deriv * one_over_rho;
+  } else {
+    // d_lifting_factor_lambda[radial_coord] =
+    // TODO : can't just use sphere_rate_ = (0.5 * (radius_inner - radius_outer)
+    // / radius_inner / radius_outer) sphere_rate_ * one_over_rho; (0.5 *
+    // (radius_inner - radius_outer) / radius_inner / radius_outer) *
+    // one_over_rho;
+    //
+    // d_lifting_factor_lambda[radial_coord] = S' * one_over_rho;
+    d_lifting_factor_lambda[radial_coord] = s_factor_deriv * one_over_rho;
+  }
   // std::cout << "d_lifting_factor_lambda[polar_coord] "
   //           << d_lifting_factor_lambda[polar_coord] << std::endl;
   // std::cout << "d_lifting_factor_lambda[radial_coord] "
   //           << d_lifting_factor_lambda[radial_coord] << std::endl;
-  if constexpr (Dim == 3) {
+  if (Dim == 3) {
     d_lifting_factor_lambda[azimuth_coord] =
         -s_factor_over_rho_cubed * cap_deriv[1] * gamma[azimuth_coord];
     // std::cout << "d_lifting_factor_lambda[azimuth_coord] "
@@ -645,18 +706,17 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
   const ReturnType one_over_rho_cubed = pow<3>(one_over_rho);
   // const ReturnType scaled_z_frustum =
   //     scaled_frustum_zero_ + scaled_frustum_rate_ * zeta;
-  const ReturnType s_factor_over_rho_cubed =
-      [this, &zeta, &one_over_rho_cubed]() -> ReturnType {
+  const ReturnType s_factor = [this, &zeta]() -> ReturnType {
     if (radial_distribution_ == Distribution::Linear) {
-      return (sphere_zero_ + sphere_rate_ * zeta) * one_over_rho_cubed;
+      return (sphere_zero_ + sphere_rate_ * zeta);
     } else if (radial_distribution_ == Distribution::Logarithmic) {
-      return exp(sphere_zero_ + sphere_rate_ * zeta) * one_over_rho_cubed;
+      return exp(sphere_zero_ + sphere_rate_ * zeta);
     } else {
-      return 2.0 * one_over_rho_cubed /
+      return 2.0 /
              ((1.0 + zeta) / radius_outer_ + (1.0 - zeta) / radius_inner_);
     }
   }();
-
+  const ReturnType s_factor_over_rho_cubed = s_factor * one_over_rho_cubed;
   // const ReturnType one_over_dz_dzeta = [this, &zeta,
   //                                       &one_over_rho]() -> ReturnType {
   //   if (radial_distribution_ == Distribution::Linear) {
@@ -699,15 +759,64 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
   const ReturnType lifting_factor_lambda =
       default_physical_z(zeta, one_over_rho);
 
+  // // TODO : do something more optimized than this, but doing this for now
+  // const ReturnType s_factor = s_factor_over_rho_cubed *
+
   // std::cout << "lifting_factor_lambda : " << lifting_factor_lambda <<
   // std::endl;
+  const ReturnType s_factor_deriv = [this, &zeta, &s_factor]() -> ReturnType {
+    if (radial_distribution_ == Distribution::Linear) {
+      // return sphere_rate_;
+      return make_with_value<ReturnType>(zeta, sphere_rate_);
+    } else if (radial_distribution_ == Distribution::Logarithmic) {
+      // return 0.5 *
+      //        ((1.0 + zeta) * pow(radius_outer_, (1.0 - zeta)) +
+      //         (1.0 - zeta) * pow(radius_inner_, (1.0 + zeta))) /
+      //        s_factor;
+      // // TODO : do something better than this:
+      // ReturnType radius_outer_factor = make_with_value<ReturnType>(zeta,
+      // 0.0); ReturnType radius_inner_factor =
+      // make_with_value<ReturnType>(zeta, 0.0); if constexpr
+      // (is_derived_of_vector_impl_v<ReturnType>) {
+      //   for (size_t i = 0; i < zeta.size(); i++) {
+      //     radius_outer_factor[i] = pow(radius_outer_, (1.0 - zeta[i]));
+      //     radius_inner_factor[i] = pow(radius_inner_, (1.0 + zeta[i]));
+      //   }
+      // } else {
+      //   radius_outer_factor = pow(radius_outer_, (1.0 - zeta));
+      //   radius_inner_factor = pow(radius_inner_, (1.0 + zeta));
+      // }
+      // return 0.5 *
+      //        ((1.0 + zeta) * radius_outer_factor +
+      //         (1.0 - zeta) * radius_inner_factor) /
+      //        s_factor;
+      return 0.5 * s_factor * log(radius_outer_ / radius_inner_);
+    } else {
+      return 2.0 *
+             (radius_outer_ * square(radius_inner_) -
+              (square(radius_outer_) * radius_inner_)) /
+             square(radius_outer_ + radius_inner_ +
+                    zeta * (radius_outer_ - radius_inner_));
+    }
+  }();
 
   // a, b, c
   std::array<ReturnType, Dim> d_lifting_factor_lambda{};
   d_lifting_factor_lambda[polar_coord] =
       -s_factor_over_rho_cubed * cap_deriv[0] * gamma[polar_coord];
-  d_lifting_factor_lambda[radial_coord] =
-      sphere_rate_ * one_over_rho + scaled_frustum_rate_;
+
+  // d_lifting_factor_lambda[radial_coord] =
+  //     sphere_rate_ * one_over_rho + scaled_frustum_rate_;
+
+  if (radial_distribution_ == Distribution::Linear) {
+    d_lifting_factor_lambda[radial_coord] =
+        sphere_rate_ * one_over_rho + scaled_frustum_rate_;
+  } else if (radial_distribution_ == Distribution::Logarithmic) {
+    d_lifting_factor_lambda[radial_coord] = s_factor_deriv * one_over_rho;
+  } else {
+    d_lifting_factor_lambda[radial_coord] = s_factor_deriv * one_over_rho;
+  }
+
   if constexpr (Dim == 3) {
     d_lifting_factor_lambda[azimuth_coord] =
         -s_factor_over_rho_cubed * cap_deriv[1] * gamma[azimuth_coord];
