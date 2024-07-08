@@ -146,6 +146,35 @@ tt::remove_cvref_wrap_t<T> Wedge<Dim>::default_physical_z(
 
 template <size_t Dim>
 template <typename T>
+tt::remove_cvref_wrap_t<T> Wedge<Dim>::get_s_factor(const T& zeta) const {
+  if (radial_distribution_ == Distribution::Linear) {
+    return (sphere_zero_ + sphere_rate_ * zeta);
+  } else if (radial_distribution_ == Distribution::Logarithmic) {
+    return exp(sphere_zero_ + sphere_rate_ * zeta);
+  } else {
+    return 2.0 / ((1.0 + zeta) / radius_outer_ + (1.0 - zeta) / radius_inner_);
+  }
+}
+
+template <size_t Dim>
+template <typename T>
+tt::remove_cvref_wrap_t<T> Wedge<Dim>::get_s_factor_deriv(
+    const T& zeta, const T& s_factor) const {
+  if (radial_distribution_ == Distribution::Linear) {
+    return make_with_value<T>(zeta, sphere_rate_);
+  } else if (radial_distribution_ == Distribution::Logarithmic) {
+    return 0.5 * s_factor * log(radius_outer_ / radius_inner_);
+  } else {
+    return 2.0 *
+           ((square(radius_outer_) * radius_inner_) -
+            radius_outer_ * square(radius_inner_)) /
+           square(radius_outer_ + radius_inner_ +
+                  zeta * (radius_inner_ - radius_outer_));
+  }
+}
+
+template <size_t Dim>
+template <typename T>
 std::array<tt::remove_cvref_wrap_t<T>, Dim> Wedge<Dim>::operator()(
     const std::array<T, Dim>& source_coords) const {
   using ReturnType = tt::remove_cvref_wrap_t<T>;
@@ -316,9 +345,9 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
     xi -= 1.0;
     xi *= 0.5;
   }
+
   std::array<ReturnType, Dim - 1> cap{};
   std::array<ReturnType, Dim - 1> cap_deriv{};
-
   cap[0] = with_equiangular_map_
                ? tan(0.5 * opening_angles_[0]) *
                      tan(0.5 * opening_angles_distribution_[0] * xi) /
@@ -340,7 +369,6 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
   gamma[radial_coord] = make_with_value<ReturnType>(cap[0], 1.0) -
                         rotated_focus[radial_coord] / cube_half_length_;
 
-  // ReturnType one_over_rho = 1.0 + square(cap[0]);
   ReturnType one_over_rho =
       square(1.0 - rotated_focus[radial_coord] / cube_half_length_) +
       square(cap[0] - rotated_focus[polar_coord] / cube_half_length_);
@@ -369,30 +397,8 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
   }
   one_over_rho = 1. / sqrt(one_over_rho);
 
-  const ReturnType s_factor = [this, &zeta]() -> ReturnType {
-    if (radial_distribution_ == Distribution::Linear) {
-      return sphere_zero_ + sphere_rate_ * zeta;
-    } else if (radial_distribution_ == Distribution::Logarithmic) {
-      return exp(sphere_zero_ + sphere_rate_ * zeta);
-    } else {
-      return 2.0 /
-             ((1.0 + zeta) / radius_outer_ + (1.0 - zeta) / radius_inner_);
-    }
-  }();
-
-  const ReturnType s_factor_deriv = [this, &zeta, &s_factor]() -> ReturnType {
-    if (radial_distribution_ == Distribution::Linear) {
-      return make_with_value<ReturnType>(zeta, sphere_rate_);
-    } else if (radial_distribution_ == Distribution::Logarithmic) {
-      return 0.5 * s_factor * log(radius_outer_ / radius_inner_);
-    } else {
-      return 2.0 *
-             ((square(radius_outer_) * radius_inner_) -
-              radius_outer_ * square(radius_inner_)) /
-             square(radius_outer_ + radius_inner_ +
-                    zeta * (radius_inner_ - radius_outer_));
-    }
-  }();
+  const ReturnType s_factor = get_s_factor(zeta);
+  const ReturnType s_factor_deriv = get_s_factor_deriv(zeta, s_factor);
 
   const ReturnType one_over_rho_cubed = pow<3>(one_over_rho);
   const ReturnType s_factor_over_rho_cubed = s_factor * one_over_rho_cubed;
@@ -441,6 +447,7 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
     dxyz_dxi[azimuth_coord] =
         gamma[azimuth_coord] * d_lifting_factor_lambda[polar_coord];
   }
+
   // Implement Scalings:
   if (halves_to_use_ != WedgeHalves::Both) {
     for (size_t d = 0; d < Dim; ++d) {
@@ -529,6 +536,7 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
     xi -= 1.0;
     xi *= 0.5;
   }
+
   std::array<ReturnType, Dim> cap{};
   std::array<ReturnType, Dim> cap_deriv{};
   cap[0] = with_equiangular_map_
@@ -555,6 +563,7 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
   ReturnType one_over_rho =
       square(1.0 - rotated_focus[radial_coord] / cube_half_length_) +
       square(cap[0] - rotated_focus[polar_coord] / cube_half_length_);
+
   if constexpr (Dim == 3) {
     // Azimuthal angle
     const ReturnType& eta = source_coords[azimuth_coord];
@@ -581,39 +590,16 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
 
   const ReturnType one_over_rho_cubed = pow<3>(one_over_rho);
 
-  const ReturnType s_factor = [this, &zeta]() -> ReturnType {
-    if (radial_distribution_ == Distribution::Linear) {
-      return (sphere_zero_ + sphere_rate_ * zeta);
-    } else if (radial_distribution_ == Distribution::Logarithmic) {
-      return exp(sphere_zero_ + sphere_rate_ * zeta);
-    } else {
-      return 2.0 /
-             ((1.0 + zeta) / radius_outer_ + (1.0 - zeta) / radius_inner_);
-    }
-  }();
+  const ReturnType s_factor = get_s_factor(zeta);
   const ReturnType s_factor_over_rho_cubed = s_factor * one_over_rho_cubed;
 
-  // 1 / z
   const ReturnType one_over_gamma_z = 1.0 / gamma[radial_coord];
 
   const ReturnType lifting_factor_lambda =
       default_physical_z(zeta, one_over_rho);
 
-  const ReturnType s_factor_deriv = [this, &zeta, &s_factor]() -> ReturnType {
-    if (radial_distribution_ == Distribution::Linear) {
-      return make_with_value<ReturnType>(zeta, sphere_rate_);
-    } else if (radial_distribution_ == Distribution::Logarithmic) {
-      return 0.5 * s_factor * log(radius_outer_ / radius_inner_);
-    } else {
-      return 2.0 *
-             ((square(radius_outer_) * radius_inner_) -
-              radius_outer_ * square(radius_inner_)) /
-             square(radius_outer_ + radius_inner_ +
-                    zeta * (radius_inner_ - radius_outer_));
-    }
-  }();
+  const ReturnType s_factor_deriv = get_s_factor_deriv(zeta, s_factor);
 
-  // a, b, c
   std::array<ReturnType, Dim> d_lifting_factor_lambda{};
   d_lifting_factor_lambda[polar_coord] =
       -s_factor_over_rho_cubed * cap_deriv[0] * gamma[polar_coord];
