@@ -6,7 +6,6 @@
 #include <climits>
 #include <cmath>
 #include <cstddef>
-#include <iostream>
 #include <pup.h>
 
 #include "DataStructures/Tensor/EagerMath/Determinant.hpp"
@@ -305,17 +304,6 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
     const std::array<T, Dim>& source_coords) const {
   using ReturnType = tt::remove_cvref_wrap_t<T>;
 
-  // std::cout << "=== In jacobian() ===" << std::endl << std::endl;
-  const std::string dist_type =
-      radial_distribution_ == Distribution::Linear
-          ? "Distribution::Linear"
-          : (radial_distribution_ == Distribution::Logarithmic
-                 ? "Distribution::Logarithmic"
-                 : (radial_distribution_ == Distribution::Inverse
-                        ? "Distribution::Inverse"
-                        : "Unknown Distribution type"));
-  // std::cout << " Using Distribution type: " << dist_type << std::endl;
-
   // Radial coordinate
   const ReturnType& zeta = source_coords[radial_coord];
 
@@ -347,34 +335,10 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
   const auto rotated_focus =
       discrete_rotation(orientation_of_wedge_.inverse_map(), focal_offset_);
 
-  // std::cout << "focal_offset_[polar_coord] " << focal_offset_[polar_coord]
-  //           << std::endl;
-  // std::cout << "rotated_focus[polar_coord] " << rotated_focus[polar_coord]
-  //           << std::endl;
-  // if constexpr (Dim == 3) {
-  //   std::cout << "rotated_focus[azimuth_coord] " <<
-  //   rotated_focus[azimuth_coord]
-  //             << std::endl;
-  //   std::cout << "focal_offset_[azimuth_coord] " <<
-  //   focal_offset_[azimuth_coord]
-  //             << std::endl;
-  // }
-  // std::cout << "focal_offset_[radial_coord] " << focal_offset_[radial_coord]
-  //           << std::endl;
-  // std::cout << "rotated_focus[radial_coord] " << rotated_focus[radial_coord]
-  //           << std::endl;
-
-  // const std::array<double, 3> gamma {{
-  //   cap[0] - rotated_focus[polar_coord] / cube_half_length_,
-  //   cap[1] - rotated_focus[polar_coord] / cube_half_length_,
-  //   1.0 - rotated_focus[polar_coord] / cube_half_length_
-  // }};
   std::array<ReturnType, Dim> gamma{};
   gamma[polar_coord] = cap[0] - rotated_focus[polar_coord] / cube_half_length_;
   gamma[radial_coord] = make_with_value<ReturnType>(cap[0], 1.0) -
                         rotated_focus[radial_coord] / cube_half_length_;
-  // std::cout << "gamma[polar_coord] " << gamma[polar_coord] << std::endl;
-  // std::cout << "gamma[radial_coord] " << gamma[radial_coord] << std::endl;
 
   // ReturnType one_over_rho = 1.0 + square(cap[0]);
   ReturnType one_over_rho =
@@ -400,16 +364,10 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
     gamma[azimuth_coord] =
         cap[1] - rotated_focus[azimuth_coord] / cube_half_length_;
 
-    // std::cout << "gamma[azimuth_coord] " << gamma[azimuth_coord] <<
-    // std::endl;
-
-    // one_over_rho += square(cap[1]);
     one_over_rho +=
         square(cap[1] - rotated_focus[azimuth_coord] / cube_half_length_);
   }
   one_over_rho = 1. / sqrt(one_over_rho);
-
-  // std::cout << "one_over_rho: " << one_over_rho << std::endl;
 
   const ReturnType s_factor = [this, &zeta]() -> ReturnType {
     if (radial_distribution_ == Distribution::Linear) {
@@ -424,30 +382,8 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
 
   const ReturnType s_factor_deriv = [this, &zeta, &s_factor]() -> ReturnType {
     if (radial_distribution_ == Distribution::Linear) {
-      // return sphere_rate_;
       return make_with_value<ReturnType>(zeta, sphere_rate_);
     } else if (radial_distribution_ == Distribution::Logarithmic) {
-      // return 0.5 *
-      //        ((1.0 + zeta) * pow(radius_outer_, (1.0 - zeta)) +
-      //         (1.0 - zeta) * pow(radius_inner_, (1.0 + zeta))) /
-      //        s_factor;
-      // // TODO : do something better than this:
-      // ReturnType radius_outer_factor = make_with_value<ReturnType>(zeta,
-      // 0.0); ReturnType radius_inner_factor =
-      // make_with_value<ReturnType>(zeta, 0.0); if constexpr
-      // (is_derived_of_vector_impl_v<ReturnType>) {
-      //   for (size_t i = 0; i < zeta.size(); i++) {
-      //     radius_outer_factor[i] = pow(radius_outer_, (1.0 - zeta[i]));
-      //     radius_inner_factor[i] = pow(radius_inner_, (1.0 + zeta[i]));
-      //   }
-      // } else {
-      //   radius_outer_factor = pow(radius_outer_, (1.0 - zeta));
-      //   radius_inner_factor = pow(radius_inner_, (1.0 + zeta));
-      // }
-      // return 0.5 *
-      //        ((1.0 + zeta) * radius_outer_factor +
-      //         (1.0 - zeta) * radius_inner_factor) /
-      //        s_factor;
       return 0.5 * s_factor * log(radius_outer_ / radius_inner_);
     } else {
       return 2.0 *
@@ -458,20 +394,11 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
     }
   }();
 
-  // std::cout << "s_factor: " << s_factor << std::endl;
-
   const ReturnType one_over_rho_cubed = pow<3>(one_over_rho);
   const ReturnType s_factor_over_rho_cubed = s_factor * one_over_rho_cubed;
   const ReturnType lifting_factor_lambda =
       default_physical_z(zeta, one_over_rho);
 
-  // std::cout << "sphere_rate_: " << sphere_rate_ << std::endl;
-  // std::cout << "scaled_frustum_rate_: " << scaled_frustum_rate_ << std::endl;
-
-  // auto d_lifting_factor_lambda = make_with_value<tnsr::i<ReturnType, Dim,
-  // Frame::NoFrame>>(
-  //     xi,
-  //     std::numeric_limits<double>::signaling_NaN());
   std::array<ReturnType, Dim> d_lifting_factor_lambda{};
   d_lifting_factor_lambda[polar_coord] =
       -s_factor_over_rho_cubed * cap_deriv[0] * gamma[polar_coord];
@@ -482,29 +409,14 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
     d_lifting_factor_lambda[radial_coord] =
         sphere_rate_ * one_over_rho + scaled_frustum_rate_;
   } else if (radial_distribution_ == Distribution::Logarithmic) {
-    // TODO : need to implement this case? not equal to Linear case above?
-    //
-    // d_lifting_factor_lambda[radial_coord] = S' * one_over_rho;
     d_lifting_factor_lambda[radial_coord] = s_factor_deriv * one_over_rho;
   } else {
-    // d_lifting_factor_lambda[radial_coord] =
-    // TODO : can't just use sphere_rate_ = (0.5 * (radius_inner - radius_outer)
-    // / radius_inner / radius_outer) sphere_rate_ * one_over_rho; (0.5 *
-    // (radius_inner - radius_outer) / radius_inner / radius_outer) *
-    // one_over_rho;
-    //
-    // d_lifting_factor_lambda[radial_coord] = S' * one_over_rho;
     d_lifting_factor_lambda[radial_coord] = s_factor_deriv * one_over_rho;
   }
-  // std::cout << "d_lifting_factor_lambda[polar_coord] "
-  //           << d_lifting_factor_lambda[polar_coord] << std::endl;
-  // std::cout << "d_lifting_factor_lambda[radial_coord] "
-  //           << d_lifting_factor_lambda[radial_coord] << std::endl;
+
   if (Dim == 3) {
     d_lifting_factor_lambda[azimuth_coord] =
         -s_factor_over_rho_cubed * cap_deriv[1] * gamma[azimuth_coord];
-    // std::cout << "d_lifting_factor_lambda[azimuth_coord] "
-    //           << d_lifting_factor_lambda[azimuth_coord] << std::endl;
   }
 
   auto jacobian_matrix =
@@ -514,30 +426,20 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
   std::array<ReturnType, Dim> dxyz_dxi{};
   dxyz_dxi[radial_coord] =
       gamma[radial_coord] * d_lifting_factor_lambda[polar_coord];
-  // std::cout << "dxyz_dxi[radial_coord]: " << dxyz_dxi[radial_coord]
-  //           << std::endl;
   if (radial_distribution_ == Distribution::Linear) {
     dxyz_dxi[polar_coord] =
         gamma[polar_coord] * d_lifting_factor_lambda[polar_coord] +
         cap_deriv[0] * lifting_factor_lambda;
-    // std::cout << "dxyz_dxi[polar_coord]: " << dxyz_dxi[polar_coord]
-    //           << std::endl;
   } else {
     dxyz_dxi[polar_coord] =
         square(one_over_rho) * cap_deriv[0] * lifting_factor_lambda;
-    // std::cout << "dxyz_dxi[polar_coord]: " << dxyz_dxi[polar_coord]
-    //           << std::endl;
     if constexpr (Dim == 3) {
       dxyz_dxi[polar_coord] *= 1.0 + square(cap[1]);
-      // std::cout << "dxyz_dxi[polar_coord]: " << dxyz_dxi[polar_coord]
-      //           << std::endl;
     }
   }
   if constexpr (Dim == 3) {
     dxyz_dxi[azimuth_coord] =
         gamma[azimuth_coord] * d_lifting_factor_lambda[polar_coord];
-    // std::cout << "dxyz_dxi[azimuth_coord]: " << dxyz_dxi[azimuth_coord]
-    //           << std::endl;
   }
   // Implement Scalings:
   if (halves_to_use_ != WedgeHalves::Both) {
@@ -545,8 +447,7 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
       gsl::at(dxyz_dxi, d) *= 0.5;
     }
   }
-  // std::cout << "dxyz_dxi[polar_coord]: " << dxyz_dxi[polar_coord] <<
-  // std::endl;
+
   std::array<ReturnType, Dim> dX_dlogical =
       discrete_rotation(orientation_of_wedge_, std::move(dxyz_dxi));
   get<0, polar_coord>(jacobian_matrix) = dX_dlogical[0];
@@ -555,42 +456,29 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
     get<2, polar_coord>(jacobian_matrix) = dX_dlogical[2];
   }
 
-  // std::cout << "=== completed rotating and setting dx_dlogical ==="
-  //           << std::endl;
-
   // Derivative by azimuthal angle
   if constexpr (Dim == 3) {
     std::array<ReturnType, Dim> dxyz_deta{};
     dxyz_deta[radial_coord] =
         gamma[radial_coord] * d_lifting_factor_lambda[azimuth_coord];
-    // std::cout << "dxyz_deta[radial_coord]: " << dxyz_deta[radial_coord]
-    //           << std::endl;
 
     if (radial_distribution_ == Distribution::Linear) {
       dxyz_deta[azimuth_coord] =
           gamma[azimuth_coord] * d_lifting_factor_lambda[azimuth_coord] +
           cap_deriv[1] * lifting_factor_lambda;
-      // std::cout << "dxyz_deta[azimuth_coord]: " << dxyz_deta[azimuth_coord]
-      //           << std::endl;
     } else {
       dxyz_deta[azimuth_coord] = (1.0 + square(cap[0])) * square(one_over_rho) *
                                  cap_deriv[1] * lifting_factor_lambda;
-      // std::cout << "dxyz_deta[azimuth_coord]: " << dxyz_deta[azimuth_coord]
-      //           << std::endl;
     }
 
     dxyz_deta[polar_coord] =
         gamma[polar_coord] * d_lifting_factor_lambda[azimuth_coord];
-    // std::cout << "dxyz_deta[polar_coord]: " << dxyz_deta[polar_coord]
-    //           << std::endl;
+
     dX_dlogical =
         discrete_rotation(orientation_of_wedge_, std::move(dxyz_deta));
     get<0, azimuth_coord>(jacobian_matrix) = dX_dlogical[0];
     get<1, azimuth_coord>(jacobian_matrix) = dX_dlogical[1];
     get<2, azimuth_coord>(jacobian_matrix) = dX_dlogical[2];
-
-    // std::cout << "=== completed rotating and setting dy_dlogical ==="
-    //           << std::endl;
   }
 
   // Derivative by radial coordinate
@@ -598,35 +486,20 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
   if (radial_distribution_ == Distribution::Linear) {
     dxyz_dzeta[radial_coord] =
         gamma[radial_coord] * d_lifting_factor_lambda[radial_coord];
-    // std::cout << "dxyz_dzeta[radial_coord]: " << dxyz_dzeta[radial_coord]
-    //           << std::endl;
   } else if (radial_distribution_ == Distribution::Logarithmic) {
     dxyz_dzeta[radial_coord] = s_factor * sphere_rate_ * one_over_rho;
-    // std::cout << "dxyz_dzeta[radial_coord]: " << dxyz_dzeta[radial_coord]
-    //           << std::endl;
   } else {
     const double sphere_rate =
         0.5 * (1.0 / radius_outer_ - 1.0 / radius_inner_);
     dxyz_dzeta[radial_coord] = -square(s_factor) * sphere_rate * one_over_rho;
-    // std::cout << "dxyz_dzeta[radial_coord]: " << dxyz_dzeta[radial_coord]
-    //           << std::endl;
   }
   dxyz_dzeta[polar_coord] =
       gamma[polar_coord] * d_lifting_factor_lambda[radial_coord];
-  // std::cout << "dxyz_dzeta[polar_coord]: " << dxyz_dzeta[polar_coord]
-  //           << std::endl;
 
   if constexpr (Dim == 3) {
     dxyz_dzeta[azimuth_coord] =
         gamma[azimuth_coord] * d_lifting_factor_lambda[radial_coord];
-    // std::cout << "dxyz_dzeta[azimuth_coord]: " << dxyz_dzeta[azimuth_coord]
-    //           << std::endl;
   }
-
-  // std::cout << "dxyz_dzeta[polar_coord]: " << dxyz_dzeta[polar_coord]
-  //           << std::endl;
-  // std::cout << "dxyz_dzeta[radial_coord]: " << dxyz_dzeta[radial_coord]
-  //           << std::endl;
 
   dX_dlogical = discrete_rotation(orientation_of_wedge_, std::move(dxyz_dzeta));
   get<0, radial_coord>(jacobian_matrix) = dX_dlogical[0];
@@ -634,8 +507,7 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
   if constexpr (Dim == 3) {
     get<2, radial_coord>(jacobian_matrix) = dX_dlogical[2];
   }
-  // std::cout << "=== completed rotating and setting dz_dlogical ==="
-  //           << std::endl;
+
   return jacobian_matrix;
 }
 
@@ -680,7 +552,6 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
   gamma[radial_coord] = make_with_value<ReturnType>(cap[0], 1.0) -
                         rotated_focus[radial_coord] / cube_half_length_;
 
-  // ReturnType one_over_rho = 1.0 + square(cap[0]);
   ReturnType one_over_rho =
       square(1.0 - rotated_focus[radial_coord] / cube_half_length_) +
       square(cap[0] - rotated_focus[polar_coord] / cube_half_length_);
@@ -703,17 +574,13 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
     gamma[azimuth_coord] =
         cap[1] - rotated_focus[azimuth_coord] / cube_half_length_;
 
-    // one_over_rho += square(cap[1]);
     one_over_rho +=
         square(cap[1] - rotated_focus[azimuth_coord] / cube_half_length_);
   }
   one_over_rho = 1. / sqrt(one_over_rho);
 
-  // std::cout << "one_over_rho : " << one_over_rho << std::endl;
-
   const ReturnType one_over_rho_cubed = pow<3>(one_over_rho);
-  // const ReturnType scaled_z_frustum =
-  //     scaled_frustum_zero_ + scaled_frustum_rate_ * zeta;
+
   const ReturnType s_factor = [this, &zeta]() -> ReturnType {
     if (radial_distribution_ == Distribution::Linear) {
       return (sphere_zero_ + sphere_rate_ * zeta);
@@ -725,41 +592,6 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
     }
   }();
   const ReturnType s_factor_over_rho_cubed = s_factor * one_over_rho_cubed;
-  // const ReturnType one_over_dz_dzeta = [this, &zeta,
-  //                                       &one_over_rho]() -> ReturnType {
-  //   if (radial_distribution_ == Distribution::Linear) {
-  //     return 1.0 / (scaled_frustum_rate_ + sphere_rate_ * one_over_rho);
-  //   } else if (radial_distribution_ == Distribution::Logarithmic) {
-  //     return 1.0 / (exp(sphere_zero_ + sphere_rate_ * zeta) * sphere_rate_ *
-  //                   one_over_rho);
-  //   } else {
-  //     const double sphere_rate =
-  //         0.5 * (1.0 / radius_outer_ - 1.0 / radius_inner_);
-  //     return -0.25 *
-  //            square((1.0 + zeta) / radius_outer_ +
-  //                   (1.0 - zeta) / radius_inner_) /
-  //            sphere_rate / one_over_rho;
-  //   }
-  // }();
-  // const ReturnType dzeta_factor = one_over_physical_z * one_over_dz_dzeta;
-
-  // 1 / c
-  // const ReturnType one_over_d_lifting_factor_dzeta = [this, &zeta,
-  //                                       &one_over_rho]() -> ReturnType {
-  //   if (radial_distribution_ == Distribution::Linear) {
-  //     return 1.0 / (scaled_frustum_rate_ + sphere_rate_ * one_over_rho);
-  //   } else if (radial_distribution_ == Distribution::Logarithmic) {
-  //     return 1.0 / (exp(sphere_zero_ + sphere_rate_ * zeta) * sphere_rate_ *
-  //                   one_over_rho);
-  //   } else {
-  //     const double sphere_rate =
-  //         0.5 * (1.0 / radius_outer_ - 1.0 / radius_inner_);
-  //     return -0.25 *
-  //            square((1.0 + zeta) / radius_outer_ +
-  //                   (1.0 - zeta) / radius_inner_) /
-  //            sphere_rate / one_over_rho;
-  //   }
-  // }();
 
   // 1 / z
   const ReturnType one_over_gamma_z = 1.0 / gamma[radial_coord];
@@ -767,37 +599,10 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
   const ReturnType lifting_factor_lambda =
       default_physical_z(zeta, one_over_rho);
 
-  // // TODO : do something more optimized than this, but doing this for now
-  // const ReturnType s_factor = s_factor_over_rho_cubed *
-
-  // std::cout << "lifting_factor_lambda : " << lifting_factor_lambda <<
-  // std::endl;
   const ReturnType s_factor_deriv = [this, &zeta, &s_factor]() -> ReturnType {
     if (radial_distribution_ == Distribution::Linear) {
-      // return sphere_rate_;
       return make_with_value<ReturnType>(zeta, sphere_rate_);
     } else if (radial_distribution_ == Distribution::Logarithmic) {
-      // return 0.5 *
-      //        ((1.0 + zeta) * pow(radius_outer_, (1.0 - zeta)) +
-      //         (1.0 - zeta) * pow(radius_inner_, (1.0 + zeta))) /
-      //        s_factor;
-      // // TODO : do something better than this:
-      // ReturnType radius_outer_factor = make_with_value<ReturnType>(zeta,
-      // 0.0); ReturnType radius_inner_factor =
-      // make_with_value<ReturnType>(zeta, 0.0); if constexpr
-      // (is_derived_of_vector_impl_v<ReturnType>) {
-      //   for (size_t i = 0; i < zeta.size(); i++) {
-      //     radius_outer_factor[i] = pow(radius_outer_, (1.0 - zeta[i]));
-      //     radius_inner_factor[i] = pow(radius_inner_, (1.0 + zeta[i]));
-      //   }
-      // } else {
-      //   radius_outer_factor = pow(radius_outer_, (1.0 - zeta));
-      //   radius_inner_factor = pow(radius_inner_, (1.0 + zeta));
-      // }
-      // return 0.5 *
-      //        ((1.0 + zeta) * radius_outer_factor +
-      //         (1.0 - zeta) * radius_inner_factor) /
-      //        s_factor;
       return 0.5 * s_factor * log(radius_outer_ / radius_inner_);
     } else {
       return 2.0 *
@@ -812,9 +617,6 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
   std::array<ReturnType, Dim> d_lifting_factor_lambda{};
   d_lifting_factor_lambda[polar_coord] =
       -s_factor_over_rho_cubed * cap_deriv[0] * gamma[polar_coord];
-
-  // d_lifting_factor_lambda[radial_coord] =
-  //     sphere_rate_ * one_over_rho + scaled_frustum_rate_;
 
   if (radial_distribution_ == Distribution::Linear) {
     d_lifting_factor_lambda[radial_coord] =
@@ -833,138 +635,56 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
   const ReturnType one_over_d_lifting_factor_lambda_dzeta =
       1.0 / d_lifting_factor_lambda[radial_coord];
 
-  // std::cout << "one_over_d_lifting_factor_lambda_dzeta : "
-  //           << one_over_d_lifting_factor_lambda_dzeta << std::endl;
-
   auto inv_jacobian_matrix =
       make_with_value<tnsr::Ij<ReturnType, Dim, Frame::NoFrame>>(xi, 0.0);
 
   // Derivatives of polar angle
   std::array<ReturnType, Dim> dxi_dxyz{};
-  // dxi_dxyz[polar_coord] = one_over_lifting_factor_lambda / cap_deriv[0];
-  // std::cout << "lifting_factor_lambda : " << lifting_factor_lambda << std::endl;
-  // std::cout << "cap_deriv[0] : " << cap_deriv[0] << std::endl;
   dxi_dxyz[polar_coord] = 1.0 / (lifting_factor_lambda * cap_deriv[0]);
-  // std::cout << "dxi_dxyz[polar_coord] : " << dxi_dxyz[polar_coord] << std::endl;
-  // // Implement Scalings:
+  // Implement Scalings:
   if (halves_to_use_ != WedgeHalves::Both) {
     dxi_dxyz[polar_coord] *= 2.0;
   }
-  // dxi_dxyz[radial_coord] = -cap[0] * dxi_dxyz[polar_coord];
-  // std::cout << "dxi_dxyz[polar_coord]: " << dxi_dxyz[polar_coord] <<
-  // std::endl; std::cout << "one_over_d_lifting_factor_lambda_dzeta: " <<
-  // one_over_d_lifting_factor_lambda_dzeta << std::endl; std::cout <<
-  // "d_lifting_factor_lambda[polar_coord]: " <<
-  // d_lifting_factor_lambda[polar_coord] << std::endl;
-  // backwards:
-  // dxi_dxyz[radial_coord] = -dxi_dxyz[polar_coord] *
-  //                          one_over_d_lifting_factor_lambda_dzeta *
-  //                          d_lifting_factor_lambda[polar_coord];
+
   dxi_dxyz[radial_coord] =
       -dxi_dxyz[polar_coord] * one_over_gamma_z * gamma[polar_coord];
-  // std::cout << "dxi_dxyz[radial_coord] : " << dxi_dxyz[radial_coord] << std::endl;
-  // std::cout << "dxi_dxyz[radial_coord]: " << dxi_dxyz[polar_coord] <<
-  // std::endl;
+
   if constexpr (Dim == 3) {
     dxi_dxyz[azimuth_coord] = make_with_value<ReturnType>(xi, 0.0);
-    // std::cout << "dxi_dxyz[azimuth_coord] : " << dxi_dxyz[azimuth_coord] << std::endl;
   }
-
-  // std::cout << "dxi_dxyz[polar_coord] : " << dxi_dxyz[polar_coord] <<
-  // std::endl; std::cout << "dxi_dxyz[radial_coord] : " <<
-  // dxi_dxyz[radial_coord]
-  //           << std::endl;
-
-  // std::array<ReturnType, Dim> dlogical_dX =
-  //     discrete_rotation(orientation_of_wedge_, std::move(dxi_dxyz));
-  // get<polar_coord, 0>(inv_jacobian_matrix) = dlogical_dX[0];
-  // get<polar_coord, 1>(inv_jacobian_matrix) = dlogical_dX[1];
-  // if constexpr (Dim == 3) {
-  //   get<polar_coord, 2>(inv_jacobian_matrix) = dlogical_dX[2];
-  // }
-
-  // std::cout << "dlogical_dX done" << std::endl;
 
   // Derivatives of azimuthal angle
   std::array<ReturnType, Dim> deta_dxyz{};
   (void)deta_dxyz;
   if constexpr (Dim == 3) {
-    // std::array<ReturnType, Dim> deta_dxyz{};
     deta_dxyz[polar_coord] = make_with_value<ReturnType>(xi, 0.0);
-    // deta_dxyz[azimuth_coord] = one_over_lifting_factor_lambda / cap_deriv[1];
     deta_dxyz[azimuth_coord] = 1.0 / (lifting_factor_lambda * cap_deriv[1]);
-    // deta_dxyz[radial_coord] = -cap[1] * deta_dxyz[azimuth_coord];
-    // backwards :
-    // deta_dxyz[radial_coord] = -deta_dxyz[azimuth_coord] *
-    //                           one_over_d_lifting_factor_lambda_dzeta *
-    //                           d_lifting_factor_lambda[azimuth_coord];
     deta_dxyz[radial_coord] =
-      -deta_dxyz[azimuth_coord] * one_over_gamma_z * gamma[azimuth_coord];
-    // dlogical_dX =
-    //     discrete_rotation(orientation_of_wedge_, std::move(deta_dxyz));
-    // get<azimuth_coord, 0>(inv_jacobian_matrix) = dlogical_dX[0];
-    // get<azimuth_coord, 1>(inv_jacobian_matrix) = dlogical_dX[1];
-    // get<azimuth_coord, 2>(inv_jacobian_matrix) = dlogical_dX[2];
-
-    // std::cout << "deta_dxyz[polar_coord] : " << deta_dxyz[polar_coord] << std::endl;
-    // std::cout << "deta_dxyz[azimuth_coord] : " << deta_dxyz[azimuth_coord] << std::endl;
-    // std::cout << "deta_dxyz[radial_coord] : " << deta_dxyz[radial_coord] << std::endl;
-
-    // std::cout << "dlogical_dY done" << std::endl;
+        -deta_dxyz[azimuth_coord] * one_over_gamma_z * gamma[azimuth_coord];
   }
 
   // Derivatives of radial coordinate
   std::array<ReturnType, Dim> dzeta_dxyz{};
-  // dzeta_dxyz[radial_coord] =
-  //     dzeta_factor * (scaled_z_frustum + s_factor_over_rho_cubed);
-  // dzeta_dxyz[polar_coord] = dzeta_factor * cap[0] * s_factor_over_rho_cubed;
-
-  // backwards:
-  // dzeta_dxyz[polar_coord] =
-  //     -dxi_dxyz[polar_coord] * one_over_gamma_z * gamma[radial_coord];
-  dzeta_dxyz[polar_coord] =
-      -dxi_dxyz[polar_coord] * one_over_d_lifting_factor_lambda_dzeta * d_lifting_factor_lambda[polar_coord];
+  dzeta_dxyz[polar_coord] = -dxi_dxyz[polar_coord] *
+                            one_over_d_lifting_factor_lambda_dzeta *
+                            d_lifting_factor_lambda[polar_coord];
   if (halves_to_use_ != WedgeHalves::Both) {
     dzeta_dxyz[polar_coord] *= 0.5;
   }
-  // std::cout << "dzeta_dxyz[polar_coord] : " << dzeta_dxyz[polar_coord]
-  //           << std::endl;
 
   if constexpr (Dim == 2) {
-    // std::cout << "dzeta_dxyz[radial_coord] before" << std::endl;
-    // std::cout << "one_over_gamma_z: " << one_over_gamma_z << std::endl;
-    // std::cout << "one_over_d_lifting_factor_lambda_dzeta: " <<
-    // one_over_d_lifting_factor_lambda_dzeta << std::endl; std::cout <<
-    // "dxi_dxyz[radial_coord]: " << dxi_dxyz[radial_coord] << std::endl;
-    dzeta_dxyz[radial_coord] =
-        one_over_gamma_z *
-        (one_over_d_lifting_factor_lambda_dzeta - dzeta_dxyz[polar_coord] * gamma[polar_coord]);
-    // std::cout << "dzeta_dxyz[radial_coord] : " << dzeta_dxyz[radial_coord] <<
-    // std::endl; dzeta_dxyz[radial_coord] =
-    //     one_over_gamma_z *
-    //     (one_over_d_lifting_factor_lambda_dzeta - get<radial_coord,
-    //     0>(inv_jacobian_matrix));
-    // std::cout << "dzeta_dxyz[radial_coord] after" << std::endl;
-    // std::cout << "dzeta_dxyz[radial_coord] : " << dzeta_dxyz[radial_coord]
-    //           << std::endl;
-  } else {
-    // backwards:
-    // dzeta_dxyz[azimuth_coord] =
-    //     -deta_dxyz[azimuth_coord] * one_over_gamma_z * gamma[azimuth_coord];
-    dzeta_dxyz[azimuth_coord] =
-        -deta_dxyz[azimuth_coord] * one_over_d_lifting_factor_lambda_dzeta * d_lifting_factor_lambda[azimuth_coord];
-    // std::cout << "dzeta_dxyz[azimuth_coord] : " << dzeta_dxyz[azimuth_coord] << std::endl;
     dzeta_dxyz[radial_coord] =
         one_over_gamma_z * (one_over_d_lifting_factor_lambda_dzeta -
-                            dzeta_dxyz[azimuth_coord] * gamma[azimuth_coord] - dzeta_dxyz[polar_coord] * gamma[polar_coord]);
-    // std::cout << "dzeta_dxyz[radial_coord] : " << dzeta_dxyz[radial_coord]
-    //           << std::endl;
+                            dzeta_dxyz[polar_coord] * gamma[polar_coord]);
+  } else {
+    dzeta_dxyz[azimuth_coord] = -deta_dxyz[azimuth_coord] *
+                                one_over_d_lifting_factor_lambda_dzeta *
+                                d_lifting_factor_lambda[azimuth_coord];
+    dzeta_dxyz[radial_coord] =
+        one_over_gamma_z * (one_over_d_lifting_factor_lambda_dzeta -
+                            dzeta_dxyz[azimuth_coord] * gamma[azimuth_coord] -
+                            dzeta_dxyz[polar_coord] * gamma[polar_coord]);
   }
-
-  // if constexpr (Dim == 3) {
-  //   dzeta_dxyz[azimuth_coord] = dzeta_factor * cap[1] *
-  //   s_factor_over_rho_cubed;
-  // }
 
   std::array<ReturnType, Dim> dlogical_dX =
       discrete_rotation(orientation_of_wedge_, std::move(dxi_dxyz));
@@ -980,7 +700,6 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
     get<azimuth_coord, 0>(inv_jacobian_matrix) = dlogical_dX[0];
     get<azimuth_coord, 1>(inv_jacobian_matrix) = dlogical_dX[1];
     get<azimuth_coord, 2>(inv_jacobian_matrix) = dlogical_dX[2];
-    // std::cout << "dlogical_dY done" << std::endl;
   }
 
   dlogical_dX = discrete_rotation(orientation_of_wedge_, std::move(dzeta_dxyz));
@@ -989,7 +708,6 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
   if constexpr (Dim == 3) {
     get<radial_coord, 2>(inv_jacobian_matrix) = dlogical_dX[2];
   }
-  // std::cout << "dlogical_dZ done" << std::endl;
   return inv_jacobian_matrix;
 }
 
