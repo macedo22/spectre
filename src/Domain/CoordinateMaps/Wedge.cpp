@@ -451,10 +451,10 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
       return 0.5 * s_factor * log(radius_outer_ / radius_inner_);
     } else {
       return 2.0 *
-             (radius_outer_ * square(radius_inner_) -
-              (square(radius_outer_) * radius_inner_)) /
+             ((square(radius_outer_) * radius_inner_) -
+              radius_outer_ * square(radius_inner_)) /
              square(radius_outer_ + radius_inner_ +
-                    zeta * (radius_outer_ - radius_inner_));
+                    zeta * (radius_inner_ - radius_outer_));
     }
   }();
 
@@ -545,6 +545,8 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
       gsl::at(dxyz_dxi, d) *= 0.5;
     }
   }
+  // std::cout << "dxyz_dxi[polar_coord]: " << dxyz_dxi[polar_coord] <<
+  // std::endl;
   std::array<ReturnType, Dim> dX_dlogical =
       discrete_rotation(orientation_of_wedge_, std::move(dxyz_dxi));
   get<0, polar_coord>(jacobian_matrix) = dX_dlogical[0];
@@ -620,6 +622,12 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
     // std::cout << "dxyz_dzeta[azimuth_coord]: " << dxyz_dzeta[azimuth_coord]
     //           << std::endl;
   }
+
+  // std::cout << "dxyz_dzeta[polar_coord]: " << dxyz_dzeta[polar_coord]
+  //           << std::endl;
+  // std::cout << "dxyz_dzeta[radial_coord]: " << dxyz_dzeta[radial_coord]
+  //           << std::endl;
+
   dX_dlogical = discrete_rotation(orientation_of_wedge_, std::move(dxyz_dzeta));
   get<0, radial_coord>(jacobian_matrix) = dX_dlogical[0];
   get<1, radial_coord>(jacobian_matrix) = dX_dlogical[1];
@@ -793,10 +801,10 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
       return 0.5 * s_factor * log(radius_outer_ / radius_inner_);
     } else {
       return 2.0 *
-             (radius_outer_ * square(radius_inner_) -
-              (square(radius_outer_) * radius_inner_)) /
+             ((square(radius_outer_) * radius_inner_) -
+              radius_outer_ * square(radius_inner_)) /
              square(radius_outer_ + radius_inner_ +
-                    zeta * (radius_outer_ - radius_inner_));
+                    zeta * (radius_inner_ - radius_outer_));
     }
   }();
 
@@ -862,8 +870,10 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
     // std::cout << "dxi_dxyz[azimuth_coord] : " << dxi_dxyz[azimuth_coord] << std::endl;
   }
 
-  // std::cout << "dxi_dxyz[polar_coord] : " << dxi_dxyz[polar_coord] << std::endl;
-  // std::cout << "dxi_dxyz[radial_coord] : " << dxi_dxyz[radial_coord] << std::endl;
+  // std::cout << "dxi_dxyz[polar_coord] : " << dxi_dxyz[polar_coord] <<
+  // std::endl; std::cout << "dxi_dxyz[radial_coord] : " <<
+  // dxi_dxyz[radial_coord]
+  //           << std::endl;
 
   // std::array<ReturnType, Dim> dlogical_dX =
   //     discrete_rotation(orientation_of_wedge_, std::move(dxi_dxyz));
@@ -917,7 +927,8 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
   if (halves_to_use_ != WedgeHalves::Both) {
     dzeta_dxyz[polar_coord] *= 0.5;
   }
-  // std::cout << "dzeta_dxyz[polar_coord] : " << dzeta_dxyz[polar_coord] << std::endl;
+  // std::cout << "dzeta_dxyz[polar_coord] : " << dzeta_dxyz[polar_coord]
+  //           << std::endl;
 
   if constexpr (Dim == 2) {
     // std::cout << "dzeta_dxyz[radial_coord] before" << std::endl;
@@ -928,12 +939,14 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
     dzeta_dxyz[radial_coord] =
         one_over_gamma_z *
         (one_over_d_lifting_factor_lambda_dzeta - dzeta_dxyz[polar_coord] * gamma[polar_coord]);
-    // std::cout << "dzeta_dxyz[radial_coord] : " << dzeta_dxyz[radial_coord] << std::endl;
-    // dzeta_dxyz[radial_coord] =
+    // std::cout << "dzeta_dxyz[radial_coord] : " << dzeta_dxyz[radial_coord] <<
+    // std::endl; dzeta_dxyz[radial_coord] =
     //     one_over_gamma_z *
     //     (one_over_d_lifting_factor_lambda_dzeta - get<radial_coord,
     //     0>(inv_jacobian_matrix));
     // std::cout << "dzeta_dxyz[radial_coord] after" << std::endl;
+    // std::cout << "dzeta_dxyz[radial_coord] : " << dzeta_dxyz[radial_coord]
+    //           << std::endl;
   } else {
     // backwards:
     // dzeta_dxyz[azimuth_coord] =
@@ -944,7 +957,8 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
     dzeta_dxyz[radial_coord] =
         one_over_gamma_z * (one_over_d_lifting_factor_lambda_dzeta -
                             dzeta_dxyz[azimuth_coord] * gamma[azimuth_coord] - dzeta_dxyz[polar_coord] * gamma[polar_coord]);
-    // std::cout << "dzeta_dxyz[radial_coord] : " << dzeta_dxyz[radial_coord] << std::endl;
+    // std::cout << "dzeta_dxyz[radial_coord] : " << dzeta_dxyz[radial_coord]
+    //           << std::endl;
   }
 
   // if constexpr (Dim == 3) {

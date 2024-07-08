@@ -255,6 +255,16 @@ void test_inv_jacobian(const Map& map,
   for (size_t i = 0; i < Map::dim; ++i) {
     for (size_t j = 0; j < Map::dim; ++j) {
       // std::cout << "(i, j) : (" << i << ", " << j << ")" << std::endl;
+      if (not(gsl::at(gsl::at(expected_identity, i), j) ==
+              approx(i == j ? 1. : 0.))) {
+        std::cout << "JJ^-1 = Identity failed at (i, j): (" << i << ", " << j
+                  << ")" << std::endl;
+        std::cout << "test_point : " << test_point << std::endl;
+        std::cout << "jacobian : " << jacobian << std::endl;
+        std::cout << "inv_jacobian : " << inv_jacobian << std::endl;
+        std::cout << "numerical_inv_jacobian : " << numerical_inv_jacobian
+                  << std::endl;
+      }
       CHECK(gsl::at(gsl::at(expected_identity, i), j) ==
             approx(i == j ? 1. : 0.));
     }

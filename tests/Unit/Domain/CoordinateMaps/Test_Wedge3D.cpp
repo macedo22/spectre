@@ -58,10 +58,10 @@ void test_wedge3d_all_directions() {
            cartesian_product(
                halves_array, all_wedge_directions(), make_array(true, false),
                make_array(CoordinateMaps::Distribution::Linear,
-               CoordinateMaps::Distribution::Linear,
-               CoordinateMaps::Distribution::Linear,
-                          CoordinateMaps::Distribution::Logarithmic/*,
-                          CoordinateMaps::Distribution::Inverse*/)),
+                          CoordinateMaps::Distribution::Linear,
+                          CoordinateMaps::Distribution::Linear,
+                          CoordinateMaps::Distribution::Logarithmic,
+                          CoordinateMaps::Distribution::Inverse)),
            make_not_null(&gen))) {
     // [cartesian_product_loop]
     CAPTURE(halves);
@@ -101,8 +101,8 @@ void test_wedge3d_alignment() {
     CAPTURE(with_equiangular_map);
     for (const auto radial_distribution :
          {CoordinateMaps::Distribution::Linear,
-          CoordinateMaps::Distribution::Logarithmic/*,
-          CoordinateMaps::Distribution::Inverse*/}) {
+          CoordinateMaps::Distribution::Logarithmic,
+          CoordinateMaps::Distribution::Inverse}) {
       CAPTURE(radial_distribution);
       const double inner_sphericity =
           radial_distribution == CoordinateMaps::Distribution::Linear ? 0.0
@@ -246,8 +246,8 @@ void test_wedge3d_random_radii() {
     CAPTURE(with_equiangular_map);
     for (const auto radial_distribution :
          {CoordinateMaps::Distribution::Linear,
-          CoordinateMaps::Distribution::Logarithmic/*,
-          CoordinateMaps::Distribution::Inverse*/}) {
+          CoordinateMaps::Distribution::Logarithmic,
+          CoordinateMaps::Distribution::Inverse}) {
       CAPTURE(radial_distribution);
       const double inner_sphericity =
           radial_distribution == CoordinateMaps::Distribution::Linear ? 0.0
@@ -545,7 +545,7 @@ SPECTRE_TEST_CASE("Unit.Domain.CoordinateMaps.Wedge3D.Map", "[Domain][Unit]") {
   test_wedge3d_random_radii();
   // can't run this test right now because Distribution::Inverse case hasn't
   // been handled in Wedge class yet
-  // test_wedge3d_large_radius();
+  test_wedge3d_large_radius();
   CHECK(not Wedge3D{}.is_identity());
 
 #ifdef SPECTRE_DEBUG
