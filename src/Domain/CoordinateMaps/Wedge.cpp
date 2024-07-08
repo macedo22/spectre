@@ -409,9 +409,6 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
   d_lifting_factor_lambda[polar_coord] =
       -s_factor_over_rho_cubed * cap_deriv[0] * gamma[polar_coord];
   if (radial_distribution_ == Distribution::Linear) {
-    // TODO : make S' function that returns something different for each
-    // distribution, where for linear it's just sphere_rate_, or make a
-    // function for computing this d_lifting_factor_lambda
     d_lifting_factor_lambda[radial_coord] =
         sphere_rate_ * one_over_rho + scaled_frustum_rate_;
   } else if (radial_distribution_ == Distribution::Logarithmic) {
