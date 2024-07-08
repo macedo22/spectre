@@ -12,7 +12,6 @@
 #include <array>
 #include <cmath>
 #include <functional>
-#include <iostream>
 #include <limits>
 #include <memory>
 #include <numeric>
@@ -117,11 +116,6 @@ void test_jacobian(const Map& map,
     const auto numerical_deriv_i = numerical_derivative(map, test_point, i, dx);
     for (size_t j = 0; j < Map::dim; ++j) {
       INFO("i: " << i << " j: " << j);
-      if (not(jacobian.get(j, i) ==
-              local_approx(gsl::at(numerical_deriv_i, j)))) {
-        std::cout << "Jacobian numerical deriv failed with (j, i): (" << j
-                  << ", " << i << ")" << std::endl;
-      }
       CHECK(jacobian.get(j, i) == local_approx(gsl::at(numerical_deriv_i, j)));
     }
   }
@@ -231,13 +225,6 @@ void test_inv_jacobian(const Map& map,
   const auto jacobian = map.jacobian(test_point);
   const auto inv_jacobian = map.inv_jacobian(test_point);
 
-  // std::cout << "test_point : " << test_point << std::endl;
-  // std::cout << "jacobian : " << jacobian << std::endl;
-  // std::cout << "inv_jacobian : " << inv_jacobian << std::endl;
-  const auto numerical_inv_jacobian = determinant_and_inverse(jacobian).second;
-  // std::cout << "numerical_inv_jacobian : " << numerical_inv_jacobian
-  //           << std::endl;
-
   const auto expected_identity = [&jacobian, &inv_jacobian]() {
     std::array<std::array<double, Map::dim>, Map::dim> identity{};
     for (size_t i = 0; i < Map::dim; ++i) {
@@ -254,17 +241,6 @@ void test_inv_jacobian(const Map& map,
 
   for (size_t i = 0; i < Map::dim; ++i) {
     for (size_t j = 0; j < Map::dim; ++j) {
-      // std::cout << "(i, j) : (" << i << ", " << j << ")" << std::endl;
-      if (not(gsl::at(gsl::at(expected_identity, i), j) ==
-              approx(i == j ? 1. : 0.))) {
-        std::cout << "JJ^-1 = Identity failed at (i, j): (" << i << ", " << j
-                  << ")" << std::endl;
-        std::cout << "test_point : " << test_point << std::endl;
-        std::cout << "jacobian : " << jacobian << std::endl;
-        std::cout << "inv_jacobian : " << inv_jacobian << std::endl;
-        std::cout << "numerical_inv_jacobian : " << numerical_inv_jacobian
-                  << std::endl;
-      }
       CHECK(gsl::at(gsl::at(expected_identity, i), j) ==
             approx(i == j ? 1. : 0.));
     }
@@ -314,12 +290,6 @@ void test_inv_jacobian(const Map& map,
   CAPTURE(test_point);
   const auto jacobian = map.jacobian(test_point);
   const auto inv_jacobian = map.inv_jacobian(test_point);
-  // std::cout << "test_point : " << test_point << std::endl;
-  // std::cout << "jacobian : " << jacobian << std::endl;
-  // std::cout << "inv_jacobian : " << inv_jacobian << std::endl;
-  const auto numerical_inv_jacobian = determinant_and_inverse(jacobian).second;
-  // std::cout << "numerical_inv_jacobian : " << numerical_inv_jacobian
-  //           << std::endl;
 
   const auto expected_identity = [&jacobian, &inv_jacobian]() {
     auto identity =
@@ -329,8 +299,6 @@ void test_inv_jacobian(const Map& map,
       for (size_t j = 0; j < Map::dim; ++j) {
         for (size_t l = 0; l < jacobian.get(0, 0).size(); l++) {
           for (size_t k = 0; k < Map::dim; ++k) {
-            // std::cout << "(i, j, k, l) : (" << i << ", " << j << ", " << k
-            //           << ", " << l << ")" << std::endl;
             identity.get(i, j)[k] += gsl::at(jacobian.get(i, k), l) *
                                      gsl::at(inv_jacobian.get(k, j), l);
           }
