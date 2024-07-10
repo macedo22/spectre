@@ -125,6 +125,8 @@ Wedge<Dim>::Wedge(const double radius_inner, const double radius_outer,
   }
 }
 
+// TODO : we compute s_factor in here and in function bodies like
+// jacobian(), but we should not recompute this
 template <size_t Dim>
 template <typename T>
 // Change name :) to lifting_factor_lambda
@@ -252,25 +254,28 @@ std::optional<std::array<double, Dim>> Wedge<Dim>::inverse(
     return std::nullopt;
   }
 
+  auto rotated_focus =
+      discrete_rotation(orientation_of_wedge_.inverse_map(), focal_offset_);
+
   const double generalized_z =
-      (physical_coords[radial_coord] - focal_offset_[radial_coord]) /
-      (1.0 - focal_offset_[radial_coord] / cube_half_length_);
+      (physical_coords[radial_coord] - rotated_focus[radial_coord]) /
+      (1.0 - rotated_focus[radial_coord] / cube_half_length_);
   const double one_over_generalized_z = 1.0 / generalized_z;
   std::array<double, Dim - 1> cap{};
-  cap[0] = (physical_coords[polar_coord] - focal_offset_[polar_coord]) *
+  cap[0] = (physical_coords[polar_coord] - rotated_focus[polar_coord]) *
                one_over_generalized_z +
-           focal_offset_[polar_coord] / cube_half_length_;
+           rotated_focus[polar_coord] / cube_half_length_;
   if constexpr (Dim == 3) {
-    cap[1] = (physical_coords[azimuth_coord] - focal_offset_[azimuth_coord]) *
+    cap[1] = (physical_coords[azimuth_coord] - rotated_focus[azimuth_coord]) *
                  one_over_generalized_z +
-             focal_offset_[azimuth_coord] / cube_half_length_;
+             rotated_focus[azimuth_coord] / cube_half_length_;
   }
-  const double radius = magnitude(physical_coords);
+  const double radius = magnitude(physical_coords - rotated_focus);
   // Radial coordinate
   double zeta = std::numeric_limits<double>::signaling_NaN();
   if (radial_distribution_ == Distribution::Linear) {
     const double one_over_rho =
-        generalized_z / magnitude(physical_coords - focal_offset_);
+        generalized_z / magnitude(physical_coords - rotated_focus);
     const double zeta_coefficient =
         (scaled_frustum_rate_ + sphere_rate_ * one_over_rho);
     // If -sphere_rate_/scaled_frustum_rate_ > 1, then
@@ -451,6 +456,10 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
     }
   }
 
+  std::cout << "dxyz_dxi[polar_coord] : " << dxyz_dxi[polar_coord] << std::endl;
+  std::cout << "dxyz_dxi[radial_coord] : " << dxyz_dxi[radial_coord]
+            << std::endl;
+
   std::array<ReturnType, Dim> dX_dlogical =
       discrete_rotation(orientation_of_wedge_, std::move(dxyz_dxi));
   get<0, polar_coord>(jacobian_matrix) = dX_dlogical[0];
@@ -503,6 +512,11 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
     dxyz_dzeta[azimuth_coord] =
         gamma[azimuth_coord] * d_lifting_factor_lambda[radial_coord];
   }
+
+  std::cout << "dxyz_dzeta[polar_coord] : " << dxyz_dzeta[polar_coord]
+            << std::endl;
+  std::cout << "dxyz_dzeta[radial_coord] : " << dxyz_dzeta[radial_coord]
+            << std::endl;
 
   dX_dlogical = discrete_rotation(orientation_of_wedge_, std::move(dxyz_dzeta));
   get<0, radial_coord>(jacobian_matrix) = dX_dlogical[0];
