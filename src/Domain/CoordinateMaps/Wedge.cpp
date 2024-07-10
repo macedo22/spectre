@@ -204,7 +204,7 @@ std::array<tt::remove_cvref_wrap_t<T>, Dim> Wedge<Dim>::operator()(
                : xi;
   ReturnType one_over_rho =
       square(1.0 - rotated_focus[radial_coord] / cube_half_length_) +
-      square(cap[0] - rotated_focus[0] / cube_half_length_);
+      square(cap[0] - rotated_focus[polar_coord] / cube_half_length_);
   if constexpr (Dim == 3) {
     // Azimuthal angle
     const ReturnType& eta = source_coords[azimuth_coord];
@@ -226,12 +226,13 @@ std::array<tt::remove_cvref_wrap_t<T>, Dim> Wedge<Dim>::operator()(
           (1.0 - rotated_focus[radial_coord] / cube_half_length_) +
       rotated_focus[radial_coord];
   physical_coords[polar_coord] =
-      lambda_lifting_factor * (cap[0] - rotated_focus[0] / cube_half_length_) +
+      lambda_lifting_factor *
+          (cap[0] - rotated_focus[polar_coord] / cube_half_length_) +
       rotated_focus[polar_coord];
   if constexpr (Dim == 3) {
     physical_coords[azimuth_coord] =
         lambda_lifting_factor *
-            (cap[1] - rotated_focus[1] / cube_half_length_) +
+            (cap[1] - rotated_focus[azimuth_coord] / cube_half_length_) +
         rotated_focus[azimuth_coord];
   }
   auto result =
