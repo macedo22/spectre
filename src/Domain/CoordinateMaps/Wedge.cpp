@@ -495,16 +495,8 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
 
   // Derivative by radial coordinate
   std::array<ReturnType, Dim> dxyz_dzeta{};
-  if (radial_distribution_ == Distribution::Linear) {
-    dxyz_dzeta[radial_coord] =
-        gamma[radial_coord] * d_lifting_factor_lambda[radial_coord];
-  } else if (radial_distribution_ == Distribution::Logarithmic) {
-    dxyz_dzeta[radial_coord] = s_factor * sphere_rate_ * one_over_rho;
-  } else {
-    const double sphere_rate =
-        0.5 * (1.0 / radius_outer_ - 1.0 / radius_inner_);
-    dxyz_dzeta[radial_coord] = -square(s_factor) * sphere_rate * one_over_rho;
-  }
+  dxyz_dzeta[radial_coord] =
+      gamma[radial_coord] * d_lifting_factor_lambda[radial_coord];
   dxyz_dzeta[polar_coord] =
       gamma[polar_coord] * d_lifting_factor_lambda[radial_coord];
 
