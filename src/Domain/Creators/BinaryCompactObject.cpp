@@ -371,12 +371,12 @@ Domain<3> BinaryCompactObject::create_domain() const {
 
   // ObjectA/B is on the right/left, respectively.
   const Translation translation_A{
-      Affine{-1.0, 1.0, -1.0 + length_inner_cube_ / 2.0,
-             1.0 + length_inner_cube_ / 2.0},
+      Affine{-1.0, 1.0, -1.0 + x_coord_a_ + offset_x_coord_a_,
+             1.0 + x_coord_a_ + offset_x_coord_a_},
       Identity2D{}};
   const Translation translation_B{
-      Affine{-1.0, 1.0, -1.0 - length_inner_cube_ / 2.0,
-             1.0 - length_inner_cube_ / 2.0},
+      Affine{-1.0, 1.0, -1.0 + x_coord_b_ + offset_x_coord_b_,
+             1.0 + x_coord_b_ + offset_x_coord_b_},
       Identity2D{}};
 
   // Two blocks covering the compact objects and their immediate neighborhood
