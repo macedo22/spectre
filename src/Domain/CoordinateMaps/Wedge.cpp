@@ -705,6 +705,11 @@ void Wedge<Dim>::pup(PUP::er& p) {
     p | cube_half_length_;
     p | focal_offset_;
   } else if (p.isUnpacking()) {
+    // While the length of the cube outside of an old Wedge is not known
+    // internally to the Wedge class, any length will mathematically work
+    // because all old Wedges have no focal offset and any terms in the math
+    // that use the cube length will be zeroed out by the zero offset. We choose
+    // this half length to be 1.0 just because it's a simple value.
     cube_half_length_ = 1.0;
     focal_offset_ = make_with_value<std::array<double, Dim>>(Dim, 0.0);
   }
