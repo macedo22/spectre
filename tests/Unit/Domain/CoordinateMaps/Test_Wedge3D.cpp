@@ -33,7 +33,7 @@ void test_wedge3d_all_directions() {
   std::uniform_real_distribution<> unit_dis(0, 1);
   std::uniform_real_distribution<> inner_dis(1, 3);
   std::uniform_real_distribution<> outer_dis(5.2, 7);
-  std::uniform_real_distribution<> cube_half_length_dist(4, 6);
+  std::uniform_real_distribution<> cube_half_length_dist(8, 10);
   std::uniform_real_distribution<> offset_coord_dist(-1, 1);
   std::uniform_real_distribution<> angle_dis(80.0, 90.0);
 
@@ -41,12 +41,8 @@ void test_wedge3d_all_directions() {
   CAPTURE(inner_radius);
   const double outer_radius = outer_dis(gen);
   CAPTURE(outer_radius);
-  const double inner_sphericity = unit_dis(gen);
-  CAPTURE(inner_sphericity);
-  const double outer_sphericity = unit_dis(gen);
-  CAPTURE(outer_sphericity);
-  const double random_cube_half_length = cube_half_length_dist(gen);
-  CAPTURE(random_cube_half_length);
+  const double cube_half_length = cube_half_length_dist(gen);
+  CAPTURE(cube_half_length);
   const double opening_angle_xi = angle_dis(gen) * M_PI / 180.0;
   CAPTURE(opening_angle_xi * 180.0 / M_PI);
   const double opening_angle_eta = angle_dis(gen) * M_PI / 180.0;
@@ -86,18 +82,23 @@ void test_wedge3d_all_directions() {
       CAPTURE(orientation);
       CAPTURE(with_equiangular_map);
       CAPTURE(radial_distribution);
+
+      // sphericity != 1.0 is only supported for Wedges where the radial
+      // distribution is linear and there is no focal offset
+      const bool use_random_sphericity =
+          (radial_distribution == CoordinateMaps::Distribution::Linear and
+           focal_offset == zero_offset);
+      const double inner_sphericity =
+          use_random_sphericity ? unit_dis(gen) : 1.0;
+      CAPTURE(inner_sphericity);
+      const double outer_sphericity =
+          use_random_sphericity ? unit_dis(gen) : 1.0;
+      CAPTURE(outer_sphericity);
+
       const Wedge3D wedge_map(
-          inner_radius, outer_radius,
-          (radial_distribution == CoordinateMaps::Distribution::Linear and
-           focal_offset == zero_offset)
-              ? inner_sphericity
-              : 1.0,
-          (radial_distribution == CoordinateMaps::Distribution::Linear and
-           focal_offset == zero_offset)
-              ? outer_sphericity
-              : 1.0,
-          random_cube_half_length, focal_offset, orientation,
-          with_equiangular_map, halves, radial_distribution,
+          inner_radius, outer_radius, inner_sphericity, outer_sphericity,
+          cube_half_length, focal_offset, orientation, with_equiangular_map,
+          halves, radial_distribution,
           with_equiangular_map
               ? std::array<double, 2>{{opening_angle_xi, opening_angle_eta}}
               : std::array<double, 2>{{M_PI_2, M_PI_2}},

@@ -32,6 +32,8 @@ void test_wedge2d_all_orientations(const bool with_equiangular_map) {
   std::uniform_real_distribution<> unit_dis(0, 1);
   std::uniform_real_distribution<> inner_dis(1, 3);
   std::uniform_real_distribution<> outer_dis(4, 7);
+  std::uniform_real_distribution<> cube_half_length_dist(8, 10);
+  std::uniform_real_distribution<> offset_coord_dist(-1, 1);
 
   // Check that points on the corners of the reference square map to the correct
   // corners of the wedge.
@@ -122,14 +124,8 @@ void test_wedge2d_all_orientations(const bool with_equiangular_map) {
   CAPTURE(inner_radius);
   const double outer_radius = outer_dis(gen);
   CAPTURE(outer_radius);
-  const double inner_circularity = unit_dis(gen);
-  CAPTURE(inner_circularity);
-  const double outer_circularity = unit_dis(gen);
-  CAPTURE(outer_circularity);
-  std::uniform_real_distribution<> cube_half_length_dist(4, 6);
-  std::uniform_real_distribution<> offset_coord_dist(-1, 1);
-  const double random_cube_half_length = cube_half_length_dist(gen);
-  CAPTURE(random_cube_half_length);
+  const double cube_half_length = cube_half_length_dist(gen);
+  CAPTURE(cube_half_length);
 
   using WedgeHalves = Wedge2D::WedgeHalves;
   const std::array<WedgeHalves, 3> possible_halves = {
@@ -157,18 +153,21 @@ void test_wedge2d_all_orientations(const bool with_equiangular_map) {
               CoordinateMaps::Distribution::Logarithmic,
               CoordinateMaps::Distribution::Inverse}) {
           CAPTURE(radial_distribution);
+          // circularity != 1.0 is only supported for Wedges where the radial
+          // distribution is linear and there is no focal offset
+          const bool use_random_circularity =
+              (radial_distribution == CoordinateMaps::Distribution::Linear and
+               focal_offset == zero_offset);
+          const double inner_circularity =
+              use_random_circularity ? unit_dis(gen) : 1.0;
+          CAPTURE(inner_circularity);
+          const double outer_circularity =
+              use_random_circularity ? unit_dis(gen) : 1.0;
+          CAPTURE(outer_circularity);
           test_suite_for_map_on_unit_cube(Wedge2D{
-              inner_radius, outer_radius,
-              (radial_distribution == CoordinateMaps::Distribution::Linear and
-               focal_offset == zero_offset)
-                  ? inner_circularity
-                  : 1.0,
-              (radial_distribution == CoordinateMaps::Distribution::Linear and
-               focal_offset == zero_offset)
-                  ? outer_circularity
-                  : 1.0,
-              random_cube_half_length, focal_offset, orientation,
-              with_equiangular_map, halves, radial_distribution});
+              inner_radius, outer_radius, inner_circularity, outer_circularity,
+              cube_half_length, focal_offset, orientation, with_equiangular_map,
+              halves, radial_distribution});
         }
       }
     }
