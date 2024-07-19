@@ -241,14 +241,14 @@ std::optional<std::array<double, Dim>> Wedge<Dim>::inverse(
     const std::array<double, Dim>& target_coords) const {
   const std::array<double, Dim> physical_coords =
       discrete_rotation(orientation_of_wedge_.inverse_map(), target_coords);
-
-  if (physical_coords[radial_coord] < 0.0 or
-      equal_within_roundoff(physical_coords[radial_coord], 0.0)) {
-    return std::nullopt;
-  }
-
   auto rotated_focus =
       discrete_rotation(orientation_of_wedge_.inverse_map(), focal_offset_);
+
+  if (physical_coords[radial_coord] < rotated_focus[radial_coord] or
+      equal_within_roundoff(physical_coords[radial_coord],
+                            rotated_focus[radial_coord])) {
+    return std::nullopt;
+  }
 
   const double generalized_z =
       (physical_coords[radial_coord] - rotated_focus[radial_coord]) /
