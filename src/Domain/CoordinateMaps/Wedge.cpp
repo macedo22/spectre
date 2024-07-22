@@ -270,7 +270,6 @@ std::optional<std::array<double, Dim>> Wedge<Dim>::inverse(
     const double one_over_rho = generalized_z / radius;
     const double zeta_coefficient =
         (scaled_frustum_rate_ + sphere_rate_ * one_over_rho);
-    // TODO : does this need to be updated to work with focal_offset_?
     // If -sphere_rate_/scaled_frustum_rate_ > 1, then
     // there exists a cone in x,y,z space given by the surface
     // zeta_coefficient=0; the map is singular on this surface.

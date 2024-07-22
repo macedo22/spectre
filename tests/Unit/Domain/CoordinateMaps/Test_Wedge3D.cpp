@@ -526,37 +526,73 @@ void test_wedge3d_large_radius() {
 
 void test_wedge3d_fail() {
   INFO("Wedge3d fail");
-  const Wedge3D map(0.2, 4.0, 0.0, 1.0, 1.0, {{0., 0., 0.}},
-                    OrientationMap<3>{}, true);
-  // Any point with z=0 should fail the inverse map.
-  const std::array<double, 3> test_mapped_point1{{3.0, 3.0, 0.0}};
-  const std::array<double, 3> test_mapped_point2{{-3.0, 3.0, 0.0}};
+  const Wedge3D no_offset_map(0.2, 4.0, 0.0, 1.0, 1.0, {{0., 0., 0.}},
+                              OrientationMap<3>{}, true);
+  const Wedge3D offset_map(0.2, 4.0, 0.0, 1.0, 1.0, {{0., 0., 0.1}},
+                           OrientationMap<3>{}, true);
 
-  // TODO : do we need to add a non-zero offset test case for this?
-  // Any point with (x^2+y^2)/z^2 >= 1199 should fail the inverse map.
+  // Any point with z <= 0 should fail the inverse map with no focal offset
+  const std::array<double, 3> test_mapped_point1a{{3.0, 3.0, 0.0}};
+  const std::array<double, 3> test_mapped_point2a{{-3.0, 3.0, 0.0}};
+
+  // Any point with z <= 0.1 should fail the inverse map with the focal offset
+  const std::array<double, 3> test_mapped_point1b{{3.0, 3.0, 0.1}};
+  const std::array<double, 3> test_mapped_point2b{{-3.0, 3.0, 0.1}};
+
+  // The above Wedges have a Linear radial distribution, so any point where
+  // rho^2 >= (-sphere_rate_/scaled_frustum_rate_)^2 = 1200 should fail for the
+  // inverse map, where rho = r (1 - z_0 / L) / (z - z_0), r is the distance
+  // from the focal_offset_ to the point being mapped, z is the z-component of
+  // the point being mapped, z_0 is the z-component of the focal_offset_, and L
+  // is the cube_half_length_ (see Wedge documentation for definitions of member
+  // variables). For the following tested points, rho is the same for the above
+  // two Wedges, so we can use these same test points to test for the same
+  // expected behavior.
   const std::array<double, 3> test_mapped_point3{{sqrt(1198.0), 1.0, 1.0}};
   const std::array<double, 3> test_mapped_point4{{30.0, sqrt(299.0), 1.0}};
   const std::array<double, 3> test_mapped_point5{{30.0, sqrt(300.0), 1.0}};
 
-  // These points are outside the mapped wedge. So inverse should either
-  // return the correct inverse (which happens to be computable for
-  // these points) or it should return nullopt.
+  // These points are outside the mapped Wedges, so the inverse should either
+  // return the correct inverse (which happens to be computable for these
+  // points) or it should return nullopt. Again, the expected behavior is the
+  // same for these points for both Wedges above.
   const std::array<double, 3> test_mapped_point6{{30.0, sqrt(298.0), 1.0}};
   const std::array<double, 3> test_mapped_point7{{2.0, 4.0, 6.0}};
 
-  CHECK_FALSE(map.inverse(test_mapped_point1).has_value());
-  CHECK_FALSE(map.inverse(test_mapped_point2).has_value());
-  CHECK_FALSE(map.inverse(test_mapped_point3).has_value());
-  CHECK_FALSE(map.inverse(test_mapped_point4).has_value());
-  CHECK_FALSE(map.inverse(test_mapped_point5).has_value());
-  if (map.inverse(test_mapped_point6).has_value()) {
+  // Check expected behavior for Wedge without offset
+  CHECK_FALSE(no_offset_map.inverse(test_mapped_point1a).has_value());
+  CHECK_FALSE(no_offset_map.inverse(test_mapped_point2a).has_value());
+  CHECK_FALSE(no_offset_map.inverse(test_mapped_point3).has_value());
+  CHECK_FALSE(no_offset_map.inverse(test_mapped_point4).has_value());
+  CHECK_FALSE(no_offset_map.inverse(test_mapped_point5).has_value());
+  if (no_offset_map.inverse(test_mapped_point6).has_value()) {
     Approx my_approx = Approx::custom().epsilon(1.e-10).scale(1.0);
-    CHECK_ITERABLE_CUSTOM_APPROX(map(map.inverse(test_mapped_point6).value()),
-                                 test_mapped_point6, my_approx);
+    CHECK_ITERABLE_CUSTOM_APPROX(
+        no_offset_map(no_offset_map.inverse(test_mapped_point6).value()),
+        test_mapped_point6, my_approx);
   }
-  if (map.inverse(test_mapped_point7).has_value()) {
-    CHECK_ITERABLE_APPROX(map(map.inverse(test_mapped_point7).value()),
-                          test_mapped_point7);
+  if (no_offset_map.inverse(test_mapped_point7).has_value()) {
+    CHECK_ITERABLE_APPROX(
+        no_offset_map(no_offset_map.inverse(test_mapped_point7).value()),
+        test_mapped_point7);
+  }
+
+  // Check expected behavior for Wedge with offset
+  CHECK_FALSE(offset_map.inverse(test_mapped_point1b).has_value());
+  CHECK_FALSE(offset_map.inverse(test_mapped_point2b).has_value());
+  CHECK_FALSE(offset_map.inverse(test_mapped_point3).has_value());
+  CHECK_FALSE(offset_map.inverse(test_mapped_point4).has_value());
+  CHECK_FALSE(offset_map.inverse(test_mapped_point5).has_value());
+  if (offset_map.inverse(test_mapped_point6).has_value()) {
+    Approx my_approx = Approx::custom().epsilon(1.e-10).scale(1.0);
+    CHECK_ITERABLE_CUSTOM_APPROX(
+        offset_map(offset_map.inverse(test_mapped_point6).value()),
+        test_mapped_point6, my_approx);
+  }
+  if (offset_map.inverse(test_mapped_point7).has_value()) {
+    CHECK_ITERABLE_APPROX(
+        offset_map(offset_map.inverse(test_mapped_point7).value()),
+        test_mapped_point7);
   }
 }
 }  // namespace

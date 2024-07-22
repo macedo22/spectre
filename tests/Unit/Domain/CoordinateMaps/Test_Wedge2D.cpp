@@ -176,25 +176,44 @@ void test_wedge2d_all_orientations(const bool with_equiangular_map) {
 
 void test_wedge2d_fail() {
   INFO("Wedge2d fail");
-  const auto map =
+  const auto no_offset_map =
       Wedge2D(0.2, 4.0, 0.0, 1.0, 1.0, {{0., 0.}}, OrientationMap<2>{}, true);
+  const auto offset_map =
+      Wedge2D(0.2, 4.0, 0.0, 1.0, 1.0, {{0.1, 0.}}, OrientationMap<2>{}, true);
 
-  // Any point with x<=0 should fail the inverse map.
+  // Any point with x <= 0 should fail the inverse map with no focal offset
   const std::array<double, 2> test_mapped_point1{{0.0, 3.0}};
   const std::array<double, 2> test_mapped_point2{{0.0, -6.0}};
   const std::array<double, 2> test_mapped_point3{{-1.0, 3.0}};
 
-  // This point is outside the mapped wedge.  So inverse should either
-  // return the correct inverse (which happens to be computable for
-  // this point) or it should return nullopt.
-  const std::array<double, 2> test_mapped_point4{{100.0, -6.0}};
+  // Any point with x <= 0.1 should fail the inverse map with the focal offset
+  const std::array<double, 2> test_mapped_point4{{0.0, 3.0}};
+  const std::array<double, 2> test_mapped_point5{{0.0, -6.0}};
+  const std::array<double, 2> test_mapped_point6{{-1.0, 3.0}};
 
-  CHECK_FALSE(map.inverse(test_mapped_point1).has_value());
-  CHECK_FALSE(map.inverse(test_mapped_point2).has_value());
-  CHECK_FALSE(map.inverse(test_mapped_point3).has_value());
-  if (map.inverse(test_mapped_point4).has_value()) {
-    CHECK_ITERABLE_APPROX(map(map.inverse(test_mapped_point4).value()),
-                          test_mapped_point4);
+  // This point is outside the mapped Wedges, so inverse should either return
+  // the correct inverse (which happens to be computable for this point for both
+  // Wedges) or it should return nullopt.
+  const std::array<double, 2> test_mapped_point7{{100.0, -6.0}};
+
+  // Check expected behavior for Wedge without offset
+  CHECK_FALSE(no_offset_map.inverse(test_mapped_point1).has_value());
+  CHECK_FALSE(no_offset_map.inverse(test_mapped_point2).has_value());
+  CHECK_FALSE(no_offset_map.inverse(test_mapped_point3).has_value());
+  if (no_offset_map.inverse(test_mapped_point7).has_value()) {
+    CHECK_ITERABLE_APPROX(
+        no_offset_map(no_offset_map.inverse(test_mapped_point7).value()),
+        test_mapped_point7);
+  }
+
+  // Check expected behavior for Wedge with offset
+  CHECK_FALSE(offset_map.inverse(test_mapped_point4).has_value());
+  CHECK_FALSE(offset_map.inverse(test_mapped_point5).has_value());
+  CHECK_FALSE(offset_map.inverse(test_mapped_point6).has_value());
+  if (offset_map.inverse(test_mapped_point7).has_value()) {
+    CHECK_ITERABLE_APPROX(
+        offset_map(offset_map.inverse(test_mapped_point7).value()),
+        test_mapped_point7);
   }
 }
 
