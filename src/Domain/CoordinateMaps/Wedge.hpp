@@ -40,6 +40,14 @@ struct WedgeCoordOrientation<3> {
 };
 }  // namespace detail
 
+// TODO : make sure everything still makes sense for variable opening angles
+// even with an offset
+// TODO : mention in the beginning that what we're going to talk about first
+// is the vanilla wedge and define what that is (look at Marcie's overleaf)
+// TODO : need to add documentation for why zeta coefficient is computed the way
+// it is
+// TODO : ask Marcie if docs should have the member variables or constructor
+// args referenced like `radius_inner_` or `radius_of_inner_surface`
 /*!
  * \ingroup CoordinateMapsGroup
  *
@@ -52,18 +60,18 @@ struct WedgeCoordOrientation<3> {
  *  between flat (a sphericity of 0) or spherical (a sphericity of 1).
  *
  *  In 2D, the first logical coordinate corresponds to the radial coordinate,
- *  and the second logical coordinates correspond to the angular coordinate. In
+ *  and the second logical coordinate corresponds to the angular coordinate. In
  *  3D, the first two logical coordinates correspond to the two angular
  *  coordinates, and the third to the radial coordinate. This difference
  *  originates from separate implementations for the 2D and 3D map that were
  *  merged. The 3D implementation can be changed to use the first logical
- *  coordinate as radial direction, but this requires propagating the change
+ *  coordinate as the radial direction, but this requires propagating the change
  *  through the rest of the domain code (see issue
  *  https://github.com/sxs-collaboration/spectre/issues/2988).
  *
  *  The following documentation is for the 3D map. The 2D map is obtained by
  *  setting either of the two angular coordinates to zero (and using \f$\xi\f$
- *  as radial coordinate).
+ *  as the radial coordinate).
  *
  *  The Wedge map is constructed by linearly interpolating between a bulged
  *  face of radius `radius_of_inner_surface` to a bulged face of
@@ -73,18 +81,22 @@ struct WedgeCoordOrientation<3> {
  *  We make a choice here as to whether we wish to use the logical coordinates
  *  parameterizing these surface as they are, in which case we have the
  *  equidistant choice of coordinates, or whether to apply a tangent map to them
- *  which leads us to the equiangular choice of coordinates. In terms of the
- *  logical coordinates, the equiangular coordinates are:
+ *  which leads us to the equiangular choice of coordinates. Wedges have
+ *  variable `opening_angles_`, the sizes of their polar and azimuthal (for the
+ *  3D case) angles in the grid frame. For a wedge with a polar opening angle of
+ *  size \f$\theta\f$ and azimuthal opening angle of size \f$\phi\f$, the
+ *  equiangular coordinates in terms of the logical coordinates are:
  *
- *  \f[\textrm{equiangular xi} : \Xi(\xi) = \textrm{tan}(\xi\pi/4)\f]
+ *  \f[\textrm{equiangular xi} : \Xi(\xi) = \textrm{tan}(\frac{\theta}{2}\xi)\f]
  *
- *  \f[\textrm{equiangular eta}  : \mathrm{H}(\eta) = \textrm{tan}(\eta\pi/4)\f]
+ *  \f[\textrm{equiangular eta} : \mathrm{H}(\eta) =
+ *  \textrm{tan}(\frac{\phi}{2}\eta)\f]
  *
  *  With derivatives:
  *
- *  \f[\Xi'(\xi) = \frac{\pi}{4}(1+\Xi^2)\f]
+ *  \f[\Xi'(\xi) = \frac{\theta}{2}(1+\Xi^2)\f]
  *
- *  \f[\mathrm{H}'(\eta) = \frac{\pi}{4}(1+\mathrm{H}^2)\f]
+ *  \f[\mathrm{H}'(\eta) = \frac{\phi}{2}(1+\mathrm{H}^2)\f]
  *
  *  The equidistant coordinates are:
  *
@@ -141,11 +153,13 @@ struct WedgeCoordOrientation<3> {
  *  \end{bmatrix}\f]
  *
  *  To construct the bulged map we interpolate between this cubical face map
- *  and a spherical face map of radius \f$R\f$, with the
- *  interpolation parameter being \f$s\f$. The surface map for the bulged face
- *  lying in the \f$+z\f$ direction is then given by:
+ *  and a spherical face map of radius \f$R\f$, with the interpolation
+ *  parameter being \f$s\f$, which we call the sphericity and which ranges from
+ *  0 to 1 with 0 corresponding to a flat surface and 1 corresponding to a
+ *  spherical surface. The surface map for the bulged face lying in the \f$+z\f$
+ *  direction is then given by:
  *
- *  \f[\vec{\sigma}_{bulged}(\xi,\eta) = {(1-s)L + \frac{sR}{\rho}}
+ *  \f[\vec{\sigma}_{bulged}(\xi,\eta) = \left\{(1-s)L + \frac{sR}{\rho}\right\}
  *  \begin{bmatrix}
  *  \Xi\\
  *  \mathrm{H}\\
@@ -158,10 +172,11 @@ struct WedgeCoordOrientation<3> {
  *  surfaces touch at the center, which leads to \f$L = R\f$.
  *
  *  ### The Full Volume Map
- *  The final map for the wedge which lies along the \f$+z\f$ is obtained by
- *  interpolating between the two surfaces with the
- *  interpolation parameter being the logical coordinate \f$\zeta\f$. This
- *  results in:
+ *  The final map for the wedge which lies along the \f$+z\f$ axis is obtained
+ *  by interpolating between the two surfaces with the interpolation parameter
+ *  being the logical coordinate \f$\zeta\f$. For a wedge whose grid points are
+ *  linearly distributed in the radial direction, this interpolation results in
+ *  the following map:
  *
  *  \f[\vec{x}(\xi,\eta,\zeta) =
  *  \frac{1}{2}\left\{(1-\zeta)\Big[(1-s_{inner})\frac{R_{inner}}{\sqrt 3}
@@ -174,28 +189,35 @@ struct WedgeCoordOrientation<3> {
  *  \end{bmatrix}\f]
  *
  *  We will define the variables \f$F(\zeta)\f$ and \f$S(\zeta)\f$, the frustum
- * and sphere factors: \f[F(\zeta) = F_0 + F_1\zeta\f] \f[S(\zeta) = S_0 +
- * S_1\zeta\f]
+ *  and sphere factors: \f[F(\zeta) = F_0 + F_1\zeta\f] \f[S(\zeta) = S_0 +
+ *  S_1\zeta\f]
  *  Where \f{align*}F_0 &= \frac{1}{2} \big\{ (1-s_{outer})R_{outer} +
- * (1-s_{inner})R_{inner}\big\}\\
+ *  (1-s_{inner})R_{inner}\big\}\\
  *  F_1 &= \partial_{\zeta} F = \frac{1}{2} \big\{ (1-s_{outer})R_{outer} -
- * (1-s_{inner})R_{inner}\big\}\\
+ *  (1-s_{inner})R_{inner}\big\}\\
  *  S_0 &= \frac{1}{2} \big\{ s_{outer}R_{outer} + s_{inner}R_{inner}\big\}\\
  *  S_1 &= \partial_{\zeta} S = \frac{1}{2} \big\{ s_{outer}R_{outer} -
- * s_{inner}R_{inner}\big\}\f}
+ *  s_{inner}R_{inner}\big\}\f}
  *
  *  The map can then be rewritten as:
- * \f[\vec{x}(\xi,\eta,\zeta) = \left\{\frac{F(\zeta)}{\sqrt 3} +
- * \frac{S(\zeta)}{\rho}\right\}\begin{bmatrix}
+ *  \f[\vec{x}(\xi,\eta,\zeta) = \left\{\frac{F(\zeta)}{\sqrt 3} +
+ *  \frac{S(\zeta)}{\rho}\right\}\begin{bmatrix}
  *  \Xi\\
  *  \mathrm{H}\\
  *  1\\
  *  \end{bmatrix}\f]
  *
+ *  The components of the inverse map are:
+ *  \f[\xi = \frac{x}{z}\f]
+ *  \f[\eta = \frac{y}{z}\f]
+ *  \f[\zeta = \frac{z - \left(\frac{S_0}{\rho} + \frac{F_0}{\sqrt{3}}\right)}
+ *  {\left(\frac{S_1}{\rho} - \frac{F_1}{\sqrt{3}}\right)}\f]
+ *
  *  We provide some common derivatives:
  *  \f[\partial_{\xi}z = \frac{-S(\zeta)\Xi\Xi'}{\rho^3}\f]
  *  \f[\partial_{\eta}z = \frac{-S(\zeta)\mathrm{H}\mathrm{H}'}{\rho^3}\f]
- * \f[\partial_{\zeta}z = \frac{F'}{\sqrt 3} + \frac{S'}{\rho}\f]
+ *  \f[\partial_{\zeta}z = \frac{F'}{\sqrt 3} + \frac{S'}{\rho}\f]
+ *
  *  The Jacobian then is: \f[J =
  *  \begin{bmatrix}
  *  \Xi'z + \Xi\partial_{\xi}z & \Xi\partial_{\eta}z & \Xi\partial_{\zeta}z \\
@@ -221,12 +243,12 @@ struct WedgeCoordOrientation<3> {
  *  ### Changing the radial distribution of the gridpoints
  *  By default, Wedge linearly distributes its gridpoints in the radial
  *  direction. An exponential distribution of gridpoints can be obtained by
- *  linearly interpolating in the logarithm of the radius, in order to obtain
+ *  linearly interpolating in the logarithm of the radius in order to obtain
  *  a relatively higher resolution at smaller radii. Since this is a radial
  *  rescaling of Wedge, this option is only supported for fully spherical
  *  wedges with `sphericity_inner` = `sphericity_outer` = 1.
  *
- *  The linear interpolation done is:
+ *  The linear interpolation done for a logarithmic radial distribution is:
  *  \f[
  *  \log r = \frac{1-\zeta}{2}\log R_{inner} +
  *  \frac{1+\zeta}{2}\log R_{outer}
@@ -240,7 +262,24 @@ struct WedgeCoordOrientation<3> {
  *  1\\
  *  \end{bmatrix}\f]
  *
- *  The jacobian simplifies similarly.
+ *  We can rewrite this map to take on the same form as the map for the linear
+ *  radial distribution, where we set
+ *  \f{align*}
+ *    F(\zeta) &= 0\\
+ *    S(\zeta) &= \sqrt{R_{inner}^{1-\zeta}R_{outer}^{1+\zeta}}\\
+ *  \f}
+ *
+ *  Which gives us
+ *
+ *  \f[\vec{x}(\xi,\eta,\zeta) =
+ *  \frac{S(\zeta)}{\rho}\begin{bmatrix}
+ *  \Xi\\
+ *  \mathrm{H}\\
+ *  1\\
+ *  \end{bmatrix}\f]
+ *
+ *  The jacobian then also takes the same form in terms of this \f$S(\zeta)\f$
+ *  and \f$S'\f$.
  *
  *  Alternatively, an inverse radial distribution can be chosen where the linear
  *  interpolation is:
@@ -250,6 +289,29 @@ struct WedgeCoordOrientation<3> {
  *  R_\mathrm{outer}} + \frac{R_\mathrm{inner} - R_\mathrm{outer}}{2
  *  R_\mathrm{inner} R_\mathrm{outer}} \zeta
  *  \f]
+ *
+ *  Which can be rewritten as:
+ *
+ *  \f[
+ *  \frac{1}{r} = \frac{1-\zeta}{2R_{inner}} + \frac{1+\zeta}{2R_{outer}}
+ *  \f]
+ *
+ *  The map likewise takes the form:
+ *  \f[\vec{x}(\xi,\eta,\zeta) =
+ *  \frac{S(\zeta)}{\rho}\begin{bmatrix}
+ *  \Xi\\
+ *  \mathrm{H}\\
+ *  1\\
+ *  \end{bmatrix}\f]
+ *
+ *  Where
+ *  \f[
+ *    S(\zeta) = \frac{2R_{inner}R_{outer}}
+ *    {(1 + \zeta)R_{inner} + (1 - \zeta)R_{outer}}
+ *  \f]
+ *
+ *  And the jacobian again takes the same form in terms of this \f$S(\zeta)\f$
+ *  and \f$S'\f$.
  */
 template <size_t Dim>
 class Wedge {
@@ -264,6 +326,12 @@ class Wedge {
     LowerOnly
   };
 
+  // TODO: make sure Wedge class or constructor docs explain that
+  // cube_half_length_  is the half length of the parent surface (that) it's the
+  // same thing (or do we need to just name it one thing everywhere?) and
+  // potentially update description for cube_half_length param below
+  // TODO : make sure the focal_offset description is consistent with Marcie's
+  // focal lifting docs
   /*!
    * Constructs a 3D wedge.
    * \param radius_inner Distance from the origin to one of the
@@ -280,6 +348,9 @@ class Wedge {
    * \param sphericity_outer Value between 0 and 1 which determines
    * whether the outer surface is flat (value of 0), spherical (value of 1) or
    * somewhere in between
+   * \param cube_half_length Half the length of the parent surface
+   * \param focal_offset The grid frame coordinates of the focus from which the
+   * Wedge is focally lifted
    * \param with_equiangular_map Determines whether to apply a tangent function
    * mapping to the logical coordinates (for `true`) or not (for `false`).
    * \param halves_to_use Determines whether to construct a full wedge or only
