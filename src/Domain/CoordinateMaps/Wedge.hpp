@@ -312,6 +312,111 @@ struct WedgeCoordOrientation<3> {
  *
  *  And the jacobian again takes the same form in terms of this \f$S(\zeta)\f$
  *  and \f$S'\f$.
+ *
+ *  ### Offset Wedge
+ *  In the case of the rectangular
+ *  \ref ::domain::creators::BinaryCompactObject "BinaryCompactObject" domain,
+ *  it becomes desirable to offset the center of the spherical excision surface
+ *  relative to the center of the cubical surface surrounding it. To enable the
+ *  offsetting of the central excision, the Wedge map must be generalized
+ *  according to the *focal lifting* method, which we will now discuss.
+ *
+ *  We consider the problem of creating parameterized volumes from parameterized
+ *  surfaces. Consider a parameterized surface $\vec{\rho}(\xi,\eta)$, also
+ *  referred to as the *parent surface*. We define *focal lifting* as the
+ *  projection of this parent surface into a three-dimensional parameterized
+ *  volume \f$\vec{x}(\xi,\eta, \zeta)\f$ with respect to some *focus*
+ *  \f$\vec{x}_0\f$ and *lifting scale factor* \f$\Lambda(\xi,\eta,\zeta)\f$.
+ *  The resulting volume is then said to be a *focally lifted* volume. These
+ *  volume maps can be cast into the following form:
+ *
+ *  \f[\vec{x} - \vec{x}_0 = \Lambda(\vec{\rho}-\vec{x}_0),\f]
+ *
+ *  which makes apparent how the mapped point \f$\vec{x}(\xi,\eta,\zeta)\f$ is
+ *  obtained. The parametric equations for the generalized Wedge3D maps can all
+ *  be written in the above form, which we will refer to as
+ *  *focally lifted form*. In the case of the Wedge3D map with no focal offset
+ *  we have:
+ *
+ *  \f{align*}
+ *    \vec{x}_0 &= 0\\
+ *    \Lambda &= \left\{\frac{F(\zeta)}{\sqrt{3}} +
+ *                      \frac{S(\zeta)}{\rho} \right\}\\
+ *    \vec{\rho} &= \begin{bmatrix} \Xi,\mathrm{H},1 \end{bmatrix}^T
+ *  \f}
+ *
+ *  The above map can be thought of as constructing a wedge from a biunit cube
+ *  centered at the origin. Points on the parent surface are scaled by a factor
+ *  of \f$\Lambda(\xi,\eta,\zeta)\f$ to obtain the corresponding point in the
+ *  volume. When generalizing the map to have a non-zero offset, we scale the
+ *  original parent surface \f$\vec{\rho} = [\Xi, \mathrm{H},1]^T\f$ by a factor
+ *  \f$L\f$, and let the focus \f$\vec{x_0}\f$ shift away from the origin. The
+ *  generalized wedge map is then given by:
+ *
+ *  \f[\vec{x}(\xi,\eta,\zeta) = \left\{\frac{F(\zeta)}{L\sqrt 3} +
+ *  \frac{S(\zeta)}{L\rho}\right\}\begin{bmatrix}
+ *  L\Xi - x_0\\
+ *  L\mathrm{H} - y_0\\
+ *  L-z_0\\
+ *  \end{bmatrix}\f]
+ *
+ *  where \f$\rho\f$ is now
+ *  \f$\sqrt{(\Xi - x_0/L)^2 + (\mathrm{H} - y_0/L)^2 + (1 - z_0/L)^2}\f$.
+ *
+ *  This map is often written as:
+ *
+ *  \f[\vec{x}(\xi,\eta,\zeta) = \left\{\frac{F(\zeta)}{\sqrt{3}} +
+ *  \frac{S(\zeta)}{\rho}\right\}(\vec{\sigma}_0 - \vec{x}_0/L),\f]
+ *
+ *  where \f$\vec{\sigma}_0 = [\Xi, \mathrm{H},1]^T\f$, as the parent surface
+ *  \f$\vec{\rho}\f$ is now \f$L\vec{\sigma}_0\f$. We give the quantity in
+ *  braces the name \f$z_{\Lambda} = L\Lambda\f$, *generalized z*. The map can
+ *  be inverted by first solving for \f$z_{\Lambda}\f$ in terms of the target
+ *  coordinates. We make use of the fact that the parent surface
+ *  \f$\vec{\rho}\f$ has a constant normal vector \f$\hat{n} = \hat{z}\f$.
+ *
+ *  \f[z_{\Lambda} = \frac{(\vec{x} - \vec{x}_0)\cdot\hat{n}}{
+ *     (\vec{\sigma}_0-\vec{x}_0/L)\cdot\hat{n}}.\f]
+ *
+ *  Moving all the known quantities to the left hand side results in the
+ *  following:
+ *
+ *  \f[\frac{\vec{x} - \vec{x}_0}{z_{\Lambda}} + \frac{\vec{x}_0}{L}
+ *  = \vec{\sigma}_0(\xi,\eta) =
+ *  \begin{bmatrix}
+ *  \Xi\\
+ *  \mathrm{H}\\
+ *  1\\
+ *  \end{bmatrix},\f]
+ *
+ *  Note that \f$|\vec{\sigma}_0 - \vec{x}_0/L| = \sqrt{(\Xi - x_0/L)^2 +
+ *  (\mathrm{H} - y_0/L)^2 + (1 - z_0/L)^2} = \rho\f$, indicating that an
+ *  expression for \f$\rho\f$ in terms of the target coordinates can be computed
+ *  via taking the magnitude of both sides of Eq. 26 (TODO : link this eq):
+ *
+ *  \f{align*}
+ *    |\vec{x} - \vec{x}_0| = z_{\Lambda}
+ *    |\vec{\sigma}_0 - \vec{x}_0/L| = z_{\Lambda}\rho.
+ *  \f}
+ *
+ *  The quantity $\rho$ is then given by:
+ *
+ *  \f[\rho = \frac{|\vec{x} - \vec{x}_0|}{z_{\Lambda}}.\f]
+ *
+ *  With $\rho$ computed, $\zeta$ can be computed from
+ *  \begin{align}
+ *  z_{\Lambda} = \left\{\frac{F(\zeta)}{\sqrt{3}}
+ *  + \frac{S(\zeta)}{\rho} \right\}
+ *  = \left\{\frac{F_0}{\sqrt{3}} + \frac{S_0}{\rho} + \frac{F_1\zeta}{\sqrt{3}}
+ *  + \frac{S_1\zeta}{\rho}\right\},
+ *  \end{align}
+ *
+ *  which gives
+ *
+ *  \begin{align}
+ *  \zeta = \frac{z_{\Lambda} - (\frac{F_0}{\sqrt{3}}
+ *  + \frac{S_0}{\rho})} {\frac{F_1}{\sqrt{3}} + \frac{S_1}{\rho}}.
+ *  \end{align}
  */
 template <size_t Dim>
 class Wedge {
