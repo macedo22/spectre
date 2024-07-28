@@ -42,6 +42,7 @@ struct WedgeCoordOrientation<3> {
 
 // TODO : make sure everything still makes sense for variable opening angles
 // even with an offset
+// TODO : add Marcie's opening angles docs
 // TODO : mention in the beginning that what we're going to talk about first
 // is the vanilla wedge and define what that is (look at Marcie's overleaf)
 // TODO : need to add documentation for why zeta coefficient is computed the way
@@ -87,70 +88,91 @@ struct WedgeCoordOrientation<3> {
  *  size \f$\theta\f$ and azimuthal opening angle of size \f$\phi\f$, the
  *  equiangular coordinates in terms of the logical coordinates are:
  *
- *  \f[\textrm{equiangular xi} : \Xi(\xi) = \textrm{tan}(\frac{\theta}{2}\xi)\f]
+ *  \begin{align}
+ *    \textrm{equiangular xi} : \Xi(\xi) = \textrm{tan}(\frac{\theta}{2}\xi)
+ *  \end{align}
  *
- *  \f[\textrm{equiangular eta} : \mathrm{H}(\eta) =
- *  \textrm{tan}(\frac{\phi}{2}\eta)\f]
+ *  \begin{align}
+ *    \textrm{equiangular eta} :
+ *        \mathrm{H}(\eta) =  \textrm{tan}(\frac{\phi}{2}\eta)
+ *  \end{align}
  *
  *  With derivatives:
  *
- *  \f[\Xi'(\xi) = \frac{\theta}{2}(1+\Xi^2)\f]
- *
- *  \f[\mathrm{H}'(\eta) = \frac{\phi}{2}(1+\mathrm{H}^2)\f]
+ *  \begin{align}
+ *    \Xi'(\xi) &= \frac{\theta}{2}(1+\Xi^2) \\
+ *    \mathrm{H}'(\eta) &= \frac{\phi}{2}(1+\mathrm{H}^2)
+ *  \end{align}
  *
  *  The equidistant coordinates are:
  *
- *  \f[ \textrm{equidistant xi}  : \Xi = \xi\f]
- *
- *  \f[ \textrm{equidistant eta}  : \mathrm{H} = \eta\f]
+ *  \begin{align}
+ *    \textrm{equidistant xi}  : \Xi = \xi \\
+ *    \textrm{equidistant eta}  : \mathrm{H} = \eta
+ *  \end{align}
  *
  *  with derivatives:
  *
- *  <center>\f$\Xi'(\xi) = 1\f$, and \f$\mathrm{H}'(\eta) = 1\f$</center>
+ *  \begin{align}
+ *    \Xi'(\xi) &= 1 \\
+ *    \mathrm{H}'(\eta) &= 1
+ *  \end{align}
  *
  *  We also define the variable \f$\rho\f$, given by:
  *
- *  \f[\textrm{rho} : \rho = \sqrt{1+\Xi^2+\mathrm{H}^2}\f]
+ *  \begin{align}
+ *    \textrm{rho} : \rho = \sqrt{1+\Xi^2+\mathrm{H}^2}
+ *  \end{align}
  *
  *  ### The Spherical Face Map
  *  The surface map for the spherical face of radius \f$R\f$ lying in the
- * \f$+z\f$
- *  direction in either choice of coordinates is then given by:
+ *  \f$+z\f$ direction in either choice of coordinates is then given by:
  *
- *  \f[\vec{\sigma}_{spherical}: \vec{\xi} \rightarrow \vec{x}(\vec{\xi})\f]
+ *  \begin{align}
+ *    \vec{\sigma}_{spherical}: \vec{\xi} \rightarrow \vec{x}(\vec{\xi})
+ *  \end{align}
+ *
  *  Where
- *  \f[
- *  \vec{x}(\xi,\eta) =
- *  \begin{bmatrix}
- *  x(\xi,\eta)\\
- *  y(\xi,\eta)\\
- *  z(\xi,\eta)\\
- *  \end{bmatrix}  = \frac{R}{\rho}
- *  \begin{bmatrix}
- *  \Xi\\
- *  \mathrm{H}\\
- *  1\\
- *  \end{bmatrix}\f]
+ *
+ *  \begin{align}
+ *    \vec{x}(\xi,\eta) =
+ *        \begin{bmatrix}
+ *          x(\xi,\eta) \\
+ *          y(\xi,\eta) \\
+ *          z(\xi,\eta) \\
+ *        \end{bmatrix}  =
+ *            \frac{R}{\rho}
+ *                \begin{bmatrix}
+ *                  \Xi \\
+ *                  \mathrm{H} \\
+ *                  1 \\
+ *                \end{bmatrix}
+ *  \end{align}
  *
  *  ### The Bulged Face Map
  *  The bulged surface is itself constructed by linearly interpolating between
  *  a cubical face and a spherical face. The surface map for the cubical face
  *  of side length \f$2L\f$ lying in the \f$+z\f$ direction is given by:
  *
- *  \f[\vec{\sigma}_{cubical}: \vec{\xi} \rightarrow \vec{x}(\vec{\xi})\f]
+ *  \begin{align}
+ *    \vec{\sigma}_{cubical}: \vec{\xi} \rightarrow \vec{x}(\vec{\xi})
+ *  \end{align}
+ *
  *  Where
- *  \f[
- *  \vec{x}(\xi,\eta) =
- *  \begin{bmatrix}
- *  x(\xi,\eta)\\
- *  y(\xi,\eta)\\
- *  L\\
- *  \end{bmatrix}  = L
- *  \begin{bmatrix}
- *  \Xi\\
- *  \mathrm{H}\\
- *  1\\
- *  \end{bmatrix}\f]
+ *
+ *  \begin{align}
+ *    \vec{x}(\xi,\eta) =
+ *        \begin{bmatrix}
+ *          x(\xi,\eta) \\
+ *          y(\xi,\eta) \\
+ *          L \\
+ *        \end{bmatrix} =
+ *            L\begin{bmatrix}
+ *               \Xi \\
+ *               \mathrm{H} \\
+ *               1 \\
+ *             \end{bmatrix}
+ *  \end{align}
  *
  *  To construct the bulged map we interpolate between this cubical face map
  *  and a spherical face map of radius \f$R\f$, with the interpolation
@@ -159,14 +181,17 @@ struct WedgeCoordOrientation<3> {
  *  spherical surface. The surface map for the bulged face lying in the \f$+z\f$
  *  direction is then given by:
  *
- *  \f[\vec{\sigma}_{bulged}(\xi,\eta) = \left\{(1-s)L + \frac{sR}{\rho}\right\}
- *  \begin{bmatrix}
- *  \Xi\\
- *  \mathrm{H}\\
- *  1\\
- *  \end{bmatrix}\f]
+ *  \begin{align}
+ *    \vec{\sigma}_{bulged}(\xi,\eta) =
+ *        \left\{(1-s)L + \frac{sR}{\rho}\right\}
+ *            \begin{bmatrix}
+ *              \Xi \\
+ *              \mathrm{H} \\
+ *              1 \\
+ *            \end{bmatrix}
+ *  \end{align}
  *
- *  We constrain L by demanding that the spherical face circumscribe the cube.
+ *  We constrain $L$ by demanding that the spherical face circumscribe the cube.
  *  With this condition, we have \f$L = R/\sqrt3\f$.
  *  \note This differs from the choice in SpEC where it is demanded that the
  *  surfaces touch at the center, which leads to \f$L = R\f$.
@@ -178,67 +203,117 @@ struct WedgeCoordOrientation<3> {
  *  linearly distributed in the radial direction, this interpolation results in
  *  the following map:
  *
- *  \f[\vec{x}(\xi,\eta,\zeta) =
- *  \frac{1}{2}\left\{(1-\zeta)\Big[(1-s_{inner})\frac{R_{inner}}{\sqrt 3}
- *   + s_{inner}\frac{R_{inner}}{\rho}\Big] +
- *  (1+\zeta)\Big[(1-s_{outer})\frac{R_{outer}}{\sqrt 3} +s_{outer}
- *  \frac{R_{outer}}{\rho}\Big] \right\}\begin{bmatrix}
- *  \Xi\\
- *  \mathrm{H}\\
- *  1\\
- *  \end{bmatrix}\f]
+ *  \begin{align}
+ *    \vec{x}(\xi,\eta,\zeta) =
+ *        \frac{1}{2}\left\{
+ *          (1-\zeta)\Big[
+ *            (1-s_{inner})\frac{R_{inner}}{\sqrt 3} +
+ *                s_{inner}\frac{R_{inner}}{\rho}
+ *          \Big] +
+ *          (1+\zeta)\Big[
+ *            (1-s_{outer})\frac{R_{outer}}{\sqrt 3} +
+ *                s_{outer}\frac{R_{outer}}{\rho}
+ *          \Big]
+ *        \right\}
+ *            \begin{bmatrix}
+ *              \Xi \\
+ *              \mathrm{H} \\
+ *              1 \\
+ *            \end{bmatrix}
+ *  \end{align}
  *
  *  We will define the variables \f$F(\zeta)\f$ and \f$S(\zeta)\f$, the frustum
- *  and sphere factors: \f[F(\zeta) = F_0 + F_1\zeta\f] \f[S(\zeta) = S_0 +
- *  S_1\zeta\f]
- *  Where \f{align*}F_0 &= \frac{1}{2} \big\{ (1-s_{outer})R_{outer} +
- *  (1-s_{inner})R_{inner}\big\}\\
- *  F_1 &= \partial_{\zeta} F = \frac{1}{2} \big\{ (1-s_{outer})R_{outer} -
- *  (1-s_{inner})R_{inner}\big\}\\
- *  S_0 &= \frac{1}{2} \big\{ s_{outer}R_{outer} + s_{inner}R_{inner}\big\}\\
- *  S_1 &= \partial_{\zeta} S = \frac{1}{2} \big\{ s_{outer}R_{outer} -
- *  s_{inner}R_{inner}\big\}\f}
+ *  and sphere factors:
+ *
+ *  \begin{align}
+ *    F(\zeta) &= F_0 + F_1\zeta
+ *    S(\zeta) &= S_0 + S_1\zeta
+ *  \end{align}
+ *
+ *  Where
+ *
+ *  \begin{align}
+ *    F_0 &=
+ *        \frac{1}{2} \big\{
+ *          (1-s_{outer})R_{outer} + (1-s_{inner})R_{inner}
+ *        \big\} \\
+ *    F_1 &=
+ *        \partial_{\zeta} F =
+ *            \frac{1}{2} \big\{
+ *              (1-s_{outer})R_{outer} - (1-s_{inner})R_{inner}
+ *            \big\} \\
+ *    S_0 &=
+ *        \frac{1}{2} \big\{
+ *          s_{outer}R_{outer} + s_{inner}R_{inner}
+ *        \big\} \\
+ *    S_1 &=
+ *        \partial_{\zeta} S =
+ *            \frac{1}{2} \big\{ s_{outer}R_{outer} - s_{inner}R_{inner}\big\}
+ *  \end{align}
  *
  *  The map can then be rewritten as:
- *  \f[\vec{x}(\xi,\eta,\zeta) = \left\{\frac{F(\zeta)}{\sqrt 3} +
- *  \frac{S(\zeta)}{\rho}\right\}\begin{bmatrix}
- *  \Xi\\
- *  \mathrm{H}\\
- *  1\\
- *  \end{bmatrix}\f]
+ *
+ *  \begin{align}
+ *    \vec{x}(\xi,\eta,\zeta) =
+ *        \left\{
+ *          \frac{F(\zeta)}{\sqrt 3} + \frac{S(\zeta)}{\rho}
+ *        \right\}
+ *            \begin{bmatrix}
+ *              \Xi \\
+ *              \mathrm{H} \\
+ *              1 \\
+ *            \end{bmatrix}
+ *  \end{align}
  *
  *  The components of the inverse map are:
- *  \f[\xi = \frac{x}{z}\f]
- *  \f[\eta = \frac{y}{z}\f]
- *  \f[\zeta = \frac{z - \left(\frac{S_0}{\rho} + \frac{F_0}{\sqrt{3}}\right)}
- *  {\left(\frac{S_1}{\rho} - \frac{F_1}{\sqrt{3}}\right)}\f]
+ *
+ *  \begin{align}
+ *    \xi &= \frac{x}{z} \\
+ *    \eta &= \frac{y}{z} \\
+ *    \zeta &=
+ *        \frac{z - \left(\frac{S_0}{\rho} + \frac{F_0}{\sqrt{3}}\right)}
+ *            {\left(\frac{S_1}{\rho} - \frac{F_1}{\sqrt{3}}\right)}
+ *  \end{align}
  *
  *  We provide some common derivatives:
- *  \f[\partial_{\xi}z = \frac{-S(\zeta)\Xi\Xi'}{\rho^3}\f]
- *  \f[\partial_{\eta}z = \frac{-S(\zeta)\mathrm{H}\mathrm{H}'}{\rho^3}\f]
- *  \f[\partial_{\zeta}z = \frac{F'}{\sqrt 3} + \frac{S'}{\rho}\f]
  *
- *  The Jacobian then is: \f[J =
- *  \begin{bmatrix}
- *  \Xi'z + \Xi\partial_{\xi}z & \Xi\partial_{\eta}z & \Xi\partial_{\zeta}z \\
- *  \mathrm{H}\partial_{\xi}z & \mathrm{H}'z +
- *  \mathrm{H}\partial_{\eta}z & \mathrm{H}\partial_{\zeta}z\\
- *   \partial_{\xi}z&\partial_{\eta}z &\partial_{\zeta}z \\
- *  \end{bmatrix}
- *  \f]
+ *  \begin{align}
+ *    \partial_{\xi}z &= \frac{-S(\zeta)\Xi\Xi'}{\rho^3} \\
+ *    \partial_{\eta}z &= \frac{-S(\zeta)\mathrm{H}\mathrm{H}'}{\rho^3} \\
+ *    \partial_{\zeta}z &= \frac{F'}{\sqrt 3} + \frac{S'}{\rho}
+ *  \end{align}
+ *
+ *  The Jacobian then is:
+ *
+ *  \begin{align}
+ *    J =
+ *        \begin{bmatrix}
+ *          \Xi'z + \Xi\partial_{\xi}z &
+ *              \Xi\partial_{\eta}z &
+ *              \Xi\partial_{\zeta}z \\
+ *          \mathrm{H}\partial_{\xi}z &
+ *              \mathrm{H}'z + \mathrm{H}\partial_{\eta}z &
+ *              \mathrm{H}\partial_{\zeta}z \\
+ *          \partial_{\xi}z &
+ *              \partial_{\eta}z &
+ *              \partial_{\zeta}z \\
+ *        \end{bmatrix}
+ *  \end{align}
  *
  *  A common factor that shows up in the inverse jacobian is:
- *  \f[ T:= \frac{S(\zeta)}{(\partial_{\zeta}z)\rho^3}\f]
+ *  \begin{align}
+ *    T:= \frac{S(\zeta)}{(\partial_{\zeta}z)\rho^3}
+ *  \end{align}
  *
- *  The inverse Jacobian then is: \f[J^{-1} =
- *  \frac{1}{z}\begin{bmatrix}
- *  \Xi'^{-1} & 0 & -\Xi\Xi'^{-1}\\
- *  0 & \mathrm{H}'^{-1} & -\mathrm{H}\mathrm{H}'^{-1}\\
- *  T\Xi &
- *  T\mathrm{H} &
- *  T + F(\partial_{\zeta}z)^{-1}/\sqrt 3\\
- *  \end{bmatrix}
- *  \f]
+ *  The inverse Jacobian then is:
+ *  \begin{align}
+ *    J^{-1} =
+ *        \frac{1}{z}\begin{bmatrix}
+ *          \Xi'^{-1} & 0 & -\Xi\Xi'^{-1} \\
+ *          0 & \mathrm{H}'^{-1} & -\mathrm{H}\mathrm{H}'^{-1} \\
+ *          T\Xi & T\mathrm{H} & T + F(\partial_{\zeta}z)^{-1}/\sqrt 3 \\
+ *        \end{bmatrix}
+ *  \end{align}
  *
  *  ### Changing the radial distribution of the gridpoints
  *  By default, Wedge linearly distributes its gridpoints in the radial
@@ -249,34 +324,42 @@ struct WedgeCoordOrientation<3> {
  *  wedges with `sphericity_inner` = `sphericity_outer` = 1.
  *
  *  The linear interpolation done for a logarithmic radial distribution is:
- *  \f[
- *  \log r = \frac{1-\zeta}{2}\log R_{inner} +
- *  \frac{1+\zeta}{2}\log R_{outer}
- *  \f]
+ *
+ *  \begin{align}
+ *    \log r = \frac{1-\zeta}{2}\log R_{inner} + \frac{1+\zeta}{2}\log R_{outer}
+ *  \end{align}
  *
  *  The map then is:
- *  \f[\vec{x}(\xi,\eta,\zeta) =
- *  \frac{\sqrt{R_{inner}^{1-\zeta}R_{outer}^{1+\zeta}}}{\rho}\begin{bmatrix}
- *  \Xi\\
- *  \mathrm{H}\\
- *  1\\
- *  \end{bmatrix}\f]
+ *
+ *  \begin{align}
+ *    \vec{x}(\xi,\eta,\zeta) =
+ *        \frac{\sqrt{R_{inner}^{1-\zeta}R_{outer}^{1+\zeta}}}{\rho}
+ *            \begin{bmatrix}
+ *              \Xi \\
+ *              \mathrm{H} \\
+ *              1 \\
+ *            \end{bmatrix}
+ *  \end{align}
  *
  *  We can rewrite this map to take on the same form as the map for the linear
  *  radial distribution, where we set
- *  \f{align*}
- *    F(\zeta) &= 0\\
- *    S(\zeta) &= \sqrt{R_{inner}^{1-\zeta}R_{outer}^{1+\zeta}}\\
- *  \f}
+ *
+ *  \begin{align}
+ *    F(\zeta) &= 0 \\
+ *    S(\zeta) &= \sqrt{R_{inner}^{1-\zeta}R_{outer}^{1+\zeta}} \\
+ *  \end{align}
  *
  *  Which gives us
  *
- *  \f[\vec{x}(\xi,\eta,\zeta) =
- *  \frac{S(\zeta)}{\rho}\begin{bmatrix}
- *  \Xi\\
- *  \mathrm{H}\\
- *  1\\
- *  \end{bmatrix}\f]
+ *  \begin{align}
+ *    \vec{x}(\xi,\eta,\zeta) =
+ *        \frac{S(\zeta)}{\rho}
+ *            \begin{bmatrix}
+ *              \Xi \\
+ *              \mathrm{H} \\
+ *              1 \\
+ *            \end{bmatrix}
+ *  \end{align}
  *
  *  The jacobian then also takes the same form in terms of this \f$S(\zeta)\f$
  *  and \f$S'\f$.
@@ -284,31 +367,39 @@ struct WedgeCoordOrientation<3> {
  *  Alternatively, an inverse radial distribution can be chosen where the linear
  *  interpolation is:
  *
- *  \f[
- *  \frac{1}{r} = \frac{R_\mathrm{inner} + R_\mathrm{outer}}{2 R_\mathrm{inner}
- *  R_\mathrm{outer}} + \frac{R_\mathrm{inner} - R_\mathrm{outer}}{2
- *  R_\mathrm{inner} R_\mathrm{outer}} \zeta
- *  \f]
+ *  \begin{align}
+ *    \frac{1}{r} =
+ *        \frac{R_\mathrm{inner} + R_\mathrm{outer}}
+ *            {2 R_\mathrm{inner}R_\mathrm{outer}} +
+ *        \frac{R_\mathrm{inner} - R_\mathrm{outer}}
+ *            {2R_\mathrm{inner} R_\mathrm{outer}} \zeta
+ *  \end{align}
  *
  *  Which can be rewritten as:
  *
- *  \f[
- *  \frac{1}{r} = \frac{1-\zeta}{2R_{inner}} + \frac{1+\zeta}{2R_{outer}}
- *  \f]
+ *  \begin{align}
+ *    \frac{1}{r} = \frac{1-\zeta}{2R_{inner}} + \frac{1+\zeta}{2R_{outer}}
+ *  \end{align}
  *
  *  The map likewise takes the form:
- *  \f[\vec{x}(\xi,\eta,\zeta) =
- *  \frac{S(\zeta)}{\rho}\begin{bmatrix}
- *  \Xi\\
- *  \mathrm{H}\\
- *  1\\
- *  \end{bmatrix}\f]
+ *
+ *  \begin{align}
+ *    \vec{x}(\xi,\eta,\zeta) =
+ *        \frac{S(\zeta)}{\rho}
+ *            \begin{bmatrix}
+ *              \Xi \\
+ *              \mathrm{H} \\
+ *              1 \\
+ *            \end{bmatrix}
+ *  \end{align}
  *
  *  Where
- *  \f[
- *    S(\zeta) = \frac{2R_{inner}R_{outer}}
- *    {(1 + \zeta)R_{inner} + (1 - \zeta)R_{outer}}
- *  \f]
+ *
+ *  \begin{align}
+ *    S(\zeta) =
+ *        \frac{2R_{inner}R_{outer}}
+ *            {(1 + \zeta)R_{inner} + (1 - \zeta)R_{outer}}
+ *  \end{align}
  *
  *  And the jacobian again takes the same form in terms of this \f$S(\zeta)\f$
  *  and \f$S'\f$.
@@ -325,97 +416,116 @@ struct WedgeCoordOrientation<3> {
  *  surfaces. Consider a parameterized surface $\vec{\rho}(\xi,\eta)$, also
  *  referred to as the *parent surface*. We define *focal lifting* as the
  *  projection of this parent surface into a three-dimensional parameterized
- *  volume \f$\vec{x}(\xi,\eta, \zeta)\f$ with respect to some *focus*
- *  \f$\vec{x}_0\f$ and *lifting scale factor* \f$\Lambda(\xi,\eta,\zeta)\f$.
- *  The resulting volume is then said to be a *focally lifted* volume. These
- *  volume maps can be cast into the following form:
+ *  volume $\vec{x}(\xi,\eta, \zeta)$ with respect to some *focus* $\vec{x}_0$
+ *  and *lifting scale factor* $\Lambda(\xi,\eta,\zeta)$. The resulting volume
+ *  is then said to be a *focally lifted* volume. These volume maps can be cast
+ *  into the following form:
  *
- *  \f[\vec{x} - \vec{x}_0 = \Lambda(\vec{\rho}-\vec{x}_0),\f]
+ *  \begin{align}
+ *    \vec{x} - \vec{x}_0 = \Lambda(\vec{\rho}-\vec{x}_0),
+ *  \end{align}
  *
- *  which makes apparent how the mapped point \f$\vec{x}(\xi,\eta,\zeta)\f$ is
- *  obtained. The parametric equations for the generalized Wedge3D maps can all
+ *  which makes apparent how the mapped point $\vec{x}(\xi,\eta,\zeta)$ is
+ *  obtained. The parametric equations for the generalized 3D Wedge maps can all
  *  be written in the above form, which we will refer to as
- *  *focally lifted form*. In the case of the Wedge3D map with no focal offset
+ *  *focally lifted form*. In the case of the 3D Wedge map with no focal offset,
  *  we have:
  *
- *  \f{align*}
- *    \vec{x}_0 &= 0\\
+ *  \begin{align}
+ *    \vec{x}_0 &= 0 \\
  *    \Lambda &= \left\{\frac{F(\zeta)}{\sqrt{3}} +
- *                      \frac{S(\zeta)}{\rho} \right\}\\
- *    \vec{\rho} &= \begin{bmatrix} \Xi,\mathrm{H},1 \end{bmatrix}^T
- *  \f}
+ *                      \frac{S(\zeta)}{\rho} \right\} \\
+ *    \vec{\rho} &= \begin{bmatrix} \Xi, \mathrm{H}, 1 \end{bmatrix}^T
+ *  \end{align}
  *
  *  The above map can be thought of as constructing a wedge from a biunit cube
  *  centered at the origin. Points on the parent surface are scaled by a factor
- *  of \f$\Lambda(\xi,\eta,\zeta)\f$ to obtain the corresponding point in the
+ *  of $\Lambda(\xi,\eta,\zeta)$ to obtain the corresponding point in the
  *  volume. When generalizing the map to have a non-zero offset, we scale the
- *  original parent surface \f$\vec{\rho} = [\Xi, \mathrm{H},1]^T\f$ by a factor
- *  \f$L\f$, and let the focus \f$\vec{x_0}\f$ shift away from the origin. The
+ *  original parent surface $\vec{\rho} = [\Xi, \mathrm{H},1]^T$ by a factor
+ *  $L$, and let the focus $\vec{x_0}$ shift away from the origin. The
  *  generalized wedge map is then given by:
  *
- *  \f[\vec{x}(\xi,\eta,\zeta) = \left\{\frac{F(\zeta)}{L\sqrt 3} +
- *  \frac{S(\zeta)}{L\rho}\right\}\begin{bmatrix}
- *  L\Xi - x_0\\
- *  L\mathrm{H} - y_0\\
- *  L-z_0\\
- *  \end{bmatrix}\f]
+ *  \begin{align}
+ *    \vec{x}(\xi,\eta,\zeta) =
+ *        \left\{\frac{F(\zeta)}{L\sqrt 3} +
+ *            \frac{S(\zeta)}{L\rho}\right\}\begin{bmatrix}
+ *              L\Xi - x_0 \\
+ *              L\mathrm{H} - y_0 \\
+ *              L-z_0 \\
+ *            \end{bmatrix}
+ *  \end{align}
  *
- *  where \f$\rho\f$ is now
- *  \f$\sqrt{(\Xi - x_0/L)^2 + (\mathrm{H} - y_0/L)^2 + (1 - z_0/L)^2}\f$.
+ *  where $\rho$ is now
+ *  $\sqrt{(\Xi - x_0/L)^2 + (\mathrm{H} - y_0/L)^2 + (1 - z_0/L)^2}$.
  *
  *  This map is often written as:
  *
- *  \f[\vec{x}(\xi,\eta,\zeta) = \left\{\frac{F(\zeta)}{\sqrt{3}} +
- *  \frac{S(\zeta)}{\rho}\right\}(\vec{\sigma}_0 - \vec{x}_0/L),\f]
+ *  \begin{align}
+ *    \vec{x}(\xi,\eta,\zeta) =
+ *        \left\{\frac{F(\zeta)}{\sqrt{3}} +
+ *        \frac{S(\zeta)}{\rho}\right\}(\vec{\sigma}_0 - \vec{x}_0/L),
+ *    \label{eq:focally_lifted_map_with_generalized_z_coef}
+ *  \end{align}
  *
- *  where \f$\vec{\sigma}_0 = [\Xi, \mathrm{H},1]^T\f$, as the parent surface
- *  \f$\vec{\rho}\f$ is now \f$L\vec{\sigma}_0\f$. We give the quantity in
- *  braces the name \f$z_{\Lambda} = L\Lambda\f$, *generalized z*. The map can
- *  be inverted by first solving for \f$z_{\Lambda}\f$ in terms of the target
- *  coordinates. We make use of the fact that the parent surface
- *  \f$\vec{\rho}\f$ has a constant normal vector \f$\hat{n} = \hat{z}\f$.
+ *  where $\vec{\sigma}_0 = [\Xi, \mathrm{H},1]^T$, as the parent surface
+ *  $\vec{\rho}$ is now $L\vec{\sigma}_0$. We give the quantity in braces the
+ *  name $z_{\Lambda} = L\Lambda$, *generalized z*. The map can be inverted by
+ *  first solving for \f$z_{\Lambda}\f$ in terms of the target coordinates. We
+ *  make use of the fact that the parent surface $\vec{\rho}$ has a constant
+ *  normal vector $\hat{n} = \hat{z}$.
  *
- *  \f[z_{\Lambda} = \frac{(\vec{x} - \vec{x}_0)\cdot\hat{n}}{
- *     (\vec{\sigma}_0-\vec{x}_0/L)\cdot\hat{n}}.\f]
+ *  \begin{align}
+ *    z_{\Lambda} = \frac{(\vec{x} - \vec{x}_0)\cdot\hat{n}}
+ *                       {(\vec{\sigma}_0-\vec{x}_0/L)\cdot\hat{n}}.
+ *  \end{align}
  *
  *  Moving all the known quantities to the left hand side results in the
  *  following:
  *
- *  \f[\frac{\vec{x} - \vec{x}_0}{z_{\Lambda}} + \frac{\vec{x}_0}{L}
- *  = \vec{\sigma}_0(\xi,\eta) =
- *  \begin{bmatrix}
- *  \Xi\\
- *  \mathrm{H}\\
- *  1\\
- *  \end{bmatrix},\f]
+ *  \begin{align}
+ *    \frac{\vec{x} - \vec{x}_0}{z_{\Lambda}} + \frac{\vec{x}_0}{L} =
+ *        \vec{\sigma}_0(\xi,\eta) =
+ *        \begin{bmatrix}
+ *          \Xi \\
+ *          \mathrm{H} \\
+ *          1 \\
+ *        \end{bmatrix},
+ *  \end{align}
  *
- *  Note that \f$|\vec{\sigma}_0 - \vec{x}_0/L| = \sqrt{(\Xi - x_0/L)^2 +
- *  (\mathrm{H} - y_0/L)^2 + (1 - z_0/L)^2} = \rho\f$, indicating that an
- *  expression for \f$\rho\f$ in terms of the target coordinates can be computed
- *  via taking the magnitude of both sides of Eq. 26 (TODO : link this eq):
+ *  Note that $|\vec{\sigma}_0 - \vec{x}_0/L| = \sqrt{(\Xi - x_0/L)^2 +
+ *  (\mathrm{H} - y_0/L)^2 + (1 - z_0/L)^2} = \rho$, indicating that an
+ *  expression for $\rho$ in terms of the target coordinates can be computed via
+ *  taking the magnitude of both sides of
+ *  Eq. ($\ref{eq:focally_lifted_map_with_generalized_z_coef}$):
  *
- *  \f{align*}
- *    |\vec{x} - \vec{x}_0| = z_{\Lambda}
- *    |\vec{\sigma}_0 - \vec{x}_0/L| = z_{\Lambda}\rho.
- *  \f}
+ *  \begin{align}
+ *    |\vec{x} - \vec{x}_0| &= z_{\Lambda}
+ *    |\vec{\sigma}_0 - \vec{x}_0/L| &= z_{\Lambda}\rho.
+ *  \end{align}
  *
  *  The quantity $\rho$ is then given by:
  *
- *  \f[\rho = \frac{|\vec{x} - \vec{x}_0|}{z_{\Lambda}}.\f]
+ *  \begin{align}
+ *    \rho = \frac{|\vec{x} - \vec{x}_0|}{z_{\Lambda}}.
+ *  \end{align}
  *
  *  With $\rho$ computed, $\zeta$ can be computed from
+ *
  *  \begin{align}
- *  z_{\Lambda} = \left\{\frac{F(\zeta)}{\sqrt{3}}
- *  + \frac{S(\zeta)}{\rho} \right\}
- *  = \left\{\frac{F_0}{\sqrt{3}} + \frac{S_0}{\rho} + \frac{F_1\zeta}{\sqrt{3}}
- *  + \frac{S_1\zeta}{\rho}\right\},
+ *    z_{\Lambda} = \left\{\frac{F(\zeta)}{\sqrt{3}} +
+ *                  \frac{S(\zeta)}{\rho} \right\}
+ *                = \left\{\frac{F_0}{\sqrt{3}} + \frac{S_0}{\rho} +
+ *                  \frac{F_1\zeta}{\sqrt{3}} + \frac{S_1\zeta}{\rho}\right\},
  *  \end{align}
  *
  *  which gives
  *
  *  \begin{align}
- *  \zeta = \frac{z_{\Lambda} - (\frac{F_0}{\sqrt{3}}
- *  + \frac{S_0}{\rho})} {\frac{F_1}{\sqrt{3}} + \frac{S_1}{\rho}}.
+ *    \zeta =
+ *        \frac{z_{\Lambda} - (
+ *            \frac{F_0}{\sqrt{3}} +
+ *            \frac{S_0}{\rho})} {\frac{F_1}{\sqrt{3}} + \frac{S_1}{\rho}}.
  *  \end{align}
  */
 template <size_t Dim>
