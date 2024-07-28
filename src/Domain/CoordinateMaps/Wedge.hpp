@@ -183,7 +183,8 @@ struct WedgeCoordOrientation<3> {
  *
  *  \begin{align}
  *    \vec{\sigma}_{bulged}(\xi,\eta) =
- *        \left\{(1-s)L + \frac{sR}{\rho}\right\}
+ *        \left\{(1-s)L +
+ *        \frac{sR}{\rho}\right\}
  *            \begin{bmatrix}
  *              \Xi \\
  *              \mathrm{H} \\
@@ -208,11 +209,11 @@ struct WedgeCoordOrientation<3> {
  *        \frac{1}{2}\left\{
  *          (1-\zeta)\Big[
  *            (1-s_{inner})\frac{R_{inner}}{\sqrt 3} +
- *                s_{inner}\frac{R_{inner}}{\rho}
+ *            s_{inner}\frac{R_{inner}}{\rho}
  *          \Big] +
  *          (1+\zeta)\Big[
  *            (1-s_{outer})\frac{R_{outer}}{\sqrt 3} +
- *                s_{outer}\frac{R_{outer}}{\rho}
+ *            s_{outer}\frac{R_{outer}}{\rho}
  *          \Big]
  *        \right\}
  *            \begin{bmatrix}
@@ -272,7 +273,7 @@ struct WedgeCoordOrientation<3> {
  *    \eta &= \frac{y}{z} \\
  *    \zeta &=
  *        \frac{z - \left(\frac{S_0}{\rho} + \frac{F_0}{\sqrt{3}}\right)}
- *            {\left(\frac{S_1}{\rho} - \frac{F_1}{\sqrt{3}}\right)}
+ *             {\left(\frac{S_1}{\rho} - \frac{F_1}{\sqrt{3}}\right)}
  *  \end{align}
  *
  *  We provide some common derivatives:
@@ -370,9 +371,9 @@ struct WedgeCoordOrientation<3> {
  *  \begin{align}
  *    \frac{1}{r} =
  *        \frac{R_\mathrm{inner} + R_\mathrm{outer}}
- *            {2 R_\mathrm{inner}R_\mathrm{outer}} +
+ *             {2 R_\mathrm{inner}R_\mathrm{outer}} +
  *        \frac{R_\mathrm{inner} - R_\mathrm{outer}}
- *            {2R_\mathrm{inner} R_\mathrm{outer}} \zeta
+ *             {2R_\mathrm{inner} R_\mathrm{outer}} \zeta
  *  \end{align}
  *
  *  Which can be rewritten as:
@@ -398,7 +399,7 @@ struct WedgeCoordOrientation<3> {
  *  \begin{align}
  *    S(\zeta) =
  *        \frac{2R_{inner}R_{outer}}
- *            {(1 + \zeta)R_{inner} + (1 - \zeta)R_{outer}}
+ *             {(1 + \zeta)R_{inner} + (1 - \zeta)R_{outer}}
  *  \end{align}
  *
  *  And the jacobian again takes the same form in terms of this \f$S(\zeta)\f$
@@ -449,7 +450,8 @@ struct WedgeCoordOrientation<3> {
  *  \begin{align}
  *    \vec{x}(\xi,\eta,\zeta) =
  *        \left\{\frac{F(\zeta)}{L\sqrt 3} +
- *            \frac{S(\zeta)}{L\rho}\right\}\begin{bmatrix}
+ *        \frac{S(\zeta)}{L\rho}\right\}
+ *            \begin{bmatrix}
  *              L\Xi - x_0 \\
  *              L\mathrm{H} - y_0 \\
  *              L-z_0 \\
@@ -484,13 +486,13 @@ struct WedgeCoordOrientation<3> {
  *  following:
  *
  *  \begin{align}
- *    \frac{\vec{x} - \vec{x}_0}{z_{\Lambda}} + \frac{\vec{x}_0}{L} =
- *        \vec{\sigma}_0(\xi,\eta) =
- *        \begin{bmatrix}
- *          \Xi \\
- *          \mathrm{H} \\
- *          1 \\
- *        \end{bmatrix},
+ *    \frac{\vec{x} - \vec{x}_0}{z_{\Lambda}} + \frac{\vec{x}_0}{L}
+ *         = \vec{\sigma}_0(\xi,\eta)
+ *         = \begin{bmatrix}
+ *             \Xi \\
+ *             \mathrm{H} \\
+ *             1 \\
+ *           \end{bmatrix},
  *  \end{align}
  *
  *  Note that $|\vec{\sigma}_0 - \vec{x}_0/L| = \sqrt{(\Xi - x_0/L)^2 +
