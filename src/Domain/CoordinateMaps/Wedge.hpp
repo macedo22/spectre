@@ -43,8 +43,6 @@ struct WedgeCoordOrientation<3> {
 // TODO : make sure everything still makes sense for variable opening angles
 // even with an offset
 // TODO : add Marcie's opening angles docs
-// TODO : mention in the beginning that what we're going to talk about first
-// is the vanilla wedge and define what that is (look at Marcie's overleaf)
 // TODO : need to add documentation for why zeta coefficient is computed the way
 // it is
 // TODO : ask Marcie about better description for cube_half_length param.
@@ -73,9 +71,10 @@ struct WedgeCoordOrientation<3> {
  *  through the rest of the domain code (see issue
  *  https://github.com/sxs-collaboration/spectre/issues/2988).
  *
- *  The following documentation is for the 3D map. The 2D map is obtained by
- *  setting either of the two angular coordinates to zero (and using \f$\xi\f$
- *  as the radial coordinate).
+ *  The following documentation is for the **centered** 3D map, as we will defer
+ *  the dicussion of Wedges with a `focal_offset_` to a later section. The 2D
+ *  map is obtained by setting either of the two angular coordinates to zero
+ *  (and using \f$\xi\f$ as the radial coordinate).
  *
  *  The Wedge map is constructed by linearly interpolating between a bulged
  *  face of radius `radius_inner_` to a bulged face of radius `radius_outer_`,
