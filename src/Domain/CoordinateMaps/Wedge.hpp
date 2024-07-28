@@ -47,8 +47,11 @@ struct WedgeCoordOrientation<3> {
 // is the vanilla wedge and define what that is (look at Marcie's overleaf)
 // TODO : need to add documentation for why zeta coefficient is computed the way
 // it is
-// TODO : ask Marcie if docs should have the member variables or constructor
-// args referenced like `radius_inner_` or `radius_of_inner_surface`
+// TODO : ask Marcie about better description for cube_half_length param.
+// Also, should we rename this to something like parent_surface_half_length?
+// Discuss before changing everywhere. Should the description say something more
+// useful to the reader? We need to also make it clear that L = cube_half_length
+// and not L/2, which is an easy mistake to make
 /*!
  * \ingroup CoordinateMapsGroup
  *
@@ -75,9 +78,9 @@ struct WedgeCoordOrientation<3> {
  *  as the radial coordinate).
  *
  *  The Wedge map is constructed by linearly interpolating between a bulged
- *  face of radius `radius_of_inner_surface` to a bulged face of
- *  radius `radius_of_outer_surface`, where the radius of each bulged face
- *  is defined to be the radius of the sphere circumscribing the bulge.
+ *  face of radius `radius_inner_` to a bulged face of radius `radius_outer_`,
+ *  where the radius of each bulged face is defined to be the radius of the
+ *  sphere circumscribing the bulge.
  *
  *  We make a choice here as to whether we wish to use the logical coordinates
  *  parameterizing these surface as they are, in which case we have the
@@ -322,7 +325,7 @@ struct WedgeCoordOrientation<3> {
  *  linearly interpolating in the logarithm of the radius in order to obtain
  *  a relatively higher resolution at smaller radii. Since this is a radial
  *  rescaling of Wedge, this option is only supported for fully spherical
- *  wedges with `sphericity_inner` = `sphericity_outer` = 1.
+ *  wedges with `sphericity_inner_` = `sphericity_outer_` = 1.
  *
  *  The linear interpolation done for a logarithmic radial distribution is:
  *
