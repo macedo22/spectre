@@ -48,7 +48,6 @@ void test_wedge3d_all_directions() {
   const double opening_angle_eta = angle_dis(gen) * M_PI / 180.0;
   CAPTURE(opening_angle_eta * 180.0 / M_PI);
 
-  const bool with_adapted_equiangular_map = false;
   using WedgeHalves = Wedge3D::WedgeHalves;
   const std::array<WedgeHalves, 3> halves_array = {
       {WedgeHalves::UpperOnly, WedgeHalves::LowerOnly, WedgeHalves::Both}};
@@ -67,10 +66,11 @@ void test_wedge3d_all_directions() {
     CAPTURE(focal_offset);
     // [cartesian_product_loop]
     for (const auto& [halves, orientation, with_equiangular_map,
-                      radial_distribution] :
+                      with_adapted_equiangular_map, radial_distribution] :
          random_sample<5>(
              cartesian_product(
                  halves_array, all_wedge_directions(), make_array(true, false),
+                 make_array(true, false),
                  make_array(CoordinateMaps::Distribution::Linear,
                             CoordinateMaps::Distribution::Linear,
                             CoordinateMaps::Distribution::Linear,
@@ -216,6 +216,7 @@ void test_wedge3d_alignment() {
   }
 }
 
+// TODO : ask Marcie if this test should also run for a non-zero offset
 void test_wedge3d_random_radii() {
   INFO("Wedge3d random radii");
   // Set up random number generator
@@ -524,6 +525,8 @@ void test_wedge3d_large_radius() {
   }
 }
 
+// TODO : do we want to make the non-zero offset test case for outside the
+// edge (but not the cone) better?
 void test_wedge3d_fail() {
   INFO("Wedge3d fail");
   const Wedge3D no_offset_map(0.2, 4.0, 0.0, 1.0, 1.0, {{0., 0., 0.}},
