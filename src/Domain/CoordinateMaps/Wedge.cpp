@@ -45,6 +45,8 @@ Wedge<Dim>::Wedge(const double radius_inner, const double radius_outer,
       radial_distribution_(radial_distribution),
       opening_angles_(opening_angles) {
   const double sqrt_dim = sqrt(double{Dim});
+  const bool approx_zero_offset =
+      equal_within_roundoff(magnitude(focal_offset_), 0.0);
   ASSERT(radius_inner > 0.0,
          "The radius of the inner surface must be greater than zero.");
   ASSERT(sphericity_inner >= 0.0 and sphericity_inner <= 1.0,
@@ -70,6 +72,9 @@ Wedge<Dim>::Wedge(const double radius_inner, const double radius_outer,
       "Wedge rotations must be done in such a manner that the sign of "
       "the determinant of the discrete rotation is positive. This is to "
       "preserve handedness of the coordinates.");
+  ASSERT(approx_zero_offset or (opening_angles_ == make_array<Dim - 1>(M_PI_2)),
+         "Cannot use both a non-zero focal offset and opening angles not equal "
+         "to pi/2.");
   ASSERT(opening_angles_ != make_array<Dim - 1>(M_PI_2) ? with_equiangular_map
                                                         : true,
          "If using opening angles other than pi/2, then the "
@@ -79,7 +84,7 @@ Wedge<Dim>::Wedge(const double radius_inner, const double radius_outer,
                           sphericity_inner * radius_inner);
     sphere_rate_ = 0.5 * (sphericity_outer_ * radius_outer -
                           sphericity_inner * radius_inner);
-    if (not equal_within_roundoff(magnitude(focal_offset_), 0.0)) {
+    if (not approx_zero_offset) {
       ASSERT(sphericity_inner_ == 1.0,
              "Focal offsets are not supported for inner sphericity < 1.0");
       ASSERT(
