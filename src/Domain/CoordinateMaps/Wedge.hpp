@@ -50,6 +50,12 @@ struct WedgeCoordOrientation<3> {
 // Discuss before changing everywhere. Should the description say something more
 // useful to the reader? We need to also make it clear that L = cube_half_length
 // and not L/2, which is an easy mistake to make
+// TODO : picture of centered and offset wedge with things labeled
+// TODO : updated description of what opening angle really is
+// TODO : logic preventing user setting non-zero offset and non-pi/2 opening
+// angles
+// TODO : add test catching the assert error
+// TODO : fix my wrong descriptionn of opening angle being angular size
 /*!
  * \ingroup CoordinateMapsGroup
  *
@@ -72,7 +78,7 @@ struct WedgeCoordOrientation<3> {
  *  https://github.com/sxs-collaboration/spectre/issues/2988).
  *
  *  The following documentation is for the **centered** 3D map, as we will defer
- *  the dicussion of Wedges with a `focal_offset_` to a later section. The 2D
+ *  the dicussion of `Wedge`s with a `focal_offset_` to a later section. The 2D
  *  map is obtained by setting either of the two angular coordinates to zero
  *  (and using \f$\xi\f$ as the radial coordinate).
  *
@@ -84,26 +90,29 @@ struct WedgeCoordOrientation<3> {
  *  We make a choice here as to whether we wish to use the logical coordinates
  *  parameterizing these surface as they are, in which case we have the
  *  equidistant choice of coordinates, or whether to apply a tangent map to them
- *  which leads us to the equiangular choice of coordinates. Wedges have
+ *  which leads us to the equiangular choice of coordinates. `Wedge`s have
  *  variable `opening_angles_`, the sizes of their polar and azimuthal (for the
- *  3D case) angles in the grid frame. For a wedge with a polar opening angle of
- *  size \f$\theta\f$ and azimuthal opening angle of size \f$\phi\f$, the
+ *  3D case) angles in the grid frame. By default, `Wedge`s have opening angles
+ *  of $\pi/2$, so we will discuss that case here and defer the discussion of
+ *  generalized opening angles for a later section.
+ *
+ *  For a Wedge with polar and azimuthal opening angles of $\pi/2$, the
  *  equiangular coordinates in terms of the logical coordinates are:
  *
  *  \begin{align}
- *    \textrm{equiangular xi} : \Xi(\xi) = \textrm{tan}(\frac{\theta}{2}\xi)
+ *    \textrm{equiangular xi} : \Xi(\xi) = \textrm{tan}(\xi\pi/4)
  *  \end{align}
  *
  *  \begin{align}
  *    \textrm{equiangular eta} :
- *        \mathrm{H}(\eta) =  \textrm{tan}(\frac{\phi}{2}\eta)
+ *        \mathrm{H}(\eta) =  \textrm{tan}(\eta\pi/4)
  *  \end{align}
  *
  *  With derivatives:
  *
  *  \begin{align}
- *    \Xi'(\xi) &= \frac{\theta}{2}(1+\Xi^2) \\
- *    \mathrm{H}'(\eta) &= \frac{\phi}{2}(1+\mathrm{H}^2)
+ *    \Xi'(\xi) &= \frac{\pi}{4}(1+\Xi^2) \\
+ *    \mathrm{H}'(\eta) &= \frac{\pi}{4}(1+\mathrm{H}^2)
  *  \end{align}
  *
  *  The equidistant coordinates are:
@@ -203,8 +212,10 @@ struct WedgeCoordOrientation<3> {
  *  The final map for the wedge which lies along the \f$+z\f$ axis is obtained
  *  by interpolating between the two surfaces with the interpolation parameter
  *  being the logical coordinate \f$\zeta\f$. For a wedge whose grid points are
- *  linearly distributed in the radial direction, this interpolation results in
- *  the following map:
+ *  **linearly** distributed in the radial direction (`radial_distribution_` is
+ *  \ref domain::CoordinateMaps::Distribution
+ *  "domain::CoordinateMaps::Distribution::Linear"), this interpolation results
+ *  in the following map:
  *
  *  \begin{align}
  *    \vec{x}(\xi,\eta,\zeta) =
@@ -229,7 +240,7 @@ struct WedgeCoordOrientation<3> {
  *  and sphere factors:
  *
  *  \begin{align}
- *    F(\zeta) &= F_0 + F_1\zeta
+ *    F(\zeta) &= F_0 + F_1\zeta \\
  *    S(\zeta) &= S_0 + S_1\zeta
  *  \end{align}
  *
@@ -273,9 +284,8 @@ struct WedgeCoordOrientation<3> {
  *  \begin{align}
  *    \xi &= \frac{x}{z} \\
  *    \eta &= \frac{y}{z} \\
- *    \zeta &=
- *        \frac{z - \left(\frac{S_0}{\rho} + \frac{F_0}{\sqrt{3}}\right)}
- *             {\left(\frac{S_1}{\rho} - \frac{F_1}{\sqrt{3}}\right)}
+ *    \zeta &= \frac{z - \left(\frac{S_0}{\rho} + \frac{F_0}{\sqrt{3}}\right)}
+ *                  {\left(\frac{S_1}{\rho} + \frac{F_1}{\sqrt{3}}\right)}
  *  \end{align}
  *
  *  We provide some common derivatives:
@@ -326,7 +336,9 @@ struct WedgeCoordOrientation<3> {
  *  rescaling of Wedge, this option is only supported for fully spherical
  *  wedges with `sphericity_inner_` = `sphericity_outer_` = 1.
  *
- *  The linear interpolation done for a logarithmic radial distribution is:
+ *  The linear interpolation done for a logarithmic radial distribution
+ *  (`radial_distribution_` is \ref domain::CoordinateMaps::Distribution
+ *  "domain::CoordinateMaps::Distribution::Logarithmic") is:
  *
  *  \begin{align}
  *    \log r = \frac{1-\zeta}{2}\log R_{inner} + \frac{1+\zeta}{2}\log R_{outer}
@@ -367,8 +379,10 @@ struct WedgeCoordOrientation<3> {
  *  The jacobian then also takes the same form in terms of this \f$S(\zeta)\f$
  *  and \f$S'\f$.
  *
- *  Alternatively, an inverse radial distribution can be chosen where the linear
- *  interpolation is:
+ *  Alternatively, an inverse radial distribution (`radial_distribution_` is
+ *  \ref domain::CoordinateMaps::Distribution
+ *  "domain::CoordinateMaps::Distribution::Inverse") can be chosen where the
+ *  linear interpolation is:
  *
  *  \begin{align}
  *    \frac{1}{r} =
@@ -407,7 +421,104 @@ struct WedgeCoordOrientation<3> {
  *  And the jacobian again takes the same form in terms of this \f$S(\zeta)\f$
  *  and \f$S'\f$.
  *
- *  ### Offset Wedge
+ *  ### Changing the opening angles
+ *  Consider the following map on $\xi \in [-1,1]$, which maps this interval
+ *  onto a parameterized curve that extends one fourth of a circle.
+ *
+ *  \begin{align}
+ *    \vec{\Gamma}(\xi) =
+ *        \frac{R}{\sqrt{1+\xi^2}}
+ *            \begin{bmatrix}
+ *              1 \\
+ *              \xi \\
+ *              \end{bmatrix}.
+ *    \label{eqn:quarter_circle}
+ *  \end{align}
+ *
+ *  It is convenient to compute the polar coordinate $\theta$ of the mapped
+ *  point as a function of $\xi$:
+ *
+ *  \begin{align}
+ *    \theta(\xi) = \tan^{-1}\left(\frac{\Gamma_y(\xi)}{\Gamma_x(\xi)}\right).
+ *    \label{eqn:polar_coord}
+ *  \end{align}
+ *
+ * The *opening angle* of the map is defined to be:
+ *
+ *  \begin{align}
+ *    \Delta \theta = \theta(1) - \theta(-1),
+ *    \label{eqn:define_opening_angle}
+ *  \end{align}
+ *
+ *  We can see that with $\xi=\pm 1$, we have $\Gamma_x = R/\sqrt{2}$ and
+ *  $\Gamma_y=\pm R/\sqrt{2}$, giving us
+ *  $\theta(1) = \pi/4$ and $\theta(-1) = -\pi/4$. This wedge has an opening
+ *  angle $\pi/2$ radians, as expected. On the other hand, the following map has
+ *  an opening angle of $\theta_O$:
+ *
+ *  \begin{align}
+ *    \vec{\Gamma}(\xi) =
+ *        \frac{R}{\sqrt{1+\tan^2{(\theta_O/2)}\xi^2}}
+ *            \begin{bmatrix}
+ *            1 \\
+ *            \tan{(\theta_O/2)}\xi \\
+ *            \end{bmatrix}.
+ *  \end{align}
+ *
+ *  Let us also consider the generalized map
+ *
+ *  \begin{align}
+ *    \vec{\Gamma}(\xi) =
+ *        \frac{R}{\sqrt{1+\Xi^2}}
+ *            \begin{bmatrix}
+ *              1 \\
+ *              \Xi \\
+ *            \end{bmatrix},
+ *  \end{align}
+ *
+ *  where $\Xi(\xi)$ is a function of $\xi$. $\theta(\xi)$ can then be written
+ *  as
+ *
+ *  \begin{align}
+ *    \theta(\xi) = \tan^{-1}(\Xi).
+ *  \end{align}
+ *
+ *  A curve $\vec{\Gamma}(\xi)$ is parameterized equiangularly if
+ *
+ *  \begin{align}
+ *    \frac{\mathrm{d}\theta}{\mathrm{d}\xi} = C.
+ *  \end{align}
+ *
+ *  For the equiangular map with a polar opening angle of $pi/2$,
+ *  $\Xi = \tan(\pi\xi/4)$, $\theta = \pi\xi/4$, and $\Delta\theta = \pi/2$. As
+ *  for the map
+ *
+ *  \begin{align}
+ *    \Xi(\xi) =
+ *        \tan{(\theta_O/2)}\frac{\tan{(\theta_D \xi/2)}}{\tan{(\theta_D/2)}},
+ *  \end{align}
+ *
+ *  this choice of $\Xi(\xi)$ results in a $\vec{\Gamma}(\xi)$ with opening
+ *  angle $\theta_O$, which is equiangularly distributed if
+ *  $\theta_O = \theta_D$. In the Wedge map, the argument
+ *  `with_adapted_equiangular_map` controls whether to set
+ *  $\theta_O = \theta_D$ (the `true` case) or to set $\theta_D = \pi/2$
+ *  (the `false` case). When working with a 3D Wedge, the opening angles for the
+ *  Wedge can be separately controlled for both the $\xi$ and $\eta$ directions,
+ *  but `with_adapted_equiangular_map` will apply to both directions.
+ *  Additionally in the 3D case, it is not possible to set
+ *  `with_equiangular_map_` to `true` for all of the six wedges of a sphere
+ *  unless every opening angle is $\pi/2$. In the
+ *  \ref ::domain::creators::BinaryCompactObject "BinaryCompactObject" domain,
+ *  the outer $+y$, $-y$, $+z$, and $-z$ `Wedge`s are allowed to have a
+ *  user-specified opening angle in the $\xi$-direction, with a corresponding
+ *  $\theta_D$ equal to this opening angle, while in the $\eta$-direction the
+ *  opening angle is set to $\pi/2$. The two end cap `Wedge`s in the $+x$ and
+ *  $-x$ directions have angular dimensions and gridpoint distributions
+ *  determined by the other four `Wedge`s, as the six `Wedge`s must conforming
+ *  have gridpoint distributions at the $\xi = \pm1$, $\eta = \pm 1$ boundaries.
+ *
+ *  ### Wedge with a Focal Offset
  *  In the case of the rectangular
  *  \ref ::domain::creators::BinaryCompactObject "BinaryCompactObject" domain,
  *  it becomes desirable to offset the center of the spherical excision surface
@@ -504,8 +615,8 @@ struct WedgeCoordOrientation<3> {
  *  Eq. ($\ref{eq:focally_lifted_map_with_generalized_z_coef}$):
  *
  *  \begin{align}
- *    |\vec{x} - \vec{x}_0| &= z_{\Lambda}
- *    |\vec{\sigma}_0 - \vec{x}_0/L| &= z_{\Lambda}\rho.
+ *    |\vec{x} - \vec{x}_0| = z_{\Lambda}|\vec{\sigma}_0 - \vec{x}_0/L|
+ *                          = z_{\Lambda}\rho.
  *  \end{align}
  *
  *  The quantity $\rho$ is then given by:
@@ -526,10 +637,9 @@ struct WedgeCoordOrientation<3> {
  *  which gives
  *
  *  \begin{align}
- *    \zeta =
- *        \frac{z_{\Lambda} - (
- *            \frac{F_0}{\sqrt{3}} +
- *            \frac{S_0}{\rho})} {\frac{F_1}{\sqrt{3}} + \frac{S_1}{\rho}}.
+ *     \zeta = \frac{z_{\Lambda} -
+ *                   \left(\frac{S_0}{\rho} + \frac{F_0}{\sqrt{3}}\right)}
+ *                  {\left(\frac{S_1}{\rho} + \frac{F_1}{\sqrt{3}}\right)}.
  *  \end{align}
  */
 template <size_t Dim>
@@ -545,12 +655,6 @@ class Wedge {
     LowerOnly
   };
 
-  // TODO: make sure Wedge class or constructor docs explain that
-  // cube_half_length_  is the half length of the parent surface (that) it's the
-  // same thing (or do we need to just name it one thing everywhere?) and
-  // potentially update description for cube_half_length param below
-  // TODO : make sure the focal_offset description is consistent with Marcie's
-  // focal lifting docs
   /*!
    * Constructs a 3D wedge.
    * \param radius_inner Distance from the origin to one of the
@@ -567,7 +671,8 @@ class Wedge {
    * \param sphericity_outer Value between 0 and 1 which determines
    * whether the outer surface is flat (value of 0), spherical (value of 1) or
    * somewhere in between
-   * \param cube_half_length Half the length of the parent surface
+   * \param cube_half_length Half the length of the parent surface (see Wedge
+   * documentation for more details)
    * \param focal_offset The grid frame coordinates of the focus from which the
    * Wedge is focally lifted
    * \param with_equiangular_map Determines whether to apply a tangent function
@@ -670,6 +775,7 @@ class Wedge {
   friend bool operator==(const Wedge<LocalDim>& lhs,
                          const Wedge<LocalDim>& rhs);
 
+  // TODO : document these
   double radius_inner_{std::numeric_limits<double>::signaling_NaN()};
   double radius_outer_{std::numeric_limits<double>::signaling_NaN()};
   double sphericity_inner_{std::numeric_limits<double>::signaling_NaN()};
