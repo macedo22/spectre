@@ -132,25 +132,6 @@ Wedge<Dim>::Wedge(const double radius_inner, const double radius_outer,
 
 template <size_t Dim>
 template <typename T>
-// TODO: Change name :) to lifting_factor_lambda
-tt::remove_cvref_wrap_t<T> Wedge<Dim>::lifting_factor_lambda(
-    const T& zeta, const T& one_over_rho) const {
-  if (radial_distribution_ == Distribution::Linear) {
-    // Using auto keeps this as a blaze expression.
-    const auto zeta_coefficient =
-        (scaled_frustum_rate_ + sphere_rate_ * one_over_rho);
-    const auto z_zero = (scaled_frustum_zero_ + sphere_zero_ * one_over_rho);
-    return z_zero + zeta_coefficient * zeta;
-  } else if (radial_distribution_ == Distribution::Logarithmic) {
-    return exp(sphere_zero_ + sphere_rate_ * zeta) * one_over_rho;
-  } else {
-    return 2.0 * one_over_rho /
-           ((1.0 + zeta) / radius_outer_ + (1.0 - zeta) / radius_inner_);
-  }
-}
-
-template <size_t Dim>
-template <typename T>
 tt::remove_cvref_wrap_t<T> Wedge<Dim>::get_s_factor(const T& zeta) const {
   if (radial_distribution_ == Distribution::Linear) {
     return (sphere_zero_ + sphere_rate_ * zeta);
@@ -176,6 +157,27 @@ tt::remove_cvref_wrap_t<T> Wedge<Dim>::get_s_factor_deriv(
            square(radius_outer_ + radius_inner_ +
                   zeta * (radius_inner_ - radius_outer_));
   }
+}
+
+template <size_t Dim>
+template <typename T>
+// TODO: Change name :) to generalized_z
+tt::remove_cvref_wrap_t<T> Wedge<Dim>::lifting_factor_lambda(
+    const T& zeta, const T& one_over_rho, const T& s_factor) const {
+  if (radial_distribution_ == Distribution::Linear) {
+    return s_factor * one_over_rho +
+           (scaled_frustum_zero_ + scaled_frustum_rate_ * zeta);
+  } else {
+    return s_factor * one_over_rho;
+  }
+}
+
+template <size_t Dim>
+template <typename T>
+// TODO: Change name :) to generalized_z
+tt::remove_cvref_wrap_t<T> Wedge<Dim>::lifting_factor_lambda(
+    const T& zeta, const T& one_over_rho) const {
+  return lifting_factor_lambda(zeta, one_over_rho, get_s_factor(zeta));
 }
 
 template <size_t Dim>
@@ -223,7 +225,7 @@ std::array<tt::remove_cvref_wrap_t<T>, Dim> Wedge<Dim>::operator()(
   one_over_rho = 1.0 / sqrt(one_over_rho);
 
   std::array<ReturnType, Dim> physical_coords{};
-  auto lambda_lifting_factor = lifting_factor_lambda(zeta, one_over_rho);
+  const auto lambda_lifting_factor = lifting_factor_lambda(zeta, one_over_rho);
   physical_coords[radial_coord] =
       lambda_lifting_factor *
           (1.0 - rotated_focus[radial_coord] / cube_half_length_) +
@@ -404,7 +406,7 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
   const ReturnType one_over_rho_cubed = pow<3>(one_over_rho);
   const ReturnType s_factor_over_rho_cubed = s_factor * one_over_rho_cubed;
   const ReturnType lambda_lifting_factor =
-      lifting_factor_lambda(zeta, one_over_rho);
+      lifting_factor_lambda(zeta, one_over_rho, s_factor);
 
   std::array<ReturnType, Dim> d_lifting_factor_lambda{};
   d_lifting_factor_lambda[polar_coord] =
@@ -572,7 +574,7 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
   const ReturnType one_over_gamma_z = 1.0 / gamma[radial_coord];
 
   const ReturnType lambda_lifting_factor =
-      lifting_factor_lambda(zeta, one_over_rho);
+      lifting_factor_lambda(zeta, one_over_rho, s_factor);
 
   const ReturnType s_factor_deriv = get_s_factor_deriv(zeta, s_factor);
 

@@ -762,10 +762,6 @@ class Wedge {
   static constexpr size_t azimuth_coord =
       detail::WedgeCoordOrientation<Dim>::azimuth_coord;
 
-  // factors out calculation of generalized z needed for mapping and jacobian
-  template <typename T>
-  tt::remove_cvref_wrap_t<T> lifting_factor_lambda(const T& zeta,
-                                                   const T& one_over_rho) const;
   // factors out calculation of S(\zeta) needed for mapping and jacobian
   template <typename T>
   tt::remove_cvref_wrap_t<T> get_s_factor(const T& zeta) const;
@@ -773,6 +769,15 @@ class Wedge {
   template <typename T>
   tt::remove_cvref_wrap_t<T> get_s_factor_deriv(const T& zeta,
                                                 const T& s_factor) const;
+
+  // factors out calculation of generalized z needed for mapping and jacobian
+  template <typename T>
+  tt::remove_cvref_wrap_t<T> lifting_factor_lambda(const T& zeta,
+                                                   const T& one_over_rho,
+                                                   const T& s_factor) const;
+  template <typename T>
+  tt::remove_cvref_wrap_t<T> lifting_factor_lambda(const T& zeta,
+                                                   const T& one_over_rho) const;
 
   template <size_t LocalDim>
   // NOLINTNEXTLINE(readability-redundant-declaration)
