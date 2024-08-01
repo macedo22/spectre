@@ -132,7 +132,7 @@ Wedge<Dim>::Wedge(const double radius_inner, const double radius_outer,
 
 template <size_t Dim>
 template <typename T>
-// Change name :) to lifting_factor_lambda
+// TODO: Change name :) to lifting_factor_lambda
 tt::remove_cvref_wrap_t<T> Wedge<Dim>::lifting_factor_lambda(
     const T& zeta, const T& one_over_rho) const {
   if (radial_distribution_ == Distribution::Linear) {

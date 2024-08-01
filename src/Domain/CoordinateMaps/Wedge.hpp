@@ -56,6 +56,7 @@ struct WedgeCoordOrientation<3> {
 // angles
 // TODO : add test catching the assert error
 // TODO : fix my wrong descriptionn of opening angle being angular size
+// TODO : is lifting_factor_lambda = generalized_z or no?
 /*!
  * \ingroup CoordinateMapsGroup
  *
@@ -92,9 +93,9 @@ struct WedgeCoordOrientation<3> {
  *  equidistant choice of coordinates, or whether to apply a tangent map to them
  *  which leads us to the equiangular choice of coordinates. `Wedge`s have
  *  variable `opening_angles_`, the sizes of their polar and azimuthal (for the
- *  3D case) angles in the grid frame. By default, `Wedge`s have opening angles
- *  of $\pi/2$, so we will discuss that case here and defer the discussion of
- *  generalized opening angles for a later section.
+ *  3D case) angles in the target frame. By default, `Wedge`s have opening
+ * angles of $\pi/2$, so we will discuss that case here and defer the discussion
+ * of generalized opening angles for a later section.
  *
  *  For a Wedge with polar and azimuthal opening angles of $\pi/2$, the
  *  equiangular coordinates in terms of the logical coordinates are:
@@ -211,7 +212,7 @@ struct WedgeCoordOrientation<3> {
  *  ### The Full Volume Map
  *  The final map for the wedge which lies along the \f$+z\f$ axis is obtained
  *  by interpolating between the two surfaces with the interpolation parameter
- *  being the logical coordinate \f$\zeta\f$. For a wedge whose grid points are
+ *  being the logical coordinate \f$\zeta\f$. For a wedge whose gridpoints are
  *  **linearly** distributed in the radial direction (`radial_distribution_` is
  *  \ref domain::CoordinateMaps::Distribution
  *  "domain::CoordinateMaps::Distribution::Linear"), this interpolation results
@@ -555,10 +556,11 @@ struct WedgeCoordOrientation<3> {
  *  The above map can be thought of as constructing a wedge from a biunit cube
  *  centered at the origin. Points on the parent surface are scaled by a factor
  *  of $\Lambda(\xi,\eta,\zeta)$ to obtain the corresponding point in the
- *  volume. When generalizing the map to have a non-zero offset, we scale the
- *  original parent surface $\vec{\rho} = [\Xi, \mathrm{H},1]^T$ by a factor
- *  $L$, and let the focus $\vec{x_0}$ shift away from the origin. The
- *  generalized wedge map is then given by:
+ *  volume. When generalizing the map to have a focus shifted from the origin
+ *  (obtained by setting `focal_offset_` to be non-zero), we scale the original
+ *  parent surface $\vec{\rho} = [\Xi, \mathrm{H},1]^T$ by a factor $L$, and let
+ *  the focus $\vec{x_0}$ shift away from the origin. The generalized wedge map
+ *  is then given by:
  *
  *  \begin{align}
  *    \vec{x}(\xi,\eta,\zeta) =
@@ -673,8 +675,8 @@ class Wedge {
    * somewhere in between
    * \param cube_half_length Half the length of the parent surface (see Wedge
    * documentation for more details)
-   * \param focal_offset The grid frame coordinates of the focus from which the
-   * Wedge is focally lifted
+   * \param focal_offset The target frame coordinates of the focus from which
+   * the Wedge is focally lifted
    * \param with_equiangular_map Determines whether to apply a tangent function
    * mapping to the logical coordinates (for `true`) or not (for `false`).
    * \param halves_to_use Determines whether to construct a full wedge or only
@@ -688,7 +690,7 @@ class Wedge {
    * intermediate map applied. In all cases, the logical points returned by the
    * inverse map will lie in the range [-1,1] in each dimension. Half wedges are
    * currently only useful in constructing domains for binary systems.
-   * \param radial_distribution Determines how to distribute grid points along
+   * \param radial_distribution Determines how to distribute gridpoints along
    * the radial direction. For wedges that are not exactly spherical, only
    * `Distribution::Linear` is currently supported.
    * \param opening_angles Determines the angular size of the wedge. The
@@ -760,12 +762,14 @@ class Wedge {
   static constexpr size_t azimuth_coord =
       detail::WedgeCoordOrientation<Dim>::azimuth_coord;
 
-  // factors out calculation of z needed for mapping and jacobian
+  // factors out calculation of generalized z needed for mapping and jacobian
   template <typename T>
   tt::remove_cvref_wrap_t<T> lifting_factor_lambda(const T& zeta,
                                                    const T& one_over_rho) const;
+  // factors out calculation of S(\zeta) needed for mapping and jacobian
   template <typename T>
   tt::remove_cvref_wrap_t<T> get_s_factor(const T& zeta) const;
+  // factors out calculation of S'(\zeta) needed for jacobian
   template <typename T>
   tt::remove_cvref_wrap_t<T> get_s_factor_deriv(const T& zeta,
                                                 const T& s_factor) const;
@@ -775,24 +779,53 @@ class Wedge {
   friend bool operator==(const Wedge<LocalDim>& lhs,
                          const Wedge<LocalDim>& rhs);
 
-  // TODO : document these
+  // TODO : finish documenting these
+  /// Distance from the origin to one of the corners which lie on the inner
+  /// surface.
   double radius_inner_{std::numeric_limits<double>::signaling_NaN()};
+  /// Distance from the origin to one of the corners which lie on the outer
+  /// surface.
   double radius_outer_{std::numeric_limits<double>::signaling_NaN()};
+  /// Value between 0 and 1 which determines whether the inner surface is flat
+  /// (value of 0), spherical (value of 1) or somewhere in between
   double sphericity_inner_{std::numeric_limits<double>::signaling_NaN()};
+  /// Value between 0 and 1 which determines whether the outer surface is flat
+  /// (value of 0), spherical (value of 1) or somewhere in between
   double sphericity_outer_{std::numeric_limits<double>::signaling_NaN()};
+  /// Half the length of the parent surface (see Wedge documentation for more
+  /// details)
   double cube_half_length_{std::numeric_limits<double>::signaling_NaN()};
+  /// The target frame coordinates of the focus from which the Wedge is focally
+  /// lifted
   std::array<double, Dim> focal_offset_{
       make_array<Dim>(std::numeric_limits<double>::signaling_NaN())};
+  /// The orientation of the desired wedge relative to the orientation of the
+  /// default wedge which is a wedge that has its curved surfaces pierced by the
+  /// upper-z axis. The logical xi and eta coordinates point in the cartesian x
+  /// and y directions, respectively.
   OrientationMap<Dim> orientation_of_wedge_{};
+  /// Determines whether to apply a tangent function mapping to the logical
+  /// coordinates (for `true`) or not (for `false`).
   bool with_equiangular_map_ = false;
+  /// Determines whether to construct a full wedge or only half a wedge (see
+  /// Wedge documentation for more details)
   WedgeHalves halves_to_use_ = WedgeHalves::Both;
+  /// Determines how to distribute gridpoints along the radial direction. For
+  /// wedges that are not exactly spherical, only `Distribution::Linear` is
+  /// currently supported.
   Distribution radial_distribution_ = Distribution::Linear;
+  ///
   double scaled_frustum_zero_{std::numeric_limits<double>::signaling_NaN()};
+  ///
   double sphere_zero_{std::numeric_limits<double>::signaling_NaN()};
+  ///
   double scaled_frustum_rate_{std::numeric_limits<double>::signaling_NaN()};
+  ///
   double sphere_rate_{std::numeric_limits<double>::signaling_NaN()};
+  ///
   std::array<double, Dim - 1> opening_angles_{
       make_array<Dim - 1>(std::numeric_limits<double>::signaling_NaN())};
+  ///
   std::array<double, Dim - 1> opening_angles_distribution_{
       make_array<Dim - 1>(std::numeric_limits<double>::signaling_NaN())};
 };
