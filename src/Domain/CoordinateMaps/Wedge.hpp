@@ -53,6 +53,7 @@ struct WedgeCoordOrientation<3> {
 // pi/2, whether with_adapted_equiangular_map_ is true or false changes
 // nothing? maybe in the new opening angles section where it doscusses
 // theta_D ?
+// TODO : make sure cling-tidy passes
 /*!
  * \ingroup CoordinateMapsGroup
  *
