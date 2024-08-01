@@ -42,21 +42,12 @@ struct WedgeCoordOrientation<3> {
 
 // TODO : make sure everything still makes sense for variable opening angles
 // even with an offset
-// TODO : add Marcie's opening angles docs
-// TODO : need to add documentation for why zeta coefficient is computed the way
-// it is
-// TODO : ask Marcie about better description for cube_half_length param.
-// Also, should we rename this to something like parent_surface_half_length?
-// Discuss before changing everywhere. Should the description say something more
-// useful to the reader? We need to also make it clear that L = cube_half_length
-// and not L/2, which is an easy mistake to make
 // TODO : picture of centered and offset wedge with things labeled
-// TODO : updated description of what opening angle really is
-// TODO : logic preventing user setting non-zero offset and non-pi/2 opening
-// angles
-// TODO : add test catching the assert error
+// TODO : run tests in Debug
 // TODO : fix my wrong descriptionn of opening angle being angular size
-// TODO : is lifting_factor_lambda = generalized_z or no?
+// TODO : Add Marcie's description of what opening angle really is and also
+// say that equiangular cap Xi and cap Eta are the same as in non-offset case
+// but we opening_angle_ = pi/2
 // TODO : document jacobian and inverse jacobian with offset, include gamma
 /*!
  * \ingroup CoordinateMapsGroup
@@ -763,7 +754,8 @@ class Wedge {
   static constexpr size_t azimuth_coord =
       detail::WedgeCoordOrientation<Dim>::azimuth_coord;
 
-  // factors out calculation of S(\zeta) needed for mapping and jacobian
+  /// Factors out calculation of S(\zeta) needed for mapping and jacobian, where
+  //
   template <typename T>
   tt::remove_cvref_wrap_t<T> get_s_factor(const T& zeta) const;
   // factors out calculation of S'(\zeta) needed for jacobian
