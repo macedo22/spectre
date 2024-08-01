@@ -10,7 +10,6 @@
 
 #include "DataStructures/Tensor/EagerMath/Determinant.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
-#include "DataStructures/VectorImpl.hpp"
 #include "Domain/CoordinateMaps/Distribution.hpp"
 #include "Domain/Structure/OrientationMap.hpp"
 #include "Utilities/ConstantExpressions.hpp"
@@ -84,7 +83,14 @@ Wedge<Dim>::Wedge(const double radius_inner, const double radius_outer,
                           sphericity_inner * radius_inner);
     sphere_rate_ = 0.5 * (sphericity_outer_ * radius_outer -
                           sphericity_inner * radius_inner);
-    if (not approx_zero_offset) {
+    if (approx_zero_offset) {
+      scaled_frustum_zero_ = 0.5 / sqrt_dim *
+                             ((1.0 - sphericity_outer_) * radius_outer +
+                              (1.0 - sphericity_inner) * radius_inner);
+      scaled_frustum_rate_ = 0.5 / sqrt_dim *
+                             ((1.0 - sphericity_outer_) * radius_outer -
+                              (1.0 - sphericity_inner) * radius_inner);
+    } else {
       ASSERT(sphericity_inner_ == 1.0,
              "Focal offsets are not supported for inner sphericity < 1.0");
       ASSERT(
@@ -97,13 +103,6 @@ Wedge<Dim>::Wedge(const double radius_inner, const double radius_outer,
       scaled_frustum_rate_ =
           0.5 * cube_half_length_ *
           ((1.0 - sphericity_outer_) - (1.0 - sphericity_inner));
-    } else {
-      scaled_frustum_zero_ = 0.5 / sqrt_dim *
-                             ((1.0 - sphericity_outer_) * radius_outer +
-                              (1.0 - sphericity_inner) * radius_inner);
-      scaled_frustum_rate_ = 0.5 / sqrt_dim *
-                             ((1.0 - sphericity_outer_) * radius_outer -
-                              (1.0 - sphericity_inner) * radius_inner);
     }
   } else if (radial_distribution_ == Distribution::Logarithmic) {
     scaled_frustum_zero_ = 0.0;

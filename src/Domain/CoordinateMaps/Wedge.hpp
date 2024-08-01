@@ -40,6 +40,8 @@ struct WedgeCoordOrientation<3> {
 };
 }  // namespace detail
 
+// TODO : do we need to assert anything regarding cube_half_length_ and
+// focal_offset_? or cube_half_length_ and radius_inner_ or radius_outer_?
 // TODO : make sure everything still makes sense for variable opening angles
 // even with an offset (do in review with Marcie)
 // TODO : add pictures of centered and offset wedge with things labeled
