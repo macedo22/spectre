@@ -161,8 +161,7 @@ tt::remove_cvref_wrap_t<T> Wedge<Dim>::get_s_factor_deriv(
 
 template <size_t Dim>
 template <typename T>
-// TODO: Change name :) to generalized_z
-tt::remove_cvref_wrap_t<T> Wedge<Dim>::lifting_factor_lambda(
+tt::remove_cvref_wrap_t<T> Wedge<Dim>::get_generalized_z(
     const T& zeta, const T& one_over_rho, const T& s_factor) const {
   if (radial_distribution_ == Distribution::Linear) {
     return s_factor * one_over_rho +
@@ -174,10 +173,9 @@ tt::remove_cvref_wrap_t<T> Wedge<Dim>::lifting_factor_lambda(
 
 template <size_t Dim>
 template <typename T>
-// TODO: Change name :) to generalized_z
-tt::remove_cvref_wrap_t<T> Wedge<Dim>::lifting_factor_lambda(
+tt::remove_cvref_wrap_t<T> Wedge<Dim>::get_generalized_z(
     const T& zeta, const T& one_over_rho) const {
-  return lifting_factor_lambda(zeta, one_over_rho, get_s_factor(zeta));
+  return get_generalized_z(zeta, one_over_rho, get_s_factor(zeta));
 }
 
 template <size_t Dim>
@@ -225,7 +223,7 @@ std::array<tt::remove_cvref_wrap_t<T>, Dim> Wedge<Dim>::operator()(
   one_over_rho = 1.0 / sqrt(one_over_rho);
 
   std::array<ReturnType, Dim> physical_coords{};
-  const auto lambda_lifting_factor = lifting_factor_lambda(zeta, one_over_rho);
+  const auto lambda_lifting_factor = get_generalized_z(zeta, one_over_rho);
   physical_coords[radial_coord] =
       lambda_lifting_factor *
           (1.0 - rotated_focus[radial_coord] / cube_half_length_) +
@@ -406,7 +404,7 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
   const ReturnType one_over_rho_cubed = pow<3>(one_over_rho);
   const ReturnType s_factor_over_rho_cubed = s_factor * one_over_rho_cubed;
   const ReturnType lambda_lifting_factor =
-      lifting_factor_lambda(zeta, one_over_rho, s_factor);
+      get_generalized_z(zeta, one_over_rho, s_factor);
 
   std::array<ReturnType, Dim> d_lifting_factor_lambda{};
   d_lifting_factor_lambda[polar_coord] =
@@ -574,7 +572,7 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
   const ReturnType one_over_gamma_z = 1.0 / gamma[radial_coord];
 
   const ReturnType lambda_lifting_factor =
-      lifting_factor_lambda(zeta, one_over_rho, s_factor);
+      get_generalized_z(zeta, one_over_rho, s_factor);
 
   const ReturnType s_factor_deriv = get_s_factor_deriv(zeta, s_factor);
 
