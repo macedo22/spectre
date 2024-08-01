@@ -527,6 +527,8 @@ void test_wedge3d_large_radius() {
 
 // TODO : do we want to make the non-zero offset test case for outside the
 // edge (but not the cone) better?
+// TODO : we need to update the offset case because we can't do inner
+// of 0
 void test_wedge3d_fail() {
   INFO("Wedge3d fail");
   const Wedge3D no_offset_map(0.2, 4.0, 0.0, 1.0, 1.0, {{0., 0., 0.}},
@@ -643,6 +645,14 @@ SPECTRE_TEST_CASE("Unit.Domain.CoordinateMaps.Wedge3D.Map", "[Domain][Unit]") {
       Catch::Matchers::ContainsSubstring(
           "Only the 'Linear' radial distribution is "
           "supported for non-spherical wedges."));
+  CHECK_THROWS_WITH(
+      Wedge3D(0.2, 4.0, 1.0, 1.0, 1.0, {{0.1, 0., 0.}}, OrientationMap<3>{},
+              true, Wedge3D::WedgeHalves::Both,
+              domain::CoordinateMaps::Distribution::Linear,
+              std::array<double, 2>{{M_PI_4 * 0.70, M_PI_4}}),
+      Catch::Matchers::ContainsSubstring(
+          "Cannot use both a non-zero focal offset and opening angles not "
+          "equal to pi/2."));
   CHECK_THROWS_WITH(
       Wedge3D(0.2, 4.0, 0.8, 0.9, 1.0, {{0., 0., 0.}}, OrientationMap<3>{},
               false, Wedge3D::WedgeHalves::Both,

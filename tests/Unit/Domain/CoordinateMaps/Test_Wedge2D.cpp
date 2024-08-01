@@ -177,9 +177,9 @@ void test_wedge2d_all_orientations(const bool with_equiangular_map) {
 void test_wedge2d_fail() {
   INFO("Wedge2d fail");
   const auto no_offset_map =
-      Wedge2D(0.2, 4.0, 0.0, 1.0, 1.0, {{0., 0.}}, OrientationMap<2>{}, true);
+      Wedge2D(0.2, 4.0, 1.0, 1.0, 1.0, {{0., 0.}}, OrientationMap<2>{}, true);
   const auto offset_map =
-      Wedge2D(0.2, 4.0, 0.0, 1.0, 1.0, {{0.1, 0.}}, OrientationMap<2>{}, true);
+      Wedge2D(0.2, 4.0, 1.0, 1.0, 1.0, {{0.1, 0.}}, OrientationMap<2>{}, true);
 
   // Any point with x <= 0 should fail the inverse map with no focal offset
   const std::array<double, 2> test_mapped_point1{{0.0, 3.0}};
@@ -315,6 +315,22 @@ SPECTRE_TEST_CASE("Unit.Domain.CoordinateMaps.Wedge2D.Map", "[Domain][Unit]") {
       Catch::Matchers::ContainsSubstring(
           "The arguments passed into the constructor for Wedge result in an "
           "object where the outer surface is pierced by the inner surface."));
+  CHECK_THROWS_WITH(
+      Wedge2D(0.2, 4.0, 1.0, 1.0, 1.0, {{0., 0.1}}, OrientationMap<2>{}, true,
+              Wedge2D::WedgeHalves::Both,
+              domain::CoordinateMaps::Distribution::Linear,
+              std::array<double, 1>{{M_PI_4}}),
+      Catch::Matchers::ContainsSubstring(
+          "Cannot use both a non-zero focal offset and opening angles not "
+          "equal to pi/2."));
+  CHECK_THROWS_WITH(
+      Wedge2D(0.2, 4.0, 0.2, 1.0, 1.0, {{0., 0.}}, OrientationMap<2>{}, false,
+              Wedge2D::WedgeHalves::Both,
+              domain::CoordinateMaps::Distribution::Linear,
+              std::array<double, 1>{{M_PI_4}}),
+      Catch::Matchers::ContainsSubstring(
+          "If using opening angles other than pi/2, then the "
+          "equiangular map option must be turned on."));
   CHECK_THROWS_WITH(
       Wedge2D(0.2, 4.0, 0.2, 1.0, 1.0, {{5., 0.}}, OrientationMap<2>{}, true,
               Wedge2D::WedgeHalves::Both,
