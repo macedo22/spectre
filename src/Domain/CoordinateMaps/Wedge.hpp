@@ -101,13 +101,13 @@ struct WedgeCoordOrientation<3> {
  *
  *  \begin{align}
  *    \textrm{equiangular xi} : \Xi(\xi) = \textrm{tan}(\xi\pi/4)
- *    \label{eqn:equiangular_xi_pi_over_2}
+ *    \label{eq:equiangular_xi_pi_over_2}
  *  \end{align}
  *
  *  \begin{align}
  *    \textrm{equiangular eta} :
  *        \mathrm{H}(\eta) =  \textrm{tan}(\eta\pi/4)
- *        \label{eqn:equiangular_eta_pi_over_2}
+ *        \label{eq:equiangular_eta_pi_over_2}
  *  \end{align}
  *
  *  With derivatives:
@@ -432,7 +432,7 @@ struct WedgeCoordOrientation<3> {
  *              1 \\
  *              \xi \\
  *              \end{bmatrix}.
- *    \label{eqn:quarter_circle}
+ *    \label{eq:quarter_circle}
  *  \end{align}
  *
  *  It is convenient to compute the polar coordinate $\theta$ of the mapped
@@ -440,14 +440,14 @@ struct WedgeCoordOrientation<3> {
  *
  *  \begin{align}
  *    \theta(\xi) = \tan^{-1}\left(\frac{\Gamma_y(\xi)}{\Gamma_x(\xi)}\right).
- *    \label{eqn:polar_coord}
+ *    \label{eq:polar_coord}
  *  \end{align}
  *
  * The *opening angle* of the map is defined to be:
  *
  *  \begin{align}
  *    \Delta \theta = \theta(1) - \theta(-1),
- *    \label{eqn:define_opening_angle}
+ *    \label{eq:define_opening_angle}
  *  \end{align}
  *
  *  We can see that with $\xi=\pm 1$, we have $\Gamma_x = R/\sqrt{2}$ and
