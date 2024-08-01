@@ -197,7 +197,7 @@ std::array<tt::remove_cvref_wrap_t<T>, Dim> Wedge<Dim>::operator()(
     xi *= 0.5;
   }
 
-  auto rotated_focus =
+  const auto rotated_focus =
       discrete_rotation(orientation_of_wedge_.inverse_map(), focal_offset_);
 
   std::array<ReturnType, Dim - 1> cap{};
@@ -222,8 +222,8 @@ std::array<tt::remove_cvref_wrap_t<T>, Dim> Wedge<Dim>::operator()(
   }
   one_over_rho = 1.0 / sqrt(one_over_rho);
 
+  const ReturnType generalized_z = get_generalized_z(zeta, one_over_rho);
   std::array<ReturnType, Dim> physical_coords{};
-  const auto generalized_z = get_generalized_z(zeta, one_over_rho);
   physical_coords[radial_coord] =
       generalized_z * (1.0 - rotated_focus[radial_coord] / cube_half_length_) +
       rotated_focus[radial_coord];
@@ -245,7 +245,7 @@ std::optional<std::array<double, Dim>> Wedge<Dim>::inverse(
     const std::array<double, Dim>& target_coords) const {
   const std::array<double, Dim> physical_coords =
       discrete_rotation(orientation_of_wedge_.inverse_map(), target_coords);
-  auto rotated_focus =
+  const auto rotated_focus =
       discrete_rotation(orientation_of_wedge_.inverse_map(), focal_offset_);
 
   if (physical_coords[radial_coord] < rotated_focus[radial_coord] or
@@ -258,6 +258,7 @@ std::optional<std::array<double, Dim>> Wedge<Dim>::inverse(
       (physical_coords[radial_coord] - rotated_focus[radial_coord]) /
       (1.0 - rotated_focus[radial_coord] / cube_half_length_);
   const double one_over_generalized_z = 1.0 / generalized_z;
+
   std::array<double, Dim - 1> cap{};
   cap[0] = (physical_coords[polar_coord] - rotated_focus[polar_coord]) *
                one_over_generalized_z +
@@ -267,9 +268,10 @@ std::optional<std::array<double, Dim>> Wedge<Dim>::inverse(
                  one_over_generalized_z +
              rotated_focus[azimuth_coord] / cube_half_length_;
   }
-  const double radius = magnitude(physical_coords - rotated_focus);
+
   // Radial coordinate
   double zeta = std::numeric_limits<double>::signaling_NaN();
+  const double radius = magnitude(physical_coords - rotated_focus);
   if (radial_distribution_ == Distribution::Linear) {
     const double one_over_rho = generalized_z / radius;
     const double zeta_coefficient =
@@ -316,6 +318,7 @@ std::optional<std::array<double, Dim>> Wedge<Dim>::inverse(
   logical_coords[radial_coord] = zeta;
   logical_coords[polar_coord] = xi;
   if constexpr (Dim == 3) {
+    // Azimuthal angle
     logical_coords[azimuth_coord] =
         with_equiangular_map_
             ? 2.0 *

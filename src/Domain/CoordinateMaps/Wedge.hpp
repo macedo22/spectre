@@ -57,6 +57,7 @@ struct WedgeCoordOrientation<3> {
 // TODO : add test catching the assert error
 // TODO : fix my wrong descriptionn of opening angle being angular size
 // TODO : is lifting_factor_lambda = generalized_z or no?
+// TODO : document jacobian and inverse jacobian with offset, include gamma
 /*!
  * \ingroup CoordinateMapsGroup
  *
