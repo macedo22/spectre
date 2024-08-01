@@ -152,9 +152,9 @@ tt::remove_cvref_wrap_t<T> Wedge<Dim>::get_s_factor_deriv(
     return 0.5 * s_factor * log(radius_outer_ / radius_inner_);
   } else {
     return 2.0 *
-           ((square(radius_outer_) * radius_inner_) -
-            radius_outer_ * square(radius_inner_)) /
-           square(radius_outer_ + radius_inner_ +
+           ((radius_inner_ * square(radius_outer_)) -
+            square(radius_inner_) * radius_outer_) /
+           square(radius_inner_ + radius_outer_ +
                   zeta * (radius_inner_ - radius_outer_));
   }
 }
@@ -186,7 +186,6 @@ std::array<tt::remove_cvref_wrap_t<T>, Dim> Wedge<Dim>::get_d_generalized_z(
     const std::array<tt::remove_cvref_wrap_t<T>, Dim>& gamma) const {
   using ReturnType = tt::remove_cvref_wrap_t<T>;
 
-  const ReturnType s_factor_deriv = get_s_factor_deriv(zeta, s_factor);
   const ReturnType one_over_rho_cubed = pow<3>(one_over_rho);
   const ReturnType s_factor_over_rho_cubed = s_factor * one_over_rho_cubed;
 
@@ -196,9 +195,11 @@ std::array<tt::remove_cvref_wrap_t<T>, Dim> Wedge<Dim>::get_d_generalized_z(
       -s_factor_over_rho_cubed * cap_deriv[0] * gamma[polar_coord];
   // Radial coordinate
   if (radial_distribution_ == Distribution::Linear) {
+    // note: sphere_rate_ = s_factor_deriv for Linear
     d_generalized_z[radial_coord] =
         sphere_rate_ * one_over_rho + scaled_frustum_rate_;
   } else {
+    const ReturnType s_factor_deriv = get_s_factor_deriv(zeta, s_factor);
     d_generalized_z[radial_coord] = s_factor_deriv * one_over_rho;
   }
   if (Dim == 3) {

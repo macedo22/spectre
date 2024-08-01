@@ -49,6 +49,8 @@ struct WedgeCoordOrientation<3> {
 // say that equiangular cap Xi and cap Eta are the same as in non-offset case
 // but we opening_angle_ = pi/2
 // TODO : document jacobian and inverse jacobian with offset, include gamma
+// TODO: ask Marcie if we need to disambiguate the two different cap Xi and
+// cap eta
 /*!
  * \ingroup CoordinateMapsGroup
  *
@@ -244,18 +246,16 @@ struct WedgeCoordOrientation<3> {
  *        \frac{1}{2} \big\{
  *          (1-s_{outer})R_{outer} + (1-s_{inner})R_{inner}
  *        \big\} \\
- *    F_1 &=
- *        \partial_{\zeta} F =
- *            \frac{1}{2} \big\{
- *              (1-s_{outer})R_{outer} - (1-s_{inner})R_{inner}
- *            \big\} \\
+ *    F_1 &= \partial_{\zeta}F
+ *         = \frac{1}{2} \big\{
+ *             (1-s_{outer})R_{outer} - (1-s_{inner})R_{inner}
+ *           \big\} \\
  *    S_0 &=
  *        \frac{1}{2} \big\{
  *          s_{outer}R_{outer} + s_{inner}R_{inner}
  *        \big\} \\
- *    S_1 &=
- *        \partial_{\zeta} S =
- *            \frac{1}{2} \big\{ s_{outer}R_{outer} - s_{inner}R_{inner}\big\}
+ *    S_1 &= \partial_{\zeta}S
+ *         = \frac{1}{2} \big\{ s_{outer}R_{outer} - s_{inner}R_{inner}\big\}
  *  \end{align}
  *
  *  The map can then be rewritten as:
@@ -286,7 +286,7 @@ struct WedgeCoordOrientation<3> {
  *  \begin{align}
  *    \partial_{\xi}z &= \frac{-S(\zeta)\Xi\Xi'}{\rho^3} \\
  *    \partial_{\eta}z &= \frac{-S(\zeta)\mathrm{H}\mathrm{H}'}{\rho^3} \\
- *    \partial_{\zeta}z &= \frac{F'}{\sqrt 3} + \frac{S'}{\rho}
+ *    \partial_{\zeta}z &= \frac{F'}{\sqrt 3} + \frac{S'(\zeta)}{\rho}
  *  \end{align}
  *
  *  The Jacobian then is:
@@ -334,7 +334,7 @@ struct WedgeCoordOrientation<3> {
  *  "domain::CoordinateMaps::Distribution::Logarithmic") is:
  *
  *  \begin{align}
- *    \log r = \frac{1-\zeta}{2}\log R_{inner} + \frac{1+\zeta}{2}\log R_{outer}
+ *    \ln r = \frac{1-\zeta}{2}\ln R_{inner} + \frac{1+\zeta}{2}\ln R_{outer}
  *  \end{align}
  *
  *  The map then is:
@@ -370,7 +370,7 @@ struct WedgeCoordOrientation<3> {
  *  \end{align}
  *
  *  The jacobian then also takes the same form in terms of this \f$S(\zeta)\f$
- *  and \f$S'\f$.
+ *  and \f$S'(\zeta)\f$.
  *
  *  Alternatively, an inverse radial distribution (`radial_distribution_` is
  *  \ref domain::CoordinateMaps::Distribution
@@ -412,7 +412,7 @@ struct WedgeCoordOrientation<3> {
  *  \end{align}
  *
  *  And the jacobian again takes the same form in terms of this \f$S(\zeta)\f$
- *  and \f$S'\f$.
+ *  and \f$S'(\zeta)\f$.
  *
  *  ### Changing the opening angles
  *  Consider the following map on $\xi \in [-1,1]$, which maps this interval
@@ -754,16 +754,136 @@ class Wedge {
   static constexpr size_t azimuth_coord =
       detail::WedgeCoordOrientation<Dim>::azimuth_coord;
 
-  /// Factors out calculation of S(\zeta) needed for mapping and jacobian, where
-  //
+  /*!
+   * \brief Factors out calculation of $S(\zeta)$ needed for mapping and the
+   * jacobian
+   *
+   * \details The value of $S(\zeta)$ is computed differently for different
+   * radial distributions.
+   *
+   * For a **linear** radial distribution:
+   *
+   * \f{align*}{
+   *   S(\zeta) = S_0 + S_1\zeta
+   * \f}
+   *
+   * where $S_0$ and $S_1$ are defined as
+   *
+   * \f{align*}{
+   *   S_0 &=
+   *       \frac{1}{2} \big\{
+   *         s_{outer}R_{outer} + s_{inner}R_{inner}
+   *       \big\} \\
+   *   S_1 &= \partial_{\zeta}S
+   *        = \frac{1}{2} \big\{ s_{outer}R_{outer} - s_{inner}R_{inner}\big\}
+   * \f}
+   *
+   * and are stored in `sphere_zero_` and `sphere_rate_`, respectively.
+   *
+   * For a **logarithmic** radial distribution:
+   *
+   * \f{align*}{
+   *   S(\zeta) = \exp{S_0 + S_1\zeta}
+   * \f}
+   *
+   * where $S_0$ and $S_1$ are defined as
+   *
+   * \f{align*}{
+   *   S_0 &= \frac{1}{2} \ln(R_{outer}R_{inner}) \\
+   *   S_1 &= \frac{1}{2} \ln(R_{outer}/R_{inner})
+   * \f}
+   *
+   * With these definitions of $S_0$ and $S_1$, we can rewrite the expression
+   * for $S(\zeta)$ as:
+   *
+   * \f{align*}{
+   *   S(\zeta) &= \sqrt{R_{inner}^{1-\zeta}R_{outer}^{1+\zeta}}
+   * \f}
+   *
+   * As with the linear distribution, $S_0$ and $S_1$ are stored in
+   * `sphere_zero_` and `sphere_rate_`, respectively.
+   *
+   * For an **inverse** radial distribution:
+   *
+   * \f{align*}{
+   *   S(\zeta) =
+   *       \frac{2R_{inner}R_{outer}}
+   *            {(1 + \zeta)R_{inner} + (1 - \zeta)R_{outer}}
+   * \f}
+   *
+   * In this case, `sphere_zero_` and `sphere_rate_` will simply be `NaN`.
+   *
+   * \see Wedge for more details on these quantities
+   *
+   * \param zeta the radial source coordinate
+   */
   template <typename T>
   tt::remove_cvref_wrap_t<T> get_s_factor(const T& zeta) const;
-  // factors out calculation of S'(\zeta) needed for jacobian
+  /*!
+   * \brief Factors out calculation of $S'(\zeta)$ needed for the jacobian
+   *
+   * \details The value of $S'(\zeta)$ is computed differently for different
+   * radial distributions.
+   *
+   * For a **linear** radial distribution:
+   *
+   * \f{align*}{
+   *   S'(\zeta) =
+   *       \frac{1}{2} \big\{ s_{outer}R_{outer} - s_{inner}R_{inner}\big\}
+   * \f}
+   *
+   * For a **logarithmic** radial distribution:
+   *
+   * \f{align*}{
+   *   S'(\zeta) = \frac{1}{2} S(\zeta)\ln(R_{outer}/R_{inner})
+   * \f}
+   *
+   * where $S(\zeta)$ is defined in `get_s_factor()`.
+   *
+   * For an **inverse** radial distribution:
+   *
+   * \f{align*}{
+   *   S'(\zeta) =
+   *       \frac{2(R_{inner} R_{outer}^2 - R_{inner}^2 R_{outer})}
+   *            {(R_{inner} + R_{outer} + \zeta(R_{inner} - R_{outer}))^2}
+   * \f}
+   *
+   * See Wedge and `get_s_factor()` for more details on these quantities
+   *
+   * \param zeta the radial source coordinate
+   * \param s_factor the antiderivative of $S'(\zeta)$
+   */
   template <typename T>
   tt::remove_cvref_wrap_t<T> get_s_factor_deriv(const T& zeta,
                                                 const T& s_factor) const;
 
-  // factors out calculation of generalized z needed for mapping and jacobian
+  /*!
+   * \brief Factors out calculation of $z_{\Lambda}$ needed for mapping and the
+   * jacobian
+   *
+   * \details The value of $z_{\Lambda}$  is computed differently for different
+   * radial distributions.
+   *
+   * For a **linear** radial distribution:
+   *
+   * \f{align*}{
+   *   z_{\Lambda} = \frac{F(\zeta)}{\sqrt 3} + \frac{S(\zeta)}{\rho}
+   * \f}
+   *
+   * For a **logarithmic** or **inverse** radial distribution:
+   *
+   * \f{align*}{
+   *   z_{\Lambda} = \frac{S(\zeta)}{\rho}
+   * \f}
+   *
+   * See Wedge and `get_s_factor()` for more details on these quantities
+   *
+   * \param zeta the radial source coordinate
+   * \param one_over_rho one over $\rho$ where
+   * $\rho = |\vec{\sigma}_0 - \vec{x}_0/L| = \sqrt{(\Xi - x_0/L)^2 +
+   * (\mathrm{H} - y_0/L)^2 + (1 - z_0/L)^2}$ (see Wedge)
+   * \param s_factor $S(\zeta)$ (see `get_s_factor()`)
+   */
   template <typename T>
   tt::remove_cvref_wrap_t<T> get_generalized_z(const T& zeta,
                                                const T& one_over_rho,
@@ -771,6 +891,40 @@ class Wedge {
   template <typename T>
   tt::remove_cvref_wrap_t<T> get_generalized_z(const T& zeta,
                                                const T& one_over_rho) const;
+  /*!
+   * \brief Factors out calculation of $\partial_i z_{\Lambda}$ needed for the
+   * jacobian
+   *
+   * \details For **all** radial distributions:
+   *
+   * \f{align*}{
+   *   \partial_{\xi} z_{\Lambda} &=
+   *       \frac{-S(\zeta)\Xi'\gamma_x}{\rho^3} \\
+   *   \partial_{\eta} z_{\Lambda} &=
+   *       \frac{-S(\zeta)\mathrm{H}'\gamma_y}{\rho^3} \\
+   *   \partial_{\zeta} z_{\Lambda} &=
+   *       \frac{F'(\zeta)}{\sqrt 3} + \frac{S'(\zeta)}{\rho}
+   * \f}
+   *
+   * However, $\partial_{\zeta} z_{\Lambda}$ reduces to
+   *
+   * \f{align*}{
+   *   \partial_{\zeta} z_{\Lambda} &= \frac{S'(\zeta)}{\rho}
+   * \f}
+   *
+   * for **logarithmic** and **inverse** radial distributions because
+   * $F(\zeta) = 0$.
+   *
+   * See Wedge and `get_s_factor()` for more details on these quantities
+   *
+   * \param zeta the radial source coordinate
+   * \param one_over_rho one over $\rho$ where
+   * $\rho = |\vec{\sigma}_0 - \vec{x}_0/L| = \sqrt{(\Xi - x_0/L)^2 +
+   * (\mathrm{H} - y_0/L)^2 + (1 - z_0/L)^2}$ (see Wedge)
+   * \param s_factor $S(\zeta)$ (see `get_s_factor()`)
+   * \param cap_deriv $\Xi'$ and $\mathrm{H}'$ (see Wedge)
+   * \param gamma $\gamma_i$ (see Wedge)
+   */
   template <typename T>
   std::array<tt::remove_cvref_wrap_t<T>, Dim> get_d_generalized_z(
       const T& zeta, const T& one_over_rho, const T& s_factor,
@@ -782,7 +936,6 @@ class Wedge {
   friend bool operator==(const Wedge<LocalDim>& lhs,
                          const Wedge<LocalDim>& rhs);
 
-  // TODO : finish documenting these
   /// Distance from the origin to one of the corners which lie on the inner
   /// surface.
   double radius_inner_{std::numeric_limits<double>::signaling_NaN()};
@@ -817,18 +970,18 @@ class Wedge {
   /// wedges that are not exactly spherical, only `Distribution::Linear` is
   /// currently supported.
   Distribution radial_distribution_ = Distribution::Linear;
-  ///
+  /// $F_0 / \sqrt{3}$ (see Wedge documentation)
   double scaled_frustum_zero_{std::numeric_limits<double>::signaling_NaN()};
-  ///
+  /// $S_0$ (see Wedge documentation)
   double sphere_zero_{std::numeric_limits<double>::signaling_NaN()};
-  ///
+  /// $F_1 / \sqrt{3}$ (see Wedge documentation)
   double scaled_frustum_rate_{std::numeric_limits<double>::signaling_NaN()};
-  ///
+  /// $S_1$ (see Wedge documentation)
   double sphere_rate_{std::numeric_limits<double>::signaling_NaN()};
-  ///
+  /// \theta_O (see Wedge documentation)
   std::array<double, Dim - 1> opening_angles_{
       make_array<Dim - 1>(std::numeric_limits<double>::signaling_NaN())};
-  ///
+  /// \theta_D (see Wedge documentation)
   std::array<double, Dim - 1> opening_angles_distribution_{
       make_array<Dim - 1>(std::numeric_limits<double>::signaling_NaN())};
 };
