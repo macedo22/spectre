@@ -180,6 +180,38 @@ tt::remove_cvref_wrap_t<T> Wedge<Dim>::get_generalized_z(
 
 template <size_t Dim>
 template <typename T>
+std::array<tt::remove_cvref_wrap_t<T>, Dim> Wedge<Dim>::get_d_generalized_z(
+    const T& zeta, const T& one_over_rho, const T& s_factor,
+    const std::array<tt::remove_cvref_wrap_t<T>, Dim - 1>& cap_deriv,
+    const std::array<tt::remove_cvref_wrap_t<T>, Dim>& gamma) const {
+  using ReturnType = tt::remove_cvref_wrap_t<T>;
+
+  const ReturnType s_factor_deriv = get_s_factor_deriv(zeta, s_factor);
+  const ReturnType one_over_rho_cubed = pow<3>(one_over_rho);
+  const ReturnType s_factor_over_rho_cubed = s_factor * one_over_rho_cubed;
+
+  std::array<ReturnType, Dim> d_generalized_z{};
+  // Polar angle
+  d_generalized_z[polar_coord] =
+      -s_factor_over_rho_cubed * cap_deriv[0] * gamma[polar_coord];
+  // Radial coordinate
+  if (radial_distribution_ == Distribution::Linear) {
+    d_generalized_z[radial_coord] =
+        sphere_rate_ * one_over_rho + scaled_frustum_rate_;
+  } else {
+    d_generalized_z[radial_coord] = s_factor_deriv * one_over_rho;
+  }
+  if (Dim == 3) {
+    // Azimuthal angle
+    d_generalized_z[azimuth_coord] =
+        -s_factor_over_rho_cubed * cap_deriv[1] * gamma[azimuth_coord];
+  }
+
+  return d_generalized_z;
+}
+
+template <size_t Dim>
+template <typename T>
 std::array<tt::remove_cvref_wrap_t<T>, Dim> Wedge<Dim>::operator()(
     const std::array<T, Dim>& source_coords) const {
   using ReturnType = tt::remove_cvref_wrap_t<T>;
@@ -401,27 +433,10 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
   one_over_rho = 1.0 / sqrt(one_over_rho);
 
   const ReturnType s_factor = get_s_factor(zeta);
-  const ReturnType s_factor_deriv = get_s_factor_deriv(zeta, s_factor);
-
-  const ReturnType one_over_rho_cubed = pow<3>(one_over_rho);
-  const ReturnType s_factor_over_rho_cubed = s_factor * one_over_rho_cubed;
   const ReturnType generalized_z =
       get_generalized_z(zeta, one_over_rho, s_factor);
-
-  std::array<ReturnType, Dim> d_generalized_z{};
-  d_generalized_z[polar_coord] =
-      -s_factor_over_rho_cubed * cap_deriv[0] * gamma[polar_coord];
-  if (radial_distribution_ == Distribution::Linear) {
-    d_generalized_z[radial_coord] =
-        sphere_rate_ * one_over_rho + scaled_frustum_rate_;
-  } else {
-    d_generalized_z[radial_coord] = s_factor_deriv * one_over_rho;
-  }
-
-  if (Dim == 3) {
-    d_generalized_z[azimuth_coord] =
-        -s_factor_over_rho_cubed * cap_deriv[1] * gamma[azimuth_coord];
-  }
+  const std::array<ReturnType, Dim> d_generalized_z =
+      get_d_generalized_z(zeta, one_over_rho, s_factor, cap_deriv, gamma);
 
   auto jacobian_matrix =
       make_with_value<tnsr::Ij<ReturnType, Dim, Frame::NoFrame>>(xi, 0.0);
@@ -512,8 +527,8 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
     xi *= 0.5;
   }
 
-  std::array<ReturnType, Dim> cap{};
-  std::array<ReturnType, Dim> cap_deriv{};
+  std::array<ReturnType, Dim - 1> cap{};
+  std::array<ReturnType, Dim - 1> cap_deriv{};
   cap[0] = with_equiangular_map_
                ? tan(0.5 * opening_angles_[0]) *
                      tan(0.5 * opening_angles_distribution_[0] * xi) /
@@ -563,36 +578,14 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
   }
   one_over_rho = 1.0 / sqrt(one_over_rho);
 
-  const ReturnType one_over_rho_cubed = pow<3>(one_over_rho);
-
   const ReturnType s_factor = get_s_factor(zeta);
-  const ReturnType s_factor_over_rho_cubed = s_factor * one_over_rho_cubed;
-
-  const ReturnType one_over_gamma_z = 1.0 / gamma[radial_coord];
-
   const ReturnType generalized_z =
       get_generalized_z(zeta, one_over_rho, s_factor);
-
-  const ReturnType s_factor_deriv = get_s_factor_deriv(zeta, s_factor);
-
-  std::array<ReturnType, Dim> d_generalized_z{};
-  d_generalized_z[polar_coord] =
-      -s_factor_over_rho_cubed * cap_deriv[0] * gamma[polar_coord];
-
-  if (radial_distribution_ == Distribution::Linear) {
-    d_generalized_z[radial_coord] =
-        sphere_rate_ * one_over_rho + scaled_frustum_rate_;
-  } else {
-    d_generalized_z[radial_coord] = s_factor_deriv * one_over_rho;
-  }
-
-  if constexpr (Dim == 3) {
-    d_generalized_z[azimuth_coord] =
-        -s_factor_over_rho_cubed * cap_deriv[1] * gamma[azimuth_coord];
-  }
-
+  const std::array<ReturnType, Dim> d_generalized_z =
+      get_d_generalized_z(zeta, one_over_rho, s_factor, cap_deriv, gamma);
   const ReturnType one_over_d_generalized_z_dzeta =
       1.0 / d_generalized_z[radial_coord];
+  const ReturnType one_over_gamma_z = 1.0 / gamma[radial_coord];
 
   auto inv_jacobian_matrix =
       make_with_value<tnsr::Ij<ReturnType, Dim, Frame::NoFrame>>(xi, 0.0);

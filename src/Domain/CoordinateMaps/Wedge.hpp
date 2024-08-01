@@ -779,6 +779,11 @@ class Wedge {
   template <typename T>
   tt::remove_cvref_wrap_t<T> get_generalized_z(const T& zeta,
                                                const T& one_over_rho) const;
+  template <typename T>
+  std::array<tt::remove_cvref_wrap_t<T>, Dim> get_d_generalized_z(
+      const T& zeta, const T& one_over_rho, const T& s_factor,
+      const std::array<tt::remove_cvref_wrap_t<T>, Dim - 1>& cap_deriv,
+      const std::array<tt::remove_cvref_wrap_t<T>, Dim>& gamma) const;
 
   template <size_t LocalDim>
   // NOLINTNEXTLINE(readability-redundant-declaration)
