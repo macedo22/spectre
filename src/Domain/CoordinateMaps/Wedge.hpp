@@ -41,16 +41,16 @@ struct WedgeCoordOrientation<3> {
 }  // namespace detail
 
 // TODO : make sure everything still makes sense for variable opening angles
-// even with an offset
-// TODO : picture of centered and offset wedge with things labeled
+// even with an offset (do in review with Marcie)
+// TODO : add pictures of centered and offset wedge with things labeled
 // TODO : run tests in Debug
-// TODO : fix my wrong descriptionn of opening angle being angular size
-// TODO : Add Marcie's description of what opening angle really is and also
-// say that equiangular cap Xi and cap Eta are the same as in non-offset case
-// but we opening_angle_ = pi/2
 // TODO : document jacobian and inverse jacobian with offset, include gamma
 // TODO: ask Marcie if we need to disambiguate the two different cap Xi and
 // cap eta
+// TODO : do we need to make a point to explain that when opening angles are
+// pi/2, whether with_adapted_equiangular_map_ is true or false changes
+// nothing? maybe in the new opening angles section where it doscusses
+// theta_D ?
 /*!
  * \ingroup CoordinateMapsGroup
  *
@@ -86,21 +86,25 @@ struct WedgeCoordOrientation<3> {
  *  parameterizing these surface as they are, in which case we have the
  *  equidistant choice of coordinates, or whether to apply a tangent map to them
  *  which leads us to the equiangular choice of coordinates. `Wedge`s have
- *  variable `opening_angles_`, the sizes of their polar and azimuthal (for the
- *  3D case) angles in the target frame. By default, `Wedge`s have opening
- * angles of $\pi/2$, so we will discuss that case here and defer the discussion
- * of generalized opening angles for a later section.
+ *  variable `opening_angles_` which, for centered `Wedge`s, are the sizes of
+ *  their polar and azimuthal (for the 3D case) angles in the target frame. By
+ *  default, `Wedge`s have opening angles of $\pi/2$, so we will discuss that
+ *  case here and defer both the discussion of generalized opening angles and
+ *  the interaction between opening angles and non-zero focal offsets for later
+ *  sections.
  *
  *  For a Wedge with polar and azimuthal opening angles of $\pi/2$, the
  *  equiangular coordinates in terms of the logical coordinates are:
  *
  *  \begin{align}
  *    \textrm{equiangular xi} : \Xi(\xi) = \textrm{tan}(\xi\pi/4)
+ *    \label{eqn:equiangular_xi_pi_over_2}
  *  \end{align}
  *
  *  \begin{align}
  *    \textrm{equiangular eta} :
  *        \mathrm{H}(\eta) =  \textrm{tan}(\eta\pi/4)
+ *        \label{eqn:equiangular_eta_pi_over_2}
  *  \end{align}
  *
  *  With derivatives:
@@ -635,6 +639,30 @@ struct WedgeCoordOrientation<3> {
  *                   \left(\frac{S_0}{\rho} + \frac{F_0}{\sqrt{3}}\right)}
  *                  {\left(\frac{S_1}{\rho} + \frac{F_1}{\sqrt{3}}\right)}.
  *  \end{align}
+ *
+ *  TODO : jacobian stuff here
+ *
+ *  ### Interaction between opening angles and focal offsets
+ *  When a Wedge is created with a non-zero focal offset, the resulting shape
+ *  can take on a variety of possible angular sizes, depending on where the
+ *  focus is placed relative to the default centered location. The reader might
+ *  note that the angular size of a Wedge can also be controlled by passing an
+ *  argument to the `opening_angles` parameter in the Wedge constructor. While
+ *  both of these methods allow the angular size of a Wedge to be changed, the
+ *  user is prevented from employing both of them at the same time. In
+ *  particular, when the the offset is set to some non-zero value, the
+ *  `opening_angles_` member variable is set to $\pi/2$. Note that the
+ *  `opening_angles_` member being set to $\pi/2$ does not imply the
+ *  resulting Wedge will have an angular size of $\pi/2$. On the contrary, the
+ *  Wedge will have the angular size that is determined by the application of
+ *  the focal lifting method on the parent surface, which is the upper $+z$ face
+ *  of a cube that is centered at the origin.
+ *
+ *  Because `opening_angles_` is set to $\pi/2$ when there is a non-zero focal
+ *  offset, when there is a non-zero focal offset and `with_equiangular_map_` is
+ *  `true`, $\Xi$ is given by Eq. ($\ref{eq:equiangular_xi_pi_over_2}$) and
+ *  $\mathrm{H}$ by Eq. ($\ref{eq:equiangular_eta_pi_over_2}$), just as it is
+ *  for the case of a centered Wedge with `opening_angles_` of $\pi/2$.
  */
 template <size_t Dim>
 class Wedge {
