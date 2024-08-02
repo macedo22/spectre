@@ -312,7 +312,7 @@ struct WedgeCoordOrientation<3> {
  *       \label{eq:jacobian_centered_wedge}
  * \end{align}
  *
- * A common factor that shows up in the inverse jacobian is:
+ * A common factor that shows up in the inverse Jacobian is:
  * \begin{align}
  *   T:= \frac{S(\zeta)}{(\partial_{\zeta}z)\rho^3}
  * \end{align}
@@ -375,7 +375,7 @@ struct WedgeCoordOrientation<3> {
  *           \end{bmatrix}
  * \end{align}
  *
- * The jacobian then is still Eq. ($\ref{eq:jacobian_centered_wedge}$) but
+ * The Jacobian then is still Eq. ($\ref{eq:jacobian_centered_wedge}$) but
  * where $F(\zeta)$ and $S(\zeta)$ are the quantities defined here for the
  * logarithmic distribution.
  *
@@ -419,7 +419,7 @@ struct WedgeCoordOrientation<3> {
  *            {(1 + \zeta)R_{inner} + (1 - \zeta)R_{outer}}
  * \end{align}
  *
- * Again, the jacobian is still Eq. ($\ref{eq:jacobian_centered_wedge}$) but
+ * Again, the Jacobian is still Eq. ($\ref{eq:jacobian_centered_wedge}$) but
  * where $F(\zeta)$ and $S(\zeta)$ are the quantities defined here for the
  * inverse distribution.
  *
@@ -564,7 +564,7 @@ struct WedgeCoordOrientation<3> {
  * is then given by:
  *
  * \begin{align}
- *   \vec{x}(\xi,\eta,\zeta) =
+ *   \vec{x} - \vec{x}_0 =
  *       \left\{\frac{F(\zeta)}{L\sqrt 3} +
  *       \frac{S(\zeta)}{L\rho}\right\}
  *           \begin{bmatrix}
@@ -580,18 +580,25 @@ struct WedgeCoordOrientation<3> {
  * This map is often written as:
  *
  * \begin{align}
- *   \vec{x}(\xi,\eta,\zeta) =
+ *   \vec{x} - \vec{x}_0 =
  *       \left\{\frac{F(\zeta)}{\sqrt{3}} +
  *       \frac{S(\zeta)}{\rho}\right\}(\vec{\sigma}_0 - \vec{x}_0/L),
- *   \label{eq:focally_lifted_map_with_generalized_z_coef}
  * \end{align}
  *
  * where $\vec{\sigma}_0 = [\Xi, \mathrm{H},1]^T$, as the parent surface
  * $\vec{\rho}$ is now $L\vec{\sigma}_0$. We give the quantity in braces the
- * name $z_{\Lambda} = L\Lambda$, *generalized z*. The map can be inverted by
- * first solving for \f$z_{\Lambda}\f$ in terms of the target coordinates. We
- * make use of the fact that the parent surface $\vec{\rho}$ has a constant
- * normal vector $\hat{n} = \hat{z}$.
+ * name $z_{\Lambda} = L\Lambda$, *generalized z*. With this definition, we can
+ * rewrite Eq. ($\ref{eq:focally_lifted_map_with_generalized_z_coef}$) in the
+ * even simpler form,
+ *
+ * \begin{align}
+ *   \vec{x} - \vec{x}_0 = z_{\Lambda}(\vec{\sigma}_0 - \vec{x}_0/L).
+ *   \label{eq:focally_lifted_map_with_generalized_z_coef}
+ * \end{align}
+ *
+ * The map can be inverted by first solving for \f$z_{\Lambda}\f$ in terms of
+ * the target coordinates. We make use of the fact that the parent surface
+ * $\vec{\rho}$ has a constant normal vector $\hat{n} = \hat{z}$.
  *
  * \begin{align}
  *   z_{\Lambda} = \frac{(\vec{x} - \vec{x}_0)\cdot\hat{n}}
@@ -599,7 +606,8 @@ struct WedgeCoordOrientation<3> {
  * \end{align}
  *
  * Moving all the known quantities to the left hand side results in the
- * following:
+ * following expression that solves for the source coordinates $\xi$ and
+ * $\eta$ in terms of the target coordinates:
  *
  * \begin{align}
  *   \frac{\vec{x} - \vec{x}_0}{z_{\Lambda}} + \frac{\vec{x}_0}{L}
@@ -628,7 +636,8 @@ struct WedgeCoordOrientation<3> {
  *   \rho = \frac{|\vec{x} - \vec{x}_0|}{z_{\Lambda}}.
  * \end{align}
  *
- * With $\rho$ computed, $\zeta$ can be computed from
+ * With $\rho$ computed, the radial source coordinate $\zeta$ can be computed
+ * from
  *
  * \begin{align}
  *   z_{\Lambda} = \left\{\frac{F(\zeta)}{\sqrt{3}} +
@@ -645,7 +654,7 @@ struct WedgeCoordOrientation<3> {
  *                 {\left(\frac{S_1}{\rho} + \frac{F_1}{\sqrt{3}}\right)}.
  * \end{align}
  *
- * TODO : jacobian stuff here
+ * The Jacobian
  *
  * ### Interaction between opening angles and focal offsets
  * When a Wedge is created with a non-zero focal offset, the resulting shape
@@ -789,7 +798,7 @@ class Wedge {
 
   /*!
    * \brief Factors out calculation of $S(\zeta)$ needed for the map and the
-   * jacobian.
+   * Jacobian.
    *
    * \details The value of $S(\zeta)$ is computed differently for different
    * radial distributions.
@@ -853,7 +862,7 @@ class Wedge {
   template <typename T>
   tt::remove_cvref_wrap_t<T> get_s_factor(const T& zeta) const;
   /*!
-   * \brief Factors out calculation of $S'(\zeta)$ needed for the jacobian.
+   * \brief Factors out calculation of $S'(\zeta)$ needed for the Jacobian.
    *
    * \details The value of $S'(\zeta)$ is computed differently for different
    * radial distributions.
@@ -892,7 +901,7 @@ class Wedge {
 
   /*!
    * \brief Factors out calculation of $z_{\Lambda}$ needed for the map and the
-   * jacobian.
+   * Jacobian.
    *
    * \details The value of $z_{\Lambda}$  is computed differently for different
    * radial distributions.
@@ -926,7 +935,7 @@ class Wedge {
                                                const T& one_over_rho) const;
   /*!
    * \brief Factors out calculation of $\partial_i z_{\Lambda}$ needed for the
-   * jacobian
+   * Jacobian
    *
    * \details For **all** radial distributions:
    *
