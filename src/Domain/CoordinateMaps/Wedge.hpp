@@ -583,13 +583,14 @@ struct WedgeCoordOrientation<3> {
  *   \vec{x} - \vec{x}_0 =
  *       \left\{\frac{F(\zeta)}{\sqrt{3}} +
  *       \frac{S(\zeta)}{\rho}\right\}(\vec{\sigma}_0 - \vec{x}_0/L),
+ *    \label{eq:focally_lifted_map_with_s_and_f_factors}
  * \end{align}
  *
  * where $\vec{\sigma}_0 = [\Xi, \mathrm{H},1]^T$, as the parent surface
  * $\vec{\rho}$ is now $L\vec{\sigma}_0$. We give the quantity in braces the
  * name $z_{\Lambda} = L\Lambda$, *generalized z*. With this definition, we can
- * rewrite Eq. ($\ref{eq:focally_lifted_map_with_generalized_z_coef}$) in the
- * even simpler form,
+ * rewrite Eq. ($\ref{eq:focally_lifted_map_with_s_and_f_factors}$) in the even
+ * simpler form,
  *
  * \begin{align}
  *   \vec{x} - \vec{x}_0 = z_{\Lambda}(\vec{\sigma}_0 - \vec{x}_0/L).
@@ -605,9 +606,18 @@ struct WedgeCoordOrientation<3> {
  *                      {(\vec{\sigma}_0-\vec{x}_0/L)\cdot\hat{n}}.
  * \end{align}
  *
- * Moving all the known quantities to the left hand side results in the
- * following expression that solves for the source coordinates $\xi$ and
- * $\eta$ in terms of the target coordinates:
+ * In other words, when $\hat{n} = \hat{z}$,
+ *
+ * \begin{align}
+ *   z_{\Lambda} = \left\{\frac{F(\zeta)}{\sqrt{3}} +
+ *                 \frac{S(\zeta)}{\rho}\right\}
+ *               = \frac{z - z_0}{1 - z_0/L}
+ * \end{align}
+ *
+ * Moving all the known quantities in
+ * Eq. ($\ref{eq:focally_lifted_map_with_generalized_z_coef}$) to the left hand
+ * side results in the following expression that solves for the source
+ * coordinates $\xi$ and $\eta$ in terms of the target coordinates:
  *
  * \begin{align}
  *   \frac{\vec{x} - \vec{x}_0}{z_{\Lambda}} + \frac{\vec{x}_0}{L}
