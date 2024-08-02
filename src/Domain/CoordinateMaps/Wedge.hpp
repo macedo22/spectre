@@ -47,8 +47,6 @@ struct WedgeCoordOrientation<3> {
 // TODO : add pictures of centered and offset wedge with things labeled
 // TODO : run tests in Debug
 // TODO : document jacobian and inverse jacobian with offset, include gamma
-// TODO: ask Marcie if we need to disambiguate the two different cap Xi and
-// cap eta
 // TODO : do we need to make a point to explain that when opening angles are
 // pi/2, whether with_adapted_equiangular_map_ is true or false changes
 // nothing? maybe in the new opening angles section where it doscusses
@@ -91,10 +89,10 @@ struct WedgeCoordOrientation<3> {
  *  which leads us to the equiangular choice of coordinates. `Wedge`s have
  *  variable `opening_angles_` which, for centered `Wedge`s, are the angular
  *  sizes of the wedge in the $\xi$ and $\eta$ directions (for the 3D case) in
- * the target frame. By default, `Wedge`s have opening angles of $\pi/2$, so we
- * will discuss that case here and defer both the discussion of generalized
- * opening angles and the interaction between opening angles and non-zero focal
- * offsets for later sections.
+ *  the target frame. By default, `Wedge`s have opening angles of $\pi/2$, so we
+ *  will discuss that case here and defer both the discussion of generalized
+ *  opening angles and the interaction between opening angles and non-zero focal
+ *  offsets for later sections.
  *
  *  For a Wedge with $\xi$ and $\eta$ opening angles of $\pi/2$, the
  *  equiangular coordinates in terms of the logical coordinates are:
@@ -311,6 +309,7 @@ struct WedgeCoordOrientation<3> {
  *              \partial_{\eta}z &
  *              \partial_{\zeta}z \\
  *        \end{bmatrix}
+ *        \label{eq:jacobian_centered_wedge}
  *  \end{align}
  *
  *  A common factor that shows up in the inverse jacobian is:
@@ -376,9 +375,9 @@ struct WedgeCoordOrientation<3> {
  *            \end{bmatrix}
  *  \end{align}
  *
- *  TODO: Reference equation
- *  The jacobian then also takes the same form in terms of this \f$S(\zeta)\f$
- *  and \f$S'(\zeta)\f$.
+ *  The jacobian then is still Eq. ($\ref{eq:jacobian_centered_wedge}$) but
+ *  where $F(\zeta)$ and $S(\zeta)$ are the quantities defined here for the
+ *  logarithmic distribution.
  *
  *  Alternatively, an inverse radial distribution (`radial_distribution_` is
  *  \ref domain::CoordinateMaps::Distribution
@@ -419,9 +418,9 @@ struct WedgeCoordOrientation<3> {
  *             {(1 + \zeta)R_{inner} + (1 - \zeta)R_{outer}}
  *  \end{align}
  *
- *  TODO: Reference equation
- *  And the jacobian again takes the same form in terms of this \f$S(\zeta)\f$
- *  and \f$S'(\zeta)\f$.
+ *  Again, the jacobian is still Eq. ($\ref{eq:jacobian_centered_wedge}$) but
+ *  where $F(\zeta)$ and $S(\zeta)$ are the quantities defined here for the
+ *  inverse distribution.
  *
  *  ### Changing the opening angles
  *  Consider the following map on $\xi \in [-1,1]$, which maps this interval
