@@ -593,11 +593,14 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
   const ReturnType s_factor = get_s_factor(zeta);
   const ReturnType generalized_z =
       get_generalized_z(zeta, one_over_rho, s_factor);
+  const ReturnType one_over_generalized_z = 1.0 / generalized_z;
   const std::array<ReturnType, Dim> d_generalized_z =
       get_d_generalized_z(zeta, one_over_rho, s_factor, cap_deriv, gamma);
   const ReturnType one_over_d_generalized_z_dzeta =
       1.0 / d_generalized_z[radial_coord];
   const ReturnType one_over_gamma_z = 1.0 / gamma[radial_coord];
+  const ReturnType scaled_z_frustum =
+      scaled_frustum_zero_ + scaled_frustum_rate_ * zeta;
 
   auto inv_jacobian_matrix =
       make_with_value<tnsr::Ij<ReturnType, Dim, Frame::NoFrame>>(xi, 0.0);
@@ -627,26 +630,21 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
   }
 
   // Derivatives of radial coordinate
-  std::array<ReturnType, Dim> dzeta_dxyz{};
-  dzeta_dxyz[polar_coord] = -dxi_dxyz[polar_coord] *
-                            one_over_d_generalized_z_dzeta *
-                            d_generalized_z[polar_coord];
-  if (halves_to_use_ != WedgeHalves::Both) {
-    dzeta_dxyz[polar_coord] *= 0.5;
-  }
 
-  if constexpr (Dim == 2) {
-    dzeta_dxyz[radial_coord] =
-        one_over_gamma_z * (one_over_d_generalized_z_dzeta -
-                            dzeta_dxyz[polar_coord] * gamma[polar_coord]);
-  } else {
-    dzeta_dxyz[azimuth_coord] = -deta_dxyz[azimuth_coord] *
-                                one_over_d_generalized_z_dzeta *
-                                d_generalized_z[azimuth_coord];
-    dzeta_dxyz[radial_coord] =
-        one_over_gamma_z * (one_over_d_generalized_z_dzeta -
-                            dzeta_dxyz[azimuth_coord] * gamma[azimuth_coord] -
-                            dzeta_dxyz[polar_coord] * gamma[polar_coord]);
+  // a common term that appears in the Jacobian, see Wedge docs
+  const ReturnType T_factor =
+      s_factor * one_over_d_generalized_z_dzeta * pow<3>(one_over_rho);
+
+  std::array<ReturnType, Dim> dzeta_dxyz{};
+  dzeta_dxyz[polar_coord] =
+      T_factor * gamma[polar_coord] * one_over_generalized_z;
+  dzeta_dxyz[radial_coord] =
+      one_over_generalized_z *
+      (one_over_gamma_z * scaled_z_frustum * one_over_d_generalized_z_dzeta +
+       T_factor * gamma[radial_coord]);
+  if constexpr (Dim == 3) {
+    dzeta_dxyz[azimuth_coord] =
+        T_factor * gamma[azimuth_coord] * one_over_generalized_z;
   }
 
   std::array<ReturnType, Dim> dlogical_dX =

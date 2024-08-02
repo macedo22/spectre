@@ -42,17 +42,10 @@ struct WedgeCoordOrientation<3> {
 
 // TODO : do we need to assert anything regarding cube_half_length_ and
 // focal_offset_? or cube_half_length_ and radius_inner_ or radius_outer_?
-// TODO : make sure everything still makes sense for variable opening angles
-// even with an offset (do in review with Marcie)
 // TODO : add pictures of centered and offset wedge with things labeled
 // TODO : run tests in Debug
 // TODO : document jacobian and inverse jacobian with offset, include gamma
-// TODO : do we need to make a point to explain that when opening angles are
-// pi/2, whether with_adapted_equiangular_map_ is true or false changes
-// nothing? maybe in the new opening angles section where it doscusses
-// theta_D ?
 // TODO : make sure cling-tidy and CI pass
-// TODO : make sure Jacobian for 2D is correctly implemented
 /*!
  * \ingroup CoordinateMapsGroup
  *
