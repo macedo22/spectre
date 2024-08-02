@@ -189,7 +189,7 @@ template <typename T>
 std::array<tt::remove_cvref_wrap_t<T>, Dim> Wedge<Dim>::get_d_generalized_z(
     const T& zeta, const T& one_over_rho, const T& s_factor,
     const std::array<tt::remove_cvref_wrap_t<T>, Dim - 1>& cap_deriv,
-    const std::array<tt::remove_cvref_wrap_t<T>, Dim>& gamma) const {
+    const std::array<tt::remove_cvref_wrap_t<T>, Dim>& rho_vec) const {
   using ReturnType = tt::remove_cvref_wrap_t<T>;
 
   const ReturnType one_over_rho_cubed = pow<3>(one_over_rho);
@@ -198,7 +198,7 @@ std::array<tt::remove_cvref_wrap_t<T>, Dim> Wedge<Dim>::get_d_generalized_z(
   std::array<ReturnType, Dim> d_generalized_z{};
   // Polar angle
   d_generalized_z[polar_coord] =
-      -s_factor_over_rho_cubed * cap_deriv[0] * gamma[polar_coord];
+      -s_factor_over_rho_cubed * cap_deriv[0] * rho_vec[polar_coord];
   // Radial coordinate
   if (radial_distribution_ == Distribution::Linear) {
     // note: sphere_rate_ = s_factor_deriv for Linear
@@ -214,7 +214,7 @@ std::array<tt::remove_cvref_wrap_t<T>, Dim> Wedge<Dim>::get_d_generalized_z(
   if (Dim == 3) {
     // Azimuthal angle
     d_generalized_z[azimuth_coord] =
-        -s_factor_over_rho_cubed * cap_deriv[1] * gamma[azimuth_coord];
+        -s_factor_over_rho_cubed * cap_deriv[1] * rho_vec[azimuth_coord];
   }
 
   return d_generalized_z;
@@ -411,10 +411,11 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
   const auto rotated_focus =
       discrete_rotation(orientation_of_wedge_.inverse_map(), focal_offset_);
 
-  std::array<ReturnType, Dim> gamma{};
-  gamma[polar_coord] = cap[0] - rotated_focus[polar_coord] / cube_half_length_;
-  gamma[radial_coord] = make_with_value<ReturnType>(cap[0], 1.0) -
-                        rotated_focus[radial_coord] / cube_half_length_;
+  std::array<ReturnType, Dim> rho_vec{};
+  rho_vec[polar_coord] =
+      cap[0] - rotated_focus[polar_coord] / cube_half_length_;
+  rho_vec[radial_coord] = make_with_value<ReturnType>(cap[0], 1.0) -
+                          rotated_focus[radial_coord] / cube_half_length_;
 
   ReturnType one_over_rho =
       square(1.0 - rotated_focus[radial_coord] / cube_half_length_) +
@@ -436,7 +437,7 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
                   square(cos(0.5 * opening_angles_distribution_[1] * eta))
             : make_with_value<ReturnType>(xi, 1.0);
 
-    gamma[azimuth_coord] =
+    rho_vec[azimuth_coord] =
         cap[1] - rotated_focus[azimuth_coord] / cube_half_length_;
 
     one_over_rho +=
@@ -448,20 +449,20 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
   const ReturnType generalized_z =
       get_generalized_z(zeta, one_over_rho, s_factor);
   const std::array<ReturnType, Dim> d_generalized_z =
-      get_d_generalized_z(zeta, one_over_rho, s_factor, cap_deriv, gamma);
+      get_d_generalized_z(zeta, one_over_rho, s_factor, cap_deriv, rho_vec);
 
   auto jacobian_matrix =
       make_with_value<tnsr::Ij<ReturnType, Dim, Frame::NoFrame>>(xi, 0.0);
 
   // Derivative by polar angle
   std::array<ReturnType, Dim> dxyz_dxi{};
-  dxyz_dxi[radial_coord] = gamma[radial_coord] * d_generalized_z[polar_coord];
-  dxyz_dxi[polar_coord] = gamma[polar_coord] * d_generalized_z[polar_coord] +
+  dxyz_dxi[radial_coord] = rho_vec[radial_coord] * d_generalized_z[polar_coord];
+  dxyz_dxi[polar_coord] = rho_vec[polar_coord] * d_generalized_z[polar_coord] +
                           cap_deriv[0] * generalized_z;
 
   if constexpr (Dim == 3) {
     dxyz_dxi[azimuth_coord] =
-        gamma[azimuth_coord] * d_generalized_z[polar_coord];
+        rho_vec[azimuth_coord] * d_generalized_z[polar_coord];
   }
 
   // Implement Scalings:
@@ -483,14 +484,14 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
   if constexpr (Dim == 3) {
     std::array<ReturnType, Dim> dxyz_deta{};
     dxyz_deta[radial_coord] =
-        gamma[radial_coord] * d_generalized_z[azimuth_coord];
+        rho_vec[radial_coord] * d_generalized_z[azimuth_coord];
 
     dxyz_deta[azimuth_coord] =
-        gamma[azimuth_coord] * d_generalized_z[azimuth_coord] +
+        rho_vec[azimuth_coord] * d_generalized_z[azimuth_coord] +
         cap_deriv[1] * generalized_z;
 
     dxyz_deta[polar_coord] =
-        gamma[polar_coord] * d_generalized_z[azimuth_coord];
+        rho_vec[polar_coord] * d_generalized_z[azimuth_coord];
 
     dX_dlogical =
         discrete_rotation(orientation_of_wedge_, std::move(dxyz_deta));
@@ -502,12 +503,13 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
   // Derivative by radial coordinate
   std::array<ReturnType, Dim> dxyz_dzeta{};
   dxyz_dzeta[radial_coord] =
-      gamma[radial_coord] * d_generalized_z[radial_coord];
-  dxyz_dzeta[polar_coord] = gamma[polar_coord] * d_generalized_z[radial_coord];
+      rho_vec[radial_coord] * d_generalized_z[radial_coord];
+  dxyz_dzeta[polar_coord] =
+      rho_vec[polar_coord] * d_generalized_z[radial_coord];
 
   if constexpr (Dim == 3) {
     dxyz_dzeta[azimuth_coord] =
-        gamma[azimuth_coord] * d_generalized_z[radial_coord];
+        rho_vec[azimuth_coord] * d_generalized_z[radial_coord];
   }
 
   dX_dlogical = discrete_rotation(orientation_of_wedge_, std::move(dxyz_dzeta));
@@ -557,10 +559,11 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
   const auto rotated_focus =
       discrete_rotation(orientation_of_wedge_.inverse_map(), focal_offset_);
 
-  std::array<ReturnType, Dim> gamma{};
-  gamma[polar_coord] = cap[0] - rotated_focus[polar_coord] / cube_half_length_;
-  gamma[radial_coord] = make_with_value<ReturnType>(cap[0], 1.0) -
-                        rotated_focus[radial_coord] / cube_half_length_;
+  std::array<ReturnType, Dim> rho_vec{};
+  rho_vec[polar_coord] =
+      cap[0] - rotated_focus[polar_coord] / cube_half_length_;
+  rho_vec[radial_coord] = make_with_value<ReturnType>(cap[0], 1.0) -
+                          rotated_focus[radial_coord] / cube_half_length_;
 
   ReturnType one_over_rho =
       square(1.0 - rotated_focus[radial_coord] / cube_half_length_) +
@@ -582,7 +585,7 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
                   square(cos(0.5 * opening_angles_distribution_[1] * eta))
             : make_with_value<ReturnType>(xi, 1.0);
 
-    gamma[azimuth_coord] =
+    rho_vec[azimuth_coord] =
         cap[1] - rotated_focus[azimuth_coord] / cube_half_length_;
 
     one_over_rho +=
@@ -595,10 +598,10 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
       get_generalized_z(zeta, one_over_rho, s_factor);
   const ReturnType one_over_generalized_z = 1.0 / generalized_z;
   const std::array<ReturnType, Dim> d_generalized_z =
-      get_d_generalized_z(zeta, one_over_rho, s_factor, cap_deriv, gamma);
+      get_d_generalized_z(zeta, one_over_rho, s_factor, cap_deriv, rho_vec);
   const ReturnType one_over_d_generalized_z_dzeta =
       1.0 / d_generalized_z[radial_coord];
-  const ReturnType one_over_gamma_z = 1.0 / gamma[radial_coord];
+  const ReturnType one_over_rho_z = 1.0 / rho_vec[radial_coord];
   const ReturnType scaled_z_frustum =
       scaled_frustum_zero_ + scaled_frustum_rate_ * zeta;
 
@@ -614,7 +617,7 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
   }
 
   dxi_dxyz[radial_coord] =
-      -dxi_dxyz[polar_coord] * one_over_gamma_z * gamma[polar_coord];
+      -dxi_dxyz[polar_coord] * one_over_rho_z * rho_vec[polar_coord];
 
   if constexpr (Dim == 3) {
     dxi_dxyz[azimuth_coord] = make_with_value<ReturnType>(xi, 0.0);
@@ -626,7 +629,7 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
     deta_dxyz[polar_coord] = make_with_value<ReturnType>(xi, 0.0);
     deta_dxyz[azimuth_coord] = 1.0 / (generalized_z * cap_deriv[1]);
     deta_dxyz[radial_coord] =
-        -deta_dxyz[azimuth_coord] * one_over_gamma_z * gamma[azimuth_coord];
+        -deta_dxyz[azimuth_coord] * one_over_rho_z * rho_vec[azimuth_coord];
   }
 
   // Derivatives of radial coordinate
@@ -637,14 +640,14 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
 
   std::array<ReturnType, Dim> dzeta_dxyz{};
   dzeta_dxyz[polar_coord] =
-      T_factor * gamma[polar_coord] * one_over_generalized_z;
+      T_factor * rho_vec[polar_coord] * one_over_generalized_z;
   dzeta_dxyz[radial_coord] =
       one_over_generalized_z *
-      (one_over_gamma_z * scaled_z_frustum * one_over_d_generalized_z_dzeta +
-       T_factor * gamma[radial_coord]);
+      (one_over_rho_z * scaled_z_frustum * one_over_d_generalized_z_dzeta +
+       T_factor * rho_vec[radial_coord]);
   if constexpr (Dim == 3) {
     dzeta_dxyz[azimuth_coord] =
-        T_factor * gamma[azimuth_coord] * one_over_generalized_z;
+        T_factor * rho_vec[azimuth_coord] * one_over_generalized_z;
   }
 
   std::array<ReturnType, Dim> dlogical_dX =

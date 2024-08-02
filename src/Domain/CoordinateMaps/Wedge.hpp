@@ -42,9 +42,7 @@ struct WedgeCoordOrientation<3> {
 
 // TODO : do we need to assert anything regarding cube_half_length_ and
 // focal_offset_? or cube_half_length_ and radius_inner_ or radius_outer_?
-// TODO : add pictures of centered and offset wedge with things labeled
 // TODO : run tests in Debug
-// TODO : document jacobian and inverse jacobian with offset, include gamma
 // TODO : make sure cling-tidy and CI pass
 /*!
  * \ingroup CoordinateMapsGroup
@@ -518,6 +516,8 @@ struct WedgeCoordOrientation<3> {
  * have gridpoint distributions at the $\xi = \pm1$, $\eta = \pm 1$ boundaries.
  *
  * ### Wedge with a Focal Offset
+ * \image html FocalOffset.jpg "Wedges without and with a focal offset"
+ *
  * In the case of the rectangular
  * \ref ::domain::creators::BinaryCompactObject "BinaryCompactObject" domain,
  * it becomes desirable to offset the center of the spherical excision surface
@@ -1020,9 +1020,9 @@ class Wedge {
    *
    * \f{align*}{
    *   \partial_{\xi} z_{\Lambda} &=
-   *       \frac{-S(\zeta)\Xi'\gamma_x}{\rho^3} \\
+   *       \frac{-S(\zeta)\Xi'\rho_x}{\rho^3} \\
    *   \partial_{\eta} z_{\Lambda} &=
-   *       \frac{-S(\zeta)\mathrm{H}'\gamma_y}{\rho^3} \\
+   *       \frac{-S(\zeta)\mathrm{H}'\rho_y}{\rho^3} \\
    *   \partial_{\zeta} z_{\Lambda} &=
    *       \frac{F'(\zeta)}{\sqrt 3} + \frac{S'(\zeta)}{\rho}
    * \f}
@@ -1044,13 +1044,14 @@ class Wedge {
    * (\mathrm{H} - y_0/L)^2 + (1 - z_0/L)^2}$ (see Wedge)
    * \param s_factor $S(\zeta)$ (see `get_s_factor()`)
    * \param cap_deriv $\Xi'$ and $\mathrm{H}'$ (see Wedge)
-   * \param gamma $\gamma_i$ (see Wedge)
+   * \param rho_vec $\vec{\rho} = [\Xi-x_0/L, \mathrm{H}-y_0/L, 1-z_0/L]^T$
+   * (see Wedge)
    */
   template <typename T>
   std::array<tt::remove_cvref_wrap_t<T>, Dim> get_d_generalized_z(
       const T& zeta, const T& one_over_rho, const T& s_factor,
       const std::array<tt::remove_cvref_wrap_t<T>, Dim - 1>& cap_deriv,
-      const std::array<tt::remove_cvref_wrap_t<T>, Dim>& gamma) const;
+      const std::array<tt::remove_cvref_wrap_t<T>, Dim>& rho_vec) const;
 
   template <size_t LocalDim>
   // NOLINTNEXTLINE(readability-redundant-declaration)
