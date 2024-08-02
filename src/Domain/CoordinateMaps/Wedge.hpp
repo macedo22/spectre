@@ -309,6 +309,7 @@ struct WedgeCoordOrientation<3> {
  * \end{align}
  *
  * A common factor that shows up in the inverse Jacobian is:
+ *
  * \begin{align}
  *   T:= \frac{S(\zeta)}{(\partial_{\zeta}z)\rho^3}
  * \end{align}
@@ -715,13 +716,22 @@ struct WedgeCoordOrientation<3> {
  *       \end{bmatrix}
  * \end{align}
  *
- * And the inverse Jacobian then is (TODO):
+ * A common factor that shows up in this inverse Jacobian is:
+ *
+ * \begin{align}
+ *   T:= \frac{S(\zeta)}{(\partial_{\zeta}z_{\Lambda})\rho^3}
+ * \end{align}
+ *
+ * And the inverse Jacobian is then:
+ *
  * \begin{align}
  *   J^{-1} =
- *       \frac{1}{z}\begin{bmatrix}
- *         \Xi'^{-1} & 0 & -\Xi\Xi'^{-1} \\
- *         0 & \mathrm{H}'^{-1} & -\mathrm{H}\mathrm{H}'^{-1} \\
- *         T\Xi & T\mathrm{H} & T + F(\partial_{\zeta}z)^{-1}/\sqrt 3 \\
+ *       \frac{1}{z_{\Lambda}}\begin{bmatrix}
+ *         \Xi'^{-1} & 0 & -\rho_x(\Xi'\rho_z)^{-1} \\
+ *         0 & \mathrm{H}'^{-1} & -\rho_y(\mathrm{H}'\rho_z)^{-1} \\
+ *         T\rho_x & T\rho_y & T\rho_z +
+ *             (F(\partial_{\zeta}z)\rho_z\partial_{\zeta}\Lambda)^{-1}/
+ *             \sqrt 3 \\
  *       \end{bmatrix}
  * \end{align}
  *
