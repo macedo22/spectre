@@ -52,6 +52,7 @@ struct WedgeCoordOrientation<3> {
 // nothing? maybe in the new opening angles section where it doscusses
 // theta_D ?
 // TODO : make sure cling-tidy and CI pass
+// TODO : make sure Jacobian for 2D is correctly implemented
 /*!
  * \ingroup CoordinateMapsGroup
  *
@@ -76,7 +77,9 @@ struct WedgeCoordOrientation<3> {
  * The following documentation is for the **centered** 3D map, as we will defer
  * the dicussion of `Wedge`s with a `focal_offset_` to a later section. The 2D
  * map is obtained by setting either of the two angular coordinates to zero
- * (and using \f$\xi\f$ as the radial coordinate).
+ * (and using \f$\xi\f$ as the radial coordinate). Note that there is also a
+ * normalization factor of $\sqrt{3}$ that appears in multiple expressions in
+ * the 3D case that becomes $\sqrt{2}$ in the 2D case.
  *
  * The Wedge map is constructed by linearly interpolating between a bulged
  * face of radius `radius_inner_` to a bulged face of radius `radius_outer_`,
@@ -282,8 +285,8 @@ struct WedgeCoordOrientation<3> {
  * \begin{align}
  *   \xi &= \frac{x}{z} \\
  *   \eta &= \frac{y}{z} \\
- *   \zeta &= \frac{z - \left(\frac{S_0}{\rho} + \frac{F_0}{\sqrt{3}}\right)}
- *                 {\left(\frac{S_1}{\rho} + \frac{F_1}{\sqrt{3}}\right)}
+ *   \zeta &= \frac{z - \left(\frac{F_0}{\sqrt{3} + \frac{S_0}{\rho}}\right)}
+ *                 {\left(\frac{F_1}{\sqrt{3} + \frac{S_1}{\rho}}\right)}
  * \end{align}
  *
  * We provide some common derivatives:
@@ -433,7 +436,7 @@ struct WedgeCoordOrientation<3> {
  *           \begin{bmatrix}
  *             1 \\
  *             \xi \\
- *             \end{bmatrix}.
+ *           \end{bmatrix}.
  *   \label{eq:quarter_circle}
  * \end{align}
  *
@@ -529,8 +532,8 @@ struct WedgeCoordOrientation<3> {
  * according to the *focal lifting* method, which we will now discuss.
  *
  * We consider the problem of creating parameterized volumes from parameterized
- * surfaces. Consider a parameterized surface $\vec{\rho}(\xi,\eta)$, also
- * referred to as the *parent surface*. We define *focal lifting* as the
+ * surfaces. Consider a parameterized surface $\vec{\sigma}_{parent}(\xi,\eta)$,
+ * also referred to as the *parent surface*. We define *focal lifting* as the
  * projection of this parent surface into a three-dimensional parameterized
  * volume $\vec{x}(\xi,\eta, \zeta)$ with respect to some *focus* $\vec{x}_0$
  * and *lifting scale factor* $\Lambda(\xi,\eta,\zeta)$. The resulting volume
@@ -538,7 +541,7 @@ struct WedgeCoordOrientation<3> {
  * into the following form:
  *
  * \begin{align}
- *   \vec{x} - \vec{x}_0 = \Lambda(\vec{\rho}-\vec{x}_0),
+ *   \vec{x} - \vec{x}_0 = \Lambda(\vec{\sigma}_{parent}-\vec{x}_0),
  * \end{align}
  *
  * which makes apparent how the mapped point $\vec{x}(\xi,\eta,\zeta)$ is
@@ -551,7 +554,7 @@ struct WedgeCoordOrientation<3> {
  *   \vec{x}_0 &= 0 \\
  *   \Lambda &= \left\{\frac{F(\zeta)}{\sqrt{3}} +
  *                     \frac{S(\zeta)}{\rho} \right\} \\
- *   \vec{\rho} &= \begin{bmatrix} \Xi, \mathrm{H}, 1 \end{bmatrix}^T
+ *   \vec{\sigma}_{parent} &= \begin{bmatrix} \Xi, \mathrm{H}, 1 \end{bmatrix}^T
  * \end{align}
  *
  * The above map can be thought of as constructing a wedge from a biunit cube
@@ -559,9 +562,9 @@ struct WedgeCoordOrientation<3> {
  * of $\Lambda(\xi,\eta,\zeta)$ to obtain the corresponding point in the
  * volume. When generalizing the map to have a focus shifted from the origin
  * (obtained by setting `focal_offset_` to be non-zero), we scale the original
- * parent surface $\vec{\rho} = [\Xi, \mathrm{H},1]^T$ by a factor $L$, and let
- * the focus $\vec{x_0}$ shift away from the origin. The generalized wedge map
- * is then given by:
+ * parent surface $\vec{\sigma}_{parent} = [\Xi, \mathrm{H},1]^T$ by a factor
+ * $L$, and let the focus $\vec{x_0}$ shift away from the origin. The
+ * generalized wedge map is then given by:
  *
  * \begin{align}
  *   \vec{x} - \vec{x}_0 =
@@ -574,8 +577,12 @@ struct WedgeCoordOrientation<3> {
  *           \end{bmatrix}
  * \end{align}
  *
- * where $\rho$ is now
- * $\sqrt{(\Xi - x_0/L)^2 + (\mathrm{H} - y_0/L)^2 + (1 - z_0/L)^2}$.
+ * where we are now defining $\rho$ to be
+ *
+ * \begin{align}
+ *   \rho = \sqrt{(\Xi - x_0/L)^2 + (\mathrm{H} - y_0/L)^2 + (1 - z_0/L)^2}.
+ *   \label{eq:generalized_rho}
+ * \end{align}
  *
  * This map is often written as:
  *
@@ -587,10 +594,10 @@ struct WedgeCoordOrientation<3> {
  * \end{align}
  *
  * where $\vec{\sigma}_0 = [\Xi, \mathrm{H},1]^T$, as the parent surface
- * $\vec{\rho}$ is now $L\vec{\sigma}_0$. We give the quantity in braces the
- * name $z_{\Lambda} = L\Lambda$, *generalized z*. With this definition, we can
- * rewrite Eq. ($\ref{eq:focally_lifted_map_with_s_and_f_factors}$) in the even
- * simpler form,
+ * $\vec{\sigma}_{parent}$ is now $L\vec{\sigma}_0$. We give the quantity in
+ * braces the name $z_{\Lambda} = L\Lambda$, *generalized z*. With this
+ * definition, we can rewrite
+ * Eq. ($\ref{eq:focally_lifted_map_with_s_and_f_factors}$) in the simpler form,
  *
  * \begin{align}
  *   \vec{x} - \vec{x}_0 = z_{\Lambda}(\vec{\sigma}_0 - \vec{x}_0/L).
@@ -599,7 +606,7 @@ struct WedgeCoordOrientation<3> {
  *
  * The map can be inverted by first solving for \f$z_{\Lambda}\f$ in terms of
  * the target coordinates. We make use of the fact that the parent surface
- * $\vec{\rho}$ has a constant normal vector $\hat{n} = \hat{z}$.
+ * $\vec{\sigma}_{parent}$ has a constant normal vector $\hat{n} = \hat{z}$.
  *
  * \begin{align}
  *   z_{\Lambda} = \frac{(\vec{x} - \vec{x}_0)\cdot\hat{n}}
@@ -659,12 +666,71 @@ struct WedgeCoordOrientation<3> {
  * which gives
  *
  * \begin{align}
- *    \zeta = \frac{z_{\Lambda} -
- *                  \left(\frac{S_0}{\rho} + \frac{F_0}{\sqrt{3}}\right)}
- *                 {\left(\frac{S_1}{\rho} + \frac{F_1}{\sqrt{3}}\right)}.
+ *   \zeta = \frac{z_{\Lambda} -
+ *                 \left(\frac{F_0}{\sqrt{3}} + \frac{S_0}{\rho}\right)}
+ *                {\left(\frac{F_1}{\sqrt{3}} + \frac{S_1}{\rho}\right)}.
  * \end{align}
  *
- * The Jacobian
+ * To compute the Jacobian, it is useful to first note that $\rho$
+ * (Eq. ($\ref{eq:generalized_rho}$)) is the magnitude of the vector
+ *
+ * \begin{align}
+ *   \vec{\rho} =
+ *           \begin{bmatrix}
+ *             \Xi - x_0/L \\
+ *             \mathrm{H} - y_0/L \\
+ *             1 - z_0/L
+ *           \end{bmatrix}
+ * \end{align}
+ *
+ * and that we can express the target coordinates in
+ * Eq. ($\ref{eq:focally_lifted_map_with_generalized_z_coef}$) in terms of the
+ * components of $\vec{\rho}$:
+ *
+ * \begin{align}
+ *   x &= z_{\Lambda}\rho_x + x_0 \\
+ *   y &= z_{\Lambda}\rho_y + y_0 \\
+ *   z &= z_{\Lambda}\rho_z + z_0
+ * \end{align}
+ *
+ * Some common terms used in the Jacobian are the derivatives of $z_{\Lambda}$
+ * with respect to the source coordinates:
+ *
+ * \begin{align}
+ *   \partial_{\xi}z_{\Lambda} &=
+ *       \frac{-S(\zeta)\Xi'\rho_x}{\rho^3} \\
+ *   \partial_{\eta}z_{\Lambda} &=
+ *       \frac{-S(\zeta)\mathrm{H}'\rho_y}{\rho^3} \\
+ *   \partial_{\zeta}z_{\Lambda} &=
+ *       \frac{F'(\zeta)}{\sqrt{3}} + \frac{S'(\zeta)}{\rho}
+ * \end{align}
+ *
+ * The Jacobian then is:
+ *
+ * \begin{align}
+ *   J =
+ *       \begin{bmatrix}
+ *         \Xi'z_{\Lambda} + \rho_x\partial_{\xi}z_{\Lambda} &
+ *             \rho_x\partial_{\eta}z_{\Lambda} &
+ *             \rho_x\partial_{\zeta}z_{\Lambda} \\
+ *         \rho_y\partial_{\xi}z_{\Lambda} &
+ *             \mathrm{H}'z_{\Lambda} + \rho_y\partial_{\eta}z_{\Lambda} &
+ *             \rho_y\partial_{\zeta}z_{\Lambda} \\
+ *         \rho_z\partial_{\xi}z_{\Lambda} &
+ *             \rho_z\partial_{\eta}z_{\Lambda} &
+ *             \rho_z\partial_{\zeta}z_{\Lambda} \\
+ *       \end{bmatrix}
+ * \end{align}
+ *
+ * And the inverse Jacobian then is (TODO):
+ * \begin{align}
+ *   J^{-1} =
+ *       \frac{1}{z}\begin{bmatrix}
+ *         \Xi'^{-1} & 0 & -\Xi\Xi'^{-1} \\
+ *         0 & \mathrm{H}'^{-1} & -\mathrm{H}\mathrm{H}'^{-1} \\
+ *         T\Xi & T\mathrm{H} & T + F(\partial_{\zeta}z)^{-1}/\sqrt 3 \\
+ *       \end{bmatrix}
+ * \end{align}
  *
  * ### Interaction between opening angles and focal offsets
  * When a Wedge is created with a non-zero focal offset, the resulting shape
