@@ -413,7 +413,8 @@ struct WedgeCoordOrientation<3> {
  *  Where
  *
  *  \begin{align}
- *    S(\zeta) =
+ *    F(\zeta) &= 0 \\
+ *    S(\zeta) &=
  *        \frac{2R_{inner}R_{outer}}
  *             {(1 + \zeta)R_{inner} + (1 - \zeta)R_{outer}}
  *  \end{align}
