@@ -80,13 +80,53 @@ struct ProcessHitsAndThrows;
 namespace OptionTags {
 // TUTORIAL STEP 0.0: add structs for the two quantities the user will choose
 // when running the executable: DartsPerIteration and AccuracyGoal.
+struct DartsPerIteration {
+  using type = size_t;
+  static constexpr Options::String help{"Darts to throw on each processor"};
+};
 
-};  // namespace OptionTags
+struct AccuracyGoal {
+  using type = double;
+  static constexpr Options::String help{
+      "Fractional accuracy goal for pi estimate"};
+};
+}  // namespace OptionTags
 
 // TUTORIAL PART 1: Set up quantities stored in DataBox
 namespace Tags {
 // TUTORIAL STEP 1.0: add structs to hold the two user-specified options in
 // memory: DartsPerIteration and AccuracyGoal
+struct DartsPerIteration : db::SimpleTag {
+  using type = size_t;
+  using option_tags = tmpl::list<OptionTags::DartsPerIteration>;
+  static constexpr bool pass_metavariables = false;
+  static size_t create_from_options(const size_t& darts_per_iteration) {
+    return darts_per_iteration;
+  }
+};
+
+struct AccuracyGoal : db::SimpleTag {
+  using type = double;
+  using option_tags = tmpl::list<OptionTags::AccuracyGoal>;
+  static constexpr bool pass_metavariables = false;
+  static double create_from_options(const double& accuracy_goal) {
+    return accuracy_goal;
+  }
+};
+
+struct ThrowsAllProcs : db::SimpleTag {
+  using type = size_t;
+  using option_tags = tmpl::list<>;
+  static constexpr bool pass_metavariables = false;
+  static size_t create_from_options() { return 0; }
+};
+
+struct HitsAllProcs : db::SimpleTag {
+  using type = size_t;
+  using option_tags = tmpl::list<>;
+  static constexpr bool pass_metavariables = false;
+  static size_t create_from_options() { return 0; }
+};
 
 // TUTORIAL STEP 1.1: add structs to hold two counters in memory: how many darts
 // have been thrown on all processors so far (ThrowsAllProcs), and how many of
