@@ -176,10 +176,10 @@ void test_wedge2d_all_orientations(const bool with_equiangular_map) {
 
 void test_wedge2d_fail() {
   INFO("Wedge2d fail");
-  const auto no_offset_map =
+  const auto centered_map =
       Wedge2D(0.2, 4.0, 1.0, 1.0, 1.0, {{0., 0.}}, OrientationMap<2>{}, true);
   const auto offset_map =
-      Wedge2D(0.2, 4.0, 1.0, 1.0, 1.0, {{0.1, 0.}}, OrientationMap<2>{}, true);
+      Wedge2D(0.2, 2.0, 1.0, 1.0, 4.0, {{0.1, 0.}}, OrientationMap<2>{}, true);
 
   // Any point with x <= 0 should fail the inverse map with no focal offset
   const std::array<double, 2> test_mapped_point1{{0.0, 3.0}};
@@ -197,12 +197,12 @@ void test_wedge2d_fail() {
   const std::array<double, 2> test_mapped_point7{{100.0, -6.0}};
 
   // Check expected behavior for Wedge without offset
-  CHECK_FALSE(no_offset_map.inverse(test_mapped_point1).has_value());
-  CHECK_FALSE(no_offset_map.inverse(test_mapped_point2).has_value());
-  CHECK_FALSE(no_offset_map.inverse(test_mapped_point3).has_value());
-  if (no_offset_map.inverse(test_mapped_point7).has_value()) {
+  CHECK_FALSE(centered_map.inverse(test_mapped_point1).has_value());
+  CHECK_FALSE(centered_map.inverse(test_mapped_point2).has_value());
+  CHECK_FALSE(centered_map.inverse(test_mapped_point3).has_value());
+  if (centered_map.inverse(test_mapped_point7).has_value()) {
     CHECK_ITERABLE_APPROX(
-        no_offset_map(no_offset_map.inverse(test_mapped_point7).value()),
+        centered_map(centered_map.inverse(test_mapped_point7).value()),
         test_mapped_point7);
   }
 
@@ -233,42 +233,42 @@ void test_equality() {
   const std::array<double, 1>& changed_opening_angles{{M_PI_2 / 2.0}};
 
   const auto wedge2d =
-      Wedge2D(0.2, 4.0, 0.0, 1.0, 1.0, {{0., 0.}}, OrientationMap<2>{}, true,
+      Wedge2D(0.2, 4.0, 0.0, 1.0, 6.0, {{0., 0.}}, OrientationMap<2>{}, true,
               halves_to_use, radial_distribution, opening_angles);
   const auto wedge2d_inner_radius_changed =
-      Wedge2D(0.3, 4.0, 0.0, 1.0, 1.0, {{0., 0.}}, OrientationMap<2>{}, true,
+      Wedge2D(0.3, 4.0, 0.0, 1.0, 6.0, {{0., 0.}}, OrientationMap<2>{}, true,
               halves_to_use, radial_distribution, opening_angles);
   const auto wedge2d_outer_radius_changed =
-      Wedge2D(0.2, 4.2, 0.0, 1.0, 1.0, {{0., 0.}}, OrientationMap<2>{}, true,
+      Wedge2D(0.2, 4.2, 0.0, 1.0, 6.0, {{0., 0.}}, OrientationMap<2>{}, true,
               halves_to_use, radial_distribution, opening_angles);
   const auto wedge2d_inner_circularity_changed =
-      Wedge2D(0.2, 4.0, 0.3, 1.0, 1.0, {{0., 0.}}, OrientationMap<2>{}, true,
+      Wedge2D(0.2, 4.0, 0.3, 1.0, 6.0, {{0., 0.}}, OrientationMap<2>{}, true,
               halves_to_use, radial_distribution, opening_angles);
   const auto wedge2d_outer_circularity_changed =
-      Wedge2D(0.2, 4.0, 0.0, 0.9, 1.0, {{0., 0.}}, OrientationMap<2>{}, true,
+      Wedge2D(0.2, 4.0, 0.0, 0.9, 6.0, {{0., 0.}}, OrientationMap<2>{}, true,
               halves_to_use, radial_distribution, opening_angles);
   const auto wedge2d_cube_half_length_changed =
       Wedge2D(0.2, 4.0, 0.0, 1.0, 5.0, {{0., 0.}}, OrientationMap<2>{}, true,
               halves_to_use, radial_distribution, opening_angles);
   const auto wedge2d_focal_offset_changed =
-      Wedge2D(0.2, 4.0, 1.0, 1.0, 1.0, {{0.1, 0.}}, OrientationMap<2>{}, true,
+      Wedge2D(0.2, 4.0, 1.0, 1.0, 6.0, {{0.1, 0.}}, OrientationMap<2>{}, true,
               halves_to_use, radial_distribution, opening_angles);
   const auto wedge2d_orientation_map_changed =
-      Wedge2D(0.2, 4.0, 0.0, 1.0, 1.0, {{0., 0.}},
+      Wedge2D(0.2, 4.0, 0.0, 1.0, 6.0, {{0., 0.}},
               OrientationMap<2>{std::array<Direction<2>, 2>{
                   {Direction<2>::upper_eta(), Direction<2>::lower_xi()}}},
               true, halves_to_use, radial_distribution, opening_angles);
   const auto wedge2d_use_equiangular_map_changed =
-      Wedge2D(0.2, 4.0, 0.0, 1.0, 1.0, {{0., 0.}}, OrientationMap<2>{}, false,
+      Wedge2D(0.2, 4.0, 0.0, 1.0, 6.0, {{0., 0.}}, OrientationMap<2>{}, false,
               halves_to_use, radial_distribution, opening_angles);
   const auto wedge2d_halves_to_use_changed =
-      Wedge2D(0.2, 4.0, 0.0, 1.0, 1.0, {{0., 0.}}, OrientationMap<2>{}, true,
+      Wedge2D(0.2, 4.0, 0.0, 1.0, 6.0, {{0., 0.}}, OrientationMap<2>{}, true,
               changed_halves_to_use, radial_distribution, opening_angles);
   const auto wedge2d_radial_distribution_changed =
-      Wedge2D(0.2, 4.0, 1.0, 1.0, 1.0, {{0., 0.}}, OrientationMap<2>{}, true,
+      Wedge2D(0.2, 4.0, 1.0, 1.0, 6.0, {{0., 0.}}, OrientationMap<2>{}, true,
               halves_to_use, changed_radial_distribution, opening_angles);
   const auto wedge2d_opening_angles_changed =
-      Wedge2D(0.2, 4.0, 0.0, 1.0, 1.0, {{0., 0.}}, OrientationMap<2>{}, true,
+      Wedge2D(0.2, 4.0, 0.0, 1.0, 6.0, {{0., 0.}}, OrientationMap<2>{}, true,
               halves_to_use, radial_distribution, changed_opening_angles);
 
   CHECK_FALSE(wedge2d == wedge2d_inner_radius_changed);
@@ -332,18 +332,38 @@ SPECTRE_TEST_CASE("Unit.Domain.CoordinateMaps.Wedge2D.Map", "[Domain][Unit]") {
           "If using opening angles other than pi/2, then the "
           "equiangular map option must be turned on."));
   CHECK_THROWS_WITH(
-      Wedge2D(0.2, 4.0, 0.2, 1.0, 1.0, {{5., 0.}}, OrientationMap<2>{}, true,
+      Wedge2D(0.2, 4.0, 0.2, 1.0, 6.0, {{5., 0.}}, OrientationMap<2>{}, true,
               Wedge2D::WedgeHalves::Both,
               domain::CoordinateMaps::Distribution::Linear),
       Catch::Matchers::ContainsSubstring(
           "Focal offsets are not supported for inner sphericity < 1.0"));
   CHECK_THROWS_WITH(
-      Wedge2D(0.2, 4.0, 1.0, 0.5, 1.0, {{5., 0.}}, OrientationMap<2>{}, true,
+      Wedge2D(0.2, 4.0, 1.0, 0.5, 6.0, {{5., 0.}}, OrientationMap<2>{}, true,
               Wedge2D::WedgeHalves::Both,
               domain::CoordinateMaps::Distribution::Linear),
       Catch::Matchers::ContainsSubstring(
           "Focal offsets are only supported for wedges with outer sphericity of"
           " 1.0 or 0.0"));
+  CHECK_THROWS_WITH(
+      Wedge2D(0.2, 4.0, 1.0, 1.0, 1.0, {{4., 0.}}, OrientationMap<2>{}, true),
+      Catch::Matchers::ContainsSubstring(
+          "For a spherical focally offset Wedge, the sum of the outer radius "
+          "and the coordinate of the focal offset with the largest magnitude "
+          "must be less than the cube half length. In other words, the "
+          "spherical surface at the given outer radius centered at the focal "
+          "offset must not pierce the cube of length 2 * cube_half_length_ "
+          "centered at the origin. See the Wedge class documentation for a "
+          "visual representation of this sphere and cube."));
+  CHECK_THROWS_WITH(
+      Wedge2D(0.2, 1.0, 1.0, 0.0, 1.0, {{4., 0.}}, OrientationMap<2>{}, true),
+      Catch::Matchers::ContainsSubstring(
+          "For a cubical focally offset Wedge, the sum of the inner radius "
+          "and the coordinate of the focal offset with the largest magnitude "
+          "must be less than the cube half length. In other words, the "
+          "spherical surface at the given inner radius centered at the focal "
+          "offset must not pierce the cube of length 2 * cube_half_length_ "
+          "centered at the origin. See the Wedge class documentation for a "
+          "visual representation of this sphere and cube."));
 #endif
 }
 }  // namespace domain

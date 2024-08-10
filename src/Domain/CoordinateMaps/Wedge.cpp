@@ -92,6 +92,7 @@ Wedge<Dim>::Wedge(const double radius_inner, const double radius_outer,
         focal_offset_,
         [](const int& a, const int& b) { return abs(a) < abs(b); });
 
+    // TODO : improve these assert messages, ask Marcie and Alex for feedback
     if (sphericity_outer_ == 1.0) {
       // note: this assert may be more restrictive than we need, can be revisted
       // if needed

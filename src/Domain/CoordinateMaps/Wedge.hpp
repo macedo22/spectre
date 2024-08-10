@@ -40,10 +40,10 @@ struct WedgeCoordOrientation<3> {
 };
 }  // namespace detail
 
-// TODO : do we need to assert anything regarding cube_half_length_ and
-// focal_offset_? or cube_half_length_ and radius_inner_ or radius_outer_?
 // TODO : run tests in Debug
 // TODO : make sure cling-tidy and CI pass
+// TODO : do we need to document that with_adaptive_equiangular_map does
+// nothing if with_equiangular_map_ = false? should we use an enum class?
 /*!
  * \ingroup CoordinateMapsGroup
  *
