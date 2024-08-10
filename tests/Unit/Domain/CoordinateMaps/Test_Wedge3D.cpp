@@ -544,10 +544,6 @@ void test_wedge3d_large_radius() {
   }
 }
 
-// TODO : do we want to make the non-zero offset test case for outside the
-// edge (but not the cone) better?
-// TODO : we need to update the offset case because we can't do inner
-// of 0
 void test_wedge3d_fail() {
   INFO("Wedge3d fail");
 
