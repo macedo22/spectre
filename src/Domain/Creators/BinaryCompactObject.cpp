@@ -124,6 +124,19 @@ BinaryCompactObject::BinaryCompactObject(
   offset_x_coord_b_ =
       x_coord_b_ - (x_coord_a_ + x_coord_b_ - length_inner_cube_) / 2.0;
 
+  // TODO : need to assert that
+  // max(abs(focal_offset)) + outer_radius < cube_half_length
+  // See similar ASSERT in Wedge. This assert should probably look something
+  // like this but with the right variables and names and stuff:
+  // const double max_abs_focal_offset_coord = *alg::max_element(
+  //     focal_offset_,
+  //     [](const int& a, const int& b) { return abs(a) < abs(b); });
+  // if (not equal_within_roundoff(magnitude(focal_offset), 0.0)) {
+  //   ASSERT(max_abs_focal_offset_coord + radius_outer_ < cube_half_length_,
+  //          "ObjectA (or ObjectB) pierces the inner cube around it. Either "
+  //          "reduce the OuterRadius or increase the CubeLength.");
+  // }
+
   // Calculate number of blocks
   // Object cubes and shells have 6 blocks each, for a total for 24 blocks.
   // The envelope and outer shell have another 10 blocks each.

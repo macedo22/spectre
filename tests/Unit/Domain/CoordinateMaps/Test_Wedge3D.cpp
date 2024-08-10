@@ -43,10 +43,6 @@ void test_wedge3d_all_directions() {
   CAPTURE(outer_radius);
   const double cube_half_length = cube_half_length_dist(gen);
   CAPTURE(cube_half_length);
-  const double opening_angle_xi = angle_dis(gen) * M_PI / 180.0;
-  CAPTURE(opening_angle_xi * 180.0 / M_PI);
-  const double opening_angle_eta = angle_dis(gen) * M_PI / 180.0;
-  CAPTURE(opening_angle_eta * 180.0 / M_PI);
 
   using WedgeHalves = Wedge3D::WedgeHalves;
   const std::array<WedgeHalves, 3> halves_array = {
@@ -86,8 +82,8 @@ void test_wedge3d_all_directions() {
       // sphericity != 1.0 is only supported for Wedges where the radial
       // distribution is linear and there is no focal offset
       const bool use_random_sphericity =
-          (radial_distribution == CoordinateMaps::Distribution::Linear and
-           focal_offset == zero_offset);
+          radial_distribution == CoordinateMaps::Distribution::Linear and
+          focal_offset == zero_offset;
       const double inner_sphericity =
           use_random_sphericity ? unit_dis(gen) : 1.0;
       CAPTURE(inner_sphericity);
@@ -95,13 +91,20 @@ void test_wedge3d_all_directions() {
           use_random_sphericity ? unit_dis(gen) : 1.0;
       CAPTURE(outer_sphericity);
 
+      const bool use_random_opening_angles =
+          with_equiangular_map and (focal_offset == zero_offset);
+      const double opening_angle_xi =
+          use_random_opening_angles ? angle_dis(gen) * M_PI / 180.0 : M_PI_2;
+      CAPTURE(opening_angle_xi);
+      const double opening_angle_eta =
+          use_random_opening_angles ? angle_dis(gen) * M_PI / 180.0 : M_PI_2;
+      CAPTURE(opening_angle_eta);
+
       const Wedge3D wedge_map(
           inner_radius, outer_radius, inner_sphericity, outer_sphericity,
           cube_half_length, focal_offset, orientation, with_equiangular_map,
           halves, radial_distribution,
-          with_equiangular_map
-              ? std::array<double, 2>{{opening_angle_xi, opening_angle_eta}}
-              : std::array<double, 2>{{M_PI_2, M_PI_2}},
+          std::array<double, 2>{{opening_angle_xi, opening_angle_eta}},
           with_adapted_equiangular_map);
       test_suite_for_map_on_unit_cube(wedge_map);
     }
@@ -217,6 +220,7 @@ void test_wedge3d_alignment() {
 }
 
 // TODO : ask Marcie if this test should also run for a non-zero offset
+// plug in 1 as xi and 1 as eta into map and see what you get
 void test_wedge3d_random_radii() {
   INFO("Wedge3d random radii");
   // Set up random number generator
@@ -311,10 +315,23 @@ void test_wedge3d_random_radii() {
           tan(with_equiangular_map ? 0.5 * opening_angle_eta : M_PI_4);
       const double one_over_denominator =
           1.0 / sqrt(1.0 + square(cap_xi_one) + square(cap_eta_one));
+      // TODO: generalize to this for the offset case:
+      // 1/rho = 1.0 / sqrt((1.0 - z_0/L)) + square(cap_xi_one - x_0/L) +
+      // square(cap_eta_one - y_0/L));
 
+      // radial coordinate is checked by mapping corners
+      // note (for the centered wedge): look at current develop wedge docs for
+      // the equation of the map - if we take the magnitude of LHS and RHS,
+      // LHS = |x| = r and since we have a spherical wedge, RHS is just
+      // S/rho * |rho_vec| = S, so S = r and in the z-oriented wedge, z coord is
+      // just 1 * S/rho
       if (radial_distribution != CoordinateMaps::Distribution::Linear) {
+        // checking x coord of outer corner, where x is radial coord for this
+        // wedge
         CHECK(map_lower_xi(outer_corner)[0] ==
               approx(-random_outer_radius_lower_xi * one_over_denominator));
+        // checking y coord of outer corner, where y coord is radial coord for
+        // this wedge
         CHECK(map_lower_eta(outer_corner)[1] ==
               approx(-random_outer_radius_lower_eta * one_over_denominator));
         CHECK(map_lower_zeta(outer_corner)[2] ==
@@ -335,6 +352,8 @@ void test_wedge3d_random_radii() {
       CAPTURE(random_outer_face);
       CAPTURE(random_inner_face);
 
+      // can't do this for non-zero offset because inner sphericity = 0 and we
+      // can't do that with non-zero offset
       if (radial_distribution == CoordinateMaps::Distribution::Linear) {
         CHECK(map_lower_xi(random_inner_face)[0] ==
               approx(-random_inner_radius_lower_xi / sqrt(3.0)));
@@ -531,73 +550,78 @@ void test_wedge3d_large_radius() {
 // of 0
 void test_wedge3d_fail() {
   INFO("Wedge3d fail");
-  const Wedge3D no_offset_map(0.2, 4.0, 0.0, 1.0, 1.0, {{0., 0., 0.}},
-                              OrientationMap<3>{}, true);
-  const Wedge3D offset_map(0.2, 4.0, 0.0, 1.0, 1.0, {{0., 0., 0.1}},
-                           OrientationMap<3>{}, true);
 
-  // Any point with z <= 0 should fail the inverse map with no focal offset
-  const std::array<double, 3> test_mapped_point1a{{3.0, 3.0, 0.0}};
-  const std::array<double, 3> test_mapped_point2a{{-3.0, 3.0, 0.0}};
+  {
+    // Check expected behavior for Wedge without offset
+    const Wedge3D centered_map(0.2, 4.0, 0.0, 1.0, 1.0, {{0., 0., 0.}},
+                               OrientationMap<3>{}, true);
 
-  // Any point with z <= 0.1 should fail the inverse map with the focal offset
-  const std::array<double, 3> test_mapped_point1b{{3.0, 3.0, 0.1}};
-  const std::array<double, 3> test_mapped_point2b{{-3.0, 3.0, 0.1}};
+    // Any point with z <= 0 should fail the inverse map with no focal offset
+    const std::array<double, 3> test_mapped_point1{{3.0, 3.0, 0.0}};
+    const std::array<double, 3> test_mapped_point2{{-3.0, 3.0, 0.0}};
 
-  // The above Wedges have a Linear radial distribution, so any point where
-  // rho^2 >= (-sphere_rate_/scaled_frustum_rate_)^2 = 1200 should fail for the
-  // inverse map, where rho = r (1 - z_0 / L) / (z - z_0), r is the distance
-  // from the focal_offset_ to the point being mapped, z is the z-component of
-  // the point being mapped, z_0 is the z-component of the focal_offset_, and L
-  // is the cube_half_length_ (see Wedge documentation for definitions of member
-  // variables). For the following tested points, rho is the same for the above
-  // two Wedges, so we can use these same test points to test for the same
-  // expected behavior.
-  const std::array<double, 3> test_mapped_point3{{sqrt(1198.0), 1.0, 1.0}};
-  const std::array<double, 3> test_mapped_point4{{30.0, sqrt(299.0), 1.0}};
-  const std::array<double, 3> test_mapped_point5{{30.0, sqrt(300.0), 1.0}};
+    // The above Wedge has a Linear radial distribution, so any point where
+    // rho^2 >= (-sphere_rate_/scaled_frustum_rate_)^2 = 1200 should fail for
+    // the inverse map, where rho = r (1 - z_0 / L) / (z - z_0), r is the
+    // distance from the focal_offset_ to the point being mapped, z is the
+    // z-component of the point being mapped, z_0 is the z-component of the
+    // focal_offset_, and L is the cube_half_length_ (see Wedge documentation
+    // for definitions of member variables).
+    const std::array<double, 3> test_mapped_point3{{sqrt(1198.0), 1.0, 1.0}};
+    const std::array<double, 3> test_mapped_point4{{30.0, sqrt(299.0), 1.0}};
+    const std::array<double, 3> test_mapped_point5{{30.0, sqrt(300.0), 1.0}};
 
-  // These points are outside the mapped Wedges, so the inverse should either
-  // return the correct inverse (which happens to be computable for these
-  // points) or it should return nullopt. Again, the expected behavior is the
-  // same for these points for both Wedges above.
-  const std::array<double, 3> test_mapped_point6{{30.0, sqrt(298.0), 1.0}};
-  const std::array<double, 3> test_mapped_point7{{2.0, 4.0, 6.0}};
+    // These points are outside the Wedge, so the inverse should either return
+    // the correct inverse (which happens to be computable for these points) or
+    // it should return nullopt.
+    const std::array<double, 3> test_mapped_point6{{30.0, sqrt(298.0), 1.0}};
+    const std::array<double, 3> test_mapped_point7{{2.0, 4.0, 6.0}};
 
-  // Check expected behavior for Wedge without offset
-  CHECK_FALSE(no_offset_map.inverse(test_mapped_point1a).has_value());
-  CHECK_FALSE(no_offset_map.inverse(test_mapped_point2a).has_value());
-  CHECK_FALSE(no_offset_map.inverse(test_mapped_point3).has_value());
-  CHECK_FALSE(no_offset_map.inverse(test_mapped_point4).has_value());
-  CHECK_FALSE(no_offset_map.inverse(test_mapped_point5).has_value());
-  if (no_offset_map.inverse(test_mapped_point6).has_value()) {
-    Approx my_approx = Approx::custom().epsilon(1.e-10).scale(1.0);
-    CHECK_ITERABLE_CUSTOM_APPROX(
-        no_offset_map(no_offset_map.inverse(test_mapped_point6).value()),
-        test_mapped_point6, my_approx);
-  }
-  if (no_offset_map.inverse(test_mapped_point7).has_value()) {
-    CHECK_ITERABLE_APPROX(
-        no_offset_map(no_offset_map.inverse(test_mapped_point7).value()),
-        test_mapped_point7);
+    CHECK_FALSE(centered_map.inverse(test_mapped_point1).has_value());
+    CHECK_FALSE(centered_map.inverse(test_mapped_point2).has_value());
+    CHECK_FALSE(centered_map.inverse(test_mapped_point3).has_value());
+    CHECK_FALSE(centered_map.inverse(test_mapped_point4).has_value());
+    CHECK_FALSE(centered_map.inverse(test_mapped_point5).has_value());
+    if (centered_map.inverse(test_mapped_point6).has_value()) {
+      Approx my_approx = Approx::custom().epsilon(1.e-10).scale(1.0);
+      CHECK_ITERABLE_CUSTOM_APPROX(
+          centered_map(centered_map.inverse(test_mapped_point6).value()),
+          test_mapped_point6, my_approx);
+    }
+    if (centered_map.inverse(test_mapped_point7).has_value()) {
+      CHECK_ITERABLE_APPROX(
+          centered_map(centered_map.inverse(test_mapped_point7).value()),
+          test_mapped_point7);
+    }
   }
 
-  // Check expected behavior for Wedge with offset
-  CHECK_FALSE(offset_map.inverse(test_mapped_point1b).has_value());
-  CHECK_FALSE(offset_map.inverse(test_mapped_point2b).has_value());
-  CHECK_FALSE(offset_map.inverse(test_mapped_point3).has_value());
-  CHECK_FALSE(offset_map.inverse(test_mapped_point4).has_value());
-  CHECK_FALSE(offset_map.inverse(test_mapped_point5).has_value());
-  if (offset_map.inverse(test_mapped_point6).has_value()) {
-    Approx my_approx = Approx::custom().epsilon(1.e-10).scale(1.0);
-    CHECK_ITERABLE_CUSTOM_APPROX(
-        offset_map(offset_map.inverse(test_mapped_point6).value()),
-        test_mapped_point6, my_approx);
-  }
-  if (offset_map.inverse(test_mapped_point7).has_value()) {
-    CHECK_ITERABLE_APPROX(
-        offset_map(offset_map.inverse(test_mapped_point7).value()),
-        test_mapped_point7);
+  {
+    const Wedge3D offset_map(0.2, 4.0, 1.0, 0.0, 1.0, {{0., 0., 0.1}},
+                             OrientationMap<3>{}, true);
+
+    // Any point with z <= 0.1 should fail the inverse map with the focal offset
+    const std::array<double, 3> test_mapped_point1{{0.3, 0.3, 0.1}};
+    const std::array<double, 3> test_mapped_point2{{-0.3, 0.3, 0.1}};
+
+    // These points are outside the Wedge, so the inverse should either return
+    // the correct inverse (which happens to be computable for these points) or
+    // it should return nullopt.
+    const std::array<double, 3> test_mapped_point3{{10.0, 12.0, 14.0}};
+    const std::array<double, 3> test_mapped_point4{{5.0, 5.0, 0.2}};
+
+    CHECK_FALSE(offset_map.inverse(test_mapped_point1).has_value());
+    CHECK_FALSE(offset_map.inverse(test_mapped_point2).has_value());
+    if (offset_map.inverse(test_mapped_point3).has_value()) {
+      Approx my_approx = Approx::custom().epsilon(1.e-10).scale(1.0);
+      CHECK_ITERABLE_CUSTOM_APPROX(
+          offset_map(offset_map.inverse(test_mapped_point3).value()),
+          test_mapped_point3, my_approx);
+    }
+    if (offset_map.inverse(test_mapped_point4).has_value()) {
+      CHECK_ITERABLE_APPROX(
+          offset_map(offset_map.inverse(test_mapped_point4).value()),
+          test_mapped_point4);
+    }
   }
 }
 }  // namespace
@@ -672,6 +696,28 @@ SPECTRE_TEST_CASE("Unit.Domain.CoordinateMaps.Wedge3D.Map", "[Domain][Unit]") {
       Catch::Matchers::ContainsSubstring(
           "Focal offsets are only supported for wedges with outer sphericity of"
           " 1.0 or 0.0"));
+  CHECK_THROWS_WITH(
+      Wedge3D(0.2, 4.0, 1.0, 1.0, 1.0, {{5., 0., 0.}}, OrientationMap<3>{},
+              true),
+      Catch::Matchers::ContainsSubstring(
+          "For a spherical focally offset Wedge, the sum of the outer radius "
+          "and the coordinate of the focal offset with the largest magnitude "
+          "must be less than the cube half length. In other words, the "
+          "spherical surface at the given outer radius centered at the focal "
+          "offset must not pierce the cube of length 2 * cube_half_length_ "
+          "centered at the origin. See the Wedge class documentation for a "
+          "visual representation of this sphere and cube."));
+  CHECK_THROWS_WITH(
+      Wedge3D(0.2, 1.0, 1.0, 0.0, 1.0, {{5., 0., 0.}}, OrientationMap<3>{},
+              true),
+      Catch::Matchers::ContainsSubstring(
+          "For a cubical focally offset Wedge, the sum of the inner radius "
+          "and the coordinate of the focal offset with the largest magnitude "
+          "must be less than the cube half length. In other words, the "
+          "spherical surface at the given inner radius centered at the focal "
+          "offset must not pierce the cube of length 2 * cube_half_length_ "
+          "centered at the origin. See the Wedge class documentation for a "
+          "visual representation of this sphere and cube."));
 #endif
 }
 }  // namespace domain

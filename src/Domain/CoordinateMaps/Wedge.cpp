@@ -12,6 +12,7 @@
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Domain/CoordinateMaps/Distribution.hpp"
 #include "Domain/Structure/OrientationMap.hpp"
+#include "Utilities/Algorithm.hpp"
 #include "Utilities/ConstantExpressions.hpp"
 #include "Utilities/DereferenceWrapper.hpp"
 #include "Utilities/EqualWithinRoundoff.hpp"
@@ -55,13 +56,6 @@ Wedge<Dim>::Wedge(const double radius_inner, const double radius_outer,
   ASSERT(radius_outer > radius_inner,
          "The radius of the outer surface must be greater than the radius of "
          "the inner surface.");
-  ASSERT(radius_outer *
-                 ((1.0 - sphericity_outer_) / sqrt_dim + sphericity_outer_) >
-             radius_inner *
-                 ((1.0 - sphericity_inner) / sqrt_dim + sphericity_inner),
-         "The arguments passed into the constructor for Wedge result in an "
-         "object where the "
-         "outer surface is pierced by the inner surface.");
   ASSERT(radial_distribution_ == Distribution::Linear or
              (sphericity_inner_ == 1.0 and sphericity_outer_ == 1.0),
          "Only the 'Linear' radial distribution is supported for non-spherical "
@@ -78,6 +72,54 @@ Wedge<Dim>::Wedge(const double radius_inner, const double radius_outer,
                                                         : true,
          "If using opening angles other than pi/2, then the "
          "equiangular map option must be turned on.");
+
+  if (approx_zero_offset) {
+    ASSERT(radius_outer *
+                   ((1.0 - sphericity_outer_) / sqrt_dim + sphericity_outer_) >
+               radius_inner *
+                   ((1.0 - sphericity_inner) / sqrt_dim + sphericity_inner),
+           "The arguments passed into the constructor for Wedge result in an "
+           "object where the outer surface is pierced by the inner surface.");
+  } else {
+    ASSERT(sphericity_inner_ == 1.0,
+           "Focal offsets are not supported for inner sphericity < 1.0");
+    ASSERT(sphericity_outer_ == 0.0 or sphericity_outer_ == 1.0,
+           "Focal offsets are only supported for wedges with outer sphericity "
+           "of 1.0 or 0.0");
+
+    // coord of focal_offset_ with largest magnitude
+    const double max_abs_focal_offset_coord = *alg::max_element(
+        focal_offset_,
+        [](const int& a, const int& b) { return abs(a) < abs(b); });
+
+    if (sphericity_outer_ == 1.0) {
+      // note: this assert may be more restrictive than we need, can be revisted
+      // if needed
+      ASSERT(
+          max_abs_focal_offset_coord + radius_outer_ < cube_half_length_,
+          "For a spherical focally offset Wedge, the sum of the outer radius "
+          "and the coordinate of the focal offset with the largest magnitude "
+          "must be less than the cube half length. In other words, the "
+          "spherical surface at the given outer radius centered at the focal "
+          "offset must not pierce the cube of length 2 * cube_half_length_ "
+          "centered at the origin. See the Wedge class documentation for a "
+          "visual representation of this sphere and cube.");
+
+    } else if (sphericity_outer_ == 0.0) {
+      // if sphericity_outer_= 0.0, the outer surface of the Wedge is the parent
+      // surface
+      ASSERT(
+          max_abs_focal_offset_coord + radius_inner_ < cube_half_length_,
+          "For a cubical focally offset Wedge, the sum of the inner radius "
+          "and the coordinate of the focal offset with the largest magnitude "
+          "must be less than the cube half length. In other words, the "
+          "spherical surface at the given inner radius centered at the focal "
+          "offset must not pierce the cube of length 2 * cube_half_length_ "
+          "centered at the origin. See the Wedge class documentation for a "
+          "visual representation of this sphere and cube.");
+    }
+  }
+
   if (radial_distribution_ == Distribution::Linear) {
     sphere_zero_ = 0.5 * (sphericity_outer_ * radius_outer +
                           sphericity_inner * radius_inner);
@@ -91,12 +133,6 @@ Wedge<Dim>::Wedge(const double radius_inner, const double radius_outer,
                              ((1.0 - sphericity_outer_) * radius_outer -
                               (1.0 - sphericity_inner) * radius_inner);
     } else {
-      ASSERT(sphericity_inner_ == 1.0,
-             "Focal offsets are not supported for inner sphericity < 1.0");
-      ASSERT(
-          sphericity_outer_ == 0.0 or sphericity_outer_ == 1.0,
-          "Focal offsets are only supported for wedges with outer sphericity "
-          "of 1.0 or 0.0");
       scaled_frustum_zero_ =
           0.5 * cube_half_length_ *
           ((1.0 - sphericity_outer_) + (1.0 - sphericity_inner));
@@ -183,6 +219,8 @@ tt::remove_cvref_wrap_t<T> Wedge<Dim>::get_generalized_z(
     const T& zeta, const T& one_over_rho) const {
   return get_generalized_z(zeta, one_over_rho, get_s_factor(zeta));
 }
+
+// TODO: add function for d_generalized_z_dzeta and use it in the function below
 
 template <size_t Dim>
 template <typename T>
