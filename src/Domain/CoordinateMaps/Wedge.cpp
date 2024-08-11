@@ -250,7 +250,7 @@ std::array<tt::remove_cvref_wrap_t<T>, Dim> Wedge<Dim>::get_d_generalized_z(
   } else {
     ERROR("Unsupported radial distribution: " << radial_distribution_);
   }
-  if (Dim == 3) {
+  if constexpr (Dim == 3) {
     // Azimuthal angle
     d_generalized_z[azimuth_coord] =
         -s_factor_over_rho_cubed * cap_deriv[1] * rho_vec[azimuth_coord];
