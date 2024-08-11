@@ -386,12 +386,10 @@ std::string create_option_string(
     const size_t additional_refinement_outer,
     const size_t additional_refinement_A, const size_t additional_refinement_B,
     const double opening_angle, const bool add_boundary_condition) {
-  std::string cube_length = "";
-  if (excise_A and excise_B and not add_time_dependence) {
-    cube_length = "  CubeLength: 7.5";
-  } else {
-    cube_length = "  CubeLength: Auto";
-  }
+  const std::string cube_length =
+      (excise_A and excise_B and not add_time_dependence)
+          ? "  CubeLength: 7.5"
+          : "  CubeLength: Auto";
   const std::string time_dependence{
       add_time_dependence
           ? "  TimeDependentMaps:\n"
