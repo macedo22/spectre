@@ -286,11 +286,11 @@ struct WedgeCoordOrientation<3> {
  *
  * We provide some common derivatives:
  *
- * \begin{align}
+ * \f{align}
  *   \partial_{\xi}z &= \frac{-S(\zeta)\Xi\Xi'}{\rho^3} \\
  *   \partial_{\eta}z &= \frac{-S(\zeta)\mathrm{H}\mathrm{H}'}{\rho^3} \\
  *   \partial_{\zeta}z &= \frac{F'}{\sqrt 3} + \frac{S'(\zeta)}{\rho}
- * \end{align}
+ * \f}
  *
  * The Jacobian then is:
  *
@@ -317,14 +317,14 @@ struct WedgeCoordOrientation<3> {
  * \end{align}
  *
  * The inverse Jacobian then is:
- * \begin{align}
+ * \f{align}
  *   J^{-1} =
  *       \frac{1}{z}\begin{bmatrix}
  *         \Xi'^{-1} & 0 & -\Xi\Xi'^{-1} \\
  *         0 & \mathrm{H}'^{-1} & -\mathrm{H}\mathrm{H}'^{-1} \\
  *         T\Xi & T\mathrm{H} & T + F(\partial_{\zeta}z)^{-1}/\sqrt 3 \\
  *       \end{bmatrix}
- * \end{align}
+ * \f}
  *
  * ### Changing the radial distribution of the gridpoints
  * By default, Wedge linearly distributes its gridpoints in the radial
@@ -423,7 +423,7 @@ struct WedgeCoordOrientation<3> {
  * inverse distribution.
  *
  * ### Changing the opening angles
- * Consider the following map on $\xi \in [-1,1]$, which maps this interval
+ * Consider the following map on \f$\xi \in [-1,1]\f$, which maps this interval
  * onto a parameterized curve that extends one fourth of a circle.
  *
  * \begin{align}
