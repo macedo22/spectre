@@ -662,13 +662,12 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
     dxi_dxyz[azimuth_coord] = make_with_value<ReturnType>(xi, 0.0);
   }
 
-  // Derivatives of azimuthal angle
-  std::array<ReturnType, Dim> deta_dxyz{};
+  std::array<ReturnType, Dim> dlogical_dX =
+      discrete_rotation(orientation_of_wedge_, std::move(dxi_dxyz));
+  get<polar_coord, 0>(inv_jacobian_matrix) = dlogical_dX[0];
+  get<polar_coord, 1>(inv_jacobian_matrix) = dlogical_dX[1];
   if constexpr (Dim == 3) {
-    deta_dxyz[polar_coord] = make_with_value<ReturnType>(xi, 0.0);
-    deta_dxyz[azimuth_coord] = 1.0 / (generalized_z * cap_deriv[1]);
-    deta_dxyz[radial_coord] =
-        -deta_dxyz[azimuth_coord] * one_over_rho_z * rho_vec[azimuth_coord];
+    get<polar_coord, 2>(inv_jacobian_matrix) = dlogical_dX[2];
   }
 
   // Derivatives of radial coordinate
@@ -689,15 +688,21 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
         T_factor * rho_vec[azimuth_coord] * one_over_generalized_z;
   }
 
-  std::array<ReturnType, Dim> dlogical_dX =
-      discrete_rotation(orientation_of_wedge_, std::move(dxi_dxyz));
-  get<polar_coord, 0>(inv_jacobian_matrix) = dlogical_dX[0];
-  get<polar_coord, 1>(inv_jacobian_matrix) = dlogical_dX[1];
+  dlogical_dX = discrete_rotation(orientation_of_wedge_, std::move(dzeta_dxyz));
+  get<radial_coord, 0>(inv_jacobian_matrix) = dlogical_dX[0];
+  get<radial_coord, 1>(inv_jacobian_matrix) = dlogical_dX[1];
   if constexpr (Dim == 3) {
-    get<polar_coord, 2>(inv_jacobian_matrix) = dlogical_dX[2];
+    get<radial_coord, 2>(inv_jacobian_matrix) = dlogical_dX[2];
   }
 
   if constexpr (Dim == 3) {
+    // Derivatives of azimuthal angle
+    std::array<ReturnType, Dim> deta_dxyz{};
+    deta_dxyz[polar_coord] = make_with_value<ReturnType>(xi, 0.0);
+    deta_dxyz[azimuth_coord] = 1.0 / (generalized_z * cap_deriv[1]);
+    deta_dxyz[radial_coord] =
+        -deta_dxyz[azimuth_coord] * one_over_rho_z * rho_vec[azimuth_coord];
+
     dlogical_dX =
         discrete_rotation(orientation_of_wedge_, std::move(deta_dxyz));
     get<azimuth_coord, 0>(inv_jacobian_matrix) = dlogical_dX[0];
@@ -705,12 +710,6 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
     get<azimuth_coord, 2>(inv_jacobian_matrix) = dlogical_dX[2];
   }
 
-  dlogical_dX = discrete_rotation(orientation_of_wedge_, std::move(dzeta_dxyz));
-  get<radial_coord, 0>(inv_jacobian_matrix) = dlogical_dX[0];
-  get<radial_coord, 1>(inv_jacobian_matrix) = dlogical_dX[1];
-  if constexpr (Dim == 3) {
-    get<radial_coord, 2>(inv_jacobian_matrix) = dlogical_dX[2];
-  }
   return inv_jacobian_matrix;
 }
 
