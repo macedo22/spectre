@@ -48,6 +48,7 @@ struct WedgeCoordOrientation<3> {
 // have sphericity_outer_ = 0 (use parent surface)? (here and BCO)
 // TODO : is it confusing that cube_half_length_ doesn't do anything if we
 // don't have an offset? (here and BCO)
+// TODO : document frustum_zero and frustum_rate for focal offset
 /*!
  * \ingroup CoordinateMapsGroup
  *
@@ -280,8 +281,8 @@ struct WedgeCoordOrientation<3> {
  * \begin{align}
  *   \xi &= \frac{x}{z} \\
  *   \eta &= \frac{y}{z} \\
- *   \zeta &= \frac{z - \left(\frac{F_0}{\sqrt{3} + \frac{S_0}{\rho}}\right)}
- *                 {\left(\frac{F_1}{\sqrt{3} + \frac{S_1}{\rho}}\right)}
+ *   \zeta &= \frac{z - \left(\frac{F_0}{\sqrt{3}} + \frac{S_0}{\rho}\right)}
+ *                 {\left(\frac{F_1}{\sqrt{3}} + \frac{S_1}{\rho}\right)}
  * \end{align}
  *
  * We provide some common derivatives:
@@ -454,8 +455,9 @@ struct WedgeCoordOrientation<3> {
  * We can see that with $\xi=\pm 1$, we have $\Gamma_x = R/\sqrt{2}$ and
  * $\Gamma_y=\pm R/\sqrt{2}$, giving us
  * $\theta(1) = \pi/4$ and $\theta(-1) = -\pi/4$. This wedge has an opening
- * angle $\pi/2$ radians, as expected. On the other hand, the following map has
- * an opening angle of $\theta_O$:
+ * angle $\pi/2$ radians, as expected.
+ *
+ * On the other hand, the following map has an opening angle of $\theta_O$:
  *
  * \begin{align}
  *   \vec{\Gamma}(\xi) =
@@ -482,17 +484,32 @@ struct WedgeCoordOrientation<3> {
  *
  * \begin{align}
  *   \theta(\xi) = \tan^{-1}(\Xi).
+ *   \label{eq:theta}
  * \end{align}
  *
- * A curve $\vec{\Gamma}(\xi)$ is parameterized equiangularly if
+ * For the map $\Xi(\xi) = \tan(\pi\xi/4)$, Eq. ($\ref{eq:theta}$) yields
+ * $\theta(\xi) = \pi\xi/4$ and $\Delta\theta = \pi/2$. Note that this choice of
+ * $\Xi(\xi)$ is equivalent to a reparameterization of the previous map given in
+ * Eq. ($\ref{eq:quarter_circle}$). The reparameterization of the curve
+ * $\vec{\Gamma}(\xi)$ via the tangent map yields an empirically superior
+ * gridpoint distribution in practice. That this reparameterization should have
+ * this property can be motivated by an observation of the following:
+ *
+ * \begin{align}
+ *   \frac{\mathrm{d}\tan^{-1}\Xi}{\mathrm{d}\xi}
+ *       = \frac{1}{1+\Xi^2}\frac{\mathrm{d}\Xi}{\mathrm{d}\xi}
+ *       = \frac{\pi}{4}.
+ * \end{align}
+ *
+ * In other words, this parameterization has the property that the logical
+ * coordinate $\xi$ subtends the angle $\theta$ at a constant rate. In general,
+ * we say that a curve $\vec{\Gamma}(\xi)$ is parameterized *equiangularly* if
  *
  * \begin{align}
  *   \frac{\mathrm{d}\theta}{\mathrm{d}\xi} = C.
  * \end{align}
  *
- * For the equiangular map with an opening angle of $pi/2$,
- * $\Xi = \tan(\pi\xi/4)$, $\theta = \pi\xi/4$, and $\Delta\theta = \pi/2$. As
- * for the map
+ * As for the map
  *
  * \begin{align}
  *   \Xi(\xi) =
@@ -540,6 +557,7 @@ struct WedgeCoordOrientation<3> {
  *
  * \begin{align}
  *   \vec{x} - \vec{x}_0 = \Lambda(\vec{\sigma}_{parent}-\vec{x}_0),
+ *   \label{eq:focal_lifting}
  * \end{align}
  *
  * which makes apparent how the mapped point $\vec{x}(\xi,\eta,\zeta)$ is
@@ -673,12 +691,12 @@ struct WedgeCoordOrientation<3> {
  * (Eq. ($\ref{eq:generalized_rho}$)) is the magnitude of the vector
  *
  * \begin{align}
- *   \vec{\rho} =
- *           \begin{bmatrix}
- *             \Xi - x_0/L \\
- *             \mathrm{H} - y_0/L \\
- *             1 - z_0/L
- *           \end{bmatrix}
+ *   \vec{\rho} = \vec{\sigma}_0 - \vec{x}_0/L
+ *              = \begin{bmatrix}
+ *                  \Xi - x_0/L \\
+ *                  \mathrm{H} - y_0/L \\
+ *                  1 - z_0/L
+ *                \end{bmatrix}
  * \end{align}
  *
  * and that we can express the target coordinates in
@@ -733,11 +751,26 @@ struct WedgeCoordOrientation<3> {
  *       \frac{1}{z_{\Lambda}}\begin{bmatrix}
  *         \Xi'^{-1} & 0 & -\rho_x(\Xi'\rho_z)^{-1} \\
  *         0 & \mathrm{H}'^{-1} & -\rho_y(\mathrm{H}'\rho_z)^{-1} \\
- *         T\rho_x & T\rho_y & T\rho_z +
- *             (F(\partial_{\zeta}z)\rho_z\partial_{\zeta}\Lambda)^{-1}/
- *             \sqrt 3 \\
+ *         T\rho_x & T\rho_y &
+ *             T\rho_z + F(\partial_{\zeta}z_{\Lambda}\rho_z)^{-1}/\sqrt{3}
  *       \end{bmatrix}
  * \end{align}
+ *
+ * ### Offsetting a Rotated Wedge
+ * The default Wedge map is oriented in the $+z$ direction, so the
+ * construction of a Wedge oriented along a different direction requires an
+ * additional OrientationMap $R$ to be passed to `orientation_of_wedge`. When
+ * offsetting a rotated Wedge, the coordinates passed as parameters to
+ * `focal_offset` are in the coordinate frame in which the Wedge is rotated
+ * (the target frame). However, the focal lifting procedure (shown in
+ * Eq. ($\ref{eq:focal_lifting}$)) is done in the default frame in which the
+ * Wedge is facing the $+z$ direction, so the focal offset $\vec{x}_0$ is first
+ * hit by the inverse rotation $R^{-1}$ and then the rotated focus
+ * $R^{-1}\vec{x}_0$ is used internally as the focus for the $+z$ Wedge. When
+ * the focal lifting calculation has completed, the rotation of the $+z$ Wedge
+ * into the desired orientation by $R$ also rotates the focus into the desired
+ * location. When performing the inverse operation, the focus is similarly
+ * rotated into the default frame, where the inversion is performed.
  *
  * ### Interaction between opening angles and focal offsets
  * When a Wedge is created with a non-zero focal offset, the resulting shape
@@ -1061,7 +1094,7 @@ class Wedge {
   // NOLINTNEXTLINE(readability-redundant-declaration)
   friend bool operator==(const Wedge<LocalDim>& lhs,
                          const Wedge<LocalDim>& rhs);
-  // TODO: Marcie Revisit Constructor Documentation
+
   /// Distance from the origin to one of the corners which lie on the inner
   /// surface.
   double radius_inner_{std::numeric_limits<double>::signaling_NaN()};
