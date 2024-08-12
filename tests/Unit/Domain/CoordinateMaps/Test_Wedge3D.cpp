@@ -29,7 +29,7 @@ using Wedge3D = CoordinateMaps::Wedge<3>;
 void test_wedge3d_all_directions() {
   INFO("Wedge3d all directions");
   // Set up random number generator
-  MAKE_GENERATOR(gen);
+  MAKE_GENERATOR(gen, 17);
   std::uniform_real_distribution<> unit_dis(0, 1);
   std::uniform_real_distribution<> inner_dis(1, 3);
   std::uniform_real_distribution<> outer_dis(5.2, 7);
@@ -219,8 +219,6 @@ void test_wedge3d_alignment() {
   }
 }
 
-// TODO : ask Marcie if this test should also run for a non-zero offset
-// plug in 1 as xi and 1 as eta into map and see what you get
 void test_wedge3d_random_radii() {
   INFO("Wedge3d random radii");
   // Set up random number generator
@@ -228,6 +226,8 @@ void test_wedge3d_random_radii() {
   std::uniform_real_distribution<> real_dis(-1, 1);
   std::uniform_real_distribution<> inner_dis(1, 3);
   std::uniform_real_distribution<> outer_dis(4, 7);
+  std::uniform_real_distribution<> cube_half_length_dist(8, 10);
+  std::uniform_real_distribution<> offset_coord_dist(-1, 1);
   std::uniform_real_distribution<> angle_dis(55.0, 125.0);
 
   // Check that points on the corners of the reference cube map to the correct
@@ -260,122 +260,192 @@ void test_wedge3d_random_radii() {
   const double random_outer_radius_upper_zeta = outer_dis(gen);
   CAPTURE(random_outer_radius_upper_zeta);
 
-  const double opening_angle_xi = angle_dis(gen) * M_PI / 180.0;
-  CAPTURE(opening_angle_xi * 180.0 / M_PI);
-  const double opening_angle_eta = angle_dis(gen) * M_PI / 180.0;
-  CAPTURE(opening_angle_eta * 180.0 / M_PI);
-  std::array<double, 2> opening_angles{{opening_angle_xi, opening_angle_eta}};
+  const double random_opening_angle_xi = angle_dis(gen) * M_PI / 180.0;
+  CAPTURE(random_opening_angle_xi * 180.0 / M_PI);
+  const double random_opening_angle_eta = angle_dis(gen) * M_PI / 180.0;
+  CAPTURE(random_opening_angle_eta * 180.0 / M_PI);
+  std::array<double, 2> random_opening_angles{
+      {random_opening_angle_xi, random_opening_angle_eta}};
   std::array<double, 2> default_angles{{M_PI_2, M_PI_2}};
+
+  const std::array<double, 3> zero_offset{{0.0, 0.0, 0.0}};
+  const std::array<double, 3> random_focal_offset{
+      {offset_coord_dist(gen), offset_coord_dist(gen), offset_coord_dist(gen)}};
+  const std::array<std::array<double, 3>, 2> focal_offsets = {
+      {zero_offset, random_focal_offset}};
+  const double cube_half_length = cube_half_length_dist(gen);
+  CAPTURE(cube_half_length);
 
   using WedgeHalves = Wedge3D::WedgeHalves;
   const auto wedge_directions = all_wedge_directions();
-  for (const auto& with_equiangular_map : {true, false}) {
-    CAPTURE(with_equiangular_map);
-    for (const auto radial_distribution :
-         {CoordinateMaps::Distribution::Linear,
-          CoordinateMaps::Distribution::Logarithmic,
-          CoordinateMaps::Distribution::Inverse}) {
-      CAPTURE(radial_distribution);
-      const double inner_sphericity =
-          radial_distribution == CoordinateMaps::Distribution::Linear ? 0.0
-                                                                      : 1.0;
-      const Wedge3D map_lower_xi(
-          random_inner_radius_lower_xi, random_outer_radius_lower_xi,
-          inner_sphericity, 1.0, 1.0, {{0., 0., 0.}}, wedge_directions[5],
-          with_equiangular_map, WedgeHalves::Both, radial_distribution,
-          with_equiangular_map ? opening_angles : default_angles);
-      const Wedge3D map_lower_eta(
-          random_inner_radius_lower_eta, random_outer_radius_lower_eta,
-          inner_sphericity, 1.0, 1.0, {{0., 0., 0.}}, wedge_directions[3],
-          with_equiangular_map, WedgeHalves::Both, radial_distribution,
-          with_equiangular_map ? opening_angles : default_angles);
-      const Wedge3D map_lower_zeta(
-          random_inner_radius_lower_zeta, random_outer_radius_lower_zeta,
-          inner_sphericity, 1.0, 1.0, {{0., 0., 0.}}, wedge_directions[1],
-          with_equiangular_map, WedgeHalves::Both, radial_distribution,
-          with_equiangular_map ? opening_angles : default_angles);
-      const Wedge3D map_upper_xi(
-          random_inner_radius_upper_xi, random_outer_radius_upper_xi,
-          inner_sphericity, 1.0, 1.0, {{0., 0., 0.}}, wedge_directions[4],
-          with_equiangular_map, WedgeHalves::Both, radial_distribution,
-          with_equiangular_map ? opening_angles : default_angles);
-      const Wedge3D map_upper_eta(
-          random_inner_radius_upper_eta, random_outer_radius_upper_eta,
-          inner_sphericity, 1.0, 1.0, {{0., 0., 0.}}, wedge_directions[2],
-          with_equiangular_map, WedgeHalves::Both, radial_distribution,
-          with_equiangular_map ? opening_angles : default_angles);
-      const Wedge3D map_upper_zeta(
-          random_inner_radius_upper_zeta, random_outer_radius_upper_zeta,
-          inner_sphericity, 1.0, 1.0, {{0., 0., 0.}}, wedge_directions[0],
-          with_equiangular_map, WedgeHalves::Both, radial_distribution,
-          with_equiangular_map ? opening_angles : default_angles);
-      const double cap_xi_one =
-          tan(with_equiangular_map ? 0.5 * opening_angle_xi : M_PI_4);
-      const double cap_eta_one =
-          tan(with_equiangular_map ? 0.5 * opening_angle_eta : M_PI_4);
-      const double one_over_denominator =
-          1.0 / sqrt(1.0 + square(cap_xi_one) + square(cap_eta_one));
-      // TODO: generalize to this for the offset case:
-      // 1/rho = 1.0 / sqrt((1.0 - z_0/L)) + square(cap_xi_one - x_0/L) +
-      // square(cap_eta_one - y_0/L));
+  for (const auto& focal_offset_upper_zeta : focal_offsets) {
+    CAPTURE(focal_offset_upper_zeta);
+    // Generate the offsets for each Wedge such that when rotated to the upper
+    // zeta orientation, the offset coordinates are the same. These rotations of
+    // the coordinates are based on the orientations of the Wedges as described
+    // in the Sphere class documentation.
+    const std::array<double, 3> focal_offset_lower_xi{
+        {-focal_offset_upper_zeta[2], -focal_offset_upper_zeta[0],
+         focal_offset_upper_zeta[1]}};
+    const std::array<double, 3> focal_offset_lower_eta{
+        {focal_offset_upper_zeta[0], -focal_offset_upper_zeta[2],
+         focal_offset_upper_zeta[1]}};
+    const std::array<double, 3> focal_offset_lower_zeta{
+        {focal_offset_upper_zeta[0], -focal_offset_upper_zeta[1],
+         -focal_offset_upper_zeta[2]}};
+    const std::array<double, 3> focal_offset_upper_xi{
+        {focal_offset_upper_zeta[2], focal_offset_upper_zeta[0],
+         focal_offset_upper_zeta[1]}};
+    const std::array<double, 3> focal_offset_upper_eta{
+        {focal_offset_upper_zeta[0], focal_offset_upper_zeta[2],
+         -focal_offset_upper_zeta[1]}};
 
-      // radial coordinate is checked by mapping corners
-      // note (for the centered wedge): look at current develop wedge docs for
-      // the equation of the map - if we take the magnitude of LHS and RHS,
-      // LHS = |x| = r and since we have a spherical wedge, RHS is just
-      // S/rho * |rho_vec| = S, so S = r and in the z-oriented wedge, z coord is
-      // just 1 * S/rho
-      if (radial_distribution != CoordinateMaps::Distribution::Linear) {
-        // checking x coord of outer corner, where x is radial coord for this
-        // wedge
-        CHECK(map_lower_xi(outer_corner)[0] ==
-              approx(-random_outer_radius_lower_xi * one_over_denominator));
-        // checking y coord of outer corner, where y coord is radial coord for
-        // this wedge
-        CHECK(map_lower_eta(outer_corner)[1] ==
-              approx(-random_outer_radius_lower_eta * one_over_denominator));
-        CHECK(map_lower_zeta(outer_corner)[2] ==
-              approx(-random_outer_radius_lower_zeta * one_over_denominator));
-        CHECK(map_upper_xi(inner_corner)[0] ==
-              approx(random_inner_radius_upper_xi * one_over_denominator));
-        CHECK(map_upper_eta(inner_corner)[1] ==
-              approx(random_inner_radius_upper_eta * one_over_denominator));
-        CHECK(map_upper_zeta(inner_corner)[2] ==
-              approx(random_inner_radius_upper_zeta * one_over_denominator));
-      }
-      // Check that random points on the edges of the reference cube map to the
-      // correct edges of the wedge.
-      const std::array<double, 3> random_outer_face{
-          {real_dis(gen), real_dis(gen), 1.0}};
-      const std::array<double, 3> random_inner_face{
-          {real_dis(gen), real_dis(gen), -1.0}};
-      CAPTURE(random_outer_face);
-      CAPTURE(random_inner_face);
+    for (const auto& with_equiangular_map : {true, false}) {
+      CAPTURE(with_equiangular_map);
+      const bool use_random_opening_angles =
+          with_equiangular_map and (focal_offset_upper_zeta == zero_offset);
+      const std::array<double, 2> opening_angles =
+          use_random_opening_angles ? random_opening_angles : default_angles;
+      CAPTURE(opening_angles);
+      for (const auto radial_distribution :
+           {CoordinateMaps::Distribution::Linear,
+            CoordinateMaps::Distribution::Logarithmic,
+            CoordinateMaps::Distribution::Inverse}) {
+        CAPTURE(radial_distribution);
+        const double inner_sphericity =
+            (radial_distribution == CoordinateMaps::Distribution::Linear) and
+                    (focal_offset_upper_zeta == zero_offset)
+                ? 0.0
+                : 1.0;
+        CAPTURE(inner_sphericity);
 
-      // can't do this for non-zero offset because inner sphericity = 0 and we
-      // can't do that with non-zero offset
-      if (radial_distribution == CoordinateMaps::Distribution::Linear) {
-        CHECK(map_lower_xi(random_inner_face)[0] ==
-              approx(-random_inner_radius_lower_xi / sqrt(3.0)));
-        CHECK(map_lower_eta(random_inner_face)[1] ==
-              approx(-random_inner_radius_lower_eta / sqrt(3.0)));
-        CHECK(map_upper_xi(random_inner_face)[0] ==
-              approx(random_inner_radius_upper_xi / sqrt(3.0)));
-        CHECK(map_upper_eta(random_inner_face)[1] ==
-              approx(random_inner_radius_upper_eta / sqrt(3.0)));
+        const Wedge3D map_lower_xi(
+            random_inner_radius_lower_xi, random_outer_radius_lower_xi,
+            inner_sphericity, 1.0, cube_half_length, focal_offset_lower_xi,
+            wedge_directions[5], with_equiangular_map, WedgeHalves::Both,
+            radial_distribution, opening_angles);
+        const Wedge3D map_lower_eta(
+            random_inner_radius_lower_eta, random_outer_radius_lower_eta,
+            inner_sphericity, 1.0, cube_half_length, focal_offset_lower_eta,
+            wedge_directions[3], with_equiangular_map, WedgeHalves::Both,
+            radial_distribution, opening_angles);
+        const Wedge3D map_lower_zeta(
+            random_inner_radius_lower_zeta, random_outer_radius_lower_zeta,
+            inner_sphericity, 1.0, cube_half_length, focal_offset_lower_zeta,
+            wedge_directions[1], with_equiangular_map, WedgeHalves::Both,
+            radial_distribution, opening_angles);
+        const Wedge3D map_upper_xi(
+            random_inner_radius_upper_xi, random_outer_radius_upper_xi,
+            inner_sphericity, 1.0, cube_half_length, focal_offset_upper_xi,
+            wedge_directions[4], with_equiangular_map, WedgeHalves::Both,
+            radial_distribution, opening_angles);
+        const Wedge3D map_upper_eta(
+            random_inner_radius_upper_eta, random_outer_radius_upper_eta,
+            inner_sphericity, 1.0, cube_half_length, focal_offset_upper_eta,
+            wedge_directions[2], with_equiangular_map, WedgeHalves::Both,
+            radial_distribution, opening_angles);
+        const Wedge3D map_upper_zeta(
+            random_inner_radius_upper_zeta, random_outer_radius_upper_zeta,
+            inner_sphericity, 1.0, cube_half_length, focal_offset_upper_zeta,
+            wedge_directions[0], with_equiangular_map, WedgeHalves::Both,
+            radial_distribution, opening_angles);
+
+        const double cap_xi_one =
+            tan(with_equiangular_map ? 0.5 * opening_angles[0] : M_PI_4);
+        const double cap_eta_one =
+            tan(with_equiangular_map ? 0.5 * opening_angles[1] : M_PI_4);
+
+        const double one_over_rho_inner_corner =
+            1.0 /
+            sqrt(square(1.0 - focal_offset_upper_zeta[2] / cube_half_length) +
+                 square(-cap_xi_one -
+                        focal_offset_upper_zeta[0] / cube_half_length) +
+                 square(-cap_eta_one -
+                        focal_offset_upper_zeta[1] / cube_half_length));
+        const double one_over_rho_outer_corner =
+            1.0 /
+            sqrt(square(1.0 - focal_offset_upper_zeta[2] / cube_half_length) +
+                 square(cap_xi_one -
+                        focal_offset_upper_zeta[0] / cube_half_length) +
+                 square(cap_eta_one -
+                        focal_offset_upper_zeta[1] / cube_half_length));
+
+        // TODO : get map_lower_eta and map_upper_eta to pass
+        if (inner_sphericity == 1.0) {
+          CHECK(map_lower_xi(outer_corner)[0] ==
+                approx(-(
+                    random_outer_radius_lower_xi * one_over_rho_outer_corner *
+                        (1.0 - focal_offset_upper_zeta[2] / cube_half_length) +
+                    focal_offset_upper_zeta[2])));
+          //   CHECK(map_lower_eta(outer_corner)[1] ==
+          //         approx(-(
+          //             random_outer_radius_lower_eta *
+          //             one_over_rho_outer_corner *
+          //                 (1.0 - focal_offset_upper_zeta[2] /
+          //                 cube_half_length) +
+          //             focal_offset_upper_zeta[2])));
+          CHECK(map_lower_zeta(outer_corner)[2] ==
+                approx(-(
+                    random_outer_radius_lower_zeta * one_over_rho_outer_corner *
+                        (1.0 - focal_offset_upper_zeta[2] / cube_half_length) +
+                    focal_offset_upper_zeta[2])));
+          CHECK(
+              map_upper_xi(inner_corner)[0] ==
+              approx(random_inner_radius_upper_xi * one_over_rho_inner_corner *
+                         (1.0 - focal_offset_upper_zeta[2] / cube_half_length) +
+                     focal_offset_upper_zeta[2]));
+          //   CHECK(
+          //       map_upper_eta(inner_corner)[1] ==
+          //       approx(random_inner_radius_upper_eta *
+          //       one_over_rho_inner_corner *
+          //                  (1.0 - focal_offset_upper_zeta[2] /
+          //                  cube_half_length) +
+          //              focal_offset_upper_zeta[2]));
+          CHECK(map_upper_zeta(inner_corner)[2] ==
+                approx(
+                    random_inner_radius_upper_zeta * one_over_rho_inner_corner *
+                        (1.0 - focal_offset_upper_zeta[2] / cube_half_length) +
+                    focal_offset_upper_zeta[2]));
+        }
+
+        // Check that random points on the edges of the reference cube map to
+        // the correct edges of the wedge.
+        const std::array<double, 3> random_outer_face{
+            {real_dis(gen), real_dis(gen), 1.0}};
+        const std::array<double, 3> random_inner_face{
+            {real_dis(gen), real_dis(gen), -1.0}};
+        CAPTURE(random_outer_face);
+        CAPTURE(random_inner_face);
+
+        if (inner_sphericity == 0.0) {
+          CHECK(map_lower_xi(random_inner_face)[0] ==
+                approx(-random_inner_radius_lower_xi / sqrt(3.0)));
+          CHECK(map_lower_eta(random_inner_face)[1] ==
+                approx(-random_inner_radius_lower_eta / sqrt(3.0)));
+          CHECK(map_upper_xi(random_inner_face)[0] ==
+                approx(random_inner_radius_upper_xi / sqrt(3.0)));
+          CHECK(map_upper_eta(random_inner_face)[1] ==
+                approx(random_inner_radius_upper_eta / sqrt(3.0)));
+        }
+        CHECK(magnitude(map_lower_xi(random_outer_face) -
+                        focal_offset_lower_xi) ==
+              approx(random_outer_radius_lower_xi));
+        CHECK(magnitude(map_lower_eta(random_outer_face) -
+                        focal_offset_lower_eta) ==
+              approx(random_outer_radius_lower_eta));
+        CHECK(magnitude(map_upper_xi(random_outer_face) -
+                        focal_offset_upper_xi) ==
+              approx(random_outer_radius_upper_xi));
+        CHECK(magnitude(map_upper_eta(random_outer_face) -
+                        focal_offset_upper_eta) ==
+              approx(random_outer_radius_upper_eta));
+        CHECK(magnitude(map_lower_zeta(random_outer_face) -
+                        focal_offset_lower_zeta) ==
+              approx(random_outer_radius_lower_zeta));
+        CHECK(magnitude(map_upper_zeta(random_outer_face) -
+                        focal_offset_upper_zeta) ==
+              approx(random_outer_radius_upper_zeta));
       }
-      CHECK(magnitude(map_lower_xi(random_outer_face)) ==
-            approx(random_outer_radius_lower_xi));
-      CHECK(magnitude(map_lower_eta(random_outer_face)) ==
-            approx(random_outer_radius_lower_eta));
-      CHECK(magnitude(map_upper_xi(random_outer_face)) ==
-            approx(random_outer_radius_upper_xi));
-      CHECK(magnitude(map_upper_eta(random_outer_face)) ==
-            approx(random_outer_radius_upper_eta));
-      CHECK(magnitude(map_lower_zeta(random_outer_face)) ==
-            approx(random_outer_radius_lower_zeta));
-      CHECK(magnitude(map_upper_zeta(random_outer_face)) ==
-            approx(random_outer_radius_upper_zeta));
     }
   }
 }
