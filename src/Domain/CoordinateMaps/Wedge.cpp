@@ -92,7 +92,6 @@ Wedge<Dim>::Wedge(const double radius_inner, const double radius_outer,
         focal_offset_,
         [](const int& a, const int& b) { return abs(a) < abs(b); });
 
-    // TODO : improve these assert messages, ask Marcie and Alex for feedback
     if (sphericity_outer_ == 1.0) {
       // note: this assert may be more restrictive than we need, can be revisted
       // if needed
@@ -221,8 +220,6 @@ tt::remove_cvref_wrap_t<T> Wedge<Dim>::get_generalized_z(
   return get_generalized_z(zeta, one_over_rho, get_s_factor(zeta));
 }
 
-// TODO: add function for d_generalized_z_dzeta and use it in the function below
-
 template <size_t Dim>
 template <typename T>
 std::array<tt::remove_cvref_wrap_t<T>, Dim> Wedge<Dim>::get_d_generalized_z(
@@ -277,7 +274,7 @@ std::array<tt::remove_cvref_wrap_t<T>, Dim> Wedge<Dim>::operator()(
     xi -= 1.0;
     xi *= 0.5;
   }
-  // TODO: Document half wedges
+
   const auto rotated_focus =
       discrete_rotation(orientation_of_wedge_.inverse_map(), focal_offset_);
 
@@ -320,7 +317,7 @@ std::array<tt::remove_cvref_wrap_t<T>, Dim> Wedge<Dim>::operator()(
   }
   return discrete_rotation(orientation_of_wedge_, std::move(physical_coords));
 }
-// TODO: Document rotation of focus
+
 template <size_t Dim>
 std::optional<std::array<double, Dim>> Wedge<Dim>::inverse(
     const std::array<double, Dim>& target_coords) const {
@@ -349,7 +346,7 @@ std::optional<std::array<double, Dim>> Wedge<Dim>::inverse(
                  one_over_generalized_z +
              rotated_focus[azimuth_coord] / cube_half_length_;
   }
-  // TODO: Examine z_zero and zeta_coefficient again
+
   // Radial coordinate
   double zeta = std::numeric_limits<double>::signaling_NaN();
   const double radius = magnitude(physical_coords - rotated_focus);

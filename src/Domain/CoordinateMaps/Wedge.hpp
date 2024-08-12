@@ -40,15 +40,6 @@ struct WedgeCoordOrientation<3> {
 };
 }  // namespace detail
 
-// TODO : run tests in Debug
-// TODO : make sure cling-tidy and CI pass
-// TODO : do we need to document that with_adaptive_equiangular_map does
-// nothing if with_equiangular_map_ = false? should we use an enum class?
-// TODO : is it confusing that outer radius means nothing if we offset and
-// have sphericity_outer_ = 0 (use parent surface)? (here and BCO)
-// TODO : is it confusing that cube_half_length_ doesn't do anything if we
-// don't have an offset? (here and BCO)
-// TODO : document frustum_zero and frustum_rate for focal offset
 /*!
  * \ingroup CoordinateMapsGroup
  *
