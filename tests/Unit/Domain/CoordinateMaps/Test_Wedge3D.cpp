@@ -283,13 +283,13 @@ void test_wedge3d_random_radii() {
     // Generate the offsets for each Wedge such that when rotated to the upper
     // zeta orientation, the offset coordinates are the same. These rotations of
     // the coordinates are based on the orientations of the Wedges as described
-    // in the Sphere class documentation.
+    // in the all_wedge_directions() documentation.
     const std::array<double, 3> focal_offset_lower_xi{
         {-focal_offset_upper_zeta[2], -focal_offset_upper_zeta[0],
          focal_offset_upper_zeta[1]}};
     const std::array<double, 3> focal_offset_lower_eta{
-        {focal_offset_upper_zeta[0], -focal_offset_upper_zeta[2],
-         focal_offset_upper_zeta[1]}};
+        {focal_offset_upper_zeta[1], -focal_offset_upper_zeta[2],
+         -focal_offset_upper_zeta[0]}};
     const std::array<double, 3> focal_offset_lower_zeta{
         {focal_offset_upper_zeta[0], -focal_offset_upper_zeta[1],
          -focal_offset_upper_zeta[2]}};
@@ -297,8 +297,8 @@ void test_wedge3d_random_radii() {
         {focal_offset_upper_zeta[2], focal_offset_upper_zeta[0],
          focal_offset_upper_zeta[1]}};
     const std::array<double, 3> focal_offset_upper_eta{
-        {focal_offset_upper_zeta[0], focal_offset_upper_zeta[2],
-         -focal_offset_upper_zeta[1]}};
+        {focal_offset_upper_zeta[1], focal_offset_upper_zeta[2],
+         focal_offset_upper_zeta[0]}};
 
     for (const auto& with_equiangular_map : {true, false}) {
       CAPTURE(with_equiangular_map);
@@ -370,20 +370,12 @@ void test_wedge3d_random_radii() {
                  square(cap_eta_one -
                         focal_offset_upper_zeta[1] / cube_half_length));
 
-        // TODO : get map_lower_eta and map_upper_eta to pass
         if (inner_sphericity == 1.0) {
           CHECK(map_lower_xi(outer_corner)[0] ==
                 approx(-(
                     random_outer_radius_lower_xi * one_over_rho_outer_corner *
                         (1.0 - focal_offset_upper_zeta[2] / cube_half_length) +
                     focal_offset_upper_zeta[2])));
-          //   CHECK(map_lower_eta(outer_corner)[1] ==
-          //         approx(-(
-          //             random_outer_radius_lower_eta *
-          //             one_over_rho_outer_corner *
-          //                 (1.0 - focal_offset_upper_zeta[2] /
-          //                 cube_half_length) +
-          //             focal_offset_upper_zeta[2])));
           CHECK(map_lower_zeta(outer_corner)[2] ==
                 approx(-(
                     random_outer_radius_lower_zeta * one_over_rho_outer_corner *
@@ -394,13 +386,6 @@ void test_wedge3d_random_radii() {
               approx(random_inner_radius_upper_xi * one_over_rho_inner_corner *
                          (1.0 - focal_offset_upper_zeta[2] / cube_half_length) +
                      focal_offset_upper_zeta[2]));
-          //   CHECK(
-          //       map_upper_eta(inner_corner)[1] ==
-          //       approx(random_inner_radius_upper_eta *
-          //       one_over_rho_inner_corner *
-          //                  (1.0 - focal_offset_upper_zeta[2] /
-          //                  cube_half_length) +
-          //              focal_offset_upper_zeta[2]));
           CHECK(map_upper_zeta(inner_corner)[2] ==
                 approx(
                     random_inner_radius_upper_zeta * one_over_rho_inner_corner *
