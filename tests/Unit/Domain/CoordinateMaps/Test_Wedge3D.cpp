@@ -392,7 +392,7 @@ void test_wedge3d_random_radii() {
                          (1.0 - focal_offset_upper_zeta[2] / cube_half_length) +
                      focal_offset_upper_zeta[2]));
           CHECK(
-              map_upper_eta(inner_corner)[0] ==
+              map_upper_eta(inner_corner)[1] ==
               approx(random_inner_radius_upper_eta * one_over_rho_inner_corner *
                          (1.0 - focal_offset_upper_zeta[2] / cube_half_length) +
                      focal_offset_upper_zeta[2]));
