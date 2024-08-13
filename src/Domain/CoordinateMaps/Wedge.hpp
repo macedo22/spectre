@@ -800,24 +800,32 @@ class Wedge {
 
   /*!
    * Constructs a 3D wedge.
-   * \param radius_inner Distance from the origin to one of the
-   * corners which lie on the inner surface.
-   * \param radius_outer Distance from the origin to one of the
-   * corners which lie on the outer surface.
+   * \param radius_inner Distance from the origin to one of the corners which
+   * lie on the inner surface.
+   * \param radius_outer For any Wedge with zero `focal_offset` or a spherical
+   * Wedge with nonzero `focal_offset`, this is the distance from the
+   * `focal_offset` to one of the corners that lie on the outer surface. For a
+   * Wedge with both a nonzero `focal_offset` and `outer_sphericity == 0.0`,
+   * this parameter has no effect because the outer corners of the Wedge will
+   * instead lie on the parent surface, which is set by the `cube_half_length`
+   * (see Wedge docs for more details).
    * \param orientation_of_wedge The orientation of the desired wedge relative
    * to the orientation of the default wedge which is a wedge that has its
-   * curved surfaces pierced by the upper-z axis. The logical xi and eta
+   * curved surfaces pierced by the upper-z axis. The logical $\xi$ and $\eta$
    * coordinates point in the cartesian x and y directions, respectively.
    * \param sphericity_inner Value between 0 and 1 which determines
    * whether the inner surface is flat (value of 0), spherical (value of 1) or
-   * somewhere in between
+   * somewhere in between. If `focal_offset` is nonzero, `sphericity_inner` must
+   * be `1.0`.
    * \param sphericity_outer Value between 0 and 1 which determines
    * whether the outer surface is flat (value of 0), spherical (value of 1) or
-   * somewhere in between
+   * somewhere in between. If `focal_offset` is nonzero, `sphericity_outer` must
+   * be `0.0` or `1.0`.
    * \param cube_half_length Half the length of the parent surface (see Wedge
-   * documentation for more details)
+   * documentation for more details). This parameter has no effect when
+   * `focal_offset` is zero.
    * \param focal_offset The target frame coordinates of the focus from which
-   * the Wedge is focally lifted
+   * the Wedge is focally lifted.
    * \param with_equiangular_map Determines whether to apply a tangent function
    * mapping to the logical coordinates (for `true`) or not (for `false`).
    * \param halves_to_use Determines whether to construct a full wedge or only
@@ -834,16 +842,19 @@ class Wedge {
    * \param radial_distribution Determines how to distribute gridpoints along
    * the radial direction. For wedges that are not exactly spherical, only
    * `Distribution::Linear` is currently supported.
-   * \param opening_angles Determines the angular size of the wedge. The
-   * default value is pi/2, which corresponds to a wedge size of pi/2. For this
-   * setting, four Wedges can be put together to cover 2pi in angle along a
-   * great circle. This option is meant to be used with the equiangular map
-   * option turned on.
+   * \param opening_angles Determines the angular size of a wedge when
+   * `focal_offset` is 0. The default value is $\pi/2$, which corresponds to a
+   * wedge size of $\pi/2$. For this setting, four Wedges can be put together to
+   * cover $2\pi$ in angle along a great circle. This option is meant to be used
+   * with the equiangular map option turned on. If `focal_offset` is nonzero,
+   * this parameter must be $\pi/2$ because opening angles don't make sense to
+   * define with a focal offset (see Wedge docs for more details).
    * \param with_adapted_equiangular_map Determines whether to adapt the
    * point distribution in the wedge to match its physical angular size. When
    * `true`, angular distances are proportional to logical distances. Note
    * that it is not possible to use adapted maps in every Wedge of a Sphere
-   * unless each Wedge has the same size along both angular directions.
+   * unless each Wedge has the same size along both angular directions. If
+   * `focal_offset` is nonzero, this parameter has no effect.
    */
   Wedge(double radius_inner, double radius_outer, double sphericity_inner,
         double sphericity_outer, double cube_half_length,
@@ -1089,26 +1100,33 @@ class Wedge {
   /// Distance from the origin to one of the corners which lie on the inner
   /// surface.
   double radius_inner_{std::numeric_limits<double>::signaling_NaN()};
-  /// Distance from the origin to one of the corners which lie on the outer
-  /// surface.
+  /// For any Wedge with zero `focal_offset` or a spherical Wedge with nonzero
+  /// `focal_offset`, this is the distance from the `focal_offset` to one of the
+  /// corners that lie on the outer surface. For a Wedge with both a nonzero
+  /// `focal_offset` and `outer_sphericity == 0.0`, this parameter has no effect
+  /// because the outer corners of the Wedge will instead lie on the parent
+  /// surface, which is set by the `cube_half_length` (see Wedge docs for more
+  /// details).
   double radius_outer_{std::numeric_limits<double>::signaling_NaN()};
   /// Value between 0 and 1 which determines whether the inner surface is flat
-  /// (value of 0), spherical (value of 1) or somewhere in between
+  /// (value of 0), spherical (value of 1) or somewhere in between. If
+  /// `focal_offset` is nonzero, `sphericity_inner` must be `1.0`.
   double sphericity_inner_{std::numeric_limits<double>::signaling_NaN()};
   /// Value between 0 and 1 which determines whether the outer surface is flat
-  /// (value of 0), spherical (value of 1) or somewhere in between
+  /// (value of 0), spherical (value of 1) or somewhere in between. If
+  /// `focal_offset` is nonzero, `sphericity_outer` must be `0.0` or `1.0`.
   double sphericity_outer_{std::numeric_limits<double>::signaling_NaN()};
   /// Half the length of the parent surface (see Wedge documentation for more
-  /// details)
+  /// details). This parameter has no effect when `focal_offset` is zero.
   double cube_half_length_{std::numeric_limits<double>::signaling_NaN()};
   /// The target frame coordinates of the focus from which the Wedge is focally
-  /// lifted
+  /// lifted.
   std::array<double, Dim> focal_offset_{
       make_array<Dim>(std::numeric_limits<double>::signaling_NaN())};
   /// The orientation of the desired wedge relative to the orientation of the
   /// default wedge which is a wedge that has its curved surfaces pierced by the
-  /// upper-z axis. The logical xi and eta coordinates point in the cartesian x
-  /// and y directions, respectively.
+  /// upper-z axis. The logical $\xi$ and $\eta$ coordinates point in the
+  /// cartesian x and y directions, respectively.
   OrientationMap<Dim> orientation_of_wedge_{};
   /// Determines whether to apply a tangent function mapping to the logical
   /// coordinates (for `true`) or not (for `false`).
