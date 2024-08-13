@@ -29,7 +29,7 @@ using Wedge3D = CoordinateMaps::Wedge<3>;
 void test_wedge3d_all_directions() {
   INFO("Wedge3d all directions");
   // Set up random number generator
-  MAKE_GENERATOR(gen, 17);
+  MAKE_GENERATOR(gen);
   std::uniform_real_distribution<> unit_dis(0, 1);
   std::uniform_real_distribution<> inner_dis(1, 3);
   std::uniform_real_distribution<> outer_dis(5.2, 7);
@@ -282,8 +282,8 @@ void test_wedge3d_random_radii() {
     CAPTURE(focal_offset_upper_zeta);
     // Generate the offsets for each Wedge such that when rotated to the upper
     // zeta orientation, the offset coordinates are the same. These rotations of
-    // the coordinates are based on the orientations of the Wedges as described
-    // in the all_wedge_directions() documentation.
+    // the coordinates are based on the orientations of the Wedges as defined by
+    // all_wedge_directions().
     const std::array<double, 3> focal_offset_lower_xi{
         {-focal_offset_upper_zeta[2], -focal_offset_upper_zeta[0],
          focal_offset_upper_zeta[1]}};
@@ -376,6 +376,11 @@ void test_wedge3d_random_radii() {
                     random_outer_radius_lower_xi * one_over_rho_outer_corner *
                         (1.0 - focal_offset_upper_zeta[2] / cube_half_length) +
                     focal_offset_upper_zeta[2])));
+          CHECK(map_lower_eta(outer_corner)[1] ==
+                approx(-(
+                    random_outer_radius_lower_eta * one_over_rho_outer_corner *
+                        (1.0 - focal_offset_upper_zeta[2] / cube_half_length) +
+                    focal_offset_upper_zeta[2])));
           CHECK(map_lower_zeta(outer_corner)[2] ==
                 approx(-(
                     random_outer_radius_lower_zeta * one_over_rho_outer_corner *
@@ -384,6 +389,11 @@ void test_wedge3d_random_radii() {
           CHECK(
               map_upper_xi(inner_corner)[0] ==
               approx(random_inner_radius_upper_xi * one_over_rho_inner_corner *
+                         (1.0 - focal_offset_upper_zeta[2] / cube_half_length) +
+                     focal_offset_upper_zeta[2]));
+          CHECK(
+              map_upper_eta(inner_corner)[0] ==
+              approx(random_inner_radius_upper_eta * one_over_rho_inner_corner *
                          (1.0 - focal_offset_upper_zeta[2] / cube_half_length) +
                      focal_offset_upper_zeta[2]));
           CHECK(map_upper_zeta(inner_corner)[2] ==
