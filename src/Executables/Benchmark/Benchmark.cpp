@@ -54,165 +54,86 @@
 // main module we just have it be empty
 extern "C" void CkRegisterMainModule(void) {}
 
-// This file is an example of how to do microbenchmark with Google Benchmark
-// https://github.com/google/benchmark
-// For two examples in different anonymous namespaces
-
-namespace {
-// Benchmark of push_back() in std::vector, following Chandler Carruth's talk
-// at CppCon in 2015,
-// https://www.youtube.com/watch?v=nXaxk27zwlk
-
-// void bench_create(benchmark::State &state) {
-//  while (state.KeepRunning()) {
-//    std::vector<int> v;
-//    benchmark::DoNotOptimize(&v);
-//    static_cast<void>(v);
-//  }
-// }
-// BENCHMARK(bench_create);
-
-// void bench_reserve(benchmark::State &state) {
-//  while (state.KeepRunning()) {
-//    std::vector<int> v;
-//    v.reserve(1);
-//    benchmark::DoNotOptimize(v.data());
-//  }
-// }
-// BENCHMARK(bench_reserve);
-
-// void bench_push_back(benchmark::State &state) {
-//  while (state.KeepRunning()) {
-//    std::vector<int> v;
-//    v.reserve(1);
-//    benchmark::DoNotOptimize(v.data());
-//    v.push_back(42);
-//    benchmark::ClobberMemory();
-//  }
-// }
-// BENCHMARK(bench_push_back);
-}  // namespace
-
 namespace {
 #define assertm(exp, msg) assert(((void)msg, exp))
 
-// In this anonymous namespace is an example of microbenchmarking the
-// all_gradient routine for the GH system
-using DataType = DataVector;
-// constexpr size_t Dim = 3;
-using DerivativeFrame = Frame::Inertial;
-constexpr Spectral::Basis basis = Spectral::Basis::Legendre;
-constexpr Spectral::Quadrature quadrature = Spectral::Quadrature::GaussLobatto;
-constexpr double time = 3.4;
+constexpr size_t Dim = 3;
+constexpr Spectral::Basis basis = BenchmarkImpl::basis;
+constexpr Spectral::Quadrature quadrature = BenchmarkImpl::quadrature;
 
-template <size_t Dim>
-struct Kappa : db::SimpleTag {
-  using type = tnsr::abb<DataVector, Dim, DerivativeFrame>;
-};
-template <size_t Dim>
-struct Psi : db::SimpleTag {
-  using type = tnsr::aa<DataVector, Dim, DerivativeFrame>;
-};
+using DerivativeFrame = BenchmarkImpl::DerivativeFrame;
+// quantities for computing partial derivatives
+using Kappa = BenchmarkImpl::Kappa<Dim>;
+using Psi = BenchmarkImpl::Psi<Dim>;
 
-template <size_t Dim>
-using gh_evolution_vars_tags =
-    typename gh::System<Dim>::variables_tag::tags_list;
-
-template <typename Tensor>
-void fill_with_values(const gsl::not_null<Tensor*> tensor) {
-  double value = 1.0;
-  for (size_t i = 0; i < tensor->size(); i++) {
-    for (size_t elem_index = 0; elem_index < (*tensor)[0].size();
-         elem_index++) {
-      (*tensor)[i][elem_index] = value;
-      value = -value * 1.01;
-    }
-  }
-}
-
-template <typename DataType, size_t Dim>
-struct BenchmarkImpl {
-  using dt_spacetime_metric_type = tnsr::aa<DataType, Dim>;
-  using dt_pi_type = tnsr::aa<DataType, Dim>;
-  using dt_phi_type = tnsr::iaa<DataType, Dim>;
-  using temp_gamma1_type = Scalar<DataType>;
-  using temp_gamma2_type = Scalar<DataType>;
-  using temp_gauge_function_type = tnsr::a<DataType, Dim>;
-  using temp_spacetime_deriv_gauge_function_type = tnsr::ab<DataVector, Dim>;
-  using gamma1gamma2_type = Scalar<DataType>;
-  using half_pi_two_normals_type = Scalar<DataType>;
-  using normal_dot_gauge_constraint_type = Scalar<DataType>;
-  using gamma1_plus_1_type = Scalar<DataType>;
-  using pi_one_normal_type = tnsr::a<DataType, Dim>;
-  using gauge_constraint_type = tnsr::a<DataType, Dim>;
-  using half_phi_two_normals_type = tnsr::i<DataType, Dim>;
-  using shift_dot_three_index_constraint_type = tnsr::aa<DataType, Dim>;
-  using mesh_velocity_dot_three_index_constraint_type = tnsr::aa<DataType, Dim>;
-  using phi_one_normal_type = tnsr::ia<DataType, Dim>;
-  using pi_2_up_type = tnsr::aB<DataType, Dim>;
-  using three_index_constraint_type = tnsr::iaa<DataType, Dim>;
-  using phi_1_up_type = tnsr::Iaa<DataType, Dim>;
-  using phi_3_up_type = tnsr::iaB<DataType, Dim>;
-  using christoffel_first_kind_3_up_type = tnsr::abC<DataType, Dim>;
-  using lapse_type = Scalar<DataType>;
-  using shift_type = tnsr::I<DataType, Dim>;
-  using inverse_spatial_metric_type = tnsr::II<DataType, Dim>;
-  using det_spatial_metric_type = Scalar<DataType>;
-  using sqrt_det_spatial_metric_type = Scalar<DataType>;
-  using inverse_spacetime_metric_type = tnsr::AA<DataType, Dim>;
-  using christoffel_first_kind_type = tnsr::abb<DataType, Dim>;
-  using christoffel_second_kind_type = tnsr::Abb<DataType, Dim>;
-  using trace_christoffel_type = tnsr::a<DataVector, Dim>;
-  using normal_spacetime_vector_type = tnsr::A<DataType, Dim>;
-  using d_spacetime_metric_type = tnsr::iaa<DataType, Dim>;
-  using d_pi_type = tnsr::iaa<DataType, Dim>;
-  using d_phi_type = tnsr::ijaa<DataType, Dim>;
-  using spacetime_metric_type = tnsr::aa<DataType, Dim>;
-  using pi_type = tnsr::aa<DataType, Dim>;
-  using phi_type = tnsr::iaa<DataType, Dim>;
-  using gamma0_type = Scalar<DataType>;
-  using gamma1_type = Scalar<DataType>;
-  using gamma2_type = Scalar<DataType>;
-  using gauge_condition_type = gh::gauges::DampedHarmonic;
-  //   using mesh_type = Mesh<Dim>;
-  using inertial_coords_type = tnsr::I<DataVector, Dim, Frame::Inertial>;
-  using inverse_jacobian_type =
-      InverseJacobian<DataVector, Dim, Frame::ElementLogical, Frame::Inertial>;
-  using mesh_velocity_type = tnsr::I<DataType, Dim>;
-
-  // new temporaries used in new version of time derivative
-  using logical_shift_type =
-      typename gr::Tags::Shift<DataVector, Dim, Frame::ElementLogical>::type;
-  using inverse_spatial_metric_logical_1_type =
-      typename gh::Tags::InverseSpatialMetricLogical1<Dim>::type;
-  using logical_mesh_velocity_type =
-      typename domain::Tags::MeshVelocityWithValue<Dim,
-                                                   Frame::ElementLogical>::type;
-  using shift_dot_d_spacetime_metric_type =
-      typename gh::Tags::ShiftDotDSpacetimeMetric<Dim>::type;
-  using shift_dot_phi_type = typename gh::Tags::ShiftDotPhi<Dim>::type;
-  using mesh_velocity_dot_phi_type =
-      typename gh::Tags::MeshVelocityDotPhi<Dim>::type;
-  using mesh_velocity_dot_d_spacetime_metric_type =
-      typename gh::Tags::MeshVelocityDotDSpacetimeMetric<Dim>::type;
-  using upper_gauge_function_type = typename gh::Tags::UpperGaugeH<Dim>::type;
-  using gamma2_logical_d_spacetime_metric_minus_logical_d_pi_type =
-      typename gh::Tags::Gamma2LogicalDSpacetimeMetricMinusLogicalDPi<
-          Dim>::type;
-};
+// GH vars types
+using dt_spacetime_metric_type = BenchmarkImpl::dt_spacetime_metric_type<Dim>;
+using dt_pi_type = BenchmarkImpl::dt_pi_type<Dim>;
+using dt_phi_type = BenchmarkImpl::dt_phi_type<Dim>;
+using temp_gamma1_type = BenchmarkImpl::temp_gamma1_type<Dim>;
+using temp_gamma2_type = BenchmarkImpl::temp_gamma2_type<Dim>;
+using temp_gauge_function_type = BenchmarkImpl::temp_gauge_function_type<Dim>;
+using temp_spacetime_deriv_gauge_function_type =
+    BenchmarkImpl::temp_spacetime_deriv_gauge_function_type<Dim>;
+using gamma1gamma2_type = BenchmarkImpl::gamma1gamma2_type<Dim>;
+using half_pi_two_normals_type = BenchmarkImpl::half_pi_two_normals_type<Dim>;
+using normal_dot_gauge_constraint_type =
+    BenchmarkImpl::normal_dot_gauge_constraint_type<Dim>;
+using gamma1_plus_1_type = BenchmarkImpl::gamma1_plus_1_type<Dim>;
+using pi_one_normal_type = BenchmarkImpl::pi_one_normal_type<Dim>;
+using gauge_constraint_type = BenchmarkImpl::gauge_constraint_type<Dim>;
+using half_phi_two_normals_type = BenchmarkImpl::half_phi_two_normals_type<Dim>;
+using shift_dot_three_index_constraint_type =
+    BenchmarkImpl::shift_dot_three_index_constraint_type<Dim>;
+using mesh_velocity_dot_three_index_constraint_type =
+    BenchmarkImpl::mesh_velocity_dot_three_index_constraint_type<Dim>;
+using phi_one_normal_type = BenchmarkImpl::phi_one_normal_type<Dim>;
+using pi_2_up_type = BenchmarkImpl::pi_2_up_type<Dim>;
+using three_index_constraint_type =
+    BenchmarkImpl::three_index_constraint_type<Dim>;
+using phi_1_up_type = BenchmarkImpl::phi_1_up_type<Dim>;
+using phi_3_up_type = BenchmarkImpl::phi_3_up_type<Dim>;
+using christoffel_first_kind_3_up_type =
+    BenchmarkImpl::christoffel_first_kind_3_up_type<Dim>;
+using lapse_type = BenchmarkImpl::lapse_type<Dim>;
+using shift_type = BenchmarkImpl::shift_type<Dim>;
+using inverse_spatial_metric_type =
+    BenchmarkImpl::inverse_spatial_metric_type<Dim>;
+using det_spatial_metric_type = BenchmarkImpl::det_spatial_metric_type<Dim>;
+using sqrt_det_spatial_metric_type =
+    BenchmarkImpl::sqrt_det_spatial_metric_type<Dim>;
+using inverse_spacetime_metric_type =
+    BenchmarkImpl::inverse_spacetime_metric_type<Dim>;
+using christoffel_first_kind_type =
+    BenchmarkImpl::christoffel_first_kind_type<Dim>;
+using christoffel_second_kind_type =
+    BenchmarkImpl::christoffel_second_kind_type<Dim>;
+using trace_christoffel_type = BenchmarkImpl::trace_christoffel_type<Dim>;
+using normal_spacetime_vector_type =
+    BenchmarkImpl::normal_spacetime_vector_type<Dim>;
+using d_spacetime_metric_type = BenchmarkImpl::d_spacetime_metric_type<Dim>;
+using d_pi_type = BenchmarkImpl::d_pi_type<Dim>;
+using d_phi_type = BenchmarkImpl::d_phi_type<Dim>;
+using spacetime_metric_type = BenchmarkImpl::spacetime_metric_type<Dim>;
+using pi_type = BenchmarkImpl::pi_type<Dim>;
+using phi_type = BenchmarkImpl::phi_type<Dim>;
+using gamma0_type = BenchmarkImpl::gamma0_type<Dim>;
+using gamma1_type = BenchmarkImpl::gamma1_type<Dim>;
+using gamma2_type = BenchmarkImpl::gamma2_type<Dim>;
+using gauge_condition_type = BenchmarkImpl::gauge_condition_type<Dim>;
+using inertial_coords_type = BenchmarkImpl::inertial_coords_type<Dim>;
+using inverse_jacobian_type = BenchmarkImpl::inverse_jacobian_type<Dim>;
+using mesh_velocity_type = BenchmarkImpl::mesh_velocity_type<Dim>;
 
 // clang-tidy: don't pass be non-const reference
 void bench_partial_derivatives(benchmark::State& state) {  // NOLINT
-  constexpr size_t Dim = 3;
   const std::array<size_t, Dim> extents = {
       {static_cast<size_t>(state.range(1)), static_cast<size_t>(state.range(2)),
        static_cast<size_t>(state.range(3))}};
   const size_t num_3d_points = static_cast<size_t>(state.range(0));
   assertm(num_3d_points == extents[0] * extents[1] * extents[2],
           "Num 3D points does not match the product of the three 1D points");
-  (void)num_3d_points;
-  const Mesh<Dim> mesh{extents, Spectral::Basis::Legendre,
-                       Spectral::Quadrature::GaussLobatto};
+  const Mesh<Dim> mesh{extents, basis, quadrature};
   domain::CoordinateMaps::Affine map1d(-1.0, 1.0, -1.0, 1.0);
   using Map3d =
       domain::CoordinateMaps::ProductOf3Maps<domain::CoordinateMaps::Affine,
@@ -224,7 +145,6 @@ void bench_partial_derivatives(benchmark::State& state) {  // NOLINT
   using VarTags = gh_evolution_vars_tags<Dim>;
   const InverseJacobian<DataVector, Dim, Frame::ElementLogical, DerivativeFrame>
       inv_jac = map.inv_jacobian(logical_coordinates(mesh));
-  const auto grid_coords = map(logical_coordinates(mesh));
   Variables<VarTags> vars(mesh.number_of_grid_points(), 0.0);
 
   while (state.KeepRunning()) {
@@ -235,16 +155,13 @@ void bench_partial_derivatives(benchmark::State& state) {  // NOLINT
 
 // clang-tidy: don't pass be non-const reference
 void bench_logical_partial_derivatives(benchmark::State& state) {  // NOLINT
-  constexpr size_t Dim = 3;
   const std::array<size_t, Dim> extents = {
       {static_cast<size_t>(state.range(1)), static_cast<size_t>(state.range(2)),
        static_cast<size_t>(state.range(3))}};
   const size_t num_3d_points = static_cast<size_t>(state.range(0));
   assertm(num_3d_points == extents[0] * extents[1] * extents[2],
           "Num 3D points does not match the product of the three 1D points");
-  (void)num_3d_points;
-  const Mesh<Dim> mesh{extents, Spectral::Basis::Legendre,
-                       Spectral::Quadrature::GaussLobatto};
+  const Mesh<Dim> mesh{extents, basis, quadrature};
 
   using VarTags = gh_evolution_vars_tags<Dim>;
   Variables<VarTags> vars(mesh.number_of_grid_points(), 0.0);
@@ -256,84 +173,15 @@ void bench_logical_partial_derivatives(benchmark::State& state) {  // NOLINT
 }
 
 void bench_og_time_derivative(benchmark::State& state) {  // NOLINT
-  constexpr size_t Dim = 3;
-  using BenchmarkImpl = BenchmarkImpl<DataVector, Dim>;
-  using dt_spacetime_metric_type =
-      typename BenchmarkImpl::dt_spacetime_metric_type;
-  using dt_pi_type = typename BenchmarkImpl::dt_pi_type;
-  using dt_phi_type = typename BenchmarkImpl::dt_phi_type;
-  using temp_gamma1_type = typename BenchmarkImpl::temp_gamma1_type;
-  using temp_gamma2_type = typename BenchmarkImpl::temp_gamma2_type;
-  using temp_gauge_function_type =
-      typename BenchmarkImpl::temp_gauge_function_type;
-  using temp_spacetime_deriv_gauge_function_type =
-      typename BenchmarkImpl::temp_spacetime_deriv_gauge_function_type;
-  using gamma1gamma2_type = typename BenchmarkImpl::gamma1gamma2_type;
-  using half_pi_two_normals_type =
-      typename BenchmarkImpl::half_pi_two_normals_type;
-  using normal_dot_gauge_constraint_type =
-      typename BenchmarkImpl::normal_dot_gauge_constraint_type;
-  using gamma1_plus_1_type = typename BenchmarkImpl::gamma1_plus_1_type;
-  using pi_one_normal_type = typename BenchmarkImpl::pi_one_normal_type;
-  using gauge_constraint_type = typename BenchmarkImpl::gauge_constraint_type;
-  using half_phi_two_normals_type =
-      typename BenchmarkImpl::half_phi_two_normals_type;
-  using shift_dot_three_index_constraint_type =
-      typename BenchmarkImpl::shift_dot_three_index_constraint_type;
-  using mesh_velocity_dot_three_index_constraint_type =
-      typename BenchmarkImpl::mesh_velocity_dot_three_index_constraint_type;
-  using phi_one_normal_type = typename BenchmarkImpl::phi_one_normal_type;
-  using pi_2_up_type = typename BenchmarkImpl::pi_2_up_type;
-  using three_index_constraint_type =
-      typename BenchmarkImpl::three_index_constraint_type;
-  using phi_1_up_type = typename BenchmarkImpl::phi_1_up_type;
-  using phi_3_up_type = typename BenchmarkImpl::phi_3_up_type;
-  using christoffel_first_kind_3_up_type =
-      typename BenchmarkImpl::christoffel_first_kind_3_up_type;
-  using lapse_type = typename BenchmarkImpl::lapse_type;
-  using shift_type = typename BenchmarkImpl::shift_type;
-  using inverse_spatial_metric_type =
-      typename BenchmarkImpl::inverse_spatial_metric_type;
-  using det_spatial_metric_type =
-      typename BenchmarkImpl::det_spatial_metric_type;
-  using sqrt_det_spatial_metric_type =
-      typename BenchmarkImpl::sqrt_det_spatial_metric_type;
-  using inverse_spacetime_metric_type =
-      typename BenchmarkImpl::inverse_spacetime_metric_type;
-  using christoffel_first_kind_type =
-      typename BenchmarkImpl::christoffel_first_kind_type;
-  using christoffel_second_kind_type =
-      typename BenchmarkImpl::christoffel_second_kind_type;
-  using trace_christoffel_type = typename BenchmarkImpl::trace_christoffel_type;
-  using normal_spacetime_vector_type =
-      typename BenchmarkImpl::normal_spacetime_vector_type;
-  using d_spacetime_metric_type =
-      typename BenchmarkImpl::d_spacetime_metric_type;
-  using d_pi_type = typename BenchmarkImpl::d_pi_type;
-  using d_phi_type = typename BenchmarkImpl::d_phi_type;
-  using spacetime_metric_type = typename BenchmarkImpl::spacetime_metric_type;
-  using pi_type = typename BenchmarkImpl::pi_type;
-  using phi_type = typename BenchmarkImpl::phi_type;
-  using gamma0_type = typename BenchmarkImpl::gamma0_type;
-  using gamma1_type = typename BenchmarkImpl::gamma1_type;
-  using gamma2_type = typename BenchmarkImpl::gamma2_type;
-  using gauge_condition_type = typename BenchmarkImpl::gauge_condition_type;
-  //   using mesh_type = typename BenchmarkImpl::mesh_type;
-  using inertial_coords_type = typename BenchmarkImpl::inertial_coords_type;
-  using inverse_jacobian_type = typename BenchmarkImpl::inverse_jacobian_type;
-  using mesh_velocity_type = typename BenchmarkImpl::mesh_velocity_type;
-
   const std::array<size_t, Dim> extents = {
       {static_cast<size_t>(state.range(1)), static_cast<size_t>(state.range(2)),
        static_cast<size_t>(state.range(3))}};
   const size_t num_3d_points = static_cast<size_t>(state.range(0));
   assertm(num_3d_points == extents[0] * extents[1] * extents[2],
           "Num 3D points does not match the product of the three 1D points");
-  (void)num_3d_points;
-  const Mesh<Dim> mesh{extents, Spectral::Basis::Legendre,
-                       Spectral::Quadrature::GaussLobatto};
+  const Mesh<Dim> mesh{extents, basis, qudrature};
   const size_t num_grid_points = mesh.number_of_grid_points();
-  const DataType used_for_size = DataVector(num_grid_points, 0.0);
+  const DataVector used_for_size = DataVector(num_grid_points, 0.0);
   std::uniform_real_distribution<> distribution(0.1, 1.0);
   const gauge_condition_type gauge_condition{};
 
@@ -590,86 +438,6 @@ void bench_og_time_derivative(benchmark::State& state) {  // NOLINT
 }
 
 void bench_time_derivative(benchmark::State& state) {  // NOLINT
-  constexpr size_t Dim = 3;
-  using BenchmarkImpl = BenchmarkImpl<DataVector, Dim>;
-  using dt_spacetime_metric_type =
-      typename BenchmarkImpl::dt_spacetime_metric_type;
-  using dt_pi_type = typename BenchmarkImpl::dt_pi_type;
-  using dt_phi_type = typename BenchmarkImpl::dt_phi_type;
-  using temp_gamma1_type = typename BenchmarkImpl::temp_gamma1_type;
-  using temp_gamma2_type = typename BenchmarkImpl::temp_gamma2_type;
-  using temp_gauge_function_type =
-      typename BenchmarkImpl::temp_gauge_function_type;
-  using temp_spacetime_deriv_gauge_function_type =
-      typename BenchmarkImpl::temp_spacetime_deriv_gauge_function_type;
-  using gamma1gamma2_type = typename BenchmarkImpl::gamma1gamma2_type;
-  using half_pi_two_normals_type =
-      typename BenchmarkImpl::half_pi_two_normals_type;
-  using normal_dot_gauge_constraint_type =
-      typename BenchmarkImpl::normal_dot_gauge_constraint_type;
-  using gamma1_plus_1_type = typename BenchmarkImpl::gamma1_plus_1_type;
-  using pi_one_normal_type = typename BenchmarkImpl::pi_one_normal_type;
-  using gauge_constraint_type = typename BenchmarkImpl::gauge_constraint_type;
-  using half_phi_two_normals_type =
-      typename BenchmarkImpl::half_phi_two_normals_type;
-  using shift_dot_three_index_constraint_type =
-      typename BenchmarkImpl::shift_dot_three_index_constraint_type;
-  using mesh_velocity_dot_three_index_constraint_type =
-      typename BenchmarkImpl::mesh_velocity_dot_three_index_constraint_type;
-  using phi_one_normal_type = typename BenchmarkImpl::phi_one_normal_type;
-  using pi_2_up_type = typename BenchmarkImpl::pi_2_up_type;
-  using three_index_constraint_type =
-      typename BenchmarkImpl::three_index_constraint_type;
-  using phi_1_up_type = typename BenchmarkImpl::phi_1_up_type;
-  using phi_3_up_type = typename BenchmarkImpl::phi_3_up_type;
-  using christoffel_first_kind_3_up_type =
-      typename BenchmarkImpl::christoffel_first_kind_3_up_type;
-  using lapse_type = typename BenchmarkImpl::lapse_type;
-  using shift_type = typename BenchmarkImpl::shift_type;
-  using inverse_spatial_metric_type =
-      typename BenchmarkImpl::inverse_spatial_metric_type;
-  using det_spatial_metric_type =
-      typename BenchmarkImpl::det_spatial_metric_type;
-  using sqrt_det_spatial_metric_type =
-      typename BenchmarkImpl::sqrt_det_spatial_metric_type;
-  using inverse_spacetime_metric_type =
-      typename BenchmarkImpl::inverse_spacetime_metric_type;
-  using christoffel_first_kind_type =
-      typename BenchmarkImpl::christoffel_first_kind_type;
-  using christoffel_second_kind_type =
-      typename BenchmarkImpl::christoffel_second_kind_type;
-  using trace_christoffel_type = typename BenchmarkImpl::trace_christoffel_type;
-  using normal_spacetime_vector_type =
-      typename BenchmarkImpl::normal_spacetime_vector_type;
-  using logical_shift_type = typename BenchmarkImpl::logical_shift_type;
-  using inverse_spatial_metric_logical_1_type =
-      typename BenchmarkImpl::inverse_spatial_metric_logical_1_type;
-  using logical_mesh_velocity_type =
-      typename BenchmarkImpl::logical_mesh_velocity_type;
-  using shift_dot_d_spacetime_metric_type =
-      typename BenchmarkImpl::shift_dot_d_spacetime_metric_type;
-  using shift_dot_phi_type = typename BenchmarkImpl::shift_dot_phi_type;
-  using mesh_velocity_dot_phi_type =
-      typename BenchmarkImpl::mesh_velocity_dot_phi_type;
-  using mesh_velocity_dot_d_spacetime_metric_type =
-      typename BenchmarkImpl::mesh_velocity_dot_d_spacetime_metric_type;
-  using upper_gauge_function_type =
-      typename BenchmarkImpl::upper_gauge_function_type;
-  using gamma2_logical_d_spacetime_metric_minus_logical_d_pi_type =
-      typename BenchmarkImpl::
-          gamma2_logical_d_spacetime_metric_minus_logical_d_pi_type;
-  using spacetime_metric_type = typename BenchmarkImpl::spacetime_metric_type;
-  using pi_type = typename BenchmarkImpl::pi_type;
-  using phi_type = typename BenchmarkImpl::phi_type;
-  using gamma0_type = typename BenchmarkImpl::gamma0_type;
-  using gamma1_type = typename BenchmarkImpl::gamma1_type;
-  using gamma2_type = typename BenchmarkImpl::gamma2_type;
-  using gauge_condition_type = typename BenchmarkImpl::gauge_condition_type;
-  //   using mesh_type = typename BenchmarkImpl::mesh_type;
-  using inertial_coords_type = typename BenchmarkImpl::inertial_coords_type;
-  using inverse_jacobian_type = typename BenchmarkImpl::inverse_jacobian_type;
-  using mesh_velocity_type = typename BenchmarkImpl::mesh_velocity_type;
-
   const std::array<size_t, Dim> extents = {
       {static_cast<size_t>(state.range(1)), static_cast<size_t>(state.range(2)),
        static_cast<size_t>(state.range(3))}};
@@ -677,10 +445,9 @@ void bench_time_derivative(benchmark::State& state) {  // NOLINT
   assertm(num_3d_points == extents[0] * extents[1] * extents[2],
           "Num 3D points does not match the product of the three 1D points");
   (void)num_3d_points;
-  const Mesh<Dim> mesh{extents, Spectral::Basis::Legendre,
-                       Spectral::Quadrature::GaussLobatto};
+  const Mesh<Dim> mesh{extents, basis, quadrature};
   const size_t num_grid_points = mesh.number_of_grid_points();
-  const DataType used_for_size = DataVector(num_grid_points, 0.0);
+  const DataVector used_for_size = DataVector(num_grid_points, 0.0);
   std::uniform_real_distribution<> distribution(0.1, 1.0);
   const gauge_condition_type gauge_condition{};
 

@@ -96,22 +96,22 @@ struct InverseSpatialMetricLogical1 : db::SimpleTag {
 
 template <size_t Dim>
 struct ShiftDotDSpacetimeMetric : db::SimpleTag {
-  using type = tnsr::aa<DataVector, Dim>;
+  using type = tnsr::aa<DataVector, Dim, Frame::Inertial>;
 };
 
 template <size_t Dim>
 struct ShiftDotPhi : db::SimpleTag {
-  using type = tnsr::aa<DataVector, Dim>;
+  using type = tnsr::aa<DataVector, Dim, Frame::Inertial>;
 };
 
 template <size_t Dim>
 struct MeshVelocityDotPhi : db::SimpleTag {
-  using type = tnsr::aa<DataVector, Dim>;
+  using type = tnsr::aa<DataVector, Dim, Frame::Inertial>;
 };
 
 template <size_t Dim>
 struct MeshVelocityDotDSpacetimeMetric : db::SimpleTag {
-  using type = tnsr::aa<DataVector, Dim>;
+  using type = tnsr::aa<DataVector, Dim, Frame::Inertial>;
 };
 
 /*!
