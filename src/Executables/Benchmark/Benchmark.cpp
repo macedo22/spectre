@@ -39,10 +39,13 @@
 extern "C" void CkRegisterMainModule(void) {}
 
 namespace {
+using Function = BenchmarkHelpers::Function;
+using GridPointsListType = BenchmarkHelpers::GridPointsListType;
+
 // Dim and grid points for this specific cpp
 constexpr size_t Dim = 3;
-constexpr BenchmarkHelpers::GridPointsListType grid_points_list_type =
-    BenchmarkHelpers::GridPointsListType::Consecutive;
+constexpr GridPointsListType grid_points_list_type =
+    GridPointsListType::Consecutive;
 constexpr size_t total_num_cases =
     BenchmarkHelpers::num_cases<Dim, grid_points_list_type>;
 constexpr size_t num_cases_to_run = total_num_cases;
@@ -135,6 +138,28 @@ using gamma2_logical_d_spacetime_metric_minus_logical_d_pi_type =
         Dim>;
 
 // clang-tidy: don't pass be non-const reference
+void bench_logical_partial_derivatives(benchmark::State& state) {  // NOLINT
+  const std::array<size_t, Dim> extents = {
+      {static_cast<size_t>(state.range(1)), static_cast<size_t>(state.range(2)),
+       static_cast<size_t>(state.range(3))}};
+  const size_t total_num_grid_points = static_cast<size_t>(state.range(0));
+  (void)total_num_grid_points;
+  assertm(
+      total_grid_points_is_product_of_extents(extents, total_num_grid_points),
+      "Total number of grid points is not equal to the product of the extents");
+
+  const Mesh<Dim> mesh{extents, basis, quadrature};
+
+  using VarTags = gh_evolution_vars_tags<Dim>;
+  Variables<VarTags> vars(mesh.number_of_grid_points(), 0.0);
+
+  while (state.KeepRunning()) {
+    benchmark::DoNotOptimize(logical_partial_derivatives<VarTags>(vars, mesh));
+    benchmark::ClobberMemory();
+  }
+}
+
+// clang-tidy: don't pass be non-const reference
 void bench_partial_derivatives(benchmark::State& state) {  // NOLINT
   const std::array<size_t, Dim> extents = {
       {static_cast<size_t>(state.range(1)), static_cast<size_t>(state.range(2)),
@@ -161,28 +186,6 @@ void bench_partial_derivatives(benchmark::State& state) {  // NOLINT
 
   while (state.KeepRunning()) {
     benchmark::DoNotOptimize(partial_derivatives<VarTags>(vars, mesh, inv_jac));
-    benchmark::ClobberMemory();
-  }
-}
-
-// clang-tidy: don't pass be non-const reference
-void bench_logical_partial_derivatives(benchmark::State& state) {  // NOLINT
-  const std::array<size_t, Dim> extents = {
-      {static_cast<size_t>(state.range(1)), static_cast<size_t>(state.range(2)),
-       static_cast<size_t>(state.range(3))}};
-  const size_t total_num_grid_points = static_cast<size_t>(state.range(0));
-  (void)total_num_grid_points;
-  assertm(
-      total_grid_points_is_product_of_extents(extents, total_num_grid_points),
-      "Total number of grid points is not equal to the product of the extents");
-
-  const Mesh<Dim> mesh{extents, basis, quadrature};
-
-  using VarTags = gh_evolution_vars_tags<Dim>;
-  Variables<VarTags> vars(mesh.number_of_grid_points(), 0.0);
-
-  while (state.KeepRunning()) {
-    benchmark::DoNotOptimize(logical_partial_derivatives<VarTags>(vars, mesh));
     benchmark::ClobberMemory();
   }
 }
@@ -784,13 +787,13 @@ constexpr std::array<std::array<size_t, Dim>, total_num_cases> extents =
 constexpr std::array<size_t, total_num_cases> total_num_grid_points =
     BenchmarkHelpers::total_num_grid_points<Dim, grid_points_list_type>;
 
-template <size_t NumberOfCases, size_t Dimension>
+template <Function Func, size_t NumberOfCases, size_t Dimension>
 struct run_benchmark_case;
 
-template <size_t NumberOfCases>
-struct run_benchmark_case<NumberOfCases, 1> {
+template <Function Func, size_t NumberOfCases>
+struct run_benchmark_case<Func, NumberOfCases, 1> {
   template <size_t I>
-  static void apply(const std::string name) {
+  static void apply() {
     static_assert(
         I < NumberOfCases,
         "Attempting to generate a case number not requested to be run");
@@ -798,16 +801,37 @@ struct run_benchmark_case<NumberOfCases, 1> {
         I < total_num_cases,
         "Attempting to generate a case number whose index is out of bounds");
 
-    BENCHMARK(bench_partial_derivatives)
-        ->Name(name)
-        ->Args({static_cast<long int>(total_num_grid_points[I]),
-                static_cast<long int>(extents[I][0])});
+    const std::string name_prefix =
+        BenchmarkHelpers::get_benchmark_name_prefix<DataVector, 1, Func>();
+    if constexpr (Func == Function::LogicalPartialDerivatives) {
+      BENCHMARK(bench_logical_partial_derivatives)
+          ->Name(name_prefix)
+          ->Args({static_cast<long int>(total_num_grid_points[I]),
+                  static_cast<long int>(extents[I][0])});
+    } else if constexpr (Func == Function::PartialDerivatives) {
+      BENCHMARK(bench_partial_derivatives)
+          ->Name(name_prefix)
+          ->Args({static_cast<long int>(total_num_grid_points[I]),
+                  static_cast<long int>(extents[I][0])});
+    } else if constexpr (Func == Function::OgTimeDerivative) {
+      BENCHMARK(bench_og_time_derivative)
+          ->Name(name_prefix)
+          ->Args({static_cast<long int>(total_num_grid_points[I]),
+                  static_cast<long int>(extents[I][0])});
+    } else if constexpr (Func == Function::TimeDerivative) {
+      BENCHMARK(bench_time_derivative)
+          ->Name(name_prefix)
+          ->Args({static_cast<long int>(total_num_grid_points[I]),
+                  static_cast<long int>(extents[I][0])});
+    } else {
+      static_assert("Unknown function");
+    }
   }
 };
-template <size_t NumberOfCases>
-struct run_benchmark_case<NumberOfCases, 2> {
+template <Function Func, size_t NumberOfCases>
+struct run_benchmark_case<Func, NumberOfCases, 2> {
   template <size_t I>
-  static void apply(const std::string name) {
+  static void apply() {
     static_assert(
         I < NumberOfCases,
         "Attempting to generate a case number not requested to be run");
@@ -815,17 +839,41 @@ struct run_benchmark_case<NumberOfCases, 2> {
         I < total_num_cases,
         "Attempting to generate a case number whose index is out of bounds");
 
-    BENCHMARK(bench_partial_derivatives)
-        ->Name(name)
-        ->Args({static_cast<long int>(total_num_grid_points[I]),
-                static_cast<long int>(extents[I][0]),
-                static_cast<long int>(extents[I][1])});
+    const std::string name_prefix =
+        BenchmarkHelpers::get_benchmark_name_prefix<DataVector, 2, Func>();
+    if constexpr (Func == Function::LogicalPartialDerivatives) {
+      BENCHMARK(bench_logical_partial_derivatives)
+          ->Name(name_prefix)
+          ->Args({static_cast<long int>(total_num_grid_points[I]),
+                  static_cast<long int>(extents[I][0]),
+                  static_cast<long int>(extents[I][1])});
+    } else if constexpr (Func == Function::PartialDerivatives) {
+      BENCHMARK(bench_partial_derivatives)
+          ->Name(name_prefix)
+          ->Args({static_cast<long int>(total_num_grid_points[I]),
+                  static_cast<long int>(extents[I][0]),
+                  static_cast<long int>(extents[I][1])});
+    } else if constexpr (Func == Function::OgTimeDerivative) {
+      BENCHMARK(bench_og_time_derivative)
+          ->Name(name_prefix)
+          ->Args({static_cast<long int>(total_num_grid_points[I]),
+                  static_cast<long int>(extents[I][0]),
+                  static_cast<long int>(extents[I][1])});
+    } else if constexpr (Func == Function::TimeDerivative) {
+      BENCHMARK(bench_time_derivative)
+          ->Name(name_prefix)
+          ->Args({static_cast<long int>(total_num_grid_points[I]),
+                  static_cast<long int>(extents[I][0]),
+                  static_cast<long int>(extents[I][1])});
+    } else {
+      static_assert("Unknown function");
+    }
   }
 };
-template <size_t NumberOfCases>
-struct run_benchmark_case<NumberOfCases, 3> {
+template <Function Func, size_t NumberOfCases>
+struct run_benchmark_case<Func, NumberOfCases, 3> {
   template <size_t I>
-  static void apply(const std::string name) {
+  static void apply() {
     static_assert(
         I < NumberOfCases,
         "Attempting to generate a case number not requested to be run");
@@ -833,129 +881,63 @@ struct run_benchmark_case<NumberOfCases, 3> {
         I < total_num_cases,
         "Attempting to generate a case number whose index is out of bounds");
 
-    BENCHMARK(bench_partial_derivatives)
-        ->Name(name)
-        ->Args({static_cast<long int>(total_num_grid_points[I]),
-                static_cast<long int>(extents[I][0]),
-                static_cast<long int>(extents[I][1]),
-                static_cast<long int>(extents[I][2])});
+    const std::string name_prefix =
+        BenchmarkHelpers::get_benchmark_name_prefix<DataVector, 3, Func>();
+    if constexpr (Func == Function::LogicalPartialDerivatives) {
+      BENCHMARK(bench_logical_partial_derivatives)
+          ->Name(name_prefix)
+          ->Args({static_cast<long int>(total_num_grid_points[I]),
+                  static_cast<long int>(extents[I][0]),
+                  static_cast<long int>(extents[I][1]),
+                  static_cast<long int>(extents[I][2])});
+    } else if constexpr (Func == Function::PartialDerivatives) {
+      BENCHMARK(bench_partial_derivatives)
+          ->Name(name_prefix)
+          ->Args({static_cast<long int>(total_num_grid_points[I]),
+                  static_cast<long int>(extents[I][0]),
+                  static_cast<long int>(extents[I][1]),
+                  static_cast<long int>(extents[I][2])});
+    } else if constexpr (Func == Function::OgTimeDerivative) {
+      BENCHMARK(bench_og_time_derivative)
+          ->Name(name_prefix)
+          ->Args({static_cast<long int>(total_num_grid_points[I]),
+                  static_cast<long int>(extents[I][0]),
+                  static_cast<long int>(extents[I][1]),
+                  static_cast<long int>(extents[I][2])});
+    } else if constexpr (Func == Function::TimeDerivative) {
+      BENCHMARK(bench_time_derivative)
+          ->Name(name_prefix)
+          ->Args({static_cast<long int>(total_num_grid_points[I]),
+                  static_cast<long int>(extents[I][0]),
+                  static_cast<long int>(extents[I][1]),
+                  static_cast<long int>(extents[I][2])});
+    } else {
+      static_assert("Unknown function");
+    }
   }
 };
 
+template <Function Func>
 struct run_benchmark_cases_helper {
   template <size_t... Is>
-  static void apply(const std::string name, std::index_sequence<Is...>) {
+  static void apply(std::index_sequence<Is...>) {
     (void)std::initializer_list<int>{
-        (run_benchmark_case<num_cases_to_run, Dim>::apply<Is>(name), 0)...};
+        (run_benchmark_case<Func, num_cases_to_run, Dim>::template apply<Is>(),
+         0)...};
   }
 };
 
-void run_benchmark_cases(const std::string name) {
-  run_benchmark_cases_helper::apply(
-      name, std::make_index_sequence<num_cases_to_run>{});
+template <Function Func>
+void run_benchmark_cases() {
+  run_benchmark_cases_helper<Func>::apply(
+      std::make_index_sequence<num_cases_to_run>{});
 }
 
 void run_benchmark() {
-  const std::string partial_derivatives_benchmark_name =
-      "partial_derivatives/3D/num_3d_points";
-  run_benchmark_cases(partial_derivatives_benchmark_name);
-  //   BENCHMARK(bench_partial_derivatives)
-  //       ->Name(partial_derivatives_benchmark_name)
-  //       ->Args({total_num_grid_points[0], extents[0][0], extents[0][1],
-  //               extents[0][2]})
-  //       ->Args({total_num_grid_points[1], extents[1][0], extents[1][1],
-  //               extents[1][2]})
-  //       ->Args({total_num_grid_points[2], extents[2][0], extents[2][1],
-  //               extents[2][2]})
-  //       ->Args({total_num_grid_points[3], extents[3][0], extents[3][1],
-  //               extents[3][2]})
-  //       ->Args({total_num_grid_points[4], extents[4][0], extents[4][1],
-  //               extents[4][2]})
-  //       ->Args({total_num_grid_points[5], extents[5][0], extents[5][1],
-  //               extents[5][2]})
-  //       ->Args({total_num_grid_points[6], extents[6][0], extents[6][1],
-  //               extents[6][2]})
-  //       ->Args({total_num_grid_points[7], extents[7][0], extents[7][1],
-  //               extents[7][2]})
-  //       ->Args({total_num_grid_points[8], extents[8][0], extents[8][1],
-  //               extents[8][2]})
-  //       ->Args({total_num_grid_points[9], extents[9][0], extents[9][1],
-  //               extents[9][2]});
-
-  const std::string logical_partial_derivatives_benchmark_name =
-      "logical_partial_derivatives/3D/num_3d_points";
-  BENCHMARK(bench_logical_partial_derivatives)
-      ->Name(logical_partial_derivatives_benchmark_name)
-      ->Args({total_num_grid_points[0], extents[0][0], extents[0][1],
-              extents[0][2]})
-      ->Args({total_num_grid_points[1], extents[1][0], extents[1][1],
-              extents[1][2]})
-      ->Args({total_num_grid_points[2], extents[2][0], extents[2][1],
-              extents[2][2]})
-      ->Args({total_num_grid_points[3], extents[3][0], extents[3][1],
-              extents[3][2]})
-      ->Args({total_num_grid_points[4], extents[4][0], extents[4][1],
-              extents[4][2]})
-      ->Args({total_num_grid_points[5], extents[5][0], extents[5][1],
-              extents[5][2]})
-      ->Args({total_num_grid_points[6], extents[6][0], extents[6][1],
-              extents[6][2]})
-      ->Args({total_num_grid_points[7], extents[7][0], extents[7][1],
-              extents[7][2]})
-      ->Args({total_num_grid_points[8], extents[8][0], extents[8][1],
-              extents[8][2]})
-      ->Args({total_num_grid_points[9], extents[9][0], extents[9][1],
-              extents[9][2]});
-
-  const std::string og_time_derivative_benchmark_name =
-      "og_time_derivative/3D/num_3d_points";
-  BENCHMARK(bench_og_time_derivative)
-      ->Name(og_time_derivative_benchmark_name)
-      ->Args({total_num_grid_points[0], extents[0][0], extents[0][1],
-              extents[0][2]})
-      ->Args({total_num_grid_points[1], extents[1][0], extents[1][1],
-              extents[1][2]})
-      ->Args({total_num_grid_points[2], extents[2][0], extents[2][1],
-              extents[2][2]})
-      ->Args({total_num_grid_points[3], extents[3][0], extents[3][1],
-              extents[3][2]})
-      ->Args({total_num_grid_points[4], extents[4][0], extents[4][1],
-              extents[4][2]})
-      ->Args({total_num_grid_points[5], extents[5][0], extents[5][1],
-              extents[5][2]})
-      ->Args({total_num_grid_points[6], extents[6][0], extents[6][1],
-              extents[6][2]})
-      ->Args({total_num_grid_points[7], extents[7][0], extents[7][1],
-              extents[7][2]})
-      ->Args({total_num_grid_points[8], extents[8][0], extents[8][1],
-              extents[8][2]})
-      ->Args({total_num_grid_points[9], extents[9][0], extents[9][1],
-              extents[9][2]});
-
-  const std::string time_derivative_benchmark_name =
-      "time_derivative/3D/num_3d_points";
-  BENCHMARK(bench_time_derivative)
-      ->Name(time_derivative_benchmark_name)
-      ->Args({total_num_grid_points[0], extents[0][0], extents[0][1],
-              extents[0][2]})
-      ->Args({total_num_grid_points[1], extents[1][0], extents[1][1],
-              extents[1][2]})
-      ->Args({total_num_grid_points[2], extents[2][0], extents[2][1],
-              extents[2][2]})
-      ->Args({total_num_grid_points[3], extents[3][0], extents[3][1],
-              extents[3][2]})
-      ->Args({total_num_grid_points[4], extents[4][0], extents[4][1],
-              extents[4][2]})
-      ->Args({total_num_grid_points[5], extents[5][0], extents[5][1],
-              extents[5][2]})
-      ->Args({total_num_grid_points[6], extents[6][0], extents[6][1],
-              extents[6][2]})
-      ->Args({total_num_grid_points[7], extents[7][0], extents[7][1],
-              extents[7][2]})
-      ->Args({total_num_grid_points[8], extents[8][0], extents[8][1],
-              extents[8][2]})
-      ->Args({total_num_grid_points[9], extents[9][0], extents[9][1],
-              extents[9][2]});
+  run_benchmark_cases<Function::LogicalPartialDerivatives>();
+  run_benchmark_cases<Function::PartialDerivatives>();
+  run_benchmark_cases<Function::OgTimeDerivative>();
+  run_benchmark_cases<Function::TimeDerivative>();
 }
 }  // namespace
 

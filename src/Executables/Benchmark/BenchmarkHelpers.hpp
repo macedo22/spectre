@@ -97,17 +97,26 @@ template <size_t Dim, size_t num_cases>
 constexpr std::array<std::array<size_t, Dim>, num_cases>
 get_extents_consecutive() {
   const size_t lowest_num_grid_points = 2;
-
   std::array<std::array<size_t, Dim>, num_cases> extents{};
-
   for (size_t i = 0; i < num_cases; i++) {
     const size_t num_1d_grid_points = i + lowest_num_grid_points;
     for (size_t j = 0; j < Dim; j++) {
       gsl::at(gsl::at(extents, i), j) = num_1d_grid_points;
     }
   }
-
   return extents;
+}
+
+// Given one set of extents with grid points per Dim, compute total grid points
+template <size_t Dim>
+constexpr size_t get_total_num_grid_points(
+    const std::array<size_t, Dim>& extents) {
+  size_t total_num_grid_points;
+  total_num_grid_points = extents[0];
+  for (size_t i = 1; i < Dim; i++) {
+    total_num_grid_points *= gsl::at(extents, i);
+  }
+  return total_num_grid_points;
 }
 
 // Given a list extents with grid points per Dim, compute total grid points for
@@ -116,14 +125,10 @@ template <size_t Dim, size_t num_cases>
 constexpr std::array<size_t, num_cases> get_total_num_grid_points(
     const std::array<std::array<size_t, Dim>, num_cases>& extents) {
   std::array<size_t, num_cases> total_num_grid_points{};
-
   for (size_t i = 0; i < num_cases; i++) {
-    gsl::at(total_num_grid_points, i) = gsl::at(extents, i)[0];
-    for (size_t j = 1; j < Dim; j++) {
-      gsl::at(total_num_grid_points, i) *= gsl::at(gsl::at(extents, i), j);
-    }
+    gsl::at(total_num_grid_points, i) =
+        get_total_num_grid_points(gsl::at(extents, i));
   }
-
   return total_num_grid_points;
 }
 
@@ -155,11 +160,40 @@ constexpr bool total_grid_points_is_product_of_extents(
 
 // Functions benchmarked
 enum class Function {
-  PartialDerivatives,
   LogicalPartialDerivatives,
-  TimeDerivative,
-  OgtimeDerivative
+  PartialDerivatives,
+  OgTimeDerivative,
+  TimeDerivative
 };
+
+template <typename DataType, size_t Dim, Function Func>
+std::string get_benchmark_name_prefix() {
+  const std::string datatype =
+      std::is_same_v<DataType, DataVector> ? "DataVector" : "double";
+
+  std::string name;
+  if constexpr (Func == Function::LogicalPartialDerivatives) {
+    name += "logical_partial_derivatives";
+  } else if constexpr (Func == Function::PartialDerivatives) {
+    name += "partial_derivatives";
+  } else if constexpr (Func == Function::OgTimeDerivative) {
+    name += "og_time_derivative";
+  } else if constexpr (Func == Function::TimeDerivative) {
+    name += "time_derivative";
+  } else {
+    static_assert("Unknown function");
+  }
+
+  name += "/" + datatype + "/" + std::to_string(Dim) +
+          "D/total_num_grid_points/extents[0]";
+
+  for (size_t i = 0; i < Dim; i++) {
+    name += "/extents[" + std::to_string(i) + "]";
+  }
+  name += ":";
+
+  return name;
+}
 
 // Dim and p-refinement benchmarking cases
 enum class GridPointsListType { Consecutive, PowersOfTwo };
