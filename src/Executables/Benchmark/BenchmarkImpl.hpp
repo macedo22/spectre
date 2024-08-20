@@ -5,7 +5,20 @@
 
 #include <cstddef>
 
+#include "DataStructures/DataBox/Tag.hpp"
+#include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
+#include "Domain/TagsTimeDependent.hpp"
+#include "Evolution/Systems/GeneralizedHarmonic/ConstraintDamping/Tags.hpp"
+#include "Evolution/Systems/GeneralizedHarmonic/DuDtTempTags.hpp"
+#include "Evolution/Systems/GeneralizedHarmonic/GaugeSourceFunctions/DampedHarmonic.hpp"
+#include "Evolution/Systems/GeneralizedHarmonic/GaugeSourceFunctions/Dispatch.hpp"
+#include "Evolution/Systems/GeneralizedHarmonic/GaugeSourceFunctions/Gauges.hpp"
+#include "Evolution/Systems/GeneralizedHarmonic/System.hpp"
+#include "Evolution/Systems/GeneralizedHarmonic/Tags.hpp"
+#include "NumericalAlgorithms/Spectral/Basis.hpp"
+#include "NumericalAlgorithms/Spectral/Quadrature.hpp"
+#include "PointwiseFunctions/GeneralRelativity/Shift.hpp"
 #include "Utilities/ContainerHelpers.hpp"
 #include "Utilities/ForceInline.hpp"
 #include "Utilities/Gsl.hpp"
@@ -17,6 +30,7 @@ using gh_evolution_vars_tags =
 namespace BenchmarkImpl {
 constexpr Spectral::Basis basis = Spectral::Basis::Legendre;
 constexpr Spectral::Quadrature quadrature = Spectral::Quadrature::GaussLobatto;
+constexpr double time = 3.4;
 
 using DerivativeFrame = Frame::Inertial;
 
