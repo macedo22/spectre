@@ -195,6 +195,16 @@ std::string get_benchmark_name_prefix() {
   return name;
 }
 
+template <size_t Dim>
+std::array<size_t, Dim> get_extents_from_state(const benchmark::State& state) {
+  std::array<size_t, Dim> extents{};
+  for (size_t i = 0; i < Dim; i++) {
+    // first index of state is total grid points, so skip it
+    gsl::at(extents, i) = static_cast<size_t>(state.range(i + 1));
+  }
+  return extents;
+}
+
 // Dim and p-refinement benchmarking cases
 enum class GridPointsListType { Consecutive, PowersOfTwo };
 

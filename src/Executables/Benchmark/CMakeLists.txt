@@ -1,32 +1,44 @@
 # Distributed under the MIT License.
 # See LICENSE.txt for details.
 
-# Since benchmarking is only interesting in release mode the executable isn't
-# added for Debug builds. Charm++'s main function is overridden with the main
-# from the Google Benchmark library. The executable is not added to the `all` make
-# target since it is only interesting in specific circumstances.
-if("${GoogleBenchmark_FOUND}" AND NOT "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-  set(executable Benchmark)
+add_subdirectory(all)
 
-  add_spectre_executable(
-    ${executable}
-    EXCLUDE_FROM_ALL
-    Benchmark.cpp
-    )
+add_subdirectory(og_time_derivative_DataVector_3D_2_2_2)
+add_subdirectory(og_time_derivative_DataVector_3D_3_3_3)
+add_subdirectory(og_time_derivative_DataVector_3D_4_4_4)
+add_subdirectory(og_time_derivative_DataVector_3D_5_5_5)
+add_subdirectory(og_time_derivative_DataVector_3D_6_6_6)
+add_subdirectory(og_time_derivative_DataVector_3D_7_7_7)
+add_subdirectory(og_time_derivative_DataVector_3D_8_8_8)
+add_subdirectory(og_time_derivative_DataVector_3D_9_9_9)
+add_subdirectory(og_time_derivative_DataVector_3D_10_10_10)
+add_subdirectory(og_time_derivative_DataVector_3D_11_11_11)
+add_subdirectory(og_time_derivative_DataVector_3D_12_12_12)
+add_subdirectory(og_time_derivative_DataVector_3D_13_13_13)
+add_subdirectory(og_time_derivative_DataVector_3D_14_14_14)
+add_subdirectory(og_time_derivative_DataVector_3D_15_15_15)
+add_subdirectory(og_time_derivative_DataVector_3D_16_16_16)
+add_subdirectory(og_time_derivative_DataVector_3D_17_17_17)
+add_subdirectory(og_time_derivative_DataVector_3D_18_18_18)
+add_subdirectory(og_time_derivative_DataVector_3D_19_19_19)
+add_subdirectory(og_time_derivative_DataVector_3D_20_20_20)
 
-  # Add specific libraries needed for the benchmark you are interested in.
-  target_link_libraries(
-    ${executable}
-    PRIVATE
-    CoordinateMaps
-    DataStructuresHelpers
-    Domain
-    GeneralizedHarmonic
-    GeneralRelativityHelpers
-    GeneralRelativity
-    Informer
-    GoogleBenchmark
-    Spectral
-    Utilities
-    )
-endif()
+add_subdirectory(time_derivative_DataVector_3D_2_2_2)
+add_subdirectory(time_derivative_DataVector_3D_3_3_3)
+add_subdirectory(time_derivative_DataVector_3D_4_4_4)
+add_subdirectory(time_derivative_DataVector_3D_5_5_5)
+add_subdirectory(time_derivative_DataVector_3D_6_6_6)
+add_subdirectory(time_derivative_DataVector_3D_7_7_7)
+add_subdirectory(time_derivative_DataVector_3D_8_8_8)
+add_subdirectory(time_derivative_DataVector_3D_9_9_9)
+add_subdirectory(time_derivative_DataVector_3D_10_10_10)
+add_subdirectory(time_derivative_DataVector_3D_11_11_11)
+add_subdirectory(time_derivative_DataVector_3D_12_12_12)
+add_subdirectory(time_derivative_DataVector_3D_13_13_13)
+add_subdirectory(time_derivative_DataVector_3D_14_14_14)
+add_subdirectory(time_derivative_DataVector_3D_15_15_15)
+add_subdirectory(time_derivative_DataVector_3D_16_16_16)
+add_subdirectory(time_derivative_DataVector_3D_17_17_17)
+add_subdirectory(time_derivative_DataVector_3D_18_18_18)
+add_subdirectory(time_derivative_DataVector_3D_19_19_19)
+add_subdirectory(time_derivative_DataVector_3D_20_20_20)

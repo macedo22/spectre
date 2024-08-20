@@ -16,21 +16,14 @@
 #include "DataStructures/TempBuffer.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Variables.hpp"
-#include "Domain/CoordinateMaps/Affine.hpp"
-#include "Domain/CoordinateMaps/CoordinateMap.hpp"
-#include "Domain/CoordinateMaps/CoordinateMap.tpp"
-#include "Domain/CoordinateMaps/ProductMaps.hpp"
-#include "Domain/CoordinateMaps/ProductMaps.tpp"
 #include "Evolution/Systems/GeneralizedHarmonic/TimeDerivative.hpp"
 #include "Executables/Benchmark/BenchmarkHelpers.hpp"
 #include "Executables/Benchmark/BenchmarkImpl.hpp"
 #include "NumericalAlgorithms/LinearOperators/PartialDerivatives.hpp"
 #include "NumericalAlgorithms/LinearOperators/PartialDerivatives.tpp"
 #include "NumericalAlgorithms/Spectral/Basis.hpp"
-#include "NumericalAlgorithms/Spectral/LogicalCoordinates.hpp"
 #include "NumericalAlgorithms/Spectral/Mesh.hpp"
 #include "NumericalAlgorithms/Spectral/Quadrature.hpp"
-#include "NumericalAlgorithms/Spectral/Spectral.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/TMPL.hpp"
 
@@ -40,25 +33,19 @@ extern "C" void CkRegisterMainModule(void) {}
 
 namespace {
 using Function = BenchmarkHelpers::Function;
-using GridPointsListType = BenchmarkHelpers::GridPointsListType;
 
-// Dim and grid points for this specific cpp
+// Function, Dim, and grid points to benchmark for this specific cpp
+constexpr Function FunctionToRun = Function::OgTimeDerivative;
 constexpr size_t Dim = 3;
-constexpr GridPointsListType grid_points_list_type =
-    GridPointsListType::Consecutive;
-constexpr size_t total_num_cases =
-    BenchmarkHelpers::num_cases<Dim, grid_points_list_type>;
+constexpr std::array<std::array<size_t, Dim>, 1> extents_to_run{
+    {{{20, 20, 20}}}};
+constexpr size_t total_num_cases = extents_to_run.size();
 constexpr size_t num_cases_to_run = total_num_cases;
 
 // General settings
 constexpr Spectral::Basis basis = BenchmarkImpl::basis;
 constexpr Spectral::Quadrature quadrature = BenchmarkImpl::quadrature;
 constexpr double time = BenchmarkImpl::time;
-
-using DerivativeFrame = BenchmarkImpl::DerivativeFrame;
-// quantities for computing partial derivatives
-using Kappa = BenchmarkImpl::Kappa<Dim>;
-using Psi = BenchmarkImpl::Psi<Dim>;
 
 // GH vars types
 using dt_spacetime_metric_type = BenchmarkImpl::dt_spacetime_metric_type<Dim>;
@@ -137,336 +124,9 @@ using gamma2_logical_d_spacetime_metric_minus_logical_d_pi_type =
     BenchmarkImpl::gamma2_logical_d_spacetime_metric_minus_logical_d_pi_type<
         Dim>;
 
-// clang-tidy: don't pass be non-const reference
-void bench_logical_partial_derivatives(benchmark::State& state) {  // NOLINT
-  const std::array<size_t, Dim> extents = {
-      {static_cast<size_t>(state.range(1)), static_cast<size_t>(state.range(2)),
-       static_cast<size_t>(state.range(3))}};
-  const size_t total_num_grid_points = static_cast<size_t>(state.range(0));
-  (void)total_num_grid_points;
-  assertm(
-      total_grid_points_is_product_of_extents(extents, total_num_grid_points),
-      "Total number of grid points is not equal to the product of the extents");
-
-  const Mesh<Dim> mesh{extents, basis, quadrature};
-
-  using VarTags = gh_evolution_vars_tags<Dim>;
-  Variables<VarTags> vars(mesh.number_of_grid_points(), 0.0);
-
-  while (state.KeepRunning()) {
-    benchmark::DoNotOptimize(logical_partial_derivatives<VarTags>(vars, mesh));
-    benchmark::ClobberMemory();
-  }
-}
-
-// clang-tidy: don't pass be non-const reference
-void bench_partial_derivatives(benchmark::State& state) {  // NOLINT
-  const std::array<size_t, Dim> extents = {
-      {static_cast<size_t>(state.range(1)), static_cast<size_t>(state.range(2)),
-       static_cast<size_t>(state.range(3))}};
-  const size_t total_num_grid_points = static_cast<size_t>(state.range(0));
-  (void)total_num_grid_points;
-  assertm(
-      total_grid_points_is_product_of_extents(extents, total_num_grid_points),
-      "Total number of grid points is not equal to the product of the extents");
-
-  const Mesh<Dim> mesh{extents, basis, quadrature};
-  domain::CoordinateMaps::Affine map1d(-1.0, 1.0, -1.0, 1.0);
-  using Map3d =
-      domain::CoordinateMaps::ProductOf3Maps<domain::CoordinateMaps::Affine,
-                                             domain::CoordinateMaps::Affine,
-                                             domain::CoordinateMaps::Affine>;
-  domain::CoordinateMap<Frame::ElementLogical, DerivativeFrame, Map3d> map(
-      Map3d{map1d, map1d, map1d});
-
-  using VarTags = gh_evolution_vars_tags<Dim>;
-  const InverseJacobian<DataVector, Dim, Frame::ElementLogical, DerivativeFrame>
-      inv_jac = map.inv_jacobian(logical_coordinates(mesh));
-  Variables<VarTags> vars(mesh.number_of_grid_points(), 0.0);
-
-  while (state.KeepRunning()) {
-    benchmark::DoNotOptimize(partial_derivatives<VarTags>(vars, mesh, inv_jac));
-    benchmark::ClobberMemory();
-  }
-}
-
-void bench_og_time_derivative(benchmark::State& state) {  // NOLINT
-  const std::array<size_t, Dim> extents = {
-      {static_cast<size_t>(state.range(1)), static_cast<size_t>(state.range(2)),
-       static_cast<size_t>(state.range(3))}};
-  const size_t total_num_grid_points = static_cast<size_t>(state.range(0));
-  (void)total_num_grid_points;
-  assertm(
-      total_grid_points_is_product_of_extents(extents, total_num_grid_points),
-      "Total number of grid points is not equal to the product of the extents");
-
-  const Mesh<Dim> mesh{extents, basis, quadrature};
-  const size_t num_grid_points = mesh.number_of_grid_points();
-  const DataVector used_for_size = DataVector(num_grid_points, 0.0);
-  std::uniform_real_distribution<> distribution(0.1, 1.0);
-  const gauge_condition_type gauge_condition{};
-
-  TempBuffer<tmpl::list<
-      ::Tags::TempTensor<0, dt_spacetime_metric_type>,
-      ::Tags::TempTensor<1, dt_pi_type>, ::Tags::TempTensor<2, dt_phi_type>,
-      ::Tags::TempTensor<3, temp_gamma1_type>,
-      ::Tags::TempTensor<4, temp_gamma2_type>,
-      ::Tags::TempTensor<5, temp_gauge_function_type>,
-      ::Tags::TempTensor<6, temp_spacetime_deriv_gauge_function_type>,
-      ::Tags::TempTensor<7, gamma1gamma2_type>,
-      ::Tags::TempTensor<8, half_pi_two_normals_type>,
-      ::Tags::TempTensor<9, normal_dot_gauge_constraint_type>,
-      ::Tags::TempTensor<10, gamma1_plus_1_type>,
-      ::Tags::TempTensor<11, pi_one_normal_type>,
-      ::Tags::TempTensor<12, gauge_constraint_type>,
-      ::Tags::TempTensor<13, half_phi_two_normals_type>,
-      ::Tags::TempTensor<14, shift_dot_three_index_constraint_type>,
-      ::Tags::TempTensor<15, mesh_velocity_dot_three_index_constraint_type>,
-      ::Tags::TempTensor<16, phi_one_normal_type>,
-      ::Tags::TempTensor<17, pi_2_up_type>,
-      ::Tags::TempTensor<18, three_index_constraint_type>,
-      ::Tags::TempTensor<19, phi_1_up_type>,
-      ::Tags::TempTensor<20, phi_3_up_type>,
-      ::Tags::TempTensor<21, christoffel_first_kind_3_up_type>,
-      ::Tags::TempTensor<22, lapse_type>, ::Tags::TempTensor<23, shift_type>,
-      ::Tags::TempTensor<24, inverse_spatial_metric_type>,
-      ::Tags::TempTensor<25, det_spatial_metric_type>,
-      ::Tags::TempTensor<26, sqrt_det_spatial_metric_type>,
-      ::Tags::TempTensor<27, inverse_spacetime_metric_type>,
-      ::Tags::TempTensor<28, christoffel_first_kind_type>,
-      ::Tags::TempTensor<29, christoffel_second_kind_type>,
-      ::Tags::TempTensor<30, trace_christoffel_type>,
-      ::Tags::TempTensor<31, normal_spacetime_vector_type>,
-      ::Tags::TempTensor<32, d_spacetime_metric_type>,
-      ::Tags::TempTensor<33, d_pi_type>, ::Tags::TempTensor<34, d_phi_type>,
-      ::Tags::TempTensor<35, spacetime_metric_type>,
-      ::Tags::TempTensor<36, pi_type>, ::Tags::TempTensor<37, phi_type>,
-      ::Tags::TempTensor<38, gamma0_type>, ::Tags::TempTensor<39, gamma1_type>,
-      ::Tags::TempTensor<40, gamma2_type>,
-      ::Tags::TempTensor<41, inertial_coords_type>,
-      ::Tags::TempTensor<42, inverse_jacobian_type>,
-      ::Tags::TempTensor<43, mesh_velocity_type>>>
-      vars{num_grid_points};
-
-  // RHS: d_spacetime_metric
-  d_spacetime_metric_type& d_spacetime_metric =
-      get<::Tags::TempTensor<32, d_spacetime_metric_type>>(vars);
-  BenchmarkHelpers::assign_unique_values_to_tensor(
-      make_not_null(&d_spacetime_metric));
-
-  // RHS: d_pi
-  d_pi_type& d_pi = get<::Tags::TempTensor<33, d_pi_type>>(vars);
-  BenchmarkHelpers::assign_unique_values_to_tensor(make_not_null(&d_pi));
-
-  // RHS: d_phi
-  d_phi_type& d_phi = get<::Tags::TempTensor<34, d_phi_type>>(vars);
-  BenchmarkHelpers::assign_unique_values_to_tensor(make_not_null(&d_phi));
-
-  // RHS: spacetime_metric
-  spacetime_metric_type& spacetime_metric =
-      get<::Tags::TempTensor<35, spacetime_metric_type>>(vars);
-  BenchmarkHelpers::assign_unique_values_to_tensor(
-      make_not_null(&spacetime_metric));
-
-  // RHS: pi
-  pi_type& pi = get<::Tags::TempTensor<36, pi_type>>(vars);
-  BenchmarkHelpers::assign_unique_values_to_tensor(make_not_null(&pi));
-  // RHS: phi
-  phi_type& phi = get<::Tags::TempTensor<37, phi_type>>(vars);
-  BenchmarkHelpers::assign_unique_values_to_tensor(make_not_null(&phi));
-
-  // RHS: gamma0
-  gamma0_type& gamma0 = get<::Tags::TempTensor<38, gamma0_type>>(vars);
-  BenchmarkHelpers::assign_unique_values_to_tensor(make_not_null(&gamma0));
-
-  // RHS: gamma1
-  gamma1_type& gamma1 = get<::Tags::TempTensor<39, gamma1_type>>(vars);
-  BenchmarkHelpers::assign_unique_values_to_tensor(make_not_null(&gamma1));
-
-  // RHS: gamma2
-  gamma2_type& gamma2 = get<::Tags::TempTensor<40, gamma2_type>>(vars);
-  BenchmarkHelpers::assign_unique_values_to_tensor(make_not_null(&gamma2));
-
-  // RHS: inertial_coords
-  inertial_coords_type& inertial_coords =
-      get<::Tags::TempTensor<41, inertial_coords_type>>(vars);
-  BenchmarkHelpers::assign_unique_values_to_tensor(
-      make_not_null(&inertial_coords));
-
-  // RHS: inverse_jacobian
-  inverse_jacobian_type& inverse_jacobian =
-      get<::Tags::TempTensor<42, inverse_jacobian_type>>(vars);
-  BenchmarkHelpers::assign_unique_values_to_tensor(
-      make_not_null(&inverse_jacobian));
-
-  // RHS: mesh_velocity
-  mesh_velocity_type& mesh_velocity =
-      get<::Tags::TempTensor<43, mesh_velocity_type>>(vars);
-  BenchmarkHelpers::assign_unique_values_to_tensor(
-      make_not_null(&mesh_velocity));
-
-  // LHS: dt_spacetime_metric
-  dt_spacetime_metric_type& dt_spacetime_metric =
-      get<::Tags::TempTensor<0, dt_spacetime_metric_type>>(vars);
-
-  // LHS: dt_pi
-  dt_pi_type& dt_pi = get<::Tags::TempTensor<1, dt_pi_type>>(vars);
-
-  // LHS: dt_phi
-  dt_phi_type& dt_phi = get<::Tags::TempTensor<2, dt_phi_type>>(vars);
-
-  // LHS: temp_gamma1
-  temp_gamma1_type& temp_gamma1 =
-      get<::Tags::TempTensor<3, temp_gamma1_type>>(vars);
-
-  // LHS: temp_gamma2
-  temp_gamma2_type& temp_gamma2 =
-      get<::Tags::TempTensor<4, temp_gamma2_type>>(vars);
-
-  // LHS: temp_gauge_function
-  temp_gauge_function_type& temp_gauge_function =
-      get<::Tags::TempTensor<5, temp_gauge_function_type>>(vars);
-
-  // LHS: temp_spacetime_deriv_gauge_function
-  temp_spacetime_deriv_gauge_function_type&
-      temp_spacetime_deriv_gauge_function =
-          get<::Tags::TempTensor<6, temp_spacetime_deriv_gauge_function_type>>(
-              vars);
-
-  // LHS: gamma1gamma2
-  gamma1gamma2_type& gamma1gamma2 =
-      get<::Tags::TempTensor<7, gamma1gamma2_type>>(vars);
-
-  // LHS: half_pi_two_normals
-  half_pi_two_normals_type& half_pi_two_normals =
-      get<::Tags::TempTensor<8, half_pi_two_normals_type>>(vars);
-
-  // LHS: normal_dot_gauge_constraint
-  normal_dot_gauge_constraint_type& normal_dot_gauge_constraint =
-      get<::Tags::TempTensor<9, normal_dot_gauge_constraint_type>>(vars);
-
-  // LHS: gamma1_plus_1
-  gamma1_plus_1_type& gamma1_plus_1 =
-      get<::Tags::TempTensor<10, gamma1_plus_1_type>>(vars);
-
-  // LHS: pi_one_normal
-  pi_one_normal_type& pi_one_normal =
-      get<::Tags::TempTensor<11, pi_one_normal_type>>(vars);
-
-  // LHS: gauge_constraint
-  gauge_constraint_type& gauge_constraint =
-      get<::Tags::TempTensor<12, gauge_constraint_type>>(vars);
-
-  // LHS: half_phi_two_normals
-  half_phi_two_normals_type& half_phi_two_normals =
-      get<::Tags::TempTensor<13, half_phi_two_normals_type>>(vars);
-
-  // LHS: shift_dot_three_index_constraint
-  shift_dot_three_index_constraint_type& shift_dot_three_index_constraint =
-      get<::Tags::TempTensor<14, shift_dot_three_index_constraint_type>>(vars);
-
-  // LHS: mesh_velocity_dot_three_index_constraint
-  mesh_velocity_dot_three_index_constraint_type&
-      mesh_velocity_dot_three_index_constraint = get<::Tags::TempTensor<
-          15, mesh_velocity_dot_three_index_constraint_type>>(vars);
-
-  // LHS: phi_one_normal
-  phi_one_normal_type& phi_one_normal =
-      get<::Tags::TempTensor<16, phi_one_normal_type>>(vars);
-
-  // LHS: pi_2_up
-  pi_2_up_type& pi_2_up = get<::Tags::TempTensor<17, pi_2_up_type>>(vars);
-
-  // LHS: three_index_constraint
-  three_index_constraint_type& three_index_constraint =
-      get<::Tags::TempTensor<18, three_index_constraint_type>>(vars);
-
-  // LHS: phi_1_up
-  phi_1_up_type& phi_1_up = get<::Tags::TempTensor<19, phi_1_up_type>>(vars);
-
-  // LHS: phi_3_up
-  phi_3_up_type& phi_3_up = get<::Tags::TempTensor<20, phi_3_up_type>>(vars);
-
-  // LHS: christoffel_first_kind_3_up
-  christoffel_first_kind_3_up_type& christoffel_first_kind_3_up =
-      get<::Tags::TempTensor<21, christoffel_first_kind_3_up_type>>(vars);
-
-  // LHS: lapse
-  lapse_type& lapse = get<::Tags::TempTensor<22, lapse_type>>(vars);
-
-  // LHS: shift
-  shift_type& shift = get<::Tags::TempTensor<23, shift_type>>(vars);
-
-  // LHS: inverse_spatial_metric
-  inverse_spatial_metric_type& inverse_spatial_metric =
-      get<::Tags::TempTensor<24, inverse_spatial_metric_type>>(vars);
-
-  // LHS: det_spatial_metric
-  det_spatial_metric_type& det_spatial_metric =
-      get<::Tags::TempTensor<25, det_spatial_metric_type>>(vars);
-
-  // LHS: sqrt_det_spatial_metric
-  sqrt_det_spatial_metric_type& sqrt_det_spatial_metric =
-      get<::Tags::TempTensor<26, sqrt_det_spatial_metric_type>>(vars);
-
-  // LHS: inverse_spacetime_metric
-  inverse_spacetime_metric_type& inverse_spacetime_metric =
-      get<::Tags::TempTensor<27, inverse_spacetime_metric_type>>(vars);
-
-  // LHS: christoffel_first_kind
-  christoffel_first_kind_type& christoffel_first_kind =
-      get<::Tags::TempTensor<28, christoffel_first_kind_type>>(vars);
-
-  // LHS: christoffel_second_kind
-  christoffel_second_kind_type& christoffel_second_kind =
-      get<::Tags::TempTensor<29, christoffel_second_kind_type>>(vars);
-
-  // LHS: trace_christoffel
-  trace_christoffel_type& trace_christoffel =
-      get<::Tags::TempTensor<30, trace_christoffel_type>>(vars);
-
-  // LHS: normal_spacetime_vector
-  normal_spacetime_vector_type& normal_spacetime_vector =
-      get<::Tags::TempTensor<31, normal_spacetime_vector_type>>(vars);
-
-  for (auto _ : state) {
-    gh::OgTimeDerivative<Dim>::apply(
-        make_not_null(&dt_spacetime_metric), make_not_null(&dt_pi),
-        make_not_null(&dt_phi), make_not_null(&temp_gamma1),
-        make_not_null(&temp_gamma2), make_not_null(&temp_gauge_function),
-        make_not_null(&temp_spacetime_deriv_gauge_function),
-        make_not_null(&gamma1gamma2), make_not_null(&half_pi_two_normals),
-        make_not_null(&normal_dot_gauge_constraint),
-        make_not_null(&gamma1_plus_1), make_not_null(&pi_one_normal),
-        make_not_null(&gauge_constraint), make_not_null(&half_phi_two_normals),
-        make_not_null(&shift_dot_three_index_constraint),
-        make_not_null(&mesh_velocity_dot_three_index_constraint),
-        make_not_null(&phi_one_normal), make_not_null(&pi_2_up),
-        make_not_null(&three_index_constraint), make_not_null(&phi_1_up),
-        make_not_null(&phi_3_up), make_not_null(&christoffel_first_kind_3_up),
-        make_not_null(&lapse), make_not_null(&shift),
-        make_not_null(&inverse_spatial_metric),
-        make_not_null(&det_spatial_metric),
-        make_not_null(&sqrt_det_spatial_metric),
-        make_not_null(&inverse_spacetime_metric),
-        make_not_null(&christoffel_first_kind),
-        make_not_null(&christoffel_second_kind),
-        make_not_null(&trace_christoffel),
-        make_not_null(&normal_spacetime_vector), d_spacetime_metric, d_pi,
-        d_phi, spacetime_metric, pi, phi, gamma0, gamma1, gamma2,
-        gauge_condition, mesh, time, inertial_coords, inverse_jacobian,
-        mesh_velocity);
-    benchmark::DoNotOptimize(dt_spacetime_metric);
-    benchmark::DoNotOptimize(dt_pi);
-    benchmark::DoNotOptimize(dt_phi);
-    benchmark::ClobberMemory();
-  }
-}
-
-void bench_time_derivative(benchmark::State& state) {  // NOLINT
-  const std::array<size_t, Dim> extents = {
-      {static_cast<size_t>(state.range(1)), static_cast<size_t>(state.range(2)),
-       static_cast<size_t>(state.range(3))}};
+void bench(benchmark::State& state) {  // NOLINT
+  const std::array<size_t, Dim> extents =
+      BenchmarkHelpers::get_extents_from_state<Dim>(state);
   const size_t total_num_grid_points = static_cast<size_t>(state.range(0));
   (void)total_num_grid_points;
   assertm(
@@ -801,29 +461,10 @@ struct run_benchmark_case<Func, NumberOfCases, 1> {
     const size_t total_num_grid_points =
         BenchmarkHelpers::get_total_num_grid_points(extents[I]);
 
-    if constexpr (Func == Function::LogicalPartialDerivatives) {
-      BENCHMARK(bench_logical_partial_derivatives)
-          ->Name(name_prefix)
-          ->Args({static_cast<long int>(total_num_grid_points),
-                  static_cast<long int>(extents[I][0])});
-    } else if constexpr (Func == Function::PartialDerivatives) {
-      BENCHMARK(bench_partial_derivatives)
-          ->Name(name_prefix)
-          ->Args({static_cast<long int>(total_num_grid_points),
-                  static_cast<long int>(extents[I][0])});
-    } else if constexpr (Func == Function::OgTimeDerivative) {
-      BENCHMARK(bench_og_time_derivative)
-          ->Name(name_prefix)
-          ->Args({static_cast<long int>(total_num_grid_points),
-                  static_cast<long int>(extents[I][0])});
-    } else if constexpr (Func == Function::TimeDerivative) {
-      BENCHMARK(bench_time_derivative)
-          ->Name(name_prefix)
-          ->Args({static_cast<long int>(total_num_grid_points),
-                  static_cast<long int>(extents[I][0])});
-    } else {
-      static_assert("Unknown function");
-    }
+    BENCHMARK(bench)
+        ->Name(name_prefix)
+        ->Args({static_cast<long int>(total_num_grid_points),
+                static_cast<long int>(extents[I][0])});
   }
 };
 template <Function Func, size_t NumberOfCases>
@@ -843,33 +484,11 @@ struct run_benchmark_case<Func, NumberOfCases, 2> {
     const size_t total_num_grid_points =
         BenchmarkHelpers::get_total_num_grid_points(extents[I]);
 
-    if constexpr (Func == Function::LogicalPartialDerivatives) {
-      BENCHMARK(bench_logical_partial_derivatives)
-          ->Name(name_prefix)
-          ->Args({static_cast<long int>(total_num_grid_points),
-                  static_cast<long int>(extents[I][0]),
-                  static_cast<long int>(extents[I][1])});
-    } else if constexpr (Func == Function::PartialDerivatives) {
-      BENCHMARK(bench_partial_derivatives)
-          ->Name(name_prefix)
-          ->Args({static_cast<long int>(total_num_grid_points),
-                  static_cast<long int>(extents[I][0]),
-                  static_cast<long int>(extents[I][1])});
-    } else if constexpr (Func == Function::OgTimeDerivative) {
-      BENCHMARK(bench_og_time_derivative)
-          ->Name(name_prefix)
-          ->Args({static_cast<long int>(total_num_grid_points),
-                  static_cast<long int>(extents[I][0]),
-                  static_cast<long int>(extents[I][1])});
-    } else if constexpr (Func == Function::TimeDerivative) {
-      BENCHMARK(bench_time_derivative)
-          ->Name(name_prefix)
-          ->Args({static_cast<long int>(total_num_grid_points),
-                  static_cast<long int>(extents[I][0]),
-                  static_cast<long int>(extents[I][1])});
-    } else {
-      static_assert("Unknown function");
-    }
+    BENCHMARK(bench)
+        ->Name(name_prefix)
+        ->Args({static_cast<long int>(total_num_grid_points),
+                static_cast<long int>(extents[I][0]),
+                static_cast<long int>(extents[I][1])});
   }
 };
 template <Function Func, size_t NumberOfCases>
@@ -889,37 +508,12 @@ struct run_benchmark_case<Func, NumberOfCases, 3> {
     const size_t total_num_grid_points =
         BenchmarkHelpers::get_total_num_grid_points(extents[I]);
 
-    if constexpr (Func == Function::LogicalPartialDerivatives) {
-      BENCHMARK(bench_logical_partial_derivatives)
-          ->Name(name_prefix)
-          ->Args({static_cast<long int>(total_num_grid_points),
-                  static_cast<long int>(extents[I][0]),
-                  static_cast<long int>(extents[I][1]),
-                  static_cast<long int>(extents[I][2])});
-    } else if constexpr (Func == Function::PartialDerivatives) {
-      BENCHMARK(bench_partial_derivatives)
-          ->Name(name_prefix)
-          ->Args({static_cast<long int>(total_num_grid_points),
-                  static_cast<long int>(extents[I][0]),
-                  static_cast<long int>(extents[I][1]),
-                  static_cast<long int>(extents[I][2])});
-    } else if constexpr (Func == Function::OgTimeDerivative) {
-      BENCHMARK(bench_og_time_derivative)
-          ->Name(name_prefix)
-          ->Args({static_cast<long int>(total_num_grid_points),
-                  static_cast<long int>(extents[I][0]),
-                  static_cast<long int>(extents[I][1]),
-                  static_cast<long int>(extents[I][2])});
-    } else if constexpr (Func == Function::TimeDerivative) {
-      BENCHMARK(bench_time_derivative)
-          ->Name(name_prefix)
-          ->Args({static_cast<long int>(total_num_grid_points),
-                  static_cast<long int>(extents[I][0]),
-                  static_cast<long int>(extents[I][1]),
-                  static_cast<long int>(extents[I][2])});
-    } else {
-      static_assert("Unknown function");
-    }
+    BENCHMARK(bench)
+        ->Name(name_prefix)
+        ->Args({static_cast<long int>(total_num_grid_points),
+                static_cast<long int>(extents[I][0]),
+                static_cast<long int>(extents[I][1]),
+                static_cast<long int>(extents[I][2])});
   }
 };
 
@@ -945,16 +539,7 @@ void run_benchmark_cases(
       extents, std::make_index_sequence<num_cases_to_run>{});
 }
 
-void run_benchmark() {
-  // Cases run with different numbers of grid points
-  constexpr std::array<std::array<size_t, Dim>, total_num_cases> extents =
-      BenchmarkHelpers::extents<Dim, grid_points_list_type>;
-
-  run_benchmark_cases<Function::LogicalPartialDerivatives>(extents);
-  run_benchmark_cases<Function::PartialDerivatives>(extents);
-  run_benchmark_cases<Function::OgTimeDerivative>(extents);
-  run_benchmark_cases<Function::TimeDerivative>(extents);
-}
+void run_benchmark() { run_benchmark_cases<FunctionToRun>(extents_to_run); }
 }  // namespace
 
 // // Ignore the warning about an extra ';' because some versions of benchmark
