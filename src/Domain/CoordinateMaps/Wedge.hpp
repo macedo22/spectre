@@ -196,7 +196,7 @@ struct WedgeCoordOrientation<3> {
  * We constrain $L$ by demanding that the spherical face circumscribe the cube.
  * With this condition, we have \f$L = R/\sqrt3\f$.
  * \note This differs from the choice in SpEC where it is demanded that the
- * surfaces touch at the center, which leads to \f$L = R\f$.
+ * surfaces touch at the cube face centers, which leads to \f$L = R\f$.
  *
  * ### The Full Volume Map
  * The final map for the wedge which lies along the \f$+z\f$ axis is obtained
@@ -496,7 +496,7 @@ struct WedgeCoordOrientation<3> {
  * we say that a curve $\vec{\Gamma}(\xi)$ is parameterized *equiangularly* if
  *
  * \begin{align}
- *   \frac{\mathrm{d}\theta}{\mathrm{d}\xi} = C.
+ *   \frac{\mathrm{d}\theta}{\mathrm{d}\xi} = \text{const}.
  * \end{align}
  *
  * As for the map
