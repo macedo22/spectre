@@ -6,6 +6,7 @@
 #include <climits>
 #include <cmath>
 #include <cstddef>
+#include <optional>
 #include <pup.h>
 
 #include "DataStructures/Tensor/EagerMath/Determinant.hpp"
@@ -19,14 +20,53 @@
 #include "Utilities/ErrorHandling/Assert.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/MakeWithValue.hpp"
+#include "Utilities/Serialization/PupStlCpp17.hpp"
 
 namespace domain::CoordinateMaps {
+namespace {
+template <size_t Dim>
+void run_shared_asserts(const double radius_inner,
+                        const std::optional<double> radius_outer,
+                        const double sphericity_inner,
+                        const double sphericity_outer,
+                        const Distribution radial_distribution,
+                        const OrientationMap<Dim>& orientation_of_wedge,
+                        const std::array<double, Dim>& focal_offset) {
+  const double sqrt_dim = sqrt(Dim);
+  const bool zero_offset = (focal_offset == make_array<Dim, double>(0.0));
+
+  ASSERT(radius_inner > 0.0,
+         "The radius of the inner surface must be greater than zero.");
+  if (zero_offset or sphericity_outer == 1.0) {
+    // radius_outer should have a value
+    ASSERT(radius_outer.value() > radius_inner,
+           "The radius of the outer surface must be greater than the radius of "
+           "the inner surface.");
+  }
+  ASSERT(radial_distribution == Distribution::Linear or
+             (sphericity_inner == 1.0 and sphericity_outer == 1.0),
+         "Only the 'Linear' radial distribution is supported for non-spherical "
+         "wedges.");
+  if (zero_offset) {
+    // radius_outer should have a value
+    ASSERT(radius_outer.value() *
+                   ((1.0 - sphericity_outer) / sqrt_dim + sphericity_outer) >
+               radius_inner *
+                   ((1.0 - sphericity_inner) / sqrt_dim + sphericity_inner),
+           "The arguments passed into the constructor for Wedge result in an "
+           "object where the outer surface is pierced by the inner surface.");
+  }
+  ASSERT(
+      get(determinant(discrete_rotation_jacobian(orientation_of_wedge))) > 0.0,
+      "Wedge rotations must be done in such a manner that the sign of "
+      "the determinant of the discrete rotation is positive. This is to "
+      "preserve handedness of the coordinates.");
+}
+}  // namespace
 
 template <size_t Dim>
 Wedge<Dim>::Wedge(const double radius_inner, const double radius_outer,
                   const double sphericity_inner, const double sphericity_outer,
-                  const double cube_half_length,
-                  const std::array<double, Dim> focal_offset,
                   OrientationMap<Dim> orientation_of_wedge,
                   const bool with_equiangular_map,
                   const WedgeHalves halves_to_use,
@@ -37,109 +77,37 @@ Wedge<Dim>::Wedge(const double radius_inner, const double radius_outer,
       radius_outer_(radius_outer),
       sphericity_inner_(sphericity_inner),
       sphericity_outer_(sphericity_outer),
-      cube_half_length_(cube_half_length),
-      focal_offset_(focal_offset),
+      cube_half_length_(std::nullopt),
+      focal_offset_(make_array<Dim, double>(0.0)),
       orientation_of_wedge_(std::move(orientation_of_wedge)),
       with_equiangular_map_(with_equiangular_map),
       halves_to_use_(halves_to_use),
       radial_distribution_(radial_distribution),
       opening_angles_(opening_angles) {
-  const double sqrt_dim = sqrt(double{Dim});
-  const bool approx_zero_offset =
-      equal_within_roundoff(magnitude(focal_offset_), 0.0);
-  ASSERT(radius_inner > 0.0,
-         "The radius of the inner surface must be greater than zero.");
   ASSERT(sphericity_inner >= 0.0 and sphericity_inner <= 1.0,
          "Sphericity of the inner surface must be between 0 and 1");
   ASSERT(sphericity_outer >= 0.0 and sphericity_outer <= 1.0,
          "Sphericity of the outer surface must be between 0 and 1");
-  ASSERT(radius_outer > radius_inner,
-         "The radius of the outer surface must be greater than the radius of "
-         "the inner surface.");
-  ASSERT(radial_distribution_ == Distribution::Linear or
-             (sphericity_inner_ == 1.0 and sphericity_outer_ == 1.0),
-         "Only the 'Linear' radial distribution is supported for non-spherical "
-         "wedges.");
-  ASSERT(
-      get(determinant(discrete_rotation_jacobian(orientation_of_wedge_))) > 0.0,
-      "Wedge rotations must be done in such a manner that the sign of "
-      "the determinant of the discrete rotation is positive. This is to "
-      "preserve handedness of the coordinates.");
-  ASSERT(approx_zero_offset or (opening_angles_ == make_array<Dim - 1>(M_PI_2)),
-         "Cannot use both a non-zero focal offset and opening angles not equal "
-         "to pi/2.");
+  run_shared_asserts(radius_inner_, radius_outer_, sphericity_inner_,
+                     sphericity_outer_, radial_distribution_,
+                     orientation_of_wedge_, focal_offset_);
   ASSERT(opening_angles_ != make_array<Dim - 1>(M_PI_2) ? with_equiangular_map
                                                         : true,
          "If using opening angles other than pi/2, then the "
          "equiangular map option must be turned on.");
 
-  if (approx_zero_offset) {
-    ASSERT(radius_outer *
-                   ((1.0 - sphericity_outer_) / sqrt_dim + sphericity_outer_) >
-               radius_inner *
-                   ((1.0 - sphericity_inner) / sqrt_dim + sphericity_inner),
-           "The arguments passed into the constructor for Wedge result in an "
-           "object where the outer surface is pierced by the inner surface.");
-  } else {
-    ASSERT(sphericity_inner_ == 1.0,
-           "Focal offsets are not supported for inner sphericity < 1.0");
-    ASSERT(sphericity_outer_ == 0.0 or sphericity_outer_ == 1.0,  // NOLINT
-           "Focal offsets are only supported for wedges with outer sphericity "
-           "of 1.0 or 0.0");
-
-    // coord of focal_offset_ with largest magnitude
-    const double max_abs_focal_offset_coord = *alg::max_element(
-        focal_offset_,
-        [](const int& a, const int& b) { return abs(a) < abs(b); });
-
-    if (sphericity_outer_ == 1.0) {
-      // note: this assert may be more restrictive than we need, can be revisted
-      // if needed
-      ASSERT(
-          max_abs_focal_offset_coord + radius_outer_ < cube_half_length_,
-          "For a spherical focally offset Wedge, the sum of the outer radius "
-          "and the coordinate of the focal offset with the largest magnitude "
-          "must be less than the cube half length. In other words, the "
-          "spherical surface at the given outer radius centered at the focal "
-          "offset must not pierce the cube of length 2 * cube_half_length_ "
-          "centered at the origin. See the Wedge class documentation for a "
-          "visual representation of this sphere and cube.");
-
-    } else if (sphericity_outer_ == 0.0) {
-      // if sphericity_outer_= 0.0, the outer surface of the Wedge is the parent
-      // surface
-      ASSERT(
-          max_abs_focal_offset_coord + radius_inner_ < cube_half_length_,
-          "For a cubical focally offset Wedge, the sum of the inner radius "
-          "and the coordinate of the focal offset with the largest magnitude "
-          "must be less than the cube half length. In other words, the "
-          "spherical surface at the given inner radius centered at the focal "
-          "offset must not pierce the cube of length 2 * cube_half_length_ "
-          "centered at the origin. See the Wedge class documentation for a "
-          "visual representation of this sphere and cube.");
-    }
-  }
-
   if (radial_distribution_ == Distribution::Linear) {
+    const double sqrt_dim = sqrt(double{Dim});
     sphere_zero_ = 0.5 * (sphericity_outer_ * radius_outer +
                           sphericity_inner * radius_inner);
     sphere_rate_ = 0.5 * (sphericity_outer_ * radius_outer -
                           sphericity_inner * radius_inner);
-    if (approx_zero_offset) {
-      scaled_frustum_zero_ = 0.5 / sqrt_dim *
-                             ((1.0 - sphericity_outer_) * radius_outer +
-                              (1.0 - sphericity_inner) * radius_inner);
-      scaled_frustum_rate_ = 0.5 / sqrt_dim *
-                             ((1.0 - sphericity_outer_) * radius_outer -
-                              (1.0 - sphericity_inner) * radius_inner);
-    } else {
-      scaled_frustum_zero_ =
-          0.5 * cube_half_length_ *
-          ((1.0 - sphericity_outer_) + (1.0 - sphericity_inner));
-      scaled_frustum_rate_ =
-          0.5 * cube_half_length_ *
-          ((1.0 - sphericity_outer_) - (1.0 - sphericity_inner));
-    }
+    scaled_frustum_zero_ = 0.5 / sqrt_dim *
+                           ((1.0 - sphericity_outer_) * radius_outer +
+                            (1.0 - sphericity_inner) * radius_inner);
+    scaled_frustum_rate_ = 0.5 / sqrt_dim *
+                           ((1.0 - sphericity_outer_) * radius_outer -
+                            (1.0 - sphericity_inner) * radius_inner);
   } else if (radial_distribution_ == Distribution::Logarithmic) {
     scaled_frustum_zero_ = 0.0;
     sphere_zero_ = 0.5 * (log(radius_outer * radius_inner));
@@ -166,6 +134,242 @@ Wedge<Dim>::Wedge(const double radius_inner, const double radius_outer,
 }
 
 template <size_t Dim>
+Wedge<Dim>::Wedge(
+    const double radius_inner, const std::optional<double> radius_outer,
+    const double cube_half_length, const std::array<double, Dim> focal_offset,
+    OrientationMap<Dim> orientation_of_wedge, const bool with_equiangular_map,
+    const WedgeHalves halves_to_use, const Distribution radial_distribution)
+    : radius_inner_(radius_inner),
+      radius_outer_((focal_offset == make_array<Dim>(0.0))
+                        ? (radius_outer.has_value()
+                               ? radius_outer.value()
+                               : sqrt(Dim) * cube_half_length)
+                        : radius_outer),
+      sphericity_inner_(1.0),
+      sphericity_outer_(radius_outer.has_value() ? 1.0 : 0.0),
+      cube_half_length_((focal_offset == make_array<Dim>(0.0))
+                            ? std::nullopt
+                            : std::optional<double>(cube_half_length)),
+      focal_offset_(focal_offset),
+      orientation_of_wedge_(std::move(orientation_of_wedge)),
+      with_equiangular_map_(with_equiangular_map),
+      halves_to_use_(halves_to_use),
+      radial_distribution_(radial_distribution),
+      opening_angles_((focal_offset == make_array<Dim>(0.0))
+                          ? std::optional<std::array<double, Dim - 1>>(
+                                make_array<Dim - 1>(M_PI_2))
+                          : std::nullopt),
+      opening_angles_distribution_(
+          (focal_offset == make_array<Dim>(0.0))
+              ? std::optional<std::array<double, Dim - 1>>(
+                    make_array<Dim - 1>(M_PI_2))
+              : std::nullopt) {
+  run_shared_asserts(radius_inner_, radius_outer_, sphericity_inner_,
+                     sphericity_outer_, radial_distribution_,
+                     orientation_of_wedge_, focal_offset_);
+
+  const bool zero_offset = (focal_offset_ == make_array<Dim, double>(0.0));
+  if (not zero_offset) {
+    // Do checks specific to an offset Wedge
+    ASSERT(sphericity_inner_ == 1.0,
+           "Focal offsets are not supported for inner sphericity < 1.0");
+    ASSERT(sphericity_outer_ == 0.0 or sphericity_outer_ == 1.0,  // NOLINT
+           "Focal offsets are only supported for wedges with outer sphericity "
+           "of 1.0 or 0.0");
+
+    // coord of focal_offset_ with largest magnitude
+    const double max_abs_focal_offset_coord = *alg::max_element(
+        focal_offset_,
+        [](const int& a, const int& b) { return abs(a) < abs(b); });
+
+    if (sphericity_outer_ == 1.0) {
+      // note: this assert may be more restrictive than we need, can be revisted
+      // if needed
+      ASSERT(
+          max_abs_focal_offset_coord + radius_outer_.value() <
+              cube_half_length_.value(),
+          "For a spherical focally offset Wedge, the sum of the outer radius "
+          "and the coordinate of the focal offset with the largest magnitude "
+          "must be less than the cube half length. In other words, the "
+          "spherical surface at the given outer radius centered at the focal "
+          "offset must not pierce the cube of length 2 * cube_half_length_ "
+          "centered at the origin. See the Wedge class documentation for a "
+          "visual representation of this sphere and cube.");
+
+    } else {
+      // if sphericity_outer_= 0.0, the outer surface of the Wedge is the parent
+      // surface
+      ASSERT(
+          max_abs_focal_offset_coord + radius_inner_ <
+              cube_half_length_.value(),
+          "For a cubical focally offset Wedge, the sum of the inner radius "
+          "and the coordinate of the focal offset with the largest magnitude "
+          "must be less than the cube half length. In other words, the "
+          "spherical surface at the given inner radius centered at the focal "
+          "offset must not pierce the cube of length 2 * cube_half_length_ "
+          "centered at the origin. See the Wedge class documentation for a "
+          "visual representation of this sphere and cube.");
+    }
+  }
+
+  if (radial_distribution_ == Distribution::Linear) {
+    if (sphericity_outer_ == 0.0) {
+      sphere_zero_ = 0.5 * (sphericity_inner_ * radius_inner);
+      sphere_rate_ = -0.5 * (sphericity_inner_ * radius_inner);
+    } else if (sphericity_outer_ == 1.0) {
+      sphere_zero_ =
+          0.5 * (radius_outer_.value() + sphericity_inner_ * radius_inner);
+      sphere_rate_ =
+          0.5 * (radius_outer_.value() - sphericity_inner_ * radius_inner);
+    } else {
+      ERROR("Unsupported outer sphericity : " << sphericity_outer_);
+    }
+
+    if (zero_offset) {
+      // Do what the centered Wedge constructor does
+      const double sqrt_dim = sqrt(double{Dim});
+      scaled_frustum_zero_ =
+          0.5 / sqrt_dim *
+          ((1.0 - sphericity_outer_) * radius_outer_.value() +
+           (1.0 - sphericity_inner_) * radius_inner);
+      scaled_frustum_rate_ =
+          0.5 / sqrt_dim *
+          ((1.0 - sphericity_outer_) * radius_outer_.value() -
+           (1.0 - sphericity_inner_) * radius_inner);
+    } else {
+      scaled_frustum_zero_ =
+          0.5 * cube_half_length_.value() *
+          ((1.0 - sphericity_outer_) + (1.0 - sphericity_inner_));
+      scaled_frustum_rate_ =
+          0.5 * cube_half_length_.value() *
+          ((1.0 - sphericity_outer_) - (1.0 - sphericity_inner_));
+    }
+  } else if (radial_distribution_ == Distribution::Logarithmic) {
+    // radius_outer_ will have a value because Distribution::Logarithmic only
+    // supported for spherical wedges
+    scaled_frustum_zero_ = 0.0;
+    sphere_zero_ = 0.5 * (log(radius_outer_.value() * radius_inner));
+    scaled_frustum_rate_ = 0.0;
+    sphere_rate_ = 0.5 * (log(radius_outer_.value() / radius_inner));
+  } else if (radial_distribution_ == Distribution::Inverse) {
+    scaled_frustum_zero_ = 0.0;
+    // Most places where sphere_zero_ and sphere_rate_ would be used
+    // would cause precision issues for large wedges, so we don't
+    // define them.
+    // 0.5 * (radius_inner + radius_outer) / radius_inner / radius_outer;
+    sphere_zero_ = std::numeric_limits<double>::signaling_NaN();
+    scaled_frustum_rate_ = 0.0;
+    // 0.5 * (radius_inner - radius_outer) / radius_inner / radius_outer;
+    sphere_rate_ = std::numeric_limits<double>::signaling_NaN();
+  } else {
+    ERROR("Unsupported radial distribution: " << radial_distribution_);
+  }
+}
+
+template <size_t Dim>
+template <bool FuncIsXi, typename T>
+tt::remove_cvref_wrap_t<T> Wedge<Dim>::get_cap_angular_function(
+    const T& lowercase_xi_or_eta) const {
+  const bool zero_offset = (focal_offset_ == make_array<Dim, double>(0.0));
+  constexpr auto cap_index = static_cast<size_t>(not FuncIsXi);
+
+  return zero_offset
+             ? (with_equiangular_map_
+                    ? tan(0.5 * opening_angles_.value()[cap_index]) *
+                          tan(0.5 *
+                              opening_angles_distribution_.value()[cap_index] *
+                              lowercase_xi_or_eta) /
+                          tan(0.5 *
+                              opening_angles_distribution_.value()[cap_index])
+                    : lowercase_xi_or_eta)
+             : (with_equiangular_map_ ? tan(M_PI_4 * lowercase_xi_or_eta)
+                                      : lowercase_xi_or_eta);
+}
+
+template <size_t Dim>
+template <bool FuncIsXi, typename T>
+tt::remove_cvref_wrap_t<T> Wedge<Dim>::get_deriv_cap_angular_function(
+    const T& lowercase_xi_or_eta) const {
+  using ReturnType = tt::remove_cvref_wrap_t<T>;
+
+  const bool zero_offset = (focal_offset_ == make_array<Dim, double>(0.0));
+  constexpr auto cap_index = static_cast<size_t>(not FuncIsXi);
+
+  return zero_offset
+             ? (with_equiangular_map_
+                    ? 0.5 * opening_angles_distribution_.value()[cap_index] *
+                          tan(0.5 * opening_angles_.value()[cap_index]) /
+                          tan(0.5 *
+                              opening_angles_distribution_.value()[cap_index]) /
+                          square(cos(
+                              0.5 *
+                              opening_angles_distribution_.value()[cap_index] *
+                              lowercase_xi_or_eta))
+                    : make_with_value<ReturnType>(lowercase_xi_or_eta, 1.0))
+             : (with_equiangular_map_
+                    ? M_PI_4 / square(cos(M_PI_4 * lowercase_xi_or_eta))
+                    : make_with_value<ReturnType>(lowercase_xi_or_eta, 1.0));
+}
+
+template <size_t Dim>
+template <typename T>
+std::array<tt::remove_cvref_wrap_t<T>, Dim> Wedge<Dim>::get_rho_vec(
+    const std::array<double, Dim>& rotated_focus,
+    const std::array<tt::remove_cvref_wrap_t<T>, Dim - 1>& cap) const {
+  using ReturnType = tt::remove_cvref_wrap_t<T>;
+
+  const bool zero_offset = (focal_offset_ == make_array<Dim, double>(0.0));
+
+  std::array<ReturnType, Dim> rho_vec{};
+  rho_vec[polar_coord] =
+      zero_offset
+          ? cap[0]
+          : (cap[0] - rotated_focus[polar_coord] / cube_half_length_.value());
+  rho_vec[radial_coord] =
+      zero_offset ? make_with_value<ReturnType>(cap[0], 1.0)
+                  : make_with_value<ReturnType>(cap[0], 1.0) -
+                        rotated_focus[radial_coord] / cube_half_length_.value();
+  if constexpr (Dim == 3) {
+    rho_vec[azimuth_coord] =
+        zero_offset
+            ? cap[1]
+            : cap[1] - rotated_focus[azimuth_coord] / cube_half_length_.value();
+  }
+
+  return rho_vec;
+}
+
+template <size_t Dim>
+template <typename T>
+tt::remove_cvref_wrap_t<T> Wedge<Dim>::get_one_over_rho(
+    const std::array<double, Dim>& rotated_focus,
+    const std::array<tt::remove_cvref_wrap_t<T>, Dim - 1>& cap) const {
+  using ReturnType = tt::remove_cvref_wrap_t<T>;
+
+  ReturnType one_over_rho;
+
+  const bool zero_offset = (focal_offset_ == make_array<Dim, double>(0.0));
+  if (zero_offset) {
+    one_over_rho = 1.0 + square(cap[0]);
+  } else {
+    one_over_rho =
+        square(1.0 - rotated_focus[radial_coord] / cube_half_length_.value()) +
+        square(cap[0] - rotated_focus[polar_coord] / cube_half_length_.value());
+  }
+  if constexpr (Dim == 3) {
+    if (zero_offset) {
+      one_over_rho += square(cap[1]);
+    } else {
+      one_over_rho += square(cap[1] - rotated_focus[azimuth_coord] /
+                                          cube_half_length_.value());
+    }
+  }
+  one_over_rho = 1.0 / sqrt(one_over_rho);
+
+  return one_over_rho;
+}
+
+template <size_t Dim>
 template <typename T>
 tt::remove_cvref_wrap_t<T> Wedge<Dim>::get_s_factor(const T& zeta) const {
   if (radial_distribution_ == Distribution::Linear) {
@@ -173,7 +377,10 @@ tt::remove_cvref_wrap_t<T> Wedge<Dim>::get_s_factor(const T& zeta) const {
   } else if (radial_distribution_ == Distribution::Logarithmic) {
     return exp(sphere_zero_ + sphere_rate_ * zeta);
   } else if (radial_distribution_ == Distribution::Inverse) {
-    return 2.0 / ((1.0 + zeta) / radius_outer_ + (1.0 - zeta) / radius_inner_);
+    // radius_outer_ will have a value because Distribution::Inverse only
+    // supported for spherical wedges
+    return 2.0 / ((1.0 + zeta) / radius_outer_.value() +
+                  (1.0 - zeta) / radius_inner_);
   } else {
     ERROR("Unsupported radial distribution: " << radial_distribution_);
   }
@@ -186,13 +393,17 @@ tt::remove_cvref_wrap_t<T> Wedge<Dim>::get_s_factor_deriv(
   if (radial_distribution_ == Distribution::Linear) {
     return make_with_value<T>(zeta, sphere_rate_);
   } else if (radial_distribution_ == Distribution::Logarithmic) {
-    return 0.5 * s_factor * log(radius_outer_ / radius_inner_);
+    // radius_outer_ will have a value because Distribution::Logarithmic only
+    // supported for spherical wedges
+    return 0.5 * s_factor * log(radius_outer_.value() / radius_inner_);
   } else if (radial_distribution_ == Distribution::Inverse) {
+    // radius_outer_ will have a value because Distribution::Inverse only
+    // supported for spherical wedges
     return 2.0 *
-           ((radius_inner_ * square(radius_outer_)) -
-            square(radius_inner_) * radius_outer_) /
-           square(radius_inner_ + radius_outer_ +
-                  zeta * (radius_inner_ - radius_outer_));
+           ((radius_inner_ * square(radius_outer_.value())) -
+            square(radius_inner_) * radius_outer_.value()) /
+           square(radius_inner_ + radius_outer_.value() +
+                  zeta * (radius_inner_ - radius_outer_.value()));
   } else {
     ERROR("Unsupported radial distribution: " << radial_distribution_);
   }
@@ -275,45 +486,44 @@ std::array<tt::remove_cvref_wrap_t<T>, Dim> Wedge<Dim>::operator()(
     xi *= 0.5;
   }
 
-  const auto rotated_focus =
-      discrete_rotation(orientation_of_wedge_.inverse_map(), focal_offset_);
-
   std::array<ReturnType, Dim - 1> cap{};
-  cap[0] = with_equiangular_map_
-               ? tan(0.5 * opening_angles_[0]) *
-                     tan(0.5 * opening_angles_distribution_[0] * xi) /
-                     tan(0.5 * opening_angles_distribution_[0])
-               : xi;
-  ReturnType one_over_rho =
-      square(1.0 - rotated_focus[radial_coord] / cube_half_length_) +
-      square(cap[0] - rotated_focus[polar_coord] / cube_half_length_);
+  cap[0] = get_cap_angular_function<true>(xi);
   if constexpr (Dim == 3) {
     // Azimuthal angle
     const ReturnType& eta = source_coords[azimuth_coord];
-    cap[1] = with_equiangular_map_
-                 ? tan(0.5 * opening_angles_[1]) *
-                       tan(0.5 * opening_angles_distribution_[1] * eta) /
-                       tan(0.5 * opening_angles_distribution_[1])
-                 : eta;
-    one_over_rho +=
-        square(cap[1] - rotated_focus[azimuth_coord] / cube_half_length_);
+    cap[1] = get_cap_angular_function<false>(eta);
   }
-  one_over_rho = 1.0 / sqrt(one_over_rho);
 
+  const auto rotated_focus =
+      discrete_rotation(orientation_of_wedge_.inverse_map(), focal_offset_);
+  const ReturnType one_over_rho = get_one_over_rho<T>(rotated_focus, cap);
   const ReturnType generalized_z = get_generalized_z(zeta, one_over_rho);
+
+  const bool zero_offset = (focal_offset_ == make_array<Dim, double>(0.0));
+
   std::array<ReturnType, Dim> physical_coords{};
   physical_coords[radial_coord] =
-      generalized_z * (1.0 - rotated_focus[radial_coord] / cube_half_length_) +
-      rotated_focus[radial_coord];
-  physical_coords[polar_coord] =
-      generalized_z *
-          (cap[0] - rotated_focus[polar_coord] / cube_half_length_) +
-      rotated_focus[polar_coord];
-  if constexpr (Dim == 3) {
-    physical_coords[azimuth_coord] =
+      zero_offset ? generalized_z
+                  : generalized_z * (1.0 - rotated_focus[radial_coord] /
+                                               cube_half_length_.value()) +
+                        rotated_focus[radial_coord];
+  if (zero_offset) {
+    physical_coords[polar_coord] = generalized_z * cap[0];
+  } else {
+    physical_coords[polar_coord] =
         generalized_z *
-            (cap[1] - rotated_focus[azimuth_coord] / cube_half_length_) +
-        rotated_focus[azimuth_coord];
+            (cap[0] - rotated_focus[polar_coord] / cube_half_length_.value()) +
+        rotated_focus[polar_coord];
+  }
+  if constexpr (Dim == 3) {
+    if (zero_offset) {
+      physical_coords[azimuth_coord] = generalized_z * cap[1];
+    } else {
+      physical_coords[azimuth_coord] =
+          generalized_z * (cap[1] - rotated_focus[azimuth_coord] /
+                                        cube_half_length_.value()) +
+          rotated_focus[azimuth_coord];
+    }
   }
   return discrete_rotation(orientation_of_wedge_, std::move(physical_coords));
 }
@@ -332,19 +542,28 @@ std::optional<std::array<double, Dim>> Wedge<Dim>::inverse(
     return std::nullopt;
   }
 
+  const bool zero_offset = (focal_offset_ == make_array<Dim, double>(0.0));
+
   const double generalized_z =
-      (physical_coords[radial_coord] - rotated_focus[radial_coord]) /
-      (1.0 - rotated_focus[radial_coord] / cube_half_length_);
+      zero_offset
+          ? physical_coords[radial_coord]
+          : (physical_coords[radial_coord] - rotated_focus[radial_coord]) /
+                (1.0 - rotated_focus[radial_coord] / cube_half_length_.value());
   const double one_over_generalized_z = 1.0 / generalized_z;
 
   std::array<double, Dim - 1> cap{};
-  cap[0] = (physical_coords[polar_coord] - rotated_focus[polar_coord]) *
-               one_over_generalized_z +
-           rotated_focus[polar_coord] / cube_half_length_;
+  cap[0] = zero_offset
+               ? physical_coords[polar_coord] * one_over_generalized_z
+               : (physical_coords[polar_coord] - rotated_focus[polar_coord]) *
+                         one_over_generalized_z +
+                     rotated_focus[polar_coord] / cube_half_length_.value();
   if constexpr (Dim == 3) {
-    cap[1] = (physical_coords[azimuth_coord] - rotated_focus[azimuth_coord]) *
-                 one_over_generalized_z +
-             rotated_focus[azimuth_coord] / cube_half_length_;
+    cap[1] =
+        zero_offset
+            ? physical_coords[azimuth_coord] * one_over_generalized_z
+            : (physical_coords[azimuth_coord] - rotated_focus[azimuth_coord]) *
+                      one_over_generalized_z +
+                  rotated_focus[azimuth_coord] / cube_half_length_.value();
   }
 
   // Radial coordinate
@@ -374,19 +593,29 @@ std::optional<std::array<double, Dim>> Wedge<Dim>::inverse(
   } else if (radial_distribution_ == Distribution::Logarithmic) {
     zeta = (log(radius) - sphere_zero_) / sphere_rate_;
   } else if (radial_distribution_ == Distribution::Inverse) {
-    zeta = (radius_inner_ * (radius_outer_ / radius - 1.0) +
-            radius_outer_ * (radius_inner_ / radius - 1.0)) /
-           (radius_inner_ - radius_outer_);
+    const double radius_outer_or_radius_bounding_cube =
+        radius_outer_.has_value() ? radius_outer_.value()
+                                  : (sqrt(Dim) * cube_half_length_.value());
+    zeta =
+        (radius_inner_ * (radius_outer_or_radius_bounding_cube / radius - 1.0) +
+         radius_outer_or_radius_bounding_cube *
+             (radius_inner_ / radius - 1.0)) /
+        (radius_inner_ - radius_outer_or_radius_bounding_cube);
   } else {
     ERROR("Unsupported radial distribution: " << radial_distribution_);
   }
+
   // Polar angle
-  double xi = with_equiangular_map_
-                  ? 2.0 *
-                        atan(tan(0.5 * opening_angles_distribution_[0]) /
-                             tan(0.5 * opening_angles_[0]) * cap[0]) /
-                        opening_angles_distribution_[0]
-                  : cap[0];
+  double xi =
+      zero_offset
+          ? (with_equiangular_map_
+                 ? 2.0 *
+                       atan(tan(0.5 * opening_angles_distribution_.value()[0]) /
+                            tan(0.5 * opening_angles_.value()[0]) * cap[0]) /
+                       opening_angles_distribution_.value()[0]
+                 : cap[0])
+          : (with_equiangular_map_ ? atan(1.0 * cap[0]) / M_PI_4 : cap[0]);
+
   if (halves_to_use_ == WedgeHalves::UpperOnly) {
     xi *= 2.0;
     xi -= 1.0;
@@ -394,18 +623,22 @@ std::optional<std::array<double, Dim>> Wedge<Dim>::inverse(
     xi *= 2.0;
     xi += 1.0;
   }
+
   std::array<double, Dim> logical_coords{};
   logical_coords[radial_coord] = zeta;
   logical_coords[polar_coord] = xi;
   if constexpr (Dim == 3) {
     // Azimuthal angle
     logical_coords[azimuth_coord] =
-        with_equiangular_map_
-            ? 2.0 *
-                  atan(tan(0.5 * opening_angles_distribution_[1]) /
-                       tan(0.5 * opening_angles_[1]) * cap[1]) /
-                  opening_angles_distribution_[1]
-            : cap[1];
+        zero_offset
+            ? (with_equiangular_map_
+                   ? 2.0 *
+                         atan(tan(0.5 *
+                                  opening_angles_distribution_.value()[1]) /
+                              tan(0.5 * opening_angles_.value()[1]) * cap[1]) /
+                         opening_angles_distribution_.value()[1]
+                   : cap[1])
+            : (with_equiangular_map_ ? atan(1.0 * cap[1]) / M_PI_4 : cap[1]);
   }
   return logical_coords;
 }
@@ -431,56 +664,20 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, Dim, Frame::NoFrame> Wedge<Dim>::jacobian(
 
   std::array<ReturnType, Dim - 1> cap{};
   std::array<ReturnType, Dim - 1> cap_deriv{};
-  cap[0] = with_equiangular_map_
-               ? tan(0.5 * opening_angles_[0]) *
-                     tan(0.5 * opening_angles_distribution_[0] * xi) /
-                     tan(0.5 * opening_angles_distribution_[0])
-               : xi;
-  cap_deriv[0] =
-      with_equiangular_map_
-          ? 0.5 * opening_angles_distribution_[0] *
-                tan(0.5 * opening_angles_[0]) /
-                tan(0.5 * opening_angles_distribution_[0]) /
-                square(cos(0.5 * opening_angles_distribution_[0] * xi))
-          : make_with_value<ReturnType>(xi, 1.0);
-
-  const auto rotated_focus =
-      discrete_rotation(orientation_of_wedge_.inverse_map(), focal_offset_);
-
-  std::array<ReturnType, Dim> rho_vec{};
-  rho_vec[polar_coord] =
-      cap[0] - rotated_focus[polar_coord] / cube_half_length_;
-  rho_vec[radial_coord] = make_with_value<ReturnType>(cap[0], 1.0) -
-                          rotated_focus[radial_coord] / cube_half_length_;
-
-  ReturnType one_over_rho =
-      square(1.0 - rotated_focus[radial_coord] / cube_half_length_) +
-      square(cap[0] - rotated_focus[polar_coord] / cube_half_length_);
-
+  cap[0] = get_cap_angular_function<true>(xi);
+  cap_deriv[0] = get_deriv_cap_angular_function<true>(xi);
   if constexpr (Dim == 3) {
     // Azimuthal angle
     const ReturnType& eta = source_coords[azimuth_coord];
-    cap[1] = with_equiangular_map_
-                 ? tan(0.5 * opening_angles_[1]) *
-                       tan(0.5 * opening_angles_distribution_[1] * eta) /
-                       tan(0.5 * opening_angles_distribution_[1])
-                 : eta;
-    cap_deriv[1] =
-        with_equiangular_map_
-            ? 0.5 * opening_angles_distribution_[1] *
-                  tan(0.5 * opening_angles_[1]) /
-                  tan(0.5 * opening_angles_distribution_[1]) /
-                  square(cos(0.5 * opening_angles_distribution_[1] * eta))
-            : make_with_value<ReturnType>(xi, 1.0);
-
-    rho_vec[azimuth_coord] =
-        cap[1] - rotated_focus[azimuth_coord] / cube_half_length_;
-
-    one_over_rho +=
-        square(cap[1] - rotated_focus[azimuth_coord] / cube_half_length_);
+    cap[1] = get_cap_angular_function<false>(eta);
+    cap_deriv[1] = get_deriv_cap_angular_function<false>(eta);
   }
-  one_over_rho = 1.0 / sqrt(one_over_rho);
 
+  const auto rotated_focus =
+      discrete_rotation(orientation_of_wedge_.inverse_map(), focal_offset_);
+  const std::array<ReturnType, Dim> rho_vec =
+      get_rho_vec<T>(rotated_focus, cap);
+  const ReturnType one_over_rho = 1.0 / magnitude(rho_vec);
   const ReturnType s_factor = get_s_factor(zeta);
   const ReturnType generalized_z =
       get_generalized_z(zeta, one_over_rho, s_factor);
@@ -577,58 +774,23 @@ Wedge<Dim>::inv_jacobian(const std::array<T, Dim>& source_coords) const {
     xi *= 0.5;
   }
 
+
   std::array<ReturnType, Dim - 1> cap{};
   std::array<ReturnType, Dim - 1> cap_deriv{};
-  cap[0] = with_equiangular_map_
-               ? tan(0.5 * opening_angles_[0]) *
-                     tan(0.5 * opening_angles_distribution_[0] * xi) /
-                     tan(0.5 * opening_angles_distribution_[0])
-               : xi;
-  cap_deriv[0] =
-      with_equiangular_map_
-          ? 0.5 * opening_angles_distribution_[0] *
-                tan(0.5 * opening_angles_[0]) /
-                tan(0.5 * opening_angles_distribution_[0]) /
-                square(cos(0.5 * opening_angles_distribution_[0] * xi))
-          : make_with_value<ReturnType>(xi, 1.0);
-
-  const auto rotated_focus =
-      discrete_rotation(orientation_of_wedge_.inverse_map(), focal_offset_);
-
-  std::array<ReturnType, Dim> rho_vec{};
-  rho_vec[polar_coord] =
-      cap[0] - rotated_focus[polar_coord] / cube_half_length_;
-  rho_vec[radial_coord] = make_with_value<ReturnType>(cap[0], 1.0) -
-                          rotated_focus[radial_coord] / cube_half_length_;
-
-  ReturnType one_over_rho =
-      square(1.0 - rotated_focus[radial_coord] / cube_half_length_) +
-      square(cap[0] - rotated_focus[polar_coord] / cube_half_length_);
-
+  cap[0] = get_cap_angular_function<true>(xi);
+  cap_deriv[0] = get_deriv_cap_angular_function<true>(xi);
   if constexpr (Dim == 3) {
     // Azimuthal angle
     const ReturnType& eta = source_coords[azimuth_coord];
-    cap[1] = with_equiangular_map_
-                 ? tan(0.5 * opening_angles_[1]) *
-                       tan(0.5 * opening_angles_distribution_[1] * eta) /
-                       tan(0.5 * opening_angles_distribution_[1])
-                 : eta;
-    cap_deriv[1] =
-        with_equiangular_map_
-            ? 0.5 * opening_angles_distribution_[1] *
-                  tan(0.5 * opening_angles_[1]) /
-                  tan(0.5 * opening_angles_distribution_[1]) /
-                  square(cos(0.5 * opening_angles_distribution_[1] * eta))
-            : make_with_value<ReturnType>(xi, 1.0);
-
-    rho_vec[azimuth_coord] =
-        cap[1] - rotated_focus[azimuth_coord] / cube_half_length_;
-
-    one_over_rho +=
-        square(cap[1] - rotated_focus[azimuth_coord] / cube_half_length_);
+    cap[1] = get_cap_angular_function<false>(eta);
+    cap_deriv[1] = get_deriv_cap_angular_function<false>(eta);
   }
-  one_over_rho = 1.0 / sqrt(one_over_rho);
 
+  const auto rotated_focus =
+      discrete_rotation(orientation_of_wedge_.inverse_map(), focal_offset_);
+  const std::array<ReturnType, Dim> rho_vec =
+      get_rho_vec<T>(rotated_focus, cap);
+  const ReturnType one_over_rho = 1.0 / magnitude(rho_vec);
   const ReturnType s_factor = get_s_factor(zeta);
   const ReturnType generalized_z =
       get_generalized_z(zeta, one_over_rho, s_factor);
@@ -733,9 +895,9 @@ void Wedge<Dim>::pup(PUP::er& p) {
     if (version == 0) {
       double half_opening_angle = std::numeric_limits<double>::signaling_NaN();
       p | half_opening_angle;
-      opening_angles_[0] = 2. * half_opening_angle;
+      opening_angles_.value()[0] = 2. * half_opening_angle;
       if constexpr (Dim == 3) {
-        opening_angles_[1] = M_PI_2;
+        opening_angles_.value()[1] = M_PI_2;
       }
       opening_angles_distribution_ = opening_angles_;
     }
@@ -748,12 +910,7 @@ void Wedge<Dim>::pup(PUP::er& p) {
     p | cube_half_length_;
     p | focal_offset_;
   } else if (p.isUnpacking()) {
-    // While the length of the cube outside of an old Wedge is not known
-    // internally to the Wedge class, any length will mathematically work
-    // because all old Wedges have no focal offset and any terms in the math
-    // that use the cube length will be zeroed out by the zero offset. We choose
-    // this half length to be 1.0 just because it's a simple value.
-    cube_half_length_ = 1.0;
+    cube_half_length_ = std::nullopt;
     focal_offset_ = make_with_value<std::array<double, Dim>>(Dim, 0.0);
   }
 }

@@ -230,8 +230,8 @@ struct WedgeCoordOrientation<3> {
  * and sphere factors (in the linear case):
  *
  * \begin{align}
- *   F(\zeta) &= F_0 + F_1\zeta \\
- *   S(\zeta) &= S_0 + S_1\zeta
+ *   F(\zeta) &= F_0 + F_1\zeta \label{eq:frustum_factor} \\
+ *   S(\zeta) &= S_0 + S_1\zeta \label{eq:sphere_factor}
  * \end{align}
  *
  * Where
@@ -240,17 +240,18 @@ struct WedgeCoordOrientation<3> {
  *   F_0 &=
  *       \frac{1}{2} \big\{
  *         (1-s_{outer})R_{outer} + (1-s_{inner})R_{inner}
- *       \big\} \\
+ *       \big\} \label{eq:frustum_zero_linear} \\
  *   F_1 &= \partial_{\zeta}F
  *        = \frac{1}{2} \big\{
  *            (1-s_{outer})R_{outer} - (1-s_{inner})R_{inner}
- *          \big\} \\
+ *          \big\} \label{eq:frustum_rate_linear} \\
  *   S_0 &=
  *       \frac{1}{2} \big\{
  *         s_{outer}R_{outer} + s_{inner}R_{inner}
- *       \big\} \\
+ *       \big\} \label{eq:sphere_zero_linear} \\
  *   S_1 &= \partial_{\zeta}S
  *        = \frac{1}{2} \big\{ s_{outer}R_{outer} - s_{inner}R_{inner}\big\}
+ *        \label{eq:sphere_rate_linear}
  * \end{align}
  *
  * The map can then be rewritten as:
@@ -610,6 +611,17 @@ struct WedgeCoordOrientation<3> {
  *   \label{eq:focally_lifted_map_with_generalized_z_coef}
  * \end{align}
  *
+ * \note In the offset case, the frustum factor $F(\zeta)$ and sphere factor
+ * $S(\zeta)$ (Eqs. ($\ref{eq:frustum_factor}$) and ($\ref{eq:sphere_factor}$))
+ * for a linear radial distribution are no longer defined by the general $F_0$,
+ * $F_1$, $S_0$, and $S_1$ given by Eqs.
+ * ($\ref{eq:frustum_zero_linear}$), ($\ref{eq:frustum_rate_linear}$),
+ * ($\ref{eq:sphere_zero_linear}$), and ($\ref{eq:sphere_rate_linear}$). In the
+ * offset case, the inner surface must be spherical $(s_{inner} = 1)$ and the
+ * outer surface can only be spherical or flat
+ * $(s_{outer} = 0 \textrm{ or } s_{outer} = 1)$. In the case where
+ * $s_{outer} = 0$, $L/\sqrt{3}$ is taken to be $R_{outer}$.
+ *
  * The map can be inverted by first solving for \f$z_{\Lambda}\f$ in terms of
  * the target coordinates. We make use of the fact that the parent surface
  * $\vec{\sigma}_{parent}$ has a constant normal vector $\hat{n} = \hat{z}$.
@@ -798,31 +810,99 @@ class Wedge {
   };
 
   /*!
-   * Constructs a 3D wedge.
+   * \brief Constructs a centered wedge (one with no focal offset)
+   *
    * \param radius_inner Distance from the origin to one of the corners which
    * lie on the inner surface.
-   * \param radius_outer For any Wedge with zero `focal_offset` or a spherical
-   * Wedge with nonzero `focal_offset`, this is the distance from the
-   * `focal_offset` to one of the corners that lie on the outer surface. For a
-   * Wedge with both a nonzero `focal_offset` and `outer_sphericity == 0.0`,
-   * this parameter has no effect because the outer corners of the Wedge will
-   * instead lie on the parent surface, which is set by the `cube_half_length`
-   * (see Wedge docs for more details).
+   * \param radius_outer Distance from the origin to one of the corners which
+   * lie on the outer surface.
    * \param orientation_of_wedge The orientation of the desired wedge relative
    * to the orientation of the default wedge which is a wedge that has its
    * curved surfaces pierced by the upper-z axis. The logical $\xi$ and $\eta$
    * coordinates point in the cartesian x and y directions, respectively.
    * \param sphericity_inner Value between 0 and 1 which determines
    * whether the inner surface is flat (value of 0), spherical (value of 1) or
-   * somewhere in between. If `focal_offset` is nonzero, `sphericity_inner` must
-   * be `1.0`.
+   * somewhere in between.
    * \param sphericity_outer Value between 0 and 1 which determines
    * whether the outer surface is flat (value of 0), spherical (value of 1) or
-   * somewhere in between. If `focal_offset` is nonzero, `sphericity_outer` must
-   * be `0.0` or `1.0`.
+   * somewhere in between.
+   * \param with_equiangular_map Determines whether to apply a tangent function
+   * mapping to the logical coordinates (for `true`) or not (for `false`).
+   * \param halves_to_use Determines whether to construct a full wedge or only
+   * half a wedge. If constructing only half a wedge, the resulting shape has a
+   * face normal to the x direction (assuming default OrientationMap). If
+   * constructing half a wedge, an intermediate affine map is applied to the
+   * logical xi coordinate such that the interval [-1,1] is mapped to the
+   * corresponding logical half of the wedge. For example, if `UpperOnly` is
+   * specified, [-1,1] is mapped to [0,1], and if `LowerOnly` is specified,
+   * [-1,1] is mapped to [-1,0]. The case of `Both` means a full wedge, with no
+   * intermediate map applied. In all cases, the logical points returned by the
+   * inverse map will lie in the range [-1,1] in each dimension. Half wedges are
+   * currently only useful in constructing domains for binary systems.
+   * \param radial_distribution Determines how to distribute gridpoints along
+   * the radial direction. For wedges that are not exactly spherical, only
+   * `Distribution::Linear` is currently supported.
+   * \param opening_angles Determines the angular size of the wedge. The default
+   * value is $\pi/2$, which corresponds to a wedge size of $\pi/2$. For this
+   * setting, four Wedges can be put together to cover $2\pi$ in angle along a
+   * great circle. This option is meant to be used with the equiangular map
+   * option turned on.
+   * \param with_adapted_equiangular_map Determines whether to adapt the
+   * point distribution in the wedge to match its physical angular size. When
+   * `true`, angular distances are proportional to logical distances. Note
+   * that it is not possible to use adapted maps in every Wedge of a Sphere
+   * unless each Wedge has the same size along both angular directions.
+   */
+  Wedge(double radius_inner, double radius_outer, double sphericity_inner,
+        double sphericity_outer, OrientationMap<Dim> orientation_of_wedge,
+        bool with_equiangular_map,
+        WedgeHalves halves_to_use = WedgeHalves::Both,
+        Distribution radial_distribution = Distribution::Linear,
+        const std::array<double, Dim - 1>& opening_angles =
+            make_array<Dim - 1>(M_PI_2),
+        bool with_adapted_equiangular_map = true);
+
+  /*!
+   * \brief Constructs a wedge with a focal offset
+   *
+   * \details Can construct an offset Wedge with a spherical inner surface and
+   * either a spherical or a flat outer surface. If `radius_outer` has a value,
+   * a spherical Wedge will be constructed, and if not, a flat one will be
+   * constructed.
+   *
+   * Note that because the focal offset is what determines the angular size of
+   * the Wedge, opening angles cannot be used with offset Wedges.
+   *
+   * In the event that `focal_offset` happens to be zero, the Wedge's member
+   * variables and behavior will be set up to be equivalent to that of a
+   * centered Wedge:
+   * - `cube_half_length` will be discarded and `cube_half_length_` will be set
+   * to `std::nullopt`
+   * - if `radius_outer` is `std::nullopt`, `radius_outer_` will be given the
+   * value $\sqrt{\mathrm{Dim}}L$, where $L$ is the `cube_half_length`
+   * - `opening_angles_` and `opening_angles_distribution_` will be set to
+   * $\pi/2$
+   *
+   * \param radius_inner Distance from the origin to one of the corners which
+   * lie on the inner surface.
+   * \param radius_outer If this has a value, it creates a spherical Wedge
+   * (`sphericity_inner_ == sphericity_outer_ == 1.0`) where this is the
+   * distance from the origin to one of the corners that lie on the inner
+   * surface. If this is `std::nullopt`, it creates a Wedge with a flat outer
+   * surface (`sphericity_inner_ == 1.0` and `sphericity_outer_ == 0.0`). In the
+   * event that `radius_outer == std::nullopt` **and** `focal_offset_` is zero,
+   * `radius_outer_` (the member variable) will instead be set to
+   * $\sqrt{\mathrm{Dim}}L$, where $L$ is the `cube_half_length_`.
+   * `radius_outer_` is given a value in this circumstance so that it can be
+   * handled as a centered Wedge (one with no offset).
+   * \param orientation_of_wedge The orientation of the desired wedge relative
+   * to the orientation of the default wedge which is a wedge that has its
+   * curved surfaces pierced by the upper-z axis. The logical $\xi$ and $\eta$
+   * coordinates point in the cartesian x and y directions, respectively.
    * \param cube_half_length Half the length of the parent surface (see Wedge
-   * documentation for more details). This parameter has no effect when
-   * `focal_offset` is zero.
+   * documentation for more details). If `focal_offset_` is zero, this
+   * parameter has no effect and `cube_half_length_` is set to `std::nullopt`
+   * so that it canbe handled as a centered Wedge (one with no offset).
    * \param focal_offset The target frame coordinates of the focus from which
    * the Wedge is focally lifted.
    * \param with_equiangular_map Determines whether to apply a tangent function
@@ -841,29 +921,12 @@ class Wedge {
    * \param radial_distribution Determines how to distribute gridpoints along
    * the radial direction. For wedges that are not exactly spherical, only
    * `Distribution::Linear` is currently supported.
-   * \param opening_angles Determines the angular size of a wedge when
-   * `focal_offset` is 0. The default value is $\pi/2$, which corresponds to a
-   * wedge size of $\pi/2$. For this setting, four Wedges can be put together to
-   * cover $2\pi$ in angle along a great circle. This option is meant to be used
-   * with the equiangular map option turned on. If `focal_offset` is nonzero,
-   * this parameter must be $\pi/2$ because opening angles don't make sense to
-   * define with a focal offset (see Wedge docs for more details).
-   * \param with_adapted_equiangular_map Determines whether to adapt the
-   * point distribution in the wedge to match its physical angular size. When
-   * `true`, angular distances are proportional to logical distances. Note
-   * that it is not possible to use adapted maps in every Wedge of a Sphere
-   * unless each Wedge has the same size along both angular directions. If
-   * `focal_offset` is nonzero, this parameter has no effect.
    */
-  Wedge(double radius_inner, double radius_outer, double sphericity_inner,
-        double sphericity_outer, double cube_half_length,
-        std::array<double, Dim> focal_offset,
+  Wedge(double radius_inner, std::optional<double> radius_outer,
+        double cube_half_length, std::array<double, Dim> focal_offset,
         OrientationMap<Dim> orientation_of_wedge, bool with_equiangular_map,
         WedgeHalves halves_to_use = WedgeHalves::Both,
-        Distribution radial_distribution = Distribution::Linear,
-        const std::array<double, Dim - 1>& opening_angles =
-            make_array<Dim - 1>(M_PI_2),
-        bool with_adapted_equiangular_map = true);
+        Distribution radial_distribution = Distribution::Linear);
 
   Wedge() = default;
   ~Wedge() = default;
@@ -914,8 +977,106 @@ class Wedge {
       detail::WedgeCoordOrientation<Dim>::azimuth_coord;
 
   /*!
-   * \brief Factors out calculation of $S(\zeta)$ needed for the map and the
-   * Jacobian.
+   * \brief Factors out the calculation of \f$\Xi(\xi)\f$ and $\mathrm{H}$
+   *
+   * \details The **equidistant** parametrization
+   * (when `with_equiangular_map_ == false`) of the logical coordinates is
+   *
+   * \f{align*}{
+   *   \Xi(\xi) = \xi.
+   * \f}
+   *
+   * The **equiangular** reparametrization
+   * (when `with_equiangular_map_ == true`) of the logical coordinates is
+   *
+   * \f{align*}{
+   *   \Xi(\xi) =
+   *       \tan{(\theta_O/2)}\frac{\tan{(\theta_D \xi/2)}}{\tan{(\theta_D/2)}},
+   * \f}
+   *
+   * where $\theta_O$ (element of `opening_angles_`) and $\theta_D$
+   * (element of `opening_angles_distribution_`) are described in the Wedge
+   * class documentation.
+   *
+   * When `focal_offset_` is nonzero, the **equiangular** reparametrization
+   * is instead
+   *
+   * \f{align*}{
+   *   \Xi(\xi) = \tan{(\pi/4)}\xi
+   * \f}
+   *
+   * \tparam FuncIsXi whether the logical cooridnate `lowercase_xi_or_eta` is
+   * $\xi$ (polar coordinate) or $\eta$ (azimuthal coordinate)
+   * \param lowercase_xi_or_eta the logical coordinate $\xi$ or $\eta$ to map
+   */
+  template <bool FuncIsXi, typename T>
+  tt::remove_cvref_wrap_t<T> get_cap_angular_function(
+      const T& lowercase_xi_or_eta) const;
+
+  /*!
+   * \brief Factors out the calculation of \f$\Xi'(\xi)\f$ and $\mathrm{H}'$
+   *
+   * \details Computes the derivatives of the quantities defined in
+   * `get_cap_angular_function()`.
+   *
+   * \tparam FuncIsXi whether the logical cooridnate `lowercase_xi_or_eta` is
+   * $\xi$ (polar coordinate) or $\eta$ (azimuthal coordinate)
+   * \param lowercase_xi_or_eta the logical coordinate $\xi$ or $\eta$ to map
+   */
+  template <bool FuncIsXi, typename T>
+  tt::remove_cvref_wrap_t<T> get_deriv_cap_angular_function(
+      const T& lowercase_xi_or_eta) const;
+
+  /*!
+   * \brief Factors out the calculation of $\vec{\rho}$
+   *
+   * \details Computes
+   * \f{align*}{
+   *   \vec{\rho} = [\Xi-x_0/L, \mathrm{H}-y_0/L, 1-z_0/L]^T
+   * \f}
+   *
+   * where \f$\Xi\f$ and $\mathrm{H}$ are the logical coordinate maps defined in
+   * `get_cap_angular_function()` and the Wedge class documentation,
+   * \f$\vec{x_0} = [x_0, y_0, z_0]^T\f$ is the result of applying the inverse
+   * map of the `orientation_of_wedge_` on the `focal_offset_`, and $L$ is the
+   * `cube_half_length_`.
+   *
+   * \param rotated_focus the result of applying the inverse map of the
+   * `orientation_of_wedge_` on the `focal_offset_`
+   * \param cap \f$\Xi\f$ (and $\mathrm{H}$ in 3D)
+   */
+  template <typename T>
+  std::array<tt::remove_cvref_wrap_t<T>, Dim> get_rho_vec(
+      const std::array<double, Dim>& rotated_focus,
+      const std::array<tt::remove_cvref_wrap_t<T>, Dim - 1>& cap) const;
+
+  /*!
+   * \brief Factors out the calculation of $1/\rho$
+   *
+   * \details Computes $1/\rho$ where
+   *
+   * \f{align*}{
+   *   \rho = \sqrt{(\Xi - x_0/L)^2 + (\mathrm{H} - y_0/L)^2 + (1 - z_0/L)^2}.
+   * \f}
+   *
+   * Here, \f$\Xi\f$ and $\mathrm{H}$ are the logical coordinate maps defined in
+   * `get_cap_angular_function()` and the Wedge class documentation,
+   * \f$\vec{x_0} = [x_0, y_0, z_0]^T\f$ is the result of applying the inverse
+   * map of the `orientation_of_wedge_` on the `focal_offset_`, and $L$ is the
+   * `cube_half_length_`.
+   *
+   * \param rotated_focus the result of applying the inverse map of the
+   * `orientation_of_wedge_` on the `focal_offset_`
+   * \param cap \f$\Xi\f$ (and $\mathrm{H}$ in 3D)
+   */
+  template <typename T>
+  tt::remove_cvref_wrap_t<T> get_one_over_rho(
+      const std::array<double, Dim>& rotated_focus,
+      const std::array<tt::remove_cvref_wrap_t<T>, Dim - 1>& cap) const;
+
+  /*!
+   * \brief Factors out the calculation of $S(\zeta)$ needed for the map and the
+   * Jacobian
    *
    * \details The value of $S(\zeta)$ is computed differently for different
    * radial distributions.
@@ -979,7 +1140,7 @@ class Wedge {
   template <typename T>
   tt::remove_cvref_wrap_t<T> get_s_factor(const T& zeta) const;
   /*!
-   * \brief Factors out calculation of $S'(\zeta)$ needed for the Jacobian.
+   * \brief Factors out the calculation of $S'(\zeta)$ needed for the Jacobian
    *
    * \details The value of $S'(\zeta)$ is computed differently for different
    * radial distributions.
@@ -1017,8 +1178,8 @@ class Wedge {
                                                 const T& s_factor) const;
 
   /*!
-   * \brief Factors out calculation of $z_{\Lambda}$ needed for the map and the
-   * Jacobian.
+   * \brief Factors out the calculation of $z_{\Lambda}$ needed for the map and
+   * the Jacobian
    *
    * \details The value of $z_{\Lambda}$  is computed differently for different
    * radial distributions.
@@ -1051,8 +1212,8 @@ class Wedge {
   tt::remove_cvref_wrap_t<T> get_generalized_z(const T& zeta,
                                                const T& one_over_rho) const;
   /*!
-   * \brief Factors out calculation of $\partial_i z_{\Lambda}$ needed for the
-   * Jacobian
+   * \brief Factors out the calculation of $\partial_i z_{\Lambda}$ needed for
+   * the Jacobian
    *
    * \details For **all** radial distributions:
    *
@@ -1099,14 +1260,12 @@ class Wedge {
   /// Distance from the origin to one of the corners which lie on the inner
   /// surface.
   double radius_inner_{std::numeric_limits<double>::signaling_NaN()};
-  /// For any Wedge with zero `focal_offset` or a spherical Wedge with nonzero
-  /// `focal_offset`, this is the distance from the `focal_offset` to one of the
-  /// corners that lie on the outer surface. For a Wedge with both a nonzero
-  /// `focal_offset` and `outer_sphericity == 0.0`, this parameter has no effect
-  /// because the outer corners of the Wedge will instead lie on the parent
-  /// surface, which is set by the `cube_half_length` (see Wedge docs for more
-  /// details).
-  double radius_outer_{std::numeric_limits<double>::signaling_NaN()};
+  /// If this contains a value, it is the distance from the `focal_offset` to
+  /// one of the corners that lie on the outer surface. Set to `std::nullopt`
+  /// when `focal_offset` is nonzero and the outer surface is flat, because
+  /// there is no single outer radius like there is for a centered Wedge or a
+  /// spherical offset Wedge.
+  std::optional<double> radius_outer_ = std::nullopt;
   /// Value between 0 and 1 which determines whether the inner surface is flat
   /// (value of 0), spherical (value of 1) or somewhere in between. If
   /// `focal_offset` is nonzero, `sphericity_inner` must be `1.0`.
@@ -1116,8 +1275,9 @@ class Wedge {
   /// `focal_offset` is nonzero, `sphericity_outer` must be `0.0` or `1.0`.
   double sphericity_outer_{std::numeric_limits<double>::signaling_NaN()};
   /// Half the length of the parent surface (see Wedge documentation for more
-  /// details). This parameter has no effect when `focal_offset` is zero.
-  double cube_half_length_{std::numeric_limits<double>::signaling_NaN()};
+  /// details). This parameter has no effect and is set to `std::nullopt` when
+  /// `focal_offset` is zero.
+  std::optional<double> cube_half_length_ = std::nullopt;
   /// The target frame coordinates of the focus from which the Wedge is focally
   /// lifted.
   std::array<double, Dim> focal_offset_{
@@ -1146,12 +1306,13 @@ class Wedge {
   double scaled_frustum_rate_{std::numeric_limits<double>::signaling_NaN()};
   /// $S_1$ (see Wedge documentation)
   double sphere_rate_{std::numeric_limits<double>::signaling_NaN()};
-  /// $\theta_O$ (see Wedge documentation)
-  std::array<double, Dim - 1> opening_angles_{
-      make_array<Dim - 1>(std::numeric_limits<double>::signaling_NaN())};
-  /// $\theta_D$ (see Wedge documentation)
-  std::array<double, Dim - 1> opening_angles_distribution_{
-      make_array<Dim - 1>(std::numeric_limits<double>::signaling_NaN())};
+  /// $\theta_O$ (see Wedge documentation). Set to `std::nullopt` when
+  /// `focal_offset_` is nonzero.
+  std::optional<std::array<double, Dim - 1>> opening_angles_ = std::nullopt;
+  /// $\theta_D$ (see Wedge documentation). Set to `std::nullopt` when
+  /// `focal_offset_` is nonzero.
+  std::optional<std::array<double, Dim - 1>> opening_angles_distribution_ =
+      std::nullopt;
 };
 
 template <size_t Dim>
