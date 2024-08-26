@@ -1043,7 +1043,7 @@ class Wedge {
    *
    * \param rotated_focus the result of applying the inverse map of the
    * `orientation_of_wedge_` on the `focal_offset_`
-   * \param cap \f$\Xi\f$ (and $\mathrm{H}$ in 3D)
+   * \param cap the function(s) \f$\Xi\f$ (and $\mathrm{H}$ in 3D)
    */
   template <typename T>
   std::array<tt::remove_cvref_wrap_t<T>, Dim> get_rho_vec(

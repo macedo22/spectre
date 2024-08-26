@@ -37,7 +37,7 @@ void run_shared_asserts(const double radius_inner,
 
   ASSERT(radius_inner > 0.0,
          "The radius of the inner surface must be greater than zero.");
-  if (zero_offset or sphericity_outer == 1.0) {
+  if (radius_outer.has_value()) {
     // radius_outer should have a value
     ASSERT(radius_outer.value() > radius_inner,
            "The radius of the outer surface must be greater than the radius of "
@@ -182,12 +182,11 @@ Wedge<Dim>::Wedge(
         focal_offset_,
         [](const int& a, const int& b) { return abs(a) < abs(b); });
 
-    if (sphericity_outer_ == 1.0) {
+    if (radius_outer_.has_value()) {
       // note: this assert may be more restrictive than we need, can be revisted
       // if needed
       ASSERT(
-          max_abs_focal_offset_coord + radius_outer_.value() <
-              cube_half_length_.value(),
+          max_abs_focal_offset_coord + radius_outer_.value() < cube_half_length,
           "For a spherical focally offset Wedge, the sum of the outer radius "
           "and the coordinate of the focal offset with the largest magnitude "
           "must be less than the cube half length. In other words, the "
@@ -200,8 +199,7 @@ Wedge<Dim>::Wedge(
       // if sphericity_outer_= 0.0, the outer surface of the Wedge is the parent
       // surface
       ASSERT(
-          max_abs_focal_offset_coord + radius_inner_ <
-              cube_half_length_.value(),
+          max_abs_focal_offset_coord + radius_inner_ < cube_half_length,
           "For a cubical focally offset Wedge, the sum of the inner radius "
           "and the coordinate of the focal offset with the largest magnitude "
           "must be less than the cube half length. In other words, the "
@@ -213,44 +211,28 @@ Wedge<Dim>::Wedge(
   }
 
   if (radial_distribution_ == Distribution::Linear) {
-    if (sphericity_outer_ == 0.0) {
-      sphere_zero_ = 0.5 * (sphericity_inner_ * radius_inner);
-      sphere_rate_ = -0.5 * (sphericity_inner_ * radius_inner);
-    } else if (sphericity_outer_ == 1.0) {
-      sphere_zero_ =
-          0.5 * (radius_outer_.value() + sphericity_inner_ * radius_inner);
-      sphere_rate_ =
-          0.5 * (radius_outer_.value() - sphericity_inner_ * radius_inner);
-    } else {
-      ERROR("Unsupported outer sphericity : " << sphericity_outer_);
-    }
-
-    if (zero_offset) {
-      // Do what the centered Wedge constructor does
-      const double sqrt_dim = sqrt(double{Dim});
-      scaled_frustum_zero_ =
-          0.5 / sqrt_dim *
-          ((1.0 - sphericity_outer_) * radius_outer_.value() +
-           (1.0 - sphericity_inner_) * radius_inner);
-      scaled_frustum_rate_ =
-          0.5 / sqrt_dim *
-          ((1.0 - sphericity_outer_) * radius_outer_.value() -
-           (1.0 - sphericity_inner_) * radius_inner);
-    } else {
-      scaled_frustum_zero_ =
-          0.5 * cube_half_length_.value() *
-          ((1.0 - sphericity_outer_) + (1.0 - sphericity_inner_));
-      scaled_frustum_rate_ =
-          0.5 * cube_half_length_.value() *
-          ((1.0 - sphericity_outer_) - (1.0 - sphericity_inner_));
-    }
+    // since sphericity_inner_ == 0.0 and since `radius_outer` indicates whether
+    // the sphericity_outer_ is 1.0 or 0.0, the expressions for $F_0$, $F_1$,
+    // $S_0$ and $S_1$ simplify greatly
+    scaled_frustum_zero_ =
+        radius_outer.has_value() ? 0.0 : 0.5 * cube_half_length;
+    scaled_frustum_rate_ =
+        radius_outer.has_value() ? 0.0 : 0.5 * cube_half_length;
+    sphere_zero_ = 0.5 * (radius_outer.value_or(0.0) + radius_inner);
+    sphere_rate_ = 0.5 * (radius_outer.value_or(0.0) - radius_inner);
   } else if (radial_distribution_ == Distribution::Logarithmic) {
-    // radius_outer_ will have a value because Distribution::Logarithmic only
-    // supported for spherical wedges
     scaled_frustum_zero_ = 0.0;
-    sphere_zero_ = 0.5 * (log(radius_outer_.value() * radius_inner));
     scaled_frustum_rate_ = 0.0;
-    sphere_rate_ = 0.5 * (log(radius_outer_.value() / radius_inner));
+    if (radius_outer.has_value()) {
+      sphere_zero_ = 0.5 * (log(radius_outer.value() * radius_inner));
+      sphere_rate_ = 0.5 * (log(radius_outer.value() / radius_inner));
+    } else {
+      // if we reach here, radius_outer == std::nullopt, which means a flat
+      // outer surface, which is only supported for Linear radial distributions
+      ERROR(
+          "Logarithmic radial distribution is only supported for spherical "
+          "wedges");
+    }
   } else if (radial_distribution_ == Distribution::Inverse) {
     scaled_frustum_zero_ = 0.0;
     // Most places where sphere_zero_ and sphere_rate_ would be used
@@ -318,7 +300,11 @@ std::array<tt::remove_cvref_wrap_t<T>, Dim> Wedge<Dim>::get_rho_vec(
     const std::array<tt::remove_cvref_wrap_t<T>, Dim - 1>& cap) const {
   using ReturnType = tt::remove_cvref_wrap_t<T>;
 
-  const bool zero_offset = (focal_offset_ == make_array<Dim, double>(0.0));
+  ASSERT(cube_half_length_.has_value() !=
+             (rotated_focus == make_array<Dim, double>(0.0)),
+         "The rotated focus should be zero for a centered Wedge and non-zero "
+         "for an offset Wedge.");
+  const bool zero_offset = not cube_half_length_.has_value();
 
   std::array<ReturnType, Dim> rho_vec{};
   rho_vec[polar_coord] =
@@ -348,7 +334,12 @@ tt::remove_cvref_wrap_t<T> Wedge<Dim>::get_one_over_rho(
 
   ReturnType one_over_rho;
 
-  const bool zero_offset = (focal_offset_ == make_array<Dim, double>(0.0));
+  ASSERT(cube_half_length_.has_value() !=
+             (rotated_focus == make_array<Dim, double>(0.0)),
+         "The rotated focus should be zero for a centered Wedge and non-zero "
+         "for an offset Wedge.");
+  const bool zero_offset = not cube_half_length_.has_value();
+
   if (zero_offset) {
     one_over_rho = 1.0 + square(cap[0]);
   } else {
@@ -377,10 +368,15 @@ tt::remove_cvref_wrap_t<T> Wedge<Dim>::get_s_factor(const T& zeta) const {
   } else if (radial_distribution_ == Distribution::Logarithmic) {
     return exp(sphere_zero_ + sphere_rate_ * zeta);
   } else if (radial_distribution_ == Distribution::Inverse) {
-    // radius_outer_ will have a value because Distribution::Inverse only
-    // supported for spherical wedges
-    return 2.0 / ((1.0 + zeta) / radius_outer_.value() +
-                  (1.0 - zeta) / radius_inner_);
+    if (radius_outer_.has_value()) {
+      return 2.0 / ((1.0 + zeta) / radius_outer_.value() +
+                    (1.0 - zeta) / radius_inner_);
+    } else {
+      // if we reach here, radius_outer == std::nullopt, which means a flat
+      // outer surface, which is only supported for Linear radial distributions
+      ERROR(
+          "Inverse radial distribution is only supported for spherical wedges");
+    }
   } else {
     ERROR("Unsupported radial distribution: " << radial_distribution_);
   }
@@ -393,17 +389,28 @@ tt::remove_cvref_wrap_t<T> Wedge<Dim>::get_s_factor_deriv(
   if (radial_distribution_ == Distribution::Linear) {
     return make_with_value<T>(zeta, sphere_rate_);
   } else if (radial_distribution_ == Distribution::Logarithmic) {
-    // radius_outer_ will have a value because Distribution::Logarithmic only
-    // supported for spherical wedges
-    return 0.5 * s_factor * log(radius_outer_.value() / radius_inner_);
+    if (radius_outer_.has_value()) {
+      return 0.5 * s_factor * log(radius_outer_.value() / radius_inner_);
+    } else {
+      // if we reach here, radius_outer == std::nullopt, which means a flat
+      // outer surface, which is only supported for Linear radial distributions
+      ERROR(
+          "Logarithmic radial distribution is only supported for spherical "
+          "wedges");
+    }
   } else if (radial_distribution_ == Distribution::Inverse) {
-    // radius_outer_ will have a value because Distribution::Inverse only
-    // supported for spherical wedges
-    return 2.0 *
-           ((radius_inner_ * square(radius_outer_.value())) -
-            square(radius_inner_) * radius_outer_.value()) /
-           square(radius_inner_ + radius_outer_.value() +
-                  zeta * (radius_inner_ - radius_outer_.value()));
+    if (radius_outer_.has_value()) {
+      return 2.0 *
+             ((radius_inner_ * square(radius_outer_.value())) -
+              square(radius_inner_) * radius_outer_.value()) /
+             square(radius_inner_ + radius_outer_.value() +
+                    zeta * (radius_inner_ - radius_outer_.value()));
+    } else {
+      // if we reach here, radius_outer == std::nullopt, which means a flat
+      // outer surface, which is only supported for Linear radial distributions
+      ERROR(
+          "Inverse radial distribution is only supported for spherical wedges");
+    }
   } else {
     ERROR("Unsupported radial distribution: " << radial_distribution_);
   }
@@ -499,7 +506,11 @@ std::array<tt::remove_cvref_wrap_t<T>, Dim> Wedge<Dim>::operator()(
   const ReturnType one_over_rho = get_one_over_rho<T>(rotated_focus, cap);
   const ReturnType generalized_z = get_generalized_z(zeta, one_over_rho);
 
-  const bool zero_offset = (focal_offset_ == make_array<Dim, double>(0.0));
+  ASSERT(cube_half_length_.has_value() !=
+             (rotated_focus == make_array<Dim, double>(0.0)),
+         "The rotated focus should be zero for a centered Wedge and non-zero "
+         "for an offset Wedge.");
+  const bool zero_offset = not cube_half_length_.has_value();
 
   std::array<ReturnType, Dim> physical_coords{};
   physical_coords[radial_coord] =
@@ -542,7 +553,11 @@ std::optional<std::array<double, Dim>> Wedge<Dim>::inverse(
     return std::nullopt;
   }
 
-  const bool zero_offset = (focal_offset_ == make_array<Dim, double>(0.0));
+  ASSERT(cube_half_length_.has_value() !=
+             (rotated_focus == make_array<Dim, double>(0.0)),
+         "The rotated focus should be zero for a centered Wedge and non-zero "
+         "for an offset Wedge.");
+  const bool zero_offset = not cube_half_length_.has_value();
 
   const double generalized_z =
       zero_offset
@@ -593,9 +608,19 @@ std::optional<std::array<double, Dim>> Wedge<Dim>::inverse(
   } else if (radial_distribution_ == Distribution::Logarithmic) {
     zeta = (log(radius) - sphere_zero_) / sphere_rate_;
   } else if (radial_distribution_ == Distribution::Inverse) {
-    const double radius_outer_or_radius_bounding_cube =
-        radius_outer_.has_value() ? radius_outer_.value()
-                                  : (sqrt(Dim) * cube_half_length_.value());
+    double radius_outer_or_radius_bounding_cube;
+    if (radius_outer_.has_value()) {
+      radius_outer_or_radius_bounding_cube = radius_outer_.value();
+    } else if (cube_half_length_.has_value()) {
+      radius_outer_or_radius_bounding_cube =
+          sqrt(Dim) * cube_half_length_.value();
+    } else {
+      ERROR(
+          "This indicates an error in the logic of Wedge. A Wedge that has no "
+          "value for radius_outer_ should still have a value for "
+          "cube_half_length_, and vice versa.");
+    }
+
     zeta =
         (radius_inner_ * (radius_outer_or_radius_bounding_cube / radius - 1.0) +
          radius_outer_or_radius_bounding_cube *
