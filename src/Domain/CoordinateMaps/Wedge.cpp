@@ -252,20 +252,41 @@ template <size_t Dim>
 template <bool FuncIsXi, typename T>
 tt::remove_cvref_wrap_t<T> Wedge<Dim>::get_cap_angular_function(
     const T& lowercase_xi_or_eta) const {
-  const bool zero_offset = (focal_offset_ == make_array<Dim, double>(0.0));
   constexpr auto cap_index = static_cast<size_t>(not FuncIsXi);
+  if (opening_angles_.has_value() and
+      opening_angles_distribution_.has_value()) {
+    return with_equiangular_map_
+               ? tan(0.5 * opening_angles_.value()[cap_index]) *
+                     tan(0.5 * opening_angles_distribution_.value()[cap_index] *
+                         lowercase_xi_or_eta) /
+                     tan(0.5 * opening_angles_distribution_.value()[cap_index])
+               : lowercase_xi_or_eta;
+  } else {
+    return with_equiangular_map_ ? tan(M_PI_4 * lowercase_xi_or_eta)
+                                 : lowercase_xi_or_eta;
+  }
 
-  return zero_offset
-             ? (with_equiangular_map_
-                    ? tan(0.5 * opening_angles_.value()[cap_index]) *
-                          tan(0.5 *
-                              opening_angles_distribution_.value()[cap_index] *
-                              lowercase_xi_or_eta) /
-                          tan(0.5 *
-                              opening_angles_distribution_.value()[cap_index])
-                    : lowercase_xi_or_eta)
-             : (with_equiangular_map_ ? tan(M_PI_4 * lowercase_xi_or_eta)
-                                      : lowercase_xi_or_eta);
+  // std::array<double, Dim - 1> opening_angles_to_use{};
+  // std::array<double, Dim - 1> opening_angles_distribution_to_use{};
+
+  // if (opening_angles_.has_value()) {
+  //   opening_angles_to_use = opening_angles_.value();
+  // } else {
+  //   opening_angles_to_use = make_array<Dim - 1, double>(M_PI_2);
+  // }
+  // if (opening_angles_distribution_.has_value()) {
+  //   opening_angles_distribution_to_use =
+  //   opening_angles_distribution_.value();
+  // } else {
+  //   opening_angles_distribution_to_use = make_array<Dim - 1, double>(M_PI_2);
+  // }
+
+  // return with_equiangular_map_
+  //            ? tan(0.5 * opening_angles_to_use[cap_index]) *
+  //                  tan(0.5 * opening_angles_distribution_to_use[cap_index] *
+  //                      lowercase_xi_or_eta) /
+  //                  tan(0.5 * opening_angles_distribution_to_use[cap_index])
+  //            : lowercase_xi_or_eta;
 }
 
 template <size_t Dim>
@@ -274,23 +295,23 @@ tt::remove_cvref_wrap_t<T> Wedge<Dim>::get_deriv_cap_angular_function(
     const T& lowercase_xi_or_eta) const {
   using ReturnType = tt::remove_cvref_wrap_t<T>;
 
-  const bool zero_offset = (focal_offset_ == make_array<Dim, double>(0.0));
   constexpr auto cap_index = static_cast<size_t>(not FuncIsXi);
-
-  return zero_offset
-             ? (with_equiangular_map_
-                    ? 0.5 * opening_angles_distribution_.value()[cap_index] *
-                          tan(0.5 * opening_angles_.value()[cap_index]) /
-                          tan(0.5 *
-                              opening_angles_distribution_.value()[cap_index]) /
-                          square(cos(
-                              0.5 *
-                              opening_angles_distribution_.value()[cap_index] *
-                              lowercase_xi_or_eta))
-                    : make_with_value<ReturnType>(lowercase_xi_or_eta, 1.0))
-             : (with_equiangular_map_
-                    ? M_PI_4 / square(cos(M_PI_4 * lowercase_xi_or_eta))
-                    : make_with_value<ReturnType>(lowercase_xi_or_eta, 1.0));
+  if (opening_angles_.has_value() and
+      opening_angles_distribution_.has_value()) {
+    return with_equiangular_map_
+               ? 0.5 * opening_angles_distribution_.value()[cap_index] *
+                     tan(0.5 * opening_angles_.value()[cap_index]) /
+                     tan(0.5 *
+                         opening_angles_distribution_.value()[cap_index]) /
+                     square(cos(
+                         0.5 * opening_angles_distribution_.value()[cap_index] *
+                         lowercase_xi_or_eta))
+               : make_with_value<ReturnType>(lowercase_xi_or_eta, 1.0);
+  } else {
+    return with_equiangular_map_
+               ? M_PI_4 / square(cos(M_PI_4 * lowercase_xi_or_eta))
+               : make_with_value<ReturnType>(lowercase_xi_or_eta, 1.0);
+  }
 }
 
 template <size_t Dim>
@@ -615,6 +636,8 @@ std::optional<std::array<double, Dim>> Wedge<Dim>::inverse(
       radius_outer_or_radius_bounding_cube =
           sqrt(Dim) * cube_half_length_.value();
     } else {
+      radius_outer_or_radius_bounding_cube =
+          std::numeric_limits<double>::signaling_NaN();
       ERROR(
           "This indicates an error in the logic of Wedge. A Wedge that has no "
           "value for radius_outer_ should still have a value for "
@@ -631,15 +654,18 @@ std::optional<std::array<double, Dim>> Wedge<Dim>::inverse(
   }
 
   // Polar angle
-  double xi =
-      zero_offset
-          ? (with_equiangular_map_
-                 ? 2.0 *
-                       atan(tan(0.5 * opening_angles_distribution_.value()[0]) /
-                            tan(0.5 * opening_angles_.value()[0]) * cap[0]) /
-                       opening_angles_distribution_.value()[0]
-                 : cap[0])
-          : (with_equiangular_map_ ? atan(1.0 * cap[0]) / M_PI_4 : cap[0]);
+  double xi;
+  if (opening_angles_.has_value() and
+      opening_angles_distribution_.has_value()) {
+    xi = with_equiangular_map_
+             ? 2.0 *
+                   atan(tan(0.5 * opening_angles_distribution_.value()[0]) /
+                        tan(0.5 * opening_angles_.value()[0]) * cap[0]) /
+                   opening_angles_distribution_.value()[0]
+             : cap[0];
+  } else {
+    xi = with_equiangular_map_ ? atan(1.0 * cap[0]) / M_PI_4 : cap[0];
+  }
 
   if (halves_to_use_ == WedgeHalves::UpperOnly) {
     xi *= 2.0;
@@ -654,16 +680,19 @@ std::optional<std::array<double, Dim>> Wedge<Dim>::inverse(
   logical_coords[polar_coord] = xi;
   if constexpr (Dim == 3) {
     // Azimuthal angle
-    logical_coords[azimuth_coord] =
-        zero_offset
-            ? (with_equiangular_map_
-                   ? 2.0 *
-                         atan(tan(0.5 *
-                                  opening_angles_distribution_.value()[1]) /
-                              tan(0.5 * opening_angles_.value()[1]) * cap[1]) /
-                         opening_angles_distribution_.value()[1]
-                   : cap[1])
-            : (with_equiangular_map_ ? atan(1.0 * cap[1]) / M_PI_4 : cap[1]);
+    if (opening_angles_.has_value() and
+        opening_angles_distribution_.has_value()) {
+      logical_coords[azimuth_coord] =
+          with_equiangular_map_
+              ? 2.0 *
+                    atan(tan(0.5 * opening_angles_distribution_.value()[1]) /
+                         tan(0.5 * opening_angles_.value()[1]) * cap[1]) /
+                    opening_angles_distribution_.value()[1]
+              : cap[1];
+    } else {
+      logical_coords[azimuth_coord] =
+          with_equiangular_map_ ? atan(1.0 * cap[1]) / M_PI_4 : cap[1];
+    }
   }
   return logical_coords;
 }
