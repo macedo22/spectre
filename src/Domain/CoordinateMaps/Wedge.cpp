@@ -629,15 +629,14 @@ std::optional<std::array<double, Dim>> Wedge<Dim>::inverse(
   } else if (radial_distribution_ == Distribution::Logarithmic) {
     zeta = (log(radius) - sphere_zero_) / sphere_rate_;
   } else if (radial_distribution_ == Distribution::Inverse) {
-    double radius_outer_or_radius_bounding_cube;
+    double radius_outer_or_radius_bounding_cube =
+        std::numeric_limits<double>::signaling_NaN();
     if (radius_outer_.has_value()) {
       radius_outer_or_radius_bounding_cube = radius_outer_.value();
     } else if (cube_half_length_.has_value()) {
       radius_outer_or_radius_bounding_cube =
           sqrt(Dim) * cube_half_length_.value();
     } else {
-      radius_outer_or_radius_bounding_cube =
-          std::numeric_limits<double>::signaling_NaN();
       ERROR(
           "This indicates an error in the logic of Wedge. A Wedge that has no "
           "value for radius_outer_ should still have a value for "
@@ -654,7 +653,7 @@ std::optional<std::array<double, Dim>> Wedge<Dim>::inverse(
   }
 
   // Polar angle
-  double xi;
+  double xi = std::numeric_limits<double>::signaling_NaN();
   if (opening_angles_.has_value() and
       opening_angles_distribution_.has_value()) {
     xi = with_equiangular_map_
@@ -949,6 +948,8 @@ void Wedge<Dim>::pup(PUP::er& p) {
     if (version == 0) {
       double half_opening_angle = std::numeric_limits<double>::signaling_NaN();
       p | half_opening_angle;
+      opening_angles_ = make_array<Dim - 1, double>(
+          std::numeric_limits<double>::signaling_NaN());
       opening_angles_.value()[0] = 2. * half_opening_angle;
       if constexpr (Dim == 3) {
         opening_angles_.value()[1] = M_PI_2;
