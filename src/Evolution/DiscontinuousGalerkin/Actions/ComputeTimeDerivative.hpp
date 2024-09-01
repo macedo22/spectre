@@ -597,7 +597,7 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
                                                      Frame::Inertial>>(box),
          &mesh,
          &mesh_velocity = db::get<::domain::Tags::MeshVelocity<Dim>>(box),
-         &logical_partial_derivs, &inertial_partial_derivs, &temporaries,
+         &logical_partial_derivs, /*&inertial_partial_derivs,*/ &temporaries,
          &volume_fluxes](const gsl::not_null<Variables<db::wrap_tags_in<
                              ::Tags::dt, typename variables_tag::tags_list>>*>
                              dt_vars_ptr,
@@ -659,8 +659,10 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
            db::get<::domain::Tags::InverseJacobian<Dim, Frame::ElementLogical,
                                                    Frame::Inertial>>(box),
        &primitive_vars, &temporaries, &volume_fluxes, &packaged_data_buffer,
-       &face_temporaries, &element = db::get<domain::Tags::Element<Dim>>(box)](
-          auto derived_correction_v) {
+       &face_temporaries, &element = db::get<domain::Tags::Element<Dim>>(box),
+       &evolved_variables =
+           db::get<variables_tag>(box)](auto derived_correction_v) {
+        (void)logical_partial_derivs;  // maybe unused
         using DerivedCorrection =
             tmpl::type_from<decltype(derived_correction_v)>;
         if (typeid(boundary_correction) == typeid(DerivedCorrection)) {
@@ -683,6 +685,20 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
               partial_derivatives(make_not_null(&inertial_partial_derivs),
                                   logical_partial_derivs,
                                   logical_to_inertial_inv_jacobian);
+              const auto& d_spacetime_metric =
+                  get<::Tags::deriv<gr::Tags::SpacetimeMetric<DataVector, Dim>,
+                                    tmpl::size_t<Dim>, Frame::Inertial>>(
+                      inertial_partial_derivs);
+              const auto& phi =
+                  get<gh::Tags::Phi<DataVector, Dim>>(evolved_variables);
+              auto& three_index_constraint =
+                  get<gh::Tags::ThreeIndexConstraint<DataVector, Dim>>(
+                      temporaries);
+
+              tenex::evaluate<ti::i, ti::a, ti::b>(
+                  make_not_null(&three_index_constraint),
+                  d_spacetime_metric(ti::i, ti::a, ti::b) -
+                      phi(ti::i, ti::a, ti::b));
             }
             detail::apply_boundary_conditions_on_all_external_faces<
                 EvolutionSystem, Dim>(
