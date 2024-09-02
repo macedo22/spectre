@@ -47,7 +47,6 @@
 #include "NumericalAlgorithms/Spectral/Mesh.hpp"
 #include "NumericalAlgorithms/Spectral/Quadrature.hpp"
 #include "NumericalAlgorithms/Spectral/Spectral.hpp"
-#include "Parallel/Printf/Printf.hpp"
 #include "Parallel/Tags/Metavariables.hpp"
 #include "Utilities/ErrorHandling/Assert.hpp"
 #include "Utilities/ErrorHandling/Error.hpp"
@@ -67,7 +66,6 @@ std::optional<std::string> apply_boundary_condition_impl(
     BoundaryConditionHelper& boundary_condition_helper,
     const Variables<AllTagsOnFaceList>& fields_on_interior_face,
     tmpl::list<TagsFromFace...> /*meta*/, const VolumeArgs&... volume_args) {
-  //   Parallel::printf("before boundary_condition_helper\n");
   return boundary_condition_helper(
       get<TagsFromFace>(fields_on_interior_face)..., volume_args...);
 }
@@ -230,17 +228,13 @@ void apply_boundary_condition_on_face(
   // evolved vars are guaranteed to be contiguous, but only if we are doing a
   // ghost boundary condition.
   if constexpr (uses_ghost_condition) {
-    // Parallel::printf("Before project_contiguous_data_to_boundary\n");
     ::dg::project_contiguous_data_to_boundary(
         make_not_null(&interior_face_fields), volume_evolved_vars, volume_mesh,
         direction);
-    // Parallel::printf("after project_contiguous_data_to_boundary\n");
   } else {
-    // Parallel::printf("Before project_tensors_to_boundary");
     ::dg::project_tensors_to_boundary<interior_evolved_vars_tags>(
         make_not_null(&interior_face_fields), volume_evolved_vars, volume_mesh,
         direction);
-    // Parallel::printf("Before project_tensors_to_boundary\n");
   }
   if constexpr (tmpl::size<fluxes_tags>::value != 0) {
     ::dg::project_contiguous_data_to_boundary(
@@ -255,52 +249,42 @@ void apply_boundary_condition_on_face(
   if constexpr (tmpl::size<tmpl::append<
                     temp_tags_no_coordinates,
                     detail::inverse_spatial_metric_tag<System>>>::value != 0) {
-    // Parallel::printf("Before project_tensors_to_boundary 1\n");
     ::dg::project_tensors_to_boundary<tmpl::append<
         temp_tags_no_coordinates, detail::inverse_spatial_metric_tag<System>>>(
         make_not_null(&interior_face_fields), volume_temporaries, volume_mesh,
         direction);
-    // Parallel::printf("after project_tensors_to_boundary 1\n");
   }
   if constexpr (System::has_primitive_and_conservative_vars and
                 tmpl::size<interior_prim_tags>::value != 0) {
-    // Parallel::printf("Before project_tensors_to_boundary 2\n");
     ASSERT(volume_primitive_variables != nullptr,
            "The volume primitive variables are not set even though the "
            "system has primitive variables.");
     ::dg::project_tensors_to_boundary<interior_prim_tags>(
         make_not_null(&interior_face_fields), *volume_primitive_variables,
         volume_mesh, direction);
-    // Parallel::printf("after project_tensors_to_boundary 2\n");
   } else {
     (void)volume_primitive_variables;
   }
   if constexpr (tmpl::size<
                     bcondition_interior_deriv_evolved_vars_tags>::value != 0) {
-    // Parallel::printf("Before project_tensors_to_boundary 3\n");
     ::dg::project_tensors_to_boundary<
         bcondition_interior_deriv_evolved_vars_tags>(
         make_not_null(&interior_face_fields), partial_derivs, volume_mesh,
         direction);
-    // Parallel::printf("after project_tensors_to_boundary 3\n");
   }
   if constexpr (tmpl::size<bcondition_interior_dt_evolved_vars_tags>::value !=
                 0) {
-    // Parallel::printf("Before project_tensors_to_boundary 4\n");
     ::dg::project_tensors_to_boundary<bcondition_interior_dt_evolved_vars_tags>(
         make_not_null(&interior_face_fields), db::get<dt_variables_tag>(*box),
         volume_mesh, direction);
-    // Parallel::printf("after project_tensors_to_boundary 4\n");
   }
 
   std::optional<tnsr::I<DataVector, Dim>> face_mesh_velocity{};
   if (volume_mesh_velocity.has_value()) {
-    // Parallel::printf("Before project_tensors_to_boundary 5\n");
     face_mesh_velocity = tnsr::I<DataVector, Dim>{number_of_points_on_face};
     ::dg::project_tensor_to_boundary(make_not_null(&*face_mesh_velocity),
                                      *volume_mesh_velocity, volume_mesh,
                                      direction);
-    // Parallel::printf("after project_tensors_to_boundary 5\n");
   }
 
   // Normalize the normal vectors. We cache the unit normal covector For
@@ -310,7 +294,6 @@ void apply_boundary_condition_on_face(
        number_of_points_on_face, &volume_inverse_jacobian,
        &volume_mesh](const auto normal_covector_magnitude_in_direction_ptr,
                      auto fields_on_face_ptr) {
-        // Parallel::printf("beginning of normalize_normal_vectors\n");
         if (auto& normal_covector_quantity =
                 *normal_covector_magnitude_in_direction_ptr;
             has_inv_spatial_metric or mesh_is_moving or
@@ -355,7 +338,6 @@ void apply_boundary_condition_on_face(
               get<evolution::dg::Tags::NormalCovector<Dim>>(
                   *normal_covector_quantity));
         }
-        // Parallel::printf("end of normalize_normal_vectors\n");
       };
   // Normalize the outward facing normal vector on the interior side
   db::mutate<evolution::dg::Tags::NormalCovectorAndMagnitude<Dim>>(
@@ -392,16 +374,10 @@ void apply_boundary_condition_on_face(
               face_mesh_velocity, interior_normal_covector,
               face_and_volume_args...);
         };
-    // Parallel::printf(
-    //     "before apply_boundary_condition_impl that calls "
-    //     "dg_demand_outgoing_char_speeds\n");
     const std::optional<std::string> error_message =
         apply_boundary_condition_impl(
             apply_bc, interior_face_fields, bcondition_interior_tags{},
             db::get<BoundaryConditionVolumeTags>(*box)...);
-    // Parallel::printf(
-    //     "after apply_boundary_condition_impl that calls "
-    //     "dg_demand_outgoing_char_speeds\n");
     if (error_message.has_value()) {
       ERROR(*error_message << "\n\nIn element:" << element.id()
                            << "\nIn direction: " << direction);
@@ -416,7 +392,6 @@ void apply_boundary_condition_on_face(
   Variables<dt_variables_tags> dt_time_derivative_correction{};
   if constexpr (uses_time_derivative_condition) {
     dt_time_derivative_correction.initialize(number_of_points_on_face);
-    // Parallel::printf("before dg_time_derivative\n");
     auto apply_bc = [&boundary_condition, &dt_time_derivative_correction,
                      &face_mesh_velocity, &interior_normal_covector](
                         const auto&... interior_face_and_volume_args) {
@@ -426,18 +401,10 @@ void apply_boundary_condition_on_face(
           face_mesh_velocity, interior_normal_covector,
           interior_face_and_volume_args...);
     };
-    // Parallel::printf("after dg_time_derivative\n");
-
-    // Parallel::printf(
-    //     "before apply_boundary_condition_impl that calls
-    //     dg_time_derivative\n");
     const std::optional<std::string> error_message =
         apply_boundary_condition_impl(
             apply_bc, interior_face_fields, bcondition_interior_tags{},
             db::get<BoundaryConditionVolumeTags>(*box)...);
-    // Parallel::printf(
-    //     "after apply_boundary_condition_impl that calls
-    //     dg_time_derivative\n");
     if (error_message.has_value()) {
       ERROR(*error_message << "\n\nIn element:" << element.id()
                            << "\nIn direction: " << direction);
@@ -458,7 +425,6 @@ void apply_boundary_condition_on_face(
       number_of_points_on_face};
 
   if constexpr (uses_ghost_condition) {
-    // Parallel::printf("uses ghost condition\n");
     using mortar_tags_list = tmpl::list<PackageFieldTags...>;
     using dg_package_data_projected_tags =
         tmpl::append<variables_tags, fluxes_tags, correction_temp_tags,
@@ -466,14 +432,12 @@ void apply_boundary_condition_on_face(
 
     Variables<mortar_tags_list> internal_packaged_data{
         number_of_points_on_face};
-    // Parallel::printf("before dg_package_data\n");
     const double max_abs_char_speed_on_face = detail::dg_package_data<System>(
         make_not_null(&internal_packaged_data), boundary_correction,
         interior_face_fields, interior_normal_covector, face_mesh_velocity,
         dg_package_data_projected_tags{},
         db::get<PackageDataVolumeTags>(*box)...);
     (void)max_abs_char_speed_on_face;
-    // Parallel::printf("after dg_package_data\n");
 
     // Notes:
     // - we pass the outward directed normal vector normalized using the
@@ -496,7 +460,6 @@ void apply_boundary_condition_on_face(
                      &face_mesh_velocity, &interior_normal_covector](
                         const auto&... interior_face_and_volume_args) {
       if constexpr (has_inv_spatial_metric) {
-        // Parallel::printf("has_inv_spatial_metric\n");
         return boundary_condition.dg_ghost(
             make_not_null(&get<BoundaryCorrectionPackagedDataInputTags>(
                 exterior_face_fields))...,
@@ -506,7 +469,6 @@ void apply_boundary_condition_on_face(
             face_mesh_velocity, interior_normal_covector,
             interior_face_and_volume_args...);
       } else {
-        // Parallel::printf("not has_inv_spatial_metric\n");
         return boundary_condition.dg_ghost(
             make_not_null(&get<BoundaryCorrectionPackagedDataInputTags>(
                 exterior_face_fields))...,
@@ -514,25 +476,19 @@ void apply_boundary_condition_on_face(
             interior_face_and_volume_args...);
       }
     };
-    // Parallel::printf(
-    //     "before apply_boundary_condition_impl that calls dg_ghost\n");
     const std::optional<std::string> error_message =
         apply_boundary_condition_impl(
             apply_bc, interior_face_fields, bcondition_interior_tags{},
             db::get<BoundaryConditionVolumeTags>(*box)...);
-    // Parallel::printf("after apply_boundary_condition_impl that calls
-    // dg_ghost\n");
     if (error_message.has_value()) {
       ERROR(*error_message << "\n\nIn element:" << element.id()
                            << "\nIn direction: " << direction);
     }
     // Subtract mesh velocity from the _exterior_ fluxes
     if (face_mesh_velocity.has_value()) {
-      //   Parallel::printf("face_mesh_velocity has value\n");
       tmpl::for_each<flux_variables>(
           [&face_mesh_velocity, &exterior_face_fields](auto tag_v) {
-            // Parallel::printf("beginning of one
-            // tmpl::for_each<flux_variables>\n"); Modify fluxes for moving mesh
+            // Modify fluxes for moving mesh
             using var_tag = typename decltype(tag_v)::type;
             using flux_var_tag =
                 db::add_tag_prefix<::Tags::Flux, var_tag, tmpl::size_t<Dim>,
@@ -559,9 +515,7 @@ void apply_boundary_condition_on_face(
               flux_var[flux_var_storage_index] -=
                   var.get(var_tensor_index) * mesh_velocity.get(flux_index);
             }
-            // Parallel::printf("end of one tmpl::for_each<flux_variables>\n");
           });
-      //   Parallel::printf("end of if (face_mesh_velocity.has_value())\n");
     }
     // Now that we have computed the inverse spatial metric on the exterior, we
     // can compute the normalized normal (co)vector on the exterior side. If
@@ -572,16 +526,12 @@ void apply_boundary_condition_on_face(
           .get(i) = -interior_normal_covector.get(i);
     }
     if constexpr (has_inv_spatial_metric) {
-      //   Parallel::printf("has_inv_spatial_metric\n");
       const tnsr::II<DataVector, Dim, Frame::Inertial>& inv_spatial_metric =
           get<tmpl::front<inverse_spatial_metric_list>>(exterior_face_fields);
-      //   Parallel::printf("after exterior_normal_covector\n");
       tnsr::i<DataVector, Dim, Frame::Inertial>& exterior_normal_covector =
           get<evolution::dg::Tags::NormalCovector<Dim>>(exterior_face_fields);
-      //   Parallel::printf("after inv_spatial_metric\n");
       tnsr::I<DataVector, Dim, Frame::Inertial>& exterior_normal_vector =
           get<detail::NormalVector<Dim>>(exterior_face_fields);
-      //   Parallel::printf("after exterior_normal_vector\n");
 
       // Since the spatial metric is different on the exterior side of the
       // interface, we need to normalize the direction-reversed interior normal
@@ -611,19 +561,16 @@ void apply_boundary_condition_on_face(
     // Package the external-side data for the boundary correction
     Variables<mortar_tags_list> external_packaged_data{
         number_of_points_on_face};
-    // Parallel::printf("before detail::dg_package_data<System>\n");
     detail::dg_package_data<System>(
         make_not_null(&external_packaged_data), boundary_correction,
         exterior_face_fields,
         get<evolution::dg::Tags::NormalCovector<Dim>>(exterior_face_fields),
         face_mesh_velocity, dg_package_data_projected_tags{},
         db::get<PackageDataVolumeTags>(*box)...);
-    // Parallel::printf("after detail::dg_package_data<System>\n");
 
     Variables<dt_variables_tags> boundary_corrections_on_face{
         number_of_points_on_face};
 
-    // Parallel::printf("before dg_boundary_terms\n");
     // Compute boundary correction
     boundary_correction.dg_boundary_terms(
         make_not_null(&get<::Tags::dt<EvolvedVariablesTags>>(
@@ -631,7 +578,6 @@ void apply_boundary_condition_on_face(
         get<PackageFieldTags>(internal_packaged_data)...,
         get<PackageFieldTags>(external_packaged_data)..., dg_formulation,
         get<BoundaryTermsVolumeTags>(*box)...);
-    // Parallel::printf("after dg_boundary_terms\n");
 
     // Lift the boundary correction
     const auto& magnitude_of_interior_face_normal =
@@ -639,35 +585,23 @@ void apply_boundary_condition_on_face(
             *db::get<evolution::dg::Tags::NormalCovectorAndMagnitude<Dim>>(*box)
                  .at(direction));
     if (volume_mesh.quadrature(0) == Spectral::Quadrature::GaussLobatto) {
-      //   Parallel::printf(
-      //       "beginning of if for volume_mesh.quadrature(0) == "
-      //       "Spectral::Quadrature::GaussLobatto\n");
       // The lift_flux function lifts only on the slice, it does not add
       // the contribution to the volume.
-      //   Parallel::printf("before lift_flux\n");
       ::dg::lift_flux(make_not_null(&boundary_corrections_on_face),
                       volume_mesh.extents(direction.dimension()),
                       magnitude_of_interior_face_normal);
-      //   Parallel::printf("after lift_flux\n");
 
-      //   Parallel::printf("before db::mutate<dt_variables_tag>\n");
       // Add the flux contribution to the volume data
       db::mutate<dt_variables_tag>(
           [&direction, &boundary_corrections_on_face,
            &volume_mesh](const auto dt_variables_ptr) {
-            // Parallel::printf("before add_slice_to_data\n");
             add_slice_to_data(
                 dt_variables_ptr, boundary_corrections_on_face,
                 volume_mesh.extents(), direction.dimension(),
                 index_to_slice_at(volume_mesh.extents(), direction));
-            // Parallel::printf("after add_slice_to_data\n");
           },
           box);
-      //   Parallel::printf("after db::mutate<dt_variables_tag>\n");
     } else {
-      //   Parallel::printf(
-      //       "beginning of else for volume_mesh.quadrature(0) == "
-      //       "Spectral::Quadrature::GaussLobatto\n");
       // We are using Gauss points.
       //
       // Optimization note: eliminate allocations for volume and face det
@@ -680,7 +614,6 @@ void apply_boundary_condition_on_face(
       Scalar<DataVector> face_det_jacobian{face_mesh.number_of_grid_points()};
       const Matrix identity{};
       auto interpolation_matrices = make_array<Dim>(std::cref(identity));
-      //   Parallel::printf("before boundary_interpolation_matrices\n");
       const std::pair<Matrix, Matrix>& matrices =
           Spectral::boundary_interpolation_matrices(
               volume_mesh.slice_through(direction.dimension()));
@@ -689,30 +622,22 @@ void apply_boundary_condition_on_face(
       apply_matrices(make_not_null(&get(face_det_jacobian)),
                      interpolation_matrices, volume_det_jacobian,
                      volume_mesh.extents());
-      //   Parallel::printf("after boundary_interpolation_matrices\n");
 
       db::mutate<dt_variables_tag>(
           [&direction, &boundary_corrections_on_face, &face_det_jacobian,
            &magnitude_of_interior_face_normal, &volume_det_inv_jacobian,
            &volume_mesh](const auto dt_variables_ptr) {
-            // Parallel::printf("before lift_boundary_terms_gauss_points\n");
             ::dg::lift_boundary_terms_gauss_points(
                 dt_variables_ptr, volume_det_inv_jacobian, volume_mesh,
                 direction, boundary_corrections_on_face,
                 magnitude_of_interior_face_normal, face_det_jacobian);
-            // Parallel::printf("after lift_boundary_terms_gauss_points\n");
           },
           box);
     }
   }
   // Add TimeDerivative correction to volume time derivatives.
   if constexpr (uses_time_derivative_condition) {
-    // Parallel::printf("beginning of if for uses_time_derivative_condition\n");
     if (volume_mesh.quadrature(0) == Spectral::Quadrature::GaussLobatto) {
-      //   Parallel::printf(
-      //       "beginning of if for uses_time_derivative_condition and if for "
-      //       "volume_mesh.quadrature(0) ==
-      //       Spectral::Quadrature::GaussLobatto\n");
       db::mutate<dt_variables_tag>(
           [&direction, &dt_time_derivative_correction,
            &volume_mesh](const auto dt_variables_ptr) {
@@ -722,15 +647,7 @@ void apply_boundary_condition_on_face(
                 index_to_slice_at(volume_mesh.extents(), direction));
           },
           box);
-      //   Parallel::printf(
-      //       "end of if for uses_time_derivative_condition and if for "
-      //       "volume_mesh.quadrature(0) ==
-      //       Spectral::Quadrature::GaussLobatto\n");
     } else {
-      //   Parallel::printf(
-      //       "beginning of else for uses_time_derivative_condition and if for
-      //       " "volume_mesh.quadrature(0) ==
-      //       Spectral::Quadrature::GaussLobatto\n");
       db::mutate<dt_variables_tag>(
           [&direction, &dt_time_derivative_correction,
            &volume_mesh](const auto dt_variables_ptr) {
@@ -739,10 +656,6 @@ void apply_boundary_condition_on_face(
                 dt_time_derivative_correction);
           },
           box);
-      //   Parallel::printf(
-      //       "end of else for uses_time_derivative_condition and else for "
-      //       "volume_mesh.quadrature(0) ==
-      //       Spectral::Quadrature::GaussLobatto\n");
     }
   }
 }
@@ -811,7 +724,6 @@ void apply_boundary_conditions_on_all_external_faces(
           const auto& boundary_condition =
               *external_boundary_conditions.at(direction);
           if (typeid(boundary_condition) == typeid(DerivedBoundaryCondition)) {
-            // Parallel::printf("Before apply_boundary_condition_on_face\n");
             detail::apply_boundary_condition_on_face<System>(
                 box, boundary_correction,
                 dynamic_cast<const DerivedBoundaryCondition&>(
@@ -841,7 +753,6 @@ void apply_boundary_conditions_on_all_external_faces(
                         System::has_primitive_and_conservative_vars>::
                         template f<BoundaryCorrection>>{},
                 typename DerivedBoundaryCondition::dg_gridless_tags{});
-            // Parallel::printf("after apply_boundary_condition_on_face\n");
             --number_of_boundaries_left;
           }
           if (number_of_boundaries_left == 0) {

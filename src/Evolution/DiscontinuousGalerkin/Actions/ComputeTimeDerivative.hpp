@@ -54,7 +54,6 @@
 #include "Parallel/ArrayCollection/SendDataToElement.hpp"
 #include "Parallel/GlobalCache.hpp"
 #include "Parallel/Invoke.hpp"
-#include "Parallel/Printf/Printf.hpp"
 #include "Time/Actions/SelfStartActions.hpp"
 #include "Time/BoundaryHistory.hpp"
 #include "Time/Tags/HistoryEvolvedVariables.hpp"
@@ -682,60 +681,42 @@ ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers, LocalTimeStepping>::
               typename DerivedCorrection::dg_package_data_volume_tags{});
 
           if (element.external_boundaries().size() > 0) {
-            // Parallel::printf("element.external_boundaries().size() > 0\n");
             if constexpr (std::is_same_v<EvolutionSystem, ::gh::System<Dim>>) {
-              // Parallel::printf("System is GH, calling
-              // partial_derivatives\n");
               partial_derivatives(make_not_null(&inertial_partial_derivs),
                                   logical_partial_derivs,
                                   logical_to_inertial_inv_jacobian);
-              // Parallel::printf("after calling partial_derivatives\n");
               const auto& d_spacetime_metric =
                   get<::Tags::deriv<gr::Tags::SpacetimeMetric<DataVector, Dim>,
                                     tmpl::size_t<Dim>, Frame::Inertial>>(
                       inertial_partial_derivs);
-              // Parallel::printf("after d_spacetime_metric\n");
               const auto& phi =
                   get<gh::Tags::Phi<DataVector, Dim>>(evolved_variables);
-              // Parallel::printf("after phi\n");
               auto& three_index_constraint =
                   get<gh::Tags::ThreeIndexConstraint<DataVector, Dim>>(
                       temporaries);
-              // Parallel::printf("after three_index_constraint\n");
-
-              // Parallel::printf("Before tenex::evaluate\n");
 
               tenex::evaluate<ti::i, ti::a, ti::b>(
                   make_not_null(&three_index_constraint),
                   d_spacetime_metric(ti::i, ti::a, ti::b) -
                       phi(ti::i, ti::a, ti::b));
-              // Parallel::printf("after tenex::evaluate\n");
             }
-            // Parallel::printf(
-            //     "Before apply_boundary_conditions_on_all_external_faces\n");
             detail::apply_boundary_conditions_on_all_external_faces<
                 EvolutionSystem, Dim>(
                 make_not_null(&box),
                 dynamic_cast<const DerivedCorrection&>(boundary_correction),
                 temporaries, volume_fluxes, inertial_partial_derivs,
                 primitive_vars);
-            // Parallel::printf(
-            //     "after apply_boundary_conditions_on_all_external_faces\n");
           }
         }
       });
 
   if constexpr (LocalTimeStepping) {
-    // Parallel::printf("before take_step");
     take_step<EvolutionSystem, LocalTimeStepping, DgStepChoosers>(
         make_not_null(&box));
-    // Parallel::printf("after take_step");
   }
 
-  // Parallel::printf("before send_data_for_fluxes");
   send_data_for_fluxes<ParallelComponent>(make_not_null(&cache),
                                           make_not_null(&box), volume_fluxes);
-  // Parallel::printf("after send_data_for_fluxes");
   return {Parallel::AlgorithmExecution::Continue, std::nullopt};
 }
 
