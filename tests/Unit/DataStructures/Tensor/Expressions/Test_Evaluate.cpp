@@ -404,10 +404,12 @@ void test_lhs_tensorindex_reorder_rank2() {
 // }
 
 void test_lhs_tensorindex_reorder() {
+  // TODO : put back
   //   test_lhs_tensorindex_reorder_symm_consistency();
   test_lhs_tensorindex_reorder_rank0();
   test_lhs_tensorindex_reorder_rank1();
   test_lhs_tensorindex_reorder_rank2();
+  // TODO : we need some subset of these, but how many?
   //   test_lhs_tensorindex_reorder_rank3();
   //   test_lhs_tensorindex_reorder_high_rank();
 }
@@ -415,6 +417,7 @@ void test_lhs_tensorindex_reorder() {
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Evaluate",
                   "[DataStructures][Unit]") {
+  // TODO : put back
   //   test_contains_indices_to_contract();
   test_lhs_tensorindex_reorder();
 }
