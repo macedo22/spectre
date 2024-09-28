@@ -30,7 +30,7 @@ spectre_run_cmake_gcc() {
           -D CMAKE_Fortran_COMPILER=gfortran \
           -D CHARM_ROOT=$CHARM_ROOT \
           -D CMAKE_BUILD_TYPE=Debug \
-          -D MEMORY_ALLOCATOR=JEMALLOC \
+          -D MEMORY_ALLOCATOR=SYSTEM \
           -D BUILD_PYTHON_BINDINGS=ON \
           -D ENABLE_PARAVIEW=ON \
           -D MACHINE=Mbot \
@@ -51,7 +51,7 @@ spectre_run_cmake_clang() {
           -D CMAKE_Fortran_COMPILER=gfortran \
           -D CHARM_ROOT=$CHARM_ROOT \
           -D CMAKE_BUILD_TYPE=Debug \
-          -D MEMORY_ALLOCATOR=JEMALLOC \
+          -D MEMORY_ALLOCATOR=SYSTEM \
           -D BUILD_PYTHON_BINDINGS=ON \
           -D ENABLE_PARAVIEW=ON \
           -D MACHINE=Mbot \
