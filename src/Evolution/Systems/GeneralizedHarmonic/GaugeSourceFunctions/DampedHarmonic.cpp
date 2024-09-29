@@ -209,9 +209,9 @@ void damped_harmonic_impl(
                              ? DampedHarmonicGauge_detail::roll_on_function(
                                    time, rollon_start_time, rollon_width)
                              : 1.0;
-  // std::cout << "=== In damped_harmonic_impl ===" << std::endl;
-  // std::cout << "coords.size(): " << coords.size() << std::endl;
-  // std::cout << "coords: " << coords << std::endl;
+  std::cout << "=== In damped_harmonic_impl ===" << std::endl;
+  std::cout << "coords.size(): " << coords.size() << std::endl;
+  std::cout << "coords: " << coords << std::endl;
   DampedHarmonicGauge_detail::spatial_weight_function<DataVector, SpatialDim,
                                                       Frame>(
       make_not_null(&weight), coords, sigma_r);
