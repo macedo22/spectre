@@ -3,6 +3,8 @@
 
 #include "Evolution/Systems/GeneralizedHarmonic/GaugeSourceFunctions/Dispatch.hpp"
 
+#include <iostream>
+
 #include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Evolution/Systems/GeneralizedHarmonic/GaugeSourceFunctions/AnalyticChristoffel.hpp"
@@ -41,6 +43,10 @@ void dispatch(
   } else if (const auto* damped_harmonic_gauge =
                  dynamic_cast<const DampedHarmonic*>(&gauge_condition);
              damped_harmonic_gauge != nullptr) {
+    std::cout << "=== In dispatch ===" << std::endl;
+    std::cout << "inertial_coords.size(): " << inertial_coords.size()
+              << std::endl;
+    std::cout << "inertial_coords: " << inertial_coords << std::endl;
     damped_harmonic_gauge->gauge_and_spacetime_derivative(
         gauge_h, d4_gauge_h, lapse, shift, sqrt_det_spatial_metric,
         inverse_spatial_metric, d4_spacetime_metric, half_pi_two_normals,
