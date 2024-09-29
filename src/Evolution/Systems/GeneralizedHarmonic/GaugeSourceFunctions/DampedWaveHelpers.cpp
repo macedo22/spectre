@@ -5,7 +5,6 @@
 
 #include <cmath>
 #include <cstddef>
-#include <iostream>
 
 #include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tags/TempTensor.hpp"
@@ -27,9 +26,6 @@ template <typename DataType, size_t SpatialDim, typename Frame>
 void spatial_weight_function(const gsl::not_null<Scalar<DataType>*> weight,
                              const tnsr::I<DataType, SpatialDim, Frame>& coords,
                              const double sigma_r) {
-  std::cout << "=== In spatial_weight_function ===" << std::endl;
-  std::cout << "coords.size(): " << coords.size() << std::endl;
-  std::cout << "coords: " << coords << std::endl;
   const auto r_squared = dot_product(coords, coords);
   get(*weight) = exp(-get(r_squared) / pow<2>(sigma_r));
 }

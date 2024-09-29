@@ -6,7 +6,6 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
-#include <iostream>
 #include <limits>
 
 #include "DataStructures/Blaze/IntegerPow.hpp"
@@ -209,9 +208,6 @@ void damped_harmonic_impl(
                              ? DampedHarmonicGauge_detail::roll_on_function(
                                    time, rollon_start_time, rollon_width)
                              : 1.0;
-  std::cout << "=== In damped_harmonic_impl ===" << std::endl;
-  std::cout << "coords.size(): " << coords.size() << std::endl;
-  std::cout << "coords: " << coords << std::endl;
   DampedHarmonicGauge_detail::spatial_weight_function<DataVector, SpatialDim,
                                                       Frame>(
       make_not_null(&weight), coords, sigma_r);
@@ -537,10 +533,6 @@ void DampedHarmonic::gauge_and_spacetime_derivative(
     const double /*time*/,
     const tnsr::I<DataVector, SpatialDim, Frame::Inertial>& inertial_coords)
     const {
-  std::cout << "=== In gauge_and_spacetime_derivative ===" << std::endl;
-  std::cout << "inertial_coords.size(): " << inertial_coords.size()
-            << std::endl;
-  std::cout << "inertial_coords: " << inertial_coords << std::endl;
   damped_harmonic(gauge_h, d4_gauge_h, lapse, shift, sqrt_det_spatial_metric,
                   inverse_spatial_metric, d4_spacetime_metric,
                   half_pi_two_normals, half_phi_two_normals, spacetime_metric,

@@ -5,7 +5,7 @@
 
 #include <cmath>
 #include <cstddef>
-#include <iostream>
+// #include <iostream>
 
 #include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/EagerMath/RaiseOrLowerIndex.hpp"
@@ -391,12 +391,6 @@ void TimeDerivative<Dim>::apply(
     // Compute gauge condition.
     get(*sqrt_det_spatial_metric) = sqrt(get(*det_spatial_metric));
   }
-
-  std::cout << "=== In TimeDerivative::apply ===" << std::endl;
-  std::cout << "inertial_coords.size(): " << inertial_coords.size()
-            << std::endl;
-  std::cout << "inertial_coords: " << inertial_coords << std::endl;
-
   gauges::dispatch<Dim>(
       gauge_function, spacetime_deriv_gauge_function, *lapse, *shift,
       *sqrt_det_spatial_metric, *inverse_spatial_metric, *da_spacetime_metric,
