@@ -9,6 +9,7 @@
 #include <cstddef>
 
 #include "DataStructures/Tensor/Tensor.hpp"
+#include "Parallel/Printf/Printf.hpp"
 #include "Utilities/ContainerHelpers.hpp"
 #include "Utilities/MakeWithValue.hpp"
 
@@ -27,9 +28,18 @@ void dot_product(
     const Tensor<DataType, Symmetry<1>, index_list<Index>>& vector_a,
     const Tensor<DataType, Symmetry<1>, index_list<Index>>& vector_b) {
   get(*dot_product) = get<0>(vector_a) * get<0>(vector_b);
+  Parallel::printf("\n=== begin dot_product() ===");
+  Parallel::printf("vector_a.size(): %d", vector_a.size());
+  Parallel::printf("&vector_a (address of vector_a): %p", (void*)&vector_a);
+  Parallel::printf("vector_b.size(): %d", vector_b.size());
+  Parallel::printf("&vector_b (address of vector_b): %p", (void*)&vector_b);
+  Parallel::printf("dot_product->size(): %d", dot_product->size());
+  Parallel::printf("&(*dot_product) (address of dot_product): %p",
+                   (void*)&(*dot_product));
   for (size_t d = 1; d < Index::dim; ++d) {
     get(*dot_product) += vector_a.get(d) * vector_b.get(d);
   }
+  Parallel::printf("=== end dot_product() ===\n");
 }
 
 template <typename DataType, typename Index>
