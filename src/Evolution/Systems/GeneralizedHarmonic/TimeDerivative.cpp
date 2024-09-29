@@ -392,10 +392,10 @@ void TimeDerivative<Dim>::apply(
     get(*sqrt_det_spatial_metric) = sqrt(get(*det_spatial_metric));
   }
 
-  std::cout << "=== In TimeDerivative::apply ===" << std::endl;
-  std::cout << "inertial_coords.size(): " << inertial_coords.size()
-            << std::endl;
-  std::cout << "inertial_coords: " << inertial_coords << std::endl;
+  // std::cout << "=== In TimeDerivative::apply ===" << std::endl;
+  // std::cout << "inertial_coords.size(): " << inertial_coords.size()
+  //           << std::endl;
+  // std::cout << "inertial_coords: " << inertial_coords << std::endl;
 
   gauges::dispatch<Dim>(
       gauge_function, spacetime_deriv_gauge_function, *lapse, *shift,
