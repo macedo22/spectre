@@ -36,6 +36,7 @@ spectre_run_cmake_gcc() {
           -D MACHINE=Mbot \
           -D USE_XSIMD=yes \
           -D DEBUG_SYMBOLS=ON \
+          -D ASAN=ON \
           "$@" \
           $SPECTRE_HOME
 }
@@ -57,6 +58,7 @@ spectre_run_cmake_clang() {
           -D MACHINE=Mbot \
           -D USE_XSIMD=yes \
           -D DEBUG_SYMBOLS=ON \
+          -D ASAN=ON \
           "$@" \
           $SPECTRE_HOME
 }
