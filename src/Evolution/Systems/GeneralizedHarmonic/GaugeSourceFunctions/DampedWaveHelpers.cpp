@@ -11,7 +11,6 @@
 #include "DataStructures/TempBuffer.hpp"
 #include "DataStructures/Tensor/EagerMath/DotProduct.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
-#include "Parallel/Printf/Printf.hpp"
 #include "PointwiseFunctions/GeneralRelativity/GeneralizedHarmonic/SpacetimeDerivOfDetSpatialMetric.hpp"
 #include "PointwiseFunctions/GeneralRelativity/GeneralizedHarmonic/SpatialDerivOfLapse.hpp"
 #include "PointwiseFunctions/GeneralRelativity/GeneralizedHarmonic/TimeDerivOfLapse.hpp"
@@ -27,13 +26,8 @@ template <typename DataType, size_t SpatialDim, typename Frame>
 void spatial_weight_function(const gsl::not_null<Scalar<DataType>*> weight,
                              const tnsr::I<DataType, SpatialDim, Frame>& coords,
                              const double sigma_r) {
-  Parallel::printf("\n=== begin spatial_weight_function() ===");
-  Parallel::printf("coords.size(): %d", coords.size());
-  Parallel::printf("&coords (address of coords): %p", (void*)&coords);
-
   const auto r_squared = dot_product(coords, coords);
   get(*weight) = exp(-get(r_squared) / pow<2>(sigma_r));
-  Parallel::printf("=== end spatial_weight_function() ===\n");
 }
 
 template <typename DataType, size_t SpatialDim, typename Frame>
