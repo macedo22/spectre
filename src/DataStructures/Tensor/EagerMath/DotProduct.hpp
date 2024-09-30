@@ -28,26 +28,61 @@ void dot_product(
     const Tensor<DataType, Symmetry<1>, index_list<Index>>& vector_a,
     const Tensor<DataType, Symmetry<1>, index_list<Index>>& vector_b) {
   get(*dot_product) = get<0>(vector_a) * get<0>(vector_b);
-  Parallel::printf("\n=== begin dot_product() ===\n");
-  Parallel::printf("vector_a.size(): %d\n", vector_a.size());
   Parallel::printf("&vector_a (address of vector_a): %p\n", (void*)&vector_a);
-  Parallel::printf("vector_b.size(): %d\n", vector_b.size());
+  Parallel::printf("vector_a.size(): %d\n", vector_a.size());
   Parallel::printf("&vector_b (address of vector_b): %p\n", (void*)&vector_b);
+  Parallel::printf("vector_b.size(): %d\n", vector_b.size());
+  Parallel::printf("&dot_product (address of dot_product): %p\n",
+                   (void*)&dot_product);
+  if constexpr (std::is_same_v<DataType, DataVector>) {
+    Parallel::printf(
+        "&(*((*dot_product)[0])) (address of dot_product Datavector data): "
+        "%p\n",
+        (void*)&(*((*dot_product)[0])));
+    for (size_t i = 0; i < Index::dim; i++) {
+      Parallel::printf(
+          "&(*(vector_a[%d])) (address of vector_a[i] Datavector data): %p\n",
+          i, (void*)&(*(vector_a[i])));
+      Parallel::printf(
+          "&(*(vector_b[%d])) (address of vector_b[i] Datavector data): %p\n",
+          i, (void*)&(*(vector_b[i])));
+    }
+  }
   Parallel::printf("dot_product->size(): %d\n", dot_product->size());
-  Parallel::printf("&(*dot_product) (address of dot_product): %p\n",
-                   (void*)&(*dot_product));
   for (size_t d = 1; d < Index::dim; ++d) {
     get(*dot_product) += vector_a.get(d) * vector_b.get(d);
   }
-  Parallel::printf("=== end dot_product() ===\n");
+  Parallel::printf("=== end void dot_product() ===\n");
 }
 
 template <typename DataType, typename Index>
 Scalar<DataType> dot_product(
     const Tensor<DataType, Symmetry<1>, index_list<Index>>& vector_a,
     const Tensor<DataType, Symmetry<1>, index_list<Index>>& vector_b) {
+  Parallel::printf("\n=== begin Scalar<DataType> dot_product() ===\n");
   Scalar<DataType> dot_product(get_size(get<0>(vector_a)));
+  Parallel::printf("&vector_a (address of vector_a): %p\n", (void*)&vector_a);
+  Parallel::printf("vector_a.size(): %d\n", vector_a.size());
+  Parallel::printf("&vector_b (address of vector_b): %p\n", (void*)&vector_b);
+  Parallel::printf("vector_b.size(): %d\n", vector_b.size());
+  Parallel::printf("&dot_product (address of dot_product): %p\n",
+                   (void*)&dot_product);
+  if constexpr (std::is_same_v<DataType, DataVector>) {
+    Parallel::printf(
+        "&(*(dot_product[0])) (address of dot_product Datavector data): %p\n",
+        (void*)&(*(dot_product[0])));
+    for (size_t i = 0; i < Index::dim; i++) {
+      Parallel::printf(
+          "&(*(vector_a[%d])) (address of vector_a[i] Datavector data): %p\n",
+          i, (void*)&(*(vector_a[i])));
+      Parallel::printf(
+          "&(*(vector_b[%d])) (address of vector_b[i] Datavector data): %p\n",
+          i, (void*)&(*(vector_b[i])));
+    }
+  }
+  Parallel::printf("dot_product.size(): %d\n", dot_product.size());
   ::dot_product(make_not_null(&dot_product), vector_a, vector_b);
+  Parallel::printf("=== end Scalar<DataType> dot_product() ===\n");
   return dot_product;
 }
 /// @}
