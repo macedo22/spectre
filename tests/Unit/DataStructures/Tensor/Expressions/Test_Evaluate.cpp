@@ -3,15 +3,12 @@
 
 #include "Framework/TestingFramework.hpp"
 
+#include <cstddef>
 #include <type_traits>
 
-#include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/Expressions/Evaluate.hpp"
 #include "DataStructures/Tensor/Expressions/TensorIndex.hpp"
-#include "DataStructures/Tensor/IndexType.hpp"
-#include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank0.hpp"
-#include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank1.hpp"
-#include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank2.hpp"
+#include "DataStructures/Tensor/Symmetry.hpp"
 
 namespace {
 template <auto&... TensorIndices>
@@ -32,123 +29,711 @@ void test_contains_indices_to_contract() {
   test_contains_indices_to_contract_impl<ti::j, ti::c, ti::J, ti::A, ti::a>(
       true);
 }
+
+void test_lhs_tensorindex_reorder_symm_consistency() {
+  // TODO : update this message
+  const std::string error_msg =
+      "tenex::detail::get_reordered_tensorindex_values() assumes a canonical "
+      "form for Symmetry that is no longer the actual canonical form of "
+      "Symmetry. To make tenex::detail::get_reordered_tensorindex_values() "
+      "agree with the current canonical form for Symmetry, the logic of "
+      "tenex::detail::get_reordered_tensorindex_values() must be updated";
+
+  if (not std::is_same_v<Symmetry<>, tmpl::integral_list<std::int32_t>>) {
+    ERROR(error_msg);
+  }
+  if (not std::is_same_v<Symmetry<4>, tmpl::integral_list<std::int32_t, 1>>) {
+    ERROR(error_msg);
+  }
+  if (not std::is_same_v<Symmetry<1, 2>,
+                         tmpl::integral_list<std::int32_t, 2, 1>>) {
+    ERROR(error_msg);
+  }
+  if (not std::is_same_v<Symmetry<3, 5>,
+                         tmpl::integral_list<std::int32_t, 2, 1>>) {
+    ERROR(error_msg);
+  }
+  if (not std::is_same_v<Symmetry<2, 2, 2>,
+                         tmpl::integral_list<std::int32_t, 1, 1, 1>>) {
+    ERROR(error_msg);
+  }
+  if (not std::is_same_v<Symmetry<8, 4, 5, 5, 8>,
+                         tmpl::integral_list<std::int32_t, 1, 3, 2, 2, 1>>) {
+    ERROR(error_msg);
+  }
+}
+
+template <typename LhsTensorIndices, typename ExpectedReorderedTensorIndices>
+struct test_lhs_tensorindex_reorder_impl;
+
+template <typename... LhsTensorIndices,
+          typename... ExpectedReorderedTensorIndices>
+struct test_lhs_tensorindex_reorder_impl<
+    tmpl::list<LhsTensorIndices...>,
+    tmpl::list<ExpectedReorderedTensorIndices...>> {
+  static constexpr size_t num_indices = sizeof...(LhsTensorIndices);
+  static constexpr std::array<size_t, num_indices>
+      expected_reordered_tensorindex_values = {
+          {ExpectedReorderedTensorIndices::value...}};
+  static void apply(const std::array<std::int32_t, num_indices>& symmetry) {
+    CHECK(tenex::detail::get_reordered_tensorindex_values<LhsTensorIndices...>(
+              symmetry) == expected_reordered_tensorindex_values);
+  }
+};
+
+void test_lhs_tensorindex_reorder_rank0() {
+  const std::array<std::int32_t, 0> symmetry{{}};
+
+  using empty_list = make_tensorindex_list<>;
+
+  test_lhs_tensorindex_reorder_impl<empty_list, empty_list>::apply(symmetry);
+}
+
+void test_lhs_tensorindex_reorder_rank1() {
+  const std::array<std::int32_t, 1> symmetry{{1}};
+
+  using i_list = make_tensorindex_list<ti::i>;
+  using a_list = make_tensorindex_list<ti::a>;
+  using t_list = make_tensorindex_list<ti::t>;
+
+  using I_list = make_tensorindex_list<ti::I>;
+  using A_list = make_tensorindex_list<ti::A>;
+  using T_list = make_tensorindex_list<ti::T>;
+
+  // lower
+  test_lhs_tensorindex_reorder_impl<i_list, i_list>::apply(symmetry);
+  test_lhs_tensorindex_reorder_impl<a_list, a_list>::apply(symmetry);
+  test_lhs_tensorindex_reorder_impl<t_list, t_list>::apply(symmetry);
+
+  // upper
+  test_lhs_tensorindex_reorder_impl<I_list, I_list>::apply(symmetry);
+  test_lhs_tensorindex_reorder_impl<A_list, A_list>::apply(symmetry);
+  test_lhs_tensorindex_reorder_impl<T_list, T_list>::apply(symmetry);
+}
+
+void test_lhs_tensorindex_reorder_rank2() {
+  constexpr size_t num_indices = 2;
+  const std::array<std::int32_t, num_indices> asymmetric_symm{{2, 1}};
+  const std::array<std::int32_t, num_indices> symmetric_symm{{1, 1}};
+
+  using ij_list = make_tensorindex_list<ti::i, ti::j>;
+  using ji_list = make_tensorindex_list<ti::j, ti::i>;
+  using ab_list = make_tensorindex_list<ti::a, ti::b>;
+  using ba_list = make_tensorindex_list<ti::b, ti::a>;
+  using ia_list = make_tensorindex_list<ti::i, ti::a>;
+  using ai_list = make_tensorindex_list<ti::a, ti::i>;
+  using it_list = make_tensorindex_list<ti::i, ti::t>;
+  using ti_list = make_tensorindex_list<ti::t, ti::i>;
+  using at_list = make_tensorindex_list<ti::a, ti::t>;
+  using ta_list = make_tensorindex_list<ti::t, ti::a>;
+  using tt_list = make_tensorindex_list<ti::t, ti::t>;
+
+  using IJ_list = make_tensorindex_list<ti::i, ti::j>;
+  using JI_list = make_tensorindex_list<ti::j, ti::i>;
+  using AB_list = make_tensorindex_list<ti::a, ti::b>;
+  using BA_list = make_tensorindex_list<ti::b, ti::a>;
+  using IA_list = make_tensorindex_list<ti::i, ti::a>;
+  using AI_list = make_tensorindex_list<ti::a, ti::i>;
+  using IT_list = make_tensorindex_list<ti::i, ti::t>;
+  using TI_list = make_tensorindex_list<ti::t, ti::i>;
+  using AT_list = make_tensorindex_list<ti::a, ti::t>;
+  using TA_list = make_tensorindex_list<ti::t, ti::a>;
+  using TT_list = make_tensorindex_list<ti::t, ti::t>;
+
+  using iJ_list = make_tensorindex_list<ti::i, ti::j>;
+  using jI_list = make_tensorindex_list<ti::j, ti::i>;
+  using aB_list = make_tensorindex_list<ti::a, ti::b>;
+  using bA_list = make_tensorindex_list<ti::b, ti::a>;
+  using iA_list = make_tensorindex_list<ti::i, ti::a>;
+  using aI_list = make_tensorindex_list<ti::a, ti::i>;
+  using iT_list = make_tensorindex_list<ti::i, ti::t>;
+  using tI_list = make_tensorindex_list<ti::t, ti::i>;
+  using aT_list = make_tensorindex_list<ti::a, ti::t>;
+  using tA_list = make_tensorindex_list<ti::t, ti::a>;
+  using tT_list = make_tensorindex_list<ti::t, ti::t>;
+
+  using Ij_list = make_tensorindex_list<ti::i, ti::j>;
+  using Ji_list = make_tensorindex_list<ti::j, ti::i>;
+  using Ab_list = make_tensorindex_list<ti::a, ti::b>;
+  using Ba_list = make_tensorindex_list<ti::b, ti::a>;
+  using Ia_list = make_tensorindex_list<ti::i, ti::a>;
+  using Ai_list = make_tensorindex_list<ti::a, ti::i>;
+  using It_list = make_tensorindex_list<ti::i, ti::t>;
+  using Ti_list = make_tensorindex_list<ti::t, ti::i>;
+  using At_list = make_tensorindex_list<ti::a, ti::t>;
+  using Ta_list = make_tensorindex_list<ti::t, ti::a>;
+  using Tt_list = make_tensorindex_list<ti::t, ti::t>;
+
+  // lower
+  test_lhs_tensorindex_reorder_impl<ij_list, ij_list>::apply(asymmetric_symm);
+  test_lhs_tensorindex_reorder_impl<ij_list, ij_list>::apply(symmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<ji_list, ji_list>::apply(asymmetric_symm);
+  test_lhs_tensorindex_reorder_impl<ji_list, ij_list>::apply(symmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<ab_list, ab_list>::apply(asymmetric_symm);
+  test_lhs_tensorindex_reorder_impl<ab_list, ab_list>::apply(symmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<ba_list, ba_list>::apply(asymmetric_symm);
+  test_lhs_tensorindex_reorder_impl<ba_list, ab_list>::apply(symmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<ai_list, ai_list>::apply(asymmetric_symm);
+  test_lhs_tensorindex_reorder_impl<ai_list, ia_list>::apply(symmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<ia_list, ia_list>::apply(asymmetric_symm);
+  test_lhs_tensorindex_reorder_impl<ia_list, ia_list>::apply(symmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<it_list, it_list>::apply(asymmetric_symm);
+  test_lhs_tensorindex_reorder_impl<it_list, it_list>::apply(symmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<ti_list, ti_list>::apply(asymmetric_symm);
+  test_lhs_tensorindex_reorder_impl<ti_list, it_list>::apply(symmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<at_list, at_list>::apply(asymmetric_symm);
+  test_lhs_tensorindex_reorder_impl<at_list, at_list>::apply(symmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<ta_list, ta_list>::apply(asymmetric_symm);
+  test_lhs_tensorindex_reorder_impl<ta_list, at_list>::apply(symmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<tt_list, tt_list>::apply(asymmetric_symm);
+  test_lhs_tensorindex_reorder_impl<tt_list, tt_list>::apply(symmetric_symm);
+
+  // upper
+  test_lhs_tensorindex_reorder_impl<IJ_list, IJ_list>::apply(asymmetric_symm);
+  test_lhs_tensorindex_reorder_impl<IJ_list, IJ_list>::apply(symmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<JI_list, JI_list>::apply(asymmetric_symm);
+  test_lhs_tensorindex_reorder_impl<JI_list, IJ_list>::apply(symmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<AB_list, AB_list>::apply(asymmetric_symm);
+  test_lhs_tensorindex_reorder_impl<AB_list, AB_list>::apply(symmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<BA_list, BA_list>::apply(asymmetric_symm);
+  test_lhs_tensorindex_reorder_impl<BA_list, AB_list>::apply(symmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<AI_list, AI_list>::apply(asymmetric_symm);
+  test_lhs_tensorindex_reorder_impl<AI_list, IA_list>::apply(symmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<IA_list, IA_list>::apply(asymmetric_symm);
+  test_lhs_tensorindex_reorder_impl<IA_list, IA_list>::apply(symmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<IT_list, IT_list>::apply(asymmetric_symm);
+  test_lhs_tensorindex_reorder_impl<IT_list, IT_list>::apply(symmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<TI_list, TI_list>::apply(asymmetric_symm);
+  test_lhs_tensorindex_reorder_impl<TI_list, IT_list>::apply(symmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<AT_list, AT_list>::apply(asymmetric_symm);
+  test_lhs_tensorindex_reorder_impl<AT_list, AT_list>::apply(symmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<TA_list, TA_list>::apply(asymmetric_symm);
+  test_lhs_tensorindex_reorder_impl<TA_list, AT_list>::apply(symmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<TT_list, TT_list>::apply(asymmetric_symm);
+  test_lhs_tensorindex_reorder_impl<TT_list, TT_list>::apply(symmetric_symm);
+
+  // lower upper
+  test_lhs_tensorindex_reorder_impl<iJ_list, iJ_list>::apply(asymmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<jI_list, jI_list>::apply(asymmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<aB_list, aB_list>::apply(asymmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<bA_list, bA_list>::apply(asymmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<aI_list, aI_list>::apply(asymmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<iA_list, iA_list>::apply(asymmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<iT_list, iT_list>::apply(asymmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<tI_list, tI_list>::apply(asymmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<aT_list, aT_list>::apply(asymmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<tA_list, tA_list>::apply(asymmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<tT_list, tT_list>::apply(asymmetric_symm);
+
+  // upper lower
+  test_lhs_tensorindex_reorder_impl<Ij_list, Ij_list>::apply(asymmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<Ji_list, Ji_list>::apply(asymmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<Ab_list, Ab_list>::apply(asymmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<Ba_list, Ba_list>::apply(asymmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<Ai_list, Ai_list>::apply(asymmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<Ia_list, Ia_list>::apply(asymmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<It_list, It_list>::apply(asymmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<Ti_list, Ti_list>::apply(asymmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<At_list, At_list>::apply(asymmetric_symm);
+
+  test_lhs_tensorindex_reorder_impl<Ta_list, Ta_list>::apply(asymmetric_symm);
+
+  // TODO : Should Tt and tT map to the same result? e.g. Tt
+  test_lhs_tensorindex_reorder_impl<Tt_list, Tt_list>::apply(asymmetric_symm);
+}
+
+void test_lhs_tensorindex_reorder_rank3() {
+  constexpr size_t num_indices = 3;
+  const std::array<std::int32_t, num_indices> symm_111{{1, 1, 1}};
+  const std::array<std::int32_t, num_indices> symm_121{{1, 2, 1}};
+  const std::array<std::int32_t, num_indices> symm_211{{2, 1, 1}};
+  const std::array<std::int32_t, num_indices> symm_221{{2, 2, 1}};
+  const std::array<std::int32_t, num_indices> symm_321{{3, 2, 1}};
+
+  using ijk_list = make_tensorindex_list<ti::i, ti::j, ti::k>;
+  using ikj_list = make_tensorindex_list<ti::i, ti::k, ti::j>;
+  using jik_list = make_tensorindex_list<ti::j, ti::i, ti::k>;
+  using jki_list = make_tensorindex_list<ti::j, ti::k, ti::i>;
+  using kij_list = make_tensorindex_list<ti::k, ti::i, ti::j>;
+  using kji_list = make_tensorindex_list<ti::k, ti::j, ti::i>;
+
+  // ijk
+  test_lhs_tensorindex_reorder_impl<ijk_list, ijk_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<ijk_list, ijk_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<ijk_list, ijk_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<ijk_list, ijk_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<ijk_list, ijk_list>::apply(symm_321);
+
+  // ikj
+  test_lhs_tensorindex_reorder_impl<ikj_list, ijk_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<ikj_list, ikj_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<ikj_list, ijk_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<ikj_list, ikj_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<ikj_list, ikj_list>::apply(symm_321);
+
+  // jik
+  test_lhs_tensorindex_reorder_impl<jik_list, ijk_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<jik_list, jik_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<jik_list, jik_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<jik_list, ijk_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<jik_list, jik_list>::apply(symm_321);
+
+  // jki
+  test_lhs_tensorindex_reorder_impl<jki_list, ijk_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<jki_list, ikj_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<jki_list, jik_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<jki_list, jki_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<jki_list, jki_list>::apply(symm_321);
+
+  // kij
+  test_lhs_tensorindex_reorder_impl<kij_list, ijk_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<kij_list, jik_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<kij_list, kij_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<kij_list, ikj_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<kij_list, kij_list>::apply(symm_321);
+
+  // kji
+  test_lhs_tensorindex_reorder_impl<kji_list, ijk_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<kji_list, ijk_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<kji_list, kij_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<kji_list, jki_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<kji_list, kji_list>::apply(symm_321);
+
+  using abc_list = make_tensorindex_list<ti::i, ti::j, ti::k>;
+  using acb_list = make_tensorindex_list<ti::i, ti::k, ti::j>;
+  using bac_list = make_tensorindex_list<ti::j, ti::i, ti::k>;
+  using bca_list = make_tensorindex_list<ti::j, ti::k, ti::i>;
+  using cab_list = make_tensorindex_list<ti::k, ti::i, ti::j>;
+  using cba_list = make_tensorindex_list<ti::k, ti::j, ti::i>;
+
+  // abc
+  test_lhs_tensorindex_reorder_impl<abc_list, abc_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<abc_list, abc_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<abc_list, abc_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<abc_list, abc_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<abc_list, abc_list>::apply(symm_321);
+
+  // acb
+  test_lhs_tensorindex_reorder_impl<acb_list, abc_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<acb_list, acb_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<acb_list, abc_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<acb_list, acb_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<acb_list, acb_list>::apply(symm_321);
+
+  // bac
+  test_lhs_tensorindex_reorder_impl<bac_list, abc_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<bac_list, bac_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<bac_list, bac_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<bac_list, abc_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<bac_list, bac_list>::apply(symm_321);
+
+  // bca
+  test_lhs_tensorindex_reorder_impl<bca_list, abc_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<bca_list, acb_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<bca_list, bac_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<bca_list, bca_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<bca_list, bca_list>::apply(symm_321);
+
+  // cab
+  test_lhs_tensorindex_reorder_impl<cab_list, abc_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<cab_list, bac_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<cab_list, cab_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<cab_list, acb_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<cab_list, cab_list>::apply(symm_321);
+
+  // cba
+  test_lhs_tensorindex_reorder_impl<cba_list, abc_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<cba_list, abc_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<cba_list, cab_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<cba_list, bca_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<cba_list, cba_list>::apply(symm_321);
+
+  using ija_list = make_tensorindex_list<ti::i, ti::j, ti::a>;
+  using iaj_list = make_tensorindex_list<ti::i, ti::a, ti::j>;
+  using jia_list = make_tensorindex_list<ti::j, ti::i, ti::a>;
+  using jai_list = make_tensorindex_list<ti::j, ti::a, ti::i>;
+  using aij_list = make_tensorindex_list<ti::a, ti::i, ti::j>;
+  using aji_list = make_tensorindex_list<ti::a, ti::j, ti::i>;
+
+  // ija
+  test_lhs_tensorindex_reorder_impl<ija_list, ija_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<ija_list, ija_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<ija_list, ija_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<ija_list, ija_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<ija_list, ija_list>::apply(symm_321);
+
+  // iaj
+  test_lhs_tensorindex_reorder_impl<iaj_list, ija_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<iaj_list, iaj_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<iaj_list, ija_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<iaj_list, iaj_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<iaj_list, iaj_list>::apply(symm_321);
+
+  // jia
+  test_lhs_tensorindex_reorder_impl<jia_list, ija_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<jia_list, jia_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<jia_list, jia_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<jia_list, ija_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<jia_list, jia_list>::apply(symm_321);
+
+  // jai
+  test_lhs_tensorindex_reorder_impl<jai_list, ija_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<jai_list, iaj_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<jai_list, jia_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<jai_list, jai_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<jai_list, jai_list>::apply(symm_321);
+
+  // aij
+  test_lhs_tensorindex_reorder_impl<aij_list, ija_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<aij_list, jia_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<aij_list, aij_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<aij_list, iaj_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<aij_list, aij_list>::apply(symm_321);
+
+  // aji
+  test_lhs_tensorindex_reorder_impl<aji_list, ija_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<aji_list, ija_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<aji_list, aij_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<aji_list, jai_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<aji_list, aji_list>::apply(symm_321);
+
+  using abi_list = make_tensorindex_list<ti::a, ti::b, ti::i>;
+  using aib_list = make_tensorindex_list<ti::a, ti::i, ti::b>;
+  using bai_list = make_tensorindex_list<ti::b, ti::a, ti::i>;
+  using bia_list = make_tensorindex_list<ti::b, ti::i, ti::a>;
+  using iab_list = make_tensorindex_list<ti::i, ti::a, ti::b>;
+  using iba_list = make_tensorindex_list<ti::i, ti::b, ti::a>;
+
+  // abi
+  test_lhs_tensorindex_reorder_impl<abi_list, iab_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<abi_list, iba_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<abi_list, aib_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<abi_list, abi_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<abi_list, abi_list>::apply(symm_321);
+
+  // aib
+  test_lhs_tensorindex_reorder_impl<aib_list, iab_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<aib_list, aib_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<aib_list, aib_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<aib_list, iab_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<aib_list, aib_list>::apply(symm_321);
+
+  // bai
+  test_lhs_tensorindex_reorder_impl<bai_list, iab_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<bai_list, iab_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<bai_list, bia_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<bai_list, abi_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<bai_list, bai_list>::apply(symm_321);
+
+  // bia
+  test_lhs_tensorindex_reorder_impl<bia_list, iab_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<bia_list, aib_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<bia_list, bia_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<bia_list, iba_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<bia_list, bia_list>::apply(symm_321);
+
+  // iab
+  test_lhs_tensorindex_reorder_impl<iab_list, iab_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<iab_list, iab_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<iab_list, iab_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<iab_list, iab_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<iab_list, iab_list>::apply(symm_321);
+
+  // iba
+  test_lhs_tensorindex_reorder_impl<iba_list, iab_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<iba_list, iba_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<iba_list, iab_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<iba_list, iba_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<iba_list, iba_list>::apply(symm_321);
+
+  using ijt_list = make_tensorindex_list<ti::i, ti::j, ti::t>;
+  using itj_list = make_tensorindex_list<ti::i, ti::t, ti::j>;
+  using jit_list = make_tensorindex_list<ti::j, ti::i, ti::t>;
+  using jti_list = make_tensorindex_list<ti::j, ti::t, ti::i>;
+  using tij_list = make_tensorindex_list<ti::t, ti::i, ti::j>;
+  using tji_list = make_tensorindex_list<ti::t, ti::j, ti::i>;
+
+  // ijt
+  test_lhs_tensorindex_reorder_impl<ijt_list, ijt_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<ijt_list, ijt_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<ijt_list, ijt_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<ijt_list, ijt_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<ijt_list, ijt_list>::apply(symm_321);
+
+  // itj
+  test_lhs_tensorindex_reorder_impl<itj_list, ijt_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<itj_list, itj_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<itj_list, ijt_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<itj_list, itj_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<itj_list, itj_list>::apply(symm_321);
+
+  // jit
+  test_lhs_tensorindex_reorder_impl<jit_list, ijt_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<jit_list, jit_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<jit_list, jit_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<jit_list, ijt_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<jit_list, jit_list>::apply(symm_321);
+
+  // jti
+  test_lhs_tensorindex_reorder_impl<jti_list, ijt_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<jti_list, itj_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<jti_list, jit_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<jti_list, jti_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<jti_list, jti_list>::apply(symm_321);
+
+  // tij
+  test_lhs_tensorindex_reorder_impl<tij_list, ijt_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<tij_list, jit_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<tij_list, tij_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<tij_list, itj_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<tij_list, tij_list>::apply(symm_321);
+
+  // tji
+  test_lhs_tensorindex_reorder_impl<tji_list, ijt_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<tji_list, ijt_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<tji_list, tij_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<tji_list, jti_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<tji_list, tji_list>::apply(symm_321);
+
+  using abt_list = make_tensorindex_list<ti::i, ti::j, ti::t>;
+  using atb_list = make_tensorindex_list<ti::i, ti::t, ti::j>;
+  using bat_list = make_tensorindex_list<ti::j, ti::i, ti::t>;
+  using bta_list = make_tensorindex_list<ti::j, ti::t, ti::i>;
+  using tab_list = make_tensorindex_list<ti::t, ti::i, ti::j>;
+  using tba_list = make_tensorindex_list<ti::t, ti::j, ti::i>;
+
+  // abt
+  test_lhs_tensorindex_reorder_impl<abt_list, abt_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<abt_list, abt_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<abt_list, abt_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<abt_list, abt_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<abt_list, abt_list>::apply(symm_321);
+
+  // atb
+  test_lhs_tensorindex_reorder_impl<atb_list, abt_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<atb_list, atb_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<atb_list, abt_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<atb_list, atb_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<atb_list, atb_list>::apply(symm_321);
+
+  // bat
+  test_lhs_tensorindex_reorder_impl<bat_list, abt_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<bat_list, bat_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<bat_list, bat_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<bat_list, abt_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<bat_list, bat_list>::apply(symm_321);
+
+  // bta
+  test_lhs_tensorindex_reorder_impl<bta_list, abt_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<bta_list, atb_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<bta_list, bat_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<bta_list, bta_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<bta_list, bta_list>::apply(symm_321);
+
+  // tab
+  test_lhs_tensorindex_reorder_impl<tab_list, abt_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<tab_list, bat_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<tab_list, tab_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<tab_list, atb_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<tab_list, tab_list>::apply(symm_321);
+
+  // tba
+  test_lhs_tensorindex_reorder_impl<tba_list, abt_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<tba_list, abt_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<tba_list, tab_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<tba_list, bta_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<tba_list, tba_list>::apply(symm_321);
+
+  using itt_list = make_tensorindex_list<ti::a, ti::t, ti::t>;
+  using tit_list = make_tensorindex_list<ti::t, ti::a, ti::t>;
+  using tti_list = make_tensorindex_list<ti::t, ti::t, ti::a>;
+
+  // itt
+  test_lhs_tensorindex_reorder_impl<itt_list, itt_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<itt_list, itt_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<itt_list, itt_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<itt_list, itt_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<itt_list, itt_list>::apply(symm_321);
+
+  // tit
+  test_lhs_tensorindex_reorder_impl<tit_list, itt_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<tit_list, tit_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<tit_list, tit_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<tit_list, itt_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<tit_list, tit_list>::apply(symm_321);
+
+  // tti
+  test_lhs_tensorindex_reorder_impl<tti_list, itt_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<tti_list, itt_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<tti_list, tit_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<tti_list, tti_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<tti_list, tti_list>::apply(symm_321);
+
+  using att_list = make_tensorindex_list<ti::a, ti::t, ti::t>;
+  using tat_list = make_tensorindex_list<ti::t, ti::a, ti::t>;
+  using tta_list = make_tensorindex_list<ti::t, ti::t, ti::a>;
+
+  // att
+  test_lhs_tensorindex_reorder_impl<att_list, att_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<att_list, att_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<att_list, att_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<att_list, att_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<att_list, att_list>::apply(symm_321);
+
+  // tat
+  test_lhs_tensorindex_reorder_impl<tat_list, att_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<tat_list, tat_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<tat_list, tat_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<tat_list, att_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<tat_list, tat_list>::apply(symm_321);
+
+  // tta
+  test_lhs_tensorindex_reorder_impl<tta_list, att_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<tta_list, att_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<tta_list, tat_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<tta_list, tta_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<tta_list, tta_list>::apply(symm_321);
+
+  using iat_list = make_tensorindex_list<ti::i, ti::a, ti::t>;
+  using ita_list = make_tensorindex_list<ti::i, ti::t, ti::a>;
+  using ait_list = make_tensorindex_list<ti::a, ti::i, ti::t>;
+  using ati_list = make_tensorindex_list<ti::a, ti::t, ti::i>;
+  using tia_list = make_tensorindex_list<ti::t, ti::i, ti::a>;
+  using tai_list = make_tensorindex_list<ti::t, ti::a, ti::i>;
+
+  // iat
+  test_lhs_tensorindex_reorder_impl<iat_list, iat_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<iat_list, iat_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<iat_list, iat_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<iat_list, iat_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<iat_list, iat_list>::apply(symm_321);
+
+  // ita
+  test_lhs_tensorindex_reorder_impl<ita_list, iat_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<ita_list, ita_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<ita_list, iat_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<ita_list, ita_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<ita_list, ita_list>::apply(symm_321);
+
+  // ait
+  test_lhs_tensorindex_reorder_impl<ait_list, iat_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<ait_list, ait_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<ait_list, ait_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<ait_list, iat_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<ait_list, ait_list>::apply(symm_321);
+
+  // ati
+  test_lhs_tensorindex_reorder_impl<ati_list, iat_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<ati_list, ita_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<ati_list, ait_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<ati_list, ati_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<ati_list, ati_list>::apply(symm_321);
+
+  // tia
+  test_lhs_tensorindex_reorder_impl<tia_list, iat_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<tia_list, ait_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<tia_list, tia_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<tia_list, ita_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<tia_list, tia_list>::apply(symm_321);
+
+  // tai
+  test_lhs_tensorindex_reorder_impl<tai_list, iat_list>::apply(symm_111);
+  test_lhs_tensorindex_reorder_impl<tai_list, iat_list>::apply(symm_121);
+  test_lhs_tensorindex_reorder_impl<tai_list, tia_list>::apply(symm_211);
+  test_lhs_tensorindex_reorder_impl<tai_list, ati_list>::apply(symm_221);
+  test_lhs_tensorindex_reorder_impl<tai_list, tai_list>::apply(symm_321);
+}
+
+void test_lhs_tensorindex_reorder_rank4() {
+  constexpr size_t num_indices = 4;
+  const std::array<std::int32_t, num_indices> symm_1111{{1, 1, 1, 1}};
+  const std::array<std::int32_t, num_indices> symm_1121{{1, 1, 2, 1}};
+  const std::array<std::int32_t, num_indices> symm_1211{{1, 2, 1, 1}};
+  const std::array<std::int32_t, num_indices> symm_2111{{2, 1, 1, 1}};
+  const std::array<std::int32_t, num_indices> symm_1221{{1, 2, 2, 1}};
+  const std::array<std::int32_t, num_indices> symm_2121{{2, 1, 2, 1}};
+  const std::array<std::int32_t, num_indices> symm_2211{{2, 2, 1, 1}};
+  const std::array<std::int32_t, num_indices> symm_2221{{2, 2, 2, 1}};
+  const std::array<std::int32_t, num_indices> symm_2321{{2, 3, 2, 1}};
+  const std::array<std::int32_t, num_indices> symm_3321{{3, 3, 2, 1}};
+  const std::array<std::int32_t, num_indices> symm_4321{{4, 3, 2, 1}};
+
+  using tbai_list = make_tensorindex_list<ti::t, ti::b, ti::a, ti::i>;
+  using aitb_list = make_tensorindex_list<ti::a, ti::i, ti::t, ti::b>;
+  using ibat_list = make_tensorindex_list<ti::i, ti::b, ti::a, ti::t>;
+  using tiab_list = make_tensorindex_list<ti::t, ti::i, ti::a, ti::b>;
+  using iabt_list = make_tensorindex_list<ti::i, ti::a, ti::b, ti::t>;
+  using aitb_list = make_tensorindex_list<ti::a, ti::i, ti::t, ti::b>;
+  using btia_list = make_tensorindex_list<ti::b, ti::t, ti::i, ti::a>;
+  using abti_list = make_tensorindex_list<ti::a, ti::b, ti::t, ti::i>;
+  using btai_list = make_tensorindex_list<ti::b, ti::t, ti::a, ti::i>;
+
+  // tbai
+  test_lhs_tensorindex_reorder_impl<tbai_list, iabt_list>::apply(symm_1111);
+  test_lhs_tensorindex_reorder_impl<tbai_list, ibat_list>::apply(symm_1121);
+  test_lhs_tensorindex_reorder_impl<tbai_list, ibat_list>::apply(symm_1211);
+  test_lhs_tensorindex_reorder_impl<tbai_list, tiab_list>::apply(symm_2111);
+  test_lhs_tensorindex_reorder_impl<tbai_list, iabt_list>::apply(symm_1221);
+  test_lhs_tensorindex_reorder_impl<tbai_list, aitb_list>::apply(symm_2121);
+  test_lhs_tensorindex_reorder_impl<tbai_list, btia_list>::apply(symm_2211);
+  test_lhs_tensorindex_reorder_impl<tbai_list, abti_list>::apply(symm_2221);
+  test_lhs_tensorindex_reorder_impl<tbai_list, abti_list>::apply(symm_2321);
+  test_lhs_tensorindex_reorder_impl<tbai_list, btai_list>::apply(symm_3321);
+  test_lhs_tensorindex_reorder_impl<tbai_list, tbai_list>::apply(symm_4321);
+}
+
+void test_lhs_tensorindex_reorder() {
+  test_lhs_tensorindex_reorder_symm_consistency();
+  test_lhs_tensorindex_reorder_rank0();
+  test_lhs_tensorindex_reorder_rank1();
+  test_lhs_tensorindex_reorder_rank2();
+  test_lhs_tensorindex_reorder_rank3();
+  test_lhs_tensorindex_reorder_rank4();
+}
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Evaluate",
                   "[DataStructures][Unit]") {
   test_contains_indices_to_contract();
-
-  // Rank 0: double
-  TestHelpers::tenex::test_evaluate_rank_0<double>(-7.31);
-
-  // Rank 0: DataVector
-  TestHelpers::tenex::test_evaluate_rank_0<DataVector>(
-      DataVector{-3.1, 9.4, 0.0, -3.1, 2.4, 9.8});
-
-  // Rank 1: double; spacetime
-  TestHelpers::tenex::test_evaluate_rank_1<double, SpacetimeIndex, UpLo::Lo,
-                                           ti::a>();
-  TestHelpers::tenex::test_evaluate_rank_1<double, SpacetimeIndex, UpLo::Lo,
-                                           ti::b>();
-  TestHelpers::tenex::test_evaluate_rank_1<double, SpacetimeIndex, UpLo::Up,
-                                           ti::A>();
-  TestHelpers::tenex::test_evaluate_rank_1<double, SpacetimeIndex, UpLo::Up,
-                                           ti::B>();
-
-  // Rank 1: double; spatial
-  TestHelpers::tenex::test_evaluate_rank_1<double, SpatialIndex, UpLo::Lo,
-                                           ti::i>();
-  TestHelpers::tenex::test_evaluate_rank_1<double, SpatialIndex, UpLo::Lo,
-                                           ti::j>();
-  TestHelpers::tenex::test_evaluate_rank_1<double, SpatialIndex, UpLo::Up,
-                                           ti::I>();
-  TestHelpers::tenex::test_evaluate_rank_1<double, SpatialIndex, UpLo::Up,
-                                           ti::J>();
-
-  // Rank 1: DataVector
-  TestHelpers::tenex::test_evaluate_rank_1<DataVector, SpatialIndex, UpLo::Up,
-                                           ti::L>();
-
-  // Rank 2: double; nonsymmetric; spacetime only
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      double, SpacetimeIndex, SpacetimeIndex, UpLo::Lo, UpLo::Lo, ti::a,
-      ti::b>();
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      double, SpacetimeIndex, SpacetimeIndex, UpLo::Up, UpLo::Up, ti::A,
-      ti::B>();
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      double, SpacetimeIndex, SpacetimeIndex, UpLo::Lo, UpLo::Lo, ti::d,
-      ti::c>();
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      double, SpacetimeIndex, SpacetimeIndex, UpLo::Up, UpLo::Up, ti::D,
-      ti::C>();
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      double, SpacetimeIndex, SpacetimeIndex, UpLo::Lo, UpLo::Up, ti::e,
-      ti::F>();
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      double, SpacetimeIndex, SpacetimeIndex, UpLo::Up, UpLo::Lo, ti::F,
-      ti::e>();
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      double, SpacetimeIndex, SpacetimeIndex, UpLo::Lo, UpLo::Up, ti::g,
-      ti::B>();
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      double, SpacetimeIndex, SpacetimeIndex, UpLo::Up, UpLo::Lo, ti::G,
-      ti::b>();
-
-  // Rank 2: double; nonsymmetric; spatial only
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      double, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Lo, ti::i, ti::j>();
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      double, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Up, ti::I, ti::J>();
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      double, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Lo, ti::j, ti::i>();
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      double, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Up, ti::J, ti::I>();
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      double, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Up, ti::i, ti::J>();
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      double, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Lo, ti::I, ti::j>();
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      double, SpatialIndex, SpatialIndex, UpLo::Lo, UpLo::Up, ti::j, ti::I>();
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      double, SpatialIndex, SpatialIndex, UpLo::Up, UpLo::Lo, ti::J, ti::i>();
-
-  // Rank 2: double; nonsymmetric; spacetime and spatial mixed
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      double, SpacetimeIndex, SpatialIndex, UpLo::Lo, UpLo::Up, ti::c, ti::I>();
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      double, SpacetimeIndex, SpatialIndex, UpLo::Up, UpLo::Lo, ti::A, ti::i>();
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      double, SpatialIndex, SpacetimeIndex, UpLo::Up, UpLo::Lo, ti::J, ti::a>();
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      double, SpatialIndex, SpacetimeIndex, UpLo::Lo, UpLo::Up, ti::i, ti::B>();
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      double, SpacetimeIndex, SpatialIndex, UpLo::Lo, UpLo::Lo, ti::e, ti::j>();
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      double, SpatialIndex, SpacetimeIndex, UpLo::Lo, UpLo::Lo, ti::i, ti::d>();
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      double, SpacetimeIndex, SpatialIndex, UpLo::Up, UpLo::Up, ti::C, ti::I>();
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      double, SpatialIndex, SpacetimeIndex, UpLo::Up, UpLo::Up, ti::J, ti::A>();
-
-  // Rank 2: double; symmetric; spacetime
-  TestHelpers::tenex::test_evaluate_rank_2_symmetric<double, SpacetimeIndex,
-                                                     UpLo::Lo, ti::a, ti::d>();
-  TestHelpers::tenex::test_evaluate_rank_2_symmetric<double, SpacetimeIndex,
-                                                     UpLo::Up, ti::G, ti::B>();
-
-  // Rank 2: double; symmetric; spatial
-  TestHelpers::tenex::test_evaluate_rank_2_symmetric<double, SpatialIndex,
-                                                     UpLo::Lo, ti::j, ti::i>();
-  TestHelpers::tenex::test_evaluate_rank_2_symmetric<double, SpatialIndex,
-                                                     UpLo::Up, ti::I, ti::J>();
-
-  // Rank 2: DataVector; nonsymmetric
-  TestHelpers::tenex::test_evaluate_rank_2_no_symmetry<
-      DataVector, SpacetimeIndex, SpacetimeIndex, UpLo::Lo, UpLo::Up, ti::f,
-      ti::G>();
-
-  // Rank 2: DataVector; symmetric
-  TestHelpers::tenex::test_evaluate_rank_2_symmetric<DataVector, SpatialIndex,
-                                                     UpLo::Lo, ti::j, ti::i>();
+  // TODO : just do a bunch of evaluate tests instead of this, can remove
+  // the rank 0 and 1?
+  test_lhs_tensorindex_reorder();
 }
