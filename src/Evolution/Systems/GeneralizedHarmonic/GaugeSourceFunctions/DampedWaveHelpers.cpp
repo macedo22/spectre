@@ -27,13 +27,13 @@ template <typename DataType, size_t SpatialDim, typename Frame>
 void spatial_weight_function(const gsl::not_null<Scalar<DataType>*> weight,
                              const tnsr::I<DataType, SpatialDim, Frame>& coords,
                              const double sigma_r) {
-  // Parallel::printf("\n=== begin spatial_weight_function() ===\n");
-  // Parallel::printf("coords.size(): %d\n", coords.size());
-  // Parallel::printf("&coords (address of coords): %p\n", (void*)&coords);
+  Parallel::printf("\n=== begin spatial_weight_function() ===\n");
+  Parallel::printf("coords.size(): %d\n", coords.size());
+  Parallel::printf("&coords (address of coords): %p\n", (void*)&coords);
 
   const auto r_squared = dot_product(coords, coords);
   get(*weight) = exp(-get(r_squared) / pow<2>(sigma_r));
-  // Parallel::printf("=== end spatial_weight_function() ===\n");
+  Parallel::printf("=== end spatial_weight_function() ===\n");
 }
 
 template <typename DataType, size_t SpatialDim, typename Frame>
