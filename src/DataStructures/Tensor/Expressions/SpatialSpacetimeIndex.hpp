@@ -7,6 +7,7 @@
 #include <cstddef>
 
 #include "DataStructures/Tensor/Expressions/TensorIndex.hpp"
+#include "DataStructures/Tensor/Expressions/TimeIndex.hpp"
 #include "DataStructures/Tensor/IndexType.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
 #include "Utilities/Algorithm.hpp"
@@ -23,6 +24,26 @@
 
 namespace tenex {
 namespace detail {
+// TODO move is_time_index_value into same namespace as this
+/// \brief Returns whether or not the provided value is a TensorIndex value
+/// that encodes a generic spatial index
+///
+/// \param value the value to check
+/// \return whether or not the value encodes a generic spatial index
+constexpr bool is_generic_spatial_index_value(const size_t value) {
+  return value >= tenex::TensorIndex_detail::spatial_sentinel;
+}
+
+/// \brief Returns whether or not the provided value is a TensorIndex value
+/// that encodes a generic spacetime index
+///
+/// \param value the value to check
+/// \return whether or not the value encodes a generic spacetime index
+constexpr bool is_generic_spacetime_index_value(const size_t value) {
+  return value < tenex::TensorIndex_detail::spatial_sentinel and
+         not is_time_index_value(value);
+}
+
 template <typename State, typename Element, typename Iteration,
           typename TensorIndexList>
 struct spatial_spacetime_index_positions_impl {

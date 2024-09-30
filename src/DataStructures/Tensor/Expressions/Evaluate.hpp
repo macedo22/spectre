@@ -16,12 +16,14 @@
 #include "DataStructures/Tensor/Expressions/DataTypeSupport.hpp"
 #include "DataStructures/Tensor/Expressions/IndexPropertyCheck.hpp"
 #include "DataStructures/Tensor/Expressions/LhsTensorSymmAndIndices.hpp"
+#include "DataStructures/Tensor/Expressions/SpatialSpacetimeIndex.hpp"
 #include "DataStructures/Tensor/Expressions/TensorExpression.hpp"
 #include "DataStructures/Tensor/Expressions/TensorIndex.hpp"
 #include "DataStructures/Tensor/Expressions/TensorIndexTransformation.hpp"
 #include "DataStructures/Tensor/Expressions/TimeIndex.hpp"
 #include "DataStructures/Tensor/Structure.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
+#include "Utilities/Algorithm.hpp"
 #include "Utilities/ContainerHelpers.hpp"
 #include "Utilities/ErrorHandling/Assert.hpp"
 #include "Utilities/Gsl.hpp"
@@ -103,6 +105,77 @@ struct CheckNoLhsAntiSymmetries<SymmList<Symm...>> {
   static constexpr bool value = (... and (Symm::value > 0));
 };
 
+// TODO : this assumes symmetry is canonicalized already
+template <typename... LhsTensorIndices, size_t NumIndices>
+constexpr std::array<size_t, NumIndices> get_reordered_tensorindex_values(
+    const std::array<std::int32_t, NumIndices>& symmetry) {
+  constexpr std::array<size_t, NumIndices> lhs_tensorindex_values = {
+      {LhsTensorIndices::value...}};
+  if (NumIndices < 2) {
+    return lhs_tensorindex_values;
+  }
+
+  std::int32_t max_symm_value = *alg::max_element(symmetry);
+
+  std::array<size_t, NumIndices> reordered_lhs_tensorindex_values =
+      lhs_tensorindex_values;
+
+  const auto compare = [](const size_t tensorindex_value1,
+                          const size_t tensorindex_value2) {
+    if (is_time_index_value(tensorindex_value2)) {
+      return false;
+    }
+
+    return is_time_index_value(tensorindex_value1) or
+           (is_generic_spacetime_index_value(tensorindex_value1) and
+            is_generic_spatial_index_value(tensorindex_value2)) or
+           (tensorindex_value1 > tensorindex_value2 and
+            is_generic_spacetime_index_value(tensorindex_value1) ==
+                is_generic_spacetime_index_value(tensorindex_value2));
+  };
+
+  std::int32_t symm_value_to_find = 1;
+  while (symm_value_to_find <= max_symm_value) {
+    // skip forward until we get to the position with the value we care about
+    // TODO: what if the value isn't found? we just assume we get a canon
+    // symmetry
+    size_t i = NumIndices - 1;
+    // TODO : check and fix this logic
+    while (true) {
+      while (i > 0 and symmetry[i] != symm_value_to_find) {
+        i--;
+      }
+      if (i == 0) {
+        break;
+      }
+
+      size_t max_tensorindex_value = reordered_lhs_tensorindex_values[i];
+      size_t max_index = i;
+
+      size_t j = i - 1;
+      // note: because we need to hit 0 and size_t wraps around to max size_t
+      while (j < NumIndices) {
+        const std::int32_t compare_symm_value = symmetry[j];
+        const size_t compare_tensorindex_value =
+            reordered_lhs_tensorindex_values[j];
+        if (compare_symm_value == symm_value_to_find and
+            compare(compare_tensorindex_value, max_tensorindex_value)) {
+          max_tensorindex_value = compare_tensorindex_value;
+          max_index = j;
+        }
+        j--;
+      }
+      reordered_lhs_tensorindex_values[max_index] =
+          reordered_lhs_tensorindex_values[i];
+      reordered_lhs_tensorindex_values[i] = max_tensorindex_value;
+      i--;
+    }
+    symm_value_to_find++;
+  }
+
+  return reordered_lhs_tensorindex_values;
+}
+
 /*!
  * \ingroup TensorExpressionsGroup
  * \brief Evaluate subtrees of the RHS expression or the RHS expression as a
@@ -146,13 +219,15 @@ struct CheckNoLhsAntiSymmetries<SymmList<Symm...>> {
 template <bool EvaluateSubtrees, typename... LhsTensorIndices,
           typename LhsDataType, typename LhsSymmetry, typename LhsIndexList,
           typename Derived, typename RhsDataType, typename RhsSymmetry,
-          typename RhsIndexList, typename... RhsTensorIndices>
+          typename RhsIndexList, typename... RhsTensorIndices,
+          size_t... LhsInts>
 void evaluate_impl(
     const gsl::not_null<Tensor<LhsDataType, LhsSymmetry, LhsIndexList>*>
         lhs_tensor,
     const TensorExpression<Derived, RhsDataType, RhsSymmetry, RhsIndexList,
                            tmpl::list<RhsTensorIndices...>>&
-        rhs_tensorexpression) {
+        rhs_tensorexpression,
+    const std::index_sequence<LhsInts...>& /*lhs_ints*/) {
   constexpr size_t num_lhs_indices = sizeof...(LhsTensorIndices);
   constexpr size_t num_rhs_indices = sizeof...(RhsTensorIndices);
 
@@ -247,15 +322,22 @@ void evaluate_impl(
     }
   }
 
+  constexpr std::array<std::int32_t, num_lhs_indices> lhs_symmetry = {
+      {tmpl::at_c<LhsSymmetry, LhsInts>::value...}};
+  constexpr std::array<size_t, num_lhs_indices> reordered_tensorindex_values =
+      get_reordered_tensorindex_values<LhsTensorIndices...>(lhs_symmetry);
+  using reordered_lhs_tensorindex_list =
+      tmpl::list<TensorIndex<reordered_tensorindex_values[LhsInts]>...>;
+
   constexpr std::array<size_t, num_rhs_indices> index_transformation =
       compute_tensorindex_transformation<num_lhs_indices, num_rhs_indices>(
-          {{LhsTensorIndices::value...}}, {{RhsTensorIndices::value...}});
+          reordered_tensorindex_values, {{RhsTensorIndices::value...}});
 
   // positions of indices in LHS tensor where generic spatial indices are used
   // for spacetime indices
   constexpr auto lhs_spatial_spacetime_index_positions =
       get_spatial_spacetime_index_positions<LhsIndexList,
-                                            lhs_tensorindex_list>();
+                                            reordered_lhs_tensorindex_list>();
   // positions of indices in RHS tensor where generic spatial indices are used
   // for spacetime indices
   constexpr auto rhs_spatial_spacetime_index_positions =
@@ -264,7 +346,7 @@ void evaluate_impl(
 
   // positions of indices in LHS tensor where concrete time indices are used
   constexpr auto lhs_time_index_positions =
-      get_time_index_positions<lhs_tensorindex_list>();
+      get_time_index_positions<reordered_lhs_tensorindex_list>();
 
   using rhs_expression_type =
       typename std::decay_t<decltype(~rhs_tensorexpression)>;
@@ -329,10 +411,11 @@ void evaluate_impl(
  * @param rhs_value the RHS value to assigned
  */
 template <typename... LhsTensorIndices, typename X, typename LhsSymmetry,
-          typename LhsIndexList, typename NumberType>
+          typename LhsIndexList, typename NumberType, size_t... LhsInts>
 void evaluate_impl(
     const gsl::not_null<Tensor<X, LhsSymmetry, LhsIndexList>*> lhs_tensor,
-    const NumberType& rhs_value) {
+    const NumberType& rhs_value,
+    const std::index_sequence<LhsInts...>& /*lhs_ints*/) {
   using lhs_tensor_type = typename std::decay_t<decltype(*lhs_tensor)>;
   constexpr size_t num_lhs_indices = sizeof...(LhsTensorIndices);
   using lhs_tensorindex_list = tmpl::list<LhsTensorIndices...>;
@@ -376,15 +459,23 @@ void evaluate_impl(
            "\n\tgsl::not_null<Tensor<VectorType, ...>*>, number).");
   }
 
+  constexpr std::array<std::int32_t, num_lhs_indices> lhs_symmetry = {
+      {tmpl::at_c<LhsSymmetry, LhsInts>::value...}};
+  // TODO: remove this temp variable to get rid of unused variable warning
+  constexpr std::array<size_t, num_lhs_indices> reordered_tensorindex_values =
+      get_reordered_tensorindex_values<LhsTensorIndices...>(lhs_symmetry);
+  using reordered_lhs_tensorindex_list =
+      tmpl::list<TensorIndex<reordered_tensorindex_values[LhsInts]>...>;
+
   // positions of indices in LHS tensor where generic spatial indices are used
   // for spacetime indices
   constexpr auto lhs_spatial_spacetime_index_positions =
       get_spatial_spacetime_index_positions<LhsIndexList,
-                                            lhs_tensorindex_list>();
+                                            reordered_lhs_tensorindex_list>();
 
   // positions of indices in LHS tensor where concrete time indices are used
   constexpr auto lhs_time_index_positions =
-      get_time_index_positions<lhs_tensorindex_list>();
+      get_time_index_positions<reordered_lhs_tensorindex_list>();
 
   for (size_t i = 0; i < lhs_tensor_type::size(); i++) {
     auto lhs_multi_index =
@@ -455,7 +546,8 @@ void evaluate(
       rhs_expression_type::primary_subtree_contains_primary_start;
   detail::evaluate_impl<evaluate_subtrees,
                         std::decay_t<decltype(LhsTensorIndices)>...>(
-      lhs_tensor, rhs_tensorexpression);
+      lhs_tensor, rhs_tensorexpression,
+      std::make_index_sequence<sizeof...(LhsTensorIndices)>{});
 }
 
 /// @{
@@ -485,16 +577,18 @@ template <auto&... LhsTensorIndices, typename X, typename LhsSymmetry,
 void evaluate(
     const gsl::not_null<Tensor<X, LhsSymmetry, LhsIndexList>*> lhs_tensor,
     const N rhs_value) {
-  detail::evaluate_impl<std::decay_t<decltype(LhsTensorIndices)>...>(lhs_tensor,
-                                                                     rhs_value);
+  detail::evaluate_impl<std::decay_t<decltype(LhsTensorIndices)>...>(
+      lhs_tensor, rhs_value,
+      std::make_index_sequence<sizeof...(LhsTensorIndices)>{});
 }
 template <auto&... LhsTensorIndices, typename X, typename LhsSymmetry,
           typename LhsIndexList, typename N>
 void evaluate(
     const gsl::not_null<Tensor<X, LhsSymmetry, LhsIndexList>*> lhs_tensor,
     const std::complex<N>& rhs_value) {
-  detail::evaluate_impl<std::decay_t<decltype(LhsTensorIndices)>...>(lhs_tensor,
-                                                                     rhs_value);
+  detail::evaluate_impl<std::decay_t<decltype(LhsTensorIndices)>...>(
+      lhs_tensor, rhs_value,
+      std::make_index_sequence<sizeof...(LhsTensorIndices)>{});
 }
 /// @}
 
@@ -626,6 +720,7 @@ void update(
           lhs_tensor);
 
   detail::evaluate_impl<false, std::decay_t<decltype(LhsTensorIndices)>...>(
-      lhs_tensor, rhs_tensorexpression);
+      lhs_tensor, rhs_tensorexpression,
+      std::make_index_sequence<sizeof...(LhsTensorIndices)>{});
 }
 }  // namespace tenex
