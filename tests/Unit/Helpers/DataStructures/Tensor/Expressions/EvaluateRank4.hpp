@@ -49,7 +49,8 @@ namespace TestHelpers::tenex {
 /// TensorExpression, e.g. `ti::c`
 /// \tparam TensorIndexD the fourth TensorIndex used on the RHS of the
 /// TensorExpression, e.g. `ti::D`
-template <typename DataType, typename RhsSymmetry,
+template <typename DataType, typename LhsSymmetry,
+          typename LhsTensorIndexTypeList, typename RhsSymmetry,
           typename RhsTensorIndexTypeList, auto& TensorIndexA,
           auto& TensorIndexB, auto& TensorIndexC, auto& TensorIndexD>
 void test_evaluate_rank_4() {
@@ -59,19 +60,19 @@ void test_evaluate_rank_4() {
 
   // Used for enforcing the ordering of the symmetry and TensorIndexTypes of the
   // LHS Tensor returned by `evaluate`
-  const std::int32_t rhs_symmetry_element_a = tmpl::at_c<RhsSymmetry, 0>::value;
-  const std::int32_t rhs_symmetry_element_b = tmpl::at_c<RhsSymmetry, 1>::value;
-  const std::int32_t rhs_symmetry_element_c = tmpl::at_c<RhsSymmetry, 2>::value;
-  const std::int32_t rhs_symmetry_element_d = tmpl::at_c<RhsSymmetry, 3>::value;
-  using rhs_tensorindextype_a = tmpl::at_c<RhsTensorIndexTypeList, 0>;
-  using rhs_tensorindextype_b = tmpl::at_c<RhsTensorIndexTypeList, 1>;
-  using rhs_tensorindextype_c = tmpl::at_c<RhsTensorIndexTypeList, 2>;
-  using rhs_tensorindextype_d = tmpl::at_c<RhsTensorIndexTypeList, 3>;
+  const std::int32_t lhs_symmetry_element_a = tmpl::at_c<LhsSymmetry, 0>::value;
+  const std::int32_t lhs_symmetry_element_b = tmpl::at_c<LhsSymmetry, 1>::value;
+  const std::int32_t lhs_symmetry_element_c = tmpl::at_c<LhsSymmetry, 2>::value;
+  const std::int32_t lhs_symmetry_element_d = tmpl::at_c<LhsSymmetry, 3>::value;
+  using lhs_tensorindextype_a = tmpl::at_c<LhsTensorIndexTypeList, 0>;
+  using lhs_tensorindextype_b = tmpl::at_c<LhsTensorIndexTypeList, 1>;
+  using lhs_tensorindextype_c = tmpl::at_c<LhsTensorIndexTypeList, 2>;
+  using lhs_tensorindextype_d = tmpl::at_c<LhsTensorIndexTypeList, 3>;
 
   // L_{abcd} = R_{abcd}
   // Use explicit type (vs auto) so the compiler checks the return type of
   // `evaluate`
-  using L_abcd_type = Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList>;
+  using L_abcd_type = Tensor<DataType, LhsSymmetry, LhsTensorIndexTypeList>;
   const L_abcd_type L_abcd_returned =
       ::tenex::evaluate<TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD>(
           R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
@@ -82,11 +83,11 @@ void test_evaluate_rank_4() {
 
   // L_{abdc} = R_{abcd}
   using L_abdc_symmetry =
-      Symmetry<rhs_symmetry_element_a, rhs_symmetry_element_b,
-               rhs_symmetry_element_d, rhs_symmetry_element_c>;
+      Symmetry<lhs_symmetry_element_a, lhs_symmetry_element_b,
+               lhs_symmetry_element_d, lhs_symmetry_element_c>;
   using L_abdc_tensorindextype_list =
-      tmpl::list<rhs_tensorindextype_a, rhs_tensorindextype_b,
-                 rhs_tensorindextype_d, rhs_tensorindextype_c>;
+      tmpl::list<lhs_tensorindextype_a, lhs_tensorindextype_b,
+                 lhs_tensorindextype_d, lhs_tensorindextype_c>;
   using L_abdc_type =
       Tensor<DataType, L_abdc_symmetry, L_abdc_tensorindextype_list>;
   const L_abdc_type L_abdc_returned =
@@ -99,11 +100,11 @@ void test_evaluate_rank_4() {
 
   // L_{acbd} = R_{abcd}
   using L_acbd_symmetry =
-      Symmetry<rhs_symmetry_element_a, rhs_symmetry_element_c,
-               rhs_symmetry_element_b, rhs_symmetry_element_d>;
+      Symmetry<lhs_symmetry_element_a, lhs_symmetry_element_c,
+               lhs_symmetry_element_b, lhs_symmetry_element_d>;
   using L_acbd_tensorindextype_list =
-      tmpl::list<rhs_tensorindextype_a, rhs_tensorindextype_c,
-                 rhs_tensorindextype_b, rhs_tensorindextype_d>;
+      tmpl::list<lhs_tensorindextype_a, lhs_tensorindextype_c,
+                 lhs_tensorindextype_b, lhs_tensorindextype_d>;
   using L_acbd_type =
       Tensor<DataType, L_acbd_symmetry, L_acbd_tensorindextype_list>;
   const L_acbd_type L_acbd_returned =
@@ -116,11 +117,11 @@ void test_evaluate_rank_4() {
 
   // L_{acdb} = R_{abcd}
   using L_acdb_symmetry =
-      Symmetry<rhs_symmetry_element_a, rhs_symmetry_element_c,
-               rhs_symmetry_element_d, rhs_symmetry_element_b>;
+      Symmetry<lhs_symmetry_element_a, lhs_symmetry_element_c,
+               lhs_symmetry_element_d, lhs_symmetry_element_b>;
   using L_acdb_tensorindextype_list =
-      tmpl::list<rhs_tensorindextype_a, rhs_tensorindextype_c,
-                 rhs_tensorindextype_d, rhs_tensorindextype_b>;
+      tmpl::list<lhs_tensorindextype_a, lhs_tensorindextype_c,
+                 lhs_tensorindextype_d, lhs_tensorindextype_b>;
   using L_acdb_type =
       Tensor<DataType, L_acdb_symmetry, L_acdb_tensorindextype_list>;
   const L_acdb_type L_acdb_returned =
@@ -133,11 +134,11 @@ void test_evaluate_rank_4() {
 
   // L_{adbc} = R_{abcd}
   using L_adbc_symmetry =
-      Symmetry<rhs_symmetry_element_a, rhs_symmetry_element_d,
-               rhs_symmetry_element_b, rhs_symmetry_element_c>;
+      Symmetry<lhs_symmetry_element_a, lhs_symmetry_element_d,
+               lhs_symmetry_element_b, lhs_symmetry_element_c>;
   using L_adbc_tensorindextype_list =
-      tmpl::list<rhs_tensorindextype_a, rhs_tensorindextype_d,
-                 rhs_tensorindextype_b, rhs_tensorindextype_c>;
+      tmpl::list<lhs_tensorindextype_a, lhs_tensorindextype_d,
+                 lhs_tensorindextype_b, lhs_tensorindextype_c>;
   using L_adbc_type =
       Tensor<DataType, L_adbc_symmetry, L_adbc_tensorindextype_list>;
   const L_adbc_type L_adbc_returned =
@@ -150,11 +151,11 @@ void test_evaluate_rank_4() {
 
   // L_{adcb} = R_{abcd}
   using L_adcb_symmetry =
-      Symmetry<rhs_symmetry_element_a, rhs_symmetry_element_d,
-               rhs_symmetry_element_c, rhs_symmetry_element_b>;
+      Symmetry<lhs_symmetry_element_a, lhs_symmetry_element_d,
+               lhs_symmetry_element_c, lhs_symmetry_element_b>;
   using L_adcb_tensorindextype_list =
-      tmpl::list<rhs_tensorindextype_a, rhs_tensorindextype_d,
-                 rhs_tensorindextype_c, rhs_tensorindextype_b>;
+      tmpl::list<lhs_tensorindextype_a, lhs_tensorindextype_d,
+                 lhs_tensorindextype_c, lhs_tensorindextype_b>;
   using L_adcb_type =
       Tensor<DataType, L_adcb_symmetry, L_adcb_tensorindextype_list>;
   const L_adcb_type L_adcb_returned =
@@ -167,11 +168,11 @@ void test_evaluate_rank_4() {
 
   // L_{bacd} = R_{abcd}
   using L_bacd_symmetry =
-      Symmetry<rhs_symmetry_element_b, rhs_symmetry_element_a,
-               rhs_symmetry_element_c, rhs_symmetry_element_d>;
+      Symmetry<lhs_symmetry_element_b, lhs_symmetry_element_a,
+               lhs_symmetry_element_c, lhs_symmetry_element_d>;
   using L_bacd_tensorindextype_list =
-      tmpl::list<rhs_tensorindextype_b, rhs_tensorindextype_a,
-                 rhs_tensorindextype_c, rhs_tensorindextype_d>;
+      tmpl::list<lhs_tensorindextype_b, lhs_tensorindextype_a,
+                 lhs_tensorindextype_c, lhs_tensorindextype_d>;
   using L_bacd_type =
       Tensor<DataType, L_bacd_symmetry, L_bacd_tensorindextype_list>;
   const L_bacd_type L_bacd_returned =
@@ -184,11 +185,11 @@ void test_evaluate_rank_4() {
 
   // L_{badc} = R_{abcd}
   using L_badc_symmetry =
-      Symmetry<rhs_symmetry_element_b, rhs_symmetry_element_a,
-               rhs_symmetry_element_d, rhs_symmetry_element_c>;
+      Symmetry<lhs_symmetry_element_b, lhs_symmetry_element_a,
+               lhs_symmetry_element_d, lhs_symmetry_element_c>;
   using L_badc_tensorindextype_list =
-      tmpl::list<rhs_tensorindextype_b, rhs_tensorindextype_a,
-                 rhs_tensorindextype_d, rhs_tensorindextype_c>;
+      tmpl::list<lhs_tensorindextype_b, lhs_tensorindextype_a,
+                 lhs_tensorindextype_d, lhs_tensorindextype_c>;
   using L_badc_type =
       Tensor<DataType, L_badc_symmetry, L_badc_tensorindextype_list>;
   const L_badc_type L_badc_returned =
@@ -201,11 +202,11 @@ void test_evaluate_rank_4() {
 
   // L_{bcad} = R_{abcd}
   using L_bcad_symmetry =
-      Symmetry<rhs_symmetry_element_b, rhs_symmetry_element_c,
-               rhs_symmetry_element_a, rhs_symmetry_element_d>;
+      Symmetry<lhs_symmetry_element_b, lhs_symmetry_element_c,
+               lhs_symmetry_element_a, lhs_symmetry_element_d>;
   using L_bcad_tensorindextype_list =
-      tmpl::list<rhs_tensorindextype_b, rhs_tensorindextype_c,
-                 rhs_tensorindextype_a, rhs_tensorindextype_d>;
+      tmpl::list<lhs_tensorindextype_b, lhs_tensorindextype_c,
+                 lhs_tensorindextype_a, lhs_tensorindextype_d>;
   using L_bcad_type =
       Tensor<DataType, L_bcad_symmetry, L_bcad_tensorindextype_list>;
   const L_bcad_type L_bcad_returned =
@@ -218,11 +219,11 @@ void test_evaluate_rank_4() {
 
   // L_{bcda} = R_{abcd}
   using L_bcda_symmetry =
-      Symmetry<rhs_symmetry_element_b, rhs_symmetry_element_c,
-               rhs_symmetry_element_d, rhs_symmetry_element_a>;
+      Symmetry<lhs_symmetry_element_b, lhs_symmetry_element_c,
+               lhs_symmetry_element_d, lhs_symmetry_element_a>;
   using L_bcda_tensorindextype_list =
-      tmpl::list<rhs_tensorindextype_b, rhs_tensorindextype_c,
-                 rhs_tensorindextype_d, rhs_tensorindextype_a>;
+      tmpl::list<lhs_tensorindextype_b, lhs_tensorindextype_c,
+                 lhs_tensorindextype_d, lhs_tensorindextype_a>;
   using L_bcda_type =
       Tensor<DataType, L_bcda_symmetry, L_bcda_tensorindextype_list>;
   const L_bcda_type L_bcda_returned =
@@ -235,11 +236,11 @@ void test_evaluate_rank_4() {
 
   // L_{bdac} = R_{abcd}
   using L_bdac_symmetry =
-      Symmetry<rhs_symmetry_element_b, rhs_symmetry_element_d,
-               rhs_symmetry_element_a, rhs_symmetry_element_c>;
+      Symmetry<lhs_symmetry_element_b, lhs_symmetry_element_d,
+               lhs_symmetry_element_a, lhs_symmetry_element_c>;
   using L_bdac_tensorindextype_list =
-      tmpl::list<rhs_tensorindextype_b, rhs_tensorindextype_d,
-                 rhs_tensorindextype_a, rhs_tensorindextype_c>;
+      tmpl::list<lhs_tensorindextype_b, lhs_tensorindextype_d,
+                 lhs_tensorindextype_a, lhs_tensorindextype_c>;
   using L_bdac_type =
       Tensor<DataType, L_bdac_symmetry, L_bdac_tensorindextype_list>;
   const L_bdac_type L_bdac_returned =
@@ -252,11 +253,11 @@ void test_evaluate_rank_4() {
 
   // L_{bdca} = R_{abcd}
   using L_bdca_symmetry =
-      Symmetry<rhs_symmetry_element_b, rhs_symmetry_element_d,
-               rhs_symmetry_element_c, rhs_symmetry_element_a>;
+      Symmetry<lhs_symmetry_element_b, lhs_symmetry_element_d,
+               lhs_symmetry_element_c, lhs_symmetry_element_a>;
   using L_bdca_tensorindextype_list =
-      tmpl::list<rhs_tensorindextype_b, rhs_tensorindextype_d,
-                 rhs_tensorindextype_c, rhs_tensorindextype_a>;
+      tmpl::list<lhs_tensorindextype_b, lhs_tensorindextype_d,
+                 lhs_tensorindextype_c, lhs_tensorindextype_a>;
   using L_bdca_type =
       Tensor<DataType, L_bdca_symmetry, L_bdca_tensorindextype_list>;
   const L_bdca_type L_bdca_returned =
@@ -269,11 +270,11 @@ void test_evaluate_rank_4() {
 
   // L_{cabd} = R_{abcd}
   using L_cabd_symmetry =
-      Symmetry<rhs_symmetry_element_c, rhs_symmetry_element_a,
-               rhs_symmetry_element_b, rhs_symmetry_element_d>;
+      Symmetry<lhs_symmetry_element_c, lhs_symmetry_element_a,
+               lhs_symmetry_element_b, lhs_symmetry_element_d>;
   using L_cabd_tensorindextype_list =
-      tmpl::list<rhs_tensorindextype_c, rhs_tensorindextype_a,
-                 rhs_tensorindextype_b, rhs_tensorindextype_d>;
+      tmpl::list<lhs_tensorindextype_c, lhs_tensorindextype_a,
+                 lhs_tensorindextype_b, lhs_tensorindextype_d>;
   using L_cabd_type =
       Tensor<DataType, L_cabd_symmetry, L_cabd_tensorindextype_list>;
   const L_cabd_type L_cabd_returned =
@@ -286,11 +287,11 @@ void test_evaluate_rank_4() {
 
   // L_{cadb} = R_{abcd}
   using L_cadb_symmetry =
-      Symmetry<rhs_symmetry_element_c, rhs_symmetry_element_a,
-               rhs_symmetry_element_d, rhs_symmetry_element_b>;
+      Symmetry<lhs_symmetry_element_c, lhs_symmetry_element_a,
+               lhs_symmetry_element_d, lhs_symmetry_element_b>;
   using L_cadb_tensorindextype_list =
-      tmpl::list<rhs_tensorindextype_c, rhs_tensorindextype_a,
-                 rhs_tensorindextype_d, rhs_tensorindextype_b>;
+      tmpl::list<lhs_tensorindextype_c, lhs_tensorindextype_a,
+                 lhs_tensorindextype_d, lhs_tensorindextype_b>;
   using L_cadb_type =
       Tensor<DataType, L_cadb_symmetry, L_cadb_tensorindextype_list>;
   const L_cadb_type L_cadb_returned =
@@ -303,11 +304,11 @@ void test_evaluate_rank_4() {
 
   // L_{cbad} = R_{abcd}
   using L_cbad_symmetry =
-      Symmetry<rhs_symmetry_element_c, rhs_symmetry_element_b,
-               rhs_symmetry_element_a, rhs_symmetry_element_d>;
+      Symmetry<lhs_symmetry_element_c, lhs_symmetry_element_b,
+               lhs_symmetry_element_a, lhs_symmetry_element_d>;
   using L_cbad_tensorindextype_list =
-      tmpl::list<rhs_tensorindextype_c, rhs_tensorindextype_b,
-                 rhs_tensorindextype_a, rhs_tensorindextype_d>;
+      tmpl::list<lhs_tensorindextype_c, lhs_tensorindextype_b,
+                 lhs_tensorindextype_a, lhs_tensorindextype_d>;
   using L_cbad_type =
       Tensor<DataType, L_cbad_symmetry, L_cbad_tensorindextype_list>;
   const L_cbad_type L_cbad_returned =
@@ -320,11 +321,11 @@ void test_evaluate_rank_4() {
 
   // L_{cbda} = R_{abcd}
   using L_cbda_symmetry =
-      Symmetry<rhs_symmetry_element_c, rhs_symmetry_element_b,
-               rhs_symmetry_element_d, rhs_symmetry_element_a>;
+      Symmetry<lhs_symmetry_element_c, lhs_symmetry_element_b,
+               lhs_symmetry_element_d, lhs_symmetry_element_a>;
   using L_cbda_tensorindextype_list =
-      tmpl::list<rhs_tensorindextype_c, rhs_tensorindextype_b,
-                 rhs_tensorindextype_d, rhs_tensorindextype_a>;
+      tmpl::list<lhs_tensorindextype_c, lhs_tensorindextype_b,
+                 lhs_tensorindextype_d, lhs_tensorindextype_a>;
   using L_cbda_type =
       Tensor<DataType, L_cbda_symmetry, L_cbda_tensorindextype_list>;
   const L_cbda_type L_cbda_returned =
@@ -337,11 +338,11 @@ void test_evaluate_rank_4() {
 
   // L_{cdab} = R_{abcd}
   using L_cdab_symmetry =
-      Symmetry<rhs_symmetry_element_c, rhs_symmetry_element_d,
-               rhs_symmetry_element_a, rhs_symmetry_element_b>;
+      Symmetry<lhs_symmetry_element_c, lhs_symmetry_element_d,
+               lhs_symmetry_element_a, lhs_symmetry_element_b>;
   using L_cdab_tensorindextype_list =
-      tmpl::list<rhs_tensorindextype_c, rhs_tensorindextype_d,
-                 rhs_tensorindextype_a, rhs_tensorindextype_b>;
+      tmpl::list<lhs_tensorindextype_c, lhs_tensorindextype_d,
+                 lhs_tensorindextype_a, lhs_tensorindextype_b>;
   using L_cdab_type =
       Tensor<DataType, L_cdab_symmetry, L_cdab_tensorindextype_list>;
   const L_cdab_type L_cdab_returned =
@@ -354,11 +355,11 @@ void test_evaluate_rank_4() {
 
   // L_{cdba} = R_{abcd}
   using L_cdba_symmetry =
-      Symmetry<rhs_symmetry_element_c, rhs_symmetry_element_d,
-               rhs_symmetry_element_b, rhs_symmetry_element_a>;
+      Symmetry<lhs_symmetry_element_c, lhs_symmetry_element_d,
+               lhs_symmetry_element_b, lhs_symmetry_element_a>;
   using L_cdba_tensorindextype_list =
-      tmpl::list<rhs_tensorindextype_c, rhs_tensorindextype_d,
-                 rhs_tensorindextype_b, rhs_tensorindextype_a>;
+      tmpl::list<lhs_tensorindextype_c, lhs_tensorindextype_d,
+                 lhs_tensorindextype_b, lhs_tensorindextype_a>;
   using L_cdba_type =
       Tensor<DataType, L_cdba_symmetry, L_cdba_tensorindextype_list>;
   const L_cdba_type L_cdba_returned =
@@ -371,11 +372,11 @@ void test_evaluate_rank_4() {
 
   // L_{dabc} = R_{abcd}
   using L_dabc_symmetry =
-      Symmetry<rhs_symmetry_element_d, rhs_symmetry_element_a,
-               rhs_symmetry_element_b, rhs_symmetry_element_c>;
+      Symmetry<lhs_symmetry_element_d, lhs_symmetry_element_a,
+               lhs_symmetry_element_b, lhs_symmetry_element_c>;
   using L_dabc_tensorindextype_list =
-      tmpl::list<rhs_tensorindextype_d, rhs_tensorindextype_a,
-                 rhs_tensorindextype_b, rhs_tensorindextype_c>;
+      tmpl::list<lhs_tensorindextype_d, lhs_tensorindextype_a,
+                 lhs_tensorindextype_b, lhs_tensorindextype_c>;
   using L_dabc_type =
       Tensor<DataType, L_dabc_symmetry, L_dabc_tensorindextype_list>;
   const L_dabc_type L_dabc_returned =
@@ -388,11 +389,11 @@ void test_evaluate_rank_4() {
 
   // L_{dacb} = R_{abcd}
   using L_dacb_symmetry =
-      Symmetry<rhs_symmetry_element_d, rhs_symmetry_element_a,
-               rhs_symmetry_element_c, rhs_symmetry_element_b>;
+      Symmetry<lhs_symmetry_element_d, lhs_symmetry_element_a,
+               lhs_symmetry_element_c, lhs_symmetry_element_b>;
   using L_dacb_tensorindextype_list =
-      tmpl::list<rhs_tensorindextype_d, rhs_tensorindextype_a,
-                 rhs_tensorindextype_c, rhs_tensorindextype_b>;
+      tmpl::list<lhs_tensorindextype_d, lhs_tensorindextype_a,
+                 lhs_tensorindextype_c, lhs_tensorindextype_b>;
   using L_dacb_type =
       Tensor<DataType, L_dacb_symmetry, L_dacb_tensorindextype_list>;
   const L_dacb_type L_dacb_returned =
@@ -405,11 +406,11 @@ void test_evaluate_rank_4() {
 
   // L_{dbac} = R_{abcd}
   using L_dbac_symmetry =
-      Symmetry<rhs_symmetry_element_d, rhs_symmetry_element_b,
-               rhs_symmetry_element_a, rhs_symmetry_element_c>;
+      Symmetry<lhs_symmetry_element_d, lhs_symmetry_element_b,
+               lhs_symmetry_element_a, lhs_symmetry_element_c>;
   using L_dbac_tensorindextype_list =
-      tmpl::list<rhs_tensorindextype_d, rhs_tensorindextype_b,
-                 rhs_tensorindextype_a, rhs_tensorindextype_c>;
+      tmpl::list<lhs_tensorindextype_d, lhs_tensorindextype_b,
+                 lhs_tensorindextype_a, lhs_tensorindextype_c>;
   using L_dbac_type =
       Tensor<DataType, L_dbac_symmetry, L_dbac_tensorindextype_list>;
   const L_dbac_type L_dbac_returned =
@@ -422,11 +423,11 @@ void test_evaluate_rank_4() {
 
   // L_{dbca} = R_{abcd}
   using L_dbca_symmetry =
-      Symmetry<rhs_symmetry_element_d, rhs_symmetry_element_b,
-               rhs_symmetry_element_c, rhs_symmetry_element_a>;
+      Symmetry<lhs_symmetry_element_d, lhs_symmetry_element_b,
+               lhs_symmetry_element_c, lhs_symmetry_element_a>;
   using L_dbca_tensorindextype_list =
-      tmpl::list<rhs_tensorindextype_d, rhs_tensorindextype_b,
-                 rhs_tensorindextype_c, rhs_tensorindextype_a>;
+      tmpl::list<lhs_tensorindextype_d, lhs_tensorindextype_b,
+                 lhs_tensorindextype_c, lhs_tensorindextype_a>;
   using L_dbca_type =
       Tensor<DataType, L_dbca_symmetry, L_dbca_tensorindextype_list>;
   const L_dbca_type L_dbca_returned =
@@ -439,11 +440,11 @@ void test_evaluate_rank_4() {
 
   // L_{dcab} = R_{abcd}
   using L_dcab_symmetry =
-      Symmetry<rhs_symmetry_element_d, rhs_symmetry_element_c,
-               rhs_symmetry_element_a, rhs_symmetry_element_b>;
+      Symmetry<lhs_symmetry_element_d, lhs_symmetry_element_c,
+               lhs_symmetry_element_a, lhs_symmetry_element_b>;
   using L_dcab_tensorindextype_list =
-      tmpl::list<rhs_tensorindextype_d, rhs_tensorindextype_c,
-                 rhs_tensorindextype_a, rhs_tensorindextype_b>;
+      tmpl::list<lhs_tensorindextype_d, lhs_tensorindextype_c,
+                 lhs_tensorindextype_a, lhs_tensorindextype_b>;
   using L_dcab_type =
       Tensor<DataType, L_dcab_symmetry, L_dcab_tensorindextype_list>;
   const L_dcab_type L_dcab_returned =
@@ -456,11 +457,11 @@ void test_evaluate_rank_4() {
 
   // L_{dcba} = R_{abcd}
   using L_dcba_symmetry =
-      Symmetry<rhs_symmetry_element_d, rhs_symmetry_element_c,
-               rhs_symmetry_element_b, rhs_symmetry_element_a>;
+      Symmetry<lhs_symmetry_element_d, lhs_symmetry_element_c,
+               lhs_symmetry_element_b, lhs_symmetry_element_a>;
   using L_dcba_tensorindextype_list =
-      tmpl::list<rhs_tensorindextype_d, rhs_tensorindextype_c,
-                 rhs_tensorindextype_b, rhs_tensorindextype_a>;
+      tmpl::list<lhs_tensorindextype_d, lhs_tensorindextype_c,
+                 lhs_tensorindextype_b, lhs_tensorindextype_a>;
   using L_dcba_type =
       Tensor<DataType, L_dcba_symmetry, L_dcba_tensorindextype_list>;
   const L_dcba_type L_dcba_returned =
