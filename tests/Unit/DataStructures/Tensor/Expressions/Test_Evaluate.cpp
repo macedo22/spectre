@@ -718,6 +718,73 @@ void test_lhs_tensorindex_reorder_rank4() {
   test_lhs_tensorindex_reorder_impl<tbai_list, abti_list>::apply(symm_2321);
   test_lhs_tensorindex_reorder_impl<tbai_list, btai_list>::apply(symm_3321);
   test_lhs_tensorindex_reorder_impl<tbai_list, tbai_list>::apply(symm_4321);
+
+  using taji_list = make_tensorindex_list<ti::t, ti::a, ti::j, ti::i>;
+  using iajt_list = make_tensorindex_list<ti::i, ti::a, ti::j, ti::t>;
+  using tija_list = make_tensorindex_list<ti::t, ti::i, ti::j, ti::a>;
+  using ijat_list = make_tensorindex_list<ti::i, ti::j, ti::a, ti::t>;
+  using jita_list = make_tensorindex_list<ti::j, ti::i, ti::t, ti::a>;
+  using atij_list = make_tensorindex_list<ti::a, ti::t, ti::i, ti::j>;
+  using jati_list = make_tensorindex_list<ti::j, ti::a, ti::t, ti::i>;
+  using atji_list = make_tensorindex_list<ti::a, ti::t, ti::j, ti::i>;
+  using btai_list = make_tensorindex_list<ti::b, ti::t, ti::a, ti::i>;
+
+  // taji
+  test_lhs_tensorindex_reorder_impl<taji_list, ijat_list>::apply(symm_1111);
+  test_lhs_tensorindex_reorder_impl<taji_list, iajt_list>::apply(symm_1121);
+  test_lhs_tensorindex_reorder_impl<taji_list, iajt_list>::apply(symm_1211);
+  test_lhs_tensorindex_reorder_impl<taji_list, tija_list>::apply(symm_2111);
+  test_lhs_tensorindex_reorder_impl<taji_list, ijat_list>::apply(symm_1221);
+  test_lhs_tensorindex_reorder_impl<taji_list, jita_list>::apply(symm_2121);
+  test_lhs_tensorindex_reorder_impl<taji_list, atij_list>::apply(symm_2211);
+  test_lhs_tensorindex_reorder_impl<taji_list, jati_list>::apply(symm_2221);
+  test_lhs_tensorindex_reorder_impl<taji_list, jati_list>::apply(symm_2321);
+  test_lhs_tensorindex_reorder_impl<taji_list, atji_list>::apply(symm_3321);
+  test_lhs_tensorindex_reorder_impl<taji_list, taji_list>::apply(symm_4321);
+
+  using akji_list = make_tensorindex_list<ti::a, ti::k, ti::j, ti::i>;
+  using ijka_list = make_tensorindex_list<ti::i, ti::j, ti::k, ti::a>;
+  using ikja_list = make_tensorindex_list<ti::i, ti::k, ti::j, ti::a>;
+  using aijk_list = make_tensorindex_list<ti::a, ti::i, ti::j, ti::k>;
+  using kaij_list = make_tensorindex_list<ti::k, ti::a, ti::i, ti::j>;
+  using jiak_list = make_tensorindex_list<ti::j, ti::i, ti::a, ti::k>;
+  using jkai_list = make_tensorindex_list<ti::j, ti::k, ti::a, ti::i>;
+  using kaji_list = make_tensorindex_list<ti::k, ti::a, ti::j, ti::i>;
+
+  // akji
+  test_lhs_tensorindex_reorder_impl<akji_list, ijka_list>::apply(symm_1111);
+  test_lhs_tensorindex_reorder_impl<akji_list, ikja_list>::apply(symm_1121);
+  test_lhs_tensorindex_reorder_impl<akji_list, ikja_list>::apply(symm_1211);
+  test_lhs_tensorindex_reorder_impl<akji_list, aijk_list>::apply(symm_2111);
+  test_lhs_tensorindex_reorder_impl<akji_list, ijka_list>::apply(symm_1221);
+  test_lhs_tensorindex_reorder_impl<akji_list, jiak_list>::apply(symm_2121);
+  test_lhs_tensorindex_reorder_impl<akji_list, kaij_list>::apply(symm_2211);
+  test_lhs_tensorindex_reorder_impl<akji_list, jkai_list>::apply(symm_2221);
+  test_lhs_tensorindex_reorder_impl<akji_list, jkai_list>::apply(symm_2321);
+  test_lhs_tensorindex_reorder_impl<akji_list, kaji_list>::apply(symm_3321);
+  test_lhs_tensorindex_reorder_impl<akji_list, akji_list>::apply(symm_4321);
+
+  using lkji_list = make_tensorindex_list<ti::l, ti::k, ti::j, ti::i>;
+  using ijkl_list = make_tensorindex_list<ti::i, ti::j, ti::k, ti::l>;
+  using ikjl_list = make_tensorindex_list<ti::i, ti::k, ti::j, ti::l>;
+  using lijk_list = make_tensorindex_list<ti::l, ti::i, ti::j, ti::k>;
+  using jilk_list = make_tensorindex_list<ti::j, ti::i, ti::l, ti::k>;
+  using klij_list = make_tensorindex_list<ti::k, ti::l, ti::i, ti::j>;
+  using jkli_list = make_tensorindex_list<ti::j, ti::k, ti::l, ti::i>;
+  using klji_list = make_tensorindex_list<ti::k, ti::l, ti::j, ti::i>;
+
+  // lkji
+  test_lhs_tensorindex_reorder_impl<lkji_list, ijkl_list>::apply(symm_1111);
+  test_lhs_tensorindex_reorder_impl<lkji_list, ikjl_list>::apply(symm_1121);
+  test_lhs_tensorindex_reorder_impl<lkji_list, ikjl_list>::apply(symm_1211);
+  test_lhs_tensorindex_reorder_impl<lkji_list, lijk_list>::apply(symm_2111);
+  test_lhs_tensorindex_reorder_impl<lkji_list, ijkl_list>::apply(symm_1221);
+  test_lhs_tensorindex_reorder_impl<lkji_list, jilk_list>::apply(symm_2121);
+  test_lhs_tensorindex_reorder_impl<lkji_list, klij_list>::apply(symm_2211);
+  test_lhs_tensorindex_reorder_impl<lkji_list, jkli_list>::apply(symm_2221);
+  test_lhs_tensorindex_reorder_impl<lkji_list, jkli_list>::apply(symm_2321);
+  test_lhs_tensorindex_reorder_impl<lkji_list, klji_list>::apply(symm_3321);
+  test_lhs_tensorindex_reorder_impl<lkji_list, lkji_list>::apply(symm_4321);
 }
 
 void test_lhs_tensorindex_reorder() {
