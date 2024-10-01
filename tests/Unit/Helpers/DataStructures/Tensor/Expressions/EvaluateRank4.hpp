@@ -9,14 +9,41 @@
 #include <numeric>
 #include <type_traits>
 
-#include "DataStructures/Tags/TempTensor.hpp"
+#include "DataStructures/Tensor/IndexType.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
-#include "DataStructures/Variables.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/ComponentPlaceholder.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/TMPL.hpp"
 
 namespace TestHelpers::tenex {
+template <bool ReturnLhsTensor, auto&... LhsTensorIndices, typename LhsTensor,
+          typename RhsExpression>
+void call_evaluate(const gsl::not_null<LhsTensor*> lhs_tensor,
+                   const RhsExpression& rhs_expression) {
+  if constexpr (ReturnLhsTensor) {
+    *lhs_tensor = ::tenex::evaluate<LhsTensorIndices...>(rhs_expression);
+  } else {
+    ::tenex::evaluate<LhsTensorIndices...>(lhs_tensor, rhs_expression);
+  }
+}
+
+template <typename Index, auto& TensorIndex>
+constexpr std::pair<size_t, size_t> get_index_value_range() {
+  constexpr bool tensorindex_is_time =
+      ::tenex::detail::is_time_index_value(TensorIndex.value);
+  static_assert(
+      not(Index::index_type == IndexType::Spatial and tensorindex_is_time),
+      "Cannot use a concrete time TensorIndex with a SpatialIndex.");
+
+  std::pair<size_t, size_t> range{};
+  range.first =
+      Index::index_type == IndexType::Spacetime and not TensorIndex.is_spacetime
+          ? 1
+          : 0;
+  range.second = tensorindex_is_time ? 0 : Index::dim - 1;
+  return range;
+}
 
 /// \ingroup TestingFrameworkGroup
 /// \brief Test that evaluating a right hand side tensor expression containing a
@@ -49,14 +76,18 @@ namespace TestHelpers::tenex {
 /// TensorExpression, e.g. `ti::c`
 /// \tparam TensorIndexD the fourth TensorIndex used on the RHS of the
 /// TensorExpression, e.g. `ti::D`
-template <typename DataType, typename LhsSymmetry,
+template <bool ReturnLhsTensor, typename DataType, typename LhsSymmetry,
           typename LhsTensorIndexTypeList, typename RhsSymmetry,
           typename RhsTensorIndexTypeList, auto& TensorIndexA,
           auto& TensorIndexB, auto& TensorIndexC, auto& TensorIndexD>
 void test_evaluate_rank_4() {
-  const size_t used_for_size = 5;
+  const size_t used_for_size = 3;
   Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> R_abcd(used_for_size);
-  std::iota(R_abcd.begin(), R_abcd.end(), 0.0);
+  std::iota(R_abcd.begin(), R_abcd.end(),
+            component_placeholder_value<DataType>::value);
+  const DataType component_placeholder = R_abcd[0];
+  const auto rhs_expression =
+      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD);
 
   // Used for enforcing the ordering of the symmetry and TensorIndexTypes of the
   // LHS Tensor returned by `evaluate`
@@ -68,18 +99,46 @@ void test_evaluate_rank_4() {
   using lhs_tensorindextype_b = tmpl::at_c<LhsTensorIndexTypeList, 1>;
   using lhs_tensorindextype_c = tmpl::at_c<LhsTensorIndexTypeList, 2>;
   using lhs_tensorindextype_d = tmpl::at_c<LhsTensorIndexTypeList, 3>;
+  using rhs_tensorindextype_a = tmpl::at_c<RhsTensorIndexTypeList, 0>;
+  using rhs_tensorindextype_b = tmpl::at_c<RhsTensorIndexTypeList, 1>;
+  using rhs_tensorindextype_c = tmpl::at_c<RhsTensorIndexTypeList, 2>;
+  using rhs_tensorindextype_d = tmpl::at_c<RhsTensorIndexTypeList, 3>;
+
+  std::array<std::pair<size_t, size_t>, 4> lhs_index_value_ranges{};
+  lhs_index_value_ranges[0] =
+      get_index_value_range<lhs_tensorindextype_a, TensorIndexA>();
+  lhs_index_value_ranges[1] =
+      get_index_value_range<lhs_tensorindextype_b, TensorIndexB>();
+  lhs_index_value_ranges[2] =
+      get_index_value_range<lhs_tensorindextype_c, TensorIndexC>();
+  lhs_index_value_ranges[3] =
+      get_index_value_range<lhs_tensorindextype_d, TensorIndexD>();
+  std::array<std::pair<size_t, size_t>, 4> rhs_index_value_ranges{};
+  rhs_index_value_ranges[0] =
+      get_index_value_range<rhs_tensorindextype_a, TensorIndexA>();
+  rhs_index_value_ranges[1] =
+      get_index_value_range<rhs_tensorindextype_b, TensorIndexB>();
+  rhs_index_value_ranges[2] =
+      get_index_value_range<rhs_tensorindextype_c, TensorIndexC>();
+  rhs_index_value_ranges[3] =
+      get_index_value_range<rhs_tensorindextype_d, TensorIndexD>();
+  std::array<bool, 4> shift_lhs_to_rhs_index_down{};
+  shift_lhs_to_rhs_index_down[0] =
+      lhs_index_value_ranges[0].first > lhs_index_value_ranges[0].first;
+  shift_lhs_to_rhs_index_down[1] =
+      lhs_index_value_ranges[1].first > lhs_index_value_ranges[1].first;
+  shift_lhs_to_rhs_index_down[2] =
+      lhs_index_value_ranges[2].first > lhs_index_value_ranges[2].first;
+  shift_lhs_to_rhs_index_down[3] =
+      lhs_index_value_ranges[3].first > lhs_index_value_ranges[3].first;
 
   // L_{abcd} = R_{abcd}
   // Use explicit type (vs auto) so the compiler checks the return type of
   // `evaluate`
   using L_abcd_type = Tensor<DataType, LhsSymmetry, LhsTensorIndexTypeList>;
-  const L_abcd_type L_abcd_returned =
-      ::tenex::evaluate<TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD>(
-          R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-  L_abcd_type L_abcd_filled{};
-  ::tenex::evaluate<TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD>(
-      make_not_null(&L_abcd_filled),
-      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
+  L_abcd_type L_abcd;
+  call_evaluate<ReturnLhsTensor, TensorIndexA, TensorIndexB, TensorIndexC,
+                TensorIndexD>(make_not_null(&L_abcd), rhs_expression);
 
   // L_{abdc} = R_{abcd}
   using L_abdc_symmetry =
@@ -90,13 +149,9 @@ void test_evaluate_rank_4() {
                  lhs_tensorindextype_d, lhs_tensorindextype_c>;
   using L_abdc_type =
       Tensor<DataType, L_abdc_symmetry, L_abdc_tensorindextype_list>;
-  const L_abdc_type L_abdc_returned =
-      ::tenex::evaluate<TensorIndexA, TensorIndexB, TensorIndexD, TensorIndexC>(
-          R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-  L_abdc_type L_abdc_filled{};
-  ::tenex::evaluate<TensorIndexA, TensorIndexB, TensorIndexD, TensorIndexC>(
-      make_not_null(&L_abdc_filled),
-      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
+  L_abdc_type L_abdc;
+  call_evaluate<ReturnLhsTensor, TensorIndexA, TensorIndexB, TensorIndexD,
+                TensorIndexC>(make_not_null(&L_abdc), rhs_expression);
 
   // L_{acbd} = R_{abcd}
   using L_acbd_symmetry =
@@ -107,13 +162,9 @@ void test_evaluate_rank_4() {
                  lhs_tensorindextype_b, lhs_tensorindextype_d>;
   using L_acbd_type =
       Tensor<DataType, L_acbd_symmetry, L_acbd_tensorindextype_list>;
-  const L_acbd_type L_acbd_returned =
-      ::tenex::evaluate<TensorIndexA, TensorIndexC, TensorIndexB, TensorIndexD>(
-          R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-  L_acbd_type L_acbd_filled{};
-  ::tenex::evaluate<TensorIndexA, TensorIndexC, TensorIndexB, TensorIndexD>(
-      make_not_null(&L_acbd_filled),
-      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
+  L_acbd_type L_acbd;
+  call_evaluate<ReturnLhsTensor, TensorIndexA, TensorIndexC, TensorIndexB,
+                TensorIndexD>(make_not_null(&L_acbd), rhs_expression);
 
   // L_{acdb} = R_{abcd}
   using L_acdb_symmetry =
@@ -124,13 +175,9 @@ void test_evaluate_rank_4() {
                  lhs_tensorindextype_d, lhs_tensorindextype_b>;
   using L_acdb_type =
       Tensor<DataType, L_acdb_symmetry, L_acdb_tensorindextype_list>;
-  const L_acdb_type L_acdb_returned =
-      ::tenex::evaluate<TensorIndexA, TensorIndexC, TensorIndexD, TensorIndexB>(
-          R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-  L_acdb_type L_acdb_filled{};
-  ::tenex::evaluate<TensorIndexA, TensorIndexC, TensorIndexD, TensorIndexB>(
-      make_not_null(&L_acdb_filled),
-      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
+  L_acdb_type L_acdb;
+  call_evaluate<ReturnLhsTensor, TensorIndexA, TensorIndexC, TensorIndexD,
+                TensorIndexB>(make_not_null(&L_acdb), rhs_expression);
 
   // L_{adbc} = R_{abcd}
   using L_adbc_symmetry =
@@ -141,13 +188,9 @@ void test_evaluate_rank_4() {
                  lhs_tensorindextype_b, lhs_tensorindextype_c>;
   using L_adbc_type =
       Tensor<DataType, L_adbc_symmetry, L_adbc_tensorindextype_list>;
-  const L_adbc_type L_adbc_returned =
-      ::tenex::evaluate<TensorIndexA, TensorIndexD, TensorIndexB, TensorIndexC>(
-          R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-  L_adbc_type L_adbc_filled{};
-  ::tenex::evaluate<TensorIndexA, TensorIndexD, TensorIndexB, TensorIndexC>(
-      make_not_null(&L_adbc_filled),
-      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
+  L_adbc_type L_adbc;
+  call_evaluate<ReturnLhsTensor, TensorIndexA, TensorIndexD, TensorIndexB,
+                TensorIndexC>(make_not_null(&L_adbc), rhs_expression);
 
   // L_{adcb} = R_{abcd}
   using L_adcb_symmetry =
@@ -158,13 +201,9 @@ void test_evaluate_rank_4() {
                  lhs_tensorindextype_c, lhs_tensorindextype_b>;
   using L_adcb_type =
       Tensor<DataType, L_adcb_symmetry, L_adcb_tensorindextype_list>;
-  const L_adcb_type L_adcb_returned =
-      ::tenex::evaluate<TensorIndexA, TensorIndexD, TensorIndexC, TensorIndexB>(
-          R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-  L_adcb_type L_adcb_filled{};
-  ::tenex::evaluate<TensorIndexA, TensorIndexD, TensorIndexC, TensorIndexB>(
-      make_not_null(&L_adcb_filled),
-      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
+  L_adcb_type L_adcb;
+  call_evaluate<ReturnLhsTensor, TensorIndexA, TensorIndexD, TensorIndexC,
+                TensorIndexB>(make_not_null(&L_adcb), rhs_expression);
 
   // L_{bacd} = R_{abcd}
   using L_bacd_symmetry =
@@ -175,13 +214,9 @@ void test_evaluate_rank_4() {
                  lhs_tensorindextype_c, lhs_tensorindextype_d>;
   using L_bacd_type =
       Tensor<DataType, L_bacd_symmetry, L_bacd_tensorindextype_list>;
-  const L_bacd_type L_bacd_returned =
-      ::tenex::evaluate<TensorIndexB, TensorIndexA, TensorIndexC, TensorIndexD>(
-          R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-  L_bacd_type L_bacd_filled{};
-  ::tenex::evaluate<TensorIndexB, TensorIndexA, TensorIndexC, TensorIndexD>(
-      make_not_null(&L_bacd_filled),
-      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
+  L_bacd_type L_bacd;
+  call_evaluate<ReturnLhsTensor, TensorIndexB, TensorIndexA, TensorIndexC,
+                TensorIndexD>(make_not_null(&L_bacd), rhs_expression);
 
   // L_{badc} = R_{abcd}
   using L_badc_symmetry =
@@ -192,13 +227,9 @@ void test_evaluate_rank_4() {
                  lhs_tensorindextype_d, lhs_tensorindextype_c>;
   using L_badc_type =
       Tensor<DataType, L_badc_symmetry, L_badc_tensorindextype_list>;
-  const L_badc_type L_badc_returned =
-      ::tenex::evaluate<TensorIndexB, TensorIndexA, TensorIndexD, TensorIndexC>(
-          R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-  L_badc_type L_badc_filled{};
-  ::tenex::evaluate<TensorIndexB, TensorIndexA, TensorIndexD, TensorIndexC>(
-      make_not_null(&L_badc_filled),
-      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
+  L_badc_type L_badc;
+  call_evaluate<ReturnLhsTensor, TensorIndexB, TensorIndexA, TensorIndexD,
+                TensorIndexC>(make_not_null(&L_badc), rhs_expression);
 
   // L_{bcad} = R_{abcd}
   using L_bcad_symmetry =
@@ -209,13 +240,9 @@ void test_evaluate_rank_4() {
                  lhs_tensorindextype_a, lhs_tensorindextype_d>;
   using L_bcad_type =
       Tensor<DataType, L_bcad_symmetry, L_bcad_tensorindextype_list>;
-  const L_bcad_type L_bcad_returned =
-      ::tenex::evaluate<TensorIndexB, TensorIndexC, TensorIndexA, TensorIndexD>(
-          R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-  L_bcad_type L_bcad_filled{};
-  ::tenex::evaluate<TensorIndexB, TensorIndexC, TensorIndexA, TensorIndexD>(
-      make_not_null(&L_bcad_filled),
-      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
+  L_bcad_type L_bcad;
+  call_evaluate<ReturnLhsTensor, TensorIndexB, TensorIndexC, TensorIndexA,
+                TensorIndexD>(make_not_null(&L_bcad), rhs_expression);
 
   // L_{bcda} = R_{abcd}
   using L_bcda_symmetry =
@@ -226,13 +253,9 @@ void test_evaluate_rank_4() {
                  lhs_tensorindextype_d, lhs_tensorindextype_a>;
   using L_bcda_type =
       Tensor<DataType, L_bcda_symmetry, L_bcda_tensorindextype_list>;
-  const L_bcda_type L_bcda_returned =
-      ::tenex::evaluate<TensorIndexB, TensorIndexC, TensorIndexD, TensorIndexA>(
-          R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-  L_bcda_type L_bcda_filled{};
-  ::tenex::evaluate<TensorIndexB, TensorIndexC, TensorIndexD, TensorIndexA>(
-      make_not_null(&L_bcda_filled),
-      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
+  L_bcda_type L_bcda;
+  call_evaluate<ReturnLhsTensor, TensorIndexB, TensorIndexC, TensorIndexD,
+                TensorIndexA>(make_not_null(&L_bcda), rhs_expression);
 
   // L_{bdac} = R_{abcd}
   using L_bdac_symmetry =
@@ -243,13 +266,9 @@ void test_evaluate_rank_4() {
                  lhs_tensorindextype_a, lhs_tensorindextype_c>;
   using L_bdac_type =
       Tensor<DataType, L_bdac_symmetry, L_bdac_tensorindextype_list>;
-  const L_bdac_type L_bdac_returned =
-      ::tenex::evaluate<TensorIndexB, TensorIndexD, TensorIndexA, TensorIndexC>(
-          R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-  L_bdac_type L_bdac_filled{};
-  ::tenex::evaluate<TensorIndexB, TensorIndexD, TensorIndexA, TensorIndexC>(
-      make_not_null(&L_bdac_filled),
-      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
+  L_bdac_type L_bdac;
+  call_evaluate<ReturnLhsTensor, TensorIndexB, TensorIndexD, TensorIndexA,
+                TensorIndexC>(make_not_null(&L_bdac), rhs_expression);
 
   // L_{bdca} = R_{abcd}
   using L_bdca_symmetry =
@@ -260,13 +279,9 @@ void test_evaluate_rank_4() {
                  lhs_tensorindextype_c, lhs_tensorindextype_a>;
   using L_bdca_type =
       Tensor<DataType, L_bdca_symmetry, L_bdca_tensorindextype_list>;
-  const L_bdca_type L_bdca_returned =
-      ::tenex::evaluate<TensorIndexB, TensorIndexD, TensorIndexC, TensorIndexA>(
-          R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-  L_bdca_type L_bdca_filled{};
-  ::tenex::evaluate<TensorIndexB, TensorIndexD, TensorIndexC, TensorIndexA>(
-      make_not_null(&L_bdca_filled),
-      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
+  L_bdca_type L_bdca;
+  call_evaluate<ReturnLhsTensor, TensorIndexB, TensorIndexD, TensorIndexC,
+                TensorIndexA>(make_not_null(&L_bdca), rhs_expression);
 
   // L_{cabd} = R_{abcd}
   using L_cabd_symmetry =
@@ -277,13 +292,9 @@ void test_evaluate_rank_4() {
                  lhs_tensorindextype_b, lhs_tensorindextype_d>;
   using L_cabd_type =
       Tensor<DataType, L_cabd_symmetry, L_cabd_tensorindextype_list>;
-  const L_cabd_type L_cabd_returned =
-      ::tenex::evaluate<TensorIndexC, TensorIndexA, TensorIndexB, TensorIndexD>(
-          R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-  L_cabd_type L_cabd_filled{};
-  ::tenex::evaluate<TensorIndexC, TensorIndexA, TensorIndexB, TensorIndexD>(
-      make_not_null(&L_cabd_filled),
-      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
+  L_cabd_type L_cabd;
+  call_evaluate<ReturnLhsTensor, TensorIndexC, TensorIndexA, TensorIndexB,
+                TensorIndexD>(make_not_null(&L_cabd), rhs_expression);
 
   // L_{cadb} = R_{abcd}
   using L_cadb_symmetry =
@@ -294,13 +305,9 @@ void test_evaluate_rank_4() {
                  lhs_tensorindextype_d, lhs_tensorindextype_b>;
   using L_cadb_type =
       Tensor<DataType, L_cadb_symmetry, L_cadb_tensorindextype_list>;
-  const L_cadb_type L_cadb_returned =
-      ::tenex::evaluate<TensorIndexC, TensorIndexA, TensorIndexD, TensorIndexB>(
-          R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-  L_cadb_type L_cadb_filled{};
-  ::tenex::evaluate<TensorIndexC, TensorIndexA, TensorIndexD, TensorIndexB>(
-      make_not_null(&L_cadb_filled),
-      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
+  L_cadb_type L_cadb;
+  call_evaluate<ReturnLhsTensor, TensorIndexC, TensorIndexA, TensorIndexD,
+                TensorIndexB>(make_not_null(&L_cadb), rhs_expression);
 
   // L_{cbad} = R_{abcd}
   using L_cbad_symmetry =
@@ -311,13 +318,9 @@ void test_evaluate_rank_4() {
                  lhs_tensorindextype_a, lhs_tensorindextype_d>;
   using L_cbad_type =
       Tensor<DataType, L_cbad_symmetry, L_cbad_tensorindextype_list>;
-  const L_cbad_type L_cbad_returned =
-      ::tenex::evaluate<TensorIndexC, TensorIndexB, TensorIndexA, TensorIndexD>(
-          R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-  L_cbad_type L_cbad_filled{};
-  ::tenex::evaluate<TensorIndexC, TensorIndexB, TensorIndexA, TensorIndexD>(
-      make_not_null(&L_cbad_filled),
-      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
+  L_cbad_type L_cbad;
+  call_evaluate<ReturnLhsTensor, TensorIndexC, TensorIndexB, TensorIndexA,
+                TensorIndexD>(make_not_null(&L_cbad), rhs_expression);
 
   // L_{cbda} = R_{abcd}
   using L_cbda_symmetry =
@@ -328,13 +331,9 @@ void test_evaluate_rank_4() {
                  lhs_tensorindextype_d, lhs_tensorindextype_a>;
   using L_cbda_type =
       Tensor<DataType, L_cbda_symmetry, L_cbda_tensorindextype_list>;
-  const L_cbda_type L_cbda_returned =
-      ::tenex::evaluate<TensorIndexC, TensorIndexB, TensorIndexD, TensorIndexA>(
-          R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-  L_cbda_type L_cbda_filled{};
-  ::tenex::evaluate<TensorIndexC, TensorIndexB, TensorIndexD, TensorIndexA>(
-      make_not_null(&L_cbda_filled),
-      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
+  L_cbda_type L_cbda;
+  call_evaluate<ReturnLhsTensor, TensorIndexC, TensorIndexB, TensorIndexD,
+                TensorIndexA>(make_not_null(&L_cbda), rhs_expression);
 
   // L_{cdab} = R_{abcd}
   using L_cdab_symmetry =
@@ -345,13 +344,9 @@ void test_evaluate_rank_4() {
                  lhs_tensorindextype_a, lhs_tensorindextype_b>;
   using L_cdab_type =
       Tensor<DataType, L_cdab_symmetry, L_cdab_tensorindextype_list>;
-  const L_cdab_type L_cdab_returned =
-      ::tenex::evaluate<TensorIndexC, TensorIndexD, TensorIndexA, TensorIndexB>(
-          R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-  L_cdab_type L_cdab_filled{};
-  ::tenex::evaluate<TensorIndexC, TensorIndexD, TensorIndexA, TensorIndexB>(
-      make_not_null(&L_cdab_filled),
-      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
+  L_cdab_type L_cdab;
+  call_evaluate<ReturnLhsTensor, TensorIndexC, TensorIndexD, TensorIndexA,
+                TensorIndexB>(make_not_null(&L_cdab), rhs_expression);
 
   // L_{cdba} = R_{abcd}
   using L_cdba_symmetry =
@@ -362,13 +357,9 @@ void test_evaluate_rank_4() {
                  lhs_tensorindextype_b, lhs_tensorindextype_a>;
   using L_cdba_type =
       Tensor<DataType, L_cdba_symmetry, L_cdba_tensorindextype_list>;
-  const L_cdba_type L_cdba_returned =
-      ::tenex::evaluate<TensorIndexC, TensorIndexD, TensorIndexB, TensorIndexA>(
-          R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-  L_cdba_type L_cdba_filled{};
-  ::tenex::evaluate<TensorIndexC, TensorIndexD, TensorIndexB, TensorIndexA>(
-      make_not_null(&L_cdba_filled),
-      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
+  L_cdba_type L_cdba;
+  call_evaluate<ReturnLhsTensor, TensorIndexC, TensorIndexD, TensorIndexB,
+                TensorIndexA>(make_not_null(&L_cdba), rhs_expression);
 
   // L_{dabc} = R_{abcd}
   using L_dabc_symmetry =
@@ -379,13 +370,9 @@ void test_evaluate_rank_4() {
                  lhs_tensorindextype_b, lhs_tensorindextype_c>;
   using L_dabc_type =
       Tensor<DataType, L_dabc_symmetry, L_dabc_tensorindextype_list>;
-  const L_dabc_type L_dabc_returned =
-      ::tenex::evaluate<TensorIndexD, TensorIndexA, TensorIndexB, TensorIndexC>(
-          R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-  L_dabc_type L_dabc_filled{};
-  ::tenex::evaluate<TensorIndexD, TensorIndexA, TensorIndexB, TensorIndexC>(
-      make_not_null(&L_dabc_filled),
-      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
+  L_dabc_type L_dabc;
+  call_evaluate<ReturnLhsTensor, TensorIndexD, TensorIndexA, TensorIndexB,
+                TensorIndexC>(make_not_null(&L_dabc), rhs_expression);
 
   // L_{dacb} = R_{abcd}
   using L_dacb_symmetry =
@@ -396,13 +383,9 @@ void test_evaluate_rank_4() {
                  lhs_tensorindextype_c, lhs_tensorindextype_b>;
   using L_dacb_type =
       Tensor<DataType, L_dacb_symmetry, L_dacb_tensorindextype_list>;
-  const L_dacb_type L_dacb_returned =
-      ::tenex::evaluate<TensorIndexD, TensorIndexA, TensorIndexC, TensorIndexB>(
-          R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-  L_dacb_type L_dacb_filled{};
-  ::tenex::evaluate<TensorIndexD, TensorIndexA, TensorIndexC, TensorIndexB>(
-      make_not_null(&L_dacb_filled),
-      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
+  L_dacb_type L_dacb;
+  call_evaluate<ReturnLhsTensor, TensorIndexD, TensorIndexA, TensorIndexC,
+                TensorIndexB>(make_not_null(&L_dacb), rhs_expression);
 
   // L_{dbac} = R_{abcd}
   using L_dbac_symmetry =
@@ -413,13 +396,9 @@ void test_evaluate_rank_4() {
                  lhs_tensorindextype_a, lhs_tensorindextype_c>;
   using L_dbac_type =
       Tensor<DataType, L_dbac_symmetry, L_dbac_tensorindextype_list>;
-  const L_dbac_type L_dbac_returned =
-      ::tenex::evaluate<TensorIndexD, TensorIndexB, TensorIndexA, TensorIndexC>(
-          R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-  L_dbac_type L_dbac_filled{};
-  ::tenex::evaluate<TensorIndexD, TensorIndexB, TensorIndexA, TensorIndexC>(
-      make_not_null(&L_dbac_filled),
-      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
+  L_dbac_type L_dbac;
+  call_evaluate<ReturnLhsTensor, TensorIndexD, TensorIndexB, TensorIndexA,
+                TensorIndexC>(make_not_null(&L_dbac), rhs_expression);
 
   // L_{dbca} = R_{abcd}
   using L_dbca_symmetry =
@@ -430,13 +409,9 @@ void test_evaluate_rank_4() {
                  lhs_tensorindextype_c, lhs_tensorindextype_a>;
   using L_dbca_type =
       Tensor<DataType, L_dbca_symmetry, L_dbca_tensorindextype_list>;
-  const L_dbca_type L_dbca_returned =
-      ::tenex::evaluate<TensorIndexD, TensorIndexB, TensorIndexC, TensorIndexA>(
-          R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-  L_dbca_type L_dbca_filled{};
-  ::tenex::evaluate<TensorIndexD, TensorIndexB, TensorIndexC, TensorIndexA>(
-      make_not_null(&L_dbca_filled),
-      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
+  L_dbca_type L_dbca;
+  call_evaluate<ReturnLhsTensor, TensorIndexD, TensorIndexB, TensorIndexC,
+                TensorIndexA>(make_not_null(&L_dbca), rhs_expression);
 
   // L_{dcab} = R_{abcd}
   using L_dcab_symmetry =
@@ -447,13 +422,9 @@ void test_evaluate_rank_4() {
                  lhs_tensorindextype_a, lhs_tensorindextype_b>;
   using L_dcab_type =
       Tensor<DataType, L_dcab_symmetry, L_dcab_tensorindextype_list>;
-  const L_dcab_type L_dcab_returned =
-      ::tenex::evaluate<TensorIndexD, TensorIndexC, TensorIndexA, TensorIndexB>(
-          R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-  L_dcab_type L_dcab_filled{};
-  ::tenex::evaluate<TensorIndexD, TensorIndexC, TensorIndexA, TensorIndexB>(
-      make_not_null(&L_dcab_filled),
-      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
+  L_dcab_type L_dcab;
+  call_evaluate<ReturnLhsTensor, TensorIndexD, TensorIndexC, TensorIndexA,
+                TensorIndexB>(make_not_null(&L_dcab), rhs_expression);
 
   // L_{dcba} = R_{abcd}
   using L_dcba_symmetry =
@@ -464,375 +435,72 @@ void test_evaluate_rank_4() {
                  lhs_tensorindextype_b, lhs_tensorindextype_a>;
   using L_dcba_type =
       Tensor<DataType, L_dcba_symmetry, L_dcba_tensorindextype_list>;
-  const L_dcba_type L_dcba_returned =
-      ::tenex::evaluate<TensorIndexD, TensorIndexC, TensorIndexB, TensorIndexA>(
-          R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-  L_dcba_type L_dcba_filled{};
-  ::tenex::evaluate<TensorIndexD, TensorIndexC, TensorIndexB, TensorIndexA>(
-      make_not_null(&L_dcba_filled),
-      R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
+  L_dcba_type L_dcba;
+  call_evaluate<ReturnLhsTensor, TensorIndexD, TensorIndexC, TensorIndexB,
+                TensorIndexA>(make_not_null(&L_dcba), rhs_expression);
 
   const size_t dim_a = tmpl::at_c<RhsTensorIndexTypeList, 0>::dim;
   const size_t dim_b = tmpl::at_c<RhsTensorIndexTypeList, 1>::dim;
   const size_t dim_c = tmpl::at_c<RhsTensorIndexTypeList, 2>::dim;
   const size_t dim_d = tmpl::at_c<RhsTensorIndexTypeList, 3>::dim;
 
-  for (size_t i = 0; i < dim_a; ++i) {
-    for (size_t j = 0; j < dim_b; ++j) {
-      for (size_t k = 0; k < dim_c; ++k) {
-          for (size_t l = 0; l < dim_d; ++l) {
-            // For L_{abcd} = R_{abcd}, check that L_{ijkl} == R_{ijkl}
-            CHECK(L_abcd_returned.get(i, j, k, l) == R_abcd.get(i, j, k, l));
-            CHECK(L_abcd_filled.get(i, j, k, l) == R_abcd.get(i, j, k, l));
-            // For L_{abdc} = R_{abcd}, check that L_{ijlk} == R_{ijkl}
-            CHECK(L_abdc_returned.get(i, j, l, k) == R_abcd.get(i, j, k, l));
-            CHECK(L_abdc_filled.get(i, j, l, k) == R_abcd.get(i, j, k, l));
-            // For L_{acbd} = R_{abcd}, check that L_{ikjl} == R_{ijkl}
-            CHECK(L_acbd_returned.get(i, k, j, l) == R_abcd.get(i, j, k, l));
-            CHECK(L_acbd_filled.get(i, k, j, l) == R_abcd.get(i, j, k, l));
-            // For L_{acdb} = R_{abcd}, check that L_{iklj} == R_{ijkl}
-            CHECK(L_acdb_returned.get(i, k, l, j) == R_abcd.get(i, j, k, l));
-            CHECK(L_acdb_filled.get(i, k, l, j) == R_abcd.get(i, j, k, l));
-            // For L_{adbc} = R_{abcd}, check that L_{iljk} == R_{ijkl}
-            CHECK(L_adbc_returned.get(i, l, j, k) == R_abcd.get(i, j, k, l));
-            CHECK(L_adbc_filled.get(i, l, j, k) == R_abcd.get(i, j, k, l));
-            // For L_{adcb} = R_{abcd}, check that L_{ilkj} == R_{ijkl}
-            CHECK(L_adcb_returned.get(i, l, k, j) == R_abcd.get(i, j, k, l));
-            CHECK(L_adcb_filled.get(i, l, k, j) == R_abcd.get(i, j, k, l));
-            // For L_{bacd} = R_{abcd}, check that L_{jikl} == R_{ijkl}
-            CHECK(L_bacd_returned.get(j, i, k, l) == R_abcd.get(i, j, k, l));
-            CHECK(L_bacd_filled.get(j, i, k, l) == R_abcd.get(i, j, k, l));
-            // For L_{badc} = R_{abcd}, check that L_{jilk} == R_{ijkl}
-            CHECK(L_badc_returned.get(j, i, l, k) == R_abcd.get(i, j, k, l));
-            CHECK(L_badc_filled.get(j, i, l, k) == R_abcd.get(i, j, k, l));
-            // For L_{bcad} = R_{abcd}, check that L_{jkil} == R_{ijkl}
-            CHECK(L_bcad_returned.get(j, k, i, l) == R_abcd.get(i, j, k, l));
-            CHECK(L_bcad_filled.get(j, k, i, l) == R_abcd.get(i, j, k, l));
-            // For L_{bcda} = R_{abcd}, check that L_{jkli} == R_{ijkl}
-            CHECK(L_bcda_returned.get(j, k, l, i) == R_abcd.get(i, j, k, l));
-            CHECK(L_bcda_filled.get(j, k, l, i) == R_abcd.get(i, j, k, l));
-            // For L_{bdac} = R_{abcd}, check that L_{jlik} == R_{ijkl}
-            CHECK(L_bdac_returned.get(j, l, i, k) == R_abcd.get(i, j, k, l));
-            CHECK(L_bdac_filled.get(j, l, i, k) == R_abcd.get(i, j, k, l));
-            // For L_{bdca} = R_{abcd}, check that L_{jlki} == R_{ijkl}
-            CHECK(L_bdca_returned.get(j, l, k, i) == R_abcd.get(i, j, k, l));
-            CHECK(L_bdca_filled.get(j, l, k, i) == R_abcd.get(i, j, k, l));
-            // For L_{cabd} = R_{abcd}, check that L_{kijl} == R_{ijkl}
-            CHECK(L_cabd_returned.get(k, i, j, l) == R_abcd.get(i, j, k, l));
-            CHECK(L_cabd_filled.get(k, i, j, l) == R_abcd.get(i, j, k, l));
-            // For L_{cadb} = R_{abcd}, check that L_{kilj} == R_{ijkl}
-            CHECK(L_cadb_returned.get(k, i, l, j) == R_abcd.get(i, j, k, l));
-            CHECK(L_cadb_filled.get(k, i, l, j) == R_abcd.get(i, j, k, l));
-            // For L_{cbad} = R_{abcd}, check that L_{kjil} == R_{ijkl}
-            CHECK(L_cbad_returned.get(k, j, i, l) == R_abcd.get(i, j, k, l));
-            CHECK(L_cbad_filled.get(k, j, i, l) == R_abcd.get(i, j, k, l));
-            // For L_{cbda} = R_{abcd}, check that L_{kjli} == R_{ijkl}
-            CHECK(L_cbda_returned.get(k, j, l, i) == R_abcd.get(i, j, k, l));
-            CHECK(L_cbda_filled.get(k, j, l, i) == R_abcd.get(i, j, k, l));
-            // For L_{cdab} = R_{abcd}, check that L_{klij} == R_{ijkl}
-            CHECK(L_cdab_returned.get(k, l, i, j) == R_abcd.get(i, j, k, l));
-            CHECK(L_cdab_filled.get(k, l, i, j) == R_abcd.get(i, j, k, l));
-            // For L_{cdba} = R_{abcd}, check that L_{klji} == R_{ijkl}
-            CHECK(L_cdba_returned.get(k, l, j, i) == R_abcd.get(i, j, k, l));
-            CHECK(L_cdba_filled.get(k, l, j, i) == R_abcd.get(i, j, k, l));
-            // For L_{dabc} = R_{abcd}, check that L_{lijk} == R_{ijkl}
-            CHECK(L_dabc_returned.get(l, i, j, k) == R_abcd.get(i, j, k, l));
-            CHECK(L_dabc_filled.get(l, i, j, k) == R_abcd.get(i, j, k, l));
-            // For L_{dacb} = R_{abcd}, check that L_{likj} == R_{ijkl}
-            CHECK(L_dacb_returned.get(l, i, k, j) == R_abcd.get(i, j, k, l));
-            CHECK(L_dacb_filled.get(l, i, k, j) == R_abcd.get(i, j, k, l));
-            // For L_{dbac} = R_{abcd}, check that L_{ljik} == R_{ijkl}
-            CHECK(L_dbac_returned.get(l, j, i, k) == R_abcd.get(i, j, k, l));
-            CHECK(L_dbac_filled.get(l, j, i, k) == R_abcd.get(i, j, k, l));
-            // For L_{dbca} = R_{abcd}, check that L_{ljki} == R_{ijkl}
-            CHECK(L_dbca_returned.get(l, j, k, i) == R_abcd.get(i, j, k, l));
-            CHECK(L_dbca_filled.get(l, j, k, i) == R_abcd.get(i, j, k, l));
-            // For L_{dcab} = R_{abcd}, check that L_{lkij} == R_{ijkl}
-            CHECK(L_dcab_returned.get(l, k, i, j) == R_abcd.get(i, j, k, l));
-            CHECK(L_dcab_filled.get(l, k, i, j) == R_abcd.get(i, j, k, l));
-            // For L_{dcba} = R_{abcd}, check that L_{lkji} == R_{ijkl}
-            CHECK(L_dcba_returned.get(l, k, j, i) == R_abcd.get(i, j, k, l));
-            CHECK(L_dcba_filled.get(l, k, j, i) == R_abcd.get(i, j, k, l));
-        }
-      }
-    }
-  }
-
-  // Test with TempTensor for LHS tensor
-  if constexpr (not std::is_same_v<DataType, double>) {
-    // L_{abcd} = R_{abcd}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_abcd_type>>> L_abcd_var{
-        used_for_size};
-    L_abcd_type& L_abcd_temp =
-        get<::Tags::TempTensor<1, L_abcd_type>>(L_abcd_var);
-    ::tenex::evaluate<TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD>(
-        make_not_null(&L_abcd_temp),
-        R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-
-    // L_{abdc} = R_{abcd}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_abdc_type>>> L_abdc_var{
-        used_for_size};
-    L_abdc_type& L_abdc_temp =
-        get<::Tags::TempTensor<1, L_abdc_type>>(L_abdc_var);
-    ::tenex::evaluate<TensorIndexA, TensorIndexB, TensorIndexD, TensorIndexC>(
-        make_not_null(&L_abdc_temp),
-        R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-
-    // L_{acbd} = R_{abcd}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_acbd_type>>> L_acbd_var{
-        used_for_size};
-    L_acbd_type& L_acbd_temp =
-        get<::Tags::TempTensor<1, L_acbd_type>>(L_acbd_var);
-    ::tenex::evaluate<TensorIndexA, TensorIndexC, TensorIndexB, TensorIndexD>(
-        make_not_null(&L_acbd_temp),
-        R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-
-    // L_{acdb} = R_{abcd}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_acdb_type>>> L_acdb_var{
-        used_for_size};
-    L_acdb_type& L_acdb_temp =
-        get<::Tags::TempTensor<1, L_acdb_type>>(L_acdb_var);
-    ::tenex::evaluate<TensorIndexA, TensorIndexC, TensorIndexD, TensorIndexB>(
-        make_not_null(&L_acdb_temp),
-        R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-
-    // L_{adbc} = R_{abcd}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_adbc_type>>> L_adbc_var{
-        used_for_size};
-    L_adbc_type& L_adbc_temp =
-        get<::Tags::TempTensor<1, L_adbc_type>>(L_adbc_var);
-    ::tenex::evaluate<TensorIndexA, TensorIndexD, TensorIndexB, TensorIndexC>(
-        make_not_null(&L_adbc_temp),
-        R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-
-    // L_{adcb} = R_{abcd}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_adcb_type>>> L_adcb_var{
-        used_for_size};
-    L_adcb_type& L_adcb_temp =
-        get<::Tags::TempTensor<1, L_adcb_type>>(L_adcb_var);
-    ::tenex::evaluate<TensorIndexA, TensorIndexD, TensorIndexC, TensorIndexB>(
-        make_not_null(&L_adcb_temp),
-        R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-
-    // L_{bacd} = R_{abcd}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_bacd_type>>> L_bacd_var{
-        used_for_size};
-    L_bacd_type& L_bacd_temp =
-        get<::Tags::TempTensor<1, L_bacd_type>>(L_bacd_var);
-    ::tenex::evaluate<TensorIndexB, TensorIndexA, TensorIndexC, TensorIndexD>(
-        make_not_null(&L_bacd_temp),
-        R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-
-    // L_{badc} = R_{abcd}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_badc_type>>> L_badc_var{
-        used_for_size};
-    L_badc_type& L_badc_temp =
-        get<::Tags::TempTensor<1, L_badc_type>>(L_badc_var);
-    ::tenex::evaluate<TensorIndexB, TensorIndexA, TensorIndexD, TensorIndexC>(
-        make_not_null(&L_badc_temp),
-        R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-
-    // L_{bcad} = R_{abcd}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_bcad_type>>> L_bcad_var{
-        used_for_size};
-    L_bcad_type& L_bcad_temp =
-        get<::Tags::TempTensor<1, L_bcad_type>>(L_bcad_var);
-    ::tenex::evaluate<TensorIndexB, TensorIndexC, TensorIndexA, TensorIndexD>(
-        make_not_null(&L_bcad_temp),
-        R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-
-    // L_{bcda} = R_{abcd}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_bcda_type>>> L_bcda_var{
-        used_for_size};
-    L_bcda_type& L_bcda_temp =
-        get<::Tags::TempTensor<1, L_bcda_type>>(L_bcda_var);
-    ::tenex::evaluate<TensorIndexB, TensorIndexC, TensorIndexD, TensorIndexA>(
-        make_not_null(&L_bcda_temp),
-        R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-
-    // L_{bdac} = R_{abcd}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_bdac_type>>> L_bdac_var{
-        used_for_size};
-    L_bdac_type& L_bdac_temp =
-        get<::Tags::TempTensor<1, L_bdac_type>>(L_bdac_var);
-    ::tenex::evaluate<TensorIndexB, TensorIndexD, TensorIndexA, TensorIndexC>(
-        make_not_null(&L_bdac_temp),
-        R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-
-    // L_{bdca} = R_{abcd}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_bdca_type>>> L_bdca_var{
-        used_for_size};
-    L_bdca_type& L_bdca_temp =
-        get<::Tags::TempTensor<1, L_bdca_type>>(L_bdca_var);
-    ::tenex::evaluate<TensorIndexB, TensorIndexD, TensorIndexC, TensorIndexA>(
-        make_not_null(&L_bdca_temp),
-        R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-
-    // L_{cabd} = R_{abcd}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_cabd_type>>> L_cabd_var{
-        used_for_size};
-    L_cabd_type& L_cabd_temp =
-        get<::Tags::TempTensor<1, L_cabd_type>>(L_cabd_var);
-    ::tenex::evaluate<TensorIndexC, TensorIndexA, TensorIndexB, TensorIndexD>(
-        make_not_null(&L_cabd_temp),
-        R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-
-    // L_{cadb} = R_{abcd}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_cadb_type>>> L_cadb_var{
-        used_for_size};
-    L_cadb_type& L_cadb_temp =
-        get<::Tags::TempTensor<1, L_cadb_type>>(L_cadb_var);
-    ::tenex::evaluate<TensorIndexC, TensorIndexA, TensorIndexD, TensorIndexB>(
-        make_not_null(&L_cadb_temp),
-        R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-
-    // L_{cbad} = R_{abcd}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_cbad_type>>> L_cbad_var{
-        used_for_size};
-    L_cbad_type& L_cbad_temp =
-        get<::Tags::TempTensor<1, L_cbad_type>>(L_cbad_var);
-    ::tenex::evaluate<TensorIndexC, TensorIndexB, TensorIndexA, TensorIndexD>(
-        make_not_null(&L_cbad_temp),
-        R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-
-    // L_{cbda} = R_{abcd}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_cbda_type>>> L_cbda_var{
-        used_for_size};
-    L_cbda_type& L_cbda_temp =
-        get<::Tags::TempTensor<1, L_cbda_type>>(L_cbda_var);
-    ::tenex::evaluate<TensorIndexC, TensorIndexB, TensorIndexD, TensorIndexA>(
-        make_not_null(&L_cbda_temp),
-        R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-
-    // L_{cdab} = R_{abcd}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_cdab_type>>> L_cdab_var{
-        used_for_size};
-    L_cdab_type& L_cdab_temp =
-        get<::Tags::TempTensor<1, L_cdab_type>>(L_cdab_var);
-    ::tenex::evaluate<TensorIndexC, TensorIndexD, TensorIndexA, TensorIndexB>(
-        make_not_null(&L_cdab_temp),
-        R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-
-    // L_{cdba} = R_{abcd}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_cdba_type>>> L_cdba_var{
-        used_for_size};
-    L_cdba_type& L_cdba_temp =
-        get<::Tags::TempTensor<1, L_cdba_type>>(L_cdba_var);
-    ::tenex::evaluate<TensorIndexC, TensorIndexD, TensorIndexB, TensorIndexA>(
-        make_not_null(&L_cdba_temp),
-        R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-
-    // L_{dabc} = R_{abcd}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_dabc_type>>> L_dabc_var{
-        used_for_size};
-    L_dabc_type& L_dabc_temp =
-        get<::Tags::TempTensor<1, L_dabc_type>>(L_dabc_var);
-    ::tenex::evaluate<TensorIndexD, TensorIndexA, TensorIndexB, TensorIndexC>(
-        make_not_null(&L_dabc_temp),
-        R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-
-    // L_{dacb} = R_{abcd}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_dacb_type>>> L_dacb_var{
-        used_for_size};
-    L_dacb_type& L_dacb_temp =
-        get<::Tags::TempTensor<1, L_dacb_type>>(L_dacb_var);
-    ::tenex::evaluate<TensorIndexD, TensorIndexA, TensorIndexC, TensorIndexB>(
-        make_not_null(&L_dacb_temp),
-        R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-
-    // L_{dbac} = R_{abcd}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_dbac_type>>> L_dbac_var{
-        used_for_size};
-    L_dbac_type& L_dbac_temp =
-        get<::Tags::TempTensor<1, L_dbac_type>>(L_dbac_var);
-    ::tenex::evaluate<TensorIndexD, TensorIndexB, TensorIndexA, TensorIndexC>(
-        make_not_null(&L_dbac_temp),
-        R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-
-    // L_{dbca} = R_{abcd}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_dbca_type>>> L_dbca_var{
-        used_for_size};
-    L_dbca_type& L_dbca_temp =
-        get<::Tags::TempTensor<1, L_dbca_type>>(L_dbca_var);
-    ::tenex::evaluate<TensorIndexD, TensorIndexB, TensorIndexC, TensorIndexA>(
-        make_not_null(&L_dbca_temp),
-        R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-
-    // L_{dcab} = R_{abcd}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_dcab_type>>> L_dcab_var{
-        used_for_size};
-    L_dcab_type& L_dcab_temp =
-        get<::Tags::TempTensor<1, L_dcab_type>>(L_dcab_var);
-    ::tenex::evaluate<TensorIndexD, TensorIndexC, TensorIndexA, TensorIndexB>(
-        make_not_null(&L_dcab_temp),
-        R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-
-    // L_{dcba} = R_{abcd}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_dcba_type>>> L_dcba_var{
-        used_for_size};
-    L_dcba_type& L_dcba_temp =
-        get<::Tags::TempTensor<1, L_dcba_type>>(L_dcba_var);
-    ::tenex::evaluate<TensorIndexD, TensorIndexC, TensorIndexB, TensorIndexA>(
-        make_not_null(&L_dcba_temp),
-        R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD));
-
-    for (size_t i = 0; i < dim_a; ++i) {
-      for (size_t j = 0; j < dim_b; ++j) {
-        for (size_t k = 0; k < dim_c; ++k) {
-          for (size_t l = 0; l < dim_d; ++l) {
-            // For L_{abcd} = R_{abcd}, check that L_{ijkl} == R_{ijkl}
-            CHECK(L_abcd_temp.get(i, j, k, l) == R_abcd.get(i, j, k, l));
-            // For L_{abdc} = R_{abcd}, check that L_{ijlk} == R_{ijkl}
-            CHECK(L_abdc_temp.get(i, j, l, k) == R_abcd.get(i, j, k, l));
-            // For L_{acbd} = R_{abcd}, check that L_{ikjl} == R_{ijkl}
-            CHECK(L_acbd_temp.get(i, k, j, l) == R_abcd.get(i, j, k, l));
-            // For L_{acdb} = R_{abcd}, check that L_{iklj} == R_{ijkl}
-            CHECK(L_acdb_temp.get(i, k, l, j) == R_abcd.get(i, j, k, l));
-            // For L_{adbc} = R_{abcd}, check that L_{iljk} == R_{ijkl}
-            CHECK(L_adbc_temp.get(i, l, j, k) == R_abcd.get(i, j, k, l));
-            // For L_{adcb} = R_{abcd}, check that L_{ilkj} == R_{ijkl}
-            CHECK(L_adcb_temp.get(i, l, k, j) == R_abcd.get(i, j, k, l));
-            // For L_{bacd} = R_{abcd}, check that L_{jikl} == R_{ijkl}
-            CHECK(L_bacd_temp.get(j, i, k, l) == R_abcd.get(i, j, k, l));
-            // For L_{badc} = R_{abcd}, check that L_{jilk} == R_{ijkl}
-            CHECK(L_badc_temp.get(j, i, l, k) == R_abcd.get(i, j, k, l));
-            // For L_{bcad} = R_{abcd}, check that L_{jkil} == R_{ijkl}
-            CHECK(L_bcad_temp.get(j, k, i, l) == R_abcd.get(i, j, k, l));
-            // For L_{bcda} = R_{abcd}, check that L_{jkli} == R_{ijkl}
-            CHECK(L_bcda_temp.get(j, k, l, i) == R_abcd.get(i, j, k, l));
-            // For L_{bdac} = R_{abcd}, check that L_{jlik} == R_{ijkl}
-            CHECK(L_bdac_temp.get(j, l, i, k) == R_abcd.get(i, j, k, l));
-            // For L_{bdca} = R_{abcd}, check that L_{jlki} == R_{ijkl}
-            CHECK(L_bdca_temp.get(j, l, k, i) == R_abcd.get(i, j, k, l));
-            // For L_{cabd} = R_{abcd}, check that L_{kijl} == R_{ijkl}
-            CHECK(L_cabd_temp.get(k, i, j, l) == R_abcd.get(i, j, k, l));
-            // For L_{cadb} = R_{abcd}, check that L_{kilj} == R_{ijkl}
-            CHECK(L_cadb_temp.get(k, i, l, j) == R_abcd.get(i, j, k, l));
-            // For L_{cbad} = R_{abcd}, check that L_{kjil} == R_{ijkl}
-            CHECK(L_cbad_temp.get(k, j, i, l) == R_abcd.get(i, j, k, l));
-            // For L_{cbda} = R_{abcd}, check that L_{kjli} == R_{ijkl}
-            CHECK(L_cbda_temp.get(k, j, l, i) == R_abcd.get(i, j, k, l));
-            // For L_{cdab} = R_{abcd}, check that L_{klij} == R_{ijkl}
-            CHECK(L_cdab_temp.get(k, l, i, j) == R_abcd.get(i, j, k, l));
-            // For L_{cdba} = R_{abcd}, check that L_{klji} == R_{ijkl}
-            CHECK(L_cdba_temp.get(k, l, j, i) == R_abcd.get(i, j, k, l));
-            // For L_{dabc} = R_{abcd}, check that L_{lijk} == R_{ijkl}
-            CHECK(L_dabc_temp.get(l, i, j, k) == R_abcd.get(i, j, k, l));
-            // For L_{dacb} = R_{abcd}, check that L_{likj} == R_{ijkl}
-            CHECK(L_dacb_temp.get(l, i, k, j) == R_abcd.get(i, j, k, l));
-            // For L_{dbac} = R_{abcd}, check that L_{ljik} == R_{ijkl}
-            CHECK(L_dbac_temp.get(l, j, i, k) == R_abcd.get(i, j, k, l));
-            // For L_{dbca} = R_{abcd}, check that L_{ljki} == R_{ijkl}
-            CHECK(L_dbca_temp.get(l, j, k, i) == R_abcd.get(i, j, k, l));
-            // For L_{dcab} = R_{abcd}, check that L_{lkij} == R_{ijkl}
-            CHECK(L_dcab_temp.get(l, k, i, j) == R_abcd.get(i, j, k, l));
-            // For L_{dcba} = R_{abcd}, check that L_{lkji} == R_{ijkl}
-            CHECK(L_dcba_temp.get(l, k, j, i) == R_abcd.get(i, j, k, l));
+  for (size_t lhs_a = 0; lhs_a < dim_a; ++lhs_a) {
+    for (size_t lhs_b = 0; lhs_b < dim_b; ++lhs_b) {
+      for (size_t lhs_c = 0; lhs_c < dim_c; ++lhs_c) {
+        for (size_t lhs_d = 0; lhs_d < dim_d; ++lhs_d) {
+          DataType expected_result;
+          if (lhs_a < lhs_index_value_ranges[0].first or
+                  lhs_a > lhs_index_value_ranges[0].second or
+                  lhs_b < lhs_index_value_ranges[1].first or
+                  lhs_b > lhs_index_value_ranges[1].second or
+                  lhs_c < lhs_index_value_ranges[2].first or
+                  lhs_c > lhs_index_value_ranges[2].second,
+              lhs_d < lhs_index_value_ranges[3].first or
+                  lhs_d > lhs_index_value_ranges[3].second) {
+            expected_result = component_placeholder;
+          } else {
+            const size_t rhs_a = shift_lhs_to_rhs_index_down[0]
+                                     ? lhs_a - rhs_index_value_ranges[0].first
+                                     : lhs_a + rhs_index_value_ranges[0].first;
+            const size_t rhs_b = shift_lhs_to_rhs_index_down[1]
+                                     ? lhs_b - rhs_index_value_ranges[1].first
+                                     : lhs_b + rhs_index_value_ranges[1].first;
+            const size_t rhs_c = shift_lhs_to_rhs_index_down[2]
+                                     ? lhs_c - rhs_index_value_ranges[2].first
+                                     : lhs_c + rhs_index_value_ranges[2].first;
+            const size_t rhs_d = shift_lhs_to_rhs_index_down[3]
+                                     ? lhs_d - rhs_index_value_ranges[3].first
+                                     : lhs_d + rhs_index_value_ranges[3].first;
+            expected_result = R_abcd.get(rhs_a, rhs_b, rhs_c, rhs_d);
           }
+
+          CHECK(L_abcd.get(lhs_a, lhs_b, lhs_c, lhs_d) == expected_result);
+          CHECK(L_abdc.get(lhs_a, lhs_b, lhs_d, lhs_c) == expected_result);
+          CHECK(L_acbd.get(lhs_a, lhs_c, lhs_b, lhs_d) == expected_result);
+          CHECK(L_acdb.get(lhs_a, lhs_c, lhs_d, lhs_b) == expected_result);
+          CHECK(L_adbc.get(lhs_a, lhs_d, lhs_b, lhs_c) == expected_result);
+          CHECK(L_adcb.get(lhs_a, lhs_d, lhs_c, lhs_b) == expected_result);
+          CHECK(L_bacd.get(lhs_b, lhs_a, lhs_c, lhs_d) == expected_result);
+          CHECK(L_badc.get(lhs_b, lhs_a, lhs_d, lhs_c) == expected_result);
+          CHECK(L_bcad.get(lhs_b, lhs_c, lhs_a, lhs_d) == expected_result);
+          CHECK(L_bcda.get(lhs_b, lhs_c, lhs_d, lhs_a) == expected_result);
+          CHECK(L_bdac.get(lhs_b, lhs_d, lhs_a, lhs_c) == expected_result);
+          CHECK(L_bdca.get(lhs_b, lhs_d, lhs_c, lhs_a) == expected_result);
+          CHECK(L_cabd.get(lhs_c, lhs_a, lhs_b, lhs_d) == expected_result);
+          CHECK(L_cadb.get(lhs_c, lhs_a, lhs_d, lhs_b) == expected_result);
+          CHECK(L_cbad.get(lhs_c, lhs_b, lhs_a, lhs_d) == expected_result);
+          CHECK(L_cbda.get(lhs_c, lhs_b, lhs_d, lhs_a) == expected_result);
+          CHECK(L_cdab.get(lhs_c, lhs_d, lhs_a, lhs_b) == expected_result);
+          CHECK(L_cdba.get(lhs_c, lhs_d, lhs_b, lhs_a) == expected_result);
+          CHECK(L_dabc.get(lhs_d, lhs_a, lhs_b, lhs_c) == expected_result);
+          CHECK(L_dacb.get(lhs_d, lhs_a, lhs_c, lhs_b) == expected_result);
+          CHECK(L_dbac.get(lhs_d, lhs_b, lhs_a, lhs_c) == expected_result);
+          CHECK(L_dbca.get(lhs_d, lhs_b, lhs_c, lhs_a) == expected_result);
+          CHECK(L_dcab.get(lhs_d, lhs_c, lhs_a, lhs_b) == expected_result);
+          CHECK(L_dcba.get(lhs_d, lhs_c, lhs_b, lhs_a) == expected_result);
         }
       }
     }
   }
 }
-
 }  // namespace TestHelpers::tenex
