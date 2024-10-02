@@ -303,14 +303,10 @@ struct TensorAsExpression<Tensor<X, Symm<SymmValues...>, IndexList<Indices...>>,
     }
   }
 
-  /// \brief Get the size of a component from the `Tensor` contained by this
-  /// expression
+  /// \brief Get a component from the `Tensor` contained by this expression
   ///
-  /// \return the size of a component from the `Tensor` contained by this
-  /// expression
-  SPECTRE_ALWAYS_INLINE size_t get_rhs_tensor_component_size() const {
-    return get_size((*t_)[0]);
-  }
+  /// \return the first component from the `Tensor` contained by this expression
+  SPECTRE_ALWAYS_INLINE auto& get_used_for_size() const { return (*t_)[0]; }
 
   /// \brief Returns the value of the contained tensor's multi-index
   ///

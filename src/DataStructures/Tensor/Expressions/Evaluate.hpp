@@ -7,6 +7,7 @@
 #pragma once
 
 #include <array>
+#include <climits>
 #include <complex>
 #include <cstddef>
 #include <type_traits>
@@ -312,11 +313,12 @@ void evaluate_impl(
     // If the LHS data type is a vector, size the LHS tensor components if their
     // size does not match the size from a `Tensor` in the RHS expression
     if constexpr (is_derived_of_vector_impl_v<LhsDataType>) {
-      const size_t rhs_component_size =
-          (~rhs_tensorexpression).get_rhs_tensor_component_size();
-      if (rhs_component_size != (*lhs_tensor)[0].size()) {
+      const auto& used_for_size = (~rhs_tensorexpression).get_used_for_size();
+      if (used_for_size.size() != (*lhs_tensor)[0].size()) {
         for (auto& lhs_component : *lhs_tensor) {
-          lhs_component = LhsDataType(rhs_component_size);
+          lhs_component =
+              LhsDataType(used_for_size.size(),
+                          std::numeric_limits<double>::signaling_NaN());
         }
       }
     }
@@ -654,9 +656,12 @@ auto evaluate(const RhsTE& rhs_tensorexpression) {
       LhsTensorSymmAndIndices<rhs_tensorindex_list, lhs_tensorindex_list,
                               rhs_symmetry, rhs_tensorindextype_list>;
 
-  Tensor<typename RhsTE::type, typename lhs_tensor_symm_and_indices::symmetry,
-         typename lhs_tensor_symm_and_indices::tensorindextype_list>
-      lhs_tensor{};
+  const auto& used_for_size = (~rhs_tensorexpression).get_used_for_size();
+  auto lhs_tensor = make_with_value<Tensor<
+      typename RhsTE::type, typename lhs_tensor_symm_and_indices::symmetry,
+      typename lhs_tensor_symm_and_indices::tensorindextype_list>>(
+      used_for_size, std::numeric_limits<double>::signaling_NaN());
+
   evaluate<LhsTensorIndices...>(make_not_null(&lhs_tensor),
                                 rhs_tensorexpression);
   return lhs_tensor;

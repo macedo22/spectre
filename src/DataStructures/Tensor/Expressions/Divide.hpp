@@ -188,17 +188,17 @@ struct Divide
     }
   }
 
-  /// \brief Get the size of a component from a `Tensor` in this expression's
-  /// subtree of the RHS `TensorExpression`
+  /// \brief Get a component from a `Tensor` in this expression's subtree of the
+  /// RHS `TensorExpression`
   ///
-  /// \return the size of a component from a `Tensor` in this expression's
-  /// subtree of the RHS `TensorExpression`
-  SPECTRE_ALWAYS_INLINE size_t get_rhs_tensor_component_size() const {
+  /// \return a component from a `Tensor` in this expression's subtree of the
+  /// RHS `TensorExpression`
+  SPECTRE_ALWAYS_INLINE auto& get_used_for_size() const {
     if constexpr (T1::height_relative_to_closest_tensor_leaf_in_subtree <=
                   T2::height_relative_to_closest_tensor_leaf_in_subtree) {
-      return t1_.get_rhs_tensor_component_size();
+      return t1_.get_used_for_size();
     } else {
-      return t2_.get_rhs_tensor_component_size();
+      return t2_.get_used_for_size();
     }
   }
 
