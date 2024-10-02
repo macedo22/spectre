@@ -5,7 +5,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <iostream>  // TODO : remove
 #include <iterator>
 #include <numeric>
 #include <random>
@@ -14,9 +13,12 @@
 #include "DataStructures/Tensor/IndexType.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
+#include "Framework/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/ComponentPlaceholder.hpp"
+#include "Utilities/ContainerHelpers.hpp"
 #include "Utilities/Gsl.hpp"
+#include "Utilities/MakeWithValue.hpp"
 #include "Utilities/TMPL.hpp"
 
 namespace TestHelpers::tenex {
@@ -31,34 +33,7 @@ void call_evaluate(const gsl::not_null<LhsTensor*> lhs_tensor,
   }
 }
 
-template <typename Index, auto& TensorIndex>
-constexpr std::pair<size_t, size_t> get_index_value_range() {
-  constexpr bool tensorindex_is_time =
-      ::tenex::detail::is_time_index_value(TensorIndex.value);
-  static_assert(
-      not(Index::index_type == IndexType::Spatial and tensorindex_is_time),
-      "Cannot use a concrete time TensorIndex with a SpatialIndex.");
-
-  std::pair<size_t, size_t> range{};
-  range.first =
-      Index::index_type == IndexType::Spacetime and not TensorIndex.is_spacetime
-          ? 1
-          : 0;
-  range.second = tensorindex_is_time ? 0 : Index::dim - 1;
-  return range;
-}
-
-// template <typename Index, auto& TensorIndex>
-// constexpr bool starting_index_value_is_0() {
-//   constexpr bool tensorindex_is_time =
-//       ::tenex::detail::is_time_index_value(TensorIndex.value);
-//   static_assert(
-//       not(Index::index_type == IndexType::Spatial and tensorindex_is_time),
-//       "Cannot use a concrete time TensorIndex with a SpatialIndex.");
-//   return Index::index_type == IndexType::Spacetime and
-//          not TensorIndex.is_spacetime;
-//   ;
-// }
+// TODO : update testing func docs
 
 /// \ingroup TestingFrameworkGroup
 /// \brief Test that evaluating a right hand side tensor expression containing a
@@ -91,17 +66,15 @@ constexpr std::pair<size_t, size_t> get_index_value_range() {
 /// TensorExpression, e.g. `ti::c`
 /// \tparam TensorIndexD the fourth TensorIndex used on the RHS of the
 /// TensorExpression, e.g. `ti::D`
-template <bool ReturnLhsTensor, typename DataType, typename LhsSymmetry,
-          typename LhsTensorIndexTypeList, typename RhsSymmetry,
-          typename RhsTensorIndexTypeList, auto& TensorIndexA,
-          auto& TensorIndexB, auto& TensorIndexC, auto& TensorIndexD,
-          typename Generator>
-void test_evaluate_rank_4(const gsl::not_null<Generator*> generator) {
-  std::uniform_real_distribution<> distribution(-5.0, 5.0);
-  const size_t used_for_size = 3;
-  const auto R_abcd = make_with_random_values<
-      Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList>>(
-      generator, distribution, used_for_size);
+template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
+          auto& TensorIndexC, auto& TensorIndexD, typename DataType,
+          typename LhsSymmetry, typename LhsTensorIndexTypeList,
+          typename RhsSymmetry, typename RhsTensorIndexTypeList>
+void test_evaluate_rank_4_impl(
+    const Tensor<DataType, LhsSymmetry, LhsTensorIndexTypeList>&
+        expected_L_abcd,
+    const Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList>& R_abcd) {
+  const size_t used_for_size = get_size(expected_L_abcd[0]);
   const auto rhs_expression =
       R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD);
 
@@ -115,57 +88,6 @@ void test_evaluate_rank_4(const gsl::not_null<Generator*> generator) {
   using lhs_tensorindextype_b = tmpl::at_c<LhsTensorIndexTypeList, 1>;
   using lhs_tensorindextype_c = tmpl::at_c<LhsTensorIndexTypeList, 2>;
   using lhs_tensorindextype_d = tmpl::at_c<LhsTensorIndexTypeList, 3>;
-  using rhs_tensorindextype_a = tmpl::at_c<RhsTensorIndexTypeList, 0>;
-  using rhs_tensorindextype_b = tmpl::at_c<RhsTensorIndexTypeList, 1>;
-  using rhs_tensorindextype_c = tmpl::at_c<RhsTensorIndexTypeList, 2>;
-  using rhs_tensorindextype_d = tmpl::at_c<RhsTensorIndexTypeList, 3>;
-
-  std::array<std::pair<size_t, size_t>, 4> lhs_index_value_ranges{};
-  lhs_index_value_ranges[0] =
-      get_index_value_range<lhs_tensorindextype_a, TensorIndexA>();
-  lhs_index_value_ranges[1] =
-      get_index_value_range<lhs_tensorindextype_b, TensorIndexB>();
-  lhs_index_value_ranges[2] =
-      get_index_value_range<lhs_tensorindextype_c, TensorIndexC>();
-  lhs_index_value_ranges[3] =
-      get_index_value_range<lhs_tensorindextype_d, TensorIndexD>();
-  std::array<std::pair<size_t, size_t>, 4> rhs_index_value_ranges{};
-  rhs_index_value_ranges[0] =
-      get_index_value_range<rhs_tensorindextype_a, TensorIndexA>();
-  rhs_index_value_ranges[1] =
-      get_index_value_range<rhs_tensorindextype_b, TensorIndexB>();
-  rhs_index_value_ranges[2] =
-      get_index_value_range<rhs_tensorindextype_c, TensorIndexC>();
-  rhs_index_value_ranges[3] =
-      get_index_value_range<rhs_tensorindextype_d, TensorIndexD>();
-  //   std::array<bool, 4> shift_lhs_to_rhs_index_down{};
-  //   shift_lhs_to_rhs_index_down[0] =
-  //       lhs_index_value_ranges[0].first > rhs_index_value_ranges[0].first;
-  //   shift_lhs_to_rhs_index_down[1] =
-  //       lhs_index_value_ranges[1].first > rhs_index_value_ranges[1].first;
-  //   shift_lhs_to_rhs_index_down[2] =
-  //       lhs_index_value_ranges[2].first > rhs_index_value_ranges[2].first;
-  //   shift_lhs_to_rhs_index_down[3] =
-  //       lhs_index_value_ranges[3].first > rhs_index_value_ranges[3].first;
-
-  //   std::array<bool, 4> lhs_starting_indices_are_0{};
-  //   lhs_starting_indices_are_0[0] =
-  //       starting_index_value_is_0<lhs_tensorindextype_a, TensorIndexA>();
-  //   lhs_starting_indices_are_0[1] =
-  //       starting_index_value_is_0<lhs_tensorindextype_b, TensorIndexB>();
-  //   lhs_starting_indices_are_0[2] =
-  //       starting_index_value_is_0<lhs_tensorindextype_c, TensorIndexC>();
-  //   lhs_starting_indices_are_0[3] =
-  //       starting_index_value_is_0<lhs_tensorindextype_d, TensorIndexD>();
-  //   std::array<bool, 4> rhs_starting_indices_are_0{};
-  //   rhs_starting_indices_are_0[0] =
-  //       starting_index_value_is_0<rhs_tensorindextype_a, TensorIndexA>();
-  //   rhs_starting_indices_are_0[1] =
-  //       starting_index_value_is_0<rhs_tensorindextype_b, TensorIndexB>();
-  //   rhs_starting_indices_are_0[2] =
-  //       starting_index_value_is_0<rhs_tensorindextype_c, TensorIndexC>();
-  //   rhs_starting_indices_are_0[3] =
-  //       starting_index_value_is_0<rhs_tensorindextype_d, TensorIndexD>();
 
   // L_{abcd} = R_{abcd}
   // Use explicit type (vs auto) so the compiler checks the return type of
@@ -174,7 +96,6 @@ void test_evaluate_rank_4(const gsl::not_null<Generator*> generator) {
   L_abcd_type L_abcd(used_for_size);
   std::iota(L_abcd.begin(), L_abcd.end(),
             component_placeholder_value<DataType>::value);
-  const DataType component_placeholder = L_abcd[0];
   call_evaluate<ReturnLhsTensor, TensorIndexA, TensorIndexB, TensorIndexC,
                 TensorIndexD>(make_not_null(&L_abcd), rhs_expression);
 
@@ -532,106 +453,66 @@ void test_evaluate_rank_4(const gsl::not_null<Generator*> generator) {
     for (size_t lhs_b = 0; lhs_b < dim_b; ++lhs_b) {
       for (size_t lhs_c = 0; lhs_c < dim_c; ++lhs_c) {
         for (size_t lhs_d = 0; lhs_d < dim_d; ++lhs_d) {
-          std::cout << "(lhs_a, lhs_b, lhs_c, lhs_d) : (" << lhs_a << ", "
-                    << lhs_b << ", " << lhs_c << ", " << lhs_d << ")"
-                    << std::endl;
-          DataType expected_result;
-          // TODO : need to update this if, it doesn't match the right cases
-          if (lhs_a < lhs_index_value_ranges[0].first or
-              lhs_a > lhs_index_value_ranges[0].second or
-              lhs_b < lhs_index_value_ranges[1].first or
-              lhs_b > lhs_index_value_ranges[1].second or
-              lhs_c < lhs_index_value_ranges[2].first or
-              lhs_c > lhs_index_value_ranges[2].second or
-              lhs_d < lhs_index_value_ranges[3].first or
-              lhs_d > lhs_index_value_ranges[3].second) {
-            if constexpr (ReturnLhsTensor) {
-              // this component was allocated but not evaluated
-              expected_result = std::numeric_limits<double>::signaling_NaN();
-            } else {
-              // this component was set to `component_placeholder` before
-              // evaluating and should be unmodified
-              expected_result = component_placeholder;
-            }
-          } else {
-            // const size_t rhs_a = shift_lhs_to_rhs_index_down[0]
-            //                          ? lhs_a -
-            //                          rhs_index_value_ranges[0].first : lhs_a
-            //                          + rhs_index_value_ranges[0].first;
-            // const size_t rhs_b = shift_lhs_to_rhs_index_down[1]
-            //                          ? lhs_b -
-            //                          rhs_index_value_ranges[1].first : lhs_b
-            //                          + rhs_index_value_ranges[1].first;
-            // const size_t rhs_c = shift_lhs_to_rhs_index_down[2]
-            //                          ? lhs_c -
-            //                          rhs_index_value_ranges[2].first : lhs_c
-            //                          + rhs_index_value_ranges[2].first;
-            // const size_t rhs_d = shift_lhs_to_rhs_index_down[3]
-            //                          ? lhs_d -
-            //                          rhs_index_value_ranges[3].first : lhs_d
-            //                          + rhs_index_value_ranges[3].first;
-            const size_t rhs_a = (lhs_index_value_ranges[0].first ==
-                                  rhs_index_value_ranges[0].first)
-                                     ? lhs_a
-                                     : ((lhs_index_value_ranges[0].first >
-                                         rhs_index_value_ranges[0].first)
-                                            ? lhs_a - 1
-                                            : lhs_a + 1);
-            const size_t rhs_b = (lhs_index_value_ranges[1].first ==
-                                  rhs_index_value_ranges[1].first)
-                                     ? lhs_b
-                                     : ((lhs_index_value_ranges[1].first >
-                                         rhs_index_value_ranges[1].first)
-                                            ? lhs_b - 1
-                                            : lhs_b + 1);
-            const size_t rhs_c = (lhs_index_value_ranges[2].first ==
-                                  rhs_index_value_ranges[2].first)
-                                     ? lhs_c
-                                     : ((lhs_index_value_ranges[2].first >
-                                         rhs_index_value_ranges[2].first)
-                                            ? lhs_c - 1
-                                            : lhs_c + 1);
-            const size_t rhs_d = (lhs_index_value_ranges[3].first ==
-                                  rhs_index_value_ranges[3].first)
-                                     ? lhs_d
-                                     : ((lhs_index_value_ranges[3].first >
-                                         rhs_index_value_ranges[3].first)
-                                            ? lhs_d - 1
-                                            : lhs_d + 1);
-            expected_result = R_abcd.get(rhs_a, rhs_b, rhs_c, rhs_d);
-
-            std::cout << "(rhs_a, rhs_b, rhs_c, rhs_d) : (" << rhs_a << ", "
-                      << rhs_b << ", " << rhs_c << ", " << rhs_d << ")"
-                      << std::endl;
-          }
+          const auto& expected_result =
+              expected_L_abcd.get(lhs_a, lhs_b, lhs_c, lhs_d);
 
           CHECK(L_abcd.get(lhs_a, lhs_b, lhs_c, lhs_d) == expected_result);
-          // CHECK(L_abdc.get(lhs_a, lhs_b, lhs_d, lhs_c) == expected_result);
-          // CHECK(L_acbd.get(lhs_a, lhs_c, lhs_b, lhs_d) == expected_result);
-          // CHECK(L_acdb.get(lhs_a, lhs_c, lhs_d, lhs_b) == expected_result);
-          // CHECK(L_adbc.get(lhs_a, lhs_d, lhs_b, lhs_c) == expected_result);
-          // CHECK(L_adcb.get(lhs_a, lhs_d, lhs_c, lhs_b) == expected_result);
-          // CHECK(L_bacd.get(lhs_b, lhs_a, lhs_c, lhs_d) == expected_result);
-          // CHECK(L_badc.get(lhs_b, lhs_a, lhs_d, lhs_c) == expected_result);
-          // CHECK(L_bcad.get(lhs_b, lhs_c, lhs_a, lhs_d) == expected_result);
-          // CHECK(L_bcda.get(lhs_b, lhs_c, lhs_d, lhs_a) == expected_result);
-          // CHECK(L_bdac.get(lhs_b, lhs_d, lhs_a, lhs_c) == expected_result);
-          // CHECK(L_bdca.get(lhs_b, lhs_d, lhs_c, lhs_a) == expected_result);
-          // CHECK(L_cabd.get(lhs_c, lhs_a, lhs_b, lhs_d) == expected_result);
-          // CHECK(L_cadb.get(lhs_c, lhs_a, lhs_d, lhs_b) == expected_result);
-          // CHECK(L_cbad.get(lhs_c, lhs_b, lhs_a, lhs_d) == expected_result);
-          // CHECK(L_cbda.get(lhs_c, lhs_b, lhs_d, lhs_a) == expected_result);
-          // CHECK(L_cdab.get(lhs_c, lhs_d, lhs_a, lhs_b) == expected_result);
-          // CHECK(L_cdba.get(lhs_c, lhs_d, lhs_b, lhs_a) == expected_result);
-          // CHECK(L_dabc.get(lhs_d, lhs_a, lhs_b, lhs_c) == expected_result);
-          // CHECK(L_dacb.get(lhs_d, lhs_a, lhs_c, lhs_b) == expected_result);
-          // CHECK(L_dbac.get(lhs_d, lhs_b, lhs_a, lhs_c) == expected_result);
-          // CHECK(L_dbca.get(lhs_d, lhs_b, lhs_c, lhs_a) == expected_result);
-          // CHECK(L_dcab.get(lhs_d, lhs_c, lhs_a, lhs_b) == expected_result);
-          // CHECK(L_dcba.get(lhs_d, lhs_c, lhs_b, lhs_a) == expected_result);
+          CHECK(L_abdc.get(lhs_a, lhs_b, lhs_d, lhs_c) == expected_result);
+          CHECK(L_acbd.get(lhs_a, lhs_c, lhs_b, lhs_d) == expected_result);
+          CHECK(L_acdb.get(lhs_a, lhs_c, lhs_d, lhs_b) == expected_result);
+          CHECK(L_adbc.get(lhs_a, lhs_d, lhs_b, lhs_c) == expected_result);
+          CHECK(L_adcb.get(lhs_a, lhs_d, lhs_c, lhs_b) == expected_result);
+          CHECK(L_bacd.get(lhs_b, lhs_a, lhs_c, lhs_d) == expected_result);
+          CHECK(L_badc.get(lhs_b, lhs_a, lhs_d, lhs_c) == expected_result);
+          CHECK(L_bcad.get(lhs_b, lhs_c, lhs_a, lhs_d) == expected_result);
+          CHECK(L_bcda.get(lhs_b, lhs_c, lhs_d, lhs_a) == expected_result);
+          CHECK(L_bdac.get(lhs_b, lhs_d, lhs_a, lhs_c) == expected_result);
+          CHECK(L_bdca.get(lhs_b, lhs_d, lhs_c, lhs_a) == expected_result);
+          CHECK(L_cabd.get(lhs_c, lhs_a, lhs_b, lhs_d) == expected_result);
+          CHECK(L_cadb.get(lhs_c, lhs_a, lhs_d, lhs_b) == expected_result);
+          CHECK(L_cbad.get(lhs_c, lhs_b, lhs_a, lhs_d) == expected_result);
+          CHECK(L_cbda.get(lhs_c, lhs_b, lhs_d, lhs_a) == expected_result);
+          CHECK(L_cdab.get(lhs_c, lhs_d, lhs_a, lhs_b) == expected_result);
+          CHECK(L_cdba.get(lhs_c, lhs_d, lhs_b, lhs_a) == expected_result);
+          CHECK(L_dabc.get(lhs_d, lhs_a, lhs_b, lhs_c) == expected_result);
+          CHECK(L_dacb.get(lhs_d, lhs_a, lhs_c, lhs_b) == expected_result);
+          CHECK(L_dbac.get(lhs_d, lhs_b, lhs_a, lhs_c) == expected_result);
+          CHECK(L_dbca.get(lhs_d, lhs_b, lhs_c, lhs_a) == expected_result);
+          CHECK(L_dcab.get(lhs_d, lhs_c, lhs_a, lhs_b) == expected_result);
+          CHECK(L_dcba.get(lhs_d, lhs_c, lhs_b, lhs_a) == expected_result);
         }
       }
     }
   }
+}
+
+template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
+          auto& TensorIndexC, auto& TensorIndexD, typename DataType,
+          typename LhsSymmetry, typename LhsTensorIndexTypeList,
+          typename RhsSymmetry, typename RhsTensorIndexTypeList>
+void test_evaluate_rank_4() {
+  MAKE_GENERATOR(generator);
+  std::uniform_real_distribution<> distribution(-5.0, 5.0);
+  const size_t used_for_size = 3;
+  const auto R_abcd = make_with_random_values<
+      Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList>>(
+      make_not_null(&generator), distribution, used_for_size);
+  auto expected_L_abcd =
+      make_with_value<Tensor<DataType, LhsSymmetry, LhsTensorIndexTypeList>>(
+          used_for_size, std::numeric_limits<double>::signaling_NaN());
+  for (size_t a = 0; a < tmpl::at_c<RhsTensorIndexTypeList, 0>::dim; a++) {
+    for (size_t b = 0; b < tmpl::at_c<RhsTensorIndexTypeList, 1>::dim; b++) {
+      for (size_t c = 0; c < tmpl::at_c<RhsTensorIndexTypeList, 2>::dim; c++) {
+        for (size_t d = 0; d < tmpl::at_c<RhsTensorIndexTypeList, 3>::dim;
+             d++) {
+          expected_L_abcd.get(a, b, c, d) = R_abcd.get(a, b, c, d);
+        }
+      }
+    }
+  }
+
+  test_evaluate_rank_4_impl<ReturnLhsTensor, TensorIndexA, TensorIndexB,
+                            TensorIndexC, TensorIndexD>(expected_L_abcd,
+                                                        R_abcd);
 }
 }  // namespace TestHelpers::tenex
