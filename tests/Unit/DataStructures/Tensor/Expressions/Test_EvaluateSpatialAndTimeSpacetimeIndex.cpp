@@ -31,20 +31,7 @@ SPECTRE_TEST_CASE(
                                      SpacetimeIndex<3, UpLo::Lo, FrameType>,
                                      SpacetimeIndex<3, UpLo::Lo, FrameType>>;
 
-  const auto R_abcd =
-      make_with_random_values<Tensor<DataType, symm_1111, index_list_abcd>>(
-          make_not_null(&generator), distribution, used_for_size);
-  auto expected_L_abcd =
-      make_with_value<Tensor<DataType, symm_1111, index_list_abcd>>(
-          used_for_size,
-          TestHelpers::tenex::component_placeholder_value<DataType>::value);
-  for (size_t a = 0; a < tmpl::at_c<index_list_abcd, 0>::dim; a++) {
-    for (size_t j = 1; j < tmpl::at_c<index_list_abcd, 1>::dim; j++) {
-      for (size_t i = 1; i < tmpl::at_c<index_list_abcd, 2>::dim; i++) {
-        expected_L_abcd.get(0, a, j, i) = R_abcd.get(0, a, j, i);
-      }
-    }
-  }
-  TestHelpers::tenex::test_evaluate_rank_4_impl<false, ti::t, ti::a, ti::j,
-                                                ti::i>(expected_L_abcd, R_abcd);
+  TestHelpers::tenex::test_evaluate_rank_4<false, ti::t, ti::a, ti::j, ti::i,
+                                           DataVector, symm_1111,
+                                           index_list_abcd>();
 }
