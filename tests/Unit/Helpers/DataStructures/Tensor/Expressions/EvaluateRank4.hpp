@@ -486,10 +486,11 @@ void test_evaluate_rank_4_impl(
   }
 }
 
-template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
-          auto& TensorIndexC, auto& TensorIndexD, typename DataType,
+template <bool ReturnLhsTensor, typename DataType, auto& TensorIndexA,
+          auto& TensorIndexB, auto& TensorIndexC, auto& TensorIndexD,
           typename LhsSymmetry, typename LhsTensorIndexTypeList,
-          typename RhsSymmetry, typename RhsTensorIndexTypeList>
+          typename RhsSymmetry = LhsSymmetry,
+          typename RhsTensorIndexTypeList = LhsTensorIndexTypeList>
 void test_evaluate_rank_4() {
   MAKE_GENERATOR(generator);
   std::uniform_real_distribution<> distribution(-5.0, 5.0);
