@@ -33,6 +33,22 @@ void call_evaluate(const gsl::not_null<LhsTensor*> lhs_tensor,
   }
 }
 
+template <typename Index, auto& TensorIndex>
+constexpr std::pair<size_t, size_t> get_index_value_range() {
+  constexpr bool tensorindex_is_time =
+      ::tenex::detail::is_time_index_value(TensorIndex.value);
+  static_assert(
+      not(Index::index_type == IndexType::Spatial and tensorindex_is_time),
+      "Cannot use a concrete time TensorIndex with a SpatialIndex.");
+  std::pair<size_t, size_t> range{};
+  range.first =
+      Index::index_type == IndexType::Spacetime and not TensorIndex.is_spacetime
+          ? 1
+          : 0;
+  range.second = tensorindex_is_time ? 0 : Index::dim - 1;
+  return range;
+}
+
 // TODO : update testing func docs
 
 /// \ingroup TestingFrameworkGroup
@@ -499,14 +515,86 @@ void test_evaluate_rank_4() {
       Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList>>(
       make_not_null(&generator), distribution, used_for_size);
   auto expected_L_abcd =
-      make_with_value<Tensor<DataType, LhsSymmetry, LhsTensorIndexTypeList>>(
-          used_for_size, std::numeric_limits<double>::signaling_NaN());
-  for (size_t a = 0; a < tmpl::at_c<RhsTensorIndexTypeList, 0>::dim; a++) {
-    for (size_t b = 0; b < tmpl::at_c<RhsTensorIndexTypeList, 1>::dim; b++) {
-      for (size_t c = 0; c < tmpl::at_c<RhsTensorIndexTypeList, 2>::dim; c++) {
-        for (size_t d = 0; d < tmpl::at_c<RhsTensorIndexTypeList, 3>::dim;
-             d++) {
-          expected_L_abcd.get(a, b, c, d) = R_abcd.get(a, b, c, d);
+      ReturnLhsTensor
+          ? Tensor<DataType, LhsSymmetry, LhsTensorIndexTypeList>{}
+          : make_with_value<
+                Tensor<DataType, LhsSymmetry, LhsTensorIndexTypeList>>(
+                used_for_size, component_placeholder_value<DataType>::value);
+
+  std::array<std::pair<size_t, size_t>, 4> lhs_index_value_ranges{};
+  lhs_index_value_ranges[0] =
+      get_index_value_range<tmpl::at_c<LhsTensorIndexTypeList, 0>,
+                            TensorIndexA>();
+  lhs_index_value_ranges[1] =
+      get_index_value_range<tmpl::at_c<LhsTensorIndexTypeList, 1>,
+                            TensorIndexB>();
+  lhs_index_value_ranges[2] =
+      get_index_value_range<tmpl::at_c<LhsTensorIndexTypeList, 2>,
+                            TensorIndexC>();
+  lhs_index_value_ranges[3] =
+      get_index_value_range<tmpl::at_c<LhsTensorIndexTypeList, 3>,
+                            TensorIndexD>();
+  std::array<std::pair<size_t, size_t>, 4> rhs_index_value_ranges{};
+  rhs_index_value_ranges[0] =
+      get_index_value_range<tmpl::at_c<RhsTensorIndexTypeList, 0>,
+                            TensorIndexA>();
+  rhs_index_value_ranges[1] =
+      get_index_value_range<tmpl::at_c<RhsTensorIndexTypeList, 1>,
+                            TensorIndexB>();
+  rhs_index_value_ranges[2] =
+      get_index_value_range<tmpl::at_c<RhsTensorIndexTypeList, 2>,
+                            TensorIndexC>();
+  rhs_index_value_ranges[3] =
+      get_index_value_range<tmpl::at_c<RhsTensorIndexTypeList, 3>,
+                            TensorIndexD>();
+  //   std::array<bool, 4> shift_lhs_to_rhs_index_down{};
+  //   shift_lhs_to_rhs_index_down[0] =
+  //       lhs_index_value_ranges[0].first > lhs_index_value_ranges[0].first;
+  //   shift_lhs_to_rhs_index_down[1] =
+  //       lhs_index_value_ranges[1].first > lhs_index_value_ranges[1].first;
+  //   shift_lhs_to_rhs_index_down[2] =
+  //       lhs_index_value_ranges[2].first > lhs_index_value_ranges[2].first;
+  //   shift_lhs_to_rhs_index_down[3] =
+  //       lhs_index_value_ranges[3].first > lhs_index_value_ranges[3].first;
+
+  //   shift[0] = lhs_index_value_ranges[0].first >
+  //   lhs_index_value_ranges[0].first; shift[1] =
+  //   lhs_index_value_ranges[1].first > lhs_index_value_ranges[1].first;
+  //   shift[2] = lhs_index_value_ranges[2].first >
+  //   lhs_index_value_ranges[2].first; shift[3] =
+  //   lhs_index_value_ranges[3].first > lhs_index_value_ranges[3].first;
+
+  for (size_t lhs_a = lhs_index_value_ranges[0].first,
+              rhs_a = rhs_index_value_ranges[0].first;
+       lhs_a <= lhs_index_value_ranges[0].second; lhs_a++, rhs_a++) {
+    for (size_t lhs_b = lhs_index_value_ranges[1].first,
+                rhs_b = rhs_index_value_ranges[1].first;
+         lhs_b <= lhs_index_value_ranges[1].second; lhs_b++, rhs_b++) {
+      for (size_t lhs_c = lhs_index_value_ranges[2].first,
+                  rhs_c = rhs_index_value_ranges[2].first;
+           lhs_c <= lhs_index_value_ranges[2].second; lhs_c++, rhs_c++) {
+        for (size_t lhs_d = lhs_index_value_ranges[3].first,
+                    rhs_d = rhs_index_value_ranges[3].first;
+             lhs_d <= lhs_index_value_ranges[3].second; lhs_d++, rhs_d++) {
+          //   const size_t rhs_a = lhs_index_value_ranges[0].first ==
+          //   rhs_index_value_ranges[0].first ? lhs_a :
+          //           (lhs_index_value_ranges[0].first <
+          //           rhs_index_value_ranges[0].first ? lhs_a + 1) : lhs_a - 1;
+          //   const size_t rhs_b = lhs_index_value_ranges[1].first ==
+          //   rhs_index_value_ranges[1].first ? lhs_b :
+          //           (lhs_index_value_ranges[1].first <
+          //           rhs_index_value_ranges[1].first ? lhs_b + 1) : lhs_b - 1;
+          //   const size_t rhs_c = lhs_index_value_ranges[2].first ==
+          //   rhs_index_value_ranges[2].first ? lhs_c :
+          //           (lhs_index_value_ranges[2].first <
+          //           rhs_index_value_ranges[2].first ? lhs_c + 1) : lhs_c - 1;
+          //   const size_t rhs_d = lhs_index_value_ranges[3].first ==
+          //   rhs_index_value_ranges[3].first ? lhs_d :
+          //           (lhs_index_value_ranges[3].first <
+          //           rhs_index_value_ranges[3].first ? lhs_d + 1) : lhs_d - 1;
+
+          expected_L_abcd.get(lhs_a, lhs_b, lhs_c, lhs_d) =
+              R_abcd.get(rhs_a, rhs_b, rhs_c, rhs_d);
         }
       }
     }
