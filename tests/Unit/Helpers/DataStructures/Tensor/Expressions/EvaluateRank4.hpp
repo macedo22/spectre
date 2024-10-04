@@ -3,10 +3,10 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
-#include <numeric>
 #include <random>
 #include <type_traits>
 
@@ -94,7 +94,7 @@ void test_evaluate_rank_4_impl(
   // `evaluate`
   using L_abcd_type = Tensor<DataType, LhsSymmetry, LhsTensorIndexTypeList>;
   L_abcd_type L_abcd(used_for_size);
-  std::iota(L_abcd.begin(), L_abcd.end(),
+  std::fill(L_abcd.begin(), L_abcd.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexA, TensorIndexB, TensorIndexC,
                 TensorIndexD>(make_not_null(&L_abcd), rhs_expression);
@@ -109,7 +109,7 @@ void test_evaluate_rank_4_impl(
   using L_abdc_type =
       Tensor<DataType, L_abdc_symmetry, L_abdc_tensorindextype_list>;
   L_abdc_type L_abdc(used_for_size);
-  std::iota(L_abdc.begin(), L_abdc.end(),
+  std::fill(L_abdc.begin(), L_abdc.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexA, TensorIndexB, TensorIndexD,
                 TensorIndexC>(make_not_null(&L_abdc), rhs_expression);
@@ -124,7 +124,7 @@ void test_evaluate_rank_4_impl(
   using L_acbd_type =
       Tensor<DataType, L_acbd_symmetry, L_acbd_tensorindextype_list>;
   L_acbd_type L_acbd(used_for_size);
-  std::iota(L_acbd.begin(), L_acbd.end(),
+  std::fill(L_acbd.begin(), L_acbd.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexA, TensorIndexC, TensorIndexB,
                 TensorIndexD>(make_not_null(&L_acbd), rhs_expression);
@@ -139,7 +139,7 @@ void test_evaluate_rank_4_impl(
   using L_acdb_type =
       Tensor<DataType, L_acdb_symmetry, L_acdb_tensorindextype_list>;
   L_acdb_type L_acdb(used_for_size);
-  std::iota(L_acdb.begin(), L_acdb.end(),
+  std::fill(L_acdb.begin(), L_acdb.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexA, TensorIndexC, TensorIndexD,
                 TensorIndexB>(make_not_null(&L_acdb), rhs_expression);
@@ -154,7 +154,7 @@ void test_evaluate_rank_4_impl(
   using L_adbc_type =
       Tensor<DataType, L_adbc_symmetry, L_adbc_tensorindextype_list>;
   L_adbc_type L_adbc(used_for_size);
-  std::iota(L_adbc.begin(), L_adbc.end(),
+  std::fill(L_adbc.begin(), L_adbc.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexA, TensorIndexD, TensorIndexB,
                 TensorIndexC>(make_not_null(&L_adbc), rhs_expression);
@@ -169,7 +169,7 @@ void test_evaluate_rank_4_impl(
   using L_adcb_type =
       Tensor<DataType, L_adcb_symmetry, L_adcb_tensorindextype_list>;
   L_adcb_type L_adcb(used_for_size);
-  std::iota(L_adcb.begin(), L_adcb.end(),
+  std::fill(L_adcb.begin(), L_adcb.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexA, TensorIndexD, TensorIndexC,
                 TensorIndexB>(make_not_null(&L_adcb), rhs_expression);
@@ -184,7 +184,7 @@ void test_evaluate_rank_4_impl(
   using L_bacd_type =
       Tensor<DataType, L_bacd_symmetry, L_bacd_tensorindextype_list>;
   L_bacd_type L_bacd(used_for_size);
-  std::iota(L_bacd.begin(), L_bacd.end(),
+  std::fill(L_bacd.begin(), L_bacd.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexB, TensorIndexA, TensorIndexC,
                 TensorIndexD>(make_not_null(&L_bacd), rhs_expression);
@@ -199,7 +199,7 @@ void test_evaluate_rank_4_impl(
   using L_badc_type =
       Tensor<DataType, L_badc_symmetry, L_badc_tensorindextype_list>;
   L_badc_type L_badc(used_for_size);
-  std::iota(L_badc.begin(), L_badc.end(),
+  std::fill(L_badc.begin(), L_badc.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexB, TensorIndexA, TensorIndexD,
                 TensorIndexC>(make_not_null(&L_badc), rhs_expression);
@@ -214,7 +214,7 @@ void test_evaluate_rank_4_impl(
   using L_bcad_type =
       Tensor<DataType, L_bcad_symmetry, L_bcad_tensorindextype_list>;
   L_bcad_type L_bcad(used_for_size);
-  std::iota(L_bcad.begin(), L_bcad.end(),
+  std::fill(L_bcad.begin(), L_bcad.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexB, TensorIndexC, TensorIndexA,
                 TensorIndexD>(make_not_null(&L_bcad), rhs_expression);
@@ -229,7 +229,7 @@ void test_evaluate_rank_4_impl(
   using L_bcda_type =
       Tensor<DataType, L_bcda_symmetry, L_bcda_tensorindextype_list>;
   L_bcda_type L_bcda(used_for_size);
-  std::iota(L_bcda.begin(), L_bcda.end(),
+  std::fill(L_bcda.begin(), L_bcda.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexB, TensorIndexC, TensorIndexD,
                 TensorIndexA>(make_not_null(&L_bcda), rhs_expression);
@@ -244,7 +244,7 @@ void test_evaluate_rank_4_impl(
   using L_bdac_type =
       Tensor<DataType, L_bdac_symmetry, L_bdac_tensorindextype_list>;
   L_bdac_type L_bdac(used_for_size);
-  std::iota(L_bdac.begin(), L_bdac.end(),
+  std::fill(L_bdac.begin(), L_bdac.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexB, TensorIndexD, TensorIndexA,
                 TensorIndexC>(make_not_null(&L_bdac), rhs_expression);
@@ -259,7 +259,7 @@ void test_evaluate_rank_4_impl(
   using L_bdca_type =
       Tensor<DataType, L_bdca_symmetry, L_bdca_tensorindextype_list>;
   L_bdca_type L_bdca(used_for_size);
-  std::iota(L_bdca.begin(), L_bdca.end(),
+  std::fill(L_bdca.begin(), L_bdca.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexB, TensorIndexD, TensorIndexC,
                 TensorIndexA>(make_not_null(&L_bdca), rhs_expression);
@@ -274,7 +274,7 @@ void test_evaluate_rank_4_impl(
   using L_cabd_type =
       Tensor<DataType, L_cabd_symmetry, L_cabd_tensorindextype_list>;
   L_cabd_type L_cabd(used_for_size);
-  std::iota(L_cabd.begin(), L_cabd.end(),
+  std::fill(L_cabd.begin(), L_cabd.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexC, TensorIndexA, TensorIndexB,
                 TensorIndexD>(make_not_null(&L_cabd), rhs_expression);
@@ -289,7 +289,7 @@ void test_evaluate_rank_4_impl(
   using L_cadb_type =
       Tensor<DataType, L_cadb_symmetry, L_cadb_tensorindextype_list>;
   L_cadb_type L_cadb(used_for_size);
-  std::iota(L_cadb.begin(), L_cadb.end(),
+  std::fill(L_cadb.begin(), L_cadb.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexC, TensorIndexA, TensorIndexD,
                 TensorIndexB>(make_not_null(&L_cadb), rhs_expression);
@@ -304,7 +304,7 @@ void test_evaluate_rank_4_impl(
   using L_cbad_type =
       Tensor<DataType, L_cbad_symmetry, L_cbad_tensorindextype_list>;
   L_cbad_type L_cbad(used_for_size);
-  std::iota(L_cbad.begin(), L_cbad.end(),
+  std::fill(L_cbad.begin(), L_cbad.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexC, TensorIndexB, TensorIndexA,
                 TensorIndexD>(make_not_null(&L_cbad), rhs_expression);
@@ -319,7 +319,7 @@ void test_evaluate_rank_4_impl(
   using L_cbda_type =
       Tensor<DataType, L_cbda_symmetry, L_cbda_tensorindextype_list>;
   L_cbda_type L_cbda(used_for_size);
-  std::iota(L_cbda.begin(), L_cbda.end(),
+  std::fill(L_cbda.begin(), L_cbda.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexC, TensorIndexB, TensorIndexD,
                 TensorIndexA>(make_not_null(&L_cbda), rhs_expression);
@@ -334,7 +334,7 @@ void test_evaluate_rank_4_impl(
   using L_cdab_type =
       Tensor<DataType, L_cdab_symmetry, L_cdab_tensorindextype_list>;
   L_cdab_type L_cdab(used_for_size);
-  std::iota(L_cdab.begin(), L_cdab.end(),
+  std::fill(L_cdab.begin(), L_cdab.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexC, TensorIndexD, TensorIndexA,
                 TensorIndexB>(make_not_null(&L_cdab), rhs_expression);
@@ -349,7 +349,7 @@ void test_evaluate_rank_4_impl(
   using L_cdba_type =
       Tensor<DataType, L_cdba_symmetry, L_cdba_tensorindextype_list>;
   L_cdba_type L_cdba(used_for_size);
-  std::iota(L_cdba.begin(), L_cdba.end(),
+  std::fill(L_cdba.begin(), L_cdba.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexC, TensorIndexD, TensorIndexB,
                 TensorIndexA>(make_not_null(&L_cdba), rhs_expression);
@@ -364,7 +364,7 @@ void test_evaluate_rank_4_impl(
   using L_dabc_type =
       Tensor<DataType, L_dabc_symmetry, L_dabc_tensorindextype_list>;
   L_dabc_type L_dabc(used_for_size);
-  std::iota(L_dabc.begin(), L_dabc.end(),
+  std::fill(L_dabc.begin(), L_dabc.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexD, TensorIndexA, TensorIndexB,
                 TensorIndexC>(make_not_null(&L_dabc), rhs_expression);
@@ -379,7 +379,7 @@ void test_evaluate_rank_4_impl(
   using L_dacb_type =
       Tensor<DataType, L_dacb_symmetry, L_dacb_tensorindextype_list>;
   L_dacb_type L_dacb(used_for_size);
-  std::iota(L_dacb.begin(), L_dacb.end(),
+  std::fill(L_dacb.begin(), L_dacb.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexD, TensorIndexA, TensorIndexC,
                 TensorIndexB>(make_not_null(&L_dacb), rhs_expression);
@@ -394,7 +394,7 @@ void test_evaluate_rank_4_impl(
   using L_dbac_type =
       Tensor<DataType, L_dbac_symmetry, L_dbac_tensorindextype_list>;
   L_dbac_type L_dbac(used_for_size);
-  std::iota(L_dbac.begin(), L_dbac.end(),
+  std::fill(L_dbac.begin(), L_dbac.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexD, TensorIndexB, TensorIndexA,
                 TensorIndexC>(make_not_null(&L_dbac), rhs_expression);
@@ -409,7 +409,7 @@ void test_evaluate_rank_4_impl(
   using L_dbca_type =
       Tensor<DataType, L_dbca_symmetry, L_dbca_tensorindextype_list>;
   L_dbca_type L_dbca(used_for_size);
-  std::iota(L_dbca.begin(), L_dbca.end(),
+  std::fill(L_dbca.begin(), L_dbca.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexD, TensorIndexB, TensorIndexC,
                 TensorIndexA>(make_not_null(&L_dbca), rhs_expression);
@@ -424,7 +424,7 @@ void test_evaluate_rank_4_impl(
   using L_dcab_type =
       Tensor<DataType, L_dcab_symmetry, L_dcab_tensorindextype_list>;
   L_dcab_type L_dcab(used_for_size);
-  std::iota(L_dcab.begin(), L_dcab.end(),
+  std::fill(L_dcab.begin(), L_dcab.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexD, TensorIndexC, TensorIndexA,
                 TensorIndexB>(make_not_null(&L_dcab), rhs_expression);
@@ -439,15 +439,15 @@ void test_evaluate_rank_4_impl(
   using L_dcba_type =
       Tensor<DataType, L_dcba_symmetry, L_dcba_tensorindextype_list>;
   L_dcba_type L_dcba(used_for_size);
-  std::iota(L_dcba.begin(), L_dcba.end(),
+  std::fill(L_dcba.begin(), L_dcba.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexD, TensorIndexC, TensorIndexB,
                 TensorIndexA>(make_not_null(&L_dcba), rhs_expression);
 
-  const size_t dim_a = tmpl::at_c<RhsTensorIndexTypeList, 0>::dim;
-  const size_t dim_b = tmpl::at_c<RhsTensorIndexTypeList, 1>::dim;
-  const size_t dim_c = tmpl::at_c<RhsTensorIndexTypeList, 2>::dim;
-  const size_t dim_d = tmpl::at_c<RhsTensorIndexTypeList, 3>::dim;
+  const size_t dim_a = tmpl::at_c<LhsTensorIndexTypeList, 0>::dim;
+  const size_t dim_b = tmpl::at_c<LhsTensorIndexTypeList, 1>::dim;
+  const size_t dim_c = tmpl::at_c<LhsTensorIndexTypeList, 2>::dim;
+  const size_t dim_d = tmpl::at_c<LhsTensorIndexTypeList, 3>::dim;
 
   for (size_t lhs_a = 0; lhs_a < dim_a; ++lhs_a) {
     for (size_t lhs_b = 0; lhs_b < dim_b; ++lhs_b) {
