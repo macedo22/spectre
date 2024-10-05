@@ -3,15 +3,19 @@
 
 #pragma once
 
+#pragma once
+
 #include <type_traits>
 
 #include "DataStructures/Tags/TempTensor.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Variables.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank2.hpp"  // TODO : remove after factoring out
 #include "Utilities/Gsl.hpp"
 #include "Utilities/TMPL.hpp"
 
 namespace TestHelpers::tenex {
+// TODO : update testing func docs
 
 /// \ingroup TestingFrameworkGroup
 /// \brief Test that evaluating a right hand side tensor expression containing a
@@ -19,18 +23,13 @@ namespace TestHelpers::tenex {
 /// side tensor
 ///
 /// \param data the data being stored in the Tensors
-template <typename DataType>
+template <bool ReturnLhsTensor, typename DataType>
 void test_evaluate_rank_0(const DataType& data) {
   const Tensor<DataType> R{{{data}}};
+  Scalar<DataType> L{};
+  call_evaluate<ReturnLhsTensor>(make_not_null(&L), R());
 
-  // Use explicit type (vs auto) so the compiler checks the return type of
-  // `evaluate`
-  const Tensor<DataType> L_returned = ::tenex::evaluate(R());
-  Tensor<DataType> L_filled{};
-  ::tenex::evaluate(make_not_null(&L_filled), R());
-
-  CHECK(L_returned.get() == data);
-  CHECK(L_filled.get() == data);
+  CHECK(get(L) == data);
 
   // Test with TempTensor for LHS tensor
   if constexpr (not std::is_same_v<DataType, double>) {
@@ -38,9 +37,9 @@ void test_evaluate_rank_0(const DataType& data) {
         data.size()};
     Tensor<DataType>& L_temp =
         get<::Tags::TempTensor<1, Tensor<DataType>>>(L_var);
-    ::tenex::evaluate(make_not_null(&L_temp), R());
+    call_evaluate<false>(make_not_null(&L_temp), R());
 
-    CHECK(L_temp.get() == data);
+    CHECK(get(L_temp) == data);
   }
 }
 

@@ -3,21 +3,26 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
 #include <iterator>
-#include <numeric>
+#include <random>
 #include <type_traits>
+#include <utility>
 
 #include "DataStructures/Tags/TempTensor.hpp"
-#include "DataStructures/Tensor/IndexType.hpp"
-#include "DataStructures/Tensor/Symmetry.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Variables.hpp"
-#include "Utilities/GenerateInstantiations.hpp"
+#include "Framework/TestHelpers.hpp"
+#include "Helpers/DataStructures/MakeWithRandomValues.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/ComponentPlaceholder.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank2.hpp"  // TODO : remove after factoring out
 #include "Utilities/Gsl.hpp"
+#include "Utilities/MakeWithValue.hpp"
 #include "Utilities/TMPL.hpp"
 
 namespace TestHelpers::tenex {
+// TODO : update testing func docs
 
 /// \ingroup TestingFrameworkGroup
 /// \brief Test that evaluating a right hand side tensor expression containing a
@@ -29,71 +34,68 @@ namespace TestHelpers::tenex {
 /// \ref SpacetimeIndex "TensorIndexType"
 /// \tparam TensorIndex the TensorIndex used in the the TensorExpression,
 /// e.g. `ti::a`
-template <typename DataType, typename TensorIndexTypeList, auto& TensorIndex>
-void test_evaluate_rank_1_impl() {
-  const size_t used_for_size = 5;
-  using tensor_type = Tensor<DataType, Symmetry<1>, TensorIndexTypeList>;
-  tensor_type R_a(used_for_size);
-  std::iota(R_a.begin(), R_a.end(), 0.0);
+template <bool ReturnLhsTensor, auto& TensorIndex, typename DataType,
+          typename LhsTensorIndexTypeList,
+          typename RhsTensorIndexTypeList = LhsTensorIndexTypeList>
+void test_evaluate_rank_1() {
+  using symmetry = Symmetry<1>;
+  using L_a_type = Tensor<DataType, symmetry, LhsTensorIndexTypeList>;
+  using R_a_type = Tensor<DataType, symmetry, RhsTensorIndexTypeList>;
+
+  MAKE_GENERATOR(generator);
+  std::uniform_real_distribution<> distribution(-5.0, 5.0);
+  const size_t used_for_size = 3;
+  const auto R_a = make_with_random_values<R_a_type>(
+      make_not_null(&generator), distribution, used_for_size);
+  auto expected_L_a =
+      ReturnLhsTensor
+          ? L_a_type{}
+          : make_with_value<L_a_type>(
+                used_for_size, component_placeholder_value<DataType>::value);
+
+  using lhs_tensorindextype = tmpl::at_c<LhsTensorIndexTypeList, 0>;
+  using rhs_tensorindextype = tmpl::at_c<RhsTensorIndexTypeList, 0>;
+
+  const std::pair<size_t, size_t> lhs_index_value_range =
+      get_index_value_range<lhs_tensorindextype, TensorIndex>();
+  const std::pair<size_t, size_t> rhs_index_value_range =
+      get_index_value_range<rhs_tensorindextype, TensorIndex>();
+
+  for (size_t lhs_a = lhs_index_value_range.first,
+              rhs_a = rhs_index_value_range.first;
+       lhs_a <= lhs_index_value_range.second; lhs_a++, rhs_a++) {
+    expected_L_a.get(lhs_a) = R_a.get(rhs_a);
+  }
 
   // L_a = R_a
   // Use explicit type (vs auto) so the compiler checks return type of
   // `evaluate`
-  const tensor_type L_a_returned =
-      ::tenex::evaluate<TensorIndex>(R_a(TensorIndex));
-  tensor_type L_a_filled{};
-  ::tenex::evaluate<TensorIndex>(make_not_null(&L_a_filled), R_a(TensorIndex));
+  L_a_type L_a(used_for_size);
+  std::fill(L_a.begin(), L_a.end(),
+            component_placeholder_value<DataType>::value);
+  call_evaluate<ReturnLhsTensor, TensorIndex>(make_not_null(&L_a),
+                                              R_a(TensorIndex));
 
-  const size_t dim = tmpl::at_c<TensorIndexTypeList, 0>::dim;
+  const size_t dim = tmpl::at_c<LhsTensorIndexTypeList, 0>::dim;
 
-  // For L_a = R_a, check that L_i == R_i
-  for (size_t i = 0; i < dim; ++i) {
-    CHECK(L_a_returned.get(i) == R_a.get(i));
-    CHECK(L_a_filled.get(i) == R_a.get(i));
+  for (size_t lhs_a = 0; lhs_a < dim; ++lhs_a) {
+    CHECK(L_a.get(lhs_a) == expected_L_a.get(lhs_a));
   }
 
   // Test with TempTensor for LHS tensor
   if constexpr (not std::is_same_v<DataType, double>) {
     // L_a = R_a
-    Variables<tmpl::list<::Tags::TempTensor<1, tensor_type>>> L_a_var{
+    Variables<tmpl::list<::Tags::TempTensor<1, L_a_type>>> L_a_var{
         used_for_size};
-    tensor_type& L_a_temp = get<::Tags::TempTensor<1, tensor_type>>(L_a_var);
-    ::tenex::evaluate<TensorIndex>(make_not_null(&L_a_temp), R_a(TensorIndex));
+    L_a_type& L_a_temp = get<::Tags::TempTensor<1, L_a_type>>(L_a_var);
+    std::fill(L_a_temp.begin(), L_a_temp.end(),
+              component_placeholder_value<DataType>::value);
+    call_evaluate<false, TensorIndex>(make_not_null(&L_a_temp),
+                                      R_a(TensorIndex));
 
-    // For L_a = R_a, check that L_i == R_i
-    for (size_t i = 0; i < dim; ++i) {
-      CHECK(L_a_temp.get(i) == R_a.get(i));
+    for (size_t lhs_a = 0; lhs_a < dim; ++lhs_a) {
+      CHECK(L_a_temp.get(lhs_a) == expected_L_a.get(lhs_a));
     }
   }
 }
-
-/// \ingroup TestingFrameworkGroup
-/// \brief Iterate testing of evaluating single rank 1 Tensors on multiple Frame
-/// types and dimensions
-///
-/// \tparam DataType the type of data being stored in the Tensors
-/// \tparam TensorIndexType the Tensors' \ref SpacetimeIndex "TensorIndexType"
-/// \tparam Valence the valence of the Tensors' index
-/// \tparam TensorIndex the TensorIndex used in the the TensorExpression,
-/// e.g. `ti::a`
-template <typename DataType,
-          template <size_t, UpLo, typename> class TensorIndexType, UpLo Valence,
-          auto& TensorIndex>
-void test_evaluate_rank_1() {
-#define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
-#define FRAME(data) BOOST_PP_TUPLE_ELEM(1, data)
-
-#define CALL_TEST_EVALUATE_RANK_1_IMPL(_, data)                               \
-  test_evaluate_rank_1_impl<                                                  \
-      DataType, index_list<TensorIndexType<DIM(data), Valence, FRAME(data)>>, \
-      TensorIndex>();
-
-  GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_1_IMPL, (1, 2, 3),
-                          (Frame::Grid, Frame::Inertial))
-
-#undef CALL_TEST_EVALUATE_RANK_1_IMPL
-#undef FRAME
-#undef DIM
-}
-
 }  // namespace TestHelpers::tenex

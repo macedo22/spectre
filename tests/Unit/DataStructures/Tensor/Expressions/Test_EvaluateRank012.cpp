@@ -14,35 +14,44 @@
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank012",
                   "[DataStructures][Unit]") {
   // Rank 0: double
-  TestHelpers::tenex::test_evaluate_rank_0<double>(-7.31);
+  TestHelpers::tenex::test_evaluate_rank_0<true, double>(-7.31);
 
   // Rank 0: DataVector
-  TestHelpers::tenex::test_evaluate_rank_0<DataVector>(
+  TestHelpers::tenex::test_evaluate_rank_0<true, DataVector>(
       DataVector{-3.1, 9.4, 0.0, -3.1, 2.4, 9.8});
 
   // Rank 1: double; spacetime
-  TestHelpers::tenex::test_evaluate_rank_1<double, SpacetimeIndex, UpLo::Lo,
-                                           ti::a>();
-  TestHelpers::tenex::test_evaluate_rank_1<double, SpacetimeIndex, UpLo::Lo,
-                                           ti::b>();
-  TestHelpers::tenex::test_evaluate_rank_1<double, SpacetimeIndex, UpLo::Up,
-                                           ti::A>();
-  TestHelpers::tenex::test_evaluate_rank_1<double, SpacetimeIndex, UpLo::Up,
-                                           ti::B>();
+  TestHelpers::tenex::test_evaluate_rank_1<
+      true, ti::a, double,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
+  TestHelpers::tenex::test_evaluate_rank_1<
+      true, ti::b, double,
+      index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Grid>>>();
+  TestHelpers::tenex::test_evaluate_rank_1<
+      true, ti::A, double,
+      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>>>();
+  TestHelpers::tenex::test_evaluate_rank_1<
+      true, ti::B, double,
+      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>();
 
   // Rank 1: double; spatial
-  TestHelpers::tenex::test_evaluate_rank_1<double, SpatialIndex, UpLo::Lo,
-                                           ti::i>();
-  TestHelpers::tenex::test_evaluate_rank_1<double, SpatialIndex, UpLo::Lo,
-                                           ti::j>();
-  TestHelpers::tenex::test_evaluate_rank_1<double, SpatialIndex, UpLo::Up,
-                                           ti::I>();
-  TestHelpers::tenex::test_evaluate_rank_1<double, SpatialIndex, UpLo::Up,
-                                           ti::J>();
+  TestHelpers::tenex::test_evaluate_rank_1<
+      true, ti::i, double,
+      index_list<SpatialIndex<2, UpLo::Lo, Frame::Inertial>>>();
+  TestHelpers::tenex::test_evaluate_rank_1<
+      true, ti::j, double,
+      index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>>>();
+  TestHelpers::tenex::test_evaluate_rank_1<
+      true, ti::I, double,
+      index_list<SpatialIndex<3, UpLo::Up, Frame::Inertial>>>();
+  TestHelpers::tenex::test_evaluate_rank_1<
+      true, ti::J, double,
+      index_list<SpatialIndex<2, UpLo::Up, Frame::Grid>>>();
 
   // Rank 1: DataVector
-  TestHelpers::tenex::test_evaluate_rank_1<DataVector, SpatialIndex, UpLo::Up,
-                                           ti::L>();
+  TestHelpers::tenex::test_evaluate_rank_1<
+      true, ti::L, DataVector,
+      index_list<SpatialIndex<3, UpLo::Up, Frame::Inertial>>>();
 
   // Rank 2: double; nonsymmetric; spacetime only
   TestHelpers::tenex::test_evaluate_rank_2<

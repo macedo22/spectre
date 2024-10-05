@@ -165,8 +165,8 @@ void test_evaluate_rank_2() {
     L_ab_type& L_ab_temp = get<::Tags::TempTensor<1, L_ab_type>>(L_ab_var);
     std::fill(L_ab_temp.begin(), L_ab_temp.end(),
               component_placeholder_value<DataType>::value);
-    call_evaluate<ReturnLhsTensor, TensorIndexA, TensorIndexB>(
-        make_not_null(&L_ab_temp), rhs_expression);
+    call_evaluate<false, TensorIndexA, TensorIndexB>(make_not_null(&L_ab_temp),
+                                                     rhs_expression);
 
     // L_{ba} = R_{ab}
     Variables<tmpl::list<::Tags::TempTensor<1, L_ba_type>>> L_ba_var{
@@ -174,8 +174,8 @@ void test_evaluate_rank_2() {
     L_ba_type& L_ba_temp = get<::Tags::TempTensor<1, L_ba_type>>(L_ba_var);
     std::fill(L_ba_temp.begin(), L_ba_temp.end(),
               component_placeholder_value<DataType>::value);
-    call_evaluate<ReturnLhsTensor, TensorIndexB, TensorIndexA>(
-        make_not_null(&L_ba_temp), rhs_expression);
+    call_evaluate<false, TensorIndexB, TensorIndexA>(make_not_null(&L_ba_temp),
+                                                     rhs_expression);
 
     for (size_t lhs_a = 0; lhs_a < dim_a; ++lhs_a) {
       for (size_t lhs_b = 0; lhs_b < dim_b; ++lhs_b) {
