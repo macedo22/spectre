@@ -3,21 +3,53 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <iterator>
-#include <numeric>
+#include <random>
 #include <type_traits>
+#include <utility>
 
 #include "DataStructures/Tags/TempTensor.hpp"
-#include "DataStructures/Tensor/IndexType.hpp"
-#include "DataStructures/Tensor/Symmetry.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Variables.hpp"
-#include "Utilities/GenerateInstantiations.hpp"
+#include "Framework/TestHelpers.hpp"
+#include "Helpers/DataStructures/MakeWithRandomValues.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/ComponentPlaceholder.hpp"
 #include "Utilities/Gsl.hpp"
+#include "Utilities/MakeWithValue.hpp"
 #include "Utilities/TMPL.hpp"
 
 namespace TestHelpers::tenex {
+template <bool ReturnLhsTensor, auto&... LhsTensorIndices, typename LhsTensor,
+          typename RhsExpression>
+void call_evaluate(const gsl::not_null<LhsTensor*> lhs_tensor,
+                   const RhsExpression& rhs_expression) {
+  if constexpr (ReturnLhsTensor) {
+    *lhs_tensor = ::tenex::evaluate<LhsTensorIndices...>(rhs_expression);
+  } else {
+    ::tenex::evaluate<LhsTensorIndices...>(lhs_tensor, rhs_expression);
+  }
+}
+
+template <typename Index, auto& TensorIndex>
+constexpr std::pair<size_t, size_t> get_index_value_range() {
+  constexpr bool tensorindex_is_time =
+      ::tenex::detail::is_time_index_value(TensorIndex.value);
+  static_assert(
+      not(Index::index_type == IndexType::Spatial and tensorindex_is_time),
+      "Cannot use a concrete time TensorIndex with a SpatialIndex.");
+  std::pair<size_t, size_t> range{};
+  range.first =
+      Index::index_type == IndexType::Spacetime and not TensorIndex.is_spacetime
+          ? 1
+          : 0;
+  range.second = tensorindex_is_time ? 0 : Index::dim - 1;
+  return range;
+}
+
+// TODO : update testing func docs
 
 /// \ingroup TestingFrameworkGroup
 /// \brief Test that evaluating a right hand side tensor expression containing a
@@ -44,46 +76,84 @@ namespace TestHelpers::tenex {
 /// TensorExpression, e.g. `ti::a`
 /// \tparam TensorIndexB the second TensorIndex used on the RHS of the
 /// TensorExpression, e.g. `ti::B`
-template <typename DataType, typename RhsSymmetry,
-          typename RhsTensorIndexTypeList, auto& TensorIndexA,
-          auto& TensorIndexB>
-void test_evaluate_rank_2_impl() {
-  const size_t used_for_size = 5;
-  Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList> R_ab(used_for_size);
-  std::iota(R_ab.begin(), R_ab.end(), 0.0);
+template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
+          typename DataType, typename LhsSymmetry,
+          typename LhsTensorIndexTypeList, typename RhsSymmetry = LhsSymmetry,
+          typename RhsTensorIndexTypeList = LhsTensorIndexTypeList>
+void test_evaluate_rank_2() {
+  MAKE_GENERATOR(generator);
+  std::uniform_real_distribution<> distribution(-5.0, 5.0);
+  const size_t used_for_size = 3;
+  const auto R_ab = make_with_random_values<
+      Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList>>(
+      make_not_null(&generator), distribution, used_for_size);
+  auto expected_L_ab =
+      ReturnLhsTensor
+          ? Tensor<DataType, LhsSymmetry, LhsTensorIndexTypeList>{}
+          : make_with_value<
+                Tensor<DataType, LhsSymmetry, LhsTensorIndexTypeList>>(
+                used_for_size, component_placeholder_value<DataType>::value);
 
+  const std::int32_t lhs_symmetry_element_a = tmpl::at_c<LhsSymmetry, 0>::value;
+  const std::int32_t lhs_symmetry_element_b = tmpl::at_c<LhsSymmetry, 1>::value;
+  using lhs_tensorindextype_a = tmpl::at_c<LhsTensorIndexTypeList, 0>;
+  using lhs_tensorindextype_b = tmpl::at_c<LhsTensorIndexTypeList, 1>;
+  using rhs_tensorindextype_a = tmpl::at_c<RhsTensorIndexTypeList, 0>;
+  using rhs_tensorindextype_b = tmpl::at_c<RhsTensorIndexTypeList, 1>;
+
+  std::array<std::pair<size_t, size_t>, 2> lhs_index_value_ranges{};
+  lhs_index_value_ranges[0] =
+      get_index_value_range<lhs_tensorindextype_a, TensorIndexA>();
+  lhs_index_value_ranges[1] =
+      get_index_value_range<lhs_tensorindextype_b, TensorIndexB>();
+  std::array<std::pair<size_t, size_t>, 2> rhs_index_value_ranges{};
+  rhs_index_value_ranges[0] =
+      get_index_value_range<rhs_tensorindextype_a, TensorIndexA>();
+  rhs_index_value_ranges[1] =
+      get_index_value_range<rhs_tensorindextype_b, TensorIndexB>();
+
+  for (size_t lhs_a = lhs_index_value_ranges[0].first,
+              rhs_a = rhs_index_value_ranges[0].first;
+       lhs_a <= lhs_index_value_ranges[0].second; lhs_a++, rhs_a++) {
+    for (size_t lhs_b = lhs_index_value_ranges[1].first,
+                rhs_b = rhs_index_value_ranges[1].first;
+         lhs_b <= lhs_index_value_ranges[1].second; lhs_b++, rhs_b++) {
+      expected_L_ab.get(lhs_a, lhs_b) = R_ab.get(rhs_a, rhs_b);
+    }
+  }
+
+  const auto rhs_expression = R_ab(TensorIndexA, TensorIndexB);
   // L_{ab} = R_{ab}
   // Use explicit type (vs auto) so the compiler checks the return type of
   // `evaluate`
-  using L_ab_type = decltype(R_ab);
-  const L_ab_type L_ab_returned = ::tenex::evaluate<TensorIndexA, TensorIndexB>(
-      R_ab(TensorIndexA, TensorIndexB));
-  L_ab_type L_ab_filled{};
-  ::tenex::evaluate<TensorIndexA, TensorIndexB>(
-      make_not_null(&L_ab_filled), R_ab(TensorIndexA, TensorIndexB));
+  using L_ab_type = Tensor<DataType, LhsSymmetry, LhsTensorIndexTypeList>;
+  L_ab_type L_ab(used_for_size);
+  std::fill(L_ab.begin(), L_ab.end(),
+            component_placeholder_value<DataType>::value);
+  call_evaluate<ReturnLhsTensor, TensorIndexA, TensorIndexB>(
+      make_not_null(&L_ab), rhs_expression);
 
   // L_{ba} = R_{ab}
+  using L_ba_symmetry =
+      Symmetry<lhs_symmetry_element_b, lhs_symmetry_element_a>;
   using L_ba_tensorindextype_list =
-      tmpl::list<tmpl::at_c<RhsTensorIndexTypeList, 1>,
-                 tmpl::at_c<RhsTensorIndexTypeList, 0>>;
-  using L_ba_type = Tensor<DataType, RhsSymmetry, L_ba_tensorindextype_list>;
-  const L_ba_type L_ba_returned = ::tenex::evaluate<TensorIndexB, TensorIndexA>(
-      R_ab(TensorIndexA, TensorIndexB));
-  L_ba_type L_ba_filled{};
-  ::tenex::evaluate<TensorIndexB, TensorIndexA>(
-      make_not_null(&L_ba_filled), R_ab(TensorIndexA, TensorIndexB));
+      tmpl::list<lhs_tensorindextype_b, lhs_tensorindextype_a>;
+  using L_ba_type = Tensor<DataType, L_ba_symmetry, L_ba_tensorindextype_list>;
+  L_ba_type L_ba(used_for_size);
+  std::fill(L_ba.begin(), L_ba.end(),
+            component_placeholder_value<DataType>::value);
+  call_evaluate<ReturnLhsTensor, TensorIndexB, TensorIndexA>(
+      make_not_null(&L_ba), rhs_expression);
 
-  const size_t dim_a = tmpl::at_c<RhsTensorIndexTypeList, 0>::dim;
-  const size_t dim_b = tmpl::at_c<RhsTensorIndexTypeList, 1>::dim;
+  const size_t dim_a = tmpl::at_c<LhsTensorIndexTypeList, 0>::dim;
+  const size_t dim_b = tmpl::at_c<LhsTensorIndexTypeList, 1>::dim;
 
-  for (size_t i = 0; i < dim_a; ++i) {
-    for (size_t j = 0; j < dim_b; ++j) {
-      // For L_{ab} = R_{ab}, check that L_{ij} == R_{ij}
-      CHECK(L_ab_returned.get(i, j) == R_ab.get(i, j));
-      CHECK(L_ab_filled.get(i, j) == R_ab.get(i, j));
-      // For L_{ba} = R_{ab}, check that L_{ji} == R_{ij}
-      CHECK(L_ba_returned.get(j, i) == R_ab.get(i, j));
-      CHECK(L_ba_filled.get(j, i) == R_ab.get(i, j));
+  for (size_t lhs_a = 0; lhs_a < dim_a; ++lhs_a) {
+    for (size_t lhs_b = 0; lhs_b < dim_b; ++lhs_b) {
+      const auto& expected_result = expected_L_ab.get(lhs_a, lhs_b);
+
+      CHECK(L_ab.get(lhs_a, lhs_b) == expected_result);
+      CHECK(L_ba.get(lhs_b, lhs_a) == expected_result);
     }
   }
 
@@ -93,107 +163,28 @@ void test_evaluate_rank_2_impl() {
     Variables<tmpl::list<::Tags::TempTensor<1, L_ab_type>>> L_ab_var{
         used_for_size};
     L_ab_type& L_ab_temp = get<::Tags::TempTensor<1, L_ab_type>>(L_ab_var);
-    ::tenex::evaluate<TensorIndexA, TensorIndexB>(
-        make_not_null(&L_ab_temp), R_ab(TensorIndexA, TensorIndexB));
+    std::fill(L_ab_temp.begin(), L_ab_temp.end(),
+              component_placeholder_value<DataType>::value);
+    call_evaluate<ReturnLhsTensor, TensorIndexA, TensorIndexB>(
+        make_not_null(&L_ab_temp), rhs_expression);
 
     // L_{ba} = R_{ab}
     Variables<tmpl::list<::Tags::TempTensor<1, L_ba_type>>> L_ba_var{
         used_for_size};
     L_ba_type& L_ba_temp = get<::Tags::TempTensor<1, L_ba_type>>(L_ba_var);
-    ::tenex::evaluate<TensorIndexB, TensorIndexA>(
-        make_not_null(&L_ba_temp), R_ab(TensorIndexA, TensorIndexB));
+    std::fill(L_ba_temp.begin(), L_ba_temp.end(),
+              component_placeholder_value<DataType>::value);
+    call_evaluate<ReturnLhsTensor, TensorIndexB, TensorIndexA>(
+        make_not_null(&L_ba_temp), rhs_expression);
 
-    for (size_t i = 0; i < dim_a; ++i) {
-      for (size_t j = 0; j < dim_b; ++j) {
-        // For L_{ab} = R_{ab}, check that L_{ij} == R_{ij}
-        CHECK(L_ab_temp.get(i, j) == R_ab.get(i, j));
-        // For L_{ba} = R_{ab}, check that L_{ji} == R_{ij}
-        CHECK(L_ba_temp.get(j, i) == R_ab.get(i, j));
+    for (size_t lhs_a = 0; lhs_a < dim_a; ++lhs_a) {
+      for (size_t lhs_b = 0; lhs_b < dim_b; ++lhs_b) {
+        const auto& expected_result = expected_L_ab.get(lhs_a, lhs_b);
+
+        CHECK(L_ab_temp.get(lhs_a, lhs_b) == expected_result);
+        CHECK(L_ba_temp.get(lhs_b, lhs_a) == expected_result);
       }
     }
   }
 }
-
-/// \ingroup TestingFrameworkGroup
-/// \brief Iterate testing of evaluating single rank 2 Tensors on multiple Frame
-/// types and dimension combinations
-///
-/// We test nonsymmetric indices and symmetric indices across two functions to
-/// ensure that the code works correctly with symmetries. This function tests
-/// one of the following symmetries:
-/// - <2, 1> (`test_evaluate_rank_2_no_symmetry`)
-/// - <1, 1> (`test_evaluate_rank_2_symmetric`)
-///
-/// \details `TensorIndexA` and `TensorIndexB` can be any type of TensorIndex
-/// and are not necessarily `ti::a` and `ti::b`. The "A" and "B" suffixes just
-/// denote the ordering of the generic indices of the RHS tensor expression. In
-/// the RHS tensor expression, it means `TensorIndexA` is the first index used
-/// and `TensorIndexB` is the second index used.
-///
-/// Note: `test_evaluate_rank_2_symmetric` has fewer template parameters due to
-/// the two indices having a shared \ref SpacetimeIndex "TensorIndexType" and
-/// and valence
-///
-/// \tparam DataType the type of data being stored in the Tensors
-/// \tparam TensorIndexTypeA the \ref SpacetimeIndex "TensorIndexType" of the
-/// first index of the RHS Tensor
-/// \tparam TensorIndexTypeB the \ref SpacetimeIndex "TensorIndexType" of the
-/// second index of the RHS Tensor
-/// \tparam ValenceA the valence of the first index used on the RHS of the
-/// TensorExpression
-/// \tparam ValenceB the valence of the second index used on the RHS of the
-/// TensorExpression
-/// \tparam TensorIndexA the first TensorIndex used on the RHS of the
-/// TensorExpression, e.g. `ti::a`
-/// \tparam TensorIndexB the second TensorIndex used on the RHS of the
-/// TensorExpression, e.g. `ti::B`
-template <typename DataType,
-          template <size_t, UpLo, typename> class TensorIndexTypeA,
-          template <size_t, UpLo, typename> class TensorIndexTypeB,
-          UpLo ValenceA, UpLo ValenceB, auto& TensorIndexA, auto& TensorIndexB>
-void test_evaluate_rank_2_no_symmetry() {
-#define DIM_A(data) BOOST_PP_TUPLE_ELEM(0, data)
-#define DIM_B(data) BOOST_PP_TUPLE_ELEM(1, data)
-#define FRAME(data) BOOST_PP_TUPLE_ELEM(2, data)
-
-#define CALL_TEST_EVALUATE_RANK_2_IMPL(_, data)                         \
-  test_evaluate_rank_2_impl<                                            \
-      DataType, Symmetry<2, 1>,                                         \
-      index_list<TensorIndexTypeA<DIM_A(data), ValenceA, FRAME(data)>,  \
-                 TensorIndexTypeB<DIM_B(data), ValenceB, FRAME(data)>>, \
-      TensorIndexA, TensorIndexB>();
-
-  GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_2_IMPL, (1, 2, 3), (1, 2, 3),
-                          (Frame::Grid, Frame::Inertial))
-
-#undef CALL_TEST_EVALUATE_RANK_2_IMPL
-#undef FRAME
-#undef DIM_B
-#undef DIM_A
-}
-
-/// \ingroup TestingFrameworkGroup
-/// \copydoc test_evaluate_rank_2_no_symmetry()
-template <typename DataType,
-          template <size_t, UpLo, typename> class TensorIndexType, UpLo Valence,
-          auto& TensorIndexA, auto& TensorIndexB>
-void test_evaluate_rank_2_symmetric() {
-#define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
-#define FRAME(data) BOOST_PP_TUPLE_ELEM(1, data)
-
-#define CALL_TEST_EVALUATE_RANK_2_IMPL(_, data)                     \
-  test_evaluate_rank_2_impl<                                        \
-      DataType, Symmetry<1, 1>,                                     \
-      index_list<TensorIndexType<DIM(data), Valence, FRAME(data)>,  \
-                 TensorIndexType<DIM(data), Valence, FRAME(data)>>, \
-      TensorIndexA, TensorIndexB>();
-
-  GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_2_IMPL, (1, 2, 3),
-                          (Frame::Grid, Frame::Inertial))
-
-#undef CALL_TEST_EVALUATE_RANK_2_IMPL
-#undef FRAME
-#undef DIM
-}
-
 }  // namespace TestHelpers::tenex
