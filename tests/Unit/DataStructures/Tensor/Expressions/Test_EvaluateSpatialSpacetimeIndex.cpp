@@ -12,8 +12,9 @@
 #include "DataStructures/Tensor/IndexType.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
-#include "Framework/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank2.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank4.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/MakeWithValue.hpp"
 
@@ -22,222 +23,239 @@ namespace {
 // RHS spacetime indices
 //
 // \tparam DataType the type of data being stored in the expression operands
-template <typename DataType, typename Generator>
-void test_rhs(const DataType& used_for_size,
-              const gsl::not_null<Generator*> generator) {
-  std::uniform_real_distribution<> distribution(0.1, 1.0);
-  constexpr size_t dim = 3;
+template <typename DataType>
+void test_rhs() {
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      true, ti::a, ti::i, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>();
 
-  const auto R = make_with_random_values<
-      Tensor<DataType, Symmetry<2, 1>,
-             index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>,
-                        SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>>>>(
-      generator, distribution, used_for_size);
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      true, ti::i, ti::a, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>,
+      index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>();
 
-  // \f$L_{ai} = R_{ai}\f$
-  // Use explicit type (vs auto) for LHS Tensor so the compiler checks the
-  // return type of `evaluate`
-  const Tensor<DataType, Symmetry<2, 1>,
-               index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>,
-                          SpatialIndex<dim, UpLo::Lo, Frame::Inertial>>>
-      Lai_from_R_ai = tenex::evaluate<ti::a, ti::i>(R(ti::a, ti::i));
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      true, ti::i, ti::j, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>>,
+      index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>();
 
-  // \f$L_{ia} = R_{ai}\f$
-  const Tensor<DataType, Symmetry<2, 1>,
-               index_list<SpatialIndex<dim, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>>>
-      Lia_from_R_ai = tenex::evaluate<ti::i, ti::a>(R(ti::a, ti::i));
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      true, ti::K, ti::J, DataType, Symmetry<2, 1>,
+      index_list<SpatialIndex<2, UpLo::Up, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Grid>>,
+      index_list<SpatialIndex<2, UpLo::Up, Frame::Grid>,
+                 SpatialIndex<3, UpLo::Up, Frame::Grid>>>();
 
-  // \f$L_{ai} = R_{ia}\f$
-  const Tensor<DataType, Symmetry<2, 1>,
-               index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>,
-                          SpatialIndex<dim, UpLo::Lo, Frame::Inertial>>>
-      Lai_from_R_ia = tenex::evaluate<ti::a, ti::i>(R(ti::i, ti::a));
+  TestHelpers::tenex::test_evaluate_rank_2_core<
+      true, ti::a, ti::i, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>>,
+      Symmetry<1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
 
-  // \f$L_{ia} = R_{ia}\f$
-  const Tensor<DataType, Symmetry<2, 1>,
-               index_list<SpatialIndex<dim, UpLo::Lo, Frame::Inertial>,
-                          SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>>>
-      Lia_from_R_ia = tenex::evaluate<ti::i, ti::a>(R(ti::i, ti::a));
+  TestHelpers::tenex::test_evaluate_rank_2_core<
+      true, ti::i, ti::a, DataType, Symmetry<2, 1>,
+      index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      Symmetry<1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
 
-  for (size_t a = 0; a < dim + 1; a++) {
-    for (size_t i = 0; i < dim; i++) {
-      CHECK(Lai_from_R_ai.get(a, i) == R.get(a, i + 1));
-      CHECK(Lia_from_R_ai.get(i, a) == R.get(a, i + 1));
-      CHECK(Lai_from_R_ia.get(a, i) == R.get(i + 1, a));
-      CHECK(Lia_from_R_ia.get(i, a) == R.get(i + 1, a));
-    }
-  }
+  TestHelpers::tenex::test_evaluate_rank_2_core<
+      false, ti::J, ti::I, DataType, Symmetry<2, 1>,
+      index_list<SpatialIndex<3, UpLo::Up, Frame::Distorted>,
+                 SpatialIndex<3, UpLo::Up, Frame::Distorted>>,
+      Symmetry<1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Distorted>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Distorted>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_core<
+      true, ti::j, ti::k, DataType, Symmetry<1, 1>,
+      index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpatialIndex<3, UpLo::Lo, Frame::Grid>>,
+      Symmetry<1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>();
 }
 
 // \brief Test evaluation of tensors where generic spatial indices are used for
 // LHS spacetime indices
 //
 // \tparam DataType the type of data being stored in the expression operands
-template <typename DataType, typename Generator>
-void test_lhs(const DataType& used_for_size,
-              const gsl::not_null<Generator*> generator) {
-  std::uniform_real_distribution<> distribution(0.1, 1.0);
-  constexpr size_t dim = 3;
+template <typename DataType>
+void test_lhs() {
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::a, ti::i, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<2, UpLo::Lo, Frame::Inertial>>,
+      index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>>();
 
-  const auto R = make_with_random_values<
-      Tensor<DataType, Symmetry<2, 1>,
-             index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>,
-                        SpatialIndex<dim, UpLo::Lo, Frame::Inertial>>>>(
-      generator, distribution, used_for_size);
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::A, ti::i, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
+                 SpatialIndex<2, UpLo::Lo, Frame::Inertial>>,
+      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>>();
 
-  // \f$L_{ai} = R_{ai}\f$
-  // Use explicit type (vs auto) for LHS Tensor so the compiler checks the
-  // return type of `evaluate`
-  Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>,
-                    SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>>>
-      Lai_from_R_ai(used_for_size);
-  tenex::evaluate<ti::a, ti::i>(make_not_null(&Lai_from_R_ai), R(ti::a, ti::i));
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::a, ti::I, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Up, Frame::Inertial>>,
+      index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>();
 
-  // \f$L_{ia} = R_{ai}\f$
-  Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>,
-                    SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>>>
-      Lia_from_R_ai(used_for_size);
-  tenex::evaluate<ti::i, ti::a>(make_not_null(&Lia_from_R_ai), R(ti::a, ti::i));
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::i, ti::a, DataType, Symmetry<2, 1>,
+      index_list<SpatialIndex<2, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
 
-  const auto S = make_with_random_values<
-      Tensor<DataType, Symmetry<2, 1>,
-             index_list<SpatialIndex<dim, UpLo::Lo, Frame::Inertial>,
-                        SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>>>>(
-      generator, distribution, used_for_size);
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::I, ti::a, DataType, Symmetry<2, 1>,
+      index_list<SpatialIndex<2, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
 
-  // \f$L_{ia} = S_{ia}\f$
-  Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>,
-                    SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>>>
-      Lia_from_S_ia(used_for_size);
-  tenex::evaluate<ti::i, ti::a>(make_not_null(&Lia_from_S_ia), S(ti::i, ti::a));
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::i, ti::A, DataType, Symmetry<2, 1>,
+      index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>();
 
-  // \f$L_{ai} = S_{ia}\f$
-  Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>,
-                    SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>>>
-      Lai_from_S_ia(used_for_size);
-  tenex::evaluate<ti::a, ti::i>(make_not_null(&Lai_from_S_ia), S(ti::i, ti::a));
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::i, ti::j, DataType, Symmetry<2, 1>,
+      index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
 
-  for (size_t a = 0; a < dim + 1; a++) {
-    for (size_t i = 0; i < dim; i++) {
-      CHECK(Lai_from_R_ai.get(a, i + 1) == R.get(a, i));
-      CHECK(Lia_from_R_ai.get(i + 1, a) == R.get(a, i));
-      CHECK(Lia_from_S_ia.get(i + 1, a) == S.get(i, a));
-      CHECK(Lai_from_S_ia.get(a, i + 1) == S.get(i, a));
-    }
-  }
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::J, ti::k, DataType, Symmetry<2, 1>,
+      index_list<SpatialIndex<2, UpLo::Up, Frame::Inertial>,
+                 SpatialIndex<2, UpLo::Lo, Frame::Inertial>>,
+      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
+                 SpatialIndex<2, UpLo::Lo, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::l, ti::J, DataType, Symmetry<2, 1>,
+      index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<2, UpLo::Up, Frame::Inertial>>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<2, UpLo::Up, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::K, ti::I, DataType, Symmetry<2, 1>,
+      index_list<SpatialIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Up, Frame::Inertial>>,
+      index_list<SpatialIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_core<
+      false, ti::J, ti::I, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>,
+      Symmetry<1, 1>,
+      index_list<SpatialIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Up, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_core<
+      false, ti::k, ti::l, DataType, Symmetry<1, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<2, UpLo::Lo, Frame::Grid>>,
+      Symmetry<1, 1>,
+      index_list<SpatialIndex<2, UpLo::Lo, Frame::Grid>,
+                 SpatialIndex<2, UpLo::Lo, Frame::Grid>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_core<
+      false, ti::J, ti::K, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<2, UpLo::Up, Frame::Inertial>>,
+      Symmetry<1, 1>,
+      index_list<SpatialIndex<2, UpLo::Up, Frame::Inertial>,
+                 SpatialIndex<2, UpLo::Up, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_core<
+      false, ti::i, ti::j, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>,
+      Symmetry<1, 1>,
+      index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpatialIndex<3, UpLo::Lo, Frame::Grid>>>();
 }
 
 // \brief Test evaluation of rank 2 tensors where generic spatial indices are
 // used for RHS and LHS spacetime indices
 //
 // \tparam DataType the type of data being stored in the expression operands
-template <typename DataType, typename Generator>
-void test_rhs_and_lhs_rank2(const DataType& used_for_size,
-                            const gsl::not_null<Generator*> generator) {
-  std::uniform_real_distribution<> distribution(0.1, 1.0);
-  constexpr size_t dim = 3;
+template <typename DataType>
+void test_rhs_and_lhs_rank2() {
+  // TODO : add more test cases here
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::a, ti::i, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
 
-  const auto R = make_with_random_values<
-      Tensor<DataType, Symmetry<2, 1>,
-             index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>,
-                        SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>>>>(
-      generator, distribution, used_for_size);
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      true, ti::a, ti::i, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>();
 
-  // \f$L_{ai} = R_{ai}\f$
-  // Use explicit type (vs auto) for LHS Tensor so the compiler checks the
-  // return type of `evaluate`
-  Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>,
-                    SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>>>
-      Lai_from_R_ai(used_for_size);
-  tenex::evaluate<ti::a, ti::i>(make_not_null(&Lai_from_R_ai), R(ti::a, ti::i));
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::i, ti::a, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
 
-  // \f$L_{ia} = R_{ai}\f$
-  Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>,
-                    SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>>>
-      Lia_from_R_ai(used_for_size);
-  tenex::evaluate<ti::i, ti::a>(make_not_null(&Lia_from_R_ai), R(ti::a, ti::i));
-
-  // \f$L_{ai} = R_{ia}\f$
-  Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>,
-                    SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>>>
-      Lai_from_R_ia(used_for_size);
-  tenex::evaluate<ti::a, ti::i>(make_not_null(&Lai_from_R_ia), R(ti::i, ti::a));
-
-  // \f$L_{ia} = R_{ia}\f$
-  Tensor<DataType, Symmetry<2, 1>,
-         index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>,
-                    SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>>>
-      Lia_from_R_ia(used_for_size);
-  tenex::evaluate<ti::i, ti::a>(make_not_null(&Lia_from_R_ia), R(ti::i, ti::a));
-
-  for (size_t a = 0; a < dim + 1; a++) {
-    for (size_t i = 0; i < dim; i++) {
-      CHECK(Lai_from_R_ai.get(a, i + 1) == R.get(a, i + 1));
-      CHECK(Lia_from_R_ai.get(i + 1, a) == R.get(a, i + 1));
-      CHECK(Lai_from_R_ia.get(a, i + 1) == R.get(i + 1, a));
-      CHECK(Lia_from_R_ia.get(i + 1, a) == R.get(i + 1, a));
-    }
-  }
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::i, ti::a, DataType, Symmetry<2, 1>,
+      index_list<SpatialIndex<2, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
 }
 
 // \brief Test evaluation of rank 4 tensors where generic spatial indices are
 // used for RHS and LHS spacetime indices
 //
 // \tparam DataType the type of data being stored in the expression operands
-template <typename DataType, typename Generator>
-void test_rhs_and_lhs_rank4(const DataType& used_for_size,
-                            const gsl::not_null<Generator*> generator) {
-  std::uniform_real_distribution<> distribution(0.1, 1.0);
-  constexpr size_t dim = 3;
-
-  const auto R = make_with_random_values<
-      Tensor<DataType, Symmetry<3, 2, 1, 2>,
-             index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Grid>,
-                        SpacetimeIndex<dim, UpLo::Lo, Frame::Grid>,
-                        SpatialIndex<dim, UpLo::Lo, Frame::Grid>,
-                        SpacetimeIndex<dim, UpLo::Lo, Frame::Grid>>>>(
-      generator, distribution, used_for_size);
-
-  // \f$L_{ai} = R_{ai}\f$
-  // Use explicit type (vs auto) for LHS Tensor so the compiler checks the
-  // return type of `evaluate`
-  Tensor<DataType, Symmetry<4, 3, 2, 1>,
-         index_list<SpatialIndex<dim, UpLo::Lo, Frame::Grid>,
-                    SpacetimeIndex<dim, UpLo::Lo, Frame::Grid>,
-                    SpacetimeIndex<dim, UpLo::Lo, Frame::Grid>,
-                    SpatialIndex<dim, UpLo::Lo, Frame::Grid>>>
-      Likaj_from_R_jaik(used_for_size);
-  tenex::evaluate<ti::i, ti::k, ti::a, ti::j>(make_not_null(&Likaj_from_R_jaik),
-                                              R(ti::j, ti::a, ti::i, ti::k));
-
-  for (size_t i = 0; i < dim; i++) {
-    for (size_t k = 0; k < dim; k++) {
-      for (size_t a = 0; a < dim + 1; a++) {
-        for (size_t j = 0; j < dim; j++) {
-          CHECK(Likaj_from_R_jaik.get(i, k + 1, a, j) ==
-                R.get(j + 1, a, i, k + 1));
-        }
-      }
-    }
-  }
+template <typename DataType>
+void test_rhs_and_lhs_rank4() {
+  TestHelpers::tenex::test_evaluate_rank_4_core<
+      true, ti::i, ti::k, ti::a, ti::j, DataType, Symmetry<4, 3, 2, 1>,
+      index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpatialIndex<2, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<2, UpLo::Lo, Frame::Grid>,
+                 SpatialIndex<2, UpLo::Lo, Frame::Inertial>>,
+      Symmetry<3, 2, 2, 1>,
+      index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<2, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<2, UpLo::Lo, Frame::Grid>,
+                 SpatialIndex<2, UpLo::Lo, Frame::Inertial>>>();
 }
 
 template <typename DataType>
-void test_evaluate_spatial_spacetime_index(const DataType& used_for_size) {
-  MAKE_GENERATOR(generator);
-
-  test_rhs(used_for_size, make_not_null(&generator));
-  test_lhs(used_for_size, make_not_null(&generator));
-  test_rhs_and_lhs_rank2(used_for_size, make_not_null(&generator));
-  test_rhs_and_lhs_rank4(used_for_size, make_not_null(&generator));
+void test_evaluate_spatial_spacetime_index(const DataType& /*meta*/) {
+  test_rhs<DataType>();
+  test_lhs<DataType>();
+  test_rhs_and_lhs_rank2<DataType>();
+  test_rhs_and_lhs_rank4<DataType>();
 }
 }  // namespace
 
