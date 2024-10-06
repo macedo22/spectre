@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <iterator>
+#include <limits>
 #include <random>
 #include <type_traits>
 #include <utility>
@@ -82,12 +83,17 @@ void test_evaluate_rank_1() {
     CHECK(L_a.get(lhs_a) == expected_L_a.get(lhs_a));
   }
 
-  // Test with TempTensor for LHS tensor
+  // Test with Variables
   if constexpr (not std::is_same_v<DataType, double>) {
+    Variables<tmpl::list<::Tags::TempTensor<0, R_a_type>,
+                         ::Tags::TempTensor<1, L_a_type>>>
+        vars(used_for_size, std::numeric_limits<double>::signaling_NaN());
+
+    R_a_type& R_a_temp = get<::Tags::TempTensor<0, R_a_type>>(vars);
+    R_a_temp = R_a;
+
     // L_a = R_a
-    Variables<tmpl::list<::Tags::TempTensor<1, L_a_type>>> L_a_var{
-        used_for_size};
-    L_a_type& L_a_temp = get<::Tags::TempTensor<1, L_a_type>>(L_a_var);
+    L_a_type& L_a_temp = get<::Tags::TempTensor<1, L_a_type>>(vars);
     std::fill(L_a_temp.begin(), L_a_temp.end(),
               component_placeholder_value<DataType>::value);
     call_evaluate<false, TensorIndex>(make_not_null(&L_a_temp),

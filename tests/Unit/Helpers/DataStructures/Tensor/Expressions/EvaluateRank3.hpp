@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <limits>
 #include <random>
 #include <type_traits>
 #include <utility>
@@ -61,8 +62,8 @@ void test_evaluate_rank_3_impl() {
   MAKE_GENERATOR(generator);
   std::uniform_real_distribution<> distribution(-5.0, 5.0);
   const size_t used_for_size = 3;
-  const auto R_abc = make_with_random_values<
-      Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList>>(
+  using R_abc_type = Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList>;
+  const auto R_abc = make_with_random_values<R_abc_type>(
       make_not_null(&generator), distribution, used_for_size);
   auto expected_L_abc =
       ReturnLhsTensor
@@ -217,59 +218,55 @@ void test_evaluate_rank_3_impl() {
     }
   }
 
-  // Test with TempTensor for LHS tensor
+  // Test with Variables
   if constexpr (not std::is_same_v<DataType, double>) {
-    // TODO combine all of these into one Variables
+    Variables<tmpl::list<
+        ::Tags::TempTensor<0, R_abc_type>, ::Tags::TempTensor<1, L_abc_type>,
+        ::Tags::TempTensor<2, L_acb_type>, ::Tags::TempTensor<3, L_bac_type>,
+        ::Tags::TempTensor<4, L_bca_type>, ::Tags::TempTensor<5, L_cab_type>,
+        ::Tags::TempTensor<6, L_cba_type>>>
+        vars(used_for_size, std::numeric_limits<double>::signaling_NaN());
+
+    R_abc_type& R_abc_temp = get<::Tags::TempTensor<0, R_abc_type>>(vars);
+    R_abc_temp = R_abc;
 
     // L_{abc} = R_{abc}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_abc_type>>> L_abc_var{
-        used_for_size};
-    L_abc_type& L_abc_temp = get<::Tags::TempTensor<1, L_abc_type>>(L_abc_var);
+    L_abc_type& L_abc_temp = get<::Tags::TempTensor<1, L_abc_type>>(vars);
     std::fill(L_abc_temp.begin(), L_abc_temp.end(),
               component_placeholder_value<DataType>::value);
     call_evaluate<false, TensorIndexA, TensorIndexB, TensorIndexC>(
         make_not_null(&L_abc_temp), rhs_expression);
 
     // L_{acb} = R_{abc}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_acb_type>>> L_acb_var{
-        used_for_size};
-    L_acb_type& L_acb_temp = get<::Tags::TempTensor<1, L_acb_type>>(L_acb_var);
+    L_acb_type& L_acb_temp = get<::Tags::TempTensor<2, L_acb_type>>(vars);
     std::fill(L_acb_temp.begin(), L_acb_temp.end(),
               component_placeholder_value<DataType>::value);
     call_evaluate<false, TensorIndexA, TensorIndexC, TensorIndexB>(
         make_not_null(&L_acb_temp), rhs_expression);
 
     // L_{bac} = R_{abc}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_bac_type>>> L_bac_var{
-        used_for_size};
-    L_bac_type& L_bac_temp = get<::Tags::TempTensor<1, L_bac_type>>(L_bac_var);
+    L_bac_type& L_bac_temp = get<::Tags::TempTensor<3, L_bac_type>>(vars);
     std::fill(L_bac_temp.begin(), L_bac_temp.end(),
               component_placeholder_value<DataType>::value);
     call_evaluate<false, TensorIndexB, TensorIndexA, TensorIndexC>(
         make_not_null(&L_bac_temp), rhs_expression);
 
     // L_{bca} = R_{abc}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_bca_type>>> L_bca_var{
-        used_for_size};
-    L_bca_type& L_bca_temp = get<::Tags::TempTensor<1, L_bca_type>>(L_bca_var);
+    L_bca_type& L_bca_temp = get<::Tags::TempTensor<4, L_bca_type>>(vars);
     std::fill(L_bca_temp.begin(), L_bca_temp.end(),
               component_placeholder_value<DataType>::value);
     call_evaluate<false, TensorIndexB, TensorIndexC, TensorIndexA>(
         make_not_null(&L_bca_temp), rhs_expression);
 
     // L_{cab} = R_{abc}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_cab_type>>> L_cab_var{
-        used_for_size};
-    L_cab_type& L_cab_temp = get<::Tags::TempTensor<1, L_cab_type>>(L_cab_var);
+    L_cab_type& L_cab_temp = get<::Tags::TempTensor<5, L_cab_type>>(vars);
     std::fill(L_cab_temp.begin(), L_cab_temp.end(),
               component_placeholder_value<DataType>::value);
     call_evaluate<false, TensorIndexC, TensorIndexA, TensorIndexB>(
         make_not_null(&L_cab_temp), rhs_expression);
 
     // L_{cba} = R_{abc}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_cba_type>>> L_cba_var{
-        used_for_size};
-    L_cba_type& L_cba_temp = get<::Tags::TempTensor<1, L_cba_type>>(L_cba_var);
+    L_cba_type& L_cba_temp = get<::Tags::TempTensor<6, L_cba_type>>(vars);
     std::fill(L_cba_temp.begin(), L_cba_temp.end(),
               component_placeholder_value<DataType>::value);
     call_evaluate<false, TensorIndexC, TensorIndexB, TensorIndexA>(

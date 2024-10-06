@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <limits>
 #include <random>
 #include <type_traits>
 #include <utility>
@@ -58,8 +59,8 @@ void test_evaluate_rank_2_impl() {
   MAKE_GENERATOR(generator);
   std::uniform_real_distribution<> distribution(-5.0, 5.0);
   const size_t used_for_size = 3;
-  const auto R_ab = make_with_random_values<
-      Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList>>(
+  using R_ab_type = Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList>;
+  const auto R_ab = make_with_random_values<R_ab_type>(
       make_not_null(&generator), distribution, used_for_size);
   auto expected_L_ab =
       ReturnLhsTensor
@@ -131,21 +132,25 @@ void test_evaluate_rank_2_impl() {
     }
   }
 
-  // Test with TempTensor for LHS tensor
+  // Test with Variables
   if constexpr (not std::is_same_v<DataType, double>) {
+    Variables<tmpl::list<::Tags::TempTensor<0, R_ab_type>,
+                         ::Tags::TempTensor<1, L_ab_type>,
+                         ::Tags::TempTensor<2, L_ba_type>>>
+        vars(used_for_size, std::numeric_limits<double>::signaling_NaN());
+
+    R_ab_type& R_ab_temp = get<::Tags::TempTensor<0, R_ab_type>>(vars);
+    R_ab_temp = R_ab;
+
     // L_{ab} = R_{ab}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_ab_type>>> L_ab_var{
-        used_for_size};
-    L_ab_type& L_ab_temp = get<::Tags::TempTensor<1, L_ab_type>>(L_ab_var);
+    L_ab_type& L_ab_temp = get<::Tags::TempTensor<1, L_ab_type>>(vars);
     std::fill(L_ab_temp.begin(), L_ab_temp.end(),
               component_placeholder_value<DataType>::value);
     call_evaluate<false, TensorIndexA, TensorIndexB>(make_not_null(&L_ab_temp),
                                                      rhs_expression);
 
     // L_{ba} = R_{ab}
-    Variables<tmpl::list<::Tags::TempTensor<1, L_ba_type>>> L_ba_var{
-        used_for_size};
-    L_ba_type& L_ba_temp = get<::Tags::TempTensor<1, L_ba_type>>(L_ba_var);
+    L_ba_type& L_ba_temp = get<::Tags::TempTensor<2, L_ba_type>>(vars);
     std::fill(L_ba_temp.begin(), L_ba_temp.end(),
               component_placeholder_value<DataType>::value);
     call_evaluate<false, TensorIndexB, TensorIndexA>(make_not_null(&L_ba_temp),
