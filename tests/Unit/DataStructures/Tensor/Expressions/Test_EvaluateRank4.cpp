@@ -11,65 +11,33 @@
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank4",
                   "[DataStructures][Unit]") {
-  // Rank 4: double; nonsymmetric
+  // nonsymmetric
   TestHelpers::tenex::test_evaluate_rank_4<
-      true, ti::b, ti::A, ti::k, ti::l, double, Symmetry<4, 3, 2, 1>,
+      true, ti::b, ti::A, ti::k, ti::l, Symmetry<4, 3, 2, 1>,
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
                  SpatialIndex<1, UpLo::Lo, Frame::Inertial>,
                  SpatialIndex<2, UpLo::Lo, Frame::Inertial>>>();
 
-  // Rank 4: double; second and third indices symmetric
+  // second and third indices symmetric
   TestHelpers::tenex::test_evaluate_rank_4<
-      true, ti::G, ti::d, ti::a, ti::j, double, Symmetry<3, 2, 2, 1>,
+      true, ti::G, ti::d, ti::a, ti::j, Symmetry<3, 2, 2, 1>,
       index_list<SpacetimeIndex<2, UpLo::Up, Frame::Grid>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
                  SpatialIndex<1, UpLo::Lo, Frame::Grid>>>();
 
-  // Rank 4: double; first, second, and fourth indices symmetric
+  // first, second, and fourth indices symmetric
   TestHelpers::tenex::test_evaluate_rank_4<
-      true, ti::j, ti::i, ti::k, ti::l, double, Symmetry<2, 2, 1, 2>,
+      true, ti::j, ti::i, ti::k, ti::l, Symmetry<2, 2, 1, 2>,
       index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>();
 
-  // Rank 4: double; symmetric
+  // symmetric
   TestHelpers::tenex::test_evaluate_rank_4<
-      true, ti::F, ti::A, ti::C, ti::D, double, Symmetry<1, 1, 1, 1>,
-      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
-                 SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
-                 SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
-                 SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>();
-
-  // Rank 4: DataVector; nonsymmetric
-  TestHelpers::tenex::test_evaluate_rank_4<
-      true, ti::b, ti::A, ti::k, ti::l, DataVector, Symmetry<4, 3, 2, 1>,
-      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                 SpatialIndex<1, UpLo::Lo, Frame::Inertial>,
-                 SpatialIndex<2, UpLo::Lo, Frame::Inertial>>>();
-
-  // Rank 4: DataVector; second and third indices symmetric
-  TestHelpers::tenex::test_evaluate_rank_4<
-      true, ti::G, ti::d, ti::a, ti::j, DataVector, Symmetry<3, 2, 2, 1>,
-      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Grid>,
-                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
-                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
-                 SpatialIndex<1, UpLo::Lo, Frame::Grid>>>();
-
-  // Rank 4: DataVector; first, second, and fourth indices symmetric
-  TestHelpers::tenex::test_evaluate_rank_4<
-      true, ti::j, ti::i, ti::k, ti::l, DataVector, Symmetry<2, 2, 1, 2>,
-      index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
-                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
-                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
-                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>();
-
-  // Rank 4: DataVector; symmetric
-  TestHelpers::tenex::test_evaluate_rank_4<
-      true, ti::F, ti::A, ti::C, ti::D, DataVector, Symmetry<1, 1, 1, 1>,
+      true, ti::F, ti::A, ti::C, ti::D, Symmetry<1, 1, 1, 1>,
       index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
                  SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
                  SpacetimeIndex<3, UpLo::Up, Frame::Grid>,

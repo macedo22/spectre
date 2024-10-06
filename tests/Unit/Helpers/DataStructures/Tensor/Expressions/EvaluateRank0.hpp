@@ -8,9 +8,11 @@
 #include <limits>
 #include <type_traits>
 
+#include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tags/TempTensor.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Variables.hpp"
+#include "DataStructures/VectorImpl.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/TestHelpers.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/TMPL.hpp"
@@ -33,7 +35,7 @@ void test_evaluate_rank_0(const DataType& data) {
   CHECK(get(L) == data);  // check LHS evaluated correctly
 
   // Test with Variables
-  if constexpr (not std::is_same_v<DataType, double>) {
+  if constexpr (is_derived_of_vector_impl_v<DataType>) {
     Variables<tmpl::list<::Tags::TempTensor<0, Scalar<DataType>>,
                          ::Tags::TempTensor<1, Scalar<DataType>>>>
         vars(data.size(), std::numeric_limits<double>::signaling_NaN());

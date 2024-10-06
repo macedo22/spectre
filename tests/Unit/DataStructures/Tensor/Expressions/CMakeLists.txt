@@ -12,8 +12,7 @@ set(LIBRARY_SOURCES
   Test_Evaluate.cpp
   Test_EvaluateComplex.cpp
   Test_EvaluateRank012.cpp
-  Test_EvaluateRank3NonSymmetric.cpp
-  Test_EvaluateRank3Symmetric.cpp
+  Test_EvaluateRank3.cpp
   Test_EvaluateRank4.cpp
   Test_EvaluateSpatialSpacetimeIndex.cpp
   Test_EvaluateSpatialAndTimeSpacetimeIndex.cpp

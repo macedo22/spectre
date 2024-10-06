@@ -11,9 +11,11 @@
 #include <type_traits>
 #include <utility>
 
+#include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tags/TempTensor.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Variables.hpp"
+#include "DataStructures/VectorImpl.hpp"
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/ComponentPlaceholder.hpp"
@@ -38,7 +40,7 @@ namespace TestHelpers::tenex {
 template <bool ReturnLhsTensor, auto& TensorIndex, typename DataType,
           typename LhsTensorIndexTypeList,
           typename RhsTensorIndexTypeList = LhsTensorIndexTypeList>
-void test_evaluate_rank_1() {
+void test_evaluate_rank_1_core() {
   using symmetry = Symmetry<1>;
   using L_a_type = Tensor<DataType, symmetry, LhsTensorIndexTypeList>;
   using R_a_type = Tensor<DataType, symmetry, RhsTensorIndexTypeList>;
@@ -80,7 +82,7 @@ void test_evaluate_rank_1() {
   CHECK(L_a == expected_L_a);  // check LHS evaluated correctly
 
   // Test with Variables
-  if constexpr (not std::is_same_v<DataType, double>) {
+  if constexpr (is_derived_of_vector_impl_v<DataType>) {
     Variables<tmpl::list<::Tags::TempTensor<0, R_a_type>,
                          ::Tags::TempTensor<1, L_a_type>>>
         vars(used_for_size, std::numeric_limits<double>::signaling_NaN());
@@ -98,5 +100,17 @@ void test_evaluate_rank_1() {
     CHECK(R_a_temp == R_a);           // check RHS wasn't modified
     CHECK(L_a_temp == expected_L_a);  // check LHS evaluated correctly
   }
+}
+
+template <bool ReturnLhsTensor, auto& TensorIndex,
+          typename RhsTensorIndexTypeList,
+          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
+void test_evaluate_rank_1() {
+  TestHelpers::tenex::test_evaluate_rank_1_core<ReturnLhsTensor, TensorIndex,
+                                                double, LhsTensorIndexTypeList,
+                                                RhsTensorIndexTypeList>();
+  TestHelpers::tenex::test_evaluate_rank_1_core<
+      ReturnLhsTensor, TensorIndex, DataVector, LhsTensorIndexTypeList,
+      RhsTensorIndexTypeList>();
 }
 }  // namespace TestHelpers::tenex

@@ -21,6 +21,5 @@ SPECTRE_TEST_CASE(
                                      SpacetimeIndex<3, UpLo::Lo, FrameType>>;
 
   TestHelpers::tenex::test_evaluate_rank_4<false, ti::t, ti::a, ti::j, ti::i,
-                                           DataVector, symm_1111,
-                                           index_list_abcd>();
+                                           symm_1111, index_list_abcd>();
 }

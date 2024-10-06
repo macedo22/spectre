@@ -12,9 +12,11 @@
 #include <type_traits>
 #include <utility>
 
+#include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tags/TempTensor.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Variables.hpp"
+#include "DataStructures/VectorImpl.hpp"
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/ComponentPlaceholder.hpp"
@@ -55,7 +57,7 @@ template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
           typename DataType, typename LhsSymmetry,
           typename LhsTensorIndexTypeList, typename RhsSymmetry = LhsSymmetry,
           typename RhsTensorIndexTypeList = LhsTensorIndexTypeList>
-void test_evaluate_rank_2_impl() {
+void test_evaluate_rank_2_core() {
   MAKE_GENERATOR(generator);
   std::uniform_real_distribution<> distribution(-5.0, 5.0);
   const size_t used_for_size = 3;
@@ -134,7 +136,7 @@ void test_evaluate_rank_2_impl() {
   }
 
   // Test with Variables
-  if constexpr (not std::is_same_v<DataType, double>) {
+  if constexpr (is_derived_of_vector_impl_v<DataType>) {
     Variables<tmpl::list<::Tags::TempTensor<0, R_ab_type>,
                          ::Tags::TempTensor<1, L_ab_type>,
                          ::Tags::TempTensor<2, L_ba_type>>>
@@ -176,18 +178,32 @@ template <bool ReturnLhsTensorForLhsSameSymmetryCase, auto& TensorIndexA,
           auto& TensorIndexB, typename DataType, typename RhsSymmetry,
           typename RhsTensorIndexTypeList,
           typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
-void test_evaluate_rank_2() {
+void test_evaluate_rank_2_impl() {
   using symmetry_21 = Symmetry<2, 1>;
   using symmetry_11 = Symmetry<1, 1>;
 
-  test_evaluate_rank_2_impl<ReturnLhsTensorForLhsSameSymmetryCase, TensorIndexA,
+  test_evaluate_rank_2_core<ReturnLhsTensorForLhsSameSymmetryCase, TensorIndexA,
                             TensorIndexB, DataType, RhsSymmetry,
                             LhsTensorIndexTypeList, RhsSymmetry,
                             RhsTensorIndexTypeList>();
   if constexpr (std::is_same_v<RhsSymmetry, symmetry_11>) {
-    test_evaluate_rank_2_impl<false, TensorIndexA, TensorIndexB, DataType,
+    test_evaluate_rank_2_core<false, TensorIndexA, TensorIndexB, DataType,
                               symmetry_21, LhsTensorIndexTypeList, RhsSymmetry,
                               RhsTensorIndexTypeList>();
   }
+}
+
+template <bool ReturnLhsTensorForLhsSameSymmetryCase, auto& TensorIndexA,
+          auto& TensorIndexB, typename RhsSymmetry,
+          typename RhsTensorIndexTypeList,
+          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
+void test_evaluate_rank_2() {
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      ReturnLhsTensorForLhsSameSymmetryCase, TensorIndexA, TensorIndexB, double,
+      RhsSymmetry, RhsTensorIndexTypeList, RhsTensorIndexTypeList>();
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      ReturnLhsTensorForLhsSameSymmetryCase, TensorIndexA, TensorIndexB,
+      DataVector, RhsSymmetry, RhsTensorIndexTypeList,
+      RhsTensorIndexTypeList>();
 }
 }  // namespace TestHelpers::tenex
