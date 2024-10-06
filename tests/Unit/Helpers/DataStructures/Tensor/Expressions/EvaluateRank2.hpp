@@ -80,7 +80,7 @@ template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
           typename DataType, typename LhsSymmetry,
           typename LhsTensorIndexTypeList, typename RhsSymmetry = LhsSymmetry,
           typename RhsTensorIndexTypeList = LhsTensorIndexTypeList>
-void test_evaluate_rank_2() {
+void test_evaluate_rank_2_impl() {
   MAKE_GENERATOR(generator);
   std::uniform_real_distribution<> distribution(-5.0, 5.0);
   const size_t used_for_size = 3;
@@ -185,6 +185,25 @@ void test_evaluate_rank_2() {
         CHECK(L_ba_temp.get(lhs_b, lhs_a) == expected_result);
       }
     }
+  }
+}
+
+template <bool ReturnLhsTensorForLhsSameSymmetryCase, auto& TensorIndexA,
+          auto& TensorIndexB, typename DataType, typename RhsSymmetry,
+          typename RhsTensorIndexTypeList,
+          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
+void test_evaluate_rank_2() {
+  using symmetry_21 = Symmetry<2, 1>;
+  using symmetry_11 = Symmetry<1, 1>;
+
+  test_evaluate_rank_2_impl<ReturnLhsTensorForLhsSameSymmetryCase, TensorIndexA,
+                            TensorIndexB, DataType, RhsSymmetry,
+                            LhsTensorIndexTypeList, RhsSymmetry,
+                            RhsTensorIndexTypeList>();
+  if constexpr (std::is_same_v<RhsSymmetry, symmetry_11>) {
+    test_evaluate_rank_2_impl<false, TensorIndexA, TensorIndexB, DataType,
+                              symmetry_21, LhsTensorIndexTypeList, RhsSymmetry,
+                              RhsTensorIndexTypeList>();
   }
 }
 }  // namespace TestHelpers::tenex
