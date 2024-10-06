@@ -10,7 +10,7 @@
 #include "DataStructures/Tags/TempTensor.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Variables.hpp"
-#include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank2.hpp"  // TODO : remove after factoring out
+#include "Helpers/DataStructures/Tensor/Expressions/TestHelpers.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/TMPL.hpp"
 

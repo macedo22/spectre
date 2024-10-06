@@ -16,7 +16,7 @@
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/ComponentPlaceholder.hpp"
-#include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank2.hpp"  // TODO : remove after factoring out
+#include "Helpers/DataStructures/Tensor/Expressions/TestHelpers.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/MakeWithValue.hpp"
 #include "Utilities/TMPL.hpp"
