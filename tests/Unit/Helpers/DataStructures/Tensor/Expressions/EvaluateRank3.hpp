@@ -203,6 +203,7 @@ void test_evaluate_rank_3_impl() {
   const size_t dim_b = tmpl::at_c<LhsTensorIndexTypeList, 1>::dim;
   const size_t dim_c = tmpl::at_c<LhsTensorIndexTypeList, 2>::dim;
 
+  // check LHS evaluated correctly
   for (size_t lhs_a = 0; lhs_a < dim_a; ++lhs_a) {
     for (size_t lhs_b = 0; lhs_b < dim_b; ++lhs_b) {
       for (size_t lhs_c = 0; lhs_c < dim_c; ++lhs_c) {
@@ -272,6 +273,10 @@ void test_evaluate_rank_3_impl() {
     call_evaluate<false, TensorIndexC, TensorIndexB, TensorIndexA>(
         make_not_null(&L_cba_temp), rhs_expression);
 
+    // check RHS wasn't modified
+    CHECK(R_abc_temp == R_abc);
+
+    // check LHS evaluated correctly
     for (size_t lhs_a = 0; lhs_a < dim_a; ++lhs_a) {
       for (size_t lhs_b = 0; lhs_b < dim_b; ++lhs_b) {
         for (size_t lhs_c = 0; lhs_c < dim_c; ++lhs_c) {

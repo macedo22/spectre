@@ -487,6 +487,7 @@ void test_evaluate_rank_4() {
   const size_t dim_c = tmpl::at_c<LhsTensorIndexTypeList, 2>::dim;
   const size_t dim_d = tmpl::at_c<LhsTensorIndexTypeList, 3>::dim;
 
+  // check LHS evaluated correctly
   for (size_t lhs_a = 0; lhs_a < dim_a; ++lhs_a) {
     for (size_t lhs_b = 0; lhs_b < dim_b; ++lhs_b) {
       for (size_t lhs_c = 0; lhs_c < dim_c; ++lhs_c) {

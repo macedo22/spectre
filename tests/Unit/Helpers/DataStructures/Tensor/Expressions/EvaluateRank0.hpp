@@ -30,7 +30,7 @@ void test_evaluate_rank_0(const DataType& data) {
   Scalar<DataType> L{};
   call_evaluate<ReturnLhsTensor>(make_not_null(&L), R());
 
-  CHECK(get(L) == data);
+  CHECK(get(L) == data);  // check LHS evaluated correctly
 
   // Test with Variables
   if constexpr (not std::is_same_v<DataType, double>) {
@@ -46,7 +46,8 @@ void test_evaluate_rank_0(const DataType& data) {
         get<::Tags::TempTensor<1, Scalar<DataType>>>(vars);
     call_evaluate<ReturnLhsTensor>(make_not_null(&L_temp), R());
 
-    CHECK(get(L_temp) == data);
+    CHECK(get(R_temp) == data);  // check RHS wasn't modified
+    CHECK(get(L_temp) == data);  // check LHS evaluated correctly
   }
 }
 

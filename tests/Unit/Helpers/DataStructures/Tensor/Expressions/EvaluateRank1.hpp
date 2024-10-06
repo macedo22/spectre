@@ -77,11 +77,7 @@ void test_evaluate_rank_1() {
   call_evaluate<ReturnLhsTensor, TensorIndex>(make_not_null(&L_a),
                                               R_a(TensorIndex));
 
-  const size_t dim = tmpl::at_c<LhsTensorIndexTypeList, 0>::dim;
-
-  for (size_t lhs_a = 0; lhs_a < dim; ++lhs_a) {
-    CHECK(L_a.get(lhs_a) == expected_L_a.get(lhs_a));
-  }
+  CHECK(L_a == expected_L_a);  // check LHS evaluated correctly
 
   // Test with Variables
   if constexpr (not std::is_same_v<DataType, double>) {
@@ -99,9 +95,8 @@ void test_evaluate_rank_1() {
     call_evaluate<false, TensorIndex>(make_not_null(&L_a_temp),
                                       R_a(TensorIndex));
 
-    for (size_t lhs_a = 0; lhs_a < dim; ++lhs_a) {
-      CHECK(L_a_temp.get(lhs_a) == expected_L_a.get(lhs_a));
-    }
+    CHECK(R_a_temp == R_a);           // check RHS wasn't modified
+    CHECK(L_a_temp == expected_L_a);  // check LHS evaluated correctly
   }
 }
 }  // namespace TestHelpers::tenex
