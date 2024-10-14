@@ -38,8 +38,8 @@ namespace TestHelpers::tenex {
 /// \tparam TensorIndex the TensorIndex used in the the TensorExpression,
 /// e.g. `ti::a`
 template <bool ReturnLhsTensor, auto& TensorIndex, typename DataType,
-          typename LhsTensorIndexTypeList,
-          typename RhsTensorIndexTypeList = LhsTensorIndexTypeList>
+          typename RhsTensorIndexTypeList,
+          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
 void test_evaluate_rank_1_core() {
   using symmetry = Symmetry<1>;
   using L_a_type = Tensor<DataType, symmetry, LhsTensorIndexTypeList>;
@@ -107,10 +107,10 @@ template <bool ReturnLhsTensor, auto& TensorIndex,
           typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
 void test_evaluate_rank_1() {
   TestHelpers::tenex::test_evaluate_rank_1_core<ReturnLhsTensor, TensorIndex,
-                                                double, LhsTensorIndexTypeList,
-                                                RhsTensorIndexTypeList>();
+                                                double, RhsTensorIndexTypeList,
+                                                LhsTensorIndexTypeList>();
   TestHelpers::tenex::test_evaluate_rank_1_core<
-      ReturnLhsTensor, TensorIndex, DataVector, LhsTensorIndexTypeList,
-      RhsTensorIndexTypeList>();
+      ReturnLhsTensor, TensorIndex, DataVector, RhsTensorIndexTypeList,
+      LhsTensorIndexTypeList>();
 }
 }  // namespace TestHelpers::tenex

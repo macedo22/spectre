@@ -54,9 +54,9 @@ namespace TestHelpers::tenex {
 /// \tparam TensorIndexB the second TensorIndex used on the RHS of the
 /// TensorExpression, e.g. `ti::B`
 template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
-          typename DataType, typename LhsSymmetry,
-          typename LhsTensorIndexTypeList, typename RhsSymmetry = LhsSymmetry,
-          typename RhsTensorIndexTypeList = LhsTensorIndexTypeList>
+          typename DataType, typename RhsSymmetry,
+          typename RhsTensorIndexTypeList, typename LhsSymmetry = RhsSymmetry,
+          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
 void test_evaluate_rank_2_core() {
   MAKE_GENERATOR(generator);
   std::uniform_real_distribution<> distribution(-5.0, 5.0);
@@ -184,12 +184,12 @@ void test_evaluate_rank_2_impl() {
 
   test_evaluate_rank_2_core<ReturnLhsTensorForLhsSameSymmetryCase, TensorIndexA,
                             TensorIndexB, DataType, RhsSymmetry,
-                            LhsTensorIndexTypeList, RhsSymmetry,
-                            RhsTensorIndexTypeList>();
+                            RhsTensorIndexTypeList, RhsSymmetry,
+                            LhsTensorIndexTypeList>();
   if constexpr (std::is_same_v<RhsSymmetry, symmetry_11>) {
     test_evaluate_rank_2_core<false, TensorIndexA, TensorIndexB, DataType,
-                              symmetry_21, LhsTensorIndexTypeList, RhsSymmetry,
-                              RhsTensorIndexTypeList>();
+                              RhsSymmetry, RhsTensorIndexTypeList, symmetry_21,
+                              LhsTensorIndexTypeList>();
   }
 }
 

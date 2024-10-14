@@ -58,9 +58,9 @@ namespace TestHelpers::tenex {
 /// TensorExpression, e.g. `ti::D`
 template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
           auto& TensorIndexC, auto& TensorIndexD, typename DataType,
-          typename LhsSymmetry, typename LhsTensorIndexTypeList,
-          typename RhsSymmetry = LhsSymmetry,
-          typename RhsTensorIndexTypeList = LhsTensorIndexTypeList>
+          typename RhsSymmetry, typename RhsTensorIndexTypeList,
+          typename LhsSymmetry = RhsSymmetry,
+          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
 void test_evaluate_rank_4_core() {
   MAKE_GENERATOR(generator);
   std::uniform_real_distribution<> distribution(-5.0, 5.0);
@@ -534,11 +534,11 @@ template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
 void test_evaluate_rank_4() {
   TestHelpers::tenex::test_evaluate_rank_4_core<
       ReturnLhsTensor, TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD,
-      double, RhsSymmetry, LhsTensorIndexTypeList, RhsSymmetry,
-      RhsTensorIndexTypeList>();
+      double, RhsSymmetry, RhsTensorIndexTypeList, RhsSymmetry,
+      LhsTensorIndexTypeList>();
   TestHelpers::tenex::test_evaluate_rank_4_core<
       ReturnLhsTensor, TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD,
-      DataVector, RhsSymmetry, LhsTensorIndexTypeList, RhsSymmetry,
-      RhsTensorIndexTypeList>();
+      DataVector, RhsSymmetry, RhsTensorIndexTypeList, RhsSymmetry,
+      LhsTensorIndexTypeList>();
 }
 }  // namespace TestHelpers::tenex
