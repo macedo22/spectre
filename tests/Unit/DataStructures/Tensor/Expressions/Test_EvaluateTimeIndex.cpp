@@ -27,22 +27,242 @@ void test_rhs(const gsl::not_null<Generator*> generator,
               const DataType& used_for_size) {
   std::uniform_real_distribution<> distribution(0.1, 1.0);
   constexpr size_t dim = 3;
+  using frame = Frame::Inertial;
 
-  const auto R = make_with_random_values<
-      Tensor<DataType, Symmetry<2, 1>,
-             index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>,
-                        SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>>>>(
+  // Note: this function doesn't utilize test helper functions like
+  // test_evaluate_rank_2_core() because they aren't generic enough to handle
+  // test cases where the number of indices on the RHS and LHS are not equal.
+  // Instead, we have to manually check each test case of interest.
+
+  // Rank 1 testing
+
+  const auto R_a = make_with_random_values<Tensor<
+      DataType, Symmetry<1>, index_list<SpacetimeIndex<dim, UpLo::Lo, frame>>>>(
+      generator, distribution, used_for_size);
+  const auto R_A = make_with_random_values<Tensor<
+      DataType, Symmetry<1>, index_list<SpacetimeIndex<dim, UpLo::Up, frame>>>>(
       generator, distribution, used_for_size);
 
-  // \f$L_{a} = R_{at}\f$
+  // \f$L = R_{t}\f$
   // Use explicit type (vs auto) for LHS Tensor so the compiler checks the
   // return type of `evaluate`
+  const Scalar<DataType> L_from_R_t = tenex::evaluate(R_a(ti::t));
+  // \f$L = R_{T}\f$
+  const Scalar<DataType> L_from_R_T = tenex::evaluate(R_A(ti::T));
+
+  CHECK(get(L_from_R_t) == R_a.get(0));
+  CHECK(get(L_from_R_T) == R_A.get(0));
+
+  // Rank 2 testing
+
+  // RHS tensors with symmetric spacetime indices
+  const auto R_ab = make_with_random_values<
+      Tensor<DataType, Symmetry<2, 1>,
+             index_list<SpacetimeIndex<dim, UpLo::Lo, frame>,
+                        SpacetimeIndex<dim, UpLo::Lo, frame>>>>(
+      generator, distribution, used_for_size);
+  const auto R_AB = make_with_random_values<
+      Tensor<DataType, Symmetry<2, 1>,
+             index_list<SpacetimeIndex<dim, UpLo::Up, frame>,
+                        SpacetimeIndex<dim, UpLo::Up, frame>>>>(
+      generator, distribution, used_for_size);
+  const auto R_Ab = make_with_random_values<
+      Tensor<DataType, Symmetry<2, 1>,
+             index_list<SpacetimeIndex<dim, UpLo::Up, frame>,
+                        SpacetimeIndex<dim, UpLo::Lo, frame>>>>(
+      generator, distribution, used_for_size);
+  const auto R_aB = make_with_random_values<
+      Tensor<DataType, Symmetry<2, 1>,
+             index_list<SpacetimeIndex<dim, UpLo::Lo, frame>,
+                        SpacetimeIndex<dim, UpLo::Up, frame>>>>(
+      generator, distribution, used_for_size);
+  // RHS tensors with one spacetime and one spatial index
+  const auto R_ai = make_with_random_values<
+      Tensor<DataType, Symmetry<2, 1>,
+             index_list<SpacetimeIndex<dim, UpLo::Lo, frame>,
+                        SpatialIndex<dim, UpLo::Lo, frame>>>>(
+      generator, distribution, used_for_size);
+  const auto R_ia = make_with_random_values<
+      Tensor<DataType, Symmetry<2, 1>,
+             index_list<SpatialIndex<dim, UpLo::Lo, frame>,
+                        SpacetimeIndex<dim, UpLo::Lo, frame>>>>(
+      generator, distribution, used_for_size);
+  const auto R_IA = make_with_random_values<
+      Tensor<DataType, Symmetry<2, 1>,
+             index_list<SpatialIndex<dim, UpLo::Up, frame>,
+                        SpacetimeIndex<dim, UpLo::Up, frame>>>>(
+      generator, distribution, used_for_size);
+  const auto R_AI = make_with_random_values<
+      Tensor<DataType, Symmetry<2, 1>,
+             index_list<SpacetimeIndex<dim, UpLo::Up, frame>,
+                        SpatialIndex<dim, UpLo::Up, frame>>>>(
+      generator, distribution, used_for_size);
+  const auto R_Ai = make_with_random_values<
+      Tensor<DataType, Symmetry<2, 1>,
+             index_list<SpacetimeIndex<dim, UpLo::Up, frame>,
+                        SpatialIndex<dim, UpLo::Lo, frame>>>>(
+      generator, distribution, used_for_size);
+  const auto R_Ia = make_with_random_values<
+      Tensor<DataType, Symmetry<2, 1>,
+             index_list<SpatialIndex<dim, UpLo::Up, frame>,
+                        SpacetimeIndex<dim, UpLo::Lo, frame>>>>(
+      generator, distribution, used_for_size);
+  const auto R_aI = make_with_random_values<
+      Tensor<DataType, Symmetry<2, 1>,
+             index_list<SpacetimeIndex<dim, UpLo::Lo, frame>,
+                        SpatialIndex<dim, UpLo::Up, frame>>>>(
+      generator, distribution, used_for_size);
+  const auto R_iA = make_with_random_values<
+      Tensor<DataType, Symmetry<2, 1>,
+             index_list<SpatialIndex<dim, UpLo::Lo, frame>,
+                        SpacetimeIndex<dim, UpLo::Up, frame>>>>(
+      generator, distribution, used_for_size);
+  // RHS tensors with symmetric spacetime indices
+  const auto S_ab = make_with_random_values<
+      Tensor<DataType, Symmetry<1, 1>,
+             index_list<SpacetimeIndex<dim, UpLo::Lo, frame>,
+                        SpacetimeIndex<dim, UpLo::Lo, frame>>>>(
+      generator, distribution, used_for_size);
+  const auto S_AB = make_with_random_values<
+      Tensor<DataType, Symmetry<1, 1>,
+             index_list<SpacetimeIndex<dim, UpLo::Up, frame>,
+                        SpacetimeIndex<dim, UpLo::Up, frame>>>>(
+      generator, distribution, used_for_size);
+
+  // Evaluations of non-symmetric RHS tensors
+
+  // \f$L_{a} = R_{at}\f$
   const Tensor<DataType, Symmetry<1>,
-               index_list<SpacetimeIndex<dim, UpLo::Lo, Frame::Inertial>>>
-      La_from_R_at = tenex::evaluate<ti::a>(R(ti::a, ti::t));
+               index_list<SpacetimeIndex<dim, UpLo::Lo, frame>>>
+      L_a_from_R_at = tenex::evaluate<ti::a>(R_ab(ti::a, ti::t));
+  // \f$L_{a} = R_{ta}\f$
+  const Tensor<DataType, Symmetry<1>,
+               index_list<SpacetimeIndex<dim, UpLo::Lo, frame>>>
+      L_a_from_R_ta = tenex::evaluate<ti::a>(R_ab(ti::t, ti::a));
+  // \f$L = R_{tt}\f$
+  const Scalar<DataType> L_from_R_tt = tenex::evaluate(R_ab(ti::t, ti::t));
+  // \f$L^{a} = R^{at}\f$
+  const Tensor<DataType, Symmetry<1>,
+               index_list<SpacetimeIndex<dim, UpLo::Up, frame>>>
+      L_A_from_R_AT = tenex::evaluate<ti::A>(R_AB(ti::A, ti::T));
+  // \f$L^{a} = R^{ta}\f$
+  const Tensor<DataType, Symmetry<1>,
+               index_list<SpacetimeIndex<dim, UpLo::Up, frame>>>
+      L_A_from_R_TA = tenex::evaluate<ti::A>(R_AB(ti::T, ti::A));
+  // \f$L = R^{tt}\f$
+  const Scalar<DataType> L_from_R_TT = tenex::evaluate(R_AB(ti::T, ti::T));
+  // \f$L^{a} = R^{a}{}_{t}\f$
+  const Tensor<DataType, Symmetry<1>,
+               index_list<SpacetimeIndex<dim, UpLo::Up, frame>>>
+      L_A_from_R_At = tenex::evaluate<ti::A>(R_Ab(ti::A, ti::t));
+  // \f$L_{a} = R^{t}{}_{a}\f$
+  const Tensor<DataType, Symmetry<1>,
+               index_list<SpacetimeIndex<dim, UpLo::Lo, frame>>>
+      L_a_from_R_Ta = tenex::evaluate<ti::a>(R_Ab(ti::T, ti::a));
+  // \f$L = R^{t}{}_{t}\f$
+  const Scalar<DataType> L_from_R_Tt = tenex::evaluate(R_Ab(ti::T, ti::t));
+  // \f$L_{a} = R_{a}{}^{t}\f$
+  const Tensor<DataType, Symmetry<1>,
+               index_list<SpacetimeIndex<dim, UpLo::Lo, frame>>>
+      L_a_from_R_aT = tenex::evaluate<ti::a>(R_aB(ti::a, ti::T));
+  // \f$L^{a} = R_{t}{}^{a}\f$
+  const Tensor<DataType, Symmetry<1>,
+               index_list<SpacetimeIndex<dim, UpLo::Up, frame>>>
+      L_A_from_R_tA = tenex::evaluate<ti::A>(R_aB(ti::t, ti::A));
+  // \f$L = R_{t}{}^{t}\f$
+  const Scalar<DataType> L_from_R_tT = tenex::evaluate(R_aB(ti::t, ti::T));
+
+  // Evaluations of symmetric RHS tensors
+
+  // \f$L_{a} = S_{at}\f$
+  const Tensor<DataType, Symmetry<1>,
+               index_list<SpacetimeIndex<dim, UpLo::Lo, frame>>>
+      L_a_from_S_at = tenex::evaluate<ti::a>(S_ab(ti::a, ti::t));
+  // \f$L_{a} = S_{ta}\f$
+  const Tensor<DataType, Symmetry<1>,
+               index_list<SpacetimeIndex<dim, UpLo::Lo, frame>>>
+      L_a_from_S_ta = tenex::evaluate<ti::a>(S_ab(ti::t, ti::a));
+  // \f$L = S_{tt}\f$
+  const Scalar<DataType> L_from_S_tt = tenex::evaluate(S_ab(ti::t, ti::t));
+  // \f$L^{a} = S^{at}\f$
+  const Tensor<DataType, Symmetry<1>,
+               index_list<SpacetimeIndex<dim, UpLo::Up, frame>>>
+      L_A_from_S_AT = tenex::evaluate<ti::A>(S_AB(ti::A, ti::T));
+  // \f$L^{a} = S^{ta}\f$
+  const Tensor<DataType, Symmetry<1>,
+               index_list<SpacetimeIndex<dim, UpLo::Up, frame>>>
+      L_A_from_S_TA = tenex::evaluate<ti::A>(S_AB(ti::T, ti::A));
+  // \f$L = S^{tt}\f$
+  const Scalar<DataType> L_from_S_TT = tenex::evaluate(S_AB(ti::T, ti::T));
+
+  // Evaluations of RHS tensors with one spatial and one spacetime index
+
+  // \f$L_{i} = R_{it}\f$
+  const Tensor<DataType, Symmetry<1>,
+               index_list<SpatialIndex<dim, UpLo::Lo, frame>>>
+      L_i_from_R_it = tenex::evaluate<ti::i>(R_ia(ti::i, ti::t));
+  // \f$L_{i} = R_{ti}\f$
+  const Tensor<DataType, Symmetry<1>,
+               index_list<SpatialIndex<dim, UpLo::Lo, frame>>>
+      L_i_from_R_ti = tenex::evaluate<ti::i>(R_ai(ti::t, ti::i));
+  // \f$L^{i} = R^{it}\f$
+  const Tensor<DataType, Symmetry<1>,
+               index_list<SpatialIndex<dim, UpLo::Up, frame>>>
+      L_I_from_R_IT = tenex::evaluate<ti::I>(R_IA(ti::I, ti::T));
+  // \f$L^{i} = R^{ti}\f$
+  const Tensor<DataType, Symmetry<1>,
+               index_list<SpatialIndex<dim, UpLo::Up, frame>>>
+      L_I_from_R_TI = tenex::evaluate<ti::I>(R_AI(ti::T, ti::I));
+  // \f$L^{i} = R^{i}{}_{t}\f$
+  const Tensor<DataType, Symmetry<1>,
+               index_list<SpatialIndex<dim, UpLo::Up, frame>>>
+      L_I_from_R_It = tenex::evaluate<ti::I>(R_Ia(ti::I, ti::t));
+  // \f$L_{i} = R^{t}{}_{i}\f$
+  const Tensor<DataType, Symmetry<1>,
+               index_list<SpatialIndex<dim, UpLo::Lo, frame>>>
+      L_i_from_R_Ti = tenex::evaluate<ti::i>(R_Ai(ti::T, ti::i));
+  // \f$L_{i} = R_{i}{}^{t}\f$
+  const Tensor<DataType, Symmetry<1>,
+               index_list<SpatialIndex<dim, UpLo::Lo, frame>>>
+      L_i_from_R_iT = tenex::evaluate<ti::i>(R_iA(ti::i, ti::T));
+  // \f$L^{i} = R_{t}{}^{i}\f$
+  const Tensor<DataType, Symmetry<1>,
+               index_list<SpatialIndex<dim, UpLo::Up, frame>>>
+      L_I_from_R_tI = tenex::evaluate<ti::I>(R_aI(ti::t, ti::I));
+
+  CHECK(get(L_from_R_tt) == R_ab.get(0, 0));
+  CHECK(get(L_from_R_TT) == R_AB.get(0, 0));
+  CHECK(get(L_from_R_Tt) == R_Ab.get(0, 0));
+  CHECK(get(L_from_R_tT) == R_aB.get(0, 0));
+
+  CHECK(get(L_from_S_tt) == S_ab.get(0, 0));
+  CHECK(get(L_from_S_TT) == S_AB.get(0, 0));
 
   for (size_t a = 0; a < dim + 1; a++) {
-    CHECK(La_from_R_at.get(a) == R.get(a, 0));
+    CHECK(L_a_from_R_at.get(a) == R_ab.get(a, 0));
+    CHECK(L_a_from_R_ta.get(a) == R_ab.get(0, a));
+    CHECK(L_A_from_R_AT.get(a) == R_AB.get(a, 0));
+    CHECK(L_A_from_R_TA.get(a) == R_AB.get(0, a));
+    CHECK(L_A_from_R_At.get(a) == R_Ab.get(a, 0));
+    CHECK(L_a_from_R_Ta.get(a) == R_Ab.get(0, a));
+    CHECK(L_a_from_R_aT.get(a) == R_aB.get(a, 0));
+    CHECK(L_A_from_R_tA.get(a) == R_aB.get(0, a));
+
+    CHECK(L_a_from_S_at.get(a) == S_ab.get(a, 0));
+    CHECK(L_a_from_S_ta.get(a) == S_ab.get(0, a));
+    CHECK(L_A_from_S_AT.get(a) == S_AB.get(a, 0));
+    CHECK(L_A_from_S_TA.get(a) == S_AB.get(0, a));
+  }
+
+  for (size_t i = 0; i < dim; i++) {
+    CHECK(L_i_from_R_it.get(i) == R_ia.get(i, 0));
+    CHECK(L_i_from_R_ti.get(i) == R_ai.get(0, i));
+    CHECK(L_I_from_R_IT.get(i) == R_IA.get(i, 0));
+    CHECK(L_I_from_R_TI.get(i) == R_AI.get(0, i));
+    CHECK(L_I_from_R_It.get(i) == R_Ia.get(i, 0));
+    CHECK(L_i_from_R_Ti.get(i) == R_Ai.get(0, i));
+    CHECK(L_i_from_R_iT.get(i) == R_iA.get(i, 0));
+    CHECK(L_I_from_R_tI.get(i) == R_aI.get(0, i));
   }
 }
 
