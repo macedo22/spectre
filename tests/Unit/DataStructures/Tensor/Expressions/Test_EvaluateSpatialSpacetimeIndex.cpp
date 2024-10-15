@@ -40,11 +40,53 @@ void test_rhs() {
                  SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>();
 
   TestHelpers::tenex::test_evaluate_rank_2_impl<
+      true, ti::A, ti::i, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      true, ti::a, ti::I, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Up, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      true, ti::I, ti::a, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>,
+      index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      true, ti::i, ti::A, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Grid>>,
+      index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
       true, ti::i, ti::j, DataType, Symmetry<2, 1>,
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpatialIndex<3, UpLo::Lo, Frame::Inertial>>,
       index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      true, ti::J, ti::k, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Grid>,
+                 SpatialIndex<2, UpLo::Lo, Frame::Grid>>,
+      index_list<SpatialIndex<2, UpLo::Up, Frame::Grid>,
+                 SpatialIndex<2, UpLo::Lo, Frame::Grid>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      true, ti::l, ti::J, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<2, UpLo::Up, Frame::Inertial>>,
+      index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<2, UpLo::Up, Frame::Inertial>>>();
 
   TestHelpers::tenex::test_evaluate_rank_2_impl<
       true, ti::K, ti::J, DataType, Symmetry<2, 1>,
