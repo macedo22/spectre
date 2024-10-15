@@ -529,7 +529,7 @@ void test_evaluate_rank_4_core() {
 
 template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
           auto& TensorIndexC, auto& TensorIndexD, typename RhsSymmetry,
-          typename RhsTensorIndexTypeList,
+          typename RhsTensorIndexTypeList, typename LhsSymmetry = RhsSymmetry,
           typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
 void test_evaluate_rank_4() {
   TestHelpers::tenex::test_evaluate_rank_4_core<

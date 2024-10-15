@@ -39,8 +39,8 @@ SPECTRE_TEST_CASE(
 
   // second and third indices symmetric
   TestHelpers::tenex::test_evaluate_rank_3<
-      true, ti::D, ti::J, ti::I, Symmetry<2, 1, 1>,
-      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+      true, ti::J, ti::M, ti::I, Symmetry<2, 1, 1>,
+      index_list<SpatialIndex<3, UpLo::Up, Frame::Inertial>,
                  SpatialIndex<3, UpLo::Up, Frame::Inertial>,
                  SpatialIndex<3, UpLo::Up, Frame::Inertial>>>();
 

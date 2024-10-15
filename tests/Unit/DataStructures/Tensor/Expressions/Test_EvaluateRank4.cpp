@@ -42,4 +42,13 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank4",
                  SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
                  SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
                  SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>();
+
+  // different LHS symmetry
+  TestHelpers::tenex::test_evaluate_rank_4<
+      true, ti::j, ti::i, ti::k, ti::l, Symmetry<2, 1, 2, 2>,
+      index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>>,
+      Symmetry<3, 2, 1, 1>>();
 }
