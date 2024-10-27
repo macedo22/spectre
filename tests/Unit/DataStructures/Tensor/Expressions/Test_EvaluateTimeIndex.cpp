@@ -9,8 +9,6 @@
 
 #include "DataStructures/ComplexDataVector.hpp"
 #include "DataStructures/DataVector.hpp"
-#include "DataStructures/Tensor/IndexType.hpp"
-#include "DataStructures/Tensor/Symmetry.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
@@ -56,7 +54,7 @@ void test_rhs(const gsl::not_null<Generator*> generator,
 
   // Rank 2 testing
 
-  // RHS tensors with symmetric spacetime indices
+  // RHS tensors with non-symmetric spacetime indices
   const auto R_ab = make_with_random_values<
       Tensor<DataType, Symmetry<2, 1>,
              index_list<SpacetimeIndex<dim, UpLo::Lo, frame>,
