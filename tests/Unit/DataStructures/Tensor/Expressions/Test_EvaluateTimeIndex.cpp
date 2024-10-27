@@ -15,6 +15,7 @@
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/ComponentPlaceholder.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank2.hpp"
 #include "Utilities/Gsl.hpp"
 
 namespace {
@@ -636,13 +637,86 @@ void test_lhs(const gsl::not_null<Generator*> generator,
   }
 }
 
+template <typename DataType>
+void test_rhs_and_lhs_rank_2() {
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::a, ti::t, DataType, Symmetry<1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::t, ti::a, DataType, Symmetry<1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::t, ti::t, DataType, Symmetry<1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::T, ti::T, DataType, Symmetry<1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::A, ti::t, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::T, ti::a, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::a, ti::T, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<2, UpLo::Up, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::t, ti::A, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::t, ti::i, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<2, UpLo::Lo, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::i, ti::t, DataType, Symmetry<2, 1>,
+      index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::I, ti::t, DataType, Symmetry<2, 1>,
+      index_list<SpatialIndex<2, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::T, ti::i, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
+                 SpatialIndex<2, UpLo::Lo, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::i, ti::T, DataType, Symmetry<2, 1>,
+      index_list<SpatialIndex<2, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<2, UpLo::Up, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::t, ti::I, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Up, Frame::Inertial>>>();
+}
+
 // \brief Test evaluation of tensors where concrete time indices are used for
 // RHS and LHS spacetime indices
 //
 // \tparam DataType the type of data being stored in the expression operands
 template <typename Generator, typename DataType>
-void test_rhs_and_lhs(const gsl::not_null<Generator*> generator,
-                      const DataType& used_for_size) {
+void test_rhs_and_lhs_rank_4(const gsl::not_null<Generator*> generator,
+                             const DataType& used_for_size) {
   std::uniform_real_distribution<> distribution(0.1, 1.0);
   constexpr size_t dim = 3;
 
@@ -693,7 +767,8 @@ void test_evaluate_spatial_spacetime_index(const DataType& used_for_size) {
 
   test_rhs(make_not_null(&generator), used_for_size);
   test_lhs(make_not_null(&generator), used_for_size);
-  test_rhs_and_lhs(make_not_null(&generator), used_for_size);
+  test_rhs_and_lhs_rank_2<DataType>();
+  test_rhs_and_lhs_rank_4(make_not_null(&generator), used_for_size);
 }
 }  // namespace
 
