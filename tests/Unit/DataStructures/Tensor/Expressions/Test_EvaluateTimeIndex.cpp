@@ -372,6 +372,8 @@ void test_lhs(const gsl::not_null<Generator*> generator,
     }
   }
 
+  // TODO : add symmetric tensor cases
+
   // Evaluations of non-symmetric RHS tensors
 
   const auto R_a = make_with_random_values<Tensor<
@@ -633,6 +635,8 @@ void test_lhs(const gsl::not_null<Generator*> generator,
             TestHelpers::tenex::component_placeholder_value<DataType>::value);
     }
   }
+
+  // TODO : add symmetric tensor cases
 }
 
 template <typename DataType>
