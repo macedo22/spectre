@@ -353,7 +353,7 @@ void test_lhs(const gsl::not_null<Generator*> generator,
   tenex::evaluate<ti::t, ti::T>(make_not_null(&L_tT_from_R), R());
 
   for (size_t a = 0; a < dim + 1; a++) {
-    for (size_t b = 0; b < dim; b++) {
+    for (size_t b = 0; b < dim + 1; b++) {
       if (a == 0 and b == 0) {
         CHECK(L_tt_from_R.get(0, 0) == get(R));
         CHECK(L_TT_from_R.get(0, 0) == get(R));
