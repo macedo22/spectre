@@ -445,7 +445,40 @@ void test_lhs(const gsl::not_null<Generator*> generator,
 }
 
 template <typename DataType>
-void test_rhs_and_lhs_rank4() {
+void test_rhs_and_lhs_rank_2() {
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::i, ti::t, DataType, Symmetry<1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::t, ti::i, DataType, Symmetry<1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::I, ti::t, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::T, ti::i, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::i, ti::T, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<2, UpLo::Up, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate_rank_2_impl<
+      false, ti::t, ti::I, DataType, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>();
+}
+
+template <typename DataType>
+void test_rhs_and_lhs_rank_4() {
   using FrameType = Frame::Inertial;
   using symm_1111 = Symmetry<1, 1, 1, 1>;
   using index_list_abcd = index_list<SpacetimeIndex<3, UpLo::Lo, FrameType>,
@@ -464,8 +497,8 @@ void test_evaluate_time_and_spatial_spacetime_index(
 
   test_rhs(make_not_null(&generator), used_for_size);
   test_lhs(make_not_null(&generator), used_for_size);
-  // test_rhs_and_lhs_rank2<DataType>();
-  test_rhs_and_lhs_rank4<DataType>();
+  test_rhs_and_lhs_rank_2<DataType>();
+  test_rhs_and_lhs_rank_4<DataType>();
 }
 }  // namespace
 
