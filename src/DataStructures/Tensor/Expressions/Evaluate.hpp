@@ -109,14 +109,14 @@ struct CheckNoLhsAntiSymmetries<SymmList<Symm...>> {
 // TODO : this assumes symmetry is canonicalized already
 template <typename... LhsTensorIndices, size_t NumIndices>
 constexpr std::array<size_t, NumIndices> get_reordered_tensorindex_values(
-    const std::array<std::int32_t, NumIndices>& symmetry) {
+    const std::array<std::int32_t, NumIndices>& canoncical_symmetry) {
   constexpr std::array<size_t, NumIndices> lhs_tensorindex_values = {
       {LhsTensorIndices::value...}};
   if (NumIndices < 2) {
     return lhs_tensorindex_values;
   }
 
-  std::int32_t max_symm_value = *alg::max_element(symmetry);
+  std::int32_t max_symm_value = *alg::max_element(canoncical_symmetry);
 
   std::array<size_t, NumIndices> reordered_lhs_tensorindex_values =
       lhs_tensorindex_values;
@@ -143,7 +143,7 @@ constexpr std::array<size_t, NumIndices> get_reordered_tensorindex_values(
     size_t i = NumIndices - 1;
     // TODO : check and fix this logic
     while (true) {
-      while (i > 0 and symmetry[i] != symm_value_to_find) {
+      while (i > 0 and canoncical_symmetry[i] != symm_value_to_find) {
         i--;
       }
       if (i == 0) {
@@ -156,7 +156,7 @@ constexpr std::array<size_t, NumIndices> get_reordered_tensorindex_values(
       size_t j = i - 1;
       // note: because we need to hit 0 and size_t wraps around to max size_t
       while (j < NumIndices) {
-        const std::int32_t compare_symm_value = symmetry[j];
+        const std::int32_t compare_symm_value = canoncical_symmetry[j];
         const size_t compare_tensorindex_value =
             reordered_lhs_tensorindex_values[j];
         if (compare_symm_value == symm_value_to_find and
@@ -463,9 +463,9 @@ void evaluate_impl(
 
   constexpr std::array<std::int32_t, num_lhs_indices> lhs_symmetry = {
       {tmpl::at_c<LhsSymmetry, LhsInts>::value...}};
-  // TODO: remove this temp variable to get rid of unused variable warning
   constexpr std::array<size_t, num_lhs_indices> reordered_tensorindex_values =
       get_reordered_tensorindex_values<LhsTensorIndices...>(lhs_symmetry);
+  (void)reordered_tensorindex_values;  // silence false unused variable warning
   using reordered_lhs_tensorindex_list =
       tmpl::list<TensorIndex<reordered_tensorindex_values[LhsInts]>...>;
 
