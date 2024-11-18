@@ -317,7 +317,7 @@ void test_lhs(const gsl::not_null<Generator*> generator,
           TestHelpers::tenex::component_placeholder_value<DataType>::value);
   }
 
-  // Test evaluation of RHS scalar to LHS rank 2
+  // Test evaluation of RHS scalar to non-symmetric LHS rank 2
 
   // \f$L_{tt} = R\f$
   auto L_tt_from_R =
@@ -352,6 +352,26 @@ void test_lhs(const gsl::not_null<Generator*> generator,
           TestHelpers::tenex::component_placeholder_value<DataType>::value);
   tenex::evaluate<ti::t, ti::T>(make_not_null(&L_tT_from_R), R());
 
+  // Test evaluation of RHS scalar to symmetric LHS rank 2
+
+  // \f$M_{tt} = R\f$
+  auto M_tt_from_R =
+      make_with_value<Tensor<DataType, Symmetry<1, 1>,
+                             index_list<SpacetimeIndex<dim, UpLo::Lo, frame>,
+                                        SpacetimeIndex<dim, UpLo::Lo, frame>>>>(
+          used_for_size,
+          TestHelpers::tenex::component_placeholder_value<DataType>::value);
+  tenex::evaluate<ti::t, ti::t>(make_not_null(&M_tt_from_R), R());
+  // \f$M^{tt} = R\f$
+  auto M_TT_from_R =
+      make_with_value<Tensor<DataType, Symmetry<1, 1>,
+                             index_list<SpacetimeIndex<dim, UpLo::Up, frame>,
+                                        SpacetimeIndex<dim, UpLo::Up, frame>>>>(
+          used_for_size,
+          TestHelpers::tenex::component_placeholder_value<DataType>::value);
+  tenex::evaluate<ti::T, ti::T>(make_not_null(&M_TT_from_R), R());
+  // \f$M^{t}{}_{t} = R\f$
+
   for (size_t a = 0; a < dim + 1; a++) {
     for (size_t b = 0; b < dim + 1; b++) {
       if (a == 0 and b == 0) {
@@ -359,6 +379,9 @@ void test_lhs(const gsl::not_null<Generator*> generator,
         CHECK(L_TT_from_R.get(0, 0) == get(R));
         CHECK(L_Tt_from_R.get(0, 0) == get(R));
         CHECK(L_tT_from_R.get(0, 0) == get(R));
+
+        CHECK(M_tt_from_R.get(0, 0) == get(R));
+        CHECK(M_TT_from_R.get(0, 0) == get(R));
       } else {
         CHECK(L_tt_from_R.get(a, b) ==
               TestHelpers::tenex::component_placeholder_value<DataType>::value);
@@ -368,13 +391,16 @@ void test_lhs(const gsl::not_null<Generator*> generator,
               TestHelpers::tenex::component_placeholder_value<DataType>::value);
         CHECK(L_tT_from_R.get(a, b) ==
               TestHelpers::tenex::component_placeholder_value<DataType>::value);
+
+        CHECK(M_tt_from_R.get(a, b) ==
+              TestHelpers::tenex::component_placeholder_value<DataType>::value);
+        CHECK(M_TT_from_R.get(a, b) ==
+              TestHelpers::tenex::component_placeholder_value<DataType>::value);
       }
     }
   }
 
-  // TODO : add symmetric tensor cases
-
-  // Evaluations of non-symmetric RHS tensors
+  // Evaluations of non-symmetric LHS tensors
 
   const auto R_a = make_with_random_values<Tensor<
       DataType, Symmetry<1>, index_list<SpacetimeIndex<dim, UpLo::Lo, frame>>>>(
@@ -635,8 +661,6 @@ void test_lhs(const gsl::not_null<Generator*> generator,
             TestHelpers::tenex::component_placeholder_value<DataType>::value);
     }
   }
-
-  // TODO : add symmetric tensor cases
 }
 
 template <typename DataType>
