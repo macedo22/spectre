@@ -479,15 +479,14 @@ void test_rhs_and_lhs_rank_2() {
 
 template <typename DataType>
 void test_rhs_and_lhs_rank_4() {
-  using FrameType = Frame::Inertial;
-  using symm_1111 = Symmetry<1, 1, 1, 1>;
-  using index_list_abcd = index_list<SpacetimeIndex<3, UpLo::Lo, FrameType>,
-                                     SpacetimeIndex<3, UpLo::Lo, FrameType>,
-                                     SpacetimeIndex<3, UpLo::Lo, FrameType>,
-                                     SpacetimeIndex<3, UpLo::Lo, FrameType>>;
+  using frame = Frame::Inertial;
+  using index_list_abcd = index_list<
+      SpacetimeIndex<3, UpLo::Lo, frame>, SpacetimeIndex<3, UpLo::Lo, frame>,
+      SpacetimeIndex<3, UpLo::Lo, frame>, SpacetimeIndex<3, UpLo::Lo, frame>>;
 
-  TestHelpers::tenex::test_evaluate_rank_4<false, ti::t, ti::a, ti::j, ti::i,
-                                           symm_1111, index_list_abcd>();
+  TestHelpers::tenex::test_evaluate_rank_4_core<
+      false, ti::t, ti::a, ti::j, ti::i, DataType, Symmetry<1, 2, 1, 1>,
+      index_list_abcd, Symmetry<1, 3, 2, 1>>();
 }
 
 template <typename DataType>
