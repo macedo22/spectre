@@ -22,39 +22,13 @@
 #include "Utilities/StdArrayHelpers.hpp"
 
 namespace partial_derivatives_detail {
+static constexpr size_t subvector_size = 64;
+
 template <size_t Dim, typename VariableTags, typename DerivativeTags>
 struct LogicalImpl;
 
-// This routine has been optimized to perform really well. The following
-// describes what optimizations were made.
-//
-// - The `partial_derivatives` functions below have an overload where the
-//   logical derivatives may be passed in instead of being computed. In the
-//   overloads where the logical derivatives are not passed in they must be
-//   computed. However, it is more efficient to allocate the memory for the
-//   logical partial derivatives with respect to each coordinate at once. This
-//   requires the `partial_derivatives_impl` to accept raw pointers to doubles
-//   for the logical derivatives so it can be used for all overloads.
-//
-// - The resultant Variables `du` is a not_null pointer so that mutating compute
-//   items can be supported.
-//
-// - The storage indices into the inverse Jacobian are precomputed to avoid
-//   having to recompute them for each tensor component of `u`.
-//
-// - The DataVectors lhs and logical_du are non-owning DataVectors to be able to
-//   plug into the optimized expression templates. This requires a `const_cast`
-//   even though we will never change the `double*`.
-//
-// - Loop over every Tensor component in the variables by incrementing a raw
-//   pointer to the contiguous data (vs. looping over each Tensor in the
-//   variables with a tmpl::for_each then iterating over each component of this
-//   Tensor).
-//
-// - We factor out the `logical_deriv_index == 0` case so that we do not need to
-//   zero the memory in `du` before the computation.
 template <typename ResultTags, size_t Dim, typename DerivativeFrame>
-void partial_derivatives_impl(
+void old_partial_derivatives_impl(
     const gsl::not_null<Variables<ResultTags>*> du,
     const std::array<const double*, Dim>& logical_partial_derivatives_of_u,
     const size_t number_of_independent_components,
@@ -103,6 +77,144 @@ void partial_derivatives_impl(
       }
       // clang-tidy: no pointer arithmetic
       pdu += num_grid_points;  // NOLINT
+    }
+  }
+}
+
+// This routine has been optimized to perform really well. The following
+// describes what optimizations were made.
+//
+// - The `partial_derivatives` functions below have an overload where the
+//   logical derivatives may be passed in instead of being computed. In the
+//   overloads where the logical derivatives are not passed in they must be
+//   computed. However, it is more efficient to allocate the memory for the
+//   logical partial derivatives with respect to each coordinate at once. This
+//   requires the `partial_derivatives_impl` to accept raw pointers to doubles
+//   for the logical derivatives so it can be used for all overloads.
+//
+// - The resultant Variables `du` is a not_null pointer so that mutating compute
+//   items can be supported.
+//
+// - The storage indices into the inverse Jacobian are precomputed to avoid
+//   having to recompute them for each tensor component of `u`.
+//
+// - The DataVectors lhs and logical_du are non-owning DataVectors to be able to
+//   plug into the optimized expression templates. This requires a `const_cast`
+//   even though we will never change the `double*`.
+//
+// - Loop over every Tensor component in the variables by incrementing a raw
+//   pointer to the contiguous data (vs. looping over each Tensor in the
+//   variables with a tmpl::for_each then iterating over each component of this
+//   Tensor).
+//
+// - We factor out the `logical_deriv_index == 0` case so that we do not need to
+//   zero the memory in `du` before the computation.
+template <typename ResultTags, size_t Dim, typename DerivativeFrame>
+void partial_derivatives_impl(
+    const gsl::not_null<Variables<ResultTags>*> du,
+    const std::array<const double*, Dim>& logical_partial_derivatives_of_u,
+    const size_t number_of_independent_components,
+    const InverseJacobian<DataVector, Dim, Frame::ElementLogical,
+                          DerivativeFrame>& inverse_jacobian) {
+  double* pdu = du->data();
+  const size_t num_grid_points = du->number_of_grid_points();
+  const size_t num_full_subvectors = num_grid_points / subvector_size;
+  const size_t remainder = num_grid_points - (subvector_size * (num_full_subvectors - 1));
+//   const size_t last_subvector_size = remainder != 0 ? subvector_size + remainder : 0;
+  DataVector lhs{};
+  DataVector logical_du{};
+  DataVector inv_jac{};
+
+  std::array<std::array<size_t, Dim>, Dim> indices{};
+  for (size_t deriv_index = 0; deriv_index < Dim; ++deriv_index) {
+    for (size_t d = 0; d < Dim; ++d) {
+      gsl::at(gsl::at(indices, d), deriv_index) =
+          InverseJacobian<DataVector, Dim, Frame::ElementLogical,
+                          DerivativeFrame>::get_storage_index(d, deriv_index);
+    }
+  }
+
+//   lhs.set_data_ref(pdu, num_grid_points * component_index * Dim);
+//   lhs = 0.0;
+
+  for (size_t component_index = 0;
+       component_index < number_of_independent_components; ++component_index) {
+    for (size_t deriv_index = 0; deriv_index < Dim; ++deriv_index) {
+      lhs.set_data_ref(pdu, num_grid_points);
+      lhs = 0.0;
+      for (size_t logical_deriv_index = 0; logical_deriv_index < Dim;
+           ++logical_deriv_index) {     
+        for (size_t subvector_index = 0; subvector_index < num_full_subvectors;
+             ++subvector_index) {
+            lhs.set_data_ref(pdu, subvector_size);
+            
+            // inv_jac.set_data_ref(const_cast<double*>(&(*(inverse_jacobian.begin() +
+            //                         gsl::at(gsl::at(indices, logical_deriv_index), deriv_index)))) +  // NOLINT
+            //                         subvector_index * subvector_size,
+            //                     subvector_size);
+
+            // inv_jac.set_data_ref(inverse_jacobian.begin() +
+            //                         gsl::at(gsl::at(indices, logical_deriv_index), deriv_index) +
+            //                         subvector_index * subvector_size,
+            //                     subvector_size);
+
+            // inv_jac.set_data_ref(&(*(inverse_jacobian.begin() +
+            //                         gsl::at(gsl::at(indices, logical_deriv_index), deriv_index) +
+            //                         subvector_index * subvector_size)),
+            //                     subvector_size);
+
+            // inv_jac.set_data_ref(const_cast<double*>( &(*(inverse_jacobian.begin() +
+            //                         gsl::at(gsl::at(indices, logical_deriv_index), deriv_index) +
+            //                         subvector_index * subvector_size)) ),
+            //                     subvector_size);
+
+            // inv_jac.set_data_ref(const_cast<double*>(inverse_jacobian.begin() +
+            //                         gsl::at(gsl::at(indices, logical_deriv_index), deriv_index) +
+            //                         subvector_index * subvector_size),
+            //                     subvector_size);
+
+            inv_jac.set_data_ref(const_cast<double*>((*(inverse_jacobian.begin() +
+                                    gsl::at(gsl::at(indices, logical_deriv_index), deriv_index))).data() +
+                                    subvector_index * subvector_size),
+                                subvector_size);
+            
+            logical_du.set_data_ref(const_cast<double*>(  // NOLINT
+                                    gsl::at(logical_partial_derivatives_of_u,
+                                            logical_deriv_index)) +  // NOLINT
+                                    component_index * num_grid_points + subvector_index * subvector_size,
+                                subvector_size);
+
+            lhs += inv_jac * logical_du;
+
+            pdu += subvector_size;  // NOLINT
+        }
+
+        if (remainder != 0) {
+            lhs.set_data_ref(pdu, remainder);
+            
+            // inv_jac.set_data_ref((inverse_jacobian.begin() +
+            //                         gsl::at(gsl::at(indices, logical_deriv_index), deriv_index)) +  // NOLINT
+            //                         num_full_subvectors * subvector_size,
+            //                     remainder);
+
+            inv_jac.set_data_ref(const_cast<double*>((*(inverse_jacobian.begin() +
+                                    gsl::at(gsl::at(indices, logical_deriv_index), deriv_index))).data() +
+                                    num_full_subvectors * subvector_size),
+                                remainder);
+            
+            logical_du.set_data_ref(const_cast<double*>(  // NOLINT
+                                    gsl::at(logical_partial_derivatives_of_u,
+                                            logical_deriv_index)) +  // NOLINT
+                                    component_index * num_grid_points + num_full_subvectors * subvector_size,
+                                remainder);
+
+            lhs += inv_jac * logical_du;
+
+            pdu += remainder;  // NOLINT
+        }
+      }
+      // clang-tidy: no pointer arithmetic
+      // pdu += num_grid_points;  // NOLINT
     }
   }
 }
