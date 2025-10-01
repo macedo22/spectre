@@ -111,7 +111,7 @@ void bench_partial_derivatives(benchmark::State& state) {  // NOLINT
 }
 
 // Each DataVector case is run with each number of grid points
-constexpr std::array<long int, 6> num_1d_grid_point_values = {2,  5,  8,
+constexpr std::array<long int, 7> num_1d_grid_point_values = {2, 4, 5, 8,
                                                               10, 15, 20};
 
 void run_benchmarks() {
@@ -123,7 +123,8 @@ void run_benchmarks() {
       ->Arg(num_1d_grid_point_values[2])
       ->Arg(num_1d_grid_point_values[3])
       ->Arg(num_1d_grid_point_values[4])
-      ->Arg(num_1d_grid_point_values[5]);
+      ->Arg(num_1d_grid_point_values[5])
+      ->Arg(num_1d_grid_point_values[6]);
 }
 // BENCHMARK(bench_all_gradient);  // NOLINT
 }  // namespace
