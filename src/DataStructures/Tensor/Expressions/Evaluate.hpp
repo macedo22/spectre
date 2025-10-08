@@ -112,69 +112,69 @@ constexpr std::array<size_t, NumIndices> get_reordered_tensorindex_values(
     const std::array<std::int32_t, NumIndices>& canoncical_symmetry) {
   constexpr std::array<size_t, NumIndices> lhs_tensorindex_values = {
       {LhsTensorIndices::value...}};
-  if (NumIndices < 2) {
+  if constexpr (NumIndices < 2) {
     return lhs_tensorindex_values;
-  }
+  } else {
+    std::int32_t max_symm_value = *alg::max_element(canoncical_symmetry);
 
-  std::int32_t max_symm_value = *alg::max_element(canoncical_symmetry);
+    std::array<size_t, NumIndices> reordered_lhs_tensorindex_values =
+        lhs_tensorindex_values;
 
-  std::array<size_t, NumIndices> reordered_lhs_tensorindex_values =
-      lhs_tensorindex_values;
+    const auto compare = [](const size_t tensorindex_value1,
+                            const size_t tensorindex_value2) {
+      if (is_time_index_value(tensorindex_value2)) {
+        return false;
+      }
 
-  const auto compare = [](const size_t tensorindex_value1,
-                          const size_t tensorindex_value2) {
-    if (is_time_index_value(tensorindex_value2)) {
-      return false;
-    }
+      return is_time_index_value(tensorindex_value1) or
+             (is_generic_spacetime_index_value(tensorindex_value1) and
+              is_generic_spatial_index_value(tensorindex_value2)) or
+             (tensorindex_value1 > tensorindex_value2 and
+              is_generic_spacetime_index_value(tensorindex_value1) ==
+                  is_generic_spacetime_index_value(tensorindex_value2));
+    };
 
-    return is_time_index_value(tensorindex_value1) or
-           (is_generic_spacetime_index_value(tensorindex_value1) and
-            is_generic_spatial_index_value(tensorindex_value2)) or
-           (tensorindex_value1 > tensorindex_value2 and
-            is_generic_spacetime_index_value(tensorindex_value1) ==
-                is_generic_spacetime_index_value(tensorindex_value2));
-  };
+    std::int32_t symm_value_to_find = 1;
+    while (symm_value_to_find <= max_symm_value) {
+      // skip forward until we get to the position with the value we care about
+      // TODO: what if the value isn't found? we just assume we get a canon
+      // symmetry
+      size_t i = NumIndices - 1;
+      // TODO : check and fix this logic
+      while (true) {
+        while (i > 0 and canoncical_symmetry[i] != symm_value_to_find) {
+          i--;
+        }
+        if (i == 0) {
+          break;
+        }
 
-  std::int32_t symm_value_to_find = 1;
-  while (symm_value_to_find <= max_symm_value) {
-    // skip forward until we get to the position with the value we care about
-    // TODO: what if the value isn't found? we just assume we get a canon
-    // symmetry
-    size_t i = NumIndices - 1;
-    // TODO : check and fix this logic
-    while (true) {
-      while (i > 0 and canoncical_symmetry[i] != symm_value_to_find) {
+        size_t max_tensorindex_value = reordered_lhs_tensorindex_values[i];
+        size_t max_index = i;
+
+        size_t j = i - 1;
+        // note: because we need to hit 0 and size_t wraps around to max size_t
+        while (j < NumIndices) {
+          const std::int32_t compare_symm_value = canoncical_symmetry[j];
+          const size_t compare_tensorindex_value =
+              reordered_lhs_tensorindex_values[j];
+          if (compare_symm_value == symm_value_to_find and
+              compare(compare_tensorindex_value, max_tensorindex_value)) {
+            max_tensorindex_value = compare_tensorindex_value;
+            max_index = j;
+          }
+          j--;
+        }
+        reordered_lhs_tensorindex_values[max_index] =
+            reordered_lhs_tensorindex_values[i];
+        reordered_lhs_tensorindex_values[i] = max_tensorindex_value;
         i--;
       }
-      if (i == 0) {
-        break;
-      }
-
-      size_t max_tensorindex_value = reordered_lhs_tensorindex_values[i];
-      size_t max_index = i;
-
-      size_t j = i - 1;
-      // note: because we need to hit 0 and size_t wraps around to max size_t
-      while (j < NumIndices) {
-        const std::int32_t compare_symm_value = canoncical_symmetry[j];
-        const size_t compare_tensorindex_value =
-            reordered_lhs_tensorindex_values[j];
-        if (compare_symm_value == symm_value_to_find and
-            compare(compare_tensorindex_value, max_tensorindex_value)) {
-          max_tensorindex_value = compare_tensorindex_value;
-          max_index = j;
-        }
-        j--;
-      }
-      reordered_lhs_tensorindex_values[max_index] =
-          reordered_lhs_tensorindex_values[i];
-      reordered_lhs_tensorindex_values[i] = max_tensorindex_value;
-      i--;
+      symm_value_to_find++;
     }
-    symm_value_to_find++;
-  }
 
-  return reordered_lhs_tensorindex_values;
+    return reordered_lhs_tensorindex_values;
+  }
 }
 
 /*!
