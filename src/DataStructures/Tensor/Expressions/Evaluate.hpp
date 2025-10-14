@@ -128,6 +128,7 @@ struct CheckNoLhsAntiSymmetries<SymmList<Symm...>> {
 /// before uppercase, where both are ordered alphabetically. Another way o
 /// saying this is that if we had a rank N `Tensor` that was fully symmetric,
 /// its canonical ordering would take the following form:
+///
 /// ```
 /// [ti::i, ti::j, ti::k, ..., ti::I, ti::J, ti:K, ...,          // spatial
 ///  ti::a, ti::b, ti::c, ..., ti::A, ti::B, ti::C, ...,         // spacetime
@@ -135,6 +136,7 @@ struct CheckNoLhsAntiSymmetries<SymmList<Symm...>> {
 /// ```
 ///
 /// Here are some examples:
+///
 /// ```
 /// symmetry: <1, 1, 1>
 /// set of `TensorIndex`s: {ti::t, ti::i, ti::a}
