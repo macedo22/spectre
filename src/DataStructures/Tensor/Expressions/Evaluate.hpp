@@ -171,6 +171,7 @@ struct CheckNoLhsAntiSymmetries<SymmList<Symm...>> {
 /// \tparam LhsTensorIndices the `TensorIndex`s of the `Tensor`, e.g. `ti::a`,
 /// `ti::b`, `ti::c`
 /// \param canoncical_symmetry the canonicalized symmetry values of the tensor
+/// (see `Symmetry` for definition of the canonical ordering of symmetry values)
 /// \return reordered values of `LhsTensorIndices::value...`
 template <typename... LhsTensorIndices, size_t NumIndices>
 constexpr std::array<size_t, NumIndices> get_reordered_tensorindex_values(
