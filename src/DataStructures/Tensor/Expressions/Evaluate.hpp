@@ -107,6 +107,71 @@ struct CheckNoLhsAntiSymmetries<SymmList<Symm...>> {
 };
 
 // TODO : this assumes symmetry is canonicalized already
+/// \brief Given a tensor and its list of tensor indices, return the
+/// canonicalized order of the tensor indices according to the tensor's symmetry
+///
+/// \details
+/// The canonical ordering of a `Tensor`'s `TensorIndex`s
+/// (e.g. `ti::a`, `ti::b`, ti::c) is relevant to sets of indices that are
+/// symmetric. Within each set of symmetric indices, the `TensorIndex` used for
+/// each index can be freely reordered. Given a set of symmetric indices, this
+/// function defines the canonical order of the `TensorIndex`s assigned to them
+/// to be such that the lowest index positions take any generic spatial tensor
+/// indices (e.g. `ti::i`, `ti::j`), the next lowest index positions take any
+/// generic spacetime indices (e.g. `ti::a`, `ti::b`), and the highest index
+/// positions take any concrete time indices (e.g. `ti::t`, `ti::T`). We can
+/// imagine the canonical ordering of symmetric indices to look generally like:
+/// `[spatial indices ... | spacetime indices... | time indices...]`.
+///
+/// Within the subsets of spatial indices and spacetime indices, the
+/// `TensorIndex`s in each will be ordered such that lowercase indices come
+/// before uppercase, where both are ordered alphabetically. Another way o
+/// saying this is that if we had a rank N `Tensor` that was fully symmetric,
+/// its canonical ordering would take the following form:
+/// ```
+/// [ti::i, ti::j, ti::k, ..., ti::I, ti::J, ti:K, ...,          // spatial
+///  ti::a, ti::b, ti::c, ..., ti::A, ti::B, ti::C, ...,         // spacetime
+///  (all ti::t and ti::T TensorIndexs in no particular order)]  // time
+/// ```
+///
+/// Here are some examples:
+/// ```
+/// symmetry: <1, 1, 1>
+/// set of `TensorIndex`s: {ti::t, ti::i, ti::a}
+/// canonical ordering: [ti::i, ti::a, ti::t]
+///
+/// symmetry: <1, 1, 1>
+/// set of `TensorIndex`s: {ti::A, ti::a, ti::b}
+/// canonical ordering: [ti::a, ti::b, ti::A]
+/// ```
+///
+/// When a `Tensor` is not fully symmetric, the `TensorIndex` labels for any
+/// indices that do not have symmetry with any other will simply keep their
+/// label because it cannot be swapped:
+///
+/// ```
+/// symmetry: <1, 2, 1>
+/// set of `TensorIndex`s: {ti::a, ti::b, ti::i}
+/// canonical ordering: [ti::i, ti::b, ti::a]
+///
+/// symmetry: <2, 1, 1>
+/// set of `TensorIndex`s: {ti::t, ti::k, ti::j}
+/// canonical ordering: [ti::t, ti::j, ti::k]
+/// ```
+///
+/// If there is more than one set of symmetric indices, each the subsets are
+/// individually reordered:
+///
+/// ```
+/// symmetry: <1, 2, 2, 1>
+/// set of `TensorIndex`s: {ti::a, ti::b, ti::t, ti::i}
+/// canonical ordering: [ti::i, ti::b, ti::t, ti::a]
+/// ```
+///
+/// \tparam LhsTensorIndices the `TensorIndex`s of the `Tensor`, e.g. `ti::a`,
+/// `ti::b`, `ti::c`
+/// \param canoncical_symmetry the canonicalized symmetry values of the tensor
+/// \return reordered values of `LhsTensorIndices::value...`
 template <typename... LhsTensorIndices, size_t NumIndices>
 constexpr std::array<size_t, NumIndices> get_reordered_tensorindex_values(
     const std::array<std::int32_t, NumIndices>& canoncical_symmetry) {
