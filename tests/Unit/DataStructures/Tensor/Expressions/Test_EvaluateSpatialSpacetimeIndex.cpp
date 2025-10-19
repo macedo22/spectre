@@ -355,6 +355,8 @@ void test_evaluate_spatial_spacetime_index(const DataType& /*meta*/) {
 SPECTRE_TEST_CASE(
     "Unit.DataStructures.Tensor.Expression.EvaluateSpatialSpacetimeIndex",
     "[DataStructures][Unit]") {
+  // Test evaluation of tensors where generic spatial indices are used for
+  // spacetime indices
   test_evaluate_spatial_spacetime_index(
       std::numeric_limits<double>::signaling_NaN());
   test_evaluate_spatial_spacetime_index(
