@@ -150,135 +150,139 @@ void test_lhs(const gsl::not_null<Generator*> generator,
   const auto R =
       make_with_random_values<DataType>(generator, distribution, used_for_size);
 
-  // Test evaluation of RHS scalar to non-symmetric LHS rank 2
+  if constexpr (not is_derived_of_vector_impl_v<DataType>) {
+    // Test evaluation of RHS scalar to non-symmetric LHS rank 2
 
-  // \f$L_{it} = R\f$
-  auto L_it_from_R =
-      make_with_value<Tensor<DataType, Symmetry<2, 1>,
-                             index_list<SpacetimeIndex<dim, UpLo::Lo, frame>,
-                                        SpacetimeIndex<dim, UpLo::Lo, frame>>>>(
-          used_for_size,
-          TestHelpers::tenex::component_placeholder_value<DataType>::value);
-  tenex::evaluate<ti::i, ti::t>(make_not_null(&L_it_from_R), R);
-  // \f$L_{ti} = R\f$
-  auto L_ti_from_R =
-      make_with_value<Tensor<DataType, Symmetry<2, 1>,
-                             index_list<SpacetimeIndex<dim, UpLo::Lo, frame>,
-                                        SpacetimeIndex<dim, UpLo::Lo, frame>>>>(
-          used_for_size,
-          TestHelpers::tenex::component_placeholder_value<DataType>::value);
-  tenex::evaluate<ti::t, ti::i>(make_not_null(&L_ti_from_R), R);
-  // \f$L^{it} = R\f$
-  auto L_IT_from_R =
-      make_with_value<Tensor<DataType, Symmetry<2, 1>,
-                             index_list<SpacetimeIndex<dim, UpLo::Up, frame>,
-                                        SpacetimeIndex<dim, UpLo::Up, frame>>>>(
-          used_for_size,
-          TestHelpers::tenex::component_placeholder_value<DataType>::value);
-  tenex::evaluate<ti::I, ti::T>(make_not_null(&L_IT_from_R), R);
-  // \f$L^{ti} = R\f$
-  auto L_TI_from_R =
-      make_with_value<Tensor<DataType, Symmetry<2, 1>,
-                             index_list<SpacetimeIndex<dim, UpLo::Up, frame>,
-                                        SpacetimeIndex<dim, UpLo::Up, frame>>>>(
-          used_for_size,
-          TestHelpers::tenex::component_placeholder_value<DataType>::value);
-  tenex::evaluate<ti::T, ti::I>(make_not_null(&L_TI_from_R), R);
-  // \f$L^{i}{}_{t} = R\f$
-  auto L_It_from_R =
-      make_with_value<Tensor<DataType, Symmetry<2, 1>,
-                             index_list<SpacetimeIndex<dim, UpLo::Up, frame>,
-                                        SpacetimeIndex<dim, UpLo::Lo, frame>>>>(
-          used_for_size,
-          TestHelpers::tenex::component_placeholder_value<DataType>::value);
-  tenex::evaluate<ti::I, ti::t>(make_not_null(&L_It_from_R), R);
-  // \f$L^{t}{}_{i} = R\f$
-  auto L_Ti_from_R =
-      make_with_value<Tensor<DataType, Symmetry<2, 1>,
-                             index_list<SpacetimeIndex<dim, UpLo::Up, frame>,
-                                        SpacetimeIndex<dim, UpLo::Lo, frame>>>>(
-          used_for_size,
-          TestHelpers::tenex::component_placeholder_value<DataType>::value);
-  tenex::evaluate<ti::T, ti::i>(make_not_null(&L_Ti_from_R), R);
-  // \f$L_{i}{}^{t} = R\f$
-  auto L_iT_from_R =
-      make_with_value<Tensor<DataType, Symmetry<2, 1>,
-                             index_list<SpacetimeIndex<dim, UpLo::Lo, frame>,
-                                        SpacetimeIndex<dim, UpLo::Up, frame>>>>(
-          used_for_size,
-          TestHelpers::tenex::component_placeholder_value<DataType>::value);
-  tenex::evaluate<ti::i, ti::T>(make_not_null(&L_iT_from_R), R);
-  // \f$L_{t}{}^{i} = R\f$
-  auto L_tI_from_R =
-      make_with_value<Tensor<DataType, Symmetry<2, 1>,
-                             index_list<SpacetimeIndex<dim, UpLo::Lo, frame>,
-                                        SpacetimeIndex<dim, UpLo::Up, frame>>>>(
-          used_for_size,
-          TestHelpers::tenex::component_placeholder_value<DataType>::value);
-  tenex::evaluate<ti::t, ti::I>(make_not_null(&L_tI_from_R), R);
+    // \f$L_{it} = R\f$
+    auto L_it_from_R = make_with_value<
+        Tensor<DataType, Symmetry<2, 1>,
+               index_list<SpacetimeIndex<dim, UpLo::Lo, frame>,
+                          SpacetimeIndex<dim, UpLo::Lo, frame>>>>(
+        used_for_size,
+        TestHelpers::tenex::component_placeholder_value<DataType>::value);
+    tenex::evaluate<ti::i, ti::t>(make_not_null(&L_it_from_R), R);
+    // \f$L_{ti} = R\f$
+    auto L_ti_from_R = make_with_value<
+        Tensor<DataType, Symmetry<2, 1>,
+               index_list<SpacetimeIndex<dim, UpLo::Lo, frame>,
+                          SpacetimeIndex<dim, UpLo::Lo, frame>>>>(
+        used_for_size,
+        TestHelpers::tenex::component_placeholder_value<DataType>::value);
+    tenex::evaluate<ti::t, ti::i>(make_not_null(&L_ti_from_R), R);
+    // \f$L^{it} = R\f$
+    auto L_IT_from_R = make_with_value<
+        Tensor<DataType, Symmetry<2, 1>,
+               index_list<SpacetimeIndex<dim, UpLo::Up, frame>,
+                          SpacetimeIndex<dim, UpLo::Up, frame>>>>(
+        used_for_size,
+        TestHelpers::tenex::component_placeholder_value<DataType>::value);
+    tenex::evaluate<ti::I, ti::T>(make_not_null(&L_IT_from_R), R);
+    // \f$L^{ti} = R\f$
+    auto L_TI_from_R = make_with_value<
+        Tensor<DataType, Symmetry<2, 1>,
+               index_list<SpacetimeIndex<dim, UpLo::Up, frame>,
+                          SpacetimeIndex<dim, UpLo::Up, frame>>>>(
+        used_for_size,
+        TestHelpers::tenex::component_placeholder_value<DataType>::value);
+    tenex::evaluate<ti::T, ti::I>(make_not_null(&L_TI_from_R), R);
+    // \f$L^{i}{}_{t} = R\f$
+    auto L_It_from_R = make_with_value<
+        Tensor<DataType, Symmetry<2, 1>,
+               index_list<SpacetimeIndex<dim, UpLo::Up, frame>,
+                          SpacetimeIndex<dim, UpLo::Lo, frame>>>>(
+        used_for_size,
+        TestHelpers::tenex::component_placeholder_value<DataType>::value);
+    tenex::evaluate<ti::I, ti::t>(make_not_null(&L_It_from_R), R);
+    // \f$L^{t}{}_{i} = R\f$
+    auto L_Ti_from_R = make_with_value<
+        Tensor<DataType, Symmetry<2, 1>,
+               index_list<SpacetimeIndex<dim, UpLo::Up, frame>,
+                          SpacetimeIndex<dim, UpLo::Lo, frame>>>>(
+        used_for_size,
+        TestHelpers::tenex::component_placeholder_value<DataType>::value);
+    tenex::evaluate<ti::T, ti::i>(make_not_null(&L_Ti_from_R), R);
+    // \f$L_{i}{}^{t} = R\f$
+    auto L_iT_from_R = make_with_value<
+        Tensor<DataType, Symmetry<2, 1>,
+               index_list<SpacetimeIndex<dim, UpLo::Lo, frame>,
+                          SpacetimeIndex<dim, UpLo::Up, frame>>>>(
+        used_for_size,
+        TestHelpers::tenex::component_placeholder_value<DataType>::value);
+    tenex::evaluate<ti::i, ti::T>(make_not_null(&L_iT_from_R), R);
+    // \f$L_{t}{}^{i} = R\f$
+    auto L_tI_from_R = make_with_value<
+        Tensor<DataType, Symmetry<2, 1>,
+               index_list<SpacetimeIndex<dim, UpLo::Lo, frame>,
+                          SpacetimeIndex<dim, UpLo::Up, frame>>>>(
+        used_for_size,
+        TestHelpers::tenex::component_placeholder_value<DataType>::value);
+    tenex::evaluate<ti::t, ti::I>(make_not_null(&L_tI_from_R), R);
 
-  for (size_t a = 0; a < dim + 1; a++) {
-    for (size_t b = 0; b < dim + 1; b++) {
-      const auto expected_value =
-          (a > 0 and b == 0) ? R
-                             : TestHelpers::tenex::component_placeholder_value<
-                                   DataType>::value;
-      CHECK(L_it_from_R.get(a, b) == expected_value);
-      CHECK(L_ti_from_R.get(b, a) == expected_value);
-      CHECK(L_IT_from_R.get(a, b) == expected_value);
-      CHECK(L_TI_from_R.get(b, a) == expected_value);
-      CHECK(L_It_from_R.get(a, b) == expected_value);
-      CHECK(L_Ti_from_R.get(b, a) == expected_value);
-      CHECK(L_iT_from_R.get(a, b) == expected_value);
-      CHECK(L_tI_from_R.get(b, a) == expected_value);
+    for (size_t a = 0; a < dim + 1; a++) {
+      for (size_t b = 0; b < dim + 1; b++) {
+        const auto expected_value =
+            (a > 0 and b == 0)
+                ? R
+                : TestHelpers::tenex::component_placeholder_value<
+                      DataType>::value;
+        CHECK(L_it_from_R.get(a, b) == expected_value);
+        CHECK(L_ti_from_R.get(b, a) == expected_value);
+        CHECK(L_IT_from_R.get(a, b) == expected_value);
+        CHECK(L_TI_from_R.get(b, a) == expected_value);
+        CHECK(L_It_from_R.get(a, b) == expected_value);
+        CHECK(L_Ti_from_R.get(b, a) == expected_value);
+        CHECK(L_iT_from_R.get(a, b) == expected_value);
+        CHECK(L_tI_from_R.get(b, a) == expected_value);
+      }
     }
-  }
 
-  // Test evaluation of RHS scalar to symmetric LHS rank 2
+    // Test evaluation of RHS scalar to symmetric LHS rank 2
 
-  // \f$M_{it} = R\f$
-  auto M_it_from_R =
-      make_with_value<Tensor<DataType, Symmetry<1, 1>,
-                             index_list<SpacetimeIndex<dim, UpLo::Lo, frame>,
-                                        SpacetimeIndex<dim, UpLo::Lo, frame>>>>(
-          used_for_size,
-          TestHelpers::tenex::component_placeholder_value<DataType>::value);
-  tenex::evaluate<ti::i, ti::t>(make_not_null(&M_it_from_R), R);
-  // \f$M_{ti} = R\f$
-  auto M_ti_from_R =
-      make_with_value<Tensor<DataType, Symmetry<1, 1>,
-                             index_list<SpacetimeIndex<dim, UpLo::Lo, frame>,
-                                        SpacetimeIndex<dim, UpLo::Lo, frame>>>>(
-          used_for_size,
-          TestHelpers::tenex::component_placeholder_value<DataType>::value);
-  tenex::evaluate<ti::t, ti::i>(make_not_null(&M_ti_from_R), R);
-  // \f$M^{it} = R\f$
-  auto M_IT_from_R =
-      make_with_value<Tensor<DataType, Symmetry<1, 1>,
-                             index_list<SpacetimeIndex<dim, UpLo::Up, frame>,
-                                        SpacetimeIndex<dim, UpLo::Up, frame>>>>(
-          used_for_size,
-          TestHelpers::tenex::component_placeholder_value<DataType>::value);
-  tenex::evaluate<ti::I, ti::T>(make_not_null(&M_IT_from_R), R);
-  // \f$M^{ti} = R\f$
-  auto M_TI_from_R =
-      make_with_value<Tensor<DataType, Symmetry<1, 1>,
-                             index_list<SpacetimeIndex<dim, UpLo::Up, frame>,
-                                        SpacetimeIndex<dim, UpLo::Up, frame>>>>(
-          used_for_size,
-          TestHelpers::tenex::component_placeholder_value<DataType>::value);
-  tenex::evaluate<ti::T, ti::I>(make_not_null(&M_TI_from_R), R);
+    // \f$M_{it} = R\f$
+    auto M_it_from_R = make_with_value<
+        Tensor<DataType, Symmetry<1, 1>,
+               index_list<SpacetimeIndex<dim, UpLo::Lo, frame>,
+                          SpacetimeIndex<dim, UpLo::Lo, frame>>>>(
+        used_for_size,
+        TestHelpers::tenex::component_placeholder_value<DataType>::value);
+    tenex::evaluate<ti::i, ti::t>(make_not_null(&M_it_from_R), R);
+    // \f$M_{ti} = R\f$
+    auto M_ti_from_R = make_with_value<
+        Tensor<DataType, Symmetry<1, 1>,
+               index_list<SpacetimeIndex<dim, UpLo::Lo, frame>,
+                          SpacetimeIndex<dim, UpLo::Lo, frame>>>>(
+        used_for_size,
+        TestHelpers::tenex::component_placeholder_value<DataType>::value);
+    tenex::evaluate<ti::t, ti::i>(make_not_null(&M_ti_from_R), R);
+    // \f$M^{it} = R\f$
+    auto M_IT_from_R = make_with_value<
+        Tensor<DataType, Symmetry<1, 1>,
+               index_list<SpacetimeIndex<dim, UpLo::Up, frame>,
+                          SpacetimeIndex<dim, UpLo::Up, frame>>>>(
+        used_for_size,
+        TestHelpers::tenex::component_placeholder_value<DataType>::value);
+    tenex::evaluate<ti::I, ti::T>(make_not_null(&M_IT_from_R), R);
+    // \f$M^{ti} = R\f$
+    auto M_TI_from_R = make_with_value<
+        Tensor<DataType, Symmetry<1, 1>,
+               index_list<SpacetimeIndex<dim, UpLo::Up, frame>,
+                          SpacetimeIndex<dim, UpLo::Up, frame>>>>(
+        used_for_size,
+        TestHelpers::tenex::component_placeholder_value<DataType>::value);
+    tenex::evaluate<ti::T, ti::I>(make_not_null(&M_TI_from_R), R);
 
-  for (size_t a = 0; a < dim + 1; a++) {
-    for (size_t b = a; b < dim + 1; b++) {
-      const auto expected_value =
-          (a == 0 and b > 0) ? R
-                             : TestHelpers::tenex::component_placeholder_value<
-                                   DataType>::value;
-      CHECK(M_it_from_R.get(a, b) == expected_value);
-      CHECK(M_ti_from_R.get(b, a) == expected_value);
-      CHECK(M_IT_from_R.get(a, b) == expected_value);
-      CHECK(M_TI_from_R.get(b, a) == expected_value);
+    for (size_t a = 0; a < dim + 1; a++) {
+      for (size_t b = a; b < dim + 1; b++) {
+        const auto expected_value =
+            (a == 0 and b > 0)
+                ? R
+                : TestHelpers::tenex::component_placeholder_value<
+                      DataType>::value;
+        CHECK(M_it_from_R.get(a, b) == expected_value);
+        CHECK(M_ti_from_R.get(b, a) == expected_value);
+        CHECK(M_IT_from_R.get(a, b) == expected_value);
+        CHECK(M_TI_from_R.get(b, a) == expected_value);
+      }
     }
   }
 
@@ -507,14 +511,13 @@ SPECTRE_TEST_CASE(
     "[DataStructures][Unit]") {
   // Test evaluation of tensors where concrete time indices and spatial indices
   // are used for spacetime indices
-
   test_evaluate_time_and_spatial_spacetime_index(
       std::numeric_limits<double>::signaling_NaN());
-  // test_evaluate_time_and_spatial_spacetime_index(
-  //     std::complex<double>(std::numeric_limits<double>::signaling_NaN(),
-  //                          std::numeric_limits<double>::signaling_NaN()));
-  // test_evaluate_time_and_spatial_spacetime_index(
-  //     DataVector(5, std::numeric_limits<double>::signaling_NaN()));
-  // test_evaluate_time_and_spatial_spacetime_index(
-  //     ComplexDataVector(5, std::numeric_limits<double>::signaling_NaN()));
+  test_evaluate_time_and_spatial_spacetime_index(
+      std::complex<double>(std::numeric_limits<double>::signaling_NaN(),
+                           std::numeric_limits<double>::signaling_NaN()));
+  test_evaluate_time_and_spatial_spacetime_index(
+      DataVector(5, std::numeric_limits<double>::signaling_NaN()));
+  test_evaluate_time_and_spatial_spacetime_index(
+      ComplexDataVector(5, std::numeric_limits<double>::signaling_NaN()));
 }
