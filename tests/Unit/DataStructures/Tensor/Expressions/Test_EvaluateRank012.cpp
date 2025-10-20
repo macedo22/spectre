@@ -160,4 +160,12 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank012",
       true, ti::I, ti::J, Symmetry<1, 1>,
       index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
                  SpatialIndex<3, UpLo::Up, Frame::Grid>>>();
+
+  // TODO : remove
+  // compilation stats as of: e4dda597aa
+  // User time (seconds): 38.72
+  // System time (seconds): 1.72
+  // Percent of CPU this job got: 99%
+  // Elapsed (wall clock) time (h:mm:ss or m:ss): 0:40.45
+  // Maximum resident set size (kbytes): 1434692
 }

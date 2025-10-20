@@ -50,4 +50,12 @@ SPECTRE_TEST_CASE(
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>();
+
+  // TODO : remove
+  // compilation stats as of: e4dda597aa
+  // User time (seconds): 21.45
+  // System time (seconds): 1.19
+  // Percent of CPU this job got: 99%
+  // Elapsed (wall clock) time (h:mm:ss or m:ss): 0:22.70
+  // Maximum resident set size (kbytes): 1081912
 }
