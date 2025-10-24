@@ -45,29 +45,13 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank012",
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
   TestHelpers::tenex::test_evaluate_rank_2<
-      true, ti::A, ti::B, Symmetry<2, 1>,
-      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
-                 SpacetimeIndex<2, UpLo::Up, Frame::Grid>>>();
-  TestHelpers::tenex::test_evaluate_rank_2<
-      true, ti::d, ti::c, Symmetry<2, 1>,
-      index_list<SpacetimeIndex<1, UpLo::Lo, Frame::Inertial>,
-                 SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>>();
-  TestHelpers::tenex::test_evaluate_rank_2<
       true, ti::D, ti::C, Symmetry<2, 1>,
       index_list<SpacetimeIndex<2, UpLo::Up, Frame::Grid>,
                  SpacetimeIndex<3, UpLo::Up, Frame::Distorted>>>();
   TestHelpers::tenex::test_evaluate_rank_2<
       true, ti::e, ti::F, Symmetry<2, 1>,
-      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                 SpacetimeIndex<2, UpLo::Up, Frame::Inertial>>>();
-  TestHelpers::tenex::test_evaluate_rank_2<
-      true, ti::F, ti::e, Symmetry<2, 1>,
-      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
-                 SpacetimeIndex<2, UpLo::Lo, Frame::Grid>>>();
-  TestHelpers::tenex::test_evaluate_rank_2<
-      true, ti::g, ti::B, Symmetry<2, 1>,
-      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>();
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<2, UpLo::Up, Frame::Grid>>>();
   TestHelpers::tenex::test_evaluate_rank_2<
       true, ti::G, ti::b, Symmetry<2, 1>,
       index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
@@ -75,35 +59,19 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank012",
 
   // Rank 2: nonsymmetric, spatial only
   TestHelpers::tenex::test_evaluate_rank_2<
-      true, ti::i, ti::j, Symmetry<2, 1>,
+      true, ti::j, ti::i, Symmetry<2, 1>,
       index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
-                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>();
+                 SpatialIndex<3, UpLo::Lo, Frame::ElementLogical>>>();
   TestHelpers::tenex::test_evaluate_rank_2<
       true, ti::I, ti::J, Symmetry<2, 1>,
       index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
                  SpatialIndex<2, UpLo::Up, Frame::Grid>>>();
   TestHelpers::tenex::test_evaluate_rank_2<
-      true, ti::j, ti::i, Symmetry<2, 1>,
-      index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
-                 SpatialIndex<3, UpLo::Lo, Frame::ElementLogical>>>();
-  TestHelpers::tenex::test_evaluate_rank_2<
-      true, ti::J, ti::I, Symmetry<2, 1>,
-      index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
-                 SpatialIndex<3, UpLo::Up, Frame::Grid>>>();
-  TestHelpers::tenex::test_evaluate_rank_2<
-      true, ti::i, ti::J, Symmetry<2, 1>,
+      true, ti::k, ti::M, Symmetry<2, 1>,
       index_list<SpatialIndex<2, UpLo::Lo, Frame::Inertial>,
-                 SpatialIndex<3, UpLo::Up, Frame::Inertial>>>();
+                 SpatialIndex<3, UpLo::Up, Frame::Distorted>>>();
   TestHelpers::tenex::test_evaluate_rank_2<
-      true, ti::I, ti::j, Symmetry<2, 1>,
-      index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
-                 SpatialIndex<3, UpLo::Lo, Frame::Grid>>>();
-  TestHelpers::tenex::test_evaluate_rank_2<
-      true, ti::j, ti::I, Symmetry<2, 1>,
-      index_list<SpatialIndex<2, UpLo::Lo, Frame::Inertial>,
-                 SpatialIndex<1, UpLo::Up, Frame::Inertial>>>();
-  TestHelpers::tenex::test_evaluate_rank_2<
-      true, ti::J, ti::i, Symmetry<2, 1>,
+      true, ti::M, ti::k, Symmetry<2, 1>,
       index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
                  SpatialIndex<3, UpLo::Lo, Frame::Grid>>>();
 
@@ -117,29 +85,13 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank012",
       index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
                  SpatialIndex<3, UpLo::Lo, Frame::Grid>>>();
   TestHelpers::tenex::test_evaluate_rank_2<
-      true, ti::J, ti::a, Symmetry<2, 1>,
+      true, ti::J, ti::C, Symmetry<2, 1>,
       index_list<SpatialIndex<3, UpLo::Up, Frame::Inertial>,
-                 SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>>();
+                 SpacetimeIndex<2, UpLo::Up, Frame::Inertial>>>();
   TestHelpers::tenex::test_evaluate_rank_2<
-      true, ti::i, ti::A, Symmetry<2, 1>,
-      index_list<SpatialIndex<2, UpLo::Lo, Frame::Grid>,
-                 SpacetimeIndex<3, UpLo::Up, Frame::Grid>>>();
-  TestHelpers::tenex::test_evaluate_rank_2<
-      true, ti::e, ti::j, Symmetry<2, 1>,
-      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>();
-  TestHelpers::tenex::test_evaluate_rank_2<
-      true, ti::i, ti::d, Symmetry<2, 1>,
-      index_list<SpatialIndex<2, UpLo::Lo, Frame::Grid>,
-                 SpacetimeIndex<1, UpLo::Lo, Frame::Grid>>>();
-  TestHelpers::tenex::test_evaluate_rank_2<
-      true, ti::C, ti::I, Symmetry<2, 1>,
-      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
-                 SpatialIndex<2, UpLo::Up, Frame::Inertial>>>();
-  TestHelpers::tenex::test_evaluate_rank_2<
-      true, ti::J, ti::A, Symmetry<2, 1>,
-      index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
-                 SpacetimeIndex<2, UpLo::Up, Frame::Grid>>>();
+      true, ti::e, ti::m, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Grid>,
+                 SpatialIndex<3, UpLo::Lo, Frame::Grid>>>();
 
   // Rank 2: symmetric, spacetime
   TestHelpers::tenex::test_evaluate_rank_2<
@@ -162,10 +114,10 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank012",
                  SpatialIndex<3, UpLo::Up, Frame::Grid>>>();
 
   // TODO : remove
-  // compilation stats as of: e4dda597aa
-  // User time (seconds): 38.72
-  // System time (seconds): 1.72
+  // compilation stats as of: e4dda597aa + 2
+  // User time (seconds): 38.72 -> 28.45
+  // System time (seconds): 1.72 -> 1.86
   // Percent of CPU this job got: 99%
-  // Elapsed (wall clock) time (h:mm:ss or m:ss): 0:40.45
-  // Maximum resident set size (kbytes): 1434692
+  // Elapsed (wall clock) time (h:mm:ss or m:ss): 0:40.45 -> 0:30.42
+  // Maximum resident set size (kbytes): 1434692 -> 1075836
 }
