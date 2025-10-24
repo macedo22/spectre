@@ -14,7 +14,9 @@ set(LIBRARY_SOURCES
   Test_EvaluateRank012.cpp
   Test_EvaluateRank3.cpp
   Test_EvaluateRank4.cpp
-  Test_EvaluateSpatialSpacetimeIndex.cpp
+  Test_EvaluateSpatialSpacetimeIndexLhs.cpp
+  Test_EvaluateSpatialSpacetimeIndexRhs.cpp
+  Test_EvaluateSpatialSpacetimeIndexRhsAndLhs.cpp
   Test_EvaluateSpatialAndTimeSpacetimeIndex.cpp
   Test_EvaluateTimeIndex.cpp
   Test_MixedOperations.cpp
