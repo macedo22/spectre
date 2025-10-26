@@ -39,13 +39,12 @@ void test_contains_indices_to_contract() {
 // is ascending from the rightmost position moving leftward with the rightmost
 // symmetry value starting at 1
 void test_lhs_tensorindex_reorder_symm_consistency() {
-  // TODO : update this message
   const std::string error_msg =
       "tenex::detail::get_reordered_tensorindex_values() assumes a canonical "
       "form for Symmetry that is no longer the actual canonical form of "
-      "Symmetry. To make tenex::detail::get_reordered_tensorindex_values() "
-      "agree with the current canonical form for Symmetry, the logic of "
-      "tenex::detail::get_reordered_tensorindex_values() must be updated";
+      "Symmetry. The logic of this unit test and "
+      "tenex::detail::get_reordered_tensorindex_values() must be updated to "
+      "agree with the current canonical form for Symmetry";
 
   if (not std::is_same_v<Symmetry<>, tmpl::integral_list<std::int32_t>>) {
     ERROR(error_msg);
