@@ -106,11 +106,17 @@ struct CheckNoLhsAntiSymmetries<SymmList<Symm...>> {
   static constexpr bool value = (... and (Symm::value > 0));
 };
 
-// TODO : this assumes symmetry is canonicalized already
 /// \brief Given a tensor and its list of tensor indices, return the
 /// canonicalized order of the tensor indices according to the tensor's symmetry
 ///
 /// \details
+/// TODO : either here or below, we need to say that the point of this is so
+/// that when we iterate over the storage indices, the multi-indices can be
+/// easily checked whether or not they should be evaluated or not. This is as
+/// opposed to checking every permutation of symmetric indices or constructing
+/// the multi-indices to evaluate by hand. Since `Tensor_detail::Structure`
+/// already does this, we can just leverage that work that's already been done.
+///
 /// The canonical ordering of a `Tensor`'s `TensorIndex`s
 /// (e.g. `ti::a`, `ti::b`, ti::c) is relevant to sets of indices that are
 /// symmetric. Within each set of symmetric indices, the `TensorIndex` used for
@@ -205,10 +211,7 @@ constexpr std::array<size_t, NumIndices> get_reordered_tensorindex_values(
     std::int32_t symm_value_to_find = 1;
     while (symm_value_to_find <= max_symm_value) {
       // skip forward until we get to the position with the value we care about
-      // TODO: what if the value isn't found? we just assume we get a canon
-      // symmetry
       size_t i = NumIndices - 1;
-      // TODO : check and fix this logic
       while (true) {
         while (i > 0 and canoncical_symmetry[i] != symm_value_to_find) {
           i--;
