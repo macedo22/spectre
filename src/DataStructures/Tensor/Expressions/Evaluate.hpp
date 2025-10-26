@@ -123,16 +123,16 @@ struct CheckNoLhsAntiSymmetries<SymmList<Symm...>> {
 /// imagine the canonical ordering of symmetric indices to look generally like:
 /// `[spatial indices ... | spacetime indices... | time indices...]`.
 ///
-/// Within the subsets of spatial indices and spacetime indices, the
+/// Within the subsets of spatial, spacetime, and time indices, the
 /// `TensorIndex`s in each will be ordered such that lowercase indices come
 /// before uppercase, where both are ordered alphabetically. Another way o
 /// saying this is that if we had a rank N `Tensor` that was fully symmetric,
 /// its canonical ordering would take the following form:
 ///
 /// ```
-/// [ti::i, ti::j, ti::k, ..., ti::I, ti::J, ti:K, ...,          // spatial
-///  ti::a, ti::b, ti::c, ..., ti::A, ti::B, ti::C, ...,         // spacetime
-///  (all ti::t and ti::T TensorIndexs in no particular order)]  // time
+/// [ti::i, ti::j, ti::k, ..., ti::I, ti::J, ti::K, ...,  // spatial
+///  ti::a, ti::b, ti::c, ..., ti::A, ti::B, ti::C, ...,  // spacetime
+///  ti::t, ti::t, ti::t, ..., ti::T, ti::T, ti::T, ...]  // time
 /// ```
 ///
 /// Here are some examples:
@@ -190,7 +190,7 @@ constexpr std::array<size_t, NumIndices> get_reordered_tensorindex_values(
 
     const auto compare = [](const size_t tensorindex_value1,
                             const size_t tensorindex_value2) {
-      if (is_time_index_value(tensorindex_value2)) {
+      if (tensorindex_value2 == ti::T.value) {
         return false;
       }
 

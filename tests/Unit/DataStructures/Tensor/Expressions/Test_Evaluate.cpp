@@ -292,7 +292,6 @@ void test_lhs_tensorindex_reorder_rank2() {
 
   test_lhs_tensorindex_reorder_impl<Ta_list, Ta_list>::apply(asymmetric_symm);
 
-  // TODO : Should Tt and tT map to the same result? e.g. Tt
   test_lhs_tensorindex_reorder_impl<Tt_list, Tt_list>::apply(asymmetric_symm);
 }
 
@@ -821,7 +820,5 @@ void test_lhs_tensorindex_reorder() {
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Evaluate",
                   "[DataStructures][Unit]") {
   test_contains_indices_to_contract();
-  // TODO : just do a bunch of evaluate tests instead of this, can remove
-  // the rank 0 and 1?
   test_lhs_tensorindex_reorder();
 }
