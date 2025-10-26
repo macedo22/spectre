@@ -366,12 +366,4 @@ SPECTRE_TEST_CASE(
       DataVector(5, std::numeric_limits<double>::signaling_NaN()));
   test_evaluate_spatial_spacetime_index(
       ComplexDataVector(5, std::numeric_limits<double>::signaling_NaN()));
-
-  // TODO : remove
-  // compilation stats as of: e4dda597aa
-  // User time (seconds): 108.33
-  // System time (seconds): 2.83
-  // Percent of CPU this job got: 99%
-  // Elapsed (wall clock) time (h:mm:ss or m:ss): 1:51.17
-  // Maximum resident set size (kbytes): 2134440
 }
