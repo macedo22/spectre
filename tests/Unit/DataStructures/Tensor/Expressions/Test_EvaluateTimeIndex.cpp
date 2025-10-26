@@ -15,6 +15,7 @@
 #include "Helpers/DataStructures/Tensor/Expressions/ComponentPlaceholder.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank2.hpp"
 #include "Utilities/Gsl.hpp"
+#include "Utilities/MakeWithValue.hpp"
 
 namespace {
 // \brief Test evaluation of tensors where concrete time indices are used for
@@ -809,12 +810,4 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateTimeIndex",
       DataVector(5, std::numeric_limits<double>::signaling_NaN()));
   test_evaluate_spatial_spacetime_index(
       ComplexDataVector(5, std::numeric_limits<double>::signaling_NaN()));
-
-  // TODO : remove
-  // compilation stats as of: e4dda597aa
-  // User time (seconds): 50.73
-  // System time (seconds): 1.74
-  // Percent of CPU this job got: 99%
-  // Elapsed (wall clock) time (h:mm:ss or m:ss): 0:52.47
-  // Maximum resident set size (kbytes): 1594252
 }

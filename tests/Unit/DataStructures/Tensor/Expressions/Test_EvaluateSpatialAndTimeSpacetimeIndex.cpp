@@ -16,6 +16,7 @@
 #include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank2.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank4.hpp"
 #include "Utilities/Gsl.hpp"
+#include "Utilities/MakeWithValue.hpp"
 
 namespace {
 template <typename Generator, typename DataType>
@@ -520,12 +521,4 @@ SPECTRE_TEST_CASE(
       DataVector(5, std::numeric_limits<double>::signaling_NaN()));
   test_evaluate_time_and_spatial_spacetime_index(
       ComplexDataVector(5, std::numeric_limits<double>::signaling_NaN()));
-
-  // TODO : remove
-  // compilation stats as of: e4dda597aa
-  // User time (seconds): 35.04
-  // System time (seconds): 1.44
-  // Percent of CPU this job got: 98%
-  // Elapsed (wall clock) time (h:mm:ss or m:ss): 0:37.15
-  // Maximum resident set size (kbytes): 1150876
 }
