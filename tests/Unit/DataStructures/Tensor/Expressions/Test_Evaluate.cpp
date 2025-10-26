@@ -33,7 +33,7 @@ void test_contains_indices_to_contract() {
       true);
 }
 
-// Tests that the canonical ordering of symmetry valyes by `Symmetry` is
+// Tests that the canonical ordering of symmetry values by `Symmetry` is
 // consistent with what `tenex::detail::get_reordered_tensorindex_values`
 // expects, which is that the symmetry values assigned to indepdenent indices
 // is ascending from the rightmost position moving leftward with the rightmost
@@ -67,6 +67,70 @@ void test_lhs_tensorindex_reorder_symm_consistency() {
   if (not std::is_same_v<Symmetry<8, 4, 5, 5, 8>,
                          tmpl::integral_list<std::int32_t, 1, 3, 2, 2, 1>>) {
     ERROR(error_msg);
+  }
+}
+
+// Tests that the canonical ordering of multi-indices by
+// `Tensor_detail::Structure` is consistent with what
+// `tenex::detail::evaluate_impl` expects. Specifically, it checks that the
+// canonical multi-indices of independent tensor components are ordered such
+// that within each subset of symmetric indices, the index values are
+// ascending from the rightmost index to the left, which is what `evaluate_impl`
+// assumes.
+void test_evaluate_and_canon_multi_index_consistency() {
+  const std::string error_msg =
+      "tenex::evaluate() assumes a canonical form for multi-indices that is no "
+      "longer consistent with the canonical form defined by "
+      "Tensor_detail::Structure. The logic of this unit test and "
+      "tenex::detail::evaluate_impl must be updated to agree with the current "
+      "canonical form for multi-indices.";
+
+  using datatype = double;
+  using frame = Frame::Inertial;
+
+  using iii = tnsr::iii<datatype, 2>::structure;
+  using aaa = Tensor<datatype, Symmetry<1, 1, 1>,
+                     index_list<SpacetimeIndex<3, UpLo::Lo, frame>,
+                                SpacetimeIndex<3, UpLo::Lo, frame>,
+                                SpacetimeIndex<3, UpLo::Lo, frame>>>::structure;
+  using iaai = Tensor<datatype, Symmetry<1, 2, 2, 1>,
+                      index_list<SpatialIndex<3, UpLo::Lo, frame>,
+                                 SpacetimeIndex<3, UpLo::Lo, frame>,
+                                 SpacetimeIndex<3, UpLo::Lo, frame>,
+                                 SpatialIndex<3, UpLo::Lo, frame>>>::structure;
+  using iiaa =
+      Tensor<datatype, Symmetry<2, 2, 1, 1>,
+             index_list<SpatialIndex<2, UpLo::Lo, frame>,
+                        SpatialIndex<2, UpLo::Lo, frame>,
+                        SpacetimeIndex<2, UpLo::Lo, frame>,
+                        SpacetimeIndex<2, UpLo::Lo, frame>>>::structure;
+
+  for (size_t i = 0; i < iii::size(); i++) {
+    const auto canon_multi_index = iii::get_canonical_tensor_index(i);
+
+    CHECK(canon_multi_index[0] >= canon_multi_index[1]);
+    CHECK(canon_multi_index[1] >= canon_multi_index[2]);
+  }
+
+  for (size_t i = 0; i < aaa::size(); i++) {
+    const auto canon_multi_index = aaa::get_canonical_tensor_index(i);
+
+    CHECK(canon_multi_index[0] >= canon_multi_index[1]);
+    CHECK(canon_multi_index[1] >= canon_multi_index[2]);
+  }
+
+  for (size_t i = 0; i < iaai::size(); i++) {
+    const auto canon_multi_index = iaai::get_canonical_tensor_index(i);
+
+    CHECK(canon_multi_index[0] >= canon_multi_index[3]);
+    CHECK(canon_multi_index[1] >= canon_multi_index[2]);
+  }
+
+  for (size_t i = 0; i < iiaa::size(); i++) {
+    const auto canon_multi_index = iiaa::get_canonical_tensor_index(i);
+
+    CHECK(canon_multi_index[0] >= canon_multi_index[1]);
+    CHECK(canon_multi_index[2] >= canon_multi_index[3]);
   }
 }
 
@@ -820,4 +884,5 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Evaluate",
                   "[DataStructures][Unit]") {
   test_contains_indices_to_contract();
   test_lhs_tensorindex_reorder();
+  test_evaluate_and_canon_multi_index_consistency();
 }
