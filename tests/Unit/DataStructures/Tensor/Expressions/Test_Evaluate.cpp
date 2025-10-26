@@ -17,6 +17,9 @@ void test_contains_indices_to_contract_impl(const bool expected) {
             {{std::decay_t<decltype(TensorIndices)>::value...}}) == expected);
 }
 
+// Tests the helper function `tenex::detail::contains_indices_to_contract`
+// correctly determines whether or not a list of tensor indices contains at
+// least one index pair to contract
 void test_contains_indices_to_contract() {
   test_contains_indices_to_contract_impl<ti::a, ti::b, ti::c>(false);
   test_contains_indices_to_contract_impl<ti::I, ti::j>(false);
@@ -30,6 +33,11 @@ void test_contains_indices_to_contract() {
       true);
 }
 
+// Tests that the canonical ordering of symmetry valyes by `Symmetry` is
+// consistent with what `tenex::detail::get_reordered_tensorindex_values`
+// expects, which is that the symmetry values assigned to indepdenent indices
+// is ascending from the rightmost position moving leftward with the rightmost
+// symmetry value starting at 1
 void test_lhs_tensorindex_reorder_symm_consistency() {
   // TODO : update this message
   const std::string error_msg =
@@ -63,6 +71,8 @@ void test_lhs_tensorindex_reorder_symm_consistency() {
   }
 }
 
+// Tests that the canonical ordering of a list of `TensorIndex`s done by
+// `tenex::detail::get_reordered_tensorindex_values`
 template <typename LhsTensorIndices, typename ExpectedReorderedTensorIndices>
 struct test_lhs_tensorindex_reorder_impl;
 
@@ -81,6 +91,8 @@ struct test_lhs_tensorindex_reorder_impl<
   }
 };
 
+// Tests that the canonical ordering of a list of `TensorIndex`s done by
+// `tenex::detail::get_reordered_tensorindex_values` for a rank 0 tensor
 void test_lhs_tensorindex_reorder_rank0() {
   const std::array<std::int32_t, 0> symmetry{{}};
 
@@ -89,6 +101,8 @@ void test_lhs_tensorindex_reorder_rank0() {
   test_lhs_tensorindex_reorder_impl<empty_list, empty_list>::apply(symmetry);
 }
 
+// Tests that the canonical ordering of a list of `TensorIndex`s done by
+// `tenex::detail::get_reordered_tensorindex_values` for a rank 1 tensor
 void test_lhs_tensorindex_reorder_rank1() {
   const std::array<std::int32_t, 1> symmetry{{1}};
 
@@ -111,6 +125,8 @@ void test_lhs_tensorindex_reorder_rank1() {
   test_lhs_tensorindex_reorder_impl<T_list, T_list>::apply(symmetry);
 }
 
+// Tests that the canonical ordering of a list of `TensorIndex`s done by
+// `tenex::detail::get_reordered_tensorindex_values` for a rank 2 tensor
 void test_lhs_tensorindex_reorder_rank2() {
   constexpr size_t num_indices = 2;
   const std::array<std::int32_t, num_indices> asymmetric_symm{{2, 1}};
@@ -280,6 +296,8 @@ void test_lhs_tensorindex_reorder_rank2() {
   test_lhs_tensorindex_reorder_impl<Tt_list, Tt_list>::apply(asymmetric_symm);
 }
 
+// Tests that the canonical ordering of a list of `TensorIndex`s done by
+// `tenex::detail::get_reordered_tensorindex_values` for a rank 3 tensor
 void test_lhs_tensorindex_reorder_rank3() {
   constexpr size_t num_indices = 3;
   const std::array<std::int32_t, num_indices> symm_111{{1, 1, 1}};
@@ -682,6 +700,8 @@ void test_lhs_tensorindex_reorder_rank3() {
   test_lhs_tensorindex_reorder_impl<tai_list, tai_list>::apply(symm_321);
 }
 
+// Tests that the canonical ordering of a list of `TensorIndex`s done by
+// `tenex::detail::get_reordered_tensorindex_values` for a rank 4 tensor
 void test_lhs_tensorindex_reorder_rank4() {
   constexpr size_t num_indices = 4;
   const std::array<std::int32_t, num_indices> symm_1111{{1, 1, 1, 1}};
@@ -787,6 +807,7 @@ void test_lhs_tensorindex_reorder_rank4() {
   test_lhs_tensorindex_reorder_impl<lkji_list, lkji_list>::apply(symm_4321);
 }
 
+// Tests `tenex::detail::get_reordered_tensorindex_values`
 void test_lhs_tensorindex_reorder() {
   test_lhs_tensorindex_reorder_symm_consistency();
   test_lhs_tensorindex_reorder_rank0();
