@@ -32,11 +32,31 @@ namespace TestHelpers::tenex {
 /// single rank 1 tensor correctly assigns the data to the evaluated left hand
 /// side tensor
 ///
-/// \tparam DataType the type of data being stored in the Tensors
-/// \tparam TensorIndexTypeList the Tensors' typelist containing their
-/// \ref SpacetimeIndex "TensorIndexType"
+/// If `ReturnLhsTensor == true`, the `tenex::evaluate` overload that returns
+/// the LHS tensor will be tested. This, in turn, includes testing whether
+/// `tenex::evaluate` is deducing the correct LHS tensor return type, where
+/// `LhsTensorIndexType` is its expected list of indices.
+///
+/// If `ReturnLhsTensor == false`, the `tenex::evaluate` overload that takes a
+/// preallocated LHS tensor will be tested. In this case, `LhsSymmetry` and
+/// `LhsTensorIndexList` can be different from and will override what would be
+/// automatically deduced from the RHS tensor expression. This is useful for
+/// testing evaluations where the desired LHS tensor type would not
+/// automatically be deduced from the RHS expression. For example, given some
+/// tensor \f$R_{a}\f$ with one spacetime index, one can test whether
+/// \f$R_{i} = ...\f$ correctly only assigns to the spatial components of the
+/// tensor.
+///
+/// \param ReturnLhsTensor whether to test tensor expression evaluation by
+/// returning the result tensor or not (which instead tests evaluation by
+/// preallocating the result tensor and filling it)
 /// \tparam TensorIndex the TensorIndex used in the the TensorExpression,
 /// e.g. `ti::a`
+/// \tparam DataType the type of data being stored in the Tensors
+/// \tparam RhsTensorIndexTypeList the RHS Tensor's typelist of
+/// \ref SpacetimeIndex "TensorIndexType"s
+/// \tparam LhsTensorIndexTypeList the LHS Tensor's typelist of
+/// \ref SpacetimeIndex "TensorIndexType"s
 template <bool ReturnLhsTensor, auto& TensorIndex, typename DataType,
           typename RhsTensorIndexTypeList,
           typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
@@ -102,6 +122,23 @@ void test_evaluate_rank_1_core() {
   }
 }
 
+/// \ingroup TestingFrameworkGroup
+/// \brief Test that evaluating a right hand side tensor expression containing a
+/// single rank 1 tensor correctly assigns the data to the evaluated left hand
+/// side tensor
+///
+/// \details This simply runs `test_evaluate_rank_1_impl` but for different
+/// data types for the tensor components
+///
+/// \param ReturnLhsTensor whether to test tensor expression evaluation by
+/// returning the result tensor or not (which instead tests evaluation by
+/// preallocating the result tensor and filling it)
+/// \tparam TensorIndex the TensorIndex used in the the TensorExpression,
+/// e.g. `ti::a`
+/// \tparam RhsTensorIndexTypeList the RHS Tensor's typelist of
+/// \ref SpacetimeIndex "TensorIndexType"s
+/// \tparam LhsTensorIndexTypeList the LHS Tensor's typelist of
+/// \ref SpacetimeIndex "TensorIndexType"s
 template <bool ReturnLhsTensor, auto& TensorIndex,
           typename RhsTensorIndexTypeList,
           typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
