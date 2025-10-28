@@ -1109,11 +1109,45 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Structure.Indices",
                            SpatialIndex<dim, UpLo::Lo, Frame::Grid>>
       tensor;
   for (size_t j = 0; j < dim; ++j) {
-    for (size_t k = j; k < dim; ++k) {
+    for (size_t k = 0; k < dim; ++k) {
       for (size_t i = 0; i < dim; ++i) {
         CHECK(tensor.get_storage_index(std::array<size_t, 3>{{i, j, k}}) ==
               tensor.get_storage_index(tensor.get_canonical_tensor_index(
                   tensor.get_storage_index(std::array<size_t, 3>{{i, j, k}}))));
+      }
+    }
+  }
+
+  constexpr size_t spatial_dim2 = 1;
+  Tensor_detail::Structure<Symmetry<2, 1, 1>,
+                           SpatialIndex<spatial_dim2, UpLo::Lo, Frame::Grid>,
+                           SpacetimeIndex<spatial_dim2, UpLo::Lo, Frame::Grid>,
+                           SpacetimeIndex<spatial_dim2, UpLo::Lo, Frame::Grid>>
+      tensor2;
+  for (size_t j = 0; j < spatial_dim2 + 1; ++j) {
+    for (size_t k = 0; k < spatial_dim2 + 1; ++k) {
+      for (size_t i = 0; i < spatial_dim2; ++i) {
+        CHECK(
+            tensor2.get_storage_index(std::array<size_t, 3>{{i, j, k}}) ==
+            tensor2.get_storage_index(tensor2.get_canonical_tensor_index(
+                tensor2.get_storage_index(std::array<size_t, 3>{{i, j, k}}))));
+      }
+    }
+  }
+
+  constexpr size_t spatial_dim3 = 3;
+  Tensor_detail::Structure<Symmetry<1, 1, 1>,
+                           SpatialIndex<spatial_dim3, UpLo::Lo, Frame::Grid>,
+                           SpatialIndex<spatial_dim3, UpLo::Lo, Frame::Grid>,
+                           SpatialIndex<spatial_dim3, UpLo::Lo, Frame::Grid>>
+      tensor3;
+  for (size_t j = 0; j < spatial_dim3; ++j) {
+    for (size_t k = 0; k < spatial_dim3; ++k) {
+      for (size_t i = 0; i < spatial_dim3; ++i) {
+        CHECK(
+            tensor3.get_storage_index(std::array<size_t, 3>{{i, j, k}}) ==
+            tensor3.get_storage_index(tensor3.get_canonical_tensor_index(
+                tensor3.get_storage_index(std::array<size_t, 3>{{i, j, k}}))));
       }
     }
   }
