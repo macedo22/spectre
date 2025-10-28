@@ -7,6 +7,7 @@
 #include <complex>
 #include <cstddef>
 #include <cstdint>
+#include <iostream>
 #include <iterator>
 #include <numeric>
 #include <ostream>
@@ -1127,6 +1128,22 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Structure.Indices",
   for (size_t j = 0; j < spatial_dim2 + 1; ++j) {
     for (size_t k = 0; k < spatial_dim2 + 1; ++k) {
       for (size_t i = 0; i < spatial_dim2; ++i) {
+        const size_t lhs = tensor2.get_storage_index(std::array<size_t, 3>{{i, j, k}});
+        const std::array<size_t, 3> rhs_canon_multi_index =
+            tensor2.get_canonical_tensor_index(lhs);
+        const size_t rhs = tensor2.get_storage_index(rhs_canon_multi_index);
+        if (lhs != rhs) {
+          const auto collapsed_to_storage =
+              tensor2.collapsed_to_storage_;
+          const auto storage_to_tensor =
+              tensor2.storage_to_tensor_;
+          std::cout << "failed\nlhs multi-index : (" << i << ", " << j << ", " << k << ")\n"
+                    << "rhs_canon_multi_index : " << rhs_canon_multi_index
+                    << "\nlhs : " << lhs << "\nrhs: " << rhs
+                    << "\ncollapsed_to_storage : " << collapsed_to_storage
+                    << "\nstorage_to_tensor : " << storage_to_tensor << std::endl;
+        }
+
         CHECK(
             tensor2.get_storage_index(std::array<size_t, 3>{{i, j, k}}) ==
             tensor2.get_storage_index(tensor2.get_canonical_tensor_index(
