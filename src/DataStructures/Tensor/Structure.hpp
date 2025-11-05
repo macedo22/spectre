@@ -94,54 +94,6 @@ constexpr void increment_tensor_index(cpp20::array<T, Size>& tensor_index,
   }
 }
 
-// // index_to_swap_with takes the last two arguments as opposed to just one of
-// // them so that when the max constexpr steps is reached on clang it is reached
-// // in this function rather than in array.
-// template <size_t Rank>
-// constexpr size_t index_to_swap_with(
-//     const cpp20::array<size_t, Rank>& tensor_index,
-//     const cpp20::array<int, Rank>& sym, size_t index_to_swap_with,
-//     const size_t current_index) {
-//   // If you encounter infinite loop compilation errors here you are
-//   // constructing very large Tensor's. If you are sure Tensor is
-//   // the correct data structure you can extend the compiler limit
-//   // by passing the flag -fconstexpr-steps=<SOME LARGER VALUE>
-//   while (true) {  // See source code comment on line above this one for fix
-//     if (Rank == index_to_swap_with) {
-//       return current_index;
-//     } else if (tensor_index[current_index] <
-//                    tensor_index[index_to_swap_with] and
-//                sym[current_index] == sym[index_to_swap_with]) {
-//       return index_to_swap_with;
-//     }
-//     index_to_swap_with++;
-//   }
-// }
-
-// template <size_t Size, size_t SymmSize>
-// constexpr cpp20::array<size_t, Size> canonicalize_tensor_index(
-//     cpp20::array<size_t, Size> tensor_index,
-//     const cpp20::array<int, SymmSize>& symm) {
-//   for (size_t i = 0; i < Size; ++i) {
-//     const size_t temp = tensor_index[i];
-//     const size_t swap = index_to_swap_with(tensor_index, symm, i, i);
-//     tensor_index[i] = tensor_index[swap];
-//     tensor_index[swap] = temp;
-//   }
-//   return tensor_index;
-// }
-
-// template <typename T, typename S, size_t Size>
-// constexpr void increment_tensor_index(cpp20::array<T, Size>& tensor_index,
-//                                       const cpp20::array<S, Size>& dims) {
-//   for (size_t i = Size - 1; i < Size; --i) {
-//     if (++tensor_index[i] < static_cast<T>(dims[i])) {
-//       return;
-//     }
-//     tensor_index[i] = 0;
-//   }
-// }
-
 // index_to_swap_with takes the last two arguments as opposed to just one of
 // them so that when the max constexpr steps is reached on clang it is reached
 // in this function rather than in array.
@@ -154,7 +106,7 @@ constexpr size_t index_to_swap_with(
   // constructing very large Tensor's. If you are sure Tensor is
   // the correct data structure you can extend the compiler limit
   // by passing the flag -fconstexpr-steps=<SOME LARGER VALUE>
-  while (index_to_swap_with < Rank) {  // See source code comment on line above this one for fix
+  while (index_to_swap_with < Rank) {  // See comment on line above for fix
     if (tensor_index[current_index] >
                    tensor_index[index_to_swap_with] and
                sym[current_index] == sym[index_to_swap_with]) {
@@ -191,7 +143,7 @@ constexpr cpp20::array<size_t, Rank> canonicalize_tensor_index(
     cpp20::array<size_t, Rank> tensor_index) {
   static_assert(tmpl::size<Symm>::value == Rank,
     "Symm and tensor_index have different ranks");
-  
+
   if constexpr (Rank < 2) {
     return tensor_index;
   } else {
@@ -251,32 +203,28 @@ constexpr auto compute_collapsed_to_storage(
         *alg::min_element(symm) > 0,
         "compute_collapsed_to_storage assumes symmetry values are > 0");
     static_assert(
-        *alg::max_element(symm) <= rank,
+        max_symm_value <= rank,
         "compute_collapsed_to_storage assumes symmetry values are <= rank");
 
     if constexpr (max_symm_value == rank) {
       const size_t first_storage_index{0};
       cpp20::array<size_t, NumberOfComponents> collapsed_to_storage{};
-      // cpp20::iota(collapsed_to_storage, first_storage_index);
-      // return collapsed_to_storage;
       return alg::iota(collapsed_to_storage, first_storage_index);
     } else {
       cpp20::array<size_t, NumberOfComponents> collapsed_to_storage{};
-      auto tensor_index =
-          convert_to_cpp20_array(make_array<tmpl::size<Symm>::value>(size_t{0}));
+      auto tensor_index = convert_to_cpp20_array(
+          make_array<tmpl::size<Symm>::value>(size_t{0}));
       size_t count{0};
       for (auto& current_storage_index : collapsed_to_storage) {
         // Compute canonical tensor_index, which, for symmetric get_tensor_index
         // is in decreasing numerical order, e.g. (3,2) rather than (2,3).
-        // const auto canonical_tensor_index =
-        //     canonicalize_tensor_index(tensor_index, symm);
         const auto canonical_tensor_index =
             canonicalize_tensor_index<Symm>(tensor_index);
-        // If the tensor_index was already in the canonical form, then it must be
-        // a new unique entry  and we add it to collapsed_to_storage_ as a new
-        // integer, thus increasing the size_. Else, the StorageIndex has already
-        // been determined so we look it up in the existing collapsed_to_storage
-        // table.
+        // If the tensor_index was already in the canonical form, then it must
+        // be a new unique entry  and we add it to collapsed_to_storage_ as a
+        // new integer, thus increasing the size_. Else, the StorageIndex has
+        // already been determined so we look it up in the existing
+        // collapsed_to_storage table.
         if (tensor_index == canonical_tensor_index) {
           current_storage_index = count;
           ++count;
@@ -326,8 +274,8 @@ constexpr auto compute_storage_to_tensor(
     cpp20::array<size_t, rank> tensor_index =
         convert_to_cpp20_array(make_array<rank>(size_t{0}));
     for (const auto& current_storage_index : collapsed_to_storage) {
-      storage_to_tensor[current_storage_index] = canonicalize_tensor_index<Symm>(
-            tensor_index);
+      storage_to_tensor[current_storage_index] =
+          canonicalize_tensor_index<Symm>(tensor_index);
       increment_tensor_index(tensor_index, index_dimensions);
     }
     return storage_to_tensor;
