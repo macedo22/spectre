@@ -1103,47 +1103,32 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.StreamStructure",
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Structure.Indices",
                   "[DataStructures][Unit]") {
-  const int dim = 3;
+  const int spatial_dim1 = 3;
   Tensor_detail::Structure<Symmetry<2, 1, 1>,
-                           SpatialIndex<dim, UpLo::Lo, Frame::Grid>,
-                           SpatialIndex<dim, UpLo::Lo, Frame::Grid>,
-                           SpatialIndex<dim, UpLo::Lo, Frame::Grid>>
-      tensor;
-  for (size_t j = 0; j < dim; ++j) {
-    for (size_t k = 0; k < dim; ++k) {
-      for (size_t i = 0; i < dim; ++i) {
-        CHECK(tensor.get_storage_index(std::array<size_t, 3>{{i, j, k}}) ==
-              tensor.get_storage_index(tensor.get_canonical_tensor_index(
-                  tensor.get_storage_index(std::array<size_t, 3>{{i, j, k}}))));
+                           SpatialIndex<spatial_dim1, UpLo::Lo, Frame::Grid>,
+                           SpatialIndex<spatial_dim1, UpLo::Lo, Frame::Grid>,
+                           SpatialIndex<spatial_dim1, UpLo::Lo, Frame::Grid>>
+      tensor1;
+  for (size_t i = 0; i < tensor1.dim<0>(); ++i) {
+    for (size_t j = 0; j < tensor1.dim<1>(); ++j) {
+      for (size_t k = 0; k < tensor1.dim<2>(); ++k) {
+        CHECK(
+            tensor1.get_storage_index(std::array<size_t, 3>{{i, j, k}}) ==
+            tensor1.get_storage_index(tensor1.get_canonical_tensor_index(
+                tensor1.get_storage_index(std::array<size_t, 3>{{i, j, k}}))));
       }
     }
   }
 
   constexpr size_t spatial_dim2 = 1;
-  Tensor_detail::Structure<Symmetry<2, 1, 1>,
-                           SpatialIndex<spatial_dim2, UpLo::Lo, Frame::Grid>,
+  Tensor_detail::Structure<Symmetry<1, 2, 1>,
                            SpacetimeIndex<spatial_dim2, UpLo::Lo, Frame::Grid>,
+                           SpatialIndex<spatial_dim2, UpLo::Lo, Frame::Grid>,
                            SpacetimeIndex<spatial_dim2, UpLo::Lo, Frame::Grid>>
       tensor2;
-  for (size_t j = 0; j < spatial_dim2 + 1; ++j) {
-    for (size_t k = 0; k < spatial_dim2 + 1; ++k) {
-      for (size_t i = 0; i < spatial_dim2; ++i) {
-        const size_t lhs = tensor2.get_storage_index(std::array<size_t, 3>{{i, j, k}});
-        const std::array<size_t, 3> rhs_canon_multi_index =
-            tensor2.get_canonical_tensor_index(lhs);
-        const size_t rhs = tensor2.get_storage_index(rhs_canon_multi_index);
-        if (lhs != rhs) {
-          const auto collapsed_to_storage =
-              tensor2.collapsed_to_storage_;
-          const auto storage_to_tensor =
-              tensor2.storage_to_tensor_;
-          std::cout << "failed\nlhs multi-index : (" << i << ", " << j << ", " << k << ")\n"
-                    << "rhs_canon_multi_index : " << rhs_canon_multi_index
-                    << "\nlhs : " << lhs << "\nrhs: " << rhs
-                    << "\ncollapsed_to_storage : " << collapsed_to_storage
-                    << "\nstorage_to_tensor : " << storage_to_tensor << std::endl;
-        }
-
+  for (size_t i = 0; i < tensor2.dim<0>(); ++i) {
+    for (size_t j = 0; j < tensor2.dim<1>(); ++j) {
+      for (size_t k = 0; k < tensor2.dim<2>(); ++k) {
         CHECK(
             tensor2.get_storage_index(std::array<size_t, 3>{{i, j, k}}) ==
             tensor2.get_storage_index(tensor2.get_canonical_tensor_index(
@@ -1153,18 +1138,40 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Structure.Indices",
   }
 
   constexpr size_t spatial_dim3 = 3;
-  Tensor_detail::Structure<Symmetry<1, 1, 1>,
-                           SpatialIndex<spatial_dim3, UpLo::Lo, Frame::Grid>,
-                           SpatialIndex<spatial_dim3, UpLo::Lo, Frame::Grid>,
-                           SpatialIndex<spatial_dim3, UpLo::Lo, Frame::Grid>>
+  Tensor_detail::Structure<
+      Symmetry<1, 1, 1>, SpatialIndex<spatial_dim3, UpLo::Up, Frame::Inertial>,
+      SpatialIndex<spatial_dim3, UpLo::Up, Frame::Inertial>,
+      SpatialIndex<spatial_dim3, UpLo::Up, Frame::Inertial>>
       tensor3;
-  for (size_t j = 0; j < spatial_dim3; ++j) {
-    for (size_t k = 0; k < spatial_dim3; ++k) {
-      for (size_t i = 0; i < spatial_dim3; ++i) {
+  for (size_t i = 0; i < tensor3.dim<0>(); ++i) {
+    for (size_t j = 0; j < tensor3.dim<1>(); ++j) {
+      for (size_t k = 0; k < tensor3.dim<2>(); ++k) {
         CHECK(
             tensor3.get_storage_index(std::array<size_t, 3>{{i, j, k}}) ==
             tensor3.get_storage_index(tensor3.get_canonical_tensor_index(
                 tensor3.get_storage_index(std::array<size_t, 3>{{i, j, k}}))));
+      }
+    }
+  }
+
+  constexpr size_t spatial_dim4 = 3;
+  Tensor_detail::Structure<
+      Symmetry<1, 2, 2, 1>,
+      SpatialIndex<spatial_dim4, UpLo::Lo, Frame::Inertial>,
+      SpacetimeIndex<spatial_dim4, UpLo::Up, Frame::Inertial>,
+      SpacetimeIndex<spatial_dim4, UpLo::Up, Frame::Inertial>,
+      SpatialIndex<spatial_dim4, UpLo::Lo, Frame::Inertial>>
+      tensor4;
+  for (size_t i = 0; i < tensor4.dim<0>(); ++i) {
+    for (size_t j = 0; j < tensor4.dim<1>(); ++j) {
+      for (size_t k = 0; k < tensor4.dim<2>(); ++k) {
+        for (size_t l = 0; l < tensor4.dim<3>(); ++l) {
+          CHECK(
+              tensor4.get_storage_index(std::array<size_t, 4>{{i, j, k, l}}) ==
+              tensor4.get_storage_index(
+                  tensor4.get_canonical_tensor_index(tensor4.get_storage_index(
+                      std::array<size_t, 4>{{i, j, k, l}}))));
+        }
       }
     }
   }
