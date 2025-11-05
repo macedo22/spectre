@@ -18,6 +18,7 @@
 #include "Utilities/ForceInline.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/MakeArray.hpp"
+#include "Utilities/Numeric.hpp"
 #include "Utilities/Requires.hpp"
 #include "Utilities/TMPL.hpp"
 
@@ -217,31 +218,49 @@ template <typename Symm, size_t NumberOfComponents>
 constexpr auto compute_collapsed_to_storage(
     const cpp20::array<size_t, tmpl::size<Symm>::value>& index_dimensions) {
   if constexpr (tmpl::size<Symm>::value != 0) {
-    cpp20::array<size_t, NumberOfComponents> collapsed_to_storage{};
-    auto tensor_index =
-        convert_to_cpp20_array(make_array<tmpl::size<Symm>::value>(size_t{0}));
-    size_t count{0};
-    for (auto& current_storage_index : collapsed_to_storage) {
-      // Compute canonical tensor_index, which, for symmetric get_tensor_index
-      // is in decreasing numerical order, e.g. (3,2) rather than (2,3).
-      const auto canonical_tensor_index = canonicalize_tensor_index(
-          tensor_index, make_cpp20_array_from_list<Symm>());
-      // If the tensor_index was already in the canonical form, then it must be
-      // a new unique entry  and we add it to collapsed_to_storage_ as a new
-      // integer, thus increasing the size_. Else, the StorageIndex has already
-      // been determined so we look it up in the existing collapsed_to_storage
-      // table.
-      if (tensor_index == canonical_tensor_index) {
-        current_storage_index = count;
-        ++count;
-      } else {
-        current_storage_index = collapsed_to_storage[compute_collapsed_index(
-            canonical_tensor_index, index_dimensions)];
+    constexpr size_t rank = tmpl::size<Symm>::value;
+    constexpr auto symm = make_cpp20_array_from_list<Symm>();
+    constexpr std::int32_t max_symm_value = *alg::max_element(symm);
+    static_assert(
+        *alg::min_element(symm) > 0,
+        "compute_collapsed_to_storage assumes symmetry values are > 0");
+    static_assert(
+        *alg::max_element(symm) <= rank,
+        "compute_collapsed_to_storage assumes symmetry values are <= rank");
+
+    if constexpr (max_symm_value == rank) {
+      const size_t first_storage_index{0};
+      cpp20::array<size_t, NumberOfComponents> collapsed_to_storage{};
+      // cpp20::iota(collapsed_to_storage, first_storage_index);
+      // return collapsed_to_storage;
+      return alg::iota(collapsed_to_storage, first_storage_index);
+    } else {
+      cpp20::array<size_t, NumberOfComponents> collapsed_to_storage{};
+      auto tensor_index =
+          convert_to_cpp20_array(make_array<tmpl::size<Symm>::value>(size_t{0}));
+      size_t count{0};
+      for (auto& current_storage_index : collapsed_to_storage) {
+        // Compute canonical tensor_index, which, for symmetric get_tensor_index
+        // is in decreasing numerical order, e.g. (3,2) rather than (2,3).
+        const auto canonical_tensor_index =
+            canonicalize_tensor_index(tensor_index, symm);
+        // If the tensor_index was already in the canonical form, then it must be
+        // a new unique entry  and we add it to collapsed_to_storage_ as a new
+        // integer, thus increasing the size_. Else, the StorageIndex has already
+        // been determined so we look it up in the existing collapsed_to_storage
+        // table.
+        if (tensor_index == canonical_tensor_index) {
+          current_storage_index = count;
+          ++count;
+        } else {
+          current_storage_index = collapsed_to_storage[compute_collapsed_index(
+              canonical_tensor_index, index_dimensions)];
+        }
+        // Move to the next tensor_index.
+        increment_tensor_index(tensor_index, index_dimensions);
       }
-      // Move to the next tensor_index.
-      increment_tensor_index(tensor_index, index_dimensions);
+      return collapsed_to_storage;
     }
-    return collapsed_to_storage;
   } else {
     (void)index_dimensions;
 
