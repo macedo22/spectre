@@ -171,12 +171,12 @@ constexpr size_t index_to_swap_with(
 // even matter if we didn't use this function in compute_collapsed_to_storage()?
 // TODO : maybe we can instead just generate the canonical ones by incrementing
 // properly?
-template <size_t Size, size_t SymmSize>
-constexpr cpp20::array<size_t, Size> canonicalize_tensor_index(
-    cpp20::array<size_t, Size> tensor_index,
-    const cpp20::array<int, SymmSize>& symm) {
-  for (size_t i = 1; i < Size; ++i) {
-    for (size_t j = i; j < Size; --j) {
+template <size_t Rank>
+constexpr cpp20::array<size_t, Rank> canonicalize_tensor_index(
+    cpp20::array<size_t, Rank> tensor_index,
+    const cpp20::array<int, Rank>& symm) {
+  for (size_t i = 1; i < Rank; ++i) {
+    for (size_t j = i; j < Rank; --j) {
       const size_t temp = tensor_index[j];
       const size_t swap = index_to_swap_with(tensor_index, symm, j, j);
       tensor_index[j] = tensor_index[swap];
@@ -184,6 +184,32 @@ constexpr cpp20::array<size_t, Size> canonicalize_tensor_index(
     }
   }
   return tensor_index;
+}
+
+template <typename Symm, size_t Rank>
+constexpr cpp20::array<size_t, Rank> canonicalize_tensor_index(
+    cpp20::array<size_t, Rank> tensor_index) {
+  static_assert(tmpl::size<Symm>::value == Rank,
+    "Symm and tensor_index have different ranks");
+  
+  if constexpr (Rank < 2) {
+    return tensor_index;
+  } else {
+    constexpr auto symm = make_cpp20_array_from_list<Symm>();
+    constexpr auto max_symm_value = *alg::max_element(symm);
+    static_assert(
+        *alg::min_element(symm) > 0,
+        "canonicalize_tensor_index assumes symmetry values are > 0");
+    static_assert(
+        max_symm_value <= Rank,
+        "canonicalize_tensor_index assumes symmetry values are <= Rank");
+
+    if constexpr (max_symm_value == Rank) {
+      return tensor_index;
+    } else {
+      return canonicalize_tensor_index(tensor_index, symm);
+    }
+  }
 }
 
 template <size_t Rank>
@@ -242,8 +268,10 @@ constexpr auto compute_collapsed_to_storage(
       for (auto& current_storage_index : collapsed_to_storage) {
         // Compute canonical tensor_index, which, for symmetric get_tensor_index
         // is in decreasing numerical order, e.g. (3,2) rather than (2,3).
+        // const auto canonical_tensor_index =
+        //     canonicalize_tensor_index(tensor_index, symm);
         const auto canonical_tensor_index =
-            canonicalize_tensor_index(tensor_index, symm);
+            canonicalize_tensor_index<Symm>(tensor_index);
         // If the tensor_index was already in the canonical form, then it must be
         // a new unique entry  and we add it to collapsed_to_storage_ as a new
         // integer, thus increasing the size_. Else, the StorageIndex has already
@@ -328,8 +356,10 @@ constexpr auto compute_storage_to_tensor(
       if constexpr (max_symm_value == rank) {
         storage_to_tensor[current_storage_index] = tensor_index;
       } else {
-        storage_to_tensor[current_storage_index] = canonicalize_tensor_index(
-            tensor_index, make_cpp20_array_from_list<Symm>());
+        // storage_to_tensor[current_storage_index] = canonicalize_tensor_index(
+        //     tensor_index, make_cpp20_array_from_list<Symm>());
+        storage_to_tensor[current_storage_index] = canonicalize_tensor_index<Symm>(
+            tensor_index);
       }
       increment_tensor_index(tensor_index, index_dimensions);
     }
