@@ -164,6 +164,12 @@ constexpr size_t index_to_swap_with(
   return current_index;
 }
 
+// TODO : we're reaching a step limit in one of the tests with this
+// TODO : can we get rid of this? or at least not use it where we don't need it?
+// it doesn't return the same canonical form for each permutation, so would it
+// even matter if we didn't use this function in compute_collapsed_to_storage()?
+// TODO : maybe we can instead just generate the canonical ones by incrementing
+// properly?
 template <size_t Size, size_t SymmSize>
 constexpr cpp20::array<size_t, Size> canonicalize_tensor_index(
     cpp20::array<size_t, Size> tensor_index,
