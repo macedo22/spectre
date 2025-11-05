@@ -292,14 +292,45 @@ template <typename Symm, size_t NumIndComps, size_t NumComps>
 constexpr auto compute_storage_to_tensor(
     const cpp20::array<size_t, NumComps>& collapsed_to_storage,
     const cpp20::array<size_t, tmpl::size<Symm>::value>& index_dimensions) {
-  if constexpr (tmpl::size<Symm>::value > 0) {
+  if constexpr (tmpl::size<Symm>::value != 0) {
     constexpr size_t rank = tmpl::size<Symm>::value;
+    constexpr auto symm = make_cpp20_array_from_list<Symm>();
+    constexpr std::int32_t max_symm_value = *alg::max_element(symm);
+    static_assert(
+        *alg::min_element(symm) > 0,
+        "compute_collapsed_to_storage assumes symmetry values are > 0");
+    static_assert(
+        *alg::max_element(symm) <= rank,
+        "compute_collapsed_to_storage assumes symmetry values are <= rank");
+
+    // if constexpr (max_symm_value == rank) {
+    //   const size_t first_storage_index{0};
+    //   cpp20::array<size_t, NumberOfComponents> storage_to_tensor{};
+    //   // cpp20::iota(collapsed_to_storage, first_storage_index);
+    //   // return collapsed_to_storage;
+    //   return alg::iota(collapsed_to_storage, first_storage_index);
+    // } else {
+    //   cpp20::array<cpp20::array<size_t, rank>, NumIndComps> storage_to_tensor{};
+    //   cpp20::array<size_t, rank> tensor_index =
+    //       convert_to_cpp20_array(make_array<rank>(size_t{0}));
+    //   for (const auto& current_storage_index : collapsed_to_storage) {
+    //     storage_to_tensor[current_storage_index] = canonicalize_tensor_index(
+    //         tensor_index, make_cpp20_array_from_list<Symm>());
+    //     increment_tensor_index(tensor_index, index_dimensions);
+    //   }
+    //   return storage_to_tensor;
+    // }
+
     cpp20::array<cpp20::array<size_t, rank>, NumIndComps> storage_to_tensor{};
     cpp20::array<size_t, rank> tensor_index =
         convert_to_cpp20_array(make_array<rank>(size_t{0}));
     for (const auto& current_storage_index : collapsed_to_storage) {
-      storage_to_tensor[current_storage_index] = canonicalize_tensor_index(
-          tensor_index, make_cpp20_array_from_list<Symm>());
+      if constexpr (max_symm_value == rank) {
+        storage_to_tensor[current_storage_index] = tensor_index;
+      } else {
+        storage_to_tensor[current_storage_index] = canonicalize_tensor_index(
+            tensor_index, make_cpp20_array_from_list<Symm>());
+      }
       increment_tensor_index(tensor_index, index_dimensions);
     }
     return storage_to_tensor;
