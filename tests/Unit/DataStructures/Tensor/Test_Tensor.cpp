@@ -1101,6 +1101,107 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.StreamStructure",
   }
 }
 
+namespace {
+template <size_t Rank>
+size_t get_flattened_multi_index(const cpp20::array<size_t, Rank>& tensor_index,
+                                 const std::array<size_t, Rank>& index_dims) {
+  if constexpr (Rank == 0) {
+    return 0;
+  } else if constexpr (Rank == 1) {
+    return tensor_index[0];
+  } else {
+    size_t flattened_index = gsl::at(tensor_index, Rank - 1);
+    for (size_t i = Rank - 2; i < Rank; i--) {
+      flattened_index =
+          gsl::at(tensor_index, i) + gsl::at(index_dims, i) * flattened_index;
+    }
+    return flattened_index;
+  }
+}
+
+// Checks that permutations of multi-indices of tensors with symmetry map to the
+// same canonical form
+template <typename S>
+void check_unique_canon_multi_index(const S& /*structure*/) {
+  constexpr size_t rank = S::rank();
+  static_assert(
+      rank > 0 and rank <= 4,
+      "check_unique_canon_multi_index only implemented for ranks 1 - 4");
+
+  using arr = cpp20::array<size_t, rank>;
+  using symmetry = S::symmetry;
+  constexpr auto index_dims = S::dims();
+  constexpr size_t num_ind_components = S::size();
+  constexpr size_t num_total_components =
+      Tensor_detail::number_of_components(index_dims);
+  std::array<bool, num_total_components> index_hit{};
+  std::fill(index_hit.begin(), index_hit.end(), false);
+
+  size_t num_unique_canon_indices = 0;
+  if constexpr (rank == 1) {
+    for (size_t i = 0; i < index_dims[0]; i++) {
+      const auto canon_multi_index =
+          Tensor_detail::canonicalize_tensor_index<symmetry>(arr{{i}});
+      const size_t flattened_index =
+          get_flattened_multi_index(canon_multi_index, index_dims);
+      if (not index_hit[flattened_index]) {
+        num_unique_canon_indices++;
+      }
+      index_hit[flattened_index] = true;
+    }
+  } else if constexpr (rank == 2) {
+    for (size_t i = 0; i < index_dims[0]; i++) {
+      for (size_t j = 0; j < index_dims[1]; j++) {
+        const auto canon_multi_index =
+            Tensor_detail::canonicalize_tensor_index<symmetry>(arr{{i, j}});
+        const size_t flattened_index =
+            get_flattened_multi_index(canon_multi_index, index_dims);
+        if (not index_hit[flattened_index]) {
+          num_unique_canon_indices++;
+        }
+        index_hit[flattened_index] = true;
+      }
+    }
+  } else if constexpr (rank == 3) {
+    for (size_t i = 0; i < index_dims[0]; i++) {
+      for (size_t j = 0; j < index_dims[1]; j++) {
+        for (size_t k = 0; k < index_dims[2]; k++) {
+          const auto canon_multi_index =
+              Tensor_detail::canonicalize_tensor_index<symmetry>(
+                  arr{{i, j, k}});
+          const size_t flattened_index =
+              get_flattened_multi_index(canon_multi_index, index_dims);
+          if (not index_hit[flattened_index]) {
+            num_unique_canon_indices++;
+          }
+          index_hit[flattened_index] = true;
+        }
+      }
+    }
+  } else {
+    for (size_t i = 0; i < index_dims[0]; i++) {
+      for (size_t j = 0; j < index_dims[1]; j++) {
+        for (size_t k = 0; k < index_dims[2]; k++) {
+          for (size_t l = 0; l < index_dims[3]; l++) {
+            const auto canon_multi_index =
+                Tensor_detail::canonicalize_tensor_index<symmetry>(
+                    arr{{i, j, k, l}});
+            const size_t flattened_index =
+                get_flattened_multi_index(canon_multi_index, index_dims);
+            if (not index_hit[flattened_index]) {
+              num_unique_canon_indices++;
+            }
+            index_hit[flattened_index] = true;
+          }
+        }
+      }
+    }
+  }
+
+  CHECK(num_unique_canon_indices == num_ind_components);
+}
+}  // namespace
+
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Structure.Indices",
                   "[DataStructures][Unit]") {
   const int spatial_dim1 = 3;
@@ -1120,6 +1221,8 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Structure.Indices",
     }
   }
 
+  check_unique_canon_multi_index(tensor1);
+
   constexpr size_t spatial_dim2 = 1;
   Tensor_detail::Structure<Symmetry<1, 2, 1>,
                            SpacetimeIndex<spatial_dim2, UpLo::Lo, Frame::Grid>,
@@ -1137,6 +1240,8 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Structure.Indices",
     }
   }
 
+  check_unique_canon_multi_index(tensor2);
+
   constexpr size_t spatial_dim3 = 3;
   Tensor_detail::Structure<
       Symmetry<1, 1, 1>, SpatialIndex<spatial_dim3, UpLo::Up, Frame::Inertial>,
@@ -1153,6 +1258,8 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Structure.Indices",
       }
     }
   }
+
+  check_unique_canon_multi_index(tensor3);
 
   constexpr size_t spatial_dim4 = 3;
   Tensor_detail::Structure<
@@ -1175,6 +1282,8 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Structure.Indices",
       }
     }
   }
+
+  check_unique_canon_multi_index(tensor4);
 }
 
 SPECTRE_TEST_CASE("Unit.Serialization.Tensor",
