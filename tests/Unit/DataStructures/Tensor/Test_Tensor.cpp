@@ -1102,9 +1102,10 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.StreamStructure",
 }
 
 namespace {
+// Helper for calculating the flattened 1D index of a multi-dimensional index
 template <size_t Rank>
-size_t get_flattened_multi_index(const cpp20::array<size_t, Rank>& tensor_index,
-                                 const std::array<size_t, Rank>& index_dims) {
+size_t get_flattened_index(const cpp20::array<size_t, Rank>& tensor_index,
+                           const std::array<size_t, Rank>& index_dims) {
   if constexpr (Rank == 0) {
     return 0;
   } else if constexpr (Rank == 1) {
@@ -1119,16 +1120,19 @@ size_t get_flattened_multi_index(const cpp20::array<size_t, Rank>& tensor_index,
   }
 }
 
-// Checks that permutations of multi-indices of tensors with symmetry map to the
-// same canonical form
+// Checks that:
+// (1) `get_storage_index` and `get_canonical_tensor_index` are inverses
+// (2) `canonicalize_tensor_index` yields the same canonical multi-index for
+//     components with symmetric indices
+//
+// (1) tests `Structure`'s interface while (2) tests its internal logic
 template <typename S>
-void check_unique_canon_multi_index(const S& /*structure*/) {
+void check_tensor_index_canonicalization(const S& structure) {
   constexpr size_t rank = S::rank();
   static_assert(
       rank > 0 and rank <= 4,
-      "check_unique_canon_multi_index only implemented for ranks 1 - 4");
+      "check_tensor_index_canonicalization only implemented for ranks 1 - 4");
 
-  using arr = cpp20::array<size_t, rank>;
   using symmetry = S::symmetry;
   constexpr auto index_dims = S::dims();
   constexpr size_t num_ind_components = S::size();
@@ -1141,25 +1145,36 @@ void check_unique_canon_multi_index(const S& /*structure*/) {
   if constexpr (rank == 1) {
     for (size_t i = 0; i < index_dims[0]; i++) {
       const auto canon_multi_index =
-          Tensor_detail::canonicalize_tensor_index<symmetry>(arr{{i}});
+          Tensor_detail::canonicalize_tensor_index<symmetry>(
+              cpp20::array<size_t, rank>{{i}});
       const size_t flattened_index =
-          get_flattened_multi_index(canon_multi_index, index_dims);
+          get_flattened_index(canon_multi_index, index_dims);
       if (not index_hit[flattened_index]) {
         num_unique_canon_indices++;
       }
       index_hit[flattened_index] = true;
+
+      CHECK(structure.get_storage_index(std::array<size_t, rank>{{i}}) ==
+            structure.get_storage_index(structure.get_canonical_tensor_index(
+                structure.get_storage_index(std::array<size_t, rank>{{i}}))));
     }
   } else if constexpr (rank == 2) {
     for (size_t i = 0; i < index_dims[0]; i++) {
       for (size_t j = 0; j < index_dims[1]; j++) {
         const auto canon_multi_index =
-            Tensor_detail::canonicalize_tensor_index<symmetry>(arr{{i, j}});
+            Tensor_detail::canonicalize_tensor_index<symmetry>(
+                cpp20::array<size_t, rank>{{i, j}});
         const size_t flattened_index =
-            get_flattened_multi_index(canon_multi_index, index_dims);
+            get_flattened_index(canon_multi_index, index_dims);
         if (not index_hit[flattened_index]) {
           num_unique_canon_indices++;
         }
         index_hit[flattened_index] = true;
+
+        CHECK(structure.get_storage_index(std::array<size_t, rank>{{i, j}}) ==
+              structure.get_storage_index(structure.get_canonical_tensor_index(
+                  structure.get_storage_index(
+                      std::array<size_t, rank>{{i, j}}))));
       }
     }
   } else if constexpr (rank == 3) {
@@ -1168,13 +1183,20 @@ void check_unique_canon_multi_index(const S& /*structure*/) {
         for (size_t k = 0; k < index_dims[2]; k++) {
           const auto canon_multi_index =
               Tensor_detail::canonicalize_tensor_index<symmetry>(
-                  arr{{i, j, k}});
+                  cpp20::array<size_t, rank>{{i, j, k}});
           const size_t flattened_index =
-              get_flattened_multi_index(canon_multi_index, index_dims);
+              get_flattened_index(canon_multi_index, index_dims);
           if (not index_hit[flattened_index]) {
             num_unique_canon_indices++;
           }
           index_hit[flattened_index] = true;
+
+          CHECK(
+              structure.get_storage_index(
+                  std::array<size_t, rank>{{i, j, k}}) ==
+              structure.get_storage_index(structure.get_canonical_tensor_index(
+                  structure.get_storage_index(
+                      std::array<size_t, rank>{{i, j, k}}))));
         }
       }
     }
@@ -1185,13 +1207,20 @@ void check_unique_canon_multi_index(const S& /*structure*/) {
           for (size_t l = 0; l < index_dims[3]; l++) {
             const auto canon_multi_index =
                 Tensor_detail::canonicalize_tensor_index<symmetry>(
-                    arr{{i, j, k, l}});
+                    cpp20::array<size_t, rank>{{i, j, k, l}});
             const size_t flattened_index =
-                get_flattened_multi_index(canon_multi_index, index_dims);
+                get_flattened_index(canon_multi_index, index_dims);
             if (not index_hit[flattened_index]) {
               num_unique_canon_indices++;
             }
             index_hit[flattened_index] = true;
+
+            CHECK(structure.get_storage_index(
+                      std::array<size_t, rank>{{i, j, k, l}}) ==
+                  structure.get_storage_index(
+                      structure.get_canonical_tensor_index(
+                          structure.get_storage_index(
+                              std::array<size_t, rank>{{i, j, k, l}}))));
           }
         }
       }
@@ -1209,57 +1238,21 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Structure.Indices",
                            SpatialIndex<spatial_dim1, UpLo::Lo, Frame::Grid>,
                            SpatialIndex<spatial_dim1, UpLo::Lo, Frame::Grid>,
                            SpatialIndex<spatial_dim1, UpLo::Lo, Frame::Grid>>
-      tensor1;
-  for (size_t i = 0; i < tensor1.dim<0>(); ++i) {
-    for (size_t j = 0; j < tensor1.dim<1>(); ++j) {
-      for (size_t k = 0; k < tensor1.dim<2>(); ++k) {
-        CHECK(
-            tensor1.get_storage_index(std::array<size_t, 3>{{i, j, k}}) ==
-            tensor1.get_storage_index(tensor1.get_canonical_tensor_index(
-                tensor1.get_storage_index(std::array<size_t, 3>{{i, j, k}}))));
-      }
-    }
-  }
-
-  check_unique_canon_multi_index(tensor1);
+      structure1;
 
   constexpr size_t spatial_dim2 = 1;
   Tensor_detail::Structure<Symmetry<1, 2, 1>,
                            SpacetimeIndex<spatial_dim2, UpLo::Lo, Frame::Grid>,
                            SpatialIndex<spatial_dim2, UpLo::Lo, Frame::Grid>,
                            SpacetimeIndex<spatial_dim2, UpLo::Lo, Frame::Grid>>
-      tensor2;
-  for (size_t i = 0; i < tensor2.dim<0>(); ++i) {
-    for (size_t j = 0; j < tensor2.dim<1>(); ++j) {
-      for (size_t k = 0; k < tensor2.dim<2>(); ++k) {
-        CHECK(
-            tensor2.get_storage_index(std::array<size_t, 3>{{i, j, k}}) ==
-            tensor2.get_storage_index(tensor2.get_canonical_tensor_index(
-                tensor2.get_storage_index(std::array<size_t, 3>{{i, j, k}}))));
-      }
-    }
-  }
-
-  check_unique_canon_multi_index(tensor2);
+      structure2;
 
   constexpr size_t spatial_dim3 = 3;
   Tensor_detail::Structure<
       Symmetry<1, 1, 1>, SpatialIndex<spatial_dim3, UpLo::Up, Frame::Inertial>,
       SpatialIndex<spatial_dim3, UpLo::Up, Frame::Inertial>,
       SpatialIndex<spatial_dim3, UpLo::Up, Frame::Inertial>>
-      tensor3;
-  for (size_t i = 0; i < tensor3.dim<0>(); ++i) {
-    for (size_t j = 0; j < tensor3.dim<1>(); ++j) {
-      for (size_t k = 0; k < tensor3.dim<2>(); ++k) {
-        CHECK(
-            tensor3.get_storage_index(std::array<size_t, 3>{{i, j, k}}) ==
-            tensor3.get_storage_index(tensor3.get_canonical_tensor_index(
-                tensor3.get_storage_index(std::array<size_t, 3>{{i, j, k}}))));
-      }
-    }
-  }
-
-  check_unique_canon_multi_index(tensor3);
+      structure3;
 
   constexpr size_t spatial_dim4 = 3;
   Tensor_detail::Structure<
@@ -1268,22 +1261,12 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Structure.Indices",
       SpacetimeIndex<spatial_dim4, UpLo::Up, Frame::Inertial>,
       SpacetimeIndex<spatial_dim4, UpLo::Up, Frame::Inertial>,
       SpatialIndex<spatial_dim4, UpLo::Lo, Frame::Inertial>>
-      tensor4;
-  for (size_t i = 0; i < tensor4.dim<0>(); ++i) {
-    for (size_t j = 0; j < tensor4.dim<1>(); ++j) {
-      for (size_t k = 0; k < tensor4.dim<2>(); ++k) {
-        for (size_t l = 0; l < tensor4.dim<3>(); ++l) {
-          CHECK(
-              tensor4.get_storage_index(std::array<size_t, 4>{{i, j, k, l}}) ==
-              tensor4.get_storage_index(
-                  tensor4.get_canonical_tensor_index(tensor4.get_storage_index(
-                      std::array<size_t, 4>{{i, j, k, l}}))));
-        }
-      }
-    }
-  }
+      structure4;
 
-  check_unique_canon_multi_index(tensor4);
+  check_tensor_index_canonicalization(structure1);
+  check_tensor_index_canonicalization(structure2);
+  check_tensor_index_canonicalization(structure3);
+  check_tensor_index_canonicalization(structure4);
 }
 
 SPECTRE_TEST_CASE("Unit.Serialization.Tensor",
