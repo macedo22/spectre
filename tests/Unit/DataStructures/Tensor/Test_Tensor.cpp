@@ -1233,28 +1233,28 @@ void check_tensor_index_canonicalization(const S& structure) {
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Structure.Indices",
                   "[DataStructures][Unit]") {
   const int spatial_dim1 = 3;
-  Tensor_detail::Structure<Symmetry<2, 1, 1>,
-                           SpatialIndex<spatial_dim1, UpLo::Lo, Frame::Grid>,
-                           SpatialIndex<spatial_dim1, UpLo::Lo, Frame::Grid>,
-                           SpatialIndex<spatial_dim1, UpLo::Lo, Frame::Grid>>
+  const Tensor_detail::Structure<
+      Symmetry<2, 1, 1>, SpatialIndex<spatial_dim1, UpLo::Lo, Frame::Grid>,
+      SpatialIndex<spatial_dim1, UpLo::Lo, Frame::Grid>,
+      SpatialIndex<spatial_dim1, UpLo::Lo, Frame::Grid>>
       structure1;
 
   constexpr size_t spatial_dim2 = 1;
-  Tensor_detail::Structure<Symmetry<1, 2, 1>,
-                           SpacetimeIndex<spatial_dim2, UpLo::Lo, Frame::Grid>,
-                           SpatialIndex<spatial_dim2, UpLo::Lo, Frame::Grid>,
-                           SpacetimeIndex<spatial_dim2, UpLo::Lo, Frame::Grid>>
+  const Tensor_detail::Structure<
+      Symmetry<1, 2, 1>, SpacetimeIndex<spatial_dim2, UpLo::Lo, Frame::Grid>,
+      SpatialIndex<spatial_dim2, UpLo::Lo, Frame::Grid>,
+      SpacetimeIndex<spatial_dim2, UpLo::Lo, Frame::Grid>>
       structure2;
 
   constexpr size_t spatial_dim3 = 3;
-  Tensor_detail::Structure<
+  const Tensor_detail::Structure<
       Symmetry<1, 1, 1>, SpatialIndex<spatial_dim3, UpLo::Up, Frame::Inertial>,
       SpatialIndex<spatial_dim3, UpLo::Up, Frame::Inertial>,
       SpatialIndex<spatial_dim3, UpLo::Up, Frame::Inertial>>
       structure3;
 
   constexpr size_t spatial_dim4 = 3;
-  Tensor_detail::Structure<
+  const Tensor_detail::Structure<
       Symmetry<1, 2, 2, 1>,
       SpatialIndex<spatial_dim4, UpLo::Lo, Frame::Inertial>,
       SpacetimeIndex<spatial_dim4, UpLo::Up, Frame::Inertial>,
