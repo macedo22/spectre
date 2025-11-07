@@ -117,6 +117,18 @@ constexpr size_t index_to_swap_with(
   return current_index;
 }
 
+// \brief Reorders a tensor multi-index to a canonical form based on its
+// symmetries
+//
+// \details Reorders the values of the symmetric indices of a multi-index such
+// that each symmetric subset has values descending from left to right in the
+// multi-index. For example, if `tensor_index` is `[1, 2, 3, 4]` and `symm` is
+// `[2, 2, 1, 1]`, the returned canonical multi-index is `[2, 1, 4, 3]`.
+//
+// \param tensor_index the multi-index to canonicalize
+// \tparam symm the canonical symmetry of the tensor
+// (see `Symmetry` for the form of canonical symmetries)
+// \return the reordered, canonical form of `tensor_index`
 template <size_t Rank>
 constexpr cpp20::array<size_t, Rank> canonicalize_tensor_index(
     cpp20::array<size_t, Rank> tensor_index,
@@ -132,6 +144,14 @@ constexpr cpp20::array<size_t, Rank> canonicalize_tensor_index(
   return tensor_index;
 }
 
+// \brief Reorders a tensor multi-index to a canonical form based on its
+// symmetries
+//
+// \details See other overload for detaiils
+//
+// \tparam Symm the symmetry of the tensor
+// \param tensor_index the multi-index to canonicalize
+// \return the reordered, canonical form of `tensor_index`
 template <typename Symm, size_t Rank>
 constexpr cpp20::array<size_t, Rank> canonicalize_tensor_index(
     cpp20::array<size_t, Rank> tensor_index) {
