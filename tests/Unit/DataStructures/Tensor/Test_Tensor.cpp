@@ -1132,7 +1132,7 @@ void check_tensor_index_canonicalization(const S& structure) {
       rank > 0 and rank <= 4,
       "check_tensor_index_canonicalization only implemented for ranks 1 - 4");
 
-  using symmetry = S::symmetry;
+  using symmetry = typename S::symmetry;
   constexpr auto index_dims = S::dims();
   constexpr size_t num_ind_components = S::size();
   constexpr size_t num_total_components =
@@ -1148,10 +1148,10 @@ void check_tensor_index_canonicalization(const S& structure) {
               cpp20::array<size_t, rank>{{i}});
       const size_t flattened_index =
           get_flattened_index(canon_multi_index, index_dims);
-      if (not index_hit[flattened_index]) {
+      if (not gsl::at(index_hit, flattened_index)) {
         num_unique_canon_indices++;
       }
-      index_hit[flattened_index] = true;
+      gsl::at(index_hit, flattened_index) = true;
 
       CHECK(structure.get_storage_index(std::array<size_t, rank>{{i}}) ==
             structure.get_storage_index(structure.get_canonical_tensor_index(
@@ -1165,10 +1165,10 @@ void check_tensor_index_canonicalization(const S& structure) {
                 cpp20::array<size_t, rank>{{i, j}});
         const size_t flattened_index =
             get_flattened_index(canon_multi_index, index_dims);
-        if (not index_hit[flattened_index]) {
+        if (not gsl::at(index_hit, flattened_index)) {
           num_unique_canon_indices++;
         }
-        index_hit[flattened_index] = true;
+        gsl::at(index_hit, flattened_index) = true;
 
         CHECK(structure.get_storage_index(std::array<size_t, rank>{{i, j}}) ==
               structure.get_storage_index(structure.get_canonical_tensor_index(
@@ -1185,10 +1185,10 @@ void check_tensor_index_canonicalization(const S& structure) {
                   cpp20::array<size_t, rank>{{i, j, k}});
           const size_t flattened_index =
               get_flattened_index(canon_multi_index, index_dims);
-          if (not index_hit[flattened_index]) {
+          if (not gsl::at(index_hit, flattened_index)) {
             num_unique_canon_indices++;
           }
-          index_hit[flattened_index] = true;
+          gsl::at(index_hit, flattened_index) = true;
 
           CHECK(
               structure.get_storage_index(
@@ -1209,10 +1209,10 @@ void check_tensor_index_canonicalization(const S& structure) {
                     cpp20::array<size_t, rank>{{i, j, k, l}});
             const size_t flattened_index =
                 get_flattened_index(canon_multi_index, index_dims);
-            if (not index_hit[flattened_index]) {
+            if (not gsl::at(index_hit, flattened_index)) {
               num_unique_canon_indices++;
             }
-            index_hit[flattened_index] = true;
+            gsl::at(index_hit, flattened_index) = true;
 
             CHECK(structure.get_storage_index(
                       std::array<size_t, rank>{{i, j, k, l}}) ==
