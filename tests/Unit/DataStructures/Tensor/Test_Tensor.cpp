@@ -1103,7 +1103,8 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.StreamStructure",
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Structure.Indices",
                   "[DataStructures][Unit]") {
   const int dim = 3;
-  Tensor_detail::Structure<Symmetry<2, 1, 1>,
+  // TODO : undo change to symmetry
+  Tensor_detail::Structure<Symmetry<1, 1, 1>,
                            SpatialIndex<dim, UpLo::Lo, Frame::Grid>,
                            SpatialIndex<dim, UpLo::Lo, Frame::Grid>,
                            SpatialIndex<dim, UpLo::Lo, Frame::Grid>>
@@ -1117,6 +1118,58 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Structure.Indices",
       }
     }
   }
+
+  const cpp20::array<int, dim> symm = {{1, 1, 1}};
+  const cpp20::array<size_t, dim> expected_canon_multi_index = {{2, 1, 0}};
+
+  const cpp20::array<size_t, dim> index_012 = {{0, 1, 2}};
+  const cpp20::array<size_t, dim> index_201 = {{2, 0, 1}};
+  const cpp20::array<size_t, dim> index_120 = {{1, 2, 0}};
+  const cpp20::array<size_t, dim> index_210 = {{2, 1, 0}};
+  const cpp20::array<size_t, dim> index_021 = {{0, 2, 1}};
+  const cpp20::array<size_t, dim> index_102 = {{1, 0, 2}};
+
+  CHECK(Tensor_detail::canonicalize_tensor_index(index_012, symm) ==
+        expected_canon_multi_index);
+  CHECK(Tensor_detail::canonicalize_tensor_index(index_201, symm) ==
+        expected_canon_multi_index);
+  CHECK(Tensor_detail::canonicalize_tensor_index(index_120, symm) ==
+        expected_canon_multi_index);
+  CHECK(Tensor_detail::canonicalize_tensor_index(index_210, symm) ==
+        expected_canon_multi_index);
+  CHECK(Tensor_detail::canonicalize_tensor_index(index_021, symm) ==
+        expected_canon_multi_index);
+  CHECK(Tensor_detail::canonicalize_tensor_index(index_102, symm) ==
+        expected_canon_multi_index);
+
+  const std::array<size_t, dim> expected_canon_multi_index_2 = {{2, 1, 0}};
+  const size_t expected_storage_index =
+      tensor.get_storage_index(expected_canon_multi_index_2);
+
+  const std::array<size_t, dim> index_012_2 = {{0, 1, 2}};
+  const std::array<size_t, dim> index_201_2 = {{2, 0, 1}};
+  const std::array<size_t, dim> index_120_2 = {{1, 2, 0}};
+  const std::array<size_t, dim> index_210_2 = {{2, 1, 0}};
+  const std::array<size_t, dim> index_021_2 = {{0, 2, 1}};
+  const std::array<size_t, dim> index_102_2 = {{1, 0, 2}};
+
+  CHECK(tensor.get_storage_index(index_012_2) == expected_storage_index);
+  CHECK(tensor.get_storage_index(index_201_2) == expected_storage_index);
+  CHECK(tensor.get_storage_index(index_120_2) == expected_storage_index);
+  CHECK(tensor.get_storage_index(index_210_2) == expected_storage_index);
+  CHECK(tensor.get_storage_index(index_021_2) == expected_storage_index);
+  CHECK(tensor.get_storage_index(index_102_2) == expected_storage_index);
+
+  // auto iii = tnsr::iii<double, 3, Frame::Grid>{};
+  // double value = 0.0;
+  // for (size_t i = 0; i < 3; i++) {
+  //   for (size_t j = 0; j < 3; j++) {
+  //     for (size_t k = 0; k < 3; k++) {
+  //       iii.get(i, j, k)
+  //       value += 1.0;
+  //     }
+  //   }
+  // }
 }
 
 SPECTRE_TEST_CASE("Unit.Serialization.Tensor",

@@ -6,6 +6,7 @@
 #pragma once
 
 #include <limits>
+#include <random>
 #include <type_traits>
 
 #include "DataStructures/DataVector.hpp"
@@ -13,6 +14,8 @@
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Variables.hpp"
 #include "DataStructures/VectorImpl.hpp"
+#include "Framework/TestHelpers.hpp"
+#include "Helpers/DataStructures/MakeWithRandomValues.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/TestHelpers.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/TMPL.hpp"
@@ -27,29 +30,44 @@ namespace TestHelpers::tenex {
 ///
 /// \param data the data being stored in the Tensors
 template <bool ReturnLhsTensor, typename DataType>
-void test_evaluate_rank_0(const DataType& data) {
-  const Tensor<DataType> R{{{data}}};
+// void test_evaluate_rank_0(const DataType& data) {
+// const Tensor<DataType> R{{{data}}};
+// Scalar<DataType> L{};
+// call_evaluate<ReturnLhsTensor>(make_not_null(&L), R());
+void test_evaluate_rank_0() {
+  MAKE_GENERATOR(generator);
+  std::uniform_real_distribution<> distribution(-5.0, 5.0);
+  const size_t used_for_size = 3;
+  const auto R = make_with_random_values<Tensor<DataType>>(
+      make_not_null(&generator), distribution, used_for_size);
+  // auto expected_L =
+  //     ReturnLhsTensor
+  //         ? L_a_type{}
+  //         : make_with_value<L_a_type>(
+  //               used_for_size, component_placeholder_value<DataType>::value);
+  // const Tensor<DataType> expected_L = R;
   Scalar<DataType> L{};
   call_evaluate<ReturnLhsTensor>(make_not_null(&L), R());
 
-  CHECK(get(L) == data);  // check LHS evaluated correctly
+  // CHECK(get(L) == get(R));  // check LHS evaluated correctly
+  CHECK(L == R);  // check LHS evaluated correctly
 
   // Test with Variables
   if constexpr (is_derived_of_vector_impl_v<DataType>) {
     Variables<tmpl::list<::Tags::TempTensor<0, Scalar<DataType>>,
                          ::Tags::TempTensor<1, Scalar<DataType>>>>
-        vars(data.size(), std::numeric_limits<double>::signaling_NaN());
+        vars(used_for_size, std::numeric_limits<double>::signaling_NaN());
 
     Scalar<DataType>& R_temp =
         get<::Tags::TempTensor<0, Scalar<DataType>>>(vars);
-    get(R_temp) = data;
+    get(R_temp) = get(R);
 
     Scalar<DataType>& L_temp =
         get<::Tags::TempTensor<1, Scalar<DataType>>>(vars);
     call_evaluate<ReturnLhsTensor>(make_not_null(&L_temp), R());
 
-    CHECK(get(R_temp) == data);  // check RHS wasn't modified
-    CHECK(get(L_temp) == data);  // check LHS evaluated correctly
+    CHECK(R_temp == R);  // check RHS wasn't modified
+    CHECK(L_temp == R);  // check LHS evaluated correctly
   }
 }
 

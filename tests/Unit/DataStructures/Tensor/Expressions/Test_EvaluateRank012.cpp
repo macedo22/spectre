@@ -10,14 +10,25 @@
 #include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank0.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank1.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank2.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/TestHelpers.hpp"
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank012",
                   "[DataStructures][Unit]") {
+  // TODO : remove this
+  TestHelpers::tenex::test_evaluate<
+      true, double, Symmetry<1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>(ti::a);
+
+  //   // Rank 0: double
+  //   TestHelpers::tenex::test_evaluate_rank_0<true, double>(-7.31);
+  //   // Rank 0: DataVector
+  //   TestHelpers::tenex::test_evaluate_rank_0<true, DataVector>(
+  //       DataVector{-3.1, 9.4, 0.0, -3.1, 2.4, 9.8});
+
   // Rank 0: double
-  TestHelpers::tenex::test_evaluate_rank_0<true, double>(-7.31);
+  TestHelpers::tenex::test_evaluate_rank_0<true, double>();
   // Rank 0: DataVector
-  TestHelpers::tenex::test_evaluate_rank_0<true, DataVector>(
-      DataVector{-3.1, 9.4, 0.0, -3.1, 2.4, 9.8});
+  TestHelpers::tenex::test_evaluate_rank_0<true, DataVector>();
 
   // Rank 1: spacetime
   TestHelpers::tenex::test_evaluate_rank_1<

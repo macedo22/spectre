@@ -82,10 +82,58 @@ constexpr size_t number_of_components(const std::array<size_t, Size>& dims) {
   return number;
 }
 
+// template <typename T, typename S, size_t Size>
+// constexpr void increment_tensor_index(cpp20::array<T, Size>& tensor_index,
+//                                       const cpp20::array<S, Size>& dims) {
+//   for (size_t i = 0; i < Size; ++i) {
+//     if (++tensor_index[i] < static_cast<T>(dims[i])) {
+//       return;
+//     }
+//     tensor_index[i] = 0;
+//   }
+// }
+
+// // index_to_swap_with takes the last two arguments as opposed to just one of
+// // them so that when the max constexpr steps is reached on clang it is reached
+// // in this function rather than in array.
+// template <size_t Rank>
+// constexpr size_t index_to_swap_with(
+//     const cpp20::array<size_t, Rank>& tensor_index,
+//     const cpp20::array<int, Rank>& sym, size_t index_to_swap_with,
+//     const size_t current_index) {
+//   // If you encounter infinite loop compilation errors here you are
+//   // constructing very large Tensor's. If you are sure Tensor is
+//   // the correct data structure you can extend the compiler limit
+//   // by passing the flag -fconstexpr-steps=<SOME LARGER VALUE>
+//   while (true) {  // See source code comment on line above this one for fix
+//     if (Rank == index_to_swap_with) {
+//       return current_index;
+//     } else if (tensor_index[current_index] <
+//                    tensor_index[index_to_swap_with] and
+//                sym[current_index] == sym[index_to_swap_with]) {
+//       return index_to_swap_with;
+//     }
+//     index_to_swap_with++;
+//   }
+// }
+
+// template <size_t Size, size_t SymmSize>
+// constexpr cpp20::array<size_t, Size> canonicalize_tensor_index(
+//     cpp20::array<size_t, Size> tensor_index,
+//     const cpp20::array<int, SymmSize>& symm) {
+//   for (size_t i = 0; i < Size; ++i) {
+//     const size_t temp = tensor_index[i];
+//     const size_t swap = index_to_swap_with(tensor_index, symm, i, i);
+//     tensor_index[i] = tensor_index[swap];
+//     tensor_index[swap] = temp;
+//   }
+//   return tensor_index;
+// }
+
 template <typename T, typename S, size_t Size>
 constexpr void increment_tensor_index(cpp20::array<T, Size>& tensor_index,
                                       const cpp20::array<S, Size>& dims) {
-  for (size_t i = 0; i < Size; ++i) {
+  for (size_t i = Size - 1; i < Size; --i) {
     if (++tensor_index[i] < static_cast<T>(dims[i])) {
       return;
     }
@@ -105,27 +153,28 @@ constexpr size_t index_to_swap_with(
   // constructing very large Tensor's. If you are sure Tensor is
   // the correct data structure you can extend the compiler limit
   // by passing the flag -fconstexpr-steps=<SOME LARGER VALUE>
-  while (true) {  // See source code comment on line above this one for fix
-    if (Rank == index_to_swap_with) {
-      return current_index;
-    } else if (tensor_index[current_index] <
+  while (index_to_swap_with < Rank) {  // See source code comment on line above this one for fix
+    if (tensor_index[current_index] >
                    tensor_index[index_to_swap_with] and
                sym[current_index] == sym[index_to_swap_with]) {
       return index_to_swap_with;
     }
-    index_to_swap_with++;
+    index_to_swap_with--;
   }
+  return current_index;
 }
 
 template <size_t Size, size_t SymmSize>
 constexpr cpp20::array<size_t, Size> canonicalize_tensor_index(
     cpp20::array<size_t, Size> tensor_index,
     const cpp20::array<int, SymmSize>& symm) {
-  for (size_t i = 0; i < Size; ++i) {
-    const size_t temp = tensor_index[i];
-    const size_t swap = index_to_swap_with(tensor_index, symm, i, i);
-    tensor_index[i] = tensor_index[swap];
-    tensor_index[swap] = temp;
+  for (size_t i = 1; i < Size; ++i) {
+    for (size_t j = i; j < Size; --j) {
+      const size_t temp = tensor_index[j];
+      const size_t swap = index_to_swap_with(tensor_index, symm, j, j);
+      tensor_index[j] = tensor_index[swap];
+      tensor_index[swap] = temp;
+    }
   }
   return tensor_index;
 }

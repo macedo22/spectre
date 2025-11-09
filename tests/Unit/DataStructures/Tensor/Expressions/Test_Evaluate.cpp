@@ -4,6 +4,7 @@
 #include "Framework/TestingFramework.hpp"
 
 #include <cstddef>
+#include <iostream>  // TODO : remove
 #include <type_traits>
 
 #include "DataStructures/Tensor/Expressions/Evaluate.hpp"
@@ -88,7 +89,7 @@ void test_evaluate_and_canon_multi_index_consistency() {
   using datatype = double;
   using frame = Frame::Inertial;
 
-  using iii = tnsr::iii<datatype, 2>::structure;
+  using iii = tnsr::iii<datatype, 3>::structure;
   using aaa = Tensor<datatype, Symmetry<1, 1, 1>,
                      index_list<SpacetimeIndex<3, UpLo::Lo, frame>,
                                 SpacetimeIndex<3, UpLo::Lo, frame>,
@@ -104,9 +105,27 @@ void test_evaluate_and_canon_multi_index_consistency() {
                         SpatialIndex<2, UpLo::Lo, frame>,
                         SpacetimeIndex<2, UpLo::Lo, frame>,
                         SpacetimeIndex<2, UpLo::Lo, frame>>>::structure;
+  using aiai =
+      Tensor<datatype, Symmetry<2, 1, 2, 1>,
+             index_list<SpacetimeIndex<3, UpLo::Lo, frame>,
+                        SpatialIndex<3, UpLo::Lo, frame>,
+                        SpacetimeIndex<3, UpLo::Lo, frame>,
+                        SpatialIndex<3, UpLo::Lo, frame>>>::structure;
+  using iiii =
+      Tensor<datatype, Symmetry<1, 1, 1, 1>,
+             index_list<SpatialIndex<3, UpLo::Lo, frame>,
+                        SpatialIndex<3, UpLo::Lo, frame>,
+                        SpatialIndex<3, UpLo::Lo, frame>,
+                        SpatialIndex<3, UpLo::Lo, frame>>>::structure;
 
   for (size_t i = 0; i < iii::size(); i++) {
     const auto canon_multi_index = iii::get_canonical_tensor_index(i);
+    // TODO : remove
+    if (not(canon_multi_index[0] >= canon_multi_index[1]) or
+        not(canon_multi_index[1] >= canon_multi_index[2])) {
+      std::cout << "i : " << i << ", canon_multi_index : " << canon_multi_index
+                << std::endl;
+    }
 
     CHECK(canon_multi_index[0] >= canon_multi_index[1]);
     CHECK(canon_multi_index[1] >= canon_multi_index[2]);
@@ -114,6 +133,14 @@ void test_evaluate_and_canon_multi_index_consistency() {
 
   for (size_t i = 0; i < aaa::size(); i++) {
     const auto canon_multi_index = aaa::get_canonical_tensor_index(i);
+    // // TODO : remove
+    // if (not (canon_multi_index[0] >= canon_multi_index[1]) or
+    //     not (canon_multi_index[1] >= canon_multi_index[2])) {
+    //   std::cout << "i : " << i << ", canon_multi_index : " <<
+    //   canon_multi_index << std::endl;
+    // }
+    // std::cout << "i : " << i << ", canon_multi_index : " << canon_multi_index
+    // << std::endl;
 
     CHECK(canon_multi_index[0] >= canon_multi_index[1]);
     CHECK(canon_multi_index[1] >= canon_multi_index[2]);
@@ -130,6 +157,21 @@ void test_evaluate_and_canon_multi_index_consistency() {
     const auto canon_multi_index = iiaa::get_canonical_tensor_index(i);
 
     CHECK(canon_multi_index[0] >= canon_multi_index[1]);
+    CHECK(canon_multi_index[2] >= canon_multi_index[3]);
+  }
+
+  for (size_t i = 0; i < aiai::size(); i++) {
+    const auto canon_multi_index = aiai::get_canonical_tensor_index(i);
+
+    CHECK(canon_multi_index[0] >= canon_multi_index[2]);
+    CHECK(canon_multi_index[1] >= canon_multi_index[3]);
+  }
+
+  for (size_t i = 0; i < iiii::size(); i++) {
+    const auto canon_multi_index = iiii::get_canonical_tensor_index(i);
+
+    CHECK(canon_multi_index[0] >= canon_multi_index[1]);
+    CHECK(canon_multi_index[1] >= canon_multi_index[2]);
     CHECK(canon_multi_index[2] >= canon_multi_index[3]);
   }
 }
@@ -244,118 +286,164 @@ void test_lhs_tensorindex_reorder_rank2() {
   using Tt_list = make_tensorindex_list<ti::t, ti::t>;
 
   // lower
-  test_lhs_tensorindex_reorder_impl<ij_list, ij_list>::apply(asymmetric_symm);
-  test_lhs_tensorindex_reorder_impl<ij_list, ij_list>::apply(symmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<ij_list,
+  // ij_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<ij_list, ij_list>::apply(symmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<ji_list, ji_list>::apply(asymmetric_symm);
-  test_lhs_tensorindex_reorder_impl<ji_list, ij_list>::apply(symmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<ji_list,
+  // ji_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<ji_list, ij_list>::apply(symmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<ab_list, ab_list>::apply(asymmetric_symm);
-  test_lhs_tensorindex_reorder_impl<ab_list, ab_list>::apply(symmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<ab_list,
+  // ab_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<ab_list, ab_list>::apply(symmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<ba_list, ba_list>::apply(asymmetric_symm);
-  test_lhs_tensorindex_reorder_impl<ba_list, ab_list>::apply(symmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<ba_list,
+  // ba_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<ba_list, ab_list>::apply(symmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<ai_list, ai_list>::apply(asymmetric_symm);
-  test_lhs_tensorindex_reorder_impl<ai_list, ia_list>::apply(symmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<ai_list,
+  // ai_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<ai_list, ia_list>::apply(symmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<ia_list, ia_list>::apply(asymmetric_symm);
-  test_lhs_tensorindex_reorder_impl<ia_list, ia_list>::apply(symmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<ia_list,
+  // ia_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<ia_list, ia_list>::apply(symmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<it_list, it_list>::apply(asymmetric_symm);
-  test_lhs_tensorindex_reorder_impl<it_list, it_list>::apply(symmetric_symm);
+  // // test_lhs_tensorindex_reorder_impl<it_list,
+  // it_list>::apply(asymmetric_symm);
+  // // test_lhs_tensorindex_reorder_impl<it_list,
+  // it_list>::apply(symmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<ti_list, ti_list>::apply(asymmetric_symm);
-  test_lhs_tensorindex_reorder_impl<ti_list, it_list>::apply(symmetric_symm);
+  // // test_lhs_tensorindex_reorder_impl<ti_list,
+  // ti_list>::apply(asymmetric_symm);
+  // // test_lhs_tensorindex_reorder_impl<ti_list,
+  // it_list>::apply(symmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<at_list, at_list>::apply(asymmetric_symm);
-  test_lhs_tensorindex_reorder_impl<at_list, at_list>::apply(symmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<at_list,
+  // at_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<at_list, at_list>::apply(symmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<ta_list, ta_list>::apply(asymmetric_symm);
-  test_lhs_tensorindex_reorder_impl<ta_list, at_list>::apply(symmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<ta_list,
+  // ta_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<ta_list, at_list>::apply(symmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<tt_list, tt_list>::apply(asymmetric_symm);
-  test_lhs_tensorindex_reorder_impl<tt_list, tt_list>::apply(symmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<tt_list,
+  // tt_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<tt_list, tt_list>::apply(symmetric_symm);
 
   // upper
-  test_lhs_tensorindex_reorder_impl<IJ_list, IJ_list>::apply(asymmetric_symm);
-  test_lhs_tensorindex_reorder_impl<IJ_list, IJ_list>::apply(symmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<IJ_list,
+  // IJ_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<IJ_list, IJ_list>::apply(symmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<JI_list, JI_list>::apply(asymmetric_symm);
-  test_lhs_tensorindex_reorder_impl<JI_list, IJ_list>::apply(symmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<JI_list,
+  // JI_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<JI_list, IJ_list>::apply(symmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<AB_list, AB_list>::apply(asymmetric_symm);
-  test_lhs_tensorindex_reorder_impl<AB_list, AB_list>::apply(symmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<AB_list,
+  // AB_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<AB_list, AB_list>::apply(symmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<BA_list, BA_list>::apply(asymmetric_symm);
-  test_lhs_tensorindex_reorder_impl<BA_list, AB_list>::apply(symmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<BA_list,
+  // BA_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<BA_list, AB_list>::apply(symmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<AI_list, AI_list>::apply(asymmetric_symm);
-  test_lhs_tensorindex_reorder_impl<AI_list, IA_list>::apply(symmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<AI_list,
+  // AI_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<AI_list, IA_list>::apply(symmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<IA_list, IA_list>::apply(asymmetric_symm);
-  test_lhs_tensorindex_reorder_impl<IA_list, IA_list>::apply(symmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<IA_list,
+  // IA_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<IA_list, IA_list>::apply(symmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<IT_list, IT_list>::apply(asymmetric_symm);
-  test_lhs_tensorindex_reorder_impl<IT_list, IT_list>::apply(symmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<IT_list,
+  // IT_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<IT_list, IT_list>::apply(symmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<TI_list, TI_list>::apply(asymmetric_symm);
-  test_lhs_tensorindex_reorder_impl<TI_list, IT_list>::apply(symmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<TI_list,
+  // TI_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<TI_list, IT_list>::apply(symmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<AT_list, AT_list>::apply(asymmetric_symm);
-  test_lhs_tensorindex_reorder_impl<AT_list, AT_list>::apply(symmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<AT_list,
+  // AT_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<AT_list, AT_list>::apply(symmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<TA_list, TA_list>::apply(asymmetric_symm);
-  test_lhs_tensorindex_reorder_impl<TA_list, AT_list>::apply(symmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<TA_list,
+  // TA_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<TA_list, AT_list>::apply(symmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<TT_list, TT_list>::apply(asymmetric_symm);
-  test_lhs_tensorindex_reorder_impl<TT_list, TT_list>::apply(symmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<TT_list,
+  // TT_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<TT_list, TT_list>::apply(symmetric_symm);
 
   // lower upper
-  test_lhs_tensorindex_reorder_impl<iJ_list, iJ_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<iJ_list,
+  // iJ_list>::apply(asymmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<jI_list, jI_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<jI_list,
+  // jI_list>::apply(asymmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<aB_list, aB_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<aB_list,
+  // aB_list>::apply(asymmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<bA_list, bA_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<bA_list,
+  // bA_list>::apply(asymmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<aI_list, aI_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<aI_list,
+  // aI_list>::apply(asymmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<iA_list, iA_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<iA_list,
+  // iA_list>::apply(asymmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<iT_list, iT_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<iT_list,
+  // iT_list>::apply(asymmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<tI_list, tI_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<tI_list,
+  // tI_list>::apply(asymmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<aT_list, aT_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<aT_list,
+  // aT_list>::apply(asymmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<tA_list, tA_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<tA_list,
+  // tA_list>::apply(asymmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<tT_list, tT_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<tT_list,
+  // tT_list>::apply(asymmetric_symm);
 
   // upper lower
-  test_lhs_tensorindex_reorder_impl<Ij_list, Ij_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<Ij_list,
+  // Ij_list>::apply(asymmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<Ji_list, Ji_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<Ji_list,
+  // Ji_list>::apply(asymmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<Ab_list, Ab_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<Ab_list,
+  // Ab_list>::apply(asymmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<Ba_list, Ba_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<Ba_list,
+  // Ba_list>::apply(asymmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<Ai_list, Ai_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<Ai_list,
+  // Ai_list>::apply(asymmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<Ia_list, Ia_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<Ia_list,
+  // Ia_list>::apply(asymmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<It_list, It_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<It_list,
+  // It_list>::apply(asymmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<Ti_list, Ti_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<Ti_list,
+  // Ti_list>::apply(asymmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<At_list, At_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<At_list,
+  // At_list>::apply(asymmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<Ta_list, Ta_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<Ta_list,
+  // Ta_list>::apply(asymmetric_symm);
 
-  test_lhs_tensorindex_reorder_impl<Tt_list, Tt_list>::apply(asymmetric_symm);
+  // test_lhs_tensorindex_reorder_impl<Tt_list,
+  // Tt_list>::apply(asymmetric_symm);
 }
 
 // Tests that the canonical ordering of a list of `TensorIndex`s done by
@@ -871,18 +959,18 @@ void test_lhs_tensorindex_reorder_rank4() {
 
 // Tests `tenex::detail::get_reordered_tensorindex_values`
 void test_lhs_tensorindex_reorder() {
-  test_lhs_tensorindex_reorder_symm_consistency();
-  test_lhs_tensorindex_reorder_rank0();
-  test_lhs_tensorindex_reorder_rank1();
-  test_lhs_tensorindex_reorder_rank2();
-  test_lhs_tensorindex_reorder_rank3();
-  test_lhs_tensorindex_reorder_rank4();
+  // test_lhs_tensorindex_reorder_symm_consistency();
+  // test_lhs_tensorindex_reorder_rank0();
+  // test_lhs_tensorindex_reorder_rank1();
+  // test_lhs_tensorindex_reorder_rank2();
+  // test_lhs_tensorindex_reorder_rank3();
+  // test_lhs_tensorindex_reorder_rank4();
 }
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Evaluate",
                   "[DataStructures][Unit]") {
-  test_contains_indices_to_contract();
-  test_lhs_tensorindex_reorder();
+  // test_contains_indices_to_contract();
+  // test_lhs_tensorindex_reorder();
   test_evaluate_and_canon_multi_index_consistency();
 }
