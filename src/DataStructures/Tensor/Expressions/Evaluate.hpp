@@ -196,12 +196,16 @@ constexpr std::array<size_t, NumIndices> get_reordered_tensorindex_values(
 
     const auto compare = [](const size_t tensorindex_value1,
                             const size_t tensorindex_value2) {
+      // TODO: is there a more elegant way to do this?
       if (tensorindex_value2 == ti::T.value) {
+        return false;
+      } else if (is_time_index_value(tensorindex_value1)) {
+        return true;
+      } else if (tensorindex_value2 == ti::t.value) {
         return false;
       }
 
-      return is_time_index_value(tensorindex_value1) or
-             (is_generic_spacetime_index_value(tensorindex_value1) and
+      return (is_generic_spacetime_index_value(tensorindex_value1) and
               is_generic_spatial_index_value(tensorindex_value2)) or
              (tensorindex_value1 > tensorindex_value2 and
               is_generic_spacetime_index_value(tensorindex_value1) ==
