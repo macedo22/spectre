@@ -252,6 +252,11 @@ constexpr std::array<size_t, NumIndices> get_reordered_tensorindex_values(
   }
 }
 
+// TODO : check if there is a bug below in evaluate or evaluate_impl where
+// someone could use NumberAsExpression as the RHS but then LHS is a vector
+// type and the LHS tensor wasn't previously sized like it needs to be for
+// a call to evaluate that returns the LHS tensor
+
 /*!
  * \ingroup TensorExpressionsGroup
  * \brief Evaluate subtrees of the RHS expression or the RHS expression as a
