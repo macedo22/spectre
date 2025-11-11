@@ -34,7 +34,7 @@ template <bool ReturnLhsTensor, typename DataType>
 // const Tensor<DataType> R{{{data}}};
 // Scalar<DataType> L{};
 // call_evaluate<ReturnLhsTensor>(make_not_null(&L), R());
-void test_evaluate_rank_0() {
+void test_evaluate_rank_0_core() {
   MAKE_GENERATOR(generator);
   std::uniform_real_distribution<> distribution(-5.0, 5.0);
   const size_t used_for_size = 3;
@@ -71,4 +71,11 @@ void test_evaluate_rank_0() {
   }
 }
 
+/// \ingroup TestingFrameworkGroup
+/// TODO
+template <bool ReturnLhsTensor>
+void test_evaluate_rank_0() {
+  TestHelpers::tenex::test_evaluate_rank_0_core<ReturnLhsTensor, double>();
+  TestHelpers::tenex::test_evaluate_rank_0_core<ReturnLhsTensor, DataVector>();
+}
 }  // namespace TestHelpers::tenex

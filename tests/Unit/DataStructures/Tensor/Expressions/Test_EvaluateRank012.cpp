@@ -32,9 +32,9 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank012",
 
   // TODO : replace these with calls to generic rank test_evaluate
   // Rank 0: double
-  TestHelpers::tenex::test_evaluate_rank_0<true, double>();
+  TestHelpers::tenex::test_evaluate_rank_0_core<true, double>();
   // Rank 0: DataVector
-  TestHelpers::tenex::test_evaluate_rank_0<true, DataVector>();
+  TestHelpers::tenex::test_evaluate_rank_0_core<true, DataVector>();
 
   // Rank 1: spacetime
   TestHelpers::tenex::test_evaluate_rank_1<

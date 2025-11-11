@@ -18,7 +18,7 @@
 namespace TestHelpers::tenex {
 template <bool ReturnLhsTensor, typename DataType>
 void test_evaluate() {
-  test_evaluate_rank_0<ReturnLhsTensor, DataType>();
+  test_evaluate_rank_0_core<ReturnLhsTensor, DataType>();
 }
 
 template <bool ReturnLhsTensor, typename DataType,
