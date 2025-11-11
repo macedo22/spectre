@@ -92,11 +92,8 @@ void test_evaluate_rank_2_core() {
   const auto R_ab = make_with_random_values<R_ab_type>(
       make_not_null(&generator), distribution, used_for_size);
   auto expected_L_ab =
-      ReturnLhsTensor
-          ? Tensor<DataType, LhsSymmetry, LhsTensorIndexTypeList>{}
-          : make_with_value<
-                Tensor<DataType, LhsSymmetry, LhsTensorIndexTypeList>>(
-                used_for_size, component_placeholder_value<DataType>::value);
+      make_with_value<Tensor<DataType, LhsSymmetry, LhsTensorIndexTypeList>>(
+          used_for_size, component_placeholder_value<DataType>::value);
 
   const std::int32_t lhs_symmetry_element_a = tmpl::at_c<LhsSymmetry, 0>::value;
   const std::int32_t lhs_symmetry_element_b = tmpl::at_c<LhsSymmetry, 1>::value;
@@ -131,9 +128,7 @@ void test_evaluate_rank_2_core() {
   // Use explicit type (vs auto) so the compiler checks the return type of
   // `evaluate`
   using L_ab_type = Tensor<DataType, LhsSymmetry, LhsTensorIndexTypeList>;
-  L_ab_type L_ab(used_for_size);
-  std::fill(L_ab.begin(), L_ab.end(),
-            component_placeholder_value<DataType>::value);
+  L_ab_type L_ab;
   call_evaluate<ReturnLhsTensor, TensorIndexA, TensorIndexB>(
       make_not_null(&L_ab), rhs_expression);
 
@@ -143,9 +138,7 @@ void test_evaluate_rank_2_core() {
   using L_ba_tensorindextype_list =
       tmpl::list<lhs_tensorindextype_b, lhs_tensorindextype_a>;
   using L_ba_type = Tensor<DataType, L_ba_symmetry, L_ba_tensorindextype_list>;
-  L_ba_type L_ba(used_for_size);
-  std::fill(L_ba.begin(), L_ba.end(),
-            component_placeholder_value<DataType>::value);
+  L_ba_type L_ba;
   call_evaluate<ReturnLhsTensor, TensorIndexB, TensorIndexA>(
       make_not_null(&L_ba), rhs_expression);
 
@@ -174,15 +167,11 @@ void test_evaluate_rank_2_core() {
 
     // L_{ab} = R_{ab}
     L_ab_type& L_ab_temp = get<::Tags::TempTensor<1, L_ab_type>>(vars);
-    std::fill(L_ab_temp.begin(), L_ab_temp.end(),
-              component_placeholder_value<DataType>::value);
     call_evaluate<false, TensorIndexA, TensorIndexB>(make_not_null(&L_ab_temp),
                                                      rhs_expression);
 
     // L_{ba} = R_{ab}
     L_ba_type& L_ba_temp = get<::Tags::TempTensor<2, L_ba_type>>(vars);
-    std::fill(L_ba_temp.begin(), L_ba_temp.end(),
-              component_placeholder_value<DataType>::value);
     call_evaluate<false, TensorIndexB, TensorIndexA>(make_not_null(&L_ba_temp),
                                                      rhs_expression);
 
