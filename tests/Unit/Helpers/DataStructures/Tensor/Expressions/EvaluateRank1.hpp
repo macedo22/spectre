@@ -93,6 +93,8 @@ void test_evaluate_rank_1_core() {
   // L_a = R_a
   // Use explicit type (vs auto) so the compiler checks return type of
   // `evaluate`
+  // TODO : don't size this in case ReturnLhsTensor == false, correct in other
+  // files too
   L_a_type L_a(used_for_size);
   std::fill(L_a.begin(), L_a.end(),
             component_placeholder_value<DataType>::value);
