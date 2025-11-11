@@ -24,6 +24,19 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank012",
   //       true, double, Symmetry<1>,
   //       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>(ti::a);
 
+  TestHelpers::tenex::test_evaluate_symmetry_cases<
+      true, double, Symmetry<1, 1>,
+      index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
+                 SpatialIndex<3, UpLo::Up, Frame::Grid>>,
+      ti::I, ti::J>();
+  TestHelpers::tenex::test_evaluate_symmetry_cases<
+      false, DataVector, Symmetry<1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      ti::k, ti::m,
+      index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>();
+
   //   // Rank 0: double
   //   TestHelpers::tenex::test_evaluate_rank_0<true, double>(-7.31);
   //   // Rank 0: DataVector
