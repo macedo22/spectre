@@ -159,4 +159,52 @@ void test_evaluate_datatype_cases() {
                        RhsTensorIndexTypeList, LhsSymmetry,
                        LhsTensorIndexTypeList>();
 }
+
+// TODO : same interface question lol
+template <bool ReturnLhsTensor>
+void test_evaluate() {
+  test_evaluate_datatype_cases<ReturnLhsTensor>();
+}
+
+template <bool ReturnLhsTensor, typename RhsTensorIndexTypeList,
+          auto& TensorIndex,
+          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
+void test_evaluate() {
+  test_evaluate_datatype_cases<ReturnLhsTensor, TensorIndex,
+                               RhsTensorIndexTypeList,
+                               LhsTensorIndexTypeList>();
+}
+
+template <bool ReturnLhsTensor, typename RhsSymmetry,
+          typename RhsTensorIndexTypeList, auto& TensorIndexA,
+          auto& TensorIndexB, typename LhsSymmetry = RhsSymmetry,
+          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
+void test_evaluate() {
+  test_evaluate_datatype_and_symmetry_cases<
+      ReturnLhsTensor, TensorIndexA, TensorIndexB, RhsSymmetry,
+      RhsTensorIndexTypeList, LhsTensorIndexTypeList>();
+}
+
+template <bool ReturnLhsTensor, typename RhsSymmetry,
+          typename RhsTensorIndexTypeList, auto& TensorIndexA,
+          auto& TensorIndexB, auto& TensorIndexC,
+          typename LhsSymmetry = RhsSymmetry,
+          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
+void test_evaluate() {
+  test_evaluate_datatype_and_symmetry_cases<
+      ReturnLhsTensor, TensorIndexA, TensorIndexB, TensorIndexC, RhsSymmetry,
+      RhsTensorIndexTypeList, LhsTensorIndexTypeList>();
+}
+
+template <bool ReturnLhsTensor, typename RhsSymmetry,
+          typename RhsTensorIndexTypeList, auto& TensorIndexA,
+          auto& TensorIndexB, auto& TensorIndexC, auto& TensorIndexD,
+          typename LhsSymmetry = RhsSymmetry,
+          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
+void test_evaluate() {
+  test_evaluate_datatype_cases<ReturnLhsTensor, TensorIndexA, TensorIndexB,
+                               TensorIndexC, TensorIndexD, double, RhsSymmetry,
+                               RhsTensorIndexTypeList, LhsSymmetry,
+                               LhsTensorIndexTypeList>();
+}
 }  // namespace TestHelpers::tenex
