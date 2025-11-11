@@ -27,6 +27,8 @@
 
 namespace TestHelpers::tenex {
 // TODO : update testing func docs
+// TODO : consider moving position of TensorIndex tparams to be
+// after symm and tensor index type list just for interface consistency
 
 /// \ingroup TestingFrameworkGroup
 /// \brief Test that evaluating a right hand side tensor expression containing a
