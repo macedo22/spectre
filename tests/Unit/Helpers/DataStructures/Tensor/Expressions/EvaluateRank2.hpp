@@ -231,6 +231,10 @@ void test_evaluate_rank_2_impl() {
   using symmetry_21 = Symmetry<2, 1>;
   using symmetry_11 = Symmetry<1, 1>;
 
+  // TODO : check for case where lhs is spatial and rhs is spacetime because
+  // then we can't do RHS and LHS symmetry as <1, 1>. Logic here and in other
+  // rank files should just handle what "all symmetries" is for the user
+
   test_evaluate_rank_2_core<ReturnLhsTensor, TensorIndexA, TensorIndexB,
                             DataType, RhsSymmetry, RhsTensorIndexTypeList,
                             RhsSymmetry, LhsTensorIndexTypeList>();
