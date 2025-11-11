@@ -18,49 +18,10 @@
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/TestHelpers.hpp"
 #include "Utilities/Gsl.hpp"
-#include "Utilities/Requires.hpp"
 #include "Utilities/TMPL.hpp"
 
 namespace TestHelpers::tenex {
 // TODO : update testing func docs
-
-template <bool ReturnLhsTensor, typename RhsTensor,
-          Requires<std::is_tensor<RhsTensor>> = nullptr>
-void test_evaluate_rank_0_core() {
-
-}
-
-template <bool ReturnLhsTensor, typename TensorComponentDataType,
-          Requires<not std::is_tensor<TensorDataType>> = nullptr>
-void test_evaluate_rank_0_core() {
-  MAKE_GENERATOR(generator);
-  std::uniform_real_distribution<> distribution(-5.0, 5.0);
-  const size_t used_for_size = 3;
-  const auto R = make_with_random_values<Tensor<TensorComponentDataType>>(
-      make_not_null(&generator), distribution, used_for_size);
-  Scalar<DataType> L{};
-  call_evaluate<ReturnLhsTensor>(make_not_null(&L), R());
-
-  CHECK(L == R);  // check LHS evaluated correctly
-
-  // Test with Variables
-  if constexpr (is_derived_of_vector_impl_v<DataType>) {
-    Variables<tmpl::list<::Tags::TempTensor<0, Scalar<DataType>>,
-                         ::Tags::TempTensor<1, Scalar<DataType>>>>
-        vars(used_for_size, std::numeric_limits<double>::signaling_NaN());
-
-    Scalar<DataType>& R_temp =
-        get<::Tags::TempTensor<0, Scalar<DataType>>>(vars);
-    get(R_temp) = get(R);
-
-    Scalar<DataType>& L_temp =
-        get<::Tags::TempTensor<1, Scalar<DataType>>>(vars);
-    call_evaluate<ReturnLhsTensor>(make_not_null(&L_temp), R());
-
-    CHECK(R_temp == R);  // check RHS wasn't modified
-    CHECK(L_temp == R);  // check LHS evaluated correctly
-  }
-}
 
 /// \ingroup TestingFrameworkGroup
 /// \brief Test that evaluating a right hand side tensor expression containing a
@@ -73,7 +34,7 @@ template <bool ReturnLhsTensor, typename DataType>
 // const Tensor<DataType> R{{{data}}};
 // Scalar<DataType> L{};
 // call_evaluate<ReturnLhsTensor>(make_not_null(&L), R());
-void test_evaluate_rank_0_core() {
+void test_evaluate_rank_0() {
   MAKE_GENERATOR(generator);
   std::uniform_real_distribution<> distribution(-5.0, 5.0);
   const size_t used_for_size = 3;
@@ -110,58 +71,4 @@ void test_evaluate_rank_0_core() {
   }
 }
 
-// /// \ingroup TestingFrameworkGroup
-// /// \brief Test that evaluating a right hand side tensor expression containing a
-// /// single rank 0 tensor correctly assigns the data to the evaluated left hand
-// /// side tensor
-// ///
-// /// \param data the data being stored in the Tensors
-// template <bool ReturnLhsTensor, typename DataType>
-// // void test_evaluate_rank_0(const DataType& data) {
-// // const Tensor<DataType> R{{{data}}};
-// // Scalar<DataType> L{};
-// // call_evaluate<ReturnLhsTensor>(make_not_null(&L), R());
-// void test_evaluate_rank_0_core() {
-//   MAKE_GENERATOR(generator);
-//   std::uniform_real_distribution<> distribution(-5.0, 5.0);
-//   const size_t used_for_size = 3;
-//   const auto R = make_with_random_values<Tensor<DataType>>(
-//       make_not_null(&generator), distribution, used_for_size);
-//   // auto expected_L =
-//   //     ReturnLhsTensor
-//   //         ? L_a_type{}
-//   //         : make_with_value<L_a_type>(
-//   //               used_for_size, component_placeholder_value<DataType>::value);
-//   // const Tensor<DataType> expected_L = R;
-//   Scalar<DataType> L{};
-//   call_evaluate<ReturnLhsTensor>(make_not_null(&L), R());
-
-//   // CHECK(get(L) == get(R));  // check LHS evaluated correctly
-//   CHECK(L == R);  // check LHS evaluated correctly
-
-//   // Test with Variables
-//   if constexpr (is_derived_of_vector_impl_v<DataType>) {
-//     Variables<tmpl::list<::Tags::TempTensor<0, Scalar<DataType>>,
-//                          ::Tags::TempTensor<1, Scalar<DataType>>>>
-//         vars(used_for_size, std::numeric_limits<double>::signaling_NaN());
-
-//     Scalar<DataType>& R_temp =
-//         get<::Tags::TempTensor<0, Scalar<DataType>>>(vars);
-//     get(R_temp) = get(R);
-
-//     Scalar<DataType>& L_temp =
-//         get<::Tags::TempTensor<1, Scalar<DataType>>>(vars);
-//     call_evaluate<ReturnLhsTensor>(make_not_null(&L_temp), R());
-
-//     CHECK(R_temp == R);  // check RHS wasn't modified
-//     CHECK(L_temp == R);  // check LHS evaluated correctly
-//   }
-// }
-
-// /// \ingroup TestingFrameworkGroup
-// /// TODO
-// void test_evaluate_rank_0() {
-//   TestHelpers::tenex::test_evaluate_rank_0_core<ReturnLhsTensor, Tensor<double>>();
-//   TestHelpers::tenex::test_evaluate_rank_0_core<ReturnLhsTensor, Tensor<DataVector>>();
-// }
 }  // namespace TestHelpers::tenex
