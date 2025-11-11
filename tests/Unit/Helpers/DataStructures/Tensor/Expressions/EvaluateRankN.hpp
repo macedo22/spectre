@@ -21,30 +21,29 @@ namespace TestHelpers::tenex {
 template <bool ReturnLhsTensor, typename DataType,
           typename RhsSymmetry = tmpl::list<>,
           typename RhsTensorIndexTypeList = tmpl::list<>,
-          typename LhsSymmetry = RhsSymmetry,
-          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList,
-          typename... TensorIndices>
-void test_evaluate(const TensorIndices&... tensorindices) {
-  constexpr size_t num_indices = tmpl::size<RhsSymmetry>::value;
-  static_assert(tmpl::size<LhsSymmetry>::value == num_indices,
-                "LHS and RHS symmetry lists are not the same length");
-  static_assert(tmpl::size<RhsTensorIndexTypeList>::value == num_indices,
-                "RHS index list is not the same length as the RHS symmetry");
-  static_assert(tmpl::size<LhsTensorIndexTypeList>::value ==
-                    tmpl::size<RhsTensorIndexTypeList>::value,
-                "LHS index list is not the same length as the RHS index list");
-  static_assert(num_indices <= 4,
-                "`test_evaluate` is only implemented for rank <= 4");
+          auto&... TensorIndices, typename LhsSymmetry = RhsSymmetry,
+          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
+void test_evaluate() {
+  constexpr size_t rank = sizeof...(TensorIndices);
+  static_assert(rank <= 4, "`test_evaluate` is only implemented for rank <= 4");
 
-  if constexpr (num_indices == 0) {
+  if constexpr (rank == 0) {
     test_evaluate_rank_0<ReturnLhsTensor, DataType>();
-  } else if constexpr (num_indices == 1) {
-    // TODO : doesn't compile because can't pass the references as tparams
-    // test_evaluate_rank_1_core<ReturnLhsTensor, tensorindices..., DataType,
-    //                           RhsTensorIndexTypeList, LhsTensorIndexTypeList>();
-  } else if constexpr (num_indices == 2) {
-  } else if constexpr (num_indices == 3) {
-  } else if constexpr (num_indices == 4) {
+  } else if constexpr (rank == 1) {
+    test_evaluate_rank_1_core<ReturnLhsTensor, TensorIndices..., DataType,
+                              RhsTensorIndexTypeList, LhsTensorIndexTypeList>();
+  } else if constexpr (rank == 2) {
+    test_evaluate_rank_2_core<ReturnLhsTensor, TensorIndices..., DataType,
+                              RhsTensorIndexTypeList, LhsSymmetry,
+                              LhsTensorIndexTypeList>();
+  } else if constexpr (rank == 3) {
+    test_evaluate_rank_3_core<ReturnLhsTensor, TensorIndices..., DataType,
+                              RhsTensorIndexTypeList, LhsSymmetry,
+                              LhsTensorIndexTypeList>();
+  } else if constexpr (rank == 4) {
+    test_evaluate_rank_4_core<ReturnLhsTensor, TensorIndices..., DataType,
+                              RhsTensorIndexTypeList, LhsSymmetry,
+                              LhsTensorIndexTypeList>();
   } else {
     ERROR("Unsupported rank");
   }

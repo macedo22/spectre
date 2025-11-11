@@ -16,9 +16,13 @@
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank012",
                   "[DataStructures][Unit]") {
   // TODO : remove this
+  TestHelpers::tenex::test_evaluate<true, double>();
   TestHelpers::tenex::test_evaluate<
       true, double, Symmetry<1>,
-      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>(ti::a);
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>, ti::a>();
+//   TestHelpers::tenex::test_evaluate<
+//       true, double, Symmetry<1>,
+//       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>(ti::a);
 
   //   // Rank 0: double
   //   TestHelpers::tenex::test_evaluate_rank_0<true, double>(-7.31);
@@ -26,6 +30,7 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank012",
   //   TestHelpers::tenex::test_evaluate_rank_0<true, DataVector>(
   //       DataVector{-3.1, 9.4, 0.0, -3.1, 2.4, 9.8});
 
+  // TODO : replace these with calls to generic rank test_evaluate
   // Rank 0: double
   TestHelpers::tenex::test_evaluate_rank_0<true, double>();
   // Rank 0: DataVector
