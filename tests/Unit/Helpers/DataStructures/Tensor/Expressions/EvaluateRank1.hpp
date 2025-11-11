@@ -70,8 +70,11 @@ void test_evaluate_rank_1_core() {
   const size_t used_for_size = 3;
   const auto R_a = make_with_random_values<R_a_type>(
       make_not_null(&generator), distribution, used_for_size);
-  auto expected_L_a = make_with_value<L_a_type>(
-      used_for_size, component_placeholder_value<DataType>::value);
+  auto expected_L_a =
+      ReturnLhsTensor
+          ? L_a_type{}
+          : make_with_value<L_a_type>(
+                used_for_size, component_placeholder_value<DataType>::value);
 
   using lhs_tensorindextype = tmpl::at_c<LhsTensorIndexTypeList, 0>;
   using rhs_tensorindextype = tmpl::at_c<RhsTensorIndexTypeList, 0>;
@@ -90,7 +93,9 @@ void test_evaluate_rank_1_core() {
   // L_a = R_a
   // Use explicit type (vs auto) so the compiler checks return type of
   // `evaluate`
-  L_a_type L_a;
+  // TODO : don't size this in case ReturnLhsTensor == false, correct in other
+  // files too
+  L_a_type L_a(used_for_size);
   std::fill(L_a.begin(), L_a.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndex>(make_not_null(&L_a),
@@ -109,6 +114,8 @@ void test_evaluate_rank_1_core() {
 
     // L_a = R_a
     L_a_type& L_a_temp = get<::Tags::TempTensor<1, L_a_type>>(vars);
+    std::fill(L_a_temp.begin(), L_a_temp.end(),
+              component_placeholder_value<DataType>::value);
     // TODO : replace false here and other files
     call_evaluate<false, TensorIndex>(make_not_null(&L_a_temp),
                                       R_a(TensorIndex));

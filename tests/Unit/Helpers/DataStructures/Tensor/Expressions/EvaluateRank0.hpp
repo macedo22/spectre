@@ -46,7 +46,7 @@ void test_evaluate_rank_0_core() {
   //         : make_with_value<L_a_type>(
   //               used_for_size, component_placeholder_value<DataType>::value);
   // const Tensor<DataType> expected_L = R;
-  Scalar<DataType> L;
+  Scalar<DataType> L{};
   call_evaluate<ReturnLhsTensor>(make_not_null(&L), R());
 
   // CHECK(get(L) == get(R));  // check LHS evaluated correctly

@@ -70,8 +70,11 @@ void test_evaluate_rank_3_core() {
   const auto R_abc = make_with_random_values<R_abc_type>(
       make_not_null(&generator), distribution, used_for_size);
   auto expected_L_abc =
-      make_with_value<Tensor<DataType, LhsSymmetry, LhsTensorIndexTypeList>>(
-          used_for_size, component_placeholder_value<DataType>::value);
+      ReturnLhsTensor
+          ? Tensor<DataType, LhsSymmetry, LhsTensorIndexTypeList>{}
+          : make_with_value<
+                Tensor<DataType, LhsSymmetry, LhsTensorIndexTypeList>>(
+                used_for_size, component_placeholder_value<DataType>::value);
 
   const std::int32_t lhs_symmetry_element_a = tmpl::at_c<LhsSymmetry, 0>::value;
   const std::int32_t lhs_symmetry_element_b = tmpl::at_c<LhsSymmetry, 1>::value;
@@ -119,7 +122,9 @@ void test_evaluate_rank_3_core() {
   // Use explicit type (vs auto) so the compiler checks the return type of
   // `evaluate`
   using L_abc_type = Tensor<DataType, LhsSymmetry, LhsTensorIndexTypeList>;
-  L_abc_type L_abc;
+  L_abc_type L_abc(used_for_size);
+  std::fill(L_abc.begin(), L_abc.end(),
+            component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexA, TensorIndexB, TensorIndexC>(
       make_not_null(&L_abc), rhs_expression);
 
@@ -132,7 +137,9 @@ void test_evaluate_rank_3_core() {
                  lhs_tensorindextype_b>;
   using L_acb_type =
       Tensor<DataType, L_acb_symmetry, L_acb_tensorindextype_list>;
-  L_acb_type L_acb;
+  L_acb_type L_acb(used_for_size);
+  std::fill(L_acb.begin(), L_acb.end(),
+            component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexA, TensorIndexC, TensorIndexB>(
       make_not_null(&L_acb), rhs_expression);
 
@@ -145,7 +152,9 @@ void test_evaluate_rank_3_core() {
                  lhs_tensorindextype_c>;
   using L_bac_type =
       Tensor<DataType, L_bac_symmetry, L_bac_tensorindextype_list>;
-  L_bac_type L_bac;
+  L_bac_type L_bac(used_for_size);
+  std::fill(L_bac.begin(), L_bac.end(),
+            component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexB, TensorIndexA, TensorIndexC>(
       make_not_null(&L_bac), rhs_expression);
 
@@ -158,7 +167,9 @@ void test_evaluate_rank_3_core() {
                  lhs_tensorindextype_a>;
   using L_bca_type =
       Tensor<DataType, L_bca_symmetry, L_bca_tensorindextype_list>;
-  L_bca_type L_bca;
+  L_bca_type L_bca(used_for_size);
+  std::fill(L_bca.begin(), L_bca.end(),
+            component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexB, TensorIndexC, TensorIndexA>(
       make_not_null(&L_bca), rhs_expression);
 
@@ -171,7 +182,9 @@ void test_evaluate_rank_3_core() {
                  lhs_tensorindextype_b>;
   using L_cab_type =
       Tensor<DataType, L_cab_symmetry, L_cab_tensorindextype_list>;
-  L_cab_type L_cab;
+  L_cab_type L_cab(used_for_size);
+  std::fill(L_cab.begin(), L_cab.end(),
+            component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexC, TensorIndexA, TensorIndexB>(
       make_not_null(&L_cab), rhs_expression);
 
@@ -184,7 +197,9 @@ void test_evaluate_rank_3_core() {
                  lhs_tensorindextype_a>;
   using L_cba_type =
       Tensor<DataType, L_cba_symmetry, L_cba_tensorindextype_list>;
-  L_cba_type L_cba;
+  L_cba_type L_cba(used_for_size);
+  std::fill(L_cba.begin(), L_cba.end(),
+            component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexC, TensorIndexB, TensorIndexA>(
       make_not_null(&L_cba), rhs_expression);
 
@@ -222,31 +237,43 @@ void test_evaluate_rank_3_core() {
 
     // L_{abc} = R_{abc}
     L_abc_type& L_abc_temp = get<::Tags::TempTensor<1, L_abc_type>>(vars);
+    std::fill(L_abc_temp.begin(), L_abc_temp.end(),
+              component_placeholder_value<DataType>::value);
     call_evaluate<false, TensorIndexA, TensorIndexB, TensorIndexC>(
         make_not_null(&L_abc_temp), rhs_expression);
 
     // L_{acb} = R_{abc}
     L_acb_type& L_acb_temp = get<::Tags::TempTensor<2, L_acb_type>>(vars);
+    std::fill(L_acb_temp.begin(), L_acb_temp.end(),
+              component_placeholder_value<DataType>::value);
     call_evaluate<false, TensorIndexA, TensorIndexC, TensorIndexB>(
         make_not_null(&L_acb_temp), rhs_expression);
 
     // L_{bac} = R_{abc}
     L_bac_type& L_bac_temp = get<::Tags::TempTensor<3, L_bac_type>>(vars);
+    std::fill(L_bac_temp.begin(), L_bac_temp.end(),
+              component_placeholder_value<DataType>::value);
     call_evaluate<false, TensorIndexB, TensorIndexA, TensorIndexC>(
         make_not_null(&L_bac_temp), rhs_expression);
 
     // L_{bca} = R_{abc}
     L_bca_type& L_bca_temp = get<::Tags::TempTensor<4, L_bca_type>>(vars);
+    std::fill(L_bca_temp.begin(), L_bca_temp.end(),
+              component_placeholder_value<DataType>::value);
     call_evaluate<false, TensorIndexB, TensorIndexC, TensorIndexA>(
         make_not_null(&L_bca_temp), rhs_expression);
 
     // L_{cab} = R_{abc}
     L_cab_type& L_cab_temp = get<::Tags::TempTensor<5, L_cab_type>>(vars);
+    std::fill(L_cab_temp.begin(), L_cab_temp.end(),
+              component_placeholder_value<DataType>::value);
     call_evaluate<false, TensorIndexC, TensorIndexA, TensorIndexB>(
         make_not_null(&L_cab_temp), rhs_expression);
 
     // L_{cba} = R_{abc}
     L_cba_type& L_cba_temp = get<::Tags::TempTensor<6, L_cba_type>>(vars);
+    std::fill(L_cba_temp.begin(), L_cba_temp.end(),
+              component_placeholder_value<DataType>::value);
     call_evaluate<false, TensorIndexC, TensorIndexB, TensorIndexA>(
         make_not_null(&L_cba_temp), rhs_expression);
 
