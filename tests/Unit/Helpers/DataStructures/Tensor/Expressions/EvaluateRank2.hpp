@@ -235,6 +235,10 @@ void test_evaluate_rank_2_impl() {
   // then we can't do RHS and LHS symmetry as <1, 1>. Logic here and in other
   // rank files should just handle what "all symmetries" is for the user
 
+  // TODO : maybe we need to not let the user specify ReturnLhsTensor? well no
+  // it's good to have but it can conflict with the symmetry and tensor index
+  // type lists. Need to find a solution.
+
   test_evaluate_rank_2_core<ReturnLhsTensor, TensorIndexA, TensorIndexB,
                             DataType, RhsSymmetry, RhsTensorIndexTypeList,
                             RhsSymmetry, LhsTensorIndexTypeList>();
