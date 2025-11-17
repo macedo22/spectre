@@ -155,7 +155,7 @@ template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
           typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
 void test_evaluate_datatype_cases() {
   test_evaluate_rank_4<ReturnLhsTensor, TensorIndexA, TensorIndexB,
-                       TensorIndexC, TensorIndexD, double, RhsSymmetry,
+                       TensorIndexC, TensorIndexD, RhsSymmetry,
                        RhsTensorIndexTypeList, LhsSymmetry,
                        LhsTensorIndexTypeList>();
 }
@@ -177,7 +177,7 @@ void test_evaluate() {
 
 template <bool ReturnLhsTensor, typename RhsSymmetry,
           typename RhsTensorIndexTypeList, auto& TensorIndexA,
-          auto& TensorIndexB, typename LhsSymmetry = RhsSymmetry,
+          auto& TensorIndexB,
           typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
 void test_evaluate() {
   test_evaluate_datatype_and_symmetry_cases<
@@ -188,7 +188,6 @@ void test_evaluate() {
 template <bool ReturnLhsTensor, typename RhsSymmetry,
           typename RhsTensorIndexTypeList, auto& TensorIndexA,
           auto& TensorIndexB, auto& TensorIndexC,
-          typename LhsSymmetry = RhsSymmetry,
           typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
 void test_evaluate() {
   test_evaluate_datatype_and_symmetry_cases<
@@ -203,7 +202,7 @@ template <bool ReturnLhsTensor, typename RhsSymmetry,
           typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
 void test_evaluate() {
   test_evaluate_datatype_cases<ReturnLhsTensor, TensorIndexA, TensorIndexB,
-                               TensorIndexC, TensorIndexD, double, RhsSymmetry,
+                               TensorIndexC, TensorIndexD, RhsSymmetry,
                                RhsTensorIndexTypeList, LhsSymmetry,
                                LhsTensorIndexTypeList>();
 }
