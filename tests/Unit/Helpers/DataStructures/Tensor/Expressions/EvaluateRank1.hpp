@@ -116,9 +116,8 @@ void test_evaluate_rank_1_core() {
     L_a_type& L_a_temp = get<::Tags::TempTensor<1, L_a_type>>(vars);
     std::fill(L_a_temp.begin(), L_a_temp.end(),
               component_placeholder_value<DataType>::value);
-    // TODO : replace false here and other files
-    call_evaluate<false, TensorIndex>(make_not_null(&L_a_temp),
-                                      R_a(TensorIndex));
+    call_evaluate<ReturnLhsTensor, TensorIndex>(make_not_null(&L_a_temp),
+                                                R_a(TensorIndex));
 
     CHECK(R_a_temp == R_a);           // check RHS wasn't modified
     CHECK(L_a_temp == expected_L_a);  // check LHS evaluated correctly

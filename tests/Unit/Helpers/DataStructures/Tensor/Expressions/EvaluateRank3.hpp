@@ -239,42 +239,42 @@ void test_evaluate_rank_3_core() {
     L_abc_type& L_abc_temp = get<::Tags::TempTensor<1, L_abc_type>>(vars);
     std::fill(L_abc_temp.begin(), L_abc_temp.end(),
               component_placeholder_value<DataType>::value);
-    call_evaluate<false, TensorIndexA, TensorIndexB, TensorIndexC>(
+    call_evaluate<ReturnLhsTensor, TensorIndexA, TensorIndexB, TensorIndexC>(
         make_not_null(&L_abc_temp), rhs_expression);
 
     // L_{acb} = R_{abc}
     L_acb_type& L_acb_temp = get<::Tags::TempTensor<2, L_acb_type>>(vars);
     std::fill(L_acb_temp.begin(), L_acb_temp.end(),
               component_placeholder_value<DataType>::value);
-    call_evaluate<false, TensorIndexA, TensorIndexC, TensorIndexB>(
+    call_evaluate<ReturnLhsTensor, TensorIndexA, TensorIndexC, TensorIndexB>(
         make_not_null(&L_acb_temp), rhs_expression);
 
     // L_{bac} = R_{abc}
     L_bac_type& L_bac_temp = get<::Tags::TempTensor<3, L_bac_type>>(vars);
     std::fill(L_bac_temp.begin(), L_bac_temp.end(),
               component_placeholder_value<DataType>::value);
-    call_evaluate<false, TensorIndexB, TensorIndexA, TensorIndexC>(
+    call_evaluate<ReturnLhsTensor, TensorIndexB, TensorIndexA, TensorIndexC>(
         make_not_null(&L_bac_temp), rhs_expression);
 
     // L_{bca} = R_{abc}
     L_bca_type& L_bca_temp = get<::Tags::TempTensor<4, L_bca_type>>(vars);
     std::fill(L_bca_temp.begin(), L_bca_temp.end(),
               component_placeholder_value<DataType>::value);
-    call_evaluate<false, TensorIndexB, TensorIndexC, TensorIndexA>(
+    call_evaluate<ReturnLhsTensor, TensorIndexB, TensorIndexC, TensorIndexA>(
         make_not_null(&L_bca_temp), rhs_expression);
 
     // L_{cab} = R_{abc}
     L_cab_type& L_cab_temp = get<::Tags::TempTensor<5, L_cab_type>>(vars);
     std::fill(L_cab_temp.begin(), L_cab_temp.end(),
               component_placeholder_value<DataType>::value);
-    call_evaluate<false, TensorIndexC, TensorIndexA, TensorIndexB>(
+    call_evaluate<ReturnLhsTensor, TensorIndexC, TensorIndexA, TensorIndexB>(
         make_not_null(&L_cab_temp), rhs_expression);
 
     // L_{cba} = R_{abc}
     L_cba_type& L_cba_temp = get<::Tags::TempTensor<6, L_cba_type>>(vars);
     std::fill(L_cba_temp.begin(), L_cba_temp.end(),
               component_placeholder_value<DataType>::value);
-    call_evaluate<false, TensorIndexC, TensorIndexB, TensorIndexA>(
+    call_evaluate<ReturnLhsTensor, TensorIndexC, TensorIndexB, TensorIndexA>(
         make_not_null(&L_cba_temp), rhs_expression);
 
     // check RHS wasn't modified
