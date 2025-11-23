@@ -44,12 +44,23 @@ constexpr bool is_generic_spacetime_index_value(const size_t value) {
          not is_time_index_value(value);
 }
 
+template <typename TensorIndexType, typename TensorIndex>
+constexpr bool is_spatial_spacetime_index() {
+  return TensorIndexType::index_type == IndexType::Spacetime and
+         not TensorIndex::is_spacetime;
+}
+
 template <typename State, typename Element, typename Iteration,
           typename TensorIndexList>
 struct spatial_spacetime_index_positions_impl {
+  // using type = typename std::conditional_t<
+  //     Element::index_type == IndexType::Spacetime and
+  //         not tmpl::at<TensorIndexList, Iteration>::is_spacetime,
+  //     tmpl::push_back<State, tmpl::integral_constant<size_t,
+  //     Iteration::value>>, State>;
   using type = typename std::conditional_t<
-      Element::index_type == IndexType::Spacetime and
-          not tmpl::at<TensorIndexList, Iteration>::is_spacetime,
+      is_spatial_spacetime_index<Element,
+                                 tmpl::at<TensorIndexList, Iteration>>(),
       tmpl::push_back<State, tmpl::integral_constant<size_t, Iteration::value>>,
       State>;
 };
