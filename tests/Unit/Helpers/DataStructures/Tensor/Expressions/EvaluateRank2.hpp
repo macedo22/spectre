@@ -250,128 +250,125 @@ void test_evaluate_rank_2_impl() {
 
   // note: below is temp work
 
-  // TODOTODOTODO: move the below stuff to a new function that isn't templated
-  // on ReturnLhsTensor
+  // TODO: consider defining alias to RHS and LHS tensor type to make
+  // getting porperties below easier. This will also catch if you create
+  // a tensor that doesn't make sense, so this sounds like a good idea
+  using rhs_structure =
+      typename Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList>::structure;
+  // note : can't do this because LHS might have symmetry broken due to
+  // usign spatial spacetime indices, for example
+  // TODO : ok maybe figure this own then lol
+  // using lhs_tensor = Tensor<DataType, RhsSymmetry, LhsTensorIndexList>
+  // here's an idea:
+  // using lhs_symmetry =
+  //     std::conditional_t<TensorMetafunctions::check_index_symmetry_v<
+  //                            RhsSymmetry, tmpl::at_c<RhsTensorIndexTypeList,
+  //                            0>, tmpl::at_c<RhsTensorIndexTypeList, 1>>,
+  //                        RhsSymmetry, Symmetry<2, 1>>;
+  // using lhs_structure = typename Tensor<DataType, lhs_symmetry,
+  //                                       LhsTensorIndexTypeList>::structure;
 
-  // // TODO: consider defining alias to RHS and LHS tensor type to make
-  // // getting porperties below easier. This will also catch if you create
-  // // a tensor that doesn't make sense, so this sounds like a good idea
-  // using rhs_structure =
-  //     typename Tensor<DataType, RhsSymmetry, RhsTensorIndexTypeList>::structure;
-  // // note : can't do this because LHS might have symmetry broken due to
-  // // usign spatial spacetime indices, for example
-  // // TODO : ok maybe figure this own then lol
-  // // using lhs_tensor = Tensor<DataType, RhsSymmetry, LhsTensorIndexList>
-  // // here's an idea:
-  // // using lhs_symmetry =
-  // //     std::conditional_t<TensorMetafunctions::check_index_symmetry_v<
-  // //                            RhsSymmetry, tmpl::at_c<RhsTensorIndexTypeList,
-  // //                            0>, tmpl::at_c<RhsTensorIndexTypeList, 1>>,
-  // //                        RhsSymmetry, Symmetry<2, 1>>;
-  // // using lhs_structure = typename Tensor<DataType, lhs_symmetry,
-  // //                                       LhsTensorIndexTypeList>::structure;
+  if constexpr (std::is_same_v<RhsSymmetry, symmetry_11>) {
+    // constexpr auto rhs_spatial_spacetime_index_positions =
+    //     ::tenex::detail::get_spatial_spacetime_index_positions<
+    //         RhsTensorIndexTypeList,
+    //         make_tensorindex_list<TensorIndexA, TensorIndexB>>();
 
-  // if constexpr (std::is_same_v<RhsSymmetry, symmetry_11>) {
-  //   // constexpr auto rhs_spatial_spacetime_index_positions =
-  //   //     ::tenex::detail::get_spatial_spacetime_index_positions<
-  //   //         RhsTensorIndexTypeList,
-  //   //         make_tensorindex_list<TensorIndexA, TensorIndexB>>();
+    // constexpr auto lhs_spatial_spacetime_index_positions =
+    //     ::tenex::detail::get_spatial_spacetime_index_positions<
+    //         LhsTensorIndexTypeList,
+    //         make_tensorindex_list<TensorIndexA, TensorIndexB>>();
 
-  //   // constexpr auto lhs_spatial_spacetime_index_positions =
-  //   //     ::tenex::detail::get_spatial_spacetime_index_positions<
-  //   //         LhsTensorIndexTypeList,
-  //   //         make_tensorindex_list<TensorIndexA, TensorIndexB>>();
+    // constexpr auto time_index_positions =
+    //     ::tenex::detail::get_time_index_positions<
+    //         make_tensorindex_list<TensorIndexA, TensorIndexB>>();
 
-  //   // constexpr auto time_index_positions =
-  //   //     ::tenex::detail::get_time_index_positions<
-  //   //         make_tensorindex_list<TensorIndexA, TensorIndexB>>();
+    constexpr std::array<bool, 2> rhs_is_spatial_spacetime_index = {
+        ::tenex::detail::is_spatial_spacetime_index<
+            tmpl::at_c<RhsTensorIndexTypeList, 0>,
+            std::decay_t<decltype(TensorIndexA)>>(),
+        ::tenex::detail::is_spatial_spacetime_index<
+            tmpl::at_c<RhsTensorIndexTypeList, 1>,
+            std::decay_t<decltype(TensorIndexB)>>()};
 
-  //   constexpr std::array<bool, 2> rhs_is_spatial_spacetime_index = {
-  //       ::tenex::detail::is_spatial_spacetime_index<
-  //           tmpl::at_c<RhsTensorIndexTypeList, 0>,
-  //           std::decay_t<decltype(TensorIndexA)>>(),
-  //       ::tenex::detail::is_spatial_spacetime_index<
-  //           tmpl::at_c<RhsTensorIndexTypeList, 1>,
-  //           std::decay_t<decltype(TensorIndexB)>>()};
+    constexpr auto lhs_spatial_spacetime_index_positions =
+        ::tenex::detail::get_spatial_spacetime_index_positions<
+            LhsTensorIndexTypeList,
+            make_tensorindex_list<TensorIndexA, TensorIndexB>>();
 
-  //   constexpr auto lhs_spatial_spacetime_index_positions =
-  //       ::tenex::detail::get_spatial_spacetime_index_positions<
-  //           LhsTensorIndexTypeList,
-  //           make_tensorindex_list<TensorIndexA, TensorIndexB>>();
+    constexpr auto time_index_positions =
+        ::tenex::detail::get_time_index_positions<
+            make_tensorindex_list<TensorIndexA, TensorIndexB>>();
 
-  //   constexpr auto time_index_positions =
-  //       ::tenex::detail::get_time_index_positions<
-  //           make_tensorindex_list<TensorIndexA, TensorIndexB>>();
+    constexpr auto rhs_index_types = rhs_structure::index_types();
+    // constexpr auto lhs_index_types = lhs_structure::index_types();
 
-  //   constexpr auto rhs_index_types = rhs_structure::index_types();
-  //   // constexpr auto lhs_index_types = lhs_structure::index_types();
+    constexpr std::array<size_t, 2> tensorindex_values = {TensorIndexA.value,
+                                                          TensorIndexB.value};
 
-  //   constexpr std::array<size_t, 2> tensorindex_values = {TensorIndexA.value,
-  //                                                         TensorIndexB.value};
+    // TensorMetafunctions::check_index_symmetry_v<Symm, Indices...>
 
-  //   // TensorMetafunctions::check_index_symmetry_v<Symm, Indices...>
+    // L_ai = R_ai
+    if constexpr (::tenex::detail::is_generic_spacetime_index_value(
+                      tensorindex_values[0]) and
+                  ::tenex::detail::is_generic_spatial_index_value(
+                      tensorindex_values[1])) {
+      if constexpr (ReturnLhsTensor) {
+        // static_assert();
+      } else {
+      }
+    }
 
-  //   // L_ai = R_ai
-  //   if constexpr (::tenex::detail::is_generic_spacetime_index_value(
-  //                     tensorindex_values[0]) and
-  //                 ::tenex::detail::is_generic_spatial_index_value(
-  //                     tensorindex_values[1])) {
-  //     if constexpr (ReturnLhsTensor) {
-  //       // static_assert();
-  //     } else {
-  //     }
-  //   }
+    // L_ia = R_ia
+    if constexpr (::tenex::detail::is_generic_spatial_index_value(
+                      tensorindex_values[0]) and
+                  ::tenex::detail::is_generic_spacetime_index_value(
+                      tensorindex_values[1])) {
+      if constexpr (ReturnLhsTensor) {
+      } else {
+      }
+    }
 
-  //   // L_ia = R_ia
-  //   if constexpr (::tenex::detail::is_generic_spatial_index_value(
-  //                     tensorindex_values[0]) and
-  //                 ::tenex::detail::is_generic_spacetime_index_value(
-  //                     tensorindex_values[1])) {
-  //     if constexpr (ReturnLhsTensor) {
-  //     } else {
-  //     }
-  //   }
+    // L_ij = R_ij
+    if constexpr (::tenex::detail::is_generic_spatial_index_value(
+                      tensorindex_values[0]) and
+                  ::tenex::detail::is_generic_spatial_index_value(
+                      tensorindex_values[1])) {
+      if constexpr (ReturnLhsTensor) {
+      } else {
+      }
+    }
 
-  //   // L_ij = R_ij
-  //   if constexpr (::tenex::detail::is_generic_spatial_index_value(
-  //                     tensorindex_values[0]) and
-  //                 ::tenex::detail::is_generic_spatial_index_value(
-  //                     tensorindex_values[1])) {
-  //     if constexpr (ReturnLhsTensor) {
-  //     } else {
-  //     }
-  //   }
+    // L_it = R_it
+    if constexpr (::tenex::detail::is_generic_spatial_index_value(
+                      tensorindex_values[0]) and
+                  ::tenex::detail::is_time_index_value(tensorindex_values[1])) {
+      if constexpr (ReturnLhsTensor) {
+      } else {
+      }
+    }
 
-  //   // L_it = R_it
-  //   if constexpr (::tenex::detail::is_generic_spatial_index_value(
-  //                     tensorindex_values[0]) and
-  //                 ::tenex::detail::is_time_index_value(tensorindex_values[1])) {
-  //     if constexpr (ReturnLhsTensor) {
-  //     } else {
-  //     }
-  //   }
+    // L_ti = R_ti
+    if constexpr (::tenex::detail::is_time_index_value(
+                      tensorindex_values[0]) and
+                  ::tenex::detail::is_generic_spatial_index_value(
+                      tensorindex_values[1])) {
+      if constexpr (ReturnLhsTensor) {
+      } else {
+      }
+    }
 
-  //   // L_ti = R_ti
-  //   if constexpr (::tenex::detail::is_time_index_value(
-  //                     tensorindex_values[0]) and
-  //                 ::tenex::detail::is_generic_spatial_index_value(
-  //                     tensorindex_values[1])) {
-  //     if constexpr (ReturnLhsTensor) {
-  //     } else {
-  //     }
-  //   }
-
-  //   // L_tt  = R_tt
-  //   if constexpr (::tenex::detail::is_time_index_value(
-  //                     tensorindex_values[0]) and
-  //                 ::tenex::detail::is_time_index_value(tensorindex_values[1])) {
-  //     if constexpr (ReturnLhsTensor) {
-  //     } else {
-  //     }
-  //   }
-  // } else {
-  //   // TODO ?
-  // }
+    // L_tt  = R_tt
+    if constexpr (::tenex::detail::is_time_index_value(
+                      tensorindex_values[0]) and
+                  ::tenex::detail::is_time_index_value(tensorindex_values[1])) {
+      if constexpr (ReturnLhsTensor) {
+      } else {
+      }
+    }
+  } else {
+    // TODO ?
+  }
 }
 
 /// \ingroup TestingFrameworkGroup
