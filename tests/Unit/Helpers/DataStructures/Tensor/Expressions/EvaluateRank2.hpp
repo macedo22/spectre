@@ -201,6 +201,8 @@ void test_evaluate_rank_2_core() {
   }
 }
 
+// TODOTODOTODO: just scrap the idea of instantiating for every LHS symmetry
+
 /// \ingroup TestingFrameworkGroup
 /// \brief Test that evaluating a right hand side tensor expression containing a
 /// single rank 2 tensor correctly assigns the data to the evaluated left hand
