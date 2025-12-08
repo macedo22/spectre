@@ -809,7 +809,7 @@ void test_rhs_and_lhs_rank_4(const gsl::not_null<Generator*> generator,
 }
 
 template <typename DataType>
-void test_evaluate_spatial_spacetime_index(const DataType& used_for_size) {
+void test_evaluate_time_index(const DataType& used_for_size) {
   MAKE_GENERATOR(generator);
 
   test_rhs(make_not_null(&generator), used_for_size);
@@ -821,13 +821,12 @@ void test_evaluate_spatial_spacetime_index(const DataType& used_for_size) {
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateTimeIndex",
                   "[DataStructures][Unit]") {
-  test_evaluate_spatial_spacetime_index(
-      std::numeric_limits<double>::signaling_NaN());
-  test_evaluate_spatial_spacetime_index(
+  test_evaluate_time_index(std::numeric_limits<double>::signaling_NaN());
+  test_evaluate_time_index(
       std::complex<double>(std::numeric_limits<double>::signaling_NaN(),
                            std::numeric_limits<double>::signaling_NaN()));
-  test_evaluate_spatial_spacetime_index(
+  test_evaluate_time_index(
       DataVector(5, std::numeric_limits<double>::signaling_NaN()));
-  test_evaluate_spatial_spacetime_index(
+  test_evaluate_time_index(
       ComplexDataVector(5, std::numeric_limits<double>::signaling_NaN()));
 }
