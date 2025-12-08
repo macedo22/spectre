@@ -354,26 +354,26 @@ void test_rhs_and_lhs_rank2() {
 template <typename DataType>
 void test_rhs_and_lhs_rank4() {
   // tests that return type is what is expected
-  TestHelpers::tenex::test_evaluate_rank_4_core<
-      true, ti::i, ti::k, ti::a, ti::j, DataType, Symmetry<1, 2, 2, 1>,
+  TestHelpers::tenex::test_evaluate<
+      true, Symmetry<1, 2, 2, 1>,
       index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
                  SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>,
                  SpatialIndex<3, UpLo::Lo, Frame::Grid>>,
-      Symmetry<1, 3, 2, 1>,
+      ti::i, ti::k, ti::a, ti::j, Symmetry<1, 3, 2, 1>,
       index_list<SpatialIndex<3, UpLo::Lo, Frame::Grid>,
                  SpatialIndex<2, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>,
                  SpatialIndex<3, UpLo::Lo, Frame::Grid>>>();
 
   // tests that only spatial components are filled for LHS tensor arg
-  TestHelpers::tenex::test_evaluate_rank_4_core<
-      false, ti::m, ti::c, ti::i, ti::j, DataType, Symmetry<1, 1, 2, 1>,
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<1, 1, 2, 1>,
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
-      Symmetry<1, 1, 2, 1>,
+      ti::m, ti::c, ti::i, ti::j, Symmetry<1, 1, 2, 1>,
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
