@@ -666,72 +666,92 @@ void test_lhs(const gsl::not_null<Generator*> generator,
 
 template <typename DataType>
 void test_rhs_and_lhs_rank_2() {
-  TestHelpers::tenex::test_evaluate_rank_2_impl<
+  TestHelpers::tenex::test_evaluate_rank_2_core<
       false, ti::a, ti::t, DataType, Symmetry<1, 1>,
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
+  TestHelpers::tenex::test_evaluate_rank_2_core<
+      false, ti::a, ti::t, DataType, Symmetry<1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      Symmetry<2, 1>>();
 
-  TestHelpers::tenex::test_evaluate_rank_2_impl<
+  TestHelpers::tenex::test_evaluate_rank_2_core<
       false, ti::t, ti::a, DataType, Symmetry<1, 1>,
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
+  TestHelpers::tenex::test_evaluate_rank_2_core<
+      false, ti::t, ti::a, DataType, Symmetry<1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      Symmetry<2, 1>>();
 
-  TestHelpers::tenex::test_evaluate_rank_2_impl<
+  TestHelpers::tenex::test_evaluate_rank_2_core<
       false, ti::t, ti::t, DataType, Symmetry<1, 1>,
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
+  TestHelpers::tenex::test_evaluate_rank_2_core<
+      false, ti::t, ti::t, DataType, Symmetry<1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      Symmetry<2, 1>>();
 
-  TestHelpers::tenex::test_evaluate_rank_2_impl<
+  TestHelpers::tenex::test_evaluate_rank_2_core<
       false, ti::T, ti::T, DataType, Symmetry<1, 1>,
       index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>();
+  TestHelpers::tenex::test_evaluate_rank_2_core<
+      false, ti::T, ti::T, DataType, Symmetry<1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>,
+      Symmetry<2, 1>>();
 
-  TestHelpers::tenex::test_evaluate_rank_2_impl<
+  TestHelpers::tenex::test_evaluate_rank_2_core<
       false, ti::A, ti::t, DataType, Symmetry<2, 1>,
       index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
                  SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>>();
 
-  TestHelpers::tenex::test_evaluate_rank_2_impl<
+  TestHelpers::tenex::test_evaluate_rank_2_core<
       false, ti::T, ti::a, DataType, Symmetry<2, 1>,
       index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
                  SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>>();
 
-  TestHelpers::tenex::test_evaluate_rank_2_impl<
+  TestHelpers::tenex::test_evaluate_rank_2_core<
       false, ti::a, ti::T, DataType, Symmetry<2, 1>,
       index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<2, UpLo::Up, Frame::Inertial>>>();
 
-  TestHelpers::tenex::test_evaluate_rank_2_impl<
+  TestHelpers::tenex::test_evaluate_rank_2_core<
       false, ti::t, ti::A, DataType, Symmetry<2, 1>,
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>();
 
-  TestHelpers::tenex::test_evaluate_rank_2_impl<
+  TestHelpers::tenex::test_evaluate_rank_2_core<
       false, ti::t, ti::i, DataType, Symmetry<2, 1>,
       index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>,
                  SpatialIndex<2, UpLo::Lo, Frame::Inertial>>>();
 
-  TestHelpers::tenex::test_evaluate_rank_2_impl<
+  TestHelpers::tenex::test_evaluate_rank_2_core<
       false, ti::i, ti::t, DataType, Symmetry<2, 1>,
       index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
 
-  TestHelpers::tenex::test_evaluate_rank_2_impl<
+  TestHelpers::tenex::test_evaluate_rank_2_core<
       false, ti::I, ti::t, DataType, Symmetry<2, 1>,
       index_list<SpatialIndex<2, UpLo::Up, Frame::Inertial>,
                  SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>>();
 
-  TestHelpers::tenex::test_evaluate_rank_2_impl<
+  TestHelpers::tenex::test_evaluate_rank_2_core<
       false, ti::T, ti::i, DataType, Symmetry<2, 1>,
       index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
                  SpatialIndex<2, UpLo::Lo, Frame::Inertial>>>();
 
-  TestHelpers::tenex::test_evaluate_rank_2_impl<
+  TestHelpers::tenex::test_evaluate_rank_2_core<
       false, ti::i, ti::T, DataType, Symmetry<2, 1>,
       index_list<SpatialIndex<2, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<2, UpLo::Up, Frame::Inertial>>>();
 
-  TestHelpers::tenex::test_evaluate_rank_2_impl<
+  TestHelpers::tenex::test_evaluate_rank_2_core<
       false, ti::t, ti::I, DataType, Symmetry<2, 1>,
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpatialIndex<3, UpLo::Up, Frame::Inertial>>>();
