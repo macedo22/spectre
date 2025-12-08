@@ -117,7 +117,7 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank012",
       index_list<SpacetimeIndex<2, UpLo::Up, Frame::Grid>,
                  SpacetimeIndex<2, UpLo::Up, Frame::Grid>>,
       ti::G, ti::B>();
-   TestHelpers::tenex::test_evaluate<
+  TestHelpers::tenex::test_evaluate<
       false, Symmetry<1, 1>,
       index_list<SpacetimeIndex<2, UpLo::Up, Frame::Grid>,
                  SpacetimeIndex<2, UpLo::Up, Frame::Grid>>,
