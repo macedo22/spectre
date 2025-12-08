@@ -13,8 +13,7 @@
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/ComponentPlaceholder.hpp"
-#include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank2.hpp"
-#include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank4.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/EvaluateRankN.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/MakeWithValue.hpp"
 
@@ -23,7 +22,7 @@ template <typename Generator, typename DataType>
 void test_rhs(const gsl::not_null<Generator*> generator,
               const DataType& used_for_size) {
   // Note: this function doesn't utilize test helper functions like
-  // test_evaluate_rank_2_core() because they aren't generic enough to handle
+  // test_evaluate() because they aren't generic enough to handle
   // test cases where the number of indices on the RHS and LHS are not equal.
   // Instead, we have to manually check each test case of interest.
 
@@ -140,7 +139,7 @@ template <typename Generator, typename DataType>
 void test_lhs(const gsl::not_null<Generator*> generator,
               const DataType& used_for_size) {
   // Note: this function doesn't utilize test helper functions like
-  // test_evaluate_rank_2_core() because they aren't generic enough to handle
+  // test_evaluate() because they aren't generic enough to handle
   // test cases where the number of indices on the RHS and LHS are not equal.
   // Instead, we have to manually check each test case of interest.
 
@@ -451,35 +450,41 @@ void test_lhs(const gsl::not_null<Generator*> generator,
 
 template <typename DataType>
 void test_rhs_and_lhs_rank_2() {
-  TestHelpers::tenex::test_evaluate_rank_2_impl<
-      false, ti::i, ti::t, DataType, Symmetry<1, 1>,
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<1, 1>,
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      ti::i, ti::t>();
 
-  TestHelpers::tenex::test_evaluate_rank_2_impl<
-      false, ti::t, ti::i, DataType, Symmetry<1, 1>,
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<1, 1>,
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      ti::t, ti::i>();
 
-  TestHelpers::tenex::test_evaluate_rank_2_impl<
-      false, ti::I, ti::t, DataType, Symmetry<2, 1>,
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 1>,
       index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
-                 SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>>();
+                 SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>,
+      ti::I, ti::t>();
 
-  TestHelpers::tenex::test_evaluate_rank_2_impl<
-      false, ti::T, ti::i, DataType, Symmetry<2, 1>,
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 1>,
       index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
-                 SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>>();
+                 SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>,
+      ti::T, ti::i>();
 
-  TestHelpers::tenex::test_evaluate_rank_2_impl<
-      false, ti::i, ti::T, DataType, Symmetry<2, 1>,
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 1>,
       index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>,
-                 SpacetimeIndex<2, UpLo::Up, Frame::Inertial>>>();
+                 SpacetimeIndex<2, UpLo::Up, Frame::Inertial>>,
+      ti::i, ti::T>();
 
-  TestHelpers::tenex::test_evaluate_rank_2_impl<
-      false, ti::t, ti::I, DataType, Symmetry<2, 1>,
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 1>,
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>();
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>,
+      ti::t, ti::I>();
 }
 
 template <typename DataType>
@@ -489,9 +494,9 @@ void test_rhs_and_lhs_rank_4() {
       SpacetimeIndex<3, UpLo::Lo, frame>, SpacetimeIndex<3, UpLo::Lo, frame>,
       SpacetimeIndex<3, UpLo::Lo, frame>, SpacetimeIndex<3, UpLo::Lo, frame>>;
 
-  TestHelpers::tenex::test_evaluate_rank_4_core<
-      false, ti::t, ti::a, ti::j, ti::i, DataType, Symmetry<1, 2, 1, 1>,
-      index_list_abcd, Symmetry<1, 3, 2, 1>>();
+  TestHelpers::tenex::test_evaluate<false, Symmetry<1, 2, 1, 1>,
+                                    index_list_abcd, ti::t, ti::a, ti::j, ti::i,
+                                    Symmetry<1, 3, 2, 1>>();
 }
 
 template <typename DataType>
