@@ -534,11 +534,11 @@ template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
 void test_evaluate_rank_4() {
   TestHelpers::tenex::test_evaluate_rank_4_core<
       ReturnLhsTensor, TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD,
-      double, RhsSymmetry, RhsTensorIndexTypeList, RhsSymmetry,
+      double, RhsSymmetry, RhsTensorIndexTypeList, LhsSymmetry,
       LhsTensorIndexTypeList>();
   TestHelpers::tenex::test_evaluate_rank_4_core<
       ReturnLhsTensor, TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD,
-      DataVector, RhsSymmetry, RhsTensorIndexTypeList, RhsSymmetry,
+      DataVector, RhsSymmetry, RhsTensorIndexTypeList, LhsSymmetry,
       LhsTensorIndexTypeList>();
 }
 }  // namespace TestHelpers::tenex

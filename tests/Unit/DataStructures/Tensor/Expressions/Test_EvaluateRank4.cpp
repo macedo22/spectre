@@ -49,7 +49,7 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank4",
 
   // different LHS symmetry
   TestHelpers::tenex::test_evaluate<
-      true, Symmetry<2, 1, 2, 2>,
+      false, Symmetry<2, 1, 2, 2>,
       index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
