@@ -31,6 +31,12 @@ SPECTRE_TEST_CASE(
                  SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>,
       ti::b, ti::a, ti::C>();
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>,
+      ti::b, ti::a, ti::C, Symmetry<3, 2, 1>>();
 
   // first and third indices symmetric
   TestHelpers::tenex::test_evaluate<
@@ -39,6 +45,12 @@ SPECTRE_TEST_CASE(
                  SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
                  SpatialIndex<2, UpLo::Lo, Frame::Grid>>,
       ti::i, ti::f, ti::j>();
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<1, 2, 1>,
+      index_list<SpatialIndex<2, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpatialIndex<2, UpLo::Lo, Frame::Grid>>,
+      ti::i, ti::f, ti::j, Symmetry<3, 2, 1>>();
 
   // second and third indices symmetric
   TestHelpers::tenex::test_evaluate<
@@ -47,6 +59,12 @@ SPECTRE_TEST_CASE(
                  SpatialIndex<3, UpLo::Up, Frame::Inertial>,
                  SpatialIndex<3, UpLo::Up, Frame::Inertial>>,
       ti::J, ti::M, ti::I>();
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 1, 1>,
+      index_list<SpatialIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Up, Frame::Inertial>>,
+      ti::J, ti::M, ti::I, Symmetry<3, 2, 1>>();
 
   // symmetric
   TestHelpers::tenex::test_evaluate<
@@ -55,4 +73,28 @@ SPECTRE_TEST_CASE(
                  SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>,
       ti::f, ti::d, ti::a>();
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<1, 1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>,
+      ti::f, ti::d, ti::a, Symmetry<2, 2, 1>>();
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<1, 1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>,
+      ti::f, ti::d, ti::a, Symmetry<1, 2, 1>>();
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<1, 1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>,
+      ti::f, ti::d, ti::a, Symmetry<2, 1, 1>>();
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<1, 1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>,
+      ti::f, ti::d, ti::a, Symmetry<3, 2, 1>>();
 }
