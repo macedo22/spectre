@@ -108,10 +108,20 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank012",
                  SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
       ti::a, ti::d>();
   TestHelpers::tenex::test_evaluate<
+      false, Symmetry<1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      ti::a, ti::d, Symmetry<2, 1>>();
+  TestHelpers::tenex::test_evaluate<
       true, Symmetry<1, 1>,
       index_list<SpacetimeIndex<2, UpLo::Up, Frame::Grid>,
                  SpacetimeIndex<2, UpLo::Up, Frame::Grid>>,
       ti::G, ti::B>();
+   TestHelpers::tenex::test_evaluate<
+      false, Symmetry<1, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Grid>,
+                 SpacetimeIndex<2, UpLo::Up, Frame::Grid>>,
+      ti::G, ti::B, Symmetry<2, 1>>();
 
   // Rank 2: symmetric, spatial
   TestHelpers::tenex::test_evaluate<
@@ -120,8 +130,18 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank012",
                  SpatialIndex<2, UpLo::Lo, Frame::Inertial>>,
       ti::j, ti::i>();
   TestHelpers::tenex::test_evaluate<
+      false, Symmetry<1, 1>,
+      index_list<SpatialIndex<2, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<2, UpLo::Lo, Frame::Inertial>>,
+      ti::j, ti::i, Symmetry<2, 1>>();
+  TestHelpers::tenex::test_evaluate<
       true, Symmetry<1, 1>,
       index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
                  SpatialIndex<3, UpLo::Up, Frame::Grid>>,
       ti::I, ti::J>();
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<1, 1>,
+      index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
+                 SpatialIndex<3, UpLo::Up, Frame::Grid>>,
+      ti::I, ti::J, Symmetry<2, 1>>();
 }
