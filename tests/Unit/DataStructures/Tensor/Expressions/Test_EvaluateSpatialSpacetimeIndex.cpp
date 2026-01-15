@@ -454,6 +454,199 @@ void test_lhs() {
 // \tparam DataType the type of data being stored in the expression operands
 template <typename DataType>
 void test_rhs_and_lhs_rank2() {
+  // - RHS Symmetry<2, 1>
+  // - two lower spatial tensor indices
+  // - RHS one or two spacetime indices
+  // - LHS two spacetime indices
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<2, UpLo::Lo, Frame::Inertial>>,
+      ti::i, ti::j, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 1>,
+      index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      ti::n, ti::m, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      ti::m, ti::i, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
+
+  // - RHS Symmetry<2, 1>
+  // - upper spatial tensor index, lower spatial tensor index
+  // - RHS two spacetime indices
+  // - LHS one or two spacetime indices
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>,
+      ti::I, ti::j, Symmetry<2, 1>,
+      index_list<SpatialIndex<2, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>,
+      ti::K, ti::i, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
+                 SpatialIndex<2, UpLo::Lo, Frame::Inertial>>>();
+
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      ti::N, ti::k, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
+
+  // - RHS Symmetry<2, 1>
+  // - lower spatial tensor indices
+  // - RHS spatial index, spacetime index
+  // - LHS spatial index, spacetime index
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 1>,
+      index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      ti::j, ti::k>();
+
+  // - RHS Symmetry<2, 1>
+  // - upper spatial tensor indices
+  // - RHS spacetime index, spatial index
+  // - LHS spatial index, spacetime index
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
+                 SpatialIndex<2, UpLo::Up, Frame::Inertial>>,
+      ti::L, ti::J, Symmetry<2, 1>,
+      index_list<SpatialIndex<2, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<2, UpLo::Up, Frame::Inertial>>>();
+
+  // - RHS Symmetry<2, 1>
+  // - lower spatial tensor index, upper spatial tensor index
+  // - RHS spatial index, spacetime index
+  // - LHS spacetime index, spatial index
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 1>,
+      index_list<SpatialIndex<2, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<2, UpLo::Up, Frame::Inertial>>,
+      ti::i, ti::M, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<2, UpLo::Up, Frame::Inertial>>>();
+
+  // - RHS Symmetry<2, 1>
+  // - lower spatial tensor indices
+  // - RHS spacetime index, spatial index
+  // - LHS spatial index, spacetime index
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>>,
+      ti::k, ti::j>();
+
+  // - RHS Symmetry<2, 1>
+  // - upper spatial tensor indices
+  // - RHS spatial index, spacetime index
+  // - LHS spacetime index, spatial index
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 1>,
+      index_list<SpatialIndex<2, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<2, UpLo::Up, Frame::Inertial>>,
+      ti::L, ti::J, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
+                 SpatialIndex<2, UpLo::Up, Frame::Inertial>>>();
+
+  // - RHS Symmetry<2, 1>
+  // - lower spacetime tensor index, lower spatial tensor index
+  // - RHS spacetime indices
+  // - LHS spacetime indices
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      ti::a, ti::i>();
+
+  // - RHS Symmetry<2, 1>
+  // - lower spatial tensor index, lower spacetime tensor index
+  // - RHS spacetime indices
+  // - LHS spacetime indices
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      ti::i, ti::a>();
+
+  // - RHS Symmetry<2, 1>
+  // - upper spacetime tensor index, upper spatial tensor index
+  // - RHS spacetime indices
+  // - LHS spacetime indices
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>,
+      ti::A, ti::I>();
+
+  // - RHS Symmetry<2, 1>
+  // - upper spatial tensor index, upper spacetime tensor index
+  // - RHS spacetime indices
+  // - LHS spacetime indices
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>,
+      ti::I, ti::A>();
+
+  // - RHS Symmetry<2, 1>
+  // - lower spatial tensor index, upper spacetime tensor index
+  // - RHS spacetime indices
+  // - LHS spacetime indices
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>,
+      ti::i, ti::A>();
+
+  // - RHS Symmetry<2, 1>
+  // - lower spacetime tensor index, upper spatial tensor index
+  // - RHS spacetime indices
+  // - LHS spacetime indices
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>,
+      ti::a, ti::I>();
+
+  // - RHS Symmetry<2, 1>
+  // - upper spatial tensor index, lower spacetime tensor index
+  // - RHS spacetime indices
+  // - LHS spacetime indices
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      ti::I, ti::a>();
+
+  // - RHS Symmetry<2, 1>
+  // - upper spacetime tensor index, lower spatial tensor index
+  // - RHS spacetime indices
+  // - LHS spacetime indices
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<2, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      ti::A, ti::i>();
+
+  // test RHS Symmetry<1, 1> to LHS Symmetry<1, 1> and <2, 1>
   TestHelpers::tenex::test_evaluate<
       false, Symmetry<1, 1>,
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
@@ -497,66 +690,6 @@ void test_rhs_and_lhs_rank2() {
       index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>,
       ti::J, ti::I, Symmetry<2, 1>>();
-
-  TestHelpers::tenex::test_evaluate<
-      false, Symmetry<2, 1>,
-      index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>,
-                 SpatialIndex<2, UpLo::Lo, Frame::Inertial>>,
-      ti::i, ti::j, Symmetry<2, 1>,
-      index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>,
-                 SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>>();
-
-  TestHelpers::tenex::test_evaluate<
-      false, Symmetry<2, 1>,
-      index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
-                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
-      ti::n, ti::m, Symmetry<2, 1>,
-      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
-
-  TestHelpers::tenex::test_evaluate<
-      false, Symmetry<2, 1>,
-      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
-                 SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>,
-      ti::I, ti::j, Symmetry<2, 1>,
-      index_list<SpatialIndex<2, UpLo::Up, Frame::Inertial>,
-                 SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>>();
-
-  TestHelpers::tenex::test_evaluate<
-      false, Symmetry<2, 1>,
-      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
-                 SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>,
-      ti::K, ti::i, Symmetry<2, 1>,
-      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
-                 SpatialIndex<2, UpLo::Lo, Frame::Inertial>>>();
-
-  TestHelpers::tenex::test_evaluate<
-      false, Symmetry<2, 1>,
-      index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
-                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
-      ti::j, ti::k>();
-
-  TestHelpers::tenex::test_evaluate<
-      false, Symmetry<2, 1>,
-      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
-                 SpatialIndex<2, UpLo::Up, Frame::Inertial>>,
-      ti::L, ti::J, Symmetry<2, 1>,
-      index_list<SpatialIndex<2, UpLo::Up, Frame::Inertial>,
-                 SpacetimeIndex<2, UpLo::Up, Frame::Inertial>>>();
-
-  TestHelpers::tenex::test_evaluate<
-      false, Symmetry<2, 1>,
-      index_list<SpatialIndex<2, UpLo::Lo, Frame::Inertial>,
-                 SpacetimeIndex<2, UpLo::Up, Frame::Inertial>>,
-      ti::i, ti::M, Symmetry<2, 1>,
-      index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>,
-                 SpatialIndex<2, UpLo::Up, Frame::Inertial>>>();
-
-  TestHelpers::tenex::test_evaluate<
-      false, Symmetry<2, 1>,
-      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                 SpatialIndex<3, UpLo::Lo, Frame::Inertial>>,
-      ti::j, ti::k>();
 }
 
 // \brief Test evaluation of rank 4 tensors where generic spatial indices are
