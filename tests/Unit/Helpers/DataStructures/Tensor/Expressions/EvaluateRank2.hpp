@@ -162,6 +162,9 @@ void test_evaluate_rank_2_core() {
     }
   }
 
+  // TODO : change filling with NaN to filling with placeholder because
+  // sometimes we purposely won't fill out a component
+
   // Test with Variables
   if constexpr (is_derived_of_vector_impl_v<DataType>) {
     Variables<tmpl::list<::Tags::TempTensor<0, R_ab_type>,
