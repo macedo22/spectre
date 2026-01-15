@@ -130,8 +130,6 @@ void test_evaluate_rank_4_core() {
       R_abcd(TensorIndexA, TensorIndexB, TensorIndexC, TensorIndexD);
 
   // L_{abcd} = R_{abcd}
-  // Use explicit type (vs auto) so the compiler checks the return type of
-  // `evaluate`
   using L_abcd_type = Tensor<DataType, LhsSymmetry, LhsTensorIndexTypeList>;
   L_abcd_type L_abcd(used_for_size);
   std::fill(L_abcd.begin(), L_abcd.end(),

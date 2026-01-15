@@ -42,8 +42,6 @@ void test_evaluate_rank_0() {
   const auto R = make_with_random_values<Tensor<DataType>>(
       make_not_null(&generator), distribution, used_for_size);
 
-  // Use explicit type (vs auto) so the compiler checks the return type of
-  // `evaluate`
   Scalar<DataType> L(used_for_size);
   std::fill(L.begin(), L.end(), component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor>(make_not_null(&L), R());

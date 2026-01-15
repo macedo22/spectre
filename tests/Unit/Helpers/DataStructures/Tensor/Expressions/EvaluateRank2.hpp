@@ -128,8 +128,6 @@ void test_evaluate_rank_2_core() {
 
   const auto rhs_expression = R_ab(TensorIndexA, TensorIndexB);
   // L_{ab} = R_{ab}
-  // Use explicit type (vs auto) so the compiler checks the return type of
-  // `evaluate`
   using L_ab_type = Tensor<DataType, LhsSymmetry, LhsTensorIndexTypeList>;
   L_ab_type L_ab(used_for_size);
   std::fill(L_ab.begin(), L_ab.end(),

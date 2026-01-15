@@ -21,7 +21,6 @@ template <bool ReturnLhsTensor, auto&... LhsTensorIndices, typename LhsTensor,
 void call_evaluate(const gsl::not_null<LhsTensor*> lhs_tensor,
                    const RhsExpression& rhs_expression) {
   if constexpr (ReturnLhsTensor) {
-    // checks at compile time that return type is correct
     *lhs_tensor = ::tenex::evaluate<LhsTensorIndices...>(rhs_expression);
   } else {
     ::tenex::evaluate<LhsTensorIndices...>(lhs_tensor, rhs_expression);
