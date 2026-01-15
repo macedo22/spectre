@@ -660,6 +660,17 @@ void test_rhs_and_lhs_rank2() {
 
   TestHelpers::tenex::test_evaluate<
       false, Symmetry<1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>,
+      ti::A, ti::I>();
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>,
+      ti::A, ti::I, Symmetry<2, 1>>();
+
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<1, 1>,
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
       ti::i, ti::a>();
@@ -668,6 +679,17 @@ void test_rhs_and_lhs_rank2() {
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
       ti::i, ti::a, Symmetry<2, 1>>();
+
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>,
+      ti::I, ti::A>();
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>,
+      ti::I, ti::A, Symmetry<2, 1>>();
 
   TestHelpers::tenex::test_evaluate<
       false, Symmetry<1, 1>,
