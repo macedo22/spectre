@@ -21,7 +21,7 @@ namespace TestHelpers::tenex {
 
 template <bool ReturnLhsTensor, typename DataType>
 void test_evaluate() {
-  test_evaluate_rank_0_core<ReturnLhsTensor, DataType>();
+  test_evaluate_rank_0<ReturnLhsTensor, DataType>();
 }
 
 template <bool ReturnLhsTensor, typename DataType,
@@ -67,7 +67,7 @@ void test_evaluate() {
 // TODO : consider moving these to RankX.hpp files or those functions here
 template <bool ReturnLhsTensor, typename DataType>
 void test_evaluate_symmetry_cases() {
-  test_evaluate_rank_0_core<ReturnLhsTensor, TensorIndex>();
+  test_evaluate_rank_0<ReturnLhsTensor, TensorIndex>();
 }
 
 template <bool ReturnLhsTensor, typename DataType,
@@ -138,7 +138,8 @@ void test_evaluate_datatype_and_symmetry_cases() {
 // TODO : same interface question lol
 template <bool ReturnLhsTensor>
 void test_evaluate_datatype_cases() {
-  test_evaluate_rank_0<ReturnLhsTensor>();
+  test_evaluate_rank_0<ReturnLhsTensor, double>();
+  test_evaluate_rank_0<ReturnLhsTensor, DataVector>();
 }
 
 template <bool ReturnLhsTensor, auto& TensorIndex,

@@ -16,6 +16,7 @@
 #include "DataStructures/VectorImpl.hpp"
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
+#include "Helpers/DataStructures/Tensor/Expressions/ComponentPlaceholder.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/TestHelpers.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/TMPL.hpp"
@@ -34,22 +35,19 @@ template <bool ReturnLhsTensor, typename DataType>
 // const Tensor<DataType> R{{{data}}};
 // Scalar<DataType> L{};
 // call_evaluate<ReturnLhsTensor>(make_not_null(&L), R());
-void test_evaluate_rank_0_core() {
+void test_evaluate_rank_0() {
   MAKE_GENERATOR(generator);
   std::uniform_real_distribution<> distribution(-5.0, 5.0);
   const size_t used_for_size = 3;
   const auto R = make_with_random_values<Tensor<DataType>>(
       make_not_null(&generator), distribution, used_for_size);
-  // auto expected_L =
-  //     ReturnLhsTensor
-  //         ? L_a_type{}
-  //         : make_with_value<L_a_type>(
-  //               used_for_size, component_placeholder_value<DataType>::value);
-  // const Tensor<DataType> expected_L = R;
-  Scalar<DataType> L{};
+
+  // Use explicit type (vs auto) so the compiler checks the return type of
+  // `evaluate`
+  Scalar<DataType> L(used_for_size);
+  std::fill(L.begin(), L.end(), component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor>(make_not_null(&L), R());
 
-  // CHECK(get(L) == get(R));  // check LHS evaluated correctly
   CHECK(L == R);  // check LHS evaluated correctly
 
   // Test with Variables
@@ -69,13 +67,5 @@ void test_evaluate_rank_0_core() {
     CHECK(R_temp == R);  // check RHS wasn't modified
     CHECK(L_temp == R);  // check LHS evaluated correctly
   }
-}
-
-/// \ingroup TestingFrameworkGroup
-/// TODO
-template <bool ReturnLhsTensor>
-void test_evaluate_rank_0() {
-  TestHelpers::tenex::test_evaluate_rank_0_core<ReturnLhsTensor, double>();
-  TestHelpers::tenex::test_evaluate_rank_0_core<ReturnLhsTensor, DataVector>();
 }
 }  // namespace TestHelpers::tenex
