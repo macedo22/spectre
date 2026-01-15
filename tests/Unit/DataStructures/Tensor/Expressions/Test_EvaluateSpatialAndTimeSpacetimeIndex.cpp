@@ -473,6 +473,28 @@ void test_rhs_and_lhs_rank_2() {
       ti::t, ti::i, Symmetry<2, 1>>();
 
   TestHelpers::tenex::test_evaluate<
+      false, Symmetry<1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>,
+      ti::I, ti::T>();
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>,
+      ti::I, ti::T, Symmetry<2, 1>>();
+
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>,
+      ti::T, ti::I>();
+  TestHelpers::tenex::test_evaluate<
+      false, Symmetry<1, 1>,
+      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
+                 SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>,
+      ti::T, ti::I, Symmetry<2, 1>>();
+
+  TestHelpers::tenex::test_evaluate<
       false, Symmetry<2, 1>,
       index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
                  SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>,
