@@ -121,6 +121,9 @@ void test_evaluate_rank_3_core() {
   // L_{abc} = R_{abc}
   using L_abc_type = Tensor<DataType, LhsSymmetry, LhsTensorIndexTypeList>;
   L_abc_type L_abc(used_for_size);
+  // component placeholder is used to detect which components have incorrectly
+  // or correctly (in the case of using spatial or time indices for spacetime
+  // indices) not been modified by evaluation of the RHS expression
   std::fill(L_abc.begin(), L_abc.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndexA, TensorIndexB, TensorIndexC>(

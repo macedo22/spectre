@@ -43,6 +43,7 @@ void test_evaluate_rank_0() {
       make_not_null(&generator), distribution, used_for_size);
 
   Scalar<DataType> L(used_for_size);
+  // component placeholder is used to detect if LHS scalar was not modified
   std::fill(L.begin(), L.end(), component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor>(make_not_null(&L), R());
 

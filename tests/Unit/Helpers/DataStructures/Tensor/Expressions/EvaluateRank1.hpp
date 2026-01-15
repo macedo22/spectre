@@ -94,6 +94,9 @@ void test_evaluate_rank_1_core() {
   // TODO : don't size this in case ReturnLhsTensor == false, correct in other
   // files too
   L_a_type L_a(used_for_size);
+  // component placeholder is used to detect which components have incorrectly
+  // or correctly (in the case of using spatial or time indices for spacetime
+  // indices) not been modified by evaluation of the RHS expression
   std::fill(L_a.begin(), L_a.end(),
             component_placeholder_value<DataType>::value);
   call_evaluate<ReturnLhsTensor, TensorIndex>(make_not_null(&L_a),
