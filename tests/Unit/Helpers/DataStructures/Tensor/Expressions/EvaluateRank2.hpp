@@ -27,9 +27,6 @@
 
 namespace TestHelpers::tenex {
 // TODO : update testing func docs
-// TODO : add static_asserts that things are the right size (the rank)
-// TODO : perhaps make one function that dispatches to the individual
-// rank tests so we don't have to repeat the docs so much
 
 /// \ingroup TestingFrameworkGroup
 /// \brief Test that evaluating a right hand side tensor expression containing a

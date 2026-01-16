@@ -4,7 +4,6 @@
 #include "Framework/TestingFramework.hpp"
 
 #include <cstddef>
-#include <iostream>  // TODO : remove
 #include <type_traits>
 
 #include "DataStructures/Tensor/Expressions/Evaluate.hpp"
@@ -120,12 +119,6 @@ void test_evaluate_and_canon_multi_index_consistency() {
 
   for (size_t i = 0; i < iii::size(); i++) {
     const auto canon_multi_index = iii::get_canonical_tensor_index(i);
-    // TODO : remove
-    if (not(canon_multi_index[0] >= canon_multi_index[1]) or
-        not(canon_multi_index[1] >= canon_multi_index[2])) {
-      std::cout << "i : " << i << ", canon_multi_index : " << canon_multi_index
-                << std::endl;
-    }
 
     CHECK(canon_multi_index[0] >= canon_multi_index[1]);
     CHECK(canon_multi_index[1] >= canon_multi_index[2]);
@@ -133,14 +126,6 @@ void test_evaluate_and_canon_multi_index_consistency() {
 
   for (size_t i = 0; i < aaa::size(); i++) {
     const auto canon_multi_index = aaa::get_canonical_tensor_index(i);
-    // // TODO : remove
-    // if (not (canon_multi_index[0] >= canon_multi_index[1]) or
-    //     not (canon_multi_index[1] >= canon_multi_index[2])) {
-    //   std::cout << "i : " << i << ", canon_multi_index : " <<
-    //   canon_multi_index << std::endl;
-    // }
-    // std::cout << "i : " << i << ", canon_multi_index : " << canon_multi_index
-    // << std::endl;
 
     CHECK(canon_multi_index[0] >= canon_multi_index[1]);
     CHECK(canon_multi_index[1] >= canon_multi_index[2]);
@@ -914,8 +899,8 @@ void test_lhs_tensorindex_reorder_rank4() {
 // Tests `tenex::detail::get_reordered_tensorindex_values`
 void test_lhs_tensorindex_reorder() {
   test_lhs_tensorindex_reorder_symm_consistency();
-  // test_lhs_tensorindex_reorder_rank0();
-  // test_lhs_tensorindex_reorder_rank1();
+  test_lhs_tensorindex_reorder_rank0();
+  test_lhs_tensorindex_reorder_rank1();
   test_lhs_tensorindex_reorder_rank2();
   test_lhs_tensorindex_reorder_rank3();
   test_lhs_tensorindex_reorder_rank4();

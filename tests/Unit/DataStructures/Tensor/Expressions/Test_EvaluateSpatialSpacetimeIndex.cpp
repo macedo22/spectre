@@ -266,8 +266,6 @@ void test_lhs() {
       index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>();
 
-  // TODO : do we want to remove passing in UpLo and Frame explicitly and
-  // just have user send in list of SpacetimeIndex, SpatialIndex..?
   TestHelpers::tenex::test_evaluate<
       false, ti::A, ti::I, Symmetry<2, 1>,
       index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
