@@ -31,10 +31,6 @@ namespace TestHelpers::tenex {
 ///
 /// \param data the data being stored in the Tensors
 template <bool ReturnLhsTensor, typename DataType>
-// void test_evaluate_rank_0(const DataType& data) {
-// const Tensor<DataType> R{{{data}}};
-// Scalar<DataType> L{};
-// call_evaluate<ReturnLhsTensor>(make_not_null(&L), R());
 void test_evaluate_rank_0() {
   MAKE_GENERATOR(generator);
   std::uniform_real_distribution<> distribution(-5.0, 5.0);
