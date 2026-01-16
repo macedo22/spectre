@@ -62,7 +62,7 @@ template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
           auto& TensorIndexC, typename DataType, typename RhsSymmetry,
           typename RhsTensorIndexTypeList, typename LhsSymmetry = RhsSymmetry,
           typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
-void test_evaluate_rank_3_core() {
+void test_evaluate_rank_3() {
   MAKE_GENERATOR(generator);
   std::uniform_real_distribution<> distribution(-5.0, 5.0);
   const size_t used_for_size = 3;
@@ -297,56 +297,5 @@ void test_evaluate_rank_3_core() {
       }
     }
   }
-}
-
-template <bool ReturnLhsTensorForLhsSameSymmetryCase, auto& TensorIndexA,
-          auto& TensorIndexB, auto& TensorIndexC, typename DataType,
-          typename RhsSymmetry, typename RhsTensorIndexTypeList,
-          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
-void test_evaluate_rank_3_impl() {
-  using symmetry_321 = Symmetry<3, 2, 1>;
-  using symmetry_211 = Symmetry<2, 1, 1>;
-  using symmetry_121 = Symmetry<1, 2, 1>;
-  using symmetry_221 = Symmetry<2, 2, 1>;
-  using symmetry_111 = Symmetry<1, 1, 1>;
-
-  test_evaluate_rank_3_core<ReturnLhsTensorForLhsSameSymmetryCase, TensorIndexA,
-                            TensorIndexB, TensorIndexC, DataType, RhsSymmetry,
-                            RhsTensorIndexTypeList, RhsSymmetry,
-                            LhsTensorIndexTypeList>();
-
-  if constexpr (std::is_same_v<RhsSymmetry, symmetry_111>) {
-    test_evaluate_rank_3_core<false, TensorIndexA, TensorIndexB, TensorIndexC,
-                              DataType, RhsSymmetry, RhsTensorIndexTypeList,
-                              symmetry_211, LhsTensorIndexTypeList>();
-    test_evaluate_rank_3_core<false, TensorIndexA, TensorIndexB, TensorIndexC,
-                              DataType, RhsSymmetry, RhsTensorIndexTypeList,
-                              symmetry_121, LhsTensorIndexTypeList>();
-    test_evaluate_rank_3_core<false, TensorIndexA, TensorIndexB, TensorIndexC,
-                              DataType, RhsSymmetry, RhsTensorIndexTypeList,
-                              symmetry_221, LhsTensorIndexTypeList>();
-    test_evaluate_rank_3_core<false, TensorIndexA, TensorIndexB, TensorIndexC,
-                              DataType, RhsSymmetry, RhsTensorIndexTypeList,
-                              symmetry_321, LhsTensorIndexTypeList>();
-  } else if constexpr (not std::is_same_v<RhsSymmetry, symmetry_321>) {
-    test_evaluate_rank_3_core<false, TensorIndexA, TensorIndexB, TensorIndexC,
-                              DataType, RhsSymmetry, RhsTensorIndexTypeList,
-                              symmetry_321, LhsTensorIndexTypeList>();
-  }
-}
-
-template <bool ReturnLhsTensorForLhsSameSymmetryCase, auto& TensorIndexA,
-          auto& TensorIndexB, auto& TensorIndexC, typename RhsSymmetry,
-          typename RhsTensorIndexTypeList,
-          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
-void test_evaluate_rank_3() {
-  TestHelpers::tenex::test_evaluate_rank_3_impl<
-      ReturnLhsTensorForLhsSameSymmetryCase, TensorIndexA, TensorIndexB,
-      TensorIndexC, double, RhsSymmetry, RhsTensorIndexTypeList,
-      RhsTensorIndexTypeList>();
-  TestHelpers::tenex::test_evaluate_rank_3_impl<
-      ReturnLhsTensorForLhsSameSymmetryCase, TensorIndexA, TensorIndexB,
-      TensorIndexC, DataVector, RhsSymmetry, RhsTensorIndexTypeList,
-      RhsTensorIndexTypeList>();
 }
 }  // namespace TestHelpers::tenex
