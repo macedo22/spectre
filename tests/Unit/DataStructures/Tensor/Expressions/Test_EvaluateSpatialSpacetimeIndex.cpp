@@ -443,7 +443,8 @@ void test_lhs() {
 // \brief Test evaluation of rank 2 tensors where generic spatial indices are
 // used for RHS and LHS spacetime indices
 void test_rhs_and_lhs_rank2() {
-  // - RHS Symmetry<2, 1>
+  // test RHS Symmetry<2, 1>
+
   // - two lower spatial tensor indices
   // - RHS one or two spacetime indices
   // - LHS two spacetime indices
@@ -471,7 +472,6 @@ void test_rhs_and_lhs_rank2() {
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
 
-  // - RHS Symmetry<2, 1>
   // - upper spatial tensor index, lower spatial tensor index
   // - RHS two spacetime indices
   // - LHS one or two spacetime indices
@@ -499,7 +499,6 @@ void test_rhs_and_lhs_rank2() {
       index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
 
-  // - RHS Symmetry<2, 1>
   // - lower spatial tensor indices
   // - RHS spatial index, spacetime index
   // - LHS spatial index, spacetime index
@@ -508,7 +507,6 @@ void test_rhs_and_lhs_rank2() {
       index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
 
-  // - RHS Symmetry<2, 1>
   // - upper spatial tensor indices
   // - RHS spacetime index, spatial index
   // - LHS spatial index, spacetime index
@@ -520,7 +518,6 @@ void test_rhs_and_lhs_rank2() {
       index_list<SpatialIndex<2, UpLo::Up, Frame::Inertial>,
                  SpacetimeIndex<2, UpLo::Up, Frame::Inertial>>>();
 
-  // - RHS Symmetry<2, 1>
   // - lower spatial tensor index, upper spatial tensor index
   // - RHS spatial index, spacetime index
   // - LHS spacetime index, spatial index
@@ -532,7 +529,6 @@ void test_rhs_and_lhs_rank2() {
       index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>,
                  SpatialIndex<2, UpLo::Up, Frame::Inertial>>>();
 
-  // - RHS Symmetry<2, 1>
   // - lower spatial tensor indices
   // - RHS spacetime index, spatial index
   // - LHS spatial index, spacetime index
@@ -541,7 +537,6 @@ void test_rhs_and_lhs_rank2() {
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpatialIndex<3, UpLo::Lo, Frame::Inertial>>>();
 
-  // - RHS Symmetry<2, 1>
   // - upper spatial tensor indices
   // - RHS spatial index, spacetime index
   // - LHS spacetime index, spatial index
@@ -553,7 +548,6 @@ void test_rhs_and_lhs_rank2() {
       index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
                  SpatialIndex<2, UpLo::Up, Frame::Inertial>>>();
 
-  // - RHS Symmetry<2, 1>
   // - lower spacetime tensor index, lower spatial tensor index
   // - RHS spacetime indices
   // - LHS spacetime indices
@@ -562,7 +556,6 @@ void test_rhs_and_lhs_rank2() {
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
 
-  // - RHS Symmetry<2, 1>
   // - lower spatial tensor index, lower spacetime tensor index
   // - RHS spacetime indices
   // - LHS spacetime indices
@@ -571,7 +564,6 @@ void test_rhs_and_lhs_rank2() {
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
 
-  // - RHS Symmetry<2, 1>
   // - upper spacetime tensor index, upper spatial tensor index
   // - RHS spacetime indices
   // - LHS spacetime indices
@@ -580,7 +572,6 @@ void test_rhs_and_lhs_rank2() {
       index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>();
 
-  // - RHS Symmetry<2, 1>
   // - upper spatial tensor index, upper spacetime tensor index
   // - RHS spacetime indices
   // - LHS spacetime indices
@@ -589,7 +580,6 @@ void test_rhs_and_lhs_rank2() {
       index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>();
 
-  // - RHS Symmetry<2, 1>
   // - lower spatial tensor index, upper spacetime tensor index
   // - RHS spacetime indices
   // - LHS spacetime indices
@@ -598,7 +588,6 @@ void test_rhs_and_lhs_rank2() {
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>();
 
-  // - RHS Symmetry<2, 1>
   // - lower spacetime tensor index, upper spatial tensor index
   // - RHS spacetime indices
   // - LHS spacetime indices
@@ -607,7 +596,6 @@ void test_rhs_and_lhs_rank2() {
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>();
 
-  // - RHS Symmetry<2, 1>
   // - upper spatial tensor index, lower spacetime tensor index
   // - RHS spacetime indices
   // - LHS spacetime indices
@@ -616,7 +604,6 @@ void test_rhs_and_lhs_rank2() {
       index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
 
-  // - RHS Symmetry<2, 1>
   // - upper spacetime tensor index, lower spatial tensor index
   // - RHS spacetime indices
   // - LHS spacetime indices
@@ -626,6 +613,7 @@ void test_rhs_and_lhs_rank2() {
                  SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
 
   // test RHS Symmetry<1, 1> to LHS Symmetry<1, 1> and <2, 1>
+
   TestHelpers::tenex::test_evaluate<
       false, ti::a, ti::i, Symmetry<1, 1>,
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
