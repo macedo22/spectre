@@ -3,8 +3,6 @@
 
 #pragma once
 
-#pragma once
-
 #include <limits>
 #include <random>
 #include <type_traits>
