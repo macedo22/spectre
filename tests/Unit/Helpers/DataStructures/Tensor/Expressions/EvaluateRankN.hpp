@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include "DataStructures/DataVector.hpp"
-#include "DataStructures/Tensor/Symmetry.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank1.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank2.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank3.hpp"
