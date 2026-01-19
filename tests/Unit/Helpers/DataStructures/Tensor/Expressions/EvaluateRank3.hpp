@@ -26,43 +26,12 @@
 #include "Utilities/TMPL.hpp"
 
 namespace TestHelpers::tenex {
-// TODO : update testing func docs
-
 /// \ingroup TestingFrameworkGroup
 /// \brief Test that evaluating a right hand side tensor expression containing a
 /// single rank 3 tensor correctly assigns the data to the evaluated left hand
 /// side tensor
 ///
-/// \details `TensorIndexA`, `TensorIndexB`, and `TensorIndexC` can be any type
-/// of TensorIndex and are not necessarily `ti::a`, `ti::b`, and `ti::c`. The
-/// "A", "B", and "C" suffixes just denote the ordering of the generic indices
-/// of the RHS tensor expression. In the RHS tensor expression, it means
-/// `TensorIndexA` is the first index used, `TensorIndexB` is the second index
-/// used, and `TensorIndexC` is the third index used.
-///
-/// If we consider the RHS tensor's generic indices to be (a, b, c), then this
-/// test checks that the data in the evaluated LHS tensor is correct according
-/// to the index orders of the LHS and RHS. The possible cases that are checked
-/// are when the LHS tensor is evaluated with index orders: (a, b, c),
-/// (a, c, b), (b, a, c), (b, c, a), (c, a, b), and (c, b, a).
-///
-/// If `ReturnLhsTensor == true`, the `tenex::evaluate` overload that returns
-/// the LHS tensor will be tested. This, in turn, includes testing whether
-/// `tenex::evaluate` is deducing the correct LHS tensor return type, where
-/// `LhsSymmetry` is its expected symmetry and `LhsTensorIndexType` is its
-/// expected list of indices.
-///
-/// If `ReturnLhsTensor == false`, the `tenex::evaluate` overload that takes a
-//// LHS tensor as an argument will be tested. In this case, `LhsSymmetry` and
-/// `LhsTensorIndexList` can be different from and will override what would be
-/// automatically deduced from the RHS tensor expression. This is useful for
-/// testing evaluations where the desired LHS tensor type would not
-/// automatically be deduced from the RHS expression. For example, given some
-/// tensor \f$R_{abc}\f$ with three spacetime indices, one can test whether
-/// \f$R_{ijk} = ...\f$ correctly only assigns to the spatial-spatial
-/// components of the tensor. Likewise, `ReturnLhsTensor == false` is
-/// necessary to test cases where the LHS symmetry is different from what
-/// would be deduced.
+/// \details See `test_evaluate` rank 4 function template for general details
 ///
 /// \param ReturnLhsTensor whether to test tensor expression evaluation by
 /// returning the result tensor or not (which instead tests evaluation by
