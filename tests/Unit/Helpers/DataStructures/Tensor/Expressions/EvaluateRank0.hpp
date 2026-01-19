@@ -22,15 +22,13 @@
 #include "Utilities/TMPL.hpp"
 
 namespace TestHelpers::tenex {
-// TODO : update testing func docs
-
 /// \ingroup TestingFrameworkGroup
 /// \brief Test that evaluating a right hand side tensor expression containing a
 /// single rank 0 tensor correctly assigns the data to the evaluated left hand
 /// side tensor
 ///
-/// \param data the data being stored in the Tensors
-template <bool ReturnLhsTensor, typename DataType>
+/// \tparam DataType the type of data being stored in the Tensors
+template <typename DataType>
 void test_evaluate_rank_0() {
   MAKE_GENERATOR(generator);
   std::uniform_real_distribution<> distribution(-5.0, 5.0);
@@ -41,7 +39,7 @@ void test_evaluate_rank_0() {
   Scalar<DataType> L(used_for_size);
   // component placeholder is used to detect if LHS scalar was not modified
   std::fill(L.begin(), L.end(), component_placeholder_value<DataType>::value);
-  call_evaluate<ReturnLhsTensor>(make_not_null(&L), R());
+  call_evaluate<true>(make_not_null(&L), R());
 
   CHECK(L == R);  // check LHS evaluated correctly
 
@@ -57,7 +55,7 @@ void test_evaluate_rank_0() {
 
     Scalar<DataType>& L_temp =
         get<::Tags::TempTensor<1, Scalar<DataType>>>(vars);
-    call_evaluate<ReturnLhsTensor>(make_not_null(&L_temp), R());
+    call_evaluate<true>(make_not_null(&L_temp), R());
 
     CHECK(R_temp == R);  // check RHS wasn't modified
     CHECK(L_temp == R);  // check LHS evaluated correctly

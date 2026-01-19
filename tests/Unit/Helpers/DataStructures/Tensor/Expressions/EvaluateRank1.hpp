@@ -49,7 +49,7 @@ namespace TestHelpers::tenex {
 ///
 /// \param ReturnLhsTensor whether to test tensor expression evaluation by
 /// returning the result tensor or not (which instead tests evaluation by
-/// preallocating the result tensor and filling it)
+/// assigning to the result tensor passed in as an argument)
 /// \tparam TensorIndex the TensorIndex used in the the TensorExpression,
 /// e.g. `ti::a`
 /// \tparam DataType the type of data being stored in the Tensors

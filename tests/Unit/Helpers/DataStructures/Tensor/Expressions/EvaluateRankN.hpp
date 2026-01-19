@@ -12,11 +12,13 @@
 #include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank4.hpp"
 
 namespace TestHelpers::tenex {
+// TODO : remove tparam ReturnLhsTensor, instead combine into one
+//        function template test_evaluate<...>()
 // test evaluation of rank 0 tensor
 template <bool ReturnLhsTensor>
 void test_evaluate() {
-  test_evaluate_rank_0<ReturnLhsTensor, double>();
-  test_evaluate_rank_0<ReturnLhsTensor, DataVector>();
+  test_evaluate_rank_0<double>();
+  test_evaluate_rank_0<DataVector>();
 }
 
 // test evaluation of rank 1 tensor

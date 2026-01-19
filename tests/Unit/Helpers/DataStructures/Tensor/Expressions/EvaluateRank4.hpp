@@ -44,10 +44,27 @@ namespace TestHelpers::tenex {
 /// are checked are when the LHS tensor is evaluated with index orders of all 24
 /// permutations of (a, b, c, d), e.g. (a, b, d, c), (a, c, b, d), ...
 ///
-/// \tparam DataType the type of data being stored in the Tensors
-/// \tparam RhsSymmetry the ::Symmetry of the RHS Tensor
-/// \tparam RhsTensorIndexTypeList the RHS Tensor's typelist of
-/// \ref SpacetimeIndex "TensorIndexType"s
+/// If `ReturnLhsTensor == true`, the `tenex::evaluate` overload that returns
+/// the LHS tensor will be tested. This, in turn, includes testing whether
+/// `tenex::evaluate` is deducing the correct LHS tensor return type, where
+/// `LhsSymmetry` is its expected symmetry and `LhsTensorIndexType` is its
+/// expected list of indices.
+///
+/// If `ReturnLhsTensor == false`, the `tenex::evaluate` overload that takes a
+//// LHS tensor as an argument will be tested. In this case, `LhsSymmetry` and
+/// `LhsTensorIndexList` can be different from and will override what would be
+/// automatically deduced from the RHS tensor expression. This is useful for
+/// testing evaluations where the desired LHS tensor type would not
+/// automatically be deduced from the RHS expression. For example, given some
+/// tensor \f$R_{abcd}\f$ with four spacetime indices, one can test whether
+/// \f$R_{ijkl} = ...\f$ correctly only assigns to the spatial-spatial
+/// components of the tensor. Likewise, `ReturnLhsTensor == false` is
+/// necessary to test cases where the LHS symmetry is different from what
+/// would be deduced.
+///
+/// \param ReturnLhsTensor whether to test tensor expression evaluation by
+/// returning the result tensor or not (which instead tests evaluation by
+/// assigning to the result tensor passed in as an argument)
 /// \tparam TensorIndexA the first TensorIndex used on the RHS of the
 /// TensorExpression, e.g. `ti::a`
 /// \tparam TensorIndexB the second TensorIndex used on the RHS of the
@@ -56,6 +73,13 @@ namespace TestHelpers::tenex {
 /// TensorExpression, e.g. `ti::c`
 /// \tparam TensorIndexD the fourth TensorIndex used on the RHS of the
 /// TensorExpression, e.g. `ti::D`
+/// \tparam DataType the type of data being stored in the Tensors
+/// \tparam RhsSymmetry the ::Symmetry of the RHS Tensor
+/// \tparam RhsTensorIndexTypeList the RHS Tensor's typelist of
+/// \ref SpacetimeIndex "TensorIndexType"s
+/// \tparam LhsSymmetry the ::Symmetry of the LHS Tensor
+/// \tparam LhsTensorIndexTypeList the LHS Tensor's typelist of
+/// \ref SpacetimeIndex "TensorIndexType"s
 template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
           auto& TensorIndexC, auto& TensorIndexD, typename DataType,
           typename RhsSymmetry, typename RhsTensorIndexTypeList,

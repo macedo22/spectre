@@ -52,7 +52,7 @@ namespace TestHelpers::tenex {
 /// expected list of indices.
 ///
 /// If `ReturnLhsTensor == false`, the `tenex::evaluate` overload that takes a
-/// preallocated LHS tensor will be tested. In this case, `LhsSymmetry` and
+//// LHS tensor as an argument will be tested. In this case, `LhsSymmetry` and
 /// `LhsTensorIndexList` can be different from and will override what would be
 /// automatically deduced from the RHS tensor expression. This is useful for
 /// testing evaluations where the desired LHS tensor type would not
@@ -65,7 +65,7 @@ namespace TestHelpers::tenex {
 ///
 /// \param ReturnLhsTensor whether to test tensor expression evaluation by
 /// returning the result tensor or not (which instead tests evaluation by
-/// preallocating the result tensor and filling it)
+/// assigning to the result tensor passed in as an argument)
 /// \tparam TensorIndexA the first TensorIndex used on the RHS of the
 /// TensorExpression, e.g. `ti::a`
 /// \tparam TensorIndexB the second TensorIndex used on the RHS of the
