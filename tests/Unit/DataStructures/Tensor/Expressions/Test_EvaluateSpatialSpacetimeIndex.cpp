@@ -3,19 +3,10 @@
 
 #include "Framework/TestingFramework.hpp"
 
-#include <complex>
-#include <cstddef>
-#include <random>
-
-#include "DataStructures/ComplexDataVector.hpp"
-#include "DataStructures/DataVector.hpp"
+#include "DataStructures/Tensor/Expressions/TensorIndex.hpp"
 #include "DataStructures/Tensor/IndexType.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
-#include "DataStructures/Tensor/Tensor.hpp"
-#include "Helpers/DataStructures/MakeWithRandomValues.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/EvaluateRankN.hpp"
-#include "Utilities/Gsl.hpp"
-#include "Utilities/MakeWithValue.hpp"
 
 namespace {
 // \brief Test evaluation of tensors where generic spatial indices are used for
