@@ -3,12 +3,10 @@
 
 #include "Framework/TestingFramework.hpp"
 
-#include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/Expressions/TensorIndex.hpp"
 #include "DataStructures/Tensor/IndexType.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/EvaluateRankN.hpp"
-#include "Helpers/DataStructures/Tensor/Expressions/TestHelpers.hpp"
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank012",
                   "[DataStructures][Unit]") {

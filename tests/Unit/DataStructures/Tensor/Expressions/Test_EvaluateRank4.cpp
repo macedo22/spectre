@@ -3,7 +3,6 @@
 
 #include "Framework/TestingFramework.hpp"
 
-#include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/Expressions/TensorIndex.hpp"
 #include "DataStructures/Tensor/IndexType.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
