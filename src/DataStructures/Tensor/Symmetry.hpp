@@ -11,7 +11,9 @@
 #include "Utilities/Array.hpp"
 #include "Utilities/TMPL.hpp"
 
-namespace detail {
+namespace Tensor_detail {
+using symmetry_datatype = std::int32_t;
+
 template <size_t Size>
 constexpr int find_reduced_index(
     const cpp20::array<std::pair<int, int>, Size>& t, const int value) {
@@ -51,16 +53,18 @@ constexpr cpp20::array<int, Size> symmetry(
 template <typename IndexSequence, typename SymmetrySequence>
 struct SymmetryImpl;
 
-template <size_t... Is, std::int32_t... Ss>
-struct SymmetryImpl<std::index_sequence<Is...>,
-                    tmpl::integral_list<std::int32_t, Ss...>> {
+template <size_t... Is, ::Tensor_detail::symmetry_datatype... Ss>
+struct SymmetryImpl<
+    std::index_sequence<Is...>,
+    tmpl::integral_list<::Tensor_detail::symmetry_datatype, Ss...>> {
   static_assert((... and (Ss > 0)),
                 "Symmetry values must be positive integers.");
   static constexpr cpp20::array<int, sizeof...(Is)> t =
-      symmetry(std::array<int, sizeof...(Is)>{{Ss...}});
-  using type = tmpl::integral_list<std::int32_t, t[Is]...>;
+      Tensor_detail::symmetry(std::array<int, sizeof...(Is)>{{Ss...}});
+  using datatype = ::Tensor_detail::symmetry_datatype;
+  using type = tmpl::integral_list<datatype, t[Is]...>;
 };
-}  // namespace detail
+}  // namespace Tensor_detail
 
 /// \ingroup TensorGroup
 /// \brief Computes the canonical symmetry from the integers `T`
@@ -73,7 +77,7 @@ struct SymmetryImpl<std::index_sequence<Is...>,
 /// supported.
 ///
 /// \tparam T the integers denoting the symmetry of the Tensor
-template <std::int32_t... T>
-using Symmetry = typename detail::SymmetryImpl<
+template <::Tensor_detail::symmetry_datatype... T>
+using Symmetry = typename Tensor_detail::SymmetryImpl<
     std::make_index_sequence<sizeof...(T)>,
-    tmpl::integral_list<std::int32_t, T...>>::type;
+    tmpl::integral_list<::Tensor_detail::symmetry_datatype, T...>>::type;
