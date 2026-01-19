@@ -137,7 +137,7 @@ void test_evaluate() {
 /// expected list of indices.
 ///
 /// If `ReturnLhsTensor == false`, the `tenex::evaluate` overload that takes a
-//// LHS tensor as an argument will be tested. In this case, `LhsSymmetry` and
+/// LHS tensor as an argument will be tested. In this case, `LhsSymmetry` and
 /// `LhsTensorIndexList` can be different from and will override what would be
 /// automatically deduced from the RHS tensor expression. This is useful for
 /// testing evaluations where the desired LHS tensor type would not
