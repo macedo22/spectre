@@ -3,12 +3,16 @@
 
 #include "Framework/TestingFramework.hpp"
 
+#include <array>
 #include <cstddef>
+#include <cstdint>
+#include <string>
 #include <type_traits>
 
 #include "DataStructures/Tensor/Expressions/Evaluate.hpp"
 #include "DataStructures/Tensor/Expressions/TensorIndex.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
+#include "Utilities/TMPL.hpp"
 
 namespace {
 template <auto&... TensorIndices>
