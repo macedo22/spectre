@@ -24,7 +24,6 @@
 
 namespace tenex {
 namespace detail {
-// TODO move is_time_index_value into same namespace as this
 /// \brief Returns whether or not the provided value is a TensorIndex value
 /// that encodes a generic spatial index
 ///
