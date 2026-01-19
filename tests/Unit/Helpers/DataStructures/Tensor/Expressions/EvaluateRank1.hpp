@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <iterator>
+#include <limits>
 #include <random>
 #include <utility>
 
