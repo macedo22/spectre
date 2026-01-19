@@ -10,7 +10,10 @@
 #include "Utilities/ErrorHandling/Error.hpp"
 #include "Utilities/Gsl.hpp"
 
-namespace TestHelpers::tenex {
+namespace TestHelpers {
+/// \ingroup TestingFrameworkGroup
+/// Functions for testing `TensorExpression`s
+namespace tenex {
 // Helper that simply calls `tenex::evaluate`
 template <bool ReturnLhsTensor, auto&... LhsTensorIndices, typename LhsTensor,
           typename RhsExpression>
@@ -46,4 +49,5 @@ constexpr std::pair<size_t, size_t> get_index_value_range() {
   range.second = tensorindex_is_time ? 0 : Index::dim - 1;
   return range;
 }
-}  // namespace TestHelpers::tenex
+}  // namespace tenex
+}  // namespace TestHelpers
