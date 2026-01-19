@@ -5,7 +5,6 @@
 
 #include <array>
 #include <cstddef>
-#include <cstdint>
 #include <string>
 #include <type_traits>
 
@@ -15,6 +14,11 @@
 #include "Utilities/TMPL.hpp"
 
 namespace {
+using symm_datatype = typename Tensor_detail::symmetry_datatype;
+
+template <symm_datatype... Is>
+using expected_symm = tmpl::integral_list<symm_datatype, Is...>;
+
 template <auto&... TensorIndices>
 void test_contains_indices_to_contract_impl(const bool expected) {
   CHECK(tenex::detail::contains_indices_to_contract<sizeof...(TensorIndices)>(
@@ -50,26 +54,23 @@ void test_lhs_tensorindex_reorder_symm_consistency() {
       "tenex::detail::get_reordered_tensorindex_values() must be updated to "
       "agree with the current canonical form for Symmetry";
 
-  if (not std::is_same_v<Symmetry<>, tmpl::integral_list<std::int32_t>>) {
+  if (not std::is_same_v<Symmetry<>, expected_symm<>>) {
     ERROR(error_msg);
   }
-  if (not std::is_same_v<Symmetry<4>, tmpl::integral_list<std::int32_t, 1>>) {
+  if (not std::is_same_v<Symmetry<4>, expected_symm<1>>) {
     ERROR(error_msg);
   }
-  if (not std::is_same_v<Symmetry<1, 2>,
-                         tmpl::integral_list<std::int32_t, 2, 1>>) {
+  if (not std::is_same_v<Symmetry<1, 2>, expected_symm<2, 1>>) {
     ERROR(error_msg);
   }
-  if (not std::is_same_v<Symmetry<3, 5>,
-                         tmpl::integral_list<std::int32_t, 2, 1>>) {
+  if (not std::is_same_v<Symmetry<3, 5>, expected_symm<2, 1>>) {
     ERROR(error_msg);
   }
-  if (not std::is_same_v<Symmetry<2, 2, 2>,
-                         tmpl::integral_list<std::int32_t, 1, 1, 1>>) {
+  if (not std::is_same_v<Symmetry<2, 2, 2>, expected_symm<1, 1, 1>>) {
     ERROR(error_msg);
   }
   if (not std::is_same_v<Symmetry<8, 4, 5, 5, 8>,
-                         tmpl::integral_list<std::int32_t, 1, 3, 2, 2, 1>>) {
+                         expected_symm<1, 3, 2, 2, 1>>) {
     ERROR(error_msg);
   }
 }
@@ -179,7 +180,7 @@ struct test_lhs_tensorindex_reorder_impl<
   static constexpr std::array<size_t, num_indices>
       expected_reordered_tensorindex_values = {
           {ExpectedReorderedTensorIndices::value...}};
-  static void apply(const std::array<std::int32_t, num_indices>& symmetry) {
+  static void apply(const std::array<symm_datatype, num_indices>& symmetry) {
     CHECK(tenex::detail::get_reordered_tensorindex_values<LhsTensorIndices...>(
               symmetry) == expected_reordered_tensorindex_values);
   }
@@ -188,7 +189,7 @@ struct test_lhs_tensorindex_reorder_impl<
 // Tests that the canonical ordering of a list of `TensorIndex`s done by
 // `tenex::detail::get_reordered_tensorindex_values` for a rank 0 tensor
 void test_lhs_tensorindex_reorder_rank0() {
-  const std::array<std::int32_t, 0> symmetry{{}};
+  const std::array<symm_datatype, 0> symmetry{{}};
 
   using empty_list = make_tensorindex_list<>;
 
@@ -198,7 +199,7 @@ void test_lhs_tensorindex_reorder_rank0() {
 // Tests that the canonical ordering of a list of `TensorIndex`s done by
 // `tenex::detail::get_reordered_tensorindex_values` for a rank 1 tensor
 void test_lhs_tensorindex_reorder_rank1() {
-  const std::array<std::int32_t, 1> symmetry{{1}};
+  const std::array<symm_datatype, 1> symmetry{{1}};
 
   using i_list = make_tensorindex_list<ti::i>;
   using a_list = make_tensorindex_list<ti::a>;
@@ -223,8 +224,8 @@ void test_lhs_tensorindex_reorder_rank1() {
 // `tenex::detail::get_reordered_tensorindex_values` for a rank 2 tensor
 void test_lhs_tensorindex_reorder_rank2() {
   constexpr size_t num_indices = 2;
-  const std::array<std::int32_t, num_indices> asymmetric_symm{{2, 1}};
-  const std::array<std::int32_t, num_indices> symmetric_symm{{1, 1}};
+  const std::array<symm_datatype, num_indices> asymmetric_symm{{2, 1}};
+  const std::array<symm_datatype, num_indices> symmetric_symm{{1, 1}};
 
   using ij_list = make_tensorindex_list<ti::i, ti::j>;
   using ji_list = make_tensorindex_list<ti::j, ti::i>;
@@ -393,11 +394,11 @@ void test_lhs_tensorindex_reorder_rank2() {
 // `tenex::detail::get_reordered_tensorindex_values` for a rank 3 tensor
 void test_lhs_tensorindex_reorder_rank3() {
   constexpr size_t num_indices = 3;
-  const std::array<std::int32_t, num_indices> symm_111{{1, 1, 1}};
-  const std::array<std::int32_t, num_indices> symm_121{{1, 2, 1}};
-  const std::array<std::int32_t, num_indices> symm_211{{2, 1, 1}};
-  const std::array<std::int32_t, num_indices> symm_221{{2, 2, 1}};
-  const std::array<std::int32_t, num_indices> symm_321{{3, 2, 1}};
+  const std::array<symm_datatype, num_indices> symm_111{{1, 1, 1}};
+  const std::array<symm_datatype, num_indices> symm_121{{1, 2, 1}};
+  const std::array<symm_datatype, num_indices> symm_211{{2, 1, 1}};
+  const std::array<symm_datatype, num_indices> symm_221{{2, 2, 1}};
+  const std::array<symm_datatype, num_indices> symm_321{{3, 2, 1}};
 
   using ijk_list = make_tensorindex_list<ti::i, ti::j, ti::k>;
   using ikj_list = make_tensorindex_list<ti::i, ti::k, ti::j>;
@@ -797,17 +798,17 @@ void test_lhs_tensorindex_reorder_rank3() {
 // `tenex::detail::get_reordered_tensorindex_values` for a rank 4 tensor
 void test_lhs_tensorindex_reorder_rank4() {
   constexpr size_t num_indices = 4;
-  const std::array<std::int32_t, num_indices> symm_1111{{1, 1, 1, 1}};
-  const std::array<std::int32_t, num_indices> symm_1121{{1, 1, 2, 1}};
-  const std::array<std::int32_t, num_indices> symm_1211{{1, 2, 1, 1}};
-  const std::array<std::int32_t, num_indices> symm_2111{{2, 1, 1, 1}};
-  const std::array<std::int32_t, num_indices> symm_1221{{1, 2, 2, 1}};
-  const std::array<std::int32_t, num_indices> symm_2121{{2, 1, 2, 1}};
-  const std::array<std::int32_t, num_indices> symm_2211{{2, 2, 1, 1}};
-  const std::array<std::int32_t, num_indices> symm_2221{{2, 2, 2, 1}};
-  const std::array<std::int32_t, num_indices> symm_2321{{2, 3, 2, 1}};
-  const std::array<std::int32_t, num_indices> symm_3321{{3, 3, 2, 1}};
-  const std::array<std::int32_t, num_indices> symm_4321{{4, 3, 2, 1}};
+  const std::array<symm_datatype, num_indices> symm_1111{{1, 1, 1, 1}};
+  const std::array<symm_datatype, num_indices> symm_1121{{1, 1, 2, 1}};
+  const std::array<symm_datatype, num_indices> symm_1211{{1, 2, 1, 1}};
+  const std::array<symm_datatype, num_indices> symm_2111{{2, 1, 1, 1}};
+  const std::array<symm_datatype, num_indices> symm_1221{{1, 2, 2, 1}};
+  const std::array<symm_datatype, num_indices> symm_2121{{2, 1, 2, 1}};
+  const std::array<symm_datatype, num_indices> symm_2211{{2, 2, 1, 1}};
+  const std::array<symm_datatype, num_indices> symm_2221{{2, 2, 2, 1}};
+  const std::array<symm_datatype, num_indices> symm_2321{{2, 3, 2, 1}};
+  const std::array<symm_datatype, num_indices> symm_3321{{3, 3, 2, 1}};
+  const std::array<symm_datatype, num_indices> symm_4321{{4, 3, 2, 1}};
 
   using tbai_list = make_tensorindex_list<ti::t, ti::b, ti::a, ti::i>;
   using aitb_list = make_tensorindex_list<ti::a, ti::i, ti::t, ti::b>;

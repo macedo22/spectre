@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
-#include <cstdint>
 #include <iterator>
 #include <limits>
 #include <random>
@@ -64,8 +63,10 @@ void test_evaluate_rank_2() {
                 Tensor<DataType, LhsSymmetry, LhsTensorIndexTypeList>>(
                 used_for_size, component_placeholder_value<DataType>::value);
 
-  const std::int32_t lhs_symmetry_element_a = tmpl::at_c<LhsSymmetry, 0>::value;
-  const std::int32_t lhs_symmetry_element_b = tmpl::at_c<LhsSymmetry, 1>::value;
+  const ::Tensor_detail::symmetry_datatype lhs_symmetry_element_a =
+      tmpl::at_c<LhsSymmetry, 0>::value;
+  const ::Tensor_detail::symmetry_datatype lhs_symmetry_element_b =
+      tmpl::at_c<LhsSymmetry, 1>::value;
   using lhs_tensorindextype_a = tmpl::at_c<LhsTensorIndexTypeList, 0>;
   using lhs_tensorindextype_b = tmpl::at_c<LhsTensorIndexTypeList, 1>;
   using rhs_tensorindextype_a = tmpl::at_c<RhsTensorIndexTypeList, 0>;

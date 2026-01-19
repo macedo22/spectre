@@ -13,6 +13,8 @@
 #include "DataStructures/Tensor/Symmetry.hpp"
 
 namespace {
+using symm_datatype = typename Tensor_detail::symmetry_datatype;
+
 constexpr size_t dim = 3;
 using frame = Frame::Grid;
 
@@ -91,13 +93,13 @@ void test_spatial_spacetime_index_positions() {
 }
 
 void test_get_spatial_spacetime_index_symmetry() {
-  constexpr std::array<std::int32_t, 0> symm_empty = {{}};
-  constexpr std::array<std::int32_t, 1> symm_1 = {{1}};
-  constexpr std::array<std::int32_t, 3> symm_111 = {{1, 1, 1}};
-  constexpr std::array<std::int32_t, 3> symm_211 = {{2, 1, 1}};
-  constexpr std::array<std::int32_t, 3> symm_121 = {{1, 2, 1}};
-  constexpr std::array<std::int32_t, 3> symm_221 = {{2, 2, 1}};
-  constexpr std::array<std::int32_t, 3> symm_321 = {{3, 2, 1}};
+  constexpr std::array<symm_datatype, 0> symm_empty = {{}};
+  constexpr std::array<symm_datatype, 1> symm_1 = {{1}};
+  constexpr std::array<symm_datatype, 3> symm_111 = {{1, 1, 1}};
+  constexpr std::array<symm_datatype, 3> symm_211 = {{2, 1, 1}};
+  constexpr std::array<symm_datatype, 3> symm_121 = {{1, 2, 1}};
+  constexpr std::array<symm_datatype, 3> symm_221 = {{2, 2, 1}};
+  constexpr std::array<symm_datatype, 3> symm_321 = {{3, 2, 1}};
 
   constexpr std::array<size_t, 0> positions_empty = {{}};
   constexpr std::array<size_t, 1> positions_0 = {{0}};
@@ -109,66 +111,95 @@ void test_get_spatial_spacetime_index_symmetry() {
   constexpr std::array<size_t, 3> positions_012 = {{0, 1, 2}};
 
   // Rank 0
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_empty, positions_empty)) == detail::symmetry(symm_empty));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_empty, positions_empty)) ==
+        Tensor_detail::symmetry(symm_empty));
 
   // Rank 1
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_1, positions_empty)) == detail::symmetry(symm_1));
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_1, positions_0)) == detail::symmetry(symm_1));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_1, positions_empty)) == Tensor_detail::symmetry(symm_1));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_1, positions_0)) == Tensor_detail::symmetry(symm_1));
 
   // Rank 3, input symmetry with three symmetric indices
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_111, positions_0)) == detail::symmetry(symm_211));
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_111, positions_1)) == detail::symmetry(symm_121));
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_111, positions_2)) == detail::symmetry(symm_221));
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_111, positions_01)) == detail::symmetry(symm_221));
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_111, positions_02)) == detail::symmetry(symm_121));
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_111, positions_12)) == detail::symmetry(symm_211));
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_111, positions_012)) == detail::symmetry(symm_111));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_111, positions_0)) == Tensor_detail::symmetry(symm_211));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_111, positions_1)) == Tensor_detail::symmetry(symm_121));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_111, positions_2)) == Tensor_detail::symmetry(symm_221));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_111, positions_01)) == Tensor_detail::symmetry(symm_221));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_111, positions_02)) == Tensor_detail::symmetry(symm_121));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_111, positions_12)) == Tensor_detail::symmetry(symm_211));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_111, positions_012)) == Tensor_detail::symmetry(symm_111));
 
   // Rank 3, input symmetry with two symmetric indices
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_121, positions_empty)) == detail::symmetry(symm_121));
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_121, positions_0)) == detail::symmetry(symm_321));
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_121, positions_1)) == detail::symmetry(symm_121));
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_121, positions_2)) == detail::symmetry(symm_321));
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_121, positions_01)) == detail::symmetry(symm_321));
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_121, positions_02)) == detail::symmetry(symm_121));
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_121, positions_12)) == detail::symmetry(symm_321));
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_121, positions_012)) == detail::symmetry(symm_121));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_121, positions_empty)) ==
+        Tensor_detail::symmetry(symm_121));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_121, positions_0)) == Tensor_detail::symmetry(symm_321));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_121, positions_1)) == Tensor_detail::symmetry(symm_121));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_121, positions_2)) == Tensor_detail::symmetry(symm_321));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_121, positions_01)) == Tensor_detail::symmetry(symm_321));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_121, positions_02)) == Tensor_detail::symmetry(symm_121));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_121, positions_12)) == Tensor_detail::symmetry(symm_321));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_121, positions_012)) == Tensor_detail::symmetry(symm_121));
 
   // Rank 3, input symmetry with no symmetric indices
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_321, positions_empty)) == detail::symmetry(symm_321));
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_321, positions_0)) == detail::symmetry(symm_321));
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_321, positions_1)) == detail::symmetry(symm_321));
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_321, positions_2)) == detail::symmetry(symm_321));
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_321, positions_01)) == detail::symmetry(symm_321));
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_321, positions_02)) == detail::symmetry(symm_321));
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_321, positions_12)) == detail::symmetry(symm_321));
-  CHECK(detail::symmetry(tenex::detail::get_spatial_spacetime_index_symmetry(
-            symm_321, positions_012)) == detail::symmetry(symm_321));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_321, positions_empty)) ==
+        Tensor_detail::symmetry(symm_321));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_321, positions_0)) == Tensor_detail::symmetry(symm_321));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_321, positions_1)) == Tensor_detail::symmetry(symm_321));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_321, positions_2)) == Tensor_detail::symmetry(symm_321));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_321, positions_01)) == Tensor_detail::symmetry(symm_321));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_321, positions_02)) == Tensor_detail::symmetry(symm_321));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_321, positions_12)) == Tensor_detail::symmetry(symm_321));
+  CHECK(Tensor_detail::symmetry(
+            tenex::detail::get_spatial_spacetime_index_symmetry(
+                symm_321, positions_012)) == Tensor_detail::symmetry(symm_321));
 }
 
 void test_replace_spatial_spacetime_indices() {
@@ -241,13 +272,13 @@ void test_spatial_spacetime_index_transformation_from_positions() {
   constexpr std::array<size_t, 1> positions_2 = {{2}};
   constexpr std::array<size_t, 2> positions_12 = {{1, 2}};
 
-  constexpr std::array<std::int32_t, 0> transformation_empty = {{}};
-  constexpr std::array<std::int32_t, 1> transformation_0 = {{0}};
-  constexpr std::array<std::int32_t, 1> transformation_m1 = {{-1}};
-  constexpr std::array<std::int32_t, 1> transformation_p1 = {{1}};
-  constexpr std::array<std::int32_t, 3> transformation_000 = {{0, 0, 0}};
-  constexpr std::array<std::int32_t, 3> transformation_m10p10 = {{-1, 0, 1}};
-  constexpr std::array<std::int32_t, 3> transformation_00m1 = {{0, 0, -1}};
+  constexpr std::array<symm_datatype, 0> transformation_empty = {{}};
+  constexpr std::array<symm_datatype, 1> transformation_0 = {{0}};
+  constexpr std::array<symm_datatype, 1> transformation_m1 = {{-1}};
+  constexpr std::array<symm_datatype, 1> transformation_p1 = {{1}};
+  constexpr std::array<symm_datatype, 3> transformation_000 = {{0, 0, 0}};
+  constexpr std::array<symm_datatype, 3> transformation_m10p10 = {{-1, 0, 1}};
+  constexpr std::array<symm_datatype, 3> transformation_00m1 = {{0, 0, -1}};
 
   // Rank 0
   CHECK(tenex::detail::spatial_spacetime_index_transformation_from_positions<0>(

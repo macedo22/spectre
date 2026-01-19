@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
-#include <cstdint>
 #include <iterator>
 #include <random>
 #include <utility>
@@ -65,10 +64,14 @@ void test_evaluate_rank_4() {
                 Tensor<DataType, LhsSymmetry, LhsTensorIndexTypeList>>(
                 used_for_size, component_placeholder_value<DataType>::value);
 
-  const std::int32_t lhs_symmetry_element_a = tmpl::at_c<LhsSymmetry, 0>::value;
-  const std::int32_t lhs_symmetry_element_b = tmpl::at_c<LhsSymmetry, 1>::value;
-  const std::int32_t lhs_symmetry_element_c = tmpl::at_c<LhsSymmetry, 2>::value;
-  const std::int32_t lhs_symmetry_element_d = tmpl::at_c<LhsSymmetry, 3>::value;
+  const ::Tensor_detail::symmetry_datatype lhs_symmetry_element_a =
+      tmpl::at_c<LhsSymmetry, 0>::value;
+  const ::Tensor_detail::symmetry_datatype lhs_symmetry_element_b =
+      tmpl::at_c<LhsSymmetry, 1>::value;
+  const ::Tensor_detail::symmetry_datatype lhs_symmetry_element_c =
+      tmpl::at_c<LhsSymmetry, 2>::value;
+  const ::Tensor_detail::symmetry_datatype lhs_symmetry_element_d =
+      tmpl::at_c<LhsSymmetry, 3>::value;
   using lhs_tensorindextype_a = tmpl::at_c<LhsTensorIndexTypeList, 0>;
   using lhs_tensorindextype_b = tmpl::at_c<LhsTensorIndexTypeList, 1>;
   using lhs_tensorindextype_c = tmpl::at_c<LhsTensorIndexTypeList, 2>;
