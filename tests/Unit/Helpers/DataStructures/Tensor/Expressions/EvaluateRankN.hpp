@@ -22,7 +22,7 @@ void test_evaluate();
 ///
 /// \details See `test_evaluate` rank 4 function template for general details
 ///
-/// \param ReturnLhsTensor whether to test tensor expression evaluation by
+/// \tparam ReturnLhsTensor whether to test tensor expression evaluation by
 /// returning the result tensor or not (which instead tests evaluation by
 /// assigning to the result tensor passed in as an argument)
 /// \tparam TensorIndex the TensorIndex used in the the TensorExpression,
@@ -49,7 +49,7 @@ void test_evaluate() {
 ///
 /// \details See `test_evaluate` rank 4 function template for general details
 ///
-/// \param ReturnLhsTensor whether to test tensor expression evaluation by
+/// \tparam ReturnLhsTensor whether to test tensor expression evaluation by
 /// returning the result tensor or not (which instead tests evaluation by
 /// assigning to the result tensor passed in as an argument)
 /// \tparam TensorIndexA the first TensorIndex used on the RHS of the
@@ -83,7 +83,7 @@ void test_evaluate() {
 ///
 /// \details See `test_evaluate` rank 4 function template for general details
 ///
-/// \param ReturnLhsTensor whether to test tensor expression evaluation by
+/// \tparam ReturnLhsTensor whether to test tensor expression evaluation by
 /// returning the result tensor or not (which instead tests evaluation by
 /// assigning to the result tensor passed in as an argument)
 /// \tparam TensorIndexA the first TensorIndex used on the RHS of the
@@ -151,7 +151,7 @@ void test_evaluate() {
 /// necessary to test cases where the LHS symmetry is different from what
 /// would be deduced.
 ///
-/// \param ReturnLhsTensor whether to test tensor expression evaluation by
+/// \tparam ReturnLhsTensor whether to test tensor expression evaluation by
 /// returning the result tensor or not (which instead tests evaluation by
 /// assigning to the result tensor passed in as an argument)
 /// \tparam TensorIndexA the first TensorIndex used on the RHS of the

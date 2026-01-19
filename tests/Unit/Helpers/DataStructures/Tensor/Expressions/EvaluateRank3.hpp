@@ -31,7 +31,7 @@ namespace TestHelpers::tenex {
 ///
 /// \details See `test_evaluate` rank 4 function template for general details
 ///
-/// \param ReturnLhsTensor whether to test tensor expression evaluation by
+/// \tparam ReturnLhsTensor whether to test tensor expression evaluation by
 /// returning the result tensor or not (which instead tests evaluation by
 /// assigning to the result tensor passed in as an argument)
 /// \tparam TensorIndexA the first TensorIndex used on the RHS of the
