@@ -13,7 +13,7 @@
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank012",
                   "[DataStructures][Unit]") {
   // Rank 0
-  TestHelpers::tenex::test_evaluate<true>();
+  TestHelpers::tenex::test_evaluate();
 
   // Rank 1: spacetime
   TestHelpers::tenex::test_evaluate<

@@ -5,21 +5,14 @@
 
 #include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
-#include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank0.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank1.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank2.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank3.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank4.hpp"
 
 namespace TestHelpers::tenex {
-// TODO : remove tparam ReturnLhsTensor, instead combine into one
-//        function template test_evaluate<...>()
 // test evaluation of rank 0 tensor
-template <bool ReturnLhsTensor>
-void test_evaluate() {
-  test_evaluate_rank_0<double>();
-  test_evaluate_rank_0<DataVector>();
-}
+void test_evaluate();
 
 // test evaluation of rank 1 tensor
 template <bool ReturnLhsTensor, auto& TensorIndex,
