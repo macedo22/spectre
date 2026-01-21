@@ -136,6 +136,24 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank012",
   const IndexType spatial_index = IndexType::Spatial;
   const IndexType spacetime_index = IndexType::Spacetime;
 
+  // TODOTODOTODO: now run the suite on a few instances that make sense
+  // and not just these random two
+  // note: going to keep that test_evaluate_suite does all
+  // indices Inertial and then all Grid because the point of this
+  // test suite is more so for mixing dims not mixing dims and frames.
+  // if we want to test mixing frames, then we can do a dedicated test that
+  // targets that or just sprinkle it in throughout other tests, which is
+  // basically what I have now already. So, just need to call
+  // test_evaluate_suite for a handful of cases, but then use
+  // the regular test_evaluate to exhaustively test other things?
+  // maybe use test suite in regular Test_EvaluateRankX.cpp tests but
+  // then in the spatial-spacetime test files, use the suite a
+  // handful of times but mostly the regular one since the mixed
+  // dim functionality has already been tested hard? or maybe just
+  // use the regular one exclusively in spatial-spacetime test files,
+  // like I do already, which would mean the only change to make would
+  // be to have the Test_EvaluateRankX.cpp files run the suite
+  // for all cases (or some)
   TestHelpers::tenex::test_evaluate_suite<
       true, ti::J, ti::C, Symmetry<2, 1>,
       indextype_list<spatial_index, spacetime_index>>();
