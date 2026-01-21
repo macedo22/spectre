@@ -8,6 +8,11 @@
 #include "DataStructures/Tensor/Symmetry.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/EvaluateRankN.hpp"
 
+namespace {
+template <IndexType... Is>
+using indextype_list = tmpl::integral_list<IndexType, Is...>;
+}  // namespace
+
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank012",
                   "[DataStructures][Unit]") {
   // Rank 0
@@ -126,4 +131,15 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank012",
       index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
                  SpatialIndex<3, UpLo::Up, Frame::Grid>>,
       Symmetry<2, 1>>();
+
+  // TODO : put in some section that makes sense
+  const IndexType spatial_index = IndexType::Spatial;
+  const IndexType spacetime_index = IndexType::Spacetime;
+
+  TestHelpers::tenex::test_evaluate_suite<
+      true, ti::J, ti::C, Symmetry<2, 1>,
+      indextype_list<spatial_index, spacetime_index>>();
+  TestHelpers::tenex::test_evaluate_suite<
+      true, ti::J, ti::I, Symmetry<1, 1>,
+      indextype_list<spatial_index, spatial_index>>();
 }

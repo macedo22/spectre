@@ -66,12 +66,25 @@ template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
           typename LhsSymmetry = RhsSymmetry,
           typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
 void test_evaluate() {
+  test_evaluate_rank_2_core<ReturnLhsTensor, TensorIndexA, TensorIndexB, double,
+                            RhsSymmetry, RhsTensorIndexTypeList, LhsSymmetry,
+                            LhsTensorIndexTypeList>();
+  test_evaluate_rank_2_core<ReturnLhsTensor, TensorIndexA, TensorIndexB,
+                            DataVector, RhsSymmetry, RhsTensorIndexTypeList,
+                            LhsSymmetry, LhsTensorIndexTypeList>();
+}
+
+template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
+          typename RhsSymmetry, typename RhsIndexTypeList,
+          typename LhsSymmetry = RhsSymmetry,
+          typename LhsIndexTypeList = RhsIndexTypeList>
+void test_evaluate_suite() {
   test_evaluate_rank_2<ReturnLhsTensor, TensorIndexA, TensorIndexB, double,
-                       RhsSymmetry, RhsTensorIndexTypeList, LhsSymmetry,
-                       LhsTensorIndexTypeList>();
+                       RhsSymmetry, RhsIndexTypeList, LhsSymmetry,
+                       LhsIndexTypeList>();
   test_evaluate_rank_2<ReturnLhsTensor, TensorIndexA, TensorIndexB, DataVector,
-                       RhsSymmetry, RhsTensorIndexTypeList, LhsSymmetry,
-                       LhsTensorIndexTypeList>();
+                       RhsSymmetry, RhsIndexTypeList, LhsSymmetry,
+                       LhsIndexTypeList>();
 }
 
 /// \ingroup TestingFrameworkGroup
