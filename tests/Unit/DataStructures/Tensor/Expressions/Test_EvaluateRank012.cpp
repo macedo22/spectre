@@ -7,29 +7,10 @@
 #include "DataStructures/Tensor/IndexType.hpp"
 #include "DataStructures/Tensor/Symmetry.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/EvaluateRankN.hpp"
-#include "Utilities/TMPL.hpp"
 
 namespace {
-// template <IndexType... Is>
-// using indextype_list = tmpl::integral_list<IndexType, Is...>;
-
-// template <IndexType Index, typename Fr = Frame::Inertial>
-// using indextype = tmpl::pair<tmpl::integral_constant<IndexType, Index>, Fr>;
-
-template <IndexType Index, typename Fr = Frame::Inertial>
-struct indextype_and_frame {
-  static constexpr IndexType indextype = Index;
-  using frame = Fr;
-};
-
-template <typename Fr = Frame::Inertial>
-using spatial_index = indextype_and_frame<IndexType::Spatial, Fr>;
-
-template <typename Fr = Frame::Inertial>
-using spacetime_index = indextype_and_frame<IndexType::Spacetime, Fr>;
-
-template <typename... Indices>
-using indextype_list = tmpl::list<Indices...>;
+template <IndexType... Is>
+using indextype_list = tmpl::integral_list<IndexType, Is...>;
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank012",
@@ -151,13 +132,9 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank012",
                  SpatialIndex<3, UpLo::Up, Frame::Grid>>,
       Symmetry<2, 1>>();
 
-  //   // TODO : put in some section that makes sense
-  //   const IndexType spatial_index = IndexType::Spatial;
-  //   const IndexType spacetime_index = IndexType::Spacetime;
-
-  using test_index = spatial_index<>;
-
-  using indexlist_1 = indextype_list<spatial_index<>>;
+  // TODO : put in some section that makes sense
+  const IndexType spatial_index = IndexType::Spatial;
+  const IndexType spacetime_index = IndexType::Spacetime;
 
   TestHelpers::tenex::test_evaluate_suite<
       true, ti::J, ti::C, Symmetry<2, 1>,
