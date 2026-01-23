@@ -16,17 +16,11 @@ using indextype_list = tmpl::integral_list<IndexType, Is...>;
 const IndexType spatial_index = IndexType::Spatial;
 const IndexType spacetime_index = IndexType::Spacetime;
 
-// \brief Test evaluation of rank 3 tensors
+// \brief Test evaluation of rank 3 tensors with no symmetry
 //
 // \tparam DataType the type of data being stored in the expression operands
 template <typename DataType>
 void test_evaluate_rank_3() {
-  // nonsymmetric
-  TestHelpers::tenex::test_evaluate<
-      true, ti::d, ti::A, ti::i, DataType, Symmetry<3, 2, 1>,
-      indextype_list<spacetime_index, spacetime_index, spatial_index>,
-      Frame::Inertial>();
-
   // first and second indices symmetric
   TestHelpers::tenex::test_evaluate<
       true, ti::b, ti::a, ti::C, DataType, Symmetry<2, 2, 1>,
@@ -81,8 +75,9 @@ void test_evaluate_rank_3() {
 }
 }  // namespace
 
-SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank3",
-                  "[DataStructures][Unit]") {
+SPECTRE_TEST_CASE(
+    "Unit.DataStructures.Tensor.Expression.EvaluateRank3Symmetric",
+    "[DataStructures][Unit]") {
   test_evaluate_rank_3<double>();
   test_evaluate_rank_3<DataVector>();
 }
