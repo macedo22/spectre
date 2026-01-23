@@ -176,7 +176,8 @@ void test_evaluate_rank_2_core() {
 template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
           typename DataType, typename RhsSymmetry, typename RhsIndexTypeList,
           typename LhsSymmetry = RhsSymmetry,
-          typename LhsIndexTypeList = RhsIndexTypeList>
+          typename LhsIndexTypeList = RhsIndexTypeList,
+          typename Frame = Frame::Inertial>
 void test_evaluate_rank_2() {
   constexpr IndexType rhs_indextype_a = tmpl::at_c<RhsIndexTypeList, 0>::value;
   constexpr IndexType rhs_indextype_b = tmpl::at_c<RhsIndexTypeList, 1>::value;
@@ -186,54 +187,48 @@ void test_evaluate_rank_2() {
   if constexpr (std::is_same_v<RhsSymmetry, Symmetry<2, 1>>) {
 #define DIM_A(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define DIM_B(data) BOOST_PP_TUPLE_ELEM(1, data)
-#define FRAME(data) BOOST_PP_TUPLE_ELEM(2, data)
 
 #define CALL_TEST_EVALUATE_RANK_2(_, data)                                    \
   test_evaluate_rank_2_core<                                                  \
       ReturnLhsTensor, TensorIndexA, TensorIndexB, DataType, RhsSymmetry,     \
       index_list<                                                             \
           ::Tensor_detail::TensorIndexType<DIM_A(data), TensorIndexA.valence, \
-                                           FRAME(data), rhs_indextype_a>,     \
+                                           Frame, rhs_indextype_a>,           \
           ::Tensor_detail::TensorIndexType<DIM_B(data), TensorIndexB.valence, \
-                                           FRAME(data), rhs_indextype_b>>,    \
+                                           Frame, rhs_indextype_b>>,          \
       LhsSymmetry,                                                            \
       index_list<                                                             \
           ::Tensor_detail::TensorIndexType<DIM_A(data), TensorIndexA.valence, \
-                                           FRAME(data), lhs_indextype_a>,     \
+                                           Frame, lhs_indextype_a>,           \
           ::Tensor_detail::TensorIndexType<DIM_B(data), TensorIndexB.valence, \
-                                           FRAME(data), lhs_indextype_b>>>();
+                                           Frame, lhs_indextype_b>>>();
 
-    GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_2, (1, 2, 3), (1, 2, 3),
-                            (Frame::Grid, Frame::Inertial))
+    GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_2, (1, 2, 3), (1, 2, 3))
 #undef CALL_TEST_EVALUATE_RANK_2
 
-#undef FRAME
 #undef DIM_B
 #undef DIM_A
   } else if (std::is_same_v<RhsSymmetry, Symmetry<1, 1>>) {
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
-#define FRAME(data) BOOST_PP_TUPLE_ELEM(1, data)
 
 #define CALL_TEST_EVALUATE_RANK_2(_, data)                                  \
   test_evaluate_rank_2_core<                                                \
       ReturnLhsTensor, TensorIndexA, TensorIndexB, DataType, RhsSymmetry,   \
       index_list<                                                           \
           ::Tensor_detail::TensorIndexType<DIM(data), TensorIndexA.valence, \
-                                           FRAME(data), rhs_indextype_a>,   \
+                                           Frame, rhs_indextype_a>,         \
           ::Tensor_detail::TensorIndexType<DIM(data), TensorIndexB.valence, \
-                                           FRAME(data), rhs_indextype_b>>,  \
+                                           Frame, rhs_indextype_b>>,        \
       LhsSymmetry,                                                          \
       index_list<                                                           \
           ::Tensor_detail::TensorIndexType<DIM(data), TensorIndexA.valence, \
-                                           FRAME(data), lhs_indextype_a>,   \
+                                           Frame, lhs_indextype_a>,         \
           ::Tensor_detail::TensorIndexType<DIM(data), TensorIndexB.valence, \
-                                           FRAME(data), lhs_indextype_b>>>();
+                                           Frame, lhs_indextype_b>>>();
 
-    GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_2, (1, 2, 3),
-                            (Frame::Grid, Frame::Inertial))
+    GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_2, (1, 2, 3))
 #undef CALL_TEST_EVALUATE_RANK_2
 
-#undef FRAME
 #undef DIM
   } else {
     ERROR("Unsupported RHS symmetry");
