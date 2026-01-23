@@ -18,6 +18,7 @@
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/ComponentPlaceholder.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/TestHelpers.hpp"
+#include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/MakeWithValue.hpp"
 #include "Utilities/TMPL.hpp"
@@ -43,7 +44,7 @@ namespace TestHelpers::tenex {
 template <bool ReturnLhsTensor, auto& TensorIndex, typename DataType,
           typename RhsTensorIndexTypeList,
           typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
-void test_evaluate_rank_1() {
+void test_evaluate_rank_1_core() {
   using symmetry = Symmetry<1>;
   using L_a_type = Tensor<DataType, symmetry, LhsTensorIndexTypeList>;
   using R_a_type = Tensor<DataType, symmetry, RhsTensorIndexTypeList>;
@@ -104,5 +105,32 @@ void test_evaluate_rank_1() {
     CHECK(R_a_temp == R_a);           // check RHS wasn't modified
     CHECK(L_a_temp == expected_L_a);  // check LHS evaluated correctly
   }
+}
+
+/// \ingroup TestingFrameworkGroup
+template <bool ReturnLhsTensor, auto& TensorIndex, typename DataType,
+          typename RhsIndexTypeList,
+          typename LhsIndexTypeList = RhsIndexTypeList>
+void test_evaluate_rank_1() {
+  constexpr IndexType rhs_indextype = tmpl::at_c<RhsIndexTypeList, 0>::value;
+  constexpr IndexType lhs_indextype = tmpl::at_c<LhsIndexTypeList, 0>::value;
+
+#define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
+#define FRAME(data) BOOST_PP_TUPLE_ELEM(1, data)
+
+#define CALL_TEST_EVALUATE_RANK_1(_, data)                              \
+  test_evaluate_rank_1_core<                                            \
+      ReturnLhsTensor, TensorIndex, DataType,                           \
+      index_list<::Tensor_detail::TensorIndexType<                      \
+          DIM(data), TensorIndex.valence, FRAME(data), rhs_indextype>>, \
+      index_list<::Tensor_detail::TensorIndexType<                      \
+          DIM(data), TensorIndex.valence, FRAME(data), lhs_indextype>>>();
+
+  GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_1, (1, 2, 3),
+                          (Frame::Grid, Frame::Inertial))
+#undef CALL_TEST_EVALUATE_RANK_1
+
+#undef FRAME
+#undef DIM
 }
 }  // namespace TestHelpers::tenex
