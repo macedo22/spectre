@@ -24,6 +24,7 @@
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/MakeWithValue.hpp"
+#include "Utilities/Requires.hpp"
 #include "Utilities/TMPL.hpp"
 
 namespace TestHelpers::tenex {
@@ -176,14 +177,14 @@ void test_evaluate_rank_2_core() {
 template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
           typename DataType, typename RhsSymmetry, typename RhsIndexTypeList,
           typename Frame, typename LhsSymmetry = RhsSymmetry,
-          typename LhsIndexTypeList = RhsIndexTypeList>
+          typename LhsIndexTypeList = RhsIndexTypeList,
+          Requires<std::is_same_v<RhsSymmetry, Symmetry<2, 1>>> = nullptr>
 void test_evaluate_rank_2() {
   constexpr IndexType rhs_indextype_a = tmpl::at_c<RhsIndexTypeList, 0>::value;
   constexpr IndexType rhs_indextype_b = tmpl::at_c<RhsIndexTypeList, 1>::value;
   constexpr IndexType lhs_indextype_a = tmpl::at_c<LhsIndexTypeList, 0>::value;
   constexpr IndexType lhs_indextype_b = tmpl::at_c<LhsIndexTypeList, 1>::value;
 
-  if constexpr (std::is_same_v<RhsSymmetry, Symmetry<2, 1>>) {
 #define DIM_A(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define DIM_B(data) BOOST_PP_TUPLE_ELEM(1, data)
 
@@ -207,7 +208,20 @@ void test_evaluate_rank_2() {
 
 #undef DIM_B
 #undef DIM_A
-  } else if (std::is_same_v<RhsSymmetry, Symmetry<1, 1>>) {
+}
+
+/// \ingroup TestingFrameworkGroup
+template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
+          typename DataType, typename RhsSymmetry, typename RhsIndexTypeList,
+          typename Frame, typename LhsSymmetry = RhsSymmetry,
+          typename LhsIndexTypeList = RhsIndexTypeList,
+          Requires<std::is_same_v<RhsSymmetry, Symmetry<1, 1>>> = nullptr>
+void test_evaluate_rank_2() {
+  constexpr IndexType rhs_indextype_a = tmpl::at_c<RhsIndexTypeList, 0>::value;
+  constexpr IndexType rhs_indextype_b = tmpl::at_c<RhsIndexTypeList, 1>::value;
+  constexpr IndexType lhs_indextype_a = tmpl::at_c<LhsIndexTypeList, 0>::value;
+  constexpr IndexType lhs_indextype_b = tmpl::at_c<LhsIndexTypeList, 1>::value;
+
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
 
 #define CALL_TEST_EVALUATE_RANK_2(_, data)                                  \
@@ -229,8 +243,5 @@ void test_evaluate_rank_2() {
 #undef CALL_TEST_EVALUATE_RANK_2
 
 #undef DIM
-  } else {
-    ERROR("Unsupported RHS symmetry");
-  }
 }
 }  // namespace TestHelpers::tenex
