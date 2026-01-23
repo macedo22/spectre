@@ -457,79 +457,100 @@ void test_lhs(const gsl::not_null<Generator*> generator,
 
 // \brief Test evaluation of rank 2 tensors where generic spatial indices and/or
 // concrete time indices are used for RHS and LHS spacetime indices
+//
+// \tparam DataType the type of data being stored in the expression operands
+template <typename DataType>
 void test_rhs_and_lhs_rank_2() {
   TestHelpers::tenex::test_evaluate<
-      false, ti::i, ti::t, Symmetry<1, 1>,
+      false, ti::i, ti::t, DataType, Symmetry<1, 1>,
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
   TestHelpers::tenex::test_evaluate<
-      false, ti::i, ti::t, Symmetry<1, 1>,
+      false, ti::i, ti::t, DataType, Symmetry<1, 1>,
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
       Symmetry<2, 1>>();
 
   TestHelpers::tenex::test_evaluate<
-      false, ti::t, ti::i, Symmetry<1, 1>,
+      false, ti::t, ti::i, DataType, Symmetry<1, 1>,
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
   TestHelpers::tenex::test_evaluate<
-      false, ti::t, ti::i, Symmetry<1, 1>,
+      false, ti::t, ti::i, DataType, Symmetry<1, 1>,
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
       Symmetry<2, 1>>();
 
   TestHelpers::tenex::test_evaluate<
-      false, ti::I, ti::T, Symmetry<1, 1>,
+      false, ti::I, ti::T, DataType, Symmetry<1, 1>,
       index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>();
   TestHelpers::tenex::test_evaluate<
-      false, ti::I, ti::T, Symmetry<1, 1>,
+      false, ti::I, ti::T, DataType, Symmetry<1, 1>,
       index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>,
       Symmetry<2, 1>>();
 
   TestHelpers::tenex::test_evaluate<
-      false, ti::T, ti::I, Symmetry<1, 1>,
+      false, ti::T, ti::I, DataType, Symmetry<1, 1>,
       index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>();
   TestHelpers::tenex::test_evaluate<
-      false, ti::T, ti::I, Symmetry<1, 1>,
+      false, ti::T, ti::I, DataType, Symmetry<1, 1>,
       index_list<SpacetimeIndex<3, UpLo::Up, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>,
       Symmetry<2, 1>>();
 
   TestHelpers::tenex::test_evaluate<
-      false, ti::I, ti::t, Symmetry<2, 1>,
+      false, ti::I, ti::t, DataType, Symmetry<2, 1>,
       index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
                  SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>>();
 
   TestHelpers::tenex::test_evaluate<
-      false, ti::T, ti::i, Symmetry<2, 1>,
+      false, ti::T, ti::i, DataType, Symmetry<2, 1>,
       index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
                  SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>>>();
 
   TestHelpers::tenex::test_evaluate<
-      false, ti::i, ti::T, Symmetry<2, 1>,
+      false, ti::i, ti::T, DataType, Symmetry<2, 1>,
       index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<2, UpLo::Up, Frame::Inertial>>>();
 
   TestHelpers::tenex::test_evaluate<
-      false, ti::t, ti::I, Symmetry<2, 1>,
+      false, ti::t, ti::I, DataType, Symmetry<2, 1>,
       index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
                  SpacetimeIndex<3, UpLo::Up, Frame::Inertial>>>();
 }
 
 // \brief Test evaluation of rank 4 tensors where generic spatial indices and/or
 // concrete time indices are used for RHS and LHS spacetime indices
+//
+// \tparam DataType the type of data being stored in the expression operands
+template <typename DataType>
 void test_rhs_and_lhs_rank_4() {
   using frame = Frame::Inertial;
   using index_list_abcd = index_list<
       SpacetimeIndex<3, UpLo::Lo, frame>, SpacetimeIndex<3, UpLo::Lo, frame>,
       SpacetimeIndex<3, UpLo::Lo, frame>, SpacetimeIndex<3, UpLo::Lo, frame>>;
 
-  TestHelpers::tenex::test_evaluate<false, ti::t, ti::a, ti::j, ti::i,
+  TestHelpers::tenex::test_evaluate<false, ti::t, ti::a, ti::j, ti::i, DataType,
                                     Symmetry<1, 2, 1, 1>, index_list_abcd,
                                     Symmetry<1, 3, 2, 1>>();
+}
+
+// \brief Test evaluation of tensors where concrete time indices and spatial
+// indices are used for spacetime indices
+//
+// \tparam DataType the type of data being stored in the expression operands
+template <typename DataType>
+void test_evaluate_spatial_and_time_spacetime_index(
+    const DataType& used_for_size) {
+  MAKE_GENERATOR(generator);
+
+  test_rhs(make_not_null(&generator), used_for_size);
+  test_lhs(make_not_null(&generator), used_for_size);
+  test_rhs_and_lhs_rank_2<DataType>();
+  test_rhs_and_lhs_rank_4<DataType>();
 }
 }  // namespace
 
@@ -537,21 +558,8 @@ SPECTRE_TEST_CASE(
     "Unit.DataStructures.Tensor.Expression."
     "EvaluateSpatialAndTimeSpacetimeIndex",
     "[DataStructures][Unit]") {
-  MAKE_GENERATOR(generator);
-
-  // Test evaluation of tensors where concrete time indices and spatial indices
-  // are used for spacetime indices
-
-  test_rhs(make_not_null(&generator),
-           std::numeric_limits<double>::signaling_NaN());
-  test_rhs(make_not_null(&generator),
-           DataVector(3, std::numeric_limits<double>::signaling_NaN()));
-
-  test_lhs(make_not_null(&generator),
-           std::numeric_limits<double>::signaling_NaN());
-  test_lhs(make_not_null(&generator),
-           DataVector(3, std::numeric_limits<double>::signaling_NaN()));
-
-  test_rhs_and_lhs_rank_2();
-  test_rhs_and_lhs_rank_4();
+  test_evaluate_spatial_and_time_spacetime_index(
+      std::numeric_limits<double>::signaling_NaN());
+  test_evaluate_spatial_and_time_spacetime_index(
+      DataVector(3, std::numeric_limits<double>::signaling_NaN()));
 }
