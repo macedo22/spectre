@@ -154,10 +154,10 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.EvaluateRank012",
   // like I do already, which would mean the only change to make would
   // be to have the Test_EvaluateRankX.cpp files run the suite
   // for all cases (or some)
-  TestHelpers::tenex::test_evaluate_suite<
+  TestHelpers::tenex::test_evaluate<
       true, ti::J, ti::C, Symmetry<2, 1>,
       indextype_list<spatial_index, spacetime_index>>();
-  TestHelpers::tenex::test_evaluate_suite<
+  TestHelpers::tenex::test_evaluate<
       true, ti::J, ti::I, Symmetry<1, 1>,
       indextype_list<spatial_index, spatial_index>>();
 }
