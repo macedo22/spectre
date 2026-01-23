@@ -19,7 +19,7 @@ namespace TestHelpers::tenex {
 /// \tparam DataType the type of data being stored in the Tensors
 template <typename DataType>
 void test_evaluate() {
-  test_evaluate_rank_0<DataType>();
+  test_evaluate_rank_0_core<DataType>();
 }
 
 /// \ingroup TestingFrameworkGroup

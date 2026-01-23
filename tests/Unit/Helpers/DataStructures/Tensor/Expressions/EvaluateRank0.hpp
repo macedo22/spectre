@@ -27,7 +27,7 @@ namespace TestHelpers::tenex {
 ///
 /// \tparam DataType the type of data being stored in the Tensors
 template <typename DataType>
-void test_evaluate_rank_0() {
+void test_evaluate_rank_0_core() {
   MAKE_GENERATOR(generator);
   std::uniform_real_distribution<> distribution(-5.0, 5.0);
   const size_t used_for_size = 3;
