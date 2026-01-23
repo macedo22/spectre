@@ -49,95 +49,76 @@ void test_evaluate_rank_012() {
   // Rank 2: nonsymmetric, spacetime only
   TestHelpers::tenex::test_evaluate<
       true, ti::a, ti::b, DataType, Symmetry<2, 1>,
-      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
+      indextype_list<spacetime_index, spacetime_index>, Frame::Inertial>();
   TestHelpers::tenex::test_evaluate<
       true, ti::D, ti::C, DataType, Symmetry<2, 1>,
-      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Grid>,
-                 SpacetimeIndex<3, UpLo::Up, Frame::Distorted>>>();
+      indextype_list<spacetime_index, spacetime_index>, Frame::Distorted>();
   TestHelpers::tenex::test_evaluate<
       true, ti::e, ti::F, DataType, Symmetry<2, 1>,
-      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Grid>,
-                 SpacetimeIndex<2, UpLo::Up, Frame::Grid>>>();
+      indextype_list<spacetime_index, spacetime_index>, Frame::Grid>();
   TestHelpers::tenex::test_evaluate<
       true, ti::G, ti::b, DataType, Symmetry<2, 1>,
-      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Inertial>,
-                 SpacetimeIndex<3, UpLo::Lo, Frame::Grid>>>();
+      indextype_list<spacetime_index, spacetime_index>,
+      Frame::ElementLogical>();
 
   // Rank 2: nonsymmetric, spatial only
   TestHelpers::tenex::test_evaluate<
       true, ti::j, ti::i, DataType, Symmetry<2, 1>,
-      index_list<SpatialIndex<3, UpLo::Lo, Frame::Inertial>,
-                 SpatialIndex<3, UpLo::Lo, Frame::ElementLogical>>>();
+      indextype_list<spatial_index, spatial_index>, Frame::ElementLogical>();
   TestHelpers::tenex::test_evaluate<
       true, ti::I, ti::J, DataType, Symmetry<2, 1>,
-      index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
-                 SpatialIndex<2, UpLo::Up, Frame::Grid>>>();
+      indextype_list<spatial_index, spatial_index>, Frame::Grid>();
   TestHelpers::tenex::test_evaluate<
       true, ti::k, ti::M, DataType, Symmetry<2, 1>,
-      index_list<SpatialIndex<2, UpLo::Lo, Frame::Inertial>,
-                 SpatialIndex<3, UpLo::Up, Frame::Distorted>>>();
+      indextype_list<spatial_index, spatial_index>, Frame::Distorted>();
   TestHelpers::tenex::test_evaluate<
       true, ti::M, ti::k, DataType, Symmetry<2, 1>,
-      index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
-                 SpatialIndex<3, UpLo::Lo, Frame::Grid>>>();
+      indextype_list<spatial_index, spatial_index>, Frame::Inertial>();
 
   // Rank 2: nonsymmetric, spacetime and spatial mixed
   TestHelpers::tenex::test_evaluate<
       true, ti::c, ti::I, DataType, Symmetry<2, 1>,
-      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                 SpatialIndex<3, UpLo::Up, Frame::Inertial>>>();
+      indextype_list<spacetime_index, spatial_index>, Frame::Inertial>();
   TestHelpers::tenex::test_evaluate<
       true, ti::A, ti::i, DataType, Symmetry<2, 1>,
-      index_list<SpacetimeIndex<3, UpLo::Up, Frame::Grid>,
-                 SpatialIndex<3, UpLo::Lo, Frame::Grid>>>();
+      indextype_list<spacetime_index, spatial_index>, Frame::Grid>();
   TestHelpers::tenex::test_evaluate<
       true, ti::J, ti::C, DataType, Symmetry<2, 1>,
-      index_list<SpatialIndex<3, UpLo::Up, Frame::Inertial>,
-                 SpacetimeIndex<2, UpLo::Up, Frame::Inertial>>>();
+      indextype_list<spatial_index, spacetime_index>, Frame::Inertial>();
   TestHelpers::tenex::test_evaluate<
-      true, ti::e, ti::m, DataType, Symmetry<2, 1>,
-      index_list<SpacetimeIndex<2, UpLo::Lo, Frame::Grid>,
-                 SpatialIndex<3, UpLo::Lo, Frame::Grid>>>();
+      true, ti::m, ti::e, DataType, Symmetry<2, 1>,
+      indextype_list<spatial_index, spacetime_index>, Frame::Grid>();
 
   // Rank 2: symmetric, spacetime
   TestHelpers::tenex::test_evaluate<
       true, ti::a, ti::d, DataType, Symmetry<1, 1>,
-      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>>();
+      indextype_list<spacetime_index, spacetime_index>, Frame::Grid>();
   TestHelpers::tenex::test_evaluate<
       false, ti::a, ti::d, DataType, Symmetry<1, 1>,
-      index_list<SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>,
-                 SpacetimeIndex<3, UpLo::Lo, Frame::Inertial>>,
+      indextype_list<spacetime_index, spacetime_index>, Frame::Inertial,
       Symmetry<2, 1>>();
   TestHelpers::tenex::test_evaluate<
       true, ti::G, ti::B, DataType, Symmetry<1, 1>,
-      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Grid>,
-                 SpacetimeIndex<2, UpLo::Up, Frame::Grid>>>();
+      indextype_list<spacetime_index, spacetime_index>, Frame::Inertial>();
   TestHelpers::tenex::test_evaluate<
       false, ti::G, ti::B, DataType, Symmetry<1, 1>,
-      index_list<SpacetimeIndex<2, UpLo::Up, Frame::Grid>,
-                 SpacetimeIndex<2, UpLo::Up, Frame::Grid>>,
+      indextype_list<spacetime_index, spacetime_index>, Frame::Grid,
       Symmetry<2, 1>>();
 
   // Rank 2: symmetric, spatial
   TestHelpers::tenex::test_evaluate<
       true, ti::j, ti::i, DataType, Symmetry<1, 1>,
-      index_list<SpatialIndex<2, UpLo::Lo, Frame::Inertial>,
-                 SpatialIndex<2, UpLo::Lo, Frame::Inertial>>>();
+      indextype_list<spatial_index, spatial_index>, Frame::Inertial>();
   TestHelpers::tenex::test_evaluate<
       false, ti::j, ti::i, DataType, Symmetry<1, 1>,
-      index_list<SpatialIndex<2, UpLo::Lo, Frame::Inertial>,
-                 SpatialIndex<2, UpLo::Lo, Frame::Inertial>>,
+      indextype_list<spatial_index, spatial_index>, Frame::Grid,
       Symmetry<2, 1>>();
   TestHelpers::tenex::test_evaluate<
       true, ti::I, ti::J, DataType, Symmetry<1, 1>,
-      index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
-                 SpatialIndex<3, UpLo::Up, Frame::Grid>>>();
+      indextype_list<spatial_index, spatial_index>, Frame::Grid>();
   TestHelpers::tenex::test_evaluate<
       false, ti::I, ti::J, DataType, Symmetry<1, 1>,
-      index_list<SpatialIndex<3, UpLo::Up, Frame::Grid>,
-                 SpatialIndex<3, UpLo::Up, Frame::Grid>>,
+      indextype_list<spatial_index, spatial_index>, Frame::Inertial,
       Symmetry<2, 1>>();
 }
 }  // namespace
