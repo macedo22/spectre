@@ -7,6 +7,7 @@
 #include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank2.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank3.hpp"
 #include "Helpers/DataStructures/Tensor/Expressions/EvaluateRank4.hpp"
+#include "Utilities/Requires.hpp"
 
 namespace TestHelpers::tenex {
 /// \ingroup TestingFrameworkGroup
@@ -33,21 +34,29 @@ void test_evaluate();
 /// \ref SpacetimeIndex "TensorIndexType"s
 template <bool ReturnLhsTensor, auto& TensorIndex,
           typename RhsTensorIndexTypeList,
-          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
+          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList,
+          typename Frame = Frame::Inertial,
+          Requires<std::is_same_v<
+              typename tmpl::at_c<RhsTensorIndexTypeList, 0>::value_type,
+              IndexType>> = nullptr>
 void test_evaluate() {
-  if constexpr (std::is_same_v<
-                    typename tmpl::at_c<RhsTensorIndexTypeList, 0>::value_type,
-                    IndexType>) {
-    test_evaluate_rank_1<ReturnLhsTensor, TensorIndex, double,
-                         RhsTensorIndexTypeList, LhsTensorIndexTypeList>();
-    test_evaluate_rank_1<ReturnLhsTensor, TensorIndex, DataVector,
-                         RhsTensorIndexTypeList, LhsTensorIndexTypeList>();
-  } else {
-    test_evaluate_rank_1_core<ReturnLhsTensor, TensorIndex, double,
-                              RhsTensorIndexTypeList, LhsTensorIndexTypeList>();
-    test_evaluate_rank_1_core<ReturnLhsTensor, TensorIndex, DataVector,
-                              RhsTensorIndexTypeList, LhsTensorIndexTypeList>();
-  }
+  test_evaluate_rank_1<ReturnLhsTensor, TensorIndex, double,
+                       RhsTensorIndexTypeList, LhsTensorIndexTypeList>();
+  test_evaluate_rank_1<ReturnLhsTensor, TensorIndex, DataVector,
+                       RhsTensorIndexTypeList, LhsTensorIndexTypeList>();
+}
+
+template <bool ReturnLhsTensor, auto& TensorIndex,
+          typename RhsTensorIndexTypeList,
+          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList,
+          Requires<not std::is_same_v<
+              typename tmpl::at_c<RhsTensorIndexTypeList, 0>::value_type,
+              IndexType>> = nullptr>
+void test_evaluate() {
+  test_evaluate_rank_1_core<ReturnLhsTensor, TensorIndex, double,
+                            RhsTensorIndexTypeList, LhsTensorIndexTypeList>();
+  test_evaluate_rank_1_core<ReturnLhsTensor, TensorIndex, DataVector,
+                            RhsTensorIndexTypeList, LhsTensorIndexTypeList>();
 }
 
 // TODO : update docs for TensorIndexTypeList tparams since now they can also be
@@ -75,25 +84,34 @@ void test_evaluate() {
 template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
           typename RhsSymmetry, typename RhsTensorIndexTypeList,
           typename LhsSymmetry = RhsSymmetry,
-          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
+          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList,
+          typename Frame = Frame::Inertial,
+          Requires<std::is_same_v<
+              typename tmpl::at_c<RhsTensorIndexTypeList, 0>::value_type,
+              IndexType>> = nullptr>
 void test_evaluate() {
-  if constexpr (std::is_same_v<
-                    typename tmpl::at_c<RhsTensorIndexTypeList, 0>::value_type,
-                    IndexType>) {
-    test_evaluate_rank_2<ReturnLhsTensor, TensorIndexA, TensorIndexB, double,
-                         RhsSymmetry, RhsTensorIndexTypeList, LhsSymmetry,
-                         LhsTensorIndexTypeList>();
-    test_evaluate_rank_2<ReturnLhsTensor, TensorIndexA, TensorIndexB,
-                         DataVector, RhsSymmetry, RhsTensorIndexTypeList,
-                         LhsSymmetry, LhsTensorIndexTypeList>();
-  } else {
-    test_evaluate_rank_2_core<ReturnLhsTensor, TensorIndexA, TensorIndexB,
-                              double, RhsSymmetry, RhsTensorIndexTypeList,
-                              LhsSymmetry, LhsTensorIndexTypeList>();
-    test_evaluate_rank_2_core<ReturnLhsTensor, TensorIndexA, TensorIndexB,
-                              DataVector, RhsSymmetry, RhsTensorIndexTypeList,
-                              LhsSymmetry, LhsTensorIndexTypeList>();
-  }
+  test_evaluate_rank_2<ReturnLhsTensor, TensorIndexA, TensorIndexB, double,
+                       RhsSymmetry, RhsTensorIndexTypeList, LhsSymmetry,
+                       LhsTensorIndexTypeList>();
+  test_evaluate_rank_2<ReturnLhsTensor, TensorIndexA, TensorIndexB, DataVector,
+                       RhsSymmetry, RhsTensorIndexTypeList, LhsSymmetry,
+                       LhsTensorIndexTypeList>();
+}
+
+template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
+          typename RhsSymmetry, typename RhsTensorIndexTypeList,
+          typename LhsSymmetry = RhsSymmetry,
+          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList,
+          Requires<not std::is_same_v<
+              typename tmpl::at_c<RhsTensorIndexTypeList, 0>::value_type,
+              IndexType>> = nullptr>
+void test_evaluate() {
+  test_evaluate_rank_2_core<ReturnLhsTensor, TensorIndexA, TensorIndexB, double,
+                            RhsSymmetry, RhsTensorIndexTypeList, LhsSymmetry,
+                            LhsTensorIndexTypeList>();
+  test_evaluate_rank_2_core<ReturnLhsTensor, TensorIndexA, TensorIndexB,
+                            DataVector, RhsSymmetry, RhsTensorIndexTypeList,
+                            LhsSymmetry, LhsTensorIndexTypeList>();
 }
 
 /// \ingroup TestingFrameworkGroup
@@ -121,27 +139,36 @@ void test_evaluate() {
 template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
           auto& TensorIndexC, typename RhsSymmetry,
           typename RhsTensorIndexTypeList, typename LhsSymmetry = RhsSymmetry,
-          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList>
+          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList,
+          typename Frame = Frame::Inertial,
+          Requires<std::is_same_v<
+              typename tmpl::at_c<RhsTensorIndexTypeList, 0>::value_type,
+              IndexType>> = nullptr>
 void test_evaluate() {
-  if constexpr (std::is_same_v<
-                    typename tmpl::at_c<RhsTensorIndexTypeList, 0>::value_type,
-                    IndexType>) {
-    test_evaluate_rank_3<ReturnLhsTensor, TensorIndexA, TensorIndexB, double,
-                         RhsSymmetry, RhsTensorIndexTypeList, LhsSymmetry,
-                         LhsTensorIndexTypeList>();
-    test_evaluate_rank_3<ReturnLhsTensor, TensorIndexA, TensorIndexB,
-                         DataVector, RhsSymmetry, RhsTensorIndexTypeList,
-                         LhsSymmetry, LhsTensorIndexTypeList>();
-  } else {
-    test_evaluate_rank_3_core<ReturnLhsTensor, TensorIndexA, TensorIndexB,
-                              TensorIndexC, double, RhsSymmetry,
-                              RhsTensorIndexTypeList, LhsSymmetry,
-                              LhsTensorIndexTypeList>();
-    test_evaluate_rank_3_core<ReturnLhsTensor, TensorIndexA, TensorIndexB,
-                              TensorIndexC, DataVector, RhsSymmetry,
-                              RhsTensorIndexTypeList, LhsSymmetry,
-                              LhsTensorIndexTypeList>();
-  }
+  test_evaluate_rank_3<ReturnLhsTensor, TensorIndexA, TensorIndexB, double,
+                       RhsSymmetry, RhsTensorIndexTypeList, LhsSymmetry,
+                       LhsTensorIndexTypeList>();
+  test_evaluate_rank_3<ReturnLhsTensor, TensorIndexA, TensorIndexB, DataVector,
+                       RhsSymmetry, RhsTensorIndexTypeList, LhsSymmetry,
+                       LhsTensorIndexTypeList>();
+}
+
+template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
+          auto& TensorIndexC, typename RhsSymmetry,
+          typename RhsTensorIndexTypeList, typename LhsSymmetry = RhsSymmetry,
+          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList,
+          Requires<not std::is_same_v<
+              typename tmpl::at_c<RhsTensorIndexTypeList, 0>::value_type,
+              IndexType>> = nullptr>
+void test_evaluate() {
+  test_evaluate_rank_3_core<ReturnLhsTensor, TensorIndexA, TensorIndexB,
+                            TensorIndexC, double, RhsSymmetry,
+                            RhsTensorIndexTypeList, LhsSymmetry,
+                            LhsTensorIndexTypeList>();
+  test_evaluate_rank_3_core<ReturnLhsTensor, TensorIndexA, TensorIndexB,
+                            TensorIndexC, DataVector, RhsSymmetry,
+                            RhsTensorIndexTypeList, LhsSymmetry,
+                            LhsTensorIndexTypeList>();
 }
 
 /// \ingroup TestingFrameworkGroup
