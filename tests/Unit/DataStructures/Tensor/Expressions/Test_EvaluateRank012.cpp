@@ -25,24 +25,26 @@ void test_evaluate_rank_012() {
   TestHelpers::tenex::test_evaluate<DataType>();
 
   // Rank 1: spacetime
-  TestHelpers::tenex::test_evaluate<true, ti::a, Frame::Inertial, DataType,
-                                    indextype_list<spacetime_index>>();
-  TestHelpers::tenex::test_evaluate<true, ti::b, Frame::Grid, DataType,
-                                    indextype_list<spacetime_index>>();
-  TestHelpers::tenex::test_evaluate<true, ti::A, Frame::Inertial, DataType,
-                                    indextype_list<spacetime_index>>();
-  TestHelpers::tenex::test_evaluate<true, ti::B, Frame::Grid, DataType,
-                                    indextype_list<spacetime_index>>();
+  TestHelpers::tenex::test_evaluate<true, ti::a, DataType,
+                                    indextype_list<spacetime_index>,
+                                    Frame::Inertial>();
+  TestHelpers::tenex::test_evaluate<
+      true, ti::b, DataType, indextype_list<spacetime_index>, Frame::Grid>();
+  TestHelpers::tenex::test_evaluate<true, ti::A, DataType,
+                                    indextype_list<spacetime_index>,
+                                    Frame::Inertial>();
+  TestHelpers::tenex::test_evaluate<
+      true, ti::B, DataType, indextype_list<spacetime_index>, Frame::Grid>();
 
   // Rank 1: spatial
-  TestHelpers::tenex::test_evaluate<true, ti::i, Frame::Grid, DataType,
-                                    indextype_list<spatial_index>>();
-  TestHelpers::tenex::test_evaluate<true, ti::j, Frame::Inertial, DataType,
-                                    indextype_list<spatial_index>>();
-  TestHelpers::tenex::test_evaluate<true, ti::I, Frame::Grid, DataType,
-                                    indextype_list<spatial_index>>();
-  TestHelpers::tenex::test_evaluate<true, ti::J, Frame::Inertial, DataType,
-                                    indextype_list<spatial_index>>();
+  TestHelpers::tenex::test_evaluate<
+      true, ti::i, DataType, indextype_list<spatial_index>, Frame::Grid>();
+  TestHelpers::tenex::test_evaluate<
+      true, ti::j, DataType, indextype_list<spatial_index>, Frame::Inertial>();
+  TestHelpers::tenex::test_evaluate<
+      true, ti::I, DataType, indextype_list<spatial_index>, Frame::Grid>();
+  TestHelpers::tenex::test_evaluate<
+      true, ti::J, DataType, indextype_list<spatial_index>, Frame::Inertial>();
 
   // Rank 2: nonsymmetric, spacetime only
   TestHelpers::tenex::test_evaluate<

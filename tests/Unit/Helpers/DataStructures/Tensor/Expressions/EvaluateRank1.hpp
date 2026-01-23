@@ -108,8 +108,8 @@ void test_evaluate_rank_1_core() {
 }
 
 /// \ingroup TestingFrameworkGroup
-template <bool ReturnLhsTensor, auto& TensorIndex, typename Frame,
-          typename DataType, typename RhsIndexTypeList,
+template <bool ReturnLhsTensor, auto& TensorIndex, typename DataType,
+          typename RhsIndexTypeList, typename Frame,
           typename LhsIndexTypeList = RhsIndexTypeList>
 void test_evaluate_rank_1() {
   constexpr IndexType rhs_indextype = tmpl::at_c<RhsIndexTypeList, 0>::value;
