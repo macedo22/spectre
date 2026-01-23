@@ -32,18 +32,17 @@ void test_evaluate();
 /// \ref SpacetimeIndex "TensorIndexType"s
 /// \tparam LhsTensorIndexTypeList the LHS Tensor's typelist of
 /// \ref SpacetimeIndex "TensorIndexType"s
-template <bool ReturnLhsTensor, auto& TensorIndex,
-          typename RhsTensorIndexTypeList,
-          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList,
+template <bool ReturnLhsTensor, auto& TensorIndex, typename RhsIndexTypeList,
+          typename LhsIndexTypeList = RhsIndexTypeList,
           typename Frame = Frame::Inertial,
           Requires<std::is_same_v<
-              typename tmpl::at_c<RhsTensorIndexTypeList, 0>::value_type,
+              typename tmpl::at_c<RhsIndexTypeList, 0>::value_type,
               IndexType>> = nullptr>
 void test_evaluate() {
-  test_evaluate_rank_1<ReturnLhsTensor, TensorIndex, double,
-                       RhsTensorIndexTypeList, LhsTensorIndexTypeList>();
+  test_evaluate_rank_1<ReturnLhsTensor, TensorIndex, double, RhsIndexTypeList,
+                       LhsIndexTypeList>();
   test_evaluate_rank_1<ReturnLhsTensor, TensorIndex, DataVector,
-                       RhsTensorIndexTypeList, LhsTensorIndexTypeList>();
+                       RhsIndexTypeList, LhsIndexTypeList>();
 }
 
 template <bool ReturnLhsTensor, auto& TensorIndex,
@@ -82,20 +81,20 @@ void test_evaluate() {
 /// \tparam LhsTensorIndexTypeList the LHS Tensor's typelist of
 /// \ref SpacetimeIndex "TensorIndexType"s
 template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
-          typename RhsSymmetry, typename RhsTensorIndexTypeList,
+          typename RhsSymmetry, typename RhsIndexTypeList,
           typename LhsSymmetry = RhsSymmetry,
-          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList,
+          typename LhsIndexTypeList = RhsIndexTypeList,
           typename Frame = Frame::Inertial,
           Requires<std::is_same_v<
-              typename tmpl::at_c<RhsTensorIndexTypeList, 0>::value_type,
+              typename tmpl::at_c<RhsIndexTypeList, 0>::value_type,
               IndexType>> = nullptr>
 void test_evaluate() {
   test_evaluate_rank_2<ReturnLhsTensor, TensorIndexA, TensorIndexB, double,
-                       RhsSymmetry, RhsTensorIndexTypeList, LhsSymmetry,
-                       LhsTensorIndexTypeList>();
+                       RhsSymmetry, RhsIndexTypeList, LhsSymmetry,
+                       LhsIndexTypeList>();
   test_evaluate_rank_2<ReturnLhsTensor, TensorIndexA, TensorIndexB, DataVector,
-                       RhsSymmetry, RhsTensorIndexTypeList, LhsSymmetry,
-                       LhsTensorIndexTypeList>();
+                       RhsSymmetry, RhsIndexTypeList, LhsSymmetry,
+                       LhsIndexTypeList>();
 }
 
 template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
@@ -137,20 +136,20 @@ void test_evaluate() {
 /// \tparam LhsTensorIndexTypeList the LHS Tensor's typelist of
 /// \ref SpacetimeIndex "TensorIndexType"s
 template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
-          auto& TensorIndexC, typename RhsSymmetry,
-          typename RhsTensorIndexTypeList, typename LhsSymmetry = RhsSymmetry,
-          typename LhsTensorIndexTypeList = RhsTensorIndexTypeList,
+          auto& TensorIndexC, typename RhsSymmetry, typename RhsIndexTypeList,
+          typename LhsSymmetry = RhsSymmetry,
+          typename LhsIndexTypeList = RhsIndexTypeList,
           typename Frame = Frame::Inertial,
           Requires<std::is_same_v<
-              typename tmpl::at_c<RhsTensorIndexTypeList, 0>::value_type,
+              typename tmpl::at_c<RhsIndexTypeList, 0>::value_type,
               IndexType>> = nullptr>
 void test_evaluate() {
   test_evaluate_rank_3<ReturnLhsTensor, TensorIndexA, TensorIndexB, double,
-                       RhsSymmetry, RhsTensorIndexTypeList, LhsSymmetry,
-                       LhsTensorIndexTypeList>();
+                       RhsSymmetry, RhsIndexTypeList, LhsSymmetry,
+                       LhsIndexTypeList>();
   test_evaluate_rank_3<ReturnLhsTensor, TensorIndexA, TensorIndexB, DataVector,
-                       RhsSymmetry, RhsTensorIndexTypeList, LhsSymmetry,
-                       LhsTensorIndexTypeList>();
+                       RhsSymmetry, RhsIndexTypeList, LhsSymmetry,
+                       LhsIndexTypeList>();
 }
 
 template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
