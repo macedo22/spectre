@@ -32,24 +32,13 @@ void test_evaluate() {
 /// \tparam ReturnLhsTensor whether to test tensor expression evaluation by
 /// returning the result tensor or not (which instead tests evaluation by
 /// assigning to the result tensor passed in as an argument)
-/// \tparam TensorIndex the TensorIndex used in the the TensorExpression,
+/// \tparam TensorIndex the TensorIndex used on the RHS of the TensorExpression,
 /// e.g. `ti::a`
 /// \tparam DataType the type of data being stored in the Tensors
 /// \tparam RhsTensorIndexTypeList the RHS Tensor's typelist of
 /// \ref SpacetimeIndex "TensorIndexType"s
 /// \tparam LhsTensorIndexTypeList the LHS Tensor's typelist of
 /// \ref SpacetimeIndex "TensorIndexType"s
-template <bool ReturnLhsTensor, auto& TensorIndex, typename DataType,
-          typename RhsIndexTypeList, typename Frame,
-          typename LhsIndexTypeList = RhsIndexTypeList,
-          Requires<std::is_same_v<
-              typename tmpl::at_c<RhsIndexTypeList, 0>::value_type,
-              IndexType>> = nullptr>
-void test_evaluate() {
-  test_evaluate_rank_1<ReturnLhsTensor, TensorIndex, DataType, RhsIndexTypeList,
-                       Frame, LhsIndexTypeList>();
-}
-
 template <bool ReturnLhsTensor, auto& TensorIndex, typename DataType,
           typename RhsTensorIndexTypeList,
           typename LhsTensorIndexTypeList = RhsTensorIndexTypeList,
@@ -61,8 +50,37 @@ void test_evaluate() {
                             RhsTensorIndexTypeList, LhsTensorIndexTypeList>();
 }
 
-// TODO : update docs for TensorIndexTypeList tparams since now they can also be
-// a list of IndexType
+/// \ingroup TestingFrameworkGroup
+/// \brief For 1, 2, and 3 spatial dimensions, test that evaluating a right
+/// hand side tensor expression containing a single rank 1 tensor correctly
+/// assigns the data to the evaluated left hand side tensor
+///
+/// \details See `test_evaluate` rank 4 function template for general details
+///
+/// \tparam ReturnLhsTensor whether to test tensor expression evaluation by
+/// returning the result tensor or not (which instead tests evaluation by
+/// assigning to the result tensor passed in as an argument)
+/// \tparam TensorIndexA the first TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti::a`
+/// \tparam TensorIndexB the second TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti::B`
+/// \tparam DataType the type of data being stored in the Tensors
+/// \tparam RhsSymmetry the ::Symmetry of the RHS Tensor
+/// \tparam RhsIndexTypeList the RHS Tensor's integral list of `IndexType`s
+/// \tparam Frame the frame of the indices
+/// \tparam LhsSymmetry the ::Symmetry of the LHS Tensor
+/// \tparam LhsIndexTypeList the LHS Tensor's integral list of `IndexType`s
+template <bool ReturnLhsTensor, auto& TensorIndex, typename DataType,
+          typename RhsIndexTypeList, typename Frame,
+          typename LhsIndexTypeList = RhsIndexTypeList,
+          Requires<std::is_same_v<
+              typename tmpl::at_c<RhsIndexTypeList, 0>::value_type,
+              IndexType>> = nullptr>
+void test_evaluate() {
+  test_evaluate_rank_1<ReturnLhsTensor, TensorIndex, DataType, RhsIndexTypeList,
+                       Frame, LhsIndexTypeList>();
+}
+
 /// \ingroup TestingFrameworkGroup
 /// \brief Test that evaluating a right hand side tensor expression containing a
 /// single rank 2 tensor correctly assigns the data to the evaluated left hand
@@ -85,19 +103,6 @@ void test_evaluate() {
 /// \tparam LhsTensorIndexTypeList the LHS Tensor's typelist of
 /// \ref SpacetimeIndex "TensorIndexType"s
 template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
-          typename DataType, typename RhsSymmetry, typename RhsIndexTypeList,
-          typename Frame, typename LhsSymmetry = RhsSymmetry,
-          typename LhsIndexTypeList = RhsIndexTypeList,
-          Requires<std::is_same_v<
-              typename tmpl::at_c<RhsIndexTypeList, 0>::value_type,
-              IndexType>> = nullptr>
-void test_evaluate() {
-  test_evaluate_rank_2<ReturnLhsTensor, TensorIndexA, TensorIndexB, DataType,
-                       RhsSymmetry, RhsIndexTypeList, Frame, LhsSymmetry,
-                       LhsIndexTypeList>();
-}
-
-template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
           typename DataType, typename RhsSymmetry,
           typename RhsTensorIndexTypeList, typename LhsSymmetry = RhsSymmetry,
           typename LhsTensorIndexTypeList = RhsTensorIndexTypeList,
@@ -108,6 +113,40 @@ void test_evaluate() {
   test_evaluate_rank_2_core<ReturnLhsTensor, TensorIndexA, TensorIndexB,
                             DataVector, RhsSymmetry, RhsTensorIndexTypeList,
                             LhsSymmetry, LhsTensorIndexTypeList>();
+}
+
+/// \ingroup TestingFrameworkGroup
+/// \brief For every combination of 1, 2, and 3 spatial dimensions for each
+/// index, test that evaluating a right hand side tensor expression containing a
+/// single rank 2 tensor correctly assigns the data to the evaluated left hand
+/// side tensor
+///
+/// \details See `test_evaluate` rank 4 function template for general details
+///
+/// \tparam ReturnLhsTensor whether to test tensor expression evaluation by
+/// returning the result tensor or not (which instead tests evaluation by
+/// assigning to the result tensor passed in as an argument)
+/// \tparam TensorIndexA the first TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti::a`
+/// \tparam TensorIndexB the second TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti::B`
+/// \tparam DataType the type of data being stored in the Tensors
+/// \tparam RhsSymmetry the ::Symmetry of the RHS Tensor
+/// \tparam RhsIndexTypeList the RHS Tensor's integral list of `IndexType`s
+/// \tparam Frame the frame of the indices
+/// \tparam LhsSymmetry the ::Symmetry of the LHS Tensor
+/// \tparam LhsIndexTypeList the LHS Tensor's integral list of `IndexType`s
+template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
+          typename DataType, typename RhsSymmetry, typename RhsIndexTypeList,
+          typename Frame, typename LhsSymmetry = RhsSymmetry,
+          typename LhsIndexTypeList = RhsIndexTypeList,
+          Requires<std::is_same_v<
+              typename tmpl::at_c<RhsIndexTypeList, 0>::value_type,
+              IndexType>> = nullptr>
+void test_evaluate() {
+  test_evaluate_rank_2<ReturnLhsTensor, TensorIndexA, TensorIndexB, DataType,
+                       RhsSymmetry, RhsIndexTypeList, Frame, LhsSymmetry,
+                       LhsIndexTypeList>();
 }
 
 /// \ingroup TestingFrameworkGroup
@@ -135,20 +174,6 @@ void test_evaluate() {
 /// \ref SpacetimeIndex "TensorIndexType"s
 template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
           auto& TensorIndexC, typename DataType, typename RhsSymmetry,
-          typename RhsIndexTypeList, typename Frame,
-          typename LhsSymmetry = RhsSymmetry,
-          typename LhsIndexTypeList = RhsIndexTypeList,
-          Requires<std::is_same_v<
-              typename tmpl::at_c<RhsIndexTypeList, 0>::value_type,
-              IndexType>> = nullptr>
-void test_evaluate() {
-  test_evaluate_rank_3<ReturnLhsTensor, TensorIndexA, TensorIndexB,
-                       TensorIndexC, DataType, RhsSymmetry, RhsIndexTypeList,
-                       Frame, LhsSymmetry, LhsIndexTypeList>();
-}
-
-template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
-          auto& TensorIndexC, typename DataType, typename RhsSymmetry,
           typename RhsTensorIndexTypeList, typename LhsSymmetry = RhsSymmetry,
           typename LhsTensorIndexTypeList = RhsTensorIndexTypeList,
           Requires<not std::is_same_v<
@@ -159,6 +184,43 @@ void test_evaluate() {
                             TensorIndexC, DataType, RhsSymmetry,
                             RhsTensorIndexTypeList, LhsSymmetry,
                             LhsTensorIndexTypeList>();
+}
+
+/// \ingroup TestingFrameworkGroup
+/// \brief For every combination of 1, 2, and 3 spatial dimensions for each
+/// index, test that evaluating a right hand side tensor expression containing a
+/// single rank 3 tensor correctly assigns the data to the evaluated left hand
+/// side tensor
+///
+/// \details See `test_evaluate` rank 4 function template for general details.
+///
+/// \tparam ReturnLhsTensor whether to test tensor expression evaluation by
+/// returning the result tensor or not (which instead tests evaluation by
+/// assigning to the result tensor passed in as an argument)
+/// \tparam TensorIndexA the first TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti::a`
+/// \tparam TensorIndexB the second TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti::B`
+/// \tparam TensorIndexC the third TensorIndex used on the RHS of the
+/// TensorExpression, e.g. `ti::c`
+/// \tparam DataType the type of data being stored in the Tensors
+/// \tparam RhsSymmetry the ::Symmetry of the RHS Tensor
+/// \tparam RhsIndexTypeList the RHS Tensor's integral list of `IndexType`s
+/// \tparam Frame the frame of the indices
+/// \tparam LhsSymmetry the ::Symmetry of the LHS Tensor
+/// \tparam LhsIndexTypeList the LHS Tensor's integral list of `IndexType`s
+template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
+          auto& TensorIndexC, typename DataType, typename RhsSymmetry,
+          typename RhsIndexTypeList, typename Frame,
+          typename LhsSymmetry = RhsSymmetry,
+          typename LhsIndexTypeList = RhsIndexTypeList,
+          Requires<std::is_same_v<
+              typename tmpl::at_c<RhsIndexTypeList, 0>::value_type,
+              IndexType>> = nullptr>
+void test_evaluate() {
+  test_evaluate_rank_3<ReturnLhsTensor, TensorIndexA, TensorIndexB,
+                       TensorIndexC, DataType, RhsSymmetry, RhsIndexTypeList,
+                       Frame, LhsSymmetry, LhsIndexTypeList>();
 }
 
 /// \ingroup TestingFrameworkGroup
