@@ -33,28 +33,28 @@ void test_evaluate_rank_3() {
       indextype_list<spacetime_index, spacetime_index, spacetime_index>,
       Frame::Inertial>();
   TestHelpers::tenex::test_evaluate<
-      false, ti::b, ti::a, ti::C, DataType, Symmetry<2, 2, 1>,
-      indextype_list<spacetime_index, spacetime_index, spacetime_index>,
+      false, ti::L, ti::J, ti::I, DataType, Symmetry<2, 2, 1>,
+      indextype_list<spatial_index, spatial_index, spacetime_index>,
       Frame::Grid, Symmetry<3, 2, 1>>();
 
   // first and third indices symmetric
   TestHelpers::tenex::test_evaluate<
-      true, ti::i, ti::f, ti::j, DataType, Symmetry<1, 2, 1>,
-      indextype_list<spatial_index, spacetime_index, spatial_index>,
-      Frame::Grid>();
+      true, ti::i, ti::k, ti::j, DataType, Symmetry<1, 2, 1>,
+      indextype_list<spatial_index, spatial_index, spatial_index>,
+      Frame::Inertial>();
   TestHelpers::tenex::test_evaluate<
-      false, ti::i, ti::f, ti::j, DataType, Symmetry<1, 2, 1>,
-      indextype_list<spatial_index, spacetime_index, spatial_index>,
-      Frame::Inertial, Symmetry<3, 2, 1>>();
+      false, ti::f, ti::M, ti::c, DataType, Symmetry<1, 2, 1>,
+      indextype_list<spacetime_index, spatial_index, spacetime_index>,
+      Frame::Grid, Symmetry<3, 2, 1>>();
 
   // second and third indices symmetric
   TestHelpers::tenex::test_evaluate<
-      true, ti::J, ti::M, ti::I, DataType, Symmetry<2, 1, 1>,
-      indextype_list<spatial_index, spacetime_index, spatial_index>,
+      true, ti::c, ti::I, ti::K, DataType, Symmetry<2, 1, 1>,
+      indextype_list<spacetime_index, spatial_index, spatial_index>,
       Frame::Inertial>();
   TestHelpers::tenex::test_evaluate<
-      false, ti::J, ti::M, ti::I, DataType, Symmetry<2, 1, 1>,
-      indextype_list<spacetime_index, spatial_index, spacetime_index>,
+      false, ti::J, ti::b, ti::c, DataType, Symmetry<2, 1, 1>,
+      indextype_list<spatial_index, spacetime_index, spacetime_index>,
       Frame::Grid, Symmetry<3, 2, 1>>();
 
   // symmetric
@@ -63,19 +63,19 @@ void test_evaluate_rank_3() {
       indextype_list<spacetime_index, spacetime_index, spacetime_index>,
       Frame::Inertial>();
   TestHelpers::tenex::test_evaluate<
-      false, ti::f, ti::d, ti::a, DataType, Symmetry<1, 1, 1>,
-      indextype_list<spacetime_index, spacetime_index, spacetime_index>,
-      Frame::Grid, Symmetry<2, 2, 1>>();
+      false, ti::k, ti::l, ti::i, DataType, Symmetry<1, 1, 1>,
+      indextype_list<spatial_index, spatial_index, spatial_index>, Frame::Grid,
+      Symmetry<2, 2, 1>>();
   TestHelpers::tenex::test_evaluate<
-      false, ti::f, ti::d, ti::a, DataType, Symmetry<1, 1, 1>,
+      false, ti::g, ti::b, ti::c, DataType, Symmetry<1, 1, 1>,
       indextype_list<spacetime_index, spacetime_index, spacetime_index>,
       Frame::Inertial, Symmetry<1, 2, 1>>();
   TestHelpers::tenex::test_evaluate<
-      false, ti::f, ti::d, ti::a, DataType, Symmetry<1, 1, 1>,
-      indextype_list<spacetime_index, spacetime_index, spacetime_index>,
-      Frame::Grid, Symmetry<2, 1, 1>>();
+      false, ti::M, ti::N, ti::J, DataType, Symmetry<1, 1, 1>,
+      indextype_list<spatial_index, spatial_index, spatial_index>, Frame::Grid,
+      Symmetry<2, 1, 1>>();
   TestHelpers::tenex::test_evaluate<
-      false, ti::f, ti::d, ti::a, DataType, Symmetry<1, 1, 1>,
+      false, ti::E, ti::A, ti::B, DataType, Symmetry<1, 1, 1>,
       indextype_list<spacetime_index, spacetime_index, spacetime_index>,
       Frame::Distorted, Symmetry<3, 2, 1>>();
 }
