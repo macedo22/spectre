@@ -142,9 +142,9 @@ template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
               typename tmpl::at_c<RhsIndexTypeList, 0>::value_type,
               IndexType>> = nullptr>
 void test_evaluate() {
-  test_evaluate_rank_3<ReturnLhsTensor, TensorIndexA, TensorIndexB, DataType,
-                       RhsSymmetry, RhsIndexTypeList, Frame, LhsSymmetry,
-                       LhsIndexTypeList>();
+  test_evaluate_rank_3<ReturnLhsTensor, TensorIndexA, TensorIndexB,
+                       TensorIndexC, DataType, RhsSymmetry, RhsIndexTypeList,
+                       Frame, LhsSymmetry, LhsIndexTypeList>();
 }
 
 template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,

@@ -313,7 +313,8 @@ void test_evaluate_rank_3() {
 
 #define CALL_TEST_EVALUATE_RANK_3(_, data)                                    \
   test_evaluate_rank_3_core<                                                  \
-      ReturnLhsTensor, TensorIndexA, TensorIndexB, DataType, RhsSymmetry,     \
+      ReturnLhsTensor, TensorIndexA, TensorIndexB, TensorIndexC, DataType,    \
+      RhsSymmetry,                                                            \
       index_list<                                                             \
           ::Tensor_detail::TensorIndexType<DIM_A(data), TensorIndexA.valence, \
                                            Frame, rhs_indextype_a>,           \
