@@ -174,10 +174,9 @@ void test_evaluate_rank_2_core() {
 
 /// \ingroup TestingFrameworkGroup
 template <bool ReturnLhsTensor, auto& TensorIndexA, auto& TensorIndexB,
-          typename DataType, typename RhsSymmetry, typename RhsIndexTypeList,
-          typename LhsSymmetry = RhsSymmetry,
-          typename LhsIndexTypeList = RhsIndexTypeList,
-          typename Frame = Frame::Inertial>
+          typename Frame, typename DataType, typename RhsSymmetry,
+          typename RhsIndexTypeList, typename LhsSymmetry = RhsSymmetry,
+          typename LhsIndexTypeList = RhsIndexTypeList>
 void test_evaluate_rank_2() {
   constexpr IndexType rhs_indextype_a = tmpl::at_c<RhsIndexTypeList, 0>::value;
   constexpr IndexType rhs_indextype_b = tmpl::at_c<RhsIndexTypeList, 1>::value;
