@@ -115,8 +115,8 @@ void test_evaluate_rank_2_impl() {
 }
 
 /// \ingroup TestingFrameworkGroup
-/// \brief Iterate testing of evaluating single rank 2 Tensors on multiple Frame
-/// types and dimension combinations
+/// \brief Iterate testing of evaluating single rank 2 Tensors on multiple
+/// dimension combinations
 ///
 /// We test nonsymmetric indices and symmetric indices across two functions to
 /// ensure that the code works correctly with symmetries. This function tests
@@ -146,25 +146,22 @@ void test_evaluate_rank_2_impl() {
 template <typename DataType,
           template <size_t, UpLo, typename> class TensorIndexTypeA,
           template <size_t, UpLo, typename> class TensorIndexTypeB,
-          auto& TensorIndexA, auto& TensorIndexB>
+          auto& TensorIndexA, auto& TensorIndexB, typename Frame>
 void test_evaluate_rank_2_no_symmetry() {
 #define DIM_A(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define DIM_B(data) BOOST_PP_TUPLE_ELEM(1, data)
-#define FRAME(data) BOOST_PP_TUPLE_ELEM(2, data)
 
-#define CALL_TEST_EVALUATE_RANK_2_IMPL(_, data)                              \
-  test_evaluate_rank_2_impl<                                                 \
-      DataType, Symmetry<2, 1>,                                              \
-      index_list<                                                            \
-          TensorIndexTypeA<DIM_A(data), TensorIndexA.valence, FRAME(data)>,  \
-          TensorIndexTypeB<DIM_B(data), TensorIndexB.valence, FRAME(data)>>, \
+#define CALL_TEST_EVALUATE_RANK_2_IMPL(_, data)                               \
+  test_evaluate_rank_2_impl<                                                  \
+      DataType, Symmetry<2, 1>,                                               \
+      index_list<TensorIndexTypeA<DIM_A(data), TensorIndexA.valence, Frame>,  \
+                 TensorIndexTypeB<DIM_B(data), TensorIndexB.valence, Frame>>, \
       TensorIndexA, TensorIndexB>();
 
-  GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_2_IMPL, (1, 2, 3), (1, 2, 3),
-                          (Frame::Grid, Frame::Inertial))
+  GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_2_IMPL, (1, 2, 3), (1, 2, 3))
 
 #undef CALL_TEST_EVALUATE_RANK_2_IMPL
-#undef FRAME
+
 #undef DIM_B
 #undef DIM_A
 }
@@ -173,24 +170,21 @@ void test_evaluate_rank_2_no_symmetry() {
 /// \copydoc test_evaluate_rank_2_no_symmetry()
 template <typename DataType,
           template <size_t, UpLo, typename> class TensorIndexType,
-          auto& TensorIndexA, auto& TensorIndexB>
+          auto& TensorIndexA, auto& TensorIndexB, typename Frame>
 void test_evaluate_rank_2_symmetric() {
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
-#define FRAME(data) BOOST_PP_TUPLE_ELEM(1, data)
 
-#define CALL_TEST_EVALUATE_RANK_2_IMPL(_, data)                           \
-  test_evaluate_rank_2_impl<                                              \
-      DataType, Symmetry<1, 1>,                                           \
-      index_list<                                                         \
-          TensorIndexType<DIM(data), TensorIndexA.valence, FRAME(data)>,  \
-          TensorIndexType<DIM(data), TensorIndexB.valence, FRAME(data)>>, \
+#define CALL_TEST_EVALUATE_RANK_2_IMPL(_, data)                            \
+  test_evaluate_rank_2_impl<                                               \
+      DataType, Symmetry<1, 1>,                                            \
+      index_list<TensorIndexType<DIM(data), TensorIndexA.valence, Frame>,  \
+                 TensorIndexType<DIM(data), TensorIndexB.valence, Frame>>, \
       TensorIndexA, TensorIndexB>();
 
-  GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_2_IMPL, (1, 2, 3),
-                          (Frame::Grid, Frame::Inertial))
+  GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_2_IMPL, (1, 2, 3))
 
 #undef CALL_TEST_EVALUATE_RANK_2_IMPL
-#undef FRAME
+
 #undef DIM
 }
 
