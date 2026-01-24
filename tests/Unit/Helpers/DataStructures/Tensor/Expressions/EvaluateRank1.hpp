@@ -73,26 +73,25 @@ void test_evaluate_rank_1_impl() {
 ///
 /// \tparam DataType the type of data being stored in the Tensors
 /// \tparam TensorIndexType the Tensors' \ref SpacetimeIndex "TensorIndexType"
-/// \tparam Valence the valence of the Tensors' index
 /// \tparam TensorIndex the TensorIndex used in the the TensorExpression,
 /// e.g. `ti::a`
+/// \tparam Frame the frame of the tensor indices
 template <typename DataType,
-          template <size_t, UpLo, typename> class TensorIndexType, UpLo Valence,
-          auto& TensorIndex>
+          template <size_t, UpLo, typename> class TensorIndexType,
+          auto& TensorIndex, typename Frame = Frame::Inertial>
 void test_evaluate_rank_1() {
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
-#define FRAME(data) BOOST_PP_TUPLE_ELEM(1, data)
 
-#define CALL_TEST_EVALUATE_RANK_1_IMPL(_, data)                               \
-  test_evaluate_rank_1_impl<                                                  \
-      DataType, index_list<TensorIndexType<DIM(data), Valence, FRAME(data)>>, \
+#define CALL_TEST_EVALUATE_RANK_1_IMPL(_, data)                           \
+  test_evaluate_rank_1_impl<                                              \
+      DataType,                                                           \
+      index_list<TensorIndexType<DIM(data), TensorIndex.valence, Frame>>, \
       TensorIndex>();
 
-  GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_1_IMPL, (1, 2, 3),
-                          (Frame::Grid, Frame::Inertial))
+  GENERATE_INSTANTIATIONS(CALL_TEST_EVALUATE_RANK_1_IMPL, (1, 2, 3))
 
 #undef CALL_TEST_EVALUATE_RANK_1_IMPL
-#undef FRAME
+
 #undef DIM
 }
 
