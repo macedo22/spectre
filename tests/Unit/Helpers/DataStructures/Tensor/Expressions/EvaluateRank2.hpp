@@ -115,8 +115,8 @@ void test_evaluate_rank_2_impl() {
 }
 
 /// \ingroup TestingFrameworkGroup
-/// \brief Iterate testing of evaluating single rank 2 Tensors on multiple Frame
-/// types and dimension combinations
+/// \brief Iterate testing of evaluating single rank 2 Tensors on multiple
+/// dimension combinations
 ///
 /// We test nonsymmetric indices and symmetric indices across two functions to
 /// ensure that the code works correctly with symmetries. This function tests

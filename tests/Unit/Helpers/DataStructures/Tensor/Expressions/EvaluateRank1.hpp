@@ -68,8 +68,8 @@ void test_evaluate_rank_1_impl() {
 }
 
 /// \ingroup TestingFrameworkGroup
-/// \brief Iterate testing of evaluating single rank 1 Tensors on multiple Frame
-/// types and dimensions
+/// \brief Iterate testing of evaluating single rank 1 Tensors on multiple
+/// dimensions
 ///
 /// \tparam DataType the type of data being stored in the Tensors
 /// \tparam TensorIndexType the Tensors' \ref SpacetimeIndex "TensorIndexType"

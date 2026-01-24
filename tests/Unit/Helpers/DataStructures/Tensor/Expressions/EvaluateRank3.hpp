@@ -263,8 +263,8 @@ void test_evaluate_rank_3_impl() {
 }
 
 /// \ingroup TestingFrameworkGroup
-/// \brief Iterate testing of evaluating single rank 3 Tensors on multiple Frame
-/// types and dimension combinations
+/// \brief Iterate testing of evaluating single rank 3 Tensors on multiple
+/// dimension combinations
 ///
 /// We test various different symmetries across several functions to ensure that
 /// the code works correctly with symmetries. This function tests one of the
