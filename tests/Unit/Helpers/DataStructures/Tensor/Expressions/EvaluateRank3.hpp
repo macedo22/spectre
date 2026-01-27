@@ -296,6 +296,7 @@ void test_evaluate_rank_3_impl() {
 /// TensorExpression, e.g. `ti::B`
 /// \tparam TensorIndexC the third TensorIndex used on the RHS of the
 /// TensorExpression, e.g. `ti::c`
+/// \tparam Frame the frame of the tensor indices
 template <typename DataType, typename RhsSymmetry, typename RhsIndexTypeList,
           auto& TensorIndexA, auto& TensorIndexB, auto& TensorIndexC,
           typename Frame,

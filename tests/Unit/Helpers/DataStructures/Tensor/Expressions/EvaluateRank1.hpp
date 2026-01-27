@@ -75,6 +75,7 @@ void test_evaluate_rank_1_impl() {
 /// \tparam RhsIndexTypeList the RHS Tensor's integral list of `IndexType`s
 /// \tparam TensorIndex the TensorIndex used in the the TensorExpression,
 /// e.g. `ti::a`
+/// \tparam Frame the frame of the tensor index
 template <typename DataType, typename RhsIndexTypeList, auto& TensorIndex,
           typename Frame>
 void test_evaluate_rank_1() {

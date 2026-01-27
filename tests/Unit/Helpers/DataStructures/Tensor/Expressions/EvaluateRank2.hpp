@@ -142,6 +142,7 @@ void test_evaluate_rank_2_impl() {
 /// TensorExpression, e.g. `ti::a`
 /// \tparam TensorIndexB the second TensorIndex used on the RHS of the
 /// TensorExpression, e.g. `ti::B`
+/// \tparam Frame the frame of the tensor indices
 template <typename DataType, typename RhsSymmetry, typename RhsIndexTypeList,
           auto& TensorIndexA, auto& TensorIndexB, typename Frame,
           Requires<std::is_same_v<RhsSymmetry, Symmetry<2, 1>>> = nullptr>
