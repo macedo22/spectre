@@ -131,7 +131,7 @@ struct CheckNoLhsAntiSymmetries<SymmList<Symm...>> {
 ///
 /// Within the subsets of spatial, spacetime, and time indices, the
 /// `TensorIndex`s in each will be ordered such that lowercase indices come
-/// before uppercase, where both are ordered alphabetically. Another way o
+/// before uppercase, where both are ordered alphabetically. Another way of
 /// saying this is that if we had a rank N `Tensor` that was fully symmetric,
 /// its canonical ordering would take the following form:
 ///
@@ -167,7 +167,7 @@ struct CheckNoLhsAntiSymmetries<SymmList<Symm...>> {
 /// canonical ordering: [ti::t, ti::j, ti::k]
 /// ```
 ///
-/// If there is more than one set of symmetric indices, each the subsets are
+/// If there is more than one set of symmetric indices, each of the subsets are
 /// individually reordered:
 ///
 /// ```
@@ -175,6 +175,79 @@ struct CheckNoLhsAntiSymmetries<SymmList<Symm...>> {
 /// set of `TensorIndex`s: {ti::a, ti::b, ti::t, ti::i}
 /// canonical ordering: [ti::i, ti::b, ti::t, ti::a]
 /// ```
+///
+/// The motivation for this specific canonical reordering is to quickly assess
+/// which components to assign to and which ones to skip when generic spatial
+/// and/or concrete time indices are used for symmetric spacetime indices in the
+/// resulting left hand side tensor when using `TensorExpression`s.
+///
+/// Let's take the spacetime metric \f$g_{ab}\f$ as our motivating example. This
+/// tensor has symmetric spacetime indices, and let's say we only want to assign
+/// to \f$g_{ti}\f$. We want to loop over all 10 independent components of
+/// \f$g_{ab}\f$ and skip components outside of \f$g_{ti}\f$, e.g. \f$g_{xy}\f$
+/// (or \f$g_{12}\f$) and \f$g_{tt}\f$ (or \f$g_{00}\f$). To do so, when we see
+/// a multi-index like `{2, 1}` in our loop, we align `{2, 1}` with `{t, i}` and
+/// ask if the `2` is a valid index for `t` and if the `1` is a valid index for
+/// `i`. `1` is valid for `i`, but `2` is not valid for `t`, so we correctly
+/// skip over `{2, 1}` and don't assign to this component.
+///
+/// However, this simple logic can lead to false positives or negatives when
+/// the indices are symmetric. What if the multi-index we're asking about is
+/// `{0, 1}` (\f$g_{01}\f$ or \f$g_{tx}\f$)? This logic would correctly
+/// determine that this is one of the components we want to assign to. But what
+/// if the multi-index was `{1, 0}`? The logic would incorrectly say to skip
+/// over and not assign to this multi-index because `1` is not a valid index for
+/// `t` and `0` is not valid for `i`. However, because \f$g_{ab}\f$ is
+/// symmetric, both `{0, 1}` and `{1, 0}` should give the same result, but
+/// `{1, 0}` gives us a false negative. Moreover and more generally, assigning
+/// to \f$g_{ti}\f$ and \f$g_{it}\f$ should yield the same behavior (assign to
+/// the same set of components).
+///
+/// One way to address this would be to check the multi-indices for all
+/// permutations of symmetric index values, e.g. is `{0, 1}` *or* `{1, 0}`
+/// valid? And if so, then evaluate it. However, this adds work at runtime and
+/// the number of permutations to check increases as we increase the number of
+/// symmetric indices.
+///
+/// The canonical reordering done by *this* function solves this problem by
+/// aligning the `TensorIndex`s with the canonical multi-index ordering
+/// implemented by `::Tensor_detail::Structure::get_canonical_tensor_index`.
+/// `get_canonical_tensor_index` takes a storage index (which corresponds to an
+/// independent tensor component) and returns a canonical multi-index. This
+/// canonical multi-index is such that index values for symmetric indices will
+/// be ordered to increase from right to left. For example, for a rank 2
+/// symmetric tensor, `{1, 0}` is the canonical multi-index corresponding to the
+/// dependent multi-indices `{0, 1}` and `{1, 0}`. Therefore, `{1, 0}` would be
+/// the multi-index returned by `get_canonical_tensor_index` that corresponds to
+/// the single independent component. In other words, when we loop over the
+/// independent canonical multi-indices, we are looping over the multi-index
+/// permutations that are in the lower triangle of the N-dimensional matrix
+/// containing all multi-index permutations. The canonical reordering of LHS
+/// `TensorIndex`s for symmetric indices that is done by *this* function is
+/// implemented to match this: by making time indices the rightmost, then
+/// spacetime the next rightmost, and then spatial indices leftmost, we
+/// guarantee that looping over the lower triangle permutations given by
+/// `get_canonical_tensor_index` will not produce false positives or negatives
+/// using the aforementioned check for valid multi-indices. This allows us to
+/// quickly check if a multi-index is valid without having to check all of its
+/// permutations. This works because the set of multi-indices that would be
+/// determined by this simple logic to be valid for a specific LHS
+/// `TensorIndex` order is a subset of the lower triangle multi-index
+/// permutations returned by `get_canonical_tensor_index`.
+///
+/// We can use the spacetime metric as an example to demonstrate this. The
+/// lower triangle multi-indices that are looped over are ordered with index
+/// values increasing right to left, e.g. `{0, 0}`, `{1, 0}`, `{2, 0}`,
+/// `{2, 1}`, etc. If a user wants to  assign to \f$g_{ti}\f$, then after this
+/// function internally reorders the LHS indices to \f$g_{it}\f$, when we loop
+/// over `{1, 0}`, we correctly get that we should evaluate this component
+/// without having to check its other permutation. Likewise, if a user wants to
+/// assign to \f$g_{it}\f$, no reordering is done and we get the same correct
+/// behavior. This works in general because given any `0`s in the symmetric
+/// indices will "first" be aligned with any time indices and then any
+/// spacetime indices, where `0` is correctly valid, but if there are more `0`s
+/// than time or spacetime `TensorIndex`s, they will be aligned with spatial
+/// indices, which is always correctly invalid.
 ///
 /// \tparam LhsTensorIndices the `TensorIndex`s of the `Tensor`, e.g. `ti::a`,
 /// `ti::b`, `ti::c`
