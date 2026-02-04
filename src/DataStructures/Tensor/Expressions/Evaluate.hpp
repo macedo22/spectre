@@ -247,7 +247,11 @@ struct CheckNoLhsAntiSymmetries<SymmList<Symm...>> {
 /// indices will "first" be aligned with any time indices and then any
 /// spacetime indices, where `0` is correctly valid, but if there are more `0`s
 /// than time or spacetime `TensorIndex`s, they will be aligned with spatial
-/// indices, which is always correctly invalid.
+/// indices, which is always correctly invalid. Similarly, when there are less
+/// time indices than index values `> 0`, those values `> 0` will be aligned
+/// with spacetime or spatial indices and correctly always be valid, and when
+/// there are more time indices than index values `> 0`, some of those values
+/// `> 0` will align with time indices and correctly always be invalid.
 ///
 /// \tparam LhsTensorIndices the `TensorIndex`s of the `Tensor`, e.g. `ti::a`,
 /// `ti::b`, `ti::c`
