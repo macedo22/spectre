@@ -3,10 +3,9 @@
 
 #include "Framework/TestingFramework.hpp"
 
-#include <climits>
 #include <complex>
 #include <cstddef>
-#include <iostream>
+#include <limits>
 #include <random>
 
 #include "DataStructures/ComplexDataVector.hpp"
@@ -14,6 +13,8 @@
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Framework/TestHelpers.hpp"
 #include "Helpers/DataStructures/MakeWithRandomValues.hpp"
+#include "Helpers/PointwiseFunctions/GeneralRelativity/TestHelpers.hpp"
+#include "PointwiseFunctions/GeneralRelativity/SpacetimeMetric.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/MakeWithValue.hpp"
 
@@ -254,61 +255,61 @@ void test_assign_number() {
 
 template <typename Generator, typename DataType>
 void test_rhs_spatial_and_time_indices(
-    const gsl::not_null<Generator*> generator,
-    const std::uniform_real_distribution<>& distribution,
-    const DataType& used_for_size) {
+    const gsl::not_null<Generator*> generator, const DataType& used_for_size) {
   constexpr size_t Dim = 3;
 
-  const auto shift = make_with_random_values<tnsr::I<DataType, Dim>>(
-      generator, distribution, used_for_size);
-  const auto spacetime_metric =
-      make_with_random_values<tnsr::aa<DataType, Dim>>(generator, distribution,
-                                                       used_for_size);
+  // use gr random helper functions and calculate spacetime metric explicitly to
+  // avoid taking square root of a negative in the tested expression
+  const Scalar<DataType> random_lapse =
+      TestHelpers::gr::random_lapse(generator, used_for_size);
+  const tnsr::I<DataType, Dim> random_shift =
+      TestHelpers::gr::random_shift<Dim>(generator, used_for_size);
+  const tnsr::ii<DataType, Dim> random_spatial_metric =
+      TestHelpers::gr::random_spatial_metric<Dim>(generator, used_for_size);
+
+  auto spacetime_metric = make_with_value<tnsr::aa<DataType, Dim>>(
+      used_for_size, std::numeric_limits<double>::signaling_NaN());
+  gr::spacetime_metric(make_not_null(&spacetime_metric), random_lapse,
+                       random_shift, random_spatial_metric);
+  const auto& shift = random_shift;
+  const auto& expected_result = random_lapse;
 
   auto lapse =
       tenex::evaluate(sqrt(shift(ti::I) * spacetime_metric(ti::i, ti::t) -
                            spacetime_metric(ti::t, ti::t)));
 
-  Scalar<DataType> expected_result{used_for_size};
-  get(expected_result) = -get<0, 0>(spacetime_metric);
-  for (size_t i = 0; i < Dim; i++) {
-    get(expected_result) += shift.get(i) * spacetime_metric.get(i + 1, 0);
-  }
-  get(expected_result) = sqrt(get(expected_result));
-
   CHECK_ITERABLE_APPROX(lapse, expected_result);
 }
 
-template <typename Generator>
+template <typename Generator, typename DataType>
 void test_lhs_spatial_and_time_indices(
     const gsl::not_null<Generator*> generator,
     const std::uniform_real_distribution<>& distribution,
-    const DataVector& used_for_size) {
+    const DataType& used_for_size) {
   constexpr size_t Dim = 3;
 
-  const auto spatial_metric =
-      make_with_random_values<tnsr::ii<DataVector, Dim>>(
-          generator, distribution, used_for_size);
-  const auto shift = make_with_random_values<tnsr::I<DataVector, Dim>>(
+  const auto spatial_metric = make_with_random_values<tnsr::ii<DataType, Dim>>(
       generator, distribution, used_for_size);
-  const auto lapse = make_with_random_values<Scalar<DataVector>>(
+  const auto shift = make_with_random_values<tnsr::I<DataType, Dim>>(
+      generator, distribution, used_for_size);
+  const auto lapse = make_with_random_values<Scalar<DataType>>(
       generator, distribution, used_for_size);
 
-  tnsr::aa<DataVector, Dim> spacetime_metric{};
+  tnsr::aa<DataType, Dim> spacetime_metric{};
   tenex::evaluate<ti::t, ti::t>(
       make_not_null(&spacetime_metric),
-      -lapse() * lapse() +
+      -square(lapse()) +
           shift(ti::M) * shift(ti::N) * spatial_metric(ti::m, ti::n));
   tenex::evaluate<ti::t, ti::i>(make_not_null(&spacetime_metric),
                                 spatial_metric(ti::m, ti::i) * shift(ti::M));
   tenex::evaluate<ti::i, ti::j>(make_not_null(&spacetime_metric),
                                 spatial_metric(ti::i, ti::j));
 
-  const DataVector lapse_squared = square(get(lapse));
+  const DataType lapse_squared = square(get(lapse));
 
   // note: there are more efficient ways to implement this equation, but
   // choosing the simplest to read and write
-  tnsr::aa<DataVector, 3> expected_result{used_for_size};
+  tnsr::aa<DataType, 3> expected_result{used_for_size};
   for (size_t i = 0; i < Dim; i++) {
     for (size_t j = i; j < Dim; j++) {
       expected_result.get(i + 1, j + 1) = spatial_metric.get(i, j);
@@ -339,6 +340,7 @@ void test_complex(const gsl::not_null<Generator*> generator,
                   const RealDataType& used_for_size) {
   static_assert(std::is_same_v<RealDataType, double> or
                 std::is_same_v<RealDataType, DataVector>);
+
   using ComplexDataType =
       std::conditional_t<std::is_same_v<RealDataType, double>,
                          std::complex<double>, ComplexDataVector>;
@@ -363,42 +365,30 @@ void test_complex(const gsl::not_null<Generator*> generator,
   CHECK_ITERABLE_APPROX(z, expected_result);
 }
 
-// void test_examples() {
+template <typename Generator, typename DataType>
+void test_examples(const gsl::not_null<Generator*> generator,
+                   const std::uniform_real_distribution<>& distribution,
+                   const DataType& used_for_size) {
+  test_evaluate(generator, distribution, used_for_size);
+  test_basic_operations(generator, distribution, used_for_size);
+  test_complex(generator, distribution, used_for_size);
+  test_specify_lhs_symmetry(generator, distribution, used_for_size);
+  test_rhs_spatial_and_time_indices(generator, used_for_size);
+  test_lhs_spatial_and_time_indices(generator, distribution, used_for_size);
 
-// }
+  if constexpr (std::is_same_v<DataType, double>) {
+    test_assign_number();
+  }
+}
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Examples",
                   "[DataStructures][Unit]") {
-  MAKE_GENERATOR(generator, 17);
+  MAKE_GENERATOR(generator, 2486307902);
   std::uniform_real_distribution<> distribution(0.1, 1.0);
-  const double number_used_for_size =
-      std::numeric_limits<double>::signaling_NaN();
-  const DataVector vector_used_for_size =
-      DataVector(5, std::numeric_limits<double>::signaling_NaN());
 
-  test_evaluate(make_not_null(&generator), distribution, vector_used_for_size);
-  test_basic_operations(make_not_null(&generator), distribution,
-                        number_used_for_size);
-  test_complex(make_not_null(&generator), distribution, vector_used_for_size);
-  test_specify_lhs_symmetry(make_not_null(&generator), distribution,
-                            vector_used_for_size);
-  test_assign_number();
-  test_rhs_spatial_and_time_indices(make_not_null(&generator), distribution,
-                                    number_used_for_size);
-  test_lhs_spatial_and_time_indices(make_not_null(&generator), distribution,
-                                    vector_used_for_size);
-
-  //   test_evaluate(make_not_null(&generator), distribution,
-  //                 std::numeric_limits<double>::signaling_NaN());
-  //   TestHelpers::tenex::Examples::test_mixed_operations(
-  //       make_not_null(&generator),
-  //       std::complex<double>(std::numeric_limits<double>::signaling_NaN(),
-  //                            std::numeric_limits<double>::signaling_NaN()));
-  //   TestHelpers::tenex::Examples::test_mixed_operations(
-  //       make_not_null(&generator),
-  //       DataVector(5, std::numeric_limits<double>::signaling_NaN()));
-  //   TestHelpers::tenex::Examples::test_mixed_operations(
-  //       make_not_null(&generator),
-  //       ComplexDataVector(5, std::numeric_limits<double>::signaling_NaN()));
+  test_examples(make_not_null(&generator), distribution,
+                std::numeric_limits<double>::signaling_NaN());
+  test_examples(make_not_null(&generator), distribution,
+                DataVector(5, std::numeric_limits<double>::signaling_NaN()));
 }

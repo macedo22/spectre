@@ -35,5 +35,7 @@ target_link_libraries(
   ${LIBRARY}
   PRIVATE
   DataStructures
+  GeneralRelativity
+  GeneralRelativityHelpers
   Utilities
   )
