@@ -304,11 +304,6 @@ void test_assign_component_subsets(
   const auto lapse = make_with_random_values<Scalar<DataVector>>(
       generator, distribution, used_for_size);
 
-  // spatial_metric is type tnsr::ii<DataVector, 3>, shift is type
-  // tnsr::I<DataVector, 3>, and lapse is type Scalar<DataVector>
-
-  // auto spacetime_metric =
-  //     make_with_value<tnsr::aa<DataVector, 3>>(used_for_size, 0.0);
   tnsr::aa<DataVector, Dim> spacetime_metric{};
   tenex::evaluate<ti::t, ti::t>(
       make_not_null(&spacetime_metric),
@@ -321,8 +316,8 @@ void test_assign_component_subsets(
 
   const DataVector lapse_squared = square(get(lapse));
 
-  // auto expected_result =
-  //     make_with_value<tnsr::aa<DataVector, 3>>(used_for_size, 0.0);
+  // note: there are more efficient ways to implement this equation, but
+  // choosing the simplest to read and write
   tnsr::aa<DataVector, 3> expected_result{used_for_size};
   for (size_t i = 0; i < Dim; i++) {
     for (size_t j = i; j < Dim; j++) {
@@ -332,81 +327,18 @@ void test_assign_component_subsets(
 
   for (size_t i = 0; i < Dim; i++) {
     expected_result.get(0, i + 1) = spatial_metric.get(0, i) * shift.get(0);
-    // expected_result.get(0, i + 1) += expected_result.get(1, i + 1) *
-    // shift.get(0);
     for (size_t m = 1; m < Dim; m++) {
       expected_result.get(0, i + 1) += spatial_metric.get(m, i) * shift.get(m);
-      // expected_result.get(0, i + 1) += expected_result.get(m + 1, i + 1) *
-      // shift.get(m);
     }
   }
 
-  expected_result.get(0, 0) = -lapse_squared;
+  get<0, 0>(expected_result) = -lapse_squared;
   for (size_t m = 0; m < Dim; m++) {
     for (size_t n = 0; n < Dim; n++) {
-      expected_result.get(0, 0) +=
+      get<0, 0>(expected_result) +=
           spatial_metric.get(m, n) * shift.get(m) * shift.get(n);
     }
   }
-
-  // auto expected_result =
-  //     make_with_value<tnsr::aa<DataVector, 3>>(used_for_size, 0.0);
-  // for (size_t i = 0; i < Dim; i++) {
-  //   for (size_t j = 0; j < Dim; j++) {
-  //     get<0, 0>(expected_result) +=
-  //         shift.get(i) * shift.get(j) * spatial_metric.get(i, j);
-  //     if (j >= i) {
-  //       expected_result.get(0, i + 1) +=
-  //           spatial_metric.get(j, i) * shift.get(j);
-  //     }
-  //     expected_result.get(i + 1, j + 1) = spatial_metric.get(i, j);
-  //   }
-  // }
-  // get<0, 0>(expected_result) -= lapse_squared;
-  // get<0, 0>(expected_result) = get<0, 0>(expected_result) - lapse_squared;
-
-  // for (size_t m = 0; m < Dim; m++) {
-  //   for (size_t n = 0; n < Dim; n++) {
-  //     get<0, 0>(expected_result) +=
-  //         shift.get(m) * shift.get(n) * spatial_metric.get(m, n);
-  //   }
-  // }
-  // get<0, 0>(expected_result) -= lapse_squared;
-
-  // for (size_t i = 0; i < Dim; i++) {
-  //   for (size_t m = 0; m < Dim; m++) {
-  //     expected_result.get(0, i + 1) += spatial_metric.get(m, i) *
-  //     shift.get(m);
-  //   }
-  // }
-
-  // for (size_t i = 0; i < Dim; i++) {
-  //   for (size_t j = i; j < Dim; j++) {
-  //     expected_result.get(i + 1, j + 1) = spatial_metric.get(i, j);
-  //   }
-  // }
-
-  // get<0, 0>(expected_result) = -square(get(lapse));
-
-  // for (size_t m = 0; m < Dim; ++m) {
-  //   get<0, 0>(expected_result) +=
-  //       spatial_metric.get(m, m) * square(shift.get(m));
-  //   for (size_t n = 0; n < m; ++n) {
-  //     get<0, 0>(expected_result) +=
-  //         2. * spatial_metric.get(m, n) * shift.get(m) * shift.get(n);
-  //   }
-  // }
-
-  // for (size_t i = 0; i < Dim; ++i) {
-  //   expected_result.get(0, i + 1) = 0.;
-  //   for (size_t m = 0; m < Dim; ++m) {
-  //     expected_result.get(0, i + 1) += spatial_metric.get(m, i) *
-  //     shift.get(m);
-  //   }
-  //   // for (size_t j = i; j < Dim; ++j) {
-  //   //   expected_result.get(i + 1, j + 1) = spatial_metric.get(i, j);
-  //   // }
-  // }
 
   CHECK_ITERABLE_APPROX(spacetime_metric, expected_result);
 }
