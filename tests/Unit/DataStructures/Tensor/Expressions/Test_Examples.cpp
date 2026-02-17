@@ -382,7 +382,7 @@ void test_examples(const gsl::not_null<Generator*> generator,
 
 SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Examples",
                   "[DataStructures][Unit]") {
-  MAKE_GENERATOR(generator, 2486307902);
+  MAKE_GENERATOR(generator);
   std::uniform_real_distribution<> distribution(0.1, 1.0);
 
   test_examples(make_not_null(&generator), distribution,
