@@ -420,19 +420,18 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Examples",
                   "[DataStructures][Unit]") {
   MAKE_GENERATOR(generator, 17);
   std::uniform_real_distribution<> distribution(0.1, 1.0);
-  //   const double number_used_for_size =
-  //       std::numeric_limits<double>::signaling_NaN();
+  const double number_used_for_size =
+      std::numeric_limits<double>::signaling_NaN();
   const DataVector vector_used_for_size =
       DataVector(1, std::numeric_limits<double>::signaling_NaN());
 
-  //   test_evaluate(make_not_null(&generator), distribution,
-  //   vector_used_for_size); test_basic_operations(make_not_null(&generator),
-  //   distribution,
-  //                         number_used_for_size);
-  //   test_specify_lhs_symmetry();
-  //   test_assign_number();
-  //   test_spatial_and_time_indices(make_not_null(&generator), distribution,
-  //                                 number_used_for_size);
+  test_evaluate(make_not_null(&generator), distribution, vector_used_for_size);
+  test_basic_operations(make_not_null(&generator), distribution,
+                        number_used_for_size);
+  test_specify_lhs_symmetry();
+  test_assign_number();
+  test_spatial_and_time_indices(make_not_null(&generator), distribution,
+                                number_used_for_size);
   test_assign_component_subsets(make_not_null(&generator), distribution,
                                 vector_used_for_size);
 
