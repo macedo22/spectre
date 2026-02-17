@@ -263,27 +263,21 @@ void test_spatial_and_time_indices(
     const DataType& used_for_size) {
   constexpr size_t Dim = 3;
 
-  const auto inverse_spatial_metric =
-      make_with_random_values<tnsr::II<DataType, Dim>>(generator, distribution,
-                                                       used_for_size);
+  const auto shift = make_with_random_values<tnsr::I<DataType, Dim>>(
+      generator, distribution, used_for_size);
   const auto spacetime_metric =
       make_with_random_values<tnsr::aa<DataType, Dim>>(generator, distribution,
                                                        used_for_size);
 
-  auto lapse = tenex::evaluate(sqrt(inverse_spatial_metric(ti::I, ti::J) *
-                                        spacetime_metric(ti::j, ti::t) *
-                                        spacetime_metric(ti::i, ti::t) -
-                                    spacetime_metric(ti::t, ti::t)));
+  auto lapse =
+      tenex::evaluate(sqrt(shift(ti::I) * spacetime_metric(ti::i, ti::t) -
+                           spacetime_metric(ti::t, ti::t)));
 
-  auto expected_result = make_with_value<Scalar<DataType>>(used_for_size, 0.0);
+  Scalar<DataType> expected_result{used_for_size};
+  get(expected_result) = -get<0, 0>(spacetime_metric);
   for (size_t i = 0; i < Dim; i++) {
-    for (size_t j = 0; j < Dim; j++) {
-      get(expected_result) += inverse_spatial_metric.get(i, j) *
-                              spacetime_metric.get(j + 1, 0) *
-                              spacetime_metric.get(i + 1, 0);
-    }
+    get(expected_result) += shift.get(i) * spacetime_metric.get(i + 1, 0);
   }
-  get(expected_result) -= get<0, 0>(spacetime_metric);
   get(expected_result) = sqrt(get(expected_result));
 
   CHECK_ITERABLE_APPROX(lapse, expected_result);
@@ -383,8 +377,4 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Examples",
   // TODO : to add:
   // - psi4 for demoing complex datavector use with std::complex:
   // https://spectre-code.org/group__GeneralRelativityGroup.html#ga57dde0a2811628294312038d28cbb383
-  //
-  // - lapse for demoing time and spatial indices for RHS spacetime:
-  //   https://spectre-code.org/group__GeneralRelativityGroup.html#gaf6dbe3d6807eb2fd55bf5fefceb79698
-  //   note: already an exmaple above, but maybe use thios because it's shorter
 }
