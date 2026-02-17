@@ -29,12 +29,12 @@ void test_evaluate(const gsl::not_null<Generator*> generator,
   const auto g = make_with_random_values<tnsr::AA<DataType, Dim>>(
       generator, distribution, used_for_size);
 
-  auto expected_product =
+  auto expected_result =
       make_with_value<tnsr::Ab<DataType, Dim>>(used_for_size, 0.0);
   for (size_t c = 0; c < Dim + 1; c++) {
     for (size_t b = 0; b < Dim + 1; b++) {
       for (size_t a = 0; a < Dim + 1; a++) {
-        expected_product.get(c, b) += R.get(a, b) * g.get(a, c);
+        expected_result.get(c, b) += R.get(a, b) * g.get(a, c);
       }
     }
   }
@@ -42,13 +42,13 @@ void test_evaluate(const gsl::not_null<Generator*> generator,
   {
     auto R_up =
         tenex::evaluate<ti::C, ti::b>(R(ti::a, ti::b) * g(ti::A, ti::C));
-    CHECK_ITERABLE_APPROX(R_up, expected_product);
+    CHECK_ITERABLE_APPROX(R_up, expected_result);
   }
   {
     tnsr::Ab<DataType, Dim> R_up{};
     tenex::evaluate<ti::C, ti::b>(make_not_null(&R_up),
                                   R(ti::a, ti::b) * g(ti::A, ti::C));
-    CHECK_ITERABLE_APPROX(R_up, expected_product);
+    CHECK_ITERABLE_APPROX(R_up, expected_result);
   }
 }
 
@@ -193,44 +193,40 @@ void test_basic_operations(const gsl::not_null<Generator*> generator,
   }
 }
 
-tnsr::aa<double, 3> compute_expected_specify_lhs_symmetry(
-    const tnsr::a<double, 3>& R) {
-  tnsr::aa<double, 3> L{};
-  for (size_t a = 0; a < 4; a++) {
-    for (size_t b = a; b < 4; b++) {
-      L.get(a, b) = R.get(a) * R.get(b);
+template <typename Generator, typename DataType>
+void test_specify_lhs_symmetry(
+    const gsl::not_null<Generator*> generator,
+    const std::uniform_real_distribution<>& distribution,
+    const DataType& used_for_size) {
+  constexpr size_t Dim = 3;
+
+  const auto R = make_with_random_values<tnsr::a<DataType, Dim>>(
+      generator, distribution, used_for_size);
+
+  auto expected_result =
+      make_with_value<tnsr::aa<DataType, Dim>>(used_for_size, 0.0);
+  for (size_t a = 0; a < Dim + 1; a++) {
+    for (size_t b = a; b < Dim + 1; b++) {
+      expected_result.get(a, b) = R.get(a) * R.get(b);
     }
   }
-  return L;
-}
 
-void test_specify_lhs_symmetry() {
   {
-    tnsr::a<double, 3> R{{1.0, 2.0, 3.0}};
     auto L = tenex::evaluate<ti::a, ti::b>(R(ti::a) * R(ti::b));
-    static_assert(std::is_same_v<decltype(L), tnsr::ab<double, 3>>);
+    static_assert(std::is_same_v<decltype(L), tnsr::ab<DataType, Dim>>);
 
-    const tnsr::aa<double, 3> expected_result =
-        compute_expected_specify_lhs_symmetry(R);
     for (size_t a = 0; a < 4; a++) {
       for (size_t b = 0; b < 4; b++) {
         CHECK(L.get(a, b) == expected_result.get(a, b));
-        CHECK(L.get(a, b) == expected_result.get(b, a));
+        CHECK(L.get(b, a) == expected_result.get(a, b));
       }
     }
   }
   {
-    tnsr::a<double, 3> R{};
-    tnsr::aa<double, 3> L{};
+    tnsr::aa<DataType, 3> L{};
     tenex::evaluate<ti::a, ti::b>(make_not_null(&L), R(ti::a) * R(ti::b));
 
-    const tnsr::aa<double, 3> expected_result =
-        compute_expected_specify_lhs_symmetry(R);
-    for (size_t a = 0; a < 4; a++) {
-      for (size_t b = a; b < 4; b++) {
-        CHECK(L.get(a, b) == expected_result.get(a, b));
-      }
-    }
+    CHECK_ITERABLE_APPROX(L, expected_result);
   }
 }
 
@@ -337,22 +333,27 @@ void test_lhs_spatial_and_time_indices(
   CHECK_ITERABLE_APPROX(spacetime_metric, expected_result);
 }
 
-template <typename Generator>
+template <typename Generator, typename RealDataType>
 void test_complex(const gsl::not_null<Generator*> generator,
                   const std::uniform_real_distribution<>& distribution,
-                  const DataVector& used_for_size) {
+                  const RealDataType& used_for_size) {
+  static_assert(std::is_same_v<RealDataType, double> or
+                std::is_same_v<RealDataType, DataVector>);
+  using ComplexDataType =
+      std::conditional_t<std::is_same_v<RealDataType, double>,
+                         std::complex<double>, ComplexDataVector>;
   constexpr size_t Dim = 3;
 
-  const auto x = make_with_random_values<tnsr::I<DataVector, Dim>>(
+  const auto x = make_with_random_values<tnsr::I<RealDataType, Dim>>(
       generator, distribution, used_for_size);
-  const auto y = make_with_random_values<tnsr::I<DataVector, Dim>>(
+  const auto y = make_with_random_values<tnsr::I<RealDataType, Dim>>(
       generator, distribution, used_for_size);
   const std::complex<double> i{0.0, 1.0};
 
-  const tnsr::I<ComplexDataVector, Dim> z =
+  const tnsr::I<ComplexDataType, Dim> z =
       tenex::evaluate<ti::I>(x(ti::I) + i * y(ti::I));
 
-  tnsr::I<ComplexDataVector, 3> expected_result{used_for_size};
+  tnsr::I<ComplexDataType, 3> expected_result{used_for_size};
 
   get<0>(expected_result) = get<0>(x) + i * get<0>(y);
   for (size_t j = 1; j < Dim; j++) {
@@ -374,13 +375,14 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Examples",
   const double number_used_for_size =
       std::numeric_limits<double>::signaling_NaN();
   const DataVector vector_used_for_size =
-      DataVector(1, std::numeric_limits<double>::signaling_NaN());
+      DataVector(5, std::numeric_limits<double>::signaling_NaN());
 
   test_evaluate(make_not_null(&generator), distribution, vector_used_for_size);
   test_basic_operations(make_not_null(&generator), distribution,
                         number_used_for_size);
   test_complex(make_not_null(&generator), distribution, vector_used_for_size);
-  test_specify_lhs_symmetry();
+  test_specify_lhs_symmetry(make_not_null(&generator), distribution,
+                            vector_used_for_size);
   test_assign_number();
   test_rhs_spatial_and_time_indices(make_not_null(&generator), distribution,
                                     number_used_for_size);
