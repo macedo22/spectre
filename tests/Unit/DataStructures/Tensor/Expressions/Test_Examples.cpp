@@ -305,8 +305,6 @@ void test_lhs_spatial_and_time_indices(
   tenex::evaluate<ti::i, ti::j>(make_not_null(&spacetime_metric),
                                 spatial_metric(ti::i, ti::j));
 
-  const DataType lapse_squared = square(get(lapse));
-
   // note: there are more efficient ways to implement this equation, but
   // choosing the simplest to read and write
   tnsr::aa<DataType, 3> expected_result{used_for_size};
@@ -323,7 +321,7 @@ void test_lhs_spatial_and_time_indices(
     }
   }
 
-  get<0, 0>(expected_result) = -lapse_squared;
+  get<0, 0>(expected_result) = -square(get(lapse));
   for (size_t m = 0; m < Dim; m++) {
     for (size_t n = 0; n < Dim; n++) {
       get<0, 0>(expected_result) +=
