@@ -337,6 +337,31 @@ void test_lhs_spatial_and_time_indices(
   CHECK_ITERABLE_APPROX(spacetime_metric, expected_result);
 }
 
+template <typename Generator>
+void test_complex(const gsl::not_null<Generator*> generator,
+                  const std::uniform_real_distribution<>& distribution,
+                  const DataVector& used_for_size) {
+  constexpr size_t Dim = 3;
+
+  const auto x = make_with_random_values<tnsr::I<DataVector, Dim>>(
+      generator, distribution, used_for_size);
+  const auto y = make_with_random_values<tnsr::I<DataVector, Dim>>(
+      generator, distribution, used_for_size);
+  const std::complex<double> i{0.0, 1.0};
+
+  const tnsr::I<ComplexDataVector, Dim> z =
+      tenex::evaluate<ti::I>(x(ti::I) + i * y(ti::I));
+
+  tnsr::I<ComplexDataVector, 3> expected_result{used_for_size};
+
+  get<0>(expected_result) = get<0>(x) + i * get<0>(y);
+  for (size_t j = 1; j < Dim; j++) {
+    expected_result.get(j) = x.get(j) + i * y.get(j);
+  }
+
+  CHECK_ITERABLE_APPROX(z, expected_result);
+}
+
 // void test_examples() {
 
 // }
@@ -354,6 +379,7 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Examples",
   test_evaluate(make_not_null(&generator), distribution, vector_used_for_size);
   test_basic_operations(make_not_null(&generator), distribution,
                         number_used_for_size);
+  test_complex(make_not_null(&generator), distribution, vector_used_for_size);
   test_specify_lhs_symmetry();
   test_assign_number();
   test_rhs_spatial_and_time_indices(make_not_null(&generator), distribution,
@@ -373,8 +399,4 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Examples",
   //   TestHelpers::tenex::Examples::test_mixed_operations(
   //       make_not_null(&generator),
   //       ComplexDataVector(5, std::numeric_limits<double>::signaling_NaN()));
-
-  // TODO : to add:
-  // - psi4 for demoing complex datavector use with std::complex:
-  // https://spectre-code.org/group__GeneralRelativityGroup.html#ga57dde0a2811628294312038d28cbb383
 }
