@@ -257,7 +257,7 @@ void test_assign_number() {
 }
 
 template <typename Generator, typename DataType>
-void test_spatial_and_time_indices(
+void test_rhs_spatial_and_time_indices(
     const gsl::not_null<Generator*> generator,
     const std::uniform_real_distribution<>& distribution,
     const DataType& used_for_size) {
@@ -284,7 +284,7 @@ void test_spatial_and_time_indices(
 }
 
 template <typename Generator>
-void test_assign_component_subsets(
+void test_lhs_spatial_and_time_indices(
     const gsl::not_null<Generator*> generator,
     const std::uniform_real_distribution<>& distribution,
     const DataVector& used_for_size) {
@@ -356,10 +356,10 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Examples",
                         number_used_for_size);
   test_specify_lhs_symmetry();
   test_assign_number();
-  test_spatial_and_time_indices(make_not_null(&generator), distribution,
-                                number_used_for_size);
-  test_assign_component_subsets(make_not_null(&generator), distribution,
-                                vector_used_for_size);
+  test_rhs_spatial_and_time_indices(make_not_null(&generator), distribution,
+                                    number_used_for_size);
+  test_lhs_spatial_and_time_indices(make_not_null(&generator), distribution,
+                                    vector_used_for_size);
 
   //   test_evaluate(make_not_null(&generator), distribution,
   //                 std::numeric_limits<double>::signaling_NaN());
