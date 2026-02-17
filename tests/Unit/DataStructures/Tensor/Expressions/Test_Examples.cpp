@@ -448,4 +448,12 @@ SPECTRE_TEST_CASE("Unit.DataStructures.Tensor.Expression.Examples",
   //   TestHelpers::tenex::Examples::test_mixed_operations(
   //       make_not_null(&generator),
   //       ComplexDataVector(5, std::numeric_limits<double>::signaling_NaN()));
+
+  // TODO : to add:
+  // - psi4 for demoing complex datavector use with std::complex:
+  // https://spectre-code.org/group__GeneralRelativityGroup.html#ga57dde0a2811628294312038d28cbb383
+  //
+  // - lapse for demoing time and spatial indices for RHS spacetime:
+  //   https://spectre-code.org/group__GeneralRelativityGroup.html#gaf6dbe3d6807eb2fd55bf5fefceb79698
+  //   note: already an exmaple above, but maybe use thios because it's shorter
 }
