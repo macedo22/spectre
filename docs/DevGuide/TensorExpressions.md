@@ -24,9 +24,9 @@ As a simple example of how `TensorExpression`s are used, if you would like to
 raise the index of some `Tensor` `R` with some inverse spacetime metric `Tensor`
 `g`, i.e. \f$R^c{}_b = R_{ab} g^{ac}\f$, you can compute this with
 `TensorExpression`s by doing:
-```
-auto R_up = tenex::evaluate<ti::C, ti::b>(R(ti::a, ti::b) * g(ti::A, ti::C));
-```
+
+\snippet Expressions/Test_Examples.cpp te_example_evaluate_lhs_return
+
 where `R_up`, `R`, and `g` are rank 2 spacetime `Tensor`s and the `ti::*`
 variables are `TensorIndex`s representing generic tensor indices. Here is a
 breakdown of the different parts of this line:
@@ -43,10 +43,8 @@ Alternatively, if you already have a LHS `Tensor` variable, you can pass it into
 the following \ref tenex::evaluate "evaluate" overload, where the LHS `Tensor`
 provided will be assigned to the result of the RHS expression:
 
-```
-tenex::evaluate<ti::C, ti::b>(
-    make_not_null(&R_up), R(ti::a, ti::b) * g(ti::A, ti::C));
-```
+\snippet Expressions/Test_Examples.cpp te_example_evaluate_lhs_arg
+
 Note that to use this \ref tenex::evaluate "evaluate" overload, the LHS `Tensor`
 does not need to be previously sized unless the data type is a Blaze vector type
 (e.g. `DataVector`) *and* the RHS expression contains no `Tensor` terms
@@ -119,58 +117,52 @@ In the following examples:
 
 ### Addition and subtraction {#te_addition_and_subtraction}
 \f$L_{ab} = R_{ab} + S_{ba}\f$
-```
-auto L = tenex::evaluate<ti::a, ti::b>(R(ti::a, ti::b) + S(ti::b, ti::a));
-```
+
+\snippet Expressions/Test_Examples.cpp te_example_addition
+
 \f$L = 1 - T\f$
-```
-auto L = tenex::evaluate(1.0 - T());
-```
+
+\snippet Expressions/Test_Examples.cpp te_example_subtraction
 
 ### Contraction of a single tensor {#te_contraction}
 \f$L = U^{a}{}_{a}\f$
-```
-auto L = tenex::evaluate(U(ti::A, ti::a));
-```
+
+\snippet Expressions/Test_Examples.cpp te_example_contraction_1
+
 \f$L^b = V_{a}{}^{ba}\f$
-```
-auto L = tenex::evaluate<ti::B>(V(ti::a, ti::B, ti::A));
-```
+
+\snippet Expressions/Test_Examples.cpp te_example_contraction_2
 
 ### Inner and outer products {#te_products}
 \f$L = G_a H^{a}\f$
-```
-auto L = tenex::evaluate(G(ti::a) * H(ti::A));
-```
+
+\snippet Expressions/Test_Examples.cpp te_example_inner_product
+
 \f$L_{cb} = T G_a G_c U^{a}{}_{b}\f$
-```
-auto L =
-    tenex::evaluate<ti::c, ti::b>(T() * G(ti::a) * G(ti::c) * U(ti::A, ti::b));
-```
+
+\snippet Expressions/Test_Examples.cpp te_example_inner_and_outer_product
 
 ### Division {#te_division}
 \f$L_a = \frac{G_a}{2}\f$
-```
-auto L = tenex::evaluate<ti::a>(G(ti::a) / 2.0);
-```
+
+\snippet Expressions/Test_Examples.cpp te_example_division_by_number
+
 \f$L_{ba} = \frac{R_{ab}}{T}\f$
-```
-auto L = tenex::evaluate<ti::b, ti::a>(R(ti::a, ti::b) / T());
-```
+
+\snippet Expressions/Test_Examples.cpp te_example_division_by_tensor
+
 \f$L = \frac{5}{U^{a}{}_{a} + 1}\f$
-```
-auto L = tenex::evaluate(5.0 / (U(ti::A, ti::a) + 1.0));
-```
+
+\snippet Expressions/Test_Examples.cpp te_example_division_by_tensor_expression
 
 ### Square root {#te_square_root}
 \f$L = \sqrt{T}\f$
-```
-auto L = tenex::evaluate(sqrt(T()));
-```
+
+\snippet Expressions/Test_Examples.cpp te_example_square_root_tensor
+
 \f$L = \sqrt{G_a H^a}\f$
-```
-auto L = tenex::evaluate(sqrt(G(ti::a) * H(ti::A)));
-```
+
+\snippet Expressions/Test_Examples.cpp te_example_square_root_inner_product
 
 ## More features {#te_more_features}
 
@@ -185,19 +177,15 @@ first argument.
 
 For example, if we have \f$L_{ab} = R_a R_b\f$, the indices of \f$L\f$ are
 symmetric. However, when we do:
-```
-tnsr::a<double, 3> R{};
-auto L = tenex::evaluate<ti::a, ti::b>(R(ti::a) * R(ti::b));
-```
+
+\snippet Expressions/Test_Examples.cpp te_example_deduced_lhs_symmetry_fail
+
 the type of `L` will be \ref tnsr "tnsr::ab" because it is not known at
 compile time that the two vectors in the product are the same. To override the
 deduced symmetry and make it a symmetric result, we can create a
 \ref tnsr "tnsr::aa" and pass it into the other overload:
-```
-tnsr::a<double, 3> R{};
-tnsr::aa<double, 3> L{};
-tenex::evaluate<ti::a, ti::b>(make_not_null(&L), R(ti::a) * R(ti::b));
-```
+
+\snippet Expressions/Test_Examples.cpp te_example_deduced_lhs_symmetry_force
 
 ### Assigning to a number {#te_assigning_to_a_number}
 You can assign a number (e.g. `double`) to a `Tensor` of any rank to fill all
@@ -206,19 +194,15 @@ different depending on the underlying data type of your `Tensor`:
 
 - When your `Tensor`'s data type is a number type (e.g. `double`,
 `std::complex<double>`):
-```
-tnsr::ab<double, 3> L{};
-tenex::evaluate<ti::a, ti::b>(make_not_null(&L), -1.0);
-```
+
+\snippet Expressions/Test_Examples.cpp te_example_assign_number_to_tensor_of_numbers
+
 - When your `Tensor`'s data type is a Blaze vector type (e.g. `DataVector`,
 `ComplexDataVector`), the `Tensor` must first be sized before calling
 \ref tenex::evaluate "evaluate" because there is no sizing information (from a
 `Tensor` component) in the RHS expression:
-```
-// construct LHS tensor with size 5 DataVector
-tnsr::ab<DataVector, 3> L{DataVector(0.0, 5)};
-tenex::evaluate<ti::a, ti::b>(make_not_null(&L), -1.0);
-```
+
+\snippet Expressions/Test_Examples.cpp te_example_assign_number_to_tensor_of_vectors
 
 See [supported number types](#te_data_type_support) for the data types that the
 RHS number can be.
@@ -228,18 +212,12 @@ If a `Tensor` has spacetime indices, you can use generic spatial indices and
 concrete time indices to refer to a subset of the components, as we see in
 literature.
 
-Lapse \f$\alpha\f$ computed from the spacetime metric \f$g_{ab}\f$ and spatial
-metric \f$\gamma_{ij}\f$:
+Lapse \f$\alpha\f$ computed from the spacetime metric \f$g_{ab}\f$ and shift
+\f$\beta^i\f$:
 
-\f$\alpha = \sqrt{\gamma^{ij} g_{jt} g_{it} - g_{tt}}\f$
-```
-// spatial_metric is type tnsr::ii<DataVector, 3> and spacetime_metric is type
-// tnsr::aa<DataVector, 3>
-auto lapse = tenex::evaluate(sqrt(inverse_spatial_metric(ti::I, ti::J) *
-                                        spacetime_metric(ti::j, ti::t) *
-                                        spacetime_metric(ti::i, ti::t) -
-                                    spacetime_metric(ti::t, ti::t)));
-```
+\f$\alpha = \sqrt{\beta^i g_{it} - g_{tt}}\f$
+
+\snippet Expressions/Test_Examples.cpp te_example_rhs_spatial_and_time_indices
 
 ### Assigning subsets of tensor components {#te_assigning_subsets_of_components}
 Related to the previous example, you can also use generic spatial indices and
@@ -249,26 +227,7 @@ subsets of the LHS `Tensor`'s components.
 Spacetime metric \f$g_{ab}\f$ computed from the lapse \f$\alpha\f$, shift
 \f$\beta^I\f$, and spatial metric \f$\gamma_{ij}\f$:
 
-\f{align}{
-  g_{tt} &= - \alpha^2 + \beta^m \beta^n \gamma_{mn} \\
-  g_{ti} &= \gamma_{mi} \beta^m  \\
-  g_{ij} &= \gamma_{ij}
-\f}
-```
-// spatial_metric is type tnsr::ii<DataVector, 3>, shift is type
-// tnsr::I<DataVector, 3>, and lapse is type Scalar<DataVector>
-
-tnsr::aa<DataVector, 3> spacetime_metric{};
-tenex::evaluate<ti::t, ti::t>(
-    make_not_null(&spacetime_metric),
-    -lapse() * lapse() + shift(ti::M) * shift(ti::N) *
-                spatial_metric(ti::m, ti::n));
-tenex::evaluate<ti::t, ti::i>(
-    make_not_null(&spacetime_metric),
-    spatial_metric(ti::m, ti::i) * shift(ti::M));
-tenex::evaluate<ti::i, ti::j>(
-    make_not_null(&spacetime_metric), spatial_metric(ti::i, ti::j));
-```
+\snippet Expressions/Test_Examples.cpp te_example_lhs_spatial_and_time_indices
 
 ### Using the LHS Tensor in the RHS expression {#te_using_lhs_tensor_in_rhs}
 You can use the LHS `Tensor` in the RHS expression to emulate operations like

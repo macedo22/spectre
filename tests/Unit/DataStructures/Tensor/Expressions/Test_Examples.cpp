@@ -41,14 +41,18 @@ void test_evaluate(const gsl::not_null<Generator*> generator,
   }
 
   {
+    // [te_example_evaluate_lhs_return]
     auto R_up =
         tenex::evaluate<ti::C, ti::b>(R(ti::a, ti::b) * g(ti::A, ti::C));
+    // [te_example_evaluate_lhs_return]
     CHECK_ITERABLE_APPROX(R_up, expected_result);
   }
   {
+    // [te_example_evaluate_lhs_arg]
     tnsr::Ab<DataType, Dim> R_up{};
     tenex::evaluate<ti::C, ti::b>(make_not_null(&R_up),
                                   R(ti::a, ti::b) * g(ti::A, ti::C));
+    // [te_example_evaluate_lhs_arg]
     CHECK_ITERABLE_APPROX(R_up, expected_result);
   }
 }
@@ -76,7 +80,9 @@ void test_basic_operations(const gsl::not_null<Generator*> generator,
 
   // addition
   {
+    // [te_example_addition]
     auto L = tenex::evaluate<ti::a, ti::b>(R(ti::a, ti::b) + S(ti::b, ti::a));
+    // [te_example_addition]
 
     tnsr::ab<DataType, Dim> expected_result{};
     for (size_t a = 0; a < Dim + 1; a++) {
@@ -89,15 +95,18 @@ void test_basic_operations(const gsl::not_null<Generator*> generator,
   }
   // subtraction
   {
+    // [te_example_subtraction]
     auto L = tenex::evaluate(1.0 - T());
+    // [te_example_subtraction]
 
     const Scalar<DataType> expected_result{1.0 - get(T)};
 
     CHECK_ITERABLE_APPROX(L, expected_result);
   }
-  // contraction of a single tensor
   {
+    // [te_example_contraction_1]
     auto L = tenex::evaluate(U(ti::A, ti::a));
+    // [te_example_contraction_1]
 
     auto expected_result =
         make_with_value<Scalar<DataType>>(used_for_size, 0.0);
@@ -108,7 +117,9 @@ void test_basic_operations(const gsl::not_null<Generator*> generator,
     CHECK_ITERABLE_APPROX(L, expected_result);
   }
   {
+    // [te_example_contraction_2]
     auto L = tenex::evaluate<ti::B>(V(ti::a, ti::B, ti::A));
+    // [te_example_contraction_2]
 
     auto expected_result =
         make_with_value<tnsr::A<DataType, Dim>>(used_for_size, 0.0);
@@ -120,9 +131,10 @@ void test_basic_operations(const gsl::not_null<Generator*> generator,
 
     CHECK_ITERABLE_APPROX(L, expected_result);
   }
-  // inner and outer products
   {
+    // [te_example_inner_product]
     auto L = tenex::evaluate(G(ti::a) * H(ti::A));
+    // [te_example_inner_product]
 
     auto expected_result =
         make_with_value<Scalar<DataType>>(used_for_size, 0.0);
@@ -133,8 +145,10 @@ void test_basic_operations(const gsl::not_null<Generator*> generator,
     CHECK_ITERABLE_APPROX(L, expected_result);
   }
   {
+    // [te_example_inner_and_outer_product]
     auto L = tenex::evaluate<ti::c, ti::b>(T() * G(ti::a) * G(ti::c) *
                                            U(ti::A, ti::b));
+    // [te_example_inner_and_outer_product]
 
     auto expected_result =
         make_with_value<tnsr::ab<DataType, Dim>>(used_for_size, 0.0);
@@ -149,9 +163,10 @@ void test_basic_operations(const gsl::not_null<Generator*> generator,
 
     CHECK_ITERABLE_APPROX(L, expected_result);
   }
-  // divison
   {
+    // [te_example_division_by_number]
     auto L = tenex::evaluate<ti::a>(G(ti::a) / 2.0);
+    // [te_example_division_by_number]
 
     tnsr::a<DataType, Dim> expected_result{};
     for (size_t a = 0; a < Dim + 1; a++) {
@@ -161,7 +176,9 @@ void test_basic_operations(const gsl::not_null<Generator*> generator,
     CHECK_ITERABLE_APPROX(L, expected_result);
   }
   {
+    // [te_example_division_by_tensor]
     auto L = tenex::evaluate<ti::b, ti::a>(R(ti::a, ti::b) / T());
+    // [te_example_division_by_tensor]
 
     tnsr::ab<DataType, Dim> expected_result{};
     for (size_t b = 0; b < Dim + 1; b++) {
@@ -172,16 +189,35 @@ void test_basic_operations(const gsl::not_null<Generator*> generator,
 
     CHECK_ITERABLE_APPROX(L, expected_result);
   }
+
+  {
+    // [te_example_division_by_tensor_expression]
+    auto L = tenex::evaluate(5.0 / (U(ti::A, ti::a) + 1.0));
+    // [te_example_division_by_tensor_expression]
+
+    auto expected_result =
+        make_with_value<Scalar<DataType>>(used_for_size, 1.0);
+    for (size_t a = 0; a < Dim + 1; a++) {
+      get(expected_result) += U.get(a, a);
+    }
+    get(expected_result) = 5.0 / get(expected_result);
+
+    CHECK_ITERABLE_APPROX(L, expected_result);
+  }
   // square root
   {
+    // [te_example_square_root_tensor]
     auto L = tenex::evaluate(sqrt(T()));
+    // [te_example_square_root_tensor]
 
     const Scalar<DataType> expected_result{sqrt(get(T))};
 
     CHECK_ITERABLE_APPROX(L, expected_result);
   }
   {
+    // [te_example_square_root_inner_product]
     auto L = tenex::evaluate(sqrt(G(ti::a) * H(ti::A)));
+    // [te_example_square_root_inner_product]
 
     auto expected_result =
         make_with_value<Scalar<DataType>>(used_for_size, 0.0);
@@ -213,8 +249,10 @@ void test_specify_lhs_symmetry(
   }
 
   {
+    // [te_example_deduced_lhs_symmetry_fail]
     auto L = tenex::evaluate<ti::a, ti::b>(R(ti::a) * R(ti::b));
     static_assert(std::is_same_v<decltype(L), tnsr::ab<DataType, Dim>>);
+    // [te_example_deduced_lhs_symmetry_fail]
 
     for (size_t a = 0; a < 4; a++) {
       for (size_t b = 0; b < 4; b++) {
@@ -224,8 +262,10 @@ void test_specify_lhs_symmetry(
     }
   }
   {
+    // [te_example_deduced_lhs_symmetry_force]
     tnsr::aa<DataType, 3> L{};
     tenex::evaluate<ti::a, ti::b>(make_not_null(&L), R(ti::a) * R(ti::b));
+    // [te_example_deduced_lhs_symmetry_force]
 
     CHECK_ITERABLE_APPROX(L, expected_result);
   }
@@ -233,17 +273,21 @@ void test_specify_lhs_symmetry(
 
 void test_assign_number() {
   {
+    // [te_example_assign_number_to_tensor_of_numbers]
     tnsr::ab<double, 3> L{};
     tenex::evaluate<ti::a, ti::b>(make_not_null(&L), -1.0);
+    // [te_example_assign_number_to_tensor_of_numbers]
 
     const auto expected_result = make_with_value<tnsr::ab<double, 3>>(
         std::numeric_limits<double>::signaling_NaN(), -1.0);
     CHECK(L == expected_result);
   }
   {
+    // [te_example_assign_number_to_tensor_of_vectors]
     // construct LHS tensor with size 5 DataVector
     tnsr::ab<DataVector, 3> L{DataVector(0.0, 5)};
     tenex::evaluate<ti::a, ti::b>(make_not_null(&L), -1.0);
+    // [te_example_assign_number_to_tensor_of_vectors]
 
     const size_t num_points = L[0].size();
     const auto expected_result = make_with_value<tnsr::ab<DataVector, 3>>(
@@ -274,9 +318,11 @@ void test_rhs_spatial_and_time_indices(
   const auto& shift = random_shift;
   const auto& expected_result = random_lapse;
 
+  // [te_example_rhs_spatial_and_time_indices]
   auto lapse =
       tenex::evaluate(sqrt(shift(ti::I) * spacetime_metric(ti::i, ti::t) -
                            spacetime_metric(ti::t, ti::t)));
+  // [te_example_rhs_spatial_and_time_indices]
 
   CHECK_ITERABLE_APPROX(lapse, expected_result);
 }
@@ -295,6 +341,7 @@ void test_lhs_spatial_and_time_indices(
   const auto lapse = make_with_random_values<Scalar<DataType>>(
       generator, distribution, used_for_size);
 
+  // [te_example_lhs_spatial_and_time_indices]
   tnsr::aa<DataType, Dim> spacetime_metric{};
   tenex::evaluate<ti::t, ti::t>(
       make_not_null(&spacetime_metric),
@@ -304,6 +351,7 @@ void test_lhs_spatial_and_time_indices(
                                 spatial_metric(ti::m, ti::i) * shift(ti::M));
   tenex::evaluate<ti::i, ti::j>(make_not_null(&spacetime_metric),
                                 spatial_metric(ti::i, ti::j));
+  // [te_example_lhs_spatial_and_time_indices]
 
   // note: there are more efficient ways to implement this equation, but
   // choosing the simplest to read and write
@@ -350,9 +398,6 @@ void test_complex(const gsl::not_null<Generator*> generator,
       generator, distribution, used_for_size);
   const std::complex<double> i{0.0, 1.0};
 
-  const tnsr::I<ComplexDataType, Dim> z =
-      tenex::evaluate<ti::I>(x(ti::I) + i * y(ti::I));
-
   tnsr::I<ComplexDataType, 3> expected_result{used_for_size};
 
   get<0>(expected_result) = get<0>(x) + i * get<0>(y);
@@ -360,7 +405,19 @@ void test_complex(const gsl::not_null<Generator*> generator,
     expected_result.get(j) = x.get(j) + i * y.get(j);
   }
 
-  CHECK_ITERABLE_APPROX(z, expected_result);
+  if constexpr (std::is_same_v<RealDataType, double>) {
+    // [te_example_complex_double]
+    tnsr::I<std::complex<double>, Dim> z =
+        tenex::evaluate<ti::I>(x(ti::I) + i * y(ti::I));
+    // [te_example_complex_double]
+    CHECK_ITERABLE_APPROX(z, expected_result);
+  } else if constexpr (std::is_same_v<RealDataType, DataVector>) {
+    // [te_example_complex_vector]
+    tnsr::I<ComplexDataVector, Dim> z =
+        tenex::evaluate<ti::I>(x(ti::I) + i * y(ti::I));
+    // [te_example_complex_vector]
+    CHECK_ITERABLE_APPROX(z, expected_result);
+  }
 }
 
 template <typename Generator, typename DataType>
