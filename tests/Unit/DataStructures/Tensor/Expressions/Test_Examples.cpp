@@ -236,8 +236,7 @@ void test_specify_lhs_symmetry(
   const auto R = make_with_random_values<tnsr::a<DataType, Dim>>(
       generator, distribution, used_for_size);
 
-  auto expected_result =
-      make_with_value<tnsr::aa<DataType, Dim>>(used_for_size, 0.0);
+  tnsr::aa<DataType, Dim> expected_result{};
   for (size_t a = 0; a < Dim + 1; a++) {
     for (size_t b = a; b < Dim + 1; b++) {
       expected_result.get(a, b) = R.get(a) * R.get(b);
@@ -351,7 +350,7 @@ void test_lhs_spatial_and_time_indices(
 
   // note: there are more efficient ways to implement this equation, but
   // choosing the simplest to read and write
-  tnsr::aa<DataType, 3> expected_result{used_for_size};
+  tnsr::aa<DataType, 3> expected_result{};
   for (size_t i = 0; i < Dim; i++) {
     for (size_t j = i; j < Dim; j++) {
       expected_result.get(i + 1, j + 1) = spatial_metric.get(i, j);
