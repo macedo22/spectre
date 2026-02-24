@@ -30,11 +30,11 @@ void test_evaluate(const gsl::not_null<Generator*> generator,
   const auto g = make_with_random_values<tnsr::AA<DataType, Dim>>(
       generator, distribution, used_for_size);
 
-  auto expected_result =
-      make_with_value<tnsr::Ab<DataType, Dim>>(used_for_size, 0.0);
+  tnsr::Ab<DataType, Dim> expected_result{};
   for (size_t c = 0; c < Dim + 1; c++) {
     for (size_t b = 0; b < Dim + 1; b++) {
-      for (size_t a = 0; a < Dim + 1; a++) {
+      expected_result.get(c, b) = R.get(0, b) * g.get(0, c);
+      for (size_t a = 1; a < Dim + 1; a++) {
         expected_result.get(c, b) += R.get(a, b) * g.get(a, c);
       }
     }
@@ -108,9 +108,8 @@ void test_basic_operations(const gsl::not_null<Generator*> generator,
     auto L = tenex::evaluate(U(ti::A, ti::a));
     // [te_example_contraction_to_scalar]
 
-    auto expected_result =
-        make_with_value<Scalar<DataType>>(used_for_size, 0.0);
-    for (size_t a = 0; a < Dim + 1; a++) {
+    Scalar<DataType> expected_result{get<0, 0>(U)};
+    for (size_t a = 1; a < Dim + 1; a++) {
       get(expected_result) += U.get(a, a);
     }
 
@@ -121,10 +120,10 @@ void test_basic_operations(const gsl::not_null<Generator*> generator,
     auto L = tenex::evaluate<ti::B>(V(ti::a, ti::B, ti::A));
     // [te_example_contraction_to_tensor]
 
-    auto expected_result =
-        make_with_value<tnsr::A<DataType, Dim>>(used_for_size, 0.0);
+    tnsr::A<DataType, Dim> expected_result{};
     for (size_t b = 0; b < Dim + 1; b++) {
-      for (size_t a = 0; a < Dim + 1; a++) {
+      expected_result.get(b) = V.get(0, b, 0);
+      for (size_t a = 1; a < Dim + 1; a++) {
         expected_result.get(b) += V.get(a, b, a);
       }
     }
@@ -136,9 +135,8 @@ void test_basic_operations(const gsl::not_null<Generator*> generator,
     auto L = tenex::evaluate(G(ti::a) * H(ti::A));
     // [te_example_inner_product]
 
-    auto expected_result =
-        make_with_value<Scalar<DataType>>(used_for_size, 0.0);
-    for (size_t a = 0; a < Dim + 1; a++) {
+    Scalar<DataType> expected_result{get<0>(G) * get<0>(H)};
+    for (size_t a = 1; a < Dim + 1; a++) {
       get(expected_result) += G.get(a) * H.get(a);
     }
 
@@ -150,11 +148,11 @@ void test_basic_operations(const gsl::not_null<Generator*> generator,
                                            U(ti::A, ti::b));
     // [te_example_inner_and_outer_product]
 
-    auto expected_result =
-        make_with_value<tnsr::ab<DataType, Dim>>(used_for_size, 0.0);
+    tnsr::ab<DataType, Dim> expected_result{};
     for (size_t c = 0; c < Dim + 1; c++) {
       for (size_t b = 0; b < Dim + 1; b++) {
-        for (size_t a = 0; a < Dim + 1; a++) {
+        expected_result.get(c, b) = get<0>(G) * G.get(c) * U.get(0, b);
+        for (size_t a = 1; a < Dim + 1; a++) {
           expected_result.get(c, b) += G.get(a) * G.get(c) * U.get(a, b);
         }
         expected_result.get(c, b) *= get(T);
@@ -189,7 +187,6 @@ void test_basic_operations(const gsl::not_null<Generator*> generator,
 
     CHECK_ITERABLE_APPROX(L, expected_result);
   }
-
   {
     // [te_example_division_by_tensor_expression]
     auto L = tenex::evaluate(5.0 / (U(ti::A, ti::a) + 1.0));
@@ -219,9 +216,8 @@ void test_basic_operations(const gsl::not_null<Generator*> generator,
     auto L = tenex::evaluate(sqrt(G(ti::a) * H(ti::A)));
     // [te_example_square_root_inner_product]
 
-    auto expected_result =
-        make_with_value<Scalar<DataType>>(used_for_size, 0.0);
-    for (size_t a = 0; a < Dim + 1; a++) {
+    Scalar<DataType> expected_result{get<0>(G) * get<0>(H)};
+    for (size_t a = 1; a < Dim + 1; a++) {
       get(expected_result) += G.get(a) * H.get(a);
     }
     get(expected_result) = sqrt(get(expected_result));
