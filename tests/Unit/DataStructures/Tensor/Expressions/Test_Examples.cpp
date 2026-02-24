@@ -1,6 +1,9 @@
 // Distributed under the MIT License.
 // See LICENSE.txt for details.
 
+// \file
+// Defines and tests examples for how to use `TensorExpression`s
+
 #include "Framework/TestingFramework.hpp"
 
 #include <complex>
@@ -19,6 +22,7 @@
 #include "Utilities/MakeWithValue.hpp"
 
 namespace {
+// test `tenex::evaluate()`
 template <typename Generator, typename DataType>
 void test_evaluate(const gsl::not_null<Generator*> generator,
                    const std::uniform_real_distribution<>& distribution,
@@ -57,6 +61,7 @@ void test_evaluate(const gsl::not_null<Generator*> generator,
   }
 }
 
+// tests arithmetric operations
 template <typename Generator, typename DataType>
 void test_basic_operations(const gsl::not_null<Generator*> generator,
                            const std::uniform_real_distribution<>& distribution,
@@ -236,6 +241,7 @@ void test_basic_operations(const gsl::not_null<Generator*> generator,
   }
 }
 
+// tests LHS symmetry deduction and override by user
 template <typename Generator, typename DataType>
 void test_specify_lhs_symmetry(
     const gsl::not_null<Generator*> generator,
@@ -276,6 +282,7 @@ void test_specify_lhs_symmetry(
   }
 }
 
+// tests assignment of a RHS number to a LHS tensor
 void test_assign_number() {
   {
     // [te_example_assign_number_to_tensor_of_numbers]
@@ -302,6 +309,7 @@ void test_assign_number() {
   }
 }
 
+// tests usage of spatial and time indices for spacetime indices on the RHS
 template <typename Generator, typename DataType>
 void test_rhs_spatial_and_time_indices(
     const gsl::not_null<Generator*> generator, const DataType& used_for_size) {
@@ -332,6 +340,7 @@ void test_rhs_spatial_and_time_indices(
   CHECK_ITERABLE_APPROX(lapse, expected_result);
 }
 
+// tests usage of spatial and time indices for spacetime indices on the LHS
 template <typename Generator, typename DataType>
 void test_lhs_spatial_and_time_indices(
     const gsl::not_null<Generator*> generator,
@@ -385,6 +394,7 @@ void test_lhs_spatial_and_time_indices(
   CHECK_ITERABLE_APPROX(spacetime_metric, expected_result);
 }
 
+// tests using real-valued and complex-valued terms in the RHS expression
 template <typename Generator, typename RealDataType>
 void test_complex(const gsl::not_null<Generator*> generator,
                   const std::uniform_real_distribution<>& distribution,
@@ -437,6 +447,7 @@ void test_complex(const gsl::not_null<Generator*> generator,
   }
 }
 
+// runs all example tests (see individual functions)
 template <typename Generator, typename DataType>
 void test_examples(const gsl::not_null<Generator*> generator,
                    const std::uniform_real_distribution<>& distribution,
