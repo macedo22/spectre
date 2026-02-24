@@ -104,9 +104,9 @@ void test_basic_operations(const gsl::not_null<Generator*> generator,
     CHECK_ITERABLE_APPROX(L, expected_result);
   }
   {
-    // [te_example_contraction_1]
+    // [te_example_contraction_to_scalar]
     auto L = tenex::evaluate(U(ti::A, ti::a));
-    // [te_example_contraction_1]
+    // [te_example_contraction_to_scalar]
 
     auto expected_result =
         make_with_value<Scalar<DataType>>(used_for_size, 0.0);
@@ -117,9 +117,9 @@ void test_basic_operations(const gsl::not_null<Generator*> generator,
     CHECK_ITERABLE_APPROX(L, expected_result);
   }
   {
-    // [te_example_contraction_2]
+    // [te_example_contraction_to_tensor]
     auto L = tenex::evaluate<ti::B>(V(ti::a, ti::B, ti::A));
-    // [te_example_contraction_2]
+    // [te_example_contraction_to_tensor]
 
     auto expected_result =
         make_with_value<tnsr::A<DataType, Dim>>(used_for_size, 0.0);
