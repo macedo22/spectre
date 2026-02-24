@@ -383,35 +383,47 @@ void test_complex(const gsl::not_null<Generator*> generator,
   static_assert(std::is_same_v<RealDataType, double> or
                 std::is_same_v<RealDataType, DataVector>);
 
-  using ComplexDataType =
-      std::conditional_t<std::is_same_v<RealDataType, double>,
-                         std::complex<double>, ComplexDataVector>;
   constexpr size_t Dim = 3;
-
-  const auto x = make_with_random_values<tnsr::I<RealDataType, Dim>>(
-      generator, distribution, used_for_size);
-  const auto y = make_with_random_values<tnsr::I<RealDataType, Dim>>(
-      generator, distribution, used_for_size);
-  const std::complex<double> i{0.0, 1.0};
-
-  tnsr::I<ComplexDataType, 3> expected_result{used_for_size};
-
-  get<0>(expected_result) = get<0>(x) + i * get<0>(y);
-  for (size_t j = 1; j < Dim; j++) {
-    expected_result.get(j) = x.get(j) + i * y.get(j);
-  }
 
   if constexpr (std::is_same_v<RealDataType, double>) {
     // [te_example_complex_double]
+    const auto x = make_with_random_values<tnsr::I<double, Dim>>(
+        generator, distribution, used_for_size);
+    const auto y = make_with_random_values<tnsr::I<double, Dim>>(
+        generator, distribution, used_for_size);
+    const std::complex<double> i{0.0, 1.0};
+
     tnsr::I<std::complex<double>, Dim> z =
         tenex::evaluate<ti::I>(x(ti::I) + i * y(ti::I));
     // [te_example_complex_double]
+
+    tnsr::I<std::complex<double>, Dim> expected_result{};
+
+    get<0>(expected_result) = get<0>(x) + i * get<0>(y);
+    for (size_t j = 1; j < Dim; j++) {
+      expected_result.get(j) = x.get(j) + i * y.get(j);
+    }
+
     CHECK_ITERABLE_APPROX(z, expected_result);
   } else if constexpr (std::is_same_v<RealDataType, DataVector>) {
     // [te_example_complex_vector]
+    const auto x = make_with_random_values<tnsr::I<DataVector, Dim>>(
+        generator, distribution, used_for_size);
+    const auto y = make_with_random_values<tnsr::I<DataVector, Dim>>(
+        generator, distribution, used_for_size);
+    const std::complex<double> i{0.0, 1.0};
+
     tnsr::I<ComplexDataVector, Dim> z =
         tenex::evaluate<ti::I>(x(ti::I) + i * y(ti::I));
     // [te_example_complex_vector]
+
+    tnsr::I<ComplexDataVector, Dim> expected_result{};
+
+    get<0>(expected_result) = get<0>(x) + i * get<0>(y);
+    for (size_t j = 1; j < Dim; j++) {
+      expected_result.get(j) = x.get(j) + i * y.get(j);
+    }
+
     CHECK_ITERABLE_APPROX(z, expected_result);
   }
 }
@@ -422,10 +434,10 @@ void test_examples(const gsl::not_null<Generator*> generator,
                    const DataType& used_for_size) {
   test_evaluate(generator, distribution, used_for_size);
   test_basic_operations(generator, distribution, used_for_size);
-  test_complex(generator, distribution, used_for_size);
   test_specify_lhs_symmetry(generator, distribution, used_for_size);
   test_rhs_spatial_and_time_indices(generator, used_for_size);
   test_lhs_spatial_and_time_indices(generator, distribution, used_for_size);
+  test_complex(generator, distribution, used_for_size);
 
   if constexpr (std::is_same_v<DataType, double>) {
     test_assign_number();
