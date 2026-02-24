@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <limits>
 #include <random>
+#include <type_traits>
 
 #include "DataStructures/ComplexDataVector.hpp"
 #include "DataStructures/DataVector.hpp"
