@@ -329,8 +329,25 @@ Currently supported underlying data types for `Tensor` terms:
 Support for more types can be added.
 
 ## Operations {#te_operation_support}
-It's possible for terms in the expression to have different data types. The
-following table shows the data type that results from performing a binary
+It's possible for terms in the RHS expression to have different data types. The
+mixture of `double`s and `Tensor<double>`s is shown in the
+[subtraction example](#te_addition_and_subtraction) and the
+[division examples](#te_division).
+
+It's also possible for terms to be a mixture of both real-valued and
+complex-valued numbers or `Tensor`s. For example, we can compute
+\f$z^i = x^i + i y*i\f$, where \f$x\f$ and \f$y\f$ are real-valued `Tensor`s,
+`i` is a `std::complex<double>`, and \f$z\f$ is a complex-valued `Tensor`.
+
+\snippet Expressions/Test_Examples.cpp te_example_complex_vector
+
+In the above example, a `std::complex<double>` is multiplied by a
+`Tensor<DataVector>`, which can be thought to have an "intermediate" type
+`Tensor<ComplexDataVector>`, and then a `Tensor<DataVector>` is added to that
+intermediate `Tensor<ComplexDataVector>` to yield the resulting type,
+`Tensor<ComplexdataVector>`.
+
+The following table shows the data type that results from performing a binary
 operation (`+`, `-`, `*`, `/`) between two terms of given data types:
 
 <table>
@@ -410,14 +427,9 @@ operation (`+`, `-`, `*`, `/`) between two terms of given data types:
   </tr>
 </table>
 
-For example, if `R` is a `Tensor<DataVector, ...>` and `S` is a
-`Tensor<ComplexDataVector, ...>`, `L` will be a
-`Tensor<ComplexDataVector, ...>`:
-```
-auto L = tenex::evaluate<ti::a>(R(ti::a) - S(ti::a));
-```
-
-<strong>\* Note:</strong> The only binary operation that is supported between
-`std::complex<double>` and `Tensor<DataVector>` is multiplication. This is
-because Blaze does not support addition, subtraction, nor division between
-`std::complex<double>` and `DataVector`.
+\parblock
+\note The only binary operation that is supported between `std::complex<double>`
+and `Tensor<DataVector>` is multiplication. This is because Blaze does not
+support addition, subtraction, nor division between `std::complex<double>` and
+`DataVector`.
+\endparblock
