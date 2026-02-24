@@ -61,7 +61,7 @@ this isn't the case for all equations and we would like to have a unified
 interface. See [this example](#te_specify_lhs_symmetry), which demonstrates a
 case where you might want to specify the LHS symmetry and where the LHS index
 order would not be deducible.
-- **[Assigning subsets of components](#te_assigning_subsets_of_components)**
+- **[Using spatial and time indices on LHS spacetime indices](#te_spatial_time_index_lhs)**
 
 ## Tensor indices {#te_tensor_indices}
 
@@ -207,7 +207,7 @@ different depending on the underlying data type of your `Tensor`:
 See [supported number types](#te_data_type_support) for the data types that the
 RHS number can be.
 
-### Using spatial and time indices on spacetime indices {#te_spatial_time_index}
+### Using spatial and time indices on RHS spacetime indices {#te_spatial_time_index_rhs}
 If a `Tensor` has spacetime indices, you can use generic spatial indices and
 concrete time indices to refer to a subset of the components, as we see in
 literature.
@@ -219,7 +219,7 @@ Lapse \f$\alpha\f$ computed from the spacetime metric \f$g_{ab}\f$ and shift
 
 \snippet Expressions/Test_Examples.cpp te_example_rhs_spatial_and_time_indices
 
-### Assigning subsets of tensor components {#te_assigning_subsets_of_components}
+### Using spatial and time indices on LHS spacetime indices {#te_spatial_time_index_lhs}
 Related to the previous example, you can also use generic spatial indices and
 concrete time indices for the spacetime indices of the LHS `Tensor` to assign
 subsets of the LHS `Tensor`'s components.
