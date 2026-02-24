@@ -30,11 +30,11 @@ void test_evaluate(const gsl::not_null<Generator*> generator,
   const auto g = make_with_random_values<tnsr::AA<DataType, Dim>>(
       generator, distribution, used_for_size);
 
-  auto expected_result =
-      make_with_value<tnsr::Ab<DataType, Dim>>(used_for_size, 0.0);
+  tnsr::Ab<DataType, Dim> expected_result{};
   for (size_t c = 0; c < Dim + 1; c++) {
     for (size_t b = 0; b < Dim + 1; b++) {
-      for (size_t a = 0; a < Dim + 1; a++) {
+      expected_result.get(c, b) = R.get(0, b) * g.get(0, c);
+      for (size_t a = 1; a < Dim + 1; a++) {
         expected_result.get(c, b) += R.get(a, b) * g.get(a, c);
       }
     }
@@ -55,6 +55,176 @@ void test_evaluate(const gsl::not_null<Generator*> generator,
     // [te_example_evaluate_lhs_arg]
     CHECK_ITERABLE_APPROX(R_up, expected_result);
   }
+}
+
+template <typename DataType, size_t Dim>
+void test_addition(const tnsr::ab<DataType, Dim>& R,
+                   const tnsr::ab<DataType, Dim>& S) {
+  // [te_example_addition]
+  auto L = tenex::evaluate<ti::a, ti::b>(R(ti::a, ti::b) + S(ti::b, ti::a));
+  // [te_example_addition]
+
+  tnsr::ab<DataType, Dim> expected_result{};
+  for (size_t a = 0; a < Dim + 1; a++) {
+    for (size_t b = 0; b < Dim + 1; b++) {
+      expected_result.get(a, b) = R.get(a, b) + S.get(b, a);
+    }
+  }
+
+  CHECK_ITERABLE_APPROX(L, expected_result);
+}
+
+template <typename DataType>
+void test_subtraction(const Scalar<DataType>& T) {
+  // [te_example_subtraction]
+  auto L = tenex::evaluate(1.0 - T());
+  // [te_example_subtraction]
+
+  const Scalar<DataType> expected_result{1.0 - get(T)};
+
+  CHECK_ITERABLE_APPROX(L, expected_result);
+}
+
+template <typename DataType, size_t Dim>
+void test_contraction_to_scalar(const tnsr::Ab<DataType, Dim>& U) {
+  // [te_example_contraction_to_scalar]
+  auto L = tenex::evaluate(U(ti::A, ti::a));
+  // [te_example_contraction_to_scalar]
+
+  Scalar<DataType> expected_result{get<0, 0>(U)};
+  for (size_t a = 1; a < Dim + 1; a++) {
+    get(expected_result) += U.get(a, a);
+  }
+
+  CHECK_ITERABLE_APPROX(L, expected_result);
+}
+
+template <typename DataType, size_t Dim>
+void test_contraction_to_tensor(const tnsr::aBC<DataType, Dim>& V) {
+  // [te_example_contraction_to_tensor]
+  auto L = tenex::evaluate<ti::B>(V(ti::a, ti::B, ti::A));
+  // [te_example_contraction_to_tensor]
+
+  tnsr::A<DataType, Dim> expected_result{};
+  for (size_t b = 0; b < Dim + 1; b++) {
+    expected_result.get(b) = V.get(0, b, 0);
+    for (size_t a = 1; a < Dim + 1; a++) {
+      expected_result.get(b) += V.get(a, b, a);
+    }
+  }
+
+  CHECK_ITERABLE_APPROX(L, expected_result);
+}
+
+template <typename DataType, size_t Dim>
+void test_inner_product(const tnsr::a<DataType, Dim>& G,
+                        const tnsr::A<DataType, Dim>& H) {
+  // [te_example_inner_product]
+  auto L = tenex::evaluate(G(ti::a) * H(ti::A));
+  // [te_example_inner_product]
+
+  Scalar<DataType> expected_result{get<0>(G) * get<0>(H)};
+  for (size_t a = 1; a < Dim + 1; a++) {
+    get(expected_result) += G.get(a) * H.get(a);
+  }
+
+  CHECK_ITERABLE_APPROX(L, expected_result);
+}
+
+template <typename DataType, size_t Dim>
+void test_inner_and_outer_product(const Scalar<DataType>& T,
+                                  const tnsr::a<DataType, Dim>& G,
+                                  const tnsr::Ab<DataType, Dim>& U) {
+  // [te_example_inner_and_outer_product]
+  auto L = tenex::evaluate<ti::c, ti::b>(T() * G(ti::a) * G(ti::c) *
+                                         U(ti::A, ti::b));
+  // [te_example_inner_and_outer_product]
+
+  tnsr::ab<DataType, Dim> expected_result{};
+  for (size_t c = 0; c < Dim + 1; c++) {
+    for (size_t b = 0; b < Dim + 1; b++) {
+      expected_result.get(c, b) = get<0>(G) * G.get(c) * U.get(0, b);
+      for (size_t a = 1; a < Dim + 1; a++) {
+        expected_result.get(c, b) += G.get(a) * G.get(c) * U.get(a, b);
+      }
+      expected_result.get(c, b) *= get(T);
+    }
+  }
+
+  CHECK_ITERABLE_APPROX(L, expected_result);
+}
+
+template <typename DataType, size_t Dim>
+void test_division_by_number(const tnsr::a<DataType, Dim>& G) {
+  // [te_example_division_by_number]
+  auto L = tenex::evaluate<ti::a>(G(ti::a) / 2.0);
+  // [te_example_division_by_number]
+
+  tnsr::a<DataType, Dim> expected_result{};
+  for (size_t a = 0; a < Dim + 1; a++) {
+    expected_result.get(a) = G.get(a) / 2.0;
+  }
+
+  CHECK_ITERABLE_APPROX(L, expected_result);
+}
+
+template <typename DataType, size_t Dim>
+void test_division_by_tensor(const tnsr::ab<DataType, Dim>& R,
+                             const Scalar<DataType>& T) {
+  // [te_example_division_by_tensor]
+  auto L = tenex::evaluate<ti::b, ti::a>(R(ti::a, ti::b) / T());
+  // [te_example_division_by_tensor]
+
+  tnsr::ab<DataType, Dim> expected_result{};
+  for (size_t b = 0; b < Dim + 1; b++) {
+    for (size_t a = 0; a < Dim + 1; a++) {
+      expected_result.get(b, a) = R.get(a, b) / get(T);
+    }
+  }
+
+  CHECK_ITERABLE_APPROX(L, expected_result);
+}
+
+template <typename DataType, size_t Dim>
+void test_division_by_tensor_expression(const tnsr::Ab<DataType, Dim>& U) {
+  // [te_example_division_by_tensor_expression]
+  auto L = tenex::evaluate(5.0 / (U(ti::A, ti::a) + 1.0));
+  // [te_example_division_by_tensor_expression]
+
+  auto expected_result = make_with_value<Scalar<DataType>>(get<0, 0>(U), 1.0);
+  for (size_t a = 0; a < Dim + 1; a++) {
+    get(expected_result) += U.get(a, a);
+  }
+  get(expected_result) = 5.0 / get(expected_result);
+
+  CHECK_ITERABLE_APPROX(L, expected_result);
+}
+
+template <typename DataType>
+void test_square_root_tensor(const Scalar<DataType>& T) {
+  // [te_example_square_root_tensor]
+  auto L = tenex::evaluate(sqrt(T()));
+  // [te_example_square_root_tensor]
+
+  const Scalar<DataType> expected_result{sqrt(get(T))};
+
+  CHECK_ITERABLE_APPROX(L, expected_result);
+}
+
+template <typename DataType, size_t Dim>
+void test_square_root_inner_product(const tnsr::a<DataType, Dim>& G,
+                                    const tnsr::A<DataType, Dim>& H) {
+  // [te_example_square_root_inner_product]
+  auto L = tenex::evaluate(sqrt(G(ti::a) * H(ti::A)));
+  // [te_example_square_root_inner_product]
+
+  Scalar<DataType> expected_result{get<0>(G) * get<0>(H)};
+  for (size_t a = 1; a < Dim + 1; a++) {
+    get(expected_result) += G.get(a) * H.get(a);
+  }
+  get(expected_result) = sqrt(get(expected_result));
+
+  CHECK_ITERABLE_APPROX(L, expected_result);
 }
 
 template <typename Generator, typename DataType>
@@ -78,156 +248,17 @@ void test_basic_operations(const gsl::not_null<Generator*> generator,
   const auto H = make_with_random_values<tnsr::A<DataType, Dim>>(
       generator, distribution, used_for_size);
 
-  // addition
-  {
-    // [te_example_addition]
-    auto L = tenex::evaluate<ti::a, ti::b>(R(ti::a, ti::b) + S(ti::b, ti::a));
-    // [te_example_addition]
-
-    tnsr::ab<DataType, Dim> expected_result{};
-    for (size_t a = 0; a < Dim + 1; a++) {
-      for (size_t b = 0; b < Dim + 1; b++) {
-        expected_result.get(a, b) = R.get(a, b) + S.get(b, a);
-      }
-    }
-
-    CHECK_ITERABLE_APPROX(L, expected_result);
-  }
-  // subtraction
-  {
-    // [te_example_subtraction]
-    auto L = tenex::evaluate(1.0 - T());
-    // [te_example_subtraction]
-
-    const Scalar<DataType> expected_result{1.0 - get(T)};
-
-    CHECK_ITERABLE_APPROX(L, expected_result);
-  }
-  {
-    // [te_example_contraction_1]
-    auto L = tenex::evaluate(U(ti::A, ti::a));
-    // [te_example_contraction_1]
-
-    auto expected_result =
-        make_with_value<Scalar<DataType>>(used_for_size, 0.0);
-    for (size_t a = 0; a < Dim + 1; a++) {
-      get(expected_result) += U.get(a, a);
-    }
-
-    CHECK_ITERABLE_APPROX(L, expected_result);
-  }
-  {
-    // [te_example_contraction_2]
-    auto L = tenex::evaluate<ti::B>(V(ti::a, ti::B, ti::A));
-    // [te_example_contraction_2]
-
-    auto expected_result =
-        make_with_value<tnsr::A<DataType, Dim>>(used_for_size, 0.0);
-    for (size_t b = 0; b < Dim + 1; b++) {
-      for (size_t a = 0; a < Dim + 1; a++) {
-        expected_result.get(b) += V.get(a, b, a);
-      }
-    }
-
-    CHECK_ITERABLE_APPROX(L, expected_result);
-  }
-  {
-    // [te_example_inner_product]
-    auto L = tenex::evaluate(G(ti::a) * H(ti::A));
-    // [te_example_inner_product]
-
-    auto expected_result =
-        make_with_value<Scalar<DataType>>(used_for_size, 0.0);
-    for (size_t a = 0; a < Dim + 1; a++) {
-      get(expected_result) += G.get(a) * H.get(a);
-    }
-
-    CHECK_ITERABLE_APPROX(L, expected_result);
-  }
-  {
-    // [te_example_inner_and_outer_product]
-    auto L = tenex::evaluate<ti::c, ti::b>(T() * G(ti::a) * G(ti::c) *
-                                           U(ti::A, ti::b));
-    // [te_example_inner_and_outer_product]
-
-    auto expected_result =
-        make_with_value<tnsr::ab<DataType, Dim>>(used_for_size, 0.0);
-    for (size_t c = 0; c < Dim + 1; c++) {
-      for (size_t b = 0; b < Dim + 1; b++) {
-        for (size_t a = 0; a < Dim + 1; a++) {
-          expected_result.get(c, b) += G.get(a) * G.get(c) * U.get(a, b);
-        }
-        expected_result.get(c, b) *= get(T);
-      }
-    }
-
-    CHECK_ITERABLE_APPROX(L, expected_result);
-  }
-  {
-    // [te_example_division_by_number]
-    auto L = tenex::evaluate<ti::a>(G(ti::a) / 2.0);
-    // [te_example_division_by_number]
-
-    tnsr::a<DataType, Dim> expected_result{};
-    for (size_t a = 0; a < Dim + 1; a++) {
-      expected_result.get(a) = G.get(a) / 2.0;
-    }
-
-    CHECK_ITERABLE_APPROX(L, expected_result);
-  }
-  {
-    // [te_example_division_by_tensor]
-    auto L = tenex::evaluate<ti::b, ti::a>(R(ti::a, ti::b) / T());
-    // [te_example_division_by_tensor]
-
-    tnsr::ab<DataType, Dim> expected_result{};
-    for (size_t b = 0; b < Dim + 1; b++) {
-      for (size_t a = 0; a < Dim + 1; a++) {
-        expected_result.get(b, a) = R.get(a, b) / get(T);
-      }
-    }
-
-    CHECK_ITERABLE_APPROX(L, expected_result);
-  }
-
-  {
-    // [te_example_division_by_tensor_expression]
-    auto L = tenex::evaluate(5.0 / (U(ti::A, ti::a) + 1.0));
-    // [te_example_division_by_tensor_expression]
-
-    auto expected_result =
-        make_with_value<Scalar<DataType>>(used_for_size, 1.0);
-    for (size_t a = 0; a < Dim + 1; a++) {
-      get(expected_result) += U.get(a, a);
-    }
-    get(expected_result) = 5.0 / get(expected_result);
-
-    CHECK_ITERABLE_APPROX(L, expected_result);
-  }
-  // square root
-  {
-    // [te_example_square_root_tensor]
-    auto L = tenex::evaluate(sqrt(T()));
-    // [te_example_square_root_tensor]
-
-    const Scalar<DataType> expected_result{sqrt(get(T))};
-
-    CHECK_ITERABLE_APPROX(L, expected_result);
-  }
-  {
-    // [te_example_square_root_inner_product]
-    auto L = tenex::evaluate(sqrt(G(ti::a) * H(ti::A)));
-    // [te_example_square_root_inner_product]
-
-    auto expected_result =
-        make_with_value<Scalar<DataType>>(used_for_size, 0.0);
-    for (size_t a = 0; a < Dim + 1; a++) {
-      get(expected_result) += G.get(a) * H.get(a);
-    }
-    get(expected_result) = sqrt(get(expected_result));
-
-    CHECK_ITERABLE_APPROX(L, expected_result);
-  }
+  test_addition(R, S);
+  test_subtraction(T);
+  test_contraction_to_scalar(U);
+  test_contraction_to_tensor(V);
+  test_inner_product(G, H);
+  test_inner_and_outer_product(T, G, U);
+  test_division_by_number(G);
+  test_division_by_tensor(R, T);
+  test_division_by_tensor_expression(U);
+  test_square_root_tensor(T);
+  test_square_root_inner_product(G, H);
 }
 
 template <typename Generator, typename DataType>
