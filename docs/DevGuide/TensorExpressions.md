@@ -230,7 +230,9 @@ Spacetime metric \f$g_{ab}\f$ computed from the lapse \f$\alpha\f$, shift
 \f$\beta^i\f$, and spatial metric \f$\gamma_{ij}\f$:
 
 \f$g_{tt} = -\alpha^2 + \beta^m \beta^n \gamma_{mn}\f$
+
 \f$g_{ti} = \gamma_{mi} \beta^m\f$
+
 \f$g_{ij} = \gamma_{ij}\f$
 
 \snippet Expressions/Test_Examples.cpp te_example_lhs_spatial_and_time_indices
