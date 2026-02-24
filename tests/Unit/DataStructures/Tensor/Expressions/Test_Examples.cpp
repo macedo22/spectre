@@ -187,8 +187,8 @@ void test_basic_operations(const gsl::not_null<Generator*> generator,
   }
   {
     // [te_example_division_by_tensor]
-    auto L = tenex::evaluate<ti::b, ti::a>(R(ti::a, ti::b) / T());
-
+    auto L =
+        tenex::evaluate<ti::b, ti::a>(R(ti::a, ti::b) / T());
     // [te_example_division_by_tensor]
 
     tnsr::ab<DataType, Dim> expected_result{};
@@ -202,8 +202,8 @@ void test_basic_operations(const gsl::not_null<Generator*> generator,
   }
   {
     // [te_example_division_by_tensor_expression]
-    auto L = tenex::evaluate(5.0 / (U(ti::A, ti::a) + 1.0));
-
+    auto L =
+        tenex::evaluate(5.0 / (U(ti::A, ti::a) + 1.0));
     // [te_example_division_by_tensor_expression]
 
     auto expected_result =
@@ -218,8 +218,8 @@ void test_basic_operations(const gsl::not_null<Generator*> generator,
   // square root
   {
     // [te_example_square_root_tensor]
-    auto L = tenex::evaluate(sqrt(T()));
-
+    auto L =
+        tenex::evaluate(sqrt(T()));
     // [te_example_square_root_tensor]
 
     const Scalar<DataType> expected_result{sqrt(get(T))};
