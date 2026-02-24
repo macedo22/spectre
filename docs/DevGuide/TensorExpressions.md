@@ -129,11 +129,11 @@ In the following examples:
 ### Contraction of a single tensor {#te_contraction}
 \f$L = U^{a}{}_{a}\f$
 
-\snippet Expressions/Test_Examples.cpp te_example_contraction_to_scalar
+\snippet Expressions/Test_Examples.cpp te_example_contraction_1
 
 \f$L^b = V_{a}{}^{ba}\f$
 
-\snippet Expressions/Test_Examples.cpp te_example_contraction_to_tensor
+\snippet Expressions/Test_Examples.cpp te_example_contraction_2
 
 ### Inner and outer products {#te_products}
 \f$L = G_a H^{a}\f$
@@ -227,16 +227,9 @@ concrete time indices for the spacetime indices of the LHS `Tensor` to assign
 subsets of the LHS `Tensor`'s components.
 
 Spacetime metric \f$g_{ab}\f$ computed from the lapse \f$\alpha\f$, shift
-\f$\beta^i\f$, and spatial metric \f$\gamma_{ij}\f$:
+\f$\beta^I\f$, and spatial metric \f$\gamma_{ij}\f$:
 
 \snippet Expressions/Test_Examples.cpp te_example_lhs_spatial_and_time_indices
-
-\parblock
-\note The above example is for demonstration purposes only. In practice, you
-would want to avoid repeating computing the reused quantity
-\f$\beta^i \gamma_{ij}\f$ by e.g. storing the result of the reused quantity in
-a another variable.
-\endparblock
 
 ### Using the LHS Tensor in the RHS expression {#te_using_lhs_tensor_in_rhs}
 You can use the LHS `Tensor` in the RHS expression to emulate operations like
@@ -266,14 +259,12 @@ tenex::update<ti::a, ti::b>(
     make_not_null(&L), L(ti::b, ti::a) + 2.0 * S(ti::b, ti::a));
 ```
 
-\parblock
-\note It is not advised to use very large RHS expressions with
+**Note:** It is not advised to use very large RHS expressions with
 \ref tenex::update "update" because runtime performance does not scale well as
 the number of operations gets very large. This is because
 \ref tenex::evaluate "evaluate" breaks up large expressions into smaller ones,
 but \ref tenex::update "update" cannot. One way around this is to break up the
 expression and use more than one call to \ref tenex::update "update".
-\endparblock
 
 # Compile time math checks {#te_compile_time_math_checks}
 For all operations, mathematical legality is checked at compile time. The
