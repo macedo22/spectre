@@ -13,7 +13,9 @@ simply add this include to the top of your file:
 #include "DataStructures/Tensor/Tensor.hpp"
 ```
 The following guide assumes a basic understanding of the `Tensor` class and
-\ref tnsr "tnsr" type aliases.
+\ref tnsr "tnsr" type aliases. **RHS** refers to the right hand side expression
+that we wish to compute and **LHS** refers to the resulting left hand side
+tensor that stores the result of computing the RHS expression.
 
 # Syntax {#te_syntax}
 `TensorExpression`s are arithmetic expressions of `Tensor`s that can be
