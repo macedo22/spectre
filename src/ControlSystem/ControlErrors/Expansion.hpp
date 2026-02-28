@@ -16,7 +16,6 @@
 #include "Domain/Structure/ObjectLabel.hpp"
 #include "Options/String.hpp"
 #include "Parallel/GlobalCache.hpp"
-#include "Parallel/Printf/Printf.hpp"
 #include "Utilities/ErrorHandling/Assert.hpp"
 #include "Utilities/ProtocolHelpers.hpp"
 #include "Utilities/TMPL.hpp"
@@ -102,13 +101,6 @@ struct Expansion : tt::ConformsTo<protocols::ControlError> {
             cache)[0];
     const double current_position_of_A = get<center_A>(measurements)[0];
     const double current_position_of_B = get<center_B>(measurements)[0];
-
-    Parallel::printf("current_expansion_factor : %g\n",
-                     current_expansion_factor);
-    Parallel::printf("grid_position_of_A : %g\n", grid_position_of_A);
-    Parallel::printf("grid_position_of_B : %g\n", grid_position_of_B);
-    Parallel::printf("current_position_of_A : %g\n", current_position_of_A);
-    Parallel::printf("current_position_of_B : %g\n", current_position_of_B);
 
     // A is to the right of B in grid frame. To get positive differences,
     // take A - B
