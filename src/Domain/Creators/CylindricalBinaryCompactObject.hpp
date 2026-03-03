@@ -365,11 +365,6 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
   }
 
  private:
-  // Note that center_A_ and center_B_ are rotated with respect to the
-  // input centers (which are in the grid frame), so that we can
-  // construct the map in a frame where the centers are offset in the
-  // z direction.  At the end, there will be another rotation back to
-  // the grid frame (where the centers are offset in the x direction).
   std::array<double, 3> center_A_{};
   std::array<double, 3> center_B_{};
   double radius_A_{};
@@ -389,9 +384,8 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
   // to the value 0.99 used in SpEC, so that we reproduce SpEC's
   // domain decomposition.
   double cut_spheres_offset_factor_{0.99};
-  // z_cutting_plane_ is x_C in Eq. (A.9) of
-  // https://arxiv.org/abs/1206.3015 (but rotated to the z-axis).
-  double z_cutting_plane_{};
+  // x_C in Eq. (A.9) of https://arxiv.org/abs/1206.3015.
+  double cutting_plane_{};
   size_t number_of_blocks_{};
   size_t first_outer_shell_block{};
   std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>
