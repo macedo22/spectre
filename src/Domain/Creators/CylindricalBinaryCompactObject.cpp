@@ -449,7 +449,9 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   const std::array<double, 3> center_cutting_plane = {0.0, 0.0,
                                                       z_cutting_plane_};
 
-  constexpr size_t center_x_coord_index = 0;
+  constexpr size_t center_x_coord_index = 2;
+  const std::array<double, 3> center_A_in_z_axis = rotate_to_z_axis(center_A_);
+  const std::array<double, 3> center_B_in_z_axis = rotate_to_z_axis(center_B_);
 
   // The labels EA, EB, EE, etc are from Figure 20 of
   // https://arxiv.org/abs/1206.3015
@@ -464,16 +466,19 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // the EE spheres exist), and is the radius of the circle where the EB
   // sphere intersects the cutting plane.
   const std::array<double, 3> center_EA = {
-      0.0, 0.0, cut_spheres_offset_factor_ * center_A_[center_x_coord_index]};
+      0.0, 0.0,
+      cut_spheres_offset_factor_ * center_A_in_z_axis[center_x_coord_index]};
   const std::array<double, 3> center_EB = {
-      0.0, 0.0, center_B_[center_x_coord_index] * cut_spheres_offset_factor_};
-  const double radius_MB =
-      std::abs(cut_spheres_offset_factor_ * center_B_[center_x_coord_index] -
-               z_cutting_plane_);
+      0.0, 0.0,
+      center_B_in_z_axis[center_x_coord_index] * cut_spheres_offset_factor_};
+  const double radius_MB = std::abs(
+      cut_spheres_offset_factor_ * center_B_in_z_axis[center_x_coord_index] -
+      z_cutting_plane_);
   const double radius_EA =
-      sqrt(square(center_EA[2] - z_cutting_plane_) + square(radius_MB));
+      sqrt(square(center_EA[center_x_coord_index] - z_cutting_plane_) +
+           square(radius_MB));
   const double radius_EB =
-      sqrt(2.0) * std::abs(center_EB[2] - z_cutting_plane_);
+      sqrt(2.0) * std::abs(center_EB[center_x_coord_index] - z_cutting_plane_);
 
   // Construct vector<CoordMap>s that go from logical coordinates to
   // various blocks making up a unit right cylinder.  These blocks are
@@ -593,17 +598,18 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
 
   // Inner radius of the outer C shell, if it exists.
   // If it doesn't exist, then it is the same as the outer_radius_.
-  const double inner_radius_C = include_outer_sphere_
-                                    ? 3.0 * (center_A_[center_x_coord_index] -
-                                             center_B_[center_x_coord_index])
-                                    : outer_radius_;
+  const double inner_radius_C =
+      include_outer_sphere_ ? 3.0 * (center_A_in_z_axis[center_x_coord_index] -
+                                     center_B_in_z_axis[center_x_coord_index])
+                            : outer_radius_;
 
   // z_cut_CA_lower is the lower z_plane position for the CA endcap,
   // defined by https://arxiv.org/abs/1206.3015 in the bulleted list
   // after Eq. (A.19) EXCEPT that here we use a factor of 1.6 instead of 1.5
   // to put the plane farther from center_A.
   const double z_cut_CA_lower =
-      z_cutting_plane_ + 1.6 * (center_EA[2] - z_cutting_plane_);
+      z_cutting_plane_ +
+      1.6 * (center_EA[center_x_coord_index] - z_cutting_plane_);
   // z_cut_CA_upper is the upper z_plane position for the CA endcap,
   // which isn't defined in https://arxiv.org/abs/1206.3015 (because the
   // maps are different).  We choose this plane to make the maps
@@ -615,13 +621,13 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // maps are different).  We choose this plane to make the maps
   // less extreme.
   const double z_cut_EA_upper =
-      center_A_[center_x_coord_index] + 0.7 * outer_radius_A_;
+      center_A_in_z_axis[center_x_coord_index] + 0.7 * outer_radius_A_;
   // z_cut_EA_lower is the lower z_plane position for the EA endcap,
   // which isn't defined in https://arxiv.org/abs/1206.3015 (because the
   // maps are different).  We choose this plane to make the maps
   // less extreme.
   const double z_cut_EA_lower =
-      center_A_[center_x_coord_index] - 0.7 * outer_radius_A_;
+      center_A_in_z_axis[center_x_coord_index] - 0.7 * outer_radius_A_;
 
   // CA Filled Cylinder
   // 5 blocks: 0 thru 4
@@ -646,7 +652,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // EA Filled Cylinder
   // 5 blocks: 9 thru 13
   add_endcap_to_list_of_maps(
-      CoordinateMaps::UniformCylindricalEndcap(center_A_, center_EA,
+      CoordinateMaps::UniformCylindricalEndcap(center_A_in_z_axis, center_EA,
                                                outer_radius_A_, radius_EA,
                                                z_cut_EA_upper, z_cut_CA_lower),
       CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
@@ -656,8 +662,8 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   add_side_to_list_of_maps(
       // For some reason codecov complains about the next line.
       CoordinateMaps::UniformCylindricalSide(  // LCOV_EXCL_LINE
-          center_A_, center_EA, outer_radius_A_, radius_EA, z_cut_EA_upper,
-          z_cut_EA_lower, z_cut_CA_lower, z_cutting_plane_),
+          center_A_in_z_axis, center_EA, outer_radius_A_, radius_EA,
+          z_cut_EA_upper, z_cut_EA_lower, z_cut_CA_lower, z_cutting_plane_),
       CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
 
   // z_cut_CB_lower is the lower z_plane position for the CB endcap,
@@ -667,7 +673,8 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // Note here that 'lower' means 'farther from z=-infinity'
   // because we are on the -z side of the cutting plane.
   const double z_cut_CB_lower =
-      z_cutting_plane_ + 1.6 * (center_EB[2] - z_cutting_plane_);
+      z_cutting_plane_ +
+      1.6 * (center_EB[center_x_coord_index] - z_cutting_plane_);
   // z_cut_CB_upper is the upper z_plane position for the CB endcap,
   // which isn't defined in https://arxiv.org/abs/1206.3015 (because the
   // maps are different).  We choose this plane to make the maps
@@ -681,37 +688,38 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // less extreme.  Note here that 'upper' means 'closer to z=-infinity'
   // because we are on the -z side of the cutting plane.
   const double z_cut_EB_upper =
-      center_B_[center_x_coord_index] - 0.7 * outer_radius_B_;
+      center_B_in_z_axis[center_x_coord_index] - 0.7 * outer_radius_B_;
   // z_cut_EB_lower is the lower z_plane position for the EB endcap,
   // which isn't defined in https://arxiv.org/abs/1206.3015 (because the
   // maps are different).  We choose this plane to make the maps
   // less extreme. Note here that 'lower' means 'farther from z=-infinity'
   // because we are on the -z side of the cutting plane.
   const double z_cut_EB_lower =
-      center_B_[center_x_coord_index] + 0.7 * outer_radius_B_;
+      center_B_in_z_axis[center_x_coord_index] + 0.7 * outer_radius_B_;
 
   // EB Filled Cylinder
   // 5 blocks: 18 thru 22
   add_endcap_to_list_of_maps(
       CoordinateMaps::UniformCylindricalEndcap(
-          flip_about_xy_plane(center_B_), flip_about_xy_plane(center_EB),
-          outer_radius_B_, radius_EB, -z_cut_EB_upper, -z_cut_CB_lower),
+          flip_about_xy_plane(center_B_in_z_axis),
+          flip_about_xy_plane(center_EB), outer_radius_B_, radius_EB,
+          -z_cut_EB_upper, -z_cut_CB_lower),
       CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
 
   // EB Cylinder
   // 4 blocks: 23 thru 26
   add_side_to_list_of_maps(
       CoordinateMaps::UniformCylindricalSide(
-          flip_about_xy_plane(center_B_), flip_about_xy_plane(center_EB),
-          outer_radius_B_, radius_EB, -z_cut_EB_upper, -z_cut_EB_lower,
-          -z_cut_CB_lower, -z_cutting_plane_),
+          flip_about_xy_plane(center_B_in_z_axis),
+          flip_about_xy_plane(center_EB), outer_radius_B_, radius_EB,
+          -z_cut_EB_upper, -z_cut_EB_lower, -z_cut_CB_lower, -z_cutting_plane_),
       CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
 
   // MA Filled Cylinder
   // 5 blocks: 27 thru 31
   add_flat_endcap_to_list_of_maps(
       CoordinateMaps::UniformCylindricalFlatEndcap(
-          flip_about_xy_plane(center_A_),
+          flip_about_xy_plane(center_A_in_z_axis),
           flip_about_xy_plane(center_cutting_plane), outer_radius_A_, radius_MB,
           -z_cut_EA_lower),
       CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
@@ -720,7 +728,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   add_flat_endcap_to_list_of_maps(
       // For some reason codecov complains about the next line.
       CoordinateMaps::UniformCylindricalFlatEndcap(  // LCOV_EXCL_LINE
-          center_B_, center_cutting_plane, outer_radius_B_, radius_MB,
+          center_B_in_z_axis, center_cutting_plane, outer_radius_B_, radius_MB,
           z_cut_EB_lower),
       CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
 
@@ -743,66 +751,68 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
 
   if (include_inner_sphere_A_) {
     const double z_cut_upper =
-        center_A_[center_x_coord_index] + 0.7 * radius_A_;
+        center_A_in_z_axis[center_x_coord_index] + 0.7 * radius_A_;
     const double z_cut_lower =
-        center_A_[center_x_coord_index] - 0.7 * radius_A_;
+        center_A_in_z_axis[center_x_coord_index] - 0.7 * radius_A_;
     // InnerSphereEA Filled Cylinder
     // 5 blocks
     add_endcap_to_list_of_maps(
         // For some reason codecov complains about the next function.
         // LCOV_EXCL_START
-        CoordinateMaps::UniformCylindricalEndcap(center_A_, center_A_,
-                                                 radius_A_, outer_radius_A_,
-                                                 z_cut_upper, z_cut_EA_upper),
+        CoordinateMaps::UniformCylindricalEndcap(
+            center_A_in_z_axis, center_A_in_z_axis, radius_A_, outer_radius_A_,
+            z_cut_upper, z_cut_EA_upper),
         // LCOV_EXCL_START
         CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
     // InnerSphereMA Filled Cylinder
     // 5 blocks
     add_endcap_to_list_of_maps(
         CoordinateMaps::UniformCylindricalEndcap(
-            flip_about_xy_plane(center_A_), flip_about_xy_plane(center_A_),
-            radius_A_, outer_radius_A_, -z_cut_lower, -z_cut_EA_lower),
+            flip_about_xy_plane(center_A_in_z_axis),
+            flip_about_xy_plane(center_A_in_z_axis), radius_A_, outer_radius_A_,
+            -z_cut_lower, -z_cut_EA_lower),
         CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
     // InnerSphereEA Cylinder
     // 4 blocks
     add_side_to_list_of_maps(
         // For some reason codecov complains about the next line.
         CoordinateMaps::UniformCylindricalSide(  // LCOV_EXCL_LINE
-            center_A_, center_A_, radius_A_, outer_radius_A_, z_cut_upper,
-            z_cut_lower, z_cut_EA_upper, z_cut_EA_lower),
+            center_A_in_z_axis, center_A_in_z_axis, radius_A_, outer_radius_A_,
+            z_cut_upper, z_cut_lower, z_cut_EA_upper, z_cut_EA_lower),
         CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
   }
   if (include_inner_sphere_B_) {
     // Note here that 'upper' means 'closer to z=-infinity'
     // because we are on the -z side of the cutting plane.
     const double z_cut_upper =
-        center_B_[center_x_coord_index] - 0.7 * radius_B_;
+        center_B_in_z_axis[center_x_coord_index] - 0.7 * radius_B_;
     const double z_cut_lower =
-        center_B_[center_x_coord_index] + 0.7 * radius_B_;
+        center_B_in_z_axis[center_x_coord_index] + 0.7 * radius_B_;
     // InnerSphereEB Filled Cylinder
     // 5 blocks
     add_endcap_to_list_of_maps(
         CoordinateMaps::UniformCylindricalEndcap(
-            flip_about_xy_plane(center_B_), flip_about_xy_plane(center_B_),
-            radius_B_, outer_radius_B_, -z_cut_upper, -z_cut_EB_upper),
+            flip_about_xy_plane(center_B_in_z_axis),
+            flip_about_xy_plane(center_B_in_z_axis), radius_B_, outer_radius_B_,
+            -z_cut_upper, -z_cut_EB_upper),
         CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
     // InnerSphereMB Filled Cylinder
     // 5 blocks
     add_endcap_to_list_of_maps(
         // For some reason codecov complains about the next function.
         // LCOV_EXCL_START
-        CoordinateMaps::UniformCylindricalEndcap(center_B_, center_B_,
-                                                 radius_B_, outer_radius_B_,
-                                                 z_cut_lower, z_cut_EB_lower),
+        CoordinateMaps::UniformCylindricalEndcap(
+            center_B_in_z_axis, center_B_in_z_axis, radius_B_, outer_radius_B_,
+            z_cut_lower, z_cut_EB_lower),
         // LCOV_EXCL_STOP
         CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
     // InnerSphereEB Cylinder
     // 4 blocks
     add_side_to_list_of_maps(
         CoordinateMaps::UniformCylindricalSide(
-            flip_about_xy_plane(center_B_), flip_about_xy_plane(center_B_),
-            radius_B_, outer_radius_B_, -z_cut_upper, -z_cut_lower,
-            -z_cut_EB_upper, -z_cut_EB_lower),
+            flip_about_xy_plane(center_B_in_z_axis),
+            flip_about_xy_plane(center_B_in_z_axis), radius_B_, outer_radius_B_,
+            -z_cut_upper, -z_cut_lower, -z_cut_EB_upper, -z_cut_EB_lower),
         CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
   }
   if (include_outer_sphere_) {
@@ -872,10 +882,10 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   }
   excision_spheres.emplace(
       "ExcisionSphereA",
-      ExcisionSphere<3>{
-          radius_A_,
-          tnsr::I<double, 3, Frame::Grid>(rotate_from_z_to_x_axis(center_A_)),
-          abutting_directions_A});
+      ExcisionSphere<3>{radius_A_,
+                        tnsr::I<double, 3, Frame::Grid>(
+                            rotate_from_z_to_x_axis(center_A_in_z_axis)),
+                        abutting_directions_A});
 
   std::unordered_map<size_t, Direction<3>> abutting_directions_B;
   if (include_inner_sphere_B_) {
@@ -902,10 +912,10 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   }
   excision_spheres.emplace(
       "ExcisionSphereB",
-      ExcisionSphere<3>{
-          radius_B_,
-          tnsr::I<double, 3, Frame::Grid>(rotate_from_z_to_x_axis(center_B_)),
-          abutting_directions_B});
+      ExcisionSphere<3>{radius_B_,
+                        tnsr::I<double, 3, Frame::Grid>(
+                            rotate_from_z_to_x_axis(center_B_in_z_axis)),
+                        abutting_directions_B});
 
   Domain<3> domain{std::move(coordinate_maps), std::move(excision_spheres),
                    block_names_, block_groups_};
