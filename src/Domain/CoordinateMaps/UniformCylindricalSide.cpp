@@ -95,9 +95,9 @@ UniformCylindricalSide::UniformCylindricalSide(
   // Assumptions made in the map.  Some of these can be relaxed,
   // as long as the unit test is changed to test them.
   // The ASSERTS here match the ones in UniformCylindricalEndcap.
-//   ASSERT(radius_one >= 0.08 * radius_two,
-//          "Radius_one = " << radius_one << " must be >= 0.08 * radius_two ="
-//                          << 0.08 * radius_two);
+  ASSERT(radius_one >= 0.08 * radius_two,
+         "Radius_one = " << radius_one << " must be >= 0.08 * radius_two ="
+                         << 0.08 * radius_two);
   ASSERT(z_plane_plus_two == z_plane_plus_one or
              z_plane_plus_two >= z_plane_plus_one + 0.03 * radius_two,
          "z_plane_plus_two must be >= z_plane_plus_one "
