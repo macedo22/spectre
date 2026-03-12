@@ -14,6 +14,7 @@
 #include "Evolution/Systems/GeneralizedHarmonic/Constraints.hpp"
 #include "Evolution/Systems/GeneralizedHarmonic/Tags.hpp"
 #include "Options/ParseOptions.hpp"
+#include "Parallel/Printf/Printf.hpp"
 #include "PointwiseFunctions/GeneralRelativity/GeneralizedHarmonic/ExtrinsicCurvature.hpp"
 #include "PointwiseFunctions/GeneralRelativity/InterfaceNullNormal.hpp"
 #include "PointwiseFunctions/GeneralRelativity/InverseSpacetimeMetric.hpp"
@@ -372,6 +373,14 @@ std::optional<std::string> ConstraintPreservingBjorhus<Dim>::dg_time_derivative(
     // moving grids, eg a rotating sphere, with some leeway for
     // floating-point errors.
     if (max(radial_mesh_velocity) > 1.e-10) {
+      Parallel::printf(
+          "Radial mesh velocity points in direction of outward normal.\n"
+          "The max is for this element is %g.\n"
+          "The radial_mesh_velocity values are:\n%s\n"
+          "The face_mesh_velocity values are:\n%s\n"
+          "The normal_covector values are:\n%s\n\n",
+          max(radial_mesh_velocity), radial_mesh_velocity, face_mesh_velocity,
+          normal_covector);
       return {
           "We found the radial mesh velocity points in the direction "
           "of the outward normal, i.e. we possibly have an expanding "
