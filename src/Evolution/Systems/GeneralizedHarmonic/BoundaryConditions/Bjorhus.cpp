@@ -371,7 +371,7 @@ std::optional<std::string> ConstraintPreservingBjorhus<Dim>::dg_time_derivative(
     // we use 1e-10 instead of 0 below to allow for purely tangentially
     // moving grids, eg a rotating sphere, with some leeway for
     // floating-point errors.
-    if (max(radial_mesh_velocity) > 1.e-6) {
+    if (max(radial_mesh_velocity) > 1.e-8) {
       return {
           "We found the radial mesh velocity points in the direction "
           "of the outward normal, i.e. we possibly have an expanding "
