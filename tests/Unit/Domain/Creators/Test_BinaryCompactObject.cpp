@@ -203,6 +203,7 @@ void test_connectivity() {
           radial_partitioning_outer_shells,
           variant_radial_distribution_outer_shells,
           opening_angle,
+          false,
           std::nullopt,
           with_boundary_conditions ? create_outer_boundary_condition()
                                    : nullptr};
@@ -334,7 +335,7 @@ void test_connectivity() {
                                                         : cube_scales[0],
                 refinement, grid_points, use_equiangular_map,
                 radial_distribution_envelope, radial_partitioning_outer_shells,
-                variant_radial_distribution_outer_shells, opening_angle,
+                variant_radial_distribution_outer_shells, opening_angle, false,
                 std::nullopt, std::make_unique<PeriodicBc>(),
                 Options::Context{false, {}, 1, 1}),
             Catch::Matchers::ContainsSubstring(
@@ -362,7 +363,7 @@ void test_connectivity() {
                   radial_distribution_envelope,
                   radial_partitioning_outer_shells,
                   variant_radial_distribution_outer_shells, opening_angle,
-                  std::nullopt, create_outer_boundary_condition(),
+                  false, std::nullopt, create_outer_boundary_condition(),
                   Options::Context{false, {}, 1, 1}),
               Catch::Matchers::ContainsSubstring(
                   "Cannot have periodic boundary "
@@ -390,7 +391,8 @@ void test_connectivity() {
                   radial_distribution_envelope,
                   radial_partitioning_outer_shells,
                   variant_radial_distribution_outer_shells, opening_angle,
-                  std::nullopt, nullptr, Options::Context{false, {}, 1, 1}),
+                  false, std::nullopt, nullptr,
+                  Options::Context{false, {}, 1, 1}),
               Catch::Matchers::ContainsSubstring(
                   "Must specify either both inner and outer boundary "
                   "conditions or neither."));
@@ -415,7 +417,7 @@ void test_connectivity() {
                   radial_distribution_envelope,
                   radial_partitioning_outer_shells,
                   variant_radial_distribution_outer_shells, opening_angle,
-                  std::nullopt, create_outer_boundary_condition(),
+                  false, std::nullopt, create_outer_boundary_condition(),
                   Options::Context{false, {}, 1, 1}),
               Catch::Matchers::ContainsSubstring(
                   "Must specify either both inner and outer boundary "
@@ -526,7 +528,8 @@ std::string create_option_string(
          "    RadialDistribution: " +
          (excise_B ? "[Logarithmic, Linear]" : "Linear") + "\n" +
          "    OpeningAngle: " + std::to_string(opening_angle) + "\n" +
-         outer_boundary_condition + "  InitialRefinement:\n" +
+         "    UseSphericalHarmonics: false\n" + outer_boundary_condition +
+         "  InitialRefinement:\n" +
          (excise_A ? "" : "    ObjectAInterior: [1, 1, 1]\n") +
          (excise_B ? "" : "    ObjectBInterior: [1, 1, 1]\n") +
          "    ObjectAShell: [1, 1, " +
@@ -600,6 +603,7 @@ void test_bns_domain_with_cubes() {
         std::vector<double>{0.49 * (envelope_radius + outer_radius)},
         radial_distribution_outer_shell,
         opening_angle,
+        false,
         std::nullopt,
         create_outer_boundary_condition()};
 
@@ -813,7 +817,7 @@ void test_parse_errors() {
           Object{0.3, 0.8, -1.0, {{create_inner_boundary_condition()}}, false},
           std::array<double, 2>{{0.1, 0.2}}, 25.5, 32.4, 1.0, 2_st, 6_st, true,
           Distribution::Projective, std::vector<double>{20.0},
-          Distribution::Linear, 120.0, std::nullopt,
+          Distribution::Linear, 120.0, false, std::nullopt,
           create_outer_boundary_condition(), Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring(
           "First radial partition must be larger than the envelope radius"));
@@ -823,7 +827,7 @@ void test_parse_errors() {
           Object{0.3, 0.8, -1.0, {{create_inner_boundary_condition()}}, false},
           std::array<double, 2>{{0.1, 0.2}}, 25.5, 32.4, 1.0, 2_st, 6_st, true,
           Distribution::Projective, std::vector<double>{40.0},
-          Distribution::Linear, 120.0, std::nullopt,
+          Distribution::Linear, 120.0, false, std::nullopt,
           create_outer_boundary_condition(), Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring(
           "Last radial partition must be smaller than the outer radius"));
@@ -833,7 +837,7 @@ void test_parse_errors() {
           Object{0.3, 0.8, -1.0, {{create_inner_boundary_condition()}}, false},
           std::array<double, 2>{{0.1, 0.2}}, 25.5, 32.4, 1.0, 2_st, 6_st, true,
           Distribution::Projective, std::vector<double>{28.0, 28.0},
-          Distribution::Linear, 120.0, std::nullopt,
+          Distribution::Linear, 120.0, false, std::nullopt,
           create_outer_boundary_condition(), Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring(
           "Radial partitioning contains duplicate element"));
@@ -843,7 +847,7 @@ void test_parse_errors() {
           Object{0.3, 0.8, -1.0, {{create_inner_boundary_condition()}}, false},
           std::array<double, 2>{{0.1, 0.2}}, 25.5, 32.4, 1.0, 2_st, 6_st, true,
           Distribution::Projective, std::vector<double>{28.0, 29.0},
-          std::vector{Distribution::Linear}, 120.0, std::nullopt,
+          std::vector{Distribution::Linear}, 120.0, false, std::nullopt,
           create_outer_boundary_condition(), Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring(
           "Specify a 'RadialDistribution' for every spherical shell."));
@@ -853,7 +857,7 @@ void test_parse_errors() {
           Object{0.3, 0.8, -1.0, {{create_inner_boundary_condition()}}, false},
           std::array<double, 2>{{0.1, 0.2}}, 25.5, 32.4, 1.0, 2_st, 6_st, true,
           Distribution::Projective, std::vector<double>{}, Distribution::Linear,
-          120.0, std::nullopt, create_outer_boundary_condition(),
+          120.0, false, std::nullopt, create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring(
           "The x-coordinate of ObjectA's center is expected to be positive."));
@@ -863,7 +867,7 @@ void test_parse_errors() {
           Object{0.3, 0.8, 1.0, {{create_inner_boundary_condition()}}, false},
           std::array<double, 2>{{0.1, 0.2}}, 25.5, 32.4, 1.0, 2_st, 6_st, true,
           Distribution::Projective, std::vector<double>{}, Distribution::Linear,
-          120.0, std::nullopt, create_outer_boundary_condition(),
+          120.0, false, std::nullopt, create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring(
           "The x-coordinate of ObjectB's center is expected to be negative."));
@@ -873,7 +877,7 @@ void test_parse_errors() {
           Object{0.5, 1.0, -7.0, {{create_inner_boundary_condition()}}, false},
           std::array<double, 2>{{0.1, 0.2}}, 25.5, 32.4, 1.0, 2_st, 6_st, true,
           Distribution::Projective, std::vector<double>{}, Distribution::Linear,
-          120.0, std::nullopt, create_outer_boundary_condition(),
+          120.0, false, std::nullopt, create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring(
           "The radius for the enveloping cube is too "
@@ -884,7 +888,7 @@ void test_parse_errors() {
           Object{0.5, 1.0, -7.0, {{create_inner_boundary_condition()}}, false},
           std::array<double, 2>{{0.1, 0.2}}, 25.5, 32.4, 0.5, 2_st, 6_st, true,
           Distribution::Projective, std::vector<double>{}, Distribution::Linear,
-          120.0, std::nullopt, create_outer_boundary_condition(),
+          120.0, false, std::nullopt, create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring(
           "The cube length should be greater than or equal to the initial "
@@ -895,7 +899,7 @@ void test_parse_errors() {
           Object{1.5, 0.8, -1.0, {{create_inner_boundary_condition()}}, false},
           std::array<double, 2>{{0.1, 0.2}}, 25.5, 32.4, 1.0, 2_st, 6_st, true,
           Distribution::Projective, std::vector<double>{}, Distribution::Linear,
-          120.0, std::nullopt, create_outer_boundary_condition(),
+          120.0, false, std::nullopt, create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring(
           "ObjectB's inner radius must be less than its outer radius."));
@@ -905,7 +909,7 @@ void test_parse_errors() {
           Object{0.5, 0.8, -1.0, {{create_inner_boundary_condition()}}, false},
           std::array<double, 2>{{0.1, 0.2}}, 25.5, 32.4, 1.0, 2_st, 6_st, true,
           Distribution::Projective, std::vector<double>{}, Distribution::Linear,
-          120.0, std::nullopt, create_outer_boundary_condition(),
+          120.0, false, std::nullopt, create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring(
           "ObjectA's inner radius must be less than its outer radius."));
@@ -915,7 +919,7 @@ void test_parse_errors() {
           Object{0.5, 0.8, -1.0, {{create_inner_boundary_condition()}}, false},
           std::array<double, 2>{{0.1, 0.2}}, 25.5, 32.4, 1.0, 2_st, 6_st, true,
           Distribution::Projective, std::vector<double>{}, Distribution::Linear,
-          120.0, std::nullopt, create_outer_boundary_condition(),
+          120.0, false, std::nullopt, create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring(
           "ObjectA's outer radius is too large for the given separation,  try "
@@ -926,7 +930,7 @@ void test_parse_errors() {
           Object{0.5, 1.0, -1.0, {{create_inner_boundary_condition()}}, false},
           std::array<double, 2>{{0.1, 0.2}}, 25.5, 32.4, 1.0, 2_st, 6_st, true,
           Distribution::Projective, std::vector<double>{}, Distribution::Linear,
-          120.0, std::nullopt, create_outer_boundary_condition(),
+          120.0, false, std::nullopt, create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring(
           "ObjectB's outer radius is too large for the given separation,  try "
@@ -937,7 +941,7 @@ void test_parse_errors() {
           Object{0.5, 0.8, -1.0, std::nullopt, true},
           std::array<double, 2>{{0.1, 0.2}}, 25.5, 32.4, 1.0, 2_st, true, 6_st,
           Distribution::Projective, std::vector<double>{}, Distribution::Linear,
-          120.0, std::nullopt, create_outer_boundary_condition(),
+          120.0, false, std::nullopt, create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring(
           "Using a logarithmically spaced radial grid in the "
@@ -949,7 +953,7 @@ void test_parse_errors() {
           Object{0.5, 0.8, -1.0, {{create_inner_boundary_condition()}}, false},
           std::array<double, 2>{{0.1, 0.2}}, 25.5, 32.4, 1.0, 2_st, 6_st, true,
           Distribution::Projective, std::vector<double>{}, Distribution::Linear,
-          120.0, std::nullopt, create_outer_boundary_condition(),
+          120.0, false, std::nullopt, create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring(
           "Using a logarithmically spaced radial grid in the "
@@ -969,7 +973,7 @@ void test_parse_errors() {
           std::array<double, 2>{{0.1, 0.2}}, 25.5, 32.4, 1.0,
           std::vector<std::array<size_t, 3>>{}, 6_st, true,
           Distribution::Projective, std::vector<double>{}, Distribution::Linear,
-          120.0, std::nullopt, create_outer_boundary_condition(),
+          120.0, false, std::nullopt, create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring("Invalid 'InitialRefinement'"));
   CHECK_THROWS_WITH(
@@ -978,9 +982,47 @@ void test_parse_errors() {
           Object{0.5, 0.8, -1.0, {{create_inner_boundary_condition()}}, false},
           std::array<double, 2>{{0.1, 0.2}}, 25.5, 32.4, 1.0, 2_st,
           std::vector<std::array<size_t, 3>>{}, true, Distribution::Projective,
-          std::vector<double>{}, Distribution::Linear, 120.0, std::nullopt,
-          create_outer_boundary_condition(), Options::Context{false, {}, 1, 1}),
+          std::vector<double>{}, Distribution::Linear, 120.0, false,
+          std::nullopt, create_outer_boundary_condition(),
+          Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring("Invalid 'InitialGridPoints'"));
+  // SphericalHarmonicsInWavezone PARSE_ERROR tests
+  CHECK_THROWS_WITH(
+      domain::creators::BinaryCompactObject(
+          Object{0.5, 0.8, 1.0, {{create_inner_boundary_condition()}}, false},
+          Object{0.3, 0.8, -1.0, {{create_inner_boundary_condition()}}, false},
+          std::array<double, 2>{{0.1, 0.2}}, 25.5, 32.4, 1.0, 2_st, 6_st, true,
+          Distribution::Projective, std::vector<double>{}, Distribution::Linear,
+          120.0, true, std::nullopt, create_outer_boundary_condition(),
+          Options::Context{false, {}, 1, 1}),
+      Catch::Matchers::ContainsSubstring(
+          "SphericalHarmonicsInWavezone is not yet fully implemented."));
+  CHECK_THROWS_WITH(
+      domain::creators::BinaryCompactObject(
+          Object{0.5, 0.8, 1.0, {{create_inner_boundary_condition()}}, false},
+          Object{0.3, 0.8, -1.0, {{create_inner_boundary_condition()}}, false},
+          std::array<double, 2>{{0.1, 0.2}}, 25.5, 32.4, 1.0, 2_st,
+          std::unordered_map<std::string, std::variant<std::array<size_t, 3>,
+                                                       std::array<size_t, 2>>>{
+              {"OuterShell", std::array<size_t, 2>{5, 4}}},
+          true, Distribution::Projective, std::vector<double>{},
+          Distribution::Linear, 120.0, false, std::nullopt,
+          create_outer_boundary_condition(), Options::Context{false, {}, 1, 1}),
+      Catch::Matchers::ContainsSubstring(
+          "only valid when SphericalHarmonicsInWavezone is enabled"));
+  CHECK_THROWS_WITH(
+      domain::creators::BinaryCompactObject(
+          Object{0.5, 0.8, 1.0, {{create_inner_boundary_condition()}}, false},
+          Object{0.3, 0.8, -1.0, {{create_inner_boundary_condition()}}, false},
+          std::array<double, 2>{{0.1, 0.2}}, 25.5, 32.4, 1.0,
+          std::unordered_map<std::string,
+                             std::variant<std::array<size_t, 3>, size_t>>{
+              {"OuterShell", size_t{2}}},
+          6_st, true, Distribution::Projective, std::vector<double>{},
+          Distribution::Linear, 120.0, false, std::nullopt,
+          create_outer_boundary_condition(), Options::Context{false, {}, 1, 1}),
+      Catch::Matchers::ContainsSubstring(
+          "only valid when SphericalHarmonicsInWavezone is enabled"));
   // Note: the boundary condition-related parse errors are checked in the
   // test_connectivity function.
 }
@@ -1018,6 +1060,7 @@ void test_kerr_horizon_conforming() {
       std::vector<double>{},
       Distribution::Inverse,
       120.,
+      false,
       domain::creators::bco::TimeDependentMapOptions<false>{
           0., std::nullopt, std::nullopt, std::nullopt, std::nullopt,
           HardcodedShape<domain::ObjectLabel::A>{

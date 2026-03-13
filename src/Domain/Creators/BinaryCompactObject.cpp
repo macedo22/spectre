@@ -45,6 +45,7 @@
 #include "Domain/Structure/ObjectLabel.hpp"
 #include "Options/ParseError.hpp"
 #include "Utilities/EqualWithinRoundoff.hpp"
+#include "Utilities/ErrorHandling/Error.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/MakeArray.hpp"
 
@@ -87,6 +88,7 @@ BinaryCompactObject<UseWorldtube>::BinaryCompactObject(
     const typename RadialDistributionOuterShell::type&
         radial_distribution_outer_shell,
     const double opening_angle_in_degrees,
+    const bool spherical_harmonics_in_wavezone,
     std::optional<bco::TimeDependentMapOptions<false>> time_dependent_options,
     std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>
         outer_boundary_condition,
@@ -113,7 +115,51 @@ BinaryCompactObject<UseWorldtube>::BinaryCompactObject(
       use_single_block_b_(
           std::holds_alternative<CartesianCubeAtXCoord>(object_B_)),
       time_dependent_options_(std::move(time_dependent_options)),
-      opening_angle_(M_PI * opening_angle_in_degrees / 180.0) {
+      opening_angle_(M_PI * opening_angle_in_degrees / 180.0),
+      spherical_harmonics_in_wavezone_(spherical_harmonics_in_wavezone) {
+  if (spherical_harmonics_in_wavezone_) {
+    PARSE_ERROR(context,
+                "SphericalHarmonicsInWavezone is not yet fully implemented.");
+  }
+  // Validate InitialGridPoints map entries
+  if (std::holds_alternative<
+          std::unordered_map<std::string, std::variant<std::array<size_t, 3>,
+                                                       std::array<size_t, 2>>>>(
+          initial_number_of_grid_points)) {
+    const auto& grid_points_map = std::get<
+        std::unordered_map<std::string, std::variant<std::array<size_t, 3>,
+                                                     std::array<size_t, 2>>>>(
+        initial_number_of_grid_points);
+    for (const auto& [block_name, extents] : grid_points_map) {
+      if (std::holds_alternative<std::array<size_t, 2>>(extents) and
+          not spherical_harmonics_in_wavezone_) {
+        PARSE_ERROR(
+            context,
+            "array<size_t, 2> grid points (block '"
+                << block_name
+                << "') are only valid when SphericalHarmonicsInWavezone "
+                   "is enabled.");
+      }
+    }
+  }
+  // Validate InitialRefinement map entries
+  if (std::holds_alternative<std::unordered_map<
+          std::string, std::variant<std::array<size_t, 3>, size_t>>>(
+          initial_refinement)) {
+    const auto& refinement_map = std::get<std::unordered_map<
+        std::string, std::variant<std::array<size_t, 3>, size_t>>>(
+        initial_refinement);
+    for (const auto& [block_name, ref] : refinement_map) {
+      if (std::holds_alternative<size_t>(ref) and
+          not spherical_harmonics_in_wavezone_) {
+        PARSE_ERROR(context,
+                    "Per-block size_t refinement in map form (block '"
+                        << block_name
+                        << "') is only valid when SphericalHarmonicsInWavezone "
+                           "is enabled.");
+      }
+    }
+  }
   // Determination of parameters for domain construction:
   const double tan_half_opening_angle = tan(0.5 * opening_angle_);
   translation_ = 0.5 * (x_coord_a_ + x_coord_b_);
@@ -375,13 +421,46 @@ BinaryCompactObject<UseWorldtube>::BinaryCompactObject(
       block_names_, block_groups_};
 
   try {
-    initial_refinement_ = std::visit(expand_over_blocks, initial_refinement);
+    initial_refinement_ = std::visit(
+        [&expand_over_blocks](
+            const auto& v) -> std::vector<std::array<size_t, 3>> {
+          using V = std::decay_t<decltype(v)>;
+          if constexpr (std::is_same_v<
+                            V,
+                            std::unordered_map<
+                                std::string,
+                                std::variant<std::array<size_t, 3>, size_t>>>) {
+            // Unreachable: blocked by earlier PARSE_ERROR
+            ERROR(
+                "Unreachable: SphericalHarmonicsInWavezone map refinement "
+                "should have triggered a PARSE_ERROR.");
+          } else {
+            return expand_over_blocks(v);
+          }
+        },
+        initial_refinement);
   } catch (const std::exception& error) {
     PARSE_ERROR(context, "Invalid 'InitialRefinement': " << error.what());
   }
   try {
-    initial_number_of_grid_points_ =
-        std::visit(expand_over_blocks, initial_number_of_grid_points);
+    initial_number_of_grid_points_ = std::visit(
+        [&expand_over_blocks](
+            const auto& v) -> std::vector<std::array<size_t, 3>> {
+          using V = std::decay_t<decltype(v)>;
+          if constexpr (std::is_same_v<
+                            V, std::unordered_map<
+                                   std::string,
+                                   std::variant<std::array<size_t, 3>,
+                                                std::array<size_t, 2>>>>) {
+            // Unreachable: blocked by earlier PARSE_ERROR
+            ERROR(
+                "Unreachable: SphericalHarmonicsInWavezone map grid points "
+                "should have triggered a PARSE_ERROR.");
+          } else {
+            return expand_over_blocks(v);
+          }
+        },
+        initial_number_of_grid_points);
   } catch (const std::exception& error) {
     PARSE_ERROR(context, "Invalid 'InitialGridPoints': " << error.what());
   }

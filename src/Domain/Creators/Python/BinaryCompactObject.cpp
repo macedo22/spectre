@@ -54,6 +54,7 @@ void bind_binary_compact_object(py::module& m) {
                      radial_partitioning_outer_shell,
                      domain::CoordinateMaps::Distribution::Linear,
                      opening_angle_in_degrees,
+                     false,
                      std::move(time_dependent_options)};
                }),
            py::arg("inner_radius_a"), py::arg("outer_radius_a"),

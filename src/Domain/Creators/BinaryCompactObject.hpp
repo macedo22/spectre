@@ -409,6 +409,22 @@ class BinaryCompactObject : public DomainCreator<3> {
         " outer shell into six Blocks of equal angular size."};
   };
 
+  struct SphericalHarmonicsInWavezone {
+    using group = OuterShell;
+    static std::string name() { return "UseSphericalHarmonics"; }
+    using type = bool;
+    static bool suggested_value() { return false; }
+    static constexpr Options::String help = {
+        "Use a spherical-harmonic basis for the outer wavezone shell(s) "
+        "instead "
+        "of the default 10-wedge Cartesian basis. When enabled, "
+        "InitialGridPoints for wavezone blocks must be specified as "
+        "array<size_t, 2> = {radial_points, L_max}, and InitialRefinement "
+        "as a scalar or single-element value (angular refinement is fixed at "
+        "0). "
+        "NOTE: This feature is not yet fully implemented."};
+  };
+
   struct CubeScale {
     using type = double;
     static constexpr Options::String help = {
@@ -420,20 +436,22 @@ class BinaryCompactObject : public DomainCreator<3> {
   };
 
   struct InitialRefinement {
-    using type =
-        std::variant<size_t, std::array<size_t, 3>,
-                     std::vector<std::array<size_t, 3>>,
-                     std::unordered_map<std::string, std::array<size_t, 3>>>;
+    using type = std::variant<
+        size_t, std::array<size_t, 3>, std::vector<std::array<size_t, 3>>,
+        std::unordered_map<std::string, std::array<size_t, 3>>,
+        std::unordered_map<std::string,
+                           std::variant<std::array<size_t, 3>, size_t>>>;
     static constexpr Options::String help = {
         "Initial refinement level in each block of the domain. See main help "
         "text for details."};
   };
 
   struct InitialGridPoints {
-    using type =
-        std::variant<size_t, std::array<size_t, 3>,
-                     std::vector<std::array<size_t, 3>>,
-                     std::unordered_map<std::string, std::array<size_t, 3>>>;
+    using type = std::variant<
+        size_t, std::array<size_t, 3>, std::vector<std::array<size_t, 3>>,
+        std::unordered_map<std::string, std::array<size_t, 3>>,
+        std::unordered_map<std::string, std::variant<std::array<size_t, 3>,
+                                                     std::array<size_t, 2>>>>;
     static constexpr Options::String help = {
         "Initial number of grid points in the elements of each block of the "
         "domain. See main help text for details."};
@@ -478,7 +496,7 @@ class BinaryCompactObject : public DomainCreator<3> {
                  OuterRadius, CubeScale, InitialRefinement, InitialGridPoints,
                  UseEquiangularMap, RadialDistributionEnvelope,
                  RadialPartitioningOuterShell, RadialDistributionOuterShell,
-                 OpeningAngle, TimeDependentMaps>,
+                 OpeningAngle, SphericalHarmonicsInWavezone, TimeDependentMaps>,
       tmpl::conditional_t<
           domain::BoundaryConditions::has_boundary_conditions_base_v<
               typename Metavariables::system>,
@@ -526,6 +544,7 @@ class BinaryCompactObject : public DomainCreator<3> {
           radial_distribution_outer_shell =
               CoordinateMaps::Distribution::Linear,
       double opening_angle_in_degrees = 90.0,
+      bool spherical_harmonics_in_wavezone = false,
       std::optional<bco::TimeDependentMapOptions<false>>
           time_dependent_options = std::nullopt,
       std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>
@@ -611,5 +630,6 @@ class BinaryCompactObject : public DomainCreator<3> {
   bool use_single_block_b_ = false;
   std::optional<bco::TimeDependentMapOptions<false>> time_dependent_options_;
   double opening_angle_ = std::numeric_limits<double>::signaling_NaN();
+  bool spherical_harmonics_in_wavezone_ = false;
 };
 }  // namespace domain::creators
