@@ -3,6 +3,8 @@
 
 #include "Evolution/Systems/GeneralizedHarmonic/BoundaryConditions/Bjorhus.hpp"
 
+#include <ostream>
+
 #include "DataStructures/Tags/TempTensor.hpp"
 #include "DataStructures/TempBuffer.hpp"
 #include "DataStructures/Tensor/EagerMath/DeterminantAndInverse.hpp"
@@ -373,19 +375,38 @@ std::optional<std::string> ConstraintPreservingBjorhus<Dim>::dg_time_derivative(
     // moving grids, eg a rotating sphere, with some leeway for
     // floating-point errors.
     if (max(radial_mesh_velocity) > 1.e-10) {
-      Parallel::printf(
-          "Radial mesh velocity points in direction of outward normal.\n"
-          "The max is for this element is %g.\n"
-          "The radial_mesh_velocity values are:\n%s\n"
-          "The face_mesh_velocity values are:\n%s\n"
-          "The normal_covector values are:\n%s\n\n",
-          max(radial_mesh_velocity), radial_mesh_velocity, face_mesh_velocity,
-          normal_covector);
-      return {
-          "We found the radial mesh velocity points in the direction "
-          "of the outward normal, i.e. we possibly have an expanding "
-          "domain. Its unclear if proper boundary conditions are "
-          "imposed in this case."};
+    //   const std::string error_message =
+    //     "Radial mesh velocity points in direction of outward normal.\n"
+    //       "The max is for this element is %g.\n"
+    //       "The radial_mesh_velocity values are:\n%s\n"
+    //       "The face_mesh_velocity values are:\n%s\n"
+    //       "The normal_covector values are:\n%s\n\n",
+    //       max(radial_mesh_velocity), radial_mesh_velocity, face_mesh_velocity,
+    //       normal_covector
+    //   };
+    std::ostringstream error_message;
+    error_message <<
+        "Radial mesh velocity points in direction of outward normal.\n" <<
+          "The max is for this element is " << max(radial_mesh_velocity) << ".\n" <<
+          "The radial_mesh_velocity values are:\n" << radial_mesh_velocity << "\n" <<
+          "The face_mesh_velocity values are:\n" << face_mesh_velocity << "\n" <<
+          "The normal_covector values are:\n" << normal_covector << "\n\n";
+
+    return error_message.str();
+
+    //   Parallel::printf(
+    //       "Radial mesh velocity points in direction of outward normal.\n"
+    //       "The max is for this element is %g.\n"
+    //       "The radial_mesh_velocity values are:\n%s\n"
+    //       "The face_mesh_velocity values are:\n%s\n"
+    //       "The normal_covector values are:\n%s\n\n",
+    //       max(radial_mesh_velocity), radial_mesh_velocity, face_mesh_velocity,
+    //       normal_covector);
+    //   return {
+    //       "We found the radial mesh velocity points in the direction "
+    //       "of the outward normal, i.e. we possibly have an expanding "
+    //       "domain. Its unclear if proper boundary conditions are "
+    //       "imposed in this case."};
     }
   }
 
