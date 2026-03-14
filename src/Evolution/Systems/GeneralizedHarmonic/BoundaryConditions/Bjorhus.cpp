@@ -372,7 +372,7 @@ std::optional<std::string> ConstraintPreservingBjorhus<Dim>::dg_time_derivative(
     // we use 1e-10 instead of 0 below to allow for purely tangentially
     // moving grids, eg a rotating sphere, with some leeway for
     // floating-point errors.
-    if (max(radial_mesh_velocity) > 1.e1) {
+    if (max(radial_mesh_velocity) > 1.e-10) {
       Parallel::printf(
           "Radial mesh velocity points in direction of outward normal.\n"
           "The max is for this element is %g.\n"
@@ -381,11 +381,11 @@ std::optional<std::string> ConstraintPreservingBjorhus<Dim>::dg_time_derivative(
           "The normal_covector values are:\n%s\n\n",
           max(radial_mesh_velocity), radial_mesh_velocity, face_mesh_velocity,
           normal_covector);
-    //   return {
-    //       "We found the radial mesh velocity points in the direction "
-    //       "of the outward normal, i.e. we possibly have an expanding "
-    //       "domain. Its unclear if proper boundary conditions are "
-    //       "imposed in this case."};
+      return {
+          "We found the radial mesh velocity points in the direction "
+          "of the outward normal, i.e. we possibly have an expanding "
+          "domain. Its unclear if proper boundary conditions are "
+          "imposed in this case."};
     }
   }
 
