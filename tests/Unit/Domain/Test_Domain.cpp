@@ -1124,10 +1124,54 @@ Domain<3> create_serialized_domain() {
 
   const BCO::InitialRefinement::type initial_refinement_variant{1_st};
   const BCO::InitialGridPoints::type initial_grid_points_variant{3_st};
-  std::vector<std::array<size_t, 3>> initial_refinement =
-      std::visit(expand_over_blocks, initial_refinement_variant);
-  std::vector<std::array<size_t, 3>> initial_grid_points =
-      std::visit(expand_over_blocks, initial_grid_points_variant);
+  std::vector<std::array<size_t, 3>> initial_refinement = std::visit(
+      [&expand_over_blocks](
+          const auto& v) -> std::vector<std::array<size_t, 3>> {
+        using V = std::decay_t<decltype(v)>;
+        if constexpr (std::is_same_v<
+                          V,
+                          std::unordered_map<
+                              std::string,
+                              std::variant<std::array<size_t, 3>, size_t>>>) {
+          std::unordered_map<std::string, std::array<size_t, 3>> converted;
+          for (const auto& [name, val] : v) {
+            if (std::holds_alternative<size_t>(val)) {
+              const size_t r = std::get<size_t>(val);
+              converted[name] = {r, 0, 0};
+            } else {
+              converted[name] = std::get<std::array<size_t, 3>>(val);
+            }
+          }
+          return expand_over_blocks(converted);
+        } else {
+          return expand_over_blocks(v);
+        }
+      },
+      initial_refinement_variant);
+  std::vector<std::array<size_t, 3>> initial_grid_points = std::visit(
+      [&expand_over_blocks](
+          const auto& v) -> std::vector<std::array<size_t, 3>> {
+        using V = std::decay_t<decltype(v)>;
+        if constexpr (std::is_same_v<
+                          V, std::unordered_map<
+                                 std::string,
+                                 std::variant<std::array<size_t, 3>,
+                                              std::array<size_t, 2>>>>) {
+          std::unordered_map<std::string, std::array<size_t, 3>> converted;
+          for (const auto& [name, val] : v) {
+            if (std::holds_alternative<std::array<size_t, 2>>(val)) {
+              const auto& a2 = std::get<std::array<size_t, 2>>(val);
+              converted[name] = {a2[0], a2[1] + 1, 2 * a2[1] + 1};
+            } else {
+              converted[name] = std::get<std::array<size_t, 3>>(val);
+            }
+          }
+          return expand_over_blocks(converted);
+        } else {
+          return expand_over_blocks(v);
+        }
+      },
+      initial_grid_points_variant);
 
   const std::vector<CoordinateMaps::Distribution> radial_distribution{
       CoordinateMaps::Distribution::Logarithmic};

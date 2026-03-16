@@ -37,10 +37,12 @@ class Affine;
 class Equiangular;
 template <size_t VolumeDim>
 class Identity;
+class Interval;
 template <typename Map1, typename Map2>
 class ProductOf2Maps;
 template <typename Map1, typename Map2, typename Map3>
 class ProductOf3Maps;
+class SphericalToCartesianPfaffian;
 template <size_t Dim>
 class Wedge;
 template <size_t VolumeDim>
@@ -194,6 +196,12 @@ class BinaryCompactObject : public DomainCreator<3> {
                             Affine3D>,
       domain::CoordinateMap<Frame::BlockLogical, Frame::Inertial,
                             CoordinateMaps::Wedge<3>, Affine3D>,
+      domain::CoordinateMap<
+          Frame::BlockLogical, Frame::Inertial,
+          domain::CoordinateMaps::ProductOf2Maps<
+              domain::CoordinateMaps::Interval,
+              domain::CoordinateMaps::Identity<2>>,
+          domain::CoordinateMaps::SphericalToCartesianPfaffian>,
       bco::TimeDependentMapOptions<false>::maps_list>>;
 
   /// Options for an excision region in the domain

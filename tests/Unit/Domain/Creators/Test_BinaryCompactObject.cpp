@@ -986,17 +986,7 @@ void test_parse_errors() {
           std::nullopt, create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring("Invalid 'InitialGridPoints'"));
-  // SphericalHarmonicsInWavezone PARSE_ERROR tests
-  CHECK_THROWS_WITH(
-      domain::creators::BinaryCompactObject(
-          Object{0.5, 0.8, 1.0, {{create_inner_boundary_condition()}}, false},
-          Object{0.3, 0.8, -1.0, {{create_inner_boundary_condition()}}, false},
-          std::array<double, 2>{{0.1, 0.2}}, 25.5, 32.4, 1.0, 2_st, 6_st, true,
-          Distribution::Projective, std::vector<double>{}, Distribution::Linear,
-          120.0, true, std::nullopt, create_outer_boundary_condition(),
-          Options::Context{false, {}, 1, 1}),
-      Catch::Matchers::ContainsSubstring(
-          "SphericalHarmonicsInWavezone is not yet fully implemented."));
+  // Misuse of SH types when SH is disabled
   CHECK_THROWS_WITH(
       domain::creators::BinaryCompactObject(
           Object{0.5, 0.8, 1.0, {{create_inner_boundary_condition()}}, false},
@@ -1025,6 +1015,162 @@ void test_parse_errors() {
           "only valid when SphericalHarmonicsInWavezone is enabled"));
   // Note: the boundary condition-related parse errors are checked in the
   // test_connectivity function.
+}
+
+void test_spherical_harmonics_wavezone() {
+  INFO("Test BinaryCompactObject with SphericalHarmonicsInWavezone=true");
+  // Both objects excised, no radial partitioning → 1 SH outer shell block.
+  // Block count: 24 (object shells+cubes) + 10 (envelope) + 1 (SH shell) = 35.
+  using GridPointsMap = std::unordered_map<
+      std::string, std::variant<std::array<size_t, 3>, std::array<size_t, 2>>>;
+  using RefinementMap =
+      std::unordered_map<std::string,
+                         std::variant<std::array<size_t, 3>, size_t>>;
+  const domain::creators::BinaryCompactObject bco_sh{
+      Object{0.3, 1.0, 3.0, {{create_inner_boundary_condition()}}, false},
+      Object{0.5, 1.0, -3.0, {{create_inner_boundary_condition()}}, false},
+      std::array<double, 2>{{0.0, 0.0}},
+      25.5,
+      32.4,
+      1.0,
+      RefinementMap{{"ObjectAShell", std::array<size_t, 3>{1, 1, 1}},
+                    {"ObjectACube", std::array<size_t, 3>{1, 1, 1}},
+                    {"ObjectBShell", std::array<size_t, 3>{1, 1, 1}},
+                    {"ObjectBCube", std::array<size_t, 3>{1, 1, 1}},
+                    {"Envelope", std::array<size_t, 3>{1, 1, 1}},
+                    {"OuterShell0", size_t{2}}},
+      GridPointsMap{{"ObjectAShell", std::array<size_t, 3>{3, 3, 3}},
+                    {"ObjectACube", std::array<size_t, 3>{3, 3, 3}},
+                    {"ObjectBShell", std::array<size_t, 3>{3, 3, 3}},
+                    {"ObjectBCube", std::array<size_t, 3>{3, 3, 3}},
+                    {"Envelope", std::array<size_t, 3>{3, 3, 3}},
+                    {"OuterShell0", std::array<size_t, 2>{4, 7}}},
+      true,
+      Distribution::Projective,
+      std::vector<double>{},
+      Distribution::Linear,
+      120.0,
+      true,
+      std::nullopt,
+      create_outer_boundary_condition()};
+
+  // Check block count: 35 total (24 object + 10 envelope + 1 SH shell).
+  CHECK(bco_sh.block_names().size() == 35);
+
+  // SH outer shell is a single block named "OuterShell0" (not in any group).
+  CHECK(bco_sh.block_names()[34] == "OuterShell0");
+  CHECK(bco_sh.block_groups().count("OuterShell0") == 0);
+
+  // initial_extents: OuterShell0 should be {4, 7+1, 2*7+1} = {4, 8, 15}.
+  const auto extents = bco_sh.initial_extents();
+  REQUIRE(extents.size() == 35);
+  CHECK(extents[34] == std::array<size_t, 3>{4, 8, 15});
+
+  // initial_refinement: OuterShell0 should be {2, 0, 0}.
+  const auto refinement = bco_sh.initial_refinement_levels();
+  REQUIRE(refinement.size() == 35);
+  CHECK(refinement[34] == std::array<size_t, 3>{2, 0, 0});
+
+  // external_boundary_conditions: outer BC on upper_xi of block 34.
+  const auto bcs = bco_sh.external_boundary_conditions();
+  REQUIRE(bcs.size() == 35);
+  CHECK(bcs[34].count(Direction<3>::upper_xi()) == 1);
+  // No boundary condition on upper_zeta for the SH shell block.
+  CHECK(bcs[34].count(Direction<3>::upper_zeta()) == 0);
+
+  // Verify the domain can be constructed and inspect neighbor topology.
+  const auto domain_sh = bco_sh.create_domain();
+  const auto& blocks = domain_sh.blocks();
+  REQUIRE(blocks.size() == 35);
+
+  // OuterShell0 (block 34): lower_xi has 10 envelope neighbors (non-conforming)
+  // and no upper_xi neighbor (only 1 shell).
+  const auto& sh_block = blocks[34];
+  CHECK(sh_block.neighbors().count(Direction<3>::lower_xi()) == 1);
+  CHECK(sh_block.neighbors().at(Direction<3>::lower_xi()).ids().size() == 10);
+  CHECK(sh_block.neighbors().count(Direction<3>::upper_xi()) == 0);
+
+  // Each envelope block (24-33): upper_zeta should point to block 34.
+  for (size_t j = 24; j < 34; ++j) {
+    CAPTURE(j);
+    CHECK(blocks[j].neighbors().count(Direction<3>::upper_zeta()) == 1);
+    CHECK(*blocks[j].neighbors().at(Direction<3>::upper_zeta()).ids().begin() ==
+          34);
+  }
+
+  // Check orientations at the envelope↔shell boundary.
+  // Shell's xi = frustum's zeta (radial); angular axes use self().
+  const OrientationMap<3> expected_shell_to_frustum{
+      {{Direction<3>::upper_zeta(), Direction<3>::self(),
+        Direction<3>::self()}}};
+  const auto expected_frustum_to_shell = expected_shell_to_frustum.inverse_map();
+  const auto& lower_xi_neighbors =
+      sh_block.neighbors().at(Direction<3>::lower_xi());
+  for (size_t j = 24; j < 34; ++j) {
+    CAPTURE(j);
+    CHECK(lower_xi_neighbors.orientation(j) == expected_shell_to_frustum);
+  }
+  for (size_t j = 24; j < 34; ++j) {
+    CAPTURE(j);
+    const auto& uz_neighbors =
+        blocks[j].neighbors().at(Direction<3>::upper_zeta());
+    CHECK(uz_neighbors.orientation(34) == expected_frustum_to_shell);
+  }
+
+  // 2-shell test: add a radial partition and verify the shell-to-shell
+  // neighbor.
+  using GridPointsMap2 = std::unordered_map<
+      std::string, std::variant<std::array<size_t, 3>, std::array<size_t, 2>>>;
+  using RefinementMap2 =
+      std::unordered_map<std::string,
+                         std::variant<std::array<size_t, 3>, size_t>>;
+  const domain::creators::BinaryCompactObject bco_sh2{
+      Object{0.3, 1.0, 3.0, {{create_inner_boundary_condition()}}, false},
+      Object{0.5, 1.0, -3.0, {{create_inner_boundary_condition()}}, false},
+      std::array<double, 2>{{0.0, 0.0}},
+      25.5,
+      32.4,
+      1.0,
+      RefinementMap2{{"ObjectAShell", std::array<size_t, 3>{1, 1, 1}},
+                     {"ObjectACube", std::array<size_t, 3>{1, 1, 1}},
+                     {"ObjectBShell", std::array<size_t, 3>{1, 1, 1}},
+                     {"ObjectBCube", std::array<size_t, 3>{1, 1, 1}},
+                     {"Envelope", std::array<size_t, 3>{1, 1, 1}},
+                     {"OuterShell0", size_t{2}},
+                     {"OuterShell1", size_t{2}}},
+      GridPointsMap2{{"ObjectAShell", std::array<size_t, 3>{3, 3, 3}},
+                     {"ObjectACube", std::array<size_t, 3>{3, 3, 3}},
+                     {"ObjectBShell", std::array<size_t, 3>{3, 3, 3}},
+                     {"ObjectBCube", std::array<size_t, 3>{3, 3, 3}},
+                     {"Envelope", std::array<size_t, 3>{3, 3, 3}},
+                     {"OuterShell0", std::array<size_t, 2>{4, 7}},
+                     {"OuterShell1", std::array<size_t, 2>{4, 7}}},
+      true,
+      Distribution::Projective,
+      std::vector<double>{28.0},
+      Distribution::Linear,
+      120.0,
+      true,
+      std::nullopt,
+      create_outer_boundary_condition()};
+
+  const auto domain_sh2 = bco_sh2.create_domain();
+  const auto& blocks2 = domain_sh2.blocks();
+  REQUIRE(blocks2.size() == 36);
+
+  // OuterShell0 (block 34): lower_xi → 10 envelope blocks, upper_xi → {35}.
+  CHECK(blocks2[34].neighbors().count(Direction<3>::lower_xi()) == 1);
+  CHECK(blocks2[34].neighbors().at(Direction<3>::lower_xi()).ids().size() ==
+        10);
+  CHECK(blocks2[34].neighbors().count(Direction<3>::upper_xi()) == 1);
+  CHECK(*blocks2[34].neighbors().at(Direction<3>::upper_xi()).ids().begin() ==
+        35);
+
+  // OuterShell1 (block 35): lower_xi → {34}, no upper_xi.
+  CHECK(blocks2[35].neighbors().count(Direction<3>::lower_xi()) == 1);
+  CHECK(*blocks2[35].neighbors().at(Direction<3>::lower_xi()).ids().begin() ==
+        34);
+  CHECK(blocks2[35].neighbors().count(Direction<3>::upper_xi()) == 0);
 }
 
 template <domain::ObjectLabel Object>
@@ -1134,5 +1280,6 @@ SPECTRE_TEST_CASE("Unit.Domain.Creators.BinaryCompactObject",
   }
   test_binary_factory();
   test_parse_errors();
+  test_spherical_harmonics_wavezone();
   test_kerr_horizon_conforming();
 }

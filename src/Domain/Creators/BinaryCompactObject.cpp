@@ -27,9 +27,11 @@
 #include "Domain/CoordinateMaps/Distribution.hpp"
 #include "Domain/CoordinateMaps/Equiangular.hpp"
 #include "Domain/CoordinateMaps/Frustum.hpp"
+#include "Domain/CoordinateMaps/Identity.hpp"
 #include "Domain/CoordinateMaps/Interval.hpp"
 #include "Domain/CoordinateMaps/ProductMaps.hpp"
 #include "Domain/CoordinateMaps/ProductMaps.tpp"
+#include "Domain/CoordinateMaps/SphericalToCartesianPfaffian.hpp"
 #include "Domain/CoordinateMaps/Wedge.hpp"
 #include "Domain/Creators/DomainCreator.hpp"
 #include "Domain/Creators/ExpandOverBlocks.hpp"
@@ -42,7 +44,11 @@
 #include "Domain/FunctionsOfTime/FunctionOfTime.hpp"
 #include "Domain/FunctionsOfTime/PiecewisePolynomial.hpp"
 #include "Domain/FunctionsOfTime/QuaternionFunctionOfTime.hpp"
+#include "Domain/Structure/BlockNeighbors.hpp"
+#include "Domain/Structure/Direction.hpp"
 #include "Domain/Structure/ObjectLabel.hpp"
+#include "Domain/Structure/OrientationMap.hpp"
+#include "Domain/Structure/Topology.hpp"
 #include "Options/ParseError.hpp"
 #include "Utilities/EqualWithinRoundoff.hpp"
 #include "Utilities/ErrorHandling/Error.hpp"
@@ -117,10 +123,6 @@ BinaryCompactObject<UseWorldtube>::BinaryCompactObject(
       time_dependent_options_(std::move(time_dependent_options)),
       opening_angle_(M_PI * opening_angle_in_degrees / 180.0),
       spherical_harmonics_in_wavezone_(spherical_harmonics_in_wavezone) {
-  if (spherical_harmonics_in_wavezone_) {
-    PARSE_ERROR(context,
-                "SphericalHarmonicsInWavezone is not yet fully implemented.");
-  }
   // Validate InitialGridPoints map entries
   if (std::holds_alternative<
           std::unordered_map<std::string, std::variant<std::array<size_t, 3>,
@@ -194,8 +196,10 @@ BinaryCompactObject<UseWorldtube>::BinaryCompactObject(
 
   // Calculate number of blocks
   // Object cubes and shells have 6 blocks each, for a total for 24 blocks.
-  // The envelope and each outer shell have another 10 blocks each.
-  number_of_blocks_ = 34 + 10 * number_of_outer_shells_;
+  // The envelope has 10 blocks. Each outer shell has 10 blocks in the standard
+  // wedge basis, or 1 block in the spherical-harmonic basis.
+  number_of_blocks_ = 34 + (spherical_harmonics_in_wavezone_ ? 1 : 10) *
+                               number_of_outer_shells_;
   // For each object whose interior is not excised, add 1 block
   if ((not use_single_block_a_) and (not is_excised_a_)) {
     number_of_blocks_++;
@@ -400,8 +404,17 @@ BinaryCompactObject<UseWorldtube>::BinaryCompactObject(
   }
   add_outer_region("Envelope");  // 10 blocks
   first_outer_shell_block_ += 10;
-  for (size_t shell = 0; shell < number_of_outer_shells_; shell++) {
-    add_outer_region("OuterShell" + std::to_string(shell));  // 10 blocks
+  if (spherical_harmonics_in_wavezone_) {
+    for (size_t shell = 0; shell < number_of_outer_shells_; shell++) {
+      // SH wavezone: 1 block per shell. We intentionally do NOT add these to
+      // block_groups_ because group-name == block-name breaks ExpandOverBlocks.
+      // Users can target these blocks by their block name directly.
+      block_names_.emplace_back("OuterShell" + std::to_string(shell));
+    }
+  } else {
+    for (size_t shell = 0; shell < number_of_outer_shells_; shell++) {
+      add_outer_region("OuterShell" + std::to_string(shell));  // 10 blocks
+    }
   }
 
   if ((not use_single_block_a_) and (not is_excised_a_)) {
@@ -430,10 +443,18 @@ BinaryCompactObject<UseWorldtube>::BinaryCompactObject(
                             std::unordered_map<
                                 std::string,
                                 std::variant<std::array<size_t, 3>, size_t>>>) {
-            // Unreachable: blocked by earlier PARSE_ERROR
-            ERROR(
-                "Unreachable: SphericalHarmonicsInWavezone map refinement "
-                "should have triggered a PARSE_ERROR.");
+            // Convert size_t entries to {r, 0, 0} for SH blocks;
+            // array<3> entries are used unchanged.
+            std::unordered_map<std::string, std::array<size_t, 3>> converted;
+            for (const auto& [name, val] : v) {
+              if (std::holds_alternative<size_t>(val)) {
+                const size_t r = std::get<size_t>(val);
+                converted[name] = {r, 0, 0};
+              } else {
+                converted[name] = std::get<std::array<size_t, 3>>(val);
+              }
+            }
+            return expand_over_blocks(converted);
           } else {
             return expand_over_blocks(v);
           }
@@ -452,10 +473,18 @@ BinaryCompactObject<UseWorldtube>::BinaryCompactObject(
                                    std::string,
                                    std::variant<std::array<size_t, 3>,
                                                 std::array<size_t, 2>>>>) {
-            // Unreachable: blocked by earlier PARSE_ERROR
-            ERROR(
-                "Unreachable: SphericalHarmonicsInWavezone map grid points "
-                "should have triggered a PARSE_ERROR.");
+            // Convert array<2>{r, L_max} entries to {r, L_max+1, 2*L_max+1}
+            // for SH blocks; array<3> entries are used unchanged.
+            std::unordered_map<std::string, std::array<size_t, 3>> converted;
+            for (const auto& [name, val] : v) {
+              if (std::holds_alternative<std::array<size_t, 2>>(val)) {
+                const auto& a2 = std::get<std::array<size_t, 2>>(val);
+                converted[name] = {a2[0], a2[1] + 1, 2 * a2[1] + 1};
+              } else {
+                converted[name] = std::get<std::array<size_t, 3>>(val);
+              }
+            }
+            return expand_over_blocks(converted);
           } else {
             return expand_over_blocks(v);
           }
@@ -656,14 +685,16 @@ Domain<3> BinaryCompactObject<UseWorldtube>::create_domain() const {
   std::move(maps_frustums.begin(), maps_frustums.end(),
             std::back_inserter(maps));
 
-  // --- Outer spherical shell (10*num_outer_shells blocks) ---
-  Maps maps_outer_shell = domain::make_vector_coordinate_map_base<
-      Frame::BlockLogical, Frame::Inertial, 3>(sph_wedge_coordinate_maps(
-      envelope_radius_, outer_radius_, 1.0, 1.0, use_equiangular_map_,
-      std::nullopt, true, radial_partitioning_outer_shell_,
-      radial_distribution_outer_shell_, ShellWedges::All, opening_angle_));
-  std::move(maps_outer_shell.begin(), maps_outer_shell.end(),
-            std::back_inserter(maps));
+  if (not spherical_harmonics_in_wavezone_) {
+    // --- Outer spherical shell (10*num_outer_shells blocks) ---
+    Maps maps_outer_shell = domain::make_vector_coordinate_map_base<
+        Frame::BlockLogical, Frame::Inertial, 3>(sph_wedge_coordinate_maps(
+        envelope_radius_, outer_radius_, 1.0, 1.0, use_equiangular_map_,
+        std::nullopt, true, radial_partitioning_outer_shell_,
+        radial_distribution_outer_shell_, ShellWedges::All, opening_angle_));
+    std::move(maps_outer_shell.begin(), maps_outer_shell.end(),
+              std::back_inserter(maps));
+  }
 
   // --- (Optional) object centers (0 to 2 blocks) ---
   //
@@ -764,9 +795,130 @@ Domain<3> BinaryCompactObject<UseWorldtube>::create_domain() const {
     }
   }
 
-  // Have corners determined automatically
-  Domain<3> domain{std::move(maps), std::move(excision_spheres), block_names_,
-                   block_groups_};
+  // Construct domain
+  Domain<3> domain;
+  if (spherical_harmonics_in_wavezone_) {
+    // --- SH wavezone: build from explicit Block objects ---
+    //
+    // `maps` at this point contains the inner (non-SH) maps in order:
+    //   [objA (1 or 12 blocks), objB (1 or 12 blocks), envelope (10 blocks),
+    //    interior cubes (0-2 blocks)]
+    // Total = first_outer_shell_block_ + n_interior_cubes entries.
+    //
+    // We determine auto-topology neighbors for these inner maps, then re-index
+    // the neighbor block IDs to account for the SH shell blocks being inserted
+    // at positions [first_outer_shell_block_, first_outer_shell_block_ +
+    // number_of_outer_shells_ - 1].
+    std::vector<DirectionMap<3, BlockNeighbors<3>>> inner_neighbors;
+    set_internal_boundaries<3>(make_not_null(&inner_neighbors), maps);
+
+    // Interior cube entries in maps (if any) have indices ≥
+    // first_outer_shell_block_, but in the final block ordering those blocks
+    // live at to_final_id(j) = j + number_of_outer_shells_, because the SH
+    // shell blocks occupy the [first_outer_shell_block_, ...) range.
+    const auto to_final_id = [this](const size_t inner_idx) -> size_t {
+      return inner_idx < first_outer_shell_block_
+                 ? inner_idx
+                 : inner_idx + number_of_outer_shells_;
+    };
+    for (auto& dir_map : inner_neighbors) {
+      DirectionMap<3, BlockNeighbors<3>> updated;
+      for (const auto& [dir, block_neighbor] : dir_map) {
+        const size_t old_id = *block_neighbor.ids().begin();
+        updated.emplace(dir,
+                        BlockNeighbors<3>{to_final_id(old_id),
+                                          block_neighbor.orientation(old_id)});
+      }
+      dir_map = std::move(updated);
+    }
+
+    // Connect the 10 envelope blocks' upper_zeta faces to the first SH shell.
+    const size_t first_envelope = first_outer_shell_block_ - 10;
+    // Orientation between the SH shell (lower_xi) and envelope frustums
+    // (upper_zeta). Shell's xi = frustum's zeta (radial); angular axes use
+    // self() (no rotation). Matches NonconformingSphericalShells::create_domain.
+    const OrientationMap<3> shell_to_frustum{
+        {{Direction<3>::upper_zeta(), Direction<3>::self(),
+          Direction<3>::self()}}};
+    const auto frustum_to_shell = shell_to_frustum.inverse_map();
+    const auto aligned = OrientationMap<3>::create_aligned();
+    for (size_t j = first_envelope; j < first_outer_shell_block_; ++j) {
+      inner_neighbors[j].emplace(
+          Direction<3>::upper_zeta(),
+          BlockNeighbors<3>{{first_outer_shell_block_},
+                            {{first_outer_shell_block_, frustum_to_shell}},
+                            /*are_conforming=*/false});
+    }
+
+    // Build blocks in final order.
+    std::vector<Block<3>> blocks;
+    blocks.reserve(number_of_blocks_);
+
+    // (a) Inner blocks before SH shells.
+    for (size_t j = 0; j < first_outer_shell_block_; ++j) {
+      blocks.emplace_back(std::move(maps[j]), j, std::move(inner_neighbors[j]),
+                          block_names_[j]);
+    }
+
+    // (b) SH outer shell blocks.
+    for (size_t shell = 0; shell < number_of_outer_shells_; ++shell) {
+      const size_t block_id = first_outer_shell_block_ + shell;
+      const double r_in = shell == 0
+                              ? envelope_radius_
+                              : radial_partitioning_outer_shell_[shell - 1];
+      const double r_out = shell < number_of_outer_shells_ - 1
+                               ? radial_partitioning_outer_shell_[shell]
+                               : outer_radius_;
+      CoordinateMaps::Interval radial_map{
+          -1.0, 1.0, r_in, r_out, radial_distribution_outer_shell_[shell], 0.0};
+      auto sh_map =
+          make_coordinate_map_base<Frame::BlockLogical, Frame::Inertial>(
+              CoordinateMaps::ProductOf2Maps<CoordinateMaps::Interval,
+                                             CoordinateMaps::Identity<2>>{
+                  std::move(radial_map), CoordinateMaps::Identity<2>{}},
+              CoordinateMaps::SphericalToCartesianPfaffian{});
+      DirectionMap<3, BlockNeighbors<3>> sh_neighbors;
+      if (shell == 0) {
+        // lower_xi → all 10 envelope blocks (non-conforming, multi-neighbor).
+        std::unordered_set<size_t> env_ids;
+        std::unordered_map<size_t, OrientationMap<3>> env_orientations;
+        for (size_t j = first_envelope; j < first_outer_shell_block_; ++j) {
+          env_ids.insert(j);
+          env_orientations.emplace(j, shell_to_frustum);
+        }
+        sh_neighbors.emplace(
+            Direction<3>::lower_xi(),
+            BlockNeighbors<3>{std::move(env_ids), std::move(env_orientations),
+                              /*are_conforming=*/false});
+      } else {
+        // lower_xi → previous SH shell (conforming, single neighbor).
+        sh_neighbors.emplace(Direction<3>::lower_xi(),
+                             BlockNeighbors<3>{block_id - 1, aligned});
+      }
+      if (shell < number_of_outer_shells_ - 1) {
+        sh_neighbors.emplace(Direction<3>::upper_xi(),
+                             BlockNeighbors<3>{block_id + 1, aligned});
+      }
+      blocks.emplace_back(std::move(sh_map), block_id, std::move(sh_neighbors),
+                          block_names_[block_id],
+                          domain::topologies::spherical_shell);
+    }
+
+    // (c) Interior cube blocks (after SH shells in final ordering).
+    for (size_t j = first_outer_shell_block_; j < maps.size(); ++j) {
+      const size_t block_id = to_final_id(j);
+      blocks.emplace_back(std::move(maps[j]), block_id,
+                          std::move(inner_neighbors[j]),
+                          block_names_[block_id]);
+    }
+
+    domain = Domain<3>{std::move(blocks), std::move(excision_spheres),
+                       block_groups_};
+  } else {
+    // Have corners determined automatically
+    domain = Domain<3>{std::move(maps), std::move(excision_spheres),
+                       block_names_, block_groups_};
+  }
 
   // Inject the hard-coded time-dependence
   if (time_dependent_options_.has_value()) {
@@ -950,14 +1102,22 @@ BinaryCompactObject<UseWorldtube>::external_boundary_conditions() const {
     }
   }
   // Outer boundary
-  const size_t offset_outer_blocks =
-      ((use_single_block_a_ and use_single_block_b_)
-           ? 12
-           : ((use_single_block_a_ or use_single_block_b_) ? 23 : 34)) +
-      10 * (number_of_outer_shells_ - 1);
-  for (size_t i = 0; i < 10; ++i) {
-    boundary_conditions[i + offset_outer_blocks][Direction<3>::upper_zeta()] =
+  if (spherical_harmonics_in_wavezone_) {
+    // SH mode: outer boundary is upper_xi of the last SH shell block.
+    const size_t last_sh_block =
+        first_outer_shell_block_ + number_of_outer_shells_ - 1;
+    boundary_conditions[last_sh_block][Direction<3>::upper_xi()] =
         outer_boundary_condition_->get_clone();
+  } else {
+    const size_t offset_outer_blocks =
+        ((use_single_block_a_ and use_single_block_b_)
+             ? 12
+             : ((use_single_block_a_ or use_single_block_b_) ? 23 : 34)) +
+        10 * (number_of_outer_shells_ - 1);
+    for (size_t i = 0; i < 10; ++i) {
+      boundary_conditions[i + offset_outer_blocks][Direction<3>::upper_zeta()] =
+          outer_boundary_condition_->get_clone();
+    }
   }
   return boundary_conditions;
 }
