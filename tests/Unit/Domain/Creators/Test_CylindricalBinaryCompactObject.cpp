@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstddef>
 #include <iomanip>
+#include <iostream>
 #include <iterator>
 #include <limits>
 #include <memory>
@@ -400,6 +401,63 @@ void test_construction(const CylBCO& creator,
     CHECK_ITERABLE_APPROX(expected_mapped_point_a, mapped_point_a);
     CHECK_ITERABLE_APPROX(expected_mapped_point_b, mapped_point_b);
   }
+
+  const auto external_boundary_conditions =
+      creator.external_boundary_conditions();
+  // const std::vector<DirectionMap<
+  //     3, std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>>>
+  //     external_boundary_conditions = creator.external_boundary_conditions();
+  if (include_inner_sphere_A and include_inner_sphere_B and
+      include_outer_sphere) {
+    std::cout << "external_boundary_conditions.size() : "
+              << external_boundary_conditions.size() << std::endl;
+    std::cout << "external_boundary_conditions : "
+              << external_boundary_conditions << std::endl;
+    std::cout << "=== OuterCA Filled Cylinder begin ===" << std::endl;
+    std::cout << "external_boundary_conditions[74] : "
+              << external_boundary_conditions[74] << std::endl;
+    std::cout << "external_boundary_conditions[75] : "
+              << external_boundary_conditions[75] << std::endl;
+    std::cout << "external_boundary_conditions[76] : "
+              << external_boundary_conditions[76] << std::endl;
+    std::cout << "external_boundary_conditions[77] : "
+              << external_boundary_conditions[77] << std::endl;
+    std::cout << "external_boundary_conditions[78] : "
+              << external_boundary_conditions[78] << std::endl;
+    std::cout << "=== OuterCA Filled Cylinder end ===" << std::endl;
+    std::cout << "=== OuterCB Filled Cylinder begin ===" << std::endl;
+    std::cout << "external_boundary_conditions[79] : "
+              << external_boundary_conditions[79] << std::endl;
+    std::cout << "external_boundary_conditions[80] : "
+              << external_boundary_conditions[80] << std::endl;
+    std::cout << "external_boundary_conditions[81] : "
+              << external_boundary_conditions[81] << std::endl;
+    std::cout << "external_boundary_conditions[82] : "
+              << external_boundary_conditions[82] << std::endl;
+    std::cout << "external_boundary_conditions[83] : "
+              << external_boundary_conditions[83] << std::endl;
+    std::cout << "=== OuterCB Filled Cylinder end ===" << std::endl;
+    std::cout << "=== OuterCA Cylinder begin ===" << std::endl;
+    std::cout << "external_boundary_conditions[84] : "
+              << external_boundary_conditions[84] << std::endl;
+    std::cout << "external_boundary_conditions[85] : "
+              << external_boundary_conditions[85] << std::endl;
+    std::cout << "external_boundary_conditions[86] : "
+              << external_boundary_conditions[86] << std::endl;
+    std::cout << "external_boundary_conditions[87] : "
+              << external_boundary_conditions[87] << std::endl;
+    std::cout << "=== OuterCA Cylinder end ===" << std::endl;
+    std::cout << "=== OuterCB Cylinder begin ===" << std::endl;
+    std::cout << "external_boundary_conditions[88] : "
+              << external_boundary_conditions[88] << std::endl;
+    std::cout << "external_boundary_conditions[89] : "
+              << external_boundary_conditions[89] << std::endl;
+    std::cout << "external_boundary_conditions[90] : "
+              << external_boundary_conditions[90] << std::endl;
+    std::cout << "external_boundary_conditions[91] : "
+              << external_boundary_conditions[91] << std::endl;
+    std::cout << "=== OuterCB Cylinder end ===" << std::endl;
+  }
 }
 
 TimeDepOptions construct_time_dependent_options() {
@@ -576,6 +634,8 @@ std::unordered_map<std::string, std::array<size_t, 3>> make_initial_structure(
 }
 
 void test_cylindrical_bbh() {
+  // std::cout << "=== test_cylindrical_bbh ===" << std::endl;
+
   MAKE_GENERATOR(gen);
 
   const std::vector<double> times_to_check{{1.0, 2.3}};
