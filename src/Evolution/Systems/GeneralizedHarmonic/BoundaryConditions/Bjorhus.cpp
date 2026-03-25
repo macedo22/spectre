@@ -3,14 +3,12 @@
 
 #include "Evolution/Systems/GeneralizedHarmonic/BoundaryConditions/Bjorhus.hpp"
 
-#include <iostream>  // TODO : remove
 #include <ostream>
 
 #include "DataStructures/Tags/TempTensor.hpp"
 #include "DataStructures/TempBuffer.hpp"
 #include "DataStructures/Tensor/EagerMath/DeterminantAndInverse.hpp"
 #include "DataStructures/Tensor/EagerMath/DotProduct.hpp"
-#include "DataStructures/Tensor/EagerMath/Magnitude.hpp"
 #include "DataStructures/Tensor/EagerMath/RaiseOrLowerIndex.hpp"
 #include "DataStructures/Variables.hpp"
 #include "Evolution/Systems/GeneralizedHarmonic/BoundaryConditions/BjorhusImpl.hpp"
@@ -128,8 +126,6 @@ std::optional<std::string> ConstraintPreservingBjorhus<Dim>::dg_time_derivative(
     const tnsr::iaa<DataVector, Dim, Frame::Inertial>& d_spacetime_metric,
     const tnsr::iaa<DataVector, Dim, Frame::Inertial>& d_pi,
     const tnsr::ijaa<DataVector, Dim, Frame::Inertial>& d_phi) const {
-  Parallel::printf("=== Bjorhus.cpp : dg_time_derivative BEGIN ===\n");
-
   TempBuffer<tmpl::list<::Tags::TempI<0, Dim, Frame::Inertial, DataVector>,
                         ::Tags::Tempiaa<1, Dim, Frame::Inertial, DataVector>,
                         ::Tags::TempII<0, Dim, Frame::Inertial, DataVector>,
@@ -372,10 +368,6 @@ std::optional<std::string> ConstraintPreservingBjorhus<Dim>::dg_time_derivative(
   *dt_spacetime_metric_correction =
       get<gr::Tags::SpacetimeMetric<DataVector, Dim>>(dt_evolved_vars);
 
-  Parallel::printf(
-      "=== Bjorhus.cpp : dg_time_derivative END before radial mesh velocity "
-      "check ===\n");
-
   if (face_mesh_velocity.has_value()) {
     const auto radial_mesh_velocity =
         get(dot_product(normal_covector, *face_mesh_velocity));
@@ -392,9 +384,6 @@ std::optional<std::string> ConstraintPreservingBjorhus<Dim>::dg_time_derivative(
     //       max(radial_mesh_velocity), radial_mesh_velocity, face_mesh_velocity,
     //       normal_covector
     //   };
-    Parallel::printf(
-        "=== Bjorhus.cpp : dg_time_derivative FAILED radial mesh velocity "
-        "check ===\n");
     std::ostringstream error_message;
     error_message <<
         "Radial mesh velocity points in direction of outward normal.\n" <<
@@ -488,8 +477,6 @@ void ConstraintPreservingBjorhus<Dim>::compute_intermediate_vars(
     const tnsr::ijaa<DataVector, Dim, Frame::Inertial>& d_phi,
     const tnsr::iaa<DataVector, Dim, Frame::Inertial>& /* d_spacetime_metric */)
     const {
-  Parallel::printf("=== Bjorhus.cpp : compute_intermediate_vars BEGIN ===\n");
-
   TempBuffer<tmpl::list<::Tags::TempScalar<0, DataVector>,
                         ::Tags::Tempia<0, Dim, Frame::Inertial, DataVector>>>
       local_buffer(get_size(get<0>(normal_covector)), 0.);
@@ -509,23 +496,6 @@ void ConstraintPreservingBjorhus<Dim>::compute_intermediate_vars(
 
   raise_or_lower_index(unit_interface_normal_vector, normal_covector,
                        *inverse_spatial_metric);
-
-  const auto spatial_metric =
-      determinant_and_inverse(*inverse_spatial_metric).second;
-
-  Parallel::printf("spatial_metric : %s\n", spatial_metric);
-  Parallel::printf("unit_interface_normal_vector : %s\n",
-                   unit_interface_normal_vector);
-  Parallel::printf("magnitude(unit_interface_normal_vector) : %s\n",
-                   magnitude(*unit_interface_normal_vector));
-  Parallel::printf(
-      "magnitude(unit_interface_normal_vector, spatial_metric) : %s\n",
-      magnitude(*unit_interface_normal_vector, spatial_metric));
-  Parallel::printf("normal_covector : %s\n", normal_covector);
-  Parallel::printf("magnitude(normal_covector) : %s\n",
-                   magnitude(normal_covector));
-  Parallel::printf("magnitude(normal_covector, inverse_spatial_metric) : %s\n",
-                   magnitude(normal_covector, *inverse_spatial_metric));
 
   gh::extrinsic_curvature(extrinsic_curvature, spacetime_unit_normal_vector, pi,
                           phi);
@@ -602,8 +572,6 @@ void ConstraintPreservingBjorhus<Dim>::compute_intermediate_vars(
 
   characteristic_speeds(char_speeds, gamma1, lapse, shift, normal_covector,
                         face_mesh_velocity);
-
-  Parallel::printf("==== Bjorhus.cpp : compute_intermediate_vars END ====\n");
 }
 
 template <size_t Dim>
