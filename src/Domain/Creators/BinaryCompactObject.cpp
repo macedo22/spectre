@@ -809,7 +809,7 @@ Domain<3> BinaryCompactObject<UseWorldtube>::create_domain() const {
     // the neighbor block IDs to account for the SH shell blocks being inserted
     // at positions [first_outer_shell_block_, first_outer_shell_block_ +
     // number_of_outer_shells_ - 1].
-    std::vector<DirectionMap<3, BlockNeighbors<3>>> inner_neighbors;
+    std::vector<DirectionMap<3, BlockNeighbors<3>>> inner_neighbors{};
     set_internal_boundaries<3>(make_not_null(&inner_neighbors), maps);
 
     // Interior cube entries in maps (if any) have indices ≥
