@@ -287,12 +287,22 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
         bco::TimeDependentMapOptions<true>::help;
   };
 
+  struct SphericalHarmonicsInWavezone {
+    // using group = OuterShell;
+    static std::string name() { return "UseSphericalHarmonics"; }
+    using type = bool;
+    static bool suggested_value() { return false; }
+    static constexpr Options::String help = {
+        "Use a spherical-harmonic basis for the outer wavezone shell(s). "
+        "NOTE: This feature is not yet fully implemented."};
+  };
+
   template <typename Metavariables>
   using options = tmpl::append<
       tmpl::list<CenterA, CenterB, RadiusA, RadiusB, IncludeInnerSphereA,
                  IncludeInnerSphereB, IncludeOuterSphere, OuterRadius,
                  UseEquiangularMap, InitialRefinement, InitialGridPoints,
-                 TimeDependentMaps>,
+                 SphericalHarmonicsInWavezone, TimeDependentMaps>,
       tmpl::conditional_t<
           domain::BoundaryConditions::has_boundary_conditions_base_v<
               typename Metavariables::system>,
@@ -318,6 +328,7 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
       double outer_radius, bool use_equiangular_map,
       const typename InitialRefinement::type& initial_refinement,
       const typename InitialGridPoints::type& initial_grid_points,
+      bool spherical_harmonics_in_wavezone,
       std::optional<bco::TimeDependentMapOptions<true>> time_dependent_options =
           std::nullopt,
       std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>
@@ -399,5 +410,6 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
       grid_anchors_{};
   // FunctionsOfTime options
   std::optional<bco::TimeDependentMapOptions<true>> time_dependent_options_{};
+  bool spherical_harmonics_in_wavezone_ = false;
 };
 }  // namespace domain::creators
