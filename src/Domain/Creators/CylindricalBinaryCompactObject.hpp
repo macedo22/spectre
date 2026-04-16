@@ -408,8 +408,8 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
       block_groups_{};
   std::unordered_map<std::string, tnsr::I<double, 3, Frame::Grid>>
       grid_anchors_{};
+  bool spherical_harmonics_in_wavezone_ = false;
   // FunctionsOfTime options
   std::optional<bco::TimeDependentMapOptions<true>> time_dependent_options_{};
-  bool spherical_harmonics_in_wavezone_ = false;
 };
 }  // namespace domain::creators
