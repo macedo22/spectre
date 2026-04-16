@@ -122,6 +122,12 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
         "Cannot have periodic boundary conditions with a binary domain");
   }
 
+  if (spherical_harmonics_in_wavezone_ and not include_outer_sphere_) {
+    PARSE_ERROR(context,
+                "Can't specify spherical harmonics in the wave zone without "
+                "also including outer sphere.");
+  }
+
   // The choices made below for the quantities xi, cutting_plane_,
   // and xi_min_sphere_e are the ones made in SpEC, and in the
   // Appendix of https://arxiv.org/abs/1206.3015.  Other choices could
@@ -188,7 +194,7 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
     number_of_blocks_ += 14;
   }
   if (include_outer_sphere) {
-    number_of_blocks_ += 18;
+    number_of_blocks_ += (spherical_harmonics_in_wavezone_ ? 1 : 18);
   }
 
   // Add SphereE blocks if necessary.  Note that
@@ -295,14 +301,22 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
     first_outer_shell_block += 14;
   }
   if (include_outer_sphere) {
-    // 5 blocks
-    add_filled_cylinder_name("OuterSphereCA", "OuterSphere");
-    // 5 blocks
-    add_filled_cylinder_name("OuterSphereCB", "OuterSphere");
-    // 4 blocks
-    add_cylinder_name("OuterSphereCA", "OuterSphere");
-    // 4 blocks
-    add_cylinder_name("OuterSphereCB", "OuterSphere");
+    if (not spherical_harmonics_in_wavezone_) {
+      // 5 blocks
+      add_filled_cylinder_name("OuterSphereCA", "OuterSphere");
+      // 5 blocks
+      add_filled_cylinder_name("OuterSphereCB", "OuterSphere");
+      // 4 blocks
+      add_cylinder_name("OuterSphereCA", "OuterSphere");
+      // 4 blocks
+      add_cylinder_name("OuterSphereCB", "OuterSphere");
+    } else {
+      // just picking a name for the only spherical shell for now
+      const std::string name = "SphericalShell0";
+      const std::string group_name = "OuterSphere";
+      block_names_.push_back(name);
+      block_groups_[group_name].insert(name);
+    }
   }
 
   // Expand initial refinement over all blocks
@@ -382,7 +396,11 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
     current_block += 4;
   }
   if (include_outer_sphere) {
-    for (size_t block = 0; block < 10; ++block) {
+    if (not spherical_harmonics_in_wavezone_) {
+      for (size_t block = 0; block < 10; ++block) {
+        swap_refinement_and_grid_points_xi_zeta(current_block++);
+      }
+    } else {
       swap_refinement_and_grid_points_xi_zeta(current_block++);
     }
   }
@@ -795,38 +813,43 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
         CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
   }
   if (include_outer_sphere_) {
-    const double z_cut_CA_outer = 0.7 * outer_radius_;
-    const double z_cut_CB_outer = -0.7 * outer_radius_;
-    // OuterCA Filled Cylinder
-    // 5 blocks
-    add_endcap_to_list_of_maps(
-        CoordinateMaps::UniformCylindricalEndcap(
-            make_array<3>(0.0), make_array<3>(0.0), inner_radius_C,
-            outer_radius_, z_cut_CA_upper, z_cut_CA_outer),
-        CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
-    // OuterCB Filled Cylinder
-    // 5 blocks
-    add_endcap_to_list_of_maps(
-        CoordinateMaps::UniformCylindricalEndcap(
-            make_array<3>(0.0), make_array<3>(0.0), inner_radius_C,
-            outer_radius_, -z_cut_CB_upper, -z_cut_CB_outer),
-        CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
-    // OuterCA Cylinder
-    // 4 blocks
-    add_side_to_list_of_maps(
-        CoordinateMaps::UniformCylindricalSide(
-            make_array<3>(0.0), make_array<3>(0.0), inner_radius_C,
-            outer_radius_, z_cut_CA_upper, cutting_plane_, z_cut_CA_outer,
-            cutting_plane_),
-        CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
-    // OuterCB Cylinder
-    // 4 blocks
-    add_side_to_list_of_maps(
-        CoordinateMaps::UniformCylindricalSide(
-            make_array<3>(0.0), make_array<3>(0.0), inner_radius_C,
-            outer_radius_, -z_cut_CB_upper, -cutting_plane_, -z_cut_CB_outer,
-            -cutting_plane_),
-        CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
+    if (not spherical_harmonics_in_wavezone_) {
+      const double z_cut_CA_outer = 0.7 * outer_radius_;
+      const double z_cut_CB_outer = -0.7 * outer_radius_;
+      // OuterCA Filled Cylinder
+      // 5 blocks
+      add_endcap_to_list_of_maps(
+          CoordinateMaps::UniformCylindricalEndcap(
+              make_array<3>(0.0), make_array<3>(0.0), inner_radius_C,
+              outer_radius_, z_cut_CA_upper, z_cut_CA_outer),
+          CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
+      // OuterCB Filled Cylinder
+      // 5 blocks
+      add_endcap_to_list_of_maps(
+          CoordinateMaps::UniformCylindricalEndcap(
+              make_array<3>(0.0), make_array<3>(0.0), inner_radius_C,
+              outer_radius_, -z_cut_CB_upper, -z_cut_CB_outer),
+          CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
+      // OuterCA Cylinder
+      // 4 blocks
+      add_side_to_list_of_maps(
+          CoordinateMaps::UniformCylindricalSide(
+              make_array<3>(0.0), make_array<3>(0.0), inner_radius_C,
+              outer_radius_, z_cut_CA_upper, cutting_plane_, z_cut_CA_outer,
+              cutting_plane_),
+          CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
+      // OuterCB Cylinder
+      // 4 blocks
+      add_side_to_list_of_maps(
+          CoordinateMaps::UniformCylindricalSide(
+              make_array<3>(0.0), make_array<3>(0.0), inner_radius_C,
+              outer_radius_, -z_cut_CB_upper, -cutting_plane_, -z_cut_CB_outer,
+              -cutting_plane_),
+          CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
+    } else {
+      // TODO: do we need something from Larry first?
+      // OuterShell SphericalShell0
+    }
   }
 
   // Excision spheres
@@ -1094,20 +1117,28 @@ CylindricalBinaryCompactObject::external_boundary_conditions() const {
     last_block += 14;
   }
   if (include_outer_sphere_) {
-    for (size_t i = 0; i < 5; ++i) {
-      // OuterCA Filled Cylinder
-      boundary_conditions[last_block + i][Direction<3>::upper_zeta()] =
-          outer_boundary_condition_->get_clone();
-      // OuterCB Filled Cylinder
-      boundary_conditions[last_block + i + 5][Direction<3>::upper_zeta()] =
-          outer_boundary_condition_->get_clone();
-    }
-    for (size_t i = 0; i < 4; ++i) {
-      // OuterCA Cylinder
-      boundary_conditions[last_block + i + 10][Direction<3>::upper_xi()] =
-          outer_boundary_condition_->get_clone();
-      // OuterCB Cylinder
-      boundary_conditions[last_block + i + 14][Direction<3>::upper_xi()] =
+    if (not spherical_harmonics_in_wavezone_) {
+      for (size_t i = 0; i < 5; ++i) {
+        // OuterCA Filled Cylinder
+        boundary_conditions[last_block + i][Direction<3>::upper_zeta()] =
+            outer_boundary_condition_->get_clone();
+        // OuterCB Filled Cylinder
+        boundary_conditions[last_block + i + 5][Direction<3>::upper_zeta()] =
+            outer_boundary_condition_->get_clone();
+      }
+      for (size_t i = 0; i < 4; ++i) {
+        // OuterCA Cylinder
+        boundary_conditions[last_block + i + 10][Direction<3>::upper_xi()] =
+            outer_boundary_condition_->get_clone();
+        // OuterCB Cylinder
+        boundary_conditions[last_block + i + 14][Direction<3>::upper_xi()] =
+            outer_boundary_condition_->get_clone();
+      }
+    } else {
+      // TODO / ASK : should I just add the same boundary_conditions
+      // need to check if radial direction is xi or zeta for spherical shell,
+      // guessing xi for now just to have something
+      boundary_conditions[last_block + 1][Direction<3>::upper_xi()] =
           outer_boundary_condition_->get_clone();
     }
   }
