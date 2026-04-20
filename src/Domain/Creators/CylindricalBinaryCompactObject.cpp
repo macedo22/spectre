@@ -915,8 +915,13 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       ExcisionSphere<3>{radius_B_, tnsr::I<double, 3, Frame::Grid>(center_B_),
                         abutting_directions_B});
 
-  Domain<3> domain{std::move(coordinate_maps), std::move(excision_spheres),
-                   block_names_, block_groups_};
+  Domain<3> domain;
+  if (not spherical_harmonics_in_wavezone_) {
+    domain = Domain<3>{std::move(coordinate_maps), std::move(excision_spheres),
+                       block_names_, block_groups_};
+  } else {
+    // TODO
+  }
 
   if (time_dependent_options_.has_value()) {
     ASSERT(include_inner_sphere_A_ and include_inner_sphere_B_,
