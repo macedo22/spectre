@@ -59,6 +59,9 @@ spectre_load_modules() {
     module load charm/8.0.0
     module load libbacktrace/2024.07.09
     module load xsimd/13.2.0
+
+    module use "/home/almacedo/modules/"
+    module load doxygen
 }
 
 spectre_run_cmake() {
@@ -73,7 +76,6 @@ spectre_run_cmake() {
           -D CHARM_ROOT=$CHARM_ROOT \
           -D BLA_VENDOR=OpenBLAS \
           -D CMAKE_BUILD_TYPE=Release \
-          -D BUILD_DOCS=OFF \
           -D DEBUG_SYMBOLS=OFF \
           -D MEMORY_ALLOCATOR=JEMALLOC \
           -D BUILD_PYTHON_BINDINGS=ON \
