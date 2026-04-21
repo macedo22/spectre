@@ -13,9 +13,11 @@
 #include "Domain/CoordinateMaps/CoordinateMap.hpp"
 #include "Domain/CoordinateMaps/CoordinateMap.tpp"
 #include "Domain/CoordinateMaps/DiscreteRotation.hpp"
+#include "Domain/CoordinateMaps/Identity.hpp"
 #include "Domain/CoordinateMaps/Interval.hpp"
 #include "Domain/CoordinateMaps/ProductMaps.hpp"
 #include "Domain/CoordinateMaps/ProductMaps.tpp"
+#include "Domain/CoordinateMaps/SphericalToCartesianPfaffian.hpp"
 #include "Domain/CoordinateMaps/UniformCylindricalEndcap.hpp"
 #include "Domain/CoordinateMaps/UniformCylindricalFlatEndcap.hpp"
 #include "Domain/CoordinateMaps/UniformCylindricalSide.hpp"
@@ -915,13 +917,27 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       ExcisionSphere<3>{radius_B_, tnsr::I<double, 3, Frame::Grid>(center_B_),
                         abutting_directions_B});
 
-  Domain<3> domain;
-  if (not spherical_harmonics_in_wavezone_) {
-    domain = Domain<3>{std::move(coordinate_maps), std::move(excision_spheres),
-                       block_names_, block_groups_};
-  } else {
-    // TODO
+  if (spherical_harmonics_in_wavezone_) {
+    // TODO : update when more than 1 shell supported, which includes supporting
+    //        radial partititioning
+    const double r_in = inner_radius_C;
+    const double r_out = outer_radius_;
+    // note: 0.0 is the singularity position for the radial map
+    CoordinateMaps::Interval radial_map{
+        -1.0, 1.0, r_in, r_out, ::domain::CoordinateMaps::Distribution::Linear,
+        0.0};
+    auto sh_map =
+        make_coordinate_map_base<Frame::BlockLogical, Frame::Inertial>(
+            CoordinateMaps::ProductOf2Maps<CoordinateMaps::Interval,
+                                           CoordinateMaps::Identity<2>>{
+                std::move(radial_map), CoordinateMaps::Identity<2>{}},
+            CoordinateMaps::SphericalToCartesianPfaffian{});
+    coordinate_maps.insert(coordinate_maps.end(), std::move(sh_map));
   }
+
+  Domain<3> domain =
+      Domain<3>{std::move(coordinate_maps), std::move(excision_spheres),
+                block_names_, block_groups_};
 
   if (time_dependent_options_.has_value()) {
     ASSERT(include_inner_sphere_A_ and include_inner_sphere_B_,
