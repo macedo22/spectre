@@ -496,6 +496,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       cyl_wedge_coord_map_center_blocks(
           cylinder_inner_radius, cylinder_lower_bound_z, cylinder_upper_bound_z,
           use_equiangular_map_);
+  // note: inner circularity is flat here because the center is rectangular
   const auto logical_to_cylinder_surrounding_maps =
       cyl_wedge_coord_map_surrounding_blocks(
           cylinder_inner_radius, cylinder_outer_radius, cylinder_lower_bound_z,
@@ -920,7 +921,223 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
     domain = Domain<3>{std::move(coordinate_maps), std::move(excision_spheres),
                        block_names_, block_groups_};
   } else {
-    // TODO
+    // --- SH wavezone: build from explicit Block objects ---
+
+    // std::vector<DirectionMap<3, BlockNeighbors<3>>> inner_neighbors;
+    // set_internal_boundaries<3>(make_not_null(&inner_neighbors), coordinate_maps);
+
+    // From Wedge.cpp :
+    // template <>
+    // struct WedgeCoordOrientation<2> {
+    //   static constexpr size_t radial_coord = 0;
+    //   static constexpr size_t polar_coord = 1;
+    //   static constexpr size_t azimuth_coord = 2;  // unused
+    // };
+
+    // From DomainHelpers.cpp :
+    // const std::array<OrientationMap<2>, 4> wedge_orientations = {
+    //   OrientationMap<2>{std::array<Direction<2>, 2>{
+    //       {Direction<2>::upper_xi(), Direction<2>::upper_eta()}}},  //+x wedge
+    //   OrientationMap<2>{std::array<Direction<2>, 2>{
+    //       {Direction<2>::lower_eta(), Direction<2>::upper_xi()}}},  //+y wedge
+    //   OrientationMap<2>{std::array<Direction<2>, 2>{
+    //       {Direction<2>::lower_xi(), Direction<2>::lower_eta()}}},  //-x wedge
+    //   OrientationMap<2>{std::array<Direction<2>, 2>{
+    //       {Direction<2>::upper_eta(), Direction<2>::lower_xi()}}}  //-y wedge
+    // };
+
+    // CA Filled Cylinder
+    // 5 blocks: 0 thru 4
+    // UniformCylindricalEndcap
+    // - not hollow
+    // - surrounding wedges: maybe xi is outward for all? maybe it changes based
+    //   on wedge OrientationMap about
+    // - center block: think the map has lower zeta as outward radial
+
+    // CA Cylinder
+    // 4 blocks: 5 thru 8
+    // UniformCylindricalSide
+    // hollow
+    // -> I think radial dir is xi for UniformCylindricalSide
+
+    // CB Filled Cylinder
+    // 5 blocks: 37 thru 41
+    // UniformCylindricalEndcap
+
+    // CB Cylinder
+    // 4 blocks: 42 thru 45
+    // UniformCylindricalSide
+
+    // first_outer_shell_block = 46;
+
+    // // Connect the 10 envelope blocks' upper_zeta faces to the first SH shell.
+    // const size_t first_envelope = first_outer_shell_block_ - 10;
+    // // Orientation between the SH shell (lower_xi) and envelope frustums
+    // // (upper_zeta). Shell's xi = frustum's zeta (radial); angular axes use
+    // // self() (no rotation). Matches
+    // // NonconformingSphericalShells::create_domain.
+    // const OrientationMap<3> shell_to_frustum{
+    //     {{Direction<3>::upper_zeta(), Direction<3>::self(),
+    //       Direction<3>::self()}}};
+    // const auto frustum_to_shell = shell_to_frustum.inverse_map();
+    // const auto aligned = OrientationMap<3>::create_aligned();
+    // for (size_t j = first_envelope; j < first_outer_shell_block_; ++j) {
+    //   inner_neighbors[j].emplace(
+    //       Direction<3>::upper_zeta(),
+    //       BlockNeighbors<3>{{first_outer_shell_block_},
+    //                         {{first_outer_shell_block_, frustum_to_shell}},
+    //                         /*are_conforming=*/false});
+    // }
+
+    // outer shell's upper xi = outward radial
+
+    // endcap center: outward radial is lower zeta?
+    const OrientationMap<3> shell_to_filled_cyl_center{
+        {{Direction<3>::lower_zeta(), Direction<3>::self(),
+          Direction<3>::self()}}};
+    const OrientationMap<3> filled_cyl_center_to_shell =
+      shell_to_filled_cyl_center.inverse();
+    // endcap wedge: outward radial is upper xi?
+    const OrientationMap<3> shell_to_filled_cyl_wedge{
+        {{Direction<3>::upper_xi(), Direction<3>::self(),
+          Direction<3>::self()}}};
+    const OrientationMap<3> filled_cyl_wedge_to_shell =
+      shell_to_filled_cyl_wedge.inverse();
+    // cyl side: outward radial is upper xi?
+    const OrientationMap<3> shell_to_hollow_cyl_wedge{
+        {{Direction<3>::upper_xi(), Direction<3>::self(),
+          Direction<3>::self()}}};
+    const OrientationMap<3> hollow_cyl_wedge_to_shell =
+      shell_to_hollow_cyl_wedge.inverse();
+
+    auto add_shell_thing_to_list_of_maps =
+      [&coordinate_maps, &logical_to_cylinder_center_maps,
+       &logical_to_cylinder_surrounding_maps](
+          const CoordinateMaps::UniformCylindricalEndcap& endcap_map,
+          const CoordinateMaps::DiscreteRotation<3>& rotation_map) {
+        auto new_logical_to_cylinder_center_maps =
+            domain::make_vector_coordinate_map_base<Frame::BlockLogical,
+                                                    Frame::Inertial, 3>(
+                logical_to_cylinder_center_maps, endcap_map, rotation_map);
+        coordinate_maps.insert(
+            coordinate_maps.end(),
+            std::make_move_iterator(
+                new_logical_to_cylinder_center_maps.begin()),
+            std::make_move_iterator(new_logical_to_cylinder_center_maps.end()));
+        auto new_logical_to_cylinder_surrounding_maps =
+            domain::make_vector_coordinate_map_base<Frame::BlockLogical,
+                                                    Frame::Inertial, 3>(
+                logical_to_cylinder_surrounding_maps, endcap_map, rotation_map);
+        coordinate_maps.insert(
+            coordinate_maps.end(),
+            std::make_move_iterator(
+                new_logical_to_cylinder_surrounding_maps.begin()),
+            std::make_move_iterator(
+                new_logical_to_cylinder_surrounding_maps.end()));
+      };
+
+    // // TODO : update to subtract off number of shells instead of 1 later
+    // const size_t first_outer_shell_block = number_of_blocks_ - 1;
+
+    // // CA Filled Cylinder
+    // // 5 blocks: 0 thru 4
+    // // UniformCylindricalEndcap
+    // // - I think block 0 is center, blocks 1 - 4 surrounding wedges
+    // inner_neighbors[0].emplace(
+    //       Direction<3>::lower_zeta(),
+    //       BlockNeighbors<3>{{first_outer_shell_block},
+    //                         {{first_outer_shell_block, filled_cyl_center_to_shell}},
+    //                         /*are_conforming=*/false});
+
+    // for (size_t j = 1; j < 5; ++j) {
+    //   inner_neighbors[j].emplace(
+    //       Direction<3>::upper_xi(),
+    //       BlockNeighbors<3>{{first_outer_shell_block},
+    //                         {{first_outer_shell_block, filled_cyl_wedge_to_shell}},
+    //                         /*are_conforming=*/false});
+    // }
+
+    // // CA Cylinder
+    // // 4 blocks: 5 thru 8
+    // // UniformCylindricalSide
+    // // hollow
+    // // -> I think radial dir is xi for UniformCylindricalSide
+    // for (size_t j = 5; j < 9; ++j) {
+    //   inner_neighbors[j].emplace(
+    //       Direction<3>::upper_xi(),
+    //       BlockNeighbors<3>{{first_outer_shell_block},
+    //                         {{first_outer_shell_block, hollow_cyl_wedge_to_shell}},
+    //                         /*are_conforming=*/false});
+    // }
+
+    // // CB Filled Cylinder
+    // // 5 blocks: 37 thru 41
+    // // UniformCylindricalEndcap
+
+    // // Build blocks in final order.
+    // std::vector<Block<3>> blocks;
+    // blocks.reserve(number_of_blocks_);
+
+    // // (a) Inner blocks before SH shells.
+    // for (size_t j = 0; j < first_outer_shell_block_; ++j) {
+    //   blocks.emplace_back(std::move(maps[j]), j, std::move(inner_neighbors[j]),
+    //                       block_names_[j]);
+    // }
+
+    // // (b) SH outer shell blocks.
+    // for (size_t shell = 0; shell < number_of_outer_shells_; ++shell) {
+    //   const size_t block_id = first_outer_shell_block_ + shell;
+    //   const double r_in = shell == 0
+    //                           ? envelope_radius_
+    //                           : radial_partitioning_outer_shell_[shell - 1];
+    //   const double r_out = shell < number_of_outer_shells_ - 1
+    //                            ? radial_partitioning_outer_shell_[shell]
+    //                            : outer_radius_;
+    //   CoordinateMaps::Interval radial_map{
+    //       -1.0, 1.0, r_in, r_out, radial_distribution_outer_shell_[shell], 0.0};
+    //   auto sh_map =
+    //       make_coordinate_map_base<Frame::BlockLogical, Frame::Inertial>(
+    //           CoordinateMaps::ProductOf2Maps<CoordinateMaps::Interval,
+    //                                          CoordinateMaps::Identity<2>>{
+    //               std::move(radial_map), CoordinateMaps::Identity<2>{}},
+    //           CoordinateMaps::SphericalToCartesianPfaffian{});
+    //   DirectionMap<3, BlockNeighbors<3>> sh_neighbors;
+    //   if (shell == 0) {
+    //     // lower_xi → all 10 envelope blocks (non-conforming, multi-neighbor).
+    //     std::unordered_set<size_t> env_ids;
+    //     std::unordered_map<size_t, OrientationMap<3>> env_orientations;
+    //     for (size_t j = first_envelope; j < first_outer_shell_block_; ++j) {
+    //       env_ids.insert(j);
+    //       env_orientations.emplace(j, shell_to_frustum);
+    //     }
+    //     sh_neighbors.emplace(
+    //         Direction<3>::lower_xi(),
+    //         BlockNeighbors<3>{std::move(env_ids), std::move(env_orientations),
+    //                           /*are_conforming=*/false});
+    //   } else {
+    //     // lower_xi → previous SH shell (conforming, single neighbor).
+    //     sh_neighbors.emplace(Direction<3>::lower_xi(),
+    //                          BlockNeighbors<3>{block_id - 1, aligned});
+    //   }
+    //   if (shell < number_of_outer_shells_ - 1) {
+    //     sh_neighbors.emplace(Direction<3>::upper_xi(),
+    //                          BlockNeighbors<3>{block_id + 1, aligned});
+    //   }
+    //   blocks.emplace_back(std::move(sh_map), block_id, std::move(sh_neighbors),
+    //                       block_names_[block_id],
+    //                       domain::topologies::spherical_shell);
+    // }
+
+    // // (c) Interior cube blocks (after SH shells in final ordering).
+    // for (size_t j = first_outer_shell_block_; j < maps.size(); ++j) {
+    //   const size_t block_id = to_final_id(j);
+    //   blocks.emplace_back(std::move(maps[j]), block_id,
+    //                       std::move(inner_neighbors[j]),
+    //                       block_names_[block_id]);
+    // }
+
+    domain = Domain<3>{std::move(blocks), std::move(excision_spheres),
+                       block_groups_};
   }
 
   if (time_dependent_options_.has_value()) {
