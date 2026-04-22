@@ -926,11 +926,26 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
     CoordinateMaps::Interval radial_map{
         -1.0, 1.0, r_in, r_out, ::domain::CoordinateMaps::Distribution::Linear,
         0.0};
+    // auto sh_map =
+    //     make_coordinate_map_base<Frame::BlockLogical, Frame::Inertial>(
+    //         CoordinateMaps::ProductOf2Maps<CoordinateMaps::Interval,
+    //                                        CoordinateMaps::Identity<2>>{
+    //             std::move(radial_map), CoordinateMaps::Identity<2>{}},
+    //         CoordinateMaps::SphericalToCartesianPfaffian{});
+    CoordinateMaps::Interval theta_map{
+        -1.0, 1.0, 0.0, M_PI, ::domain::CoordinateMaps::Distribution::Linear};
+
+    CoordinateMaps::Interval phi_map{
+        -1.0, 1.0, 0.0, 2.0 * M_PI,
+        ::domain::CoordinateMaps::Distribution::Linear};
+
     auto sh_map =
         make_coordinate_map_base<Frame::BlockLogical, Frame::Inertial>(
-            CoordinateMaps::ProductOf2Maps<CoordinateMaps::Interval,
-                                           CoordinateMaps::Identity<2>>{
-                std::move(radial_map), CoordinateMaps::Identity<2>{}},
+            CoordinateMaps::ProductOf3Maps<CoordinateMaps::Interval,
+                                           CoordinateMaps::Interval,
+                                           CoordinateMaps::Interval>{
+                std::move(radial_map), std::move(theta_map),
+                std::move(phi_map)},
             CoordinateMaps::SphericalToCartesianPfaffian{});
     coordinate_maps.insert(coordinate_maps.end(), std::move(sh_map));
   }
