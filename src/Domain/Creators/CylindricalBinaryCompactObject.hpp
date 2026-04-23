@@ -35,6 +35,7 @@ template <typename Map1, typename Map2>
 class ProductOf2Maps;
 template <typename Map1, typename Map2, typename Map3>
 class ProductOf3Maps;
+class SphericalToCartesianPfaffian;
 template <size_t VolumeDim>
 class Wedge;
 template <size_t VolumeDim>
@@ -185,6 +186,11 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
                                                     CoordinateMaps::Interval>,
                      CoordinateMaps::UniformCylindricalSide,
                      CoordinateMaps::DiscreteRotation<3>>,
+                 domain::CoordinateMap<
+                     Frame::BlockLogical, Frame::Inertial,
+                     domain::CoordinateMaps::ProductOf2Maps<
+                         CoordinateMaps::Interval, CoordinateMaps::Identity<2>>,
+                     domain::CoordinateMaps::SphericalToCartesianPfaffian>,
                  bco::TimeDependentMapOptions<true>::maps_list>>;
 
   struct CenterA {
