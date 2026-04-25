@@ -996,12 +996,12 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
     const auto cyl_endcap_center_to_shell =
         shell_to_cyl_endcap_center.inverse_map();
     const OrientationMap<3> shell_to_cyl_endcap_wedge{
-        {{Direction<3>::upper_xi(), Direction<3>::self(),
+        {{Direction<3>::upper_zeta(), Direction<3>::self(),
           Direction<3>::self()}}};
     const auto cyl_endcap_wedge_to_shell =
         shell_to_cyl_endcap_wedge.inverse_map();
     const OrientationMap<3> shell_to_cyl_side{
-        {{Direction<3>::upper_zeta(), Direction<3>::self(),
+        {{Direction<3>::upper_xi(), Direction<3>::self(),
           Direction<3>::self()}}};
     const auto cyl_side_to_shell = shell_to_cyl_side.inverse_map();
 
@@ -1031,7 +1031,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
 
     // CA Filled Cylinder : center
     inner_neighbors[ca_filled_cyl_center_block].emplace(
-        Direction<3>::upper_xi(),
+        Direction<3>::upper_zeta(),
         BlockNeighbors<3>{
             {first_outer_shell_block},
             {{first_outer_shell_block, cyl_endcap_center_to_shell}},
@@ -1052,7 +1052,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
     for (size_t j = first_ca_hollow_cyl_block;
          j < first_ca_hollow_cyl_block + 4; ++j) {
       inner_neighbors[j].emplace(
-          Direction<3>::upper_zeta(),
+          Direction<3>::upper_xi(),
           BlockNeighbors<3>{{first_outer_shell_block},
                             {{first_outer_shell_block, cyl_side_to_shell}},
                             /*are_conforming=*/false});
