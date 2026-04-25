@@ -941,35 +941,6 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
     // are supported
     const size_t number_of_outer_shells = 1;
     // Connect the 18 CA and CB cylinders to the innermost outer shell
-    // const size_t first_outer_shell_block =
-    //     (number_of_blocks_ - number_of_outer_shells) - 1;
-    // // Orientation between the SH shell (lower_xi) and envelope frustums
-    // // (upper_zeta). Shell's xi = frustum's zeta (radial); angular axes use
-    // // self() (no rotation). Matches
-    // // NonconformingSphericalShells::create_domain.
-    // const OrientationMap<3> shell_to_frustum{
-    //     {{Direction<3>::upper_zeta(), Direction<3>::self(),
-    //       Direction<3>::self()}}};
-    // const auto frustum_to_shell = shell_to_frustum.inverse_map();
-    // const auto aligned = OrientationMap<3>::create_aligned();
-    // for (size_t j = first_envelope; j < first_outer_shell_block_; ++j) {
-    //   inner_neighbors[j].emplace(
-    //       Direction<3>::upper_zeta(),
-    //       BlockNeighbors<3>{{first_outer_shell_block_},
-    //                         {{first_outer_shell_block_, frustum_to_shell}},
-    //                         /*are_conforming=*/false});
-    // }
-
-    // struct WedgeCoordOrientation<2> {
-    //   static constexpr size_t radial_coord = 0;
-    //   static constexpr size_t polar_coord = 1;
-    //   static constexpr size_t azimuth_coord = 2;  // unused
-    // };
-
-    // so maybe the radial direction (the interval) is the zeta coord?
-    // using Wedge2D = domain::CoordinateMaps::Wedge<2>;
-    // using Wedge3DPrism =
-    //     domain::CoordinateMaps::ProductOf2Maps<Wedge2D, Interval>;
 
     // CA Filled Cylinder
     // 5 blocks: 0 thru 4
@@ -1006,13 +977,6 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
     const auto cyl_side_to_shell = shell_to_cyl_side.inverse_map();
 
     const auto aligned = OrientationMap<3>::create_aligned();
-    // for (size_t j = first_envelope; j < first_outer_shell_block_; ++j) {
-    //   inner_neighbors[j].emplace(
-    //       Direction<3>::upper_zeta(),
-    //       BlockNeighbors<3>{{first_outer_shell_block_},
-    //                         {{first_outer_shell_block_, frustum_to_shell}},
-    //                         /*are_conforming=*/false});
-    // }
 
     // note: I think the center block comes before the four wedges for a filled
     // cylinder
@@ -1025,9 +989,6 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
     const size_t first_cb_filled_cyl_wedges_block =
         cb_filled_cyl_center_block + 1;
     const size_t first_cb_hollow_cyl_block = 42;
-
-    // const size_t num_filled_cyl_blocks = 5;
-    // const size_t num_hollow_cyl_blocks = 4;
 
     // CA Filled Cylinder : center
     inner_neighbors[ca_filled_cyl_center_block].emplace(
@@ -1098,51 +1059,6 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
     }
 
     // (b) SH outer shell blocks.
-    // for (size_t shell = 0; shell < number_of_outer_shells_; ++shell) {
-    //   const size_t block_id = first_outer_shell_block_ + shell;
-    //   const double r_in = shell == 0
-    //                           ? envelope_radius_
-    //                           : radial_partitioning_outer_shell_[shell - 1];
-    //   const double r_out = shell < number_of_outer_shells_ - 1
-    //                            ? radial_partitioning_outer_shell_[shell]
-    //                            : outer_radius_;
-    //   CoordinateMaps::Interval radial_map{
-    //       -1.0, 1.0, r_in, r_out, radial_distribution_outer_shell_[shell],
-    //       0.0};
-    //   auto sh_map =
-    //       make_coordinate_map_base<Frame::BlockLogical, Frame::Inertial>(
-    //           CoordinateMaps::ProductOf2Maps<CoordinateMaps::Interval,
-    //                                          CoordinateMaps::Identity<2>>{
-    //               std::move(radial_map), CoordinateMaps::Identity<2>{}},
-    //           CoordinateMaps::SphericalToCartesianPfaffian{});
-    //   DirectionMap<3, BlockNeighbors<3>> sh_neighbors;
-    //   if (shell == 0) {
-    //     // lower_xi → all 10 envelope blocks (non-conforming,
-    //     multi-neighbor). std::unordered_set<size_t> env_ids;
-    //     std::unordered_map<size_t, OrientationMap<3>> env_orientations;
-    //     for (size_t j = first_envelope; j < first_outer_shell_block_; ++j) {
-    //       env_ids.insert(j);
-    //       env_orientations.emplace(j, shell_to_frustum);
-    //     }
-    //     sh_neighbors.emplace(
-    //         Direction<3>::lower_xi(),
-    //         BlockNeighbors<3>{std::move(env_ids),
-    //         std::move(env_orientations),
-    //                           /*are_conforming=*/false});
-    //   } else {
-    //     // lower_xi → previous SH shell (conforming, single neighbor).
-    //     sh_neighbors.emplace(Direction<3>::lower_xi(),
-    //                          BlockNeighbors<3>{block_id - 1, aligned});
-    //   }
-    //   if (shell < number_of_outer_shells_ - 1) {
-    //     sh_neighbors.emplace(Direction<3>::upper_xi(),
-    //                          BlockNeighbors<3>{block_id + 1, aligned});
-    //   }
-    //   blocks.emplace_back(std::move(sh_map), block_id,
-    //   std::move(sh_neighbors),
-    //                       block_names_[block_id],
-    //                       domain::topologies::spherical_shell);
-    // }
     for (size_t shell = 0; shell < number_of_outer_shells; ++shell) {
       const size_t block_id = first_outer_shell_block + shell;
       const double r_in = inner_radius_C;
@@ -1163,19 +1079,6 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
               CoordinateMaps::SphericalToCartesianPfaffian{});
       DirectionMap<3, BlockNeighbors<3>> sh_neighbors;
       if (shell == 0) {
-        // // lower_xi → all 10 envelope blocks (non-conforming,
-        // multi-neighbor). std::unordered_set<size_t> env_ids;
-        // std::unordered_map<size_t, OrientationMap<3>> env_orientations;
-        // for (size_t j = first_envelope; j < first_outer_shell_block_; ++j) {
-        //   env_ids.insert(j);
-        //   env_orientations.emplace(j, shell_to_frustum);
-        // }
-        // sh_neighbors.emplace(
-        //     Direction<3>::lower_xi(),
-        //     BlockNeighbors<3>{std::move(env_ids),
-        //     std::move(env_orientations),
-        //                       /*are_conforming=*/false});
-
         // lower_xi → all 18 CA, CB blocks (non-conforming, multi-neighbor).
         std::unordered_set<size_t> cyl_ids;
         std::unordered_map<size_t, OrientationMap<3>> cyl_orientations;
