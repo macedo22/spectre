@@ -13,9 +13,11 @@
 #include "Domain/CoordinateMaps/CoordinateMap.hpp"
 #include "Domain/CoordinateMaps/CoordinateMap.tpp"
 #include "Domain/CoordinateMaps/DiscreteRotation.hpp"
+#include "Domain/CoordinateMaps/Identity.hpp"
 #include "Domain/CoordinateMaps/Interval.hpp"
 #include "Domain/CoordinateMaps/ProductMaps.hpp"
 #include "Domain/CoordinateMaps/ProductMaps.tpp"
+#include "Domain/CoordinateMaps/SphericalToCartesianPfaffian.hpp"
 #include "Domain/CoordinateMaps/UniformCylindricalEndcap.hpp"
 #include "Domain/CoordinateMaps/UniformCylindricalFlatEndcap.hpp"
 #include "Domain/CoordinateMaps/UniformCylindricalSide.hpp"
@@ -60,9 +62,7 @@ namespace domain::creators {
 CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
     std::array<double, 3> center_A, std::array<double, 3> center_B,
     double radius_A, double radius_B, bool include_inner_sphere_A,
-    bool include_inner_sphere_B,
-    /*bool include_outer_sphere,*/ double outer_radius,
-    bool use_equiangular_map,
+    bool include_inner_sphere_B, double outer_radius, bool use_equiangular_map,
     const typename InitialRefinement::type& initial_refinement,
     const typename InitialGridPoints::type& initial_grid_points,
     std::optional<OuterSphereOptions> outer_shell_options,
@@ -78,7 +78,6 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
       radius_B_(radius_B),
       include_inner_sphere_A_(include_inner_sphere_A),
       include_inner_sphere_B_(include_inner_sphere_B),
-      // include_outer_sphere_(include_outer_sphere),
       outer_radius_(outer_radius),
       use_equiangular_map_(use_equiangular_map),
       inner_boundary_condition_(std::move(inner_boundary_condition)),
@@ -190,6 +189,10 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
           : radius_B_;
 
   const bool include_outer_sphere = outer_shell_options.has_value();
+  const bool spherical_harmonics_in_wavezone =
+      include_outer_sphere
+          ? outer_shell_options.value().spherical_harmonics_in_wavezone_
+          : false;
 
   number_of_blocks_ = 46;
   if (include_inner_sphere_A) {
@@ -199,7 +202,8 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
     number_of_blocks_ += 14;
   }
   if (include_outer_sphere) {
-    number_of_blocks_ += 18;
+    // Only one outer spherical shell (for now) or all 18 CA, CB blocks
+    number_of_blocks_ += (spherical_harmonics_in_wavezone ? 1 : 18);
   }
 
   // Add SphereE blocks if necessary.  Note that
@@ -306,14 +310,21 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
     first_outer_shell_block += 14;
   }
   if (include_outer_sphere) {
-    // 5 blocks
-    add_filled_cylinder_name("OuterSphereCA", "OuterSphere");
-    // 5 blocks
-    add_filled_cylinder_name("OuterSphereCB", "OuterSphere");
-    // 4 blocks
-    add_cylinder_name("OuterSphereCA", "OuterSphere");
-    // 4 blocks
-    add_cylinder_name("OuterSphereCB", "OuterSphere");
+    if (not spherical_harmonics_in_wavezone) {
+      // 5 blocks
+      add_filled_cylinder_name("OuterSphereCA", "OuterSphere");
+      // 5 blocks
+      add_filled_cylinder_name("OuterSphereCB", "OuterSphere");
+      // 4 blocks
+      add_cylinder_name("OuterSphereCA", "OuterSphere");
+      // 4 blocks
+      add_cylinder_name("OuterSphereCB", "OuterSphere");
+    } else {
+      const std::string name = "OuterShell0";
+      const std::string group_name = "OuterSphere";
+      block_names_.push_back(name);
+      block_groups_[group_name].insert(name);
+    }
   }
 
   // Expand initial refinement over all blocks
@@ -393,8 +404,17 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
     current_block += 4;
   }
   if (include_outer_sphere) {
-    for (size_t block = 0; block < 10; ++block) {
+    if (not spherical_harmonics_in_wavezone) {
+      for (size_t block = 0; block < 10; ++block) {
+        swap_refinement_and_grid_points_xi_zeta(current_block++);
+      }
+    } else {
       swap_refinement_and_grid_points_xi_zeta(current_block++);
+      initial_grid_points_[first_outer_shell_block][2] =
+          ylm::Spherepack::n_phi_points(
+              initial_grid_points_[first_outer_shell_block][1] - 1);
+      initial_refinement_[first_outer_shell_block][1] = 0;
+      initial_refinement_[first_outer_shell_block][2] = 0;
     }
   }
 
@@ -589,6 +609,10 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       };
 
   const bool include_outer_sphere = outer_shell_options_.has_value();
+  const bool spherical_harmonics_in_wavezone =
+      include_outer_sphere
+          ? outer_shell_options_.value().spherical_harmonics_in_wavezone_
+          : false;
 
   // Inner radius of the outer C shell, if it exists.
   // If it doesn't exist, then it is the same as the outer_radius_.
@@ -795,7 +819,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
             -z_cut_EB_upper, -z_cut_EB_lower),
         CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
   }
-  if (include_outer_sphere) {
+  if (include_outer_sphere and not spherical_harmonics_in_wavezone) {
     const double z_cut_CA_outer = 0.7 * outer_radius_;
     const double z_cut_CB_outer = -0.7 * outer_radius_;
     // OuterCA Filled Cylinder
@@ -897,8 +921,187 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
           tnsr::I<double, 3, Frame::Grid>(rotate_from_z_to_x_axis(center_B_)),
           abutting_directions_B});
 
-  Domain<3> domain{std::move(coordinate_maps), std::move(excision_spheres),
-                   block_names_, block_groups_};
+  Domain<3> domain;
+  if (not spherical_harmonics_in_wavezone) {
+    domain = Domain<3>{std::move(coordinate_maps), std::move(excision_spheres),
+                       block_names_, block_groups_};
+  } else {
+    // --- SH wavezone: build from explicit Block objects ---
+    //
+    // `coordinate_maps` at this point contains the inner (non-SH) maps.
+    // Total = first_outer_shell_block + n_interior_cubes entries.
+    // We determine auto-topology neighbors for these inner maps
+    std::vector<DirectionMap<3, BlockNeighbors<3>>> inner_neighbors;
+    set_internal_boundaries<3>(make_not_null(&inner_neighbors),
+                               coordinate_maps);
+
+    // Connect the 18 CA, CB cylinders to the innermost outer shell
+    const OrientationMap<3> shell_to_cyl_endcap_center{
+        {{Direction<3>::upper_zeta(), Direction<3>::self(),
+          Direction<3>::self()}}};
+    const auto cyl_endcap_center_to_shell =
+        shell_to_cyl_endcap_center.inverse_map();
+    const OrientationMap<3> shell_to_cyl_endcap_wedge{
+        {{Direction<3>::upper_zeta(), Direction<3>::self(),
+          Direction<3>::self()}}};
+    const auto cyl_endcap_wedge_to_shell =
+        shell_to_cyl_endcap_wedge.inverse_map();
+    const OrientationMap<3> shell_to_cyl_side{
+        {{Direction<3>::upper_xi(), Direction<3>::self(),
+          Direction<3>::self()}}};
+    const auto cyl_side_to_shell = shell_to_cyl_side.inverse_map();
+
+    const size_t ca_filled_cyl_center_block = 0;
+    const size_t first_ca_filled_cyl_wedges_block =
+        ca_filled_cyl_center_block + 1;
+    const size_t first_ca_hollow_cyl_block = 5;
+    const size_t cb_filled_cyl_center_block = 37;
+    const size_t first_cb_filled_cyl_wedges_block =
+        cb_filled_cyl_center_block + 1;
+    const size_t first_cb_hollow_cyl_block = 42;
+
+    // CA Filled Cylinder: center
+    // 1 block: 0
+    inner_neighbors[ca_filled_cyl_center_block].emplace(
+        Direction<3>::upper_zeta(),
+        BlockNeighbors<3>{
+            {first_outer_shell_block},
+            {{first_outer_shell_block, cyl_endcap_center_to_shell}},
+            /*are_conforming=*/false});
+
+    // CA Filled Cylinder: surrounding wedges
+    // 4 blocks: 1 thru 4
+    for (size_t j = first_ca_filled_cyl_wedges_block;
+         j < first_ca_filled_cyl_wedges_block + 4; ++j) {
+      inner_neighbors[j].emplace(
+          Direction<3>::upper_zeta(),
+          BlockNeighbors<3>{
+              {first_outer_shell_block},
+              {{first_outer_shell_block, cyl_endcap_wedge_to_shell}},
+              /*are_conforming=*/false});
+    }
+
+    // CA Cylinder
+    // 4 blocks: 5 thru 8
+    for (size_t j = first_ca_hollow_cyl_block;
+         j < first_ca_hollow_cyl_block + 4; ++j) {
+      inner_neighbors[j].emplace(
+          Direction<3>::upper_xi(),
+          BlockNeighbors<3>{{first_outer_shell_block},
+                            {{first_outer_shell_block, cyl_side_to_shell}},
+                            /*are_conforming=*/false});
+    }
+
+    // CB Filled Cylinder: center
+    // 1 block: 37
+    inner_neighbors[cb_filled_cyl_center_block].emplace(
+        Direction<3>::upper_zeta(),
+        BlockNeighbors<3>{
+            {first_outer_shell_block},
+            {{first_outer_shell_block, cyl_endcap_center_to_shell}},
+            /*are_conforming=*/false});
+
+    // CB Filled Cylinder: surrounding wedges
+    // 4 blocks: 38 thru 41
+    for (size_t j = first_cb_filled_cyl_wedges_block;
+         j < first_cb_filled_cyl_wedges_block + 4; ++j) {
+      inner_neighbors[j].emplace(
+          Direction<3>::upper_zeta(),
+          BlockNeighbors<3>{
+              {first_outer_shell_block},
+              {{first_outer_shell_block, cyl_endcap_wedge_to_shell}},
+              /*are_conforming=*/false});
+    }
+
+    // CA Cylinder
+    // 4 blocks: 42 thru 45
+    for (size_t j = first_cb_hollow_cyl_block;
+         j < first_cb_hollow_cyl_block + 4; ++j) {
+      inner_neighbors[j].emplace(
+          Direction<3>::upper_xi(),
+          BlockNeighbors<3>{{first_outer_shell_block},
+                            {{first_outer_shell_block, cyl_side_to_shell}},
+                            /*are_conforming=*/false});
+    }
+
+    // Build blocks in final order.
+    std::vector<Block<3>> blocks;
+    blocks.reserve(number_of_blocks_);
+
+    // (a) Inner blocks before SH shells.
+    for (size_t j = 0; j < first_outer_shell_block; ++j) {
+      blocks.emplace_back(std::move(coordinate_maps[j]), j,
+                          std::move(inner_neighbors[j]), block_names_[j]);
+    }
+
+    // (b) SH outer shell blocks.
+    const size_t block_id = first_outer_shell_block;
+    const double r_in = inner_radius_C;
+    const double r_out = outer_radius_;
+
+    CoordinateMaps::Interval radial_map{
+        -1.0, 1.0, r_in, r_out, ::domain::CoordinateMaps::Distribution::Linear,
+        0.0};
+    auto sh_map =
+        make_coordinate_map_base<Frame::BlockLogical, Frame::Inertial>(
+            CoordinateMaps::ProductOf2Maps<CoordinateMaps::Interval,
+                                           CoordinateMaps::Identity<2>>{
+                std::move(radial_map), CoordinateMaps::Identity<2>{}},
+            CoordinateMaps::SphericalToCartesianPfaffian{});
+    DirectionMap<3, BlockNeighbors<3>> sh_neighbors;
+    // lower_xi → all 18 CA, CB blocks (non-conforming, multi-neighbor).
+    std::unordered_set<size_t> cyl_ids;
+    std::unordered_map<size_t, OrientationMap<3>> cyl_orientations;
+
+    // CA Filled Cylinder: center
+    cyl_ids.insert(ca_filled_cyl_center_block);
+    cyl_orientations.emplace(ca_filled_cyl_center_block,
+                             shell_to_cyl_endcap_center);
+
+    // CA Filled Cylinder: surrounding wedges
+    for (size_t j = first_ca_filled_cyl_wedges_block;
+         j < first_ca_filled_cyl_wedges_block + 4; ++j) {
+      cyl_ids.insert(j);
+      cyl_orientations.emplace(j, shell_to_cyl_endcap_wedge);
+    }
+
+    // CA Cylinder
+    for (size_t j = first_ca_hollow_cyl_block;
+         j < first_ca_hollow_cyl_block + 4; ++j) {
+      cyl_ids.insert(j);
+      cyl_orientations.emplace(j, shell_to_cyl_side);
+    }
+
+    // CB Filled Cylinder: center
+    cyl_ids.insert(cb_filled_cyl_center_block);
+    cyl_orientations.emplace(cb_filled_cyl_center_block,
+                             shell_to_cyl_endcap_center);
+
+    // CB Filled Cylinder: surrounding wedges
+    for (size_t j = first_cb_filled_cyl_wedges_block;
+         j < first_cb_filled_cyl_wedges_block + 4; ++j) {
+      cyl_ids.insert(j);
+      cyl_orientations.emplace(j, shell_to_cyl_endcap_wedge);
+    }
+
+    // CB Cylinder
+    for (size_t j = first_cb_hollow_cyl_block;
+         j < first_cb_hollow_cyl_block + 4; ++j) {
+      cyl_ids.insert(j);
+      cyl_orientations.emplace(j, shell_to_cyl_side);
+    }
+
+    sh_neighbors.emplace(
+        Direction<3>::lower_xi(),
+        BlockNeighbors<3>{std::move(cyl_ids), std::move(cyl_orientations),
+                          /*are_conforming=*/false});
+    blocks.emplace_back(std::move(sh_map), block_id, std::move(sh_neighbors),
+                        block_names_[block_id],
+                        domain::topologies::spherical_shell);
+
+    domain = Domain<3>{std::move(blocks), std::move(excision_spheres),
+                       block_groups_};
+  }
 
   if (time_dependent_options_.has_value()) {
     ASSERT(include_inner_sphere_A_ and include_inner_sphere_B_,
@@ -1015,6 +1218,11 @@ CylindricalBinaryCompactObject::external_boundary_conditions() const {
   if (outer_boundary_condition_ == nullptr) {
     return {};
   }
+  const bool include_outer_sphere = outer_shell_options_.has_value();
+  const bool spherical_harmonics_in_wavezone =
+      include_outer_sphere
+          ? outer_shell_options_.value().spherical_harmonics_in_wavezone_
+          : false;
   std::vector<DirectionMap<
       3, std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>>>
       boundary_conditions{number_of_blocks_};
@@ -1099,20 +1307,25 @@ CylindricalBinaryCompactObject::external_boundary_conditions() const {
     last_block += 14;
   }
   if (include_outer_sphere) {
-    for (size_t i = 0; i < 5; ++i) {
-      // OuterCA Filled Cylinder
-      boundary_conditions[last_block + i][Direction<3>::upper_zeta()] =
-          outer_boundary_condition_->get_clone();
-      // OuterCB Filled Cylinder
-      boundary_conditions[last_block + i + 5][Direction<3>::upper_zeta()] =
-          outer_boundary_condition_->get_clone();
-    }
-    for (size_t i = 0; i < 4; ++i) {
-      // OuterCA Cylinder
-      boundary_conditions[last_block + i + 10][Direction<3>::upper_xi()] =
-          outer_boundary_condition_->get_clone();
-      // OuterCB Cylinder
-      boundary_conditions[last_block + i + 14][Direction<3>::upper_xi()] =
+    if (not spherical_harmonics_in_wavezone) {
+      for (size_t i = 0; i < 5; ++i) {
+        // OuterCA Filled Cylinder
+        boundary_conditions[last_block + i][Direction<3>::upper_zeta()] =
+            outer_boundary_condition_->get_clone();
+        // OuterCB Filled Cylinder
+        boundary_conditions[last_block + i + 5][Direction<3>::upper_zeta()] =
+            outer_boundary_condition_->get_clone();
+      }
+      for (size_t i = 0; i < 4; ++i) {
+        // OuterCA Cylinder
+        boundary_conditions[last_block + i + 10][Direction<3>::upper_xi()] =
+            outer_boundary_condition_->get_clone();
+        // OuterCB Cylinder
+        boundary_conditions[last_block + i + 14][Direction<3>::upper_xi()] =
+            outer_boundary_condition_->get_clone();
+      }
+    } else {
+      boundary_conditions[last_block][Direction<3>::upper_xi()] =
           outer_boundary_condition_->get_clone();
     }
   }

@@ -325,7 +325,6 @@ std::string create_option_string(
          "\n  UseEquiangularMap: " + stringize(use_equiangular_map) +
          "\n  IncludeInnerSphereA: " + stringize(include_inner_sphere_A) +
          "\n  IncludeInnerSphereB: " + stringize(include_inner_sphere_B) +
-         //  "\n  IncludeOuterSphere: " + stringize(include_outer_sphere) +
          "\n  InitialRefinement:" +
          initial_structure(with_additional_outer_radial_refinement, 1) +
          "\n  InitialGridPoints:" +
@@ -441,62 +440,62 @@ TimeDepOptions construct_time_dependent_options() {
 void test_parse_errors() {
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
-          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false, false, false,
-          1.0, false, 1_st, 3_st, std::nullopt,
+          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false, false, 1.0,
+          false, 1_st, 3_st, std::nullopt, std::nullopt,
           create_inner_boundary_condition(), create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring("OuterRadius is too small"));
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
-          {{-2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false, false, false,
-          25.0, false, 1_st, 3_st, std::nullopt,
+          {{-2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false, false, 25.0,
+          false, 1_st, 3_st, std::nullopt, std::nullopt,
           create_inner_boundary_condition(), create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring(
           "The x-coordinate of the input CenterA is expected to be positive"));
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
-          {{2.0, 0.05, 0.0}}, {5.0, 0.05, 0.0}, 1.0, 0.4, false, false, false,
-          25.0, false, 1_st, 3_st, std::nullopt,
+          {{2.0, 0.05, 0.0}}, {5.0, 0.05, 0.0}, 1.0, 0.4, false, false, 25.0,
+          false, 1_st, 3_st, std::nullopt, std::nullopt,
           create_inner_boundary_condition(), create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring(
           "The x-coordinate of the input CenterB is expected to be negative"));
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
-          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, -1.0, 0.4, false, false, false,
-          25.0, false, 1_st, 3_st, std::nullopt,
+          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, -1.0, 0.4, false, false, 25.0,
+          false, 1_st, 3_st, std::nullopt, std::nullopt,
           create_inner_boundary_condition(), create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring("RadiusA and RadiusB are expected "
                                          "to be positive"));
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
-          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, -0.4, false, false, false,
-          25.0, false, 1_st, 3_st, std::nullopt,
+          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, -0.4, false, false, 25.0,
+          false, 1_st, 3_st, std::nullopt, std::nullopt,
           create_inner_boundary_condition(), create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring("RadiusA and RadiusB are expected "
                                          "to be positive"));
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
-          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 0.15, 0.4, false, false, false,
-          25.0, false, 1_st, 3_st, std::nullopt,
+          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 0.15, 0.4, false, false, 25.0,
+          false, 1_st, 3_st, std::nullopt, std::nullopt,
           create_inner_boundary_condition(), create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring(
           "RadiusA should not be smaller than RadiusB"));
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
-          {{2.0, 0.05, 0.0}}, {-1.0, 0.05, 0.0}, 1.0, 0.4, false, false, false,
-          25.0, false, 1_st, 3_st, std::nullopt,
+          {{2.0, 0.05, 0.0}}, {-1.0, 0.05, 0.0}, 1.0, 0.4, false, false, 25.0,
+          false, 1_st, 3_st, std::nullopt, std::nullopt,
           create_inner_boundary_condition(), create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring("We expect |x_A| <= |x_B|"));
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
-          {{4.0, 0.0, 0.0}}, {-4.0, 0.0, 0.0}, 1.0, 1.0, false, false, false,
-          25.0, false, 1_st, 3_st,
+          {{4.0, 0.0, 0.0}}, {-4.0, 0.0, 0.0}, 1.0, 1.0, false, false, 25.0,
+          false, 1_st, 3_st, std::nullopt,
           TimeDepOptions{
               0.0, std::nullopt,
               domain::creators::time_dependent_options::RotationMapOptions<
@@ -510,8 +509,8 @@ void test_parse_errors() {
   // Boundary condition errors
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
-          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false, false, false,
-          25.0, false, 1_st, 3_st, std::nullopt,
+          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false, false, 25.0,
+          false, 1_st, 3_st, std::nullopt, std::nullopt,
           create_inner_boundary_condition(),
           std::make_unique<TestHelpers::domain::BoundaryConditions::
                                TestPeriodicBoundaryCondition<3>>(),
@@ -520,8 +519,8 @@ void test_parse_errors() {
                                          "conditions with a binary domain"));
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
-          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false, false, false,
-          25.0, false, 1_st, 3_st, std::nullopt,
+          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false, false, 25.0,
+          false, 1_st, 3_st, std::nullopt, std::nullopt,
           std::make_unique<TestHelpers::domain::BoundaryConditions::
                                TestPeriodicBoundaryCondition<3>>(),
           create_outer_boundary_condition(), Options::Context{false, {}, 1, 1}),
@@ -529,17 +528,17 @@ void test_parse_errors() {
                                          "conditions with a binary domain"));
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
-          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false, false, false,
-          25.0, false, 1_st, 3_st, std::nullopt, nullptr,
+          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false, false, 25.0,
+          false, 1_st, 3_st, std::nullopt, std::nullopt, nullptr,
           create_outer_boundary_condition(), Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring(
           "Must specify either both inner and outer boundary "
           "conditions or neither."));
   CHECK_THROWS_WITH(domain::creators::CylindricalBinaryCompactObject(
                         {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false,
-                        false, false, 25.0, false, 1_st, 3_st, std::nullopt,
-                        create_inner_boundary_condition(), nullptr,
-                        Options::Context{false, {}, 1, 1}),
+                        false, 25.0, false, 1_st, 3_st, std::nullopt,
+                        std::nullopt, create_inner_boundary_condition(),
+                        nullptr, Options::Context{false, {}, 1, 1}),
                     Catch::Matchers::ContainsSubstring(
                         "Must specify either both inner and outer boundary "
                         "conditions or neither."));
@@ -651,7 +650,6 @@ void test_cylindrical_bbh() {
     if (include_outer_sphere) {
       outer_sphere_opts = OuterSphereOptions{false};
     }
-
     std::optional<TimeDepOptions> time_dep_opts{};
     if (with_time_dependence) {
       time_dep_opts = construct_time_dependent_options();
@@ -663,7 +661,6 @@ void test_cylindrical_bbh() {
         inner_radius_objectB,
         include_inner_sphere_A,
         include_inner_sphere_B,
-        // include_outer_sphere,
         outer_radius,
         use_equiangular_map,
         initial_refinement,
@@ -689,6 +686,208 @@ void test_cylindrical_bbh() {
         cyl_binary_compact_object, with_boundary_conditions);
   }
 }
+
+void test_spherical_harmonics_wavezone(const bool include_inner_sphere_a,
+                                       const bool include_inner_sphere_b,
+                                       const double radius_a,
+                                       const double radius_b,
+                                       const double outer_radius) {
+  INFO(
+      "Test CylindricalBinaryCompactObject with "
+      "SphericalHarmonicsInWavezone=true");
+  const size_t initial_refinement = 1;
+  const size_t initial_grid_points = 3;
+
+  const domain::creators::CylindricalBinaryCompactObject cbco{
+      {{7.5, 0.0, 0.0}},
+      {-7.5, 0.0, 0.0},
+      radius_a,
+      radius_b,
+      include_inner_sphere_a,
+      include_inner_sphere_b,
+      outer_radius,
+      false,
+      initial_refinement,
+      initial_grid_points,
+      OuterSphereOptions{true},
+      std::nullopt,
+      create_inner_boundary_condition(),
+      create_outer_boundary_condition()};
+
+  // Check block count.
+  const size_t num_blocks_no_inner_spheres_or_shell = 46;
+  const size_t num_blocks_one_inner_sphere = 14;
+  const size_t num_outer_shells = 1;
+
+  const size_t num_blocks =
+      num_blocks_no_inner_spheres_or_shell +
+      (include_inner_sphere_a ? num_blocks_one_inner_sphere : 0) +
+      (include_inner_sphere_b ? num_blocks_one_inner_sphere : 0) +
+      num_outer_shells;
+  CHECK(cbco.block_names().size() == num_blocks);
+
+  const size_t first_shell_block_number = num_blocks - num_outer_shells;
+  const size_t last_shell_block_number = num_blocks - 1;
+
+  // Outer shell block name and group name
+  const std::string shell_block_name{"OuterShell0"};
+  CHECK(cbco.block_names().size() == num_blocks);
+  CHECK(cbco.block_names()[first_shell_block_number] == shell_block_name);
+  CHECK(cbco.block_groups()["OuterSphere"].count(shell_block_name) == 1);
+
+  // initial_extents: OuterShell0 should be {3, 3, 2*(3 - 1) + 1} = {3, 3, 5}.
+  const auto extents = cbco.initial_extents();
+  REQUIRE(extents.size() == num_blocks);
+  CHECK(extents[first_shell_block_number] == std::array<size_t, 3>{3, 3, 5});
+
+  // initial_refinement: OuterShell0 should be {1, 0, 0}.
+  const auto refinement = cbco.initial_refinement_levels();
+  REQUIRE(refinement.size() == num_blocks);
+  CHECK(refinement[first_shell_block_number] == std::array<size_t, 3>{1, 0, 0});
+
+  // external_boundary_conditions: outer BC only on upper_xi of outer shell
+  const auto bcs = cbco.external_boundary_conditions();
+  REQUIRE(bcs.size() == num_blocks);
+  CHECK(bcs[last_shell_block_number].count(Direction<3>::upper_xi()) == 1);
+  CHECK(bcs[last_shell_block_number].count(Direction<3>::lower_xi()) == 0);
+  CHECK(bcs[last_shell_block_number].count(Direction<3>::upper_eta()) == 0);
+  CHECK(bcs[last_shell_block_number].count(Direction<3>::lower_eta()) == 0);
+  CHECK(bcs[last_shell_block_number].count(Direction<3>::upper_zeta()) == 0);
+  CHECK(bcs[last_shell_block_number].count(Direction<3>::lower_zeta()) == 0);
+
+  // Verify the domain can be constructed and inspect neighbor topology.
+  const auto domain_sh = cbco.create_domain();
+  const auto& blocks = domain_sh.blocks();
+  REQUIRE(blocks.size() == num_blocks);
+
+  // OuterShell0 : lower_xi has 18 CA, CB neighbors (non-conforming)
+  // and no upper_xi neighbor (only 1 shell).
+  const auto& sh_block = blocks[first_shell_block_number];
+  CHECK(sh_block.neighbors().count(Direction<3>::lower_xi()) == 1);
+  CHECK(sh_block.neighbors().at(Direction<3>::lower_xi()).ids().size() == 18);
+  CHECK(sh_block.neighbors().count(Direction<3>::upper_xi()) == 0);
+  CHECK(sh_block.neighbors().count(Direction<3>::lower_eta()) == 0);
+  CHECK(sh_block.neighbors().count(Direction<3>::upper_eta()) == 0);
+  CHECK(sh_block.neighbors().count(Direction<3>::lower_zeta()) == 0);
+  CHECK(sh_block.neighbors().count(Direction<3>::upper_zeta()) == 0);
+
+  // Each CA, CB block outer radial face should point to first outer shell.
+  // CA Filled Cylinder
+  for (size_t j = 0; j < 5; ++j) {
+    CAPTURE(j);
+    CHECK(blocks[j].neighbors().count(Direction<3>::upper_zeta()) == 1);
+    CHECK(*blocks[j].neighbors().at(Direction<3>::upper_zeta()).ids().begin() ==
+          first_shell_block_number);
+  }
+  // CA Cylinder
+  for (size_t j = 5; j < 9; ++j) {
+    CAPTURE(j);
+    CHECK(blocks[j].neighbors().count(Direction<3>::upper_xi()) == 1);
+    CHECK(*blocks[j].neighbors().at(Direction<3>::upper_xi()).ids().begin() ==
+          first_shell_block_number);
+  }
+  // CB Filled Cylinder
+  for (size_t j = 37; j < 42; ++j) {
+    CAPTURE(j);
+    CHECK(blocks[j].neighbors().count(Direction<3>::upper_zeta()) == 1);
+    CHECK(*blocks[j].neighbors().at(Direction<3>::upper_zeta()).ids().begin() ==
+          first_shell_block_number);
+  }
+  // CB Cylinder
+  for (size_t j = 42; j < 46; ++j) {
+    CAPTURE(j);
+    CHECK(blocks[j].neighbors().count(Direction<3>::upper_xi()) == 1);
+    CHECK(*blocks[j].neighbors().at(Direction<3>::upper_xi()).ids().begin() ==
+          first_shell_block_number);
+  }
+
+  // Check orientations at the shell boundary.
+  const OrientationMap<3> expected_shell_to_cyl_endcap_center{
+      {{Direction<3>::upper_zeta(), Direction<3>::self(),
+        Direction<3>::self()}}};
+  const auto expected_cyl_endcap_center_to_shell =
+      expected_shell_to_cyl_endcap_center.inverse_map();
+  const OrientationMap<3> expected_shell_to_cyl_endcap_wedge{
+      {{Direction<3>::upper_zeta(), Direction<3>::self(),
+        Direction<3>::self()}}};
+  const auto expected_cyl_endcap_wedge_to_shell =
+      expected_shell_to_cyl_endcap_wedge.inverse_map();
+  const OrientationMap<3> expected_shell_to_cyl_side{
+      {{Direction<3>::upper_xi(), Direction<3>::self(), Direction<3>::self()}}};
+  const auto expected_cyl_side_to_shell =
+      expected_shell_to_cyl_side.inverse_map();
+
+  const auto& lower_xi_neighbors =
+      sh_block.neighbors().at(Direction<3>::lower_xi());
+
+  // CA Filled Cylinder
+  CHECK(lower_xi_neighbors.orientation(0) ==
+        expected_shell_to_cyl_endcap_center);
+  CHECK(blocks[0]
+            .neighbors()
+            .at(Direction<3>::upper_zeta())
+            .orientation(first_shell_block_number) ==
+        expected_cyl_endcap_center_to_shell);
+  for (size_t j = 1; j < 5; ++j) {
+    CAPTURE(j);
+    CHECK(lower_xi_neighbors.orientation(j) ==
+          expected_shell_to_cyl_endcap_wedge);
+    const auto& uz_neighbors =
+        blocks[j].neighbors().at(Direction<3>::upper_zeta());
+    CHECK(uz_neighbors.orientation(first_shell_block_number) ==
+          expected_cyl_endcap_wedge_to_shell);
+  }
+  // CA Cylinder
+  for (size_t j = 5; j < 9; ++j) {
+    CAPTURE(j);
+    CHECK(lower_xi_neighbors.orientation(j) == expected_shell_to_cyl_side);
+    const auto& ux_neighbors =
+        blocks[j].neighbors().at(Direction<3>::upper_xi());
+    CHECK(ux_neighbors.orientation(first_shell_block_number) ==
+          expected_cyl_side_to_shell);
+  }
+  // CB Filled Cylinder
+  CHECK(lower_xi_neighbors.orientation(37) ==
+        expected_shell_to_cyl_endcap_center);
+  CHECK(blocks[37]
+            .neighbors()
+            .at(Direction<3>::upper_zeta())
+            .orientation(first_shell_block_number) ==
+        expected_cyl_endcap_center_to_shell);
+  for (size_t j = 38; j < 42; ++j) {
+    CAPTURE(j);
+    CHECK(lower_xi_neighbors.orientation(j) ==
+          expected_shell_to_cyl_endcap_wedge);
+    const auto& uz_neighbors =
+        blocks[j].neighbors().at(Direction<3>::upper_zeta());
+    CHECK(uz_neighbors.orientation(first_shell_block_number) ==
+          expected_cyl_endcap_wedge_to_shell);
+  }
+  // CB Cylinder
+  for (size_t j = 42; j < 45; ++j) {
+    CAPTURE(j);
+    CHECK(lower_xi_neighbors.orientation(j) == expected_shell_to_cyl_side);
+    const auto& ux_neighbors =
+        blocks[j].neighbors().at(Direction<3>::upper_xi());
+    CHECK(ux_neighbors.orientation(first_shell_block_number) ==
+          expected_cyl_side_to_shell);
+  }
+}
+
+void test_spherical_harmonics_wavezone() {
+  const double radius_a = 1.8;
+  const double radius_b = radius_a;
+  const double outer_radius = 300.0;
+
+  test_spherical_harmonics_wavezone(false, false, radius_a, radius_b,
+                                    outer_radius);
+  test_spherical_harmonics_wavezone(true, false, radius_a, radius_b,
+                                    outer_radius);
+  test_spherical_harmonics_wavezone(false, true, radius_a, radius_b,
+                                    outer_radius);
+  test_spherical_harmonics_wavezone(true, true, radius_a, radius_b,
+                                    outer_radius);
+}
 }  // namespace
 
 // [[TimeOut, 80]]
@@ -696,4 +895,5 @@ SPECTRE_TEST_CASE("Unit.Domain.Creators.CylindricalBinaryCompactObject",
                   "[Domain][Unit]") {
   test_cylindrical_bbh();
   test_parse_errors();
+  test_spherical_harmonics_wavezone();
 }
