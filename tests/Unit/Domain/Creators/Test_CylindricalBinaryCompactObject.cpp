@@ -50,6 +50,7 @@ namespace {
 using ExpirationTimeMap = std::unordered_map<std::string, double>;
 using CylBCO = ::domain::creators::CylindricalBinaryCompactObject;
 using TimeDepOptions = domain::creators::bco::TimeDependentMapOptions<true>;
+using OuterSphereOptions = CylBCO::OuterSphereOptions;
 
 std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>
 create_inner_boundary_condition() {
@@ -242,6 +243,11 @@ std::string create_option_string(
     const std::array<double, 3>& center_objectB,
     const double inner_radius_objectA, const double inner_radius_objectB,
     const double outer_radius) {
+  const std::string outer_shell{include_outer_sphere
+                                    ? ("  OuterSphere:\n"
+                                       "    UseSphericalHarmonics: False\n")
+                                    : "  OuterSphere: None\n"};
+
   const std::string time_dependence{
       add_time_dependence ? ("  TimeDependentMaps:\n"
                              "    GridCenters:\n"
@@ -319,12 +325,12 @@ std::string create_option_string(
          "\n  UseEquiangularMap: " + stringize(use_equiangular_map) +
          "\n  IncludeInnerSphereA: " + stringize(include_inner_sphere_A) +
          "\n  IncludeInnerSphereB: " + stringize(include_inner_sphere_B) +
-         "\n  IncludeOuterSphere: " + stringize(include_outer_sphere) +
+         //  "\n  IncludeOuterSphere: " + stringize(include_outer_sphere) +
          "\n  InitialRefinement:" +
          initial_structure(with_additional_outer_radial_refinement, 1) +
          "\n  InitialGridPoints:" +
          initial_structure(with_additional_grid_points, 3) + "\n" +
-         time_dependence + boundary_conditions;
+         outer_shell + time_dependence + boundary_conditions;
 }
 
 void test_construction(const CylBCO& creator,
@@ -641,6 +647,11 @@ void test_cylindrical_bbh() {
     }
 
     CylBCO cyl_binary_compact_object{};
+    std::optional<OuterSphereOptions> outer_sphere_opts{};
+    if (include_outer_sphere) {
+      outer_sphere_opts = OuterSphereOptions{false};
+    }
+
     std::optional<TimeDepOptions> time_dep_opts{};
     if (with_time_dependence) {
       time_dep_opts = construct_time_dependent_options();
@@ -652,11 +663,12 @@ void test_cylindrical_bbh() {
         inner_radius_objectB,
         include_inner_sphere_A,
         include_inner_sphere_B,
-        include_outer_sphere,
+        // include_outer_sphere,
         outer_radius,
         use_equiangular_map,
         initial_refinement,
         initial_grid_points,
+        std::move(outer_sphere_opts),
         std::move(time_dep_opts),
         with_boundary_conditions ? create_inner_boundary_condition() : nullptr,
         with_boundary_conditions ? create_outer_boundary_condition() : nullptr};
