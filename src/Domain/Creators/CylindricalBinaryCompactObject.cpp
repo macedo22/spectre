@@ -1361,10 +1361,7 @@ CylindricalBinaryCompactObject::external_boundary_conditions() const {
             outer_boundary_condition_->get_clone();
       }
     } else {
-      // TODO / ASK : should I just add the same boundary_conditions
-      // need to check if radial direction is xi or zeta for spherical shell,
-      // guessing xi for now just to have something
-      boundary_conditions[last_block + 1][Direction<3>::upper_xi()] =
+      boundary_conditions[last_block][Direction<3>::upper_xi()] =
           outer_boundary_condition_->get_clone();
     }
   }
