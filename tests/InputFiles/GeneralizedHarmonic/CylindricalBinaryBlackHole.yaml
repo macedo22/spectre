@@ -52,6 +52,8 @@ DomainCreator:
     OuterRadius: 300.0
     InitialRefinement: 2
     InitialGridPoints: 7
+    OuterSphere:
+      UseSphericalHarmonics: false
     BoundaryConditions:
       InnerBoundary:
         DemandOutgoingCharSpeeds:
