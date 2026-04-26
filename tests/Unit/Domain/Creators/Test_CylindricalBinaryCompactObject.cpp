@@ -780,6 +780,10 @@ void test_spherical_harmonics_wavezone(const bool include_inner_sphere_a,
   CHECK(sh_block.neighbors().count(Direction<3>::lower_xi()) == 1);
   CHECK(sh_block.neighbors().at(Direction<3>::lower_xi()).ids().size() == 18);
   CHECK(sh_block.neighbors().count(Direction<3>::upper_xi()) == 0);
+  CHECK(sh_block.neighbors().count(Direction<3>::lower_eta()) == 0);
+  CHECK(sh_block.neighbors().count(Direction<3>::upper_eta()) == 0);
+  CHECK(sh_block.neighbors().count(Direction<3>::lower_zeta()) == 0);
+  CHECK(sh_block.neighbors().count(Direction<3>::upper_zeta()) == 0);
 
   // Each CA, CB block outer radial face should point to outer shell.
 
