@@ -403,7 +403,16 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
         swap_refinement_and_grid_points_xi_zeta(current_block++);
       }
     } else {
-      swap_refinement_and_grid_points_xi_zeta(current_block++);
+      // TODO : remove once number_of_outer_shells generalized
+      const size_t number_of_outer_shells = 1;
+      for (size_t shell = 0; shell < number_of_outer_shells; ++shell) {
+        swap_refinement_and_grid_points_xi_zeta(current_block++);
+        const size_t idx = first_outer_shell_block + shell;
+        initial_grid_points_[idx][2] =
+            ylm::Spherepack::n_phi_points(initial_grid_points_[idx][1] - 1);
+        initial_refinement_[idx][1] = 0;
+        initial_refinement_[idx][2] = 0;
+      }
     }
   }
 

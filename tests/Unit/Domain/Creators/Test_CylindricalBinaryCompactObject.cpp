@@ -751,8 +751,7 @@ void test_spherical_harmonics_wavezone(const bool include_inner_sphere_a,
   const auto refinement = cbco.initial_refinement_levels();
   REQUIRE(refinement.size() == num_blocks);
   CHECK(refinement[num_blocks - 1] ==
-        std::array<size_t, 3>{initial_refinement, initial_refinement,
-                              initial_refinement});
+        std::array<size_t, 3>{initial_refinement, 0, 0});
 
   // external_boundary_conditions: outer BC on upper_xi of outer shell.
   const auto bcs = cbco.external_boundary_conditions();
