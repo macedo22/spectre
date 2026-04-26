@@ -217,11 +217,53 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
     static constexpr Options::String help = {
         "Add an extra spherical layer of Blocks around Object B."};
   };
-  struct IncludeOuterSphere {
-    using type = bool;
+  //   struct IncludeOuterSphere {
+  //     using type = bool;
+  //     static constexpr Options::String help = {
+  //         "Add an extra spherical layer of Blocks inside the outer
+  //         boundary."};
+  //   };
+  //   struct OuterShell {
+  //     static constexpr Options::String help = {
+  //         "Options for the outer spherical shell."};
+  //   };
+  struct OuterShellOptions {
+   public:
+    using type = Options::Auto<OuterShellOptions, Options::AutoLabel::None>;
+    static std::string name() { return "OuterShell"; }
     static constexpr Options::String help = {
-        "Add an extra spherical layer of Blocks inside the outer boundary."};
+        "Options for the outer spherical shell. Specify 'None' to remove the "
+        "outer shell."};
+
+    struct SphericalHarmonicsInWavezone {
+      using type = bool;
+      static std::string name() { return "UseSphericalHarmonics"; }
+      static bool suggested_value() { return false; }
+      static constexpr Options::String help = {
+          "Use a spherical-harmonic basis for the outer wavezone shell "
+          "instead of the default deformed cylinder blocks (18)."};
+    };
+
+    using options = tmpl::list<SphericalHarmonicsInWavezone>;
+
+    OuterShellOptions() = default;
+    OuterShellOptions(bool spherical_harmonics_in_wavezone,
+                      const Options::Context& context = {});
+    OuterShellOptions(const bool spherical_harmonics_in_wavezone,
+                      const Options::Context& context)
+        : spherical_harmonics_in_wavezone_(spherical_harmonics_in_wavezone) {}
+
+    bool spherical_harmonics_in_wavezone_ = false;
   };
+  //   struct SphericalHarmonicsInWavezone {
+  //     using group = OuterShell;
+  //     static std::string name() { return "UseSphericalHarmonics"; }
+  //     using type = bool;
+  //     static bool suggested_value() { return false; }
+  //     static constexpr Options::String help = {
+  //         "Use a spherical-harmonic basis for the outer wavezone shell "
+  //         "instead of the default deformed cylinder blocks (18)."};
+  //   };
   struct OuterRadius {
     using type = double;
     static constexpr Options::String help = {
@@ -290,9 +332,9 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
   template <typename Metavariables>
   using options = tmpl::append<
       tmpl::list<CenterA, CenterB, RadiusA, RadiusB, IncludeInnerSphereA,
-                 IncludeInnerSphereB, IncludeOuterSphere, OuterRadius,
-                 UseEquiangularMap, InitialRefinement, InitialGridPoints,
-                 TimeDependentMaps>,
+                 IncludeInnerSphereB, OuterShellOptions /*IncludeOuterSphere*/,
+                 OuterRadius, UseEquiangularMap, InitialRefinement,
+                 InitialGridPoints, TimeDependentMaps>,
       tmpl::conditional_t<
           domain::BoundaryConditions::has_boundary_conditions_base_v<
               typename Metavariables::system>,
@@ -314,10 +356,12 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
   CylindricalBinaryCompactObject(
       std::array<double, 3> center_A, std::array<double, 3> center_B,
       double radius_A, double radius_B, bool include_inner_sphere_A,
-      bool include_inner_sphere_B, bool include_outer_sphere,
+      bool include_inner_sphere_B, /*bool include_outer_sphere,*/
       double outer_radius, bool use_equiangular_map,
       const typename InitialRefinement::type& initial_refinement,
       const typename InitialGridPoints::type& initial_grid_points,
+      std::optional<OuterShellOptions> outer_shell_options =
+          std::nullopt,
       std::optional<bco::TimeDependentMapOptions<true>> time_dependent_options =
           std::nullopt,
       std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>
