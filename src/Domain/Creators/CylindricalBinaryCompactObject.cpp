@@ -13,9 +13,11 @@
 #include "Domain/CoordinateMaps/CoordinateMap.hpp"
 #include "Domain/CoordinateMaps/CoordinateMap.tpp"
 #include "Domain/CoordinateMaps/DiscreteRotation.hpp"
+#include "Domain/CoordinateMaps/Identity.hpp"
 #include "Domain/CoordinateMaps/Interval.hpp"
 #include "Domain/CoordinateMaps/ProductMaps.hpp"
 #include "Domain/CoordinateMaps/ProductMaps.tpp"
+#include "Domain/CoordinateMaps/SphericalToCartesianPfaffian.hpp"
 #include "Domain/CoordinateMaps/UniformCylindricalEndcap.hpp"
 #include "Domain/CoordinateMaps/UniformCylindricalFlatEndcap.hpp"
 #include "Domain/CoordinateMaps/UniformCylindricalSide.hpp"
@@ -43,14 +45,6 @@ std::array<double, 3> rotate_to_z_axis(const std::array<double, 3> input) {
                                                     Direction<3>::upper_xi()}},
       input);
 }
-std::array<double, 3> rotate_from_z_to_x_axis(
-    const std::array<double, 3> input) {
-  return discrete_rotation(
-      OrientationMap<3>{std::array<Direction<3>, 3>{Direction<3>::upper_zeta(),
-                                                    Direction<3>::upper_eta(),
-                                                    Direction<3>::lower_xi()}},
-      input);
-}
 std::array<double, 3> flip_about_xy_plane(const std::array<double, 3> input) {
   return std::array<double, 3>{input[0], input[1], -input[2]};
 }
@@ -64,14 +58,15 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
     bool use_equiangular_map,
     const typename InitialRefinement::type& initial_refinement,
     const typename InitialGridPoints::type& initial_grid_points,
+    const bool spherical_harmonics_in_wavezone,
     std::optional<bco::TimeDependentMapOptions<true>> time_dependent_options,
     std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>
         inner_boundary_condition,
     std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>
         outer_boundary_condition,
     const Options::Context& context)
-    : center_A_(rotate_to_z_axis(center_A)),
-      center_B_(rotate_to_z_axis(center_B)),
+    : center_A_(center_A),
+      center_B_(center_B),
       radius_A_(radius_A),
       radius_B_(radius_B),
       include_inner_sphere_A_(include_inner_sphere_A),
@@ -81,13 +76,14 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
       use_equiangular_map_(use_equiangular_map),
       inner_boundary_condition_(std::move(inner_boundary_condition)),
       outer_boundary_condition_(std::move(outer_boundary_condition)),
+      spherical_harmonics_in_wavezone_(spherical_harmonics_in_wavezone),
       time_dependent_options_(std::move(time_dependent_options)) {
-  if (center_A_[2] <= 0.0) {
+  if (center_A_[0] <= 0.0) {
     PARSE_ERROR(
         context,
         "The x-coordinate of the input CenterA is expected to be positive");
   }
-  if (center_B_[2] >= 0.0) {
+  if (center_B_[0] >= 0.0) {
     PARSE_ERROR(
         context,
         "The x-coordinate of the input CenterB is expected to be negative");
@@ -98,20 +94,20 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
   if (radius_A_ < radius_B_) {
     PARSE_ERROR(context, "RadiusA should not be smaller than RadiusB");
   }
-  if (std::abs(center_A_[2]) > std::abs(center_B_[2])) {
+  if (std::abs(center_A_[0]) > std::abs(center_B_[0])) {
     PARSE_ERROR(context,
                 "We expect |x_A| <= |x_B|, for x the x-coordinate of either "
                 "CenterA or CenterB.  We should roughly have "
                 "RadiusA x_A + RadiusB x_B = 0 (i.e. for BBHs the "
                 "center of mass should be about at the origin).");
   }
-  // The value 3.0 * (center_A_[2] - center_B_[2]) is what is
+  // The value 3.0 * (center_A_[0] - center_B_[0]) is what is
   // chosen in SpEC as the inner radius of the innermost outer sphere.
-  if (outer_radius_ < 3.0 * (center_A_[2] - center_B_[2])) {
+  if (outer_radius_ < 3.0 * (center_A_[0] - center_B_[0])) {
     PARSE_ERROR(context,
                 "OuterRadius is too small. Please increase it "
                 "beyond "
-                    << 3.0 * (center_A_[2] - center_B_[2]));
+                    << 3.0 * (center_A_[0] - center_B_[0]));
   }
 
   if ((outer_boundary_condition_ == nullptr) xor
@@ -128,15 +124,21 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
         "Cannot have periodic boundary conditions with a binary domain");
   }
 
-  // The choices made below for the quantities xi, z_cutting_plane_,
+  if (spherical_harmonics_in_wavezone_ and not include_outer_sphere_) {
+    PARSE_ERROR(context,
+                "Can't specify spherical harmonics in the wave zone without "
+                "also including outer sphere.");
+  }
+
+  // The choices made below for the quantities xi, cutting_plane_,
   // and xi_min_sphere_e are the ones made in SpEC, and in the
   // Appendix of https://arxiv.org/abs/1206.3015.  Other choices could
   // be made that would still result in a reasonable Domain. In
   // particular, during a SpEC BBH evolution the excision boundaries
-  // can sometimes get too close to z_cutting_plane_, and the
+  // can sometimes get too close to cutting_plane_, and the
   // simulation must be halted and regridded with a different choice
-  // of z_cutting_plane_, so it may be possible to choose a different
-  // initial value of z_cutting_plane_ that reduces the number of such
+  // of cutting_plane_, so it may be possible to choose a different
+  // initial value of cutting_plane_ that reduces the number of such
   // regrids or eliminates them.
 
   // xi is the quantity in Eq. (A10) of
@@ -156,13 +158,13 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
   constexpr double xi_min = 0.25;
   // Same as Eq. (A10)
   const double xi =
-      std::max(xi_min, std::abs(center_A_[2]) /
-                           (std::abs(center_A_[2]) + std::abs(center_B_[2])));
+      std::max(xi_min, std::abs(center_A_[0]) /
+                           (std::abs(center_A_[0]) + std::abs(center_B_[0])));
 
   // Compute cutting plane
   // This is Eq. (A9) with xi -> 1-xi.
-  z_cutting_plane_ = cut_spheres_offset_factor_ *
-                     ((1.0 - xi) * center_B_[2] + xi * center_A_[2]);
+  cutting_plane_ = cut_spheres_offset_factor_ *
+                   ((1.0 - xi) * center_B_[0] + xi * center_A_[0]);
 
   // outer_radius_A is the outer radius of the inner sphere A, if it exists.
   // If the inner sphere A does not exist, then outer_radius_A is the same
@@ -172,7 +174,7 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
   outer_radius_A_ =
       include_inner_sphere_A_
           ? radius_A_ +
-                0.5 * (std::abs(z_cutting_plane_ - center_A_[2]) - radius_A_)
+                0.5 * (std::abs(cutting_plane_ - center_A_[0]) - radius_A_)
           : radius_A_;
 
   // outer_radius_B is the outer radius of the inner sphere B, if it exists.
@@ -183,7 +185,7 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
   outer_radius_B_ =
       include_inner_sphere_B_
           ? radius_B_ +
-                0.5 * (std::abs(z_cutting_plane_ - center_B_[2]) - radius_B_)
+                0.5 * (std::abs(cutting_plane_ - center_B_[0]) - radius_B_)
           : radius_B_;
 
   number_of_blocks_ = 46;
@@ -194,7 +196,7 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
     number_of_blocks_ += 14;
   }
   if (include_outer_sphere) {
-    number_of_blocks_ += 18;
+    number_of_blocks_ += (spherical_harmonics_in_wavezone_ ? 1 : 18);
   }
 
   // Add SphereE blocks if necessary.  Note that
@@ -217,7 +219,7 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
   }
 
   // Create grid anchors
-  grid_anchors_ = bco::create_grid_anchors(center_A_, center_B_);
+  grid_anchors_ = bco::create_grid_anchors(center_A, center_B);
 
   // Create block names and groups
   auto add_filled_cylinder_name = [this](const std::string& prefix,
@@ -301,14 +303,22 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
     first_outer_shell_block += 14;
   }
   if (include_outer_sphere) {
-    // 5 blocks
-    add_filled_cylinder_name("OuterSphereCA", "OuterSphere");
-    // 5 blocks
-    add_filled_cylinder_name("OuterSphereCB", "OuterSphere");
-    // 4 blocks
-    add_cylinder_name("OuterSphereCA", "OuterSphere");
-    // 4 blocks
-    add_cylinder_name("OuterSphereCB", "OuterSphere");
+    if (not spherical_harmonics_in_wavezone_) {
+      // 5 blocks
+      add_filled_cylinder_name("OuterSphereCA", "OuterSphere");
+      // 5 blocks
+      add_filled_cylinder_name("OuterSphereCB", "OuterSphere");
+      // 4 blocks
+      add_cylinder_name("OuterSphereCA", "OuterSphere");
+      // 4 blocks
+      add_cylinder_name("OuterSphereCB", "OuterSphere");
+    } else {
+      // just picking a name for the only spherical shell for now
+      const std::string name = "SphericalShell0";
+      const std::string group_name = "OuterSphere";
+      block_names_.push_back(name);
+      block_groups_[group_name].insert(name);
+    }
   }
 
   // Expand initial refinement over all blocks
@@ -388,7 +398,11 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
     current_block += 4;
   }
   if (include_outer_sphere) {
-    for (size_t block = 0; block < 10; ++block) {
+    if (not spherical_harmonics_in_wavezone_) {
+      for (size_t block = 0; block < 10; ++block) {
+        swap_refinement_and_grid_points_xi_zeta(current_block++);
+      }
+    } else {
       swap_refinement_and_grid_points_xi_zeta(current_block++);
     }
   }
@@ -413,15 +427,11 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
   }
 
   if (time_dependent_options_.has_value()) {
-    const double inner_common_radius = 3.0 * (center_A_[2] - center_B_[2]);
-    const auto center_A_aligned = rotate_from_z_to_x_axis(center_A_);
-    const auto center_B_aligned = rotate_from_z_to_x_axis(center_B_);
+    const double inner_common_radius = 3.0 * (center_A_[0] - center_B_[0]);
     time_dependent_options_->build_maps(
-        std::array{center_A_aligned, center_B_aligned}, std::nullopt,
-        std::nullopt,
-        std::array{z_cutting_plane_,
-                   0.5 * (center_A_aligned[1] + center_B_aligned[1]),
-                   0.5 * (center_A_aligned[2] + center_B_aligned[2])},
+        std::array{center_A_, center_B_}, std::nullopt, std::nullopt,
+        std::array{cutting_plane_, 0.5 * (center_A_[1] + center_B_[1]),
+                   0.5 * (center_A_[2] + center_B_[2])},
         std::array{radius_A_, outer_radius_A_},
         std::array{radius_B_, outer_radius_B_}, false, false,
         inner_common_radius, outer_radius_);
@@ -441,8 +451,14 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       Direction<3>::lower_zeta(), Direction<3>::upper_eta(),
       Direction<3>::upper_xi()}};
 
-  const std::array<double, 3> center_cutting_plane = {0.0, 0.0,
-                                                      z_cutting_plane_};
+  const std::array<double, 3> center_cutting_plane = {0.0, 0.0, cutting_plane_};
+
+  // Get coords of center_A_ and center_B_ rotated with respect to the
+  // input centers (which are in the grid frame), so that we can
+  // construct the map in a frame where the centers are offset in the
+  // z direction.
+  const auto center_A_rotated_to_z_axis = rotate_to_z_axis(center_A_);
+  const auto center_B_rotated_to_z_axis = rotate_to_z_axis(center_B_);
 
   // The labels EA, EB, EE, etc are from Figure 20 of
   // https://arxiv.org/abs/1206.3015
@@ -457,15 +473,15 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // the EE spheres exist), and is the radius of the circle where the EB
   // sphere intersects the cutting plane.
   const std::array<double, 3> center_EA = {
-      0.0, 0.0, cut_spheres_offset_factor_ * center_A_[2]};
+      0.0, 0.0, cut_spheres_offset_factor_ * center_A_rotated_to_z_axis[2]};
   const std::array<double, 3> center_EB = {
-      0.0, 0.0, center_B_[2] * cut_spheres_offset_factor_};
+      0.0, 0.0, center_B_rotated_to_z_axis[2] * cut_spheres_offset_factor_};
   const double radius_MB =
-      std::abs(cut_spheres_offset_factor_ * center_B_[2] - z_cutting_plane_);
+      std::abs(cut_spheres_offset_factor_ * center_B_rotated_to_z_axis[2] -
+               cutting_plane_);
   const double radius_EA =
-      sqrt(square(center_EA[2] - z_cutting_plane_) + square(radius_MB));
-  const double radius_EB =
-      sqrt(2.0) * std::abs(center_EB[2] - z_cutting_plane_);
+      sqrt(square(center_EA[2] - cutting_plane_) + square(radius_MB));
+  const double radius_EB = sqrt(2.0) * std::abs(center_EB[2] - cutting_plane_);
 
   // Construct vector<CoordMap>s that go from logical coordinates to
   // various blocks making up a unit right cylinder.  These blocks are
@@ -586,7 +602,8 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // Inner radius of the outer C shell, if it exists.
   // If it doesn't exist, then it is the same as the outer_radius_.
   const double inner_radius_C = include_outer_sphere_
-                                    ? 3.0 * (center_A_[2] - center_B_[2])
+                                    ? 3.0 * (center_A_rotated_to_z_axis[2] -
+                                             center_B_rotated_to_z_axis[2])
                                     : outer_radius_;
 
   // z_cut_CA_lower is the lower z_plane position for the CA endcap,
@@ -594,7 +611,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // after Eq. (A.19) EXCEPT that here we use a factor of 1.6 instead of 1.5
   // to put the plane farther from center_A.
   const double z_cut_CA_lower =
-      z_cutting_plane_ + 1.6 * (center_EA[2] - z_cutting_plane_);
+      cutting_plane_ + 1.6 * (center_EA[2] - cutting_plane_);
   // z_cut_CA_upper is the upper z_plane position for the CA endcap,
   // which isn't defined in https://arxiv.org/abs/1206.3015 (because the
   // maps are different).  We choose this plane to make the maps
@@ -605,12 +622,14 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // which isn't defined in https://arxiv.org/abs/1206.3015 (because the
   // maps are different).  We choose this plane to make the maps
   // less extreme.
-  const double z_cut_EA_upper = center_A_[2] + 0.7 * outer_radius_A_;
+  const double z_cut_EA_upper =
+      center_A_rotated_to_z_axis[2] + 0.7 * outer_radius_A_;
   // z_cut_EA_lower is the lower z_plane position for the EA endcap,
   // which isn't defined in https://arxiv.org/abs/1206.3015 (because the
   // maps are different).  We choose this plane to make the maps
   // less extreme.
-  const double z_cut_EA_lower = center_A_[2] - 0.7 * outer_radius_A_;
+  const double z_cut_EA_lower =
+      center_A_rotated_to_z_axis[2] - 0.7 * outer_radius_A_;
 
   // CA Filled Cylinder
   // 5 blocks: 0 thru 4
@@ -629,15 +648,15 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
           // LCOV_EXCL_START
           center_EA, make_array<3>(0.0), radius_EA, inner_radius_C,
           // LCOV_EXCL_STOP
-          z_cut_CA_lower, z_cutting_plane_, z_cut_CA_upper, z_cutting_plane_),
+          z_cut_CA_lower, cutting_plane_, z_cut_CA_upper, cutting_plane_),
       CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
 
   // EA Filled Cylinder
   // 5 blocks: 9 thru 13
   add_endcap_to_list_of_maps(
-      CoordinateMaps::UniformCylindricalEndcap(center_A_, center_EA,
-                                               outer_radius_A_, radius_EA,
-                                               z_cut_EA_upper, z_cut_CA_lower),
+      CoordinateMaps::UniformCylindricalEndcap(
+          center_A_rotated_to_z_axis, center_EA, outer_radius_A_, radius_EA,
+          z_cut_EA_upper, z_cut_CA_lower),
       CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
 
   // EA Cylinder
@@ -645,8 +664,8 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   add_side_to_list_of_maps(
       // For some reason codecov complains about the next line.
       CoordinateMaps::UniformCylindricalSide(  // LCOV_EXCL_LINE
-          center_A_, center_EA, outer_radius_A_, radius_EA, z_cut_EA_upper,
-          z_cut_EA_lower, z_cut_CA_lower, z_cutting_plane_),
+          center_A_rotated_to_z_axis, center_EA, outer_radius_A_, radius_EA,
+          z_cut_EA_upper, z_cut_EA_lower, z_cut_CA_lower, cutting_plane_),
       CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
 
   // z_cut_CB_lower is the lower z_plane position for the CB endcap,
@@ -656,7 +675,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // Note here that 'lower' means 'farther from z=-infinity'
   // because we are on the -z side of the cutting plane.
   const double z_cut_CB_lower =
-      z_cutting_plane_ + 1.6 * (center_EB[2] - z_cutting_plane_);
+      cutting_plane_ + 1.6 * (center_EB[2] - cutting_plane_);
   // z_cut_CB_upper is the upper z_plane position for the CB endcap,
   // which isn't defined in https://arxiv.org/abs/1206.3015 (because the
   // maps are different).  We choose this plane to make the maps
@@ -669,36 +688,39 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // maps are different).  We choose this plane to make the maps
   // less extreme.  Note here that 'upper' means 'closer to z=-infinity'
   // because we are on the -z side of the cutting plane.
-  const double z_cut_EB_upper = center_B_[2] - 0.7 * outer_radius_B_;
+  const double z_cut_EB_upper =
+      center_B_rotated_to_z_axis[2] - 0.7 * outer_radius_B_;
   // z_cut_EB_lower is the lower z_plane position for the EB endcap,
   // which isn't defined in https://arxiv.org/abs/1206.3015 (because the
   // maps are different).  We choose this plane to make the maps
   // less extreme. Note here that 'lower' means 'farther from z=-infinity'
   // because we are on the -z side of the cutting plane.
-  const double z_cut_EB_lower = center_B_[2] + 0.7 * outer_radius_B_;
+  const double z_cut_EB_lower =
+      center_B_rotated_to_z_axis[2] + 0.7 * outer_radius_B_;
 
   // EB Filled Cylinder
   // 5 blocks: 18 thru 22
   add_endcap_to_list_of_maps(
       CoordinateMaps::UniformCylindricalEndcap(
-          flip_about_xy_plane(center_B_), flip_about_xy_plane(center_EB),
-          outer_radius_B_, radius_EB, -z_cut_EB_upper, -z_cut_CB_lower),
+          flip_about_xy_plane(center_B_rotated_to_z_axis),
+          flip_about_xy_plane(center_EB), outer_radius_B_, radius_EB,
+          -z_cut_EB_upper, -z_cut_CB_lower),
       CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
 
   // EB Cylinder
   // 4 blocks: 23 thru 26
   add_side_to_list_of_maps(
       CoordinateMaps::UniformCylindricalSide(
-          flip_about_xy_plane(center_B_), flip_about_xy_plane(center_EB),
-          outer_radius_B_, radius_EB, -z_cut_EB_upper, -z_cut_EB_lower,
-          -z_cut_CB_lower, -z_cutting_plane_),
+          flip_about_xy_plane(center_B_rotated_to_z_axis),
+          flip_about_xy_plane(center_EB), outer_radius_B_, radius_EB,
+          -z_cut_EB_upper, -z_cut_EB_lower, -z_cut_CB_lower, -cutting_plane_),
       CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
 
   // MA Filled Cylinder
   // 5 blocks: 27 thru 31
   add_flat_endcap_to_list_of_maps(
       CoordinateMaps::UniformCylindricalFlatEndcap(
-          flip_about_xy_plane(center_A_),
+          flip_about_xy_plane(center_A_rotated_to_z_axis),
           flip_about_xy_plane(center_cutting_plane), outer_radius_A_, radius_MB,
           -z_cut_EA_lower),
       CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
@@ -707,8 +729,8 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   add_flat_endcap_to_list_of_maps(
       // For some reason codecov complains about the next line.
       CoordinateMaps::UniformCylindricalFlatEndcap(  // LCOV_EXCL_LINE
-          center_B_, center_cutting_plane, outer_radius_B_, radius_MB,
-          z_cut_EB_lower),
+          center_B_rotated_to_z_axis, center_cutting_plane, outer_radius_B_,
+          radius_MB, z_cut_EB_lower),
       CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
 
   // CB Filled Cylinder
@@ -724,103 +746,112 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   add_side_to_list_of_maps(
       CoordinateMaps::UniformCylindricalSide(
           flip_about_xy_plane(center_EB), make_array<3>(0.0), radius_EB,
-          inner_radius_C, -z_cut_CB_lower, -z_cutting_plane_, -z_cut_CB_upper,
-          -z_cutting_plane_),
+          inner_radius_C, -z_cut_CB_lower, -cutting_plane_, -z_cut_CB_upper,
+          -cutting_plane_),
       CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
 
   if (include_inner_sphere_A_) {
-    const double z_cut_upper = center_A_[2] + 0.7 * radius_A_;
-    const double z_cut_lower = center_A_[2] - 0.7 * radius_A_;
+    const double z_cut_upper = center_A_rotated_to_z_axis[2] + 0.7 * radius_A_;
+    const double z_cut_lower = center_A_rotated_to_z_axis[2] - 0.7 * radius_A_;
     // InnerSphereEA Filled Cylinder
     // 5 blocks
     add_endcap_to_list_of_maps(
         // For some reason codecov complains about the next function.
         // LCOV_EXCL_START
-        CoordinateMaps::UniformCylindricalEndcap(center_A_, center_A_,
-                                                 radius_A_, outer_radius_A_,
-                                                 z_cut_upper, z_cut_EA_upper),
+        CoordinateMaps::UniformCylindricalEndcap(
+            center_A_rotated_to_z_axis, center_A_rotated_to_z_axis, radius_A_,
+            outer_radius_A_, z_cut_upper, z_cut_EA_upper),
         // LCOV_EXCL_START
         CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
     // InnerSphereMA Filled Cylinder
     // 5 blocks
     add_endcap_to_list_of_maps(
         CoordinateMaps::UniformCylindricalEndcap(
-            flip_about_xy_plane(center_A_), flip_about_xy_plane(center_A_),
-            radius_A_, outer_radius_A_, -z_cut_lower, -z_cut_EA_lower),
+            flip_about_xy_plane(center_A_rotated_to_z_axis),
+            flip_about_xy_plane(center_A_rotated_to_z_axis), radius_A_,
+            outer_radius_A_, -z_cut_lower, -z_cut_EA_lower),
         CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
     // InnerSphereEA Cylinder
     // 4 blocks
     add_side_to_list_of_maps(
         // For some reason codecov complains about the next line.
         CoordinateMaps::UniformCylindricalSide(  // LCOV_EXCL_LINE
-            center_A_, center_A_, radius_A_, outer_radius_A_, z_cut_upper,
-            z_cut_lower, z_cut_EA_upper, z_cut_EA_lower),
+            center_A_rotated_to_z_axis, center_A_rotated_to_z_axis, radius_A_,
+            outer_radius_A_, z_cut_upper, z_cut_lower, z_cut_EA_upper,
+            z_cut_EA_lower),
         CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
   }
   if (include_inner_sphere_B_) {
     // Note here that 'upper' means 'closer to z=-infinity'
     // because we are on the -z side of the cutting plane.
-    const double z_cut_upper = center_B_[2] - 0.7 * radius_B_;
-    const double z_cut_lower = center_B_[2] + 0.7 * radius_B_;
+    const double z_cut_upper = center_B_rotated_to_z_axis[2] - 0.7 * radius_B_;
+    const double z_cut_lower = center_B_rotated_to_z_axis[2] + 0.7 * radius_B_;
     // InnerSphereEB Filled Cylinder
     // 5 blocks
     add_endcap_to_list_of_maps(
         CoordinateMaps::UniformCylindricalEndcap(
-            flip_about_xy_plane(center_B_), flip_about_xy_plane(center_B_),
-            radius_B_, outer_radius_B_, -z_cut_upper, -z_cut_EB_upper),
+            flip_about_xy_plane(center_B_rotated_to_z_axis),
+            flip_about_xy_plane(center_B_rotated_to_z_axis), radius_B_,
+            outer_radius_B_, -z_cut_upper, -z_cut_EB_upper),
         CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
     // InnerSphereMB Filled Cylinder
     // 5 blocks
     add_endcap_to_list_of_maps(
         // For some reason codecov complains about the next function.
         // LCOV_EXCL_START
-        CoordinateMaps::UniformCylindricalEndcap(center_B_, center_B_,
-                                                 radius_B_, outer_radius_B_,
-                                                 z_cut_lower, z_cut_EB_lower),
+        CoordinateMaps::UniformCylindricalEndcap(
+            center_B_rotated_to_z_axis, center_B_rotated_to_z_axis, radius_B_,
+            outer_radius_B_, z_cut_lower, z_cut_EB_lower),
         // LCOV_EXCL_STOP
         CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
     // InnerSphereEB Cylinder
     // 4 blocks
     add_side_to_list_of_maps(
         CoordinateMaps::UniformCylindricalSide(
-            flip_about_xy_plane(center_B_), flip_about_xy_plane(center_B_),
-            radius_B_, outer_radius_B_, -z_cut_upper, -z_cut_lower,
-            -z_cut_EB_upper, -z_cut_EB_lower),
+            flip_about_xy_plane(center_B_rotated_to_z_axis),
+            flip_about_xy_plane(center_B_rotated_to_z_axis), radius_B_,
+            outer_radius_B_, -z_cut_upper, -z_cut_lower, -z_cut_EB_upper,
+            -z_cut_EB_lower),
         CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
   }
   if (include_outer_sphere_) {
-    const double z_cut_CA_outer = 0.7 * outer_radius_;
-    const double z_cut_CB_outer = -0.7 * outer_radius_;
-    // OuterCA Filled Cylinder
-    // 5 blocks
-    add_endcap_to_list_of_maps(
-        CoordinateMaps::UniformCylindricalEndcap(
-            make_array<3>(0.0), make_array<3>(0.0), inner_radius_C,
-            outer_radius_, z_cut_CA_upper, z_cut_CA_outer),
-        CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
-    // OuterCB Filled Cylinder
-    // 5 blocks
-    add_endcap_to_list_of_maps(
-        CoordinateMaps::UniformCylindricalEndcap(
-            make_array<3>(0.0), make_array<3>(0.0), inner_radius_C,
-            outer_radius_, -z_cut_CB_upper, -z_cut_CB_outer),
-        CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
-    // OuterCA Cylinder
-    // 4 blocks
-    add_side_to_list_of_maps(
-        CoordinateMaps::UniformCylindricalSide(
-            make_array<3>(0.0), make_array<3>(0.0), inner_radius_C,
-            outer_radius_, z_cut_CA_upper, z_cutting_plane_, z_cut_CA_outer,
-            z_cutting_plane_),
-        CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
-    // OuterCB Cylinder
-    // 4 blocks
-    add_side_to_list_of_maps(
-        CoordinateMaps::UniformCylindricalSide(
-            make_array<3>(0.0), make_array<3>(0.0), inner_radius_C,
-            outer_radius_, -z_cut_CB_upper, -z_cutting_plane_, -z_cut_CB_outer,
-            -z_cutting_plane_),
-        CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
+    if (not spherical_harmonics_in_wavezone_) {
+      const double z_cut_CA_outer = 0.7 * outer_radius_;
+      const double z_cut_CB_outer = -0.7 * outer_radius_;
+      // OuterCA Filled Cylinder
+      // 5 blocks
+      add_endcap_to_list_of_maps(
+          CoordinateMaps::UniformCylindricalEndcap(
+              make_array<3>(0.0), make_array<3>(0.0), inner_radius_C,
+              outer_radius_, z_cut_CA_upper, z_cut_CA_outer),
+          CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
+      // OuterCB Filled Cylinder
+      // 5 blocks
+      add_endcap_to_list_of_maps(
+          CoordinateMaps::UniformCylindricalEndcap(
+              make_array<3>(0.0), make_array<3>(0.0), inner_radius_C,
+              outer_radius_, -z_cut_CB_upper, -z_cut_CB_outer),
+          CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
+      // OuterCA Cylinder
+      // 4 blocks
+      add_side_to_list_of_maps(
+          CoordinateMaps::UniformCylindricalSide(
+              make_array<3>(0.0), make_array<3>(0.0), inner_radius_C,
+              outer_radius_, z_cut_CA_upper, cutting_plane_, z_cut_CA_outer,
+              cutting_plane_),
+          CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
+      // OuterCB Cylinder
+      // 4 blocks
+      add_side_to_list_of_maps(
+          CoordinateMaps::UniformCylindricalSide(
+              make_array<3>(0.0), make_array<3>(0.0), inner_radius_C,
+              outer_radius_, -z_cut_CB_upper, -cutting_plane_, -z_cut_CB_outer,
+              -cutting_plane_),
+          CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
+    } else {
+      // TODO: do we need something from Larry first?
+      // OuterShell SphericalShell0
+    }
   }
 
   // Excision spheres
@@ -855,10 +886,8 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   }
   excision_spheres.emplace(
       "ExcisionSphereA",
-      ExcisionSphere<3>{
-          radius_A_,
-          tnsr::I<double, 3, Frame::Grid>(rotate_from_z_to_x_axis(center_A_)),
-          abutting_directions_A});
+      ExcisionSphere<3>{radius_A_, tnsr::I<double, 3, Frame::Grid>(center_A_),
+                        abutting_directions_A});
 
   std::unordered_map<size_t, Direction<3>> abutting_directions_B;
   if (include_inner_sphere_B_) {
@@ -885,13 +914,235 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   }
   excision_spheres.emplace(
       "ExcisionSphereB",
-      ExcisionSphere<3>{
-          radius_B_,
-          tnsr::I<double, 3, Frame::Grid>(rotate_from_z_to_x_axis(center_B_)),
-          abutting_directions_B});
+      ExcisionSphere<3>{radius_B_, tnsr::I<double, 3, Frame::Grid>(center_B_),
+                        abutting_directions_B});
 
-  Domain<3> domain{std::move(coordinate_maps), std::move(excision_spheres),
-                   block_names_, block_groups_};
+  Domain<3> domain;
+  if (not spherical_harmonics_in_wavezone_) {
+    domain = Domain<3>{std::move(coordinate_maps), std::move(excision_spheres),
+                       block_names_, block_groups_};
+  } else {
+    // --- SH wavezone: build from explicit Block objects ---
+    //
+    // `maps` at this point contains the inner (non-SH) maps in order:
+    //   [objA (1 or 12 blocks), objB (1 or 12 blocks), envelope (10 blocks),
+    //    interior cubes (0-2 blocks)]
+    // Total = first_outer_shell_block_ + n_interior_cubes entries.
+    //
+    // We determine auto-topology neighbors for these inner maps, then re-index
+    // the neighbor block IDs to account for the SH shell blocks being inserted
+    // at positions [first_outer_shell_block_, first_outer_shell_block_ +
+    // number_of_outer_shells_ - 1].
+    std::vector<DirectionMap<3, BlockNeighbors<3>>> inner_neighbors;
+    set_internal_boundaries<3>(make_not_null(&inner_neighbors),
+                               coordinate_maps);
+
+    // TODO: update with subtracting the number of outer shells once multiple
+    // are supported
+    const size_t number_of_outer_shells = 1;
+    // Connect the 18 CA and CB cylinders to the innermost outer shell
+
+    // CA Filled Cylinder
+    // 5 blocks: 0 thru 4
+    // UniformCylindricalEndcap
+    // center: zeta is outward radial?
+    // surrounding wedges: zeta is outward radial?
+
+    // CA Cylinder
+    // 4 blocks: 5 thru 8
+    // UniformCylindricalSide
+    // center: xi is outward radial?
+
+    // CB Filled Cylinder
+    // 5 blocks: 37 thru 41
+    // UniformCylindricalEndcap
+
+    // CB Cylinder
+    // 4 blocks: 42 thru 45
+    // UniformCylindricalSide
+
+    const OrientationMap<3> shell_to_cyl_endcap_center{
+        {{Direction<3>::upper_zeta(), Direction<3>::self(),
+          Direction<3>::self()}}};
+    const auto cyl_endcap_center_to_shell =
+        shell_to_cyl_endcap_center.inverse_map();
+    const OrientationMap<3> shell_to_cyl_endcap_wedge{
+        {{Direction<3>::upper_zeta(), Direction<3>::self(),
+          Direction<3>::self()}}};
+    const auto cyl_endcap_wedge_to_shell =
+        shell_to_cyl_endcap_wedge.inverse_map();
+    const OrientationMap<3> shell_to_cyl_side{
+        {{Direction<3>::upper_xi(), Direction<3>::self(),
+          Direction<3>::self()}}};
+    const auto cyl_side_to_shell = shell_to_cyl_side.inverse_map();
+
+    const auto aligned = OrientationMap<3>::create_aligned();
+
+    // note: I think the center block comes before the four wedges for a filled
+    // cylinder
+
+    const size_t ca_filled_cyl_center_block = 0;
+    const size_t first_ca_filled_cyl_wedges_block =
+        ca_filled_cyl_center_block + 1;
+    const size_t first_ca_hollow_cyl_block = 5;
+    const size_t cb_filled_cyl_center_block = 37;
+    const size_t first_cb_filled_cyl_wedges_block =
+        cb_filled_cyl_center_block + 1;
+    const size_t first_cb_hollow_cyl_block = 42;
+
+    // CA Filled Cylinder : center
+    inner_neighbors[ca_filled_cyl_center_block].emplace(
+        Direction<3>::upper_zeta(),
+        BlockNeighbors<3>{
+            {first_outer_shell_block},
+            {{first_outer_shell_block, cyl_endcap_center_to_shell}},
+            /*are_conforming=*/false});
+
+    // CA Filled Cylinder : surrounding wedges
+    for (size_t j = first_ca_filled_cyl_wedges_block;
+         j < first_ca_filled_cyl_wedges_block + 4; ++j) {
+      inner_neighbors[j].emplace(
+          Direction<3>::upper_zeta(),
+          BlockNeighbors<3>{
+              {first_outer_shell_block},
+              {{first_outer_shell_block, cyl_endcap_wedge_to_shell}},
+              /*are_conforming=*/false});
+    }
+
+    // CA Cylinder
+    for (size_t j = first_ca_hollow_cyl_block;
+         j < first_ca_hollow_cyl_block + 4; ++j) {
+      inner_neighbors[j].emplace(
+          Direction<3>::upper_xi(),
+          BlockNeighbors<3>{{first_outer_shell_block},
+                            {{first_outer_shell_block, cyl_side_to_shell}},
+                            /*are_conforming=*/false});
+    }
+
+    // CB Filled Cylinder : center
+    inner_neighbors[cb_filled_cyl_center_block].emplace(
+        Direction<3>::upper_zeta(),
+        BlockNeighbors<3>{
+            {first_outer_shell_block},
+            {{first_outer_shell_block, cyl_endcap_center_to_shell}},
+            /*are_conforming=*/false});
+
+    // CB Filled Cylinder : surrounding wedges
+    for (size_t j = first_cb_filled_cyl_wedges_block;
+         j < first_cb_filled_cyl_wedges_block + 4; ++j) {
+      inner_neighbors[j].emplace(
+          Direction<3>::upper_zeta(),
+          BlockNeighbors<3>{
+              {first_outer_shell_block},
+              {{first_outer_shell_block, cyl_endcap_wedge_to_shell}},
+              /*are_conforming=*/false});
+    }
+
+    // CB Cylinder
+    for (size_t j = first_cb_hollow_cyl_block;
+         j < first_cb_hollow_cyl_block + 4; ++j) {
+      inner_neighbors[j].emplace(
+          Direction<3>::upper_xi(),
+          BlockNeighbors<3>{{first_outer_shell_block},
+                            {{first_outer_shell_block, cyl_side_to_shell}},
+                            /*are_conforming=*/false});
+    }
+
+    // Build blocks in final order.
+    std::vector<Block<3>> blocks;
+    blocks.reserve(number_of_blocks_);
+
+    // (a) Inner blocks before SH shells.
+    for (size_t j = 0; j < first_outer_shell_block; ++j) {
+      blocks.emplace_back(std::move(coordinate_maps[j]), j,
+                          std::move(inner_neighbors[j]), block_names_[j]);
+    }
+
+    // (b) SH outer shell blocks.
+    for (size_t shell = 0; shell < number_of_outer_shells; ++shell) {
+      const size_t block_id = first_outer_shell_block + shell;
+      const double r_in = inner_radius_C;
+      const double r_out = outer_radius_;
+
+      CoordinateMaps::Interval radial_map{
+          -1.0,
+          1.0,
+          r_in,
+          r_out,
+          ::domain::CoordinateMaps::Distribution::Linear,
+          0.0};
+      auto sh_map =
+          make_coordinate_map_base<Frame::BlockLogical, Frame::Inertial>(
+              CoordinateMaps::ProductOf2Maps<CoordinateMaps::Interval,
+                                             CoordinateMaps::Identity<2>>{
+                  std::move(radial_map), CoordinateMaps::Identity<2>{}},
+              CoordinateMaps::SphericalToCartesianPfaffian{});
+      DirectionMap<3, BlockNeighbors<3>> sh_neighbors;
+      if (shell == 0) {
+        // lower_xi → all 18 CA, CB blocks (non-conforming, multi-neighbor).
+        std::unordered_set<size_t> cyl_ids;
+        std::unordered_map<size_t, OrientationMap<3>> cyl_orientations;
+
+        // CA Filled Cylinder : center
+        cyl_ids.insert(ca_filled_cyl_center_block);
+        cyl_orientations.emplace(ca_filled_cyl_center_block,
+                                 shell_to_cyl_endcap_center);
+
+        // CA Filled Cylinder : surrounding wedges
+        for (size_t j = first_ca_filled_cyl_wedges_block;
+             j < first_ca_filled_cyl_wedges_block + 4; ++j) {
+          cyl_ids.insert(j);
+          cyl_orientations.emplace(j, shell_to_cyl_endcap_wedge);
+        }
+
+        // CA Cylinder
+        for (size_t j = first_ca_hollow_cyl_block;
+             j < first_ca_hollow_cyl_block + 4; ++j) {
+          cyl_ids.insert(j);
+          cyl_orientations.emplace(j, shell_to_cyl_side);
+        }
+
+        // CB Filled Cylinder : center
+        cyl_ids.insert(cb_filled_cyl_center_block);
+        cyl_orientations.emplace(cb_filled_cyl_center_block,
+                                 shell_to_cyl_endcap_center);
+
+        // CB Filled Cylinder : surrounding wedges
+        for (size_t j = first_cb_filled_cyl_wedges_block;
+             j < first_cb_filled_cyl_wedges_block + 4; ++j) {
+          cyl_ids.insert(j);
+          cyl_orientations.emplace(j, shell_to_cyl_endcap_wedge);
+        }
+
+        // CB Cylinder
+        for (size_t j = first_cb_hollow_cyl_block;
+             j < first_cb_hollow_cyl_block + 4; ++j) {
+          cyl_ids.insert(j);
+          cyl_orientations.emplace(j, shell_to_cyl_side);
+        }
+
+        sh_neighbors.emplace(
+            Direction<3>::lower_xi(),
+            BlockNeighbors<3>{std::move(cyl_ids), std::move(cyl_orientations),
+                              /*are_conforming=*/false});
+
+      } else {
+        // lower_xi → previous SH shell (conforming, single neighbor).
+        sh_neighbors.emplace(Direction<3>::lower_xi(),
+                             BlockNeighbors<3>{block_id - 1, aligned});
+      }
+      if (shell < number_of_outer_shells - 1) {
+        sh_neighbors.emplace(Direction<3>::upper_xi(),
+                             BlockNeighbors<3>{block_id + 1, aligned});
+      }
+      blocks.emplace_back(std::move(sh_map), block_id, std::move(sh_neighbors),
+                          block_names_[block_id],
+                          domain::topologies::spherical_shell);
+    }
+
+    domain = Domain<3>{std::move(blocks), std::move(excision_spheres),
+                       block_groups_};
+  }
 
   if (time_dependent_options_.has_value()) {
     ASSERT(include_inner_sphere_A_ and include_inner_sphere_B_,
@@ -1092,20 +1343,28 @@ CylindricalBinaryCompactObject::external_boundary_conditions() const {
     last_block += 14;
   }
   if (include_outer_sphere_) {
-    for (size_t i = 0; i < 5; ++i) {
-      // OuterCA Filled Cylinder
-      boundary_conditions[last_block + i][Direction<3>::upper_zeta()] =
-          outer_boundary_condition_->get_clone();
-      // OuterCB Filled Cylinder
-      boundary_conditions[last_block + i + 5][Direction<3>::upper_zeta()] =
-          outer_boundary_condition_->get_clone();
-    }
-    for (size_t i = 0; i < 4; ++i) {
-      // OuterCA Cylinder
-      boundary_conditions[last_block + i + 10][Direction<3>::upper_xi()] =
-          outer_boundary_condition_->get_clone();
-      // OuterCB Cylinder
-      boundary_conditions[last_block + i + 14][Direction<3>::upper_xi()] =
+    if (not spherical_harmonics_in_wavezone_) {
+      for (size_t i = 0; i < 5; ++i) {
+        // OuterCA Filled Cylinder
+        boundary_conditions[last_block + i][Direction<3>::upper_zeta()] =
+            outer_boundary_condition_->get_clone();
+        // OuterCB Filled Cylinder
+        boundary_conditions[last_block + i + 5][Direction<3>::upper_zeta()] =
+            outer_boundary_condition_->get_clone();
+      }
+      for (size_t i = 0; i < 4; ++i) {
+        // OuterCA Cylinder
+        boundary_conditions[last_block + i + 10][Direction<3>::upper_xi()] =
+            outer_boundary_condition_->get_clone();
+        // OuterCB Cylinder
+        boundary_conditions[last_block + i + 14][Direction<3>::upper_xi()] =
+            outer_boundary_condition_->get_clone();
+      }
+    } else {
+      // TODO / ASK : should I just add the same boundary_conditions
+      // need to check if radial direction is xi or zeta for spherical shell,
+      // guessing xi for now just to have something
+      boundary_conditions[last_block + 1][Direction<3>::upper_xi()] =
           outer_boundary_condition_->get_clone();
     }
   }

@@ -35,6 +35,7 @@ template <typename Map1, typename Map2>
 class ProductOf2Maps;
 template <typename Map1, typename Map2, typename Map3>
 class ProductOf3Maps;
+class SphericalToCartesianPfaffian;
 template <size_t VolumeDim>
 class Wedge;
 template <size_t VolumeDim>
@@ -185,6 +186,11 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
                                                     CoordinateMaps::Interval>,
                      CoordinateMaps::UniformCylindricalSide,
                      CoordinateMaps::DiscreteRotation<3>>,
+                 domain::CoordinateMap<
+                     Frame::BlockLogical, Frame::Inertial,
+                     domain::CoordinateMaps::ProductOf2Maps<
+                         CoordinateMaps::Interval, CoordinateMaps::Identity<2>>,
+                     domain::CoordinateMaps::SphericalToCartesianPfaffian>,
                  bco::TimeDependentMapOptions<true>::maps_list>>;
 
   struct CenterA {
@@ -287,12 +293,22 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
         bco::TimeDependentMapOptions<true>::help;
   };
 
+  struct SphericalHarmonicsInWavezone {
+    // using group = OuterShell;
+    static std::string name() { return "UseSphericalHarmonics"; }
+    using type = bool;
+    static bool suggested_value() { return false; }
+    static constexpr Options::String help = {
+        "Use a spherical-harmonic basis for the outer wavezone shell(s). "
+        "NOTE: This feature is not yet fully implemented."};
+  };
+
   template <typename Metavariables>
   using options = tmpl::append<
       tmpl::list<CenterA, CenterB, RadiusA, RadiusB, IncludeInnerSphereA,
                  IncludeInnerSphereB, IncludeOuterSphere, OuterRadius,
                  UseEquiangularMap, InitialRefinement, InitialGridPoints,
-                 TimeDependentMaps>,
+                 SphericalHarmonicsInWavezone, TimeDependentMaps>,
       tmpl::conditional_t<
           domain::BoundaryConditions::has_boundary_conditions_base_v<
               typename Metavariables::system>,
@@ -318,6 +334,7 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
       double outer_radius, bool use_equiangular_map,
       const typename InitialRefinement::type& initial_refinement,
       const typename InitialGridPoints::type& initial_grid_points,
+      bool spherical_harmonics_in_wavezone,
       std::optional<bco::TimeDependentMapOptions<true>> time_dependent_options =
           std::nullopt,
       std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>
@@ -365,11 +382,6 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
   }
 
  private:
-  // Note that center_A_ and center_B_ are rotated with respect to the
-  // input centers (which are in the grid frame), so that we can
-  // construct the map in a frame where the centers are offset in the
-  // z direction.  At the end, there will be another rotation back to
-  // the grid frame (where the centers are offset in the x direction).
   std::array<double, 3> center_A_{};
   std::array<double, 3> center_B_{};
   double radius_A_{};
@@ -389,9 +401,8 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
   // to the value 0.99 used in SpEC, so that we reproduce SpEC's
   // domain decomposition.
   double cut_spheres_offset_factor_{0.99};
-  // z_cutting_plane_ is x_C in Eq. (A.9) of
-  // https://arxiv.org/abs/1206.3015 (but rotated to the z-axis).
-  double z_cutting_plane_{};
+  // x_C in Eq. (A.9) of https://arxiv.org/abs/1206.3015.
+  double cutting_plane_{};
   size_t number_of_blocks_{};
   size_t first_outer_shell_block{};
   std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>
@@ -403,6 +414,7 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
       block_groups_{};
   std::unordered_map<std::string, tnsr::I<double, 3, Frame::Grid>>
       grid_anchors_{};
+  bool spherical_harmonics_in_wavezone_ = false;
   // FunctionsOfTime options
   std::optional<bco::TimeDependentMapOptions<true>> time_dependent_options_{};
 };
