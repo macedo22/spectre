@@ -324,7 +324,7 @@ std::string create_option_string(
          initial_structure(with_additional_outer_radial_refinement, 1) +
          "\n  InitialGridPoints:" +
          initial_structure(with_additional_grid_points, 3) +
-         "\n  SphericalHarmonicsInWavezone: False" + "\n" + time_dependence +
+         "\n  UseSphericalHarmonics: False" + "\n" + time_dependence +
          boundary_conditions;
 }
 
@@ -691,6 +691,167 @@ void test_cylindrical_bbh() {
         cyl_binary_compact_object, with_boundary_conditions);
   }
 }
+
+// TODO : edit this from Nils to test CBCO similarly
+void test_spherical_harmonics_wavezone(const bool include_inner_sphere_a,
+                                       const bool include_inner_sphere_b,
+                                       const double radius_a,
+                                       const double radius_b,
+                                       const double outer_radius) {
+  INFO(
+      "Test CylindricalBinaryCompactObject with "
+      "SphericalHarmonicsInWavezone=true");
+  const size_t initial_refinement = 1;
+  const size_t initial_grid_points = 3;
+
+  const domain::creators::CylindricalBinaryCompactObject cbco{
+      {{7.5, 0.0, 0.0}},
+      {-7.5, 0.0, 0.0},
+      radius_a,
+      radius_b,
+      include_inner_sphere_a,
+      include_inner_sphere_b,
+      true,
+      outer_radius,
+      false,
+      initial_refinement,
+      initial_grid_points,
+      true,
+      std::nullopt,
+      create_inner_boundary_condition(),
+      create_outer_boundary_condition()};
+
+  // Check block count.
+  const size_t num_blocks_no_inner_spheres_or_shell = 46;
+  const size_t num_blocks_one_inner_sphere = 14;
+  const size_t num_outer_shells = 1;
+
+  const size_t num_blocks =
+      num_blocks_no_inner_spheres_or_shell +
+      (include_inner_sphere_a ? num_blocks_one_inner_sphere : 0) +
+      (include_inner_sphere_b ? num_blocks_one_inner_sphere : 0) +
+      num_outer_shells;
+
+  CHECK(cbco.block_names().size() == num_blocks);
+
+  // SH outer shell block name and group name
+  // TODO: BCO removes this group, be consistent for CBCO
+  const std::string shell_block_name{"SphericalShell0"};
+  CHECK(cbco.block_names()[num_blocks - 1] == shell_block_name);
+  CHECK(cbco.block_groups()["OuterSphere"].count(shell_block_name) == 1);
+
+  // initial_extents
+  const auto extents = cbco.initial_extents();
+  REQUIRE(extents.size() == num_blocks);
+  CHECK(extents[num_blocks - 1] == std::array<size_t, 3>{initial_grid_points,
+                                                         initial_grid_points,
+                                                         initial_grid_points});
+
+  // initial_refinement
+  const auto refinement = cbco.initial_refinement_levels();
+  REQUIRE(refinement.size() == num_blocks);
+  CHECK(refinement[num_blocks - 1] ==
+        std::array<size_t, 3>{initial_refinement, initial_refinement,
+                              initial_refinement});
+
+  // external_boundary_conditions: outer BC on upper_xi of outer shell.
+  const auto bcs = cbco.external_boundary_conditions();
+  REQUIRE(bcs.size() == num_blocks);
+  CHECK(bcs[num_blocks - 1].count(Direction<3>::upper_xi()) == 1);
+  // No boundary condition on upper_zeta for the SH shell block.
+  CHECK(bcs[num_blocks - 1].count(Direction<3>::upper_zeta()) == 0);
+
+  // Verify the domain can be constructed and inspect neighbor topology.
+  const auto domain_sh = cbco.create_domain();
+  const auto& blocks = domain_sh.blocks();
+  REQUIRE(blocks.size() == num_blocks);
+
+  // OuterShell0 : lower_xi has 18 CA, CB neighbors (non-conforming)
+  // and no upper_xi neighbor (only 1 shell).
+  const auto& sh_block = blocks[num_blocks - 1];
+  CHECK(sh_block.neighbors().count(Direction<3>::lower_xi()) == 1);
+  CHECK(sh_block.neighbors().at(Direction<3>::lower_xi()).ids().size() == 18);
+  CHECK(sh_block.neighbors().count(Direction<3>::upper_xi()) == 0);
+
+  // Each CA, CB block outer radial face should point to outer shell.
+
+  // CA Filled Cylinder
+  for (size_t j = 0; j < 5; ++j) {
+    CAPTURE(j);
+    CHECK(blocks[j].neighbors().count(Direction<3>::upper_zeta()) == 1);
+    CHECK(*blocks[j].neighbors().at(Direction<3>::upper_zeta()).ids().begin() ==
+          num_blocks - 1);
+  }
+  // CA Cylinder
+  for (size_t j = 5; j < 9; ++j) {
+    CAPTURE(j);
+    CHECK(blocks[j].neighbors().count(Direction<3>::upper_xi()) == 1);
+    CHECK(*blocks[j].neighbors().at(Direction<3>::upper_xi()).ids().begin() ==
+          num_blocks - 1);
+  }
+  // CB Filled Cylinder
+  for (size_t j = 37; j < 42; ++j) {
+    CAPTURE(j);
+    CHECK(blocks[j].neighbors().count(Direction<3>::upper_zeta()) == 1);
+    CHECK(*blocks[j].neighbors().at(Direction<3>::upper_zeta()).ids().begin() ==
+          num_blocks - 1);
+  }
+  // CB Cylinder
+  for (size_t j = 42; j < 46; ++j) {
+    CAPTURE(j);
+    CHECK(blocks[j].neighbors().count(Direction<3>::upper_xi()) == 1);
+    CHECK(*blocks[j].neighbors().at(Direction<3>::upper_xi()).ids().begin() ==
+          num_blocks - 1);
+  }
+
+  // Check orientations at the shell boundary.
+  const OrientationMap<3> expected_shell_to_cyl_endcap_center{
+      {{Direction<3>::upper_zeta(), Direction<3>::self(),
+        Direction<3>::self()}}};
+  const auto expected_cyl_endcap_center_to_shell =
+      expected_shell_to_cyl_endcap_center.inverse_map();
+  const OrientationMap<3> expected_shell_to_cyl_endcap_wedge{
+      {{Direction<3>::upper_zeta(), Direction<3>::self(),
+        Direction<3>::self()}}};
+  const auto expected_cyl_endcap_wedge_to_shell =
+      expected_shell_to_cyl_endcap_wedge.inverse_map();
+  const OrientationMap<3> expected_shell_to_cyl_side{
+      {{Direction<3>::upper_xi(), Direction<3>::self(), Direction<3>::self()}}};
+  const auto expected_cyl_side_to_shell =
+      expected_shell_to_cyl_side.inverse_map();
+
+  const auto& lower_xi_neighbors =
+      sh_block.neighbors().at(Direction<3>::lower_xi());
+
+  // CA Filled Cylinder
+  CHECK(lower_xi_neighbors.orientation(0) ==
+        expected_shell_to_cyl_endcap_center);
+  for (size_t j = 1; j < 5; ++j) {
+    CAPTURE(j);
+    CHECK(lower_xi_neighbors.orientation(j) ==
+          expected_shell_to_cyl_endcap_wedge);
+  }
+  // CA Cylinder
+  for (size_t j = 5; j < 9; ++j) {
+    CAPTURE(j);
+    CHECK(lower_xi_neighbors.orientation(j) == expected_shell_to_cyl_side);
+  }
+  // CB Filled Cylinder
+  CHECK(lower_xi_neighbors.orientation(37) ==
+        expected_shell_to_cyl_endcap_center);
+  for (size_t j = 38; j < 42; ++j) {
+    CAPTURE(j);
+    CHECK(lower_xi_neighbors.orientation(j) ==
+          expected_shell_to_cyl_endcap_wedge);
+  }
+  // CB Cylinder
+  for (size_t j = 42; j < 45; ++j) {
+    CAPTURE(j);
+    CHECK(lower_xi_neighbors.orientation(j) == expected_shell_to_cyl_side);
+  }
+
+  // TODO : add more once more than one shell is supported
+}
 }  // namespace
 
 // [[TimeOut, 80]]
@@ -698,4 +859,8 @@ SPECTRE_TEST_CASE("Unit.Domain.Creators.CylindricalBinaryCompactObject",
                   "[Domain][Unit]") {
   test_cylindrical_bbh();
   test_parse_errors();
+  test_spherical_harmonics_wavezone(false, false, 1.8, 1.8, 300.0);
+  test_spherical_harmonics_wavezone(true, false, 1.8, 1.8, 300.0);
+  test_spherical_harmonics_wavezone(false, true, 1.8, 1.8, 300.0);
+  test_spherical_harmonics_wavezone(true, true, 0.8, 0.8, 300.0);
 }
