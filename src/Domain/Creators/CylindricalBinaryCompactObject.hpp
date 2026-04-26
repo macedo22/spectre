@@ -16,6 +16,7 @@
 #include "Domain/BoundaryConditions/BoundaryCondition.hpp"
 #include "Domain/BoundaryConditions/GetBoundaryConditionsBase.hpp"
 #include "Domain/CoordinateMaps/CoordinateMap.hpp"
+#include "Domain/CoordinateMaps/Identity.hpp"
 #include "Domain/Creators/DomainCreator.hpp"
 #include "Domain/Creators/TimeDependentOptions/BinaryCompactObject.hpp"
 #include "Domain/Domain.hpp"
@@ -35,6 +36,7 @@ template <typename Map1, typename Map2>
 class ProductOf2Maps;
 template <typename Map1, typename Map2, typename Map3>
 class ProductOf3Maps;
+class SphericalToCartesianPfaffian;
 template <size_t VolumeDim>
 class Wedge;
 template <size_t VolumeDim>
@@ -185,6 +187,11 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
                                                     CoordinateMaps::Interval>,
                      CoordinateMaps::UniformCylindricalSide,
                      CoordinateMaps::DiscreteRotation<3>>,
+                 domain::CoordinateMap<
+                     Frame::BlockLogical, Frame::Inertial,
+                     domain::CoordinateMaps::ProductOf2Maps<
+                         CoordinateMaps::Interval, CoordinateMaps::Identity<2>>,
+                     domain::CoordinateMaps::SphericalToCartesianPfaffian>,
                  bco::TimeDependentMapOptions<true>::maps_list>>;
 
   struct CenterA {
@@ -217,10 +224,30 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
     static constexpr Options::String help = {
         "Add an extra spherical layer of Blocks around Object B."};
   };
-  struct IncludeOuterSphere {
-    using type = bool;
+  struct OuterSphereOptions {
+   public:
+    using type = Options::Auto<OuterSphereOptions, Options::AutoLabel::None>;
+    static std::string name() { return "OuterSphere"; }
     static constexpr Options::String help = {
-        "Add an extra spherical layer of Blocks inside the outer boundary."};
+        "Options for the outer spherical shell. Specify 'None' to remove the "
+        "outer shell."};
+
+    struct SphericalHarmonicsInWavezone {
+      using type = bool;
+      static std::string name() { return "UseSphericalHarmonics"; }
+      static bool suggested_value() { return false; }
+      static constexpr Options::String help = {
+          "Use a spherical-harmonic basis for the outer wavezone shell "
+          "instead of the default deformed cylinder blocks."};
+    };
+
+    using options = tmpl::list<SphericalHarmonicsInWavezone>;
+
+    OuterSphereOptions() = default;
+    OuterSphereOptions(const bool spherical_harmonics_in_wavezone)
+        : spherical_harmonics_in_wavezone_(spherical_harmonics_in_wavezone) {}
+
+    bool spherical_harmonics_in_wavezone_ = false;
   };
   struct OuterRadius {
     using type = double;
@@ -290,8 +317,8 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
   template <typename Metavariables>
   using options = tmpl::append<
       tmpl::list<CenterA, CenterB, RadiusA, RadiusB, IncludeInnerSphereA,
-                 IncludeInnerSphereB, IncludeOuterSphere, OuterRadius,
-                 UseEquiangularMap, InitialRefinement, InitialGridPoints,
+                 IncludeInnerSphereB, OuterRadius, UseEquiangularMap,
+                 InitialRefinement, InitialGridPoints, OuterSphereOptions,
                  TimeDependentMaps>,
       tmpl::conditional_t<
           domain::BoundaryConditions::has_boundary_conditions_base_v<
@@ -314,10 +341,11 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
   CylindricalBinaryCompactObject(
       std::array<double, 3> center_A, std::array<double, 3> center_B,
       double radius_A, double radius_B, bool include_inner_sphere_A,
-      bool include_inner_sphere_B, bool include_outer_sphere,
-      double outer_radius, bool use_equiangular_map,
+      bool include_inner_sphere_B, double outer_radius,
+      bool use_equiangular_map,
       const typename InitialRefinement::type& initial_refinement,
       const typename InitialGridPoints::type& initial_grid_points,
+      std::optional<OuterSphereOptions> outer_shell_options = std::nullopt,
       std::optional<bco::TimeDependentMapOptions<true>> time_dependent_options =
           std::nullopt,
       std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>
@@ -378,7 +406,6 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
   double outer_radius_B_{};
   bool include_inner_sphere_A_{};
   bool include_inner_sphere_B_{};
-  bool include_outer_sphere_{};
   double outer_radius_{};
   bool use_equiangular_map_{false};
   typename std::vector<std::array<size_t, 3>> initial_refinement_{};
@@ -403,6 +430,7 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
       block_groups_{};
   std::unordered_map<std::string, tnsr::I<double, 3, Frame::Grid>>
       grid_anchors_{};
+  std::optional<OuterSphereOptions> outer_shell_options_{};
   // FunctionsOfTime options
   std::optional<bco::TimeDependentMapOptions<true>> time_dependent_options_{};
 };
