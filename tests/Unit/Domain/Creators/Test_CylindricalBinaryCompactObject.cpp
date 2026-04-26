@@ -760,6 +760,14 @@ void test_spherical_harmonics_wavezone(const bool include_inner_sphere_a,
   CHECK(bcs[num_blocks - 1].count(Direction<3>::upper_xi()) == 1);
   // No boundary condition on upper_zeta for the SH shell block.
   CHECK(bcs[num_blocks - 1].count(Direction<3>::upper_zeta()) == 0);
+  // No boundary condition on upper_eta for the SH shell block.
+  CHECK(bcs[num_blocks - 1].count(Direction<3>::upper_eta()) == 0);
+  // No boundary condition on lower_xi for the SH shell block.
+  CHECK(bcs[num_blocks - 1].count(Direction<3>::lower_xi()) == 0);
+  // No boundary condition on lower_xi_zeta for the SH shell block.
+  CHECK(bcs[num_blocks - 1].count(Direction<3>::lower_zeta()) == 0);
+  // No boundary condition on lower_xi_eta for the SH shell block.
+  CHECK(bcs[num_blocks - 1].count(Direction<3>::lower_eta()) == 0);
 
   // Verify the domain can be constructed and inspect neighbor topology.
   const auto domain_sh = cbco.create_domain();
