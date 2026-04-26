@@ -743,9 +743,9 @@ void test_spherical_harmonics_wavezone(const bool include_inner_sphere_a,
   // initial_extents
   const auto extents = cbco.initial_extents();
   REQUIRE(extents.size() == num_blocks);
-  CHECK(extents[num_blocks - 1] == std::array<size_t, 3>{initial_grid_points,
-                                                         initial_grid_points,
-                                                         initial_grid_points});
+  CHECK(extents[num_blocks - 1] ==
+        std::array<size_t, 3>{initial_grid_points, initial_grid_points,
+                              2 * (initial_grid_points - 1) + 1});
 
   // initial_refinement
   const auto refinement = cbco.initial_refinement_levels();
@@ -837,28 +837,54 @@ void test_spherical_harmonics_wavezone(const bool include_inner_sphere_a,
   // CA Filled Cylinder
   CHECK(lower_xi_neighbors.orientation(0) ==
         expected_shell_to_cyl_endcap_center);
+  CHECK(blocks[0]
+            .neighbors()
+            .at(Direction<3>::upper_zeta())
+            .orientation(num_blocks - 1) ==
+        expected_cyl_endcap_center_to_shell);
   for (size_t j = 1; j < 5; ++j) {
     CAPTURE(j);
     CHECK(lower_xi_neighbors.orientation(j) ==
           expected_shell_to_cyl_endcap_wedge);
+    const auto& uz_neighbors =
+        blocks[j].neighbors().at(Direction<3>::upper_zeta());
+    CHECK(uz_neighbors.orientation(num_blocks - 1) ==
+          expected_cyl_endcap_wedge_to_shell);
   }
   // CA Cylinder
   for (size_t j = 5; j < 9; ++j) {
     CAPTURE(j);
     CHECK(lower_xi_neighbors.orientation(j) == expected_shell_to_cyl_side);
+    const auto& ux_neighbors =
+        blocks[j].neighbors().at(Direction<3>::upper_xi());
+    CHECK(ux_neighbors.orientation(num_blocks - 1) ==
+          expected_cyl_side_to_shell);
   }
   // CB Filled Cylinder
   CHECK(lower_xi_neighbors.orientation(37) ==
         expected_shell_to_cyl_endcap_center);
+  CHECK(blocks[37]
+            .neighbors()
+            .at(Direction<3>::upper_zeta())
+            .orientation(num_blocks - 1) ==
+        expected_cyl_endcap_center_to_shell);
   for (size_t j = 38; j < 42; ++j) {
     CAPTURE(j);
     CHECK(lower_xi_neighbors.orientation(j) ==
           expected_shell_to_cyl_endcap_wedge);
+    const auto& uz_neighbors =
+        blocks[j].neighbors().at(Direction<3>::upper_zeta());
+    CHECK(uz_neighbors.orientation(num_blocks - 1) ==
+          expected_cyl_endcap_wedge_to_shell);
   }
   // CB Cylinder
   for (size_t j = 42; j < 45; ++j) {
     CAPTURE(j);
     CHECK(lower_xi_neighbors.orientation(j) == expected_shell_to_cyl_side);
+    const auto& ux_neighbors =
+        blocks[j].neighbors().at(Direction<3>::upper_xi());
+    CHECK(ux_neighbors.orientation(num_blocks - 1) ==
+          expected_cyl_side_to_shell);
   }
 
   // TODO : add more once more than one shell is supported
