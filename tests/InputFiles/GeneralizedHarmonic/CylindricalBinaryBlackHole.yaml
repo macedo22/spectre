@@ -53,7 +53,7 @@ DomainCreator:
     InitialRefinement: 2
     InitialGridPoints: 7
     OuterSphere:
-        UseSphericalHarmonics: false
+      UseSphericalHarmonics: false
     BoundaryConditions:
       InnerBoundary:
         DemandOutgoingCharSpeeds:
