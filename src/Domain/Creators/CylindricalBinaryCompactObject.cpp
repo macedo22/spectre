@@ -59,11 +59,11 @@ std::array<double, 3> flip_about_xy_plane(const std::array<double, 3> input) {
 namespace domain::creators {
 CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
     std::array<double, 3> center_A, std::array<double, 3> center_B,
-    double radius_A, double radius_B, bool include_inner_sphere_A,
-    bool include_inner_sphere_B, bool include_outer_sphere, double outer_radius,
-    bool use_equiangular_map,
+    double radius_A, double radius_B, bool include_outer_sphere,
+    double outer_radius, bool use_equiangular_map,
     const typename InitialRefinement::type& initial_refinement,
     const typename InitialGridPoints::type& initial_grid_points,
+    std::optional<InnerSpheresOptions> inner_spheres_options,
     std::optional<bco::TimeDependentMapOptions<true>> time_dependent_options,
     std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>
         inner_boundary_condition,
@@ -74,14 +74,13 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
       center_B_(rotate_to_z_axis(center_B)),
       radius_A_(radius_A),
       radius_B_(radius_B),
-      include_inner_sphere_A_(include_inner_sphere_A),
-      include_inner_sphere_B_(include_inner_sphere_B),
       include_outer_sphere_(include_outer_sphere),
       outer_radius_(outer_radius),
       use_equiangular_map_(use_equiangular_map),
       inner_boundary_condition_(std::move(inner_boundary_condition)),
       outer_boundary_condition_(std::move(outer_boundary_condition)),
-      time_dependent_options_(std::move(time_dependent_options)) {
+      inner_spheres_options_(std::move(inner_spheres_options))
+          time_dependent_options_(std::move(time_dependent_options)) {
   if (center_A_[2] <= 0.0) {
     PARSE_ERROR(
         context,
@@ -120,6 +119,36 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
                 "Must specify either both inner and outer boundary conditions "
                 "or neither.");
   }
+  using domain::BoundaryConditions::is_periodic;
+  if (is_periodic(inner_boundary_condition_) or
+      is_periodic(outer_boundary_condition_)) {
+    PARSE_ERROR(
+        context,
+        "Cannot have periodic boundary conditions with a binary domain");
+  }
+
+  bool include_inner_sphere_A = false;
+  bool include_inner_sphere_B = false;
+  if (inner_spheres_options.has_value()) {
+    include_inner_sphere_A =
+        inner_spheres_options.value().include_inner_sphere_A_;
+    include_inner_sphere_B =
+        inner_spheres_options.value().include_inner_sphere_B_;
+
+    if (include_inner_sphere_A or include_inner_sphere_B) {
+      const CoordinateMaps::Distribution radial_distribution_inner_spheres =
+          inner_spheres_options.value().radial_distribution_inner_spheres_;
+      if (radial_distribution_inner_spheres !=
+          CoordinateMaps::Distribution::Linear) {
+        PARSE_ERROR(
+            context,
+            "Unsupported radial distribution for inner spheres of "
+            "CylindricalBinaryCompactObject. The only radial distribution "
+            "currently supported is CoordinateMaps::Distribution::Linear.");
+      }
+    }
+  }
+
   using domain::BoundaryConditions::is_periodic;
   if (is_periodic(inner_boundary_condition_) or
       is_periodic(outer_boundary_condition_)) {
@@ -170,7 +199,7 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
   // If the inner sphere does exist, the algorithm for computing
   // outer_radius_A is the same as in SpEC when there is one inner shell.
   outer_radius_A_ =
-      include_inner_sphere_A_
+      include_inner_sphere_A
           ? radius_A_ +
                 0.5 * (std::abs(z_cutting_plane_ - center_A_[2]) - radius_A_)
           : radius_A_;
@@ -181,7 +210,7 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
   // If the inner sphere does exist, the algorithm for computing
   // outer_radius_B is the same as in SpEC when there is one inner shell.
   outer_radius_B_ =
-      include_inner_sphere_B_
+      include_inner_sphere_B
           ? radius_B_ +
                 0.5 * (std::abs(z_cutting_plane_ - center_B_[2]) - radius_B_)
           : radius_B_;
@@ -728,7 +757,25 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
           -z_cutting_plane_),
       CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
 
-  if (include_inner_sphere_A_) {
+  bool include_inner_sphere_A = false;
+  bool include_inner_sphere_B = false;
+  // If neither sphere is included, Linear is just a placeholder and has no
+  // effect
+  CoordinateMaps::Distribution radial_distribution_inner_spheres =
+      CoordinateMaps::Distribution::Linear;
+  if (inner_spheres_options.has_value()) {
+    include_inner_sphere_A =
+        inner_spheres_options.value().include_inner_sphere_A_;
+    include_inner_sphere_B =
+        inner_spheres_options.value().include_inner_sphere_B_;
+
+    if (include_inner_sphere_A or include_inner_sphere_B) {
+      radial_distribution_inner_spheres =
+          inner_spheres_options.value().radial_distribution_inner_spheres_;
+    }
+  }
+
+  if (include_inner_sphere_A) {
     const double z_cut_upper = center_A_[2] + 0.7 * radius_A_;
     const double z_cut_lower = center_A_[2] - 0.7 * radius_A_;
     // InnerSphereEA Filled Cylinder
@@ -757,7 +804,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
             z_cut_lower, z_cut_EA_upper, z_cut_EA_lower),
         CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
   }
-  if (include_inner_sphere_B_) {
+  if (include_inner_sphere_B) {
     // Note here that 'upper' means 'closer to z=-infinity'
     // because we are on the -z side of the cutting plane.
     const double z_cut_upper = center_B_[2] - 0.7 * radius_B_;
@@ -828,7 +875,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
 
   std::unordered_map<size_t, Direction<3>> abutting_directions_A;
   size_t first_inner_sphere_block = 46;
-  if (include_inner_sphere_A_) {
+  if (include_inner_sphere_A) {
     for (size_t i = 0; i < 10; ++i) {
       // LCOV_EXCL_START
       abutting_directions_A.emplace(first_inner_sphere_block + i,
@@ -861,7 +908,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
           abutting_directions_A});
 
   std::unordered_map<size_t, Direction<3>> abutting_directions_B;
-  if (include_inner_sphere_B_) {
+  if (include_inner_sphere_B) {
     for (size_t i = 0; i < 10; ++i) {
       // LCOV_EXCL_START
       abutting_directions_B.emplace(first_inner_sphere_block + i,
@@ -894,7 +941,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
                    block_names_, block_groups_};
 
   if (time_dependent_options_.has_value()) {
-    ASSERT(include_inner_sphere_A_ and include_inner_sphere_B_,
+    ASSERT(include_inner_sphere_A and include_inner_sphere_B,
            "When using time dependent maps for the CylindricalBBH domain, you "
            "must include both inner spheres.");
     // Default initialize everything to nullptr so that we only need to set the
@@ -1008,6 +1055,16 @@ CylindricalBinaryCompactObject::external_boundary_conditions() const {
   if (outer_boundary_condition_ == nullptr) {
     return {};
   }
+
+  const bool include_inner_sphere_A =
+      inner_spheres_options.has_value()
+          ? inner_spheres_options.value().include_inner_sphere_A_
+          : false;
+  const bool include_inner_sphere_B =
+      inner_spheres_options.has_value()
+          ? inner_spheres_options.value().include_inner_sphere_B_
+          : false;
+
   std::vector<DirectionMap<
       3, std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>>>
       boundary_conditions{number_of_blocks_};
@@ -1020,7 +1077,7 @@ CylindricalBinaryCompactObject::external_boundary_conditions() const {
       boundary_conditions[i + 37][Direction<3>::upper_zeta()] =
           outer_boundary_condition_->get_clone();
     }
-    if (not include_inner_sphere_A_) {
+    if (not include_inner_sphere_A) {
       // EA Filled Cylinder
       boundary_conditions[i + 9][Direction<3>::lower_zeta()] =
           inner_boundary_condition_->get_clone();
@@ -1028,7 +1085,7 @@ CylindricalBinaryCompactObject::external_boundary_conditions() const {
       boundary_conditions[i + 27][Direction<3>::lower_zeta()] =
           inner_boundary_condition_->get_clone();
     }
-    if (not include_inner_sphere_B_) {
+    if (not include_inner_sphere_B) {
       // EB Filled Cylinder
       boundary_conditions[i + 18][Direction<3>::lower_zeta()] =
           inner_boundary_condition_->get_clone();
@@ -1046,12 +1103,12 @@ CylindricalBinaryCompactObject::external_boundary_conditions() const {
       boundary_conditions[i + 42][Direction<3>::upper_xi()] =
           outer_boundary_condition_->get_clone();
     }
-    if (not include_inner_sphere_A_) {
+    if (not include_inner_sphere_A) {
       // EA Cylinder
       boundary_conditions[i + 14][Direction<3>::lower_xi()] =
           inner_boundary_condition_->get_clone();
     }
-    if (not include_inner_sphere_B_) {
+    if (not include_inner_sphere_B) {
       // EB Cylinder
       boundary_conditions[i + 23][Direction<3>::lower_xi()] =
           inner_boundary_condition_->get_clone();
@@ -1059,7 +1116,7 @@ CylindricalBinaryCompactObject::external_boundary_conditions() const {
   }
 
   size_t last_block = 46;
-  if (include_inner_sphere_A_) {
+  if (include_inner_sphere_A) {
     for (size_t i = 0; i < 5; ++i) {
       // InnerSphereEA Filled Cylinder
       boundary_conditions[last_block + i][Direction<3>::lower_zeta()] =
@@ -1075,7 +1132,7 @@ CylindricalBinaryCompactObject::external_boundary_conditions() const {
     }
     last_block += 14;
   }
-  if (include_inner_sphere_B_) {
+  if (include_inner_sphere_B) {
     for (size_t i = 0; i < 5; ++i) {
       // InnerSphereEB Filled Cylinder
       boundary_conditions[last_block + i][Direction<3>::lower_zeta()] =

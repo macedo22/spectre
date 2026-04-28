@@ -16,6 +16,7 @@
 #include "Domain/BoundaryConditions/BoundaryCondition.hpp"
 #include "Domain/BoundaryConditions/GetBoundaryConditionsBase.hpp"
 #include "Domain/CoordinateMaps/CoordinateMap.hpp"
+#include "Domain/CoordinateMaps/Distribution.hpp"
 #include "Domain/Creators/DomainCreator.hpp"
 #include "Domain/Creators/TimeDependentOptions/BinaryCompactObject.hpp"
 #include "Domain/Domain.hpp"
@@ -207,15 +208,54 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
     static constexpr Options::String help = {
         "Grid-coordinate radius of grid boundary around Object B."};
   };
-  struct IncludeInnerSphereA {
-    using type = bool;
+  //   struct IncludeInnerSphereA {
+  //     using type = bool;
+  //     static constexpr Options::String help = {
+  //         "Add an extra spherical layer of Blocks around Object A."};
+  //   };
+  //   struct IncludeInnerSphereB {
+  //     using type = bool;
+  //     static constexpr Options::String help = {
+  //         "Add an extra spherical layer of Blocks around Object B."};
+  //   };
+  struct InnerSpheresOptions {
+   public:
+    using type = Options::Auto<InnerSpheresOptions, Options::AutoLabel::None>;
+    static std::string name() { return "InnerSpheres"; }
     static constexpr Options::String help = {
-        "Add an extra spherical layer of Blocks around Object A."};
-  };
-  struct IncludeInnerSphereB {
-    using type = bool;
-    static constexpr Options::String help = {
-        "Add an extra spherical layer of Blocks around Object B."};
+        "Options for inner spheres. Specify 'None' to not use inner spheres."};
+
+    struct IncludeInnerSphereA {
+      using type = bool;
+      static constexpr Options::String help = {
+          "Add an extra spherical layer of Blocks around Object A."};
+    };
+    struct IncludeInnerSphereB {
+      using type = bool;
+      static constexpr Options::String help = {
+          "Add an extra spherical layer of Blocks around Object B."};
+    };
+    struct RadialDistribution {
+      static std::string name() { return "RadialDistribution"; }
+      using type = domain::CoordinateMaps::Distribution;
+      static constexpr Options::String help = {
+          "Select the radial distribution of grid points in the inner "
+          "spherical shells, if IncludeInnerSphereA=true and/or "
+          "IncludeInnerSphereB=true. This has no effect if neither inner "
+          "sphere is included."};
+    };
+
+    using options = tmpl::list<IncludeInnerSphereA, IncludeInnerSphereB,
+                               RadialDistribution>;
+
+    InnerSpheresOptions() = default;
+    explicit InnerSpheresOptions(const bool spherical_harmonics_in_wavezone)
+        : spherical_harmonics_in_wavezone_(spherical_harmonics_in_wavezone) {}
+
+    bool include_inner_sphere_A = false;
+    bool include_inner_sphere_B = false;
+    CoordinateMaps::Distribution radial_distribution_inner_spheres_ =
+        CoordinateMaps::Distribution::Linear;
   };
   struct IncludeOuterSphere {
     using type = bool;
@@ -289,10 +329,9 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
 
   template <typename Metavariables>
   using options = tmpl::append<
-      tmpl::list<CenterA, CenterB, RadiusA, RadiusB, IncludeInnerSphereA,
-                 IncludeInnerSphereB, IncludeOuterSphere, OuterRadius,
-                 UseEquiangularMap, InitialRefinement, InitialGridPoints,
-                 TimeDependentMaps>,
+      tmpl::list<CenterA, CenterB, RadiusA, RadiusB, InnerSpheresOptions,
+                 IncludeOuterSphere, OuterRadius, UseEquiangularMap,
+                 InitialRefinement, InitialGridPoints, TimeDependentMaps>,
       tmpl::conditional_t<
           domain::BoundaryConditions::has_boundary_conditions_base_v<
               typename Metavariables::system>,
@@ -313,11 +352,11 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
 
   CylindricalBinaryCompactObject(
       std::array<double, 3> center_A, std::array<double, 3> center_B,
-      double radius_A, double radius_B, bool include_inner_sphere_A,
-      bool include_inner_sphere_B, bool include_outer_sphere,
+      double radius_A, double radius_B, bool include_outer_sphere,
       double outer_radius, bool use_equiangular_map,
       const typename InitialRefinement::type& initial_refinement,
       const typename InitialGridPoints::type& initial_grid_points,
+      std::optional<InnerSpheresOptions> outer_shell_options = std::nullopt,
       std::optional<bco::TimeDependentMapOptions<true>> time_dependent_options =
           std::nullopt,
       std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>
@@ -376,8 +415,6 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
   double radius_B_{};
   double outer_radius_A_{};
   double outer_radius_B_{};
-  bool include_inner_sphere_A_{};
-  bool include_inner_sphere_B_{};
   bool include_outer_sphere_{};
   double outer_radius_{};
   bool use_equiangular_map_{false};
@@ -403,6 +440,7 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
       block_groups_{};
   std::unordered_map<std::string, tnsr::I<double, 3, Frame::Grid>>
       grid_anchors_{};
+  std::optional<InnerSpheresOptions> outer_shell_options_{};
   // FunctionsOfTime options
   std::optional<bco::TimeDependentMapOptions<true>> time_dependent_options_{};
 };

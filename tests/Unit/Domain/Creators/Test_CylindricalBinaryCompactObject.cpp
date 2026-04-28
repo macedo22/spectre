@@ -242,6 +242,14 @@ std::string create_option_string(
     const std::array<double, 3>& center_objectB,
     const double inner_radius_objectA, const double inner_radius_objectB,
     const double outer_radius) {
+  const std::string inner_spheres{
+      include_outer_sphere
+          ? ("  InnerSpheres:" + "\n    IncludeInnerSphereA: " +
+             stringize(include_inner_sphere_A) +
+             "\n    IncludeInnerSphereA: " + stringize(include_inner_sphere_B) +
+             "\n    RadialDistribution: Linear\n")
+          : "  InnerSpheres: None\n"};
+
   const std::string time_dependence{
       add_time_dependence ? ("  TimeDependentMaps:\n"
                              "    GridCenters:\n"
@@ -317,14 +325,12 @@ std::string create_option_string(
          "\n  RadiusB: " + stringize(inner_radius_objectB) +
          "\n  OuterRadius: " + stringize(outer_radius) +
          "\n  UseEquiangularMap: " + stringize(use_equiangular_map) +
-         "\n  IncludeInnerSphereA: " + stringize(include_inner_sphere_A) +
-         "\n  IncludeInnerSphereB: " + stringize(include_inner_sphere_B) +
          "\n  IncludeOuterSphere: " + stringize(include_outer_sphere) +
          "\n  InitialRefinement:" +
          initial_structure(with_additional_outer_radial_refinement, 1) +
          "\n  InitialGridPoints:" +
          initial_structure(with_additional_grid_points, 3) + "\n" +
-         time_dependence + boundary_conditions;
+         inner_spheres + time_dependence + boundary_conditions;
 }
 
 void test_construction(const CylBCO& creator,
@@ -435,62 +441,62 @@ TimeDepOptions construct_time_dependent_options() {
 void test_parse_errors() {
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
-          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false, false, false,
-          1.0, false, 1_st, 3_st, std::nullopt,
+          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false, 1.0, false,
+          1_st, 3_st, std::nullopt, std::nullopt,
           create_inner_boundary_condition(), create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring("OuterRadius is too small"));
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
-          {{-2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false, false, false,
-          25.0, false, 1_st, 3_st, std::nullopt,
+          {{-2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false, 25.0, false,
+          1_st, 3_st, std::nullopt, std::nullopt,
           create_inner_boundary_condition(), create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring(
           "The x-coordinate of the input CenterA is expected to be positive"));
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
-          {{2.0, 0.05, 0.0}}, {5.0, 0.05, 0.0}, 1.0, 0.4, false, false, false,
-          25.0, false, 1_st, 3_st, std::nullopt,
+          {{2.0, 0.05, 0.0}}, {5.0, 0.05, 0.0}, 1.0, 0.4, false, 25.0, false,
+          1_st, 3_st, std::nullopt, std::nullopt,
           create_inner_boundary_condition(), create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring(
           "The x-coordinate of the input CenterB is expected to be negative"));
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
-          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, -1.0, 0.4, false, false, false,
-          25.0, false, 1_st, 3_st, std::nullopt,
+          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, -1.0, 0.4, false, 25.0, false,
+          1_st, 3_st, std::nullopt, std::nullopt,
           create_inner_boundary_condition(), create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring("RadiusA and RadiusB are expected "
                                          "to be positive"));
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
-          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, -0.4, false, false, false,
-          25.0, false, 1_st, 3_st, std::nullopt,
+          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, -0.4, false, 25.0, false,
+          1_st, 3_st, std::nullopt, std::nullopt,
           create_inner_boundary_condition(), create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring("RadiusA and RadiusB are expected "
                                          "to be positive"));
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
-          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 0.15, 0.4, false, false, false,
-          25.0, false, 1_st, 3_st, std::nullopt,
+          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 0.15, 0.4, false, 25.0, false,
+          1_st, 3_st, std::nullopt, std::nullopt,
           create_inner_boundary_condition(), create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring(
           "RadiusA should not be smaller than RadiusB"));
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
-          {{2.0, 0.05, 0.0}}, {-1.0, 0.05, 0.0}, 1.0, 0.4, false, false, false,
-          25.0, false, 1_st, 3_st, std::nullopt,
+          {{2.0, 0.05, 0.0}}, {-1.0, 0.05, 0.0}, 1.0, 0.4, false, 25.0, false,
+          1_st, 3_st, std::nullopt, std::nullopt,
           create_inner_boundary_condition(), create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring("We expect |x_A| <= |x_B|"));
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
-          {{4.0, 0.0, 0.0}}, {-4.0, 0.0, 0.0}, 1.0, 1.0, false, false, false,
-          25.0, false, 1_st, 3_st,
+          {{4.0, 0.0, 0.0}}, {-4.0, 0.0, 0.0}, 1.0, 1.0, false, 25.0, false,
+          1_st, 3_st, std::nullopt,
           TimeDepOptions{
               0.0, std::nullopt,
               domain::creators::time_dependent_options::RotationMapOptions<
@@ -504,8 +510,8 @@ void test_parse_errors() {
   // Boundary condition errors
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
-          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false, false, false,
-          25.0, false, 1_st, 3_st, std::nullopt,
+          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false, 25.0, false,
+          1_st, 3_st, std::nullopt, std::nullopt,
           create_inner_boundary_condition(),
           std::make_unique<TestHelpers::domain::BoundaryConditions::
                                TestPeriodicBoundaryCondition<3>>(),
@@ -514,8 +520,8 @@ void test_parse_errors() {
                                          "conditions with a binary domain"));
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
-          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false, false, false,
-          25.0, false, 1_st, 3_st, std::nullopt,
+          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false, 25.0, false,
+          1_st, 3_st, std::nullopt, std::nullopt,
           std::make_unique<TestHelpers::domain::BoundaryConditions::
                                TestPeriodicBoundaryCondition<3>>(),
           create_outer_boundary_condition(), Options::Context{false, {}, 1, 1}),
@@ -523,15 +529,15 @@ void test_parse_errors() {
                                          "conditions with a binary domain"));
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
-          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false, false, false,
-          25.0, false, 1_st, 3_st, std::nullopt, nullptr,
+          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false, 25.0, false,
+          1_st, 3_st, std::nullopt, std::nullopt, nullptr,
           create_outer_boundary_condition(), Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring(
           "Must specify either both inner and outer boundary "
           "conditions or neither."));
   CHECK_THROWS_WITH(domain::creators::CylindricalBinaryCompactObject(
                         {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false,
-                        false, false, 25.0, false, 1_st, 3_st, std::nullopt,
+                        25.0, false, 1_st, 3_st, std::nullopt, std::nullopt,
                         create_inner_boundary_condition(), nullptr,
                         Options::Context{false, {}, 1, 1}),
                     Catch::Matchers::ContainsSubstring(
@@ -641,6 +647,12 @@ void test_cylindrical_bbh() {
     }
 
     CylBCO cyl_binary_compact_object{};
+    std::optional<InnerSpheresOptions> inner_spheres_opts{};
+    if (include_outer_sphere_A or include_outer_sphere_B) {
+      inner_spheres_opts =
+          InnerSpheresOptions{include_outer_sphere_A, include_outer_sphere_B,
+                              domain::CoordinateMaps::Distribution::Linear};
+    }
     std::optional<TimeDepOptions> time_dep_opts{};
     if (with_time_dependence) {
       time_dep_opts = construct_time_dependent_options();
@@ -650,13 +662,12 @@ void test_cylindrical_bbh() {
         center_objectB,
         inner_radius_objectA,
         inner_radius_objectB,
-        include_inner_sphere_A,
-        include_inner_sphere_B,
         include_outer_sphere,
         outer_radius,
         use_equiangular_map,
         initial_refinement,
         initial_grid_points,
+        std::move(inner_spheres_opts),
         std::move(time_dep_opts),
         with_boundary_conditions ? create_inner_boundary_condition() : nullptr,
         with_boundary_conditions ? create_outer_boundary_condition() : nullptr};
