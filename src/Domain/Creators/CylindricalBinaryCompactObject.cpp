@@ -79,8 +79,8 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
       use_equiangular_map_(use_equiangular_map),
       inner_boundary_condition_(std::move(inner_boundary_condition)),
       outer_boundary_condition_(std::move(outer_boundary_condition)),
-      inner_spheres_options_(std::move(inner_spheres_options))
-          time_dependent_options_(std::move(time_dependent_options)) {
+      inner_spheres_options_(std::move(inner_spheres_options)),
+      time_dependent_options_(std::move(time_dependent_options)) {
   if (center_A_[2] <= 0.0) {
     PARSE_ERROR(
         context,
@@ -763,15 +763,15 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // effect
   CoordinateMaps::Distribution radial_distribution_inner_spheres =
       CoordinateMaps::Distribution::Linear;
-  if (inner_spheres_options.has_value()) {
+  if (inner_spheres_options_.has_value()) {
     include_inner_sphere_A =
-        inner_spheres_options.value().include_inner_sphere_A_;
+        inner_spheres_options_.value().include_inner_sphere_A_;
     include_inner_sphere_B =
-        inner_spheres_options.value().include_inner_sphere_B_;
+        inner_spheres_options_.value().include_inner_sphere_B_;
 
     if (include_inner_sphere_A or include_inner_sphere_B) {
       radial_distribution_inner_spheres =
-          inner_spheres_options.value().radial_distribution_inner_spheres_;
+          inner_spheres_options_.value().radial_distribution_inner_spheres_;
     }
   }
 
@@ -1057,12 +1057,12 @@ CylindricalBinaryCompactObject::external_boundary_conditions() const {
   }
 
   const bool include_inner_sphere_A =
-      inner_spheres_options.has_value()
-          ? inner_spheres_options.value().include_inner_sphere_A_
+      inner_spheres_options_.has_value()
+          ? inner_spheres_options_.value().include_inner_sphere_A_
           : false;
   const bool include_inner_sphere_B =
-      inner_spheres_options.has_value()
-          ? inner_spheres_options.value().include_inner_sphere_B_
+      inner_spheres_options_.has_value()
+          ? inner_spheres_options_.value().include_inner_sphere_B_
           : false;
 
   std::vector<DirectionMap<

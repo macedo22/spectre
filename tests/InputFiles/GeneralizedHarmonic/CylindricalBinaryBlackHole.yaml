@@ -52,6 +52,10 @@ DomainCreator:
     OuterRadius: 300.0
     InitialRefinement: 2
     InitialGridPoints: 7
+    InnerSpheres:
+      IncludeInnerSphereA: true
+      IncludeInnerSphereB: true
+      RadialDistribution: Linear
     BoundaryConditions:
       InnerBoundary:
         DemandOutgoingCharSpeeds:

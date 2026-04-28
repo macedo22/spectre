@@ -49,6 +49,7 @@
 namespace {
 using ExpirationTimeMap = std::unordered_map<std::string, double>;
 using CylBCO = ::domain::creators::CylindricalBinaryCompactObject;
+using InnerSpheresOptions = CylBCO::InnerSpheresOptions;
 using TimeDepOptions = domain::creators::bco::TimeDependentMapOptions<true>;
 
 std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>
@@ -243,10 +244,11 @@ std::string create_option_string(
     const double inner_radius_objectA, const double inner_radius_objectB,
     const double outer_radius) {
   const std::string inner_spheres{
-      include_outer_sphere
-          ? ("  InnerSpheres:" + "\n    IncludeInnerSphereA: " +
+      include_inner_sphere_A or include_inner_sphere_B
+          ? ("  InnerSpheres:"
+             "\n    IncludeInnerSphereA: " +
              stringize(include_inner_sphere_A) +
-             "\n    IncludeInnerSphereA: " + stringize(include_inner_sphere_B) +
+             "\n    IncludeInnerSphereB: " + stringize(include_inner_sphere_B) +
              "\n    RadialDistribution: Linear\n")
           : "  InnerSpheres: None\n"};
 
@@ -648,9 +650,9 @@ void test_cylindrical_bbh() {
 
     CylBCO cyl_binary_compact_object{};
     std::optional<InnerSpheresOptions> inner_spheres_opts{};
-    if (include_outer_sphere_A or include_outer_sphere_B) {
+    if (include_inner_sphere_A or include_inner_sphere_B) {
       inner_spheres_opts =
-          InnerSpheresOptions{include_outer_sphere_A, include_outer_sphere_B,
+          InnerSpheresOptions{include_inner_sphere_A, include_inner_sphere_B,
                               domain::CoordinateMaps::Distribution::Linear};
     }
     std::optional<TimeDepOptions> time_dep_opts{};

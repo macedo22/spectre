@@ -249,11 +249,16 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
                                RadialDistribution>;
 
     InnerSpheresOptions() = default;
-    explicit InnerSpheresOptions(const bool spherical_harmonics_in_wavezone)
-        : spherical_harmonics_in_wavezone_(spherical_harmonics_in_wavezone) {}
+    explicit InnerSpheresOptions(
+        const bool include_inner_sphere_A, const bool include_inner_sphere_B,
+        const CoordinateMaps::Distribution radial_distribution_inner_spheres)
+        : include_inner_sphere_A_(include_inner_sphere_A),
+          include_inner_sphere_B_(include_inner_sphere_B),
+          radial_distribution_inner_spheres_(
+              radial_distribution_inner_spheres) {}
 
-    bool include_inner_sphere_A = false;
-    bool include_inner_sphere_B = false;
+    bool include_inner_sphere_A_ = false;
+    bool include_inner_sphere_B_ = false;
     CoordinateMaps::Distribution radial_distribution_inner_spheres_ =
         CoordinateMaps::Distribution::Linear;
   };
@@ -329,9 +334,9 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
 
   template <typename Metavariables>
   using options = tmpl::append<
-      tmpl::list<CenterA, CenterB, RadiusA, RadiusB, InnerSpheresOptions,
-                 IncludeOuterSphere, OuterRadius, UseEquiangularMap,
-                 InitialRefinement, InitialGridPoints, TimeDependentMaps>,
+      tmpl::list<CenterA, CenterB, RadiusA, RadiusB, IncludeOuterSphere,
+                 OuterRadius, UseEquiangularMap, InitialRefinement,
+                 InitialGridPoints, InnerSpheresOptions, TimeDependentMaps>,
       tmpl::conditional_t<
           domain::BoundaryConditions::has_boundary_conditions_base_v<
               typename Metavariables::system>,
@@ -440,7 +445,7 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
       block_groups_{};
   std::unordered_map<std::string, tnsr::I<double, 3, Frame::Grid>>
       grid_anchors_{};
-  std::optional<InnerSpheresOptions> outer_shell_options_{};
+  std::optional<InnerSpheresOptions> inner_spheres_options_{};
   // FunctionsOfTime options
   std::optional<bco::TimeDependentMapOptions<true>> time_dependent_options_{};
 };
