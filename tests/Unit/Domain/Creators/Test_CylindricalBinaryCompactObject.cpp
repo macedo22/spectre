@@ -545,6 +545,18 @@ void test_parse_errors() {
                     Catch::Matchers::ContainsSubstring(
                         "Must specify either both inner and outer boundary "
                         "conditions or neither."));
+  CHECK_THROWS_WITH(
+      domain::creators::CylindricalBinaryCompactObject(
+          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false, 100.0, false,
+          1_st, 3_st,
+          InnerSpheresOptions{
+              true,
+              true,
+              domain::CoordinateMaps::Distribution::Logarithmic,
+          },
+          std::nullopt, create_inner_boundary_condition(),
+          create_outer_boundary_condition(), Options::Context{false, {}, 1, 1}),
+      Catch::Matchers::ContainsSubstring("Unsupported radial distribution"));
 }
 
 // This matches the structure in the option string
