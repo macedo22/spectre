@@ -144,7 +144,7 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
             context,
             "Unsupported radial distribution for inner spheres of "
             "CylindricalBinaryCompactObject. The only radial distribution "
-            "currently supported is CoordinateMaps::Distribution::Linear.");
+            "currently supported is Linear.");
       }
     }
   }
