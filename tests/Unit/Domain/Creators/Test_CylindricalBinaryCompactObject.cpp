@@ -233,12 +233,6 @@ std::string stringize(const std::array<double, 3>& t) {
   return result.str();
 }
 
-std::string stringize(const domain::CoordinateMaps::Distribution distribution) {
-  std::stringstream ss{};
-  ss << std::setprecision(precision) << distribution;
-  return ss.str();
-}
-
 std::string create_option_string(
     const bool add_time_dependence,
     const bool with_additional_outer_radial_refinement,
@@ -248,17 +242,14 @@ std::string create_option_string(
     const std::array<double, 3>& center_objectA,
     const std::array<double, 3>& center_objectB,
     const double inner_radius_objectA, const double inner_radius_objectB,
-    const double outer_radius,
-    const domain::CoordinateMaps::Distribution
-        inner_sphere_radial_distribution =
-            domain::CoordinateMaps::Distribution::Linear) {
+    const double outer_radius) {
   const std::string inner_spheres{
       include_inner_sphere_A or include_inner_sphere_B
           ? ("  InnerSpheres:"
              "\n    IncludeInnerSphereA: " +
-             stringize(include_inner_sphere_A) + "\n    IncludeInnerSphereB: " +
-             stringize(include_inner_sphere_B) + "\n    RadialDistribution: " +
-             stringize(inner_sphere_radial_distribution) + "\n")
+             stringize(include_inner_sphere_A) +
+             "\n    IncludeInnerSphereB: " + stringize(include_inner_sphere_B) +
+             "\n    RadialDistribution: Linear\n")
           : "  InnerSpheres: None\n"};
 
   const std::string time_dependence{
@@ -561,7 +552,7 @@ void test_parse_errors() {
           InnerSpheresOptions{
               true,
               true,
-              domain::CoordinateMaps::Distribution::Inverse,
+              domain::CoordinateMaps::Distribution::Logarithmic,
           },
           std::nullopt, create_inner_boundary_condition(),
           create_outer_boundary_condition(), Options::Context{false, {}, 1, 1}),
@@ -610,17 +601,13 @@ void test_cylindrical_bbh() {
              include_inner_sphere_B, use_equiangular_map,
              with_additional_outer_radial_refinement,
              with_additional_grid_points, with_time_dependence,
-             with_control_systems, with_boundary_conditions,
-             inner_sphere_radial_distribution] :
+             with_control_systems, with_boundary_conditions] :
        random_sample<5>(
-           cartesian_product(
-               make_array(true, false), make_array(true, false),
-               make_array(true, false), make_array(true, false),
-               make_array(true, false), make_array(true, false),
-               make_array(true, false), make_array(true, false),
-               make_array(true, false),
-               make_array(domain::CoordinateMaps::Distribution::Linear,
-                          domain::CoordinateMaps::Distribution::Logarithmic)),
+           cartesian_product(make_array(true, false), make_array(true, false),
+                             make_array(true, false), make_array(true, false),
+                             make_array(true, false), make_array(true, false),
+                             make_array(true, false), make_array(true, false),
+                             make_array(true, false)),
            make_not_null(&gen))) {
     CAPTURE(with_sphere_e);
     CAPTURE(include_outer_sphere);
@@ -640,7 +627,6 @@ void test_cylindrical_bbh() {
     CAPTURE(include_inner_sphere_A);
     CAPTURE(include_inner_sphere_B);
     CAPTURE(with_control_systems);
-    CAPTURE(inner_sphere_radial_distribution);
 
     const double outer_radius = include_outer_sphere ? 100.0 : 30.0;
     const double mass_ratio = with_sphere_e ? 4 : 1.2;
@@ -679,7 +665,7 @@ void test_cylindrical_bbh() {
     if (include_inner_sphere_A or include_inner_sphere_B) {
       inner_spheres_opts =
           InnerSpheresOptions{include_inner_sphere_A, include_inner_sphere_B,
-                              inner_sphere_radial_distribution};
+                              domain::CoordinateMaps::Distribution::Linear};
     }
     std::optional<TimeDepOptions> time_dep_opts{};
     if (with_time_dependence) {
@@ -712,7 +698,7 @@ void test_cylindrical_bbh() {
             include_inner_sphere_A, include_inner_sphere_B,
             with_boundary_conditions, use_equiangular_map, center_objectA,
             center_objectB, inner_radius_objectA, inner_radius_objectB,
-            outer_radius, inner_sphere_radial_distribution),
+            outer_radius),
         cyl_binary_compact_object, with_boundary_conditions);
   }
 }

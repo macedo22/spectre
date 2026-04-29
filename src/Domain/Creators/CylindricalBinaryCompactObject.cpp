@@ -139,14 +139,12 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
       const CoordinateMaps::Distribution radial_distribution_inner_spheres =
           inner_spheres_options_.value().radial_distribution_inner_spheres_;
       if (radial_distribution_inner_spheres !=
-              CoordinateMaps::Distribution::Linear and
-          radial_distribution_inner_spheres !=
-              CoordinateMaps::Distribution::Logarithmic) {
+          CoordinateMaps::Distribution::Linear) {
         PARSE_ERROR(
             context,
             "Unsupported radial distribution for inner spheres of "
-            "CylindricalBinaryCompactObject. The only radial distributions "
-            "currently supported are Linear and Logarithmic.");
+            "CylindricalBinaryCompactObject. The only radial distribution "
+            "currently supported is CoordinateMaps::Distribution::Linear.");
       }
     }
   }
