@@ -1026,12 +1026,24 @@ cyl_wedge_coord_map_center_blocks(
   const auto angular_distribution =
       use_equiangular_map ? domain::CoordinateMaps::Distribution::Equiangular
                           : domain::CoordinateMaps::Distribution::Linear;
+  // const double singularity_pos =
+  //     distribution_in_z == domain::CoordinateMaps::Distribution::Logarithmic
+  //         ? -(upper_z_bound + lower_z_bound) / (upper_z_bound -
+  //         lower_z_bound) : lower_z_bound;
   for (size_t layer = 0; layer < 1 + partitioning_in_z.size(); layer++) {
     if (layer != partitioning_in_z.size()) {
       temp_upper_z_bound = partitioning_in_z.at(layer);
     } else {
       temp_upper_z_bound = upper_z_bound;
     }
+
+    // note: using same singularity for all logarithmic maps regardless of layer
+    const double singularity_pos =
+        distribution_in_z.at(layer) ==
+                domain::CoordinateMaps::Distribution::Logarithmic
+            ? -(upper_z_bound + lower_z_bound) / (upper_z_bound - lower_z_bound)
+            : lower_z_bound;
+
     maps.emplace_back(
         Interval3D{Interval(-1.0, 1.0, -1.0 * inner_radius / sqrt(2.0),
                             inner_radius / sqrt(2.0), angular_distribution),
@@ -1039,7 +1051,7 @@ cyl_wedge_coord_map_center_blocks(
                             inner_radius / sqrt(2.0), angular_distribution),
                    Interval{lower_logical_zeta, upper_logical_zeta,
                             temp_lower_z_bound, temp_upper_z_bound,
-                            distribution_in_z.at(layer), lower_z_bound}});
+                            distribution_in_z.at(layer), singularity_pos}});
 
     if (layer != partitioning_in_z.size()) {
       temp_lower_z_bound = partitioning_in_z.at(layer);
@@ -1079,6 +1091,10 @@ cyl_wedge_coord_map_surrounding_blocks(
   double temp_outer_radius{};
   double temp_lower_z_bound = lower_z_bound;
   double temp_upper_z_bound{};
+  // const double singularity_pos =
+  //     partitioning_in_z == domain::CoordinateMaps::Distribution::Logarithmic
+  //         ? -(upper_z_bound + lower_z_bound) / (upper_z_bound -
+  //         lower_z_bound) : lower_z_bound;
   const auto use_both_halves = Wedge2D::WedgeHalves::Both;
   const std::array<OrientationMap<2>, 4> wedge_orientations = {
       OrientationMap<2>{std::array<Direction<2>, 2>{
@@ -1098,6 +1114,14 @@ cyl_wedge_coord_map_surrounding_blocks(
       temp_upper_z_bound = upper_z_bound;
     }
     temp_inner_circularity = inner_circularity;
+
+    // note: using same singularity for all logarithmic maps regardless of layer
+    const double singularity_pos =
+        distribution_in_z.at(layer) ==
+                domain::CoordinateMaps::Distribution::Logarithmic
+            ? -(upper_z_bound + lower_z_bound) / (upper_z_bound - lower_z_bound)
+            : lower_z_bound;
+
     for (size_t shell = 0; shell < 1 + radial_partitioning.size(); shell++) {
       if (shell != radial_partitioning.size()) {
         temp_outer_radius = radial_partitioning.at(shell);
@@ -1110,7 +1134,7 @@ cyl_wedge_coord_map_surrounding_blocks(
           temp_lower_z_bound,
           temp_upper_z_bound,
           distribution_in_z.at(layer),
-          lower_z_bound};
+          singularity_pos};
       for (const auto& cardinal_direction : wedge_orientations) {
         maps.emplace_back(Wedge3DPrism{
             Wedge2D{temp_inner_radius, temp_outer_radius,
