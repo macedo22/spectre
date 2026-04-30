@@ -919,7 +919,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
     // The first block in the outer shell needs the transition expansion +
     // rotation + translation map from the grid to inertial frame. No maps to
     // the distorted frame
-    grid_to_inertial_block_maps[first_outer_shell_block] =
+    grid_to_inertial_block_maps[74] =
         time_dependent_options_
             ->grid_to_inertial_map<domain::ObjectLabel::None>(false, false);
 
@@ -962,7 +962,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
             ->distorted_to_inertial_map<domain::ObjectLabel::B>(true, true);
 
     for (size_t block = 1; block < number_of_blocks_; ++block) {
-      if (block == 46 or block == 60) {
+      if (block == 46 or block == 60 or block == 74) {
         continue;  // Already initialized
       } else if (block > 46 and block < 60) {
         grid_to_inertial_block_maps[block] =
