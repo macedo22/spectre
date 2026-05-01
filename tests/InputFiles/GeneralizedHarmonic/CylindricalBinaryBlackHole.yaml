@@ -51,7 +51,7 @@ DomainCreator:
     UseEquiangularMap: true
     OuterRadius: 300.0
     InitialRefinement: 2
-    InitialGridPoints: 7
+    InitialGridPoints: 9
     BoundaryConditions:
       InnerBoundary:
         DemandOutgoingCharSpeeds:
