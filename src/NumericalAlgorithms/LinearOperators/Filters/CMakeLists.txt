@@ -12,4 +12,5 @@ spectre_target_headers(
   None.tpp
   SphericalShell.hpp
   SphericalShell.tpp
+  Tag.hpp
   )
