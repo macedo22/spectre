@@ -4,6 +4,7 @@
 #include "Domain/Creators/CylindricalBinaryCompactObject.hpp"
 
 #include <cmath>
+#include <iostream> // TODO : remove
 #include <memory>
 #include <optional>
 #include <utility>
@@ -212,14 +213,21 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
   if (include_inner_sphere_A) {
     // Only one inner spherical shell (for now) or all 14 cylindrical blocks
     number_of_blocks_ += (spherical_harmonics_in_inner_sphere_A ? 1 : 14);
+    // TODO : remove this one and one for B below
+    std::cout << "include inner sphere A" << std::endl;
+    std::cout << "number_of_blocks_ : " << number_of_blocks_ << std::endl;
   }
   if (include_inner_sphere_B) {
     // Only one inner spherical shell (for now) or all 14 cylindrical blocks
     number_of_blocks_ += (spherical_harmonics_in_inner_sphere_B ? 1 : 14);
+    std::cout << "include inner sphere B" << std::endl;
+    std::cout << "number_of_blocks_ : " << number_of_blocks_ << std::endl;
   }
   if (include_outer_sphere) {
     // Only one outer spherical shell (for now) or all 18 CA, CB blocks
     number_of_blocks_ += (spherical_harmonics_in_wavezone ? 1 : 18);
+    std::cout << "include outer sphere" << std::endl;
+    std::cout << "number_of_blocks_ : " << number_of_blocks_ << std::endl;
   }
 
   // Add SphereE blocks if necessary.  Note that
@@ -1060,12 +1068,17 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
     // Build blocks in final order.
     std::vector<Block<3>> blocks;
     blocks.reserve(number_of_blocks_);
+    std::cout << "number_of_blocks_ in create_domain() : " << number_of_blocks_ << std::endl; 
+    std::cout << "number of coord maps before possible inner sphere A : " << 
 
     // (a) Inner blocks before SH shells.
     for (size_t j = 0; j < num_blocks_except_inner_and_outer_spheres; ++j) {
       blocks.emplace_back(std::move(coordinate_maps[j]), j,
                           std::move(inner_neighbors[j]), block_names_[j]);
     }
+
+    // TODO : need to take care of adding cases where inner sphere included but
+    // not spherical harmonics
 
     if (include_inner_sphere_A and spherical_harmonics_in_inner_sphere_A) {
       // TODO : do this simplification in outer sphere PR
