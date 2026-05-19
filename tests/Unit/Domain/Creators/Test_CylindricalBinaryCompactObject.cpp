@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstddef>
 #include <iomanip>
+#include <iostream>  // TODO : remove
 #include <iterator>
 #include <limits>
 #include <memory>
@@ -993,6 +994,8 @@ void test_spherical_harmonics_wavezone(const bool include_inner_sphere_a,
   const auto& blocks = domain_sh.blocks();
   REQUIRE(blocks.size() == num_blocks);
 
+  std::cout << "first_shell_block_number : " << first_shell_block_number
+            << std::endl;
   // OuterShell0 : lower_xi has 18 CA, CB neighbors (non-conforming)
   // and no upper_xi neighbor (only 1 shell).
   const auto& sh_block = blocks[first_shell_block_number];
@@ -1112,14 +1115,14 @@ void test_spherical_harmonics_wavezone() {
   const double radius_b = radius_a;
   const double outer_radius = 300.0;
 
-//   test_spherical_harmonics_wavezone(false, false, radius_a, radius_b,
-//                                     outer_radius);
-//   test_spherical_harmonics_wavezone(true, false, radius_a, radius_b,
-//                                     outer_radius);
-//   test_spherical_harmonics_wavezone(false, true, radius_a, radius_b,
-//                                     outer_radius);
-  test_spherical_harmonics_wavezone(true, true, radius_a, radius_b,
+  test_spherical_harmonics_wavezone(false, false, radius_a, radius_b,
                                     outer_radius);
+  //   test_spherical_harmonics_wavezone(true, false, radius_a, radius_b,
+  //                                     outer_radius);
+  //   test_spherical_harmonics_wavezone(false, true, radius_a, radius_b,
+  //                                     outer_radius);
+  // test_spherical_harmonics_wavezone(true, true, radius_a, radius_b,
+  //                                   outer_radius);
 }
 }  // namespace
 
