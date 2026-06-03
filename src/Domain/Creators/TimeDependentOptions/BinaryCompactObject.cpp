@@ -377,9 +377,17 @@ void TimeDependentMapOptions<IsCylindrical>::build_maps(
 
       using Wedge = domain::CoordinateMaps::ShapeMapTransitionFunctions::Wedge;
 
-      transition_func =
-          std::make_unique<domain::CoordinateMaps::ShapeMapTransitionFunctions::
-                               SphereTransition>(radii[0], radii[1]);
+     // TODO : specialize so that when we are only having the shape map in the
+     // first layer of blocks, that we only use the SphereTransition because I
+     // think it will be faster because it's simpler math? and then only use
+     // the Wedge one when we are including the second layer of blocks, where
+     // the centers of the inner and outer surface are not the same.
+     //
+     // TODO : add documentation explaining the above specialization
+
+      // transition_func =
+      //     std::make_unique<domain::CoordinateMaps::ShapeMapTransitionFunctions::
+      //                          SphereTransition>(radii[0], radii[1]);
       // transition_func = std::make_unique<Wedge>(
       //         inner_center, inner_radius, inner_sphericity, outer_center,
       //         outer_radius, outer_sphericity,
