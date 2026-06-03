@@ -375,15 +375,16 @@ void TimeDependentMapOptions<IsCylindrical>::build_maps(
       const double inner_sphericity = 1.0;
       const double outer_sphericity = 1.0;
 
-      using Wedge = domain::CoordinateMaps::ShapeMapTransitionFunctions::Wedge;
+      // using Wedge =
+      // domain::CoordinateMaps::ShapeMapTransitionFunctions::Wedge;
 
-     // TODO : specialize so that when we are only having the shape map in the
-     // first layer of blocks, that we only use the SphereTransition because I
-     // think it will be faster because it's simpler math? and then only use
-     // the Wedge one when we are including the second layer of blocks, where
-     // the centers of the inner and outer surface are not the same.
-     //
-     // TODO : add documentation explaining the above specialization
+      // TODO : add documentation explaining the this:
+      //
+      // Specialize so that when we are only having the shape map in the
+      // first layer of blocks, that we only use the SphereTransition because I
+      // think it will be faster because it's simpler math? and then only use
+      // the Wedge one when we are including the second layer of blocks, where
+      // the centers of the inner and outer surface are not the same.
 
       // transition_func =
       //     std::make_unique<domain::CoordinateMaps::ShapeMapTransitionFunctions::
@@ -392,11 +393,21 @@ void TimeDependentMapOptions<IsCylindrical>::build_maps(
       //         inner_center, inner_radius, inner_sphericity, outer_center,
       //         outer_radius, outer_sphericity,
       //         static_cast<Wedge::Axis>(gsl::at(axes, j % 6)));
-      transition_func = std::make_unique<Wedge>(
-          gsl::at(object_centers, i), inner_radius, inner_sphericity,
-          outer_center, outer_radius, outer_sphericity,
-          static_cast<Wedge::Axis>(
-              Wedge::Axis::PlusZ));  // not sure about PlusZ
+
+      if (transition_ends_at_cube) {
+        using Wedge =
+            domain::CoordinateMaps::ShapeMapTransitionFunctions::Wedge;
+        transition_func = std::make_unique<Wedge>(
+            gsl::at(object_centers, i), inner_radius, inner_sphericity,
+            outer_center, outer_radius, outer_sphericity,
+            static_cast<Wedge::Axis>(
+                Wedge::Axis::PlusZ));  // not sure about PlusZ
+      } else {
+        transition_func =
+            std::make_unique<domain::CoordinateMaps::
+                                 ShapeMapTransitionFunctions::SphereTransition>(
+                inner_radius, outer_radius);
+      }
 
       gsl::at(shape_maps_, i) =
           Shape{gsl::at(object_centers, i), coefficient_truncation_limit,
@@ -408,10 +419,20 @@ void TimeDependentMapOptions<IsCylindrical>::build_maps(
       //         domain::CoordinateMaps::ShapeMapTransitionFunctions::
       //                          SphereTransition>(radii[0], radii[1], false,
       //                                            true);
-      transition_func = std::make_unique<Wedge>(
-          gsl::at(object_centers, i), inner_radius, inner_sphericity,
-          outer_center, outer_radius, outer_sphericity,
-          static_cast<Wedge::Axis>(Wedge::Axis::Interior));
+
+      if (transition_ends_at_cube) {
+        using Wedge =
+            domain::CoordinateMaps::ShapeMapTransitionFunctions::Wedge;
+        transition_func = std::make_unique<Wedge>(
+            gsl::at(object_centers, i), inner_radius, inner_sphericity,
+            outer_center, outer_radius, outer_sphericity,
+            static_cast<Wedge::Axis>(Wedge::Axis::Interior));
+      } else {
+        transition_func =
+            std::make_unique<domain::CoordinateMaps::
+                                 ShapeMapTransitionFunctions::SphereTransition>(
+                inner_radius, outer_radius, false, true);
+      }
 
       // Last two are the interior maps
       gsl::at(shape_maps_, shape_maps_.size() - 2 + i) =
