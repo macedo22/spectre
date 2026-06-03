@@ -709,29 +709,6 @@ void test_errors() {
   } else {
     radii = std::array{0.1, 0.5, 1.0};
   }
-  if (IsCylindrical) {
-    CHECK_THROWS_WITH(
-        ([&radii]() {
-          TimeDependentMapOptions<IsCylindrical> time_dep_opts{
-              1.0,
-              std::nullopt,
-              std::nullopt,
-              std::nullopt,
-              std::nullopt,
-              time_dependent_options::ShapeMapOptions<not IsCylindrical,
-                                                      domain::ObjectLabel::A>{
-                  8, std::nullopt},
-              std::nullopt,
-              std::nullopt};
-          time_dep_opts.build_maps(
-              std::array{std::array{5.0, 0.0, 0.0}, std::array{-5.0, 0.0, 0.0}},
-              {{7.5, 0.0, 0.0}}, {{-7.5, 0.0, 0.0}}, std::array{0.0, 0.0, 0.0},
-              radii, radii, false, false, 25.0, 100.0);
-        }()),
-        Catch::Matchers::ContainsSubstring(
-            "When using the CylindricalBinaryCompactObject domain creator, "
-            "the excision centers cannot be offset."));
-  }
 #ifdef SPECTRE_DEBUG
   CHECK_THROWS_WITH(
       TimeDependentMapOptions<IsCylindrical>{}.has_distorted_frame_options(

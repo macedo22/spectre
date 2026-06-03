@@ -266,9 +266,11 @@ struct TimeDependentMapOptions {
    *
    * If a shape map is requested and the object is excised, then the shape map
    * will deform the inner excision surface of the object. This deformation
-   * either extends to the outer radius of the sphere, or further to the edge of
-   * the cube that surrounds the sphere, depending on the `TransitionEndsAtCube`
-   * option.
+   * either extends to the outer radius of the inner sphere, or further to the
+   * edge of the cube or sphere that surrounds the inner sphere, depending on
+   * the `TransitionEndsAtCube` option. TODO: update since name doesn't make
+   * sense for CBCO
+   *
    * If the object is filled, then the shape map will deform the outer radius of
    * the sphere that covers the object and the `TransitionEndsAtCube` option
    * must be `true`.

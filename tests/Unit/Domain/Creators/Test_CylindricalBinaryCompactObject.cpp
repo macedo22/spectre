@@ -463,20 +463,21 @@ void test_construction(
         3.0 * (center_objectA[0] - center_objectB[0]);
 
     const std::array<double, 3> expected_center_EA = {
-        0.0, 0.0, expected_cut_spheres_offset_factor * center_objectA[2]};
+        center_objectA[0] * expected_cut_spheres_offset_factor, 0.0, 0.0};
     const std::array<double, 3> expected_center_EB = {
-        0.0, 0.0, expected_cut_spheres_offset_factor * center_objectB[2]};
+        center_objectB[0] * expected_cut_spheres_offset_factor, 0.0, 0.0};
     const double expected_radius_MB =
-        std::abs(expected_cut_spheres_offset_factor * center_objectB[2] -
+        std::abs(expected_cut_spheres_offset_factor * center_objectB[0] -
                  expected_cutting_plane);
     const double expected_radius_EA =
-        sqrt(square(expected_center_EA[2] - expected_cutting_plane) +
+        sqrt(square(expected_center_EA[0] - expected_cutting_plane) +
              square(expected_radius_MB));
     const double expected_radius_EB =
         sqrt(2.0) * std::abs(expected_center_EB[2] - expected_cutting_plane);
     TimeDepOptions time_dep_options = construct_time_dependent_options();
     time_dep_options.build_maps(
-        std::array{center_objectA, center_objectB}, std::nullopt, std::nullopt,
+        std::array{center_objectA, center_objectB}, expected_center_EA,
+        expected_center_EB,
         std::array{expected_cutting_plane,
                    0.5 * (center_objectA[1] + center_objectB[1]),
                    0.5 * (center_objectA[2] + center_objectB[2])},

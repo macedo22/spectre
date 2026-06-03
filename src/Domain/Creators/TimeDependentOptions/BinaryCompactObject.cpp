@@ -345,14 +345,7 @@ void TimeDependentMapOptions<IsCylindrical>::build_maps(
                      coefficient_truncation_limit_from_shape_options(
                          shape_options_B_.value());
 
-    // Currently, we don't support different transition functions for the
-    // cylindrical domain
     if constexpr (IsCylindrical) {
-      if (cube_A_center.has_value() or cube_B_center.has_value()) {
-        ERROR_NO_TRACE(
-            "When using the CylindricalBinaryCompactObject domain creator, "
-            "the excision centers cannot be offset.");
-      }
       transition_func =
           std::make_unique<domain::CoordinateMaps::ShapeMapTransitionFunctions::
                                SphereTransition>(radii[0], radii[1]);
