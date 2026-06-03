@@ -258,10 +258,11 @@ struct TimeDependentMapOptions {
    * is not constructed for that object. An identity map will be used instead.
    * This happens when the object is covered by a Cartesian cube, rather than a
    * sphere.
-   * If \p IsCylindrical is true, only pass two radii for the inner/outer radius
-   * of the object sphere. If it is false, pass three radii corresponding to the
-   * excision radius, the outer radius of the inner sphere, and the radius of
-   * the surrounding cube.
+   *
+   * If \p IsCylindrical is false, the three radii correspond to the excision
+   * radius, the outer radius of the inner sphere, and the radius of the
+   * surrounding cube. If \p IsCylindrical is true, then the third radius
+   * instead corresponds to the outer radius of the surrounding sphere.
    *
    * If a shape map is requested and the object is excised, then the shape map
    * will deform the inner excision surface of the object. This deformation
