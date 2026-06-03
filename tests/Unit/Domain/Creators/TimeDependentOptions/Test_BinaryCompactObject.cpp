@@ -354,17 +354,17 @@ void test(const bool include_expansion, const bool include_rotation,
        cartesian_product(make_array(true, false), make_array(true, false))) {
     CAPTURE(excise_A);
     CAPTURE(excise_B);
-    using RadiiType = std::optional<std::array<double, IsCylindrical ? 2 : 3>>;
+    using RadiiType = std::optional<std::array<double, 3>>;
     RadiiType inner_outer_radii_A{};
     RadiiType inner_outer_radii_B{};
 
     if constexpr (IsCylindrical) {
-      inner_outer_radii_A = std::array{0.8, 3.2};
+      inner_outer_radii_A = std::array{0.8, 1.4, 3.2};
     } else {
       inner_outer_radii_A = std::array{0.8, 1.4, 3.2};
     }
     if constexpr (IsCylindrical) {
-      inner_outer_radii_B = std::array{0.5, 2.1};
+      inner_outer_radii_B = std::array{0.5, 0.9, 2.1};
     } else {
       inner_outer_radii_B = std::array{0.5, 0.9, 2.1};
     }
@@ -702,10 +702,10 @@ void test_errors() {
       Catch::Matchers::ContainsSubstring(
           "Time dependent map options were "
           "specified, but all options were 'None'."));
-  using RadiiType = std::array<double, IsCylindrical ? 2 : 3>;
+  using RadiiType = std::array<double, 3>;
   RadiiType radii{};
   if constexpr (IsCylindrical) {
-    radii = std::array{0.1, 1.0};
+    radii = std::array{0.1, 0.5, 1.0};
   } else {
     radii = std::array{0.1, 0.5, 1.0};
   }

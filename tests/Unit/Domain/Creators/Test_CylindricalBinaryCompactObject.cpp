@@ -461,15 +461,30 @@ void test_construction(
                inner_radius_objectB);
     const double expected_inner_common_radius =
         3.0 * (center_objectA[0] - center_objectB[0]);
+
+    const std::array<double, 3> expected_center_EA = {
+        0.0, 0.0, expected_cut_spheres_offset_factor * center_objectA[2]};
+    const std::array<double, 3> expected_center_EB = {
+        0.0, 0.0, expected_cut_spheres_offset_factor * center_objectB[2]};
+    const double expected_radius_MB =
+        std::abs(expected_cut_spheres_offset_factor * center_objectB[2] -
+                 expected_cutting_plane);
+    const double expected_radius_EA =
+        sqrt(square(expected_center_EA[2] - expected_cutting_plane) +
+             square(expected_radius_MB));
+    const double expected_radius_EB =
+        sqrt(2.0) * std::abs(expected_center_EB[2] - expected_cutting_plane);
     TimeDepOptions time_dep_options = construct_time_dependent_options();
     time_dep_options.build_maps(
         std::array{center_objectA, center_objectB}, std::nullopt, std::nullopt,
         std::array{expected_cutting_plane,
                    0.5 * (center_objectA[1] + center_objectB[1]),
                    0.5 * (center_objectA[2] + center_objectB[2])},
-        std::array{inner_radius_objectA, expected_outer_radius_A},
-        std::array{inner_radius_objectB, expected_outer_radius_B}, false, false,
-        expected_inner_common_radius, outer_radius);
+        std::array{inner_radius_objectA, expected_outer_radius_A,
+                   expected_radius_EA},
+        std::array{inner_radius_objectB, expected_outer_radius_B,
+                   expected_radius_EB},
+        false, false, expected_inner_common_radius, outer_radius);
 
     for (size_t i = 0; i < blocks.size(); i++) {
       const std::string block_name = gsl::at(block_names, i);

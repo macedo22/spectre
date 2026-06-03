@@ -416,14 +416,28 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
     const double inner_common_radius = 3.0 * (center_A_[2] - center_B_[2]);
     const auto center_A_aligned = rotate_from_z_to_x_axis(center_A_);
     const auto center_B_aligned = rotate_from_z_to_x_axis(center_B_);
+
+    // TODO : this duplicates code from create_domain, consider either storing
+    // these as member variables or having a function to call for both
+    const std::array<double, 3> center_EA = {
+        0.0, 0.0, cut_spheres_offset_factor_ * center_A_[2]};
+    const std::array<double, 3> center_EB = {
+        0.0, 0.0, center_B_[2] * cut_spheres_offset_factor_};
+    const double radius_MB =
+        std::abs(cut_spheres_offset_factor_ * center_B_[2] - z_cutting_plane_);
+    const double radius_EA =
+        sqrt(square(center_EA[2] - z_cutting_plane_) + square(radius_MB));
+    const double radius_EB =
+        sqrt(2.0) * std::abs(center_EB[2] - z_cutting_plane_);
+
     time_dependent_options_->build_maps(
         std::array{center_A_aligned, center_B_aligned}, std::nullopt,
         std::nullopt,
         std::array{z_cutting_plane_,
                    0.5 * (center_A_aligned[1] + center_B_aligned[1]),
                    0.5 * (center_A_aligned[2] + center_B_aligned[2])},
-        std::array{radius_A_, outer_radius_A_},
-        std::array{radius_B_, outer_radius_B_}, false, false,
+        std::array{radius_A_, outer_radius_A_, radius_EA},
+        std::array{radius_B_, outer_radius_B_, radius_EB}, false, false,
         inner_common_radius, outer_radius_);
   }
 }

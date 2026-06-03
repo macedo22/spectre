@@ -274,10 +274,8 @@ void TimeDependentMapOptions<IsCylindrical>::build_maps(
     const std::optional<std::array<double, 3>>& cube_A_center,
     const std::optional<std::array<double, 3>>& cube_B_center,
     const std::array<double, 3>& center_of_mass,
-    const std::optional<std::array<double, IsCylindrical ? 2 : 3>>&
-        object_A_radii,
-    const std::optional<std::array<double, IsCylindrical ? 2 : 3>>&
-        object_B_radii,
+    const std::optional<std::array<double, 3>>& object_A_radii,
+    const std::optional<std::array<double, 3>>& object_B_radii,
     const bool object_A_filled, const bool object_B_filled,
     const double envelope_radius, const double domain_outer_radius) {
   if (expansion_map_options_.has_value() or rotation_map_options_.has_value() or

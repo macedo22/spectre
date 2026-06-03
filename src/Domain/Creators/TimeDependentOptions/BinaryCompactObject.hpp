@@ -272,17 +272,14 @@ struct TimeDependentMapOptions {
    * the sphere that covers the object and the `TransitionEndsAtCube` option
    * must be `true`.
    */
-  void build_maps(
-      const std::array<std::array<double, 3>, 2>& object_centers,
-      const std::optional<std::array<double, 3>>& cube_A_center,
-      const std::optional<std::array<double, 3>>& cube_B_center,
-      const std::array<double, 3>& center_of_mass,
-      const std::optional<std::array<double, IsCylindrical ? 2 : 3>>&
-          object_A_radii,
-      const std::optional<std::array<double, IsCylindrical ? 2 : 3>>&
-          object_B_radii,
-      bool object_A_filled, bool object_B_filled, double envelope_radius,
-      double domain_outer_radius);
+  void build_maps(const std::array<std::array<double, 3>, 2>& object_centers,
+                  const std::optional<std::array<double, 3>>& cube_A_center,
+                  const std::optional<std::array<double, 3>>& cube_B_center,
+                  const std::array<double, 3>& center_of_mass,
+                  const std::optional<std::array<double, 3>>& object_A_radii,
+                  const std::optional<std::array<double, 3>>& object_B_radii,
+                  bool object_A_filled, bool object_B_filled,
+                  double envelope_radius, double domain_outer_radius);
 
   /*!
    * \brief Check whether options were specified in the constructor for the
