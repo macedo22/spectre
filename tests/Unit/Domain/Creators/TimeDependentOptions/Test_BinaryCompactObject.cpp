@@ -179,10 +179,9 @@ void test(const bool include_expansion, const bool include_rotation,
     shape_map_a_options =
         IsCylindrical
             ? time_dependent_options::ShapeMapOptions<
-                  not IsCylindrical, domain::ObjectLabel::A>{l_max_A,
-                                                             std::nullopt,
-                                                             size_A_values}
-            : time_dependent_options::ShapeMapOptions<not IsCylindrical,
+                  true, domain::ObjectLabel::A>{l_max_A, std::nullopt,
+                                                size_A_values}
+            : time_dependent_options::ShapeMapOptions<true,
                                                       domain::ObjectLabel::A>{
                   l_max_A, std::nullopt, size_A_values, 0.,
                   transition_ends_at_cube_A};
@@ -194,10 +193,9 @@ void test(const bool include_expansion, const bool include_rotation,
     shape_map_b_options =
         IsCylindrical
             ? time_dependent_options::ShapeMapOptions<
-                  not IsCylindrical, domain::ObjectLabel::B>{l_max_B,
-                                                             std::nullopt,
-                                                             size_B_values}
-            : time_dependent_options::ShapeMapOptions<not IsCylindrical,
+                  true, domain::ObjectLabel::B>{l_max_B, std::nullopt,
+                                                size_B_values}
+            : time_dependent_options::ShapeMapOptions<true,
                                                       domain::ObjectLabel::B>{
                   l_max_B, std::nullopt, size_B_values, 0.,
                   transition_ends_at_cube_B};
@@ -680,19 +678,19 @@ void test_errors() {
   CHECK_THROWS_WITH(
       (TimeDependentMapOptions<IsCylindrical>{
           1.0, std::nullopt, std::nullopt, std::nullopt, std::nullopt,
-          time_dependent_options::ShapeMapOptions<
-              not IsCylindrical, domain::ObjectLabel::A>{1, {}},
-          time_dependent_options::ShapeMapOptions<
-              not IsCylindrical, domain::ObjectLabel::B>{8, {}},
+          time_dependent_options::ShapeMapOptions<true, domain::ObjectLabel::A>{
+              1, {}},
+          time_dependent_options::ShapeMapOptions<true, domain::ObjectLabel::B>{
+              8, {}},
           std::nullopt}),
       Catch::Matchers::ContainsSubstring("Initial LMax must be 2 or greater"));
   CHECK_THROWS_WITH(
       (TimeDependentMapOptions<IsCylindrical>{
           1.0, std::nullopt, std::nullopt, std::nullopt, std::nullopt,
-          time_dependent_options::ShapeMapOptions<
-              not IsCylindrical, domain::ObjectLabel::A>{6, {}},
-          time_dependent_options::ShapeMapOptions<
-              not IsCylindrical, domain::ObjectLabel::B>{0, {}},
+          time_dependent_options::ShapeMapOptions<true, domain::ObjectLabel::A>{
+              6, {}},
+          time_dependent_options::ShapeMapOptions<true, domain::ObjectLabel::B>{
+              0, {}},
           std::nullopt}),
       Catch::Matchers::ContainsSubstring("Initial LMax must be 2 or greater"));
   CHECK_THROWS_WITH(

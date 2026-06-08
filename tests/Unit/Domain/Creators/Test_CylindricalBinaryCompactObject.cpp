@@ -353,13 +353,13 @@ TimeDepOptions construct_time_dependent_options() {
       std::nullopt,
       std::nullopt,
       domain::creators::time_dependent_options::ShapeMapOptions<
-          false, domain::ObjectLabel::A>{
+          true, domain::ObjectLabel::A>{
           8_st,
           std::nullopt,
           {{initial_size_A_coefs[0][0], initial_size_A_coefs[1][0],
             initial_size_A_coefs[1][0]}}},
       domain::creators::time_dependent_options::ShapeMapOptions<
-          false, domain::ObjectLabel::B>{
+          true, domain::ObjectLabel::B>{
           8_st,
           std::nullopt,
           {{initial_size_B_coefs[0][0], initial_size_B_coefs[1][0],
