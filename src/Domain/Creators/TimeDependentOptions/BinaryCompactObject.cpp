@@ -127,10 +127,12 @@ TimeDependentMapOptions<IsCylindrical>::create_worldtube_functions_of_time()
         "Initial size for both excision spheres need to be provided when using "
         "the worldtube.");
   }
-  const auto& shape_opts_A = std::get<time_dependent_options::ShapeMapOptions<
-      not IsCylindrical, domain::ObjectLabel::A>>(shape_options_A_.value());
-  const auto& shape_opts_B = std::get<time_dependent_options::ShapeMapOptions<
-      not IsCylindrical, domain::ObjectLabel::B>>(shape_options_B_.value());
+  const auto& shape_opts_A = std::get<
+      time_dependent_options::ShapeMapOptions<true, domain::ObjectLabel::A>>(
+      shape_options_A_.value());
+  const auto& shape_opts_B = std::get<
+      time_dependent_options::ShapeMapOptions<true, domain::ObjectLabel::B>>(
+      shape_options_B_.value());
   for (size_t i = 0; i < shape_names.size(); i++) {
     const auto make_initial_size_values = [](const auto& lambda_options) {
       return std::array<double, 2>{

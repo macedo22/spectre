@@ -181,8 +181,7 @@ struct TimeDependentMapOptions {
   /// \brief Options for the shape map
   template <domain::ObjectLabel Object>
   using ShapeMapOptions =
-      domain::creators::time_dependent_options::ShapeMapOptions<
-          not IsCylindrical, Object>;
+      domain::creators::time_dependent_options::ShapeMapOptions<true, Object>;
   template <domain::ObjectLabel Object>
   using ShapeMapOptionType = typename ShapeMapOptions<Object>::type::value_type;
 
