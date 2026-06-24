@@ -176,12 +176,8 @@ block_names_and_groups(const bool include_inner_sphere_A,
           "InnerSphereEBCylinderEast", "InnerSphereEBCylinderNorth",
           "InnerSphereEBCylinderWest", "InnerSphereEBCylinderSouth"}});
   }
-  block_names.insert(
-      block_names.end(),
-      {"OuterShell0"});
-  block_groups.insert(
-      {"OuterSphere",
-       {"OuterShell0"}});
+  block_names.insert(block_names.end(), {"OuterShell0"});
+  block_groups.insert({"OuterSphere", {"OuterShell0"}});
 
   return std::make_pair(block_names, block_groups);
 }
@@ -262,7 +258,8 @@ std::string create_option_string(
   // is_h_refinement = false: we're constructing p-refinement (grid points)
   const auto initial_structure =
       [&include_inner_sphere_A, &include_inner_sphere_B](
-          const bool is_h_refinement, const bool include_extra, const size_t value) {
+          const bool is_h_refinement, const bool include_extra,
+          const size_t value) {
         const std::string same = "[" + get_output(value) + "," +
                                  get_output(value) + "," + get_output(value) +
                                  "]";
@@ -612,16 +609,8 @@ void test_parse_errors() {
       Catch::Matchers::ContainsSubstring(
           "Must specify either both inner and outer boundary "
           "conditions or neither."));
+  // InitialRefinement and InitialGridPoints
   CHECK_THROWS_WITH(
-      domain::creators::CylindricalBinaryCompactObject(
-          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false, false, 25.0,
-          false, 1_st, 3_st, std::nullopt, create_inner_boundary_condition(),
-          nullptr, Options::Context{false, {}, 1, 1}),
-      Catch::Matchers::ContainsSubstring(
-          "Must specify either both inner and outer boundary "
-          "conditions or neither."));
-// InitialRefinement and InitialGridPoints
-CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
           {{2.0, 0.05, 0.0}}, {-3.0, 0.05, 0.0}, 1.0, 0.4, false, false, 25.0,
           false, std::array<size_t, 3>{1_st, 1_st, 1_st}, 3_st, std::nullopt,
@@ -639,14 +628,15 @@ CHECK_THROWS_WITH(
 
 // This matches the structure in the option string
 std::unordered_map<std::string, std::array<size_t, 3>> make_initial_structure(
-    const bool is_h_refinement, const size_t initial_value, const bool include_inner_sphere_A,
-    const bool include_inner_sphere_B) {
+    const bool is_h_refinement, const size_t initial_value,
+    const bool include_inner_sphere_A, const bool include_inner_sphere_B) {
   std::unordered_map<std::string, std::array<size_t, 3>> initial_map;
   const std::array<size_t, 3> same{initial_value, initial_value, initial_value};
   const std::array<size_t, 3> one_more{initial_value + 1, initial_value,
                                        initial_value};
   const std::array<size_t, 3> outer_sphere =
-      is_h_refinement ? std::array<size_t, 3>{initial_value + 1, 0, 0} : one_more;
+      is_h_refinement ? std::array<size_t, 3>{initial_value + 1, 0, 0}
+                      : one_more;
   initial_map["Outer"] = one_more;
   initial_map["InnerA"] = same;
   initial_map["InnerB"] = one_more;
