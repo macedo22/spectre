@@ -631,6 +631,7 @@ void test_parse_errors() {
       Catch::Matchers::ContainsSubstring(
           "Must specify either both inner and outer boundary "
           "conditions or neither."));
+// InitialRefinement and InitialGridPoints
 CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
           {{2.0, 0.05, 0.0}}, {-3.0, 0.05, 0.0}, 1.0, 0.4, false, false, 25.0,
