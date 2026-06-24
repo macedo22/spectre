@@ -4,7 +4,6 @@
 #include "Domain/Creators/CylindricalBinaryCompactObject.hpp"
 
 #include <cmath>
-#include <iostream>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -309,174 +308,20 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
   const ExpandOverBlocks<std::array<size_t, 3>> expand_over_blocks{
       block_names_, block_groups_};
   try {
-    // std::cout << "first_outer_shell_block: " << first_outer_shell_block << std::endl;
-    // // std::cout << "initial_refinement[first_outer_shell_block][0]: " << initial_refinement[first_outer_shell_block][0] << std::endl;
-    // // std::cout << "initial_refinement[first_outer_shell_block][1]: " << initial_refinement[first_outer_shell_block][1] << std::endl;
-    // std::cout << "before visit" << std::endl;
-    // initial_refinement_ = std::visit(expand_over_blocks, initial_refinement);
-    // std::cout << "after visit" << std::endl;
-
-    // std::array<InitialRefinement::type, 1> test;
-    // std::cout << test << std::endl;
-    // if constexpr (std::is_same_v<InitialRefinement::type, size_t>) {
-    //   std::cout << "InitialRefinement::type is size_t" << std::endl;
-    //   // If one size_t was used to globally define refinement throughout the
-    //   // domain, overwrite the refinement levels to be 0 just for the angular
-    //   // directions of the outer spherical shell since angular refinement
-    //   // doesn't make since for blocks with spherical harmonics. This allows the
-    //   // user to still easily specify a global refinement level instead of
-    //   // having to manually specify the same refinement for all directions of
-    //   // all block groups with the same number except zero for only these two.
-    //   initial_refinement_[first_outer_shell_block][1] = 0;
-    //   initial_refinement_[first_outer_shell_block][2] = 0;
-
-    //   std::cout << "first_outer_shell_block: " << first_outer_shell_block << std::endl;
-    //   std::cout << "initial_refinement_[first_outer_shell_block][0]: " << initial_refinement_[first_outer_shell_block][0] << std::endl;
-    //   std::cout << "initial_refinement_[first_outer_shell_block][1]: " << initial_refinement_[first_outer_shell_block][1] << std::endl;
-    // }
-
-    // initial_refinement_ = std::visit(
-    //     [&expand_over_blocks]<typename V>(
-    //         const V& v) -> std::vector<std::array<size_t, 3>> {
-    //       if constexpr (std::is_same_v<V, size_t>) {
-    //         // // Convert size_t entries to {r, 0, 0} for spherical harmonic
-    //         // // blocks; array<3> entries are used unchanged.
-    //         // const auto converted = [&v]() {
-    //         //   std::unordered_map<std::string, std::array<size_t, 3>> result;
-    //         //   for (const auto& [name, val] : v) {
-    //         //     if (std::holds_alternative<size_t>(val)) {
-    //         //       const size_t r = std::get<size_t>(val);
-    //         //       result[name] = {r, 0, 0};
-    //         //     } else {
-    //         //       result[name] = std::get<std::array<size_t, 3>>(val);
-    //         //     }
-    //         //   }
-    //         //   return result;
-    //         // }();
-    //         // return expand_over_blocks(converted);
-
-    //         // Convert size_t entries to {r, 0, 0} for spherical harmonic
-    //         // blocks; array<3> entries are used unchanged.
-    //         const auto converted = [&v]() {
-    //           std::unordered_map<std::string, std::array<size_t, 3>> result;
-    //           for (const auto& [name, val] : v) {
-    //             if (std::holds_alternative<size_t>(val)) {
-    //               const size_t r = std::get<size_t>(val);
-    //               result[name] = {r, 0, 0};
-    //             } else {
-    //               result[name] = std::get<std::array<size_t, 3>>(val);
-    //             }
-    //           }
-    //           return result;
-    //         }();
-    //         return expand_over_blocks(converted);
-
-    //         // If one size_t was used to globally define refinement throughout the
-    //         // domain, overwrite the refinement levels to be 0 just for the angular
-    //         // directions of the outer spherical shell since angular refinement
-    //         // doesn't make since for blocks with spherical harmonics. This allows the
-    //         // user to still easily specify a global refinement level instead of
-    //         // having to manually specify the same refinement for all directions of
-    //         // all block groups with the same number except zero for only these two.
-    //         initial_refinement_[first_outer_shell_block][1] = 0;
-    //         initial_refinement_[first_outer_shell_block][2] = 0;
-    //       } else {
-    //         return expand_over_blocks(v);
-    //       }
-    //     },
-    //     initial_refinement);
-
-    // initial_refinement_ = std::visit(expand_over_blocks, initial_refinement);
-
-    // std::visit(
-    //     [&initial_refinement_, &first_outer_shell_block] <typename V>(
-    //         const V& v) {
-    //       if constexpr (std::is_same_v<V, size_t>) {
-    //         // If one size_t was used to globally define refinement throughout the
-    //         // domain, overwrite the refinement levels to be 0 just for the angular
-    //         // directions of the outer spherical shell since angular refinement
-    //         // doesn't make since for blocks with spherical harmonics. This allows the
-    //         // user to still easily specify a global refinement level instead of
-    //         // having to manually specify the same refinement for all directions of
-    //         // all block groups with the same number except zero for only these two.
-    //         initial_refinement_[first_outer_shell_block][1] = 0;
-    //         initial_refinement_[first_outer_shell_block][2] = 0;
-    //       } else {
-    //         return expand_over_blocks(v);
-    //       }
-    //     },
-    //     initial_refinement);
-
-    // initial_refinement_ = std::visit<std::vector<std::array<size_t, 3>>>(
-    // initial_refinement_ = std::visit(
-    //     [this, &expand_over_blocks]<typename V>(const V& v)
-    //         -> std::vector<std::array<size_t, 3>> {
-    //       if constexpr (std::is_same_v<V, size_t>) {
-    //         // // Convert size_t entries to {r, 0, 0} for spherical harmonic
-    //         // // blocks; array<3> entries are used unchanged.
-    //         // const auto converted = [&v]() {
-    //         //   std::unordered_map<std::string, std::array<size_t, 3>> result;
-    //         //   for (const auto& [name, val] : v) {
-    //         //     if (std::holds_alternative<size_t>(val)) {
-    //         //       const size_t r = std::get<size_t>(val);
-    //         //       result[name] = {r, 0, 0};
-    //         //     } else {
-    //         //       result[name] = std::get<std::array<size_t, 3>>(val);
-    //         //     }
-    //         //   }
-    //         //   return result;
-    //         // }();
-    //         // return expand_over_blocks(converted);
-
-    //         std::vector<std::array<size_t, 3>> expanded = expand_over_blocks(v);
-
-    //         // If one size_t was used to globally define refinement throughout the
-    //         // domain, overwrite the refinement levels to be 0 just for the angular
-    //         // directions of the outer spherical shell since angular refinement
-    //         // doesn't make since for blocks with spherical harmonics. This allows the
-    //         // user to still easily specify a global refinement level instead of
-    //         // having to manually specify the same refinement for all directions of
-    //         // all block groups with the same number except zero for only these two.
-    //         expanded[first_outer_shell_block][1] = 0;
-    //         expanded[first_outer_shell_block][2] = 0;
-
-    //         return expanded;
-    //       } else {
-    //         (void)first_outer_shell_block;
-    //         return expand_over_blocks(v);
-    //       }
-    //     },
-    //     initial_refinement);
-
     initial_refinement_ = std::visit(
-        [this, &expand_over_blocks]<typename V>(const V& v)
-            -> std::vector<std::array<size_t, 3>> {
+        [this, &expand_over_blocks]<typename V>(
+            const V& v) -> std::vector<std::array<size_t, 3>> {
           if constexpr (std::is_same_v<V, size_t>) {
-            // // Convert size_t entries to {r, 0, 0} for spherical harmonic
-            // // blocks; array<3> entries are used unchanged.
-            // const auto converted = [&v]() {
-            //   std::unordered_map<std::string, std::array<size_t, 3>> result;
-            //   for (const auto& [name, val] : v) {
-            //     if (std::holds_alternative<size_t>(val)) {
-            //       const size_t r = std::get<size_t>(val);
-            //       result[name] = {r, 0, 0};
-            //     } else {
-            //       result[name] = std::get<std::array<size_t, 3>>(val);
-            //     }
-            //   }
-            //   return result;
-            // }();
-            // return expand_over_blocks(converted);
-
             std::vector<std::array<size_t, 3>> expanded = expand_over_blocks(v);
 
-            // If one size_t was used to globally define refinement throughout the
-            // domain, overwrite the refinement levels to be 0 just for the angular
-            // directions of the outer spherical shell since angular refinement
-            // doesn't make since for blocks with spherical harmonics. This allows the
-            // user to still easily specify a global refinement level instead of
-            // having to manually specify the same refinement for all directions of
-            // all block groups with the same number except zero for only these two.
+            // If one size_t was used to globally define refinement throughout
+            // the domain, overwrite the refinement levels to be 0 just for the
+            // angular directions of the outer spherical shell since angular
+            // refinement doesn't make since for blocks with spherical
+            // harmonics. This allows the user to still easily specify a global
+            // refinement level instead of having to manually specify the same
+            // refinement for all directions of all block groups with the same
+            // number except zero for only these two.
             expanded[first_outer_shell_block][1] = 0;
             expanded[first_outer_shell_block][2] = 0;
 
@@ -488,7 +333,6 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
         },
         initial_refinement);
 
-    // TODOTODOTODO: think I need to use something like try block at line 510 in BCO
   } catch (const std::exception& error) {
     PARSE_ERROR(context, "Invalid 'InitialRefinement': " << error.what());
   }
@@ -501,22 +345,13 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
     }
 
   size_t outer_sphere_l_max;
-    size_t outer_sphere_m_max;
+  size_t outer_sphere_m_max;
   try {
     initial_grid_points_ = std::visit(expand_over_blocks, initial_grid_points);
 
     outer_sphere_l_max =
         initial_grid_points_[first_outer_shell_block][1];
-    outer_sphere_m_max =
-        initial_grid_points_[first_outer_shell_block][2];
-    // // A spherical-harmonic shell is fully specified by a single ell, so
-    // // l_max must equal m_max.
-    // if (outer_sphere_l_max != outer_sphere_m_max) {
-    //   PARSE_ERROR(
-    //       context,
-    //       "Spherical-harmonic outer-shell blocks must have L_max = M_max. "
-    //       "Specify grid points as [radial_points, L_max, L_max].");
-    // }
+    outer_sphere_m_max = initial_grid_points_[first_outer_shell_block][2];
 
     // For spherical-harmonic outer-shell blocks, initial_number_of_grid_points_
     // stores {n_radial, l_max, m_max}. Convert (l_max, m_max) to the number of
@@ -530,13 +365,13 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
     PARSE_ERROR(context, "Invalid 'InitialGridPoints': " << error.what());
   }
   // A spherical-harmonic shell is fully specified by a single ell, so
-    // l_max must equal m_max.
-    if (outer_sphere_l_max != outer_sphere_m_max) {
-      PARSE_ERROR(
-          context,
-          "Spherical-harmonic outer-shell blocks must have L_max = M_max. "
-          "Specify grid points as [radial_points, L_max, L_max].");
-    }
+  // l_max must equal m_max.
+  if (outer_sphere_l_max != outer_sphere_m_max) {
+    PARSE_ERROR(
+        context,
+        "Spherical-harmonic outer-shell blocks must have L_max = M_max. "
+        "Specify grid points as [radial_points, L_max, L_max].");
+  }
 
   // Now we must change the initial refinement and initial grid points
   // for certain blocks, because the [r, theta, perp] directions do
