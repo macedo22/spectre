@@ -274,15 +274,20 @@ std::string create_option_string(
                                            "        BlockId: 314\n"}
                              : ""};
 
+  // is_h_refinement = true: we're constructing h-refinement
+  // is_h_refinement = false: we're constructing p-refinement (grid points)
   const auto initial_structure =
       [&include_inner_sphere_A, &include_inner_sphere_B](
-          const bool include_extra, const size_t value) {
+          const bool is_h_refinement, const bool include_extra, const size_t value) {
         const std::string same = "[" + get_output(value) + "," +
                                  get_output(value) + "," + get_output(value) +
                                  "]";
         const std::string one_more = "[" + get_output(value + 1) + "," +
                                      get_output(value) + "," +
                                      get_output(value) + "]";
+        const std::string outer_shell = is_h_refinement ?
+                                    ("[" + get_output(value + 1) + ", 0, 0]") :
+                                    one_more;
         std::string result{};
         if (include_extra) {
           result += "\n    Outer: " + one_more;
@@ -294,7 +299,7 @@ std::string create_option_string(
           if (include_inner_sphere_B) {
             result += "\n    InnerSphereB: " + same;
           }
-          result += "\n    OuterSphere: " + one_more;
+          result += "\n    OuterSphere: " + outer_shell;
         } else {
           result = " " + get_output(value);
         }
@@ -312,9 +317,9 @@ std::string create_option_string(
          "\n  IncludeInnerSphereA: " + stringize(include_inner_sphere_A) +
          "\n  IncludeInnerSphereB: " + stringize(include_inner_sphere_B) +
          "\n  InitialRefinement:" +
-         initial_structure(with_additional_outer_radial_refinement, 1) +
+         initial_structure(true, with_additional_outer_radial_refinement, 1) +
          "\n  InitialGridPoints:" +
-         initial_structure(with_additional_grid_points, 3) + "\n" +
+         initial_structure(false, with_additional_grid_points, 3) + "\n" +
          time_dependence + boundary_conditions;
 }
 
@@ -780,6 +785,6 @@ void test_cylindrical_bbh() {
 // [[TimeOut, 80]]
 SPECTRE_TEST_CASE("Unit.Domain.Creators.CylindricalBinaryCompactObject",
                   "[Domain][Unit]") {
-//   test_cylindrical_bbh();
+  test_cylindrical_bbh();
   test_parse_errors();
 }
