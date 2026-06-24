@@ -631,16 +631,10 @@ void test_parse_errors() {
       Catch::Matchers::ContainsSubstring(
           "Must specify either both inner and outer boundary "
           "conditions or neither."));
-  const std::unordered_map<std::string, std::array<size_t, 3>> bad_outer_shell_angular_refinement = {
-        {"InnerA", {1_st, 1_st, 1_st}},
-        {"InnerB", {1_st, 1_st, 1_st}},
-        {"Outer", {1_st, 1_st, 1_st}},
-        {"OuterSphere", {1_st, 1_st, 1_st}}
-    };
 CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
           {{2.0, 0.05, 0.0}}, {-3.0, 0.05, 0.0}, 1.0, 0.4, false, false, 25.0,
-          false, bad_outer_shell_angular_refinement, 3_st, std::nullopt,
+          false, std::array<size_t, 3>{1_st, 1_st, 1_st}, 3_st, std::nullopt,
           create_inner_boundary_condition(), create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring("Angular h-refinement"));
