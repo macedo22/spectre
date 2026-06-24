@@ -638,13 +638,13 @@ CHECK_THROWS_WITH(
           create_inner_boundary_condition(), create_outer_boundary_condition(),
           Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring("Angular h-refinement"));
-// //   CHECK_THROWS_WITH(
-// //       domain::creators::CylindricalBinaryCompactObject(
-// //           {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 1.0, 0.4, false, false, 25.0,
-// //           false, std::array<size_t, 3>{{1_st, 1_st, 1_st}}, 3_st, std::nullopt,
-// //           create_inner_boundary_condition(), create_outer_boundary_condition(),
-// //           Options::Context{false, {}, 1, 1}),
-// //       Catch::Matchers::ContainsSubstring("Invalid 'InitialRefinement'"));
+  CHECK_THROWS_WITH(
+      domain::creators::CylindricalBinaryCompactObject(
+          {{2.0, 0.05, 0.0}}, {-3.0, 0.05, 0.0}, 1.0, 0.4, false, false, 25.0,
+          false, 1_st, std::array<size_t, 3>{{3_st, 4_st, 5_st}}, std::nullopt,
+          create_inner_boundary_condition(), create_outer_boundary_condition(),
+          Options::Context{false, {}, 1, 1}),
+      Catch::Matchers::ContainsSubstring("must have L_max = M_max"));
 }
 
 // This matches the structure in the option string
