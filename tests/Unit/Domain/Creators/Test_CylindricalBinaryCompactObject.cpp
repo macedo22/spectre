@@ -178,26 +178,10 @@ block_names_and_groups(const bool include_inner_sphere_A,
   }
   block_names.insert(
       block_names.end(),
-      {"OuterSphereCAFilledCylinderCenter", "OuterSphereCAFilledCylinderEast",
-       "OuterSphereCAFilledCylinderNorth", "OuterSphereCAFilledCylinderWest",
-       "OuterSphereCAFilledCylinderSouth", "OuterSphereCBFilledCylinderCenter",
-       "OuterSphereCBFilledCylinderEast", "OuterSphereCBFilledCylinderNorth",
-       "OuterSphereCBFilledCylinderWest", "OuterSphereCBFilledCylinderSouth",
-       "OuterSphereCACylinderEast", "OuterSphereCACylinderNorth",
-       "OuterSphereCACylinderWest", "OuterSphereCACylinderSouth",
-       "OuterSphereCBCylinderEast", "OuterSphereCBCylinderNorth",
-       "OuterSphereCBCylinderWest", "OuterSphereCBCylinderSouth"});
+      {"OuterShell0"});
   block_groups.insert(
       {"OuterSphere",
-       {"OuterSphereCAFilledCylinderCenter", "OuterSphereCAFilledCylinderEast",
-        "OuterSphereCAFilledCylinderNorth", "OuterSphereCAFilledCylinderWest",
-        "OuterSphereCAFilledCylinderSouth", "OuterSphereCBFilledCylinderCenter",
-        "OuterSphereCBFilledCylinderEast", "OuterSphereCBFilledCylinderNorth",
-        "OuterSphereCBFilledCylinderWest", "OuterSphereCBFilledCylinderSouth",
-        "OuterSphereCACylinderEast", "OuterSphereCACylinderNorth",
-        "OuterSphereCACylinderWest", "OuterSphereCACylinderSouth",
-        "OuterSphereCBCylinderEast", "OuterSphereCBCylinderNorth",
-        "OuterSphereCBCylinderWest", "OuterSphereCBCylinderSouth"}});
+       {"OuterShell0"}});
 
   return std::make_pair(block_names, block_groups);
 }
@@ -655,12 +639,14 @@ CHECK_THROWS_WITH(
 
 // This matches the structure in the option string
 std::unordered_map<std::string, std::array<size_t, 3>> make_initial_structure(
-    const size_t initial_value, const bool include_inner_sphere_A,
+    const bool is_h_refinement, const size_t initial_value, const bool include_inner_sphere_A,
     const bool include_inner_sphere_B) {
   std::unordered_map<std::string, std::array<size_t, 3>> initial_map;
   const std::array<size_t, 3> same{initial_value, initial_value, initial_value};
   const std::array<size_t, 3> one_more{initial_value + 1, initial_value,
                                        initial_value};
+  const std::array<size_t, 3> outer_sphere =
+      is_h_refinement ? std::array<size_t, 3>{initial_value + 1, 0, 0} : one_more;
   initial_map["Outer"] = one_more;
   initial_map["InnerA"] = same;
   initial_map["InnerB"] = one_more;
@@ -670,7 +656,7 @@ std::unordered_map<std::string, std::array<size_t, 3>> make_initial_structure(
   if (include_inner_sphere_B) {
     initial_map["InnerSphereB"] = same;
   }
-  initial_map["OuterSphere"] = one_more;
+  initial_map["OuterSphere"] = outer_sphere;
 
   return initial_map;
 }
@@ -735,13 +721,13 @@ void test_cylindrical_bbh() {
 
     if (with_additional_outer_radial_refinement) {
       initial_refinement = make_initial_structure(
-          refinement, include_inner_sphere_A, include_inner_sphere_B);
+          true, refinement, include_inner_sphere_A, include_inner_sphere_B);
     } else {
       initial_refinement = refinement;
     }
     if (with_additional_grid_points) {
       initial_grid_points = make_initial_structure(
-          grid_points, include_inner_sphere_A, include_inner_sphere_B);
+          false, grid_points, include_inner_sphere_A, include_inner_sphere_B);
     } else {
       initial_grid_points = grid_points;
     }
