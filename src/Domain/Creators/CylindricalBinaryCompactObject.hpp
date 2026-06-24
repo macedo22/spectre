@@ -105,9 +105,8 @@ namespace domain::creators {
  *   consists of 4 blocks, named 'East', 'North', 'West', and 'South',
  *   so an example of a valid block name is 'CACylinderEast'.
  * - The Block group called "Outer" consists of all the CA and CB blocks.
- * - OuterSphereCAFilledCylinder, OuterSphereCBFilledCylinder,
- *   OuterSphereCACylinder, and OuterSphereCBCylinder are in a Block group
- *   called "OuterSphere" and all of these border the outer boundary.
+ * - OuterShell0 is the single shell in a Block group called "OuterSphere" and
+ *   it borders the outer boundary.
  * - The Block group called "InnerA" consists of all the EA, and MA
  *   blocks. They all border the inner boundary "A" if
  *   `IncludeInnerSphereA` is false.

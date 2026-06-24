@@ -600,7 +600,6 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
     }
     current_block += 4;
   }
-  swap_refinement_and_grid_points_xi_zeta(current_block++);
 
   // Build time-dependent maps
   // The size map, which is applied from the grid to distorted frame, currently
@@ -989,37 +988,6 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
             -z_cut_EB_upper, -z_cut_EB_lower),
         CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
   }
-  const double z_cut_CA_outer = 0.7 * outer_radius_;
-  const double z_cut_CB_outer = -0.7 * outer_radius_;
-  // OuterCA Filled Cylinder
-  // 5 blocks
-  add_endcap_to_list_of_maps(
-      CoordinateMaps::UniformCylindricalEndcap(
-          make_array<3>(0.0), make_array<3>(0.0), inner_radius_C, outer_radius_,
-          z_cut_CA_upper, z_cut_CA_outer),
-      CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
-  // OuterCB Filled Cylinder
-  // 5 blocks
-  add_endcap_to_list_of_maps(
-      CoordinateMaps::UniformCylindricalEndcap(
-          make_array<3>(0.0), make_array<3>(0.0), inner_radius_C, outer_radius_,
-          -z_cut_CB_upper, -z_cut_CB_outer),
-      CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
-  // OuterCA Cylinder
-  // 4 blocks
-  add_side_to_list_of_maps(
-      CoordinateMaps::UniformCylindricalSide(
-          make_array<3>(0.0), make_array<3>(0.0), inner_radius_C, outer_radius_,
-          z_cut_CA_upper, z_cutting_plane_, z_cut_CA_outer, z_cutting_plane_),
-      CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
-  // OuterCB Cylinder
-  // 4 blocks
-  add_side_to_list_of_maps(
-      CoordinateMaps::UniformCylindricalSide(
-          make_array<3>(0.0), make_array<3>(0.0), inner_radius_C, outer_radius_,
-          -z_cut_CB_upper, -z_cutting_plane_, -z_cut_CB_outer,
-          -z_cutting_plane_),
-      CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
 
   // Excision spheres
   std::unordered_map<std::string, ExcisionSphere<3>> excision_spheres{};
@@ -1090,7 +1058,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
 
   Domain<3> domain;
   // `coordinate_maps` at this point contains the inner non-shell maps.
-  // Total = first_outer_shell_block + n_interior_cubes entries.
+  // Total =  num_shells + n_interior_cubes entries
   // We determine auto-topology neighbors for these inner maps
   std::vector<DirectionMap<3, BlockNeighbors<3>>> inner_neighbors;
   set_internal_boundaries<3>(make_not_null(&inner_neighbors), coordinate_maps);
