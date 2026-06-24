@@ -634,8 +634,6 @@ void test_parse_errors() {
   const std::unordered_map<std::string, std::array<size_t, 3>> bad_outer_shell_angular_refinement = {
         {"InnerA", {1_st, 1_st, 1_st}},
         {"InnerB", {1_st, 1_st, 1_st}},
-        {"InnerSphereA", {1_st, 1_st, 1_st}},
-        {"InnerSphereB", {1_st, 1_st, 1_st}},
         {"Outer", {1_st, 1_st, 1_st}},
         {"OuterSphere", {1_st, 1_st, 1_st}}
     };

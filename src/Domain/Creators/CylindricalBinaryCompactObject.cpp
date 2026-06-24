@@ -408,6 +408,46 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
     //     initial_refinement);
 
     // initial_refinement_ = std::visit<std::vector<std::array<size_t, 3>>>(
+    // initial_refinement_ = std::visit(
+    //     [this, &expand_over_blocks]<typename V>(const V& v)
+    //         -> std::vector<std::array<size_t, 3>> {
+    //       if constexpr (std::is_same_v<V, size_t>) {
+    //         // // Convert size_t entries to {r, 0, 0} for spherical harmonic
+    //         // // blocks; array<3> entries are used unchanged.
+    //         // const auto converted = [&v]() {
+    //         //   std::unordered_map<std::string, std::array<size_t, 3>> result;
+    //         //   for (const auto& [name, val] : v) {
+    //         //     if (std::holds_alternative<size_t>(val)) {
+    //         //       const size_t r = std::get<size_t>(val);
+    //         //       result[name] = {r, 0, 0};
+    //         //     } else {
+    //         //       result[name] = std::get<std::array<size_t, 3>>(val);
+    //         //     }
+    //         //   }
+    //         //   return result;
+    //         // }();
+    //         // return expand_over_blocks(converted);
+
+    //         std::vector<std::array<size_t, 3>> expanded = expand_over_blocks(v);
+
+    //         // If one size_t was used to globally define refinement throughout the
+    //         // domain, overwrite the refinement levels to be 0 just for the angular
+    //         // directions of the outer spherical shell since angular refinement
+    //         // doesn't make since for blocks with spherical harmonics. This allows the
+    //         // user to still easily specify a global refinement level instead of
+    //         // having to manually specify the same refinement for all directions of
+    //         // all block groups with the same number except zero for only these two.
+    //         expanded[first_outer_shell_block][1] = 0;
+    //         expanded[first_outer_shell_block][2] = 0;
+
+    //         return expanded;
+    //       } else {
+    //         (void)first_outer_shell_block;
+    //         return expand_over_blocks(v);
+    //       }
+    //     },
+    //     initial_refinement);
+
     initial_refinement_ = std::visit(
         [this, &expand_over_blocks]<typename V>(const V& v)
             -> std::vector<std::array<size_t, 3>> {
