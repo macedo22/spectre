@@ -778,10 +778,10 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
                                      const std::string& m_filled,
                                      const std::string& e_side) {
     const OrientationMap<3> to_filled{std::array<Direction<3>, 3>{
-        Direction<3>::lower_zeta(), Direction<3>::self(),
+        Direction<3>::upper_zeta(), Direction<3>::self(),
         Direction<3>::self()}};
     const OrientationMap<3> to_side{std::array<Direction<3>, 3>{
-        Direction<3>::lower_xi(), Direction<3>::self(), Direction<3>::self()}};
+        Direction<3>::upper_xi(), Direction<3>::self(), Direction<3>::self()}};
     const size_t s = tag_to_index.at(sphere_tag);
     const size_t ef = tag_to_index.at(e_filled);
     const size_t mf = tag_to_index.at(m_filled);
@@ -1024,21 +1024,17 @@ CylindricalBinaryCompactObject::external_boundary_conditions() const {
     set_outer("CBCylinder", Direction<3>::upper_xi());
   }
 
-  // Inner (excision) boundary for object A: the lower-zeta face of the
-  // innermost filled cylinders and the lower-xi face of the innermost side.
+  // Inner excision boundaries: if the optional spherical shell is present,
+  // use its inner radial face; otherwise use the innermost cylindered blocks.
   if (include_inner_sphere_A_) {
-    set_inner("InnerSphereEAFilledCylinder", Direction<3>::lower_zeta());
-    set_inner("InnerSphereMAFilledCylinder", Direction<3>::lower_zeta());
-    set_inner("InnerSphereEACylinder", Direction<3>::lower_xi());
+    set_inner("SphereA", Direction<3>::lower_xi());
   } else {
     set_inner("EAFilledCylinder", Direction<3>::lower_zeta());
     set_inner("MAFilledCylinder", Direction<3>::lower_zeta());
     set_inner("EACylinder", Direction<3>::lower_xi());
   }
   if (include_inner_sphere_B_) {
-    set_inner("InnerSphereEBFilledCylinder", Direction<3>::lower_zeta());
-    set_inner("InnerSphereMBFilledCylinder", Direction<3>::lower_zeta());
-    set_inner("InnerSphereEBCylinder", Direction<3>::lower_xi());
+    set_inner("SphereB", Direction<3>::lower_xi());
   } else {
     set_inner("EBFilledCylinder", Direction<3>::lower_zeta());
     set_inner("MBFilledCylinder", Direction<3>::lower_zeta());
