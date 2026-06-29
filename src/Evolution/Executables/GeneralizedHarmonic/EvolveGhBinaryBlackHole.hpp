@@ -240,7 +240,7 @@ struct EvolutionMetavars {
   static constexpr bool use_damped_harmonic_rollon = false;
   using system = gh::System<volume_dim>;
   using temporal_id = Tags::TimeStepId;
-  using TimeStepperBase = LtsTimeStepper;
+  using TimeStepperBase = TimeStepper;
 
   static constexpr bool local_time_stepping =
       TimeStepperBase::local_time_stepping;
@@ -536,15 +536,19 @@ struct EvolutionMetavars {
             tmpl::list<gh::gauges::DampedHarmonic, gh::gauges::Harmonic>>,
         tmpl::pair<MathFunction<1, Frame::Inertial>,
                    MathFunctions::all_math_functions<1, Frame::Inertial>>,
-        // Restrict to monotonic time steppers in LTS to avoid control
-        // systems deadlocking.
-        tmpl::pair<LtsTimeStepper, TimeSteppers::monotonic_lts_time_steppers>,
+        // // Restrict to monotonic time steppers in LTS to avoid control
+        // // systems deadlocking.
+        // tmpl::pair<LtsTimeStepper,
+        // TimeSteppers::monotonic_lts_time_steppers>,
         tmpl::pair<PhaseChange,
                    tmpl::push_back<
                        PhaseControl::factory_creatable_classes,
                        gh::bbh::phase_control::CheckpointAndExitIfComplete>>,
-        tmpl::pair<StepChooser<StepChooserUse::LtsStep>,
-                   StepChoosers::standard_step_choosers<system>>,
+        // tmpl::conditional_t<
+        //     local_time_stepping,
+        //     tmpl::pair<StepChooser<StepChooserUse::LtsStep>,
+        //                StepChoosers::standard_step_choosers<system>>,
+        //     tmpl::list<>>,
         tmpl::pair<
             StepChooser<StepChooserUse::Slab>,
             StepChoosers::standard_slab_choosers<system, local_time_stepping>>,
@@ -614,7 +618,10 @@ struct EvolutionMetavars {
               control_system::Actions::LimitTimeStep<control_systems>,
               Actions::MutateApply<UpdateU<system, local_time_stepping>>>>,
       Actions::MutateApply<CleanHistory<system>>,
-      Actions::MutateApply<evolution::dg::CleanMortarHistory<volume_dim>>,
+      tmpl::conditional_t<
+          local_time_stepping,
+          Actions::MutateApply<evolution::dg::CleanMortarHistory<volume_dim>>,
+          tmpl::list<>>,
       dg::Actions::SpectralFilter>;
 
   using initialization_actions = tmpl::list<
@@ -759,7 +766,10 @@ struct EvolutionMetavars {
                                tmpl::pin<tmpl::size_t<volume_dim>>>>>,
             gh::bbh::Tags::ElementCompletionRequested,
             Tags::ChangeSlabSize::NumberOfExpectedMessages,
-            Tags::ChangeSlabSize::NewSlabSize, Tags::FixedLtsRatio>>>;
+            Tags::ChangeSlabSize::NewSlabSize/*,
+            tmpl::conditional_t<local_time_stepping,
+                                tmpl::list<Tags::FixedLtsRatio>,
+                                tmpl::list<>>*/>>>;
     static constexpr bool keep_coarse_grids = false;
     static constexpr bool p_refine_only_in_event = true;
   };
