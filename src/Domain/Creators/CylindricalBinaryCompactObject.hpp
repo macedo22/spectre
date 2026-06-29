@@ -31,6 +31,7 @@
 /// \cond
 namespace domain {
 namespace CoordinateMaps {
+class Affine;
 class Interval;
 template <typename Map1, typename Map2>
 class ProductOf2Maps;
@@ -184,7 +185,10 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
                      Frame::BlockLogical, Frame::Inertial,
                      domain::CoordinateMaps::ProductOf2Maps<
                          CoordinateMaps::Interval, CoordinateMaps::Identity<2>>,
-                     domain::CoordinateMaps::SphericalToCartesianPfaffian>,
+                     domain::CoordinateMaps::SphericalToCartesianPfaffian,
+                     CoordinateMaps::ProductOf3Maps<CoordinateMaps::Affine,
+                                                    CoordinateMaps::Affine,
+                                                    CoordinateMaps::Affine>>,
                  bco::TimeDependentMapOptions<true>::maps_list>>;
 
   struct CenterA {
