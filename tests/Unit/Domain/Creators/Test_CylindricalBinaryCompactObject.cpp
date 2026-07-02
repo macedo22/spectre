@@ -231,10 +231,9 @@ std::string create_option_string(
                                      get_output(value) + "," +
                                      get_output(value) + "]";
         const std::string shell_same =
-            is_h_refinement ? ("[" + get_output(value) + ", 0, 0]") : same;
+            is_h_refinement ? get_output(value) : same;
         const std::string shell_one_more =
-            is_h_refinement ? ("[" + get_output(value + 1) + ", 0, 0]")
-                            : one_more;
+            is_h_refinement ? get_output(value + 1) : one_more;
         std::string result{};
         if (include_extra) {
           result += "\n    Outer: " + one_more;
@@ -601,18 +600,47 @@ void test_parse_errors() {
 }
 
 // This matches the structure in the option string
-std::unordered_map<std::string, std::array<size_t, 3>> make_initial_structure(
-    const bool is_h_refinement, const size_t initial_value,
-    const bool include_inner_sphere_A, const bool include_inner_sphere_B) {
-  std::unordered_map<std::string, std::array<size_t, 3>> initial_map;
+std::unordered_map<std::string, std::variant<std::array<size_t, 3>, size_t>>
+make_initial_refinement(const size_t initial_value,
+                        const bool include_inner_sphere_A,
+                        const bool include_inner_sphere_B) {
+  std::unordered_map<std::string, std::variant<std::array<size_t, 3>, size_t>>
+      initial_map;
   const std::array<size_t, 3> same{initial_value, initial_value, initial_value};
   const std::array<size_t, 3> one_more{initial_value + 1, initial_value,
                                        initial_value};
-  const std::array<size_t, 3> shell_same =
-      is_h_refinement ? std::array<size_t, 3>{initial_value, 0, 0} : same;
-  const std::array<size_t, 3> shell_one_more =
-      is_h_refinement ? std::array<size_t, 3>{initial_value + 1, 0, 0}
-                      : one_more;
+  const size_t shell_same = initial_value;
+  const size_t shell_one_more = initial_value + 1;
+
+  initial_map["Outer"] = one_more;
+  initial_map["InnerA"] = same;
+  initial_map["InnerB"] = one_more;
+  if (include_inner_sphere_A) {
+    initial_map["InnerSphereA"] = shell_same;
+  }
+  if (include_inner_sphere_B) {
+    initial_map["InnerSphereB"] = shell_same;
+  }
+  initial_map["OuterSphere"] = shell_one_more;
+
+  return initial_map;
+}
+
+// This matches the structure in the option string
+std::unordered_map<std::string,
+                   std::variant<std::array<size_t, 3>, std::array<size_t, 2>>>
+make_initial_grid_points(const size_t initial_value,
+                         const bool include_inner_sphere_A,
+                         const bool include_inner_sphere_B) {
+  std::unordered_map<std::string,
+                     std::variant<std::array<size_t, 3>, std::array<size_t, 2>>>
+      initial_map;
+  const std::array<size_t, 3> same{initial_value, initial_value, initial_value};
+  const std::array<size_t, 3> one_more{initial_value + 1, initial_value,
+                                       initial_value};
+  const std::array<size_t, 2> shell_same{initial_value, initial_value};
+  const std::array<size_t, 2> shell_one_more{initial_value + 1, initial_value};
+
   initial_map["Outer"] = one_more;
   initial_map["InnerA"] = same;
   initial_map["InnerB"] = one_more;
@@ -686,14 +714,14 @@ void test_cylindrical_bbh() {
     CylBCO::InitialGridPoints::type initial_grid_points{};
 
     if (with_additional_outer_radial_refinement) {
-      initial_refinement = make_initial_structure(
-          true, refinement, include_inner_sphere_A, include_inner_sphere_B);
+      initial_refinement = make_initial_refinement(
+          refinement, include_inner_sphere_A, include_inner_sphere_B);
     } else {
       initial_refinement = refinement;
     }
     if (with_additional_grid_points) {
-      initial_grid_points = make_initial_structure(
-          false, grid_points, include_inner_sphere_A, include_inner_sphere_B);
+      initial_grid_points = make_initial_grid_points(
+          grid_points, include_inner_sphere_A, include_inner_sphere_B);
     } else {
       initial_grid_points = grid_points;
     }
