@@ -32,7 +32,10 @@
 namespace domain {
 namespace CoordinateMaps {
 class Affine;
+template <size_t Dim>
+class Identity;
 class Interval;
+class PolarToCartesian;
 template <typename Map1, typename Map2>
 class ProductOf2Maps;
 template <typename Map1, typename Map2, typename Map3>
@@ -149,6 +152,7 @@ namespace domain::creators {
  */
 class CylindricalBinaryCompactObject : public DomainCreator<3> {
  public:
+  // TODO :: remove unneded cubed cylinder maps
   using maps_list = tmpl::flatten<
       tmpl::list<domain::CoordinateMap<
                      Frame::BlockLogical, Frame::Inertial,
@@ -182,6 +186,11 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
                                                     CoordinateMaps::Interval>,
                      CoordinateMaps::UniformCylindricalSide,
                      CoordinateMaps::DiscreteRotation<3>>,
+                 domain::CoordinateMap<
+                     Frame::BlockLogical, Frame::Inertial,
+                     domain::CoordinateMaps::ProductOf3Maps<CoordinateMaps::Affine, CoordinateMaps::Identity<1>, CoordinateMaps::Interval>,
+                     domain::CoordinateMaps::ProductOf2Maps<CoordinateMaps::PolarToCartesian, CoordinateMaps::Identity<1>>
+                 >,
                  domain::CoordinateMap<
                      Frame::BlockLogical, Frame::Inertial,
                      domain::CoordinateMaps::ProductOf2Maps<

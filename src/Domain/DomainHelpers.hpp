@@ -15,6 +15,7 @@
 
 #include "DataStructures/Index.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
+#include "Domain/CoordinateMaps/CoordinateMap.hpp"
 #include "Domain/CoordinateMaps/Distribution.hpp"
 #include "Domain/Structure/Direction.hpp"
 #include "Domain/Structure/Side.hpp"
@@ -45,7 +46,11 @@ template <typename Map1, typename Map2>
 class ProductOf2Maps;
 template <typename Map1, typename Map2, typename Map3>
 class ProductOf3Maps;
+class Affine;
+template <size_t Dim>
+class Identity;
 class Interval;
+class PolarToCartesian;
 template <size_t Dim>
 class Wedge;
 class Frustum;
@@ -352,6 +357,18 @@ auto cyl_wedge_coord_map_surrounding_blocks(
     CylindricalDomainParityFlip parity_flip = CylindricalDomainParityFlip::none)
     -> std::vector<domain::CoordinateMaps::ProductOf2Maps<
         domain::CoordinateMaps::Wedge<2>, domain::CoordinateMaps::Interval>>;
+
+// TODO : document
+std::unique_ptr<
+    domain::CoordinateMapBase<Frame::BlockLogical, Frame::Inertial, 3>>
+// ::domain::CoordinateMap<
+//                      Frame::BlockLogical, Frame::Inertial,
+//                      ::domain::CoordinateMaps::ProductOf3Maps<::domain::CoordinateMaps::Affine, ::domain::CoordinateMaps::Identity<1>, ::domain::CoordinateMaps::Interval>,
+//                      ::domain::CoordinateMaps::ProductOf2Maps<::domain::CoordinateMaps::PolarToCartesian, ::domain::CoordinateMaps::Identity<1>>
+//                  >
+    cyl_coordinate_map(
+    const double inner_radius, const double outer_radius,
+    const double lower_z_bound, const double upper_z_bound);
 
 /// \ingroup ComputationalDomainGroup
 /// \brief The corners for a cylindrical domain split into discs with radial
