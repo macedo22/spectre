@@ -96,7 +96,7 @@ void validate_initial_grid_points(
       const bool is_cylinder_block = cylinder_names.contains(block_name);
       ASSERT(not(is_spherical_harmonic_block and is_cylinder_block),
              "Block '" << block_name
-                       << "' cannot be both a spherical-harmonc shell block "
+                       << "' cannot be both a spherical-harmonic shell block "
                           "and a cylinder block. ");
       if (is_spherical_harmonic_block) {
         if (std::holds_alternative<std::array<size_t, 3>>(extents)) {
@@ -154,7 +154,7 @@ void validate_initial_refinement(
       const bool is_cylinder_block = cylinder_names.contains(block_name);
       ASSERT(not(is_spherical_harmonic_block and is_cylinder_block),
              "Block '" << block_name
-                       << "' cannot be both a spherical-harmonc shell block "
+                       << "' cannot be both a spherical-harmonic shell block "
                           "and a cylinder block. ");
       if (is_spherical_harmonic_block) {
         if (std::holds_alternative<std::array<size_t, 3>>(ref)) {

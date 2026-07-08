@@ -49,8 +49,24 @@ DomainCreator:
     IncludeInnerSphereB: true
     UseEquiangularMap: true
     OuterRadius: 300.0
-    InitialRefinement: 2
-    InitialGridPoints: 7
+    InitialRefinement:
+      # z refinement for cylinders
+      InnerA: 1
+      InnerB: 1
+      Outer: 1
+      # radial refinement for spherical shells
+      InnerSphereA: 1
+      InnerSphereB: 1
+      OuterSphere: 1
+    InitialGridPoints:
+      # [theta_modes, z_points] for cylinders
+      InnerA: [7, 7]
+      InnerB: [7, 7]
+      Outer: [7, 7]
+      # [radial_points, L_max] for spherical shells
+      InnerSphereA: [7, 7]
+      InnerSphereB: [7, 7]
+      OuterSphere: [7, 7]
     BoundaryConditions:
       InnerBoundary:
         DemandOutgoingCharSpeeds:
