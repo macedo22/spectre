@@ -36,6 +36,7 @@
 #include "Domain/Structure/ObjectLabel.hpp"
 #include "Domain/Structure/OrientationMap.hpp"
 #include "NumericalAlgorithms/RootFinding/QuadraticEquation.hpp"
+#include "NumericalAlgorithms/SphericalHarmonics/Spherepack.hpp"
 #include "Options/ParseError.hpp"
 
 namespace {
@@ -397,6 +398,16 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
           "Specify grid points for InnerSphereA as [radial_points, L_max] or "
           "[radial_points, L_max, L_max].");
     }
+    // For spherical-harmonic outer-shell blocks, initial_number_of_grid_points_
+    // stores {n_radial, l_max, m_max}. Convert (l_max, m_max) to the number of
+    // collocation points the spherical-harmonic basis uses in each angular
+    // direction.
+    initial_grid_points_[first_inner_shell_A_block][1] =
+        ylm::Spherepack::n_theta_points(
+            gsl::at(initial_grid_points_, first_inner_shell_A_block)[1]);
+    initial_grid_points_[first_inner_shell_A_block][2] =
+        ylm::Spherepack::n_phi_points(
+            gsl::at(initial_grid_points_, first_inner_shell_A_block)[2]);
   }
   if (include_inner_sphere_B_) {
     if (initial_grid_points_[first_inner_shell_B_block][1] !=
@@ -407,6 +418,12 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
           "Specify grid points for InnerSphereB as [radial_points, L_max] or "
           "[radial_points, L_max, L_max].");
     }
+    initial_grid_points_[first_inner_shell_B_block][1] =
+        ylm::Spherepack::n_theta_points(
+            gsl::at(initial_grid_points_, first_inner_shell_B_block)[1]);
+    initial_grid_points_[first_inner_shell_B_block][2] =
+        ylm::Spherepack::n_phi_points(
+            gsl::at(initial_grid_points_, first_inner_shell_B_block)[2]);
   }
   if (initial_grid_points_[first_outer_shell_block][1] !=
       initial_grid_points_[first_outer_shell_block][2]) {
@@ -416,6 +433,13 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
         "Specify grid points for OuterSphere as [radial_points, L_max] or "
         "[radial_points, L_max, L_max].");
   }
+
+  initial_grid_points_[first_outer_shell_block][1] =
+      ylm::Spherepack::n_theta_points(
+          gsl::at(initial_grid_points_, first_outer_shell_block)[1]);
+  initial_grid_points_[first_outer_shell_block][2] =
+      ylm::Spherepack::n_phi_points(
+          gsl::at(initial_grid_points_, first_outer_shell_block)[2]);
 
   // Now we must change the initial refinement and initial grid points
   // for certain blocks, because the [r, theta, perp] directions do

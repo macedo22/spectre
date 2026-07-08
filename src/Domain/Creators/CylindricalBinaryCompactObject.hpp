@@ -262,9 +262,9 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
         "outer boundaries, 'theta' is the periodic direction, and 'perp' is "
         "the third direction. The exception to this is that for spherical "
         "shell blocks groups ('InnerSphereA', 'InnerSphereB', 'OuterSphere'),"
-        "you must instead specify grid points as [r, L_max] or "
-        "[r, L_max, L_max]. The exception to this is if a single number is "
-        "specified for global initial grid points."};
+        "you must instead specify grid points as [r, L_max]. The exception to "
+        "this is if a single number is specified for global initial grid "
+        "points."};
   };
 
   struct BoundaryConditions {
