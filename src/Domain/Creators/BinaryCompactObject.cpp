@@ -80,7 +80,8 @@ void validate_initial_grid_points(
     const Options::Context& context,
     const BinaryCompactObject::InitialGridPoints::type&
         initial_number_of_grid_points,
-    const std::unordered_set<std::string>& spherical_harmonic_shell_names) {
+    const std::unordered_set<std::string>& spherical_harmonic_shell_names,
+    const std::unordered_set<std::string>& cylinder_names) {
   if (std::holds_alternative<
           std::unordered_map<std::string, std::variant<std::array<size_t, 3>,
                                                        std::array<size_t, 2>>>>(
@@ -92,6 +93,11 @@ void validate_initial_grid_points(
     for (const auto& [block_name, extents] : grid_points_map) {
       const bool is_spherical_harmonic_block =
           spherical_harmonic_shell_names.contains(block_name);
+      const bool is_cylinder_block = cylinder_names.contains(block_name);
+      ASSERT(not(is_spherical_harmonic_block and is_cylinder_block),
+             "Block '" << block_name
+                       << "' cannot be both a spherical-harmonc shell block "
+                          "and a cylinder block. ");
       if (is_spherical_harmonic_block) {
         if (std::holds_alternative<std::array<size_t, 3>>(extents)) {
           PARSE_ERROR(context, "Block '"
@@ -100,20 +106,30 @@ void validate_initial_grid_points(
                                       "Specify its grid points as "
                                       "[radial_points, L_max], not array<3>.");
         }
+      } else if (is_cylinder_block) {
+        if (std::holds_alternative<std::array<size_t, 3>>(extents)) {
+          PARSE_ERROR(context, "Block '" << block_name
+                                         << "' is a cylinder block. "
+                                            "Specify its grid points as "
+                                            "[TODO, TODO], not array<3>.");
+        }
       } else {
         if (std::holds_alternative<std::array<size_t, 2>>(extents)) {
-          if (not spherical_harmonic_shell_names.empty()) {
+          if (not spherical_harmonic_shell_names.empty() or
+              not cylinder_names.empty()) {
             PARSE_ERROR(context,
                         "Specifying 2 grid points for block '"
                             << block_name
                             << "' is only valid for spherical-harmonic "
-                               "shell blocks (OuterShell0, etc.).");
+                               "shell blocks (OuterShell0, etc.) or cylinder "
+                               "blocks (CAFilledCylinder, etc.).");
           } else {
-            PARSE_ERROR(
-                context,
-                "Specifying 2 grid points (block '"
-                    << block_name
-                    << "') is only valid for spherical-harmonic shell blocks.");
+            // TODO : redundant if else branch?
+            PARSE_ERROR(context,
+                        "Specifying 2 grid points (block '"
+                            << block_name
+                            << "') is only valid for spherical-harmonic shell "
+                               "blocks or cylinder blocks.");
           }
         }
       }
@@ -124,7 +140,8 @@ void validate_initial_grid_points(
 void validate_initial_refinement(
     const Options::Context& context,
     const BinaryCompactObject::InitialRefinement::type& initial_refinement,
-    const std::unordered_set<std::string>& spherical_harmonic_shell_names) {
+    const std::unordered_set<std::string>& spherical_harmonic_shell_names,
+    const std::unordered_set<std::string>& cylinder_names) {
   if (std::holds_alternative<std::unordered_map<
           std::string, std::variant<std::array<size_t, 3>, size_t>>>(
           initial_refinement)) {
@@ -134,6 +151,11 @@ void validate_initial_refinement(
     for (const auto& [block_name, ref] : refinement_map) {
       const bool is_spherical_harmonic_block =
           spherical_harmonic_shell_names.contains(block_name);
+      const bool is_cylinder_block = cylinder_names.contains(block_name);
+      ASSERT(not(is_spherical_harmonic_block and is_cylinder_block),
+             "Block '" << block_name
+                       << "' cannot be both a spherical-harmonc shell block "
+                          "and a cylinder block. ");
       if (is_spherical_harmonic_block) {
         if (std::holds_alternative<std::array<size_t, 3>>(ref)) {
           PARSE_ERROR(context,
@@ -144,20 +166,33 @@ void validate_initial_refinement(
                              "(radial only), not array<3>. Angular "
                              "h-refinement is not supported for these blocks.");
         }
+      } else if (is_cylinder_block) {
+        if (std::holds_alternative<std::array<size_t, 3>>(ref)) {
+          PARSE_ERROR(context,
+                      "Block '"
+                          << block_name
+                          << "' is a cylinder block. "
+                             "Specify its refinement as a single number "
+                             "(z only), not array<3>. Radial and angular "
+                             "h-refinement are not supported for these blocks.");
+        }
       } else {
         if (std::holds_alternative<size_t>(ref)) {
-          if (not spherical_harmonic_shell_names.empty()) {
+          if (not spherical_harmonic_shell_names.empty() or
+              not cylinder_names.empty()) {
             PARSE_ERROR(context,
                         "Per-block single-number refinement for block '"
                             << block_name
                             << "' is only valid for spherical-harmonic "
-                               "shell blocks (OuterShell0, etc.).");
+                               "shell blocks (OuterShell0, etc.) or cylinder "
+                               "blocks (CAFilledCylinder, etc.).");
           } else {
             PARSE_ERROR(
                 context,
                 "Per-block single-number refinement in map syntax (block '"
                     << block_name
-                    << "') is only valid for spherical-harmonic shell blocks.");
+                    << "') is only valid for spherical-harmonic shell blocks "
+                       "or cylinder blocks.");
           }
         }
       }

@@ -677,7 +677,8 @@ create_grid_anchors(const std::array<double, 3>& center_a,
 void validate_initial_refinement(
     const Options::Context& context,
     const BinaryCompactObject::InitialRefinement::type& initial_refinement,
-    const std::unordered_set<std::string>& spherical_harmonic_shell_names);
+    const std::unordered_set<std::string>& spherical_harmonic_shell_names,
+    const std::unordered_set<std::string>& cylinder_names = {});
 
 /*!
  * \brief Validate `InitialGridPoints` map entries.
@@ -694,7 +695,8 @@ void validate_initial_grid_points(
     const Options::Context& context,
     const BinaryCompactObject::InitialGridPoints::type&
         initial_number_of_grid_points,
-    const std::unordered_set<std::string>& spherical_harmonic_shell_names);
+    const std::unordered_set<std::string>& spherical_harmonic_shell_names,
+    const std::unordered_set<std::string>& cylinder_names = {});
 
 /*!
  * \brief Convert `size_t` radial h refinement entries for spherical harmonic

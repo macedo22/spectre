@@ -16,6 +16,7 @@
 #include "Domain/CoordinateMaps/DiscreteRotation.hpp"
 #include "Domain/CoordinateMaps/Identity.hpp"
 #include "Domain/CoordinateMaps/Interval.hpp"
+#include "Domain/CoordinateMaps/PolarToCartesian.hpp"
 #include "Domain/CoordinateMaps/ProductMaps.hpp"
 #include "Domain/CoordinateMaps/ProductMaps.tpp"
 #include "Domain/CoordinateMaps/SphericalToCartesianPfaffian.hpp"
@@ -130,6 +131,15 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
         "Cannot have periodic boundary conditions with a binary domain");
   }
 
+  // Build the set of cylindrical block groups and block names so the
+  // validation below can distinguish spherical-harmonic blocks from other
+  // blocks and block groups.
+  const std::unordered_set<std::string> cylinder_names{
+      "InnerA",    "EAFilledCylinder", "MAFilledCylinder", "EACylinder",
+      "InnerB",    "EBFilledCylinder", "MBFilledCylinder", "EBCylinder",
+      "Outer",     "CAFilledCylinder", "CACylinder",       "CBFilledCylinder",
+      "CBCylinder"};
+
   // Build the set of spherical-harmonic shell block groups and block names so
   // the validation below can distinguish spherical-harmonic blocks from other
   // blocks and block groups.
@@ -207,7 +217,7 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
                 0.5 * (std::abs(z_cutting_plane_ - center_B_[2]) - radius_B_)
           : radius_B_;
 
-  number_of_blocks_ = 46;
+  number_of_blocks_ = 10;
   if (include_inner_sphere_A) {
     number_of_blocks_ += 1;
   }
@@ -591,77 +601,99 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // DiscreteRotation map, composes it with the logical-to-cylinder
   // maps, and adds it to the list of coordinate maps. Also adds
   // boundary conditions if requested.
-  auto add_endcap_to_list_of_maps =
-      [&coordinate_maps, &logical_to_cylinder_map](
-          const auto& endcap_map,
-          const CoordinateMaps::DiscreteRotation<3>& rotation_map) {
-        auto new_logical_to_cylinder_map =
-            ::domain::make_coordinate_map_base<Frame::BlockLogical,
-                                                    Frame::Inertial>(
-                *logical_to_cylinder_map, endcap_map, rotation_map);
-        coordinate_maps.insert(
-            coordinate_maps.end(), std::move(new_logical_to_cylinder_map));
-      };
+  auto add_endcap_to_list_of_maps = [&coordinate_maps,
+                                     &logical_to_cylinder_map](
+                                        const auto& endcap_map,
+                                        const CoordinateMaps::DiscreteRotation<
+                                            3>& rotation_map) {
+    // auto new_logical_to_cylinder_maps =
+    //     ::domain::make_coordinate_map_base<Frame::BlockLogical,
+    //                                             Frame::Inertial, 3>(
+    //         *logical_to_cylinder_map, endcap_map, rotation_map);
+    // coordinate_maps.insert(
+    //     coordinate_maps.end(), std::move(new_logical_to_cylinder_maps));
 
-//   // Lambda that takes a UniformCylindricalEndcap map and a
-//   // DiscreteRotation map, composes it with the logical-to-cylinder
-//   // maps, and adds it to the list of coordinate maps. Also adds
-//   // boundary conditions if requested.
-//   auto add_endcap_to_list_of_maps =
-//       [&coordinate_maps, &logical_to_cylinder_center_maps,
-//        &logical_to_cylinder_surrounding_maps](
-//           const CoordinateMaps::UniformCylindricalEndcap& endcap_map,
-//           const CoordinateMaps::DiscreteRotation<3>& rotation_map) {
-//         auto new_logical_to_cylinder_center_maps =
-//             domain::make_vector_coordinate_map_base<Frame::BlockLogical,
-//                                                     Frame::Inertial, 3>(
-//                 logical_to_cylinder_center_maps, endcap_map, rotation_map);
-//         coordinate_maps.insert(
-//             coordinate_maps.end(),
-//             std::make_move_iterator(
-//                 new_logical_to_cylinder_center_maps.begin()),
-//             std::make_move_iterator(new_logical_to_cylinder_center_maps.end()));
-//         auto new_logical_to_cylinder_surrounding_maps =
-//             domain::make_vector_coordinate_map_base<Frame::BlockLogical,
-//                                                     Frame::Inertial, 3>(
-//                 logical_to_cylinder_surrounding_maps, endcap_map, rotation_map);
-//         coordinate_maps.insert(
-//             coordinate_maps.end(),
-//             std::make_move_iterator(
-//                 new_logical_to_cylinder_surrounding_maps.begin()),
-//             std::make_move_iterator(
-//                 new_logical_to_cylinder_surrounding_maps.end()));
-//       };
+    // coordinate_maps.insert(
+    //     coordinate_maps.end(),
+    //     std::make_move_iterator(
+    //         new_logical_to_cylinder_maps.begin()),
+    //     std::make_move_iterator(
+    //         new_logical_to_cylinder_maps.end()));
 
-//   // Lambda that takes a UniformCylindricalFlatEndcap map and a
-//   // DiscreteRotation map, composes it with the logical-to-cylinder
-//   // maps, and adds it to the list of coordinate maps. Also adds
-//   // boundary conditions if requested.
-//   auto add_flat_endcap_to_list_of_maps =
-//       [&coordinate_maps, &logical_to_cylinder_center_maps,
-//        &logical_to_cylinder_surrounding_maps](
-//           const CoordinateMaps::UniformCylindricalFlatEndcap& endcap_map,
-//           const CoordinateMaps::DiscreteRotation<3>& rotation_map) {
-//         auto new_logical_to_cylinder_center_maps =
-//             domain::make_vector_coordinate_map_base<Frame::BlockLogical,
-//                                                     Frame::Inertial, 3>(
-//                 logical_to_cylinder_center_maps, endcap_map, rotation_map);
-//         coordinate_maps.insert(
-//             coordinate_maps.end(),
-//             std::make_move_iterator(
-//                 new_logical_to_cylinder_center_maps.begin()),
-//             std::make_move_iterator(new_logical_to_cylinder_center_maps.end()));
-//         auto new_logical_to_cylinder_surrounding_maps =
-//             domain::make_vector_coordinate_map_base<Frame::BlockLogical,
-//                                                     Frame::Inertial, 3>(
-//                 logical_to_cylinder_surrounding_maps, endcap_map, rotation_map);
-//         coordinate_maps.insert(
-//             coordinate_maps.end(),
-//             std::make_move_iterator(
-//                 new_logical_to_cylinder_surrounding_maps.begin()),
-//             std::make_move_iterator(
-//                 new_logical_to_cylinder_surrounding_maps.end()));
-//       };
+    // coordinate_maps.emplace_back(
+    //     ::domain::make_coordinate_map_base<Frame::BlockLogical,
+    //     Frame::Inertial>(
+    //         logical_to_cylinder_map, endcap_map, rotation_map));
+
+    auto new_logical_to_cylinder_map = ::domain::push_back(
+        ::domain::push_back(logical_to_cylinder_map, endcap_map), rotation_map);
+
+    coordinate_maps.emplace_back(
+        std::make_unique<std::decay_t<decltype(new_logical_to_cylinder_map)>>(
+            std::move(new_logical_to_cylinder_map)));
+  };
+
+  //   // Lambda that takes a UniformCylindricalEndcap map and a
+  //   // DiscreteRotation map, composes it with the logical-to-cylinder
+  //   // maps, and adds it to the list of coordinate maps. Also adds
+  //   // boundary conditions if requested.
+  //   auto add_endcap_to_list_of_maps =
+  //       [&coordinate_maps, &logical_to_cylinder_center_maps,
+  //        &logical_to_cylinder_surrounding_maps](
+  //           const CoordinateMaps::UniformCylindricalEndcap& endcap_map,
+  //           const CoordinateMaps::DiscreteRotation<3>& rotation_map) {
+  //         auto new_logical_to_cylinder_center_maps =
+  //             domain::make_vector_coordinate_map_base<Frame::BlockLogical,
+  //                                                     Frame::Inertial, 3>(
+  //                 logical_to_cylinder_center_maps, endcap_map, rotation_map);
+  //         coordinate_maps.insert(
+  //             coordinate_maps.end(),
+  //             std::make_move_iterator(
+  //                 new_logical_to_cylinder_center_maps.begin()),
+  //             std::make_move_iterator(new_logical_to_cylinder_center_maps.end()));
+  //         auto new_logical_to_cylinder_surrounding_maps =
+  //             domain::make_vector_coordinate_map_base<Frame::BlockLogical,
+  //                                                     Frame::Inertial, 3>(
+  //                 logical_to_cylinder_surrounding_maps, endcap_map,
+  //                 rotation_map);
+  //         coordinate_maps.insert(
+  //             coordinate_maps.end(),
+  //             std::make_move_iterator(
+  //                 new_logical_to_cylinder_surrounding_maps.begin()),
+  //             std::make_move_iterator(
+  //                 new_logical_to_cylinder_surrounding_maps.end()));
+  //       };
+
+  //   // Lambda that takes a UniformCylindricalFlatEndcap map and a
+  //   // DiscreteRotation map, composes it with the logical-to-cylinder
+  //   // maps, and adds it to the list of coordinate maps. Also adds
+  //   // boundary conditions if requested.
+  //   auto add_flat_endcap_to_list_of_maps =
+  //       [&coordinate_maps, &logical_to_cylinder_center_maps,
+  //        &logical_to_cylinder_surrounding_maps](
+  //           const CoordinateMaps::UniformCylindricalFlatEndcap& endcap_map,
+  //           const CoordinateMaps::DiscreteRotation<3>& rotation_map) {
+  //         auto new_logical_to_cylinder_center_maps =
+  //             domain::make_vector_coordinate_map_base<Frame::BlockLogical,
+  //                                                     Frame::Inertial, 3>(
+  //                 logical_to_cylinder_center_maps, endcap_map, rotation_map);
+  //         coordinate_maps.insert(
+  //             coordinate_maps.end(),
+  //             std::make_move_iterator(
+  //                 new_logical_to_cylinder_center_maps.begin()),
+  //             std::make_move_iterator(new_logical_to_cylinder_center_maps.end()));
+  //         auto new_logical_to_cylinder_surrounding_maps =
+  //             domain::make_vector_coordinate_map_base<Frame::BlockLogical,
+  //                                                     Frame::Inertial, 3>(
+  //                 logical_to_cylinder_surrounding_maps, endcap_map,
+  //                 rotation_map);
+  //         coordinate_maps.insert(
+  //             coordinate_maps.end(),
+  //             std::make_move_iterator(
+  //                 new_logical_to_cylinder_surrounding_maps.begin()),
+  //             std::make_move_iterator(
+  //                 new_logical_to_cylinder_surrounding_maps.end()));
+  //       };
 
   // Construct vector<CoordMap>s that go from logical coordinates to
   // various blocks making up a right cylindrical shell of inner radius 1,
@@ -691,12 +723,34 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       [&coordinate_maps, &logical_to_cylindrical_shell_map](
           const CoordinateMaps::UniformCylindricalSide& side_map,
           const CoordinateMaps::DiscreteRotation<3>& rotation_map) {
-        auto new_logical_to_cylindrical_shell_map =
-            ::domain::make_coordinate_map_base<Frame::BlockLogical,
-                                                    Frame::Inertial>(
-                *logical_to_cylindrical_shell_map, side_map, rotation_map);
-        coordinate_maps.insert(
-            coordinate_maps.end(), std::move(new_logical_to_cylindrical_shell_map));
+        // auto new_logical_to_cylindrical_shell_maps =
+        //     ::domain::make_coordinate_map_base<Frame::BlockLogical,
+        //                                             Frame::Inertial, 3>(
+        //         *logical_to_cylindrical_shell_map, side_map, rotation_map);
+        // coordinate_maps.insert(
+        //     coordinate_maps.end(),
+        //     std::move(new_logical_to_cylindrical_shell_map));
+
+        // coordinate_maps.insert(
+        //     coordinate_maps.end(),
+        //     std::make_move_iterator(
+        //         new_logical_to_cylindrical_shell_maps.begin()),
+        //     std::make_move_iterator(
+        //         new_logical_to_cylindrical_shell_maps.end()));
+
+        // coordinate_maps.emplace_back(
+        //     ::domain::make_coordinate_map_base<Frame::BlockLogical,
+        //     Frame::Inertial>(
+        //         logical_to_cylindrical_shell_map, side_map, rotation_map));
+
+        auto new_logical_to_cylindrical_shell_map = ::domain::push_back(
+            ::domain::push_back(logical_to_cylindrical_shell_map, side_map),
+            rotation_map);
+
+        coordinate_maps.emplace_back(
+            std::make_unique<
+                std::decay_t<decltype(new_logical_to_cylindrical_shell_map)>>(
+                std::move(new_logical_to_cylindrical_shell_map)));
       };
 
   // Lambda that takes a UniformCylindricalSide map and a DiscreteRotation
@@ -829,7 +883,8 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
 
   // MA Filled Cylinder
   // 5 blocks: 27 thru 31
-  add_flat_endcap_to_list_of_maps(
+  //   add_flat_endcap_to_list_of_maps(
+  add_endcap_to_list_of_maps(
       CoordinateMaps::UniformCylindricalFlatEndcap(
           flip_about_xy_plane(center_A_),
           flip_about_xy_plane(center_cutting_plane), outer_radius_A_, radius_MB,
@@ -837,7 +892,8 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
   // MB Filled Cylinder
   // 5 blocks: 32 thru 36
-  add_flat_endcap_to_list_of_maps(
+  //   add_flat_endcap_to_list_of_maps(
+  add_endcap_to_list_of_maps(
       // For some reason codecov complains about the next line.
       CoordinateMaps::UniformCylindricalFlatEndcap(  // LCOV_EXCL_LINE
           center_B_, center_cutting_plane, outer_radius_B_, radius_MB,
@@ -1289,8 +1345,8 @@ add_cyl_shell_block_neighbor(inner_neighbors, false, true, first_cb_side_block,
   add_shell_cyl_endcap_neighbor(outer_cyl_ids, outer_cyl_orientations,
                                  first_cb_endcap_block);
   // CB Cylinder
-  add_shell_cyl_side_neighbors(outer_cyl_ids, outer_cyl_orientations,
-                               first_cb_side_block);
+  add_shell_cyl_side_neighbor(outer_cyl_ids, outer_cyl_orientations,
+                              first_cb_side_block);
 
   auto outer_sh_map = make_spherical_shell_coord_map(
       inner_radius_C, outer_radius_,
