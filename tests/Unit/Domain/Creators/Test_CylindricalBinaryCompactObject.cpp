@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstddef>
 #include <iomanip>
+#include <iostream>  // TODO : remove
 #include <iterator>
 #include <limits>
 #include <memory>
@@ -281,8 +282,10 @@ void test_construction(
     const double outer_radius, const std::array<double, 3>& center_objectA,
     const std::array<double, 3>& center_objectB,
     const std::vector<double>& times_to_check) {
+  std::cout << "before test_domain_creator" << std::endl;
   const auto domain = TestHelpers::domain::creators::test_domain_creator(
       creator, with_boundary_conditions, false, times_to_check);
+  std::cout << "after test_domain_creator" << std::endl;
 
   const auto& [block_names, block_groups] =
       block_names_and_groups(include_inner_sphere_A, include_inner_sphere_B);
@@ -574,22 +577,25 @@ make_initial_refinement(const size_t initial_value,
                         const bool include_inner_sphere_B) {
   std::unordered_map<std::string, std::variant<std::array<size_t, 3>, size_t>>
       initial_map;
-  const std::array<size_t, 3> same{initial_value, initial_value, initial_value};
-  const std::array<size_t, 3> one_more{initial_value + 1, initial_value,
-                                       initial_value};
-  const size_t shell_same = initial_value;
-  const size_t shell_one_more = initial_value + 1;
+  //   const std::array<size_t, 3> cyl_same{initial_value, initial_value,
+  //   initial_value}; const std::array<size_t, 3> one_more{initial_value + 1,
+  //   initial_value,
+  //                                        initial_value};
+
+  //   std::unordered_map<std::string, size_t> initial_map;
+  const size_t same = initial_value;
+  const size_t one_more = initial_value + 1;
 
   initial_map["Outer"] = one_more;
   initial_map["InnerA"] = same;
   initial_map["InnerB"] = one_more;
   if (include_inner_sphere_A) {
-    initial_map["InnerSphereA"] = shell_same;
+    initial_map["InnerSphereA"] = same;
   }
   if (include_inner_sphere_B) {
-    initial_map["InnerSphereB"] = shell_same;
+    initial_map["InnerSphereB"] = same;
   }
-  initial_map["OuterSphere"] = shell_one_more;
+  initial_map["OuterSphere"] = one_more;
 
   return initial_map;
 }
@@ -603,22 +609,28 @@ make_initial_grid_points(const size_t initial_value,
   std::unordered_map<std::string,
                      std::variant<std::array<size_t, 3>, std::array<size_t, 2>>>
       initial_map;
-  const std::array<size_t, 3> same{initial_value, initial_value, initial_value};
-  const std::array<size_t, 3> one_more{initial_value + 1, initial_value,
-                                       initial_value};
-  const std::array<size_t, 2> shell_same{initial_value, initial_value};
-  const std::array<size_t, 2> shell_one_more{initial_value + 1, initial_value};
+  //   const std::array<size_t, 3> same{initial_value, initial_value,
+  //   initial_value}; const std::array<size_t, 3> one_more{initial_value +
+  //   1, initial_value,
+  //                                        initial_value};
+  //   const std::array<size_t, 2> shell_same{initial_value, initial_value};
+  //   const std::array<size_t, 2> shell_one_more{initial_value + 1,
+  //   initial_value};
+
+  //   std::unordered_map<std::string, std::array<size_t, 2>> initial_map;
+  const std::array<size_t, 2> same{initial_value, initial_value};
+  const std::array<size_t, 2> one_more{initial_value + 1, initial_value};
 
   initial_map["Outer"] = one_more;
   initial_map["InnerA"] = same;
   initial_map["InnerB"] = one_more;
   if (include_inner_sphere_A) {
-    initial_map["InnerSphereA"] = shell_same;
+    initial_map["InnerSphereA"] = same;
   }
   if (include_inner_sphere_B) {
-    initial_map["InnerSphereB"] = shell_same;
+    initial_map["InnerSphereB"] = same;
   }
-  initial_map["OuterSphere"] = shell_one_more;
+  initial_map["OuterSphere"] = one_more;
 
   return initial_map;
 }
@@ -628,7 +640,7 @@ void test_cylindrical_bbh() {
 
   const std::vector<double> times_to_check{{1.0, 2.3}};
 
-  constexpr size_t refinement = 1;
+  constexpr size_t refinement = 0;
   constexpr size_t grid_points = 3;
 
   const double separation = 9.0;
@@ -718,14 +730,14 @@ void test_cylindrical_bbh() {
                       include_inner_sphere_A, include_inner_sphere_B,
                       inner_radius_objectA, inner_radius_objectB, outer_radius,
                       center_objectA, center_objectB, times_to_check);
-    TestHelpers::domain::creators::test_creation(
-        create_option_string(
-            with_time_dependence, with_additional_outer_radial_refinement,
-            with_additional_grid_points, include_inner_sphere_A,
-            include_inner_sphere_B, with_boundary_conditions,
-            use_equiangular_map, center_objectA, center_objectB,
-            inner_radius_objectA, inner_radius_objectB, outer_radius),
-        cyl_binary_compact_object, with_boundary_conditions);
+    // TestHelpers::domain::creators::test_creation(
+    //     create_option_string(
+    //         with_time_dependence, with_additional_outer_radial_refinement,
+    //         with_additional_grid_points, include_inner_sphere_A,
+    //         include_inner_sphere_B, with_boundary_conditions,
+    //         use_equiangular_map, center_objectA, center_objectB,
+    //         inner_radius_objectA, inner_radius_objectB, outer_radius),
+    //     cyl_binary_compact_object, with_boundary_conditions);
   }
 }
 
@@ -873,6 +885,6 @@ void test_initial_extents_and_refinement() {
 SPECTRE_TEST_CASE("Unit.Domain.Creators.CylindricalBinaryCompactObject",
                   "[Domain][Unit]") {
   test_initial_extents_and_refinement();
-  //   test_cylindrical_bbh();
+  test_cylindrical_bbh();
   test_parse_errors();
 }

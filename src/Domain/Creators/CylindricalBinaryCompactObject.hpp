@@ -154,7 +154,7 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
  public:
   // TODO :: remove unneded cubed cylinder maps
   using maps_list = tmpl::flatten<
-      tmpl::list<domain::CoordinateMap<
+      tmpl::list</*domain::CoordinateMap<
                      Frame::BlockLogical, Frame::Inertial,
                      CoordinateMaps::ProductOf3Maps<CoordinateMaps::Interval,
                                                     CoordinateMaps::Interval,
@@ -166,8 +166,18 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
                      CoordinateMaps::ProductOf2Maps<CoordinateMaps::Wedge<2>,
                                                     CoordinateMaps::Interval>,
                      CoordinateMaps::UniformCylindricalEndcap,
-                     CoordinateMaps::DiscreteRotation<3>>,
+                     CoordinateMaps::DiscreteRotation<3>>,*/
                  domain::CoordinateMap<
+                     Frame::BlockLogical, Frame::Inertial,
+                     CoordinateMaps::ProductOf3Maps<CoordinateMaps::Affine,
+                                                    CoordinateMaps::Identity<1>,
+                                                    CoordinateMaps::Interval>,
+                     CoordinateMaps::ProductOf2Maps<CoordinateMaps::PolarToCartesian,
+                                                    CoordinateMaps::Identity<1>>,
+                     CoordinateMaps::DiscreteRotation<3>,
+                     CoordinateMaps::UniformCylindricalEndcap,
+                     CoordinateMaps::DiscreteRotation<3>>,
+                 /*domain::CoordinateMap<
                      Frame::BlockLogical, Frame::Inertial,
                      CoordinateMaps::ProductOf3Maps<CoordinateMaps::Interval,
                                                     CoordinateMaps::Interval,
@@ -179,18 +189,32 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
                      CoordinateMaps::ProductOf2Maps<CoordinateMaps::Wedge<2>,
                                                     CoordinateMaps::Interval>,
                      CoordinateMaps::UniformCylindricalFlatEndcap,
+                     CoordinateMaps::DiscreteRotation<3>>,*/
+                 domain::CoordinateMap<
+                     Frame::BlockLogical, Frame::Inertial,
+                     CoordinateMaps::ProductOf3Maps<CoordinateMaps::Affine,
+                                                    CoordinateMaps::Identity<1>,
+                                                    CoordinateMaps::Interval>,
+                     CoordinateMaps::ProductOf2Maps<CoordinateMaps::PolarToCartesian,
+                                                    CoordinateMaps::Identity<1>>,
+                     CoordinateMaps::DiscreteRotation<3>,
+                     CoordinateMaps::UniformCylindricalFlatEndcap,
                      CoordinateMaps::DiscreteRotation<3>>,
                  domain::CoordinateMap<
                      Frame::BlockLogical, Frame::Inertial,
-                     CoordinateMaps::ProductOf2Maps<CoordinateMaps::Wedge<2>,
+                     CoordinateMaps::ProductOf3Maps<CoordinateMaps::Affine,
+                                                    CoordinateMaps::Identity<1>,
                                                     CoordinateMaps::Interval>,
+                     CoordinateMaps::ProductOf2Maps<CoordinateMaps::PolarToCartesian,
+                                                    CoordinateMaps::Identity<1>>,
+                     CoordinateMaps::DiscreteRotation<3>,
                      CoordinateMaps::UniformCylindricalSide,
                      CoordinateMaps::DiscreteRotation<3>>,
-                 domain::CoordinateMap<
-                     Frame::BlockLogical, Frame::Inertial,
-                     domain::CoordinateMaps::ProductOf3Maps<CoordinateMaps::Affine, CoordinateMaps::Identity<1>, CoordinateMaps::Interval>,
-                     domain::CoordinateMaps::ProductOf2Maps<CoordinateMaps::PolarToCartesian, CoordinateMaps::Identity<1>>
-                 >,
+                //  domain::CoordinateMap<
+                //      Frame::BlockLogical, Frame::Inertial,
+                //      domain::CoordinateMaps::ProductOf3Maps<CoordinateMaps::Affine, CoordinateMaps::Identity<1>, CoordinateMaps::Interval>,
+                //      domain::CoordinateMaps::ProductOf2Maps<CoordinateMaps::PolarToCartesian, CoordinateMaps::Identity<1>>
+                //  >,
                  domain::CoordinateMap<
                      Frame::BlockLogical, Frame::Inertial,
                      domain::CoordinateMaps::ProductOf2Maps<

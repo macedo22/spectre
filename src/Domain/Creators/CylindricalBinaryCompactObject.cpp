@@ -765,6 +765,16 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       Direction<3>::lower_zeta(), Direction<3>::upper_eta(),
       Direction<3>::upper_xi()}};
 
+  const OrientationMap<3> half_turn_along_zeta{std::array<Direction<3>, 3>{
+      Direction<3>::lower_xi(), Direction<3>::lower_eta(),
+      Direction<3>::upper_zeta()}};
+  
+  const OrientationMap<3> no_rotation = OrientationMap<3>::create_aligned();
+  
+  // const OrientationMap<3> half_turn_along_zeta{std::array<Direction<3>, 3>{
+  //     Direction<3>::lower_xi(), Direction<3>::lower_eta(),
+  //     Direction<3>::upper_zeta()}};
+
   const std::array<double, 3> center_cutting_plane = {0.0, 0.0,
                                                       z_cutting_plane_};
 
@@ -812,7 +822,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
 //           cylinder_upper_bound_z, use_equiangular_map_, 0.0);
 
   using Affine = ::domain::CoordinateMaps::Affine;
-  using Identity1D = ::domain::CoordinateMaps::Identity<1>;
+  // using Identity1D = ::domain::CoordinateMaps::Identity<1>;
   using Interval = ::domain::CoordinateMaps::Interval;
 //   const auto linear_distribution = ::domain::CoordinateMaps::Distribution::Linear;
 
@@ -834,6 +844,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // boundary conditions if requested.
   auto add_endcap_to_list_of_maps = [&coordinate_maps,
                                      &logical_to_cylinder_map](
+                                      const CoordinateMaps::DiscreteRotation<3>& pre_rotation_map,
                                         const auto& endcap_map,
                                         const CoordinateMaps::DiscreteRotation<
                                             3>& rotation_map) {
@@ -856,12 +867,32 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
     //     Frame::Inertial>(
     //         logical_to_cylinder_map, endcap_map, rotation_map));
 
-    auto new_logical_to_cylinder_map = ::domain::push_back(
-        ::domain::push_back(logical_to_cylinder_map, endcap_map), rotation_map);
+    // auto new_logical_to_cylinder_map = ::domain::push_back(
+    //     ::domain::push_back(logical_to_cylinder_map, endcap_map), rotation_map);
 
-    coordinate_maps.emplace_back(
-        std::make_unique<std::decay_t<decltype(new_logical_to_cylinder_map)>>(
-            std::move(new_logical_to_cylinder_map)));
+    // coordinate_maps.emplace_back(
+    //     std::make_unique<std::decay_t<decltype(new_logical_to_cylinder_map)>>(
+    //         std::move(new_logical_to_cylinder_map)));
+
+    // auto new_logical_to_cylinder_map =
+    //         domain::make_vector_coordinate_map_base<Frame::BlockLogical,
+    //                                                 Frame::Inertial, 3>(
+    //             logical_to_cylinder_map, pre_rotation_map, endcap_map, rotation_map);
+    //     coordinate_maps.insert(
+    //         coordinate_maps.end(),
+    //         std::make_move_iterator(
+    //             new_logical_to_cylinder_map.begin()),
+    //         std::make_move_iterator(
+    //             new_logical_to_cylinder_map.end()));
+
+    auto new_logical_to_cylinder_map = ::domain::push_back(::domain::push_back(
+            ::domain::push_back(logical_to_cylinder_map, pre_rotation_map),
+            endcap_map), rotation_map);
+
+        coordinate_maps.emplace_back(
+            std::make_unique<
+                std::decay_t<decltype(new_logical_to_cylinder_map)>>(
+                std::move(new_logical_to_cylinder_map)));
   };
 
   //   // Lambda that takes a UniformCylindricalEndcap map and a
@@ -952,6 +983,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // requested.
   auto add_side_to_list_of_maps =
       [&coordinate_maps, &logical_to_cylindrical_shell_map](
+        const CoordinateMaps::DiscreteRotation<3>& pre_rotation_map,
           const CoordinateMaps::UniformCylindricalSide& side_map,
           const CoordinateMaps::DiscreteRotation<3>& rotation_map) {
         // auto new_logical_to_cylindrical_shell_maps =
@@ -974,9 +1006,38 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
         //     Frame::Inertial>(
         //         logical_to_cylindrical_shell_map, side_map, rotation_map));
 
-        auto new_logical_to_cylindrical_shell_map = ::domain::push_back(
-            ::domain::push_back(logical_to_cylindrical_shell_map, side_map),
-            rotation_map);
+        // auto new_logical_to_cylindrical_shell_map = ::domain::push_back(
+        //     ::domain::push_back(logical_to_cylindrical_shell_map, side_map),
+        //     rotation_map);
+
+        // coordinate_maps.emplace_back(
+        //     std::make_unique<
+        //         std::decay_t<decltype(new_logical_to_cylindrical_shell_map)>>(
+        //         std::move(new_logical_to_cylindrical_shell_map)));
+
+        // if (half_turn) {
+        //   auto new_logical_to_cylindrical_shell_maps =
+        //     domain::make_vector_coordinate_map_base<Frame::BlockLogical,
+        //                                             Frame::Inertial, 3>(
+        //         logical_to_cylindrical_shell_maps, side_map, rotation_map);
+
+        // } else {
+        //   CoordinateMaps::DiscreteRotation<3>{OrientationMap<3>::create_aligned()}
+        // }
+        // auto new_logical_to_cylindrical_shell_maps =
+        //     domain::make_vector_coordinate_map_base<Frame::BlockLogical,
+        //                                             Frame::Inertial, 3>(
+        //         logical_to_cylindrical_shell_map, pre_rotation_map, side_map, rotation_map);
+        // coordinate_maps.insert(
+        //     coordinate_maps.end(),
+        //     std::make_move_iterator(
+        //         new_logical_to_cylindrical_shell_maps.begin()),
+        //     std::make_move_iterator(
+        //         new_logical_to_cylindrical_shell_maps.end()));
+
+        auto new_logical_to_cylindrical_shell_map = ::domain::push_back(::domain::push_back(
+            ::domain::push_back(logical_to_cylindrical_shell_map, pre_rotation_map),
+            side_map), rotation_map);
 
         coordinate_maps.emplace_back(
             std::make_unique<
@@ -1033,6 +1094,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // CA Filled Cylinder
   // 5 blocks: 0 thru 4
   add_endcap_to_list_of_maps(
+      CoordinateMaps::DiscreteRotation<3>(no_rotation),
       CoordinateMaps::UniformCylindricalEndcap(center_EA, make_array<3>(0.0),
                                                radius_EA, inner_radius_C,
                                                z_cut_CA_lower, z_cut_CA_upper),
@@ -1041,6 +1103,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // CA Cylinder
   // 4 blocks: 5 thru 8
   add_side_to_list_of_maps(
+      CoordinateMaps::DiscreteRotation<3>(no_rotation),
       CoordinateMaps::UniformCylindricalSide(
           // codecov complains about the next line being untested.
           // No idea why, since this entire function is called.
@@ -1053,6 +1116,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // EA Filled Cylinder
   // 5 blocks: 9 thru 13
   add_endcap_to_list_of_maps(
+      CoordinateMaps::DiscreteRotation<3>(no_rotation),
       CoordinateMaps::UniformCylindricalEndcap(center_A_, center_EA,
                                                outer_radius_A_, radius_EA,
                                                z_cut_EA_upper, z_cut_CA_lower),
@@ -1061,6 +1125,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // EA Cylinder
   // 4 blocks: 14 thru 17
   add_side_to_list_of_maps(
+      CoordinateMaps::DiscreteRotation<3>(no_rotation),
       // For some reason codecov complains about the next line.
       CoordinateMaps::UniformCylindricalSide(  // LCOV_EXCL_LINE
           center_A_, center_EA, outer_radius_A_, radius_EA, z_cut_EA_upper,
@@ -1098,6 +1163,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // EB Filled Cylinder
   // 5 blocks: 18 thru 22
   add_endcap_to_list_of_maps(
+      CoordinateMaps::DiscreteRotation<3>(half_turn_along_zeta),
       CoordinateMaps::UniformCylindricalEndcap(
           flip_about_xy_plane(center_B_), flip_about_xy_plane(center_EB),
           outer_radius_B_, radius_EB, -z_cut_EB_upper, -z_cut_CB_lower),
@@ -1106,6 +1172,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // EB Cylinder
   // 4 blocks: 23 thru 26
   add_side_to_list_of_maps(
+      CoordinateMaps::DiscreteRotation<3>(half_turn_along_zeta),
       CoordinateMaps::UniformCylindricalSide(
           flip_about_xy_plane(center_B_), flip_about_xy_plane(center_EB),
           outer_radius_B_, radius_EB, -z_cut_EB_upper, -z_cut_EB_lower,
@@ -1116,6 +1183,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // 5 blocks: 27 thru 31
   //   add_flat_endcap_to_list_of_maps(
   add_endcap_to_list_of_maps(
+      CoordinateMaps::DiscreteRotation<3>(half_turn_along_zeta),
       CoordinateMaps::UniformCylindricalFlatEndcap(
           flip_about_xy_plane(center_A_),
           flip_about_xy_plane(center_cutting_plane), outer_radius_A_, radius_MB,
@@ -1125,6 +1193,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // 5 blocks: 32 thru 36
   //   add_flat_endcap_to_list_of_maps(
   add_endcap_to_list_of_maps(
+      CoordinateMaps::DiscreteRotation<3>(no_rotation),
       // For some reason codecov complains about the next line.
       CoordinateMaps::UniformCylindricalFlatEndcap(  // LCOV_EXCL_LINE
           center_B_, center_cutting_plane, outer_radius_B_, radius_MB,
@@ -1134,6 +1203,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // CB Filled Cylinder
   // 5 blocks: 37 thru 41
   add_endcap_to_list_of_maps(
+      CoordinateMaps::DiscreteRotation<3>(half_turn_along_zeta),
       CoordinateMaps::UniformCylindricalEndcap(
           flip_about_xy_plane(center_EB), make_array<3>(0.0), radius_EB,
           inner_radius_C, -z_cut_CB_lower, -z_cut_CB_upper),
@@ -1142,6 +1212,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // CB Cylinder
   // 4 blocks: 42 thru 45
   add_side_to_list_of_maps(
+      CoordinateMaps::DiscreteRotation<3>(half_turn_along_zeta),
       CoordinateMaps::UniformCylindricalSide(
           flip_about_xy_plane(center_EB), make_array<3>(0.0), radius_EB,
           inner_radius_C, -z_cut_CB_lower, -z_cutting_plane_, -z_cut_CB_upper,
@@ -1477,6 +1548,8 @@ add_cyl_shell_block_neighbor(inner_neighbors, false, true, first_cb_side_block,
   auto make_spherical_shell_coord_map =
       [](const double inner_radius, const double outer_radius,
          const std::array<double, 3>& aligned_center) {
+        // TODO : change Interval to Affine because ChatGPT seems to think it
+        // should be faster since jacobian and inverse_jacobian are stored?
         CoordinateMaps::Interval radial_map{
             -1.0,
             1.0,
