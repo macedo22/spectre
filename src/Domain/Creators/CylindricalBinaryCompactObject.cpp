@@ -159,6 +159,8 @@ std::vector<std::array<size_t, 3>> set_initial_grid_points(
                                   ylm::Spherepack::n_phi_points(a2[1])};
                 } else if (cylinder_names.contains(name)) {
                   const auto& a2 = std::get<std::array<size_t, 2>>(val);
+                  // TODO : only do this for hollow cylinders. For filled
+                  // cylinders, leave as is?
                   // TODO: change this to what it should be for cylinders
                   // result[name] = {a2[0], a2[1], a2[1]};
                   // theta_M = n_theta / 2;
