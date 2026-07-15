@@ -1296,6 +1296,8 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
           tnsr::I<double, 3, Frame::Grid>(rotate_from_z_to_x_axis(center_B_)),
           abutting_directions_B});
 
+  // TODO : need to explicitly connect cylinders together, don't think
+  // set_internal_boundaries can figure it out
   Domain<3> domain;
   // `coordinate_maps` at this point contains the inner non-shell maps.
   // Total =  num_shells + n_interior_cubes entries
