@@ -260,12 +260,6 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
     static constexpr Options::String help = {
         "Grid-coordinate radius of outer boundary."};
   };
-  struct UseEquiangularMap {
-    using type = bool;
-    static constexpr Options::String help = {
-        "Distribute grid points equiangularly in 2d wedges."};
-    static bool suggested_value() { return false; }
-  };
 
   struct InitialRefinement {
     using type = std::variant<
@@ -331,7 +325,7 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
   template <typename Metavariables>
   using options = tmpl::append<
       tmpl::list<CenterA, CenterB, RadiusA, RadiusB, IncludeInnerSphereA,
-                 IncludeInnerSphereB, OuterRadius, UseEquiangularMap,
+                 IncludeInnerSphereB, OuterRadius,
                  InitialRefinement, InitialGridPoints, TimeDependentMaps>,
       tmpl::conditional_t<
           domain::BoundaryConditions::has_boundary_conditions_base_v<
@@ -355,7 +349,6 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
       std::array<double, 3> center_A, std::array<double, 3> center_B,
       double radius_A, double radius_B, bool include_inner_sphere_A,
       bool include_inner_sphere_B, double outer_radius,
-      bool use_equiangular_map,
       const typename InitialRefinement::type& initial_refinement,
       const typename InitialGridPoints::type& initial_grid_points,
       std::optional<bco::TimeDependentMapOptions<true>> time_dependent_options =
@@ -419,7 +412,6 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
   bool include_inner_sphere_A_{};
   bool include_inner_sphere_B_{};
   double outer_radius_{};
-  bool use_equiangular_map_{false};
   typename std::vector<std::array<size_t, 3>> initial_refinement_{};
   typename std::vector<std::array<size_t, 3>> initial_grid_points_{};
   // cut_spheres_offset_factor_ is eta in Eq. (A.9) of
