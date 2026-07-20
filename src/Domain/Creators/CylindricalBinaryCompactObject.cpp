@@ -121,6 +121,10 @@ std::vector<std::array<size_t, 3>> set_initial_refinement(
       initial_refinement);
 }
 
+// TODOTODOTODO : should this just take filled_cylinder_names? also need to
+// handle how the input file takes in grid points for endcaps vs sides because
+// the sides don't have the dependence between r and theta and should take
+// 3 values instead of 2, while endcaps should take 2 values
 std::vector<std::array<size_t, 3>> set_initial_grid_points(
     const domain::ExpandOverBlocks<std::array<size_t, 3>>& expand_over_blocks,
     const domain::creators::CylindricalBinaryCompactObject::InitialGridPoints::

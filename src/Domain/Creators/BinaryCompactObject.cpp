@@ -76,6 +76,8 @@ create_grid_anchors(const std::array<double, 3>& center_a,
   return result;
 }
 
+// TODOTODOTODO : should this just take filled_cylinder_names? same with
+// the other grid point functions.
 void validate_initial_grid_points(
     const Options::Context& context,
     const BinaryCompactObject::InitialGridPoints::type&
