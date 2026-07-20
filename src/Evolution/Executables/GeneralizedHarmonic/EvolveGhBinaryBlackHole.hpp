@@ -243,7 +243,7 @@ struct EvolutionMetavars {
   static constexpr bool use_damped_harmonic_rollon = false;
   using system = gh::System<volume_dim>;
   using temporal_id = Tags::TimeStepId;
-  using TimeStepperBase = LtsTimeStepper;
+  using TimeStepperBase = TimeStepper;
 
   static constexpr bool local_time_stepping =
       TimeStepperBase::local_time_stepping;
@@ -545,13 +545,10 @@ struct EvolutionMetavars {
                    MathFunctions::all_math_functions<1, Frame::Inertial>>,
         // Restrict to monotonic time steppers in LTS to avoid control
         // systems deadlocking.
-        tmpl::pair<LtsTimeStepper, TimeSteppers::monotonic_lts_time_steppers>,
         tmpl::pair<PhaseChange,
                    tmpl::push_back<
                        PhaseControl::factory_creatable_classes,
                        gh::bbh::phase_control::CheckpointAndExitIfComplete>>,
-        tmpl::pair<StepChooser<StepChooserUse::LtsStep>,
-                   StepChoosers::standard_step_choosers<system>>,
         tmpl::pair<StepChooser<StepChooserUse::Slab>,
                    tmpl::append<StepChoosers::standard_slab_choosers<
                                     system, local_time_stepping>,
@@ -626,7 +623,10 @@ struct EvolutionMetavars {
               control_system::Actions::LimitTimeStep<control_systems>,
               Actions::MutateApply<UpdateU<system, local_time_stepping>>>>,
       Actions::MutateApply<CleanHistory<system>>,
-      Actions::MutateApply<evolution::dg::CleanMortarHistory<volume_dim>>,
+      tmpl::conditional_t<
+          local_time_stepping,
+          Actions::MutateApply<evolution::dg::CleanMortarHistory<volume_dim>>,
+          tmpl::list<>>,
       dg::Actions::SpectralFilter>;
 
   using initialization_actions = tmpl::list<
