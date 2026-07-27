@@ -261,6 +261,8 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
         "Grid-coordinate radius of outer boundary."};
   };
 
+  // TODO : need to get rid of array<3> since nothing uses that now
+  // also need to update docs
   struct InitialRefinement {
     using type = std::variant<
         size_t, std::array<size_t, 3>, std::vector<std::array<size_t, 3>>,
@@ -276,6 +278,8 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
         "('InnerSphereA', 'InnerSphereB', and 'OuterSphere'), you must instead "
         "specify refinement as a single value representing radial refinement."};
   };
+  // TODO : should I add array<2> as an option?
+  // also need to update docs
   struct InitialGridPoints {
     using type = std::variant<
         size_t, std::array<size_t, 3>, std::vector<std::array<size_t, 3>>,

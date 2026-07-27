@@ -190,28 +190,33 @@ std::string create_option_string(
       [&include_inner_sphere_A, &include_inner_sphere_B](
           const bool is_h_refinement, const bool include_extra,
           const size_t value) {
-        const std::string same = "[" + get_output(value) + "," +
-                                 get_output(value) + "," + get_output(value) +
-                                 "]";
-        const std::string one_more = "[" + get_output(value + 1) + "," +
-                                     get_output(value) + "," +
-                                     get_output(value) + "]";
-        const std::string shell_same =
-            is_h_refinement ? get_output(value) : same;
-        const std::string shell_one_more =
-            is_h_refinement ? get_output(value + 1) : one_more;
+        // const std::string same = "[" + get_output(value) + "," +
+        //                          get_output(value) + "," + get_output(value) +
+        //                          "]";
+        // const std::string one_more = "[" + get_output(value + 1) + "," +
+        //                              get_output(value) + "," +
+        //                              get_output(value) + "]";
+        const std::string same =
+            is_h_refinement ? "" + get_output(value) + "" :
+            "[" + get_output(value) + "," + get_output(value) + "]";
+        const std::string sphere_one_more =
+            is_h_refinement ? "" + get_output(value + 1) + "" :
+            "[" + get_output(value + 1) + "," + get_output(value) + "]";
+        const std::string cyl_one_more =
+            is_h_refinement ? "" + get_output(value + 1) + "" :
+            "[" + get_output(value) + "," + get_output(value + 1) + "]";
         std::string result{};
         if (include_extra) {
-          result += "\n    Outer: " + one_more;
+          result += "\n    Outer: " + cyl_one_more;
           result += "\n    InnerA: " + same;
-          result += "\n    InnerB: " + one_more;
+          result += "\n    InnerB: " + cyl_one_more;
           if (include_inner_sphere_A) {
-            result += "\n    InnerSphereA: " + shell_same;
+            result += "\n    InnerSphereA: " + same;
           }
           if (include_inner_sphere_B) {
-            result += "\n    InnerSphereB: " + shell_same;
+            result += "\n    InnerSphereB: " + sphere_one_more;
           }
-          result += "\n    OuterSphere: " + shell_one_more;
+          result += "\n    OuterSphere: " + sphere_one_more;
         } else {
           result = " " + get_output(value);
         }
@@ -228,7 +233,7 @@ std::string create_option_string(
          "\n  IncludeInnerSphereA: " + stringize(include_inner_sphere_A) +
          "\n  IncludeInnerSphereB: " + stringize(include_inner_sphere_B) +
          "\n  InitialRefinement:" +
-         initial_structure(true, with_additional_outer_radial_refinement, 1) +
+         initial_structure(true, with_additional_outer_radial_refinement, 0) +
          "\n  InitialGridPoints:" +
          initial_structure(false, with_additional_grid_points, 3) + "\n" +
          time_dependence + boundary_conditions;
@@ -577,6 +582,7 @@ std::unordered_map<std::string, std::variant<std::array<size_t, 3>, size_t>>
 make_initial_refinement(const size_t initial_value,
                         const bool include_inner_sphere_A,
                         const bool include_inner_sphere_B) {
+  // TODO : should not use variant, just map of size_t now
   std::unordered_map<std::string, std::variant<std::array<size_t, 3>, size_t>>
       initial_map;
   //   const std::array<size_t, 3> cyl_same{initial_value, initial_value,
@@ -589,13 +595,14 @@ make_initial_refinement(const size_t initial_value,
   const size_t one_more = initial_value + 1;
 
   initial_map["Outer"] = one_more;
+//   std::cout << "initial_map[\"Outer\"] is : " << get(initial_map["Outer"]) << std::endl;
   initial_map["InnerA"] = same;
   initial_map["InnerB"] = one_more;
   if (include_inner_sphere_A) {
     initial_map["InnerSphereA"] = same;
   }
   if (include_inner_sphere_B) {
-    initial_map["InnerSphereB"] = same;
+    initial_map["InnerSphereB"] = one_more;
   }
   initial_map["OuterSphere"] = one_more;
 
@@ -621,18 +628,19 @@ make_initial_grid_points(const size_t initial_value,
 
   //   std::unordered_map<std::string, std::array<size_t, 2>> initial_map;
   const std::array<size_t, 2> same{initial_value, initial_value};
-  const std::array<size_t, 2> one_more{initial_value + 1, initial_value};
+  const std::array<size_t, 2> sphere_one_more{initial_value + 1, initial_value};
+  const std::array<size_t, 2> cyl_one_more{initial_value, initial_value + 1};
 
-  initial_map["Outer"] = one_more;
+  initial_map["Outer"] = cyl_one_more;
   initial_map["InnerA"] = same;
-  initial_map["InnerB"] = one_more;
+  initial_map["InnerB"] = cyl_one_more;
   if (include_inner_sphere_A) {
     initial_map["InnerSphereA"] = same;
   }
   if (include_inner_sphere_B) {
-    initial_map["InnerSphereB"] = same;
+    initial_map["InnerSphereB"] = sphere_one_more;
   }
-  initial_map["OuterSphere"] = one_more;
+  initial_map["OuterSphere"] = sphere_one_more;
 
   return initial_map;
 }
@@ -730,14 +738,14 @@ void test_cylindrical_bbh() {
                       include_inner_sphere_A, include_inner_sphere_B,
                       inner_radius_objectA, inner_radius_objectB, outer_radius,
                       center_objectA, center_objectB, times_to_check);
-    // TestHelpers::domain::creators::test_creation(
-    //     create_option_string(
-    //         with_time_dependence, with_additional_outer_radial_refinement,
-    //         with_additional_grid_points, include_inner_sphere_A,
-    //         include_inner_sphere_B, with_boundary_conditions,
-    //         use_equiangular_map, center_objectA, center_objectB,
-    //         inner_radius_objectA, inner_radius_objectB, outer_radius),
-    //     cyl_binary_compact_object, with_boundary_conditions);
+    TestHelpers::domain::creators::test_creation(
+        create_option_string(
+            with_time_dependence, with_additional_outer_radial_refinement,
+            with_additional_grid_points, include_inner_sphere_A,
+            include_inner_sphere_B, with_boundary_conditions, center_objectA,
+            center_objectB, inner_radius_objectA, inner_radius_objectB,
+            outer_radius),
+        cyl_binary_compact_object, with_boundary_conditions);
   }
 }
 
