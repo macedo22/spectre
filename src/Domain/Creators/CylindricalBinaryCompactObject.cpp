@@ -61,153 +61,141 @@ std::array<double, 3> flip_about_xy_plane(const std::array<double, 3> input) {
   return std::array<double, 3>{input[0], input[1], -input[2]};
 }
 
-// TODO : remove global array<3> for possible input for h and p refinement
-std::vector<std::array<size_t, 3>> set_initial_refinement(
-    const domain::ExpandOverBlocks<std::array<size_t, 3>>& expand_over_blocks,
-    const domain::creators::CylindricalBinaryCompactObject::InitialRefinement::
-        type& initial_refinement,
-    const std::unordered_set<std::string>& spherical_harmonic_shell_names,
-    const std::unordered_set<std::string>& cylinder_names) {
-  return std::visit(
-      [&expand_over_blocks, &spherical_harmonic_shell_names,
-       &cylinder_names]<typename V>(
-          const V& v) -> std::vector<std::array<size_t, 3>> {
-        if constexpr (std::is_same_v<
-                          V,
-                          std::unordered_map<
-                              std::string,
-                              std::variant<std::array<size_t, 3>, size_t>>>) {
-          const auto converted = [&v, &spherical_harmonic_shell_names,
-                                  &cylinder_names]() {
-            std::unordered_map<std::string, std::array<size_t, 3>> result;
-            for (const auto& [name, val] : v) {
-              const bool is_spherical_harmonic_block =
-                  spherical_harmonic_shell_names.contains(name);
-              const bool is_cylinder_block = cylinder_names.contains(name);
-              // TODO: may need to update error message as "Block name or group
-              // name " << name
-              ASSERT(not(is_spherical_harmonic_block and is_cylinder_block),
-                     "Block '"
-                         << name
-                         << "' cannot be both a spherical-harmonic shell block "
-                            "and a cylinder block. ");
-              if (std::holds_alternative<size_t>(val)) {
-                if (spherical_harmonic_shell_names.contains(name)) {
-                  const size_t r = std::get<size_t>(val);
-                  result[name] = {r, 0, 0};
-                } else if (cylinder_names.contains(name)) {
-                  const size_t z = std::get<size_t>(val);
-                  result[name] = {0, 0, z};
-                } else {
-                  ERROR(
-                      "Block '"
-                      << name
-                      << "' refinement was specified as a single number, but "
-                         "it is not the name of a spherical shell or cylinder "
-                         "block or group. Refinement for this entry should be "
-                         "specified as array<3>.");
-                }
-              } else {
-                result[name] = std::get<std::array<size_t, 3>>(val);
-              }
-            }
-            return result;
-          }();
-          return expand_over_blocks(converted);
-        } else {
-          return expand_over_blocks(v);
-        }
-      },
-      initial_refinement);
-}
+// std::vector<std::array<size_t, 3>> set_initial_refinement(
+//     const domain::ExpandOverBlocks<std::array<size_t, 3>>&
+//     expand_over_blocks, const
+//     domain::creators::CylindricalBinaryCompactObject::InitialRefinement::
+//         type& initial_refinement,
+//     const std::unordered_set<std::string>& spherical_harmonic_shell_names,
+//     const std::unordered_set<std::string>& cylinder_names) {
+//   return std::visit(
+//       [&expand_over_blocks, &spherical_harmonic_shell_names,
+//        &cylinder_names]<typename V>(
+//           const V& v) -> std::vector<std::array<size_t, 3>> {
+//         if constexpr (std::is_same_v<
+//                           V,
+//                           std::unordered_map<
+//                               std::string,
+//                               std::variant<std::array<size_t, 3>, size_t>>>)
+//                               {
+//           const auto converted = [&v, &spherical_harmonic_shell_names,
+//                                   &cylinder_names]() {
+//             std::unordered_map<std::string, std::array<size_t, 3>> result;
+//             for (const auto& [name, val] : v) {
+//               const bool is_spherical_harmonic =
+//                   spherical_harmonic_shell_names.contains(name);
+//               const bool is_cylinder = cylinder_names.contains(name);
+//               ASSERT(not(is_spherical_harmonic and is_cylinder),
+//                      "Block or group '"
+//                          << name
+//                          << "' cannot be both a spherical-harmonic shell
+//                          block/group "
+//                             "and a cylinder block/group. ");
+//               if (std::holds_alternative<size_t>(val)) {
+//                 if (spherical_harmonic_shell_names.contains(name)) {
+//                   const size_t r = std::get<size_t>(val);
+//                   result[name] = {r, 0, 0};
+//                 } else if (cylinder_names.contains(name)) {
+//                   const size_t z = std::get<size_t>(val);
+//                   result[name] = {0, 0, z};
+//                 } else {
+//                   ERROR(
+//                       "Block or group '"
+//                       << name
+//                       << "' refinement was specified as a single number, but
+//                       "
+//                          "it is not the name of a spherical shell or cylinder
+//                          " "block or group. Refinement for this entry should
+//                          be " "specified as array<3>.");
+//                 }
+//               } else {
+//                 result[name] = std::get<std::array<size_t, 3>>(val);
+//               }
+//             }
+//             return result;
+//           }();
+//           return expand_over_blocks(converted);
+//         } else {
+//           return expand_over_blocks(v);
+//         }
+//       },
+//       initial_refinement);
+// }
 
-// TODOTODOTODO : should this just take filled_cylinder_names? also need to
-// handle how the input file takes in grid points for endcaps vs sides because
-// the sides don't have the dependence between r and theta and should take
-// 3 values instead of 2, while endcaps should take 2 values
-std::vector<std::array<size_t, 3>> set_initial_grid_points(
-    const domain::ExpandOverBlocks<std::array<size_t, 3>>& expand_over_blocks,
-    const domain::creators::CylindricalBinaryCompactObject::InitialGridPoints::
-        type& initial_grid_points,
-    const std::unordered_set<std::string>& spherical_harmonic_shell_names,
-    const std::unordered_set<std::string>& cylinder_names) {
-  return std::visit(
-      [&expand_over_blocks, &spherical_harmonic_shell_names,
-       &cylinder_names]<typename V>(
-          const V& v) -> std::vector<std::array<size_t, 3>> {
-        if constexpr (std::is_same_v<
-                          V, std::unordered_map<
-                                 std::string,
-                                 std::variant<std::array<size_t, 3>,
-                                              std::array<size_t, 2>>>>) {
-          const auto converted = [&v, &spherical_harmonic_shell_names,
-                                  &cylinder_names]() {
-            std::unordered_map<std::string, std::array<size_t, 3>> result;
-            for (const auto& [name, val] : v) {
-              const bool is_spherical_harmonic_block =
-                  spherical_harmonic_shell_names.contains(name);
-              const bool is_cylinder_block = cylinder_names.contains(name);
-              // TODO: may need to update error message as "Block name or group
-              // name " << name
-              ASSERT(not(is_spherical_harmonic_block and is_cylinder_block),
-                     "Block '"
-                         << name
-                         << "' cannot be both a spherical-harmonic shell block "
-                            "and a cylinder block. ");
-              if (std::holds_alternative<std::array<size_t, 2>>(val)) {
-                if (spherical_harmonic_shell_names.contains(name)) {
-                  const auto& a2 = std::get<std::array<size_t, 2>>(val);
-                  // TODO : update to set a2[1] and a2[2] as num collocation
-                  // points instead of L_max and M_max result[name] = {a2[0],
-                  // a2[1], a2[1]};
-                  result[name] = {a2[0], ylm::Spherepack::n_theta_points(a2[1]),
-                                  ylm::Spherepack::n_phi_points(a2[1])};
-                } else if (cylinder_names.contains(name)) {
-                  const auto& a2 = std::get<std::array<size_t, 2>>(val);
-                  // TODO : only do this for hollow cylinders. For filled
-                  // cylinders, leave as is?
-                  // TODO: change this to what it should be for cylinders
-                  // result[name] = {a2[0], a2[1], a2[1]};
-                  // theta_M = n_theta / 2;
-                  // disk_n_r = theta_M / 2 + 1 + theta_M % 2;
-                  // TODOTODOTODO :
-                  // - actually compute this
-                  // - remove single array<3> as an option for grid points and
-                  //   refinement
-                  // - remove the asserts in constructor that validate that
-                  //   the setting functions set things properly - tests are
-                  //   for that. Instead, can maybe put any of those we still
-                  //   want in this function or in the set_initial_refinement
-                  //   function.
-                  // - assert that n_r > 2?
-                  // - have people specify number of theta modes (theta_M)?
-                  const size_t num_theta_modes = a2[0];
-                  const size_t n_z = a2[1];
-                  const size_t n_theta = num_theta_modes * 2 - 1;  // always odd
-                  const size_t n_radial =
-                      (num_theta_modes / 2) + 1 + (num_theta_modes % 2);
-                  result[name] = {n_radial, n_theta, n_z};
-                } else {
-                  ERROR("Block '"
-                        << name
-                        << "' grid points was specified as array<2>, but "
-                           "it is not the name of a spherical shell or "
-                           "cylinder block or group. Grid points for "
-                           "this entry should be specified as array<3>.");
-                }
-              } else {
-                result[name] = std::get<std::array<size_t, 3>>(val);
-              }
-            }
-            return result;
-          }();
-          return expand_over_blocks(converted);
-        } else {
-          return expand_over_blocks(v);
-        }
-      },
-      initial_grid_points);
-}
+// TODO: just don't use expand_over_blocks. Tabling this because it's not super
+// important
+// std::vector<std::array<size_t, 3>> set_initial_grid_points(
+//     const domain::ExpandOverBlocks<std::array<size_t, 3>>&
+//     expand_over_blocks, const
+//     domain::creators::CylindricalBinaryCompactObject::InitialGridPoints::
+//         type& initial_grid_points,
+//     const std::unordered_set<std::string>& spherical_harmonic_shell_names,
+//     const std::unordered_set<std::string>& filled_cylinder_names) {
+//   return std::visit(
+//       [&expand_over_blocks, &spherical_harmonic_shell_names,
+//        &filled_cylinder_names]<typename V>(
+//           const V& v) -> std::vector<std::array<size_t, 3>> {
+//         if constexpr (std::is_same_v<
+//                           V, std::unordered_map<
+//                                  std::string,
+//                                  std::variant<std::array<size_t, 3>,
+//                                               std::array<size_t, 2>>>>) {
+//           const auto converted = [&v, &spherical_harmonic_shell_names,
+//                                   &filled_cylinder_names]() {
+//             std::unordered_map<std::string, std::array<size_t, 3>> result;
+//             for (const auto& [name, val] : v) {
+//               const bool is_spherical_harmonic =
+//                   spherical_harmonic_shell_names.contains(name);
+//               const bool is_filled_cylinder =
+//               filled_cylinder_names.contains(name);
+//               ASSERT(not(is_spherical_harmonic and is_filled_cylinder),
+//                      "Block or group '"
+//                          << name
+//                          << "' cannot be both a spherical-harmonic shell
+//                          block/group "
+//                             "and a cylinder block/group. ");
+//               if (std::holds_alternative<std::array<size_t, 2>>(val)) {
+//                 if (spherical_harmonic_shell_names.contains(name)) {
+//                   const auto& a2 = std::get<std::array<size_t, 2>>(val);
+//                 //   result[name] = {a2[0],
+//                 ylm::Spherepack::n_theta_points(a2[1]),
+//                 //                   ylm::Spherepack::n_phi_points(a2[1])};
+
+//                   result[name] = {a2[0],
+//                   ylm::Spherepack::n_theta_points(a2[1]),
+//                                   ylm::Spherepack::n_phi_points(a2[1])};
+//                 } else if (filled_cylinder_names.contains(name)) {
+//                   const auto& a2 = std::get<std::array<size_t, 2>>(val);
+//                   // TODO :
+//                   // - assert that n_r > 2?
+//                   // - have people specify number of theta modes (theta_M)?
+//                   const size_t num_theta_modes = a2[0];
+//                   const size_t n_z = a2[1];
+//                   const size_t n_theta = num_theta_modes * 2 - 1;  // always
+//                   odd const size_t n_radial =
+//                       (num_theta_modes / 2) + 1 + (num_theta_modes % 2);
+//                   result[name] = {n_radial, n_theta, n_z};
+//                 } else {
+//                   ERROR("Block '"
+//                         << name
+//                         << "' grid points was specified as array<2>, but "
+//                            "it is not the name of a spherical shell or "
+//                            "filled cylinder block or group. Grid points for "
+//                            "this entry should be specified as array<3>.");
+//                 }
+//               } else {
+//                 result[name] = std::get<std::array<size_t, 3>>(val);
+//               }
+//             }
+//             return result;
+//           }();
+//           return expand_over_blocks(converted);
+//         } else {
+//           return expand_over_blocks(v);
+//         }
+//       },
+//       initial_grid_points);
+// }
 }  // namespace
 
 namespace domain::creators {
@@ -279,14 +267,24 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
         "Cannot have periodic boundary conditions with a binary domain");
   }
 
+  // TODO : move addition of blocks and groups farther below to up here
+  // so we're not creating these lists twice
+
   // Build the set of cylindrical block groups and block names so the
   // validation below can distinguish spherical-harmonic blocks from other
   // blocks and block groups.
-  const std::unordered_set<std::string> cylinder_names{
-      "InnerA",    "EAFilledCylinder", "MAFilledCylinder", "EACylinder",
-      "InnerB",    "EBFilledCylinder", "MBFilledCylinder", "EBCylinder",
-      "Outer",     "CAFilledCylinder", "CACylinder",       "CBFilledCylinder",
-      "CBCylinder"};
+  const std::unordered_set<std::string> filled_cylinder_names{
+      "InnerA", "EAFilledCylinder", "MAFilledCylinder",
+      "InnerB", "EBFilledCylinder", "MBFilledCylinder",
+      "Outer",  "CAFilledCylinder", "CBFilledCylinder"};
+  const std::unordered_set<std::string> hollow_cylinder_names{
+      "InnerA", "EACylinder", "InnerB",    "EBCylinder",
+      "Outer",  "CACylinder", "CBCylinder"};
+  std::unordered_set<std::string> all_cylinder_names;
+  std::set_union(
+      std::begin(filled_cylinder_names), std::end(filled_cylinder_names),
+      std::begin(hollow_cylinder_names), std::end(hollow_cylinder_names),
+      std::inserter(all_cylinder_names, std::begin(all_cylinder_names)));
 
   // Build the set of spherical-harmonic shell block groups and block names so
   // the validation below can distinguish spherical-harmonic blocks from other
@@ -304,10 +302,10 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
 
   bco::validate_initial_refinement(context, initial_refinement,
                                    spherical_harmonic_shell_names,
-                                   cylinder_names);
+                                   all_cylinder_names);
   bco::validate_initial_grid_points(context, initial_grid_points,
                                     spherical_harmonic_shell_names,
-                                    cylinder_names);
+                                    filled_cylinder_names);
 
   // The choices made below for the quantities xi, z_cutting_plane_,
   // and xi_min_sphere_e are the ones made in SpEC, and in the
@@ -502,9 +500,9 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
   const ExpandOverBlocks<std::array<size_t, 3>> expand_over_blocks{
       block_names_, block_groups_};
   try {
-    initial_refinement_ =
-        set_initial_refinement(expand_over_blocks, initial_refinement,
-                               spherical_harmonic_shell_names, cylinder_names);
+    initial_refinement_ = bco::set_initial_refinement(
+        expand_over_blocks, initial_refinement, spherical_harmonic_shell_names,
+        all_cylinder_names);
     // If a global single-number refinement was used, post-process the spherical
     // shell and cylinder entries to make the angular directions have
     // h refinement = 0.
@@ -534,198 +532,200 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
   } catch (const std::exception& error) {
     PARSE_ERROR(context, "Invalid 'InitialRefinement': " << error.what());
   }
-  //   // Validate angular h-refinement == 0 in spherical shell blocks
-  //   if (include_inner_sphere_A_) {
-  //     if (gsl::at(initial_refinement_, first_inner_shell_A_block)[1] != 0 or
-  //         gsl::at(initial_refinement_, first_inner_shell_A_block)[2] != 0) {
-  //       PARSE_ERROR(context,
-  //                   "Angular h-refinement is not supported for "
-  //                   "spherical-harmonic inner-shell blocks. Specify
-  //                   refinement " "for InnerSphereA as a single number.");
-  //     }
-  //   }
-  //   if (include_inner_sphere_B_) {
-  //     if (gsl::at(initial_refinement_, first_inner_shell_B_block)[1] != 0 or
-  //         gsl::at(initial_refinement_, first_inner_shell_B_block)[2] != 0) {
-  //       PARSE_ERROR(context,
-  //                   "Angular h-refinement is not supported for "
-  //                   "spherical-harmonic inner-shell blocks. Specify
-  //                   refinement " "for InnerSphereB as a single number.");
-  //     }
-  //   }
-  //   if (gsl::at(initial_refinement_, first_outer_shell_block)[1] != 0 or
-  //       gsl::at(initial_refinement_, first_outer_shell_block)[2] != 0) {
-  //     PARSE_ERROR(context,
-  //                 "Angular h-refinement is not supported for "
-  //                 "spherical-harmonic outer-shell blocks. Specify refinement
-  //                 " "for OuterSphere as a single number.");
-  //   }
+  // Validate angular h-refinement == 0 in spherical shell blocks
+  if (include_inner_sphere_A_) {
+    if (gsl::at(initial_refinement_, first_inner_shell_A_block)[1] != 0 or
+        gsl::at(initial_refinement_, first_inner_shell_A_block)[2] != 0) {
+      PARSE_ERROR(context,
+                  "Angular h-refinement is not supported for "
+                  "spherical-harmonic inner-shell blocks. Specify refinement "
+                  "for InnerSphereA as a single number.");
+    }
+  }
+  if (include_inner_sphere_B_) {
+    if (gsl::at(initial_refinement_, first_inner_shell_B_block)[1] != 0 or
+        gsl::at(initial_refinement_, first_inner_shell_B_block)[2] != 0) {
+      PARSE_ERROR(context,
+                  "Angular h-refinement is not supported for "
+                  "spherical-harmonic inner-shell blocks. Specify refinement "
+                  "for InnerSphereB as a single number.");
+    }
+  }
+  if (gsl::at(initial_refinement_, first_outer_shell_block)[1] != 0 or
+      gsl::at(initial_refinement_, first_outer_shell_block)[2] != 0) {
+    PARSE_ERROR(context,
+                "Angular h-refinement is not supported for "
+                "spherical-harmonic outer-shell blocks. Specify refinement"
+                "for OuterSphere as a single number.");
+  }
+
+  // TODO: make  block index to name map instead of this junk
+  const std::array<size_t, 6> filled_cylinder_indices{0, 2, 4, 6, 7, 8};
 
   try {
     // TODO: maybe have these functions be called "expand_blah_blah"
     // and then have a function that sets the things?
-    initial_grid_points_ =
-        set_initial_grid_points(expand_over_blocks, initial_grid_points,
-                                spherical_harmonic_shell_names, cylinder_names);
+    initial_grid_points_ = bco::set_initial_grid_points(
+        expand_over_blocks, initial_grid_points, spherical_harmonic_shell_names,
+        filled_cylinder_names);
     // TODO : I don't love this solution, find a more elegant way to set or
     // post-process these
     if (std::holds_alternative<size_t>(initial_grid_points)) {
-      // Set cylinder h refinement to {0, 0, z}
-      for (size_t i = 0; i < first_inner_shell_A_block; i++) {
-        const size_t num_theta_modes = gsl::at(initial_grid_points_, i)[1];
-        initial_grid_points_[i][1] = num_theta_modes * 2 - 1;
-        initial_grid_points_[i][0] =
-            (num_theta_modes / 2) + 1 + (num_theta_modes % 2);
+      for (size_t block_number : filled_cylinder_indices) {
+        // // const size_t block_number = gsl::at(filled_cylinder_indices, i);
+        // const size_t num_theta_modes = gsl::at(initial_grid_points_,
+        // block_number)[1]; initial_grid_points_[block_number][1] =
+        // num_theta_modes * 2 - 1; initial_grid_points_[block_number][0] =
+        //     (num_theta_modes / 2) + 1 + (num_theta_modes % 2);
+        // const size_t num_radial_points = gsl::at(initial_grid_points_,
+        // block_number)[0];
+
+        // TODO assert num_radial_points > 1 ? actually don't think that's
+        // necessary
+
+        // note:
+        // radial_points = (theta_modes / 2) + 1 + (theta_modes % 2), so one
+        // could have odd or even theta_modes for the same radial_points.
+        // Choosing the even theta_modes for the same radial_points means:
+        //   theta_modes = 2 * (radial_points - 1)
+        //   theta_points = 2 * theta_modes + 1 = 4 * radial_modes - 3
+        // Choosing the odd theta_modes for the same radial_points means:
+        //   theta_modes = 2 * (radial_points - 2) + 1
+        //   theta_points = 2 * theta_modes + 1 = 4 * radial_modes - 5
+        // Here, we choose the even case to get one extra theta_mode out of
+        // radial_points.
+        initial_grid_points_[block_number][1] =
+            4 * (gsl::at(initial_grid_points_, block_number)[0]) - 3;
       }
-      // Convert spherical shell grid points from {r, L_max, L_max} to
-      // {r, n_theta, n_phi}
-      if (include_inner_sphere_A) {
-        // InnerAShell0
-        initial_grid_points_[first_inner_shell_A_block][1] =
-            ylm::Spherepack::n_theta_points(
-                gsl::at(initial_grid_points_, first_inner_shell_A_block)[1]);
-        initial_grid_points_[first_inner_shell_A_block][2] =
-            ylm::Spherepack::n_phi_points(
-                gsl::at(initial_grid_points_, first_inner_shell_A_block)[2]);
-        // initial_grid_points_[first_inner_shell_B_block][1] =
-        //   ylm::Spherepack::n_theta_points(
-        //       gsl::at(initial_grid_points_,
-        //   first_inner_shell_B_block)[1]);;
-        // initial_refinement_[first_inner_shell_A_block][2] = 0;
-      }
-      if (include_inner_sphere_B) {
-        // InnerBShell0
-        // initial_refinement_[first_inner_shell_B_block][1] = 0;
-        // initial_refinement_[first_inner_shell_B_block][2] = 0;
-        initial_grid_points_[first_inner_shell_B_block][1] =
-            ylm::Spherepack::n_theta_points(
-                gsl::at(initial_grid_points_, first_inner_shell_B_block)[1]);
-        initial_grid_points_[first_inner_shell_B_block][2] =
-            ylm::Spherepack::n_phi_points(
-                gsl::at(initial_grid_points_, first_inner_shell_B_block)[2]);
-      }
-      // OuterShell0
-      //   initial_refinement_[first_outer_shell_block][1] = 0;
-      //   initial_refinement_[first_outer_shell_block][2] = 0;
-      initial_grid_points_[first_outer_shell_block][1] =
-          ylm::Spherepack::n_theta_points(
-              gsl::at(initial_grid_points_, first_outer_shell_block)[1]);
-      initial_grid_points_[first_outer_shell_block][2] =
-          ylm::Spherepack::n_phi_points(
-              gsl::at(initial_grid_points_, first_outer_shell_block)[2]);
+      //   // Convert spherical shell grid points from {r, L_max, L_max} to
+      //   // {r, n_theta, n_phi}
+      //   if (include_inner_sphere_A) {
+      //     // InnerAShell0
+      //     initial_grid_points_[first_inner_shell_A_block][1] =
+      //         ylm::Spherepack::n_theta_points(
+      //             gsl::at(initial_grid_points_,
+      //             first_inner_shell_A_block)[1]);
+      //     initial_grid_points_[first_inner_shell_A_block][2] =
+      //         ylm::Spherepack::n_phi_points(
+      //             gsl::at(initial_grid_points_,
+      //             first_inner_shell_A_block)[2]);
+      //     // initial_grid_points_[first_inner_shell_B_block][1] =
+      //     //   ylm::Spherepack::n_theta_points(
+      //     //       gsl::at(initial_grid_points_,
+      //     //   first_inner_shell_B_block)[1]);;
+      //     // initial_refinement_[first_inner_shell_A_block][2] = 0;
+      //   }
+      //   if (include_inner_sphere_B) {
+      //     // InnerBShell0
+      //     // initial_refinement_[first_inner_shell_B_block][1] = 0;
+      //     // initial_refinement_[first_inner_shell_B_block][2] = 0;
+      //     initial_grid_points_[first_inner_shell_B_block][1] =
+      //         ylm::Spherepack::n_theta_points(
+      //             gsl::at(initial_grid_points_,
+      //             first_inner_shell_B_block)[1]);
+      //     initial_grid_points_[first_inner_shell_B_block][2] =
+      //         ylm::Spherepack::n_phi_points(
+      //             gsl::at(initial_grid_points_,
+      //             first_inner_shell_B_block)[2]);
+      //   }
+      //   // OuterShell0
+      //   //   initial_refinement_[first_outer_shell_block][1] = 0;
+      //   //   initial_refinement_[first_outer_shell_block][2] = 0;
+      //   initial_grid_points_[first_outer_shell_block][1] =
+      //       ylm::Spherepack::n_theta_points(
+      //           gsl::at(initial_grid_points_, first_outer_shell_block)[1]);
+      //   initial_grid_points_[first_outer_shell_block][2] =
+      //       ylm::Spherepack::n_phi_points(
+      //           gsl::at(initial_grid_points_, first_outer_shell_block)[2]);
+      // }
     }
   } catch (const std::exception& error) {
     PARSE_ERROR(context, "Invalid 'InitialGridPoints': " << error.what());
   }
-  // Validate angular grid points in spherical shell blocks. A
+
+  // TODO : need to check for odd number of points for all cylinders
+
+  // Validate angular grid points in all cylindrical blocks are odd.
+  for (size_t block_number = 0; block_number < first_inner_shell_A_block;
+       block_number++) {
+    if (gsl::at(initial_grid_points_, block_number)[1] % 2 == 0) {
+      PARSE_ERROR(context,
+                  "Cylindrical block "
+                      << gsl::at(block_names_, block_number)
+                      << " must have an odd number of angular grid points.");
+    }
+  }
+
+  // Validate angular grid points in filled cylinder blocks. The Zernike disk
+  // is fully specified by either the number of radial points or the number of
+  // theta points, so check that they relate as expected.
+  for (size_t block_number : filled_cylinder_indices) {
+    const size_t num_theta_modes =
+        gsl::at(initial_grid_points_, block_number)[1] / 2;
+    const size_t expected_num_r_points =
+        (num_theta_modes / 2) + 1 + (num_theta_modes % 2);
+    if (gsl::at(initial_grid_points_, block_number)[0] !=
+        expected_num_r_points) {
+      PARSE_ERROR(context,
+                  "Filled cylinder blocks must have "
+                  "num_r_points = ((num_theta_points / 2) / 2) + 1 + "
+                  "((num_theta_points / 2) % 2). Specify grid points for "
+                      << gsl::at(block_names_, block_number)
+                      << " as [num_radial_points, num_z_points].");
+    }
+  }
+  // TODO : maybe just loop over the spherical shell blocks below instead of
+  // doing one by one Validate angular grid points in spherical shell blocks. A
   // spherical-harmonic shell is fully specified by a single ell, so l_max must
   // equal m_max.
-  //   if (include_inner_sphere_A_) {
-  //     if (initial_grid_points_[first_inner_shell_A_block][1] !=
-  //         initial_grid_points_[first_inner_shell_A_block][2]) {
-  //       PARSE_ERROR(
-  //           context,
-  //           "Spherical-harmonic inner-shell blocks must have L_max = M_max. "
-  //           "Specify grid points for InnerSphereA as [radial_points,
-  //           L_max].");
-  //     }
-  //     // TODO: get rid of this since it's handled in the set_ function?
-  //     // // For spherical-harmonic outer-shell blocks,
-  //     initial_number_of_grid_points_
-  //     // // stores {n_radial, l_max, m_max}. Convert (l_max, m_max) to the
-  //     number of
-  //     // // collocation points the spherical-harmonic basis uses in each
-  //     angular
-  //     // // direction.
-  //     // initial_grid_points_[first_inner_shell_A_block][1] =
-  //     //     ylm::Spherepack::n_theta_points(
-  //     //         gsl::at(initial_grid_points_,
-  //     first_inner_shell_A_block)[1]);
-  //     // initial_grid_points_[first_inner_shell_A_block][2] =
-  //     //     ylm::Spherepack::n_phi_points(
-  //     //         gsl::at(initial_grid_points_,
-  //     first_inner_shell_A_block)[2]);
-  //   }
-  //   if (include_inner_sphere_B_) {
-  //     if (initial_grid_points_[first_inner_shell_B_block][1] !=
-  //         initial_grid_points_[first_inner_shell_B_block][2]) {
-  //       PARSE_ERROR(
-  //           context,
-  //           "Spherical-harmonic inner-shell blocks must have L_max = M_max. "
-  //           "Specify grid points for InnerSphereB as [radial_points,
-  //           L_max].");
-  //     }
-  //     // initial_grid_points_[first_inner_shell_B_block][1] =
-  //     //     ylm::Spherepack::n_theta_points(
-  //     //         gsl::at(initial_grid_points_,
-  //     first_inner_shell_B_block)[1]);
-  //     // initial_grid_points_[first_inner_shell_B_block][2] =
-  //     //     ylm::Spherepack::n_phi_points(
-  //     //         gsl::at(initial_grid_points_,
-  //     first_inner_shell_B_block)[2]);
-  //   }
-  //   if (initial_grid_points_[first_outer_shell_block][1] !=
-  //       initial_grid_points_[first_outer_shell_block][2]) {
-  //     PARSE_ERROR(
-  //         context,
-  //         "Spherical-harmonic outer-shell blocks must have L_max = M_max. "
-  //         "Specify grid points for OuterSphere as [radial_points, L_max].");
-  //   }
+  if (include_inner_sphere_A_) {
+    if (initial_grid_points_[first_inner_shell_A_block][1] !=
+        initial_grid_points_[first_inner_shell_A_block][2]) {
+      PARSE_ERROR(
+          context,
+          "Spherical-harmonic inner-shell blocks must have L_max = M_max. "
+          "Specify grid points for InnerSphereA as [radial_points, L_max].");
+    }
+    // For spherical-harmonic outer-shell blocks, initial_number_of_grid_points_
+    // stores {n_radial, l_max, m_max}. Convert (l_max, m_max) to the number of
+    // collocation points the spherical-harmonic basis uses in each angular
+    // direction.
+    initial_grid_points_[first_inner_shell_A_block][1] =
+        ylm::Spherepack::n_theta_points(
+            gsl::at(initial_grid_points_, first_inner_shell_A_block)[1]);
+    initial_grid_points_[first_inner_shell_A_block][2] =
+        ylm::Spherepack::n_phi_points(
+            gsl::at(initial_grid_points_, first_inner_shell_A_block)[2]);
+  }
+  if (include_inner_sphere_B_) {
+    if (initial_grid_points_[first_inner_shell_B_block][1] !=
+        initial_grid_points_[first_inner_shell_B_block][2]) {
+      PARSE_ERROR(
+          context,
+          "Spherical-harmonic inner-shell blocks must have L_max = M_max. "
+          "Specify grid points for InnerSphereB as [radial_points, L_max].");
+    }
+    initial_grid_points_[first_inner_shell_B_block][1] =
+        ylm::Spherepack::n_theta_points(
+            gsl::at(initial_grid_points_, first_inner_shell_B_block)[1]);
+    initial_grid_points_[first_inner_shell_B_block][2] =
+        ylm::Spherepack::n_phi_points(
+            gsl::at(initial_grid_points_, first_inner_shell_B_block)[2]);
+  }
+  if (initial_grid_points_[first_outer_shell_block][1] !=
+      initial_grid_points_[first_outer_shell_block][2]) {
+    PARSE_ERROR(
+        context,
+        "Spherical-harmonic outer-shell blocks must have L_max = M_max. "
+        "Specify grid points for OuterSphere as [radial_points, L_max].");
+  }
 
-  //   initial_grid_points_[first_outer_shell_block][1] =
-  //       ylm::Spherepack::n_theta_points(
-  //           gsl::at(initial_grid_points_, first_outer_shell_block)[1]);
-  //   initial_grid_points_[first_outer_shell_block][2] =
-  //       ylm::Spherepack::n_phi_points(
-  //           gsl::at(initial_grid_points_, first_outer_shell_block)[2]);
-
-  // Now we must change the initial refinement and initial grid points
-  // for certain blocks, because the [r, theta, perp] directions do
-  // not always correspond to [xi, eta, zeta].  The values in
-  // initial_refinement_ must correspond to [xi, eta, zeta].
-  //
-  // In particular, for cylinders: [xi, eta, zeta] = [r, theta, perp]
-  // but for filled cylinders: [xi, eta, zeta] = [perp, theta, r].
-
-//   // TODO : remove the refinement swaps for cylinders?
-//   auto swap_refinement_and_grid_points_xi_zeta = [this](const size_t block_id) {
-//     size_t val = gsl::at(initial_refinement_[block_id], 0);
-//     gsl::at(initial_refinement_[block_id], 0) =
-//         gsl::at(initial_refinement_[block_id], 2);
-//     gsl::at(initial_refinement_[block_id], 2) = val;
-//     val = gsl::at(initial_grid_points_[block_id], 0);
-//     gsl::at(initial_grid_points_[block_id], 0) =
-//         gsl::at(initial_grid_points_[block_id], 2);
-//     gsl::at(initial_grid_points_[block_id], 2) = val;
-//   };
-
-//   // CA Filled Cylinder
-//   // 5 blocks: 0 thru 4
-//   for (size_t block = 0; block < 5; ++block) {
-//     swap_refinement_and_grid_points_xi_zeta(block);
-//   }
-
-//   // EA Filled Cylinder
-//   // 5 blocks: 9 thru 13
-//   for (size_t block = 9; block < 14; ++block) {
-//     swap_refinement_and_grid_points_xi_zeta(block);
-//   }
-
-//   // EB Filled Cylinder
-//   // 5 blocks: 18 thru 22
-//   for (size_t block = 18; block < 23; ++block) {
-//     swap_refinement_and_grid_points_xi_zeta(block);
-//   }
-
-//   // MA Filled Cylinder
-//   // 5 blocks: 27 thru 31
-//   // MB Filled Cylinder
-//   // 5 blocks: 32 thru 36
-//   // CB Filled Cylinder
-//   // 5 blocks: 37 thru 41
-//   for (size_t block = 27; block < 42; ++block) {
-//     swap_refinement_and_grid_points_xi_zeta(block);
-//   }
+  initial_grid_points_[first_outer_shell_block][1] =
+      ylm::Spherepack::n_theta_points(
+          gsl::at(initial_grid_points_, first_outer_shell_block)[1]);
+  initial_grid_points_[first_outer_shell_block][2] =
+      ylm::Spherepack::n_phi_points(
+          gsl::at(initial_grid_points_, first_outer_shell_block)[2]);
 
   // Build time-dependent maps
   // The size map, which is applied from the grid to distorted frame, currently
@@ -1303,8 +1303,6 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
           tnsr::I<double, 3, Frame::Grid>(rotate_from_z_to_x_axis(center_B_)),
           abutting_directions_B});
 
-  // TODO : need to explicitly connect cylinders together, don't think
-  // set_internal_boundaries can figure it out
   Domain<3> domain;
   // `coordinate_maps` at this point contains the inner non-shell maps.
   // Total =  num_shells + n_interior_cubes entries
@@ -1716,8 +1714,6 @@ add_cyl_shell_block_neighbor(inner_neighbors, false, true, first_cb_side_block,
   auto make_spherical_shell_coord_map =
       [](const double inner_radius, const double outer_radius,
          const std::array<double, 3>& aligned_center) {
-        // TODO : change Interval to Affine because ChatGPT seems to think it
-        // should be faster since jacobian and inverse_jacobian are stored?
         CoordinateMaps::Interval radial_map{
             -1.0,
             1.0,

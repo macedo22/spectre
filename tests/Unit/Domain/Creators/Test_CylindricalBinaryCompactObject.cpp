@@ -567,6 +567,9 @@ void test_parse_errors() {
   //           create_outer_boundary_condition(), Options::Context{false, {}, 1,
   //           1}),
   //       Catch::Matchers::ContainsSubstring("must have L_max = M_max"));
+
+  // TODO : need to add new parse tests for filled cylinder points and
+  // for h refinement for both filled and hollow
 }
 
 // This matches the structure in the option string
@@ -757,12 +760,12 @@ void test_initial_extents_and_refinement() {
 
   // Set h and p refinement globally with one number
   const size_t global_refinement = 1;
-  const size_t global_grid_points = 12;
+  const size_t global_grid_points = 13;
 
   // Set h and p refinement locally per block group
   const RefinementMap local_refinement =
-      RefinementMap{{"InnerA", size_t{1}},       {"InnerB", size_t{2}},
-                    {"Outer", size_t{2}},        {"InnerSphereA", size_t{0}},
+      RefinementMap{{"InnerA", size_t{1}},       {"InnerB", size_t{0}},
+                    {"Outer", size_t{1}},        {"InnerSphereA", size_t{0}},
                     {"InnerSphereB", size_t{1}}, {"OuterSphere", size_t{2}}};
   const GridPointsMap local_grid_points =
       GridPointsMap{{"InnerA", std::array<size_t, 2>{5, 7}},
@@ -821,40 +824,68 @@ void test_initial_extents_and_refinement() {
     // Set expected h and p refinement
     if (block_groups.at("InnerSphereA").contains(block_name_global)) {
       expected_refinement_from_global = {{1, 0, 0}};
-      expected_extents_from_global = {{12, ylm::Spherepack::n_theta_points(12),
-                                       ylm::Spherepack::n_phi_points(12)}};
+      expected_extents_from_global = {{13, ylm::Spherepack::n_theta_points(13),
+                                       ylm::Spherepack::n_phi_points(13)}};
       expected_refinement_from_local = {{0, 0, 0}};
       expected_extents_from_local = {{4, ylm::Spherepack::n_theta_points(6),
                                       ylm::Spherepack::n_phi_points(6)}};
     } else if (block_groups.at("InnerSphereB").contains(block_name_global)) {
       expected_refinement_from_global = {{1, 0, 0}};
-      expected_extents_from_global = {{12, ylm::Spherepack::n_theta_points(12),
-                                       ylm::Spherepack::n_phi_points(12)}};
+      expected_extents_from_global = {{13, ylm::Spherepack::n_theta_points(13),
+                                       ylm::Spherepack::n_phi_points(13)}};
       expected_refinement_from_local = {{1, 0, 0}};
       expected_extents_from_local = {{6, ylm::Spherepack::n_theta_points(8),
                                       ylm::Spherepack::n_phi_points(8)}};
     } else if (block_groups.at("OuterSphere").contains(block_name_global)) {
       expected_refinement_from_global = {{1, 0, 0}};
-      expected_extents_from_global = {{12, ylm::Spherepack::n_theta_points(12),
-                                       ylm::Spherepack::n_phi_points(12)}};
+      expected_extents_from_global = {{13, ylm::Spherepack::n_theta_points(13),
+                                       ylm::Spherepack::n_phi_points(13)}};
       expected_refinement_from_local = {{2, 0, 0}};
       expected_extents_from_local = {{8, ylm::Spherepack::n_theta_points(10),
                                       ylm::Spherepack::n_phi_points(10)}};
     } else if (block_groups.at("InnerA").contains(block_name_global)) {
       expected_refinement_from_global = {{0, 0, 1}};
-      expected_extents_from_global = {{7, 23, 12}};
       expected_refinement_from_local = {{0, 0, 1}};
-      expected_extents_from_local = {{4, 9, 7}};
+      expected_extents_from_local = {{5, 17, 7}};
+      if (block_name_global.find("Filled") != std::string::npos) {
+        expected_extents_from_global = {{13, 49, 13}};
+        // expected_extents_from_local = {{5, 17, 7}};
+      } else {
+        expected_extents_from_global = {{13, 13, 13}};
+        // expected_extents_from_local = {{5, 17, 7}};
+      }
+      //   expected_refinement_from_global = {{0, 0, 1}};
+      //   expected_extents_from_global = {{13, 49, 13}};
+      //   expected_refinement_from_local = {{0, 0, 1}};
+      //   expected_extents_from_local = {{5, 17, 7}};
     } else if (block_groups.at("InnerB").contains(block_name_global)) {
       expected_refinement_from_global = {{0, 0, 1}};
-      expected_extents_from_global = {{7, 23, 12}};
-      expected_refinement_from_local = {{0, 0, 2}};
-      expected_extents_from_local = {{5, 13, 9}};
+      expected_refinement_from_local = {{0, 0, 0}};
+      expected_extents_from_local = {{7, 25, 9}};
+      if (block_name_global.find("Filled") != std::string::npos) {
+        expected_extents_from_global = {{13, 49, 13}};
+      } else {
+        expected_extents_from_global = {{13, 13, 13}};
+      }
+      //   expected_refinement_from_global = {{0, 0, 1}};
+      //   expected_extents_from_global = {{13, 49, 13}};
+      //   expected_refinement_from_local = {{0, 0, 0}};
+      //   expected_extents_from_local = {{7, 25, 9}};
     } else if (block_groups.at("Outer").contains(block_name_global)) {
       expected_refinement_from_global = {{0, 0, 1}};
-      expected_extents_from_global = {{7, 23, 12}};
-      expected_refinement_from_local = {{0, 0, 2}};
-      expected_extents_from_local = {{6, 17, 11}};
+      expected_refinement_from_local = {{0, 0, 1}};
+      expected_extents_from_local = {{9, 33, 11}};
+      if (block_name_global.find("Filled") != std::string::npos) {
+        expected_extents_from_global = {{13, 49, 13}};
+        // expected_extents_from_local = {{9, 33, 11}};
+      } else {
+        expected_extents_from_global = {{13, 13, 13}};
+        // expected_extents_from_local = {{9, 33, 11}};
+      }
+      //   expected_refinement_from_global = {{0, 0, 1}};
+      //   expected_extents_from_global = {{13, 49, 13}};
+      //   expected_refinement_from_local = {{0, 0, 1}};
+      //   expected_extents_from_local = {{9, 33, 11}};
     } else {
       ERROR("Block name " << block_name_global
                           << " not found in block groups.");
