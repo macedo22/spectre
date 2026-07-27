@@ -15,8 +15,11 @@
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "Domain/BoundaryConditions/BoundaryCondition.hpp"
 #include "Domain/BoundaryConditions/GetBoundaryConditionsBase.hpp"
+#include "Domain/CoordinateMaps/Affine.hpp"
 #include "Domain/CoordinateMaps/CoordinateMap.hpp"
 #include "Domain/CoordinateMaps/Identity.hpp"
+#include "Domain/CoordinateMaps/PolarToCartesian.hpp"
+#include "Domain/CoordinateMaps/SphericalToCartesianPfaffian.hpp"
 #include "Domain/Creators/DomainCreator.hpp"
 #include "Domain/Creators/TimeDependentOptions/BinaryCompactObject.hpp"
 #include "Domain/Domain.hpp"
@@ -31,13 +34,11 @@
 /// \cond
 namespace domain {
 namespace CoordinateMaps {
-class Affine;
 class Interval;
 template <typename Map1, typename Map2>
 class ProductOf2Maps;
 template <typename Map1, typename Map2, typename Map3>
 class ProductOf3Maps;
-class SphericalToCartesianPfaffian;
 template <size_t VolumeDim>
 class Wedge;
 template <size_t VolumeDim>
@@ -49,9 +50,6 @@ class UniformCylindricalSide;
 
 template <typename SourceFrame, typename TargetFrame, typename... Maps>
 class CoordinateMap;
-
-template <typename T>
-struct ExpandOverBlocks;
 
 namespace FunctionsOfTime {
 class FunctionOfTime;
@@ -95,9 +93,12 @@ namespace domain::creators {
  * of Figure 20 indicates that there are additional spherical shells
  * outside the "CA" and "CB" blocks; `CylindricalBinaryCompactObject`
  * has these extra shells inside "EA" only if the option `IncludeInnerSphereA`
- * is true, and it has the extra shells inside "EB" only if the option
- * `IncludeInnerSphereB` is true. If the shells are absent, then the "EA" and
- * "EB" blocks extend to the excision boundaries.
+ * is true, it has the extra shells inside "EB" only if the option
+ * `IncludeInnerSphereB` is true, and it has the extra shells outside
+ * "CA" and "CB" only if `IncludeOuterSphere` is true.
+ * If the shells are absent, then the "EA" and "EB"
+ * blocks extend to the excision boundaries and the "CA" and "CB" blocks
+ * extend to the outer boundary.
  *
  * The Blocks are named as follows:
  * - Each of CAFilledCylinder, EAFilledCylinder, EBFilledCylinder,
@@ -108,21 +109,27 @@ namespace domain::creators {
  * - Each of CACylinder, EACylinder, EBCylinder, and CBCylinder
  *   consists of 4 blocks, named 'East', 'North', 'West', and 'South',
  *   so an example of a valid block name is 'CACylinderEast'.
- * - The Block group called "Outer" consists of all the CA and CB blocks.
- * - OuterShell0 is the single shell in a Block group called "OuterSphere" and
- *   it borders the outer boundary.
+ * - The Block group called "Outer" consists of all the CA and CB blocks. They
+ *   all border the outer boundary if `IncludeOuterSphere` is false.
+ * - If `IncludeOuterSphere` is true, then there are more blocks named
+ *   OuterSphereCAFilledCylinder, OuterSphereCBFilledCylinder,
+ *   OuterSphereCACylinder, and OuterSphereCBCylinder.
+ *   These are in a Block group called "OuterSphere",
+ *   and all of these border the outer boundary.
  * - The Block group called "InnerA" consists of all the EA, and MA
  *   blocks. They all border the inner boundary "A" if
  *   `IncludeInnerSphereA` is false.
- * - If `IncludeInnerSphereA` is true, InnerAShell0 is the single shell in a
- *   Block group called "InnerSphereA" and it borders the inner excision
- *   boundary "A".
+ * - If `IncludeInnerSphereA` is true, then there are new blocks
+ *   InnerSphereEAFilledCylinder, InnerSphereMAFilledCylinder, and
+ *   InnerSphereEACylinder. These are in a Block group called "InnerSphereA",
+ *   and all of these border the inner excision boundary "A".
  * - The Block group called "InnerB" consists of all the EB, and MB
  *   blocks. They all border the inner boundary "B" if
  *   `IncludeInnerSphereB` is false.
- * - If `IncludeInnerSphereB` is true, InnerBShell0 is the single shell in a
- *   Block group called "InnerSphereB" and it borders the inner excision
- *   boundary "B".
+ * - If `IncludeInnerSphereB` is true, then there are new blocks
+ *   InnerSphereEBFilledCylinder, InnerSphereMBFilledCylinder, and
+ *   InnerSphereEBCylinder. These are in a Block group called "InnerSphereB",
+ *   and all of these border the inner excision boundary "B".
  *
  * If \f$c_A\f$ and \f$c_B\f$ are the input parameters center_A and
  * center_B, \f$r_A\f$ and \f$r_B\f$ are the input parameters radius_A and
@@ -149,48 +156,41 @@ namespace domain::creators {
  */
 class CylindricalBinaryCompactObject : public DomainCreator<3> {
  public:
-  using maps_list = tmpl::flatten<
-      tmpl::list<domain::CoordinateMap<
-                     Frame::BlockLogical, Frame::Inertial,
-                     CoordinateMaps::ProductOf3Maps<CoordinateMaps::Interval,
-                                                    CoordinateMaps::Interval,
-                                                    CoordinateMaps::Interval>,
-                     CoordinateMaps::UniformCylindricalEndcap,
-                     CoordinateMaps::DiscreteRotation<3>>,
-                 domain::CoordinateMap<
-                     Frame::BlockLogical, Frame::Inertial,
-                     CoordinateMaps::ProductOf2Maps<CoordinateMaps::Wedge<2>,
-                                                    CoordinateMaps::Interval>,
-                     CoordinateMaps::UniformCylindricalEndcap,
-                     CoordinateMaps::DiscreteRotation<3>>,
-                 domain::CoordinateMap<
-                     Frame::BlockLogical, Frame::Inertial,
-                     CoordinateMaps::ProductOf3Maps<CoordinateMaps::Interval,
-                                                    CoordinateMaps::Interval,
-                                                    CoordinateMaps::Interval>,
-                     CoordinateMaps::UniformCylindricalFlatEndcap,
-                     CoordinateMaps::DiscreteRotation<3>>,
-                 domain::CoordinateMap<
-                     Frame::BlockLogical, Frame::Inertial,
-                     CoordinateMaps::ProductOf2Maps<CoordinateMaps::Wedge<2>,
-                                                    CoordinateMaps::Interval>,
-                     CoordinateMaps::UniformCylindricalFlatEndcap,
-                     CoordinateMaps::DiscreteRotation<3>>,
-                 domain::CoordinateMap<
-                     Frame::BlockLogical, Frame::Inertial,
-                     CoordinateMaps::ProductOf2Maps<CoordinateMaps::Wedge<2>,
-                                                    CoordinateMaps::Interval>,
-                     CoordinateMaps::UniformCylindricalSide,
-                     CoordinateMaps::DiscreteRotation<3>>,
-                 domain::CoordinateMap<
-                     Frame::BlockLogical, Frame::Inertial,
-                     domain::CoordinateMaps::ProductOf2Maps<
-                         CoordinateMaps::Interval, CoordinateMaps::Identity<2>>,
-                     domain::CoordinateMaps::SphericalToCartesianPfaffian,
-                     CoordinateMaps::ProductOf3Maps<CoordinateMaps::Affine,
-                                                    CoordinateMaps::Affine,
-                                                    CoordinateMaps::Affine>>,
-                 bco::TimeDependentMapOptions<true>::maps_list>>;
+  // Each filled cylinder is a single ZernikeB2 block and each side is a single
+  // Fourier annular block, built by composing a polar disk/annulus map with the
+  // appropriate UniformCylindrical* endcap/side map and a DiscreteRotation.
+  using filled_cylinder_logical_map =
+      CoordinateMaps::ProductOf3Maps<CoordinateMaps::Affine,
+                                     CoordinateMaps::Identity<1>,
+                                     CoordinateMaps::Interval>;
+  using polar_to_cartesian_map =
+      CoordinateMaps::ProductOf2Maps<CoordinateMaps::PolarToCartesian,
+                                     CoordinateMaps::Identity<1>>;
+  using maps_list = tmpl::flatten<tmpl::list<
+      domain::CoordinateMap<Frame::BlockLogical, Frame::Inertial,
+                            filled_cylinder_logical_map, polar_to_cartesian_map,
+                            CoordinateMaps::DiscreteRotation<3>,
+                            CoordinateMaps::UniformCylindricalEndcap,
+                            CoordinateMaps::DiscreteRotation<3>>,
+      domain::CoordinateMap<Frame::BlockLogical, Frame::Inertial,
+                            filled_cylinder_logical_map, polar_to_cartesian_map,
+                            CoordinateMaps::DiscreteRotation<3>,
+                            CoordinateMaps::UniformCylindricalFlatEndcap,
+                            CoordinateMaps::DiscreteRotation<3>>,
+      domain::CoordinateMap<Frame::BlockLogical, Frame::Inertial,
+                            filled_cylinder_logical_map, polar_to_cartesian_map,
+                            CoordinateMaps::DiscreteRotation<3>,
+                            CoordinateMaps::UniformCylindricalSide,
+                            CoordinateMaps::DiscreteRotation<3>>,
+      domain::CoordinateMap<
+          Frame::BlockLogical, Frame::Inertial,
+          CoordinateMaps::ProductOf2Maps<CoordinateMaps::Affine,
+                                         CoordinateMaps::Identity<2>>,
+          CoordinateMaps::SphericalToCartesianPfaffian,
+          CoordinateMaps::ProductOf3Maps<CoordinateMaps::Affine,
+                                         CoordinateMaps::Affine,
+                                         CoordinateMaps::Affine>>,
+      bco::TimeDependentMapOptions<true>::maps_list>>;
 
   struct CenterA {
     using type = std::array<double, 3>;
@@ -222,49 +222,39 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
     static constexpr Options::String help = {
         "Add an extra spherical layer of Blocks around Object B."};
   };
+  struct IncludeOuterSphere {
+    using type = bool;
+    static constexpr Options::String help = {
+        "Add an extra spherical layer of Blocks inside the outer boundary."};
+  };
   struct OuterRadius {
     using type = double;
     static constexpr Options::String help = {
         "Grid-coordinate radius of outer boundary."};
   };
-  struct UseEquiangularMap {
-    using type = bool;
-    static constexpr Options::String help = {
-        "Distribute grid points equiangularly in 2d wedges."};
-    static bool suggested_value() { return false; }
-  };
-
   struct InitialRefinement {
-    using type = std::variant<
-        size_t, std::array<size_t, 3>, std::vector<std::array<size_t, 3>>,
-        std::unordered_map<std::string, std::array<size_t, 3>>,
-        std::unordered_map<std::string,
-                           std::variant<std::array<size_t, 3>, size_t>>>;
+    using type =
+        std::variant<size_t, std::array<size_t, 3>,
+                     std::vector<std::array<size_t, 3>>,
+                     std::unordered_map<std::string, std::array<size_t, 3>>>;
     static constexpr Options::String help = {
         "Initial refinement level. Specify one of: a single number, a list "
         "representing [r, theta, perp], or such a list for every block in the "
         "domain. Here 'r' is the radial direction normal to the inner and "
         "outer boundaries, 'theta' is the periodic direction, and 'perp' is "
-        "the third direction. Note that for spherical shell block groups "
-        "('InnerSphereA', 'InnerSphereB', and 'OuterSphere'), you must instead "
-        "specify refinement as a single value representing radial refinement."};
+        "the third direction."};
   };
   struct InitialGridPoints {
-    using type = std::variant<
-        size_t, std::array<size_t, 3>, std::vector<std::array<size_t, 3>>,
-        std::unordered_map<std::string, std::array<size_t, 3>>,
-        std::unordered_map<std::string, std::variant<std::array<size_t, 3>,
-                                                     std::array<size_t, 2>>>>;
+    using type =
+        std::variant<size_t, std::array<size_t, 3>,
+                     std::vector<std::array<size_t, 3>>,
+                     std::unordered_map<std::string, std::array<size_t, 3>>>;
     static constexpr Options::String help = {
         "Initial number of grid points. Specify one of: a single number, a "
         "list representing [r, theta, perp], or such a list for every block in "
         "the domain. Here 'r' is the radial direction normal to the inner and "
         "outer boundaries, 'theta' is the periodic direction, and 'perp' is "
-        "the third direction. The exception to this is that for spherical "
-        "shell blocks groups ('InnerSphereA', 'InnerSphereB', 'OuterSphere'),"
-        "you must instead specify grid points as [r, L_max]. The exception to "
-        "this is if a single number is specified for global initial grid "
-        "points."};
+        "the third direction."};
   };
 
   struct BoundaryConditions {
@@ -298,7 +288,7 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
   template <typename Metavariables>
   using options = tmpl::append<
       tmpl::list<CenterA, CenterB, RadiusA, RadiusB, IncludeInnerSphereA,
-                 IncludeInnerSphereB, OuterRadius, UseEquiangularMap,
+                 IncludeInnerSphereB, IncludeOuterSphere, OuterRadius,
                  InitialRefinement, InitialGridPoints, TimeDependentMaps>,
       tmpl::conditional_t<
           domain::BoundaryConditions::has_boundary_conditions_base_v<
@@ -321,8 +311,8 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
   CylindricalBinaryCompactObject(
       std::array<double, 3> center_A, std::array<double, 3> center_B,
       double radius_A, double radius_B, bool include_inner_sphere_A,
-      bool include_inner_sphere_B, double outer_radius,
-      bool use_equiangular_map,
+      bool include_inner_sphere_B, bool include_outer_sphere,
+      double outer_radius,
       const typename InitialRefinement::type& initial_refinement,
       const typename InitialGridPoints::type& initial_grid_points,
       std::optional<bco::TimeDependentMapOptions<true>> time_dependent_options =
@@ -385,8 +375,8 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
   double outer_radius_B_{};
   bool include_inner_sphere_A_{};
   bool include_inner_sphere_B_{};
+  bool include_outer_sphere_{};
   double outer_radius_{};
-  bool use_equiangular_map_{false};
   typename std::vector<std::array<size_t, 3>> initial_refinement_{};
   typename std::vector<std::array<size_t, 3>> initial_grid_points_{};
   // cut_spheres_offset_factor_ is eta in Eq. (A.9) of
