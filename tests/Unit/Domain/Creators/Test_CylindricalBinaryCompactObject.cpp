@@ -36,6 +36,7 @@
 #include "Domain/FunctionsOfTime/QuaternionFunctionOfTime.hpp"
 #include "Domain/InterfaceLogicalCoordinates.hpp"
 #include "Domain/Structure/Direction.hpp"
+#include "Domain/Structure/NeighborIsConforming.hpp"
 #include "Domain/Structure/ObjectLabel.hpp"
 #include "Domain/Structure/Side.hpp"
 #include "Framework/TestCreation.hpp"
@@ -74,6 +75,11 @@ void check_face_conformity(const Domain<3>& domain) {
       for (const size_t neighbor_id : block_neighbors.ids()) {
         const auto& neighbor = blocks[neighbor_id];
         const auto& orientation = block_neighbors.orientation(neighbor_id);
+        if (not domain::neighbor_is_conforming(block.topologies(),
+                                               neighbor.topologies(), direction,
+                                               orientation)) {
+          continue;
+        }
         const auto xi = interface_logical_coordinates(face_mesh, direction);
         tnsr::I<DataVector, 3, Frame::BlockLogical> xi_host{};
         tnsr::I<DataVector, 3, Frame::BlockLogical> xi_neighbor{};
@@ -143,32 +149,16 @@ block_names_and_groups(const bool include_inner_sphere_A,
       {"InnerB", {"EBFilledCylinder", "EBCylinder", "MBFilledCylinder"}}};
 
   if (include_inner_sphere_A) {
-    block_names.insert(block_names.end(), {"InnerSphereEAFilledCylinder",
-                                           "InnerSphereMAFilledCylinder",
-                                           "InnerSphereEACylinder"});
-    block_groups.insert(
-        {"InnerSphereA",
-         {"InnerSphereEAFilledCylinder", "InnerSphereMAFilledCylinder",
-          "InnerSphereEACylinder"}});
+    block_names.push_back("SphereA");
+    block_groups.insert({"InnerSphereA", {"SphereA"}});
   }
   if (include_inner_sphere_B) {
-    block_names.insert(block_names.end(), {"InnerSphereEBFilledCylinder",
-                                           "InnerSphereMBFilledCylinder",
-                                           "InnerSphereEBCylinder"});
-    block_groups.insert(
-        {"InnerSphereB",
-         {"InnerSphereEBFilledCylinder", "InnerSphereMBFilledCylinder",
-          "InnerSphereEBCylinder"}});
+    block_names.push_back("SphereB");
+    block_groups.insert({"InnerSphereB", {"SphereB"}});
   }
   if (include_outer_sphere) {
-    block_names.insert(
-        block_names.end(),
-        {"OuterSphereCAFilledCylinder", "OuterSphereCBFilledCylinder",
-         "OuterSphereCACylinder", "OuterSphereCBCylinder"});
-    block_groups.insert(
-        {"OuterSphere",
-         {"OuterSphereCAFilledCylinder", "OuterSphereCBFilledCylinder",
-          "OuterSphereCACylinder", "OuterSphereCBCylinder"}});
+    block_names.push_back("SphereC");
+    block_groups.insert({"OuterSphere", {"SphereC"}});
   }
 
   return std::make_pair(block_names, block_groups);

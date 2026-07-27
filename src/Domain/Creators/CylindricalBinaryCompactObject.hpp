@@ -102,34 +102,27 @@ namespace domain::creators {
  *
  * The Blocks are named as follows:
  * - Each of CAFilledCylinder, EAFilledCylinder, EBFilledCylinder,
- *   MAFilledCylinder, MBFilledCylinder, and CBFilledCylinder consists
- *   of 5 blocks, named 'Center', 'East', 'North', 'West', and
- *   'South', so an example of a valid block name is
- *   'CAFilledCylinderCenter'.
- * - Each of CACylinder, EACylinder, EBCylinder, and CBCylinder
- *   consists of 4 blocks, named 'East', 'North', 'West', and 'South',
- *   so an example of a valid block name is 'CACylinderEast'.
+ *   MAFilledCylinder, MBFilledCylinder, and CBFilledCylinder is a
+ *   single filled-cylinder block.
+ * - Each of CACylinder, EACylinder, EBCylinder, and CBCylinder is a
+ *   single cylindrical-side block.
  * - The Block group called "Outer" consists of all the CA and CB blocks. They
  *   all border the outer boundary if `IncludeOuterSphere` is false.
- * - If `IncludeOuterSphere` is true, then there are more blocks named
- *   OuterSphereCAFilledCylinder, OuterSphereCBFilledCylinder,
- *   OuterSphereCACylinder, and OuterSphereCBCylinder.
- *   These are in a Block group called "OuterSphere",
- *   and all of these border the outer boundary.
+ * - If `IncludeOuterSphere` is true, then there is a spherical-shell block
+ *   named SphereC. It is in a Block group called "OuterSphere" and borders
+ *   the outer boundary.
  * - The Block group called "InnerA" consists of all the EA, and MA
  *   blocks. They all border the inner boundary "A" if
  *   `IncludeInnerSphereA` is false.
- * - If `IncludeInnerSphereA` is true, then there are new blocks
- *   InnerSphereEAFilledCylinder, InnerSphereMAFilledCylinder, and
- *   InnerSphereEACylinder. These are in a Block group called "InnerSphereA",
- *   and all of these border the inner excision boundary "A".
+ * - If `IncludeInnerSphereA` is true, then there is a spherical-shell block
+ *   named SphereA. It is in a Block group called "InnerSphereA" and borders
+ *   the inner excision boundary "A".
  * - The Block group called "InnerB" consists of all the EB, and MB
  *   blocks. They all border the inner boundary "B" if
  *   `IncludeInnerSphereB` is false.
- * - If `IncludeInnerSphereB` is true, then there are new blocks
- *   InnerSphereEBFilledCylinder, InnerSphereMBFilledCylinder, and
- *   InnerSphereEBCylinder. These are in a Block group called "InnerSphereB",
- *   and all of these border the inner excision boundary "B".
+ * - If `IncludeInnerSphereB` is true, then there is a spherical-shell block
+ *   named SphereB. It is in a Block group called "InnerSphereB" and borders
+ *   the inner excision boundary "B".
  *
  * If \f$c_A\f$ and \f$c_B\f$ are the input parameters center_A and
  * center_B, \f$r_A\f$ and \f$r_B\f$ are the input parameters radius_A and
@@ -239,10 +232,11 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
                      std::unordered_map<std::string, std::array<size_t, 3>>>;
     static constexpr Options::String help = {
         "Initial refinement level. Specify one of: a single number, a list "
-        "representing [r, theta, perp], or such a list for every block in the "
-        "domain. Here 'r' is the radial direction normal to the inner and "
-        "outer boundaries, 'theta' is the periodic direction, and 'perp' is "
-        "the third direction."};
+        "representing [r, theta, perp], such a list for every block in the "
+        "domain, or a map from block names or block groups to such lists. "
+        "Here 'r' is the radial direction normal to the inner and outer "
+        "boundaries, 'theta' is the periodic direction, and 'perp' is the "
+        "third direction."};
   };
   struct InitialGridPoints {
     using type =
@@ -251,10 +245,11 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
                      std::unordered_map<std::string, std::array<size_t, 3>>>;
     static constexpr Options::String help = {
         "Initial number of grid points. Specify one of: a single number, a "
-        "list representing [r, theta, perp], or such a list for every block in "
-        "the domain. Here 'r' is the radial direction normal to the inner and "
-        "outer boundaries, 'theta' is the periodic direction, and 'perp' is "
-        "the third direction."};
+        "list representing [r, theta, perp], such a list for every block in "
+        "the domain, or a map from block names or block groups to such lists. "
+        "Here 'r' is the radial direction normal to the inner and outer "
+        "boundaries, 'theta' is the periodic direction, and 'perp' is the "
+        "third direction."};
   };
 
   struct BoundaryConditions {
