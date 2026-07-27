@@ -554,27 +554,28 @@ void test_parse_errors() {
       Catch::Matchers::ContainsSubstring(
           "Must specify either both inner and outer boundary "
           "conditions or neither."));
-  // TODO : replace these tests? remove std::array<3> as option?
-  //   // InitialRefinement and InitialGridPoints
-  //   CHECK_THROWS_WITH(
-  //       domain::creators::CylindricalBinaryCompactObject(
-  //           {{2.0, 0.05, 0.0}}, {-3.0, 0.05, 0.0}, 1.0, 0.4, false,
-  //           false, 25.0, false, std::array<size_t, 3>{1_st, 1_st, 1_st},
-  //           3_st, std::nullopt, create_inner_boundary_condition(),
-  //           create_outer_boundary_condition(), Options::Context{false, {}, 1,
-  //           1}),
-  //       Catch::Matchers::ContainsSubstring("Angular h-refinement"));
-  //   CHECK_THROWS_WITH(
-  //       domain::creators::CylindricalBinaryCompactObject(
-  //           {{2.0, 0.05, 0.0}}, {-3.0, 0.05, 0.0}, 1.0, 0.4, false,
-  //           false, 25.0, false, 1_st, std::array<size_t, 3>{{3_st, 4_st,
-  //           5_st}}, std::nullopt, create_inner_boundary_condition(),
-  //           create_outer_boundary_condition(), Options::Context{false, {}, 1,
-  //           1}),
-  //       Catch::Matchers::ContainsSubstring("must have L_max = M_max"));
-
-  // TODO : need to add new parse tests for filled cylinder points and
-  // for h refinement for both filled and hollow
+  // InitialRefinement and InitialGridPoints
+  CHECK_THROWS_WITH(
+      domain::creators::CylindricalBinaryCompactObject(
+          {{2.0, 0.05, 0.0}}, {-3.0, 0.05, 0.0}, 1.0, 0.4, false, false, 25.0,
+          std::array<size_t, 3>{1_st, 1_st, 1_st}, 3_st, std::nullopt,
+          create_inner_boundary_condition(), create_outer_boundary_condition(),
+          Options::Context{false, {}, 1, 1}),
+      Catch::Matchers::ContainsSubstring("Angular h-refinement"));
+  CHECK_THROWS_WITH(
+      domain::creators::CylindricalBinaryCompactObject(
+          {{2.0, 0.05, 0.0}}, {-3.0, 0.05, 0.0}, 1.0, 0.4, false, false, 25.0,
+          1_st, std::array<size_t, 3>{{3_st, 9_st, 7_st}}, std::nullopt,
+          create_inner_boundary_condition(), create_outer_boundary_condition(),
+          Options::Context{false, {}, 1, 1}),
+      Catch::Matchers::ContainsSubstring("must have L_max = M_max"));
+  CHECK_THROWS_WITH(
+      domain::creators::CylindricalBinaryCompactObject(
+          {{2.0, 0.05, 0.0}}, {-3.0, 0.05, 0.0}, 1.0, 0.4, false, false, 25.0,
+          1_st, std::array<size_t, 3>{{3_st, 8_st, 8_st}}, std::nullopt,
+          create_inner_boundary_condition(), create_outer_boundary_condition(),
+          Options::Context{false, {}, 1, 1}),
+      Catch::Matchers::ContainsSubstring("odd number of angular grid points"));
 }
 
 // This matches the structure in the option string
