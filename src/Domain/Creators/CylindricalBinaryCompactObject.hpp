@@ -229,7 +229,7 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
         "of single numbers for every block group in the domain, every block "
         "name in the domain, or a mix of block groups and blocks. Each single "
         "number represents the radial refinement for spherical shell blocks "
-        "or z refinement for cylindrical blocks.\n\n Note that the z direction "
+        "and z refinement for cylindrical blocks.\n\nNote that the z direction "
         "in cylinder blocks will roughly correspond to refinement in a "
         "direction parallel to the axis of separation between the two objects. "
         "Because filled cylinder blocks lie along the axis of separation but "
