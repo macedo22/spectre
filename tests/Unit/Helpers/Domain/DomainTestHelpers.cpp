@@ -290,52 +290,83 @@ void check_block_face_grid_points_align(
           {3, 1},
           {Spectral::Basis::Legendre, Spectral::Basis::Cartoon},
           {Spectral::Quadrature::Gauss, Spectral::Quadrature::AxialSymmetry}};
-    } else if (alg::equal(host_block.topologies(), domain::topologies::full_cylinder)) {
-      if (alg::equal(neighbor_block.topologies(), domain::topologies::full_cylinder) and
-          (direction == Direction<VolumeDim>::upper_zeta() or direction == Direction<VolumeDim>::lower_zeta())) {
+    } else if (alg::equal(host_block.topologies(),
+                          domain::topologies::full_cylinder)) {
+      if (alg::equal(neighbor_block.topologies(),
+                     domain::topologies::full_cylinder) and
+          (direction == Direction<VolumeDim>::upper_zeta() or
+           direction == Direction<VolumeDim>::lower_zeta())) {
         face_mesh = Mesh<VolumeDim - 1>{
-          {3, 9},
-          {Spectral::Basis::ZernikeB2, Spectral::Basis::ZernikeB2},
-          {Spectral::Quadrature::GaussRadauUpper, Spectral::Quadrature::Equiangular}};
-      } else if (alg::equal(neighbor_block.topologies(), domain::topologies::cylindrical_shell) and
-          (direction == Direction<VolumeDim>::upper_xi() or direction == Direction<VolumeDim>::lower_xi())) {
+            {3, 9},
+            {Spectral::Basis::ZernikeB2, Spectral::Basis::ZernikeB2},
+            {Spectral::Quadrature::GaussRadauUpper,
+             Spectral::Quadrature::Equiangular}};
+      } else if (alg::equal(neighbor_block.topologies(),
+                            domain::topologies::cylindrical_shell) and
+                 (direction == Direction<VolumeDim>::upper_xi() or
+                  direction == Direction<VolumeDim>::lower_xi())) {
         face_mesh = Mesh<VolumeDim - 1>{
-          {9, 5},
-          {Spectral::Basis::ZernikeB2, Spectral::Basis::Legendre},
-          {Spectral::Quadrature::Equiangular, Spectral::Quadrature::GaussLobatto}};
-      } else if (alg::equal(neighbor_block.topologies(), domain::topologies::spherical_shell) and
-          (direction == Direction<VolumeDim>::upper_xi() or direction == Direction<VolumeDim>::lower_xi())) {
-        face_mesh = Mesh<VolumeDim - 1>{
-          {3, 9},
-          {Spectral::Basis::ZernikeB2, Spectral::Basis::ZernikeB2},
-          {Spectral::Quadrature::GaussRadauUpper, Spectral::Quadrature::Equiangular}};
+            {9, 5},
+            {Spectral::Basis::ZernikeB2, Spectral::Basis::Legendre},
+            {Spectral::Quadrature::Equiangular,
+             Spectral::Quadrature::GaussLobatto}};
       } else {
-        // ERROR("TODO");
-        return;
+        ERROR(
+            "check_block_face_grid_points_align() for a filled cylinder host "
+            "block is only implemented for when a neighbor block is a filled "
+            "cylinder in the +/-zeta direction or a hollow cylinder in the "
+            "+/-xi direction.");
       }
-    } else if (alg::equal(host_block.topologies(), domain::topologies::cylindrical_shell)) {
-      if (alg::equal(neighbor_block.topologies(), domain::topologies::cylindrical_shell) and
-          (direction == Direction<VolumeDim>::upper_xi() or direction == Direction<VolumeDim>::lower_xi())) {
+    } else if (alg::equal(host_block.topologies(),
+                          domain::topologies::cylindrical_shell)) {
+      if (alg::equal(neighbor_block.topologies(),
+                     domain::topologies::cylindrical_shell) and
+          (direction == Direction<VolumeDim>::upper_xi() or
+           direction == Direction<VolumeDim>::lower_xi())) {
         face_mesh = Mesh<VolumeDim - 1>{
-          {3, 9},
-          {Spectral::Basis::Fourier, Spectral::Basis::Legendre},
-          {Spectral::Quadrature::Equiangular, Spectral::Quadrature::GaussLobatto}};
-      } else if (alg::equal(neighbor_block.topologies(), domain::topologies::full_cylinder) and
-          (direction == Direction<VolumeDim>::upper_zeta() or direction == Direction<VolumeDim>::lower_zeta())) {
+            {3, 9},
+            {Spectral::Basis::Fourier, Spectral::Basis::Legendre},
+            {Spectral::Quadrature::Equiangular,
+             Spectral::Quadrature::GaussLobatto}};
+      } else if (alg::equal(neighbor_block.topologies(),
+                            domain::topologies::cylindrical_shell) and
+                 (direction == Direction<VolumeDim>::upper_zeta() or
+                  direction == Direction<VolumeDim>::lower_zeta())) {
         face_mesh = Mesh<VolumeDim - 1>{
-          {9, 5},
-          {Spectral::Basis::Legendre, Spectral::Basis::Fourier},
-          {Spectral::Quadrature::GaussLobatto, Spectral::Quadrature::Equiangular}};
-      } else if (alg::equal(neighbor_block.topologies(), domain::topologies::spherical_shell) and
-          (direction == Direction<VolumeDim>::upper_zeta() or direction == Direction<VolumeDim>::lower_zeta())) {
+            {9, 5},
+            {Spectral::Basis::Legendre, Spectral::Basis::Fourier},
+            {Spectral::Quadrature::GaussLobatto,
+             Spectral::Quadrature::Equiangular}};
+      } else if (alg::equal(neighbor_block.topologies(),
+                            domain::topologies::full_cylinder) and
+                 (direction == Direction<VolumeDim>::upper_zeta() or
+                  direction == Direction<VolumeDim>::lower_zeta())) {
         face_mesh = Mesh<VolumeDim - 1>{
-          {3, 9},
-          {Spectral::Basis::Fourier, Spectral::Basis::Legendre},
-          {Spectral::Quadrature::Equiangular, Spectral::Quadrature::GaussLobatto}};
+            {9, 5},
+            {Spectral::Basis::Legendre, Spectral::Basis::Fourier},
+            {Spectral::Quadrature::GaussLobatto,
+             Spectral::Quadrature::Equiangular}};
+      } else if (alg::equal(neighbor_block.topologies(),
+                            domain::topologies::spherical_shell) and
+                 (direction == Direction<VolumeDim>::upper_xi() or
+                  direction == Direction<VolumeDim>::lower_xi())) {
+        face_mesh = Mesh<VolumeDim - 1>{
+            {3, 9},
+            {Spectral::Basis::Fourier, Spectral::Basis::Legendre},
+            {Spectral::Quadrature::Equiangular,
+             Spectral::Quadrature::GaussLobatto}};
       } else {
-        // ERROR("TODO");
-        return;
+        ERROR(
+            "check_block_face_grid_points_align() for a hollow cylinder host "
+            "block is only implemented for when a neighbor block is a hollow "
+            "cylinder in the +/-xi direction or a filled cylinder in the "
+            "+/-zeta direction.");
       }
+    } else if (alg::equal(host_block.topologies(),
+                          domain::topologies::spherical_shell)) {
+      ERROR(
+          "check_block_face_grid_points_align() is not implemented for "
+          "spherical shell host blocks.");
     } else {
       face_mesh = Mesh<VolumeDim - 1>{3_st, Spectral::Basis::Legendre,
                                     Spectral::Quadrature::Gauss};
@@ -600,33 +631,21 @@ void test_physical_separation(
         } else if constexpr (VolumeDim == 3) {
            // For cylinder blocks, we don't test physical separation of corners
            // with physical_separation() because there are no corners.
-           if ((blocks[i].topologies() ==
-                  domain::topologies::full_cylinder and
+           if ((blocks[i].topologies() == domain::topologies::full_cylinder and
+                blocks[j].topologies() == domain::topologies::full_cylinder) or
+               (blocks[i].topologies() == domain::topologies::full_cylinder and
                 blocks[j].topologies() ==
-                  domain::topologies::full_cylinder) or
+                    domain::topologies::cylindrical_shell) or
                (blocks[i].topologies() ==
-                  domain::topologies::full_cylinder and
+                    domain::topologies::cylindrical_shell and
                 blocks[j].topologies() ==
-                  domain::topologies::cylindrical_shell) or
+                    domain::topologies::cylindrical_shell) or
                (blocks[i].topologies() ==
-                  domain::topologies::full_cylinder and
-                blocks[j].topologies() ==
-                  domain::topologies::spherical_shell) or
-               (blocks[i].topologies() ==
-                  domain::topologies::cylindrical_shell and
-                blocks[j].topologies() ==
-                  domain::topologies::cylindrical_shell) or
-               (blocks[i].topologies() ==
-                  domain::topologies::cylindrical_shell and
-                blocks[j].topologies() ==
-                  domain::topologies::full_cylinder) or
-               (blocks[i].topologies() ==
-                  domain::topologies::full_cylinder and
-                blocks[j].topologies() ==
-                  domain::topologies::spherical_shell)) {
-              domain::check_block_face_grid_points_align(blocks[i], blocks[j],
-                                                       time, functions_of_time);
-          }
+                    domain::topologies::cylindrical_shell and
+                blocks[j].topologies() == domain::topologies::full_cylinder)) {
+             domain::check_block_face_grid_points_align(
+                 blocks[i], blocks[j], time, functions_of_time);
+           }
         }
       }
     }
