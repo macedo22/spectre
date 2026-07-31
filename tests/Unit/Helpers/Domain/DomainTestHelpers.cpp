@@ -278,7 +278,10 @@ void check_block_face_grid_points_align(
   const auto orientation =
       find_neighbor_orientation(host_block, neighbor_block);
   // Set up a Mesh on the shared face. Corner points are already checked by
-  // physical_separation, so check on Gauss points
+  // physical_separation, so check on Gauss points. For cylindrical blocks,
+  // GaussLobatto points are used so that endpoints are also checked since
+  // physical_separation cannot be called for cylindrical blocks since they do
+  // not have corners.
   Mesh<VolumeDim - 1> face_mesh;
   //   - domain::topologies::cylindrical_shell = {I1, S1, I1}
   // - domain::topologies::full_cylinder = {B2Radial, B2Angular, I1}
