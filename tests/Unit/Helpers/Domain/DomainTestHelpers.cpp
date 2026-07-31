@@ -263,106 +263,6 @@ tnsr::I<double, VolumeDim, Frame::BlockLogical> point_in_neighbor_frame(
   return get_corner_of_orthant(point_get_orthant);
 }
 
-// This tests whether a logical grid point on the face of the host Block
-// corresponds to the same logical grid point on the abutting face of the
-// neighbor Block (taking into account the discrete rotation of the
-// OrientationMap from the host Block to the neighbor Block).
-template <size_t VolumeDim>
-void check_block_face_grid_points_align(
-    const Block<VolumeDim>& host_block, const Block<VolumeDim>& neighbor_block,
-    double time = std::numeric_limits<double>::signaling_NaN(),
-    const std::unordered_map<
-        std::string, std::unique_ptr<domain::FunctionsOfTime::FunctionOfTime>>&
-        functions_of_time = {}) {
-  const auto direction = find_direction_to_neighbor(host_block, neighbor_block);
-  const auto orientation =
-      find_neighbor_orientation(host_block, neighbor_block);
-  // Set up a Mesh on the shared face. Corner points are already checked by
-  // physical_separation, so check on Gauss points
-  Mesh<VolumeDim - 1> face_mesh;
-  if (host_block.topologies()[VolumeDim - 1] ==
-      domain::Topology::CartoonCylinder) {
-    if constexpr (VolumeDim == 3) {
-      face_mesh = Mesh<VolumeDim - 1>{
-          {3, 1},
-          {Spectral::Basis::Legendre, Spectral::Basis::Cartoon},
-          {Spectral::Quadrature::Gauss, Spectral::Quadrature::AxialSymmetry}};
-    } else {
-      ERROR("Cartoon basis used with non 3D mesh, got dim = " << VolumeDim);
-    }
-  } else {
-    face_mesh = Mesh<VolumeDim - 1>{3_st, Spectral::Basis::Legendre,
-                                    Spectral::Quadrature::Gauss};
-  }
-  // We want block logical coordinates on face_mesh on the host side and the
-  // neighbor. The following returns element logical coordinates in the host
-  // frame, which we then copy into tensors holding block logical coordinates,
-  // taking into account the OrientationMap between the host and neighbor
-  // blocks.
-  tnsr::I<DataVector, VolumeDim, Frame::ElementLogical> xi =
-      interface_logical_coordinates(face_mesh, direction);
-  tnsr::I<DataVector, VolumeDim, Frame::BlockLogical> xi_host{};
-  tnsr::I<DataVector, VolumeDim, Frame::BlockLogical> xi_neighbor{};
-  for (size_t d = 0; d < VolumeDim; ++d) {
-    // assume an Element covering the Block which maps element logical
-    // coordinates to block logical coordinates with the identity map
-    xi_host[d] = xi[d];
-    const auto dth_upper_direction_in_neighbor_frame =
-        orientation(Direction<VolumeDim>(d, Side::Upper));
-    // This takes into account the permutation of dimensions induced by the
-    // OrientationMap
-    xi_neighbor[dth_upper_direction_in_neighbor_frame.dimension()] = xi[d];
-    // There is a sign flip if this is the dimension of the direction to the
-    // neighbor as the logical coord is -1/+1 on the lower/upper side of the
-    // block.
-    // There is also a sign flip if the mapped upper direction becomes a lower
-    // direction
-    if ((dth_upper_direction_in_neighbor_frame.side() == Side::Lower) xor
-        (d == direction.dimension())) {
-      xi_neighbor[dth_upper_direction_in_neighbor_frame.dimension()] *= -1.0;
-    }
-  }
-  if (host_block.is_time_dependent() != neighbor_block.is_time_dependent()) {
-    ERROR(
-        "Both host_block and neighbor_block must have the same time "
-        "dependence, but host_block has time-dependence status: "
-        << std::boolalpha << host_block.is_time_dependent()
-        << " and neighbor_block has: " << neighbor_block.is_time_dependent());
-  }
-  CAPTURE(xi_host);
-  CAPTURE(xi_neighbor);
-  // Check that each grid point on the face Mesh has the same grid and
-  // inertial coordinates when mapped from the logical coordinates of each
-  // Block.
-  if (host_block.is_time_dependent()) {
-    ASSERT(not std::isnan(time),
-           "Blocks have time dependent maps but a time to evaluate at was "
-           "not passed");
-    const auto& host_map_logical_to_grid =
-        host_block.moving_mesh_logical_to_grid_map();
-    const auto& host_map_grid_to_inertial =
-        host_block.moving_mesh_grid_to_inertial_map();
-    const auto& neighbor_map_logical_to_grid =
-        neighbor_block.moving_mesh_logical_to_grid_map();
-    const auto& neighbor_map_grid_to_inertial =
-        neighbor_block.moving_mesh_grid_to_inertial_map();
-    const auto x_grid_self = host_map_logical_to_grid(xi_host);
-    const auto x_grid_neighbor = neighbor_map_logical_to_grid(xi_neighbor);
-    CHECK_ITERABLE_APPROX(x_grid_self, x_grid_neighbor);
-    const auto x_inertial_self =
-        host_map_grid_to_inertial(x_grid_self, time, functions_of_time);
-    const auto x_inertial_neighbor =
-        neighbor_map_grid_to_inertial(x_grid_neighbor, time, functions_of_time);
-    CHECK_ITERABLE_APPROX(x_inertial_self, x_inertial_neighbor);
-  } else {
-    const auto& host_map = host_block.stationary_map();
-    const auto& neighbor_map = neighbor_block.stationary_map();
-    const auto x_self = host_map(xi_host);
-    const auto x_neighbor = neighbor_map(xi_neighbor);
-    CHECK_ITERABLE_APPROX(x_self, x_neighbor);
-  }
-}
-
 // Given two Blocks which are neighbors, computes the max separation between
 // the abutting faces of the Blocks in the Frame::Inertial frame using the
 // CoordinateMaps of each block.
@@ -434,6 +334,173 @@ double physical_separation(
   return max_separation;
 }
 }  // namespace
+template <size_t VolumeDim>
+void check_block_face_grid_points_align(
+    const Block<VolumeDim>& host_block, const Block<VolumeDim>& neighbor_block,
+    double time,
+    const std::unordered_map<
+        std::string, std::unique_ptr<domain::FunctionsOfTime::FunctionOfTime>>&
+        functions_of_time) {
+  const auto direction = find_direction_to_neighbor(host_block, neighbor_block);
+  const auto orientation =
+      find_neighbor_orientation(host_block, neighbor_block);
+  // Set up a Mesh on the shared face. Corner points are already checked by
+  // physical_separation, so check on Gauss points
+  Mesh<VolumeDim - 1> face_mesh;
+  //   - domain::topologies::cylindrical_shell = {I1, S1, I1}
+  // - domain::topologies::full_cylinder = {B2Radial, B2Angular, I1}
+
+  // if constexpr () {
+
+  // }
+  if constexpr (VolumeDim == 3) {
+    if (host_block.topologies()[VolumeDim - 1] ==
+      domain::Topology::CartoonCylinder) {
+      face_mesh = Mesh<VolumeDim - 1>{
+          {3, 1},
+          {Spectral::Basis::Legendre, Spectral::Basis::Cartoon},
+          {Spectral::Quadrature::Gauss, Spectral::Quadrature::AxialSymmetry}};
+    } else if (alg::equal(host_block.topologies(), domain::topologies::full_cylinder)) {
+      if (alg::equal(neighbor_block.topologies(), domain::topologies::full_cylinder) and
+          (direction == Direction<VolumeDim>::upper_zeta() or direction == Direction<VolumeDim>::lower_zeta())) {
+        face_mesh = Mesh<VolumeDim - 1>{
+          {3, 9},
+          {Spectral::Basis::ZernikeB2, Spectral::Basis::ZernikeB2},
+          {Spectral::Quadrature::GaussRadauUpper, Spectral::Quadrature::Equiangular}};
+      } else if (alg::equal(neighbor_block.topologies(), domain::topologies::cylindrical_shell) and
+          (direction == Direction<VolumeDim>::upper_xi() or direction == Direction<VolumeDim>::lower_xi())) {
+        face_mesh = Mesh<VolumeDim - 1>{
+          {9, 5},
+          {Spectral::Basis::ZernikeB2, Spectral::Basis::Legendre},
+          {Spectral::Quadrature::Equiangular, Spectral::Quadrature::GaussLobatto}};
+      } else {
+        // ERROR("TODO");
+        return;
+      }
+    } else if (alg::equal(host_block.topologies(), domain::topologies::cylindrical_shell)) {
+      if (alg::equal(neighbor_block.topologies(), domain::topologies::cylindrical_shell) and
+          (direction == Direction<VolumeDim>::upper_xi() or direction == Direction<VolumeDim>::lower_xi())) {
+        face_mesh = Mesh<VolumeDim - 1>{
+          {3, 9},
+          {Spectral::Basis::Fourier, Spectral::Basis::Legendre},
+          {Spectral::Quadrature::Equiangular, Spectral::Quadrature::GaussLobatto}};
+      } else if (alg::equal(neighbor_block.topologies(), domain::topologies::full_cylinder) and
+          (direction == Direction<VolumeDim>::upper_zeta() or direction == Direction<VolumeDim>::lower_zeta())) {
+        face_mesh = Mesh<VolumeDim - 1>{
+          {9, 5},
+          {Spectral::Basis::Fourier, Spectral::Basis::Legendre},
+          {Spectral::Quadrature::Equiangular, Spectral::Quadrature::GaussLobatto}};
+      } else {
+        // ERROR("TODO");
+        return;
+      }
+    } else {
+      face_mesh = Mesh<VolumeDim - 1>{3_st, Spectral::Basis::Legendre,
+                                    Spectral::Quadrature::Gauss};
+    }
+  } else if (host_block.topologies()[VolumeDim - 1] ==
+      domain::Topology::CartoonCylinder) {
+    ERROR("Cartoon basis used with non 3D mesh, got dim = " << VolumeDim);
+  } else {
+    face_mesh = Mesh<VolumeDim - 1>{3_st, Spectral::Basis::Legendre,
+                                    Spectral::Quadrature::Gauss};
+  }
+
+  // if (host_block.topologies()[VolumeDim - 1] ==
+  //     domain::Topology::CartoonCylinder) {
+  //   if constexpr (VolumeDim == 3) {
+  //     face_mesh = Mesh<VolumeDim - 1>{
+  //         {3, 1},
+  //         {Spectral::Basis::Legendre, Spectral::Basis::Cartoon},
+  //         {Spectral::Quadrature::Gauss, Spectral::Quadrature::AxialSymmetry}};
+  //   } else {
+  //     ERROR("Cartoon basis used with non 3D mesh, got dim = " << VolumeDim);
+  //   }
+  // } else if (alg::equal(host_block.topologies(), domain::topologies::full_cylinder)) {
+  //   // if constexpr (VolumeDim == 3) {
+  //   //   face_mesh = Mesh<VolumeDim - 1>{
+  //   //       {3, 9},
+  //   //       {Spectral::Basis::ZernikeB2, Spectral::Basis::ZernikeB2, Spectral::Basis::Legendre},
+  //   //       {Spectral::Quadrature::GaussRadauUpper, Spectral::Quadrature::Equiangular, Spectral::Quadrature::Gauss}};
+  //   // } else {
+  //   //   ERROR("Cartoon basis used with non 3D mesh, got dim = " << VolumeDim);
+  //   // }
+  //   face_mesh = Mesh<VolumeDim - 1>{
+  //         {3, 9},
+  //         {Spectral::Basis::ZernikeB2, Spectral::Basis::ZernikeB2},
+  //         {Spectral::Quadrature::GaussRadauUpper, Spectral::Quadrature::Equiangular}};
+  // } else {
+  //   face_mesh = Mesh<VolumeDim - 1>{3_st, Spectral::Basis::Legendre,
+  //                                   Spectral::Quadrature::Gauss};
+  // }
+  // We want block logical coordinates on face_mesh on the host side and the
+  // neighbor. The following returns element logical coordinates in the host
+  // frame, which we then copy into tensors holding block logical coordinates,
+  // taking into account the OrientationMap between the host and neighbor
+  // blocks.
+  tnsr::I<DataVector, VolumeDim, Frame::ElementLogical> xi =
+      interface_logical_coordinates(face_mesh, direction);
+  tnsr::I<DataVector, VolumeDim, Frame::BlockLogical> xi_host{};
+  tnsr::I<DataVector, VolumeDim, Frame::BlockLogical> xi_neighbor{};
+  for (size_t d = 0; d < VolumeDim; ++d) {
+    // assume an Element covering the Block which maps element logical
+    // coordinates to block logical coordinates with the identity map
+    xi_host[d] = xi[d];
+    const auto dth_upper_direction_in_neighbor_frame =
+        orientation(Direction<VolumeDim>(d, Side::Upper));
+    // This takes into account the permutation of dimensions induced by the
+    // OrientationMap
+    xi_neighbor[dth_upper_direction_in_neighbor_frame.dimension()] = xi[d];
+    // There is a sign flip if this is the dimension of the direction to the
+    // neighbor as the logical coord is -1/+1 on the lower/upper side of the
+    // block.
+    // There is also a sign flip if the mapped upper direction becomes a lower
+    // direction
+    if ((dth_upper_direction_in_neighbor_frame.side() == Side::Lower) xor
+        (d == direction.dimension())) {
+      xi_neighbor[dth_upper_direction_in_neighbor_frame.dimension()] *= -1.0;
+    }
+  }
+  if (host_block.is_time_dependent() != neighbor_block.is_time_dependent()) {
+    ERROR(
+        "Both host_block and neighbor_block must have the same time "
+        "dependence, but host_block has time-dependence status: "
+        << std::boolalpha << host_block.is_time_dependent()
+        << " and neighbor_block has: " << neighbor_block.is_time_dependent());
+  }
+  CAPTURE(xi_host);
+  CAPTURE(xi_neighbor);
+  // Check that each grid point on the face Mesh has the same grid and
+  // inertial coordinates when mapped from the logical coordinates of each
+  // Block.
+  if (host_block.is_time_dependent()) {
+    ASSERT(not std::isnan(time),
+           "Blocks have time dependent maps but a time to evaluate at was "
+           "not passed");
+    const auto& host_map_logical_to_grid =
+        host_block.moving_mesh_logical_to_grid_map();
+    const auto& host_map_grid_to_inertial =
+        host_block.moving_mesh_grid_to_inertial_map();
+    const auto& neighbor_map_logical_to_grid =
+        neighbor_block.moving_mesh_logical_to_grid_map();
+    const auto& neighbor_map_grid_to_inertial =
+        neighbor_block.moving_mesh_grid_to_inertial_map();
+    const auto x_grid_self = host_map_logical_to_grid(xi_host);
+    const auto x_grid_neighbor = neighbor_map_logical_to_grid(xi_neighbor);
+    CHECK_ITERABLE_APPROX(x_grid_self, x_grid_neighbor);
+    const auto x_inertial_self =
+        host_map_grid_to_inertial(x_grid_self, time, functions_of_time);
+    const auto x_inertial_neighbor =
+        neighbor_map_grid_to_inertial(x_grid_neighbor, time, functions_of_time);
+    CHECK_ITERABLE_APPROX(x_inertial_self, x_inertial_neighbor);
+  } else {
+    const auto& host_map = host_block.stationary_map();
+    const auto& neighbor_map = neighbor_block.stationary_map();
+    const auto x_self = host_map(xi_host);
+    const auto x_neighbor = neighbor_map(xi_neighbor);
+    CHECK_ITERABLE_APPROX(x_self, x_neighbor);
+  }
+}
 }  // namespace domain
 
 namespace {
@@ -657,6 +724,13 @@ tnsr::i<DataType, SpatialDim> unit_basis_form(
       const Domain<DIM(data)>& domain,                                \
       const std::vector<std::array<size_t, DIM(data)>>&               \
           initial_refinement_levels);                                 \
+  template \
+void domain::check_block_face_grid_points_align( \
+    const Block<DIM(data)>& host_block, const Block<DIM(data)>& neighbor_block, \
+    double time, \
+    const std::unordered_map< \
+        std::string, std::unique_ptr<domain::FunctionsOfTime::FunctionOfTime>>& \
+        functions_of_time); \
   template void test_physical_separation(                             \
       const std::vector<Block<DIM(data)>>& blocks, const double time, \
       const std::unordered_map<                                       \

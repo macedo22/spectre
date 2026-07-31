@@ -36,6 +36,7 @@
 #include "Domain/FunctionsOfTime/FixedSpeedCubic.hpp"
 #include "Domain/FunctionsOfTime/PiecewisePolynomial.hpp"
 #include "Domain/FunctionsOfTime/QuaternionFunctionOfTime.hpp"
+#include "Domain/Structure/NeighborIsConforming.hpp"
 #include "Domain/Structure/ObjectLabel.hpp"
 #include "Framework/TestCreation.hpp"
 #include "Helpers/Domain/BoundaryConditions/BoundaryCondition.hpp"
@@ -915,12 +916,117 @@ void test_initial_extents_and_refinement() {
     CHECK(extents_from_local == expected_extents_from_local);
   }
 }
+
+// void check_filled_cylinder_to_filled_cylinder_connectivity(
+//     const Block<3>& host_cyl, const Block<3>& neighbor_cyl,
+//     const Direction<3>& neighbor_direction, const  ) {
+//     const std::string name = block.name();
+// }
+
+void test_block_topology_and_connectivity() {
+  const auto creator = domain::creators::CylindricalBinaryCompactObject(
+          {{5.0, 0.0, 0.0}}, {{-5.0, 0.0, 0.0}}, 1.0, 1.0, true, true, 100.0,
+          1_st, 9_st);
+  const Domain<3> domain = creator.create_domain();
+  const auto& blocks = domain.blocks();
+
+  for (auto& block : blocks) {
+    const std::string name = block.name();
+    CAPTURE(name);
+    const std::array< domain::Topology, 3 >& topologies =
+        block.topologies();
+    const domain::CoordinateMapBase< Frame::BlockLogical, Frame::Inertial, 3>& stationary_map =
+        block.stationary_map();
+    const bool block_is_cylinder = (topologies == domain::topologies::full_cylinder or topologies == domain::topologies::cylindrical_shell);
+    const bool block_is_spherical_shell = topologies == domain::topologies::spherical_shell;
+    // // block can't be both a cylinder and a spherical shell
+    // CHECK(not (block_is_cylinder and block_is_spherical_shell));
+    // // block must be neither a cylinder or a spherical shell
+    // CHECK(not (not block_is_cylinder and not block_is_spherical_shell));
+    CHECK((block_is_cylinder or block_is_spherical_shell));
+    CHECK(block_is_cylinder == (name.find("Cylinder") != std::string::npos));
+    CHECK((topologies == domain::topologies::full_cylinder) == (name.find("FilledCylinder") != std::string::npos));
+    CHECK(block.neighbors().size() > 0);
+    for (const auto& [direction, block_neighbors] : block.neighbors()) {
+      for (const size_t neighbor_id : block_neighbors.ids()) {
+        const auto& neighbor = blocks[neighbor_id];
+        const auto& orientation = block_neighbors.orientation(neighbor_id);
+        // if (not domain::neighbor_is_conforming(block.topologies(),
+        //                                        neighbor.topologies(), direction,
+        //                                        orientation)) {
+        //   continue;
+        // }
+        const std::string neighbor_name = neighbor.name();
+        CAPTURE(neighbor_name);
+        CAPTURE(direction);
+        CAPTURE(orientation);
+        // const bool neighbor_block_is_cylinder = neighbor_name.find("Cylinder") != std::string::npos;
+        const std::array< domain::Topology, 3 >& neighbor_topologies =
+            neighbor.topologies();
+        const bool neighbor_block_is_cylinder = (neighbor_topologies == domain::topologies::full_cylinder or neighbor_topologies == domain::topologies::cylindrical_shell);
+        const bool neighbor_block_is_spherical_shell = neighbor_topologies == domain::topologies::spherical_shell;
+        // // neighbor block can't be both a cylinder and a spherical shell
+        // CHECK(not (neighbor_block_is_cylinder and neighbor_block_is_spherical_shell));
+        // // neighbor block must be a cylinder or a spherical shell
+        // CHECK(not (not neighbor_block_is_cylinder and not neighbor_block_is_spherical_shell));
+
+        CHECK((neighbor_block_is_cylinder or neighbor_block_is_spherical_shell));
+        CHECK(neighbor_block_is_cylinder == (neighbor_name.find("Cylinder") != std::string::npos));
+        CHECK((neighbor_topologies == domain::topologies::full_cylinder) == (neighbor_name.find("FilledCylinder") != std::string::npos));
+
+        const bool is_conforming = domain::neighbor_is_conforming(
+              block.topologies(), neighbor.topologies(), direction, orientation);
+        CHECK(is_conforming == block_neighbors.are_conforming());
+
+        const Direction<3> direction_to_host_in_neighbor =
+              orientation(direction.opposite());
+          REQUIRE(direction_to_host_in_neighbor.side() != Side::Self);
+        if (block_is_cylinder and neighbor_block_is_cylinder) {
+          CHECK(block_neighbors.are_conforming());
+          domain::check_block_face_grid_points_align(block, neighbor);
+          // TODO
+        //   continue;
+        } else if (block_is_spherical_shell and neighbor_block_is_spherical_shell) {
+          CHECK(block_neighbors.are_conforming());
+          // TODO
+        //   continue; 
+        } else if (block_is_cylinder and neighbor_block_is_spherical_shell) {
+          CHECK(not block_neighbors.are_conforming());
+          // TODO: handle nonconforming thing
+        //   continue; 
+        } else {
+          CHECK(not block_neighbors.are_conforming());
+          // TODO: handle nonconforming thing
+        //   continue; 
+        }
+        // const auto xi = interface_logical_coordinates(face_mesh, direction);
+        // tnsr::I<DataVector, 3, Frame::BlockLogical> xi_host{};
+        // tnsr::I<DataVector, 3, Frame::BlockLogical> xi_neighbor{};
+        // for (size_t d = 0; d < 3; ++d) {
+        //   xi_host[d] = xi[d];
+        //   const auto mapped = orientation(Direction<3>(d, Side::Upper));
+        //   xi_neighbor[mapped.dimension()] = xi[d];
+        //   if ((mapped.side() == Side::Lower) xor (d == direction.dimension())) {
+        //     xi_neighbor[mapped.dimension()] *= -1.0;
+        //   }
+        // }
+        // const auto x_self = block.stationary_map()(xi_host);
+        // const auto x_neighbor = neighbor.stationary_map()(xi_neighbor);
+        // CAPTURE(block.id());
+        // CAPTURE(neighbor_id);
+        // CAPTURE(direction);
+        // CHECK_ITERABLE_APPROX(x_self, x_neighbor);
+      }
+    }
+  }
+}
 }  // namespace
 
 // [[TimeOut, 80]]
 SPECTRE_TEST_CASE("Unit.Domain.Creators.CylindricalBinaryCompactObject",
                   "[Domain][Unit]") {
   test_initial_extents_and_refinement();
+  test_block_topology_and_connectivity();
   test_cylindrical_bbh();
   test_parse_errors();
 }
