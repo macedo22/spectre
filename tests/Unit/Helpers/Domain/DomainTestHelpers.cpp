@@ -328,19 +328,23 @@ void check_block_face_grid_points_align(
             {Spectral::Basis::Fourier, Spectral::Basis::Legendre},
             {Spectral::Quadrature::Equiangular,
              Spectral::Quadrature::GaussLobatto}};
-      } else if (alg::equal(neighbor_block.topologies(),
-                            domain::topologies::cylindrical_shell) and
-                 (direction == Direction<VolumeDim>::upper_zeta() or
-                  direction == Direction<VolumeDim>::lower_zeta())) {
+      }
+      // for some reason, clang-tidy things these are duplicate branches
+      // NOLINTBEGIN
+      else if (alg::equal(neighbor_block.topologies(),
+                          domain::topologies::cylindrical_shell) and
+               (direction == Direction<VolumeDim>::upper_zeta() or
+                direction == Direction<VolumeDim>::lower_zeta())) {
         face_mesh = Mesh<VolumeDim - 1>{
             {9, 5},
             {Spectral::Basis::Legendre, Spectral::Basis::Fourier},
             {Spectral::Quadrature::GaussLobatto,
              Spectral::Quadrature::Equiangular}};
-      } else if (alg::equal(neighbor_block.topologies(),
-                            domain::topologies::full_cylinder) and
-                 (direction == Direction<VolumeDim>::upper_zeta() or
-                  direction == Direction<VolumeDim>::lower_zeta())) {
+      }  // NOLINTEND
+      else if (alg::equal(neighbor_block.topologies(),
+                          domain::topologies::full_cylinder) and
+               (direction == Direction<VolumeDim>::upper_zeta() or
+                direction == Direction<VolumeDim>::lower_zeta())) {
         face_mesh = Mesh<VolumeDim - 1>{
             {9, 5},
             {Spectral::Basis::Legendre, Spectral::Basis::Fourier},
