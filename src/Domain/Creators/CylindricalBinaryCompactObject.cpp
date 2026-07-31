@@ -520,15 +520,12 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       Direction<3>::lower_zeta(), Direction<3>::upper_eta(),
       Direction<3>::upper_xi()}};
 
-  const OrientationMap<3> half_turn_along_zeta{std::array<Direction<3>, 3>{
+  // 180 degree rotation about a cylinder's axis
+  const OrientationMap<3> half_turn_about_zeta{std::array<Direction<3>, 3>{
       Direction<3>::lower_xi(), Direction<3>::lower_eta(),
       Direction<3>::upper_zeta()}};
-  
+
   const OrientationMap<3> aligned = OrientationMap<3>::create_aligned();
-  
-  // const OrientationMap<3> half_turn_along_zeta{std::array<Direction<3>, 3>{
-  //     Direction<3>::lower_xi(), Direction<3>::lower_eta(),
-  //     Direction<3>::upper_zeta()}};
 
   const std::array<double, 3> center_cutting_plane = {0.0, 0.0,
                                                       z_cutting_plane_};
@@ -556,29 +553,24 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   const double radius_EB =
       sqrt(2.0) * std::abs(center_EB[2] - z_cutting_plane_);
 
-  // Construct vector<CoordMap>s that go from logical coordinates to
-  // various blocks making up a unit right cylinder.  These blocks are
-  // either the central square blocks, or the surrounding wedge
-  // blocks. The radii and bounds are what are expected by the
-  // UniformCylindricalEndcap maps, (except cylinder_inner_radius, which
-  // determines the internal block boundaries inside the cylinder, and
-  // which the UniformCylindricalEndcap maps don't care about).
+  // Construct a coordinate map that goes from logical coordinates to a unit
+  // right cylinder block. The radii and bounds are what are expected by the
+  // UniformCylindricalEndCap and UniformCylindricalFlatEndCap maps.
   const double cylinder_inner_radius = 0.5;
   const double cylinder_outer_radius = 1.0;
   const double cylinder_lower_bound_z = -1.0;
   const double cylinder_upper_bound_z = 1.0;
 
-  using Affine = ::domain::CoordinateMaps::Affine;
-
   const auto logical_to_cylinder_map =
       cyl_coordinate_map(cylinder_inner_radius, cylinder_outer_radius,
                          cylinder_lower_bound_z, cylinder_upper_bound_z);
 
-  // TODO : update this comment
-  // Lambda that takes a UniformCylindricalEndcap map and a
-  // DiscreteRotation map, composes it with the logical-to-cylinder
-  // maps, and adds it to the list of coordinate maps. Also adds
-  // boundary conditions if requested.
+  // Lambda that takes a pre-rotation map, a UniformCylindricalEndcap or a
+  // UniformCylindricalFlatEndcap map and a DiscreteRotation map, composes it
+  // with the logical-to-cylinder map, and adds it to the list of
+  // coordinate maps. Also adds boundary conditions if requested. The
+  // pre-rotation map is used by blocks at the cutting plane to achieve nodal
+  // alignment with their block neighbor on the other side of the plane.
   auto add_endcap_to_list_of_maps =
       [&coordinate_maps, &logical_to_cylinder_map](
           const CoordinateMaps::DiscreteRotation<3>& pre_rotation_map,
@@ -596,12 +588,9 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
                 std::move(new_logical_to_cylinder_map)));
       };
 
-  // Construct vector<CoordMap>s that go from logical coordinates to
-  // various blocks making up a right cylindrical shell of inner radius 1,
-  // outer radius 2, and z-extents from -1 to +1.  These blocks are
-  // either the central square blocks, or the surrounding wedge
-  // blocks. The radii and bounds are what are expected by the
-  // UniformCylindricalEndcap maps.
+  // Construct a coordinate map that goes from logical coordinates to a unit
+  // right cylindrical shell block. The radii and bounds are what are expected
+  // by the UniformCylindricalSide map.
   const double cylindrical_shell_inner_radius = 1.0;
   const double cylindrical_shell_outer_radius = 2.0;
   const double cylindrical_shell_lower_bound_z = -1.0;
@@ -611,19 +600,23 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       cylindrical_shell_inner_radius, cylindrical_shell_outer_radius,
       cylindrical_shell_lower_bound_z, cylindrical_shell_upper_bound_z);
 
-  // TODO : update doc comments here
-  // Lambda that takes a UniformCylindricalSide map and a DiscreteRotation
-  // map, composes it with the logical-to-cylinder maps, and adds it
-  // to the list of coordinate maps.  Also adds boundary conditions if
-  // requested.
+  // Lambda that takes a pre-rotation map, a UniformCylindricalSide map, and a
+  // DiscreteRotation map, composes it with the logical-to-cylinder maps, and
+  // adds it to the list of coordinate maps.  Also adds boundary conditions if
+  // requested.  The pre-rotation map is used by blocks at the cutting plane to
+  // achieve nodal alignment with their block neighbor on the other side of the
+  // plane.
   auto add_side_to_list_of_maps =
       [&coordinate_maps, &logical_to_cylindrical_shell_map](
           const CoordinateMaps::DiscreteRotation<3>& pre_rotation_map,
           const CoordinateMaps::UniformCylindricalSide& side_map,
           const CoordinateMaps::DiscreteRotation<3>& rotation_map) {
-        auto new_logical_to_cylindrical_shell_map = ::domain::push_back(::domain::push_back(
-            ::domain::push_back(logical_to_cylindrical_shell_map, pre_rotation_map),
-            side_map), rotation_map);
+        auto new_logical_to_cylindrical_shell_map = ::domain::push_back(
+            ::domain::push_back(
+                ::domain::push_back(logical_to_cylindrical_shell_map,
+                                    pre_rotation_map),
+                side_map),
+            rotation_map);
 
         coordinate_maps.emplace_back(
             std::make_unique<
@@ -658,7 +651,6 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   const double z_cut_EA_lower = center_A_[2] - 0.7 * outer_radius_A_;
 
   // CA Filled Cylinder
-  // 5 blocks: 0 thru 4
   add_endcap_to_list_of_maps(
       CoordinateMaps::DiscreteRotation<3>(aligned),
       CoordinateMaps::UniformCylindricalEndcap(center_EA, make_array<3>(0.0),
@@ -667,7 +659,6 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
 
   // CA Cylinder
-  // 4 blocks: 5 thru 8
   add_side_to_list_of_maps(
       CoordinateMaps::DiscreteRotation<3>(aligned),
       CoordinateMaps::UniformCylindricalSide(
@@ -680,7 +671,6 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
 
   // EA Filled Cylinder
-  // 5 blocks: 9 thru 13
   add_endcap_to_list_of_maps(
       CoordinateMaps::DiscreteRotation<3>(aligned),
       CoordinateMaps::UniformCylindricalEndcap(center_A_, center_EA,
@@ -689,7 +679,6 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
 
   // EA Cylinder
-  // 4 blocks: 14 thru 17
   add_side_to_list_of_maps(
       CoordinateMaps::DiscreteRotation<3>(aligned),
       // For some reason codecov complains about the next line.
@@ -727,18 +716,16 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   const double z_cut_EB_lower = center_B_[2] + 0.7 * outer_radius_B_;
 
   // EB Filled Cylinder
-  // 5 blocks: 18 thru 22
   add_endcap_to_list_of_maps(
-      CoordinateMaps::DiscreteRotation<3>(half_turn_along_zeta),
+      CoordinateMaps::DiscreteRotation<3>(half_turn_about_zeta),
       CoordinateMaps::UniformCylindricalEndcap(
           flip_about_xy_plane(center_B_), flip_about_xy_plane(center_EB),
           outer_radius_B_, radius_EB, -z_cut_EB_upper, -z_cut_CB_lower),
       CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
 
   // EB Cylinder
-  // 4 blocks: 23 thru 26
   add_side_to_list_of_maps(
-      CoordinateMaps::DiscreteRotation<3>(half_turn_along_zeta),
+      CoordinateMaps::DiscreteRotation<3>(half_turn_about_zeta),
       CoordinateMaps::UniformCylindricalSide(
           flip_about_xy_plane(center_B_), flip_about_xy_plane(center_EB),
           outer_radius_B_, radius_EB, -z_cut_EB_upper, -z_cut_EB_lower,
@@ -746,18 +733,14 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
 
   // MA Filled Cylinder
-  // 5 blocks: 27 thru 31
-  //   add_flat_endcap_to_list_of_maps(
   add_endcap_to_list_of_maps(
-      CoordinateMaps::DiscreteRotation<3>(half_turn_along_zeta),
+      CoordinateMaps::DiscreteRotation<3>(half_turn_about_zeta),
       CoordinateMaps::UniformCylindricalFlatEndcap(
           flip_about_xy_plane(center_A_),
           flip_about_xy_plane(center_cutting_plane), outer_radius_A_, radius_MB,
           -z_cut_EA_lower),
       CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
   // MB Filled Cylinder
-  // 5 blocks: 32 thru 36
-  //   add_flat_endcap_to_list_of_maps(
   add_endcap_to_list_of_maps(
       CoordinateMaps::DiscreteRotation<3>(aligned),
       // For some reason codecov complains about the next line.
@@ -767,24 +750,23 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
 
   // CB Filled Cylinder
-  // 5 blocks: 37 thru 41
   add_endcap_to_list_of_maps(
-      CoordinateMaps::DiscreteRotation<3>(half_turn_along_zeta),
+      CoordinateMaps::DiscreteRotation<3>(half_turn_about_zeta),
       CoordinateMaps::UniformCylindricalEndcap(
           flip_about_xy_plane(center_EB), make_array<3>(0.0), radius_EB,
           inner_radius_C, -z_cut_CB_lower, -z_cut_CB_upper),
       CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
 
   // CB Cylinder
-  // 4 blocks: 42 thru 45
   add_side_to_list_of_maps(
-      CoordinateMaps::DiscreteRotation<3>(half_turn_along_zeta),
+      CoordinateMaps::DiscreteRotation<3>(half_turn_about_zeta),
       CoordinateMaps::UniformCylindricalSide(
           flip_about_xy_plane(center_EB), make_array<3>(0.0), radius_EB,
           inner_radius_C, -z_cut_CB_lower, -z_cutting_plane_, -z_cut_CB_upper,
           -z_cutting_plane_),
       CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
 
+  // TODO: clean up, don't use
   const size_t ea_endcap_block = 2;
   const size_t ea_side_block = 3;
   const size_t ma_endcap_block = 6;
