@@ -242,7 +242,7 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
         "spherical coordinates that is perpendicular to the cylinder's local "
         "angular direction."};
   };
-  // TODO : update docs
+
   struct InitialGridPoints {
     using type = std::variant<
         size_t, std::array<size_t, 3>, std::vector<std::array<size_t, 3>>,
@@ -250,15 +250,32 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
         std::unordered_map<std::string, std::variant<std::array<size_t, 3>,
                                                      std::array<size_t, 2>>>>;
     static constexpr Options::String help = {
-        "Initial number of grid points. Specify one of: a single number, a "
-        "list representing [r, theta, perp], or such a list for every block in "
-        "the domain. Here 'r' is the radial direction normal to the inner and "
-        "outer boundaries, 'theta' is the periodic direction, and 'perp' is "
-        "the third direction. The exception to this is that for spherical "
-        "shell blocks groups ('InnerSphereA', 'InnerSphereB', 'OuterSphere'),"
-        "you must instead specify grid points as [r, L_max]. The exception to "
-        "this is if a single number is specified for global initial grid "
-        "points."};
+        "Initial number of grid points. Specify one of the following:"
+        "\n\t- a single number"
+        "\n\t- a single list that represents [r, l_max] for spherical shell "
+        "\n\t  blocks and [r, z] for cylindrical blocks"
+        "\n\t- such lists for every block group"
+        "\n\t- lists for blocks and/or block groups as follows:"
+        "\n\t\t- [r, l_max] for spherical shell blocks and groups"
+        "\n\t\t- [r, z] for filled cylinder blocks and groups containing them, "
+        "\n\t\t  where r must be > 2"
+        "\n\t\t- [r, theta, z] for hollow cylinder blocks, where theta must be "
+        "\n\t\t  odd\n\n"
+        "While the most verbose, the best choice for a production run is "
+        "likely to specify a list for each cylindrical block instead of each "
+        "cylindrical block group. If you set a whole group (e.g. InnerA) using "
+        "[r, z], the interfaces between its filled cylinders "
+        "(e.g. EAFilledCylinder) and its hollow cylinders (e.g. EACylinder) "
+        "may not have similar resolution on each side unless r and z are "
+        "close. This is because at these interfaces, the z direction in filled "
+        "cylinders lines up with the radial direction in hollow cylinders. To "
+        "get the resolution on either side of these interfaces to match well, "
+        "you either want to set a cylindrical block group with r and z close "
+        "in value or set the individual cylindrical blocks for more freedom. "
+        "Also note that any h refinement in these cylindrical blocks will also "
+        "be in similarly different directions at the interface, which affects "
+        "this picture of trying to match the p refinement at the interface of "
+        "hollow and filled cylinders."};
   };
 
   struct BoundaryConditions {
