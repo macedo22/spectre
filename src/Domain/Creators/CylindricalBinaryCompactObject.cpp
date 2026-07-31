@@ -317,15 +317,6 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
                                     spherical_harmonic_shell_names,
                                     filled_cylinder_names);
 
-  const size_t outer_shell_block = block_positions_.at("OuterShell0");
-  // TODO: using this for now, but want to not have to rely on ordering
-  // ultimately for the stuff below that uses this
-  const size_t first_shell_block =
-      include_inner_sphere_A
-          ? block_positions_.at("InnerAShell0")
-          : (include_inner_sphere_B ? block_positions_.at("InnerBShell0")
-                                    : outer_shell_block);
-
   // For expanding initial refinement and grid points over all blocks
   const ExpandOverBlocks<std::array<size_t, 3>> expand_over_blocks{
       block_names_, block_groups_};
@@ -333,180 +324,142 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
     initial_refinement_ = bco::set_initial_refinement(
         expand_over_blocks, initial_refinement, spherical_harmonic_shell_names,
         all_cylinder_names);
-    // If a global single-number refinement was used, post-process the spherical
-    // shell and cylinder entries to make the angular directions have
-    // h refinement = 0.
-    // TODO : I don't love this solution, find a more elegant way to set or
-    // post-process these
+    // If a global single-number h-refinement was used, post-process the
+    // expanded cylinder and spherical shell blocks to make the angular
+    // directions have h refinement = 0.
     if (std::holds_alternative<size_t>(initial_refinement)) {
-      // Set cylinder h refinement to {0, 0, z}
-      for (size_t i = 0; i < first_shell_block; i++) {
-        initial_refinement_[i][0] = 0;
-        initial_refinement_[i][1] = 0;
+      for (const auto& [name, position] : block_positions_) {
+        if (name.find("Cylinder") != std::string::npos) {
+          // Set cylinder h refinement to {0, 0, z}
+          initial_refinement_[position][0] = 0;
+          initial_refinement_[position][1] = 0;
+        } else if (name.find("Shell") != std::string::npos) {
+          // Set spherical shell h refinement to {r, 0, 0}
+          initial_refinement_[position][1] = 0;
+          initial_refinement_[position][2] = 0;
+        }
       }
-      // Set spherical shell h refinement to {r, 0, 0}
-      if (include_inner_sphere_A) {
-        // InnerAShell0
-        initial_refinement_[block_positions_.at("InnerAShell0")][1] = 0;
-        initial_refinement_[block_positions_.at("InnerAShell0")][2] = 0;
-      }
-      if (include_inner_sphere_B) {
-        // InnerBShell0
-        initial_refinement_[block_positions_.at("InnerBShell0")][1] = 0;
-        initial_refinement_[block_positions_.at("InnerBShell0")][2] = 0;
-      }
-      // OuterShell0
-      initial_refinement_[outer_shell_block][1] = 0;
-      initial_refinement_[outer_shell_block][2] = 0;
     }
   } catch (const std::exception& error) {
     PARSE_ERROR(context, "Invalid 'InitialRefinement': " << error.what());
   }
-  // Validate angular h-refinement == 0 in spherical shell blocks
-  if (include_inner_sphere_A_) {
-    if (gsl::at(initial_refinement_, block_positions_.at("InnerAShell0"))[1] !=
-            0 or
-        gsl::at(initial_refinement_, block_positions_.at("InnerAShell0"))[2] !=
-            0) {
-      PARSE_ERROR(context,
-                  "Angular h-refinement is not supported for "
-                  "spherical-harmonic inner-shell blocks. Specify refinement "
-                  "for InnerSphereA as a single number.");
-    }
-  }
-  if (include_inner_sphere_B_) {
-    if (gsl::at(initial_refinement_, block_positions_.at("InnerBShell0"))[1] !=
-            0 or
-        gsl::at(initial_refinement_, block_positions_.at("InnerBShell0"))[2] !=
-            0) {
-      PARSE_ERROR(context,
-                  "Angular h-refinement is not supported for "
-                  "spherical-harmonic inner-shell blocks. Specify refinement "
-                  "for InnerSphereB as a single number.");
-    }
-  }
-  if (gsl::at(initial_refinement_, outer_shell_block)[1] != 0 or
-      gsl::at(initial_refinement_, outer_shell_block)[2] != 0) {
-    PARSE_ERROR(context,
-                "Angular h-refinement is not supported for "
-                "spherical-harmonic outer-shell blocks. Specify refinement"
-                "for OuterSphere as a single number.");
-  }
 
-  // TODO: make  block index to name map instead of this junk
-  const std::array<size_t, 6> filled_cylinder_indices{0, 2, 4, 6, 7, 8};
+  // Validate angular h-refinement == 0 in cylinder and spherical shell blocks
+  for (const auto& [name, position] : block_positions_) {
+    if (name.find("Cylinder") != std::string::npos) {
+      if (gsl::at(gsl::at(initial_refinement_, position), 0) != 0 or
+          gsl::at(gsl::at(initial_refinement_, position), 1) != 0) {
+        PARSE_ERROR(context,
+                    "Angular h-refinement is not supported for cylindrical "
+                    "blocks. Specify refinement for "
+                        << name << " as a single number.");
+      }
+    } else if (name.find("Shell") != std::string::npos) {
+      if (gsl::at(gsl::at(initial_refinement_, position), 1) != 0 or
+          gsl::at(gsl::at(initial_refinement_, position), 2) != 0) {
+        PARSE_ERROR(context,
+                    "Angular h-refinement is not supported for "
+                    "spherical-harmonic shell blocks. Specify refinement for "
+                        << name << " as a single number.");
+      }
+    }
+  }
 
   try {
-    // TODO: maybe have these functions be called "expand_blah_blah"
-    // and then have a function that sets the things?
     initial_grid_points_ = bco::set_initial_grid_points(
         expand_over_blocks, initial_grid_points, spherical_harmonic_shell_names,
         filled_cylinder_names);
-    // TODO : I don't love this solution, find a more elegant way to set or
-    // post-process these
+    // If a global single-number p-refinement was used, post-process the
+    // expanded filled cylinder blocks to make the angular directions have the
+    // correct number of spectral points for ZernikeB2.
     if (std::holds_alternative<size_t>(initial_grid_points)) {
-      for (size_t block_number : filled_cylinder_indices) {
-        // TODO assert num_radial_points > 1 ? actually don't think that's
-        // necessary
-
-        // note:
-        // radial_points = (theta_modes / 2) + 1 + (theta_modes % 2), so one
-        // could have odd or even theta_modes for the same radial_points.
-        // Choosing the even theta_modes for the same radial_points means:
-        //   theta_modes = 2 * (radial_points - 1)
-        //   theta_points = 2 * theta_modes + 1 = 4 * radial_modes - 3
-        // Choosing the odd theta_modes for the same radial_points means:
-        //   theta_modes = 2 * (radial_points - 2) + 1
-        //   theta_points = 2 * theta_modes + 1 = 4 * radial_modes - 5
-        // Here, we choose the even case to get one extra theta_mode out of
-        // radial_points.
-        initial_grid_points_[block_number][1] =
-            4 * (gsl::at(initial_grid_points_, block_number)[0]) - 3;
+      for (const auto& [name, position] : block_positions_) {
+        if (name.find("FilledCylinder") != std::string::npos) {
+          // note for ZernikeB2:
+          // radial_points = (theta_modes / 2) + 1 + (theta_modes % 2), so one
+          // could have odd or even theta_modes for the same radial_points.
+          // Choosing the even theta_modes for the same radial_points means:
+          //   theta_modes = 2 * (radial_points - 1)
+          //   theta_points = 2 * theta_modes + 1 = 4 * radial_modes - 3
+          // Choosing the odd theta_modes for the same radial_points means:
+          //   theta_modes = 2 * (radial_points - 2) + 1
+          //   theta_points = 2 * theta_modes + 1 = 4 * radial_modes - 5
+          // Here, we choose the even case to get one extra theta_mode out of
+          // radial_points.
+          initial_grid_points_[position][1] =
+              4 * gsl::at(gsl::at(initial_grid_points_, position), 0) - 3;
+        }
       }
     }
   } catch (const std::exception& error) {
     PARSE_ERROR(context, "Invalid 'InitialGridPoints': " << error.what());
   }
 
-  // Validate angular grid points in all cylindrical blocks are odd.
-  for (size_t block_number = 0; block_number < first_shell_block;
-       block_number++) {
-    if (gsl::at(initial_grid_points_, block_number)[1] % 2 == 0) {
-      PARSE_ERROR(context,
-                  "Cylindrical block "
-                      << gsl::at(block_names_, block_number)
-                      << " must have an odd number of angular grid points.");
+  // Validate number of radial points for filled cylinders is > 2.
+  for (const auto& [name, position] : block_positions_) {
+    if (name.find("FilledCylinder") != std::string::npos) {
+      if (gsl::at(gsl::at(initial_grid_points_, position), 0) <= 2) {
+        PARSE_ERROR(context,
+                    "Filled cylindrical block "
+                        << name
+                        << " must have more than 2 radial grid points.");
+      }
     }
   }
 
-  // Validate angular grid points in filled cylinder blocks. The Zernike disk
-  // is fully specified by either the number of radial points or the number of
-  // theta points, so check that they relate as expected.
-  for (size_t block_number : filled_cylinder_indices) {
-    const size_t num_theta_modes =
-        gsl::at(initial_grid_points_, block_number)[1] / 2;
-    const size_t expected_num_r_points =
-        (num_theta_modes / 2) + 1 + (num_theta_modes % 2);
-    if (gsl::at(initial_grid_points_, block_number)[0] !=
-        expected_num_r_points) {
-      PARSE_ERROR(context,
-                  "Filled cylinder blocks must have "
-                  "num_r_points = ((num_theta_points / 2) / 2) + 1 + "
-                  "((num_theta_points / 2) % 2). Specify grid points for "
-                      << gsl::at(block_names_, block_number)
-                      << " as [num_radial_points, num_z_points].");
+  // Validate number of angular grid points in all cylindrical blocks are odd.
+  for (const auto& [name, position] : block_positions_) {
+    if (name.find("Cylinder") != std::string::npos) {
+      if (gsl::at(gsl::at(initial_grid_points_, position), 1) % 2 == 0) {
+        PARSE_ERROR(context,
+                    "Cylindrical block "
+                        << name
+                        << " must have an odd number of angular grid points.");
+      }
     }
-  }
-  // TODO : maybe just loop over the spherical shell blocks below instead of
-  // doing one by one Validate angular grid points in spherical shell blocks. A
-  // spherical-harmonic shell is fully specified by a single ell, so l_max must
-  // equal m_max.
-  if (include_inner_sphere_A_) {
-    if (initial_grid_points_[block_positions_.at("InnerAShell0")][1] !=
-        initial_grid_points_[block_positions_.at("InnerAShell0")][2]) {
-      PARSE_ERROR(
-          context,
-          "Spherical-harmonic inner-shell blocks must have L_max = M_max. "
-          "Specify grid points for InnerSphereA as [radial_points, L_max].");
-    }
-    // For spherical-harmonic outer-shell blocks, initial_number_of_grid_points_
-    // stores {n_radial, l_max, m_max}. Convert (l_max, m_max) to the number of
-    // collocation points the spherical-harmonic basis uses in each angular
-    // direction.
-    initial_grid_points_[block_positions_.at("InnerAShell0")][1] =
-        ylm::Spherepack::n_theta_points(gsl::at(
-            initial_grid_points_, block_positions_.at("InnerAShell0"))[1]);
-    initial_grid_points_[block_positions_.at("InnerAShell0")][2] =
-        ylm::Spherepack::n_phi_points(gsl::at(
-            initial_grid_points_, block_positions_.at("InnerAShell0"))[2]);
-  }
-  if (include_inner_sphere_B_) {
-    if (initial_grid_points_[block_positions_.at("InnerBShell0")][1] !=
-        initial_grid_points_[block_positions_.at("InnerBShell0")][2]) {
-      PARSE_ERROR(
-          context,
-          "Spherical-harmonic inner-shell blocks must have L_max = M_max. "
-          "Specify grid points for InnerSphereB as [radial_points, L_max].");
-    }
-    initial_grid_points_[block_positions_.at("InnerBShell0")][1] =
-        ylm::Spherepack::n_theta_points(gsl::at(
-            initial_grid_points_, block_positions_.at("InnerBShell0"))[1]);
-    initial_grid_points_[block_positions_.at("InnerBShell0")][2] =
-        ylm::Spherepack::n_phi_points(gsl::at(
-            initial_grid_points_, block_positions_.at("InnerBShell0"))[2]);
-  }
-  if (initial_grid_points_[outer_shell_block][1] !=
-      initial_grid_points_[outer_shell_block][2]) {
-    PARSE_ERROR(
-        context,
-        "Spherical-harmonic outer-shell blocks must have L_max = M_max. "
-        "Specify grid points for OuterSphere as [radial_points, L_max].");
   }
 
-  initial_grid_points_[outer_shell_block][1] = ylm::Spherepack::n_theta_points(
-      gsl::at(initial_grid_points_, outer_shell_block)[1]);
-  initial_grid_points_[outer_shell_block][2] = ylm::Spherepack::n_phi_points(
-      gsl::at(initial_grid_points_, outer_shell_block)[2]);
+  // Validate number of angular grid points in filled cylinder blocks is what is
+  // expected by ZernikeB2. The Zernike disk is fully specified by either the
+  // number of radial points or the number of theta points, so check that they
+  // relate as expected.
+  for (const auto& [name, position] : block_positions_) {
+    if (name.find("FilledCylinder") != std::string::npos) {
+      const size_t num_theta_modes =
+          gsl::at(gsl::at(initial_grid_points_, position), 1) / 2;
+      const size_t expected_num_r_points =
+          (num_theta_modes / 2) + 1 + (num_theta_modes % 2);
+      if (gsl::at(gsl::at(initial_grid_points_, position), 0) !=
+          expected_num_r_points) {
+        PARSE_ERROR(context,
+                    "Filled cylinder blocks must have "
+                    "num_r_points = ((num_theta_points / 2) / 2) + 1 + "
+                    "((num_theta_points / 2) % 2). Specify grid points for "
+                        << name << " as [num_radial_points, num_z_points].");
+      }
+    }
+  }
+
+  // For spherical-harmonic outer-shell blocks, initial_number_of_grid_points_
+  // stores {n_radial, l_max, m_max}. First validate that l_max == m_max, then
+  // convert (l_max, m_max) to the number of collocation points the
+  // spherical-harmonic basis uses in each angular direction.
+  for (const auto& [name, position] : block_positions_) {
+    if (name.find("Shell") != std::string::npos) {
+      const size_t l_max = gsl::at(gsl::at(initial_grid_points_, position), 1);
+      const size_t m_max = gsl::at(gsl::at(initial_grid_points_, position), 2);
+      if (l_max != m_max) {
+        PARSE_ERROR(context,
+                    "Spherical-harmonic shell blocks must have L_max = M_max. "
+                    "Specify grid points for "
+                        << name << " as [radial_points, L_max].");
+      }
+      initial_grid_points_[position][1] = ylm::Spherepack::n_theta_points(
+          gsl::at(gsl::at(initial_grid_points_, position), 1));
+      initial_grid_points_[position][2] = ylm::Spherepack::n_phi_points(
+          gsl::at(gsl::at(initial_grid_points_, position), 2));
+    }
+  }
 
   // Build time-dependent maps
   // The size map, which is applied from the grid to distorted frame, currently
