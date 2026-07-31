@@ -766,17 +766,16 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
           -z_cutting_plane_),
       CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
 
-  // TODO: clean up, don't use
-  const size_t ea_endcap_block = 2;
-  const size_t ea_side_block = 3;
-  const size_t ma_endcap_block = 6;
-  const size_t eb_endcap_block = 4;
-  const size_t eb_side_block = 5;
-  const size_t mb_endcap_block = 7;
-  const size_t ca_endcap_block = 0;
-  const size_t ca_side_block = 1;
-  const size_t cb_endcap_block = 8;
-  const size_t cb_side_block = 9;
+  const size_t ea_endcap_block = block_positions_.at("EAFilledCylinder");
+  const size_t ea_side_block = block_positions_.at("EACylinder");
+  const size_t ma_endcap_block = block_positions_.at("MAFilledCylinder");
+  const size_t eb_endcap_block = block_positions_.at("EBFilledCylinder");
+  const size_t eb_side_block = block_positions_.at("EBCylinder");
+  const size_t mb_endcap_block = block_positions_.at("MBFilledCylinder");
+  const size_t ca_endcap_block = block_positions_.at("CAFilledCylinder");
+  const size_t ca_side_block = block_positions_.at("CACylinder");
+  const size_t cb_endcap_block = block_positions_.at("CBFilledCylinder");
+  const size_t cb_side_block = block_positions_.at("CBCylinder");
 
   // Excision spheres
   std::unordered_map<std::string, ExcisionSphere<3>> excision_spheres{};
@@ -1300,14 +1299,13 @@ CylindricalBinaryCompactObject::external_boundary_conditions() const {
   std::vector<DirectionMap<
       3, std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>>>
       boundary_conditions{number_of_blocks_};
-  // TODO : better solution?
-  const size_t ea_endcap_block = 2;
-  const size_t ea_side_block = 3;
-  const size_t ma_endcap_block = 6;
-  const size_t eb_endcap_block = 4;
-  const size_t eb_side_block = 5;
-  const size_t mb_endcap_block = 7;
-  size_t last_block = 10;
+  const size_t ea_endcap_block = block_positions_.at("EAFilledCylinder");
+  const size_t ea_side_block = block_positions_.at("EACylinder");
+  const size_t ma_endcap_block = block_positions_.at("MAFilledCylinder");
+  const size_t eb_endcap_block = block_positions_.at("EBFilledCylinder");
+  const size_t eb_side_block = block_positions_.at("EBCylinder");
+  const size_t mb_endcap_block = block_positions_.at("MBFilledCylinder");
+  const size_t outer_shell_block = block_positions_.at("OuterShell0");
 
   if (not include_inner_sphere_A_) {
       // EA Filled Cylinder
@@ -1320,9 +1318,9 @@ CylindricalBinaryCompactObject::external_boundary_conditions() const {
       boundary_conditions[ea_side_block][Direction<3>::lower_xi()] =
           inner_boundary_condition_->get_clone();
   } else {
-    boundary_conditions[last_block][Direction<3>::lower_xi()] =
-        inner_boundary_condition_->get_clone();
-    last_block += 1;
+    boundary_conditions[block_positions_.at("InnerAShell0")]
+                       [Direction<3>::lower_xi()] =
+                           inner_boundary_condition_->get_clone();
   }
   if (not include_inner_sphere_B_) {
       // EB Filled Cylinder
@@ -1335,11 +1333,11 @@ CylindricalBinaryCompactObject::external_boundary_conditions() const {
       boundary_conditions[eb_side_block][Direction<3>::lower_xi()] =
           inner_boundary_condition_->get_clone();
   } else {
-    boundary_conditions[last_block][Direction<3>::lower_xi()] =
-        inner_boundary_condition_->get_clone();
-    last_block += 1;
+    boundary_conditions[block_positions_.at("InnerBShell0")]
+                       [Direction<3>::lower_xi()] =
+                           inner_boundary_condition_->get_clone();
   }
-  boundary_conditions[last_block][Direction<3>::upper_xi()] =
+  boundary_conditions[outer_shell_block][Direction<3>::upper_xi()] =
       outer_boundary_condition_->get_clone();
 
   return boundary_conditions;
