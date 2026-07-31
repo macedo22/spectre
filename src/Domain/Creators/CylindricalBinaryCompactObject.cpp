@@ -823,12 +823,11 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
           abutting_directions_B});
 
   Domain<3> domain;
-  // TODO: comment on needing to build everything from scratch
-  // TODO: change name from inner_neighbors since we don't have those anymore
+  // non-shell maps
   std::vector<DirectionMap<3, BlockNeighbors<3>>> inner_neighbors{
       coordinate_maps.size()};
 
-  // Add a shell as a neighor of one of the blocks making up a cylinder
+  // Add a cylinder as a neighor of a cylinder
   auto add_cyl_cyl_block_neighbor =
       [](std::vector<DirectionMap<3, BlockNeighbors<3>>>& neighbors,
          const size_t this_block_number, const size_t neighbor_block_number,
@@ -960,7 +959,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       {{Direction<3>::upper_xi(), Direction<3>::self(), Direction<3>::self()}}};
   const auto cyl_side_to_shell = shell_to_cyl_side.inverse_map();
 
-  // Add a shell as a neighor of one of the blocks making up a cylinder
+  // Add a spherical shell as a neighor of one of a cylinder
   auto add_cyl_shell_block_neighbor =
       [](std::vector<DirectionMap<3, BlockNeighbors<3>>>& neighbors,
          const bool cyl_is_filled, const bool shell_is_outside_cyl,
@@ -1038,7 +1037,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
                         cyl_topology);
   }
 
-  // Add a cylindrical endcap as a neighbor of a shell
+  // Add a cylindrical endcap as a neighbor of a spherical shell
   auto add_shell_cyl_endcap_neighbor =
       [&shell_to_cyl_endcap](
           std::unordered_set<size_t>& cyl_ids,
@@ -1048,7 +1047,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
         cyl_orientations.emplace(cyl__block_number, shell_to_cyl_endcap);
       };
 
-  // Add a cylindrical side as a neighbor of a shell
+  // Add a cylindrical side as a neighbor of a spherical shell
   auto add_shell_cyl_side_neighbor =
       [&shell_to_cyl_side](
           std::unordered_set<size_t>& cyl_ids,
@@ -1085,7 +1084,8 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
 
   // (b) SH inner shell blocks for InnerSphereA.
   if (include_inner_sphere_A_) {
-    // lower_xi → all 18 CA, CB blocks (non-conforming, multi-neighbor).
+    // upper_xi → EA endcap, EA side, and MA blocks
+    // (non-conforming, multi-neighbor).
     std::unordered_set<size_t> inner_a_cyl_ids;
     std::unordered_map<size_t, OrientationMap<3>> inner_a_cyl_orientations;
 
@@ -1116,7 +1116,8 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
 
   // (c) SH inner shell blocks for InnerSphereB.
   if (include_inner_sphere_B_) {
-    // lower_xi → all 18 CA, CB blocks (non-conforming, multi-neighbor).
+    // upper_xi → EB endcap, EB side, and MB blocks
+    // (non-conforming, multi-neighbor).
     std::unordered_set<size_t> inner_b_cyl_ids;
     std::unordered_map<size_t, OrientationMap<3>> inner_b_cyl_orientations;
 
@@ -1147,7 +1148,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   }
 
   // (d) SH outer shell blocks for OuterSphere.
-  // lower_xi → all 18 CA, CB blocks (non-conforming, multi-neighbor).
+  // lower_xi → all 4 CA, CB blocks (non-conforming, multi-neighbor).
   std::unordered_set<size_t> outer_cyl_ids;
   std::unordered_map<size_t, OrientationMap<3>> outer_cyl_orientations;
 
