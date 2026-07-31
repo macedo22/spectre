@@ -52,6 +52,9 @@ namespace {
 using ExpirationTimeMap = std::unordered_map<std::string, double>;
 using CylBCO = ::domain::creators::CylindricalBinaryCompactObject;
 using TimeDepOptions = domain::creators::bco::TimeDependentMapOptions<true>;
+using RefinementMap = std::unordered_map<std::string, size_t>;
+using GridPointsMap = std::unordered_map<
+    std::string, std::variant<std::array<size_t, 3>, std::array<size_t, 2>>>;
 
 std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>
 create_inner_boundary_condition() {
@@ -549,33 +552,16 @@ void test_parse_errors() {
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
           {{2.0, 0.05, 0.0}}, {-3.0, 0.05, 0.0}, 1.0, 0.4, false, false, 25.0,
-          1_st, std::array<size_t, 3>{{3_st, 9_st, 7_st}}, std::nullopt,
-          create_inner_boundary_condition(), create_outer_boundary_condition(),
-          Options::Context{false, {}, 1, 1}),
-      Catch::Matchers::ContainsSubstring("must have L_max = M_max"));
-  CHECK_THROWS_WITH(
-      domain::creators::CylindricalBinaryCompactObject(
-          {{2.0, 0.05, 0.0}}, {-3.0, 0.05, 0.0}, 1.0, 0.4, false, false, 25.0,
-          1_st, std::array<size_t, 3>{{3_st, 8_st, 8_st}}, std::nullopt,
-          create_inner_boundary_condition(), create_outer_boundary_condition(),
-          Options::Context{false, {}, 1, 1}),
+          1_st, 4_st, std::nullopt, create_inner_boundary_condition(),
+          create_outer_boundary_condition(), Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring("odd number of angular grid points"));
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
           {{2.0, 0.05, 0.0}}, {-3.0, 0.05, 0.0}, 1.0, 0.4, false, false, 25.0,
-          1_st, std::array<size_t, 3>{{2_st, 5_st, 5_st}}, std::nullopt,
-          create_inner_boundary_condition(), create_outer_boundary_condition(),
-          Options::Context{false, {}, 1, 1}),
+          1_st, 1_st, std::nullopt, create_inner_boundary_condition(),
+          create_outer_boundary_condition(), Options::Context{false, {}, 1, 1}),
       Catch::Matchers::ContainsSubstring(
           "must have more than 2 radial grid points"));
-  CHECK_THROWS_WITH(
-      domain::creators::CylindricalBinaryCompactObject(
-          {{2.0, 0.05, 0.0}}, {-3.0, 0.05, 0.0}, 1.0, 0.4, false, false, 25.0,
-          1_st, std::array<size_t, 3>{{3_st, 5_st, 5_st}}, std::nullopt,
-          create_inner_boundary_condition(), create_outer_boundary_condition(),
-          Options::Context{false, {}, 1, 1}),
-      Catch::Matchers::ContainsSubstring(
-          "Filled cylinder blocks must have num_r_points"));
 }
 
 // This matches the structure in the option string
@@ -735,10 +721,6 @@ void test_cylindrical_bbh() {
 // Make sure initial refinement and initial grid points for different blocks
 // are set to the correct values based on the input
 void test_initial_extents_and_refinement() {
-  using RefinementMap = std::unordered_map<std::string, size_t>;
-  using GridPointsMap = std::unordered_map<
-      std::string, std::variant<std::array<size_t, 3>, std::array<size_t, 2>>>;
-
   const std::array<double, 3> center_A{{2.0, 0.05, 0.0}};
   const std::array<double, 3> center_B{{-2.0, 0.05, 0.0}};
   const double radius_A = 1.0;

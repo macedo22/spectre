@@ -308,12 +308,22 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
          "Size of block_positions_ map should be equal to the number of blocks "
          "in the domain.");
 
+  // Since BinaryCompactObject::InitialGridPoints type differs from
+  // CylindricalBinaryCompactObject::InitialGridPoints type, need to first
+  // create the BCO-compatible type with the CBCO data to be able to reuse the
+  // functionality of bco::validate_initial_grid_points() and
+  // bco::set_initial_grid_points().
+  const auto bco_initial_grid_points = std::visit(
+      [](const auto& value) {
+        return BinaryCompactObject::InitialGridPoints::type{value};
+      },
+      initial_grid_points);
   // Validate that the input file has the correct format for
   // InitialGridPoints. No need to validate the format for InitialRefinement
   // because it does not accept a map of strings to possibly
   // differently-sized arrays for refinement. If a map is provided, it already
   // only accepts a map of size_t keys.
-  bco::validate_initial_grid_points(context, initial_grid_points,
+  bco::validate_initial_grid_points(context, bco_initial_grid_points,
                                     spherical_harmonic_shell_names,
                                     filled_cylinder_names);
 
@@ -382,8 +392,8 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
 
   try {
     initial_grid_points_ = bco::set_initial_grid_points(
-        expand_over_blocks, initial_grid_points, spherical_harmonic_shell_names,
-        filled_cylinder_names);
+        expand_over_blocks, bco_initial_grid_points,
+        spherical_harmonic_shell_names, filled_cylinder_names);
     // If a global single-number p-refinement was used, post-process the
     // expanded filled cylinder blocks to make the angular directions have the
     // correct number of spectral points for ZernikeB2.

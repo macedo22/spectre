@@ -245,16 +245,12 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
 
   struct InitialGridPoints {
     using type = std::variant<
-        size_t, std::array<size_t, 3>, std::vector<std::array<size_t, 3>>,
-        std::unordered_map<std::string, std::array<size_t, 3>>,
+        size_t,
         std::unordered_map<std::string, std::variant<std::array<size_t, 3>,
                                                      std::array<size_t, 2>>>>;
     static constexpr Options::String help = {
         "Initial number of grid points. Specify one of the following:"
         "\n\t- a single number"
-        "\n\t- a single list that represents [r, l_max] for spherical shell "
-        "\n\t  blocks and [r, z] for cylindrical blocks"
-        "\n\t- such lists for every block group"
         "\n\t- lists for blocks and/or block groups as follows:"
         "\n\t\t- [r, l_max] for spherical shell blocks and groups"
         "\n\t\t- [r, z] for filled cylinder blocks and groups containing them, "

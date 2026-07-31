@@ -116,7 +116,7 @@ void validate_initial_grid_points(
                   << name
                   << "' is a filled cylinder block or group containing one. "
                      "Specify its grid points as "
-                     "[theta_points, z_points], not array<3>.");
+                     "[radial_points, z_points], not array<3>.");
         }
       } else {
         if (std::holds_alternative<std::array<size_t, 2>>(extents)) {
