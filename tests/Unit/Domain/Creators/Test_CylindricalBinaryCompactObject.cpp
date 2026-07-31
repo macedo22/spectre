@@ -36,6 +36,7 @@
 #include "Domain/FunctionsOfTime/FixedSpeedCubic.hpp"
 #include "Domain/FunctionsOfTime/PiecewisePolynomial.hpp"
 #include "Domain/FunctionsOfTime/QuaternionFunctionOfTime.hpp"
+#include "Domain/Structure/NeighborIsConforming.hpp"
 #include "Domain/Structure/ObjectLabel.hpp"
 #include "Framework/TestCreation.hpp"
 #include "Helpers/Domain/BoundaryConditions/BoundaryCondition.hpp"
@@ -190,6 +191,12 @@ std::string create_option_string(
       [&include_inner_sphere_A, &include_inner_sphere_B](
           const bool is_h_refinement, const bool include_extra,
           const size_t value) {
+        // const std::string same = "[" + get_output(value) + "," +
+        //                          get_output(value) + "," + get_output(value) +
+        //                          "]";
+        // const std::string one_more = "[" + get_output(value + 1) + "," +
+        //                              get_output(value) + "," +
+        //                              get_output(value) + "]";
         const std::string same =
             is_h_refinement ? "" + get_output(value) + "" :
             "[" + get_output(value) + "," + get_output(value) + "]";
@@ -280,8 +287,10 @@ void test_construction(
     const double outer_radius, const std::array<double, 3>& center_objectA,
     const std::array<double, 3>& center_objectB,
     const std::vector<double>& times_to_check) {
+  std::cout << "before test_domain_creator" << std::endl;
   const auto domain = TestHelpers::domain::creators::test_domain_creator(
       creator, with_boundary_conditions, false, times_to_check);
+  std::cout << "after test_domain_creator" << std::endl;
 
   const auto& [block_names, block_groups] =
       block_names_and_groups(include_inner_sphere_A, include_inner_sphere_B);
@@ -575,12 +584,20 @@ std::unordered_map<std::string, std::variant<std::array<size_t, 3>, size_t>>
 make_initial_refinement(const size_t initial_value,
                         const bool include_inner_sphere_A,
                         const bool include_inner_sphere_B) {
+  // TODO : should not use variant, just map of size_t now
   std::unordered_map<std::string, std::variant<std::array<size_t, 3>, size_t>>
+      initial_map;
+  //   const std::array<size_t, 3> cyl_same{initial_value, initial_value,
+  //   initial_value}; const std::array<size_t, 3> one_more{initial_value + 1,
+  //   initial_value,
+  //                                        initial_value};
 
-      const size_t same = initial_value;
+  //   std::unordered_map<std::string, size_t> initial_map;
+  const size_t same = initial_value;
   const size_t one_more = initial_value + 1;
 
   initial_map["Outer"] = one_more;
+//   std::cout << "initial_map[\"Outer\"] is : " << get(initial_map["Outer"]) << std::endl;
   initial_map["InnerA"] = same;
   initial_map["InnerB"] = one_more;
   if (include_inner_sphere_A) {
@@ -603,7 +620,15 @@ make_initial_grid_points(const size_t initial_value,
   std::unordered_map<std::string,
                      std::variant<std::array<size_t, 3>, std::array<size_t, 2>>>
       initial_map;
+  //   const std::array<size_t, 3> same{initial_value, initial_value,
+  //   initial_value}; const std::array<size_t, 3> one_more{initial_value +
+  //   1, initial_value,
+  //                                        initial_value};
+  //   const std::array<size_t, 2> shell_same{initial_value, initial_value};
+  //   const std::array<size_t, 2> shell_one_more{initial_value + 1,
+  //   initial_value};
 
+  //   std::unordered_map<std::string, std::array<size_t, 2>> initial_map;
   const std::array<size_t, 2> same{initial_value, initial_value};
   const std::array<size_t, 2> sphere_one_more{initial_value + 1, initial_value};
   const std::array<size_t, 2> cyl_one_more{initial_value, initial_value + 1};
@@ -834,9 +859,15 @@ void test_initial_extents_and_refinement() {
       expected_extents_from_local = {{5, 17, 7}};
       if (block_name_global.find("Filled") != std::string::npos) {
         expected_extents_from_global = {{13, 49, 13}};
+        // expected_extents_from_local = {{5, 17, 7}};
       } else {
         expected_extents_from_global = {{13, 13, 13}};
+        // expected_extents_from_local = {{5, 17, 7}};
       }
+      //   expected_refinement_from_global = {{0, 0, 1}};
+      //   expected_extents_from_global = {{13, 49, 13}};
+      //   expected_refinement_from_local = {{0, 0, 1}};
+      //   expected_extents_from_local = {{5, 17, 7}};
     } else if (block_groups.at("InnerB").contains(block_name_global)) {
       expected_refinement_from_global = {{0, 0, 1}};
       expected_refinement_from_local = {{0, 0, 0}};
@@ -846,15 +877,25 @@ void test_initial_extents_and_refinement() {
       } else {
         expected_extents_from_global = {{13, 13, 13}};
       }
+      //   expected_refinement_from_global = {{0, 0, 1}};
+      //   expected_extents_from_global = {{13, 49, 13}};
+      //   expected_refinement_from_local = {{0, 0, 0}};
+      //   expected_extents_from_local = {{7, 25, 9}};
     } else if (block_groups.at("Outer").contains(block_name_global)) {
       expected_refinement_from_global = {{0, 0, 1}};
       expected_refinement_from_local = {{0, 0, 1}};
       expected_extents_from_local = {{9, 33, 11}};
       if (block_name_global.find("Filled") != std::string::npos) {
         expected_extents_from_global = {{13, 49, 13}};
+        // expected_extents_from_local = {{9, 33, 11}};
       } else {
         expected_extents_from_global = {{13, 13, 13}};
+        // expected_extents_from_local = {{9, 33, 11}};
       }
+      //   expected_refinement_from_global = {{0, 0, 1}};
+      //   expected_extents_from_global = {{13, 49, 13}};
+      //   expected_refinement_from_local = {{0, 0, 1}};
+      //   expected_extents_from_local = {{9, 33, 11}};
     } else {
       ERROR("Block name " << block_name_global
                           << " not found in block groups.");
