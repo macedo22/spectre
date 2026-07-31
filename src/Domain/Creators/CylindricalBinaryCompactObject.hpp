@@ -152,78 +152,46 @@ namespace domain::creators {
  */
 class CylindricalBinaryCompactObject : public DomainCreator<3> {
  public:
-  // TODO :: remove unneded cubed cylinder maps
-  using maps_list = tmpl::flatten<
-      tmpl::list</*domain::CoordinateMap<
-                     Frame::BlockLogical, Frame::Inertial,
-                     CoordinateMaps::ProductOf3Maps<CoordinateMaps::Interval,
-                                                    CoordinateMaps::Interval,
-                                                    CoordinateMaps::Interval>,
-                     CoordinateMaps::UniformCylindricalEndcap,
-                     CoordinateMaps::DiscreteRotation<3>>,
-                 domain::CoordinateMap<
-                     Frame::BlockLogical, Frame::Inertial,
-                     CoordinateMaps::ProductOf2Maps<CoordinateMaps::Wedge<2>,
-                                                    CoordinateMaps::Interval>,
-                     CoordinateMaps::UniformCylindricalEndcap,
-                     CoordinateMaps::DiscreteRotation<3>>,*/
-                 domain::CoordinateMap<
-                     Frame::BlockLogical, Frame::Inertial,
-                     CoordinateMaps::ProductOf3Maps<CoordinateMaps::Affine,
-                                                    CoordinateMaps::Identity<1>,
-                                                    CoordinateMaps::Interval>,
-                     CoordinateMaps::ProductOf2Maps<CoordinateMaps::PolarToCartesian,
-                                                    CoordinateMaps::Identity<1>>,
-                     CoordinateMaps::DiscreteRotation<3>,
-                     CoordinateMaps::UniformCylindricalEndcap,
-                     CoordinateMaps::DiscreteRotation<3>>,
-                 /*domain::CoordinateMap<
-                     Frame::BlockLogical, Frame::Inertial,
-                     CoordinateMaps::ProductOf3Maps<CoordinateMaps::Interval,
-                                                    CoordinateMaps::Interval,
-                                                    CoordinateMaps::Interval>,
-                     CoordinateMaps::UniformCylindricalFlatEndcap,
-                     CoordinateMaps::DiscreteRotation<3>>,
-                 domain::CoordinateMap<
-                     Frame::BlockLogical, Frame::Inertial,
-                     CoordinateMaps::ProductOf2Maps<CoordinateMaps::Wedge<2>,
-                                                    CoordinateMaps::Interval>,
-                     CoordinateMaps::UniformCylindricalFlatEndcap,
-                     CoordinateMaps::DiscreteRotation<3>>,*/
-                 domain::CoordinateMap<
-                     Frame::BlockLogical, Frame::Inertial,
-                     CoordinateMaps::ProductOf3Maps<CoordinateMaps::Affine,
-                                                    CoordinateMaps::Identity<1>,
-                                                    CoordinateMaps::Interval>,
-                     CoordinateMaps::ProductOf2Maps<CoordinateMaps::PolarToCartesian,
-                                                    CoordinateMaps::Identity<1>>,
-                     CoordinateMaps::DiscreteRotation<3>,
-                     CoordinateMaps::UniformCylindricalFlatEndcap,
-                     CoordinateMaps::DiscreteRotation<3>>,
-                 domain::CoordinateMap<
-                     Frame::BlockLogical, Frame::Inertial,
-                     CoordinateMaps::ProductOf3Maps<CoordinateMaps::Affine,
-                                                    CoordinateMaps::Identity<1>,
-                                                    CoordinateMaps::Interval>,
-                     CoordinateMaps::ProductOf2Maps<CoordinateMaps::PolarToCartesian,
-                                                    CoordinateMaps::Identity<1>>,
-                     CoordinateMaps::DiscreteRotation<3>,
-                     CoordinateMaps::UniformCylindricalSide,
-                     CoordinateMaps::DiscreteRotation<3>>,
-                //  domain::CoordinateMap<
-                //      Frame::BlockLogical, Frame::Inertial,
-                //      domain::CoordinateMaps::ProductOf3Maps<CoordinateMaps::Affine, CoordinateMaps::Identity<1>, CoordinateMaps::Interval>,
-                //      domain::CoordinateMaps::ProductOf2Maps<CoordinateMaps::PolarToCartesian, CoordinateMaps::Identity<1>>
-                //  >,
-                 domain::CoordinateMap<
-                     Frame::BlockLogical, Frame::Inertial,
-                     domain::CoordinateMaps::ProductOf2Maps<
-                         CoordinateMaps::Interval, CoordinateMaps::Identity<2>>,
-                     domain::CoordinateMaps::SphericalToCartesianPfaffian,
-                     CoordinateMaps::ProductOf3Maps<CoordinateMaps::Affine,
-                                                    CoordinateMaps::Affine,
-                                                    CoordinateMaps::Affine>>,
-                 bco::TimeDependentMapOptions<true>::maps_list>>;
+  using maps_list = tmpl::flatten<tmpl::list<
+      domain::CoordinateMap<
+          Frame::BlockLogical, Frame::Inertial,
+          CoordinateMaps::ProductOf3Maps<CoordinateMaps::Affine,
+                                         CoordinateMaps::Identity<1>,
+                                         CoordinateMaps::Interval>,
+          CoordinateMaps::ProductOf2Maps<CoordinateMaps::PolarToCartesian,
+                                         CoordinateMaps::Identity<1>>,
+          CoordinateMaps::DiscreteRotation<3>,
+          CoordinateMaps::UniformCylindricalEndcap,
+          CoordinateMaps::DiscreteRotation<3>>,
+      domain::CoordinateMap<
+          Frame::BlockLogical, Frame::Inertial,
+          CoordinateMaps::ProductOf3Maps<CoordinateMaps::Affine,
+                                         CoordinateMaps::Identity<1>,
+                                         CoordinateMaps::Interval>,
+          CoordinateMaps::ProductOf2Maps<CoordinateMaps::PolarToCartesian,
+                                         CoordinateMaps::Identity<1>>,
+          CoordinateMaps::DiscreteRotation<3>,
+          CoordinateMaps::UniformCylindricalFlatEndcap,
+          CoordinateMaps::DiscreteRotation<3>>,
+      domain::CoordinateMap<
+          Frame::BlockLogical, Frame::Inertial,
+          CoordinateMaps::ProductOf3Maps<CoordinateMaps::Affine,
+                                         CoordinateMaps::Identity<1>,
+                                         CoordinateMaps::Interval>,
+          CoordinateMaps::ProductOf2Maps<CoordinateMaps::PolarToCartesian,
+                                         CoordinateMaps::Identity<1>>,
+          CoordinateMaps::DiscreteRotation<3>,
+          CoordinateMaps::UniformCylindricalSide,
+          CoordinateMaps::DiscreteRotation<3>>,
+      domain::CoordinateMap<
+          Frame::BlockLogical, Frame::Inertial,
+          domain::CoordinateMaps::ProductOf2Maps<CoordinateMaps::Interval,
+                                                 CoordinateMaps::Identity<2>>,
+          domain::CoordinateMaps::SphericalToCartesianPfaffian,
+          CoordinateMaps::ProductOf3Maps<CoordinateMaps::Affine,
+                                         CoordinateMaps::Affine,
+                                         CoordinateMaps::Affine>>,
+      bco::TimeDependentMapOptions<true>::maps_list>>;
 
   struct CenterA {
     using type = std::array<double, 3>;
@@ -261,8 +229,7 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
         "Grid-coordinate radius of outer boundary."};
   };
 
-  // TODO : need to get rid of array<3> since nothing uses that now
-  // also need to update docs
+  // TODO : update docs
   struct InitialRefinement {
     using type = std::variant<
         size_t, std::array<size_t, 3>, std::vector<std::array<size_t, 3>>,
@@ -278,8 +245,7 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
         "('InnerSphereA', 'InnerSphereB', and 'OuterSphere'), you must instead "
         "specify refinement as a single value representing radial refinement."};
   };
-  // TODO : should I add array<2> as an option?
-  // also need to update docs
+  // TODO : update docs
   struct InitialGridPoints {
     using type = std::variant<
         size_t, std::array<size_t, 3>, std::vector<std::array<size_t, 3>>,
