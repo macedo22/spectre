@@ -5,7 +5,6 @@
 
 #include "Framework/TestingFramework.hpp"
 
-#include <iostream>
 #include <memory>
 #include <string>
 #include <tuple>
@@ -37,9 +36,7 @@ Domain<Dim> test_domain_creator(const DomainCreator<Dim>& domain_creator,
                                     std::numeric_limits<double>::quiet_NaN()}) {
   INFO("Test domain creator consistency");
   CAPTURE(Dim);
-  std::cout << "before domain_creator.create_domain()" << std::endl;
   auto domain = domain_creator.create_domain();
-  std::cout << "after domain_creator.create_domain()" << std::endl;
   const auto block_names = domain_creator.block_names();
   const auto block_groups = domain_creator.block_groups();
   const auto all_boundary_conditions =
@@ -47,7 +44,6 @@ Domain<Dim> test_domain_creator(const DomainCreator<Dim>& domain_creator,
   const auto initial_refinement_levels =
       domain_creator.initial_refinement_levels();
   const auto initial_extents = domain_creator.initial_extents();
-  std::cout << "after initial_extents" << std::endl;
 
   const auto& blocks = domain.blocks();
   REQUIRE(initial_refinement_levels.size() == blocks.size());
@@ -94,17 +90,11 @@ Domain<Dim> test_domain_creator(const DomainCreator<Dim>& domain_creator,
     }
   }
 
-  std::cout << "before register_derived_with_charm" << std::endl;
   ::domain::creators::register_derived_with_charm();
-  std::cout << "after register_derived_with_charm" << std::endl;
   ::domain::creators::time_dependence::register_derived_with_charm();
-  std::cout << "after register_derived_with_charm" << std::endl;
-  // TODOTODOTODO: fails here?
   test_serialization(domain);
-  std::cout << "after test_serialization" << std::endl;
 
   test_initial_domain(domain, initial_refinement_levels);
-  std::cout << "after test_initial_domain" << std::endl;
   const auto functions_of_time = domain_creator.functions_of_time();
   for (const double time : times) {
     CAPTURE(time);

@@ -1186,8 +1186,6 @@ cyl_wedge_coordinate_maps(
   return cylinder_mapping;
 }
 
-// std::unique_ptr<
-//     domain::CoordinateMapBase<Frame::BlockLogical, Frame::Inertial, 3>>
 domain::CoordinateMap<
     Frame::BlockLogical, Frame::Inertial,
     domain::CoordinateMaps::ProductOf3Maps<
