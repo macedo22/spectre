@@ -283,12 +283,6 @@ void check_block_face_grid_points_align(
   // physical_separation cannot be called for cylindrical blocks since they do
   // not have corners.
   Mesh<VolumeDim - 1> face_mesh;
-  //   - domain::topologies::cylindrical_shell = {I1, S1, I1}
-  // - domain::topologies::full_cylinder = {B2Radial, B2Angular, I1}
-
-  // if constexpr () {
-
-  // }
   if constexpr (VolumeDim == 3) {
     if (host_block.topologies()[VolumeDim - 1] ==
       domain::Topology::CartoonCylinder) {
@@ -354,33 +348,6 @@ void check_block_face_grid_points_align(
                                     Spectral::Quadrature::Gauss};
   }
 
-  // if (host_block.topologies()[VolumeDim - 1] ==
-  //     domain::Topology::CartoonCylinder) {
-  //   if constexpr (VolumeDim == 3) {
-  //     face_mesh = Mesh<VolumeDim - 1>{
-  //         {3, 1},
-  //         {Spectral::Basis::Legendre, Spectral::Basis::Cartoon},
-  //         {Spectral::Quadrature::Gauss, Spectral::Quadrature::AxialSymmetry}};
-  //   } else {
-  //     ERROR("Cartoon basis used with non 3D mesh, got dim = " << VolumeDim);
-  //   }
-  // } else if (alg::equal(host_block.topologies(), domain::topologies::full_cylinder)) {
-  //   // if constexpr (VolumeDim == 3) {
-  //   //   face_mesh = Mesh<VolumeDim - 1>{
-  //   //       {3, 9},
-  //   //       {Spectral::Basis::ZernikeB2, Spectral::Basis::ZernikeB2, Spectral::Basis::Legendre},
-  //   //       {Spectral::Quadrature::GaussRadauUpper, Spectral::Quadrature::Equiangular, Spectral::Quadrature::Gauss}};
-  //   // } else {
-  //   //   ERROR("Cartoon basis used with non 3D mesh, got dim = " << VolumeDim);
-  //   // }
-  //   face_mesh = Mesh<VolumeDim - 1>{
-  //         {3, 9},
-  //         {Spectral::Basis::ZernikeB2, Spectral::Basis::ZernikeB2},
-  //         {Spectral::Quadrature::GaussRadauUpper, Spectral::Quadrature::Equiangular}};
-  // } else {
-  //   face_mesh = Mesh<VolumeDim - 1>{3_st, Spectral::Basis::Legendre,
-  //                                   Spectral::Quadrature::Gauss};
-  // }
   // We want block logical coordinates on face_mesh on the host side and the
   // neighbor. The following returns element logical coordinates in the host
   // frame, which we then copy into tensors holding block logical coordinates,
