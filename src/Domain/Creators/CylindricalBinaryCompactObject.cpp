@@ -395,36 +395,21 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
     PARSE_ERROR(context, "Invalid 'InitialGridPoints': " << error.what());
   }
 
-  // Validate number of radial points for filled cylinders is > 2.
+  // Validate p-refinement values in cylinder and spherical shell blocks
   for (const auto& [name, position] : block_positions_) {
     if (name.find("FilledCylinder") != std::string::npos) {
+      // Validate number of radial points for filled cylinders is > 2
       if (gsl::at(gsl::at(initial_grid_points_, position), 0) <= 2) {
         PARSE_ERROR(context,
                     "Filled cylindrical block "
                         << name
                         << " must have more than 2 radial grid points.");
       }
-    }
-  }
 
-  // Validate number of angular grid points in all cylindrical blocks are odd.
-  for (const auto& [name, position] : block_positions_) {
-    if (name.find("Cylinder") != std::string::npos) {
-      if (gsl::at(gsl::at(initial_grid_points_, position), 1) % 2 == 0) {
-        PARSE_ERROR(context,
-                    "Cylindrical block "
-                        << name
-                        << " must have an odd number of angular grid points.");
-      }
-    }
-  }
-
-  // Validate number of angular grid points in filled cylinder blocks is what is
-  // expected by ZernikeB2. The Zernike disk is fully specified by either the
-  // number of radial points or the number of theta points, so check that they
-  // relate as expected.
-  for (const auto& [name, position] : block_positions_) {
-    if (name.find("FilledCylinder") != std::string::npos) {
+      // Validate number of angular grid points in filled cylinder blocks is
+      // what is expected by ZernikeB2. The Zernike disk is fully specified by
+      // either the number of radial points or the number of theta points, so
+      // check that they relate as expected.
       const size_t num_theta_modes =
           gsl::at(gsl::at(initial_grid_points_, position), 1) / 2;
       const size_t expected_num_r_points =
@@ -438,14 +423,20 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
                         << name << " as [num_radial_points, num_z_points].");
       }
     }
-  }
-
-  // For spherical-harmonic outer-shell blocks, initial_number_of_grid_points_
-  // stores {n_radial, l_max, m_max}. First validate that l_max == m_max, then
-  // convert (l_max, m_max) to the number of collocation points the
-  // spherical-harmonic basis uses in each angular direction.
-  for (const auto& [name, position] : block_positions_) {
-    if (name.find("Shell") != std::string::npos) {
+    if (name.find("Cylinder") != std::string::npos) {
+      // Validate number of angular grid points in all cylindrical blocks are
+      // odd.
+      if (gsl::at(gsl::at(initial_grid_points_, position), 1) % 2 == 0) {
+        PARSE_ERROR(context,
+                    "Cylindrical block "
+                        << name
+                        << " must have an odd number of angular grid points.");
+      }
+    } else if (name.find("Shell") != std::string::npos) {
+      // For spherical-harmonic shell blocks, initial_number_of_grid_points_
+      // stores {n_radial, l_max, m_max}. First validate that l_max == m_max,
+      // then convert (l_max, m_max) to the number of collocation points the
+      // spherical-harmonic basis uses in each angular direction.
       const size_t l_max = gsl::at(gsl::at(initial_grid_points_, position), 1);
       const size_t m_max = gsl::at(gsl::at(initial_grid_points_, position), 2);
       if (l_max != m_max) {
