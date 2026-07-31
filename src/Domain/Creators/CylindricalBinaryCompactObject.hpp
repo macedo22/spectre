@@ -152,37 +152,30 @@ namespace domain::creators {
  */
 class CylindricalBinaryCompactObject : public DomainCreator<3> {
  public:
+  using unit_cylinder_map =
+      CoordinateMaps::ProductOf3Maps<CoordinateMaps::Affine,
+                                     CoordinateMaps::Identity<1>,
+                                     CoordinateMaps::Interval>;
+  using polar_to_cartesian_map =
+      CoordinateMaps::ProductOf2Maps<CoordinateMaps::PolarToCartesian,
+                                     CoordinateMaps::Identity<1>>;
+
   using maps_list = tmpl::flatten<tmpl::list<
-      domain::CoordinateMap<
-          Frame::BlockLogical, Frame::Inertial,
-          CoordinateMaps::ProductOf3Maps<CoordinateMaps::Affine,
-                                         CoordinateMaps::Identity<1>,
-                                         CoordinateMaps::Interval>,
-          CoordinateMaps::ProductOf2Maps<CoordinateMaps::PolarToCartesian,
-                                         CoordinateMaps::Identity<1>>,
-          CoordinateMaps::DiscreteRotation<3>,
-          CoordinateMaps::UniformCylindricalEndcap,
-          CoordinateMaps::DiscreteRotation<3>>,
-      domain::CoordinateMap<
-          Frame::BlockLogical, Frame::Inertial,
-          CoordinateMaps::ProductOf3Maps<CoordinateMaps::Affine,
-                                         CoordinateMaps::Identity<1>,
-                                         CoordinateMaps::Interval>,
-          CoordinateMaps::ProductOf2Maps<CoordinateMaps::PolarToCartesian,
-                                         CoordinateMaps::Identity<1>>,
-          CoordinateMaps::DiscreteRotation<3>,
-          CoordinateMaps::UniformCylindricalFlatEndcap,
-          CoordinateMaps::DiscreteRotation<3>>,
-      domain::CoordinateMap<
-          Frame::BlockLogical, Frame::Inertial,
-          CoordinateMaps::ProductOf3Maps<CoordinateMaps::Affine,
-                                         CoordinateMaps::Identity<1>,
-                                         CoordinateMaps::Interval>,
-          CoordinateMaps::ProductOf2Maps<CoordinateMaps::PolarToCartesian,
-                                         CoordinateMaps::Identity<1>>,
-          CoordinateMaps::DiscreteRotation<3>,
-          CoordinateMaps::UniformCylindricalSide,
-          CoordinateMaps::DiscreteRotation<3>>,
+      domain::CoordinateMap<Frame::BlockLogical, Frame::Inertial,
+                            unit_cylinder_map, polar_to_cartesian_map,
+                            CoordinateMaps::DiscreteRotation<3>,
+                            CoordinateMaps::UniformCylindricalEndcap,
+                            CoordinateMaps::DiscreteRotation<3>>,
+      domain::CoordinateMap<Frame::BlockLogical, Frame::Inertial,
+                            unit_cylinder_map, polar_to_cartesian_map,
+                            CoordinateMaps::DiscreteRotation<3>,
+                            CoordinateMaps::UniformCylindricalFlatEndcap,
+                            CoordinateMaps::DiscreteRotation<3>>,
+      domain::CoordinateMap<Frame::BlockLogical, Frame::Inertial,
+                            unit_cylinder_map, polar_to_cartesian_map,
+                            CoordinateMaps::DiscreteRotation<3>,
+                            CoordinateMaps::UniformCylindricalSide,
+                            CoordinateMaps::DiscreteRotation<3>>,
       domain::CoordinateMap<
           Frame::BlockLogical, Frame::Inertial,
           domain::CoordinateMaps::ProductOf2Maps<CoordinateMaps::Interval,
