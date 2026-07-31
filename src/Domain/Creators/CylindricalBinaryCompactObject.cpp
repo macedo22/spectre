@@ -60,142 +60,6 @@ std::array<double, 3> rotate_from_z_to_x_axis(
 std::array<double, 3> flip_about_xy_plane(const std::array<double, 3> input) {
   return std::array<double, 3>{input[0], input[1], -input[2]};
 }
-
-// std::vector<std::array<size_t, 3>> set_initial_refinement(
-//     const domain::ExpandOverBlocks<std::array<size_t, 3>>&
-//     expand_over_blocks, const
-//     domain::creators::CylindricalBinaryCompactObject::InitialRefinement::
-//         type& initial_refinement,
-//     const std::unordered_set<std::string>& spherical_harmonic_shell_names,
-//     const std::unordered_set<std::string>& cylinder_names) {
-//   return std::visit(
-//       [&expand_over_blocks, &spherical_harmonic_shell_names,
-//        &cylinder_names]<typename V>(
-//           const V& v) -> std::vector<std::array<size_t, 3>> {
-//         if constexpr (std::is_same_v<
-//                           V,
-//                           std::unordered_map<
-//                               std::string,
-//                               std::variant<std::array<size_t, 3>, size_t>>>)
-//                               {
-//           const auto converted = [&v, &spherical_harmonic_shell_names,
-//                                   &cylinder_names]() {
-//             std::unordered_map<std::string, std::array<size_t, 3>> result;
-//             for (const auto& [name, val] : v) {
-//               const bool is_spherical_harmonic =
-//                   spherical_harmonic_shell_names.contains(name);
-//               const bool is_cylinder = cylinder_names.contains(name);
-//               ASSERT(not(is_spherical_harmonic and is_cylinder),
-//                      "Block or group '"
-//                          << name
-//                          << "' cannot be both a spherical-harmonic shell
-//                          block/group "
-//                             "and a cylinder block/group. ");
-//               if (std::holds_alternative<size_t>(val)) {
-//                 if (spherical_harmonic_shell_names.contains(name)) {
-//                   const size_t r = std::get<size_t>(val);
-//                   result[name] = {r, 0, 0};
-//                 } else if (cylinder_names.contains(name)) {
-//                   const size_t z = std::get<size_t>(val);
-//                   result[name] = {0, 0, z};
-//                 } else {
-//                   ERROR(
-//                       "Block or group '"
-//                       << name
-//                       << "' refinement was specified as a single number, but
-//                       "
-//                          "it is not the name of a spherical shell or cylinder
-//                          " "block or group. Refinement for this entry should
-//                          be " "specified as array<3>.");
-//                 }
-//               } else {
-//                 result[name] = std::get<std::array<size_t, 3>>(val);
-//               }
-//             }
-//             return result;
-//           }();
-//           return expand_over_blocks(converted);
-//         } else {
-//           return expand_over_blocks(v);
-//         }
-//       },
-//       initial_refinement);
-// }
-
-// TODO: just don't use expand_over_blocks. Tabling this because it's not super
-// important
-// std::vector<std::array<size_t, 3>> set_initial_grid_points(
-//     const domain::ExpandOverBlocks<std::array<size_t, 3>>&
-//     expand_over_blocks, const
-//     domain::creators::CylindricalBinaryCompactObject::InitialGridPoints::
-//         type& initial_grid_points,
-//     const std::unordered_set<std::string>& spherical_harmonic_shell_names,
-//     const std::unordered_set<std::string>& filled_cylinder_names) {
-//   return std::visit(
-//       [&expand_over_blocks, &spherical_harmonic_shell_names,
-//        &filled_cylinder_names]<typename V>(
-//           const V& v) -> std::vector<std::array<size_t, 3>> {
-//         if constexpr (std::is_same_v<
-//                           V, std::unordered_map<
-//                                  std::string,
-//                                  std::variant<std::array<size_t, 3>,
-//                                               std::array<size_t, 2>>>>) {
-//           const auto converted = [&v, &spherical_harmonic_shell_names,
-//                                   &filled_cylinder_names]() {
-//             std::unordered_map<std::string, std::array<size_t, 3>> result;
-//             for (const auto& [name, val] : v) {
-//               const bool is_spherical_harmonic =
-//                   spherical_harmonic_shell_names.contains(name);
-//               const bool is_filled_cylinder =
-//               filled_cylinder_names.contains(name);
-//               ASSERT(not(is_spherical_harmonic and is_filled_cylinder),
-//                      "Block or group '"
-//                          << name
-//                          << "' cannot be both a spherical-harmonic shell
-//                          block/group "
-//                             "and a cylinder block/group. ");
-//               if (std::holds_alternative<std::array<size_t, 2>>(val)) {
-//                 if (spherical_harmonic_shell_names.contains(name)) {
-//                   const auto& a2 = std::get<std::array<size_t, 2>>(val);
-//                 //   result[name] = {a2[0],
-//                 ylm::Spherepack::n_theta_points(a2[1]),
-//                 //                   ylm::Spherepack::n_phi_points(a2[1])};
-
-//                   result[name] = {a2[0],
-//                   ylm::Spherepack::n_theta_points(a2[1]),
-//                                   ylm::Spherepack::n_phi_points(a2[1])};
-//                 } else if (filled_cylinder_names.contains(name)) {
-//                   const auto& a2 = std::get<std::array<size_t, 2>>(val);
-//                   // TODO :
-//                   // - assert that n_r > 2?
-//                   // - have people specify number of theta modes (theta_M)?
-//                   const size_t num_theta_modes = a2[0];
-//                   const size_t n_z = a2[1];
-//                   const size_t n_theta = num_theta_modes * 2 - 1;  // always
-//                   odd const size_t n_radial =
-//                       (num_theta_modes / 2) + 1 + (num_theta_modes % 2);
-//                   result[name] = {n_radial, n_theta, n_z};
-//                 } else {
-//                   ERROR("Block '"
-//                         << name
-//                         << "' grid points was specified as array<2>, but "
-//                            "it is not the name of a spherical shell or "
-//                            "filled cylinder block or group. Grid points for "
-//                            "this entry should be specified as array<3>.");
-//                 }
-//               } else {
-//                 result[name] = std::get<std::array<size_t, 3>>(val);
-//               }
-//             }
-//             return result;
-//           }();
-//           return expand_over_blocks(converted);
-//         } else {
-//           return expand_over_blocks(v);
-//         }
-//       },
-//       initial_grid_points);
-// }
 }  // namespace
 
 namespace domain::creators {
@@ -267,46 +131,6 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
         "Cannot have periodic boundary conditions with a binary domain");
   }
 
-  // TODO : move addition of blocks and groups farther below to up here
-  // so we're not creating these lists twice
-
-  // Build the set of cylindrical block groups and block names so the
-  // validation below can distinguish spherical-harmonic blocks from other
-  // blocks and block groups.
-  const std::unordered_set<std::string> filled_cylinder_names{
-      "InnerA", "EAFilledCylinder", "MAFilledCylinder",
-      "InnerB", "EBFilledCylinder", "MBFilledCylinder",
-      "Outer",  "CAFilledCylinder", "CBFilledCylinder"};
-  const std::unordered_set<std::string> hollow_cylinder_names{
-      "InnerA", "EACylinder", "InnerB",    "EBCylinder",
-      "Outer",  "CACylinder", "CBCylinder"};
-  std::unordered_set<std::string> all_cylinder_names;
-  std::set_union(
-      std::begin(filled_cylinder_names), std::end(filled_cylinder_names),
-      std::begin(hollow_cylinder_names), std::end(hollow_cylinder_names),
-      std::inserter(all_cylinder_names, std::begin(all_cylinder_names)));
-
-  // Build the set of spherical-harmonic shell block groups and block names so
-  // the validation below can distinguish spherical-harmonic blocks from other
-  // blocks and block groups.
-  std::unordered_set<std::string> spherical_harmonic_shell_names{"OuterSphere",
-                                                                 "OuterShell0"};
-  if (include_inner_sphere_A) {
-    spherical_harmonic_shell_names.insert("InnerSphereA");
-    spherical_harmonic_shell_names.insert("InnerAShell0");
-  }
-  if (include_inner_sphere_B) {
-    spherical_harmonic_shell_names.insert("InnerSphereB");
-    spherical_harmonic_shell_names.insert("InnerBShell0");
-  }
-
-  bco::validate_initial_refinement(context, initial_refinement,
-                                   spherical_harmonic_shell_names,
-                                   all_cylinder_names);
-  bco::validate_initial_grid_points(context, initial_grid_points,
-                                    spherical_harmonic_shell_names,
-                                    filled_cylinder_names);
-
   // The choices made below for the quantities xi, z_cutting_plane_,
   // and xi_min_sphere_e are the ones made in SpEC, and in the
   // Appendix of https://arxiv.org/abs/1206.3015.  Other choices could
@@ -365,16 +189,6 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
                 0.5 * (std::abs(z_cutting_plane_ - center_B_[2]) - radius_B_)
           : radius_B_;
 
-  number_of_blocks_ = 10;
-  if (include_inner_sphere_A) {
-    number_of_blocks_ += 1;
-  }
-  if (include_inner_sphere_B) {
-    number_of_blocks_ += 1;
-  }
-  // Outer sphere
-  number_of_blocks_ += 1;
-
   // Add SphereE blocks if necessary.  Note that
   // https://arxiv.org/abs/1206.3015 has a mistake just above
   // Eq. (A.11) and the same mistake above Eq. (A.20), where it lists
@@ -397,68 +211,78 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
   // Create grid anchors in x direction from unrotated input centers
   grid_anchors_ = bco::create_grid_anchors(center_A, center_B);
 
-  //   std::unordered_map<std::string, size_t> block_positions{};
+  // Build the set of cylindrical block groups and block names so the
+  // validation below can distinguish spherical-harmonic blocks from other
+  // blocks and block groups.
+  std::unordered_set<std::string> filled_cylinder_names{};
+  std::unordered_set<std::string> hollow_cylinder_names{};
 
-  // Create block names and groups
-  auto add_filled_cylinder_name = [this /*, &block_positions*/](
+  // Create cylinder block names and groups
+  auto add_filled_cylinder_name = [this, &filled_cylinder_names](
                                       const std::string& prefix,
                                       const std::string& group_name) {
     const std::string name = std::string(prefix).append("FilledCylinder");
     block_names_.push_back(name);
     block_groups_[group_name].insert(name);
-    //   block_positions[name] = block_names_.size() - 1;
+    block_positions_[name] = block_names_.size() - 1;
+    filled_cylinder_names.insert(name);
+    filled_cylinder_names.insert(group_name);
   };
-  auto add_cylinder_name = [this /*, &block_positions*/](
+  auto add_cylinder_name = [this, &hollow_cylinder_names](
                                const std::string& prefix,
                                const std::string& group_name) {
     const std::string name = std::string(prefix).append("Cylinder");
     block_names_.push_back(name);
     block_groups_[group_name].insert(name);
-    //   block_positions[name] = block_names_.size() - 1;
+    block_positions_[name] = block_names_.size() - 1;
+    hollow_cylinder_names.insert(name);
+    hollow_cylinder_names.insert(group_name);
   };
 
   // CA Filled Cylinder
-  // 5 blocks: 0 thru 4
   add_filled_cylinder_name("CA", "Outer");
 
   // CA Cylinder
-  // 4 blocks: 5 thru 8
   add_cylinder_name("CA", "Outer");
 
   // EA Filled Cylinder
-  // 5 blocks: 9 thru 13
   add_filled_cylinder_name("EA", "InnerA");
 
   // EA Cylinder
-  // 4 blocks: 14 thru 17
   add_cylinder_name("EA", "InnerA");
 
   // EB Filled Cylinder
-  // 5 blocks: 18 thru 22
   add_filled_cylinder_name("EB", "InnerB");
 
   // EB Cylinder
-  // 4 blocks: 23 thru 26
   add_cylinder_name("EB", "InnerB");
 
   // MA Filled Cylinder
-  // 5 blocks: 27 thru 31
   add_filled_cylinder_name("MA", "InnerA");
 
   // MB Filled Cylinder
-  // 5 blocks: 32 thru 36
   add_filled_cylinder_name("MB", "InnerB");
 
   // CB Filled Cylinder
-  // 5 blocks: 37 thru 41
   add_filled_cylinder_name("CB", "Outer");
 
   // CB Cylinder
-  // 4 blocks: 42 thru 45
   add_cylinder_name("CB", "Outer");
 
+  // combine filled and hollow cylinder blocks and groups into one set
+  std::unordered_set<std::string> all_cylinder_names;
+  std::set_union(
+      std::begin(filled_cylinder_names), std::end(filled_cylinder_names),
+      std::begin(hollow_cylinder_names), std::end(hollow_cylinder_names),
+      std::inserter(all_cylinder_names, std::begin(all_cylinder_names)));
+
+  // Build the set of spherical-harmonic shell block groups and block names so
+  // the validation below can distinguish spherical-harmonic blocks from other
+  // blocks and block groups.
+  std::unordered_set<std::string> spherical_harmonic_shell_names{};
+
   // Create block names and groups
-  auto add_spherical_shell_name = [this /*, &block_positions*/](
+  auto add_spherical_shell_name = [this, &spherical_harmonic_shell_names](
                                       const std::string& prefix,
                                       const std::string& group_name,
                                       const size_t shell_number) {
@@ -466,35 +290,41 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
         std::to_string(shell_number));
     block_names_.push_back(name);
     block_groups_[group_name].insert(name);
-    // block_positions[name] = block_names_.size() - 1;
+    block_positions_[name] = block_names_.size() - 1;
+    spherical_harmonic_shell_names.insert(name);
+    spherical_harmonic_shell_names.insert(group_name);
   };
-
-  //   const size_t block_number_CA_endcap = 0;
-  //   const size_t block_number_CA_side = 1;
-  //   const size_t block_number_EA_endcap = 2;
-  //   const size_t block_number_EA_side = 3;
-  //   const size_t block_number_EB_endcap = 4;
-  //   const size_t block_number_EB_side = 5;
-  //   const size_t block_number_MA_endcap = 6;
-  //   const size_t block_number_MB_endcap = 7;
-  //   const size_t block_number_CB_endcap = 8;
-  //   const size_t block_number_CB_side = 9;
-  const size_t first_inner_shell_A_block = 10;
-  size_t first_inner_shell_B_block = first_inner_shell_A_block;
-  first_outer_shell_block = first_inner_shell_A_block;
 
   if (include_inner_sphere_A) {
     add_spherical_shell_name("InnerA", "InnerSphereA", 0);
-
-    first_inner_shell_B_block += 1;
-    first_outer_shell_block += 1;
   }
   if (include_inner_sphere_B) {
     add_spherical_shell_name("InnerB", "InnerSphereB", 0);
-
-    first_outer_shell_block += 1;
   }
   add_spherical_shell_name("Outer", "OuterSphere", 0);
+
+  number_of_blocks_ = block_names_.size();
+  ASSERT(number_of_blocks_ == block_positions_.size(),
+         "Size of block_positions_ map should be equal to the number of blocks "
+         "in the domain.");
+
+  // Validate that the input file has the correct format for
+  // InitialRefinement and InitialGridPoints
+  bco::validate_initial_refinement(context, initial_refinement,
+                                   spherical_harmonic_shell_names,
+                                   all_cylinder_names);
+  bco::validate_initial_grid_points(context, initial_grid_points,
+                                    spherical_harmonic_shell_names,
+                                    filled_cylinder_names);
+
+  const size_t outer_shell_block = block_positions_.at("OuterShell0");
+  // TODO: using this for now, but want to not have to rely on ordering
+  // ultimately for the stuff below that uses this
+  const size_t first_shell_block =
+      include_inner_sphere_A
+          ? block_positions_.at("InnerAShell0")
+          : (include_inner_sphere_B ? block_positions_.at("InnerBShell0")
+                                    : outer_shell_block);
 
   // For expanding initial refinement and grid points over all blocks
   const ExpandOverBlocks<std::array<size_t, 3>> expand_over_blocks{
@@ -510,32 +340,34 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
     // post-process these
     if (std::holds_alternative<size_t>(initial_refinement)) {
       // Set cylinder h refinement to {0, 0, z}
-      for (size_t i = 0; i < first_inner_shell_A_block; i++) {
+      for (size_t i = 0; i < first_shell_block; i++) {
         initial_refinement_[i][0] = 0;
         initial_refinement_[i][1] = 0;
       }
       // Set spherical shell h refinement to {r, 0, 0}
       if (include_inner_sphere_A) {
         // InnerAShell0
-        initial_refinement_[first_inner_shell_A_block][1] = 0;
-        initial_refinement_[first_inner_shell_A_block][2] = 0;
+        initial_refinement_[block_positions_.at("InnerAShell0")][1] = 0;
+        initial_refinement_[block_positions_.at("InnerAShell0")][2] = 0;
       }
       if (include_inner_sphere_B) {
         // InnerBShell0
-        initial_refinement_[first_inner_shell_B_block][1] = 0;
-        initial_refinement_[first_inner_shell_B_block][2] = 0;
+        initial_refinement_[block_positions_.at("InnerBShell0")][1] = 0;
+        initial_refinement_[block_positions_.at("InnerBShell0")][2] = 0;
       }
       // OuterShell0
-      initial_refinement_[first_outer_shell_block][1] = 0;
-      initial_refinement_[first_outer_shell_block][2] = 0;
+      initial_refinement_[outer_shell_block][1] = 0;
+      initial_refinement_[outer_shell_block][2] = 0;
     }
   } catch (const std::exception& error) {
     PARSE_ERROR(context, "Invalid 'InitialRefinement': " << error.what());
   }
   // Validate angular h-refinement == 0 in spherical shell blocks
   if (include_inner_sphere_A_) {
-    if (gsl::at(initial_refinement_, first_inner_shell_A_block)[1] != 0 or
-        gsl::at(initial_refinement_, first_inner_shell_A_block)[2] != 0) {
+    if (gsl::at(initial_refinement_, block_positions_.at("InnerAShell0"))[1] !=
+            0 or
+        gsl::at(initial_refinement_, block_positions_.at("InnerAShell0"))[2] !=
+            0) {
       PARSE_ERROR(context,
                   "Angular h-refinement is not supported for "
                   "spherical-harmonic inner-shell blocks. Specify refinement "
@@ -543,16 +375,18 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
     }
   }
   if (include_inner_sphere_B_) {
-    if (gsl::at(initial_refinement_, first_inner_shell_B_block)[1] != 0 or
-        gsl::at(initial_refinement_, first_inner_shell_B_block)[2] != 0) {
+    if (gsl::at(initial_refinement_, block_positions_.at("InnerBShell0"))[1] !=
+            0 or
+        gsl::at(initial_refinement_, block_positions_.at("InnerBShell0"))[2] !=
+            0) {
       PARSE_ERROR(context,
                   "Angular h-refinement is not supported for "
                   "spherical-harmonic inner-shell blocks. Specify refinement "
                   "for InnerSphereB as a single number.");
     }
   }
-  if (gsl::at(initial_refinement_, first_outer_shell_block)[1] != 0 or
-      gsl::at(initial_refinement_, first_outer_shell_block)[2] != 0) {
+  if (gsl::at(initial_refinement_, outer_shell_block)[1] != 0 or
+      gsl::at(initial_refinement_, outer_shell_block)[2] != 0) {
     PARSE_ERROR(context,
                 "Angular h-refinement is not supported for "
                 "spherical-harmonic outer-shell blocks. Specify refinement"
@@ -572,14 +406,6 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
     // post-process these
     if (std::holds_alternative<size_t>(initial_grid_points)) {
       for (size_t block_number : filled_cylinder_indices) {
-        // // const size_t block_number = gsl::at(filled_cylinder_indices, i);
-        // const size_t num_theta_modes = gsl::at(initial_grid_points_,
-        // block_number)[1]; initial_grid_points_[block_number][1] =
-        // num_theta_modes * 2 - 1; initial_grid_points_[block_number][0] =
-        //     (num_theta_modes / 2) + 1 + (num_theta_modes % 2);
-        // const size_t num_radial_points = gsl::at(initial_grid_points_,
-        // block_number)[0];
-
         // TODO assert num_radial_points > 1 ? actually don't think that's
         // necessary
 
@@ -597,56 +423,13 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
         initial_grid_points_[block_number][1] =
             4 * (gsl::at(initial_grid_points_, block_number)[0]) - 3;
       }
-      //   // Convert spherical shell grid points from {r, L_max, L_max} to
-      //   // {r, n_theta, n_phi}
-      //   if (include_inner_sphere_A) {
-      //     // InnerAShell0
-      //     initial_grid_points_[first_inner_shell_A_block][1] =
-      //         ylm::Spherepack::n_theta_points(
-      //             gsl::at(initial_grid_points_,
-      //             first_inner_shell_A_block)[1]);
-      //     initial_grid_points_[first_inner_shell_A_block][2] =
-      //         ylm::Spherepack::n_phi_points(
-      //             gsl::at(initial_grid_points_,
-      //             first_inner_shell_A_block)[2]);
-      //     // initial_grid_points_[first_inner_shell_B_block][1] =
-      //     //   ylm::Spherepack::n_theta_points(
-      //     //       gsl::at(initial_grid_points_,
-      //     //   first_inner_shell_B_block)[1]);;
-      //     // initial_refinement_[first_inner_shell_A_block][2] = 0;
-      //   }
-      //   if (include_inner_sphere_B) {
-      //     // InnerBShell0
-      //     // initial_refinement_[first_inner_shell_B_block][1] = 0;
-      //     // initial_refinement_[first_inner_shell_B_block][2] = 0;
-      //     initial_grid_points_[first_inner_shell_B_block][1] =
-      //         ylm::Spherepack::n_theta_points(
-      //             gsl::at(initial_grid_points_,
-      //             first_inner_shell_B_block)[1]);
-      //     initial_grid_points_[first_inner_shell_B_block][2] =
-      //         ylm::Spherepack::n_phi_points(
-      //             gsl::at(initial_grid_points_,
-      //             first_inner_shell_B_block)[2]);
-      //   }
-      //   // OuterShell0
-      //   //   initial_refinement_[first_outer_shell_block][1] = 0;
-      //   //   initial_refinement_[first_outer_shell_block][2] = 0;
-      //   initial_grid_points_[first_outer_shell_block][1] =
-      //       ylm::Spherepack::n_theta_points(
-      //           gsl::at(initial_grid_points_, first_outer_shell_block)[1]);
-      //   initial_grid_points_[first_outer_shell_block][2] =
-      //       ylm::Spherepack::n_phi_points(
-      //           gsl::at(initial_grid_points_, first_outer_shell_block)[2]);
-      // }
     }
   } catch (const std::exception& error) {
     PARSE_ERROR(context, "Invalid 'InitialGridPoints': " << error.what());
   }
 
-  // TODO : need to check for odd number of points for all cylinders
-
   // Validate angular grid points in all cylindrical blocks are odd.
-  for (size_t block_number = 0; block_number < first_inner_shell_A_block;
+  for (size_t block_number = 0; block_number < first_shell_block;
        block_number++) {
     if (gsl::at(initial_grid_points_, block_number)[1] % 2 == 0) {
       PARSE_ERROR(context,
@@ -679,8 +462,8 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
   // spherical-harmonic shell is fully specified by a single ell, so l_max must
   // equal m_max.
   if (include_inner_sphere_A_) {
-    if (initial_grid_points_[first_inner_shell_A_block][1] !=
-        initial_grid_points_[first_inner_shell_A_block][2]) {
+    if (initial_grid_points_[block_positions_.at("InnerAShell0")][1] !=
+        initial_grid_points_[block_positions_.at("InnerAShell0")][2]) {
       PARSE_ERROR(
           context,
           "Spherical-harmonic inner-shell blocks must have L_max = M_max. "
@@ -690,42 +473,40 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
     // stores {n_radial, l_max, m_max}. Convert (l_max, m_max) to the number of
     // collocation points the spherical-harmonic basis uses in each angular
     // direction.
-    initial_grid_points_[first_inner_shell_A_block][1] =
-        ylm::Spherepack::n_theta_points(
-            gsl::at(initial_grid_points_, first_inner_shell_A_block)[1]);
-    initial_grid_points_[first_inner_shell_A_block][2] =
-        ylm::Spherepack::n_phi_points(
-            gsl::at(initial_grid_points_, first_inner_shell_A_block)[2]);
+    initial_grid_points_[block_positions_.at("InnerAShell0")][1] =
+        ylm::Spherepack::n_theta_points(gsl::at(
+            initial_grid_points_, block_positions_.at("InnerAShell0"))[1]);
+    initial_grid_points_[block_positions_.at("InnerAShell0")][2] =
+        ylm::Spherepack::n_phi_points(gsl::at(
+            initial_grid_points_, block_positions_.at("InnerAShell0"))[2]);
   }
   if (include_inner_sphere_B_) {
-    if (initial_grid_points_[first_inner_shell_B_block][1] !=
-        initial_grid_points_[first_inner_shell_B_block][2]) {
+    if (initial_grid_points_[block_positions_.at("InnerBShell0")][1] !=
+        initial_grid_points_[block_positions_.at("InnerBShell0")][2]) {
       PARSE_ERROR(
           context,
           "Spherical-harmonic inner-shell blocks must have L_max = M_max. "
           "Specify grid points for InnerSphereB as [radial_points, L_max].");
     }
-    initial_grid_points_[first_inner_shell_B_block][1] =
-        ylm::Spherepack::n_theta_points(
-            gsl::at(initial_grid_points_, first_inner_shell_B_block)[1]);
-    initial_grid_points_[first_inner_shell_B_block][2] =
-        ylm::Spherepack::n_phi_points(
-            gsl::at(initial_grid_points_, first_inner_shell_B_block)[2]);
+    initial_grid_points_[block_positions_.at("InnerBShell0")][1] =
+        ylm::Spherepack::n_theta_points(gsl::at(
+            initial_grid_points_, block_positions_.at("InnerBShell0"))[1]);
+    initial_grid_points_[block_positions_.at("InnerBShell0")][2] =
+        ylm::Spherepack::n_phi_points(gsl::at(
+            initial_grid_points_, block_positions_.at("InnerBShell0"))[2]);
   }
-  if (initial_grid_points_[first_outer_shell_block][1] !=
-      initial_grid_points_[first_outer_shell_block][2]) {
+  if (initial_grid_points_[outer_shell_block][1] !=
+      initial_grid_points_[outer_shell_block][2]) {
     PARSE_ERROR(
         context,
         "Spherical-harmonic outer-shell blocks must have L_max = M_max. "
         "Specify grid points for OuterSphere as [radial_points, L_max].");
   }
 
-  initial_grid_points_[first_outer_shell_block][1] =
-      ylm::Spherepack::n_theta_points(
-          gsl::at(initial_grid_points_, first_outer_shell_block)[1]);
-  initial_grid_points_[first_outer_shell_block][2] =
-      ylm::Spherepack::n_phi_points(
-          gsl::at(initial_grid_points_, first_outer_shell_block)[2]);
+  initial_grid_points_[outer_shell_block][1] = ylm::Spherepack::n_theta_points(
+      gsl::at(initial_grid_points_, outer_shell_block)[1]);
+  initial_grid_points_[outer_shell_block][2] = ylm::Spherepack::n_phi_points(
+      gsl::at(initial_grid_points_, outer_shell_block)[2]);
 
   // Build time-dependent maps
   // The size map, which is applied from the grid to distorted frame, currently
@@ -817,150 +598,34 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   const double cylinder_outer_radius = 1.0;
   const double cylinder_lower_bound_z = -1.0;
   const double cylinder_upper_bound_z = 1.0;
-//   const auto logical_to_cylinder_center_maps =
-//       cyl_wedge_coord_map_center_blocks(
-//           cylinder_inner_radius, cylinder_lower_bound_z, cylinder_upper_bound_z,
-//           use_equiangular_map_);
-//   const auto logical_to_cylinder_surrounding_maps =
-//       cyl_wedge_coord_map_surrounding_blocks(
-//           cylinder_inner_radius, cylinder_outer_radius, cylinder_lower_bound_z,
-//           cylinder_upper_bound_z, use_equiangular_map_, 0.0);
 
   using Affine = ::domain::CoordinateMaps::Affine;
-  // using Identity1D = ::domain::CoordinateMaps::Identity<1>;
-  using Interval = ::domain::CoordinateMaps::Interval;
-//   const auto linear_distribution = ::domain::CoordinateMaps::Distribution::Linear;
 
-//   const auto logical_to_cylinder_maps =
-//             make_coordinate_map_base<Frame::BlockLogical, Frame::Inertial>(
-//                 CoordinateMaps::ProductOf3Maps<Affine, Identity1D, Interval>{
-//                     Affine{-1.0, 1.0, cylinder_inner_radius, cylinder_outer_radius}, Identity1D{},
-//                     Interval{-1.0, 1.0, cylinder_lower_bound_z, cylinder_upper_bound_z, Linear}},
-//                 CoordinateMaps::ProductOf2Maps<CoordinateMaps::PolarToCartesian,
-//                                                 Identity1D>{
-//                     CoordinateMaps::PolarToCartesian{}, Identity1D{}});
-
-  const auto logical_to_cylinder_map = cyl_coordinate_map(cylinder_inner_radius, cylinder_outer_radius, cylinder_lower_bound_z, cylinder_upper_bound_z);
+  const auto logical_to_cylinder_map =
+      cyl_coordinate_map(cylinder_inner_radius, cylinder_outer_radius,
+                         cylinder_lower_bound_z, cylinder_upper_bound_z);
 
   // TODO : update this comment
   // Lambda that takes a UniformCylindricalEndcap map and a
   // DiscreteRotation map, composes it with the logical-to-cylinder
   // maps, and adds it to the list of coordinate maps. Also adds
   // boundary conditions if requested.
-  auto add_endcap_to_list_of_maps = [&coordinate_maps,
-                                     &logical_to_cylinder_map](
-                                      const CoordinateMaps::DiscreteRotation<3>& pre_rotation_map,
-                                        const auto& endcap_map,
-                                        const CoordinateMaps::DiscreteRotation<
-                                            3>& rotation_map) {
-    // auto new_logical_to_cylinder_maps =
-    //     ::domain::make_coordinate_map_base<Frame::BlockLogical,
-    //                                             Frame::Inertial, 3>(
-    //         *logical_to_cylinder_map, endcap_map, rotation_map);
-    // coordinate_maps.insert(
-    //     coordinate_maps.end(), std::move(new_logical_to_cylinder_maps));
-
-    // coordinate_maps.insert(
-    //     coordinate_maps.end(),
-    //     std::make_move_iterator(
-    //         new_logical_to_cylinder_maps.begin()),
-    //     std::make_move_iterator(
-    //         new_logical_to_cylinder_maps.end()));
-
-    // coordinate_maps.emplace_back(
-    //     ::domain::make_coordinate_map_base<Frame::BlockLogical,
-    //     Frame::Inertial>(
-    //         logical_to_cylinder_map, endcap_map, rotation_map));
-
-    // auto new_logical_to_cylinder_map = ::domain::push_back(
-    //     ::domain::push_back(logical_to_cylinder_map, endcap_map), rotation_map);
-
-    // coordinate_maps.emplace_back(
-    //     std::make_unique<std::decay_t<decltype(new_logical_to_cylinder_map)>>(
-    //         std::move(new_logical_to_cylinder_map)));
-
-    // auto new_logical_to_cylinder_map =
-    //         domain::make_vector_coordinate_map_base<Frame::BlockLogical,
-    //                                                 Frame::Inertial, 3>(
-    //             logical_to_cylinder_map, pre_rotation_map, endcap_map, rotation_map);
-    //     coordinate_maps.insert(
-    //         coordinate_maps.end(),
-    //         std::make_move_iterator(
-    //             new_logical_to_cylinder_map.begin()),
-    //         std::make_move_iterator(
-    //             new_logical_to_cylinder_map.end()));
-
-    auto new_logical_to_cylinder_map = ::domain::push_back(::domain::push_back(
-            ::domain::push_back(logical_to_cylinder_map, pre_rotation_map),
-            endcap_map), rotation_map);
+  auto add_endcap_to_list_of_maps =
+      [&coordinate_maps, &logical_to_cylinder_map](
+          const CoordinateMaps::DiscreteRotation<3>& pre_rotation_map,
+          const auto& endcap_map,
+          const CoordinateMaps::DiscreteRotation<3>& rotation_map) {
+        auto new_logical_to_cylinder_map = ::domain::push_back(
+            ::domain::push_back(
+                ::domain::push_back(logical_to_cylinder_map, pre_rotation_map),
+                endcap_map),
+            rotation_map);
 
         coordinate_maps.emplace_back(
             std::make_unique<
                 std::decay_t<decltype(new_logical_to_cylinder_map)>>(
                 std::move(new_logical_to_cylinder_map)));
-  };
-
-  //   // Lambda that takes a UniformCylindricalEndcap map and a
-  //   // DiscreteRotation map, composes it with the logical-to-cylinder
-  //   // maps, and adds it to the list of coordinate maps. Also adds
-  //   // boundary conditions if requested.
-  //   auto add_endcap_to_list_of_maps =
-  //       [&coordinate_maps, &logical_to_cylinder_center_maps,
-  //        &logical_to_cylinder_surrounding_maps](
-  //           const CoordinateMaps::UniformCylindricalEndcap& endcap_map,
-  //           const CoordinateMaps::DiscreteRotation<3>& rotation_map) {
-  //         auto new_logical_to_cylinder_center_maps =
-  //             domain::make_vector_coordinate_map_base<Frame::BlockLogical,
-  //                                                     Frame::Inertial, 3>(
-  //                 logical_to_cylinder_center_maps, endcap_map, rotation_map);
-  //         coordinate_maps.insert(
-  //             coordinate_maps.end(),
-  //             std::make_move_iterator(
-  //                 new_logical_to_cylinder_center_maps.begin()),
-  //             std::make_move_iterator(new_logical_to_cylinder_center_maps.end()));
-  //         auto new_logical_to_cylinder_surrounding_maps =
-  //             domain::make_vector_coordinate_map_base<Frame::BlockLogical,
-  //                                                     Frame::Inertial, 3>(
-  //                 logical_to_cylinder_surrounding_maps, endcap_map,
-  //                 rotation_map);
-  //         coordinate_maps.insert(
-  //             coordinate_maps.end(),
-  //             std::make_move_iterator(
-  //                 new_logical_to_cylinder_surrounding_maps.begin()),
-  //             std::make_move_iterator(
-  //                 new_logical_to_cylinder_surrounding_maps.end()));
-  //       };
-
-  //   // Lambda that takes a UniformCylindricalFlatEndcap map and a
-  //   // DiscreteRotation map, composes it with the logical-to-cylinder
-  //   // maps, and adds it to the list of coordinate maps. Also adds
-  //   // boundary conditions if requested.
-  //   auto add_flat_endcap_to_list_of_maps =
-  //       [&coordinate_maps, &logical_to_cylinder_center_maps,
-  //        &logical_to_cylinder_surrounding_maps](
-  //           const CoordinateMaps::UniformCylindricalFlatEndcap& endcap_map,
-  //           const CoordinateMaps::DiscreteRotation<3>& rotation_map) {
-  //         auto new_logical_to_cylinder_center_maps =
-  //             domain::make_vector_coordinate_map_base<Frame::BlockLogical,
-  //                                                     Frame::Inertial, 3>(
-  //                 logical_to_cylinder_center_maps, endcap_map, rotation_map);
-  //         coordinate_maps.insert(
-  //             coordinate_maps.end(),
-  //             std::make_move_iterator(
-  //                 new_logical_to_cylinder_center_maps.begin()),
-  //             std::make_move_iterator(new_logical_to_cylinder_center_maps.end()));
-  //         auto new_logical_to_cylinder_surrounding_maps =
-  //             domain::make_vector_coordinate_map_base<Frame::BlockLogical,
-  //                                                     Frame::Inertial, 3>(
-  //                 logical_to_cylinder_surrounding_maps, endcap_map,
-  //                 rotation_map);
-  //         coordinate_maps.insert(
-  //             coordinate_maps.end(),
-  //             std::make_move_iterator(
-  //                 new_logical_to_cylinder_surrounding_maps.begin()),
-  //             std::make_move_iterator(
-  //                 new_logical_to_cylinder_surrounding_maps.end()));
-  //       };
+      };
 
   // Construct vector<CoordMap>s that go from logical coordinates to
   // various blocks making up a right cylindrical shell of inner radius 1,
@@ -972,14 +637,10 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   const double cylindrical_shell_outer_radius = 2.0;
   const double cylindrical_shell_lower_bound_z = -1.0;
   const double cylindrical_shell_upper_bound_z = 1.0;
-//   const auto logical_to_cylindrical_shell_maps =
-//       cyl_wedge_coord_map_surrounding_blocks(
-//           cylindrical_shell_inner_radius, cylindrical_shell_outer_radius,
-//           cylindrical_shell_lower_bound_z, cylindrical_shell_upper_bound_z,
-//           use_equiangular_map_, 1.0);
 
-  const auto logical_to_cylindrical_shell_map =
-      cyl_coordinate_map(cylindrical_shell_inner_radius, cylindrical_shell_outer_radius, cylindrical_shell_lower_bound_z, cylindrical_shell_upper_bound_z);
+  const auto logical_to_cylindrical_shell_map = cyl_coordinate_map(
+      cylindrical_shell_inner_radius, cylindrical_shell_outer_radius,
+      cylindrical_shell_lower_bound_z, cylindrical_shell_upper_bound_z);
 
   // TODO : update doc comments here
   // Lambda that takes a UniformCylindricalSide map and a DiscreteRotation
@@ -988,58 +649,9 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // requested.
   auto add_side_to_list_of_maps =
       [&coordinate_maps, &logical_to_cylindrical_shell_map](
-        const CoordinateMaps::DiscreteRotation<3>& pre_rotation_map,
+          const CoordinateMaps::DiscreteRotation<3>& pre_rotation_map,
           const CoordinateMaps::UniformCylindricalSide& side_map,
           const CoordinateMaps::DiscreteRotation<3>& rotation_map) {
-        // auto new_logical_to_cylindrical_shell_maps =
-        //     ::domain::make_coordinate_map_base<Frame::BlockLogical,
-        //                                             Frame::Inertial, 3>(
-        //         *logical_to_cylindrical_shell_map, side_map, rotation_map);
-        // coordinate_maps.insert(
-        //     coordinate_maps.end(),
-        //     std::move(new_logical_to_cylindrical_shell_map));
-
-        // coordinate_maps.insert(
-        //     coordinate_maps.end(),
-        //     std::make_move_iterator(
-        //         new_logical_to_cylindrical_shell_maps.begin()),
-        //     std::make_move_iterator(
-        //         new_logical_to_cylindrical_shell_maps.end()));
-
-        // coordinate_maps.emplace_back(
-        //     ::domain::make_coordinate_map_base<Frame::BlockLogical,
-        //     Frame::Inertial>(
-        //         logical_to_cylindrical_shell_map, side_map, rotation_map));
-
-        // auto new_logical_to_cylindrical_shell_map = ::domain::push_back(
-        //     ::domain::push_back(logical_to_cylindrical_shell_map, side_map),
-        //     rotation_map);
-
-        // coordinate_maps.emplace_back(
-        //     std::make_unique<
-        //         std::decay_t<decltype(new_logical_to_cylindrical_shell_map)>>(
-        //         std::move(new_logical_to_cylindrical_shell_map)));
-
-        // if (half_turn) {
-        //   auto new_logical_to_cylindrical_shell_maps =
-        //     domain::make_vector_coordinate_map_base<Frame::BlockLogical,
-        //                                             Frame::Inertial, 3>(
-        //         logical_to_cylindrical_shell_maps, side_map, rotation_map);
-
-        // } else {
-        //   CoordinateMaps::DiscreteRotation<3>{OrientationMap<3>::create_aligned()}
-        // }
-        // auto new_logical_to_cylindrical_shell_maps =
-        //     domain::make_vector_coordinate_map_base<Frame::BlockLogical,
-        //                                             Frame::Inertial, 3>(
-        //         logical_to_cylindrical_shell_map, pre_rotation_map, side_map, rotation_map);
-        // coordinate_maps.insert(
-        //     coordinate_maps.end(),
-        //     std::make_move_iterator(
-        //         new_logical_to_cylindrical_shell_maps.begin()),
-        //     std::make_move_iterator(
-        //         new_logical_to_cylindrical_shell_maps.end()));
-
         auto new_logical_to_cylindrical_shell_map = ::domain::push_back(::domain::push_back(
             ::domain::push_back(logical_to_cylindrical_shell_map, pre_rotation_map),
             side_map), rotation_map);
@@ -1049,26 +661,6 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
                 std::decay_t<decltype(new_logical_to_cylindrical_shell_map)>>(
                 std::move(new_logical_to_cylindrical_shell_map)));
       };
-
-  // Lambda that takes a UniformCylindricalSide map and a DiscreteRotation
-  // map, composes it with the logical-to-cylinder maps, and adds it
-  // to the list of coordinate maps.  Also adds boundary conditions if
-  // requested.
-//   auto add_side_to_list_of_maps =
-//       [&coordinate_maps, &logical_to_cylindrical_shell_map](
-//           const CoordinateMaps::UniformCylindricalSide& side_map,
-//           const CoordinateMaps::DiscreteRotation<3>& rotation_map) {
-//         auto new_logical_to_cylindrical_shell_maps =
-//             domain::make_vector_coordinate_map_base<Frame::BlockLogical,
-//                                                     Frame::Inertial, 3>(
-//                 logical_to_cylindrical_shell_maps, side_map, rotation_map);
-//         coordinate_maps.insert(
-//             coordinate_maps.end(),
-//             std::make_move_iterator(
-//                 new_logical_to_cylindrical_shell_maps.begin()),
-//             std::make_move_iterator(
-//                 new_logical_to_cylindrical_shell_maps.end()));
-//       };
 
   // Inner radius of the outer C shell.
   const double inner_radius_C = 3.0 * (center_A_[2] - center_B_[2]);
@@ -1224,51 +816,36 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
           -z_cutting_plane_),
       CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
 
-//   const size_t first_ea_endcap_block = 9;
-//   const size_t first_ea_side_block = 14;
-//   const size_t first_ma_endcap_block = 27;
-//   const size_t first_eb_endcap_block = 18;
-//   const size_t first_eb_side_block = 23;
-//   const size_t first_mb_endcap_block = 32;
-
-  const size_t first_ea_endcap_block = 2;
-  const size_t first_ea_side_block = 3;
-  const size_t first_ma_endcap_block = 6;
-  const size_t first_eb_endcap_block = 4;
-  const size_t first_eb_side_block = 5;
-  const size_t first_mb_endcap_block = 7;
-  const size_t first_ca_endcap_block = 0;
-  const size_t first_ca_side_block = 1;
-  const size_t first_cb_endcap_block = 8;
-  const size_t first_cb_side_block = 9;
+  const size_t ea_endcap_block = 2;
+  const size_t ea_side_block = 3;
+  const size_t ma_endcap_block = 6;
+  const size_t eb_endcap_block = 4;
+  const size_t eb_side_block = 5;
+  const size_t mb_endcap_block = 7;
+  const size_t ca_endcap_block = 0;
+  const size_t ca_side_block = 1;
+  const size_t cb_endcap_block = 8;
+  const size_t cb_side_block = 9;
 
   // Excision spheres
   std::unordered_map<std::string, ExcisionSphere<3>> excision_spheres{};
 
   std::unordered_map<size_t, Direction<3>> abutting_directions_A;
-  const size_t first_inner_shell_A_block = 10; // 46;
-  size_t first_inner_shell_B_block = first_inner_shell_A_block;
+  const size_t inner_shell_A_block = 10;  // 46;
+  size_t inner_shell_B_block = inner_shell_A_block;
   if (include_inner_sphere_A_) {
     // LCOV_EXCL_START
-    abutting_directions_A.emplace(first_inner_shell_A_block,
+    abutting_directions_A.emplace(inner_shell_A_block,
                                   Direction<3>::lower_xi());
     // LCOV_EXCL_STOP
 
     // Block numbers of sphereB might depend on whether there is an inner
     // sphereA layer, so increment here to get that right.
-    first_inner_shell_B_block += 1;
+    inner_shell_B_block += 1;
   } else {
-    // for (size_t i = 0; i < 5; ++i) {
-    //   abutting_directions_A.emplace(9 + i, Direction<3>::lower_zeta());
-    //   abutting_directions_A.emplace(27 + i, Direction<3>::lower_zeta());
-    // }
-    // for (size_t i = 0; i < 4; ++i) {
-    //   abutting_directions_A.emplace(14 + i, Direction<3>::lower_xi());
-    // }
-
-    abutting_directions_A.emplace(first_ea_endcap_block, Direction<3>::lower_zeta());
-    abutting_directions_A.emplace(first_ma_endcap_block, Direction<3>::lower_zeta());
-    abutting_directions_A.emplace(first_ea_side_block, Direction<3>::lower_xi());
+    abutting_directions_A.emplace(ea_endcap_block, Direction<3>::lower_zeta());
+    abutting_directions_A.emplace(ma_endcap_block, Direction<3>::lower_zeta());
+    abutting_directions_A.emplace(ea_side_block, Direction<3>::lower_xi());
   }
   excision_spheres.emplace(
       "ExcisionSphereA",
@@ -1280,21 +857,13 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   std::unordered_map<size_t, Direction<3>> abutting_directions_B;
   if (include_inner_sphere_B_) {
     // LCOV_EXCL_START
-    abutting_directions_B.emplace(first_inner_shell_B_block,
+    abutting_directions_B.emplace(inner_shell_B_block,
                                   Direction<3>::lower_xi());
     // LCOV_EXCL_STOP
   } else {
-    // for (size_t i = 0; i < 5; ++i) {
-    //   abutting_directions_B.emplace(18 + i, Direction<3>::lower_zeta());
-    //   abutting_directions_B.emplace(32 + i, Direction<3>::lower_zeta());
-    // }
-    // for (size_t i = 0; i < 4; ++i) {
-    //   abutting_directions_B.emplace(23 + i, Direction<3>::lower_xi());
-    // }
-
-    abutting_directions_B.emplace(first_eb_endcap_block, Direction<3>::lower_zeta());
-    abutting_directions_B.emplace(first_mb_endcap_block, Direction<3>::lower_zeta());
-    abutting_directions_B.emplace(first_eb_side_block, Direction<3>::lower_xi());
+    abutting_directions_B.emplace(eb_endcap_block, Direction<3>::lower_zeta());
+    abutting_directions_B.emplace(mb_endcap_block, Direction<3>::lower_zeta());
+    abutting_directions_B.emplace(eb_side_block, Direction<3>::lower_xi());
   }
   excision_spheres.emplace(
       "ExcisionSphereB",
@@ -1304,37 +873,10 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
           abutting_directions_B});
 
   Domain<3> domain;
-  // `coordinate_maps` at this point contains the inner non-shell maps.
-  // Total =  num_shells + n_interior_cubes entries
-  // We determine auto-topology neighbors for these inner maps
-  std::vector<DirectionMap<3, BlockNeighbors<3>>> inner_neighbors{coordinate_maps.size()};
-  // set_internal_boundaries<3>(make_not_null(&inner_neighbors), coordinate_maps);
-
-//   // Connect the E sphere cylinder blocks to the outermost inner shells and
-//   // connect the C sphere cylinder blocks to the innermost outer shell
-//   const OrientationMap<3> shell_to_cyl_endcap_center{
-//       {{Direction<3>::upper_zeta(), Direction<3>::self(),
-//         Direction<3>::self()}}};
-//   const auto cyl_endcap_center_to_shell =
-//       shell_to_cyl_endcap_center.inverse_map();
-//   const OrientationMap<3> shell_to_cyl_endcap_wedge{
-//       {{Direction<3>::upper_zeta(), Direction<3>::self(),
-//         Direction<3>::self()}}};
-//   const auto cyl_endcap_wedge_to_shell =
-//       shell_to_cyl_endcap_wedge.inverse_map();
-//   const OrientationMap<3> shell_to_cyl_side{
-//       {{Direction<3>::upper_xi(), Direction<3>::self(), Direction<3>::self()}}};
-//   const auto cyl_side_to_shell = shell_to_cyl_side.inverse_map();
-
-  // Connect the cylinders to each other
-  // const OrientationMap<3> cyl_side_to_endcap{
-  //     {{Direction<3>::upper_zeta(), Direction<3>::self(),
-  //       Direction<3>::self()}}};
-  // const auto cyl_endcap_to_shell =
-  //     shell_to_cyl_endcap.inverse_map();
-  // const OrientationMap<3> shell_to_cyl_side{
-  //     {{Direction<3>::upper_xi(), Direction<3>::self(), Direction<3>::self()}}};
-  // const auto cyl_side_to_shell = shell_to_cyl_side.inverse_map();
+  // TODO: comment on needing to build everything from scratch
+  // TODO: change name from inner_neighbors since we don't have those anymore
+  std::vector<DirectionMap<3, BlockNeighbors<3>>> inner_neighbors{
+      coordinate_maps.size()};
 
   // Add a shell as a neighor of one of the blocks making up a cylinder
   auto add_cyl_cyl_block_neighbor =
@@ -1350,136 +892,112 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       };
 
   // EA Filled Cylinder
-  add_cyl_cyl_block_neighbor(inner_neighbors,
-                                    first_ea_endcap_block, first_ea_side_block,
-                                    Direction<3>::upper_xi(),
-                                    OrientationMap<3>{
-      {{Direction<3>::lower_zeta(), Direction<3>::upper_eta(), Direction<3>::upper_xi()}}});
-  add_cyl_cyl_block_neighbor(inner_neighbors,
-                                    first_ea_endcap_block, first_ca_endcap_block,
-                                    Direction<3>::upper_zeta(),
-                                    aligned);
-  
+  add_cyl_cyl_block_neighbor(
+      inner_neighbors, ea_endcap_block, ea_side_block, Direction<3>::upper_xi(),
+      OrientationMap<3>{{{Direction<3>::lower_zeta(), Direction<3>::upper_eta(),
+                          Direction<3>::upper_xi()}}});
+  add_cyl_cyl_block_neighbor(inner_neighbors, ea_endcap_block, ca_endcap_block,
+                             Direction<3>::upper_zeta(), aligned);
+
   // EA Cylinder
-  add_cyl_cyl_block_neighbor(inner_neighbors,
-                                    first_ea_side_block, first_ea_endcap_block,
-                                    Direction<3>::upper_zeta(),
-                                    OrientationMap<3>{
-      {{Direction<3>::upper_zeta(), Direction<3>::upper_eta(), Direction<3>::lower_xi()}}});
-  add_cyl_cyl_block_neighbor(inner_neighbors,
-                                    first_ea_side_block, first_ma_endcap_block,
-                                    Direction<3>::lower_zeta(),
-                                    OrientationMap<3>{
-      {{Direction<3>::upper_zeta(), Direction<3>::lower_eta(), Direction<3>::upper_xi()}}});
-  add_cyl_cyl_block_neighbor(inner_neighbors,
-                                    first_ea_side_block, first_ca_side_block,
-                                    Direction<3>::upper_xi(),
-                                    aligned);
+  add_cyl_cyl_block_neighbor(
+      inner_neighbors, ea_side_block, ea_endcap_block,
+      Direction<3>::upper_zeta(),
+      OrientationMap<3>{{{Direction<3>::upper_zeta(), Direction<3>::upper_eta(),
+                          Direction<3>::lower_xi()}}});
+  add_cyl_cyl_block_neighbor(
+      inner_neighbors, ea_side_block, ma_endcap_block,
+      Direction<3>::lower_zeta(),
+      OrientationMap<3>{{{Direction<3>::upper_zeta(), Direction<3>::lower_eta(),
+                          Direction<3>::upper_xi()}}});
+  add_cyl_cyl_block_neighbor(inner_neighbors, ea_side_block, ca_side_block,
+                             Direction<3>::upper_xi(), aligned);
 
   // MA Filled Cylinder
-  add_cyl_cyl_block_neighbor(inner_neighbors,
-                                    first_ma_endcap_block, first_ea_side_block,
-                                    Direction<3>::upper_xi(),
-                                    OrientationMap<3>{
-      {{Direction<3>::upper_zeta(), Direction<3>::lower_eta(), Direction<3>::upper_xi()}}});
-  add_cyl_cyl_block_neighbor(inner_neighbors,
-                                    first_ma_endcap_block, first_mb_endcap_block,
-                                    Direction<3>::upper_zeta(),
-                                    OrientationMap<3>{
-      {{Direction<3>::upper_xi(), Direction<3>::lower_eta(), Direction<3>::lower_zeta()}}});
+  add_cyl_cyl_block_neighbor(
+      inner_neighbors, ma_endcap_block, ea_side_block, Direction<3>::upper_xi(),
+      OrientationMap<3>{{{Direction<3>::upper_zeta(), Direction<3>::lower_eta(),
+                          Direction<3>::upper_xi()}}});
+  add_cyl_cyl_block_neighbor(
+      inner_neighbors, ma_endcap_block, mb_endcap_block,
+      Direction<3>::upper_zeta(),
+      OrientationMap<3>{{{Direction<3>::upper_xi(), Direction<3>::lower_eta(),
+                          Direction<3>::lower_zeta()}}});
 
   // CA Filled Cylinder
-  add_cyl_cyl_block_neighbor(inner_neighbors,
-                                    first_ca_endcap_block, first_ca_side_block,
-                                    Direction<3>::upper_xi(),
-                                    OrientationMap<3>{
-      {{Direction<3>::lower_zeta(), Direction<3>::upper_eta(), Direction<3>::upper_xi()}}});
-  add_cyl_cyl_block_neighbor(inner_neighbors,
-                                    first_ca_endcap_block, first_ea_endcap_block,
-                                    Direction<3>::lower_zeta(),
-                                    aligned);
-  
+  add_cyl_cyl_block_neighbor(
+      inner_neighbors, ca_endcap_block, ca_side_block, Direction<3>::upper_xi(),
+      OrientationMap<3>{{{Direction<3>::lower_zeta(), Direction<3>::upper_eta(),
+                          Direction<3>::upper_xi()}}});
+  add_cyl_cyl_block_neighbor(inner_neighbors, ca_endcap_block, ea_endcap_block,
+                             Direction<3>::lower_zeta(), aligned);
+
   // CA Cylinder
-  add_cyl_cyl_block_neighbor(inner_neighbors,
-                                    first_ca_side_block, first_ca_endcap_block,
-                                    Direction<3>::upper_zeta(),
-                                    OrientationMap<3>{
-      {{Direction<3>::upper_zeta(), Direction<3>::upper_eta(), Direction<3>::lower_xi()}}});
-  add_cyl_cyl_block_neighbor(inner_neighbors,
-                                    first_ca_side_block, first_cb_side_block,
-                                    Direction<3>::lower_zeta(),
-                                    OrientationMap<3>{
-      {{Direction<3>::upper_xi(), Direction<3>::lower_eta(), Direction<3>::lower_zeta()}}});
-  add_cyl_cyl_block_neighbor(inner_neighbors,
-                                    first_ca_side_block, first_ea_side_block,
-                                    Direction<3>::lower_xi(),
-                                    aligned);
+  add_cyl_cyl_block_neighbor(
+      inner_neighbors, ca_side_block, ca_endcap_block,
+      Direction<3>::upper_zeta(),
+      OrientationMap<3>{{{Direction<3>::upper_zeta(), Direction<3>::upper_eta(),
+                          Direction<3>::lower_xi()}}});
+  add_cyl_cyl_block_neighbor(
+      inner_neighbors, ca_side_block, cb_side_block, Direction<3>::lower_zeta(),
+      OrientationMap<3>{{{Direction<3>::upper_xi(), Direction<3>::lower_eta(),
+                          Direction<3>::lower_zeta()}}});
+  add_cyl_cyl_block_neighbor(inner_neighbors, ca_side_block, ea_side_block,
+                             Direction<3>::lower_xi(), aligned);
 
   // EB Filled Cylinder
-  add_cyl_cyl_block_neighbor(inner_neighbors,
-                                    first_eb_endcap_block, first_eb_side_block,
-                                    Direction<3>::upper_xi(),
-                                    OrientationMap<3>{
-      {{Direction<3>::lower_zeta(), Direction<3>::upper_eta(), Direction<3>::upper_xi()}}});
-  add_cyl_cyl_block_neighbor(inner_neighbors,
-                                    first_eb_endcap_block, first_cb_endcap_block,
-                                    Direction<3>::upper_zeta(),
-                                    aligned);
-  
+  add_cyl_cyl_block_neighbor(
+      inner_neighbors, eb_endcap_block, eb_side_block, Direction<3>::upper_xi(),
+      OrientationMap<3>{{{Direction<3>::lower_zeta(), Direction<3>::upper_eta(),
+                          Direction<3>::upper_xi()}}});
+  add_cyl_cyl_block_neighbor(inner_neighbors, eb_endcap_block, cb_endcap_block,
+                             Direction<3>::upper_zeta(), aligned);
+
   // EB Cylinder
-  add_cyl_cyl_block_neighbor(inner_neighbors,
-                                    first_eb_side_block, first_eb_endcap_block,
-                                    Direction<3>::upper_zeta(),
-                                    OrientationMap<3>{
-      {{Direction<3>::upper_zeta(), Direction<3>::upper_eta(), Direction<3>::lower_xi()}}});
-  add_cyl_cyl_block_neighbor(inner_neighbors,
-                                    first_eb_side_block, first_mb_endcap_block,
-                                    Direction<3>::lower_zeta(),
-                                    OrientationMap<3>{
-      {{Direction<3>::upper_zeta(), Direction<3>::lower_eta(), Direction<3>::upper_xi()}}});
-  add_cyl_cyl_block_neighbor(inner_neighbors,
-                                    first_eb_side_block, first_cb_side_block,
-                                    Direction<3>::upper_xi(),
-                                    aligned);
+  add_cyl_cyl_block_neighbor(
+      inner_neighbors, eb_side_block, eb_endcap_block,
+      Direction<3>::upper_zeta(),
+      OrientationMap<3>{{{Direction<3>::upper_zeta(), Direction<3>::upper_eta(),
+                          Direction<3>::lower_xi()}}});
+  add_cyl_cyl_block_neighbor(
+      inner_neighbors, eb_side_block, mb_endcap_block,
+      Direction<3>::lower_zeta(),
+      OrientationMap<3>{{{Direction<3>::upper_zeta(), Direction<3>::lower_eta(),
+                          Direction<3>::upper_xi()}}});
+  add_cyl_cyl_block_neighbor(inner_neighbors, eb_side_block, cb_side_block,
+                             Direction<3>::upper_xi(), aligned);
 
   // MB Filled Cylinder
-  add_cyl_cyl_block_neighbor(inner_neighbors,
-                                    first_mb_endcap_block, first_eb_side_block,
-                                    Direction<3>::upper_xi(),
-                                    OrientationMap<3>{
-      {{Direction<3>::upper_zeta(), Direction<3>::lower_eta(), Direction<3>::upper_xi()}}});
-  add_cyl_cyl_block_neighbor(inner_neighbors,
-                                    first_mb_endcap_block, first_ma_endcap_block,
-                                    Direction<3>::upper_zeta(),
-                                    OrientationMap<3>{
-      {{Direction<3>::upper_xi(), Direction<3>::lower_eta(), Direction<3>::lower_zeta()}}});
+  add_cyl_cyl_block_neighbor(
+      inner_neighbors, mb_endcap_block, eb_side_block, Direction<3>::upper_xi(),
+      OrientationMap<3>{{{Direction<3>::upper_zeta(), Direction<3>::lower_eta(),
+                          Direction<3>::upper_xi()}}});
+  add_cyl_cyl_block_neighbor(
+      inner_neighbors, mb_endcap_block, ma_endcap_block,
+      Direction<3>::upper_zeta(),
+      OrientationMap<3>{{{Direction<3>::upper_xi(), Direction<3>::lower_eta(),
+                          Direction<3>::lower_zeta()}}});
 
   // CB Filled Cylinder
-  add_cyl_cyl_block_neighbor(inner_neighbors,
-                                    first_cb_endcap_block, first_cb_side_block,
-                                    Direction<3>::upper_xi(),
-                                    OrientationMap<3>{
-      {{Direction<3>::lower_zeta(), Direction<3>::upper_eta(), Direction<3>::upper_xi()}}});
-  add_cyl_cyl_block_neighbor(inner_neighbors,
-                                    first_cb_endcap_block, first_eb_endcap_block,
-                                    Direction<3>::lower_zeta(),
-                                    aligned);
-  
+  add_cyl_cyl_block_neighbor(
+      inner_neighbors, cb_endcap_block, cb_side_block, Direction<3>::upper_xi(),
+      OrientationMap<3>{{{Direction<3>::lower_zeta(), Direction<3>::upper_eta(),
+                          Direction<3>::upper_xi()}}});
+  add_cyl_cyl_block_neighbor(inner_neighbors, cb_endcap_block, eb_endcap_block,
+                             Direction<3>::lower_zeta(), aligned);
+
   // CB Cylinder
-  add_cyl_cyl_block_neighbor(inner_neighbors,
-                                    first_cb_side_block, first_cb_endcap_block,
-                                    Direction<3>::upper_zeta(),
-                                    OrientationMap<3>{
-      {{Direction<3>::upper_zeta(), Direction<3>::upper_eta(), Direction<3>::lower_xi()}}});
-  add_cyl_cyl_block_neighbor(inner_neighbors,
-                                    first_cb_side_block, first_ca_side_block,
-                                    Direction<3>::lower_zeta(),
-                                    OrientationMap<3>{
-      {{Direction<3>::upper_xi(), Direction<3>::lower_eta(), Direction<3>::lower_zeta()}}});
-  add_cyl_cyl_block_neighbor(inner_neighbors,
-                                    first_cb_side_block, first_eb_side_block,
-                                    Direction<3>::lower_xi(),
-                                    aligned);
+  add_cyl_cyl_block_neighbor(
+      inner_neighbors, cb_side_block, cb_endcap_block,
+      Direction<3>::upper_zeta(),
+      OrientationMap<3>{{{Direction<3>::upper_zeta(), Direction<3>::upper_eta(),
+                          Direction<3>::lower_xi()}}});
+  add_cyl_cyl_block_neighbor(
+      inner_neighbors, cb_side_block, ca_side_block, Direction<3>::lower_zeta(),
+      OrientationMap<3>{{{Direction<3>::upper_xi(), Direction<3>::lower_eta(),
+                          Direction<3>::lower_zeta()}}});
+  add_cyl_cyl_block_neighbor(inner_neighbors, cb_side_block, eb_side_block,
+                             Direction<3>::lower_xi(), aligned);
 
   // Connect the E sphere cylinder blocks to the outermost inner shells and
   // connect the C sphere cylinder blocks to the innermost outer shell
@@ -1511,145 +1029,57 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
                               /*are_conforming=*/false});
       };
 
-//   // Add a shell as a neighor of each of the blocks making up a cylindrical
-//   // endcap
-//   auto add_cyl_endcap_shell_neighbors =
-//       [&add_cyl_shell_block_neighbor, &cyl_endcap_center_to_shell,
-//        &cyl_endcap_wedge_to_shell](
-//           std::vector<DirectionMap<3, BlockNeighbors<3>>>& neighbors,
-//           const bool shell_is_outside_cyl, const size_t first_cyl_block_number,
-//           const size_t shell_block_number) {
-//         const bool cyl_is_filled = true;
-//         add_cyl_shell_block_neighbor(neighbors, cyl_is_filled,
-//                                      shell_is_outside_cyl,
-//                                      first_cyl_block_number, shell_block_number,
-//                                      cyl_endcap_center_to_shell);
-//         for (size_t j = first_cyl_block_number + 1;
-//              j < first_cyl_block_number + 5; j++) {
-//           add_cyl_shell_block_neighbor(
-//               neighbors, cyl_is_filled, shell_is_outside_cyl, j,
-//               shell_block_number, cyl_endcap_wedge_to_shell);
-//         }
-//       };
-
-//   // Add a shell as a neighor of each of the blocks making up a cylindrical side
-//   auto add_cyl_side_shell_neighbors =
-//       [&add_cyl_shell_block_neighbor, &cyl_side_to_shell](
-//           std::vector<DirectionMap<3, BlockNeighbors<3>>>& neighbors,
-//           const bool shell_is_outside_cyl, const size_t first_cyl_block_number,
-//           const size_t shell_block_number) {
-//         const bool cyl_is_filled = false;
-//         for (size_t j = first_cyl_block_number; j < first_cyl_block_number + 4;
-//              j++) {
-//           add_cyl_shell_block_neighbor(neighbors, cyl_is_filled,
-//                                        shell_is_outside_cyl, j,
-//                                        shell_block_number, cyl_side_to_shell);
-//         }
-//       };
-
-//   const size_t first_ea_endcap_block = 9;
-//   const size_t first_ea_side_block = 14;
-//   const size_t first_ma_endcap_block = 27;
-
   if (include_inner_sphere_A_) {
-    // // EA Filled Cylinder
-    // add_cyl_endcap_shell_neighbors(inner_neighbors, false,
-    //                                first_ea_endcap_block,
-    //                                first_inner_shell_A_block);
-    // // EA Cylinder
-    // add_cyl_side_shell_neighbors(inner_neighbors, false, first_ea_side_block,
-    //                              first_inner_shell_A_block);
-    // // MA Filled Cylinder
-    // add_cyl_endcap_shell_neighbors(inner_neighbors, false,
-    //                                first_ma_endcap_block,
-    //                                first_inner_shell_A_block);
-
     // EA Filled Cylinder
-    add_cyl_shell_block_neighbor(inner_neighbors, true, false,
-                                     first_ea_endcap_block, first_inner_shell_A_block,
-                                     cyl_endcap_to_shell);
+    add_cyl_shell_block_neighbor(inner_neighbors, true, false, ea_endcap_block,
+                                 inner_shell_A_block, cyl_endcap_to_shell);
     // EA Cylinder
-    add_cyl_shell_block_neighbor(inner_neighbors, false, false, first_ea_side_block,
-                                 first_inner_shell_A_block, cyl_side_to_shell);
+    add_cyl_shell_block_neighbor(inner_neighbors, false, false, ea_side_block,
+                                 inner_shell_A_block, cyl_side_to_shell);
     // MA Filled Cylinder
-    add_cyl_shell_block_neighbor(inner_neighbors, true, false,
-                                   first_ma_endcap_block,
-                                   first_inner_shell_A_block, cyl_endcap_to_shell);
+    add_cyl_shell_block_neighbor(inner_neighbors, true, false, ma_endcap_block,
+                                 inner_shell_A_block, cyl_endcap_to_shell);
   }
-
-//   const size_t first_eb_endcap_block = 18;
-//   const size_t first_eb_side_block = 23;
-//   const size_t first_mb_endcap_block = 32;
 
   if (include_inner_sphere_B_) {
-    // // EB Filled Cylinder
-    // add_cyl_endcap_shell_neighbors(inner_neighbors, false,
-    //                                first_eb_endcap_block,
-    //                                first_inner_shell_B_block);
-    // // EB Cylinder
-    // add_cyl_side_shell_neighbors(inner_neighbors, false, first_eb_side_block,
-    //                              first_inner_shell_B_block);
-    // // MB Filled Cylinder
-    // add_cyl_endcap_shell_neighbors(inner_neighbors, false,
-    //                                first_mb_endcap_block,
-    //                                first_inner_shell_B_block);
-
     // EB Filled Cylinder
-    add_cyl_shell_block_neighbor(inner_neighbors, true, false,
-                                     first_eb_endcap_block, first_inner_shell_B_block,
-                                     cyl_endcap_to_shell);
+    add_cyl_shell_block_neighbor(inner_neighbors, true, false, eb_endcap_block,
+                                 inner_shell_B_block, cyl_endcap_to_shell);
     // EB Cylinder
-    add_cyl_shell_block_neighbor(inner_neighbors, false, false, first_eb_side_block,
-                                 first_inner_shell_B_block, cyl_side_to_shell);
+    add_cyl_shell_block_neighbor(inner_neighbors, false, false, eb_side_block,
+                                 inner_shell_B_block, cyl_side_to_shell);
     // MB Filled Cylinder
-    add_cyl_shell_block_neighbor(inner_neighbors, true, false,
-                                   first_mb_endcap_block,
-                                   first_inner_shell_B_block, cyl_endcap_to_shell);
+    add_cyl_shell_block_neighbor(inner_neighbors, true, false, mb_endcap_block,
+                                 inner_shell_B_block, cyl_endcap_to_shell);
   }
 
-//   const size_t first_ca_endcap_block = 0;
-//   const size_t first_ca_side_block = 5;
-//   const size_t first_cb_endcap_block = 37;
-//   const size_t first_cb_side_block = 42;
-
-//   // CA Filled Cylinder
-//   add_cyl_endcap_shell_neighbors(inner_neighbors, true, first_ca_endcap_block,
-//                                  first_outer_shell_block);
-//   // CA Cylinder
-//   add_cyl_side_shell_neighbors(inner_neighbors, true, first_ca_side_block,
-//                                first_outer_shell_block);
-//   // CB Filled Cylinder
-//   add_cyl_endcap_shell_neighbors(inner_neighbors, true, first_cb_endcap_block,
-//                                  first_outer_shell_block);
-//   // CB Cylinder
-//   add_cyl_side_shell_neighbors(inner_neighbors, true, first_cb_side_block,
-//                                first_outer_shell_block);
+  const size_t outer_shell_block = block_positions_.at("OuterShell0");
 
   // CA Filled Cylinder
-add_cyl_shell_block_neighbor(inner_neighbors, true, true,
-                                    first_ca_endcap_block, first_outer_shell_block,
-                                    cyl_endcap_to_shell);
-// CA Cylinder
-add_cyl_shell_block_neighbor(inner_neighbors, false, true, first_ca_side_block,
-                                 first_outer_shell_block, cyl_side_to_shell);
+  add_cyl_shell_block_neighbor(inner_neighbors, true, true, ca_endcap_block,
+                               outer_shell_block, cyl_endcap_to_shell);
+  // CA Cylinder
+  add_cyl_shell_block_neighbor(inner_neighbors, false, true, ca_side_block,
+                               outer_shell_block, cyl_side_to_shell);
 
   // CB Filled Cylinder
-add_cyl_shell_block_neighbor(inner_neighbors, true, true,
-                                    first_cb_endcap_block, first_outer_shell_block,
-                                    cyl_endcap_to_shell);
-// CB Cylinder
-add_cyl_shell_block_neighbor(inner_neighbors, false, true, first_cb_side_block,
-                                 first_outer_shell_block, cyl_side_to_shell);
+  add_cyl_shell_block_neighbor(inner_neighbors, true, true, cb_endcap_block,
+                               outer_shell_block, cyl_endcap_to_shell);
+  // CB Cylinder
+  add_cyl_shell_block_neighbor(inner_neighbors, false, true, cb_side_block,
+                               outer_shell_block, cyl_side_to_shell);
 
   // Build blocks in final order.
   std::vector<Block<3>> blocks;
   blocks.reserve(number_of_blocks_);
 
   // (a) Inner blocks before SH shells.
-  for (size_t j = 0; j < first_inner_shell_A_block; ++j) {
+  for (size_t j = 0; j < inner_shell_A_block; ++j) {
     const std::string block_name = gsl::at(block_names_, j);
-    ASSERT(block_name.find("Cylinder") != std::string::npos, "Expected block to be a cylindrical block with the substring 'Cylinder'.");
-  
+    ASSERT(block_name.find("Cylinder") != std::string::npos,
+           "Expected block to be a cylindrical block with the substring "
+           "'Cylinder'.");
+
     const auto cyl_topology = block_name.find("Filled") != std::string::npos ?
         domain::topologies::full_cylinder :
         domain::topologies::cylindrical_shell;
@@ -1658,45 +1088,14 @@ add_cyl_shell_block_neighbor(inner_neighbors, false, true, first_cb_side_block,
                         cyl_topology);
   }
 
-//   // Add one of the blocks making up a cylindrical endcap as a neighbor of a
-//   // shell
-//   auto add_shell_cyl_endcap_neighbors =
-//       [&shell_to_cyl_endcap_center, &shell_to_cyl_endcap_wedge](
-//           std::unordered_set<size_t>& cyl_ids,
-//           std::unordered_map<size_t, OrientationMap<3>>& cyl_orientations,
-//           const size_t first_cyl_block_number) {
-//         cyl_ids.insert(first_cyl_block_number);
-//         cyl_orientations.emplace(first_cyl_block_number,
-//                                  shell_to_cyl_endcap_center);
-//         for (size_t j = first_cyl_block_number + 1;
-//              j < first_cyl_block_number + 5; ++j) {
-//           cyl_ids.insert(j);
-//           cyl_orientations.emplace(j, shell_to_cyl_endcap_wedge);
-//         }
-//       };
-
-//   // Add one of the blocks making up a cylindrical side as a neighbor of a shell
-//   auto add_shell_cyl_side_neighbors =
-//       [&shell_to_cyl_side](
-//           std::unordered_set<size_t>& cyl_ids,
-//           std::unordered_map<size_t, OrientationMap<3>>& cyl_orientations,
-//           const size_t first_cyl_block_number) {
-//         for (size_t j = first_cyl_block_number; j < first_cyl_block_number + 4;
-//              ++j) {
-//           cyl_ids.insert(j);
-//           cyl_orientations.emplace(j, shell_to_cyl_side);
-//         }
-//       };
-
   // Add a cylindrical endcap as a neighbor of a shell
   auto add_shell_cyl_endcap_neighbor =
       [&shell_to_cyl_endcap](
           std::unordered_set<size_t>& cyl_ids,
           std::unordered_map<size_t, OrientationMap<3>>& cyl_orientations,
-          const size_t first_cyl_block_number) {
-        cyl_ids.insert(first_cyl_block_number);
-        cyl_orientations.emplace(first_cyl_block_number,
-                                 shell_to_cyl_endcap);
+          const size_t cyl__block_number) {
+        cyl_ids.insert(cyl__block_number);
+        cyl_orientations.emplace(cyl__block_number, shell_to_cyl_endcap);
       };
 
   // Add a cylindrical side as a neighbor of a shell
@@ -1704,10 +1103,9 @@ add_cyl_shell_block_neighbor(inner_neighbors, false, true, first_cb_side_block,
       [&shell_to_cyl_side](
           std::unordered_set<size_t>& cyl_ids,
           std::unordered_map<size_t, OrientationMap<3>>& cyl_orientations,
-          const size_t first_cyl_block_number) {
-        cyl_ids.insert(first_cyl_block_number);
-        cyl_orientations.emplace(first_cyl_block_number,
-                                 shell_to_cyl_side);
+          const size_t cyl__block_number) {
+        cyl_ids.insert(cyl__block_number);
+        cyl_orientations.emplace(cyl__block_number, shell_to_cyl_side);
       };
 
   using Affine = CoordinateMaps::Affine;
@@ -1743,13 +1141,13 @@ add_cyl_shell_block_neighbor(inner_neighbors, false, true, first_cb_side_block,
 
     // EA Filled Cylinder
     add_shell_cyl_endcap_neighbor(inner_a_cyl_ids, inner_a_cyl_orientations,
-                                   first_ea_endcap_block);
+                                  ea_endcap_block);
     // EA Cylinder
     add_shell_cyl_side_neighbor(inner_a_cyl_ids, inner_a_cyl_orientations,
-                                 first_ea_side_block);
+                                ea_side_block);
     // MA Filled Cylinder
     add_shell_cyl_endcap_neighbor(inner_a_cyl_ids, inner_a_cyl_orientations,
-                                   first_ma_endcap_block);
+                                  ma_endcap_block);
 
     auto inner_a_sh_map = make_spherical_shell_coord_map(
         radius_A_, outer_radius_A_, rotate_from_z_to_x_axis(center_A_));
@@ -1760,9 +1158,9 @@ add_cyl_shell_block_neighbor(inner_neighbors, false, true, first_cb_side_block,
         BlockNeighbors<3>{std::move(inner_a_cyl_ids),
                           std::move(inner_a_cyl_orientations),
                           /*are_conforming=*/false});
-    blocks.emplace_back(std::move(inner_a_sh_map), first_inner_shell_A_block,
+    blocks.emplace_back(std::move(inner_a_sh_map), inner_shell_A_block,
                         std::move(inner_a_sh_neighbors),
-                        block_names_[first_inner_shell_A_block],
+                        block_names_[inner_shell_A_block],
                         domain::topologies::spherical_shell);
   }
 
@@ -1774,13 +1172,13 @@ add_cyl_shell_block_neighbor(inner_neighbors, false, true, first_cb_side_block,
 
     // EB Filled Cylinder
     add_shell_cyl_endcap_neighbor(inner_b_cyl_ids, inner_b_cyl_orientations,
-                                   first_eb_endcap_block);
+                                  eb_endcap_block);
     // EB Cylinder
     add_shell_cyl_side_neighbor(inner_b_cyl_ids, inner_b_cyl_orientations,
-                                 first_eb_side_block);
+                                eb_side_block);
     // MB Filled Cylinder
     add_shell_cyl_endcap_neighbor(inner_b_cyl_ids, inner_b_cyl_orientations,
-                                   first_mb_endcap_block);
+                                  mb_endcap_block);
 
     auto inner_b_sh_map = make_spherical_shell_coord_map(
         radius_B_, outer_radius_B_, rotate_from_z_to_x_axis(center_B_));
@@ -1792,9 +1190,9 @@ add_cyl_shell_block_neighbor(inner_neighbors, false, true, first_cb_side_block,
                           std::move(inner_b_cyl_orientations),
                           /*are_conforming=*/false});
 
-    blocks.emplace_back(std::move(inner_b_sh_map), first_inner_shell_B_block,
+    blocks.emplace_back(std::move(inner_b_sh_map), inner_shell_B_block,
                         std::move(inner_b_sh_neighbors),
-                        block_names_[first_inner_shell_B_block],
+                        block_names_[inner_shell_B_block],
                         domain::topologies::spherical_shell);
   }
 
@@ -1805,16 +1203,16 @@ add_cyl_shell_block_neighbor(inner_neighbors, false, true, first_cb_side_block,
 
   // CA Filled Cylinder
   add_shell_cyl_endcap_neighbor(outer_cyl_ids, outer_cyl_orientations,
-                                 first_ca_endcap_block);
+                                ca_endcap_block);
   // CA Cylinder
   add_shell_cyl_side_neighbor(outer_cyl_ids, outer_cyl_orientations,
-                               first_ca_side_block);
+                              ca_side_block);
   // CB Filled Cylinder
   add_shell_cyl_endcap_neighbor(outer_cyl_ids, outer_cyl_orientations,
-                                 first_cb_endcap_block);
+                                cb_endcap_block);
   // CB Cylinder
   add_shell_cyl_side_neighbor(outer_cyl_ids, outer_cyl_orientations,
-                              first_cb_side_block);
+                              cb_side_block);
 
   auto outer_sh_map = make_spherical_shell_coord_map(
       inner_radius_C, outer_radius_,
@@ -1827,10 +1225,9 @@ add_cyl_shell_block_neighbor(inner_neighbors, false, true, first_cb_side_block,
                         std::move(outer_cyl_orientations),
                         /*are_conforming=*/false});
 
-  blocks.emplace_back(std::move(outer_sh_map), first_outer_shell_block,
-                      std::move(outer_sh_neighbors),
-                      block_names_[first_outer_shell_block],
-                      domain::topologies::spherical_shell);
+  blocks.emplace_back(
+      std::move(outer_sh_map), outer_shell_block, std::move(outer_sh_neighbors),
+      block_names_[outer_shell_block], domain::topologies::spherical_shell);
 
   domain =
       Domain<3>{std::move(blocks), std::move(excision_spheres), block_groups_};
@@ -1861,7 +1258,7 @@ add_cyl_shell_block_neighbor(inner_neighbors, false, true, first_cb_side_block,
     // The first block in the outer shell needs the transition expansion +
     // rotation + translation map from the grid to inertial frame. No maps to
     // the distorted frame
-    grid_to_inertial_block_maps[first_outer_shell_block] =
+    grid_to_inertial_block_maps[outer_shell_block] =
         time_dependent_options_
             ->grid_to_inertial_map<domain::ObjectLabel::None>(false, false);
 
@@ -1879,60 +1276,53 @@ add_cyl_shell_block_neighbor(inner_neighbors, false, true, first_cb_side_block,
 
     // The `true` being passed to the functions specifies that the size map
     // *should* be included in the distorted frame.
-    grid_to_inertial_block_maps[first_inner_shell_A_block] =
+    grid_to_inertial_block_maps[inner_shell_A_block] =
         time_dependent_options_->grid_to_inertial_map<domain::ObjectLabel::A>(
             true, true);
-    grid_to_distorted_block_maps[first_inner_shell_A_block] =
+    grid_to_distorted_block_maps[inner_shell_A_block] =
         time_dependent_options_->grid_to_distorted_map<domain::ObjectLabel::A>(
             true);
-    distorted_to_inertial_block_maps[first_inner_shell_A_block] =
+    distorted_to_inertial_block_maps[inner_shell_A_block] =
         time_dependent_options_
             ->distorted_to_inertial_map<domain::ObjectLabel::A>(true, true);
 
-    grid_to_inertial_block_maps[first_inner_shell_B_block] =
+    grid_to_inertial_block_maps[inner_shell_B_block] =
         time_dependent_options_->grid_to_inertial_map<domain::ObjectLabel::B>(
             true, true);
-    grid_to_distorted_block_maps[first_inner_shell_B_block] =
+    grid_to_distorted_block_maps[inner_shell_B_block] =
         time_dependent_options_->grid_to_distorted_map<domain::ObjectLabel::B>(
             true);
-    distorted_to_inertial_block_maps[first_inner_shell_B_block] =
+    distorted_to_inertial_block_maps[inner_shell_B_block] =
         time_dependent_options_
             ->distorted_to_inertial_map<domain::ObjectLabel::B>(true, true);
 
     for (size_t block = 1; block < number_of_blocks_; ++block) {
-      if (block == first_inner_shell_A_block or
-          block == first_inner_shell_B_block or
-          block == first_outer_shell_block) {
+      if (block == inner_shell_A_block or block == inner_shell_B_block or
+          block == outer_shell_block) {
         continue;  // Already initialized
-      } else if (block > first_inner_shell_A_block and
-                 block < first_inner_shell_B_block) {
+      } else if (block > inner_shell_A_block and block < inner_shell_B_block) {
         grid_to_inertial_block_maps[block] =
-            grid_to_inertial_block_maps[first_inner_shell_A_block]->get_clone();
-        if (grid_to_distorted_block_maps[first_inner_shell_A_block] !=
-            nullptr) {
+            grid_to_inertial_block_maps[inner_shell_A_block]->get_clone();
+        if (grid_to_distorted_block_maps[inner_shell_A_block] != nullptr) {
           grid_to_distorted_block_maps[block] =
-              grid_to_distorted_block_maps[first_inner_shell_A_block]
-                  ->get_clone();
+              grid_to_distorted_block_maps[inner_shell_A_block]->get_clone();
           distorted_to_inertial_block_maps[block] =
-              distorted_to_inertial_block_maps[first_inner_shell_A_block]
+              distorted_to_inertial_block_maps[inner_shell_A_block]
                   ->get_clone();
         }
-      } else if (block > first_inner_shell_B_block and
-                 block < first_outer_shell_block) {
+      } else if (block > inner_shell_B_block and block < outer_shell_block) {
         grid_to_inertial_block_maps[block] =
-            grid_to_inertial_block_maps[first_inner_shell_B_block]->get_clone();
-        if (grid_to_distorted_block_maps[first_inner_shell_B_block] !=
-            nullptr) {
+            grid_to_inertial_block_maps[inner_shell_B_block]->get_clone();
+        if (grid_to_distorted_block_maps[inner_shell_B_block] != nullptr) {
           grid_to_distorted_block_maps[block] =
-              grid_to_distorted_block_maps[first_inner_shell_B_block]
-                  ->get_clone();
+              grid_to_distorted_block_maps[inner_shell_B_block]->get_clone();
           distorted_to_inertial_block_maps[block] =
-              distorted_to_inertial_block_maps[first_inner_shell_B_block]
+              distorted_to_inertial_block_maps[inner_shell_B_block]
                   ->get_clone();
         }
-      } else if (block > first_outer_shell_block) {
+      } else if (block > outer_shell_block) {
         grid_to_inertial_block_maps[block] =
-            grid_to_inertial_block_maps[first_outer_shell_block]->get_clone();
+            grid_to_inertial_block_maps[outer_shell_block]->get_clone();
       } else {
         grid_to_inertial_block_maps[block] =
             grid_to_inertial_block_maps[0]->get_clone();
@@ -1959,69 +1349,24 @@ CylindricalBinaryCompactObject::external_boundary_conditions() const {
   std::vector<DirectionMap<
       3, std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>>>
       boundary_conditions{number_of_blocks_};
-//   for (size_t i = 0; i < 5; ++i) {
-//     if (not include_inner_sphere_A_) {
-//       // EA Filled Cylinder
-//       boundary_conditions[i + 9][Direction<3>::lower_zeta()] =
-//           inner_boundary_condition_->get_clone();
-//       // MA Filled Cylinder
-//       boundary_conditions[i + 27][Direction<3>::lower_zeta()] =
-//           inner_boundary_condition_->get_clone();
-//     }
-//     if (not include_inner_sphere_B_) {
-//       // EB Filled Cylinder
-//       boundary_conditions[i + 18][Direction<3>::lower_zeta()] =
-//           inner_boundary_condition_->get_clone();
-//       // MB Filled Cylinder
-//       boundary_conditions[i + 32][Direction<3>::lower_zeta()] =
-//           inner_boundary_condition_->get_clone();
-//     }
-//   }
-//   for (size_t i = 0; i < 4; ++i) {
-//     if (not include_inner_sphere_A_) {
-//       // EA Cylinder
-//       boundary_conditions[i + 14][Direction<3>::lower_xi()] =
-//           inner_boundary_condition_->get_clone();
-//     }
-//     if (not include_inner_sphere_B_) {
-//       // EB Cylinder
-//       boundary_conditions[i + 23][Direction<3>::lower_xi()] =
-//           inner_boundary_condition_->get_clone();
-//     }
-//   }
-
-//   size_t last_block = 46;
-//   if (include_inner_sphere_A_) {
-//     boundary_conditions[last_block][Direction<3>::lower_xi()] =
-//         inner_boundary_condition_->get_clone();
-//     last_block += 1;
-//   }
-//   if (include_inner_sphere_B_) {
-//     boundary_conditions[last_block][Direction<3>::lower_xi()] =
-//         inner_boundary_condition_->get_clone();
-//     last_block += 1;
-//   }
-//   boundary_conditions[last_block][Direction<3>::upper_xi()] =
-//       outer_boundary_condition_->get_clone();
-
-  const size_t first_ea_endcap_block = 2;
-  const size_t first_ea_side_block = 3;
-  const size_t first_ma_endcap_block = 6;
-  const size_t first_eb_endcap_block = 4;
-  const size_t first_eb_side_block = 5;
-  const size_t first_mb_endcap_block = 7;
+  // TODO : better solution?
+  const size_t ea_endcap_block = 2;
+  const size_t ea_side_block = 3;
+  const size_t ma_endcap_block = 6;
+  const size_t eb_endcap_block = 4;
+  const size_t eb_side_block = 5;
+  const size_t mb_endcap_block = 7;
   size_t last_block = 10;
 
-  //   first_ca_endcap_block
   if (not include_inner_sphere_A_) {
       // EA Filled Cylinder
-      boundary_conditions[first_ea_endcap_block][Direction<3>::lower_zeta()] =
+      boundary_conditions[ea_endcap_block][Direction<3>::lower_zeta()] =
           inner_boundary_condition_->get_clone();
       // MA Filled Cylinder
-      boundary_conditions[first_ma_endcap_block][Direction<3>::lower_zeta()] =
+      boundary_conditions[ma_endcap_block][Direction<3>::lower_zeta()] =
           inner_boundary_condition_->get_clone();
       // EA Cylinder
-      boundary_conditions[first_ea_side_block][Direction<3>::lower_xi()] =
+      boundary_conditions[ea_side_block][Direction<3>::lower_xi()] =
           inner_boundary_condition_->get_clone();
   } else {
     boundary_conditions[last_block][Direction<3>::lower_xi()] =
@@ -2030,13 +1375,13 @@ CylindricalBinaryCompactObject::external_boundary_conditions() const {
   }
   if (not include_inner_sphere_B_) {
       // EB Filled Cylinder
-      boundary_conditions[first_eb_endcap_block][Direction<3>::lower_zeta()] =
+      boundary_conditions[eb_endcap_block][Direction<3>::lower_zeta()] =
           inner_boundary_condition_->get_clone();
       // MB Filled Cylinder
-      boundary_conditions[first_mb_endcap_block][Direction<3>::lower_zeta()] =
+      boundary_conditions[mb_endcap_block][Direction<3>::lower_zeta()] =
           inner_boundary_condition_->get_clone();
       // EB Cylinder
-      boundary_conditions[first_eb_side_block][Direction<3>::lower_xi()] =
+      boundary_conditions[eb_side_block][Direction<3>::lower_xi()] =
           inner_boundary_condition_->get_clone();
   } else {
     boundary_conditions[last_block][Direction<3>::lower_xi()] =

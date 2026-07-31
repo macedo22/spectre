@@ -428,7 +428,7 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
   // https://arxiv.org/abs/1206.3015 (but rotated to the z-axis).
   double z_cutting_plane_{};
   size_t number_of_blocks_{};
-  size_t first_outer_shell_block{};
+  std::unordered_map<std::string, size_t> block_positions_{};
   std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>
       inner_boundary_condition_;
   std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>
