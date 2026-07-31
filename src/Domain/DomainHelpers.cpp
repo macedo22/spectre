@@ -1202,10 +1202,9 @@ cyl_coordinate_map(const double inner_radius, const double outer_radius,
   using Identity1D = domain::CoordinateMaps::Identity<1>;
   using Interval = domain::CoordinateMaps::Interval;
   using PolarToCartesian = domain::CoordinateMaps::PolarToCartesian;
-  // using Linear = ::domain::CoordinateMaps::Distribution::Linear;
   const auto linear = domain::CoordinateMaps::Distribution::Linear;
 
-  // Map: (xi, eta, zeta) in [-1,1]^3
+  // Map: (xi, eta, zeta) in [-1,1] x [0, 2pi] x [-1, 1]
   //   xi -> r in [inner_r, outer_r]  (Affine)
   //   eta -> phi in [0, 2pi)         (Identity<1>, passes through)
   //   zeta -> z in [z_lower, z_upper] (Interval)

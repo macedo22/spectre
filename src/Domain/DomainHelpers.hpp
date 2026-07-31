@@ -279,7 +279,8 @@ std::vector<std::array<size_t, 8>> corners_for_biradially_layered_domains(
         {1, 2, 3, 4, 5, 6, 7, 8}});
 
 /// \ingroup ComputationalDomainGroup
-/// These are the CoordinateMaps used in the Cylinder DomainCreator.
+/// These are the CoordinateMaps used in the Cylinder DomainCreator for when
+/// cylinders are built using cubes instead of a single cylindrical block.
 ///
 /// The `radial_partitioning` specifies the radial boundaries of sub-shells
 /// between `inner_radius` and `outer_radius`, while `partitioning_in_z`
@@ -358,9 +359,15 @@ auto cyl_wedge_coord_map_surrounding_blocks(
     -> std::vector<domain::CoordinateMaps::ProductOf2Maps<
         domain::CoordinateMaps::Wedge<2>, domain::CoordinateMaps::Interval>>;
 
-// TODO : document
-// std::unique_ptr<
-//     domain::CoordinateMapBase<Frame::BlockLogical, Frame::Inertial, 3>>
+/// \ingroup ComputationalDomainGroup
+/// This is the CoordinateMap used in the Cylinder DomainCreator for when
+/// cylinders are built using a single cylindrical block instead of cubes.
+///
+/// Returns a unit cylinder with the given `inner_radius`, `outer_radius`,
+/// `lower_z_bound`, and `upper_z_bound`. The returned unit cylinder's
+/// intended use is to compose it with `UniformCylindricalEndCap`,
+/// `UniformCylindricalFlatEndCap`, or `UniformCylindricalSide` to create the
+/// different cylinders needed by `domain::CylindricalBinaryCompactObject`.
 ::domain::CoordinateMap<
     Frame::BlockLogical, Frame::Inertial,
     ::domain::CoordinateMaps::ProductOf3Maps<
