@@ -373,6 +373,12 @@ void check_block_face_grid_points_align(
           {9, 5},
           {Spectral::Basis::ZernikeB2, Spectral::Basis::Legendre},
           {Spectral::Quadrature::Equiangular, Spectral::Quadrature::GaussLobatto}};
+      } else if (alg::equal(neighbor_block.topologies(), domain::topologies::spherical_shell) and
+          (direction == Direction<VolumeDim>::upper_xi() or direction == Direction<VolumeDim>::lower_xi())) {
+        face_mesh = Mesh<VolumeDim - 1>{
+          {3, 9},
+          {Spectral::Basis::ZernikeB2, Spectral::Basis::ZernikeB2},
+          {Spectral::Quadrature::GaussRadauUpper, Spectral::Quadrature::Equiangular}};
       } else {
         // ERROR("TODO");
         return;
@@ -388,6 +394,12 @@ void check_block_face_grid_points_align(
           (direction == Direction<VolumeDim>::upper_zeta() or direction == Direction<VolumeDim>::lower_zeta())) {
         face_mesh = Mesh<VolumeDim - 1>{
           {9, 5},
+          {Spectral::Basis::Legendre, Spectral::Basis::Fourier},
+          {Spectral::Quadrature::GaussLobatto, Spectral::Quadrature::Equiangular}};
+      } else if (alg::equal(neighbor_block.topologies(), domain::topologies::spherical_shell) and
+          (direction == Direction<VolumeDim>::upper_zeta() or direction == Direction<VolumeDim>::lower_zeta())) {
+        face_mesh = Mesh<VolumeDim - 1>{
+          {3, 9},
           {Spectral::Basis::Fourier, Spectral::Basis::Legendre},
           {Spectral::Quadrature::Equiangular, Spectral::Quadrature::GaussLobatto}};
       } else {
