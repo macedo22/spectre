@@ -1042,9 +1042,9 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       [&shell_to_cyl_endcap](
           std::unordered_set<size_t>& cyl_ids,
           std::unordered_map<size_t, OrientationMap<3>>& cyl_orientations,
-          const size_t cyl__block_number) {
-        cyl_ids.insert(cyl__block_number);
-        cyl_orientations.emplace(cyl__block_number, shell_to_cyl_endcap);
+          const size_t cyl_block_number) {
+        cyl_ids.insert(cyl_block_number);
+        cyl_orientations.emplace(cyl_block_number, shell_to_cyl_endcap);
       };
 
   // Add a cylindrical side as a neighbor of a spherical shell
@@ -1052,9 +1052,9 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       [&shell_to_cyl_side](
           std::unordered_set<size_t>& cyl_ids,
           std::unordered_map<size_t, OrientationMap<3>>& cyl_orientations,
-          const size_t cyl__block_number) {
-        cyl_ids.insert(cyl__block_number);
-        cyl_orientations.emplace(cyl__block_number, shell_to_cyl_side);
+          const size_t cyl_block_number) {
+        cyl_ids.insert(cyl_block_number);
+        cyl_orientations.emplace(cyl_block_number, shell_to_cyl_side);
       };
 
   using Affine = CoordinateMaps::Affine;
