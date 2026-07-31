@@ -545,14 +545,7 @@ void test_parse_errors() {
       Catch::Matchers::ContainsSubstring(
           "Must specify either both inner and outer boundary "
           "conditions or neither."));
-  // InitialRefinement and InitialGridPoints
-  CHECK_THROWS_WITH(
-      domain::creators::CylindricalBinaryCompactObject(
-          {{2.0, 0.05, 0.0}}, {-3.0, 0.05, 0.0}, 1.0, 0.4, false, false, 25.0,
-          std::array<size_t, 3>{1_st, 1_st, 1_st}, 3_st, std::nullopt,
-          create_inner_boundary_condition(), create_outer_boundary_condition(),
-          Options::Context{false, {}, 1, 1}),
-      Catch::Matchers::ContainsSubstring("Angular h-refinement"));
+  // InitialGridPoints
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
           {{2.0, 0.05, 0.0}}, {-3.0, 0.05, 0.0}, 1.0, 0.4, false, false, 25.0,
@@ -586,12 +579,10 @@ void test_parse_errors() {
 }
 
 // This matches the structure in the option string
-std::unordered_map<std::string, std::variant<std::array<size_t, 3>, size_t>>
-make_initial_refinement(const size_t initial_value,
-                        const bool include_inner_sphere_A,
-                        const bool include_inner_sphere_B) {
-  std::unordered_map<std::string, std::variant<std::array<size_t, 3>, size_t>>
-      initial_map;
+std::unordered_map<std::string, size_t> make_initial_refinement(
+    const size_t initial_value, const bool include_inner_sphere_A,
+    const bool include_inner_sphere_B) {
+  std::unordered_map<std::string, size_t> initial_map;
   const size_t same = initial_value;
   const size_t one_more = initial_value + 1;
 
@@ -744,9 +735,7 @@ void test_cylindrical_bbh() {
 // Make sure initial refinement and initial grid points for different blocks
 // are set to the correct values based on the input
 void test_initial_extents_and_refinement() {
-  using RefinementMap =
-      std::unordered_map<std::string,
-                         std::variant<std::array<size_t, 3>, size_t>>;
+  using RefinementMap = std::unordered_map<std::string, size_t>;
   using GridPointsMap = std::unordered_map<
       std::string, std::variant<std::array<size_t, 3>, std::array<size_t, 2>>>;
 

@@ -222,21 +222,25 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
         "Grid-coordinate radius of outer boundary."};
   };
 
-  // TODO : update docs
   struct InitialRefinement {
-    using type = std::variant<
-        size_t, std::array<size_t, 3>, std::vector<std::array<size_t, 3>>,
-        std::unordered_map<std::string, std::array<size_t, 3>>,
-        std::unordered_map<std::string,
-                           std::variant<std::array<size_t, 3>, size_t>>>;
+    using type = std::variant<size_t, std::unordered_map<std::string, size_t>>;
     static constexpr Options::String help = {
-        "Initial refinement level. Specify one of: a single number, a list "
-        "representing [r, theta, perp], or such a list for every block in the "
-        "domain. Here 'r' is the radial direction normal to the inner and "
-        "outer boundaries, 'theta' is the periodic direction, and 'perp' is "
-        "the third direction. Note that for spherical shell block groups "
-        "('InnerSphereA', 'InnerSphereB', and 'OuterSphere'), you must instead "
-        "specify refinement as a single value representing radial refinement."};
+        "Initial refinement level. Specify one of: a single number or a list "
+        "of single numbers for every block group in the domain, every block "
+        "name in the domain, or a mix of block groups and blocks. Each single "
+        "number represents the radial refinement for spherical shell blocks "
+        "or z refinement for cylindrical blocks.\n\n Note that the z direction "
+        "in cylinder blocks will roughly correspond to refinement in a "
+        "direction parallel to the axis of separation between the two objects. "
+        "Because filled cylinder blocks lie along the axis of separation but "
+        "hollow cylinder blocks wrap around it, refinement in leads to "
+        "refinement in different spherical coordinate directions in the "
+        "global spherical coordinates. More specifically, z refinement in "
+        "filled cylinders (e.g. EAFilledCylinder) will roughly correspond to "
+        "radial refinement in global spherical coordinates, but in hollow "
+        "cylinders, it will behave more like angular refinement in global "
+        "spherical coordinates that is perpendicular to the cylinder's local "
+        "angular direction."};
   };
   // TODO : update docs
   struct InitialGridPoints {

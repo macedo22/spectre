@@ -309,10 +309,10 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
          "in the domain.");
 
   // Validate that the input file has the correct format for
-  // InitialRefinement and InitialGridPoints
-  bco::validate_initial_refinement(context, initial_refinement,
-                                   spherical_harmonic_shell_names,
-                                   all_cylinder_names);
+  // InitialGridPoints. No need to validate the format for InitialRefinement
+  // because it does not accept a map of strings to possibly
+  // differently-sized arrays for refinement. If a map is provided, it already
+  // only accepts a map of size_t keys.
   bco::validate_initial_grid_points(context, initial_grid_points,
                                     spherical_harmonic_shell_names,
                                     filled_cylinder_names);
@@ -321,9 +321,24 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
   const ExpandOverBlocks<std::array<size_t, 3>> expand_over_blocks{
       block_names_, block_groups_};
   try {
+    // Since BinaryCompactObject::InitialRefinement map type differs from
+    // CylindricalBinaryCompactObject::InitialRefinement map type, need to first
+    // create the BCO-compatible type with the CBCO data to be able to reuse the
+    // functionality of bco::set_initial_refinement().
+    using bco_ref_map_type =
+        std::unordered_map<std::string,
+                           std::variant<std::array<size_t, 3>, size_t>>;
+    using cbco_ref_map_type = std::unordered_map<std::string, size_t>;
+    const auto bco_initial_refinement =
+        std::holds_alternative<size_t>(initial_refinement)
+            ? BinaryCompactObject::InitialRefinement::type{std::get<size_t>(
+                  initial_refinement)}
+            : BinaryCompactObject::InitialRefinement::type{bco_ref_map_type{
+                  std::get<cbco_ref_map_type>(initial_refinement).begin(),
+                  std::get<cbco_ref_map_type>(initial_refinement).end()}};
     initial_refinement_ = bco::set_initial_refinement(
-        expand_over_blocks, initial_refinement, spherical_harmonic_shell_names,
-        all_cylinder_names);
+        expand_over_blocks, bco_initial_refinement,
+        spherical_harmonic_shell_names, all_cylinder_names);
     // If a global single-number h-refinement was used, post-process the
     // expanded cylinder and spherical shell blocks to make the angular
     // directions have h refinement = 0.
