@@ -935,8 +935,8 @@ void test_block_topology_and_connectivity() {
     CAPTURE(name);
     const std::array< domain::Topology, 3 >& topologies =
         block.topologies();
-    const domain::CoordinateMapBase< Frame::BlockLogical, Frame::Inertial, 3>& stationary_map =
-        block.stationary_map();
+    // const domain::CoordinateMapBase< Frame::BlockLogical, Frame::Inertial, 3>& stationary_map =
+    //     block.stationary_map();
     const bool block_is_cylinder = (topologies == domain::topologies::full_cylinder or topologies == domain::topologies::cylindrical_shell);
     const bool block_is_spherical_shell = topologies == domain::topologies::spherical_shell;
     // // block can't be both a cylinder and a spherical shell
