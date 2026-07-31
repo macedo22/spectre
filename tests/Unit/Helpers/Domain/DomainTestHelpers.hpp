@@ -62,8 +62,7 @@ void test_domain_construction(
         domain::CoordinateMapBase<Frame::Grid, Frame::Inertial, VolumeDim>>>&
         expected_grid_to_inertial_maps = {});
 
-// Test that neighboring Blocks abut each other. This tests both Block corners
-// and points on the interface between Blocks.
+// Test that two neighboring Blocks abut each other.
 template <size_t VolumeDim>
 void test_physical_separation(
     const std::vector<Block<VolumeDim>>& blocks,
