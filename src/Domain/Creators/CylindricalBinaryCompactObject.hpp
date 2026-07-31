@@ -104,13 +104,10 @@ namespace domain::creators {
  *
  * The Blocks are named as follows:
  * - Each of CAFilledCylinder, EAFilledCylinder, EBFilledCylinder,
- *   MAFilledCylinder, MBFilledCylinder, and CBFilledCylinder consists
- *   of 5 blocks, named 'Center', 'East', 'North', 'West', and
- *   'South', so an example of a valid block name is
- *   'CAFilledCylinderCenter'.
- * - Each of CACylinder, EACylinder, EBCylinder, and CBCylinder
- *   consists of 4 blocks, named 'East', 'North', 'West', and 'South',
- *   so an example of a valid block name is 'CACylinderEast'.
+ *   MAFilledCylinder, MBFilledCylinder, and CBFilledCylinder are filled
+ *   cylindrical endcaps made of a single cylindrical block.
+ * - Each of CACylinder, EACylinder, EBCylinder, and CBCylinder are hollow
+ *   ylindrical shells made of a single cylindrical block.
  * - The Block group called "Outer" consists of all the CA and CB blocks.
  * - OuterShell0 is the single shell in a Block group called "OuterSphere" and
  *   it borders the outer boundary.
