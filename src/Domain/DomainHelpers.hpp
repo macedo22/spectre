@@ -376,8 +376,8 @@ auto cyl_wedge_coord_map_surrounding_blocks(
     ::domain::CoordinateMaps::ProductOf2Maps<
         ::domain::CoordinateMaps::PolarToCartesian,
         ::domain::CoordinateMaps::Identity<1>>>
-cyl_coordinate_map(const double inner_radius, const double outer_radius,
-                   const double lower_z_bound, const double upper_z_bound);
+cyl_coordinate_map(double inner_radius, double outer_radius,
+                   double lower_z_bound, double upper_z_bound);
 
 /// \ingroup ComputationalDomainGroup
 /// \brief The corners for a cylindrical domain split into discs with radial
