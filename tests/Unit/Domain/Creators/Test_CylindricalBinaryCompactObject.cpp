@@ -7,7 +7,6 @@
 #include <cmath>
 #include <cstddef>
 #include <iomanip>
-#include <iostream>  // TODO : remove
 #include <iterator>
 #include <limits>
 #include <memory>
