@@ -263,84 +263,17 @@ tnsr::I<double, VolumeDim, Frame::BlockLogical> point_in_neighbor_frame(
   return get_corner_of_orthant(point_get_orthant);
 }
 
-// Given two Blocks which are neighbors, computes the max separation between
-// the abutting faces of the Blocks in the Frame::Inertial frame using the
-// CoordinateMaps of each block.
+// This tests whether a logical grid point on the face of the host Block
+// corresponds to the same logical grid point on the abutting face of the
+// neighbor Block (taking into account the discrete rotation of the
+// OrientationMap from the host Block to the neighbor Block).
 template <size_t VolumeDim>
-double physical_separation(
-    const Block<VolumeDim>& block1, const Block<VolumeDim>& block2,
+void check_block_face_grid_points_align(
+    const Block<VolumeDim>& host_block, const Block<VolumeDim>& neighbor_block,
     double time = std::numeric_limits<double>::signaling_NaN(),
     const std::unordered_map<
         std::string, std::unique_ptr<domain::FunctionsOfTime::FunctionOfTime>>&
         functions_of_time = {}) {
-  double max_separation = 0;
-  const auto direction = find_direction_to_neighbor(block1, block2);
-  const auto orientation = find_neighbor_orientation(block1, block2);
-  std::array<tnsr::I<double, VolumeDim, Frame::BlockLogical>,
-             two_to_the(VolumeDim - 1)>
-      shared_points1{};
-  std::array<tnsr::I<double, VolumeDim, Frame::BlockLogical>,
-             two_to_the(VolumeDim - 1)>
-      shared_points2{};
-  for (FaceCornerIterator<VolumeDim> fci(direction); fci; ++fci) {
-    gsl::at(shared_points1, fci.face_index()) = fci();
-  }
-  for (FaceCornerIterator<VolumeDim> fci(direction.opposite()); fci; ++fci) {
-    gsl::at(shared_points2, fci.face_index()) =
-        point_in_neighbor_frame(orientation, fci());
-  }
-  if (block1.is_time_dependent() != block2.is_time_dependent()) {
-    ERROR(
-        "Both block1 and block2 must have the same time dependence, but block1 "
-        "has time-dependence status: "
-        << std::boolalpha << block1.is_time_dependent()
-        << " and block2 has: " << block2.is_time_dependent());
-  }
-  if (block1.is_time_dependent()) {
-    ASSERT(not std::isnan(time),
-           "Blocks have time dependent maps but a time to evaluate at was "
-           "not passed");
-    const auto& map1_logical_to_grid = block1.moving_mesh_logical_to_grid_map();
-    const auto& map1_grid_to_inertial =
-        block1.moving_mesh_grid_to_inertial_map();
-    const auto& map2_logical_to_grid = block2.moving_mesh_logical_to_grid_map();
-    const auto& map2_grid_to_inertial =
-        block2.moving_mesh_grid_to_inertial_map();
-    for (size_t i = 0; i < two_to_the(VolumeDim - 1); i++) {
-      for (size_t j = 0; j < VolumeDim; j++) {
-        max_separation = std::max(
-            max_separation,
-            std::abs(map1_grid_to_inertial(
-                         map1_logical_to_grid(gsl::at(shared_points1, i)), time,
-                         functions_of_time)
-                         .get(j) -
-                     map2_grid_to_inertial(
-                         map2_logical_to_grid(gsl::at(shared_points2, i)), time,
-                         functions_of_time)
-                         .get(j)));
-      }
-    }
-  } else {
-    const auto& map1 = block1.stationary_map();
-    const auto& map2 = block2.stationary_map();
-    for (size_t i = 0; i < two_to_the(VolumeDim - 1); i++) {
-      for (size_t j = 0; j < VolumeDim; j++) {
-        max_separation = std::max(
-            max_separation, std::abs(map1(gsl::at(shared_points1, i)).get(j) -
-                                     map2(gsl::at(shared_points2, i)).get(j)));
-      }
-    }
-  }
-  return max_separation;
-}
-}  // namespace
-template <size_t VolumeDim>
-void check_block_face_grid_points_align(
-    const Block<VolumeDim>& host_block, const Block<VolumeDim>& neighbor_block,
-    double time,
-    const std::unordered_map<
-        std::string, std::unique_ptr<domain::FunctionsOfTime::FunctionOfTime>>&
-        functions_of_time) {
   const auto direction = find_direction_to_neighbor(host_block, neighbor_block);
   const auto orientation =
       find_neighbor_orientation(host_block, neighbor_block);
@@ -513,6 +446,78 @@ void check_block_face_grid_points_align(
     CHECK_ITERABLE_APPROX(x_self, x_neighbor);
   }
 }
+
+// Given two Blocks which are neighbors, computes the max separation between
+// the abutting faces of the Blocks in the Frame::Inertial frame using the
+// CoordinateMaps of each block.
+template <size_t VolumeDim>
+double physical_separation(
+    const Block<VolumeDim>& block1, const Block<VolumeDim>& block2,
+    double time = std::numeric_limits<double>::signaling_NaN(),
+    const std::unordered_map<
+        std::string, std::unique_ptr<domain::FunctionsOfTime::FunctionOfTime>>&
+        functions_of_time = {}) {
+  double max_separation = 0;
+  const auto direction = find_direction_to_neighbor(block1, block2);
+  const auto orientation = find_neighbor_orientation(block1, block2);
+  std::array<tnsr::I<double, VolumeDim, Frame::BlockLogical>,
+             two_to_the(VolumeDim - 1)>
+      shared_points1{};
+  std::array<tnsr::I<double, VolumeDim, Frame::BlockLogical>,
+             two_to_the(VolumeDim - 1)>
+      shared_points2{};
+  for (FaceCornerIterator<VolumeDim> fci(direction); fci; ++fci) {
+    gsl::at(shared_points1, fci.face_index()) = fci();
+  }
+  for (FaceCornerIterator<VolumeDim> fci(direction.opposite()); fci; ++fci) {
+    gsl::at(shared_points2, fci.face_index()) =
+        point_in_neighbor_frame(orientation, fci());
+  }
+  if (block1.is_time_dependent() != block2.is_time_dependent()) {
+    ERROR(
+        "Both block1 and block2 must have the same time dependence, but block1 "
+        "has time-dependence status: "
+        << std::boolalpha << block1.is_time_dependent()
+        << " and block2 has: " << block2.is_time_dependent());
+  }
+  if (block1.is_time_dependent()) {
+    ASSERT(not std::isnan(time),
+           "Blocks have time dependent maps but a time to evaluate at was "
+           "not passed");
+    const auto& map1_logical_to_grid = block1.moving_mesh_logical_to_grid_map();
+    const auto& map1_grid_to_inertial =
+        block1.moving_mesh_grid_to_inertial_map();
+    const auto& map2_logical_to_grid = block2.moving_mesh_logical_to_grid_map();
+    const auto& map2_grid_to_inertial =
+        block2.moving_mesh_grid_to_inertial_map();
+    for (size_t i = 0; i < two_to_the(VolumeDim - 1); i++) {
+      for (size_t j = 0; j < VolumeDim; j++) {
+        max_separation = std::max(
+            max_separation,
+            std::abs(map1_grid_to_inertial(
+                         map1_logical_to_grid(gsl::at(shared_points1, i)), time,
+                         functions_of_time)
+                         .get(j) -
+                     map2_grid_to_inertial(
+                         map2_logical_to_grid(gsl::at(shared_points2, i)), time,
+                         functions_of_time)
+                         .get(j)));
+      }
+    }
+  } else {
+    const auto& map1 = block1.stationary_map();
+    const auto& map2 = block2.stationary_map();
+    for (size_t i = 0; i < two_to_the(VolumeDim - 1); i++) {
+      for (size_t j = 0; j < VolumeDim; j++) {
+        max_separation = std::max(
+            max_separation, std::abs(map1(gsl::at(shared_points1, i)).get(j) -
+                                     map2(gsl::at(shared_points2, i)).get(j)));
+      }
+    }
+  }
+  return max_separation;
+}
+}  // namespace
 }  // namespace domain
 
 namespace {
@@ -620,6 +625,36 @@ void test_physical_separation(
                                             functions_of_time) < tolerance);
           if constexpr (VolumeDim > 1) {
             domain::check_block_face_grid_points_align(blocks[i], blocks[j],
+                                                       time, functions_of_time);
+          }
+        } else if constexpr (VolumeDim == 3) {
+           // For cylinder blocks, we don't test physical separation of corners
+           // with physical_separation() because there are no corners.
+           if ((blocks[i].topologies() ==
+                  domain::topologies::full_cylinder and
+                blocks[j].topologies() ==
+                  domain::topologies::full_cylinder) or
+               (blocks[i].topologies() ==
+                  domain::topologies::full_cylinder and
+                blocks[j].topologies() ==
+                  domain::topologies::cylindrical_shell) or
+               (blocks[i].topologies() ==
+                  domain::topologies::full_cylinder and
+                blocks[j].topologies() ==
+                  domain::topologies::spherical_shell) or
+               (blocks[i].topologies() ==
+                  domain::topologies::cylindrical_shell and
+                blocks[j].topologies() ==
+                  domain::topologies::cylindrical_shell) or
+               (blocks[i].topologies() ==
+                  domain::topologies::cylindrical_shell and
+                blocks[j].topologies() ==
+                  domain::topologies::full_cylinder) or
+               (blocks[i].topologies() ==
+                  domain::topologies::full_cylinder and
+                blocks[j].topologies() ==
+                  domain::topologies::spherical_shell)) {
+              domain::check_block_face_grid_points_align(blocks[i], blocks[j],
                                                        time, functions_of_time);
           }
         }
@@ -736,13 +771,6 @@ tnsr::i<DataType, SpatialDim> unit_basis_form(
       const Domain<DIM(data)>& domain,                                \
       const std::vector<std::array<size_t, DIM(data)>>&               \
           initial_refinement_levels);                                 \
-  template \
-void domain::check_block_face_grid_points_align( \
-    const Block<DIM(data)>& host_block, const Block<DIM(data)>& neighbor_block, \
-    double time, \
-    const std::unordered_map< \
-        std::string, std::unique_ptr<domain::FunctionsOfTime::FunctionOfTime>>& \
-        functions_of_time); \
   template void test_physical_separation(                             \
       const std::vector<Block<DIM(data)>>& blocks, const double time, \
       const std::unordered_map<                                       \

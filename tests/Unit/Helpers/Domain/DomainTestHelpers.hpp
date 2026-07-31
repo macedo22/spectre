@@ -62,20 +62,6 @@ void test_domain_construction(
         domain::CoordinateMapBase<Frame::Grid, Frame::Inertial, VolumeDim>>>&
         expected_grid_to_inertial_maps = {});
 
-namespace domain {
-// This tests whether logical grid points on the face of the host Block
-// corresponds to the same logical grid points on the abutting face of the
-// neighbor Block (taking into account the discrete rotation of the
-// OrientationMap from the host Block to the neighbor Block).
-template <size_t VolumeDim>
-void check_block_face_grid_points_align(
-    const Block<VolumeDim>& host_block, const Block<VolumeDim>& neighbor_block,
-    double time = std::numeric_limits<double>::signaling_NaN(),
-    const std::unordered_map<
-        std::string, std::unique_ptr<domain::FunctionsOfTime::FunctionOfTime>>&
-        functions_of_time = {});
-}  // namespace domain
-
 // Test that neighboring Blocks abut each other. This tests both Block corners
 // and points on the interface between Blocks.
 template <size_t VolumeDim>
