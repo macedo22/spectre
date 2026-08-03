@@ -72,9 +72,9 @@ spectre_run_cmake() {
           -D CMAKE_Fortran_COMPILER=gfortran \
           -D CHARM_ROOT=$CHARM_ROOT \
           -D BLA_VENDOR=OpenBLAS \
-          -D CMAKE_BUILD_TYPE=Release \
+          -D CMAKE_BUILD_TYPE=Debug \
           -D BUILD_DOCS=OFF \
-          -D DEBUG_SYMBOLS=OFF \
+          -D DEBUG_SYMBOLS=ON \
           -D MEMORY_ALLOCATOR=JEMALLOC \
           -D BUILD_PYTHON_BINDINGS=ON \
           -D BUILD_SHARED_LIBS=ON \
