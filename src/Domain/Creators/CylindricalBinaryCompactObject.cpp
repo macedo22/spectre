@@ -556,7 +556,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // Construct a coordinate map that goes from logical coordinates to a unit
   // right cylinder block. The radii and bounds are what are expected by the
   // UniformCylindricalEndCap and UniformCylindricalFlatEndCap maps.
-  const double cylinder_inner_radius = 0.5;
+  const double cylinder_inner_radius = 0.0;
   const double cylinder_outer_radius = 1.0;
   const double cylinder_lower_bound_z = -1.0;
   const double cylinder_upper_bound_z = 1.0;
