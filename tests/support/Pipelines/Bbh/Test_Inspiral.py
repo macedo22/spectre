@@ -252,7 +252,7 @@ class TestInspiral(unittest.TestCase):
                 common_args
                 + [
                     "-O",
-                    str(self.test_dir / "Inspiral"),
+                    str(self.test_dir / "CylindricalInspiral"),
                     "--cylindrical-domain",
                     "--no-submit",
                 ]
@@ -260,7 +260,9 @@ class TestInspiral(unittest.TestCase):
         except SystemExit as e:
             self.assertEqual(e.code, 0)
         self.assertTrue(
-            (self.test_dir / "Inspiral/Segment_0000/Inspiral.yaml").exists()
+            (
+                self.test_dir / "CylindricalInspiral/Segment_0000/Inspiral.yaml"
+            ).exists()
         )
 
 
