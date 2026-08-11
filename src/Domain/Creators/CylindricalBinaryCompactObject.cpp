@@ -167,6 +167,9 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
   z_cutting_plane_ = cut_spheres_offset_factor_ *
                      ((1.0 - xi) * center_B_[2] + xi * center_A_[2]);
 
+  // TODO : need to update computation of outer_radius_A and outer_radius_B
+  // based on number of shells
+
   // outer_radius_A is the outer radius of the inner sphere A, if it exists.
   // If the inner sphere A does not exist, then outer_radius_A is the same
   // as radius_A_.
@@ -295,11 +298,80 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
     spherical_harmonic_shell_names.insert(group_name);
   };
 
+  auto add_inner_spherical_shells_for_sphere =
+      [this, &add_spherical_shell_name](
+          const std::string& prefix, const std::string& group_name,
+          const std::array<double, 3>& center_rotated_to_z_axis,
+          const double inner_radius) {
+        // In spec/InputFiles/bbh/DoMulitpleRuns.input, it sets
+        //   RelativeDelta = 0.40
+        // which it says is set by
+        //   RelativeDeltaR := DeltaR/Ravg.
+        // In spec/InputFiles/bbh/GrDomain.input, it then sets
+        //   RelativeDeltaR=1.1*__RelativeDeltaR__
+        // for SphereA and SphereB.
+        const double relative_delta_r = 0.44;
+        // In spec/Dust/Domain/Subdomain/CreateTouchingCutSphereWedgesBBH.cpp,
+        //   rA = fabs(Geometry().CutX()-mCenterA[0])
+        // and
+        //   rB = fabs(Geometry().CutX()-mCenterB[0])
+        // where Geometry().CutX() is the x coordinate of the cutting plane.
+        const double distance_to_cutting_plane =
+            fabs(z_cutting_plane_ - gsl::at(center_rotated_to_z_axis, 2));
+        // The below implements SpEC logic for determining an inner sphere's
+        // outer radius, how many shells it should have, and its radial
+        // partitioning when specific radial partitioning is not specified by
+        // user input. Since radial partitioning is not currently an input
+        // option for this domain, it will always be automatically determined in
+        // this way.
+        //
+        // In spec/Dust/Domain/Subdomain/CreateTouchingSphericalShellHelper.cpp,
+        // NextRadiusOutsideRmax is distance_to_cutting_plane. See spec branch
+        // if(NextRadiusOutsideRmax>0 and not RMaxIsDefined), which is what is
+        // implemented below.
+        // const double distance_to_cutting_plane_over_inner_radius =
+        //     distance_to_cutting_plane / inner_radius;
+        int num_shells =
+            std::round(std::log(distance_to_cutting_plane / inner_radius) /
+                       std::log(1.0 + relative_delta_r)) -
+            1;
+        // Note: The SpEC logic then does:
+        //   if(mNShells==0) mNShells++;
+        //   if(mNShells<0) mNShells=0;
+        // This domain, however, currently accepts a boolean for whether or not
+        // to include inner spheres. It's possible that a user would specify
+        // `true` to ask for an inner sphere but then num_shells above ends up
+        // being negative. By the SpEC logic, this would set num_shells = 0, but
+        // this would directly go against the user's request to include an
+        // inner sphere. For this reason, we instead choose to set
+        // num_shells = 1 when this happens so as to still honor the user's
+        // request to have an inner sphere at all. This can later be updated to
+        // match SpEC's behavior if this domain's input options to include or
+        // exclude an inner sphere are removed.
+        if (num_shells <= 0) {
+          num_shells = 1;
+        }
+
+        // const double coef = pow(distance_to_cutting_plane_over_inner_radius,
+        //                         1.0 / static_cast<double>(num_shells + 1));
+        // std::vector<double> radii{};
+        // radii.reserve(num_shells + 1);
+        // mRadii.assign(MV::Size(mNShells + 1), rmin);
+        // for (int k = 1; k <= mNShells; ++k)
+        //   mRadii[k] = mRadii[k - 1] * coef;
+        for (size_t shell_number = 0;
+             shell_number < static_cast<size_t>(num_shells); shell_number++) {
+          add_spherical_shell_name(prefix, group_name, shell_number);
+        }
+      };
+
   if (include_inner_sphere_A) {
-    add_spherical_shell_name("InnerA", "InnerSphereA", 0);
+    add_inner_spherical_shells_for_sphere("InnerA", "InnerSphereA", center_A_,
+                                          radius_A_);
   }
   if (include_inner_sphere_B) {
-    add_spherical_shell_name("InnerB", "InnerSphereB", 0);
+    add_inner_spherical_shells_for_sphere("InnerB", "InnerSphereB", center_B_,
+                                          radius_B_);
   }
   add_spherical_shell_name("Outer", "OuterSphere", 0);
 
@@ -781,17 +853,11 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   std::unordered_map<std::string, ExcisionSphere<3>> excision_spheres{};
 
   std::unordered_map<size_t, Direction<3>> abutting_directions_A;
-  const size_t inner_shell_A_block = 10;  // 46;
-  size_t inner_shell_B_block = inner_shell_A_block;
   if (include_inner_sphere_A_) {
     // LCOV_EXCL_START
-    abutting_directions_A.emplace(inner_shell_A_block,
+    abutting_directions_A.emplace(block_positions_.at("InnerAShell0"),
                                   Direction<3>::lower_xi());
     // LCOV_EXCL_STOP
-
-    // Block numbers of sphereB might depend on whether there is an inner
-    // sphereA layer, so increment here to get that right.
-    inner_shell_B_block += 1;
   } else {
     abutting_directions_A.emplace(ea_endcap_block, Direction<3>::lower_zeta());
     abutting_directions_A.emplace(ma_endcap_block, Direction<3>::lower_zeta());
@@ -807,7 +873,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   std::unordered_map<size_t, Direction<3>> abutting_directions_B;
   if (include_inner_sphere_B_) {
     // LCOV_EXCL_START
-    abutting_directions_B.emplace(inner_shell_B_block,
+    abutting_directions_B.emplace(block_positions_.at("InnerBShell0"),
                                   Direction<3>::lower_xi());
     // LCOV_EXCL_STOP
   } else {
@@ -978,28 +1044,72 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
                               /*are_conforming=*/false});
       };
 
+  // Get the number of spherical shells for InnerSphereA and InnerSphereB
+  const size_t num_shells_inner_sphere_A =
+      include_inner_sphere_A_ ? 0 : block_groups_.at("InnerSphereA").size();
   if (include_inner_sphere_A_) {
+    ASSERT(num_shells_inner_sphere_A > 0,
+           "Requested to include InnerSphereA but the number of spherical "
+           "shells for InnerSphereA is 0.");
+  } else {
+    ASSERT(not block_groups_.contains("InnerSphereA"),
+           "Did not request to include InnerSphereA, but InnerSphereA found as "
+           "an existing block group.");
+  }
+  const size_t num_shells_inner_sphere_B =
+      include_inner_sphere_B_ ? 0 : block_groups_.at("InnerSphereB").size();
+  if (include_inner_sphere_B_) {
+    ASSERT(num_shells_inner_sphere_B > 0,
+           "Requested to include InnerSphereB but the number of spherical "
+           "shells for InnerSphereB is 0.");
+  } else {
+    ASSERT(not block_groups_.contains("InnerSphereB"),
+           "Did not request to include InnerSphereB, but InnerSphereB found as "
+           "an existing block group.");
+  }
+
+  if (include_inner_sphere_A_) {
+    // Get outermost block of InnerSphereA
+    const std::string outermost_inner_shell_A_block_name =
+        std::string("InnerAShell")
+            .append(std::to_string(num_shells_inner_sphere_A - 1));
+    const size_t outermost_inner_shell_A_block_number =
+        block_positions_.at(outermost_inner_shell_A_block_name);
+
     // EA Filled Cylinder
     add_cyl_shell_block_neighbor(inner_neighbors, true, false, ea_endcap_block,
-                                 inner_shell_A_block, cyl_endcap_to_shell);
+                                 outermost_inner_shell_A_block_number,
+                                 cyl_endcap_to_shell);
     // EA Cylinder
     add_cyl_shell_block_neighbor(inner_neighbors, false, false, ea_side_block,
-                                 inner_shell_A_block, cyl_side_to_shell);
+                                 outermost_inner_shell_A_block_number,
+                                 cyl_side_to_shell);
     // MA Filled Cylinder
     add_cyl_shell_block_neighbor(inner_neighbors, true, false, ma_endcap_block,
-                                 inner_shell_A_block, cyl_endcap_to_shell);
+                                 outermost_inner_shell_A_block_number,
+                                 cyl_endcap_to_shell);
   }
 
   if (include_inner_sphere_B_) {
+    // Get outermost block of InnerSphereB
+    const std::string outermost_inner_shell_B_block_name =
+        std::string("InnerBShell")
+            .append(std::to_string(num_shells_inner_sphere_B - 1));
+    const size_t outermost_inner_shell_B_block_number =
+        block_positions_.at(outermost_inner_shell_B_block_name);
+
     // EB Filled Cylinder
     add_cyl_shell_block_neighbor(inner_neighbors, true, false, eb_endcap_block,
-                                 inner_shell_B_block, cyl_endcap_to_shell);
+                                 outermost_inner_shell_B_block_number,
+                                 cyl_endcap_to_shell);
     // EB Cylinder
     add_cyl_shell_block_neighbor(inner_neighbors, false, false, eb_side_block,
-                                 inner_shell_B_block, cyl_side_to_shell);
+                                 outermost_inner_shell_B_block_number,
+                                 cyl_side_to_shell);
     // MB Filled Cylinder
     add_cyl_shell_block_neighbor(inner_neighbors, true, false, mb_endcap_block,
-                                 inner_shell_B_block, cyl_endcap_to_shell);
+                                 outermost_inner_shell_B_block_number,
+                                 cyl_endcap_to_shell);
   }
 
   const size_t outer_shell_block = block_positions_.at("OuterShell0");
@@ -1022,19 +1132,16 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   std::vector<Block<3>> blocks;
   blocks.reserve(number_of_blocks_);
 
-  // (a) Inner blocks before SH shells.
-  for (size_t j = 0; j < inner_shell_A_block; ++j) {
-    const std::string block_name = gsl::at(block_names_, j);
-    ASSERT(block_name.find("Cylinder") != std::string::npos,
-           "Expected block to be a cylindrical block with the substring "
-           "'Cylinder'.");
-
-    const auto cyl_topology = block_name.find("Filled") != std::string::npos ?
-        domain::topologies::full_cylinder :
-        domain::topologies::cylindrical_shell;
-    blocks.emplace_back(std::move(coordinate_maps[j]), j,
-                        std::move(inner_neighbors[j]), block_name,
-                        cyl_topology);
+  // (a) Inner cylindrical blocks.
+  for (const auto& [name, position] : block_positions_) {
+    if (name.find("Cylinder") != std::string::npos) {
+      const auto cyl_topology = name.find("Filled") != std::string::npos
+                                    ? domain::topologies::full_cylinder
+                                    : domain::topologies::cylindrical_shell;
+      blocks.emplace_back(std::move(coordinate_maps[position]), position,
+                          std::move(inner_neighbors[position]), name,
+                          cyl_topology);
+    }
   }
 
   // Add a cylindrical endcap as a neighbor of a spherical shell
@@ -1082,6 +1189,8 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
                        1.0 + aligned_center[2]}});
       };
 
+  // TODO : connect shells of InnerSphereA, spaced out like SpEC
+
   // (b) SH inner shell blocks for InnerSphereA.
   if (include_inner_sphere_A_) {
     // upper_xi → EA endcap, EA side, and MA blocks
@@ -1108,11 +1217,14 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
         BlockNeighbors<3>{std::move(inner_a_cyl_ids),
                           std::move(inner_a_cyl_orientations),
                           /*are_conforming=*/false});
-    blocks.emplace_back(std::move(inner_a_sh_map), inner_shell_A_block,
+    blocks.emplace_back(std::move(inner_a_sh_map),
+                        block_positions_.at("InnerAShell0"),
                         std::move(inner_a_sh_neighbors),
-                        block_names_[inner_shell_A_block],
+                        block_names_[block_positions_.at("InnerAShell0")],
                         domain::topologies::spherical_shell);
   }
+
+  // TODO : connect shells of InnerSphereB, spaced out like SpEC
 
   // (c) SH inner shell blocks for InnerSphereB.
   if (include_inner_sphere_B_) {
@@ -1141,9 +1253,10 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
                           std::move(inner_b_cyl_orientations),
                           /*are_conforming=*/false});
 
-    blocks.emplace_back(std::move(inner_b_sh_map), inner_shell_B_block,
+    blocks.emplace_back(std::move(inner_b_sh_map),
+                        block_positions_.at("InnerBShell0"),
                         std::move(inner_b_sh_neighbors),
-                        block_names_[inner_shell_B_block],
+                        block_names_[block_positions_.at("InnerBShell0")],
                         domain::topologies::spherical_shell);
   }
 
@@ -1186,6 +1299,11 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
     ASSERT(include_inner_sphere_A_ and include_inner_sphere_B_,
            "When using time dependent maps for the CylindricalBBH domain, you "
            "must include both inner spheres.");
+    const size_t first_inner_shell_A_block =
+        block_positions_.at("InnerAShell0");
+    const size_t first_inner_shell_B_block =
+        block_positions_.at("InnerAShell0");
+
     // Default initialize everything to nullptr so that we only need to set the
     // appropriate block maps for the specific frames
     std::vector<std::unique_ptr<
@@ -1226,48 +1344,54 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
 
     // The `true` being passed to the functions specifies that the size map
     // *should* be included in the distorted frame.
-    grid_to_inertial_block_maps[inner_shell_A_block] =
+    grid_to_inertial_block_maps[first_inner_shell_A_block] =
         time_dependent_options_->grid_to_inertial_map<domain::ObjectLabel::A>(
             true, true);
-    grid_to_distorted_block_maps[inner_shell_A_block] =
+    grid_to_distorted_block_maps[first_inner_shell_A_block] =
         time_dependent_options_->grid_to_distorted_map<domain::ObjectLabel::A>(
             true);
-    distorted_to_inertial_block_maps[inner_shell_A_block] =
+    distorted_to_inertial_block_maps[first_inner_shell_A_block] =
         time_dependent_options_
             ->distorted_to_inertial_map<domain::ObjectLabel::A>(true, true);
 
-    grid_to_inertial_block_maps[inner_shell_B_block] =
+    grid_to_inertial_block_maps[first_inner_shell_B_block] =
         time_dependent_options_->grid_to_inertial_map<domain::ObjectLabel::B>(
             true, true);
-    grid_to_distorted_block_maps[inner_shell_B_block] =
+    grid_to_distorted_block_maps[first_inner_shell_B_block] =
         time_dependent_options_->grid_to_distorted_map<domain::ObjectLabel::B>(
             true);
-    distorted_to_inertial_block_maps[inner_shell_B_block] =
+    distorted_to_inertial_block_maps[first_inner_shell_B_block] =
         time_dependent_options_
             ->distorted_to_inertial_map<domain::ObjectLabel::B>(true, true);
 
     for (size_t block = 1; block < number_of_blocks_; ++block) {
-      if (block == inner_shell_A_block or block == inner_shell_B_block or
-          block == outer_shell_block) {
+      if (block == first_inner_shell_A_block or
+          block == first_inner_shell_B_block or block == outer_shell_block) {
         continue;  // Already initialized
-      } else if (block > inner_shell_A_block and block < inner_shell_B_block) {
+      } else if (block > first_inner_shell_A_block and
+                 block < first_inner_shell_B_block) {
         grid_to_inertial_block_maps[block] =
-            grid_to_inertial_block_maps[inner_shell_A_block]->get_clone();
-        if (grid_to_distorted_block_maps[inner_shell_A_block] != nullptr) {
+            grid_to_inertial_block_maps[first_inner_shell_A_block]->get_clone();
+        if (grid_to_distorted_block_maps[first_inner_shell_A_block] !=
+            nullptr) {
           grid_to_distorted_block_maps[block] =
-              grid_to_distorted_block_maps[inner_shell_A_block]->get_clone();
+              grid_to_distorted_block_maps[first_inner_shell_A_block]
+                  ->get_clone();
           distorted_to_inertial_block_maps[block] =
-              distorted_to_inertial_block_maps[inner_shell_A_block]
+              distorted_to_inertial_block_maps[first_inner_shell_A_block]
                   ->get_clone();
         }
-      } else if (block > inner_shell_B_block and block < outer_shell_block) {
+      } else if (block > first_inner_shell_B_block and
+                 block < outer_shell_block) {
         grid_to_inertial_block_maps[block] =
-            grid_to_inertial_block_maps[inner_shell_B_block]->get_clone();
-        if (grid_to_distorted_block_maps[inner_shell_B_block] != nullptr) {
+            grid_to_inertial_block_maps[first_inner_shell_B_block]->get_clone();
+        if (grid_to_distorted_block_maps[first_inner_shell_B_block] !=
+            nullptr) {
           grid_to_distorted_block_maps[block] =
-              grid_to_distorted_block_maps[inner_shell_B_block]->get_clone();
+              grid_to_distorted_block_maps[first_inner_shell_B_block]
+                  ->get_clone();
           distorted_to_inertial_block_maps[block] =
-              distorted_to_inertial_block_maps[inner_shell_B_block]
+              distorted_to_inertial_block_maps[first_inner_shell_B_block]
                   ->get_clone();
         }
       } else if (block > outer_shell_block) {
