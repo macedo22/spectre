@@ -270,11 +270,9 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
   add_cylinder_name("CB", "Outer");
 
   // combine filled and hollow cylinder blocks and groups into one set
-  std::unordered_set<std::string> all_cylinder_names;
-  std::set_union(
-      std::begin(filled_cylinder_names), std::end(filled_cylinder_names),
-      std::begin(hollow_cylinder_names), std::end(hollow_cylinder_names),
-      std::inserter(all_cylinder_names, std::begin(all_cylinder_names)));
+  std::unordered_set<std::string> all_cylinder_names = filled_cylinder_names;
+  all_cylinder_names.insert(std::begin(hollow_cylinder_names),
+                            std::end(hollow_cylinder_names));
 
   // Build the set of spherical-harmonic shell block groups and block names so
   // the validation below can distinguish spherical-harmonic blocks from other
