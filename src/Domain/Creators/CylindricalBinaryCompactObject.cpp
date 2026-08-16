@@ -167,31 +167,6 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
   z_cutting_plane_ = cut_spheres_offset_factor_ *
                      ((1.0 - xi) * center_B_[2] + xi * center_A_[2]);
 
-  // TODO : need to update computation of outer_radius_A and outer_radius_B
-  // based on number of shells
-
-  // outer_radius_A is the outer radius of the inner sphere A, if it exists.
-  // If the inner sphere A does not exist, then outer_radius_A is the same
-  // as radius_A_.
-  // If the inner sphere does exist, the algorithm for computing
-  // outer_radius_A is the same as in SpEC when there is one inner shell.
-  outer_radius_A_ =
-      include_inner_sphere_A_
-          ? radius_A_ +
-                0.5 * (std::abs(z_cutting_plane_ - center_A_[2]) - radius_A_)
-          : radius_A_;
-
-  // outer_radius_B is the outer radius of the inner sphere B, if it exists.
-  // If the inner sphere B does not exist, then outer_radius_B is the same
-  // as radius_B_.
-  // If the inner sphere does exist, the algorithm for computing
-  // outer_radius_B is the same as in SpEC when there is one inner shell.
-  outer_radius_B_ =
-      include_inner_sphere_B_
-          ? radius_B_ +
-                0.5 * (std::abs(z_cutting_plane_ - center_B_[2]) - radius_B_)
-          : radius_B_;
-
   // Add SphereE blocks if necessary.  Note that
   // https://arxiv.org/abs/1206.3015 has a mistake just above
   // Eq. (A.11) and the same mistake above Eq. (A.20), where it lists
@@ -329,10 +304,10 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
         // NextRadiusOutsideRmax is distance_to_cutting_plane. See spec branch
         // if(NextRadiusOutsideRmax>0 and not RMaxIsDefined), which is what is
         // implemented below.
-        // const double distance_to_cutting_plane_over_inner_radius =
-        //     distance_to_cutting_plane / inner_radius;
+        const double distance_to_cutting_plane_over_inner_radius =
+            distance_to_cutting_plane / inner_radius;
         int num_shells =
-            std::round(std::log(distance_to_cutting_plane / inner_radius) /
+            std::round(std::log(distance_to_cutting_plane_over_inner_radius) /
                        std::log(1.0 + relative_delta_r)) -
             1;
         // Note: The SpEC logic then does:
@@ -352,27 +327,27 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
           num_shells = 1;
         }
 
-        // const double coef = pow(distance_to_cutting_plane_over_inner_radius,
-        //                         1.0 / static_cast<double>(num_shells + 1));
+        const double coef = pow(distance_to_cutting_plane_over_inner_radius,
+                                1.0 / static_cast<double>(num_shells + 1));
         // std::vector<double> radii{};
         // radii.reserve(num_shells + 1);
         // mRadii.assign(MV::Size(mNShells + 1), rmin);
         // for (int k = 1; k <= mNShells; ++k)
         //   mRadii[k] = mRadii[k - 1] * coef;
+        double outermost_radius = inner_radius;
         for (size_t shell_number = 0;
              shell_number < static_cast<size_t>(num_shells); shell_number++) {
           add_spherical_shell_name(prefix, group_name, shell_number);
+          outermost_radius *= coef;
         }
+
+        return outermost_radius;
       };
 
-  if (include_inner_sphere_A) {
-    add_inner_spherical_shells_for_sphere("InnerA", "InnerSphereA", center_A_,
-                                          radius_A_);
-  }
-  if (include_inner_sphere_B) {
-    add_inner_spherical_shells_for_sphere("InnerB", "InnerSphereB", center_B_,
-                                          radius_B_);
-  }
+  outer_radius_B_ = add_inner_spherical_shells_for_sphere(
+      "InnerA", "InnerSphereA", center_A_, radius_A_);
+  outer_radius_B_ = add_inner_spherical_shells_for_sphere(
+      "InnerB", "InnerSphereB", center_B_, radius_B_);
   add_spherical_shell_name("Outer", "OuterSphere", 0);
 
   number_of_blocks_ = block_names_.size();
@@ -1025,7 +1000,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       {{Direction<3>::upper_xi(), Direction<3>::self(), Direction<3>::self()}}};
   const auto cyl_side_to_shell = shell_to_cyl_side.inverse_map();
 
-  // Add a spherical shell as a neighor of one of a cylinder
+  // Add a spherical shell as a neighor of a cylinder
   auto add_cyl_shell_block_neighbor =
       [](std::vector<DirectionMap<3, BlockNeighbors<3>>>& neighbors,
          const bool cyl_is_filled, const bool shell_is_outside_cyl,
@@ -1069,6 +1044,23 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   }
 
   if (include_inner_sphere_A_) {
+    // // Connect InnerSphereA shells to each other
+    // for (size_t shell_number = 1; shell_number < num_shells_inner_sphere_B;
+    //      shell_number++) {
+    //   const size_t inner_shell_block_number = block_positions_.at(
+    //       std::string("InnerAShell").append(std::to_string(shell_number -
+    //       1)));
+    //   const size_t outer_shell_block_number = block_positions_.at(
+    //       std::string("InnerAShell").append(std::to_string(shell_number -
+    //       1)));
+
+    //   add_spherical_shell_block_neighbors(
+    //       inner_neighbors, inner_shell_block_number,
+    //       outer_shell_block_number);
+    // }
+
+    // // Connect outermost shell of InnerSphereA shells to cylinders
+
     // Get outermost block of InnerSphereA
     const std::string outermost_inner_shell_A_block_name =
         std::string("InnerAShell")
@@ -1091,6 +1083,23 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   }
 
   if (include_inner_sphere_B_) {
+    // // Connect InnerSphereB shells to each other
+    // for (size_t shell_number = 1; shell_number < num_shells_inner_sphere_B;
+    //      shell_number++) {
+    //   const size_t inner_shell_block_number = block_positions_.at(
+    //       std::string("InnerBShell").append(std::to_string(shell_number -
+    //       1)));
+    //   const size_t outer_shell_block_number = block_positions_.at(
+    //       std::string("InnerBShell").append(std::to_string(shell_number -
+    //       1)));
+
+    //   add_spherical_shell_block_neighbors(
+    //       inner_neighbors, inner_shell_block_number,
+    //       outer_shell_block_number);
+    // }
+
+    // // Connect outermost shell of InnerSphereB shells to cylinders
+
     // Get outermost block of InnerSphereB
     const std::string outermost_inner_shell_B_block_name =
         std::string("InnerBShell")
@@ -1164,6 +1173,23 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
         cyl_orientations.emplace(cyl_block_number, shell_to_cyl_side);
       };
 
+  // Add nested spherical shells as block neighbors
+  auto add_spherical_shell_block_neighbors =
+      [&aligned](std::vector<DirectionMap<3, BlockNeighbors<3>>>& neighbors,
+                 const size_t inner_shell_block_number,
+                 const size_t outer_shell_block_number) {
+        neighbors[inner_shell_block_number].emplace(
+            Direction<3>::upper_xi(),
+            BlockNeighbors<3>{{outer_shell_block_number},
+                              {{outer_shell_block_number, aligned}},
+                              /*are_conforming=*/true});
+        neighbors[outer_shell_block_number].emplace(
+            Direction<3>::lower_xi(),
+            BlockNeighbors<3>{{inner_shell_block_number},
+                              {{inner_shell_block_number, aligned}},
+                              /*are_conforming=*/true});
+      };
+
   using Affine = CoordinateMaps::Affine;
   auto make_spherical_shell_coord_map =
       [](const double inner_radius, const double outer_radius,
@@ -1189,10 +1215,47 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
                        1.0 + aligned_center[2]}});
       };
 
-  // TODO : connect shells of InnerSphereA, spaced out like SpEC
+  // TODO : make new code adding and connecting multiple shells better
 
   // (b) SH inner shell blocks for InnerSphereA.
   if (include_inner_sphere_A_) {
+    // Connect InnerSphereA shells to each other
+    const double distance_to_cutting_plane =
+        fabs(z_cutting_plane_ - gsl::at(center_A_, 2));
+    const double distance_to_cutting_plane_over_inner_radius =
+        distance_to_cutting_plane / radius_A_;
+    const double coef =
+        pow(distance_to_cutting_plane_over_inner_radius,
+            1.0 / static_cast<double>(num_shells_inner_sphere_A + 1));
+    double inner_radius = radius_A_;
+    double outer_radius = inner_radius;
+    std::vector<DirectionMap<3, BlockNeighbors<3>>> inner_a_sh_neighbors{2_st};
+
+    for (size_t shell_number = 0; shell_number + 1 < num_shells_inner_sphere_A;
+         shell_number++) {
+      const size_t inner_shell_block_number = block_positions_.at(
+          std::string("InnerAShell").append(std::to_string(shell_number)));
+      const size_t outer_shell_block_number = block_positions_.at(
+          std::string("InnerAShell").append(std::to_string(shell_number)));
+
+      add_spherical_shell_block_neighbors(inner_a_sh_neighbors,
+                                          inner_shell_block_number,
+                                          outer_shell_block_number);
+
+      outer_radius *= coef;
+      auto inner_a_sh_map = make_spherical_shell_coord_map(
+          inner_radius, outer_radius, rotate_from_z_to_x_axis(center_A_));
+
+      blocks.emplace_back(
+          std::move(inner_a_sh_map), outer_shell_block_number,
+          std::move(inner_a_sh_neighbors[outer_shell_block_number]),
+          gsl::at(block_names_, outer_shell_block_number),
+          domain::topologies::spherical_shell);
+      inner_radius = outer_radius;
+    }
+
+    // Connect outermost shell of InnerSphereA shells to cylinders
+
     // upper_xi → EA endcap, EA side, and MA blocks
     // (non-conforming, multi-neighbor).
     std::unordered_set<size_t> inner_a_cyl_ids;
@@ -1208,26 +1271,68 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
     add_shell_cyl_endcap_neighbor(inner_a_cyl_ids, inner_a_cyl_orientations,
                                   ma_endcap_block);
 
-    auto inner_a_sh_map = make_spherical_shell_coord_map(
-        radius_A_, outer_radius_A_, rotate_from_z_to_x_axis(center_A_));
+    auto outermost_inner_a_sh_map = make_spherical_shell_coord_map(
+        inner_radius, outer_radius_A_, rotate_from_z_to_x_axis(center_A_));
 
-    DirectionMap<3, BlockNeighbors<3>> inner_a_sh_neighbors;
-    inner_a_sh_neighbors.emplace(
+    // Get outermost block of InnerSphereA
+    const std::string outermost_inner_shell_A_block_name =
+        std::string("InnerAShell")
+            .append(std::to_string(num_shells_inner_sphere_A - 1));
+    const size_t outermost_inner_shell_A_block_number =
+        block_positions_.at(outermost_inner_shell_A_block_name);
+
+    DirectionMap<3, BlockNeighbors<3>> outermost_inner_a_sh_neighbors;
+    outermost_inner_a_sh_neighbors.emplace(
         Direction<3>::upper_xi(),
         BlockNeighbors<3>{std::move(inner_a_cyl_ids),
                           std::move(inner_a_cyl_orientations),
                           /*are_conforming=*/false});
-    blocks.emplace_back(std::move(inner_a_sh_map),
-                        block_positions_.at("InnerAShell0"),
-                        std::move(inner_a_sh_neighbors),
-                        block_names_[block_positions_.at("InnerAShell0")],
+    blocks.emplace_back(std::move(outermost_inner_a_sh_map),
+                        outermost_inner_shell_A_block_number,
+                        std::move(outermost_inner_a_sh_neighbors),
+                        block_names_[outermost_inner_shell_A_block_number],
                         domain::topologies::spherical_shell);
   }
 
-  // TODO : connect shells of InnerSphereB, spaced out like SpEC
-
   // (c) SH inner shell blocks for InnerSphereB.
   if (include_inner_sphere_B_) {
+    // Connect InnerSphereB shells to each other
+    const double distance_to_cutting_plane =
+        fabs(z_cutting_plane_ - gsl::at(center_B_, 2));
+    const double distance_to_cutting_plane_over_inner_radius =
+        distance_to_cutting_plane / radius_B_;
+    const double coef =
+        pow(distance_to_cutting_plane_over_inner_radius,
+            1.0 / static_cast<double>(num_shells_inner_sphere_B + 1));
+    double inner_radius = radius_B_;
+    double outer_radius = inner_radius;
+    std::vector<DirectionMap<3, BlockNeighbors<3>>> inner_b_sh_neighbors{2_st};
+
+    for (size_t shell_number = 0; shell_number + 1 < num_shells_inner_sphere_A;
+         shell_number++) {
+      const size_t inner_shell_block_number = block_positions_.at(
+          std::string("InnerBShell").append(std::to_string(shell_number)));
+      const size_t outer_shell_block_number = block_positions_.at(
+          std::string("InnerBShell").append(std::to_string(shell_number)));
+
+      add_spherical_shell_block_neighbors(inner_b_sh_neighbors,
+                                          inner_shell_block_number,
+                                          outer_shell_block_number);
+
+      outer_radius *= coef;
+      auto inner_b_sh_map = make_spherical_shell_coord_map(
+          inner_radius, outer_radius, rotate_from_z_to_x_axis(center_B_));
+
+      blocks.emplace_back(
+          std::move(inner_b_sh_map), outer_shell_block_number,
+          std::move(inner_b_sh_neighbors[outer_shell_block_number]),
+          gsl::at(block_names_, outer_shell_block_number),
+          domain::topologies::spherical_shell);
+      inner_radius = outer_radius;
+    }
+
+    // Connect outermost shell of InnerSphereB shells to cylinders
+
     // upper_xi → EB endcap, EB side, and MB blocks
     // (non-conforming, multi-neighbor).
     std::unordered_set<size_t> inner_b_cyl_ids;
@@ -1243,20 +1348,26 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
     add_shell_cyl_endcap_neighbor(inner_b_cyl_ids, inner_b_cyl_orientations,
                                   mb_endcap_block);
 
-    auto inner_b_sh_map = make_spherical_shell_coord_map(
-        radius_B_, outer_radius_B_, rotate_from_z_to_x_axis(center_B_));
+    auto outermost_inner_b_sh_map = make_spherical_shell_coord_map(
+        inner_radius, outer_radius_B_, rotate_from_z_to_x_axis(center_B_));
 
-    DirectionMap<3, BlockNeighbors<3>> inner_b_sh_neighbors;
-    inner_b_sh_neighbors.emplace(
+    // Get outermost block of InnerSphereA
+    const std::string outermost_inner_shell_B_block_name =
+        std::string("InnerBShell")
+            .append(std::to_string(num_shells_inner_sphere_B - 1));
+    const size_t outermost_inner_shell_B_block_number =
+        block_positions_.at(outermost_inner_shell_B_block_name);
+
+    DirectionMap<3, BlockNeighbors<3>> outermost_inner_b_sh_neighbors;
+    outermost_inner_b_sh_neighbors.emplace(
         Direction<3>::upper_xi(),
         BlockNeighbors<3>{std::move(inner_b_cyl_ids),
                           std::move(inner_b_cyl_orientations),
                           /*are_conforming=*/false});
-
-    blocks.emplace_back(std::move(inner_b_sh_map),
-                        block_positions_.at("InnerBShell0"),
-                        std::move(inner_b_sh_neighbors),
-                        block_names_[block_positions_.at("InnerBShell0")],
+    blocks.emplace_back(std::move(outermost_inner_b_sh_map),
+                        outermost_inner_shell_B_block_number,
+                        std::move(outermost_inner_b_sh_neighbors),
+                        block_names_[outermost_inner_shell_B_block_number],
                         domain::topologies::spherical_shell);
   }
 
