@@ -874,7 +874,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   Domain<3> domain;
   // non-shell maps
   std::vector<DirectionMap<3, BlockNeighbors<3>>> inner_neighbors{
-      coordinate_maps.size()};
+      number_of_blocks_};
 
   // Add a cylinder as a neighor of a cylinder
   auto add_cyl_cyl_block_neighbor =
@@ -1155,13 +1155,12 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
     ASSERT(block_name.find("Cylinder") != std::string::npos,
            "Expected block " << block_id << " named '" << block_name
                              << "' to be cylindrical.");
-    const auto cyl_topology =
-        block_name.find("Filled") != std::string::npos
-            ? domain::topologies::full_cylinder
-            : domain::topologies::cylindrical_shell;
+    const auto cyl_topology = block_name.find("Filled") != std::string::npos
+                                  ? domain::topologies::full_cylinder
+                                  : domain::topologies::cylindrical_shell;
     blocks.emplace_back(std::move(gsl::at(coordinate_maps, block_id)), block_id,
-                        std::move(gsl::at(inner_neighbors, block_id)), block_name,
-                        cyl_topology);
+                        std::move(gsl::at(inner_neighbors, block_id)),
+                        block_name, cyl_topology);
   }
 
   // Add a cylindrical endcap as a neighbor of a spherical shell
@@ -1248,9 +1247,8 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       const size_t outer_shell_block_number = block_positions_.at(
           std::string("InnerAShell").append(std::to_string(shell_number + 1)));
 
-      add_spherical_shell_block_neighbors(inner_neighbors,
-                                          inner_shell_block_number,
-                                          outer_shell_block_number);
+      add_spherical_shell_block_neighbors(
+          inner_neighbors, inner_shell_block_number, outer_shell_block_number);
 
       outer_radius *= coef;
       auto inner_a_sh_map = make_spherical_shell_coord_map(
@@ -1325,9 +1323,8 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       const size_t outer_shell_block_number = block_positions_.at(
           std::string("InnerBShell").append(std::to_string(shell_number + 1)));
 
-      add_spherical_shell_block_neighbors(inner_neighbors,
-                                          inner_shell_block_number,
-                                          outer_shell_block_number);
+      add_spherical_shell_block_neighbors(
+          inner_neighbors, inner_shell_block_number, outer_shell_block_number);
 
       outer_radius *= coef;
       auto inner_b_sh_map = make_spherical_shell_coord_map(
