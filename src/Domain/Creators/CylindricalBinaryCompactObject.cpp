@@ -344,7 +344,7 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
         return outermost_radius;
       };
 
-  outer_radius_B_ = add_inner_spherical_shells_for_sphere(
+  outer_radius_A_ = add_inner_spherical_shells_for_sphere(
       "InnerA", "InnerSphereA", center_A_, radius_A_);
   outer_radius_B_ = add_inner_spherical_shells_for_sphere(
       "InnerB", "InnerSphereB", center_B_, radius_B_);
