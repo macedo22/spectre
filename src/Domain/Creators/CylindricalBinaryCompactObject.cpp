@@ -1021,7 +1021,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
 
   // Get the number of spherical shells for InnerSphereA and InnerSphereB
   const size_t num_shells_inner_sphere_A =
-      include_inner_sphere_A_ ? 0 : block_groups_.at("InnerSphereA").size();
+      not include_inner_sphere_A_ ? 0 : block_groups_.at("InnerSphereA").size();
   if (include_inner_sphere_A_) {
     ASSERT(num_shells_inner_sphere_A > 0,
            "Requested to include InnerSphereA but the number of spherical "
@@ -1032,7 +1032,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
            "an existing block group.");
   }
   const size_t num_shells_inner_sphere_B =
-      include_inner_sphere_B_ ? 0 : block_groups_.at("InnerSphereB").size();
+      not include_inner_sphere_B_ ? 0 : block_groups_.at("InnerSphereB").size();
   if (include_inner_sphere_B_) {
     ASSERT(num_shells_inner_sphere_B > 0,
            "Requested to include InnerSphereB but the number of spherical "
