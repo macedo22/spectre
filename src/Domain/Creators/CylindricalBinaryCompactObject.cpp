@@ -1236,7 +1236,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       const size_t inner_shell_block_number = block_positions_.at(
           std::string("InnerAShell").append(std::to_string(shell_number)));
       const size_t outer_shell_block_number = block_positions_.at(
-          std::string("InnerAShell").append(std::to_string(shell_number)));
+          std::string("InnerAShell").append(std::to_string(shell_number + 1)));
 
       add_spherical_shell_block_neighbors(inner_a_sh_neighbors,
                                           inner_shell_block_number,
@@ -1308,12 +1308,12 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
     double outer_radius = inner_radius;
     std::vector<DirectionMap<3, BlockNeighbors<3>>> inner_b_sh_neighbors{2_st};
 
-    for (size_t shell_number = 0; shell_number + 1 < num_shells_inner_sphere_A;
+    for (size_t shell_number = 0; shell_number + 1 < num_shells_inner_sphere_B;
          shell_number++) {
       const size_t inner_shell_block_number = block_positions_.at(
           std::string("InnerBShell").append(std::to_string(shell_number)));
       const size_t outer_shell_block_number = block_positions_.at(
-          std::string("InnerBShell").append(std::to_string(shell_number)));
+          std::string("InnerBShell").append(std::to_string(shell_number + 1)));
 
       add_spherical_shell_block_neighbors(inner_b_sh_neighbors,
                                           inner_shell_block_number,
