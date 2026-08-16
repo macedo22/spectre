@@ -344,10 +344,18 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
         return outermost_radius;
       };
 
-  outer_radius_A_ = add_inner_spherical_shells_for_sphere(
-      "InnerA", "InnerSphereA", center_A_, radius_A_);
-  outer_radius_B_ = add_inner_spherical_shells_for_sphere(
-      "InnerB", "InnerSphereB", center_B_, radius_B_);
+  if (include_inner_sphere_A_) {
+    outer_radius_A_ = add_inner_spherical_shells_for_sphere(
+        "InnerA", "InnerSphereA", center_A_, radius_A_);
+  } else {
+    outer_radius_A_ = radius_A_;
+  }
+  if (include_inner_sphere_B_) {
+    outer_radius_B_ = add_inner_spherical_shells_for_sphere(
+        "InnerB", "InnerSphereB", center_B_, radius_B_);
+  } else {
+    outer_radius_B_ = radius_B_;
+  }
   add_spherical_shell_name("Outer", "OuterSphere", 0);
 
   number_of_blocks_ = block_names_.size();
@@ -1142,15 +1150,18 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   blocks.reserve(number_of_blocks_);
 
   // (a) Inner cylindrical blocks.
-  for (const auto& [name, position] : block_positions_) {
-    if (name.find("Cylinder") != std::string::npos) {
-      const auto cyl_topology = name.find("Filled") != std::string::npos
-                                    ? domain::topologies::full_cylinder
-                                    : domain::topologies::cylindrical_shell;
-      blocks.emplace_back(std::move(coordinate_maps[position]), position,
-                          std::move(inner_neighbors[position]), name,
-                          cyl_topology);
-    }
+  for (size_t block_id = 0; block_id < coordinate_maps.size(); ++block_id) {
+    const std::string& block_name = gsl::at(block_names_, block_id);
+    ASSERT(block_name.find("Cylinder") != std::string::npos,
+           "Expected block " << block_id << " named '" << block_name
+                             << "' to be cylindrical.");
+    const auto cyl_topology =
+        block_name.find("Filled") != std::string::npos
+            ? domain::topologies::full_cylinder
+            : domain::topologies::cylindrical_shell;
+    blocks.emplace_back(std::move(gsl::at(coordinate_maps, block_id)), block_id,
+                        std::move(gsl::at(inner_neighbors, block_id)), block_name,
+                        cyl_topology);
   }
 
   // Add a cylindrical endcap as a neighbor of a spherical shell
@@ -1229,7 +1240,6 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
             1.0 / static_cast<double>(num_shells_inner_sphere_A + 1));
     double inner_radius = radius_A_;
     double outer_radius = inner_radius;
-    std::vector<DirectionMap<3, BlockNeighbors<3>>> inner_a_sh_neighbors{2_st};
 
     for (size_t shell_number = 0; shell_number + 1 < num_shells_inner_sphere_A;
          shell_number++) {
@@ -1238,7 +1248,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       const size_t outer_shell_block_number = block_positions_.at(
           std::string("InnerAShell").append(std::to_string(shell_number + 1)));
 
-      add_spherical_shell_block_neighbors(inner_a_sh_neighbors,
+      add_spherical_shell_block_neighbors(inner_neighbors,
                                           inner_shell_block_number,
                                           outer_shell_block_number);
 
@@ -1247,9 +1257,9 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
           inner_radius, outer_radius, rotate_from_z_to_x_axis(center_A_));
 
       blocks.emplace_back(
-          std::move(inner_a_sh_map), outer_shell_block_number,
-          std::move(inner_a_sh_neighbors[outer_shell_block_number]),
-          gsl::at(block_names_, outer_shell_block_number),
+          std::move(inner_a_sh_map), inner_shell_block_number,
+          std::move(gsl::at(inner_neighbors, inner_shell_block_number)),
+          gsl::at(block_names_, inner_shell_block_number),
           domain::topologies::spherical_shell);
       inner_radius = outer_radius;
     }
@@ -1281,7 +1291,8 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
     const size_t outermost_inner_shell_A_block_number =
         block_positions_.at(outermost_inner_shell_A_block_name);
 
-    DirectionMap<3, BlockNeighbors<3>> outermost_inner_a_sh_neighbors;
+    auto& outermost_inner_a_sh_neighbors =
+        gsl::at(inner_neighbors, outermost_inner_shell_A_block_number);
     outermost_inner_a_sh_neighbors.emplace(
         Direction<3>::upper_xi(),
         BlockNeighbors<3>{std::move(inner_a_cyl_ids),
@@ -1306,7 +1317,6 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
             1.0 / static_cast<double>(num_shells_inner_sphere_B + 1));
     double inner_radius = radius_B_;
     double outer_radius = inner_radius;
-    std::vector<DirectionMap<3, BlockNeighbors<3>>> inner_b_sh_neighbors{2_st};
 
     for (size_t shell_number = 0; shell_number + 1 < num_shells_inner_sphere_B;
          shell_number++) {
@@ -1315,7 +1325,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       const size_t outer_shell_block_number = block_positions_.at(
           std::string("InnerBShell").append(std::to_string(shell_number + 1)));
 
-      add_spherical_shell_block_neighbors(inner_b_sh_neighbors,
+      add_spherical_shell_block_neighbors(inner_neighbors,
                                           inner_shell_block_number,
                                           outer_shell_block_number);
 
@@ -1324,9 +1334,9 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
           inner_radius, outer_radius, rotate_from_z_to_x_axis(center_B_));
 
       blocks.emplace_back(
-          std::move(inner_b_sh_map), outer_shell_block_number,
-          std::move(inner_b_sh_neighbors[outer_shell_block_number]),
-          gsl::at(block_names_, outer_shell_block_number),
+          std::move(inner_b_sh_map), inner_shell_block_number,
+          std::move(gsl::at(inner_neighbors, inner_shell_block_number)),
+          gsl::at(block_names_, inner_shell_block_number),
           domain::topologies::spherical_shell);
       inner_radius = outer_radius;
     }
@@ -1358,7 +1368,8 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
     const size_t outermost_inner_shell_B_block_number =
         block_positions_.at(outermost_inner_shell_B_block_name);
 
-    DirectionMap<3, BlockNeighbors<3>> outermost_inner_b_sh_neighbors;
+    auto& outermost_inner_b_sh_neighbors =
+        gsl::at(inner_neighbors, outermost_inner_shell_B_block_number);
     outermost_inner_b_sh_neighbors.emplace(
         Direction<3>::upper_xi(),
         BlockNeighbors<3>{std::move(inner_b_cyl_ids),
