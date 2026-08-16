@@ -1413,7 +1413,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
     const size_t first_inner_shell_A_block =
         block_positions_.at("InnerAShell0");
     const size_t first_inner_shell_B_block =
-        block_positions_.at("InnerAShell0");
+        block_positions_.at("InnerBShell0");
 
     // Default initialize everything to nullptr so that we only need to set the
     // appropriate block maps for the specific frames
