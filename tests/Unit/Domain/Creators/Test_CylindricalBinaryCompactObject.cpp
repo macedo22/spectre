@@ -275,6 +275,34 @@ TimeDepOptions construct_time_dependent_options() {
       std::nullopt};
 }
 
+// TODO : maybe put the outer radius computation into a helper in a cbco::detail
+// namespace so that it can be called from outside and we don't have to
+// duplicate this code because it isn't very maintainance-friendly to have it in
+// two places.
+// This is copied almost exactly from CylindricalBinaryCompactObject so that it
+// can be invoked by testing below. The notable difference is that takes in
+// a center aligned with the x axis instead of z.
+double expected_inner_sphere_outer_radius(
+    const std::array<double, 3>& center_rotated_to_x_axis,
+    const double inner_radius, const double x_cutting_plane) {
+  const double relative_delta_r = 0.44;
+  const double distance_to_cutting_plane =
+      fabs(x_cutting_plane - gsl::at(center_rotated_to_x_axis, 0));
+  const double distance_to_cutting_plane_over_inner_radius =
+      distance_to_cutting_plane / inner_radius;
+  int num_shells =
+      std::round(std::log(distance_to_cutting_plane_over_inner_radius) /
+                 std::log(1.0 + relative_delta_r)) -
+      1;
+  if (num_shells <= 0) {
+    num_shells = 1;
+  }
+
+  const double coef = pow(distance_to_cutting_plane_over_inner_radius,
+                          1.0 / static_cast<double>(num_shells + 1));
+  return inner_radius * pow(coef, num_shells);
+}
+
 void test_construction(
     const CylBCO& creator, const bool with_boundary_conditions,
     const bool include_inner_sphere_A, const bool include_inner_sphere_B,
@@ -358,14 +386,10 @@ void test_construction(
         expected_cut_spheres_offset_factor *
         ((1.0 - expected_xi) * center_objectB[0] +
          expected_xi * center_objectA[0]);
-    const double expected_outer_radius_A =
-        inner_radius_objectA +
-        0.5 * (std::abs(expected_cutting_plane - center_objectA[0]) -
-               inner_radius_objectA);
-    const double expected_outer_radius_B =
-        inner_radius_objectB +
-        0.5 * (std::abs(expected_cutting_plane - center_objectB[0]) -
-               inner_radius_objectB);
+    const double expected_outer_radius_A = expected_inner_sphere_outer_radius(
+        center_objectA, inner_radius_objectA, expected_cutting_plane);
+    const double expected_outer_radius_B = expected_inner_sphere_outer_radius(
+        center_objectB, inner_radius_objectB, expected_cutting_plane);
     const double expected_inner_common_radius =
         3.0 * (center_objectA[0] - center_objectB[0]);
     TimeDepOptions time_dep_options = construct_time_dependent_options();

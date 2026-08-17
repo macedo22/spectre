@@ -60,6 +60,72 @@ std::array<double, 3> rotate_from_z_to_x_axis(
 std::array<double, 3> flip_about_xy_plane(const std::array<double, 3> input) {
   return std::array<double, 3>{input[0], input[1], -input[2]};
 }
+// Computes the outer radius of an inner sphere based on SpEC's logic that
+// depends on the distance of the object to the cutting plane.
+double get_inner_sphere_outer_radius(
+    const std::array<double, 3>& center_rotated_to_z_axis,
+    const double inner_radius, const double z_cutting_plane) {
+  // In spec/InputFiles/bbh/DoMulitpleRuns.input, it sets
+  //   RelativeDelta = 0.40
+  // which it says is set by
+  //   RelativeDeltaR := DeltaR/Ravg.
+  // In spec/InputFiles/bbh/GrDomain.input, it then sets
+  //   RelativeDeltaR=1.1*__RelativeDeltaR__
+  // for SphereA and SphereB.
+  const double relative_delta_r = 0.44;
+  // In spec/Dust/Domain/Subdomain/CreateTouchingCutSphereWedgesBBH.cpp,
+  //   rA = fabs(Geometry().CutX()-mCenterA[0])
+  // and
+  //   rB = fabs(Geometry().CutX()-mCenterB[0])
+  // where Geometry().CutX() is the x coordinate of the cutting plane.
+  const double distance_to_cutting_plane =
+      fabs(z_cutting_plane - gsl::at(center_rotated_to_z_axis, 2));
+  // The below implements SpEC logic for determining an inner sphere's
+  // outer radius, how many shells it should have, and its radial
+  // partitioning when specific radial partitioning is not specified by
+  // user input. Since radial partitioning is not currently an input
+  // option for this domain, it will always be automatically determined in
+  // this way.
+  //
+  // In spec/Dust/Domain/Subdomain/CreateTouchingSphericalShellHelper.cpp,
+  // NextRadiusOutsideRmax is distance_to_cutting_plane. See spec branch
+  // if(NextRadiusOutsideRmax>0 and not RMaxIsDefined), which is what is
+  // implemented below.
+  const double distance_to_cutting_plane_over_inner_radius =
+      distance_to_cutting_plane / inner_radius;
+  int num_shells =
+      std::round(std::log(distance_to_cutting_plane_over_inner_radius) /
+                 std::log(1.0 + relative_delta_r)) -
+      1;
+  // Note: The SpEC logic then does:
+  //   if(mNShells==0) mNShells++;
+  //   if(mNShells<0) mNShells=0;
+  // This domain, however, currently accepts a boolean for whether or not
+  // to include inner spheres. It's possible that a user would specify
+  // `true` to ask for an inner sphere but then num_shells above ends up
+  // being negative. By the SpEC logic, this would set num_shells = 0, but
+  // this would directly go against the user's request to include an
+  // inner sphere. For this reason, we instead choose to set
+  // num_shells = 1 when this happens so as to still honor the user's
+  // request to have an inner sphere at all. This can later be updated to
+  // match SpEC's behavior if this domain's input options to include or
+  // exclude an inner sphere are removed.
+  if (num_shells <= 0) {
+    num_shells = 1;
+  }
+
+  const double coef = pow(distance_to_cutting_plane_over_inner_radius,
+                          1.0 / static_cast<double>(num_shells + 1));
+  // SpEC then assigns each shell's outer radius to be
+  // inner_radius * pow(coef, n) where n starts at 0 and is the shell
+  // number. This domain currently only supports one inner shell block, so
+  // simply set its outer radius to the outer radius of what the outermost shell
+  // in the spec inner sphere would be. Performing h refinement of this single
+  // block won't be exactly the same, but this at least gives us the same sized
+  // inner sphere region as spec, which was based on the distance of this object
+  // from the cutting plane.
+  return inner_radius * pow(coef, num_shells);
+}
 }  // namespace
 
 namespace domain::creators {
@@ -171,23 +237,23 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
   // If the inner sphere A does not exist, then outer_radius_A is the same
   // as radius_A_.
   // If the inner sphere does exist, the algorithm for computing
-  // outer_radius_A is the same as in SpEC when there is one inner shell.
-  outer_radius_A_ =
-      include_inner_sphere_A_
-          ? radius_A_ +
-                0.5 * (std::abs(z_cutting_plane_ - center_A_[2]) - radius_A_)
-          : radius_A_;
+  // outer_radius_A is the same as in SpEC based on the distance of the object
+  // to the cutting plane. See get_inner_sphere_outer_radius().
+  outer_radius_A_ = include_inner_sphere_A_
+                        ? get_inner_sphere_outer_radius(center_A_, radius_A_,
+                                                        z_cutting_plane_)
+                        : radius_A_;
 
   // outer_radius_B is the outer radius of the inner sphere B, if it exists.
   // If the inner sphere B does not exist, then outer_radius_B is the same
   // as radius_B_.
   // If the inner sphere does exist, the algorithm for computing
-  // outer_radius_B is the same as in SpEC when there is one inner shell.
-  outer_radius_B_ =
-      include_inner_sphere_B_
-          ? radius_B_ +
-                0.5 * (std::abs(z_cutting_plane_ - center_B_[2]) - radius_B_)
-          : radius_B_;
+  // outer_radius_B is the same as in SpEC based on the distance of the object
+  // to the cutting plane. See get_inner_sphere_outer_radius().
+  outer_radius_B_ = include_inner_sphere_B_
+                        ? get_inner_sphere_outer_radius(center_B_, radius_B_,
+                                                        z_cutting_plane_)
+                        : radius_B_;
 
   // Add SphereE blocks if necessary.  Note that
   // https://arxiv.org/abs/1206.3015 has a mistake just above
