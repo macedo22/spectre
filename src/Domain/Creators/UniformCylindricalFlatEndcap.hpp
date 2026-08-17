@@ -129,7 +129,7 @@ class UniformCylindricalFlatEndcap : public DomainCreator<3> {
     using type = int;
     static constexpr Options::String help = {
         "Direction of the normal to the flat cylindrical face of the endcap: "
-        "+x: +1, +y: +2, +z: +3, -x: -1, -y: -2, -z: -3. Specify 2 to keep "
+        "+x: +1, +y: +2, +z: +3, -x: -1, -y: -2, -z: -3. Specify 3 to keep "
         "the endcap oriented the same (+z) as "
         "`domain::CoordinateMaps::UniformCylindricalFlatEndcap`."};
   };
