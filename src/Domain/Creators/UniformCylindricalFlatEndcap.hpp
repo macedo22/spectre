@@ -91,7 +91,7 @@ class UniformCylindricalFlatEndcap : public DomainCreator<3> {
   };
 
   /*!
-   * \brief Radius of the cylinder's outer edge
+   * \brief Center of the cylinder's outer edge
    */
   struct CylinderCenter {
     using type = std::array<double, 3>;
