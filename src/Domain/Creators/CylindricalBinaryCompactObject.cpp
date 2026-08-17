@@ -1124,14 +1124,10 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   using Affine = CoordinateMaps::Affine;
   auto make_spherical_shell_coord_map =
       [](const double inner_radius, const double outer_radius,
-         const std::array<double, 3>& aligned_center) {
+         const std::array<double, 3>& aligned_center,
+         const ::domain::CoordinateMaps::Distribution radial_distribution) {
         CoordinateMaps::Interval radial_map{
-            -1.0,
-            1.0,
-            inner_radius,
-            outer_radius,
-            ::domain::CoordinateMaps::Distribution::Linear,
-            0.0};
+            -1.0, 1.0, inner_radius, outer_radius, radial_distribution, 0.0};
         return make_coordinate_map_base<Frame::BlockLogical, Frame::Inertial>(
             CoordinateMaps::ProductOf2Maps<CoordinateMaps::Interval,
                                            CoordinateMaps::Identity<2>>{
@@ -1164,7 +1160,8 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
                                   ma_endcap_block);
 
     auto inner_a_sh_map = make_spherical_shell_coord_map(
-        radius_A_, outer_radius_A_, rotate_from_z_to_x_axis(center_A_));
+        radius_A_, outer_radius_A_, rotate_from_z_to_x_axis(center_A_),
+        ::domain::CoordinateMaps::Distribution::Logarithmic);
 
     DirectionMap<3, BlockNeighbors<3>> inner_a_sh_neighbors;
     inner_a_sh_neighbors.emplace(
@@ -1196,7 +1193,8 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
                                   mb_endcap_block);
 
     auto inner_b_sh_map = make_spherical_shell_coord_map(
-        radius_B_, outer_radius_B_, rotate_from_z_to_x_axis(center_B_));
+        radius_B_, outer_radius_B_, rotate_from_z_to_x_axis(center_B_),
+        ::domain::CoordinateMaps::Distribution::Logarithmic);
 
     DirectionMap<3, BlockNeighbors<3>> inner_b_sh_neighbors;
     inner_b_sh_neighbors.emplace(
@@ -1230,7 +1228,8 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
                               cb_side_block);
 
   auto outer_sh_map = make_spherical_shell_coord_map(
-      inner_radius_C, outer_radius_, make_array<3>(0.0));
+      inner_radius_C, outer_radius_, make_array<3>(0.0),
+      ::domain::CoordinateMaps::Distribution::Linear);
 
   DirectionMap<3, BlockNeighbors<3>> outer_sh_neighbors;
   outer_sh_neighbors.emplace(
