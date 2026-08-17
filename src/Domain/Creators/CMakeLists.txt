@@ -30,6 +30,7 @@ spectre_target_sources(
   ShellDistribution.cpp
   Sphere.cpp
   SphericalShells.cpp
+  UniformCylindricalFlatEndcap.cpp
   )
 
 spectre_target_headers(
@@ -65,6 +66,7 @@ spectre_target_headers(
   ShellDistribution.hpp
   Sphere.hpp
   SphericalShells.hpp
+  UniformCylindricalFlatEndcap.hpp
   )
 
 target_link_libraries(

@@ -1,0 +1,201 @@
+Executable: EvolveScalarWave3D
+Testing:
+  Check: parse
+
+---
+
+Parallelization:
+  ElementDistribution: NumGridPoints
+
+ResourceInfo:
+  AvoidGlobalProc0: false
+  Singletons: Auto
+
+InitialData: &InitialData
+  PlaneWave:
+    WaveVector: [0.0, 0.0, 1.0]
+    Center: [0.0, 0.0, 0.0]
+    Profile:
+      Gaussian:
+        Amplitude: 1.0
+        Width: 15.0
+        Center: 0.0
+      # Sinusoid:
+      #   Amplitude: 1.0
+      #   Wavenumber: 0.05
+      #   Phase: 0.0
+
+Amr:
+  Criteria:
+  EnableInBlocks: All
+  Policies:
+    EnforceTwoToOneBalanceInNormalDirection: true
+    Isotropy: Anisotropic
+    Limits:
+      RefinementLevel: Auto
+      NumGridPoints: Auto
+      ErrorBeyondLimits: False
+    AllowCoarsening: true
+  Verbosity: Quiet
+
+PhaseChangeAndTriggers:
+
+Evolution:
+  InitialTime: 0.0
+  InitialTimeStep: &InitialTimeStep 0.0002
+  MinimumTimeStep: 1e-7
+  # This is the smallest interval we'd need to observe time step/constraints. If
+  # you need it smaller you can edit it, but make sure to change the slab
+  # intervals in the EventsAndTriggersAtSlabs
+  InitialSlabSize: *InitialTimeStep # 0.1
+  LocalTimeStepping: Off
+  VariableOrderAlgorithm:
+    GoalOrder: 4
+  LtsStepChoosers:
+    - LimitIncrease:
+        Factor: 2
+    - PreventRapidIncrease
+    - ErrorControl:
+        # Found that 100x smaller timestep tolerances reduced the noise in the
+        # constraints significantly
+        AbsoluteTolerance: 1e-10
+        RelativeTolerance: 1e-8
+        MaxFactor: 2
+        MinFactor: 0.25
+        SafetyFactor: 0.95
+  # Found that order 4 offers a significant speedup compared to order 5
+  TimeStepper:
+    AdamsMoultonPcMonotonic:
+      Order: 4
+
+DomainCreator:
+  # using settings for MB in CBCO for equal mass non-spinning separation = 15
+  # e = 0 with spec's calculation of inner sphere outer radius based on distance
+  # of center of inner sphere to cutting plane
+  UniformCylindricalFlatEndcap:
+    SphereRadius: 5.18624897
+    SphereCenter: [0.0, 0.0, 0.0]
+    # std::abs(cut_spheres_offset_factor_ * center_B_[2] - z_cutting_plane_)
+    #   = abs(0.99 * -7.5 - 0.0) = 7.425
+    CylinderRadius: 7.425
+    CylinderCenter: [0.0, 0.0, 7.5]
+    # const double z_cut_EB_lower = center_B_[2] + 0.7 * outer_radius_B_;
+    #   = (-7.5) + 0.7 * 5.18624897 = -3.869625721
+    ZPlane: 3.869625721
+    # spec number of grid lines in local cyl coords (r, theta, z):
+    # - FilledCylinderMA0: [8, 17, 9]
+    # - FilledCylinderMA1: [8, 15, 10]
+    # - CylinderSMA0.0: [10, 17, 9]
+    # - CylinderSMA1.0: [10, 17, 10]
+    #
+    # spectre
+    # - MB will be refined in z once, so use 10 because 10 * 2 - 1 = 19 and above has 10 + 9 - 1 = 18
+    # - MB can't be refined radially, so use 10 + 8 - 1 = 17 radial grid lines
+    # - MB theta points and r points connected, so theta extents must be 65 oof
+    # MAFilledCylinder: [17, 65, 10] # 65 / 2 -> 32 -> 32 / 2 + 1 + 32 % 2 = 16 + 1 = 17
+    # MBFilledCylinder: [17, 65, 10]
+    InitialRadialGridPoints: 17
+    InitialThetaGridPoints: 65
+    InitialZGridPoints: 10
+    InitialRefinementInZ: 1
+    BoundaryConditions:
+      LowerZ:
+        DirichletAnalytic:
+          AnalyticPrescription: *InitialData
+      UpperZ:
+        DirichletAnalytic:
+          AnalyticPrescription: *InitialData
+      Mantle:
+        DirichletAnalytic:
+          AnalyticPrescription: *InitialData
+
+SpatialDiscretization:
+  BoundaryCorrection:
+    UpwindPenalty:
+  DiscontinuousGalerkin:
+    Formulation: StrongInertial
+    Quadrature: GaussLobatto
+    Filtering:
+      - FilledCylinder:
+          NumModesToKill: 1
+          RadialAngularHalfPower: 24
+          ZHalfPower: 24
+          Enable: true
+          BlocksToFilter: All
+          VolumeFilterOnSubstep: false
+          BoundaryCorrectionFilterOnSubstep: true
+          VolumeFilterEveryNSteps: 2
+          BoundaryCorrectionFilterEveryNSteps: None
+
+EventsAndTriggersAtCheckpoints:
+
+EventsAndTriggersAtSteps:
+
+EventsAndTriggersAtSlabs:
+  - Trigger:
+      Slabs:
+        Specified:
+          # should go to t = 10.0 given new timestep of 0.0002?
+          # should go to t = 2.0 given new timestep of 0.0002?
+          # Values: [10000] # [50000] # [200000] # [20]
+          # should go to t = 0.1 given new timestep of 0.0002?
+          # Values: [500]
+          Values: [50]
+    Events:
+      - Completion
+
+  - Trigger:
+      Slabs:
+        EvenlySpaced:
+          # 500 should be dt = 0.1
+          Interval: 1 # 5 # 500 #100 # 5
+          Offset: 0
+    Events:
+      - ObserveNorms:
+          SubfileName: Norms
+          TensorsToObserve:
+            - Name: Error(Psi)
+              NormType: L2Norm
+              Components: Sum
+            - Name: Error(Pi)
+              NormType: L2Norm
+              Components: Sum
+            - Name: Error(Phi)
+              NormType: L2Norm
+              Components: Sum
+            - Name: PointwiseL2Norm(OneIndexConstraint)
+              NormType: L2Norm
+              Components: Individual
+            - Name: PointwiseL2Norm(TwoIndexConstraint)
+              NormType: L2Norm
+              Components: Individual
+
+  - Trigger:
+      Slabs:
+        EvenlySpaced:
+          # 500 should be dt = 0.1
+          Interval: 1 # 5 # 500 # 100 # 20 # 5
+          Offset: 0
+    Events:
+      - ObserveFields:
+          SubfileName: VolumeData
+          VariablesToObserve:
+            - Psi
+            - Pi
+            - Phi
+            - Error(Psi)
+            - Error(Pi)
+            - Error(Phi)
+            - PointwiseL2Norm(OneIndexConstraint)
+            - PointwiseL2Norm(TwoIndexConstraint)
+          InterpolateToMesh: None
+          ProjectToMesh: None
+          CoordinatesFloatingPointType: Double
+          FloatingPointTypes: [Double]
+          BlocksToObserve: All
+
+EventsAndDenseTriggers:
+
+Observers:
+  VolumeFileName: "ScalarWavePlaneWave3DVolume"
+  ReductionFileName: "ScalarWavePlaneWave3DReductions"

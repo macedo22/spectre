@@ -21,6 +21,7 @@
 #include "Domain/Creators/RotatedBricks.hpp"
 #include "Domain/Creators/Sphere.hpp"
 #include "Domain/Creators/SphericalShells.hpp"
+#include "Domain/Creators/UniformCylindricalFlatEndcap.hpp"
 #include "Utilities/TMPL.hpp"
 
 namespace DomainCreators_detail {
@@ -35,6 +36,7 @@ struct domain_creators<3> {
       domain::creators::FrustalCloak,
       domain::creators::NonconformingSphericalShells,
       domain::creators::PeriodicBrick, domain::creators::RotatedBricks,
-      domain::creators::Sphere, domain::creators::SphericalShells>;
+      domain::creators::Sphere, domain::creators::SphericalShells,
+      domain::creators::UniformCylindricalFlatEndcap>;
 };
 }  // namespace DomainCreators_detail
