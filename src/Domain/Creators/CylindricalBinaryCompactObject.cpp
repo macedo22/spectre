@@ -824,8 +824,8 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
 
   Domain<3> domain;
   // non-shell maps
-  std::vector<DirectionMap<3, BlockNeighbors<3>>> inner_neighbors{
-      coordinate_maps.size()};
+  std::vector<DirectionMap<3, BlockNeighbors<3>>> inner_neighbors(
+      coordinate_maps.size());
 
   // Add a cylinder as a neighor of a cylinder
   auto add_cyl_cyl_block_neighbor =
@@ -1190,13 +1190,13 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
     // appropriate block maps for the specific frames
     std::vector<std::unique_ptr<
         domain::CoordinateMapBase<Frame::Grid, Frame::Inertial, 3>>>
-        grid_to_inertial_block_maps{number_of_blocks_};
+        grid_to_inertial_block_maps(number_of_blocks_);
     std::vector<std::unique_ptr<
         domain::CoordinateMapBase<Frame::Grid, Frame::Distorted, 3>>>
-        grid_to_distorted_block_maps{number_of_blocks_};
+        grid_to_distorted_block_maps(number_of_blocks_);
     std::vector<std::unique_ptr<
         domain::CoordinateMapBase<Frame::Distorted, Frame::Inertial, 3>>>
-        distorted_to_inertial_block_maps{number_of_blocks_};
+        distorted_to_inertial_block_maps(number_of_blocks_);
 
     // The 0th block always exists and will only need an rigid expansion +
     // rotation + translation map from the grid to inertial frame. No maps to
@@ -1298,7 +1298,7 @@ CylindricalBinaryCompactObject::external_boundary_conditions() const {
   }
   std::vector<DirectionMap<
       3, std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>>>
-      boundary_conditions{number_of_blocks_};
+      boundary_conditions(number_of_blocks_);
   const size_t ea_endcap_block = block_positions_.at("EAFilledCylinder");
   const size_t ea_side_block = block_positions_.at("EACylinder");
   const size_t ma_endcap_block = block_positions_.at("MAFilledCylinder");
