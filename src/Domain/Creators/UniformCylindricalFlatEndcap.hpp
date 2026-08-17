@@ -25,6 +25,8 @@
 namespace domain {
 namespace CoordinateMaps {
 class Affine;
+template <size_t VolumeDim>
+class DiscreteRotation;
 template <size_t Dim>
 class Identity;
 class Interval;
@@ -57,7 +59,8 @@ class UniformCylindricalFlatEndcap : public DomainCreator<3> {
       ::domain::CoordinateMaps::ProductOf2Maps<
           ::domain::CoordinateMaps::PolarToCartesian,
           ::domain::CoordinateMaps::Identity<1>>,
-      ::domain::CoordinateMaps::UniformCylindricalFlatEndcap>>;
+      ::domain::CoordinateMaps::UniformCylindricalFlatEndcap,
+      ::domain::CoordinateMaps::DiscreteRotation<3>>>;
 
   /*!
    * \brief Center of the imaginary sphere that would abut the lower surface of
@@ -117,6 +120,18 @@ class UniformCylindricalFlatEndcap : public DomainCreator<3> {
         "Plane of intersection between imaginary sphere and cylindrical "
         "endcap. See domain::CoordinateMaps::UniformCylindricalFlatEndcap for "
         "more details."};
+  };
+
+  /*!
+   * \brief Direction of the normal to the flat cylindrical face of the endcap
+   */
+  struct RotationDirection {
+    using type = int;
+    static constexpr Options::String help = {
+        "Direction of the normal to the flat cylindrical face of the endcap: "
+        "+x: +1, +y: +2, +z: +3, -x: -1, -y: -2, -z: -3. Specify 2 to keep "
+        "the endcap oriented the same (+z) as "
+        "`domain::CoordinateMaps::UniformCylindricalFlatEndcap`."};
   };
 
   /*!
@@ -206,8 +221,9 @@ class UniformCylindricalFlatEndcap : public DomainCreator<3> {
 
   using basic_options =
       tmpl::list<SphereCenter, SphereRadius, CylinderCenter, CylinderRadius,
-                 ZPlane, InitialRadialGridPoints, InitialThetaGridPoints,
-                 InitialZGridPoints, InitialRefinementInZ>;
+                 ZPlane, RotationDirection, InitialRadialGridPoints,
+                 InitialThetaGridPoints, InitialZGridPoints,
+                 InitialRefinementInZ>;
 
   template <typename Metavariables>
   using options = tmpl::conditional_t<
@@ -235,7 +251,7 @@ class UniformCylindricalFlatEndcap : public DomainCreator<3> {
       typename SphereRadius::type sphere_radius,
       typename CylinderCenter::type cylinder_center,
       typename CylinderRadius::type cylinder_radius,
-      typename ZPlane::type z_plane,
+      typename ZPlane::type z_plane, typename RotationDirection::type direction,
       typename InitialRadialGridPoints::type initial_radial_grid_points,
       typename InitialThetaGridPoints::type initial_theta_grid_points,
       typename InitialZGridPoints::type initial_z_grid_points,
@@ -247,7 +263,7 @@ class UniformCylindricalFlatEndcap : public DomainCreator<3> {
       typename SphereRadius::type sphere_radius,
       typename CylinderCenter::type cylinder_center,
       typename CylinderRadius::type cylinder_radius,
-      typename ZPlane::type z_plane,
+      typename ZPlane::type z_plane, typename RotationDirection::type direction,
       typename InitialRadialGridPoints::type initial_radial_grid_points,
       typename InitialThetaGridPoints::type initial_theta_grid_points,
       typename InitialZGridPoints::type initial_z_grid_points,
@@ -292,6 +308,7 @@ class UniformCylindricalFlatEndcap : public DomainCreator<3> {
   typename CylinderCenter::type cylinder_center_{};
   typename CylinderRadius::type cylinder_radius_{};
   typename ZPlane::type z_plane_{};
+  typename RotationDirection::type direction_{};
   typename InitialRadialGridPoints::type initial_radial_grid_points_{};
   typename InitialThetaGridPoints::type initial_theta_grid_points_{};
   typename InitialZGridPoints::type initial_z_grid_points_{};

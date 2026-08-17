@@ -3,6 +3,7 @@
 
 #include "Domain/Creators/UniformCylindricalFlatEndcap.hpp"
 
+#include <array>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -13,6 +14,7 @@
 #include "Domain/CoordinateMaps/Affine.hpp"
 #include "Domain/CoordinateMaps/CoordinateMap.hpp"
 #include "Domain/CoordinateMaps/CoordinateMap.tpp"
+#include "Domain/CoordinateMaps/DiscreteRotation.hpp"
 #include "Domain/CoordinateMaps/Identity.hpp"
 #include "Domain/CoordinateMaps/Interval.hpp"
 #include "Domain/CoordinateMaps/PolarToCartesian.hpp"
@@ -24,6 +26,7 @@
 #include "Domain/DomainHelpers.hpp"
 #include "Domain/Structure/Direction.hpp"
 #include "Domain/Structure/DirectionMap.hpp"
+#include "Domain/Structure/OrientationMap.hpp"
 #include "Domain/Structure/Topology.hpp"
 #include "Options/ParseError.hpp"
 
@@ -39,6 +42,7 @@ UniformCylindricalFlatEndcap::UniformCylindricalFlatEndcap(
     const typename CylinderCenter::type cylinder_center,
     const typename CylinderRadius::type cylinder_radius,
     const typename ZPlane::type z_plane,
+    const typename RotationDirection::type direction,
     const typename InitialRadialGridPoints::type initial_radial_grid_points,
     const typename InitialThetaGridPoints::type initial_theta_grid_points,
     const typename InitialZGridPoints::type initial_z_grid_points,
@@ -49,6 +53,7 @@ UniformCylindricalFlatEndcap::UniformCylindricalFlatEndcap(
       cylinder_center_(cylinder_center),
       cylinder_radius_(cylinder_radius),
       z_plane_(z_plane),
+      direction_(direction),
       initial_radial_grid_points_(initial_radial_grid_points),
       initial_theta_grid_points_(initial_theta_grid_points),
       initial_z_grid_points_(initial_z_grid_points),
@@ -85,6 +90,14 @@ UniformCylindricalFlatEndcap::UniformCylindricalFlatEndcap(
             << cylinder_center_[2]);
   }
 
+  if ((direction != 1) and (direction != 2) and (direction != 3) and
+      (direction != -1) and (direction != -2) and (direction != -3)) {
+    PARSE_ERROR(
+        context,
+        "RotationDirection must be one of {1, 2, 3, -1, -2, -3} but got "
+            << direction);
+  }
+
   if (initial_theta_grid_points_ % 2 != 1) {
     PARSE_ERROR(context,
                 "The number of angular grid points must be odd (this helps "
@@ -106,6 +119,7 @@ UniformCylindricalFlatEndcap::UniformCylindricalFlatEndcap(
     const typename CylinderCenter::type cylinder_center,
     const typename CylinderRadius::type cylinder_radius,
     const typename ZPlane::type z_plane,
+    const typename RotationDirection::type direction,
     const typename InitialThetaGridPoints::type initial_radial_grid_points,
     const typename InitialThetaGridPoints::type initial_theta_grid_points,
     const typename InitialZGridPoints::type initial_z_grid_points,
@@ -119,8 +133,9 @@ UniformCylindricalFlatEndcap::UniformCylindricalFlatEndcap(
     const Options::Context& context)
     : UniformCylindricalFlatEndcap(
           sphere_center, sphere_radius, cylinder_center, cylinder_radius,
-          z_plane, initial_radial_grid_points, initial_theta_grid_points,
-          initial_z_grid_points, initial_refinement_in_z, context) {
+          z_plane, direction, initial_radial_grid_points,
+          initial_theta_grid_points, initial_z_grid_points,
+          initial_refinement_in_z, context) {
   // NOLINTNEXTLINE
   lower_z_boundary_condition_ = std::move(lower_z_boundary_condition);
   // NOLINTNEXTLINE
@@ -186,6 +201,40 @@ Domain<3> UniformCylindricalFlatEndcap::create_domain() const {
       domain::CoordinateMapBase<Frame::BlockLogical, Frame::Inertial, 3>>>
       coordinate_maps{};
 
+  const OrientationMap<3> rotate_to_x_axis{std::array<Direction<3>, 3>{
+      Direction<3>::upper_zeta(), Direction<3>::upper_eta(),
+      Direction<3>::lower_xi()}};
+  const OrientationMap<3> rotate_to_y_axis{std::array<Direction<3>, 3>{
+      Direction<3>::upper_xi(), Direction<3>::upper_zeta(),
+      Direction<3>::lower_eta()}};
+  const OrientationMap<3> rotate_to_z_axis =
+      OrientationMap<3>::create_aligned();
+  const OrientationMap<3> rotate_to_minus_x_axis{std::array<Direction<3>, 3>{
+      Direction<3>::lower_zeta(), Direction<3>::upper_eta(),
+      Direction<3>::upper_xi()}};
+  const OrientationMap<3> rotate_to_minus_y_axis{std::array<Direction<3>, 3>{
+      Direction<3>::upper_xi(), Direction<3>::lower_zeta(),
+      Direction<3>::upper_eta()}};
+  const OrientationMap<3> rotate_to_minus_z_axis{std::array<Direction<3>, 3>{
+      Direction<3>::upper_xi(), Direction<3>::lower_eta(),
+      Direction<3>::lower_zeta()}};
+
+  OrientationMap<3> orientation_map;
+  if (direction_ == -1) {
+    orientation_map = rotate_to_minus_x_axis;
+  } else if (direction_ == -2) {
+    orientation_map = rotate_to_minus_y_axis;
+  } else if (direction_ == -3) {
+    orientation_map = rotate_to_minus_z_axis;
+  } else if (direction_ == 1) {
+    orientation_map = rotate_to_x_axis;
+  } else if (direction_ == 2) {
+    orientation_map = rotate_to_y_axis;
+  } else {
+    // direction_ == 3
+    orientation_map = rotate_to_z_axis;
+  }
+
   // Construct a coordinate map that goes from logical coordinates to a unit
   // right cylinder block. The radii and bounds are what are expected by the
   // UniformCylindricalFlatEndcap map.
@@ -201,8 +250,10 @@ Domain<3> UniformCylindricalFlatEndcap::create_domain() const {
       ::domain::CoordinateMaps::UniformCylindricalFlatEndcap(
           sphere_center_, cylinder_center_, sphere_radius_, cylinder_radius_,
           z_plane_);
-  auto endcap_map = ::domain::push_back(logical_to_unit_cylinder_map,
-                                        unit_cylinder_to_endcap_map);
+  auto endcap_map =
+      ::domain::push_back(::domain::push_back(logical_to_unit_cylinder_map,
+                                              unit_cylinder_to_endcap_map),
+                          CoordinateMaps::DiscreteRotation<3>(orientation_map));
   coordinate_maps.emplace_back(
       std::make_unique<std::decay_t<decltype(endcap_map)>>(
           std::move(endcap_map)));

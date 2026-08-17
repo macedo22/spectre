@@ -13,7 +13,7 @@ ResourceInfo:
 
 InitialData: &InitialData
   PlaneWave:
-    WaveVector: [0.0, 0.0, 1.0]
+    WaveVector: [1.0, 0.0, 0.0]
     Center: [0.0, 0.0, 0.0]
     Profile:
       Gaussian:
@@ -82,6 +82,8 @@ DomainCreator:
     # const double z_cut_EB_lower = center_B_[2] + 0.7 * outer_radius_B_;
     #   = (-7.5) + 0.7 * 5.18624897 = -3.869625721
     ZPlane: 3.869625721
+    # +1 = +x rotation like MBFilledCylinder in CBCO
+    RotationDirection: +1
     # spec number of grid lines in local cyl coords (r, theta, z):
     # - FilledCylinderMA0: [8, 17, 9]
     # - FilledCylinderMA1: [8, 15, 10]
