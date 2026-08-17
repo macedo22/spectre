@@ -8,6 +8,7 @@ add_spectre_library(${LIBRARY})
 spectre_target_sources(
   ${LIBRARY}
   PRIVATE
+  AbuttingUniformCylindricalFlatEndcaps.cpp
   AlignedLattice.cpp
   AngularCylinder.cpp
   AngularDisk.cpp
@@ -37,6 +38,7 @@ spectre_target_headers(
   ${LIBRARY}
   INCLUDE_DIRECTORY ${CMAKE_SOURCE_DIR}/src
   HEADERS
+  AbuttingUniformCylindricalFlatEndcaps.hpp
   AlignedLattice.hpp
   AngularCylinder.hpp
   AngularDisk.hpp
