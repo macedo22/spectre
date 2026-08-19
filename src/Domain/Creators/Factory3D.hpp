@@ -20,6 +20,7 @@
 #include "Domain/Creators/NonconformingSphericalShells.hpp"
 #include "Domain/Creators/Rectilinear.hpp"
 #include "Domain/Creators/RotatedBricks.hpp"
+#include "Domain/Creators/SnowGlobe.hpp"
 #include "Domain/Creators/Sphere.hpp"
 #include "Domain/Creators/SphericalShells.hpp"
 #include "Domain/Creators/UniformCylindricalFlatEndcap.hpp"
@@ -38,7 +39,8 @@ struct domain_creators<3> {
       domain::creators::FrustalCloak,
       domain::creators::NonconformingSphericalShells,
       domain::creators::PeriodicBrick, domain::creators::RotatedBricks,
-      domain::creators::Sphere, domain::creators::SphericalShells,
+      domain::creators::SnowGlobe, domain::creators::Sphere,
+      domain::creators::SphericalShells,
       domain::creators::UniformCylindricalFlatEndcap>;
 };
 }  // namespace DomainCreators_detail

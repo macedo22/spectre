@@ -29,6 +29,7 @@ spectre_target_sources(
   RotatedIntervals.cpp
   RotatedRectangles.cpp
   ShellDistribution.cpp
+  SnowGlobe.cpp
   Sphere.cpp
   SphericalShells.cpp
   UniformCylindricalFlatEndcap.cpp
@@ -66,6 +67,7 @@ spectre_target_headers(
   RotatedIntervals.hpp
   RotatedRectangles.hpp
   ShellDistribution.hpp
+  SnowGlobe.hpp
   Sphere.hpp
   SphericalShells.hpp
   UniformCylindricalFlatEndcap.hpp
