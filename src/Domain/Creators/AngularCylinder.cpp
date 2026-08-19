@@ -4,6 +4,7 @@
 #include "Domain/Creators/AngularCylinder.hpp"
 
 #include <algorithm>
+#include <iostream>
 #include <memory>
 #include <utility>
 #include <variant>
@@ -452,6 +453,9 @@ AngularCylinder::external_boundary_conditions() const {
   std::vector<DirectionMap<
       3, std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>>>
       boundary_conditions{num_blocks_};
+  std::cout << "num_blocks_ : " << num_blocks_ << std::endl;
+  std::cout << "boundary_conditions.size() : " << boundary_conditions.size()
+            << std::endl;
 
   for (size_t layer = 0; layer < num_layers; ++layer) {
     for (size_t radial = 0; radial < num_radial_blocks; ++radial) {
