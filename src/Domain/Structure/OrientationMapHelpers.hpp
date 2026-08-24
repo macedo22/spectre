@@ -70,6 +70,25 @@ VectorType orient_variables_on_slice(
     const VectorType& variables_on_slice,
     const Index<VolumeDim - 1>& slice_extents, size_t sliced_dim,
     const OrientationMap<VolumeDim>& orientation_of_neighbor);
+
+/// \brief Orient data on a spectral slice, accounting for periodic collocation
+/// points.
+///
+/// Unlike the overload taking only `slice_extents`, which assumes interval
+/// collocation points, this overload uses the
+/// basis and quadrature in `slice_mesh` to distinguish a reflection on an
+/// interval from a reflection on a periodic angular coordinate.
+template <typename VectorType, size_t VolumeDim>
+void orient_variables_on_slice(
+    gsl::not_null<VectorType*> result, const VectorType& variables_on_slice,
+    const Mesh<VolumeDim - 1>& slice_mesh, size_t sliced_dim,
+    const OrientationMap<VolumeDim>& orientation_of_neighbor);
+
+template <typename VectorType, size_t VolumeDim>
+VectorType orient_variables_on_slice(
+    const VectorType& variables_on_slice, const Mesh<VolumeDim - 1>& slice_mesh,
+    size_t sliced_dim,
+    const OrientationMap<VolumeDim>& orientation_of_neighbor);
 /// @}
 
 /// @{
@@ -134,6 +153,38 @@ Variables<TagsList> orient_variables_on_slice(
       VectorType(const_cast<ValueType*>(variables_on_slice.data()),
                  variables_on_slice.size()),
       slice_extents, sliced_dim, orientation_of_neighbor);
+  return oriented_variables;
+}
+
+template <size_t VolumeDim, typename TagsList>
+Variables<TagsList> orient_variables_on_slice(
+    const Variables<TagsList>& variables_on_slice,
+    const Mesh<VolumeDim - 1>& slice_mesh, const size_t sliced_dim,
+    const OrientationMap<VolumeDim>& orientation_of_neighbor) {
+  // Skip work (aside from a copy) if neighbor slice is aligned
+  if (orientation_of_neighbor.is_aligned()) {
+    return variables_on_slice;
+  }
+
+  const size_t number_of_grid_points = slice_mesh.number_of_grid_points();
+  ASSERT(variables_on_slice.number_of_grid_points() == number_of_grid_points,
+         "Inconsistent `variables_on_slice` and `slice_mesh`:\n"
+         "  variables_on_slice.number_of_grid_points() = "
+             << variables_on_slice.number_of_grid_points()
+             << "\n"
+                "  slice_mesh.number_of_grid_points() = "
+             << number_of_grid_points);
+
+  Variables<TagsList> oriented_variables(number_of_grid_points);
+  using VectorType = typename Variables<TagsList>::vector_type;
+  using ValueType = typename Variables<TagsList>::value_type;
+  VectorType result(oriented_variables.data(), oriented_variables.size());
+  orient_variables_on_slice(
+      make_not_null(&result),
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+      VectorType(const_cast<ValueType*>(variables_on_slice.data()),
+                 variables_on_slice.size()),
+      slice_mesh, sliced_dim, orientation_of_neighbor);
   return oriented_variables;
 }
 /// @}

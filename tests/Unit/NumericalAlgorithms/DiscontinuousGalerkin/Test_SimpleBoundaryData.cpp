@@ -66,10 +66,9 @@ SPECTRE_TEST_CASE("Unit.DG.SimpleBoundaryData", "[Unit][NumericalAlgorithms]") {
       {{Direction<2>::lower_xi(), Direction<2>::lower_eta()}},
       {{Direction<2>::upper_eta(), Direction<2>::lower_xi()}}};
   auto oriented_data = data;
-  oriented_data.orient_on_slice(slice_extents, sliced_dim,
-                                orientation_of_neighbor);
+  oriented_data.orient_on_slice(face_mesh, sliced_dim, orientation_of_neighbor);
   CHECK(oriented_data.field_data ==
-        orient_variables_on_slice(data.field_data, slice_extents, sliced_dim,
+        orient_variables_on_slice(data.field_data, face_mesh, sliced_dim,
                                   orientation_of_neighbor));
   CHECK(oriented_data.extra_data == data.extra_data);
 }

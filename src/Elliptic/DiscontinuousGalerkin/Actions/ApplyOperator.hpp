@@ -272,7 +272,7 @@ struct PrepareAndSendMortarData<
         // Reorient the data to the neighbor orientation if necessary
         if (not orientation.is_aligned()) {
           remote_boundary_data_on_mortar.orient_on_slice(
-              mortar_meshes.at(mortar_id).extents(), dimension, orientation);
+              mortar_meshes.at(mortar_id), dimension, orientation);
         }
         // Send remote data to neighbor
         Parallel::receive_data<mortar_data_inbox_tag>(

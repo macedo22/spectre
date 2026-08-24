@@ -328,7 +328,7 @@ void test_construction(
   for (size_t block_id = 0; block_id < blocks.size(); ++block_id) {
     block_ids.emplace(blocks[block_id].name(), block_id);
   }
-  const auto check_nonconforming_interface =
+  const auto check_conforming_interface =
       [&blocks, &block_ids, &initial_refinement](
           const std::string& host_name, const Direction<3>& direction,
           const std::string& neighbor_name) {
@@ -340,7 +340,7 @@ void test_construction(
         const auto& block_neighbors = blocks[host_id].neighbors().at(direction);
         REQUIRE(block_neighbors.size() == 1);
         CHECK(block_neighbors.ids().contains(neighbor_id));
-        CHECK_FALSE(block_neighbors.are_conforming());
+        CHECK(block_neighbors.are_conforming());
 
         const auto& refinement = initial_refinement[host_id];
         const ElementId<3> element_id{
@@ -350,30 +350,29 @@ void test_construction(
         const auto element = domain::create_initial_element(element_id, blocks,
                                                             initial_refinement);
         const auto& element_neighbors = element.neighbors().at(direction);
-        CHECK_FALSE(element_neighbors.are_conforming());
+        CHECK(element_neighbors.are_conforming());
         for (const auto& neighbor : element_neighbors) {
           CHECK(neighbor.block_id() == neighbor_id);
         }
         const auto face_type = element.face_types().at(direction);
-        CHECK((face_type == domain::FaceType::SingleNonconforming or
-               face_type == domain::FaceType::MultipleNonconforming));
+        CHECK(face_type == domain::FaceType::ConformingUnaligned);
       };
-  check_nonconforming_interface("MAFilledCylinder", Direction<3>::upper_xi(),
-                                "EACylinder");
-  check_nonconforming_interface("EACylinder", Direction<3>::lower_zeta(),
-                                "MAFilledCylinder");
-  check_nonconforming_interface("MBFilledCylinder", Direction<3>::upper_xi(),
-                                "EBCylinder");
-  check_nonconforming_interface("EBCylinder", Direction<3>::lower_zeta(),
-                                "MBFilledCylinder");
-  check_nonconforming_interface("MAFilledCylinder", Direction<3>::upper_zeta(),
-                                "MBFilledCylinder");
-  check_nonconforming_interface("MBFilledCylinder", Direction<3>::upper_zeta(),
-                                "MAFilledCylinder");
-  check_nonconforming_interface("CACylinder", Direction<3>::lower_zeta(),
-                                "CBCylinder");
-  check_nonconforming_interface("CBCylinder", Direction<3>::lower_zeta(),
-                                "CACylinder");
+  check_conforming_interface("MAFilledCylinder", Direction<3>::upper_xi(),
+                             "EACylinder");
+  check_conforming_interface("EACylinder", Direction<3>::lower_zeta(),
+                             "MAFilledCylinder");
+  check_conforming_interface("MBFilledCylinder", Direction<3>::upper_xi(),
+                             "EBCylinder");
+  check_conforming_interface("EBCylinder", Direction<3>::lower_zeta(),
+                             "MBFilledCylinder");
+  check_conforming_interface("MAFilledCylinder", Direction<3>::upper_zeta(),
+                             "MBFilledCylinder");
+  check_conforming_interface("MBFilledCylinder", Direction<3>::upper_zeta(),
+                             "MAFilledCylinder");
+  check_conforming_interface("CACylinder", Direction<3>::lower_zeta(),
+                             "CBCylinder");
+  check_conforming_interface("CBCylinder", Direction<3>::lower_zeta(),
+                             "CACylinder");
 
   if (block.is_time_dependent()) {
     // Taken from option string above

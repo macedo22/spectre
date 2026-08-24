@@ -1900,7 +1900,7 @@ void test_impl(const Spectral::Quadrature quadrature,
         if (local_data or orientation.is_aligned()) {
           return expected_data;
         } else {
-          return orient_variables_on_slice(expected_data, mortar_mesh.extents(),
+          return orient_variables_on_slice(expected_data, mortar_mesh,
                                            local_direction.dimension(),
                                            orientation);
         }

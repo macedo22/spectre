@@ -790,10 +790,9 @@ void ComputeTimeDerivative<Dim, EvolutionSystem, DgStepChoosers,
           volume_mesh_for_neighbor = orientation(volume_mesh);
           mortar_mesh_for_neighbor = orient_mesh_on_slice(
               mortar_mesh, direction.dimension(), orientation);
-          const auto& slice_extents = mortar_mesh.extents();
           neighbor_boundary_data_on_mortar = orient_variables_on_slice(
               all_mortar_data.at(mortar_id).local().mortar_data.value(),
-              slice_extents, direction.dimension(), orientation);
+              mortar_mesh, direction.dimension(), orientation);
           break;
         }
         case InterfaceDataPolicy::NonconformingSelfInterpolates: {

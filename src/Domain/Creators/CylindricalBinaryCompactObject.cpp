@@ -859,8 +859,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       inner_neighbors, ea_side_block, ma_endcap_block,
       Direction<3>::lower_zeta(),
       OrientationMap<3>{{{Direction<3>::upper_zeta(), Direction<3>::lower_eta(),
-                          Direction<3>::upper_xi()}}},
-      /*are_conforming=*/false);
+                          Direction<3>::upper_xi()}}});
   add_cyl_cyl_block_neighbor(inner_neighbors, ea_side_block, ca_side_block,
                              Direction<3>::upper_xi(), aligned);
 
@@ -868,14 +867,12 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   add_cyl_cyl_block_neighbor(
       inner_neighbors, ma_endcap_block, ea_side_block, Direction<3>::upper_xi(),
       OrientationMap<3>{{{Direction<3>::upper_zeta(), Direction<3>::lower_eta(),
-                          Direction<3>::upper_xi()}}},
-      /*are_conforming=*/false);
+                          Direction<3>::upper_xi()}}});
   add_cyl_cyl_block_neighbor(
       inner_neighbors, ma_endcap_block, mb_endcap_block,
       Direction<3>::upper_zeta(),
       OrientationMap<3>{{{Direction<3>::upper_xi(), Direction<3>::lower_eta(),
-                          Direction<3>::lower_zeta()}}},
-      /*are_conforming=*/false);
+                          Direction<3>::lower_zeta()}}});
 
   // CA Filled Cylinder
   add_cyl_cyl_block_neighbor(
@@ -894,8 +891,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   add_cyl_cyl_block_neighbor(
       inner_neighbors, ca_side_block, cb_side_block, Direction<3>::lower_zeta(),
       OrientationMap<3>{{{Direction<3>::upper_xi(), Direction<3>::lower_eta(),
-                          Direction<3>::lower_zeta()}}},
-      /*are_conforming=*/false);
+                          Direction<3>::lower_zeta()}}});
   add_cyl_cyl_block_neighbor(inner_neighbors, ca_side_block, ea_side_block,
                              Direction<3>::lower_xi(), aligned);
 
@@ -917,8 +913,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       inner_neighbors, eb_side_block, mb_endcap_block,
       Direction<3>::lower_zeta(),
       OrientationMap<3>{{{Direction<3>::upper_zeta(), Direction<3>::lower_eta(),
-                          Direction<3>::upper_xi()}}},
-      /*are_conforming=*/false);
+                          Direction<3>::upper_xi()}}});
   add_cyl_cyl_block_neighbor(inner_neighbors, eb_side_block, cb_side_block,
                              Direction<3>::upper_xi(), aligned);
 
@@ -926,14 +921,12 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   add_cyl_cyl_block_neighbor(
       inner_neighbors, mb_endcap_block, eb_side_block, Direction<3>::upper_xi(),
       OrientationMap<3>{{{Direction<3>::upper_zeta(), Direction<3>::lower_eta(),
-                          Direction<3>::upper_xi()}}},
-      /*are_conforming=*/false);
+                          Direction<3>::upper_xi()}}});
   add_cyl_cyl_block_neighbor(
       inner_neighbors, mb_endcap_block, ma_endcap_block,
       Direction<3>::upper_zeta(),
       OrientationMap<3>{{{Direction<3>::upper_xi(), Direction<3>::lower_eta(),
-                          Direction<3>::lower_zeta()}}},
-      /*are_conforming=*/false);
+                          Direction<3>::lower_zeta()}}});
 
   // CB Filled Cylinder
   add_cyl_cyl_block_neighbor(
@@ -952,8 +945,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   add_cyl_cyl_block_neighbor(
       inner_neighbors, cb_side_block, ca_side_block, Direction<3>::lower_zeta(),
       OrientationMap<3>{{{Direction<3>::upper_xi(), Direction<3>::lower_eta(),
-                          Direction<3>::lower_zeta()}}},
-      /*are_conforming=*/false);
+                          Direction<3>::lower_zeta()}}});
   add_cyl_cyl_block_neighbor(inner_neighbors, cb_side_block, eb_side_block,
                              Direction<3>::lower_xi(), aligned);
 

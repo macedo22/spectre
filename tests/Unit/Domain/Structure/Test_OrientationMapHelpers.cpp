@@ -682,6 +682,43 @@ void test_2d_orient_variables_on_slice() {
   CHECK(number_of_orientations_checked == 48);
 }
 
+void test_periodic_orient_variables_on_slice() {
+  // This is the orientation of the MAFilledCylinder-to-EACylinder interface in
+  // CylindricalBinaryCompactObject. The Fourier axis is reflected and the two
+  // axes on the slice are transposed.
+  const Mesh<2> slice_mesh{
+      {{5, 3}},
+      {{Spectral::Basis::Fourier, Spectral::Basis::Legendre}},
+      {{Spectral::Quadrature::Equiangular,
+        Spectral::Quadrature::GaussLobatto}}};
+  const OrientationMap<3> orientation_map{{Direction<3>::upper_zeta(),
+                                           Direction<3>::lower_eta(),
+                                           Direction<3>::upper_xi()}};
+  const DataVector data{{0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0,
+                         11.0, 12.0, 13.0, 14.0}};
+
+  // A periodic reflection maps k to (-k) mod N, so k=0 remains fixed. Ordinary
+  // array reversal would incorrectly map k to N-1-k and shift every point.
+  const DataVector expected{{0.0, 5.0, 10.0, 4.0, 9.0, 14.0, 3.0, 8.0, 13.0,
+                             2.0, 7.0, 12.0, 1.0, 6.0, 11.0}};
+  CHECK(orient_variables_on_slice(data, slice_mesh, 0, orientation_map) ==
+        expected);
+
+  DataVector result(data.size());
+  orient_variables_on_slice(make_not_null(&result), data, slice_mesh, 0,
+                            orientation_map);
+  CHECK(result == expected);
+
+  // An interval reflection retains the usual endpoint-to-endpoint reversal.
+  const Mesh<1> interval_mesh{5, Spectral::Basis::Legendre,
+                              Spectral::Quadrature::GaussLobatto};
+  const OrientationMap<2> interval_orientation{
+      {Direction<2>::upper_xi(), Direction<2>::lower_eta()}};
+  CHECK(orient_variables_on_slice(DataVector{{0.0, 1.0, 2.0, 3.0, 4.0}},
+                                  interval_mesh, 0, interval_orientation) ==
+        DataVector{{4.0, 3.0, 2.0, 1.0, 0.0}});
+}
+
 }  // namespace
 
 // [[TimeOut, 10]]
@@ -701,5 +738,6 @@ SPECTRE_TEST_CASE("Unit.Domain.Structure.OrientationMapHelpers",
     test_0d_orient_variables_on_slice();
     test_1d_orient_variables_on_slice();
     test_2d_orient_variables_on_slice();
+    test_periodic_orient_variables_on_slice();
   }
 }

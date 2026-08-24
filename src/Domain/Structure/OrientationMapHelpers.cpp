@@ -3,9 +3,7 @@
 
 #include "Domain/Structure/OrientationMapHelpers.hpp"
 
-#include <algorithm>
 #include <array>
-#include <numeric>
 
 #include "DataStructures/ComplexDataVector.hpp"
 #include "DataStructures/DataVector.hpp"
@@ -15,6 +13,9 @@
 #include "Domain/Structure/OrientationMap.hpp"
 #include "Domain/Structure/SegmentId.hpp"
 #include "Domain/Structure/Side.hpp"
+#include "NumericalAlgorithms/Spectral/Basis.hpp"
+#include "NumericalAlgorithms/Spectral/Mesh.hpp"
+#include "NumericalAlgorithms/Spectral/Quadrature.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/Literals.hpp"
 #include "Utilities/MakeArray.hpp"
@@ -23,12 +24,33 @@
 namespace {
 
 // 1D data can be aligned or anti-aligned
+size_t oriented_index(const size_t index, const size_t extent,
+                      const bool axis_is_aligned,
+                      const bool has_periodic_collocation_points) {
+  if (axis_is_aligned) {
+    return index;
+  }
+  if (has_periodic_collocation_points) {
+    return (extent - index) % extent;
+  }
+  return extent - 1 - index;
+}
+
+template <size_t Dim>
+bool has_periodic_collocation_points(const Mesh<Dim>& mesh, const size_t dim) {
+  return mesh.basis(dim) == Spectral::Basis::Fourier or
+         (mesh.basis(dim) == Spectral::Basis::SphericalHarmonic and
+          mesh.quadrature(dim) == Spectral::Quadrature::Equiangular);
+}
+
 std::vector<size_t> compute_offset_permutation(
-    const Index<1>& extents, const bool neighbor_axis_is_aligned) {
+    const Index<1>& extents, const bool neighbor_axis_is_aligned,
+    const bool axis_has_periodic_collocation_points = false) {
   std::vector<size_t> oriented_offsets(extents.product());
-  std::iota(oriented_offsets.begin(), oriented_offsets.end(), 0);
-  if (not neighbor_axis_is_aligned) {
-    std::reverse(oriented_offsets.begin(), oriented_offsets.end());
+  for (size_t i = 0; i < extents[0]; ++i) {
+    oriented_offsets[i] =
+        oriented_index(i, extents[0], neighbor_axis_is_aligned,
+                       axis_has_periodic_collocation_points);
   }
   return oriented_offsets;
 }
@@ -40,37 +62,36 @@ std::vector<size_t> compute_offset_permutation(
 std::vector<size_t> compute_offset_permutation(
     const Index<2>& extents, const bool neighbor_first_axis_is_aligned,
     const bool neighbor_second_axis_is_aligned,
-    const bool neighbor_axes_are_transposed) {
+    const bool neighbor_axes_are_transposed,
+    const bool first_axis_has_periodic_collocation_points = false,
+    const bool second_axis_has_periodic_collocation_points = false) {
   std::vector<size_t> oriented_offsets(extents.product());
-  // Reduce the number of cases to explicitly write out by 4, by encoding the
-  // (anti-)alignment of each axis as numerical factors ("offset" and "step")
-  // that then contribute in identically-structured loops.
-  // But doing this requires mixing positive and negative factors, so we cast
-  // from size_t to int, do the work, then cast from int back to size_t.
-  const auto num_pts_1 = static_cast<int>(extents[0]);
-  const auto num_pts_2 = static_cast<int>(extents[1]);
-  const int i1_offset = neighbor_first_axis_is_aligned ? 0 : num_pts_1 - 1;
-  const int i1_step = neighbor_first_axis_is_aligned ? 1 : -1;
-  const int i2_offset = neighbor_second_axis_is_aligned ? 0 : num_pts_2 - 1;
-  const int i2_step = neighbor_second_axis_is_aligned ? 1 : -1;
+  const size_t num_pts_1 = extents[0];
+  const size_t num_pts_2 = extents[1];
   if (neighbor_axes_are_transposed) {
-    for (int i2 = 0; i2 < num_pts_2; ++i2) {
-      for (int i1 = 0; i1 < num_pts_1; ++i1) {
-        // NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
-        oriented_offsets[static_cast<size_t>(i1 + num_pts_1 * i2)] =
-            // NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
-            static_cast<size_t>((i2_offset + i2_step * i2) +
-                                num_pts_2 * (i1_offset + i1_step * i1));
+    for (size_t i2 = 0; i2 < num_pts_2; ++i2) {
+      for (size_t i1 = 0; i1 < num_pts_1; ++i1) {
+        const size_t oriented_i1 =
+            oriented_index(i1, num_pts_1, neighbor_first_axis_is_aligned,
+                           first_axis_has_periodic_collocation_points);
+        const size_t oriented_i2 =
+            oriented_index(i2, num_pts_2, neighbor_second_axis_is_aligned,
+                           second_axis_has_periodic_collocation_points);
+        oriented_offsets[i1 + num_pts_1 * i2] =
+            oriented_i2 + num_pts_2 * oriented_i1;
       }
     }
   } else {
-    for (int i2 = 0; i2 < num_pts_2; ++i2) {
-      for (int i1 = 0; i1 < num_pts_1; ++i1) {
-        // NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
-        oriented_offsets[static_cast<size_t>(i1 + num_pts_1 * i2)] =
-            // NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
-            static_cast<size_t>((i1_offset + i1_step * i1) +
-                                num_pts_1 * (i2_offset + i2_step * i2));
+    for (size_t i2 = 0; i2 < num_pts_2; ++i2) {
+      for (size_t i1 = 0; i1 < num_pts_1; ++i1) {
+        const size_t oriented_i1 =
+            oriented_index(i1, num_pts_1, neighbor_first_axis_is_aligned,
+                           first_axis_has_periodic_collocation_points);
+        const size_t oriented_i2 =
+            oriented_index(i2, num_pts_2, neighbor_second_axis_is_aligned,
+                           second_axis_has_periodic_collocation_points);
+        oriented_offsets[i1 + num_pts_1 * i2] =
+            oriented_i1 + num_pts_1 * oriented_i2;
       }
     }
   }
@@ -295,6 +316,51 @@ std::vector<size_t> oriented_offset_on_slice(
       neighbor_second_axis_is_aligned, neighbor_axes_are_transposed);
 }
 
+std::vector<size_t> oriented_offset_on_slice(
+    const Mesh<0>& /*slice_mesh*/, const size_t /*sliced_dim*/,
+    const OrientationMap<1>& /*orientation_of_neighbor*/) {
+  return {0};
+}
+
+std::vector<size_t> oriented_offset_on_slice(
+    const Mesh<1>& slice_mesh, const size_t sliced_dim,
+    const OrientationMap<2>& orientation_of_neighbor) {
+  const Direction<2> my_slice_axis =
+      (0 == sliced_dim ? Direction<2>::upper_eta() : Direction<2>::upper_xi());
+  const Direction<2> neighbor_slice_axis =
+      orientation_of_neighbor(my_slice_axis);
+  const bool is_aligned = (neighbor_slice_axis.side() == Side::Upper);
+  return compute_offset_permutation(
+      slice_mesh.extents(), is_aligned,
+      has_periodic_collocation_points(slice_mesh, 0));
+}
+
+std::vector<size_t> oriented_offset_on_slice(
+    const Mesh<2>& slice_mesh, const size_t sliced_dim,
+    const OrientationMap<3>& orientation_of_neighbor) {
+  const std::array<size_t, 2> dims_of_slice =
+      (0 == sliced_dim     ? make_array(1_st, 2_st)
+       : (1 == sliced_dim) ? make_array(0_st, 2_st)
+                           : make_array(0_st, 1_st));
+  const bool neighbor_axes_are_transposed =
+      (orientation_of_neighbor(dims_of_slice[0]) >
+       orientation_of_neighbor(dims_of_slice[1]));
+  const Direction<3> neighbor_first_axis =
+      orientation_of_neighbor(Direction<3>(dims_of_slice[0], Side::Upper));
+  const Direction<3> neighbor_second_axis =
+      orientation_of_neighbor(Direction<3>(dims_of_slice[1], Side::Upper));
+  const bool neighbor_first_axis_is_aligned =
+      (Side::Upper == neighbor_first_axis.side());
+  const bool neighbor_second_axis_is_aligned =
+      (Side::Upper == neighbor_second_axis.side());
+
+  return compute_offset_permutation(
+      slice_mesh.extents(), neighbor_first_axis_is_aligned,
+      neighbor_second_axis_is_aligned, neighbor_axes_are_transposed,
+      has_periodic_collocation_points(slice_mesh, 0),
+      has_periodic_collocation_points(slice_mesh, 1));
+}
+
 template <typename T>
 void orient_each_component(
     const gsl::not_null<gsl::span<T>*> oriented_variables,
@@ -400,6 +466,37 @@ void orient_variables_on_slice(
 }
 
 template <typename VectorType, size_t VolumeDim>
+void orient_variables_on_slice(
+    const gsl::not_null<VectorType*> result,
+    const VectorType& variables_on_slice, const Mesh<VolumeDim - 1>& slice_mesh,
+    const size_t sliced_dim,
+    const OrientationMap<VolumeDim>& orientation_of_neighbor) {
+  ASSERT(result->size() == variables_on_slice.size(),
+         "Result should have size " << variables_on_slice.size()
+                                    << " but has size " << result->size());
+  const size_t number_of_grid_points = slice_mesh.number_of_grid_points();
+  ASSERT(variables_on_slice.size() % number_of_grid_points == 0,
+         "The size of the variables must be divisible by the number of grid "
+         "points. Number of grid points: "
+             << number_of_grid_points
+             << " size: " << variables_on_slice.size());
+  // Skip work (aside from a copy) if neighbor slice is aligned
+  if (orientation_of_neighbor.is_aligned()) {
+    (*result) = variables_on_slice;
+    return;
+  }
+
+  const auto oriented_offset =
+      oriented_offset_on_slice(slice_mesh, sliced_dim, orientation_of_neighbor);
+
+  auto oriented_vars_view = gsl::make_span(result->data(), result->size());
+  orient_each_component(
+      make_not_null(&oriented_vars_view),
+      gsl::make_span(variables_on_slice.data(), variables_on_slice.size()),
+      number_of_grid_points, oriented_offset);
+}
+
+template <typename VectorType, size_t VolumeDim>
 VectorType orient_variables(
     const VectorType& variables, const Index<VolumeDim>& extents,
     const OrientationMap<VolumeDim>& orientation_of_neighbor) {
@@ -417,6 +514,18 @@ VectorType orient_variables_on_slice(
   VectorType oriented_variables(variables_on_slice.size());
   orient_variables_on_slice(make_not_null(&oriented_variables),
                             variables_on_slice, slice_extents, sliced_dim,
+                            orientation_of_neighbor);
+  return oriented_variables;
+}
+
+template <typename VectorType, size_t VolumeDim>
+VectorType orient_variables_on_slice(
+    const VectorType& variables_on_slice, const Mesh<VolumeDim - 1>& slice_mesh,
+    const size_t sliced_dim,
+    const OrientationMap<VolumeDim>& orientation_of_neighbor) {
+  VectorType oriented_variables(variables_on_slice.size());
+  orient_variables_on_slice(make_not_null(&oriented_variables),
+                            variables_on_slice, slice_mesh, sliced_dim,
                             orientation_of_neighbor);
   return oriented_variables;
 }
@@ -444,11 +553,20 @@ template Mesh<2> orient_mesh_on_slice(
       const DTYPE(data) & variables_on_slice,                                  \
       const Index<DIM(data) - 1>& slice_extents, size_t sliced_dim,            \
       const OrientationMap<DIM(data)>& orientation_of_neighbor);               \
+  template void orient_variables_on_slice(                                     \
+      const gsl::not_null<DTYPE(data)*> result,                                \
+      const DTYPE(data) & variables_on_slice,                                  \
+      const Mesh<DIM(data) - 1>& slice_mesh, size_t sliced_dim,                \
+      const OrientationMap<DIM(data)>& orientation_of_neighbor);               \
   template DTYPE(data) orient_variables(                                       \
       const DTYPE(data) & variables, const Index<DIM(data)>& extents,          \
       const OrientationMap<DIM(data)>& orientation_of_neighbor);               \
   template DTYPE(data) orient_variables_on_slice(                              \
       const DTYPE(data) & variables, const Index<DIM(data) - 1>& extents,      \
+      size_t sliced_dim,                                                       \
+      const OrientationMap<DIM(data)>& orientation_of_neighbor);               \
+  template DTYPE(data) orient_variables_on_slice(                              \
+      const DTYPE(data) & variables, const Mesh<DIM(data) - 1>& slice_mesh,    \
       size_t sliced_dim,                                                       \
       const OrientationMap<DIM(data)>& orientation_of_neighbor);
 

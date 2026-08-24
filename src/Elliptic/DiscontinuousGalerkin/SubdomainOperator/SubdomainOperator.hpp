@@ -462,7 +462,7 @@ struct SubdomainOperator
               central_mortar_data_.at(mortar_id).local_data(temporal_id);
           if (not orientation.is_aligned()) {
             oriented_mortar_data.orient_on_slice(
-                mortar_mesh.extents(), direction.dimension(), orientation);
+                mortar_mesh, direction.dimension(), orientation);
           }
           neighbors_mortar_data_[overlap_id][::dg::MortarId<Dim>{
                                                  direction_from_neighbor,
@@ -551,8 +551,8 @@ struct SubdomainOperator
                     neighbor_mortar_data.local_data(temporal_id);
                 if (not neighbor_orientation.is_aligned()) {
                   oriented_neighbor_mortar_data.orient_on_slice(
-                      neighbor_mortar_mesh.extents(),
-                      neighbor_direction.dimension(), neighbor_orientation);
+                      neighbor_mortar_mesh, neighbor_direction.dimension(),
+                      neighbor_orientation);
                 }
                 remote_mortar_data.remote_insert(
                     temporal_id, std::move(oriented_neighbor_mortar_data));

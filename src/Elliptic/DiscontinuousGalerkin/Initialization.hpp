@@ -532,9 +532,8 @@ struct InitializeFacesAndMortars : tt::ConformsTo<::amr::protocols::Projector> {
             neighbor_element_map, functions_of_time);
         // Orient the result back to the perspective of this element
         const auto neighbor_element_size = orient_variables_on_slice(
-            get(reoriented_neighbor_element_size),
-            reoriented_mortar_mesh.extents(), direction_in_neighbor.dimension(),
-            orientation.inverse_map());
+            get(reoriented_neighbor_element_size), reoriented_mortar_mesh,
+            direction_in_neighbor.dimension(), orientation.inverse_map());
         penalty_factors->emplace(
             mortar_id,
             elliptic::dg::penalty(

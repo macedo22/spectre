@@ -81,6 +81,15 @@ struct SimpleBoundaryData {
     this->field_data = orient_variables_on_slice(
         this->field_data, slice_extents, sliced_dim, orientation_of_neighbor);
   }
+
+  /// Orient the `field_data`, accounting for periodic collocation points
+  template <size_t MortarDim>
+  void orient_on_slice(
+      const Mesh<MortarDim>& slice_mesh, const size_t sliced_dim,
+      const OrientationMap<MortarDim + 1>& orientation_of_neighbor) {
+    this->field_data = orient_variables_on_slice(
+        this->field_data, slice_mesh, sliced_dim, orientation_of_neighbor);
+  }
 };
 
 }  // namespace dg
