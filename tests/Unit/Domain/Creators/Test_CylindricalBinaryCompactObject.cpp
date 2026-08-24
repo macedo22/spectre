@@ -92,13 +92,15 @@ block_names_and_groups(const bool include_inner_sphere_A,
                        const bool include_inner_sphere_B) {
   std::vector<std::string> block_names{
       "CAFilledCylinder", "CACylinder", "EAFilledCylinder", "EACylinder",
-      "EBFilledCylinder", "EBCylinder", "MAFilledCylinder", "MBFilledCylinder",
-      "CBFilledCylinder", "CBCylinder"};
+      "EBFilledCylinder", "EBCylinder", "MAFilledCylinder", "MACylinder",
+      "MBFilledCylinder", "MBCylinder", "CBFilledCylinder", "CBCylinder"};
   std::unordered_map<std::string, std::unordered_set<std::string>> block_groups{
       {"Outer",
        {{"CAFilledCylinder", "CBCylinder", "CBFilledCylinder", "CACylinder"}}},
-      {"InnerA", {"EAFilledCylinder", "MAFilledCylinder", "EACylinder"}},
-      {"InnerB", {"EBFilledCylinder", "MBFilledCylinder", "EBCylinder"}}};
+      {"InnerA",
+       {"EAFilledCylinder", "MAFilledCylinder", "EACylinder", "MACylinder"}},
+      {"InnerB",
+       {"EBFilledCylinder", "MBFilledCylinder", "EBCylinder", "MBCylinder"}}};
 
   if (include_inner_sphere_A) {
     block_names.insert(block_names.end(), {"InnerAShell0"});

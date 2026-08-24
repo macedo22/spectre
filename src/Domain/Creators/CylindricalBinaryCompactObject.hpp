@@ -17,6 +17,7 @@
 #include "Domain/BoundaryConditions/GetBoundaryConditionsBase.hpp"
 #include "Domain/CoordinateMaps/CoordinateMap.hpp"
 #include "Domain/CoordinateMaps/Identity.hpp"
+#include "Domain/CoordinateMaps/UniformCylindricalFlatEndcapShell.hpp"
 #include "Domain/Creators/DomainCreator.hpp"
 #include "Domain/Creators/TimeDependentOptions/BinaryCompactObject.hpp"
 #include "Domain/Domain.hpp"
@@ -167,6 +168,11 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
                             unit_cylinder_map, polar_to_cartesian_map,
                             CoordinateMaps::DiscreteRotation<3>,
                             CoordinateMaps::UniformCylindricalFlatEndcap,
+                            CoordinateMaps::DiscreteRotation<3>>,
+      domain::CoordinateMap<Frame::BlockLogical, Frame::Inertial,
+                            unit_cylinder_map, polar_to_cartesian_map,
+                            CoordinateMaps::DiscreteRotation<3>,
+                            CoordinateMaps::UniformCylindricalFlatEndcapShell,
                             CoordinateMaps::DiscreteRotation<3>>,
       domain::CoordinateMap<Frame::BlockLogical, Frame::Inertial,
                             unit_cylinder_map, polar_to_cartesian_map,

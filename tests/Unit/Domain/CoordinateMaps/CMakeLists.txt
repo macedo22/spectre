@@ -33,6 +33,7 @@ set(LIBRARY_SOURCES
   Test_TimeDependentHelpers.cpp
   Test_UniformCylindricalEndcap.cpp
   Test_UniformCylindricalFlatEndcap.cpp
+  Test_UniformCylindricalFlatEndcapShell.cpp
   Test_UniformCylindricalSide.cpp
   Test_Wedge2D.cpp
   Test_Wedge3D.cpp

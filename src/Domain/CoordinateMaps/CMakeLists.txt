@@ -40,6 +40,7 @@ spectre_target_sources(
   SphericalToCartesianPfaffian.cpp
   UniformCylindricalEndcap.cpp
   UniformCylindricalFlatEndcap.cpp
+  UniformCylindricalFlatEndcapShell.cpp
   UniformCylindricalSide.cpp
   Wedge.cpp
   )
@@ -89,6 +90,7 @@ spectre_target_headers(
   TimeDependentHelpers.hpp
   UniformCylindricalEndcap.hpp
   UniformCylindricalFlatEndcap.hpp
+  UniformCylindricalFlatEndcapShell.hpp
   UniformCylindricalSide.hpp
   Wedge.hpp
   )
