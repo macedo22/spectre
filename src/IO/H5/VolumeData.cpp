@@ -341,24 +341,25 @@ size_t append_element_extents_and_connectivity(
                n_r * n_ph * index_z;
       };
 
-      // Close the phi seam: connect last phi strip (index_ph = n_ph-1) back to
-      // first (index_ph = 0) with hexahedra.
-      for (int j_r = 0; j_r < n_r - 1; ++j_r) {
-        for (int j_z = 0; j_z < n_z - 1; ++j_z) {
-          total_connectivity->push_back(vis::detail::xdmf_topology_type(
-              vis::detail::Topology::Hexahedron));
-          ++cell_count;
-          total_connectivity->push_back(global_index(j_r, n_ph - 1, j_z));
-          total_connectivity->push_back(global_index(j_r + 1, n_ph - 1, j_z));
-          total_connectivity->push_back(global_index(j_r + 1, 0, j_z));
-          total_connectivity->push_back(global_index(j_r, 0, j_z));
-          total_connectivity->push_back(global_index(j_r, n_ph - 1, j_z + 1));
-          total_connectivity->push_back(
-              global_index(j_r + 1, n_ph - 1, j_z + 1));
-          total_connectivity->push_back(global_index(j_r + 1, 0, j_z + 1));
-          total_connectivity->push_back(global_index(j_r, 0, j_z + 1));
-        }
-      }
+      // // Close the phi seam: connect last phi strip (index_ph = n_ph-1) back
+      // to
+      // // first (index_ph = 0) with hexahedra.
+      // for (int j_r = 0; j_r < n_r - 1; ++j_r) {
+      //   for (int j_z = 0; j_z < n_z - 1; ++j_z) {
+      //     total_connectivity->push_back(vis::detail::xdmf_topology_type(
+      //         vis::detail::Topology::Hexahedron));
+      //     ++cell_count;
+      //     total_connectivity->push_back(global_index(j_r, n_ph - 1, j_z));
+      //     total_connectivity->push_back(global_index(j_r + 1, n_ph - 1,
+      //     j_z)); total_connectivity->push_back(global_index(j_r + 1, 0,
+      //     j_z)); total_connectivity->push_back(global_index(j_r, 0, j_z));
+      //     total_connectivity->push_back(global_index(j_r, n_ph - 1, j_z +
+      //     1)); total_connectivity->push_back(
+      //         global_index(j_r + 1, n_ph - 1, j_z + 1));
+      //     total_connectivity->push_back(global_index(j_r + 1, 0, j_z + 1));
+      //     total_connectivity->push_back(global_index(j_r, 0, j_z + 1));
+      //   }
+      // }
 
       // For a filled cylinder (ZernikeB2), fill the central hole with
       // wedges between consecutive z layers.
