@@ -128,7 +128,8 @@ Element<VolumeDim> create_initial_element(
           const auto direction_from_neighbor =
               orientation(direction).opposite();
           std::array<std::vector<SegmentId>, VolumeDim> valid_segment_ids;
-          if (neighbor_is_conforming(block.topologies(),
+          if (block_neighbors.are_conforming() and
+              neighbor_is_conforming(block.topologies(),
                                      blocks[neighbor_block_id].topologies(),
                                      direction, orientation)) {
             const auto oriented_segment_ids = orientation(segment_ids);

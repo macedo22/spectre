@@ -24,6 +24,7 @@
 #include "DataStructures/Tensor/TypeAliases.hpp"
 #include "Domain/Block.hpp"
 #include "Domain/BoundaryConditions/BoundaryCondition.hpp"
+#include "Domain/CreateInitialElement.hpp"
 #include "Domain/Creators/CylindricalBinaryCompactObject.hpp"
 #include "Domain/Creators/DomainCreator.hpp"
 #include "Domain/Creators/OptionTags.hpp"
@@ -35,7 +36,10 @@
 #include "Domain/FunctionsOfTime/FixedSpeedCubic.hpp"
 #include "Domain/FunctionsOfTime/PiecewisePolynomial.hpp"
 #include "Domain/FunctionsOfTime/QuaternionFunctionOfTime.hpp"
+#include "Domain/Structure/ElementId.hpp"
+#include "Domain/Structure/FaceType.hpp"
 #include "Domain/Structure/ObjectLabel.hpp"
+#include "Domain/Structure/SegmentId.hpp"
 #include "Framework/TestCreation.hpp"
 #include "Helpers/Domain/BoundaryConditions/BoundaryCondition.hpp"
 #include "Helpers/Domain/Creators/TestHelpers.hpp"
@@ -318,6 +322,50 @@ void test_construction(
   const auto& block = blocks[0];
   CHECK(block.is_time_dependent() == excision_sphere_a.is_time_dependent());
   CHECK(block.is_time_dependent() == excision_sphere_b.is_time_dependent());
+
+  const auto initial_refinement = creator.initial_refinement_levels();
+  std::unordered_map<std::string, size_t> block_ids;
+  for (size_t block_id = 0; block_id < blocks.size(); ++block_id) {
+    block_ids.emplace(blocks[block_id].name(), block_id);
+  }
+  const auto check_nonconforming_interface =
+      [&blocks, &block_ids, &initial_refinement](
+          const std::string& host_name, const Direction<3>& direction,
+          const std::string& neighbor_name) {
+        CAPTURE(host_name);
+        CAPTURE(direction);
+        CAPTURE(neighbor_name);
+        const size_t host_id = block_ids.at(host_name);
+        const size_t neighbor_id = block_ids.at(neighbor_name);
+        const auto& block_neighbors = blocks[host_id].neighbors().at(direction);
+        REQUIRE(block_neighbors.size() == 1);
+        CHECK(block_neighbors.ids().contains(neighbor_id));
+        CHECK_FALSE(block_neighbors.are_conforming());
+
+        const auto& refinement = initial_refinement[host_id];
+        const ElementId<3> element_id{
+            host_id,
+            std::array{SegmentId{refinement[0], 0}, SegmentId{refinement[1], 0},
+                       SegmentId{refinement[2], 0}}};
+        const auto element = domain::create_initial_element(element_id, blocks,
+                                                            initial_refinement);
+        const auto& element_neighbors = element.neighbors().at(direction);
+        CHECK_FALSE(element_neighbors.are_conforming());
+        for (const auto& neighbor : element_neighbors) {
+          CHECK(neighbor.block_id() == neighbor_id);
+        }
+        const auto face_type = element.face_types().at(direction);
+        CHECK((face_type == domain::FaceType::SingleNonconforming or
+               face_type == domain::FaceType::MultipleNonconforming));
+      };
+  check_nonconforming_interface("MAFilledCylinder", Direction<3>::upper_xi(),
+                                "EACylinder");
+  check_nonconforming_interface("EACylinder", Direction<3>::lower_zeta(),
+                                "MAFilledCylinder");
+  check_nonconforming_interface("MBFilledCylinder", Direction<3>::upper_xi(),
+                                "EBCylinder");
+  check_nonconforming_interface("EBCylinder", Direction<3>::lower_zeta(),
+                                "MBFilledCylinder");
 
   if (block.is_time_dependent()) {
     // Taken from option string above

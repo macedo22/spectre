@@ -470,6 +470,36 @@ void test_nonconforming_blocks() {
        {Direction<2>::lower_eta(), Neighbors<2>{east_u, aligned}},
        {Direction<2>::upper_eta(), Neighbors<2>{north_u, aligned}}},
       domain::topologies::hypercube<2>);
+
+  INFO("Explicitly nonconforming blocks with conforming topologies");
+  std::vector<Block<2>> explicitly_nonconforming_blocks;
+  explicitly_nonconforming_blocks.emplace_back(
+      nullptr, 0,
+      DirectionMap<2, BlockNeighbors<2>>{
+          {Direction<2>::upper_xi(),
+           BlockNeighbors<2>{{1}, {{1, aligned}}, /*are_conforming=*/false}}});
+  explicitly_nonconforming_blocks.emplace_back(
+      nullptr, 1,
+      DirectionMap<2, BlockNeighbors<2>>{
+          {Direction<2>::lower_xi(),
+           BlockNeighbors<2>{{0}, {{0, aligned}}, /*are_conforming=*/false}}});
+  const std::vector<std::array<size_t, 2>> explicitly_nonconforming_refinement{
+      std::array{0_st, 1_st}, std::array{0_st, 1_st}};
+  const ElementId<2> self_lower{0,
+                                std::array{SegmentId{0, 0}, SegmentId{1, 0}}};
+  const ElementId<2> self_upper{0,
+                                std::array{SegmentId{0, 0}, SegmentId{1, 1}}};
+  const ElementId<2> neighbor_lower{
+      1, std::array{SegmentId{0, 0}, SegmentId{1, 0}}};
+  const ElementId<2> neighbor_upper{
+      1, std::array{SegmentId{0, 0}, SegmentId{1, 1}}};
+  test_create_initial_element(
+      self_lower, explicitly_nonconforming_blocks,
+      explicitly_nonconforming_refinement,
+      {{Direction<2>::upper_xi(), Neighbors<2>{{neighbor_lower, neighbor_upper},
+                                               {{1, aligned}},
+                                               /*are_conforming=*/false}},
+       {Direction<2>::upper_eta(), Neighbors<2>{self_upper, aligned}}});
 }
 }  // namespace
 
