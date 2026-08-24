@@ -13,7 +13,6 @@
 #include "Domain/Structure/OrientationMap.hpp"
 #include "Domain/Structure/SegmentId.hpp"
 #include "Domain/Structure/Side.hpp"
-#include "NumericalAlgorithms/Spectral/Basis.hpp"
 #include "NumericalAlgorithms/Spectral/Mesh.hpp"
 #include "NumericalAlgorithms/Spectral/Quadrature.hpp"
 #include "Utilities/GenerateInstantiations.hpp"
@@ -38,9 +37,11 @@ size_t oriented_index(const size_t index, const size_t extent,
 
 template <size_t Dim>
 bool has_periodic_collocation_points(const Mesh<Dim>& mesh, const size_t dim) {
-  return mesh.basis(dim) == Spectral::Basis::Fourier or
-         (mesh.basis(dim) == Spectral::Basis::SphericalHarmonic and
-          mesh.quadrature(dim) == Spectral::Quadrature::Equiangular);
+  // Equiangular quadrature is used for periodic angular directions in Fourier,
+  // spherical-harmonic, ZernikeB2, and ZernikeB3 meshes. In particular, a face
+  // produced by slicing away the axial dimension of a filled cylinder retains
+  // its ZernikeB2 basis, so checking only for Basis::Fourier would miss it.
+  return mesh.quadrature(dim) == Spectral::Quadrature::Equiangular;
 }
 
 std::vector<size_t> compute_offset_permutation(

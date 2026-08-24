@@ -36,17 +36,23 @@
 #include "Domain/FunctionsOfTime/FixedSpeedCubic.hpp"
 #include "Domain/FunctionsOfTime/PiecewisePolynomial.hpp"
 #include "Domain/FunctionsOfTime/QuaternionFunctionOfTime.hpp"
+#include "Domain/InterfaceLogicalCoordinates.hpp"
 #include "Domain/Structure/ElementId.hpp"
 #include "Domain/Structure/FaceType.hpp"
 #include "Domain/Structure/ObjectLabel.hpp"
+#include "Domain/Structure/OrientationMapHelpers.hpp"
 #include "Domain/Structure/SegmentId.hpp"
 #include "Framework/TestCreation.hpp"
 #include "Helpers/Domain/BoundaryConditions/BoundaryCondition.hpp"
 #include "Helpers/Domain/Creators/TestHelpers.hpp"
 #include "Helpers/Domain/DomainTestHelpers.hpp"
 #include "Informer/InfoFromBuild.hpp"
+#include "NumericalAlgorithms/Spectral/Basis.hpp"
+#include "NumericalAlgorithms/Spectral/Mesh.hpp"
+#include "NumericalAlgorithms/Spectral/Quadrature.hpp"
 #include "NumericalAlgorithms/SphericalHarmonics/Spherepack.hpp"
 #include "Utilities/CartesianProduct.hpp"
+#include "Utilities/ConstantExpressions.hpp"
 #include "Utilities/GetOutput.hpp"
 #include "Utilities/MakeArray.hpp"
 #include "Utilities/ProtocolHelpers.hpp"
@@ -279,6 +285,91 @@ TimeDepOptions construct_time_dependent_options() {
       std::nullopt};
 }
 
+void test_cylinder_neighbor_point_order(const std::vector<Block<3>>& blocks) {
+  const auto cylinder_mesh = [](const Block<3>& block) {
+    if (block.topologies() == domain::topologies::full_cylinder) {
+      return Mesh<3>{{{3, 5, 4}},
+                     Spectral::bases::full_cylinder<>,
+                     Spectral::quadratures::full_cylinder<>};
+    }
+    REQUIRE(block.topologies() == domain::topologies::cylindrical_shell);
+    return Mesh<3>{{{4, 5, 4}},
+                   Spectral::bases::cylindrical_shell<>,
+                   Spectral::quadratures::cylindrical_shell<>};
+  };
+
+  size_t number_of_interfaces_checked = 0;
+  for (const auto& host_block : blocks) {
+    if (host_block.name().find("Cylinder") == std::string::npos) {
+      continue;
+    }
+    const auto host_mesh = cylinder_mesh(host_block);
+    for (const auto& [direction, block_neighbors] : host_block.neighbors()) {
+      for (const size_t neighbor_id : block_neighbors) {
+        const auto& neighbor_block = blocks.at(neighbor_id);
+        if (neighbor_block.name().find("Cylinder") == std::string::npos or
+            host_block.id() > neighbor_id) {
+          continue;
+        }
+        ++number_of_interfaces_checked;
+        CAPTURE(host_block.name());
+        CAPTURE(direction);
+        CAPTURE(neighbor_block.name());
+        REQUIRE(block_neighbors.are_conforming());
+
+        const auto& orientation = block_neighbors.orientation(neighbor_id);
+        const Direction<3> direction_from_neighbor =
+            orientation(direction.opposite());
+        const auto host_face_mesh =
+            host_mesh.on_interface(direction.dimension());
+        const auto neighbor_face_mesh =
+            cylinder_mesh(neighbor_block)
+                .on_interface(direction_from_neighbor.dimension());
+        REQUIRE(orient_mesh_on_slice(host_face_mesh, direction.dimension(),
+                                     orientation) == neighbor_face_mesh);
+
+        const auto host_element_logical_coords =
+            interface_logical_coordinates(host_face_mesh, direction);
+        const auto neighbor_element_logical_coords =
+            interface_logical_coordinates(neighbor_face_mesh,
+                                          direction_from_neighbor);
+        tnsr::I<DataVector, 3, Frame::BlockLogical> host_logical_coords{};
+        tnsr::I<DataVector, 3, Frame::BlockLogical> neighbor_logical_coords{};
+        for (size_t d = 0; d < 3; ++d) {
+          host_logical_coords.get(d) = host_element_logical_coords.get(d);
+          neighbor_logical_coords.get(d) =
+              neighbor_element_logical_coords.get(d);
+        }
+        const auto check_mapped_points =
+            [&host_face_mesh, &direction, &orientation](
+                const auto& host_points, const auto& neighbor_points) {
+              // Comparing all Cartesian coordinates is stronger than comparing
+              // atan2 angles and avoids ambiguity at the angular branch cut.
+              for (size_t d = 0; d < 3; ++d) {
+                CHECK_ITERABLE_APPROX(orient_variables_on_slice(
+                                          host_points.get(d), host_face_mesh,
+                                          direction.dimension(), orientation),
+                                      neighbor_points.get(d));
+              }
+            };
+        REQUIRE(host_block.is_time_dependent() ==
+                neighbor_block.is_time_dependent());
+        if (host_block.is_time_dependent()) {
+          check_mapped_points(
+              host_block.moving_mesh_logical_to_grid_map()(host_logical_coords),
+              neighbor_block.moving_mesh_logical_to_grid_map()(
+                  neighbor_logical_coords));
+        } else {
+          check_mapped_points(
+              host_block.stationary_map()(host_logical_coords),
+              neighbor_block.stationary_map()(neighbor_logical_coords));
+        }
+      }
+    }
+  }
+  CHECK(number_of_interfaces_checked == 12);
+}
+
 void test_construction(
     const CylBCO& creator, const bool with_boundary_conditions,
     const bool include_inner_sphere_A, const bool include_inner_sphere_B,
@@ -319,6 +410,7 @@ void test_construction(
     CHECK(excision_sphere_b.center().get(i) == center_objectB.at(i));
   }
   const auto& blocks = domain.blocks();
+  test_cylinder_neighbor_point_order(blocks);
   const auto& block = blocks[0];
   CHECK(block.is_time_dependent() == excision_sphere_a.is_time_dependent());
   CHECK(block.is_time_dependent() == excision_sphere_b.is_time_dependent());
@@ -343,10 +435,16 @@ void test_construction(
         CHECK(block_neighbors.are_conforming());
 
         const auto& refinement = initial_refinement[host_id];
-        const ElementId<3> element_id{
-            host_id,
-            std::array{SegmentId{refinement[0], 0}, SegmentId{refinement[1], 0},
-                       SegmentId{refinement[2], 0}}};
+        std::array segment_ids{SegmentId{refinement[0], 0},
+                               SegmentId{refinement[1], 0},
+                               SegmentId{refinement[2], 0}};
+        const size_t normal_dim = direction.dimension();
+        const size_t normal_refinement = refinement.at(normal_dim);
+        segment_ids.at(normal_dim) =
+            SegmentId{normal_refinement, direction.side() == Side::Upper
+                                             ? two_to_the(normal_refinement) - 1
+                                             : 0};
+        const ElementId<3> element_id{host_id, segment_ids};
         const auto element = domain::create_initial_element(element_id, blocks,
                                                             initial_refinement);
         const auto& element_neighbors = element.neighbors().at(direction);

@@ -709,6 +709,22 @@ void test_periodic_orient_variables_on_slice() {
                             orientation_map);
   CHECK(result == expected);
 
+  // This is the MAFilledCylinder-to-MBFilledCylinder cutting-plane
+  // orientation. Since the axial dimension is sliced away, the face retains
+  // its ZernikeB2 basis. Its Equiangular dimension is nevertheless periodic
+  // and must use the same k -> (-k) mod N reflection.
+  const Mesh<2> disk_mesh{
+      {{3, 5}},
+      {{Spectral::Basis::ZernikeB2, Spectral::Basis::ZernikeB2}},
+      {{Spectral::Quadrature::GaussRadauUpper,
+        Spectral::Quadrature::Equiangular}}};
+  const OrientationMap<3> disk_orientation{{Direction<3>::upper_xi(),
+                                            Direction<3>::lower_eta(),
+                                            Direction<3>::lower_zeta()}};
+  CHECK(orient_variables_on_slice(data, disk_mesh, 2, disk_orientation) ==
+        DataVector{{0.0, 1.0, 2.0, 12.0, 13.0, 14.0, 9.0, 10.0, 11.0, 6.0, 7.0,
+                    8.0, 3.0, 4.0, 5.0}});
+
   // An interval reflection retains the usual endpoint-to-endpoint reversal.
   const Mesh<1> interval_mesh{5, Spectral::Basis::Legendre,
                               Spectral::Quadrature::GaussLobatto};
