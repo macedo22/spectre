@@ -366,6 +366,14 @@ void test_construction(
                                 "EBCylinder");
   check_nonconforming_interface("EBCylinder", Direction<3>::lower_zeta(),
                                 "MBFilledCylinder");
+  check_nonconforming_interface("MAFilledCylinder", Direction<3>::upper_zeta(),
+                                "MBFilledCylinder");
+  check_nonconforming_interface("MBFilledCylinder", Direction<3>::upper_zeta(),
+                                "MAFilledCylinder");
+  check_nonconforming_interface("CACylinder", Direction<3>::lower_zeta(),
+                                "CBCylinder");
+  check_nonconforming_interface("CBCylinder", Direction<3>::lower_zeta(),
+                                "CACylinder");
 
   if (block.is_time_dependent()) {
     // Taken from option string above

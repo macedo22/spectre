@@ -874,7 +874,8 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       inner_neighbors, ma_endcap_block, mb_endcap_block,
       Direction<3>::upper_zeta(),
       OrientationMap<3>{{{Direction<3>::upper_xi(), Direction<3>::lower_eta(),
-                          Direction<3>::lower_zeta()}}});
+                          Direction<3>::lower_zeta()}}},
+      /*are_conforming=*/false);
 
   // CA Filled Cylinder
   add_cyl_cyl_block_neighbor(
@@ -893,7 +894,8 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   add_cyl_cyl_block_neighbor(
       inner_neighbors, ca_side_block, cb_side_block, Direction<3>::lower_zeta(),
       OrientationMap<3>{{{Direction<3>::upper_xi(), Direction<3>::lower_eta(),
-                          Direction<3>::lower_zeta()}}});
+                          Direction<3>::lower_zeta()}}},
+      /*are_conforming=*/false);
   add_cyl_cyl_block_neighbor(inner_neighbors, ca_side_block, ea_side_block,
                              Direction<3>::lower_xi(), aligned);
 
@@ -930,7 +932,8 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       inner_neighbors, mb_endcap_block, ma_endcap_block,
       Direction<3>::upper_zeta(),
       OrientationMap<3>{{{Direction<3>::upper_xi(), Direction<3>::lower_eta(),
-                          Direction<3>::lower_zeta()}}});
+                          Direction<3>::lower_zeta()}}},
+      /*are_conforming=*/false);
 
   // CB Filled Cylinder
   add_cyl_cyl_block_neighbor(
@@ -949,7 +952,8 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   add_cyl_cyl_block_neighbor(
       inner_neighbors, cb_side_block, ca_side_block, Direction<3>::lower_zeta(),
       OrientationMap<3>{{{Direction<3>::upper_xi(), Direction<3>::lower_eta(),
-                          Direction<3>::lower_zeta()}}});
+                          Direction<3>::lower_zeta()}}},
+      /*are_conforming=*/false);
   add_cyl_cyl_block_neighbor(inner_neighbors, cb_side_block, eb_side_block,
                              Direction<3>::lower_xi(), aligned);
 
