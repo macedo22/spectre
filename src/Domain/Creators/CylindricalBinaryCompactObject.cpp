@@ -271,10 +271,10 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
 
   // combine filled and hollow cylinder blocks and groups into one set
   std::unordered_set<std::string> all_cylinder_names;
-  std::set_union(
-      std::begin(filled_cylinder_names), std::end(filled_cylinder_names),
-      std::begin(hollow_cylinder_names), std::end(hollow_cylinder_names),
-      std::inserter(all_cylinder_names, std::begin(all_cylinder_names)));
+  all_cylinder_names.insert(std::begin(filled_cylinder_names),
+                            std::end(filled_cylinder_names));
+  all_cylinder_names.insert(std::begin(hollow_cylinder_names),
+                            std::end(hollow_cylinder_names));
 
   // Build the set of spherical-harmonic shell block groups and block names so
   // the validation below can distinguish spherical-harmonic blocks from other
@@ -781,7 +781,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   std::unordered_map<std::string, ExcisionSphere<3>> excision_spheres{};
 
   std::unordered_map<size_t, Direction<3>> abutting_directions_A;
-  const size_t inner_shell_A_block = 10;  // 46;
+  const size_t inner_shell_A_block = 10;
   size_t inner_shell_B_block = inner_shell_A_block;
   if (include_inner_sphere_A_) {
     // LCOV_EXCL_START
@@ -1024,7 +1024,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
 
   // (a) Inner blocks before SH shells.
   for (size_t j = 0; j < inner_shell_A_block; ++j) {
-    const std::string block_name = gsl::at(block_names_, j);
+    const std::string& block_name = gsl::at(block_names_, j);
     ASSERT(block_name.find("Cylinder") != std::string::npos,
            "Expected block to be a cylindrical block with the substring "
            "'Cylinder'.");
@@ -1246,37 +1246,9 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
         time_dependent_options_
             ->distorted_to_inertial_map<domain::ObjectLabel::B>(true, true);
 
-    for (size_t block = 1; block < number_of_blocks_; ++block) {
-      if (block == inner_shell_A_block or block == inner_shell_B_block or
-          block == outer_shell_block) {
-        continue;  // Already initialized
-      } else if (block > inner_shell_A_block and block < inner_shell_B_block) {
-        grid_to_inertial_block_maps[block] =
-            grid_to_inertial_block_maps[inner_shell_A_block]->get_clone();
-        if (grid_to_distorted_block_maps[inner_shell_A_block] != nullptr) {
-          grid_to_distorted_block_maps[block] =
-              grid_to_distorted_block_maps[inner_shell_A_block]->get_clone();
-          distorted_to_inertial_block_maps[block] =
-              distorted_to_inertial_block_maps[inner_shell_A_block]
-                  ->get_clone();
-        }
-      } else if (block > inner_shell_B_block and block < outer_shell_block) {
-        grid_to_inertial_block_maps[block] =
-            grid_to_inertial_block_maps[inner_shell_B_block]->get_clone();
-        if (grid_to_distorted_block_maps[inner_shell_B_block] != nullptr) {
-          grid_to_distorted_block_maps[block] =
-              grid_to_distorted_block_maps[inner_shell_B_block]->get_clone();
-          distorted_to_inertial_block_maps[block] =
-              distorted_to_inertial_block_maps[inner_shell_B_block]
-                  ->get_clone();
-        }
-      } else if (block > outer_shell_block) {
-        grid_to_inertial_block_maps[block] =
-            grid_to_inertial_block_maps[outer_shell_block]->get_clone();
-      } else {
-        grid_to_inertial_block_maps[block] =
-            grid_to_inertial_block_maps[0]->get_clone();
-      }
+    for (size_t block = 1; block < inner_shell_A_block; ++block) {
+      grid_to_inertial_block_maps[block] =
+          grid_to_inertial_block_maps[0]->get_clone();
     }
 
     for (size_t block = 0; block < number_of_blocks_; ++block) {

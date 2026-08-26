@@ -230,7 +230,7 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
         "in cylinder blocks will roughly correspond to refinement in a "
         "direction parallel to the axis of separation between the two objects. "
         "Because filled cylinder blocks lie along the axis of separation but "
-        "hollow cylinder blocks wrap around it, refinement in leads to "
+        "hollow cylinder blocks wrap around it, refinement in z leads to "
         "refinement in different spherical coordinate directions in the "
         "global spherical coordinates. More specifically, z refinement in "
         "filled cylinders (e.g. EAFilledCylinder) will roughly correspond to "

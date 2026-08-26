@@ -193,14 +193,17 @@ std::string create_option_string(
           const bool is_h_refinement, const bool include_extra,
           const size_t value) {
         const std::string same =
-            is_h_refinement ? "" + get_output(value) + "" :
-            "[" + get_output(value) + "," + get_output(value) + "]";
+            is_h_refinement
+                ? get_output(value)
+                : "[" + get_output(value) + "," + get_output(value) + "]";
         const std::string sphere_one_more =
-            is_h_refinement ? "" + get_output(value + 1) + "" :
-            "[" + get_output(value + 1) + "," + get_output(value) + "]";
+            is_h_refinement
+                ? get_output(value + 1)
+                : "[" + get_output(value + 1) + "," + get_output(value) + "]";
         const std::string cyl_one_more =
-            is_h_refinement ? "" + get_output(value + 1) + "" :
-            "[" + get_output(value) + "," + get_output(value + 1) + "]";
+            is_h_refinement
+                ? get_output(value + 1)
+                : "[" + get_output(value) + "," + get_output(value + 1) + "]";
         std::string result{};
         if (include_extra) {
           result += "\n    Outer: " + cyl_one_more;
