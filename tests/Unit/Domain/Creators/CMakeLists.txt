@@ -42,6 +42,7 @@ target_link_libraries(
   DomainBoundaryConditionsHelpers
   DomainCreators
   DomainHelpers
+  DiscontinuousGalerkin
   GeneralizedHarmonic
   GeneralRelativity
   H5

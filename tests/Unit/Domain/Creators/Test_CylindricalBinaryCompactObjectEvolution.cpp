@@ -22,10 +22,12 @@
 #include <variant>
 #include <vector>
 
+#include "DataStructures/DataBox/Tag.hpp"
 #include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/EagerMath/Magnitude.hpp"
 #include "DataStructures/Tensor/IndexType.hpp"
 #include "DataStructures/Tensor/TypeAliases.hpp"
+#include "DataStructures/Variables.hpp"
 #include "Domain/Block.hpp"
 #include "Domain/BoundaryConditions/BoundaryCondition.hpp"
 #include "Domain/CoordinateMaps/CoordinateMap.hpp"
@@ -41,16 +43,19 @@
 #include "Domain/Creators/TimeDependentOptions/TranslationMap.hpp"
 #include "Domain/Domain.hpp"
 #include "Domain/ElementMap.hpp"
+#include "Domain/ElementToBlockLogicalMap.hpp"
 #include "Domain/ExcisionSphere.hpp"
 #include "Domain/FunctionsOfTime/FixedSpeedCubic.hpp"
 #include "Domain/FunctionsOfTime/PiecewisePolynomial.hpp"
 #include "Domain/FunctionsOfTime/QuaternionFunctionOfTime.hpp"
+#include "Domain/InterfaceLogicalCoordinates.hpp"
 #include "Domain/Structure/CreateInitialMesh.hpp"
 #include "Domain/Structure/DirectionalIdMap.hpp"
 #include "Domain/Structure/Element.hpp"
 #include "Domain/Structure/ElementId.hpp"
 #include "Domain/Structure/InitialElementIds.hpp"
 #include "Domain/Structure/ObjectLabel.hpp"
+#include "Domain/Structure/OrientationMapHelpers.hpp"
 #include "Domain/Structure/ZCurve.hpp"
 #include "Evolution/Systems/GeneralizedHarmonic/BoundaryConditions/Bjorhus.hpp"
 #include "Evolution/Systems/GeneralizedHarmonic/BoundaryConditions/DemandOutgoingCharSpeeds.hpp"
@@ -59,10 +64,12 @@
 #include "Helpers/Domain/Creators/TestHelpers.hpp"
 #include "Helpers/Domain/DomainTestHelpers.hpp"
 #include "Informer/InfoFromBuild.hpp"
+#include "NumericalAlgorithms/DiscontinuousGalerkin/MortarHelpers.hpp"
 #include "NumericalAlgorithms/Spectral/Basis.hpp"
 #include "NumericalAlgorithms/Spectral/LogicalCoordinates.hpp"
 #include "NumericalAlgorithms/Spectral/Mesh.hpp"
 #include "NumericalAlgorithms/Spectral/Quadrature.hpp"
+#include "NumericalAlgorithms/Spectral/SegmentSize.hpp"
 #include "NumericalAlgorithms/SphericalHarmonics/Spherepack.hpp"
 #include "Utilities/Algorithm.hpp"
 #include "Utilities/CartesianProduct.hpp"
@@ -81,6 +88,75 @@ using TimeDepOptions = domain::creators::bco::TimeDependentMapOptions<true>;
 using RefinementMap = std::unordered_map<std::string, size_t>;
 using GridPointsMap = std::unordered_map<
     std::string, std::variant<std::array<size_t, Dim>, std::array<size_t, 2>>>;
+
+struct InterfaceTestField : db::SimpleTag {
+  using type = Scalar<DataVector>;
+};
+
+tnsr::I<DataVector, Dim, Frame::ElementLogical>
+element_logical_coordinates_on_mortar(
+    const Mesh<Dim - 1>& mortar_mesh, const Direction<Dim>& direction,
+    const std::array<Spectral::SegmentSize, Dim - 1>& mortar_size) {
+  auto result = interface_logical_coordinates(mortar_mesh, direction);
+  size_t mortar_dimension = 0;
+  for (size_t d = 0; d < Dim; ++d) {
+    if (d == direction.dimension()) {
+      continue;
+    }
+    const auto segment_size = mortar_size[mortar_dimension];
+    if (segment_size == Spectral::SegmentSize::LowerHalf) {
+      result.get(d) = 0.5 * (result.get(d) - 1.0);
+    } else if (segment_size == Spectral::SegmentSize::UpperHalf) {
+      result.get(d) = 0.5 * (result.get(d) + 1.0);
+    } else {
+      ASSERT(segment_size == Spectral::SegmentSize::Full,
+             "Unexpected mortar segment size " << segment_size);
+    }
+    ++mortar_dimension;
+  }
+  return result;
+}
+
+template <typename TargetFrame>
+tnsr::I<DataVector, Dim, TargetFrame> orient_tensor_data_on_slice(
+    const tnsr::I<DataVector, Dim, TargetFrame>& tensor,
+    const Index<Dim - 1>& slice_extents, const size_t sliced_dimension,
+    const OrientationMap<Dim>& orientation) {
+  tnsr::I<DataVector, Dim, TargetFrame> result{slice_extents.product()};
+  for (size_t d = 0; d < Dim; ++d) {
+    result.get(d) = orient_variables_on_slice(tensor.get(d), slice_extents,
+                                              sliced_dimension, orientation);
+  }
+  return result;
+}
+
+Variables<tmpl::list<InterfaceTestField>> interface_test_field(
+    const ElementId<Dim>& element_id, const std::string& block_name,
+    const Mesh<Dim - 1>& face_mesh, const Direction<Dim>& direction) {
+  const auto element_logical_coords =
+      interface_logical_coordinates(face_mesh, direction);
+  const auto element_to_block_map =
+      domain::element_to_block_logical_map(element_id);
+  const auto block_logical_coords =
+      (*element_to_block_map)(element_logical_coords);
+
+  DataVector lambda{};
+  if (block_name == "EACylinder" or block_name == "EBCylinder") {
+    lambda = 0.5 * (1.0 + block_logical_coords.get(0));
+  } else if (block_name == "MAFilledCylinder") {
+    lambda = 0.5 * (1.0 - block_logical_coords.get(2));
+  } else {
+    ASSERT(block_name == "MBFilledCylinder", "Unexpected block " << block_name);
+    lambda = 0.5 * (1.0 + block_logical_coords.get(2));
+  }
+
+  const DataVector& eta = block_logical_coords.get(1);
+  Variables<tmpl::list<InterfaceTestField>> result{
+      face_mesh.number_of_grid_points()};
+  get(get<InterfaceTestField>(result)) =
+      (1.0 + lambda) * (2.0 + sin(eta) + 0.25 * cos(2.0 * eta));
+  return result;
+}
 
 // using params from run at:
 //     /home/almacedo/runs/bbh/test/cbco_use_cylinders_fix_angular_orientation/b2678025e34bc6bdf2454ff623a6a921bd0a91b3/evolve/gh/01/Segment_0000/Inspiral.yaml
@@ -273,10 +349,142 @@ void test(const std::array<double, Dim>& center_a,
   ASSERT(flattened_element_index == num_elements,
          "flattened_element_index != num_elements");
 
-  // Now, compare logical and inertial points on boundaries of interest,
-  // taking care to apply orientation maps where needed
+  const auto& block_names = creator.block_names();
+  const auto functions_of_time = creator.functions_of_time();
+  const auto find_element_index = [&elements](const ElementId<Dim>& id) {
+    const auto element_it = alg::find_if(
+        elements,
+        [&id](const Element<Dim>& element) { return element.id() == id; });
+    ASSERT(element_it != elements.end(), "Could not find element " << id);
+    return static_cast<size_t>(std::distance(elements.begin(), element_it));
+  };
 
-  CHECK(true);
+  // For a conforming interface, discrete reorientation and half-mortar
+  // scaling must associate every mortar index with the same physical point.
+  // Using orient_variables_on_slice here checks the same point permutation
+  // that is used for communicating DG boundary data.
+  for (size_t host_index = 0; host_index < elements.size(); ++host_index) {
+    const auto& host_element = elements[host_index];
+    const auto& host_id = host_element.id();
+    const auto& host_name = block_names[host_id.block_id()];
+    if (host_name.find("Cylinder") == std::string::npos) {
+      continue;
+    }
+
+    for (const auto& [host_direction, host_neighbors] :
+         host_element.neighbors()) {
+      if (not host_neighbors.are_conforming()) {
+        continue;
+      }
+      for (const auto& neighbor_id : host_neighbors) {
+        const auto& neighbor_name = block_names[neighbor_id.block_id()];
+        if (neighbor_name.find("Cylinder") == std::string::npos) {
+          continue;
+        }
+        CAPTURE(host_name, host_id, host_direction, neighbor_name, neighbor_id);
+
+        const auto& host_to_neighbor_orientation =
+            host_neighbors.orientation(neighbor_id);
+        const Direction<Dim> neighbor_direction =
+            host_to_neighbor_orientation(host_direction.opposite());
+        const size_t neighbor_index = find_element_index(neighbor_id);
+        const auto& neighbor_element = elements[neighbor_index];
+        const auto& neighbor_neighbors =
+            neighbor_element.neighbors().at(neighbor_direction);
+        REQUIRE(neighbor_neighbors.ids().contains(host_id));
+        REQUIRE(neighbor_neighbors.are_conforming());
+        const auto& neighbor_to_host_orientation =
+            neighbor_neighbors.orientation(host_id);
+        REQUIRE(neighbor_to_host_orientation ==
+                host_to_neighbor_orientation.inverse_map());
+
+        const DirectionalId<Dim> host_mortar_id{host_direction, neighbor_id};
+        const Mesh<Dim - 1> host_face_mesh =
+            meshes[host_index].on_interface(host_direction.dimension());
+        const Mesh<Dim - 1> host_mortar_mesh = ::dg::mortar_mesh(
+            host_face_mesh, neighbor_meshes[host_index]
+                                .at(host_mortar_id)
+                                .on_interface(host_direction.dimension()));
+        const auto host_mortar_size =
+            ::dg::mortar_size(host_id, neighbor_id, host_direction.dimension(),
+                              host_to_neighbor_orientation);
+        const auto host_logical_coords = element_logical_coordinates_on_mortar(
+            host_mortar_mesh, host_direction, host_mortar_size);
+        const auto host_grid_coords =
+            element_maps[host_index](host_logical_coords);
+
+        const DirectionalId<Dim> neighbor_mortar_id{neighbor_direction,
+                                                    host_id};
+        const Mesh<Dim - 1> neighbor_face_mesh =
+            meshes[neighbor_index].on_interface(neighbor_direction.dimension());
+        const Mesh<Dim - 1> neighbor_mortar_mesh = ::dg::mortar_mesh(
+            neighbor_face_mesh,
+            neighbor_meshes[neighbor_index]
+                .at(neighbor_mortar_id)
+                .on_interface(neighbor_direction.dimension()));
+        const auto neighbor_mortar_size = ::dg::mortar_size(
+            neighbor_id, host_id, neighbor_direction.dimension(),
+            neighbor_to_host_orientation);
+        const auto neighbor_logical_coords =
+            element_logical_coordinates_on_mortar(
+                neighbor_mortar_mesh, neighbor_direction, neighbor_mortar_size);
+        const auto neighbor_grid_coords =
+            element_maps[neighbor_index](neighbor_logical_coords);
+
+        REQUIRE(host_mortar_mesh ==
+                orient_mesh_on_slice(neighbor_mortar_mesh,
+                                     neighbor_direction.dimension(),
+                                     neighbor_to_host_orientation));
+        const auto neighbor_grid_coords_in_host_order =
+            orient_tensor_data_on_slice(
+                neighbor_grid_coords, neighbor_mortar_mesh.extents(),
+                neighbor_direction.dimension(), neighbor_to_host_orientation);
+        CHECK_ITERABLE_APPROX(host_grid_coords,
+                              neighbor_grid_coords_in_host_order);
+
+        for (const double time : {0.0, 1.0}) {
+          CAPTURE(time);
+          const auto host_inertial_coords =
+              (*grid_to_inertial_maps[host_index])(host_grid_coords, time,
+                                                   functions_of_time);
+          const auto neighbor_inertial_coords =
+              (*grid_to_inertial_maps[neighbor_index])(neighbor_grid_coords,
+                                                       time, functions_of_time);
+          const auto neighbor_inertial_coords_in_host_order =
+              orient_tensor_data_on_slice(
+                  neighbor_inertial_coords, neighbor_mortar_mesh.extents(),
+                  neighbor_direction.dimension(), neighbor_to_host_orientation);
+          CHECK_ITERABLE_APPROX(host_inertial_coords,
+                                neighbor_inertial_coords_in_host_order);
+        }
+
+        const bool is_m_e_interface = ((host_name == "EACylinder" and
+                                        neighbor_name == "MAFilledCylinder") or
+                                       (host_name == "MAFilledCylinder" and
+                                        neighbor_name == "EACylinder") or
+                                       (host_name == "EBCylinder" and
+                                        neighbor_name == "MBFilledCylinder") or
+                                       (host_name == "MBFilledCylinder" and
+                                        neighbor_name == "EBCylinder"));
+        if (is_m_e_interface) {
+          const auto host_data_on_mortar = ::dg::project_to_mortar(
+              interface_test_field(host_id, host_name, host_face_mesh,
+                                   host_direction),
+              host_face_mesh, host_mortar_mesh, host_mortar_size);
+          const auto neighbor_data_on_mortar = ::dg::project_to_mortar(
+              interface_test_field(neighbor_id, neighbor_name,
+                                   neighbor_face_mesh, neighbor_direction),
+              neighbor_face_mesh, neighbor_mortar_mesh, neighbor_mortar_size);
+          const auto neighbor_data_in_host_order = orient_variables_on_slice(
+              neighbor_data_on_mortar, neighbor_mortar_mesh.extents(),
+              neighbor_direction.dimension(), neighbor_to_host_orientation);
+          CHECK_ITERABLE_APPROX(
+              get(get<InterfaceTestField>(host_data_on_mortar)),
+              get(get<InterfaceTestField>(neighbor_data_in_host_order)));
+        }
+      }
+    }
+  }
 }
 }  // namespace
 
@@ -345,4 +553,39 @@ SPECTRE_TEST_CASE(
   test(center_a, center_b, radius_a, radius_b, include_sphere_a,
        include_sphere_b, outer_radius, initial_refinement, initial_grid_points,
        time_dep_options);
+
+  // Repeat with z refinement and unequal face extents, so the test exercises
+  // multiple neighbors, half mortars, and p projection as in the evolution.
+  const size_t production_cylinder_refinement = 1;
+  const RefinementMap production_initial_refinement{
+      {"CAFilledCylinder", production_cylinder_refinement},
+      {"CBFilledCylinder", production_cylinder_refinement},
+      {"EAFilledCylinder", production_cylinder_refinement},
+      {"EBFilledCylinder", production_cylinder_refinement},
+      {"MAFilledCylinder", production_cylinder_refinement},
+      {"MBFilledCylinder", production_cylinder_refinement},
+      {"CACylinder", production_cylinder_refinement},
+      {"CBCylinder", production_cylinder_refinement},
+      {"EACylinder", production_cylinder_refinement},
+      {"EBCylinder", production_cylinder_refinement},
+      {"InnerSphereA", sphere_refinement},
+      {"InnerSphereB", sphere_refinement},
+      {"OuterSphere", sphere_refinement}};
+  const GridPointsMap production_initial_grid_points{
+      {"CAFilledCylinder", std::array<size_t, 2>{8, 9}},
+      {"CBFilledCylinder", std::array<size_t, 2>{8, 9}},
+      {"EAFilledCylinder", std::array<size_t, 2>{8, 9}},
+      {"EBFilledCylinder", std::array<size_t, 2>{8, 9}},
+      {"MAFilledCylinder", std::array<size_t, 2>{17, 10}},
+      {"MBFilledCylinder", std::array<size_t, 2>{17, 10}},
+      {"CACylinder", std::array<size_t, 3>{17, 15, 7}},
+      {"CBCylinder", std::array<size_t, 3>{17, 15, 7}},
+      {"EACylinder", std::array<size_t, 3>{18, 19, 6}},
+      {"EBCylinder", std::array<size_t, 3>{18, 19, 6}},
+      {"InnerSphereA", inner_sphere_extents},
+      {"InnerSphereB", inner_sphere_extents},
+      {"OuterSphere", outer_sphere_extents}};
+  test(center_a, center_b, radius_a, radius_b, include_sphere_a,
+       include_sphere_b, outer_radius, production_initial_refinement,
+       production_initial_grid_points, time_dep_options);
 }
