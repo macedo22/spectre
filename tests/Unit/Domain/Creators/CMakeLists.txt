@@ -14,6 +14,7 @@ set(LIBRARY_SOURCES
   Test_CartoonSphere2D.cpp
   Test_Cylinder.cpp
   Test_CylindricalBinaryCompactObject.cpp
+  Test_CylindricalBinaryCompactObjectEvolution.cpp
   Test_Disk.cpp
   Test_ExpandOverBlocks.cpp
   Test_FrustalCloak.cpp
@@ -41,6 +42,7 @@ target_link_libraries(
   DomainBoundaryConditionsHelpers
   DomainCreators
   DomainHelpers
+  GeneralizedHarmonic
   GeneralRelativity
   H5
   Informer
