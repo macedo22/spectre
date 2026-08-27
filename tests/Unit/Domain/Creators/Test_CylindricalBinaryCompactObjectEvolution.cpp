@@ -239,6 +239,33 @@ void test(const std::array<double, Dim>& center_a,
                 ::domain::CoordinateMaps::Identity<Dim>{});
       }
 
+      for (const auto& [direction, neighbors] :
+           elements[flattened_element_index].neighbors()) {
+        for (const auto& neighbor : neighbors) {
+          const auto& neighbor_block = domain.blocks()[neighbor.block_id()];
+          if (neighbors.are_conforming()) {
+            const auto& neighbor_orientation = neighbors.orientation(neighbor);
+            neighbor_meshes[flattened_element_index].emplace(
+                DirectionalId{direction, neighbor},
+                neighbor_orientation.inverse_map()(
+                    ::domain::create_initial_mesh(initial_extents,
+                                                  neighbor_block, neighbor,
+                                                  i1_basis, i1_quadrature)));
+          } else if (elements[flattened_element_index].face_types().at(
+                         direction) ==
+                     ::domain::FaceType::SingleNonconforming) {
+            // We do not insert neighbor meshes into neighbor_mesh for a
+            // direction with domain::FaceType::MultipleNonconforming as this
+            // could overflow the FixedHashMap size
+            neighbor_meshes[flattened_element_index].emplace(
+                DirectionalId{direction, neighbor},
+                ::domain::create_initial_mesh(initial_extents, neighbor_block,
+                                              neighbor, i1_basis,
+                                              i1_quadrature));
+          }
+        }
+      }
+
       flattened_element_index++;
     }
   }
@@ -278,7 +305,7 @@ SPECTRE_TEST_CASE(
 
   const std::array<size_t, 2> filled_cylinder_extents{5, 5};
   const std::array<size_t, 3> hollow_cylinder_extents{
-      filled_cylinder_extents[2], 4 * filled_cylinder_extents[0] - 3,
+      filled_cylinder_extents[1], 4 * filled_cylinder_extents[0] - 3,
       filled_cylinder_extents[0]};
   const std::array<size_t, 2> inner_sphere_extents{12, 20};
   const std::array<size_t, 2> outer_sphere_extents{20, 13};
