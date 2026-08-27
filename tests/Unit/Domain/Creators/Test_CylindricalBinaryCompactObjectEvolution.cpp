@@ -272,49 +272,47 @@ SPECTRE_TEST_CASE(
   const bool include_sphere_a = true;
   const bool include_sphere_b = true;
   const double outer_radius = 600.0;
-  //   const RefinementMap initial_refinement{
-  //       {"CAFilledCylinder", 1}, {"CBFilledCylinder", 1},
-  //       {"EAFilledCylinder", 1},
-  //       {"EBFilledCylinder", 1}, {"MAFilledCylinder", 1},
-  //       {"MBFilledCylinder", 1},
-  //       {"CACylinder", 1},       {"CBCylinder", 1},       {"EACylinder", 1},
-  //       {"EBCylinder", 1},       {"InnerSphereA", 2},     {"InnerSphereB",
-  //       2},
-  //       {"OuterSphere", 2}};
-  //   const GridPointsMap initial_grid_points{
-  //       {"CAFilledCylinder", std::array<size_t, 2>{8, 9}},
-  //       {"CBFilledCylinder", std::array<size_t, 2>{8, 9}},
-  //       {"EAFilledCylinder", std::array<size_t, 2>{8, 9}},
-  //       {"EBFilledCylinder", std::array<size_t, 2>{8, 9}},
-  //       {"MAFilledCylinder", std::array<size_t, 2>{17, 10}},
-  //       {"MBFilledCylinder", std::array<size_t, 2>{17, 10}},
-  //       {"CACylinder", std::array<size_t, Dim>{17, 15, 7}},
-  //       {"CBCylinder", std::array<size_t, Dim>{17, 15, 7}},
-  //       {"EACylinder", std::array<size_t, Dim>{18, 19, 6}},
-  //       {"EBCylinder", std::array<size_t, Dim>{18, 19, 6}},
-  //       {"InnerSphereA", std::array<size_t, 2>{12, 20}},
-  //       {"InnerSphereB", std::array<size_t, 2>{12, 20}},
-  //       {"OuterSphere", std::array<size_t, 2>{20, 13}}};
+
+  const size_t cylinder_refinement = 0;
+  const size_t sphere_refinement = 0;
+
+  const std::array<size_t, 2> filled_cylinder_extents{5, 5};
+  const std::array<size_t, 3> hollow_cylinder_extents{
+      filled_cylinder_extents[2], 4 * filled_cylinder_extents[0] - 3,
+      filled_cylinder_extents[0]};
+  const std::array<size_t, 2> inner_sphere_extents{12, 20};
+  const std::array<size_t, 2> outer_sphere_extents{20, 13};
+
   const RefinementMap initial_refinement{
-      {"CAFilledCylinder", 0}, {"CBFilledCylinder", 0}, {"EAFilledCylinder", 0},
-      {"EBFilledCylinder", 0}, {"MAFilledCylinder", 0}, {"MBFilledCylinder", 0},
-      {"CACylinder", 0},       {"CBCylinder", 0},       {"EACylinder", 0},
-      {"EBCylinder", 0},       {"InnerSphereA", 0},     {"InnerSphereB", 0},
-      {"OuterSphere", 0}};
+      {"CAFilledCylinder", cylinder_refinement},
+      {"CBFilledCylinder", cylinder_refinement},
+      {"EAFilledCylinder", cylinder_refinement},
+      {"EBFilledCylinder", cylinder_refinement},
+      {"MAFilledCylinder", cylinder_refinement},
+      {"MBFilledCylinder", cylinder_refinement},
+      {"CACylinder", cylinder_refinement},
+      {"CBCylinder", cylinder_refinement},
+      {"EACylinder", cylinder_refinement},
+      {"EBCylinder", cylinder_refinement},
+      {"InnerSphereA", sphere_refinement},
+      {"InnerSphereB", sphere_refinement},
+      {"OuterSphere", sphere_refinement}};
+
   const GridPointsMap initial_grid_points{
-      {"CAFilledCylinder", std::array<size_t, 2>{17, 17}},
-      {"CBFilledCylinder", std::array<size_t, 2>{17, 17}},
-      {"EAFilledCylinder", std::array<size_t, 2>{17, 17}},
-      {"EBFilledCylinder", std::array<size_t, 2>{17, 17}},
-      {"MAFilledCylinder", std::array<size_t, 2>{17, 17}},
-      {"MBFilledCylinder", std::array<size_t, 2>{17, 17}},
-      {"CACylinder", std::array<size_t, Dim>{17, 65, 17}},
-      {"CBCylinder", std::array<size_t, Dim>{17, 65, 17}},
-      {"EACylinder", std::array<size_t, Dim>{17, 65, 17}},
-      {"EBCylinder", std::array<size_t, Dim>{17, 65, 17}},
-      {"InnerSphereA", std::array<size_t, 2>{12, 20}},
-      {"InnerSphereB", std::array<size_t, 2>{12, 20}},
-      {"OuterSphere", std::array<size_t, 2>{20, 13}}};
+      {"CAFilledCylinder", filled_cylinder_extents},
+      {"CBFilledCylinder", filled_cylinder_extents},
+      {"EAFilledCylinder", filled_cylinder_extents},
+      {"EBFilledCylinder", filled_cylinder_extents},
+      {"MAFilledCylinder", filled_cylinder_extents},
+      {"MBFilledCylinder", filled_cylinder_extents},
+      {"CACylinder", hollow_cylinder_extents},
+      {"CBCylinder", hollow_cylinder_extents},
+      {"EACylinder", hollow_cylinder_extents},
+      {"EBCylinder", hollow_cylinder_extents},
+      {"InnerSphereA", inner_sphere_extents},
+      {"InnerSphereB", inner_sphere_extents},
+      {"OuterSphere", outer_sphere_extents}};
+
   const TimeDepOptions time_dep_options = construct_time_dependent_options();
 
   test(center_a, center_b, radius_a, radius_b, include_sphere_a,
