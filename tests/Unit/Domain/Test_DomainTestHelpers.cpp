@@ -3,12 +3,17 @@
 
 #include "Framework/TestingFramework.hpp"
 
-#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
 #include <limits>
+#include <memory>
 #include <random>
+#include <string>
+#include <type_traits>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/EagerMath/Magnitude.hpp"
@@ -25,7 +30,6 @@
 #include "Domain/CoordinateMaps/ProductMaps.tpp"
 #include "Domain/CoordinateMaps/Rotation.hpp"
 #include "Domain/Domain.hpp"
-#include "Domain/FunctionsOfTime/FunctionOfTime.hpp"
 #include "Domain/Structure/BlockNeighbors.hpp"
 #include "Domain/Structure/Direction.hpp"
 #include "Domain/Structure/DirectionMap.hpp"
@@ -59,12 +63,16 @@ make_affine_map_3d(const std::array<double, 3>& center,
                  center[2] + 0.5 * dimensions[2]}});
 }
 
+// Domain creator consisting of two cubed blocks that are conforming neighbors,
+// where one block has rotated local coordinates with respect to the other.
 struct ConformingCubes {
   static constexpr size_t Dim = 3;
 
   ConformingCubes() {}
   Domain<Dim> create_domain() const {
+    // pick a location not at the origin to make this test domain less trivial
     const std::array<double, Dim> center_block_1{-0.8, 1.3, 4.1};
+    // length x width x depth
     const std::array<double, Dim> dimensions_block_1{5.0, 6.0, 7.0};
 
     auto coord_map_block_1 =
@@ -133,6 +141,8 @@ struct ConformingCubes {
       {"Blocks", {{"Block1", "Block2"}}}};
 };
 
+// Helper for creating a filled or hollow cylindrical block coordinate map
+//
 // inner_radius = 0.0 for a cylinder, inner_radius > 0.0 for a hollow cylinder
 domain::CoordinateMap<
     Frame::BlockLogical, Frame::Inertial,
@@ -147,7 +157,7 @@ make_cyl_coordinate_map(const double inner_radius, const double outer_radius,
                         const double upper_z_bound) {
   const auto linear = domain::CoordinateMaps::Distribution::Linear;
 
-  // Map: (xi, eta, zeta) in [-1,1] x [0, 2pi] x [-1, 1]
+  // Map: (xi, eta, zeta) in [-1,1] x [0, 2pi) x [-1, 1]
   //   xi -> r in [inner_r, outer_r]  (Affine)
   //   eta -> phi in [0, 2pi)         (Identity<1>, passes through)
   //   zeta -> z in [z_lower, z_upper] (Interval)
@@ -160,6 +170,43 @@ make_cyl_coordinate_map(const double inner_radius, const double outer_radius,
           PolarToCartesian{}, Identity1D{}});
 }
 
+// Domain creator consisting of a filled cylinder surrounded by a hollow
+// cylinder, which are conforming neighbors, and where the hollow cylinder
+// has its angular and axial (z) coordinates in the opposite direction of those
+// of the filled cylinder.
+//
+// This test case is meant to target the reversal of an angular coordinate when
+// we have S1 topology, because a reversal of the array of coordinates with S1
+// is not symmetric like it is for the reversal of coordinates with I1. When
+// using an OrientationMap to communicate that the angular coordinate of a
+// conforming neighbor block is in the opposite direction of the angular
+// coordinate of the host block, this lack of symmetry must be handled.
+//
+// More specifically, we can imagine having the filled and hollow cylinder with
+// the same extents in each direction, but the hollow cylinder is flipped
+// upside-down so that its angular coordinates go in the opposite direction.
+// The coordinates will not geometrically overlap at this point unless we have
+// an even number of coordinates, but in practice we use odd for numerical
+// stability. To get the odd coordinates to overlap geometrically and have each
+// block's 0th coordinate (local theta = 0) be at the same physical location,
+// we could rotate the filled cylinder about its z axis by 180 degrees. Now,
+// the blocks' 0th coordinates would be at the same location, but one block's
+// 1st coordinate would overlap with the other's N - 1 coordinate. In this way,
+// the set of coordinates would geometrically align but proceed in opposite
+// local directions. While the interface here would be geometrically conforming
+// and the points are seemingly aligned, data between the two blocks would not
+// be communicated properly. This is because when orient_variables_on_slice()
+// reverses the list of angular points, the 0th point of one cylinder will be
+// mapped to the N - 1 coordinate of the other, which are not in the same
+// physical location and are instead separated by 2pi/N, where N is the number
+// of angular points. (This is notably different than the behavior with I1
+// topology, where the 0th coordinate of one cube would be in the same physical
+// location as the N - 1 coordinate.) Instead, the way to make these two
+// cylinders have opposite angular directions and also for their points to be
+// related by a simple OrientationMap reversal, they must be staggered by the
+// additional 2pi/N. This domain creator does exactly that to make it so that
+// grid points map to themselves and not their angular neighbor at the interface
+// between the two blocks.
 struct ConformingNestedReversedCylinders {
   static constexpr size_t Dim = 3;
 
@@ -170,102 +217,70 @@ struct ConformingNestedReversedCylinders {
     const double height = 8.0;
     const double half_height = 0.5 * height;
 
-    // const double unit_inner_radius = 0.0;
-    // const double unit_outer_radius = 1.0;
-    // const double unit_lower_bound_z = -1.0;
-    // const double unit_upper_bound_z = 1.0;
-
-    // const double unit_inner_radius = 0.0;
-    // const double unit_outer_radius = 1.0;
-    // const double unit_lower_bound_z = -1.0;
-    // const double unit_upper_bound_z = 1.0;
-
-    // const auto logical_to_unit_cylinder_map =
-    //   cyl_coordinate_map(unit_inner_radius, unit_outer_radius,
-    //                      unit_lower_bound_z, unit_upper_bound_z);
-
-    // auto coord_map_block_1 =
-    //     make_affine_map_3d(center_block_1, dimensions_block_1);
-
     auto inner_cyl_coord_map = make_cyl_coordinate_map(
         0.0, inner_cyl_outer_radius, -half_height, half_height);
 
-    // // block 2 has a shift in the x coord because it abuts block 1 on +x side
-    // const std::array<double, Dim> center_block_2{
-    //     center_block_1[0] + dimensions_block_1[0], center_block_1[1],
-    //     center_block_1[2]};
-    // const std::array<double, Dim> dimensions_block_2 = dimensions_block_1;
+    const OrientationMap<Dim> rotate_upside_down{
+        std::array<Direction<Dim>, Dim>{Direction<3>::lower_xi(),
+                                        Direction<3>::upper_eta(),
+                                        Direction<3>::lower_zeta()}};
 
-    // // [-1, 1]^3
-    // auto unit_cube = make_affine_map_3d(std::array<double, Dim>{0.0, 0.0, 0.0},
-    //                                     std::array<double, Dim>{2.0, 2.0, 2.0});
-    // const OrientationMap<3> rotation_block_2{std::array<Direction<Dim>, Dim>{
-    //     Direction<3>::lower_zeta(), Direction<Dim>::lower_xi(),
-    //     Direction<3>::upper_eta()}};
-    // // rotate unit cube, then translate and scale it to abut block 1
-    // auto coord_map_block_2 = domain::push_back(
-    //     domain::push_back(
-    //         unit_cube,
-    //         domain::CoordinateMaps::DiscreteRotation<Dim>(rotation_block_2)),
-    //     make_affine_map_3d(center_block_2, dimensions_block_2));
+    // check_block_face_grid_points_align() uses N=9 angular grid points for the
+    // interface mesh, and pi - 2pi/N = 7pi/9, which will rotate the hollow
+    // cylinder so that the N-1 point of the hollow cylinder overlaps with the
+    // 0th point of the filled cylinder
+    const double rotation_about_z = 7.0 * M_PI / 9.0;
+    auto outer_cyl_coord_map = domain::push_back(
+        domain::push_back(
+            make_cyl_coordinate_map(inner_cyl_outer_radius,
+                                    outer_cyl_outer_radius, -half_height,
+                                    half_height),
+            domain::CoordinateMaps::DiscreteRotation<Dim>(rotate_upside_down)),
+        domain::CoordinateMaps::Rotation<3>(rotation_about_z, 0.0, 0.0));
 
-  const OrientationMap<Dim> rotate_upside_down{std::array<Direction<Dim>, Dim>{
-      Direction<3>::lower_xi(), Direction<3>::upper_eta(),
-      Direction<3>::lower_zeta()}};
+    std::vector<std::unique_ptr<
+        domain::CoordinateMapBase<Frame::BlockLogical, Frame::Inertial, Dim>>>
+        coordinate_maps{};
+    coordinate_maps.emplace_back(
+        std::make_unique<std::decay_t<decltype(inner_cyl_coord_map)>>(
+            std::move(inner_cyl_coord_map)));
+    coordinate_maps.emplace_back(
+        std::make_unique<std::decay_t<decltype(outer_cyl_coord_map)>>(
+            std::move(outer_cyl_coord_map)));
 
-  // auto coord_map_block_2 = domain::push_back(
-  //         coord_map_block_1,
-  //         domain::CoordinateMaps::DiscreteRotation<Dim>(rotate_upside_down));
-  const double rotation_about_z = 7.0 * M_PI / 9.0;
-  auto outer_cyl_coord_map = domain::push_back(
-      domain::push_back(
-          make_cyl_coordinate_map(inner_cyl_outer_radius,
-                                  outer_cyl_outer_radius, -half_height,
-                                  half_height),
-          domain::CoordinateMaps::DiscreteRotation<Dim>(rotate_upside_down)),
-      domain::CoordinateMaps::Rotation<3>(rotation_about_z, 0.0, 0.0));
+    const OrientationMap<Dim> inner_to_outer_cyl_map{
+        std::array<Direction<Dim>, Dim>{Direction<3>::upper_xi(),
+                                        Direction<3>::lower_eta(),
+                                        Direction<3>::lower_zeta()}};
 
-  std::vector<std::unique_ptr<
-      domain::CoordinateMapBase<Frame::BlockLogical, Frame::Inertial, Dim>>>
-      coordinate_maps{};
-  coordinate_maps.emplace_back(
-      std::make_unique<std::decay_t<decltype(inner_cyl_coord_map)>>(
-          std::move(inner_cyl_coord_map)));
-  coordinate_maps.emplace_back(
-      std::make_unique<std::decay_t<decltype(outer_cyl_coord_map)>>(
-          std::move(outer_cyl_coord_map)));
+    std::vector<DirectionMap<Dim, BlockNeighbors<Dim>>> block_neighbors{
+        coordinate_maps.size()};
+    // add hollow cylinder as neighbor of filled cylinder
+    block_neighbors[0].emplace(
+        Direction<Dim>::upper_xi(),
+        BlockNeighbors<Dim>{{1},
+                            {{1, inner_to_outer_cyl_map}},
+                            /*are_conforming=*/true});
+    // add filled cylinder as neighbor of hollow cylinder
+    block_neighbors[1].emplace(
+        Direction<Dim>::lower_xi(),
+        BlockNeighbors<Dim>{{0},
+                            {{0, inner_to_outer_cyl_map}},
+                            /*are_conforming=*/true});
 
-  const OrientationMap<Dim> inner_to_outer_cyl_map{
-      std::array<Direction<Dim>, Dim>{Direction<3>::upper_xi(),
-                                      Direction<3>::lower_eta(),
-                                      Direction<3>::lower_zeta()}};
+    std::vector<Block<Dim>> blocks;
+    blocks.reserve(coordinate_maps.size());
 
-  std::vector<DirectionMap<Dim, BlockNeighbors<Dim>>> block_neighbors{
-      coordinate_maps.size()};
-  // add block 2 as a neighbor of block 1
-  block_neighbors[0].emplace(Direction<Dim>::upper_xi(),
-                             BlockNeighbors<Dim>{{1},
-                                                 {{1, inner_to_outer_cyl_map}},
-                                                 /*are_conforming=*/true});
-  // add block 1 as a neighbor of block 2
-  block_neighbors[1].emplace(Direction<Dim>::lower_xi(),
-                             BlockNeighbors<Dim>{{0},
-                                                 {{0, inner_to_outer_cyl_map}},
-                                                 /*are_conforming=*/true});
+    blocks.emplace_back(std::move(coordinate_maps[0]), 0,
+                        std::move(block_neighbors[0]), block_names_.at(0),
+                        domain::topologies::full_cylinder);
+    blocks.emplace_back(std::move(coordinate_maps[1]), 1,
+                        std::move(block_neighbors[1]), block_names_.at(1),
+                        domain::topologies::cylindrical_shell);
 
-  std::vector<Block<Dim>> blocks;
-  blocks.reserve(coordinate_maps.size());
+    Domain<3> domain{std::move(blocks), {}, block_groups};
 
-  blocks.emplace_back(std::move(coordinate_maps[0]), 0,
-                      std::move(block_neighbors[0]), block_names_.at(0),
-                      domain::topologies::full_cylinder);
-  blocks.emplace_back(std::move(coordinate_maps[1]), 1,
-                      std::move(block_neighbors[1]), block_names_.at(1),
-                      domain::topologies::cylindrical_shell);
-
-  Domain<3> domain{std::move(blocks), {}, block_groups};
-
-  return domain;
+    return domain;
   }
 
   std::vector<std::string> block_names_{"Block1", "Block2"};
@@ -319,13 +334,16 @@ void test_unit_basis_form(const DataType& used_for_size) {
   }
 }
 
-void test_physical_separation() {
+// Test the domain test helper, test_physical_separation()
+void test_test_physical_separation() {
+  // Test conforming interface with I1 topology and rotated local coordinates
   const ConformingCubes conforming_cubes_creator{};
   const Domain<3> conforming_cubes_domain =
       conforming_cubes_creator.create_domain();
   const auto& conforming_cubes_blocks = conforming_cubes_domain.blocks();
   test_physical_separation(conforming_cubes_blocks, 0.0);
 
+  // Test conforming interface with S1 topology and reversed local coordinates
   const ConformingNestedReversedCylinders
       conforming_nested_reversed_cylinders_creator{};
   const Domain<3> conforming_nested_reversed_cylinders_domain =
@@ -341,5 +359,5 @@ SPECTRE_TEST_CASE("Unit.Domain.TestHelpers", "[Unit][Domain]") {
   CHECK_FOR_DOUBLES_AND_DATAVECTORS(test_euclidean_basis_vector, (1, 2, 3));
   CHECK_FOR_DOUBLES_AND_DATAVECTORS(test_unit_basis_form, (1, 2, 3));
 
-  test_physical_separation();
+  test_test_physical_separation();
 }
