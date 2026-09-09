@@ -68,7 +68,7 @@ make_affine_map_3d(const std::array<double, 3>& center,
 struct ConformingCubes {
   static constexpr size_t Dim = 3;
 
-  ConformingCubes() {}
+  ConformingCubes() = default;
   Domain<Dim> create_domain() const {
     // pick a location not at the origin to make this test domain less trivial
     const std::array<double, Dim> center_block_1{-0.8, 1.3, 4.1};
@@ -210,7 +210,7 @@ make_cyl_coordinate_map(const double inner_radius, const double outer_radius,
 struct ConformingNestedReversedCylinders {
   static constexpr size_t Dim = 3;
 
-  ConformingNestedReversedCylinders() {}
+  ConformingNestedReversedCylinders() = default;
   Domain<Dim> create_domain() const {
     const double inner_cyl_outer_radius = 3.0;
     const double outer_cyl_outer_radius = 5.0;
