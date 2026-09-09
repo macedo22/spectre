@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <limits>
 #include <random>
@@ -17,8 +18,12 @@
 #include "Domain/CoordinateMaps/CoordinateMap.hpp"
 #include "Domain/CoordinateMaps/CoordinateMap.tpp"
 #include "Domain/CoordinateMaps/DiscreteRotation.hpp"
+#include "Domain/CoordinateMaps/Identity.hpp"
+#include "Domain/CoordinateMaps/Interval.hpp"
+#include "Domain/CoordinateMaps/PolarToCartesian.hpp"
 #include "Domain/CoordinateMaps/ProductMaps.hpp"
 #include "Domain/CoordinateMaps/ProductMaps.tpp"
+#include "Domain/CoordinateMaps/Rotation.hpp"
 #include "Domain/Domain.hpp"
 #include "Domain/FunctionsOfTime/FunctionOfTime.hpp"
 #include "Domain/Structure/BlockNeighbors.hpp"
@@ -35,6 +40,9 @@
 
 namespace {
 using Affine = domain::CoordinateMaps::Affine;
+using Identity1D = domain::CoordinateMaps::Identity<1>;
+using Interval = domain::CoordinateMaps::Interval;
+using PolarToCartesian = domain::CoordinateMaps::PolarToCartesian;
 
 ::domain::CoordinateMap<
     Frame::BlockLogical, Frame::Inertial,
@@ -135,11 +143,8 @@ domain::CoordinateMap<
         ::domain::CoordinateMaps::PolarToCartesian,
         ::domain::CoordinateMaps::Identity<1>>>
 make_cyl_coordinate_map(const double inner_radius, const double outer_radius,
-                   const double lower_z_bound, const double upper_z_bound) {
-  using Affine = domain::CoordinateMaps::Affine;
-  using Identity1D = domain::CoordinateMaps::Identity<1>;
-  using Interval = domain::CoordinateMaps::Interval;
-  using PolarToCartesian = domain::CoordinateMaps::PolarToCartesian;
+                        const double lower_z_bound,
+                        const double upper_z_bound) {
   const auto linear = domain::CoordinateMaps::Distribution::Linear;
 
   // Map: (xi, eta, zeta) in [-1,1] x [0, 2pi] x [-1, 1]
@@ -155,13 +160,15 @@ make_cyl_coordinate_map(const double inner_radius, const double outer_radius,
           PolarToCartesian{}, Identity1D{}});
 }
 
-struct ConformingReversedCylinders {
+struct ConformingNestedReversedCylinders {
   static constexpr size_t Dim = 3;
 
-  ConformingReversedCylinders() {}
+  ConformingNestedReversedCylinders() {}
   Domain<Dim> create_domain() const {
-    const double radius =  5.0;
+    const double inner_cyl_outer_radius = 3.0;
+    const double outer_cyl_outer_radius = 5.0;
     const double height = 8.0;
+    const double half_height = 0.5 * height;
 
     // const double unit_inner_radius = 0.0;
     // const double unit_outer_radius = 1.0;
@@ -180,7 +187,8 @@ struct ConformingReversedCylinders {
     // auto coord_map_block_1 =
     //     make_affine_map_3d(center_block_1, dimensions_block_1);
 
-    auto coord_map_block_1 = make_affine_map_3d(0.0, radius, 0.0, height);
+    auto inner_cyl_coord_map = make_cyl_coordinate_map(
+        0.0, inner_cyl_outer_radius, -half_height, half_height);
 
     // // block 2 has a shift in the x coord because it abuts block 1 on +x side
     // const std::array<double, Dim> center_block_2{
@@ -205,47 +213,59 @@ struct ConformingReversedCylinders {
       Direction<3>::lower_xi(), Direction<3>::upper_eta(),
       Direction<3>::lower_zeta()}};
 
-    auto coord_map_block_2 = domain::push_back(
-            coord_map_block_1,
-            domain::CoordinateMaps::DiscreteRotation<Dim>(rotate_upside_down));
+  // auto coord_map_block_2 = domain::push_back(
+  //         coord_map_block_1,
+  //         domain::CoordinateMaps::DiscreteRotation<Dim>(rotate_upside_down));
+  const double rotation_about_z = 7.0 * M_PI / 9.0;
+  auto outer_cyl_coord_map = domain::push_back(
+      domain::push_back(
+          make_cyl_coordinate_map(inner_cyl_outer_radius,
+                                  outer_cyl_outer_radius, -half_height,
+                                  half_height),
+          domain::CoordinateMaps::DiscreteRotation<Dim>(rotate_upside_down)),
+      domain::CoordinateMaps::Rotation<3>(rotation_about_z, 0.0, 0.0));
 
-    std::vector<std::unique_ptr<
-        domain::CoordinateMapBase<Frame::BlockLogical, Frame::Inertial, Dim>>>
-        coordinate_maps{};
-    coordinate_maps.emplace_back(
-        std::make_unique<std::decay_t<decltype(coord_map_block_1)>>(
-            std::move(coord_map_block_1)));
-    coordinate_maps.emplace_back(
-        std::make_unique<std::decay_t<decltype(coord_map_block_2)>>(
-            std::move(coord_map_block_2)));
+  std::vector<std::unique_ptr<
+      domain::CoordinateMapBase<Frame::BlockLogical, Frame::Inertial, Dim>>>
+      coordinate_maps{};
+  coordinate_maps.emplace_back(
+      std::make_unique<std::decay_t<decltype(inner_cyl_coord_map)>>(
+          std::move(inner_cyl_coord_map)));
+  coordinate_maps.emplace_back(
+      std::make_unique<std::decay_t<decltype(outer_cyl_coord_map)>>(
+          std::move(outer_cyl_coord_map)));
 
-    std::vector<DirectionMap<Dim, BlockNeighbors<Dim>>> block_neighbors{
-        coordinate_maps.size()};
-    // add block 2 as a neighbor of block 1
-    block_neighbors[0].emplace(Direction<Dim>::upper_xi(),
-                               BlockNeighbors<Dim>{{1},
-                                                   {{1, rotation_block_2}},
-                                                   /*are_conforming=*/true});
-    // add block 1 as a neighbor of block 2
-    block_neighbors[1].emplace(
-        Direction<Dim>::upper_zeta(),
-        BlockNeighbors<Dim>{{0},
-                            {{0, rotation_block_2.inverse_map()}},
-                            /*are_conforming=*/true});
+  const OrientationMap<Dim> inner_to_outer_cyl_map{
+      std::array<Direction<Dim>, Dim>{Direction<3>::upper_xi(),
+                                      Direction<3>::lower_eta(),
+                                      Direction<3>::lower_zeta()}};
 
-    std::vector<Block<Dim>> blocks;
-    blocks.reserve(coordinate_maps.size());
+  std::vector<DirectionMap<Dim, BlockNeighbors<Dim>>> block_neighbors{
+      coordinate_maps.size()};
+  // add block 2 as a neighbor of block 1
+  block_neighbors[0].emplace(Direction<Dim>::upper_xi(),
+                             BlockNeighbors<Dim>{{1},
+                                                 {{1, inner_to_outer_cyl_map}},
+                                                 /*are_conforming=*/true});
+  // add block 1 as a neighbor of block 2
+  block_neighbors[1].emplace(Direction<Dim>::lower_xi(),
+                             BlockNeighbors<Dim>{{0},
+                                                 {{0, inner_to_outer_cyl_map}},
+                                                 /*are_conforming=*/true});
 
-    blocks.emplace_back(std::move(coordinate_maps[0]), 0,
-                        std::move(block_neighbors[0]), block_names_.at(0),
-                        domain::topologies::hypercube<Dim>);
-    blocks.emplace_back(std::move(coordinate_maps[1]), 1,
-                        std::move(block_neighbors[1]), block_names_.at(1),
-                        domain::topologies::hypercube<Dim>);
+  std::vector<Block<Dim>> blocks;
+  blocks.reserve(coordinate_maps.size());
 
-    Domain<3> domain{std::move(blocks), {}, block_groups};
+  blocks.emplace_back(std::move(coordinate_maps[0]), 0,
+                      std::move(block_neighbors[0]), block_names_.at(0),
+                      domain::topologies::full_cylinder);
+  blocks.emplace_back(std::move(coordinate_maps[1]), 1,
+                      std::move(block_neighbors[1]), block_names_.at(1),
+                      domain::topologies::cylindrical_shell);
 
-    return domain;
+  Domain<3> domain{std::move(blocks), {}, block_groups};
+
+  return domain;
   }
 
   std::vector<std::string> block_names_{"Block1", "Block2"};
@@ -305,6 +325,14 @@ void test_physical_separation() {
       conforming_cubes_creator.create_domain();
   const auto& conforming_cubes_blocks = conforming_cubes_domain.blocks();
   test_physical_separation(conforming_cubes_blocks, 0.0);
+
+  const ConformingNestedReversedCylinders
+      conforming_nested_reversed_cylinders_creator{};
+  const Domain<3> conforming_nested_reversed_cylinders_domain =
+      conforming_nested_reversed_cylinders_creator.create_domain();
+  const auto& conforming_nested_reversed_cylinders_blocks =
+      conforming_nested_reversed_cylinders_domain.blocks();
+  test_physical_separation(conforming_nested_reversed_cylinders_blocks, 0.0);
 }
 }  //  namespace
 
