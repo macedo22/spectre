@@ -237,7 +237,8 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
           radial_distribution_(radial_distribution) {}
 
     std::optional<double> outer_radius_;
-    domain::CoordinateMaps::Distribution radial_distribution_;
+    domain::CoordinateMaps::Distribution radial_distribution_{
+        domain::CoordinateMaps::Distribution::Logarithmic};
   };
   struct InnerSphereBOptions {
    public:
@@ -271,7 +272,8 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
           radial_distribution_(radial_distribution) {}
 
     std::optional<double> outer_radius_;
-    domain::CoordinateMaps::Distribution radial_distribution_;
+    domain::CoordinateMaps::Distribution radial_distribution_{
+        domain::CoordinateMaps::Distribution::Logarithmic};
   };
   struct OuterSphereOptions {
    public:
