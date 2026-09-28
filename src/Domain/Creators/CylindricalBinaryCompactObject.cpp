@@ -349,45 +349,33 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
         return BinaryCompactObject::InitialGridPoints::type{value};
       },
       initial_grid_points);
+  const auto bco_initial_refinement = std::visit(
+      [](const auto& value) { return bco::InitialRefinement{value}; },
+      initial_refinement);
   // Validate that the input file has the correct format for
-  // InitialGridPoints. No need to validate the format for InitialRefinement
-  // because it does not accept a map of strings to possibly
-  // differently-sized arrays for refinement. If a map is provided, it already
-  // only accepts a map of size_t keys.
+  // InitialGridPoints and InitialRefinement.
   bco::validate_initial_grid_points(context, bco_initial_grid_points,
                                     spherical_harmonic_shell_names,
                                     filled_cylinder_names);
+  bco::validate_initial_refinement(context, bco_initial_refinement,
+                                   spherical_harmonic_shell_names,
+                                   all_cylinder_names);
 
   // For expanding initial refinement and grid points over all blocks
   const ExpandOverBlocks<std::array<size_t, 3>> expand_over_blocks{
       block_names_, block_groups_};
   try {
-    // Since BinaryCompactObject::InitialRefinement map type differs from
-    // CylindricalBinaryCompactObject::InitialRefinement map type, need to first
-    // create the BCO-compatible type with the CBCO data to be able to reuse the
-    // functionality of bco::set_initial_refinement().
-    using bco_ref_map_type =
-        std::unordered_map<std::string,
-                           std::variant<std::array<size_t, 3>, size_t>>;
-    using cbco_ref_map_type = std::unordered_map<std::string, size_t>;
-    const auto bco_initial_refinement =
-        std::holds_alternative<size_t>(initial_refinement)
-            ? BinaryCompactObject::InitialRefinement::type{std::get<size_t>(
-                  initial_refinement)}
-            : BinaryCompactObject::InitialRefinement::type{bco_ref_map_type{
-                  std::get<cbco_ref_map_type>(initial_refinement).begin(),
-                  std::get<cbco_ref_map_type>(initial_refinement).end()}};
     initial_refinement_ = bco::set_initial_refinement(
         expand_over_blocks, bco_initial_refinement,
         spherical_harmonic_shell_names, all_cylinder_names);
     // If a global single-number h-refinement was used, post-process the
     // expanded cylinder and spherical shell blocks to make the angular
-    // directions have h refinement = 0.
+    // directions have h refinement = 0. Cylinders retain the global value in
+    // both their radial and z directions.
     if (std::holds_alternative<size_t>(initial_refinement)) {
       for (const auto& [name, position] : block_positions_) {
         if (name.find("Cylinder") != std::string::npos) {
-          // Set cylinder h refinement to {0, 0, z}
-          initial_refinement_[position][0] = 0;
+          // Set cylinder h refinement to {r, 0, z}
           initial_refinement_[position][1] = 0;
         } else if (name.find("Shell") != std::string::npos) {
           // Set spherical shell h refinement to {r, 0, 0}
@@ -403,12 +391,11 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
   // Validate angular h-refinement == 0 in cylinder and spherical shell blocks
   for (const auto& [name, position] : block_positions_) {
     if (name.find("Cylinder") != std::string::npos) {
-      if (gsl::at(gsl::at(initial_refinement_, position), 0) != 0 or
-          gsl::at(gsl::at(initial_refinement_, position), 1) != 0) {
+      if (gsl::at(gsl::at(initial_refinement_, position), 1) != 0) {
         PARSE_ERROR(context,
                     "Angular h-refinement is not supported for cylindrical "
                     "blocks. Specify refinement for "
-                        << name << " as a single number.");
+                        << name << " as [radial, z].");
       }
     } else if (name.find("Shell") != std::string::npos) {
       if (gsl::at(gsl::at(initial_refinement_, position), 1) != 0 or

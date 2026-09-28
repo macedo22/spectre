@@ -647,6 +647,16 @@ class BinaryCompactObject : public DomainCreator<3> {
 };
 
 namespace bco {
+/// Superset of the initial-refinement option types used by the binary
+/// compact-object domain creators.
+using InitialRefinement = std::variant<
+    size_t, std::array<size_t, 3>, std::vector<std::array<size_t, 3>>,
+    std::unordered_map<std::string, std::array<size_t, 3>>,
+    std::unordered_map<std::string,
+                       std::variant<std::array<size_t, 3>, size_t>>,
+    std::unordered_map<std::string,
+                       std::variant<std::array<size_t, 2>, size_t>>>;
+
 /*!
  * \brief Create a set of centers of objects for the binary domains.
  *
@@ -665,9 +675,9 @@ create_grid_anchors(const std::array<double, 3>& center_a,
 /*!
  * \brief Validate `InitialRefinement` map entries.
  *
- * \details Any spherical-harmonic block must use `size_t` (radial only).
- * `array<3>` is rejected on spherical-harmonic blocks even if angular
- * components are zero. Non-spherical-harmonic entries must use `array<3>`.
+ * \details Any spherical-harmonic block must use `size_t` (radial only),
+ * any cylinder block must use `array<2>{radial, z}`, and all other blocks
+ * must use `array<3>`.
  *
  * \param context options context
  * \param initial_refinement the initial refinement from options
@@ -677,7 +687,7 @@ create_grid_anchors(const std::array<double, 3>& center_a,
  */
 void validate_initial_refinement(
     const Options::Context& context,
-    const BinaryCompactObject::InitialRefinement::type& initial_refinement,
+    const InitialRefinement& initial_refinement,
     const std::unordered_set<std::string>& spherical_harmonic_shell_names,
     const std::unordered_set<std::string>& cylinder_names = {});
 
@@ -702,10 +712,11 @@ void validate_initial_grid_points(
     const std::unordered_set<std::string>& filled_cylinder_names = {});
 
 /*!
- * \brief Convert `size_t` radial h refinement entries for spherical harmonic
- * blocks to `{r, 0, 0}`
+ * \brief Convert specialized h-refinement entries to three dimensions.
  *
- * \details All `array<3>` entries are unchanged.
+ * \details Converts `size_t` entries for spherical-harmonic blocks to
+ * `{r, 0, 0}` and `array<2>{r, z}` entries for cylinders to `{r, 0, z}`.
+ * All `array<3>` entries are unchanged.
  *
  * \param expand_over_blocks `ExpandOverBlocks` containing the block names and
  * block groups
@@ -718,7 +729,7 @@ void validate_initial_grid_points(
  */
 std::vector<std::array<size_t, 3>> set_initial_refinement(
     const ExpandOverBlocks<std::array<size_t, 3>>& expand_over_blocks,
-    const BinaryCompactObject::InitialRefinement::type& initial_refinement,
+    const InitialRefinement& initial_refinement,
     const std::unordered_set<std::string>& spherical_harmonic_shell_names,
     const std::unordered_set<std::string>& cylinder_names = {});
 

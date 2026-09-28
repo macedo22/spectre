@@ -273,13 +273,16 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
   };
 
   struct InitialRefinement {
-    using type = std::variant<size_t, std::unordered_map<std::string, size_t>>;
+    using type = std::variant<
+        size_t, std::unordered_map<
+                    std::string, std::variant<std::array<size_t, 2>, size_t>>>;
     static constexpr Options::String help = {
-        "Initial refinement level. Specify one of: a single number or a list "
-        "of single numbers for every block group in the domain, every block "
-        "name in the domain, or a mix of block groups and blocks. Each single "
-        "number represents the radial refinement for spherical shell blocks "
-        "and z refinement for cylindrical blocks.\n\nNote that the z direction "
+        "Initial refinement level. Specify one of: a single number or a map "
+        "from block groups and/or block names. A global single number is used "
+        "for both radial and z refinement in cylindrical blocks and for "
+        "radial refinement in spherical shell blocks. In a map, spherical "
+        "shell blocks must use a single number and cylindrical blocks must "
+        "use [radial, z].\n\nNote that the z direction "
         "in cylinder blocks will roughly correspond to refinement in a "
         "direction parallel to the axis of separation between the two objects. "
         "Because filled cylinder blocks lie along the axis of separation but "

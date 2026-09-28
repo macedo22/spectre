@@ -149,103 +149,126 @@ void validate_initial_grid_points(
 
 void validate_initial_refinement(
     const Options::Context& context,
-    const BinaryCompactObject::InitialRefinement::type& initial_refinement,
+    const InitialRefinement& initial_refinement,
     const std::unordered_set<std::string>& spherical_harmonic_shell_names,
     const std::unordered_set<std::string>& cylinder_names) {
-  if (std::holds_alternative<std::unordered_map<
-          std::string, std::variant<std::array<size_t, 3>, size_t>>>(
-          initial_refinement)) {
-    const auto& refinement_map = std::get<std::unordered_map<
-        std::string, std::variant<std::array<size_t, 3>, size_t>>>(
-        initial_refinement);
-    for (const auto& [name, ref] : refinement_map) {
-      const bool is_spherical_harmonic =
-          spherical_harmonic_shell_names.contains(name);
-      const bool is_cylinder = cylinder_names.contains(name);
-      ASSERT(not(is_spherical_harmonic and is_cylinder),
-             "Block or group '"
-                 << name
-                 << "' cannot be both a spherical-harmonic shell block/group "
-                    "and a cylinder block/group. ");
-      if (is_spherical_harmonic) {
-        if (std::holds_alternative<std::array<size_t, 3>>(ref)) {
-          PARSE_ERROR(context,
-                      "Block or group '"
-                          << name
-                          << "' is a spherical-harmonic shell block/group. "
-                             "Specify its refinement as a single number "
-                             "(radial only), not array<3>. Angular "
-                             "h-refinement is not supported for these blocks.");
-        }
-      } else if (is_cylinder) {
-        if (std::holds_alternative<std::array<size_t, 3>>(ref)) {
-          PARSE_ERROR(
-              context,
-              "Block or group '"
-                  << name
-                  << "' is a cylinder block/group. "
-                     "Specify its refinement as a single number "
-                     "(z only), not array<3>. Radial and angular "
-                     "h-refinement are not supported for these blocks.");
-        }
-      } else {
-        if (std::holds_alternative<size_t>(ref)) {
-          if (not spherical_harmonic_shell_names.empty() or
-              not cylinder_names.empty()) {
-            PARSE_ERROR(
-                context,
-                "Per-block single-number refinement for block or group '"
-                    << name
-                    << "' is only valid for spherical-harmonic "
-                       "shell blocks (OuterShell0, etc.), "
-                       "spherical-harmonic shell block groups "
-                       "(OuterSphere, etc.), cylinder blocks "
-                       "(CAFilledCylinder, etc.), or cylinder block "
-                       "groups (InnerA, etc.).");
-          } else {
-            PARSE_ERROR(context,
-                        "Per-block single-number refinement in map syntax "
-                        "(block or group '"
-                            << name
-                            << "') is only valid for spherical-harmonic shell "
-                               "blocks/groups "
-                               "or cylinder blocks/groups.");
+  const auto validate_value = [&context, &spherical_harmonic_shell_names,
+                               &cylinder_names](const std::string& name,
+                                                const auto& value) {
+    using Value = std::decay_t<decltype(value)>;
+    const bool is_spherical_harmonic =
+        spherical_harmonic_shell_names.contains(name);
+    const bool is_cylinder = cylinder_names.contains(name);
+    ASSERT(not(is_spherical_harmonic and is_cylinder),
+           "Block or group '"
+               << name
+               << "' cannot be both a spherical-harmonic shell block/group "
+                  "and a cylinder block/group. ");
+    if (is_spherical_harmonic) {
+      if constexpr (not std::is_same_v<Value, size_t>) {
+        PARSE_ERROR(context,
+                    "Block or group '"
+                        << name
+                        << "' is a spherical-harmonic shell block/group. "
+                           "Specify its refinement as a single number "
+                           "(radial only), not an array. Angular "
+                           "h-refinement is not supported for these blocks.");
+      }
+    } else if (is_cylinder) {
+      if constexpr (not std::is_same_v<Value, std::array<size_t, 2>>) {
+        PARSE_ERROR(context, "Block or group '"
+                                 << name
+                                 << "' is a cylinder block/group. Specify its "
+                                    "refinement as [radial, z].");
+      }
+    } else if constexpr (std::is_same_v<Value, size_t>) {
+      PARSE_ERROR(context,
+                  "Per-block single-number refinement for block or group '"
+                      << name
+                      << "' is only valid for spherical-harmonic shell blocks "
+                         "or spherical-harmonic shell block groups.");
+    } else if constexpr (std::is_same_v<Value, std::array<size_t, 2>>) {
+      PARSE_ERROR(context,
+                  "Specifying 2 refinement levels for block or group '"
+                      << name
+                      << "' is only valid for cylinder blocks or cylinder "
+                         "block groups.");
+    }
+  };
+
+  std::visit(
+      [&validate_value](const auto& value) {
+        using Value = std::decay_t<decltype(value)>;
+        using RefinementMap3D =
+            std::unordered_map<std::string,
+                               std::variant<std::array<size_t, 3>, size_t>>;
+        using RefinementMap2D =
+            std::unordered_map<std::string,
+                               std::variant<std::array<size_t, 2>, size_t>>;
+        using ArrayMap3D =
+            std::unordered_map<std::string, std::array<size_t, 3>>;
+        if constexpr (std::is_same_v<Value, ArrayMap3D>) {
+          for (const auto& [name, refinement] : value) {
+            validate_value(name, refinement);
+          }
+        } else if constexpr (std::is_same_v<Value, RefinementMap3D> or
+                             std::is_same_v<Value, RefinementMap2D>) {
+          for (const auto& [name, refinement] : value) {
+            std::visit(
+                [&validate_value, &name](const auto& held_refinement) {
+                  validate_value(name, held_refinement);
+                },
+                refinement);
           }
         }
-      }
-    }
-  }
+      },
+      initial_refinement);
 }
 
 std::vector<std::array<size_t, 3>> set_initial_refinement(
     const ExpandOverBlocks<std::array<size_t, 3>>& expand_over_blocks,
-    const BinaryCompactObject::InitialRefinement::type& initial_refinement,
+    const InitialRefinement& initial_refinement,
     const std::unordered_set<std::string>& spherical_harmonic_shell_names,
     const std::unordered_set<std::string>& cylinder_names) {
   return std::visit(
       [&expand_over_blocks, &spherical_harmonic_shell_names,
        &cylinder_names]<typename V>(
           const V& v) -> std::vector<std::array<size_t, 3>> {
-        if constexpr (std::is_same_v<
-                          V,
-                          std::unordered_map<
-                              std::string,
-                              std::variant<std::array<size_t, 3>, size_t>>>) {
+        using RefinementMap3D =
+            std::unordered_map<std::string,
+                               std::variant<std::array<size_t, 3>, size_t>>;
+        using RefinementMap2D =
+            std::unordered_map<std::string,
+                               std::variant<std::array<size_t, 2>, size_t>>;
+        if constexpr (std::is_same_v<V, RefinementMap3D> or
+                      std::is_same_v<V, RefinementMap2D>) {
           const auto converted = [&v, &spherical_harmonic_shell_names,
                                   &cylinder_names]() {
             std::unordered_map<std::string, std::array<size_t, 3>> result;
             for (const auto& [name, val] : v) {
-              if (std::holds_alternative<size_t>(val) and
-                  spherical_harmonic_shell_names.contains(name)) {
-                const size_t r = std::get<size_t>(val);
-                result[name] = {r, 0, 0};
-              } else if (std::holds_alternative<size_t>(val) and
-                         cylinder_names.contains(name)) {
-                const size_t z = std::get<size_t>(val);
-                result[name] = {0, 0, z};
-              } else {
-                result[name] = std::get<std::array<size_t, 3>>(val);
-              }
+              result[name] = std::visit(
+                  [&name, &spherical_harmonic_shell_names, &cylinder_names](
+                      const auto& refinement) -> std::array<size_t, 3> {
+                    using Refinement = std::decay_t<decltype(refinement)>;
+                    if constexpr (std::is_same_v<Refinement, size_t>) {
+                      ASSERT(spherical_harmonic_shell_names.contains(name),
+                             "Expected '" << name
+                                          << "' to name a spherical-harmonic "
+                                             "shell block or group.");
+                      return {refinement, 0, 0};
+                    } else if constexpr (std::is_same_v<
+                                             Refinement,
+                                             std::array<size_t, 2>>) {
+                      ASSERT(cylinder_names.contains(name),
+                             "Expected '" << name
+                                          << "' to name a cylinder block or "
+                                             "group.");
+                      return {refinement[0], 0, refinement[1]};
+                    } else {
+                      return refinement;
+                    }
+                  },
+                  val);
             }
             return result;
           }();
@@ -409,7 +432,10 @@ BinaryCompactObject::BinaryCompactObject(
          "SphericalHarmonicsInWavezone is disabled but the list of spherical "
          "shell names is non-empty.");
 
-  bco::validate_initial_refinement(context, initial_refinement,
+  const auto bco_initial_refinement = std::visit(
+      [](const auto& value) { return bco::InitialRefinement{value}; },
+      initial_refinement);
+  bco::validate_initial_refinement(context, bco_initial_refinement,
                                    spherical_harmonic_shell_names);
   bco::validate_initial_grid_points(context, initial_number_of_grid_points,
                                     spherical_harmonic_shell_names);
@@ -664,8 +690,9 @@ BinaryCompactObject::BinaryCompactObject(
       block_names_, block_groups_};
 
   try {
-    initial_refinement_ = bco::set_initial_refinement(
-        expand_over_blocks, initial_refinement, spherical_harmonic_shell_names);
+    initial_refinement_ =
+        bco::set_initial_refinement(expand_over_blocks, bco_initial_refinement,
+                                    spherical_harmonic_shell_names);
   } catch (const std::exception& error) {
     PARSE_ERROR(context, "Invalid 'InitialRefinement': " << error.what());
   }

@@ -56,7 +56,9 @@ using CylBCO = ::domain::creators::CylindricalBinaryCompactObject;
 using InnerSphere = CylBCO::InnerSphere;
 using OuterSphereOptions = CylBCO::OuterSphereOptions;
 using TimeDepOptions = domain::creators::bco::TimeDependentMapOptions<true>;
-using RefinementMap = std::unordered_map<std::string, size_t>;
+using RefinementMap =
+    std::unordered_map<std::string,
+                       std::variant<std::array<size_t, 2>, size_t>>;
 using GridPointsMap = std::unordered_map<
     std::string, std::variant<std::array<size_t, 3>, std::array<size_t, 2>>>;
 using Distribution = domain::CoordinateMaps::Distribution;
@@ -192,39 +194,37 @@ std::string create_option_string(
 
   // is_h_refinement = true: we're constructing h-refinement
   // is_h_refinement = false: we're constructing p-refinement (grid points)
-  const auto initial_structure =
-      [&include_inner_sphere_A, &include_inner_sphere_B](
-          const bool is_h_refinement, const bool include_extra,
-          const size_t value) {
-        const std::string same =
-            is_h_refinement
-                ? get_output(value)
-                : "[" + get_output(value) + "," + get_output(value) + "]";
-        const std::string sphere_one_more =
-            is_h_refinement
-                ? get_output(value + 1)
-                : "[" + get_output(value + 1) + "," + get_output(value) + "]";
-        const std::string cyl_one_more =
-            is_h_refinement
-                ? get_output(value + 1)
-                : "[" + get_output(value) + "," + get_output(value + 1) + "]";
-        std::string result{};
-        if (include_extra) {
-          result += "\n    Outer: " + cyl_one_more;
-          result += "\n    InnerA: " + same;
-          result += "\n    InnerB: " + cyl_one_more;
-          if (include_inner_sphere_A) {
-            result += "\n    InnerSphereA: " + same;
-          }
-          if (include_inner_sphere_B) {
-            result += "\n    InnerSphereB: " + sphere_one_more;
-          }
-          result += "\n    OuterSphere: " + sphere_one_more;
-        } else {
-          result = " " + get_output(value);
-        }
-        return result;
-      };
+  const auto initial_structure = [&include_inner_sphere_A,
+                                  &include_inner_sphere_B](
+                                     const bool is_h_refinement,
+                                     const bool include_extra,
+                                     const size_t value) {
+    const std::string same =
+        "[" + get_output(value) + "," + get_output(value) + "]";
+    const std::string sphere_same = is_h_refinement ? get_output(value) : same;
+    const std::string sphere_one_more =
+        is_h_refinement
+            ? get_output(value + 1)
+            : "[" + get_output(value + 1) + "," + get_output(value) + "]";
+    const std::string cyl_one_more =
+        "[" + get_output(value) + "," + get_output(value + 1) + "]";
+    std::string result{};
+    if (include_extra) {
+      result += "\n    Outer: " + cyl_one_more;
+      result += "\n    InnerA: " + same;
+      result += "\n    InnerB: " + cyl_one_more;
+      if (include_inner_sphere_A) {
+        result += "\n    InnerSphereA: " + sphere_same;
+      }
+      if (include_inner_sphere_B) {
+        result += "\n    InnerSphereB: " + sphere_one_more;
+      }
+      result += "\n    OuterSphere: " + sphere_one_more;
+    } else {
+      result = " " + get_output(value);
+    }
+    return result;
+  };
 
   const std::string outer_sphere_options{
       "  OuterSphere:\n"
@@ -615,26 +615,36 @@ void test_parse_errors() {
           create_inner_boundary_condition(), create_outer_boundary_condition()),
       Catch::Matchers::ContainsSubstring(
           "must have more than 2 radial grid points"));
+  // Per-group cylinder refinement must specify both radial and z refinement.
+  CHECK_THROWS_WITH(
+      domain::creators::CylindricalBinaryCompactObject(
+          {{2.0, 0.05, 0.0}}, {-3.0, 0.05, 0.0}, 1.0, 0.4,
+          RefinementMap{{"InnerA", size_t{1}}}, 3_st,
+          OuterSphereOptions{25.0}, std::nullopt, std::nullopt, std::nullopt,
+          create_inner_boundary_condition(), create_outer_boundary_condition(),
+          Options::Context{false, {}, 1, 1}),
+      Catch::Matchers::ContainsSubstring(
+          "Specify its refinement as [radial, z]"));
 }
 
 // This matches the structure in the option string
-std::unordered_map<std::string, size_t> make_initial_refinement(
-    const size_t initial_value, const bool include_inner_sphere_A,
-    const bool include_inner_sphere_B) {
-  std::unordered_map<std::string, size_t> initial_map;
-  const size_t same = initial_value;
-  const size_t one_more = initial_value + 1;
+RefinementMap make_initial_refinement(const size_t initial_value,
+                                      const bool include_inner_sphere_A,
+                                      const bool include_inner_sphere_B) {
+  RefinementMap initial_map;
+  const std::array<size_t, 2> same{initial_value, initial_value};
+  const std::array<size_t, 2> one_more{initial_value, initial_value + 1};
 
   initial_map["Outer"] = one_more;
   initial_map["InnerA"] = same;
   initial_map["InnerB"] = one_more;
   if (include_inner_sphere_A) {
-    initial_map["InnerSphereA"] = same;
+    initial_map["InnerSphereA"] = initial_value;
   }
   if (include_inner_sphere_B) {
-    initial_map["InnerSphereB"] = one_more;
+    initial_map["InnerSphereB"] = initial_value + 1;
   }
-  initial_map["OuterSphere"] = one_more;
+  initial_map["OuterSphere"] = initial_value + 1;
 
   return initial_map;
 }
@@ -804,9 +814,12 @@ void test_initial_extents_and_refinement() {
 
   // Set h and p refinement locally per block group
   const RefinementMap local_refinement =
-      RefinementMap{{"InnerA", size_t{1}},       {"InnerB", size_t{0}},
-                    {"Outer", size_t{1}},        {"InnerSphereA", size_t{0}},
-                    {"InnerSphereB", size_t{1}}, {"OuterSphere", size_t{2}}};
+      RefinementMap{{"InnerA", std::array<size_t, 2>{1, 0}},
+                    {"InnerB", std::array<size_t, 2>{0, 1}},
+                    {"Outer", std::array<size_t, 2>{1, 1}},
+                    {"InnerSphereA", size_t{0}},
+                    {"InnerSphereB", size_t{1}},
+                    {"OuterSphere", size_t{2}}};
   const GridPointsMap local_grid_points =
       GridPointsMap{{"InnerA", std::array<size_t, 2>{5, 7}},
                     {"InnerB", std::array<size_t, 2>{7, 9}},
@@ -892,8 +905,8 @@ void test_initial_extents_and_refinement() {
       expected_extents_from_local = {{8, ylm::Spherepack::n_theta_points(10),
                                       ylm::Spherepack::n_phi_points(10)}};
     } else if (block_groups.at("InnerA").contains(block_name_global)) {
-      expected_refinement_from_global = {{0, 0, 1}};
-      expected_refinement_from_local = {{0, 0, 1}};
+      expected_refinement_from_global = {{1, 0, 1}};
+      expected_refinement_from_local = {{1, 0, 0}};
       expected_extents_from_local = {{5, 17, 7}};
       if (block_name_global.find("Filled") != std::string::npos) {
         expected_extents_from_global = {{13, 49, 13}};
@@ -901,8 +914,8 @@ void test_initial_extents_and_refinement() {
         expected_extents_from_global = {{13, 13, 13}};
       }
     } else if (block_groups.at("InnerB").contains(block_name_global)) {
-      expected_refinement_from_global = {{0, 0, 1}};
-      expected_refinement_from_local = {{0, 0, 0}};
+      expected_refinement_from_global = {{1, 0, 1}};
+      expected_refinement_from_local = {{0, 0, 1}};
       expected_extents_from_local = {{7, 25, 9}};
       if (block_name_global.find("Filled") != std::string::npos) {
         expected_extents_from_global = {{13, 49, 13}};
@@ -910,8 +923,8 @@ void test_initial_extents_and_refinement() {
         expected_extents_from_global = {{13, 13, 13}};
       }
     } else if (block_groups.at("Outer").contains(block_name_global)) {
-      expected_refinement_from_global = {{0, 0, 1}};
-      expected_refinement_from_local = {{0, 0, 1}};
+      expected_refinement_from_global = {{1, 0, 1}};
+      expected_refinement_from_local = {{1, 0, 1}};
       expected_extents_from_local = {{9, 33, 11}};
       if (block_name_global.find("Filled") != std::string::npos) {
         expected_extents_from_global = {{13, 49, 13}};
