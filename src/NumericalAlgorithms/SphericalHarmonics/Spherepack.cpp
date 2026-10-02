@@ -610,6 +610,7 @@ void Spherepack::interpolate_from_coefs(
   auto& ysnp2 = get(get<::Tags::TempScalar<5, T>>(buffer));
 
   std::array<T*, 3> ycn_vals{&ycn, &ycnp1, &ycnp2};
+  std::array<T*, 3> ysn_vals{&ysn, &ysnp1, &ysnp2};
 
   const size_t l1 = m_max_ + 1;
 
@@ -623,8 +624,8 @@ void Spherepack::interpolate_from_coefs(
   // dependence, and there is a factor of 1/2.
   size_t idx = 0;
   {
-    ycn = 0.;
-    ycnp1 = 0.;
+    *(ycn_vals[0]) = 0.;
+    *(ycn_vals[1]) = 0.;
     for (size_t n = n_theta_ - 1; n > 0;
          --n, ++idx) {  // Loops from n_theta_-1 to 1.
       T* temp = ycn_vals[2];
@@ -643,28 +644,37 @@ void Spherepack::interpolate_from_coefs(
   }
   // Now do recurrence for other m.
   for (size_t m = 1; m < l1; ++m) {
-    ycn = 0.;
-    ycnp1 = 0.;
-    ysn = 0.;
-    ysnp1 = 0.;
+    *(ycn_vals[0]) = 0.;
+    *(ycn_vals[1]) = 0.;
+    *(ysn_vals[0]) = 0.;
+    *(ysn_vals[1]) = 0.;
     for (size_t n = n_theta_ - 1; n > m; --n, ++idx) {
-      ycnp2 = ycnp1;
-      ysnp2 = ysnp1;
-      ycnp1 = ycn;
-      ysnp1 = ysn;
-      ycn = cos_theta * alpha[idx] * ycnp1 + beta[idx] * ycnp2 +
-            spectral_coefs[a_offset + spectral_stride * index[idx]];
-      ysn = cos_theta * alpha[idx] * ysnp1 + beta[idx] * ysnp2 +
-            spectral_coefs[b_offset + spectral_stride * index[idx]];
+      T* temp = ycn_vals[2];
+      ycn_vals[2] = ycn_vals[1];
+      ycn_vals[1] = ycn_vals[0];
+      ycn_vals[0] = temp;
+      *(ycn_vals[0]) = cos_theta * alpha[idx] * (*(ycn_vals[1])) +
+                       beta[idx] * (*(ycn_vals[2])) +
+                       spectral_coefs[a_offset + spectral_stride * index[idx]];
+
+      temp = ysn_vals[2];
+      ysn_vals[2] = ysn_vals[1];
+      ysn_vals[1] = ysn_vals[0];
+      ysn_vals[0] = temp;
+      *(ysn_vals[0]) = cos_theta * alpha[idx] * (*(ysn_vals[1])) +
+                       beta[idx] * (*(ysn_vals[2])) +
+                       spectral_coefs[b_offset + spectral_stride * index[idx]];
     }
 
-    auto& fc = ycnp2;
-    auto& fs = ysnp2;
+    auto& fc = *(ycn_vals[2]);
+    auto& fs = *(ysn_vals[2]);
     fc = interpolation_info.pbar_factor[m] *
-         (beta[idx] * ycnp1 + cos_theta * alpha[idx] * ycn +
+         (beta[idx] * (*(ycn_vals[1])) +
+          cos_theta * alpha[idx] * (*(ycn_vals[0])) +
           spectral_coefs[a_offset + spectral_stride * index[idx]]);
     fs = interpolation_info.pbar_factor[m] *
-         (beta[idx] * ysnp1 + cos_theta * alpha[idx] * ysn +
+         (beta[idx] * (*(ysn_vals[1])) +
+          cos_theta * alpha[idx] * (*(ysn_vals[0])) +
           spectral_coefs[b_offset + spectral_stride * index[idx]]);
     *result += fc * interpolation_info.cos_m_phi[m] -
                fs * interpolation_info.sin_m_phi[m];
