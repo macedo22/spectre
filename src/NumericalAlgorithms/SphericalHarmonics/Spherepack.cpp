@@ -609,6 +609,8 @@ void Spherepack::interpolate_from_coefs(
   auto& ysnp1 = get(get<::Tags::TempScalar<4, T>>(buffer));
   auto& ysnp2 = get(get<::Tags::TempScalar<5, T>>(buffer));
 
+  std::array<T*, 3> ycn_vals{&ycn, &ycnp1, &ycnp2};
+
   const size_t l1 = m_max_ + 1;
 
   // Offsets of 'a' and 'b' in spectral_coefs.
@@ -625,13 +627,17 @@ void Spherepack::interpolate_from_coefs(
     ycnp1 = 0.;
     for (size_t n = n_theta_ - 1; n > 0;
          --n, ++idx) {  // Loops from n_theta_-1 to 1.
-      ycnp2 = ycnp1;
-      ycnp1 = ycn;
-      ycn = cos_theta * alpha[idx] * ycnp1 + beta[idx] * ycnp2 +
-            spectral_coefs[a_offset + spectral_stride * index[idx]];
+      T* temp = ycn_vals[2];
+      ycn_vals[2] = ycn_vals[1];
+      ycn_vals[1] = ycn_vals[0];
+      ycn_vals[0] = temp;
+      *(ycn_vals[0]) = cos_theta * alpha[idx] * (*(ycn_vals[1])) +
+                       beta[idx] * (*(ycn_vals[2])) +
+                       spectral_coefs[a_offset + spectral_stride * index[idx]];
     }
     *result = 0.5 * interpolation_info.pbar_factor[0] *
-              (beta[idx] * ycnp1 + cos_theta * alpha[idx] * ycn +
+              (beta[idx] * (*(ycn_vals[1])) +
+               cos_theta * alpha[idx] * (*(ycn_vals[0])) +
                spectral_coefs[a_offset + spectral_stride * index[idx]]);
     ++idx;
   }
