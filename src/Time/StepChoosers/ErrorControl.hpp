@@ -14,13 +14,20 @@
 #include <typeinfo>
 #include <unordered_map>
 
+#include "DataStructures/DataBox/TagName.hpp"
+#include "Domain/Structure/Element.hpp"
+#include "Domain/Tags.hpp"
 #include "Options/String.hpp"
+#include "Parallel/Printf/Printf.hpp"
 #include "Time/RequestsStepperErrorTolerances.hpp"
 #include "Time/StepChoosers/StepChooser.hpp"
 #include "Time/StepperErrorEstimate.hpp"
 #include "Time/StepperErrorTolerances.hpp"
 #include "Time/Tags/StepperErrors.hpp"
+#include "Time/Tags/TimeStepId.hpp"
+#include "Time/TimeStepId.hpp"
 #include "Time/TimeStepRequest.hpp"
+#include "Utilities/Requires.hpp"
 #include "Utilities/Serialization/CharmPupable.hpp"
 #include "Utilities/TMPL.hpp"
 #include "Utilities/TypeTraits/IsA.hpp"
@@ -31,6 +38,26 @@ struct NoSuchType;
 
 namespace StepChoosers {
 namespace ErrorControl_detail {
+template <typename System, typename = std::void_t<>>
+struct has_volume_dim : std::false_type {};
+
+template <typename System>
+struct has_volume_dim<System, std::void_t<decltype(System::volume_dim)>>
+    : std::true_type {};
+
+template <typename System, typename ErrorTags,
+          bool HasVolumeDim = has_volume_dim<System>::value>
+struct argument_tags {
+  using type = ErrorTags;
+};
+
+template <typename System, typename... ErrorTags>
+struct argument_tags<System, tmpl::list<ErrorTags...>, true> {
+  using type =
+      tmpl::list<ErrorTags..., domain::Tags::Element<System::volume_dim>,
+                 ::Tags::TimeStepId>;
+};
+
 template <typename StepChooserUse>
 std::optional<double> goal_from_variable(
     const std::array<std::optional<StepperErrorEstimate>, 2>& errors,
@@ -153,21 +180,31 @@ class ErrorControl<StepChooserUse, System, tmpl::list<VariablesTags...>>
     static type lower_bound() { return 0.0; }
   };
 
+  struct Diagnostics {
+    using type = bool;
+    static constexpr Options::String help{
+        "Write per-element error-control diagnostics to "
+        "'TimeStepperErrorDiagnostics.txt'. This is intended for debugging "
+        "and can produce a large amount of output."};
+  };
+
   static constexpr Options::String help{
       "Sets a goal based on time-stepper truncation error."};
   using options = tmpl::list<AbsoluteTolerance, RelativeTolerance, MaxFactor,
-                             MinFactor, SafetyFactor>;
+                             MinFactor, SafetyFactor, Diagnostics>;
 
   ErrorControl(const double absolute_tolerance, const double relative_tolerance,
                const double max_factor, const double min_factor,
-               const double safety_factor)
+               const double safety_factor, const bool diagnostics = false)
       : absolute_tolerance_{absolute_tolerance},
         relative_tolerance_{relative_tolerance},
         max_factor_{max_factor},
         min_factor_{min_factor},
-        safety_factor_{safety_factor} {}
+        safety_factor_{safety_factor},
+        diagnostics_{diagnostics} {}
 
-  using argument_tags = tmpl::list<::Tags::StepperErrors<VariablesTags>...>;
+  using argument_tags = typename ErrorControl_detail::argument_tags<
+      System, tmpl::list<::Tags::StepperErrors<VariablesTags>...>>::type;
 
   TimeStepRequest operator()(
       const typename ::Tags::StepperErrors<VariablesTags>::type&... errors,
@@ -181,6 +218,33 @@ class ErrorControl<StepChooserUse, System, tmpl::list<VariablesTags...>>
                                 std::abs(*goal) < std::abs(*tightest_goal))) {
         tightest_goal = goal;
       }
+    }
+    return ::TimeStepRequest{.size_goal = tightest_goal};
+  }
+
+  template <typename LocalSystem = System,
+            Requires<ErrorControl_detail::has_volume_dim<LocalSystem>::value> =
+                nullptr>
+  TimeStepRequest operator()(
+      const typename ::Tags::StepperErrors<VariablesTags>::type&... errors,
+      const Element<LocalSystem::volume_dim>& element,
+      const TimeStepId& time_step_id, const double previous_step) const {
+    const std::array goals{
+        ErrorControl_detail::goal_from_variable<StepChooserUse>(
+            errors, min_factor_, max_factor_, safety_factor_)...};
+    std::optional<double> tightest_goal{};
+    for (const auto& goal : goals) {
+      if (goal.has_value() and (not tightest_goal.has_value() or
+                                std::abs(*goal) < std::abs(*tightest_goal))) {
+        tightest_goal = goal;
+      }
+    }
+
+    if (diagnostics_) {
+      size_t goal_index = 0;
+      (write_diagnostics<VariablesTags>(errors, goals[goal_index++], element,
+                                        time_step_id, previous_step),
+       ...);
     }
     return ::TimeStepRequest{.size_goal = tightest_goal};
   }
@@ -204,14 +268,80 @@ class ErrorControl<StepChooserUse, System, tmpl::list<VariablesTags...>>
     p | min_factor_;
     p | max_factor_;
     p | safety_factor_;
+    p | diagnostics_;
   }
 
  private:
+  template <typename VariablesTag, typename LocalSystem = System,
+            Requires<ErrorControl_detail::has_volume_dim<LocalSystem>::value> =
+                nullptr>
+  void write_diagnostics(
+      const std::array<std::optional<StepperErrorEstimate>, 2>& errors,
+      const std::optional<double>& goal,
+      const Element<LocalSystem::volume_dim>& element,
+      const TimeStepId& time_step_id, const double previous_step) const {
+    if (not errors[1].has_value()) {
+      Parallel::fprintf("TimeStepperErrorDiagnostics.txt",
+                        "ErrorControl element=%s evaluation_time=%.17g "
+                        "variables=%s status=no_new_error_estimate "
+                        "event_previous_step=%.17g atol=%.17g rtol=%.17g\n",
+                        element.id(), time_step_id.step_time().value(),
+                        db::tag_name<VariablesTag>(), previous_step,
+                        absolute_tolerance_, relative_tolerance_);
+      return;
+    }
+
+    const auto& current_error = *errors[1];
+    const bool use_pi_controller =
+        not std::is_same_v<StepChooserUse, ::StepChooserUse::LtsStep> and
+        errors[0].has_value() and errors[0]->order == current_error.order;
+    const double current_error_for_power =
+        std::max(current_error.step_error(), 1e-14);
+    double raw_factor = 0.0;
+    if (use_pi_controller) {
+      const double alpha_factor =
+          0.7 / static_cast<double>(current_error.order + 1);
+      const double beta_factor =
+          0.4 / static_cast<double>(errors[0]->order + 1);
+      raw_factor = safety_factor_ *
+                   pow(1.0 / current_error_for_power, alpha_factor) *
+                   pow(std::max(errors[0]->step_error(), 1e-14), beta_factor);
+    } else {
+      raw_factor = safety_factor_ *
+                   pow(1.0 / current_error_for_power,
+                       1.0 / static_cast<double>(current_error.order + 1));
+    }
+    const double applied_factor =
+        std::clamp(raw_factor, min_factor_, max_factor_);
+    const double previous_error =
+        errors[0].has_value() ? errors[0]->step_error()
+                              : std::numeric_limits<double>::quiet_NaN();
+
+    Parallel::fprintf(
+        "TimeStepperErrorDiagnostics.txt",
+        "ErrorControl element=%s evaluation_time=%.17g variables=%s "
+        "error_step_start=%.17g error_step_size=%.17g error_order=%zu "
+        "normalized_error=%.17g previous_normalized_error=%.17g "
+        "controller=%s raw_factor=%.17g applied_factor=%.17g "
+        "element_size_goal=%.17g event_previous_step=%.17g "
+        "atol=%.17g rtol=%.17g safety=%.17g min_factor=%.17g "
+        "max_factor=%.17g\n",
+        element.id(), time_step_id.step_time().value(),
+        db::tag_name<VariablesTag>(), current_error.step_time.value(),
+        current_error.step_size.value(), current_error.order,
+        current_error.step_error(), previous_error,
+        use_pi_controller ? "PI" : "P", raw_factor, applied_factor,
+        goal.value_or(std::numeric_limits<double>::quiet_NaN()), previous_step,
+        absolute_tolerance_, relative_tolerance_, safety_factor_, min_factor_,
+        max_factor_);
+  }
+
   double absolute_tolerance_ = std::numeric_limits<double>::signaling_NaN();
   double relative_tolerance_ = std::numeric_limits<double>::signaling_NaN();
   double max_factor_ = std::numeric_limits<double>::signaling_NaN();
   double min_factor_ = std::numeric_limits<double>::signaling_NaN();
   double safety_factor_ = std::numeric_limits<double>::signaling_NaN();
+  bool diagnostics_ = false;
 };
 /// \cond
 template <typename StepChooserUse, typename System, typename... VariablesTags>
