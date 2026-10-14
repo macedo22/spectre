@@ -18,6 +18,9 @@
 #include "DataStructures/DataBox/Tag.hpp"
 #include "DataStructures/Tensor/TypeAliases.hpp"
 #include "DataStructures/VariablesTag.hpp"
+#include "Domain/Structure/Element.hpp"
+#include "Domain/Structure/ElementId.hpp"
+#include "Domain/Tags.hpp"
 #include "Framework/TestCreation.hpp"
 #include "Framework/TestHelpers.hpp"
 #include "Options/Protocols/FactoryCreation.hpp"
@@ -27,6 +30,7 @@
 #include "Time/StepperErrorEstimate.hpp"
 #include "Time/StepperErrorTolerances.hpp"
 #include "Time/Tags/StepperErrors.hpp"
+#include "Time/Tags/TimeStepId.hpp"
 #include "Time/TimeStepRequest.hpp"
 #include "Utilities/Literals.hpp"
 #include "Utilities/ProtocolHelpers.hpp"
@@ -46,10 +50,12 @@ struct EvolvedVar2 : db::SimpleTag {
 };
 
 struct OneVarSystem {
+  static constexpr size_t volume_dim = 2;
   using variables_tag = Tags::Variables<tmpl::list<EvolvedVar1, EvolvedVar2>>;
 };
 
 struct SplitVarSystem {
+  static constexpr size_t volume_dim = 2;
   using variables_tag = tmpl::list<Tags::Variables<tmpl::list<EvolvedVar1>>,
                                    Tags::Variables<tmpl::list<EvolvedVar2>>>;
 };
@@ -77,8 +83,12 @@ std::optional<double> get_suggestion(
     const double previous_step) {
   auto box = db::create<db::AddSimpleTags<
       Parallel::Tags::MetavariablesImpl<Metavariables<OneVarSystem>>,
-      Tags::StepperErrors<OneVarSystem::variables_tag>>>(
-      Metavariables<OneVarSystem>{}, std::array{previous_error, error});
+      Tags::StepperErrors<OneVarSystem::variables_tag>,
+      domain::Tags::Element<OneVarSystem::volume_dim>, Tags::TimeStepId>>(
+      Metavariables<OneVarSystem>{}, std::array{previous_error, error},
+      Element<OneVarSystem::volume_dim>{ElementId<OneVarSystem::volume_dim>{0},
+                                        {}},
+      TimeStepId{true, 0, Slab{0.0, 1.0}.start()});
 
   const std::unique_ptr<StepChooser<StepChooserUse>> error_control_base =
       std::make_unique<
@@ -106,8 +116,12 @@ TimeStepRequest get_two_vars_suggestion(
   auto box = db::create<db::AddSimpleTags<
       Parallel::Tags::MetavariablesImpl<Metavariables<SplitVarSystem>>,
       Tags::StepperErrors<tmpl::front<SplitVarSystem::variables_tag>>,
-      Tags::StepperErrors<tmpl::back<SplitVarSystem::variables_tag>>>>(
-      Metavariables<SplitVarSystem>{}, first_errors, second_errors);
+      Tags::StepperErrors<tmpl::back<SplitVarSystem::variables_tag>>,
+      domain::Tags::Element<SplitVarSystem::volume_dim>, Tags::TimeStepId>>(
+      Metavariables<SplitVarSystem>{}, first_errors, second_errors,
+      Element<SplitVarSystem::volume_dim>{
+          ElementId<SplitVarSystem::volume_dim>{0}, {}},
+      TimeStepId{true, 0, Slab{0.0, 1.0}.start()});
 
   const std::unique_ptr<StepChooser<StepChooserUse>> error_control_base =
       std::make_unique<
@@ -273,7 +287,8 @@ void test_chooser() {
       "  AbsoluteTolerance: 1.0e-5\n"
       "  RelativeTolerance: 1.0e-4\n"
       "  MaxFactor: 2.1\n"
-      "  MinFactor: 0.5");
+      "  MinFactor: 0.5\n"
+      "  Diagnostics: false");
 
   CHECK(StepChoosers::ErrorControl<StepChooserUse, System>{}.uses_local_data());
 }
