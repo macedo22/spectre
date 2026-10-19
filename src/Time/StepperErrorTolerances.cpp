@@ -11,6 +11,7 @@ void StepperErrorTolerances::pup(PUP::er& p) {
   p | estimates;
   p | absolute;
   p | relative;
+  p | diagnostics;
 }
 
 bool operator==(const StepperErrorTolerances& a,
@@ -18,7 +19,7 @@ bool operator==(const StepperErrorTolerances& a,
   return (a.estimates == StepperErrorTolerances::Estimates::None and
           b.estimates == StepperErrorTolerances::Estimates::None) or
          (a.estimates == b.estimates and a.absolute == b.absolute and
-          a.relative == b.relative);
+          a.relative == b.relative and a.diagnostics == b.diagnostics);
 }
 
 bool operator!=(const StepperErrorTolerances& a,
@@ -34,6 +35,9 @@ std::ostream& operator<<(std::ostream& os,
   os << "abs = " << tolerances.absolute << ", rel = " << tolerances.relative;
   if (tolerances.estimates == StepperErrorTolerances::Estimates::AllOrders) {
     os << " (all orders)";
+  }
+  if (tolerances.diagnostics) {
+    os << " (diagnostics)";
   }
   return os;
 }

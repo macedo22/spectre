@@ -50,6 +50,8 @@ SPECTRE_TEST_CASE("Unit.Time.Test_CollectStepperErrorTolerances",
       .estimates = StepperErrorTolerances::Estimates::StepperOrder,
       .absolute = 1e-5,
       .relative = 1e-4};
+  auto tols_32_with_diagnostics = tols_32;
+  tols_32_with_diagnostics.diagnostics = true;
 
   {
     std::unordered_map<std::type_index, StepperErrorTolerances> tolerances{};
@@ -63,6 +65,15 @@ SPECTRE_TEST_CASE("Unit.Time.Test_CollectStepperErrorTolerances",
     collect_stepper_error_tolerances(&tolerances, NotTolerances{});
     CHECK(tolerances.size() == 1);
     CHECK(tolerances.at(typeid(int)) == tols_32);
+  }
+
+  {
+    std::unordered_map<std::type_index, StepperErrorTolerances> tolerances{
+        {typeid(int), tols_32}};
+    collect_stepper_error_tolerances(
+        &tolerances, Tolerances{{{typeid(int), tols_32_with_diagnostics}}});
+    CHECK(tolerances.size() == 1);
+    CHECK(tolerances.at(typeid(int)) == tols_32_with_diagnostics);
   }
 
   {

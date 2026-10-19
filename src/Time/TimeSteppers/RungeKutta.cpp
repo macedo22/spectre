@@ -163,10 +163,17 @@ std::optional<StepperErrorEstimate> RungeKutta::update_u_impl(
     error.emplace(history.back().time_step_id.step_time(), time_step,
                   get<Tags::FixedOrder>(order()) - 1,
                   largest_stepper_error(*history.back().value, *u, tolerances));
+    if (tolerances.diagnostics) {
+      error->diagnostics.emplace(
+          stepper_error_diagnostics(*history.back().value, *u, tolerances));
+    }
   }
 
   update_u_impl_with_tableau(u, history, time_step, tableau,
                              number_of_substeps);
+  if (error.has_value() and error->diagnostics.has_value()) {
+    record_step_end_value(*error->diagnostics, *u);
+  }
   return error;
 }
 

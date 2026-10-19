@@ -290,6 +290,14 @@ void test_chooser() {
       "  MinFactor: 0.5\n"
       "  Diagnostics: false");
 
+  const StepChoosers::ErrorControl<StepChooserUse, System>
+      error_control_with_diagnostics{1.0e-5, 1.0e-4, 2.1, 0.5, 0.95, true};
+  for (const auto& [variables_type, tolerances] :
+       error_control_with_diagnostics.tolerances()) {
+    (void)variables_type;
+    CHECK(tolerances.diagnostics);
+  }
+
   CHECK(StepChoosers::ErrorControl<StepChooserUse, System>{}.uses_local_data());
 }
 

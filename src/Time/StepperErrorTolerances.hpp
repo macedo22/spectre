@@ -21,6 +21,8 @@ struct StepperErrorTolerances {
   Estimates estimates = Estimates::None;
   double absolute = std::numeric_limits<double>::signaling_NaN();
   double relative = std::numeric_limits<double>::signaling_NaN();
+  /// Collect detailed, potentially expensive diagnostics for the estimate.
+  bool diagnostics = false;
 
   void pup(PUP::er& p);
 };

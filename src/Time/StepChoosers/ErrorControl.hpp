@@ -62,6 +62,49 @@ template <typename StepChooserUse>
 std::optional<double> goal_from_variable(
     const std::array<std::optional<StepperErrorEstimate>, 2>& errors,
     double min_factor, double max_factor, double safety_factor);
+
+struct ComponentLocation {
+  std::string name{"unavailable"};
+  size_t independent_component = StepperErrorDiagnostics::invalid_index;
+  size_t grid_point = StepperErrorDiagnostics::invalid_index;
+  size_t number_of_grid_points = 0;
+};
+
+template <typename VariablesTag>
+ComponentLocation component_location(const size_t flat_index,
+                                     const size_t number_of_values) {
+  using VariablesType = typename VariablesTag::type;
+  constexpr size_t number_of_components =
+      VariablesType::number_of_independent_components;
+  static_assert(number_of_components > 0);
+  ComponentLocation result{};
+  if (flat_index == StepperErrorDiagnostics::invalid_index or
+      number_of_values == 0 or number_of_values % number_of_components != 0) {
+    return result;
+  }
+  result.number_of_grid_points = number_of_values / number_of_components;
+  result.independent_component = flat_index / result.number_of_grid_points;
+  result.grid_point = flat_index % result.number_of_grid_points;
+  if (result.independent_component >= number_of_components) {
+    return result;
+  }
+
+  size_t first_component = 0;
+  tmpl::for_each<typename VariablesType::tags_list>([&result, &first_component](
+                                                        auto tag_v) {
+    using Tag = tmpl::type_from<decltype(tag_v)>;
+    using TensorType = typename Tag::type;
+    if (result.name == "unavailable" and
+        result.independent_component >= first_component and
+        result.independent_component < first_component + TensorType::size()) {
+      result.name = db::tag_name<Tag>() +
+                    TensorType::component_suffix(result.independent_component -
+                                                 first_component);
+    }
+    first_component += TensorType::size();
+  });
+  return result;
+}
 }  // namespace ErrorControl_detail
 
 /*!
@@ -258,7 +301,8 @@ class ErrorControl<StepChooserUse, System, tmpl::list<VariablesTags...>>
     return {{typeid(VariablesTags),
              {.estimates = StepperErrorTolerances::Estimates::StepperOrder,
               .absolute = absolute_tolerance_,
-              .relative = relative_tolerance_}}...};
+              .relative = relative_tolerance_,
+              .diagnostics = diagnostics_}}...};
   }
 
   void pup(PUP::er& p) override {  // NOLINT
@@ -317,6 +361,44 @@ class ErrorControl<StepChooserUse, System, tmpl::list<VariablesTags...>>
         errors[0].has_value() ? errors[0]->step_error()
                               : std::numeric_limits<double>::quiet_NaN();
 
+    const auto* const diagnostics = current_error.diagnostics.has_value()
+                                        ? &current_error.diagnostics.value()
+                                        : nullptr;
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    const size_t invalid_index = StepperErrorDiagnostics::invalid_index;
+    const size_t number_of_values =
+        diagnostics == nullptr ? 0 : diagnostics->number_of_values;
+    const auto maximum_error_location =
+        ErrorControl_detail::component_location<VariablesTag>(
+            diagnostics == nullptr ? invalid_index
+                                   : diagnostics->maximum_absolute_error_index,
+            number_of_values);
+    const auto maximum_start_value_location =
+        ErrorControl_detail::component_location<VariablesTag>(
+            diagnostics == nullptr
+                ? invalid_index
+                : diagnostics->maximum_absolute_step_start_value_index,
+            number_of_values);
+    const auto maximum_end_value_location =
+        ErrorControl_detail::component_location<VariablesTag>(
+            diagnostics == nullptr
+                ? invalid_index
+                : diagnostics->maximum_absolute_step_end_value_index,
+            number_of_values);
+    const auto maximum_pointwise_error_location =
+        ErrorControl_detail::component_location<VariablesTag>(
+            diagnostics == nullptr
+                ? invalid_index
+                : diagnostics->maximum_pointwise_normalized_error_index,
+            number_of_values);
+    constexpr double spec_style_epsilon = 1.0e-12;
+    const double spec_style_local_relative_error =
+        diagnostics == nullptr
+            ? nan
+            : diagnostics->maximum_absolute_error /
+                  (diagnostics->maximum_absolute_step_end_value +
+                   spec_style_epsilon);
+
     Parallel::fprintf(
         "TimeStepperErrorDiagnostics.txt",
         "ErrorControl element=%s evaluation_time=%.17g variables=%s "
@@ -325,7 +407,31 @@ class ErrorControl<StepChooserUse, System, tmpl::list<VariablesTags...>>
         "controller=%s raw_factor=%.17g applied_factor=%.17g "
         "element_size_goal=%.17g event_previous_step=%.17g "
         "atol=%.17g rtol=%.17g safety=%.17g min_factor=%.17g "
-        "max_factor=%.17g\n",
+        "max_factor=%.17g diagnostics_status=%s number_of_values=%zu "
+        "number_of_grid_points=%zu "
+        "max_abs_error=%.17g max_abs_error_flat_index=%zu "
+        "max_abs_error_component=%s max_abs_error_component_index=%zu "
+        "max_abs_error_grid_point=%zu "
+        "max_abs_step_start_value=%.17g "
+        "max_abs_step_start_value_flat_index=%zu "
+        "max_abs_step_start_value_component=%s "
+        "max_abs_step_start_value_component_index=%zu "
+        "max_abs_step_start_value_grid_point=%zu "
+        "max_abs_step_end_value=%.17g "
+        "max_abs_step_end_value_flat_index=%zu "
+        "max_abs_step_end_value_component=%s "
+        "max_abs_step_end_value_component_index=%zu "
+        "max_abs_step_end_value_grid_point=%zu "
+        "spec_style_epsilon=%.17g spec_style_local_relative_error=%.17g "
+        "max_pointwise_normalized_error=%.17g "
+        "max_pointwise_normalized_error_flat_index=%zu "
+        "max_pointwise_normalized_error_component=%s "
+        "max_pointwise_normalized_error_component_index=%zu "
+        "max_pointwise_normalized_error_grid_point=%zu "
+        "abs_error_at_max_pointwise_normalized_error=%.17g "
+        "abs_step_start_value_at_max_pointwise_normalized_error=%.17g "
+        "abs_step_end_estimate_at_max_pointwise_normalized_error=%.17g "
+        "normalization_at_max_pointwise_normalized_error=%.17g\n",
         element.id(), time_step_id.step_time().value(),
         db::tag_name<VariablesTag>(), current_error.step_time.value(),
         current_error.step_size.value(), current_error.order,
@@ -333,7 +439,54 @@ class ErrorControl<StepChooserUse, System, tmpl::list<VariablesTags...>>
         use_pi_controller ? "PI" : "P", raw_factor, applied_factor,
         goal.value_or(std::numeric_limits<double>::quiet_NaN()), previous_step,
         absolute_tolerance_, relative_tolerance_, safety_factor_, min_factor_,
-        max_factor_);
+        max_factor_, diagnostics == nullptr ? "unavailable" : "available",
+        number_of_values, maximum_error_location.number_of_grid_points,
+        diagnostics == nullptr ? nan : diagnostics->maximum_absolute_error,
+        diagnostics == nullptr ? invalid_index
+                               : diagnostics->maximum_absolute_error_index,
+        maximum_error_location.name,
+        maximum_error_location.independent_component,
+        maximum_error_location.grid_point,
+        diagnostics == nullptr ? nan
+                               : diagnostics->maximum_absolute_step_start_value,
+        diagnostics == nullptr
+            ? invalid_index
+            : diagnostics->maximum_absolute_step_start_value_index,
+        maximum_start_value_location.name,
+        maximum_start_value_location.independent_component,
+        maximum_start_value_location.grid_point,
+        diagnostics == nullptr ? nan
+                               : diagnostics->maximum_absolute_step_end_value,
+        diagnostics == nullptr
+            ? invalid_index
+            : diagnostics->maximum_absolute_step_end_value_index,
+        maximum_end_value_location.name,
+        maximum_end_value_location.independent_component,
+        maximum_end_value_location.grid_point, spec_style_epsilon,
+        spec_style_local_relative_error,
+        diagnostics == nullptr
+            ? nan
+            : diagnostics->maximum_pointwise_normalized_error,
+        diagnostics == nullptr
+            ? invalid_index
+            : diagnostics->maximum_pointwise_normalized_error_index,
+        maximum_pointwise_error_location.name,
+        maximum_pointwise_error_location.independent_component,
+        maximum_pointwise_error_location.grid_point,
+        diagnostics == nullptr
+            ? nan
+            : diagnostics->absolute_error_at_maximum_pointwise_normalized_error,
+        diagnostics == nullptr
+            ? nan
+            : diagnostics
+                  ->absolute_step_start_value_at_maximum_pointwise_normalized_error,
+        diagnostics == nullptr
+            ? nan
+            : diagnostics
+                  ->absolute_step_end_estimate_at_maximum_pointwise_normalized_error,
+        diagnostics == nullptr
+            ? nan
+            : diagnostics->normalization_at_maximum_pointwise_normalized_error);
   }
 
   double absolute_tolerance_ = std::numeric_limits<double>::signaling_NaN();

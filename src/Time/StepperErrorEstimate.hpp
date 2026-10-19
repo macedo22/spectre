@@ -5,6 +5,7 @@
 
 #include <array>
 #include <cstddef>
+#include <limits>
 #include <optional>
 
 #include "Time/Time.hpp"
@@ -14,6 +15,36 @@ namespace PUP {
 class er;
 }  // namespace PUP
 /// \endcond
+
+/// \ingroup TimeGroup
+/// Detailed diagnostic information about a time-stepper error estimate.
+///
+/// The indices refer to the flattened storage passed to the time stepper.  For
+/// a `Variables`, the grid-point index varies fastest, followed by the
+/// independent tensor-component index.
+struct StepperErrorDiagnostics {
+  static constexpr size_t invalid_index = std::numeric_limits<size_t>::max();
+
+  size_t number_of_values = 0;
+
+  double maximum_absolute_error = 0.0;
+  size_t maximum_absolute_error_index = invalid_index;
+
+  double maximum_absolute_step_start_value = 0.0;
+  size_t maximum_absolute_step_start_value_index = invalid_index;
+
+  double maximum_absolute_step_end_value = 0.0;
+  size_t maximum_absolute_step_end_value_index = invalid_index;
+
+  double maximum_pointwise_normalized_error = 0.0;
+  size_t maximum_pointwise_normalized_error_index = invalid_index;
+  double absolute_error_at_maximum_pointwise_normalized_error = 0.0;
+  double absolute_step_start_value_at_maximum_pointwise_normalized_error = 0.0;
+  double absolute_step_end_estimate_at_maximum_pointwise_normalized_error = 0.0;
+  double normalization_at_maximum_pointwise_normalized_error = 0.0;
+
+  void pup(PUP::er& p);
+};
 
 /// \ingroup TimeGroup
 /// Estimate of the TimeStepper truncation error.
@@ -31,6 +62,9 @@ struct StepperErrorEstimate {
   /// variable-order stepper were to be changed.  The error
   /// `errors[i]` should scale approximately as $(\Delta t)^{i + 1}$.
   std::array<std::optional<double>, 8> errors{};
+
+  /// Additional data collected only when explicitly requested for debugging.
+  std::optional<StepperErrorDiagnostics> diagnostics{};
 
   StepperErrorEstimate() = default;
   StepperErrorEstimate(Time step_time_in, TimeDelta step_size_in,

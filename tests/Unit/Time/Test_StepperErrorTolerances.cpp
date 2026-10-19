@@ -25,6 +25,11 @@ SPECTRE_TEST_CASE("Unit.Time.StepperErrorTolerances", "[Unit][Time]") {
       .estimates = StepperErrorTolerances::Estimates::AllOrders,
       .absolute = 0.1,
       .relative = 0.3};
+  const StepperErrorTolerances tols5{
+      .estimates = StepperErrorTolerances::Estimates::StepperOrder,
+      .absolute = 0.1,
+      .relative = 0.3,
+      .diagnostics = true};
   CHECK(tols0 == tols0);
   CHECK_FALSE(tols0 != tols0);
   CHECK(tols1 == tols1);
@@ -37,9 +42,13 @@ SPECTRE_TEST_CASE("Unit.Time.StepperErrorTolerances", "[Unit][Time]") {
   CHECK_FALSE(tols1 == tols3);
   CHECK(tols1 != tols4);
   CHECK_FALSE(tols1 == tols4);
+  CHECK(tols1 != tols5);
+  CHECK_FALSE(tols1 == tols5);
   test_serialization(tols1);
+  test_serialization(tols5);
 
   CHECK(get_output(tols0) == "None");
   CHECK(get_output(tols1) == "abs = 0.1, rel = 0.3");
   CHECK(get_output(tols4) == "abs = 0.1, rel = 0.3 (all orders)");
+  CHECK(get_output(tols5) == "abs = 0.1, rel = 0.3 (diagnostics)");
 }
