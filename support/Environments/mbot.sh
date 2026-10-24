@@ -12,6 +12,10 @@ spectre_load_modules() {
     # The order here is important
     module load gcc/11.4.0
     module load spectre-deps > /dev/null 2>&1
+
+    # Use my own SpEC checkout
+    module unload spec-exporter/2024-09-05 > /dev/null 2>&1
+    export SPEC_ROOT=/home/fs01/spec1182/spec
 }
 
 spectre_unload_modules() {
