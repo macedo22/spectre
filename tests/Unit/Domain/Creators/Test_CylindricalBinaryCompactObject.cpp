@@ -367,11 +367,11 @@ void test_construction(
     CHECK_ITERABLE_APPROX(expected_mapped_point_a, mapped_point_a);
     CHECK_ITERABLE_APPROX(expected_mapped_point_b, mapped_point_b);
 
-    // Check that blocks have expected time dependent maps
-    constexpr double xi_min = 0.25;
-    const double expected_xi = std::max(
-        xi_min, std::abs(center_objectA[0]) / (std::abs(center_objectA[0]) +
-                                               std::abs(center_objectB[0])));
+    // Check that blocks have expected time dependent maps. All tested centers
+    // are in the supported range 1/3 < xi < 2/3, so no clamping is needed.
+    const double expected_xi =
+        std::abs(center_objectA[0]) /
+        (std::abs(center_objectA[0]) + std::abs(center_objectB[0]));
 
     // Build expected time dependent maps to check against
     const double expected_cut_spheres_offset_factor = 0.99;
@@ -539,19 +539,18 @@ void test_parse_errors() {
           create_inner_boundary_condition(), create_outer_boundary_condition()),
       Catch::Matchers::ContainsSubstring("RadiusA and RadiusB are expected "
                                          "to be positive"));
-  CHECK_THROWS_WITH(
-      domain::creators::CylindricalBinaryCompactObject(
-          {{2.0, 0.05, 0.0}}, {-5.0, 0.05, 0.0}, 0.15, 0.4, 1_st, 3_st,
-          OuterSphereOptions{25.0}, std::nullopt, std::nullopt, std::nullopt,
-          create_inner_boundary_condition(), create_outer_boundary_condition()),
-      Catch::Matchers::ContainsSubstring(
-          "RadiusA should not be smaller than RadiusB"));
-  CHECK_THROWS_WITH(
-      domain::creators::CylindricalBinaryCompactObject(
-          {{2.0, 0.05, 0.0}}, {-1.0, 0.05, 0.0}, 1.0, 0.4, 1_st, 3_st,
-          OuterSphereOptions{25.0}, std::nullopt, std::nullopt, std::nullopt,
-          create_inner_boundary_condition(), create_outer_boundary_condition()),
-      Catch::Matchers::ContainsSubstring("We expect |x_A| <= |x_B|"));
+  // The topology still requires SphereE blocks for large asymmetries,
+  // regardless of which object is farther from the origin.
+  for (const auto& centers : {std::array{1.0, -2.0}, std::array{2.0, -1.0},
+                              std::array{1.0, -4.0}, std::array{4.0, -1.0}}) {
+    CAPTURE(centers);
+    CHECK_THROWS_WITH(
+        CylBCO({{centers[0], 0.05, 0.0}}, {centers[1], 0.05, 0.0}, 0.15, 0.4,
+               1_st, 3_st, OuterSphereOptions{25.0}, std::nullopt, std::nullopt,
+               std::nullopt, create_inner_boundary_condition(),
+               create_outer_boundary_condition()),
+        Catch::Matchers::ContainsSubstring(" < xi < "));
+  }
   CHECK_THROWS_WITH(
       domain::creators::CylindricalBinaryCompactObject(
           {{4.0, 0.0, 0.0}}, {-4.0, 0.0, 0.0}, 1.0, 1.0, 1_st, 3_st,
@@ -797,6 +796,50 @@ void test_cylindrical_bbh() {
   }
 }
 
+void test_object_orderings() {
+  // Independently reverse the center distances and radii. Exercise both ends
+  // of the supported center-distance range, with and without inner shells.
+  // Include time-dependent maps whenever the inner shells are present.
+  for (const auto& [a_farther, a_larger, include_inner_spheres] :
+       cartesian_product(make_array(true, false), make_array(true, false),
+                         make_array(true, false))) {
+    CAPTURE(a_farther, a_larger, include_inner_spheres);
+    const std::array<double, 3> center_A{a_farther ? 6.0 : 3.1, 0.05, 0.0};
+    const std::array<double, 3> center_B{a_farther ? -3.1 : -6.0, 0.05, 0.0};
+    const double radius_A = a_larger ? 1.2 : 1.0;
+    const double radius_B = a_larger ? 1.0 : 1.2;
+    const std::optional<InnerSphere> inner_sphere =
+        include_inner_spheres
+            ? std::optional{InnerSphere{std::nullopt, Distribution::Linear}}
+            : std::nullopt;
+    std::optional<TimeDepOptions> time_dep_options =
+        include_inner_spheres
+            ? std::optional{construct_time_dependent_options()}
+            : std::nullopt;
+    const CylBCO creator{center_A,
+                         center_B,
+                         radius_A,
+                         radius_B,
+                         0_st,
+                         3_st,
+                         OuterSphereOptions{100.0},
+                         inner_sphere,
+                         inner_sphere,
+                         std::move(time_dep_options),
+                         create_inner_boundary_condition(),
+                         create_outer_boundary_condition()};
+    test_construction(creator, true, include_inner_spheres,
+                      include_inner_spheres, radius_A, radius_B, 100.0,
+                      center_A, center_B, {1.0, 2.3});
+    TestHelpers::domain::creators::test_creation(
+        create_option_string(include_inner_spheres, false, false,
+                             include_inner_spheres, include_inner_spheres,
+                             Distribution::Linear, Distribution::Linear, true,
+                             center_A, center_B, radius_A, radius_B, 100.0),
+        creator, true);
+  }
+}
+
 // Make sure initial refinement and initial grid points for different blocks
 // are set to the correct values based on the input
 void test_initial_extents_and_refinement() {
@@ -958,5 +1001,6 @@ SPECTRE_TEST_CASE("Unit.Domain.Creators.CylindricalBinaryCompactObject",
                   "[Domain][Unit]") {
   test_initial_extents_and_refinement();
   test_cylindrical_bbh();
+  test_object_orderings();
   test_parse_errors();
 }

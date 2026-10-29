@@ -3,6 +3,7 @@
 
 #include "Domain/Creators/CylindricalBinaryCompactObject.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <optional>
@@ -101,16 +102,6 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
   if (radius_A_ <= 0.0 or radius_B_ <= 0.0) {
     PARSE_ERROR(context, "RadiusA and RadiusB are expected to be positive");
   }
-  if (radius_A_ < radius_B_) {
-    PARSE_ERROR(context, "RadiusA should not be smaller than RadiusB");
-  }
-  if (std::abs(center_A_[2]) > std::abs(center_B_[2])) {
-    PARSE_ERROR(context,
-                "We expect |x_A| <= |x_B|, for x the x-coordinate of either "
-                "CenterA or CenterB.  We should roughly have "
-                "RadiusA x_A + RadiusB x_B = 0 (i.e. for BBHs the "
-                "center of mass should be about at the origin).");
-  }
   // The value 3.0 * (center_A_[2] - center_B_[2]) is what is
   // chosen in SpEC as the inner radius of the innermost outer sphere.
   if (outer_sphere_.outer_radius_ < 3.0 * (center_A_[2] - center_B_[2])) {
@@ -157,13 +148,14 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
   // will swap xi -> 1-xi in Eq. (A9).
   // Therefore, xi = 0 means that the cutting plane passes through the center of
   // object B, and xi = 1 means that the cutting plane passes through
-  // the center of object A.  Note that for |x_A| <= |x_B| (as assumed
-  // above), xi is always <= 1/2.
+  // the center of object A. Clamp both ends of the interval so that
+  // exchanging A and B and reflecting the x axis sends xi to 1-xi.
   constexpr double xi_min = 0.25;
-  // Same as Eq. (A10)
+  // Eq. (A10), generalized to either ordering of |x_A| and |x_B|.
   const double xi =
-      std::max(xi_min, std::abs(center_A_[2]) /
-                           (std::abs(center_A_[2]) + std::abs(center_B_[2])));
+      std::clamp(std::abs(center_A_[2]) /
+                     (std::abs(center_A_[2]) + std::abs(center_B_[2])),
+                 xi_min, 1.0 - xi_min);
 
   // Compute cutting plane
   // This is Eq. (A9) with xi -> 1-xi.
@@ -225,18 +217,16 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
   // Eq. (A.11) and the same mistake above Eq. (A.20), where it lists
   // the wrong mass ratio (for BBHs). The correct statement is that if
   // xi <= 1/3, this means that the mass ratio (for BBH) is large (>=2)
-  // and we should add SphereE blocks.
+  // and we should add SphereE blocks. The reflected configuration needs
+  // these blocks when xi >= 2/3.
   constexpr double xi_min_sphere_e = 1.0 / 3.0;
-  if (xi <= xi_min_sphere_e) {
-    // The following ERROR will be removed in an upcoming PR that
-    // will support higher mass ratios.
-    ERROR(
-        "We currently only support domains where objects A and B are "
-        "approximately the same size, and approximately the same distance from "
-        "the origin.  More technically, we support xi > "
-        << xi_min_sphere_e << ", but the value of xi is " << xi
-        << ". Support for more general domains will be added in the near "
-           "future");
+  if (xi <= xi_min_sphere_e or xi >= 2.0 * xi_min_sphere_e) {
+    PARSE_ERROR(
+        context,
+        "These center positions require additional SphereE blocks, which are "
+        "not yet implemented. We currently support "
+            << xi_min_sphere_e << " < xi < " << 2.0 * xi_min_sphere_e
+            << ", but the value of xi is " << xi << ".");
   }
 
   // Create grid anchors in x direction from unrotated input centers
@@ -549,19 +539,21 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
   // center_EB and radius_EB are the center and outer-radius of the
   // cylindered-sphere EB in Figure 20.
   //
-  // radius_MB is eq. A16 or A23 in the paper (depending on whether
-  // the EE spheres exist), and is the radius of the circle where the EB
-  // sphere intersects the cutting plane.
+  // radius_M is the common radius of the circles where the EA and EB
+  // spheres intersect the cutting plane. Eq. (A23) assumes that EB's
+  // center is closer to the plane. Use the closer of the two centers
+  // to also support the reflected configuration. Both sphere radii
+  // follow from this common circle and their distances to the plane.
   const std::array<double, 3> center_EA = {
       0.0, 0.0, cut_spheres_offset_factor_ * center_A_[2]};
   const std::array<double, 3> center_EB = {
       0.0, 0.0, center_B_[2] * cut_spheres_offset_factor_};
-  const double radius_MB =
-      std::abs(cut_spheres_offset_factor_ * center_B_[2] - z_cutting_plane_);
+  const double radius_M = std::min(std::abs(center_EA[2] - z_cutting_plane_),
+                                   std::abs(center_EB[2] - z_cutting_plane_));
   const double radius_EA =
-      sqrt(square(center_EA[2] - z_cutting_plane_) + square(radius_MB));
+      sqrt(square(center_EA[2] - z_cutting_plane_) + square(radius_M));
   const double radius_EB =
-      sqrt(2.0) * std::abs(center_EB[2] - z_cutting_plane_);
+      sqrt(square(center_EB[2] - z_cutting_plane_) + square(radius_M));
 
   // Construct a coordinate map that goes from logical coordinates to a unit
   // right cylinder block. The radii and bounds are what are expected by the
@@ -747,7 +739,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_z_axis),
       CoordinateMaps::UniformCylindricalFlatEndcap(
           flip_about_xy_plane(center_A_),
-          flip_about_xy_plane(center_cutting_plane), outer_radius_A_, radius_MB,
+          flip_about_xy_plane(center_cutting_plane), outer_radius_A_, radius_M,
           -z_cut_EA_lower),
       CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
   // MB Filled Cylinder
@@ -755,7 +747,7 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const {
       CoordinateMaps::DiscreteRotation<3>(aligned),
       // For some reason codecov complains about the next line.
       CoordinateMaps::UniformCylindricalFlatEndcap(  // LCOV_EXCL_LINE
-          center_B_, center_cutting_plane, outer_radius_B_, radius_MB,
+          center_B_, center_cutting_plane, outer_radius_B_, radius_M,
           z_cut_EB_lower),
       CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
 

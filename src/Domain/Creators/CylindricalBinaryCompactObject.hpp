@@ -132,13 +132,13 @@ namespace domain::creators {
  * following restrictions on parameters:
  * - \f$c_A^0>0\f$; this is a convention to simplify the code.
  * - \f$c_B^0<0\f$; this is a convention to simplify the code.
- * - \f$|c_A^0|\le|c_B^0|\f$. We should roughly have \f$r_A c_A^0 + r_B c_B^0\f$
- *   close to zero; that is, for BBHs (where \f$r_A\f$ is roughly twice the
- *   mass of the heavier object A, and \f$r_B\f$ is roughly twice the mass
- *   of the lighter object B) the center of mass should be roughly
- *   at the origin.
- * - \f$0 < r_B < r_A\f$
- * - \f$R \ge 3(|c_A^0|-|c_B^0|)\f$; otherwise the blocks will be too compressed
+ * - \f$r_A > 0\f$ and \f$r_B > 0\f$, with either radius allowed to be larger.
+ * - \f$1/2 < |c_A^0|/|c_B^0| < 2\f$, with either center allowed to be
+ *   farther from the origin. More asymmetric configurations require
+ *   additional SphereE blocks, which are not yet implemented.
+ * - The excision spheres and any inner shells must not reach the cutting
+ *   plane between the objects.
+ * - \f$R \ge 3(|c_A^0|+|c_B^0|)\f$; otherwise the blocks will be too compressed
  *   near the outer boundary.
  *
  * All time dependent maps are optional to specify. To include a map, specify
