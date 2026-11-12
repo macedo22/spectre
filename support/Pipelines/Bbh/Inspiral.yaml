@@ -39,6 +39,8 @@ Next:
 
 ---
 
+StageRhsDiagnostics: None
+
 Parallelization:
   ElementDistribution: NumGridPointsAndGridSpacing
 

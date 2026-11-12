@@ -46,6 +46,7 @@
 #include "Evolution/DiscontinuousGalerkin/Initialization/ProjectSpectralFilters.hpp"
 #include "Evolution/DiscontinuousGalerkin/Initialization/SetupEqualRateRegions.hpp"
 #include "Evolution/DiscontinuousGalerkin/Initialization/SpectralFilters.hpp"
+#include "Evolution/DiscontinuousGalerkin/StageRhsDiagnostics.hpp"
 #include "Evolution/Executables/GeneralizedHarmonic/Deadlock.hpp"
 #include "Evolution/Initialization/DgDomain.hpp"
 #include "Evolution/Initialization/Evolution.hpp"
@@ -602,6 +603,7 @@ struct EvolutionMetavars {
           evolution::dg::ApplyLtsDenseBoundaryCorrections<EvolutionMetavars>>>,
       control_system::Actions::LimitTimeStep<control_systems>,
       Actions::MutateApply<UpdateU<system>>,
+      evolution::dg::stage_rhs_diagnostics::Observe<system>,
       evolution::dg::Actions::ApplyLtsBoundaryCorrections<
           volume_dim, use_dg_element_collection>,
       Actions::MutateApply<ChangeTimeStepperOrder<system>>,
@@ -612,6 +614,7 @@ struct EvolutionMetavars {
 
   using initialization_actions = tmpl::list<
       Initialization::Actions::InitializeItems<
+          evolution::dg::stage_rhs_diagnostics::Initialize,
           Initialization::TimeStepping<EvolutionMetavars, TimeStepper,
                                        use_control_systems, true>,
           evolution::dg::Initialization::Domain<EvolutionMetavars,
@@ -718,6 +721,7 @@ struct EvolutionMetavars {
   struct amr : tt::ConformsTo<::amr::protocols::AmrMetavariables> {
     using element_array = gh_dg_element_array;
     using projectors = tmpl::list<
+        evolution::dg::stage_rhs_diagnostics::Project,
         Initialization::ProjectTimeStepping<volume_dim>,
         evolution::dg::Initialization::ProjectDomain<volume_dim>,
         ::amr::projectors::ProjectVariables<volume_dim,

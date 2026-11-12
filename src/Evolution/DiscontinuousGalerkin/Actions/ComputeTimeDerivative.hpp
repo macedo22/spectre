@@ -43,6 +43,7 @@
 #include "Evolution/DiscontinuousGalerkin/MortarTags.hpp"
 #include "Evolution/DiscontinuousGalerkin/NormalVectorTags.hpp"
 #include "Evolution/DiscontinuousGalerkin/OnlyDgBlockIds.hpp"
+#include "Evolution/DiscontinuousGalerkin/StageRhsDiagnostics.hpp"
 #include "Evolution/DiscontinuousGalerkin/UsingSubcell.hpp"
 #include "NumericalAlgorithms/DiscontinuousGalerkin/Formulation.hpp"
 #include "NumericalAlgorithms/DiscontinuousGalerkin/MortarHelpers.hpp"
@@ -713,6 +714,10 @@ Parallel::iterable_action_return_t ComputeTimeDerivative_detail::Impl<
           },
           make_not_null(&box));
     }
+  }
+
+  if constexpr (not IsAuxiliary) {
+    stage_rhs_diagnostics::capture_volume<EvolutionSystem>(box, partial_derivs);
   }
 
   const Variables<detail::get_primitive_vars_tags_from_system<EvolutionSystem>>*
