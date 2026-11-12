@@ -23,6 +23,7 @@ spectre_target_headers(
   NormalVectorTags.hpp
   OnlyDgBlockIds.hpp
   StageRhsDiagnostics.hpp
+  StepperErrorDiagnostics.hpp
   OptionTags.hpp
   SubcellElementDistribution.hpp
   TimeDerivativeDecisions.hpp

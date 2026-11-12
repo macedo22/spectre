@@ -47,6 +47,7 @@
 #include "Evolution/DiscontinuousGalerkin/Initialization/SetupEqualRateRegions.hpp"
 #include "Evolution/DiscontinuousGalerkin/Initialization/SpectralFilters.hpp"
 #include "Evolution/DiscontinuousGalerkin/StageRhsDiagnostics.hpp"
+#include "Evolution/DiscontinuousGalerkin/StepperErrorDiagnostics.hpp"
 #include "Evolution/Executables/GeneralizedHarmonic/Deadlock.hpp"
 #include "Evolution/Initialization/DgDomain.hpp"
 #include "Evolution/Initialization/Evolution.hpp"
@@ -364,6 +365,14 @@ struct EvolutionMetavars {
 
   using observe_fields = tmpl::append<
       tmpl::list<
+          evolution::dg::Tags::PointwiseNormalizedTimeStepperErrorCompute<
+              volume_dim, typename system::variables_tag>,
+          evolution::dg::Tags::NormalizedTimeStepperErrorCompute<
+              volume_dim, typename system::variables_tag>,
+          evolution::dg::Tags::TimeStepperErrorStepStartCompute<
+              volume_dim, typename system::variables_tag>,
+          evolution::dg::Tags::TimeStepperErrorStepSizeCompute<
+              volume_dim, typename system::variables_tag>,
           gr::Tags::SpacetimeMetric<DataVector, volume_dim>,
           gh::Tags::Pi<DataVector, volume_dim>,
           gh::Tags::Phi<DataVector, volume_dim>,

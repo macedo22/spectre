@@ -63,6 +63,108 @@ the new state are not compatible with this binary.
 
 ## Output
 
+### Optional volume visualization of pointwise and element errors
+
+`EvolveGhBinaryBlackHole` also exposes these fields through `ObserveFields`:
+
+- **`PointwiseNormalizedTimeStepperError`**: the normalized embedded error,
+  maximized over independent evolved tensor components **at each grid point**.
+  Use this to look for angular structure, boundary concentrations, or other
+  patterns within elements.
+- `NormalizedTimeStepperError`: the latest stored normalized error used by
+  error control, maximized over all grid points and all independent evolved
+  tensor components in the element.
+- `TimeStepperErrorStepStart`: start time of the step that produced that error.
+- `TimeStepperErrorStepSize`: size of that step.
+
+The last three fields are element-level scalars repeated at every point of the
+element's full mesh. `PointwiseNormalizedTimeStepperError` varies within each
+element. For a component `c` and point `p`, it reconstructs the signed embedded
+difference from the completed Dormand--Prince stage derivatives:
+
+```text
+delta[c,p] = dt * sum_i((b5[i] - b4[i]) * k[i,c,p])
+E[p] = max_c abs(delta[c,p]) /
+    (atol + rtol * max(abs(u_start[c,p]), abs(u_start[c,p] + delta[c,p])))
+```
+
+The normalization and summation ordering match the production calculation.
+The maximum of `E[p]` within an element should reproduce
+`NormalizedTimeStepperError` up to floating-point roundoff. The component
+providing the maximum can differ from point to point.
+
+Pointwise output currently requires **DormandPrince5** and a completed-step
+observation under `EventsAndTriggersAtSlabs` or `EventsAndTriggersAtSteps`.
+It uses the retained RK history, so it does work **only when requested for an
+observation**, with no new per-step capture or checkpoint state. Do not use it
+with dense-output/substep observations or after a mesh-changing event at the
+same observation time. Missing completed history produces a descriptive error.
+Use a fixed mesh for comparisons to the stored production estimate.
+
+All four fields work with
+`ErrorControl: Diagnostics: false` and `StageRhsDiagnostics: None`, as long as
+error control is enabled and computing estimates. Both existing text outputs
+remain independently available.
+
+Add the field names to an existing `ObserveFields: VariablesToObserve` list,
+or add this entry under your existing `EventsAndTriggersAtSlabs`:
+
+```yaml
+  - Trigger:
+      Slabs:
+        EvenlySpaced:
+          Interval: 500
+          Offset: 0
+    Events:
+      - ObserveFields:
+          SubfileName: TimeStepperError
+          VariablesToObserve:
+            - PointwiseNormalizedTimeStepperError
+            - NormalizedTimeStepperError
+            - TimeStepperErrorStepStart
+            - TimeStepperErrorStepSize
+          InterpolateToMesh: None
+          ProjectToMesh: None
+          CoordinatesFloatingPointType: Double
+          FloatingPointTypes: [Double]
+          BlocksToObserve: All
+```
+
+The interval is in slabs, not simulation time. With `VolumeFileName: BbhVolume`,
+this writes `TimeStepperError.vol` in `BbhVolume*.h5`. Generate visualization
+metadata with:
+
+```sh
+spectre generate-xdmf --subfile-name TimeStepperError \
+  --output TimeStepperError BbhVolume*.h5
+```
+
+Open the XDMF file in ParaView and color by
+`PointwiseNormalizedTimeStepperError` for the requested spatial patterns, or
+`NormalizedTimeStepperError` for the element maxima.
+Use a logarithmic color scale to distinguish small errors, and a fixed color
+range when comparing times. Avoid merging points across element boundaries,
+since the errors can be discontinuous there. Keep `InterpolateToMesh: None`
+and `ProjectToMesh: None` to save the values on the original grid points;
+ParaView still interpolates colors between points when displaying surfaces.
+
+At a slab boundary in a forward GTS run, the estimate normally belongs to the
+step just completed, rather than the step about to begin. Match text records
+using `TimeStepperErrorStepStart` (the text's `error_step_start`), not the
+volume observation time. No estimate exists initially, so these fields are
+NaN at the initial observation; NaN means unavailable, not zero error. The
+pointwise field requires the completed-step history described above; the
+element-level fields simply report the latest stored estimate. An error near
+one is near the specified tolerance scale, but the
+PI controller's safety factor and previous error also affect its request.
+
+Nothing is written unless the fields are requested. Pointwise output adds an
+RK-error reconstruction over all evolved components at each observation, and
+writes one scalar per grid point. The other fields only repeat stored scalars.
+It does not enable the expensive per-step text diagnostics.
+
+### Targeted stage/RHS text output
+
 `TimeStepperStageDiagnostics.txt` contains one complete key/value record per
 line, with two record types. Output from elements may be interleaved. Group by
 `element`, `step_start`, `component`, and `point`, and sort stages by `stage`,
